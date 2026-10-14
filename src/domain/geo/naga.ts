@@ -1,7 +1,5 @@
 // Naga City boundary: OpenStreetMap relation 3084673, ODbL 1.0 (c) OpenStreetMap contributors.
-// naga-city-boundary.json is a byte-identical copy of data/geo/naga-city-boundary.geojson
-// (bundlers cannot import the .geojson extension); tests/unit/geo.test.ts enforces they match.
-import boundary from "./naga-city-boundary.json";
+import boundary from "../../../data/geo/naga-city-boundary.json";
 import { boundsContains, padBounds, pointInRing } from "./geometry";
 import type { Bounds, LatLng, LngLat } from "./types";
 

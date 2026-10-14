@@ -38,6 +38,18 @@ describe("isInsideNaga", () => {
   });
 });
 
+describe("boundary data", () => {
+  it("has 1,269 points and keeps OSM/ODbL provenance", () => {
+    const file = JSON.parse(
+      readFileSync(resolve(__dirname, "../../data/geo/naga-city-boundary.json"), "utf8"),
+    ) as { features: { properties: { source: string; license: string } }[] };
+    expect(NAGA_BOUNDARY).toHaveLength(1269);
+    const props = file.features[0]!.properties;
+    expect(props.source).toContain("3084673");
+    expect(props.license).toContain("ODbL");
+  });
+});
+
 describe("Naga constants", () => {
   it("computes NAGA_BOUNDS from the boundary", () => {
     expect(NAGA_BOUNDS.south).toBeCloseTo(13.6023285, 6);
