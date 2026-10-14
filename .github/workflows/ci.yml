@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -40,7 +40,7 @@ jobs:
           path: playwright-report
           retention-days: 7
 
-  # Uses a disposable Neon branch per run. Runs only on main or manual dispatch (never on
+  # Uses a disposable Neon branch per run. Runs only on master or manual dispatch (never on
   # pull requests), inside the protected `neon-ci` environment, with a least-privilege
   # Neon API key. The seed branch must contain no real personal data.
   # TODO: pin third-party actions to commit SHAs before the repo goes public.
