@@ -24,6 +24,24 @@ function dotIcon(coarse: boolean): L.DivIcon {
 const PRECISE_ICON = dotIcon(false);
 const COARSE_ICON = dotIcon(true);
 
+// Stable style objects so react-leaflet only restyles the circle when the quality changes.
+const ACCURACY_STYLE: L.PathOptions = {
+  className: "pn-accuracy",
+  stroke: false,
+  fillColor: "#2BB5AE",
+  fillOpacity: 0.14,
+  interactive: false,
+};
+const COARSE_ACCURACY_STYLE: L.PathOptions = {
+  className: "pn-accuracy pn-accuracy--coarse",
+  stroke: true,
+  weight: 1,
+  color: "#5A6478",
+  fillColor: "#5A6478",
+  fillOpacity: 0.12,
+  interactive: false,
+};
+
 type Props = { fix: LocationFix | null | undefined; quality?: FixQuality };
 
 export function UserLocationLayer({ fix, quality }: Props) {
@@ -42,15 +60,7 @@ export function UserLocationLayer({ fix, quality }: Props) {
         <Circle
           center={center}
           radius={radius}
-          pathOptions={{
-            className: coarse ? "pn-accuracy pn-accuracy--coarse" : "pn-accuracy",
-            stroke: coarse,
-            weight: 1,
-            color: coarse ? "#5A6478" : "#2BB5AE",
-            fillColor: coarse ? "#5A6478" : "#2BB5AE",
-            fillOpacity: coarse ? 0.12 : 0.14,
-            interactive: false,
-          }}
+          pathOptions={coarse ? COARSE_ACCURACY_STYLE : ACCURACY_STYLE}
         />
       ) : null}
       <Marker position={center} icon={icon} interactive={false} keyboard={false} zIndexOffset={1000} />

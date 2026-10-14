@@ -9,7 +9,7 @@ import "./naga-map.css";
 import L from "leaflet";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { MapContainer, Marker, Polygon, TileLayer, useMap } from "react-leaflet";
-import { OSM_ATTRIBUTION, currentTileConfig } from "@/client/map/tile-config";
+import { OSM_ATTRIBUTION, attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { prefersReducedMotion, useReducedMotion } from "@/client/map/use-reduced-motion";
 import type { LocationFix } from "@/domain/geo/location-fix";
 import {
@@ -41,8 +41,25 @@ const MASK_RINGS: L.LatLngTuple[][] = NAGA_MASK_RINGS.map((ring) =>
 );
 const OUTLINE: L.LatLngTuple[] = NAGA_BOUNDARY.map(([lng, lat]): L.LatLngTuple => [lat, lng]);
 
+// Module-level styles: a stable pathOptions object means react-leaflet never calls setStyle
+// on the 1,269-point polygons on re-render. Dark mode (mask 0.45) is applied in naga-map.css,
+// which overrides Leaflet's fill-opacity attribute, so no JS light/dark variant is needed.
+const MASK_STYLE: L.PathOptions = {
+  className: "pn-mask",
+  stroke: false,
+  fillColor: "#0F1E3D",
+  fillOpacity: 0.28,
+  interactive: false,
+};
+const OUTLINE_STYLE: L.PathOptions = {
+  className: "pn-outline",
+  color: "#0B7A75",
+  weight: 2,
+  fill: false,
+  interactive: false,
+};
+
 const LEAFLET_URL = "https://leafletjs.com";
-const OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright";
 
 function pinIcon(kind: "start" | "destination"): L.DivIcon {
   const label = kind === "start" ? "Start point" : "Destination";
@@ -75,12 +92,19 @@ function MapViewSync({ recenterSignal, userFix, onView, onAnnounce }: SyncProps)
     onView({ lat: center.lat, lng: center.lng, zoom: map.getZoom() });
   });
 
+  // Report once when ready (guarded so StrictMode's effect replay doesn't fire it twice),
+  // then on every moveend; Leaflet fires moveend after zooms too.
+  const readyReported = useRef(false);
   useEffect(() => {
     const handler = () => report();
-    map.whenReady(handler);
-    map.on("moveend zoomend", handler);
+    map.whenReady(() => {
+      if (readyReported.current) return;
+      readyReported.current = true;
+      report();
+    });
+    map.on("moveend", handler);
     return () => {
-      map.off("moveend zoomend", handler);
+      map.off("moveend", handler);
     };
   }, [map]);
 
@@ -117,6 +141,10 @@ export default function NagaMapLeaflet({
 }: NagaMapProps) {
   const reducedMotion = useReducedMotion();
   const [tiles] = useState(currentTileConfig);
+  // No basemap: only the OSM boundary data needs crediting.
+  const [attribution] = useState(() =>
+    attributionParts(tiles.url === null ? OSM_ATTRIBUTION : tiles.attribution),
+  );
   const [map, setMap] = useState<L.Map | null>(null);
   const [view, setView] = useState<View | null>(null);
   const [announcement, setAnnouncement] = useState("");
@@ -129,7 +157,10 @@ export default function NagaMapLeaflet({
 
   const zoomBy = (delta: 1 | -1) => {
     if (!map) return;
-    const target = Math.min(NAGA_MAX_ZOOM, Math.max(NAGA_MIN_ZOOM, Math.round(map.getZoom()) + delta));
+    const current = Math.round(map.getZoom());
+    const target = Math.min(NAGA_MAX_ZOOM, Math.max(NAGA_MIN_ZOOM, current + delta));
+    if (target === current) return; // at the limit: the button is aria-disabled
+
     map.setZoom(target, { animate: !prefersReducedMotion() });
     setAnnouncement(`Zoom level ${target}`);
   };
@@ -167,23 +198,11 @@ export default function NagaMapLeaflet({
         ) : null}
         <Polygon
           positions={MASK_RINGS}
-          pathOptions={{
-            className: "pn-mask",
-            stroke: false,
-            fillColor: "#0F1E3D",
-            fillOpacity: 0.28,
-            interactive: false,
-          }}
+          pathOptions={MASK_STYLE}
         />
         <Polygon
           positions={OUTLINE}
-          pathOptions={{
-            className: "pn-outline",
-            color: "#0B7A75",
-            weight: 2,
-            fill: false,
-            interactive: false,
-          }}
+          pathOptions={OUTLINE_STYLE}
         />
         <UserLocationLayer fix={userFix} quality={userQuality} />
         {pins?.start ? (
@@ -239,20 +258,18 @@ export default function NagaMapLeaflet({
           Leaflet
         </a>
         <span aria-hidden="true">|</span>
-        {tiles.url === null ? (
-          <span>
-            Boundary{" "}
-            <a href={OSM_COPYRIGHT_URL} target="_blank" rel="noopener noreferrer">
-              {OSM_ATTRIBUTION}
-            </a>
-          </span>
-        ) : tiles.attribution === OSM_ATTRIBUTION ? (
-          <a href={OSM_COPYRIGHT_URL} target="_blank" rel="noopener noreferrer">
-            {OSM_ATTRIBUTION}
-          </a>
-        ) : (
-          <span>{tiles.attribution}</span>
-        )}
+        <span>
+          {tiles.url === null ? "Boundary " : null}
+          {attribution.map((part, i) =>
+            part.href ? (
+              <a key={i} href={part.href} target="_blank" rel="noopener noreferrer">
+                {part.text}
+              </a>
+            ) : (
+              <span key={i}>{part.text}</span>
+            ),
+          )}
+        </span>
       </div>
 
       <p className="sr-only" aria-live="polite">

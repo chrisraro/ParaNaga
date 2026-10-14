@@ -111,15 +111,20 @@
   fill: rgba(15, 30, 61, 0.3);
 }
 
-/* Glass controls, top-right: zoom capsule, then locate. */
-.pn-map .pn-map-controls {
+/* Glass controls, top-right, at the brief's positions. Stack A starts at top 60 with the
+   layers button (48) + divider (1) — not built yet, so that slot stays empty — and locate at
+   y 109-157. Stack B (zoom) sits at top 176. --naga-map-controls-top shifts both together. */
+.pn-map .pn-map-locate,
+.pn-map .pn-map-zoom {
   position: absolute;
-  top: var(--naga-map-controls-top, 60px);
   right: 16px;
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+}
+.pn-map .pn-map-locate {
+  top: calc(var(--naga-map-controls-top, 60px) + 49px);
+}
+.pn-map .pn-map-zoom {
+  top: calc(var(--naga-map-controls-top, 60px) + 116px);
 }
 .pn-map .pn-glass {
   background: var(--pn-glass);
@@ -159,10 +164,10 @@
 .pn-map .pn-ctl--locate {
   color: var(--pn-accent);
 }
-.pn-map .pn-ctl:active:not(:disabled) {
+.pn-map .pn-ctl:active:not([aria-disabled="true"]) {
   transform: scale(0.97);
 }
-.pn-map .pn-ctl:disabled {
+.pn-map .pn-ctl[aria-disabled="true"] {
   opacity: 0.38;
   cursor: default;
 }
@@ -220,7 +225,7 @@
   .pn-map .pn-ctl {
     transition: none;
   }
-  .pn-map .pn-ctl:active:not(:disabled) {
+  .pn-map .pn-ctl:active:not([aria-disabled="true"]) {
     transform: none;
   }
 }
