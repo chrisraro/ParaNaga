@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { AppPreviewShell } from "@/ui/app-gate/app-preview-shell";
 import { PhoneOnlyGate } from "@/ui/app-gate/phone-only-gate";
+import { HomeScreen } from "@/ui/home/home-screen";
 
 export const metadata: Metadata = {
   title: "App",
-  description: "Open ParaNaga on your phone to plan commutes around Naga City.",
+  description: "Plan commutes around Naga City: set your start and destination on the map.",
 };
 
+// Static shell: no request-time APIs here; HomeScreen is a Client Component.
 export default function AppPage() {
   return (
     <PhoneOnlyGate>
-      <AppPreviewShell />
+      <HomeScreen />
     </PhoneOnlyGate>
   );
 }
