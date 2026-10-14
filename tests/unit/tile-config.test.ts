@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { OSM_ATTRIBUTION, OSM_TILE_URL, tileConfig } from "@/client/map/tile-config";
+import { OSM_ATTRIBUTION, OSM_TILE_URL, attributionParts, tileConfig } from "@/client/map/tile-config";
 
 describe("tileConfig", () => {
   it("defaults to OSM tiles in development", () => {
@@ -41,5 +41,36 @@ describe("tileConfig", () => {
       url,
       attribution: OSM_ATTRIBUTION,
     });
+  });
+});
+
+describe("attributionParts", () => {
+  const MAPTILER = { text: "© MapTiler", href: "https://www.maptiler.com/copyright/" };
+  const OSM = { text: "© OpenStreetMap contributors", href: "https://www.openstreetmap.org/copyright" };
+
+  it("links both parts of the MapTiler attribution", () => {
+    expect(attributionParts("© MapTiler © OpenStreetMap contributors")).toEqual([MAPTILER, { text: " " }, OSM]);
+  });
+
+  it("links the OSM default", () => {
+    expect(attributionParts(OSM_ATTRIBUTION)).toEqual([OSM]);
+  });
+
+  it("keeps unknown text as plain text, never markup", () => {
+    expect(attributionParts('<a href="x">Evil</a> tiles')).toEqual([{ text: '<a href="x">Evil</a> tiles' }]);
+  });
+
+  it("handles mixed order and surrounding text", () => {
+    expect(attributionParts("Tiles © OpenStreetMap contributors, © MapTiler.")).toEqual([
+      { text: "Tiles " },
+      OSM,
+      { text: ", " },
+      MAPTILER,
+      { text: "." },
+    ]);
+  });
+
+  it("returns nothing for empty text", () => {
+    expect(attributionParts("")).toEqual([]);
   });
 });

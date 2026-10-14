@@ -38,3 +38,26 @@ export function currentTileConfig(): TileConfig {
     NODE_ENV: process.env.NODE_ENV,
   });
 }
+
+/** One segment of the attribution: plain text, or a link to a known copyright page. */
+export type AttributionPart = { text: string; href?: string };
+
+const ATTRIBUTION_LINKS: Record<string, string> = {
+  "© MapTiler": "https://www.maptiler.com/copyright/",
+  "© OpenStreetMap contributors": "https://www.openstreetmap.org/copyright",
+};
+const ATTRIBUTION_LINK_RE = /© MapTiler|© OpenStreetMap contributors/g;
+
+/** Splits configured attribution text into text and link parts. Env text is never treated as HTML. */
+export function attributionParts(text: string): AttributionPart[] {
+  const parts: AttributionPart[] = [];
+  let last = 0;
+  for (const match of text.matchAll(ATTRIBUTION_LINK_RE)) {
+    const start = match.index;
+    if (start > last) parts.push({ text: text.slice(last, start) });
+    parts.push({ text: match[0], href: ATTRIBUTION_LINKS[match[0]] });
+    last = start + match[0].length;
+  }
+  if (last < text.length) parts.push({ text: text.slice(last) });
+  return parts;
+}
