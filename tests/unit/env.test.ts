@@ -4,7 +4,7 @@ import { parseServerEnv } from "@/server/env";
 const prodBase = {
   NODE_ENV: "production",
   VERCEL_ENV: "production",
-  DATABASE_URL: "postgresql://app:pw@example.neon.tech/paranaga",
+  PARANAGA_DATABASE_URL: "postgresql://paranaga_app:pw@ep-x-pooler.example.neon.tech/neondb",
   NEON_AUTH_BASE_URL: "https://auth.example.neon.tech/paranaga/auth",
   NEON_AUTH_COOKIE_SECRET: "x".repeat(32),
   CRON_SECRET: "y".repeat(32),
@@ -13,7 +13,7 @@ const prodBase = {
 describe("server env (spec §3.14)", () => {
   it("development works with nothing configured", () => {
     const env = parseServerEnv({ NODE_ENV: "development" });
-    expect(env.DATABASE_URL).toBeUndefined();
+    expect(env.PARANAGA_DATABASE_URL).toBeUndefined();
     expect(env.AUTO_PUBLISH_ENABLED).toBe(false);
     expect(env.JEV_COMPLAINTS_ENABLED).toBe(false);
   });
@@ -38,10 +38,26 @@ describe("server env (spec §3.14)", () => {
   it("production deployments require database, auth and cron secrets", () => {
     expect(() =>
       parseServerEnv({ VERCEL_ENV: "production", JEV_MODEL_ID: "typesafe/jev-1.13-20260917" }),
-    ).toThrow(/DATABASE_URL/);
+    ).toThrow(/PARANAGA_DATABASE_URL/);
     expect(() =>
       parseServerEnv({ APP_ENV: "production", JEV_MODEL_ID: "typesafe/jev-1.13-20260917" }),
-    ).toThrow(/DATABASE_URL/);
+    ).toThrow(/PARANAGA_DATABASE_URL/);
+  });
+
+  it("production refuses a database URL that is not the paranaga_app role", () => {
+    expect(() =>
+      parseServerEnv({
+        ...prodBase,
+        JEV_MODEL_ID: "typesafe/jev-1.13-20260917",
+        PARANAGA_DATABASE_URL: "postgresql://neondb_owner:pw@ep-x-pooler.example.neon.tech/neondb",
+      }),
+    ).toThrow(/must connect as paranaga_app/);
+  });
+
+  it("ignores the integration-managed DATABASE_URL entirely", () => {
+    const env = parseServerEnv({ NODE_ENV: "development", DATABASE_URL: "postgresql://owner:pw@h/db" });
+    expect(env).not.toHaveProperty("DATABASE_URL");
+    expect(env.PARANAGA_DATABASE_URL).toBeUndefined();
   });
 
   it("a local `next start` (NODE_ENV=production, no deployment env) is not strict", () => {

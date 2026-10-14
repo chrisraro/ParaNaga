@@ -19,7 +19,10 @@ export const serverEnvSchema = z
     // Strict checks key off the real deployment, not NODE_ENV (`next start` is always "production").
     VERCEL_ENV: z.preprocess(emptyToUndefined, z.enum(["production", "preview", "development"]).optional()),
     APP_ENV: z.preprocess(emptyToUndefined, z.enum(["production", "staging", "development"]).optional()),
-    DATABASE_URL: optionalUrl,
+    // Runtime connection as the restricted paranaga_app role (pooled endpoint).
+    // Deliberately not DATABASE_URL: the Vercel Neon integration manages that one and
+    // sets it to the owner role, which would bypass row-level security.
+    PARANAGA_DATABASE_URL: optionalUrl,
     NEON_AUTH_BASE_URL: optionalUrl,
     NEON_AUTH_COOKIE_SECRET: z.preprocess(emptyToUndefined, z.string().min(32).optional()),
     STORAGE_ENDPOINT: optionalUrl,
@@ -48,8 +51,15 @@ export const serverEnvSchema = z
           "Production requires a dated Jev build id such as typesafe/jev-1.13-20260917; aliases (jev-latest, jev-router, typesafe/jev-1.13) are refused.",
       });
     }
-    for (const key of ["DATABASE_URL", "NEON_AUTH_BASE_URL", "NEON_AUTH_COOKIE_SECRET", "CRON_SECRET"] as const) {
+    for (const key of ["PARANAGA_DATABASE_URL", "NEON_AUTH_BASE_URL", "NEON_AUTH_COOKIE_SECRET", "CRON_SECRET"] as const) {
       if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: `${key} is required in production.` });
+    }
+    if (env.PARANAGA_DATABASE_URL && new URL(env.PARANAGA_DATABASE_URL).username !== "paranaga_app") {
+      ctx.addIssue({
+        code: "custom",
+        path: ["PARANAGA_DATABASE_URL"],
+        message: "PARANAGA_DATABASE_URL must connect as paranaga_app (the owner role bypasses row-level security).",
+      });
     }
   });
 

@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   }
 
   let db: Status = "unconfigured";
-  if (env.DATABASE_URL) {
+  if (env.PARANAGA_DATABASE_URL) {
     try {
       await withRequestContext({ userId: null, requestId: crypto.randomUUID() }, (tx) => tx.execute(sql`select 1`));
       db = "ok";
