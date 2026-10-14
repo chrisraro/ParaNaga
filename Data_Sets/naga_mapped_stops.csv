@@ -1,0 +1,129 @@
+id,source_layer,route_id,direction,source_stop_code,label_raw,latitude,longitude,code_prefix_matches_layer,operating_status,navigation_ready
+MYM-A-001,Loop Service A,R8-A,clockwise,A1,Plaza Rizal,13.6233869,123.1846726,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-002,Loop Service A,R8-A,clockwise,A2,Plaza Quince Martires,13.6244338,123.1861778,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-003,Loop Service A,R8-A,clockwise,A4,Cam High/Naga Central School,13.6298321,123.190976,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-004,Loop Service A,R8-A,clockwise,A5,BISCAST,13.6314651,123.1927517,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-005,Loop Service A,R8-A,clockwise,A6,Cor. Peñafrancia Ave & Magsaysay Ave.,13.6328896,123.1942656,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-006,Loop Service A,R8-A,clockwise,A8,Cor. Magsaysay Ave. & Dayangdang St,13.6309839,123.1970077,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-007,Loop Service A,R8-A,clockwise,A10,Westpark/Philhealth,13.6292228,123.1985007,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-008,Loop Service A,R8-A,clockwise,A12,City Hall,13.6265116,123.1990963,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-009,Loop Service A,R8-A,clockwise,A15,Cor. Magsaysay Ave. & Leon Aureus St.,13.6261192,123.200876,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-010,Loop Service A,R8-A,clockwise,A14,Villla Caceres,13.6277598,123.1997995,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-011,Loop Service A,R8-A,clockwise,A18,Bennett's Plaza,13.6185759,123.1985904,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-012,Loop Service A,R8-A,clockwise,A19,Mother Seton Hospital,13.6176694,123.1970291,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-013,Loop Service A,R8-A,clockwise,A21,Robinsons Mall/Banko Central ng Pilipinas,13.6157173,123.1925205,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-014,Loop Service A,R8-A,clockwise,A26,S&R,13.6162097,123.1890293,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-015,Loop Service A,R8-A,clockwise,A27,BIcol River Esplanade,13.6165957,123.1864136,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-016,Loop Service A,R8-A,clockwise,A29,101 Shopping Centre,13.6185569,123.183673,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-017,Loop Service A,R8-A,clockwise,A30,Naga City Market,13.621666,123.1842716,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-018,Loop Service A,R8-A,clockwise,A24,Bus Terminal,13.6189216,123.1890866,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-019,Loop Service A,R8-A,clockwise,A11,Civic Centre,13.628149,123.1978132,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-020,Loop Service A,R8-A,clockwise,A13,BFP/BIR,13.6249841,123.1995469,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-021,Loop Service A,R8-A,clockwise,A16,Cor. Magsaysay Ave. & Mayflower St.,13.623996,123.2008868,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-022,Loop Service A,R8-A,clockwise,A17,Rotonda,13.6204547,123.2006852,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-023,Loop Service A,R8-A,clockwise,A20,Yashano Mall/M Plaza,13.6166307,123.1951644,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-024,Loop Service A,R8-A,clockwise,A22,ALDP Mall/Pag-Ibig,13.6160052,123.1907468,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-025,Loop Service A,R8-A,clockwise,A28,Fraternidad St.,13.6166855,123.1838985,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-026,Loop Service A,R8-A,clockwise,A23,STI College/Landers,13.6179234,123.1908514,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-027,Loop Service A,R8-A,clockwise,A3,USI/Centro Square,13.6276709,123.1887035,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-028,Loop Service A,R8-A,clockwise,A25,PNR Road,13.6173035,123.1880936,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-029,Loop Service A,R8-A,clockwise,A7,Avenue Hotel/UMA Residence,13.632102,123.1958976,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-A-030,Loop Service A,R8-A,clockwise,A9,NCF Magsaysay,13.6299067,123.1979773,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-001,Loop Service C,R8-C,clockwise,A2,San Fransisco Parish/Plaza Quince Martires,13.6244247,123.1861684,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-002,Loop Service C,R8-C,clockwise,C3,USI/Ateneo Ave.,13.6290106,123.1878649,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-003,Loop Service C,R8-C,clockwise,C5,Cor. Magsaysay Extension & Bagumbayan Sur,13.634123,123.1876057,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-004,Loop Service C,R8-C,clockwise,C6,Jacob,13.6340388,123.1899757,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-005,Loop Service C,R8-C,clockwise,C7,Cam High/NCF,13.633623,123.192217,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-006,Loop Service C,R8-C,clockwise,A8,Cor. Magsaysay Ave. & Dayangdang St,13.6309852,123.1970077,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-007,Loop Service C,R8-C,clockwise,A10,Westpark/Philhealth,13.6292228,123.1985007,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-008,Loop Service C,R8-C,clockwise,A11,Civic Centre,13.6281558,123.1978198,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-009,Loop Service C,R8-C,clockwise,A12,City Hall,13.626509,123.199099,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-010,Loop Service C,R8-C,clockwise,A15,Cor. Magsaysay Ave. & Leon Aureus St.,13.6261127,123.200876,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-011,Loop Service C,R8-C,clockwise,A17,Rotonda,13.6204549,123.200684,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-012,Loop Service C,R8-C,clockwise,A18,Bennett's Plaza,13.6185759,123.1985917,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-013,Loop Service C,R8-C,clockwise,A21,Robinsons Mall/Banko Central ng Pilipinas,13.6157199,123.1925178,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-014,Loop Service C,R8-C,clockwise,A22,ALDP Mall/Pag-Ibig,13.6160011,123.1907486,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-015,Loop Service C,R8-C,clockwise,A29,101 Shopping Centre,13.6185686,123.1836676,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-016,Loop Service C,R8-C,clockwise,A30,Naga City Market,13.6216739,123.1842703,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-017,Loop Service C,R8-C,clockwise,A1,Plaza Rizal,13.6233869,123.1846726,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-018,Loop Service C,R8-C,clockwise,C4,Ocampo St.,13.6321529,123.1877839,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-019,Loop Service C,R8-C,clockwise,A14,Villla Caceres,13.6277598,123.1997995,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-020,Loop Service C,R8-C,clockwise,A13,BFP/BIR,13.624988,123.1995509,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-021,Loop Service C,R8-C,clockwise,A16,Cor. Magsaysay Ave. & Mayflower St.,13.6239699,123.2008761,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-022,Loop Service C,R8-C,clockwise,A19,Mother Seton Hospital,13.6176655,123.1970278,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-023,Loop Service C,R8-C,clockwise,A20,Yashano Mall/M Plaza,13.6166163,123.1951631,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-024,Loop Service C,R8-C,clockwise,A23,STI College/Landers,13.6179234,123.1908514,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-025,Loop Service C,R8-C,clockwise,A24,Bus Terminal,13.6189216,123.1890866,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-026,Loop Service C,R8-C,clockwise,A26,S&R,13.6162097,123.1890293,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-027,Loop Service C,R8-C,clockwise,A27,BIcol River Esplanade,13.6165935,123.1864133,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-028,Loop Service C,R8-C,clockwise,A25,PNR Road,13.6173041,123.1880962,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-029,Loop Service C,R8-C,clockwise,A28,Fraternidad St.,13.6166855,123.1838985,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-030,Loop Service C,R8-C,clockwise,C8,Cor. Magsaysay & Peñafrancia Ave.,13.6333978,123.1940142,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-031,Loop Service C,R8-C,clockwise,C2,Naga Cathedral,13.6271576,123.1872994,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-032,Loop Service C,R8-C,clockwise,A7,Avenue Hotel/UMA Residence,13.632102,123.1958976,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-033,Loop Service C,R8-C,clockwise,A9,NCF Magsaysay,13.6299067,123.1979773,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-C-034,Loop Service C,R8-C,clockwise,C1,Downtown District Hotel,13.6257968,123.1864866,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-001,Loop Service B,R8-B,counterclockwise,B1,Plaza Rizal,13.6232548,123.185086,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-002,Loop Service B,R8-B,counterclockwise,B2,Naga City Market,13.6210147,123.1840106,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-003,Loop Service B,R8-B,counterclockwise,B3,101 Shopping Centre,13.6183652,123.183465,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-004,Loop Service B,R8-B,counterclockwise,B11,Robinsons Mall/Banko Central ng Pilipinas,13.6155551,123.1927602,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-005,Loop Service B,R8-B,counterclockwise,B12,Yashano Mall/M Plaza,13.6164729,123.1952572,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-006,Loop Service B,R8-B,counterclockwise,B14,Bennett's Plaza,13.6182747,123.198405,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-007,Loop Service B,R8-B,counterclockwise,B15,Rotonda,13.6214426,123.2011051,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-008,Loop Service B,R8-B,counterclockwise,B16,Cor. Magsaysay Ave. & Mayflower St.,13.6239018,123.2011408,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-009,Loop Service B,R8-B,counterclockwise,B20,Cor. Magsaysay Ave. & Leon Aureus St.,13.6264882,123.2008883,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-010,Loop Service B,R8-B,counterclockwise,B21,Villla Caceres,13.6278605,123.1998742,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-011,Loop Service B,R8-B,counterclockwise,B22,Westpark/Philhealth,13.6292459,123.198745,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-012,Loop Service B,R8-B,counterclockwise,B27,BISCAST,13.6315759,123.192658,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-013,Loop Service B,R8-B,counterclockwise,B28,Cam High/Naga Central School,13.6299509,123.1908639,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-014,Loop Service B,R8-B,counterclockwise,B31,E-Mall,13.6251079,123.1859734,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-015,Loop Service B,R8-B,counterclockwise,B26,Cor. Peñafrancia Ave & Magsaysay Ave,13.6329889,123.1941831,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-016,Loop Service B,R8-B,counterclockwise,B19,,13.6279812,123.1981041,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-017,Loop Service B,R8-B,counterclockwise,B18,,13.6266719,123.1992224,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-018,Loop Service B,R8-B,counterclockwise,B7,Bus Terminal,13.6186967,123.1891074,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-019,Loop Service B,R8-B,counterclockwise,B8,STI College/Landers,13.6178597,123.1906439,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-020,Loop Service B,R8-B,counterclockwise,B24,Cor. Magsaysay Ave. & Dayangdang St,13.6316088,123.1966893,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-021,Loop Service B,R8-B,counterclockwise,B9,S&R,13.6160537,123.1890343,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-022,Loop Service B,R8-B,counterclockwise,B10,ALDP Mall/Pag-Ibig,13.615822,123.1907239,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-023,Loop Service B,R8-B,counterclockwise,B13,Mother Seton Hospital,13.6175984,123.1972154,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-024,Loop Service B,R8-B,counterclockwise,B17,BFP/BIR,13.6249848,123.1997631,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-025,Loop Service B,R8-B,counterclockwise,B29,USI,13.6278131,123.1881629,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-026,Loop Service B,R8-B,counterclockwise,B5,BIcol River Esplanade,13.6164679,123.1862188,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-027,Loop Service B,R8-B,counterclockwise,B30,Naga Cathedral,13.6272763,123.1870736,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-028,Loop Service B,R8-B,counterclockwise,B25,Avenue Hotel/UMA Residence,13.6321528,123.1960653,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-029,Loop Service B,R8-B,counterclockwise,B23,NCF Magsaysay,13.6299849,123.1980793,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-030,Loop Service B,R8-B,counterclockwise,B6,PNR Road,13.6173902,123.1883366,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-B-031,Loop Service B,R8-B,counterclockwise,B4,Cor. Diversion Rd. & Fraternidad St.,13.616439,123.1847296,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-001,Loop Service D,R8-D,counterclockwise,D2,Cam High/NCF,13.633776,123.1922303,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-002,Loop Service D,R8-D,counterclockwise,D4,Cor. Magsaysay Extension & Bagumbayan Sur,13.6343011,123.1875888,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-003,Loop Service D,R8-D,counterclockwise,D6,USI/Ateneo Ave.,13.6294487,123.1877824,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-004,Loop Service D,R8-D,counterclockwise,B1,Plaza Rizal,13.6232548,123.185086,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-005,Loop Service D,R8-D,counterclockwise,B3,101 Shopping Centre,13.6183651,123.1834704,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-006,Loop Service D,R8-D,counterclockwise,B4,Cor. Diversion Rd. & Fraternidad St.,13.6164834,123.1847391,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-007,Loop Service D,R8-D,counterclockwise,B10,ALDP Mall/Pag-Ibig,13.6158211,123.1907315,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-008,Loop Service D,R8-D,counterclockwise,B11,Robinsons Mall/Banko Central ng Pilipinas,13.6155537,123.1927589,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-009,Loop Service D,R8-D,counterclockwise,B14,Bennett's Plaza,13.618276,123.198405,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-010,Loop Service D,R8-D,counterclockwise,B15,Rotonda,13.621453,123.2011078,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-011,Loop Service D,R8-D,counterclockwise,B16,Cor. Magsaysay Ave. & Mayflower St.,13.623894,123.2011381,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-012,Loop Service D,R8-D,counterclockwise,B20,Cor. Magsaysay Ave. & Leon Aureus St.,13.6264895,123.2008897,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-013,Loop Service D,R8-D,counterclockwise,B21,Villla Caceres,13.6278631,123.1998729,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-014,Loop Service D,R8-D,counterclockwise,B22,Westpark/Philhealth,13.6292511,123.1987369,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-015,Loop Service D,R8-D,counterclockwise,B24,Cor. Magsaysay Ave. & Dayangdang St,13.6316034,123.196698,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-016,Loop Service D,R8-D,counterclockwise,B7,Bus Terminal,13.6187201,123.1891288,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-017,Loop Service D,R8-D,counterclockwise,B8,STI College/Landers,13.6178532,123.1906412,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-018,Loop Service D,R8-D,counterclockwise,B18,City Hall,13.6266745,123.1992197,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-019,Loop Service D,R8-D,counterclockwise,B19,Civic Centre,13.6279759,123.1980961,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-020,Loop Service D,R8-D,counterclockwise,D1,Cor. Magsaysay & Peñafrancia Ave.,13.6335483,123.1940304,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-021,Loop Service D,R8-D,counterclockwise,D3,Jacob,13.6341934,123.1900064,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-022,Loop Service D,R8-D,counterclockwise,D5,Ocampo St.,13.6320061,123.1876901,True,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-023,Loop Service D,R8-D,counterclockwise,B30,Naga Cathedral,13.6272763,123.1870736,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-024,Loop Service D,R8-D,counterclockwise,B17,BFP/BIR,13.6249874,123.1997671,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-025,Loop Service D,R8-D,counterclockwise,B13,Mother Seton Hospital,13.6175984,123.1972154,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-026,Loop Service D,R8-D,counterclockwise,B12,Yashano Mall/M Plaza,13.6164742,123.1952572,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-027,Loop Service D,R8-D,counterclockwise,B9,S&R,13.6160539,123.1890394,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-028,Loop Service D,R8-D,counterclockwise,B2,Naga City Market,13.621021,123.1840057,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-029,Loop Service D,R8-D,counterclockwise,B31,E-Mall/Plaza Quince Martires,13.625107,123.185969,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-030,Loop Service D,R8-D,counterclockwise,B5,BIcol River Esplanade,13.6164679,123.1862228,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-031,Loop Service D,R8-D,counterclockwise,B6,PNR Road,13.6174012,123.1883294,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-032,Loop Service D,R8-D,counterclockwise,B25,Avenue Hotel/UMA Residence,13.6321528,123.1960653,False,mapped;current_physical_and_legal_status_unverified,False
+MYM-D-033,Loop Service D,R8-D,counterclockwise,B23,NCF Magsaysay,13.6299849,123.1980793,False,mapped;current_physical_and_legal_status_unverified,False

@@ -2,26 +2,54 @@
   "name": "paranaga",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:e2e": "playwright test",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:check-rls": "tsx scripts/check-rls.ts",
+    "admin:bootstrap": "tsx scripts/bootstrap-admin.ts",
+    "check:boundaries": "tsx scripts/check-boundaries.ts",
+    "check:bundle-secrets": "tsx scripts/check-bundle-secrets.ts",
+    "verify": "pnpm typecheck && pnpm lint && pnpm check:boundaries && pnpm test && pnpm build && pnpm check:bundle-secrets"
   },
   "dependencies": {
+    "@neondatabase/auth": "0.6.0-beta",
+    "@vercel/functions": "^3.9.11",
+    "drizzle-orm": "^0.45.4",
     "next": "16.4.1",
+    "pg": "^8.23.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/turbopack": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^5.0.4",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.1",
+    "fast-check": "^4.10.2",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.4"
   },
   "packageManager": "pnpm@11.12.0"
 }
