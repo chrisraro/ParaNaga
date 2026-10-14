@@ -23,7 +23,7 @@ Copy `.env.example` to `.env.local` and fill in, for the **`dev`** branch:
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | pooled connection string for role `paranaga_app` |
+| `PARANAGA_DATABASE_URL` | pooled connection string for role `paranaga_app` |
 | `DATABASE_URL_UNPOOLED` | direct connection string for the owner role |
 | `NEON_AUTH_BASE_URL` | Auth URL from the Neon console |
 | `NEON_AUTH_COOKIE_SECRET` | `openssl rand -base64 32` |
@@ -31,7 +31,7 @@ Copy `.env.example` to `.env.local` and fill in, for the **`dev`** branch:
 | `CRON_SECRET` | `openssl rand -base64 32` |
 | `OPENROUTER_API_KEY` | your key — set it yourself in `.env.local` / Vercel, never paste it into chat |
 
-In Vercel, set the same variables per environment. Vercel's Neon integration injects its own `DATABASE_URL` as the owner role — **override it** with the `paranaga_app` pooled URL, and keep the owner URL only as `DATABASE_URL_UNPOOLED` for the migration job.
+In Vercel, set the same variables per environment as **sensitive**. Vercel's Neon integration injects `DATABASE_URL`, `DATABASE_URL_UNPOOLED` and friends as the **owner** role; leave them alone (the integration manages them). The app reads only `PARANAGA_DATABASE_URL`, and production refuses to start unless it connects as `paranaga_app`.
 
 ## 3. Migrate, set role passwords, check
 
@@ -46,7 +46,7 @@ alter role paranaga_app    with login password '<generated>';
 alter role paranaga_import with login password '<generated>';
 ```
 
-Then build `DATABASE_URL` from the **pooled** host with `paranaga_app`, and verify:
+Then build `PARANAGA_DATABASE_URL` from the **pooled** host (`ep-…-pooler…`) with `paranaga_app`, and verify:
 
 ```bash
 pnpm db:check-rls
