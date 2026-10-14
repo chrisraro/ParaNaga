@@ -198,6 +198,50 @@ describe("useGeolocation", () => {
     expect(watchPosition).not.toHaveBeenCalled();
   });
 
+  it("stop() from timeout or unavailable returns to idle; denied stays denied", () => {
+    const stopAfter = (code: number) => {
+      const { result, unmount } = renderHook(() => useGeolocation());
+      act(() => result.current.start());
+      act(() => failure(error(code)));
+      act(() => result.current.stop());
+      const s = result.current.state;
+      unmount();
+      return s;
+    };
+    expect(stopAfter(3)).toBe("idle");
+    expect(stopAfter(2)).toBe("idle");
+    expect(stopAfter(1)).toBe("denied");
+  });
+
+  it("stop -> start -> timeout with no new fix is timeout despite the old fix", () => {
+    const { result } = renderHook(() => useGeolocation());
+    act(() => result.current.start());
+    act(() => success(position(10)));
+    act(() => result.current.stop());
+    act(() => result.current.start());
+    act(() => failure(error(3)));
+    expect(result.current.state).toBe("timeout");
+    expect(result.current.fix).not.toBeNull();
+  });
+
+  it("unavailable then success returns to watching", () => {
+    const { result } = renderHook(() => useGeolocation());
+    act(() => result.current.start());
+    act(() => failure(error(2)));
+    expect(result.current.state).toBe("unavailable");
+    act(() => success(position(10)));
+    expect(result.current.state).toBe("watching");
+  });
+
+  it("success -> unavailable -> timeout ends in watching", () => {
+    const { result } = renderHook(() => useGeolocation());
+    act(() => result.current.start());
+    act(() => success(position(10)));
+    act(() => failure(error(2)));
+    act(() => failure(error(3)));
+    expect(result.current.state).toBe("watching");
+  });
+
   it("reports unsupported when geolocation is missing", () => {
     Object.defineProperty(navigator, "geolocation", { configurable: true, value: undefined });
     const { result } = renderHook(() => useGeolocation());

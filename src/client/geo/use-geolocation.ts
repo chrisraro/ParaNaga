@@ -52,6 +52,8 @@ export function useGeolocation(): UseGeolocation {
   const watchId = useRef<number | null>(null);
   // The user wants a watch (true between start() and stop()/denied), even while hidden.
   const wanted = useRef(false);
+  // True once the current start() session has received a success (fixRef may hold an older session's fix).
+  const sessionHasFix = useRef(false);
 
   const clear = useCallback(() => {
     if (watchId.current !== null) {
@@ -67,6 +69,7 @@ export function useGeolocation(): UseGeolocation {
         const now = Date.now();
         const next = pickBetterFix(fixRef.current, toFix(position), now);
         fixRef.current = next;
+        sessionHasFix.current = true;
         setFix(next);
         setAssessment(assessFix(next, now));
         setState("watching");
@@ -78,8 +81,8 @@ export function useGeolocation(): UseGeolocation {
           setState("denied");
         } else if (err.code === POSITION_UNAVAILABLE) {
           setState("unavailable");
-        } else if (err.code === TIMEOUT && fixRef.current === null) {
-          setState("timeout");
+        } else if (err.code === TIMEOUT) {
+          setState(sessionHasFix.current ? "watching" : "timeout");
         }
       },
       WATCH_OPTIONS,
@@ -98,6 +101,7 @@ export function useGeolocation(): UseGeolocation {
     }
     if (wanted.current) return;
     wanted.current = true;
+    sessionHasFix.current = false;
     setState("requesting");
     if (document.visibilityState !== "hidden") begin();
   }, [begin]);
@@ -105,7 +109,7 @@ export function useGeolocation(): UseGeolocation {
   const stop = useCallback(() => {
     wanted.current = false;
     clear();
-    setState((s) => (s === "requesting" || s === "watching" ? "idle" : s));
+    setState((s) => (s === "denied" || s === "unsupported" || s === "insecure" ? s : "idle"));
   }, [clear]);
 
   // Pause while hidden, resume on visible only if the user had started a watch.
