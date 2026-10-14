@@ -8,8 +8,8 @@ import { SiteHeader } from "@/ui/landing/site-header";
 // never "live", "official" or "guaranteed"; no invented counts, ratings or testimonials.
 
 const ROUTES: [string, string][] = [
-  ["San Felipe", "#2F6FE4"], ["Pacol", "#7B4FD6"], ["Del Rosario · Magsaysay", "#0E8C86"], ["Del Rosario · Roxas", "#D9731A"],
-  ["Del Rosario · Panganiban", "#B8860B"], ["Carolina–Panicuason", "#2E8B4F"], ["San Isidro · Cararayan", "#D6457F"], ["Magsaysay Loops A–D", "#3E4C6B"],
+  ["San Felipe", "#2F6FE4"], ["Pacol", "#7B4FD6"], ["Del Rosario · Magsaysay", "#0D827D"], ["Del Rosario · Roxas", "#B25E15"],
+  ["Del Rosario · Panganiban", "#976E09"], ["Carolina–Panicuason", "#2C854C"], ["San Isidro · Cararayan", "#C94177"], ["Magsaysay Loops A–D", "#3E4C6B"],
 ];
 
 const QUESTIONS = [

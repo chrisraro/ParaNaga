@@ -68,7 +68,7 @@ export function HomePreview() {
         </div>
         <p className="mb-1 mt-4 text-xl font-bold tracking-tight">Nearby stops</p>
         <StopRow name="Plaza Rizal stop" chips={[["San Felipe", "#2F6FE4"], ["Pacol", "#7B4FD6"]]} />
-        <StopRow name="Centro loading cluster" chips={[["Del Rosario", "#0E8C86"], ["Loop A", "#3E4C6B"]]} />
+        <StopRow name="Centro loading cluster" chips={[["Del Rosario", "#0D827D"], ["Loop A", "#3E4C6B"]]} />
       </div>
     </div>
   );
@@ -135,7 +135,7 @@ export function TripPreview() {
       <div className="mt-3 flex flex-col gap-3 rounded-[22px] bg-white p-4">
         <span className="text-[13px] font-bold uppercase tracking-wide text-ink-2">Least walking</span>
         <p className="text-[28px] font-bold tracking-tight">[min]</p>
-        <span className="flex items-center gap-2"><Chip label="Del Rosario" color="#0E8C86" /> → <Chip label="Loop B" color="#3E4C6B" /></span>
+        <span className="flex items-center gap-2"><Chip label="Del Rosario" color="#0D827D" /> → <Chip label="Loop B" color="#3E4C6B" /></span>
       </div>
     </div>
   );
