@@ -25,6 +25,17 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on core (Neon branch)", () => {
   const rows = async (userId: string | null, query: ReturnType<typeof sql>) =>
     as(userId, async (db) => (await db.execute(query)).rows);
 
+  // Drizzle wraps Postgres errors ("Failed query: …"); the original is error.cause.
+  const pgError = async (promise: Promise<unknown>) => {
+    try {
+      await promise;
+    } catch (error) {
+      const cause = (error as { cause?: { code?: string; message?: string } }).cause;
+      return { code: cause?.code, message: cause?.message ?? "" };
+    }
+    throw new Error("expected the query to fail");
+  };
+
   beforeAll(async () => {
     owner = new pg.Client({ connectionString: ownerUrl });
     await owner.connect();
@@ -77,15 +88,15 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on core (Neon branch)", () => {
   });
 
   it("non-admins cannot grant roles", async () => {
-    await expect(rows(alice, sql`select core.grant_role(${bob}, 'contributor', 'test')`)).rejects.toThrow(
-      /only admins/,
-    );
+    const error = await pgError(rows(alice, sql`select core.grant_role(${bob}, 'contributor', 'test')`));
+    expect(error.code).toBe("42501");
+    expect(error.message).toMatch(/only admins/);
   });
 
   it("admins cannot grant roles to themselves", async () => {
-    await expect(
-      rows(admin, sql`select core.grant_role(${admin}, 'complaint_reviewer', 'test')`),
-    ).rejects.toThrow(/themselves/);
+    const error = await pgError(rows(admin, sql`select core.grant_role(${admin}, 'complaint_reviewer', 'test')`));
+    expect(error.code).toBe("42501");
+    expect(error.message).toMatch(/themselves/);
   });
 
   it("admins can grant a role, and the grant is audited", async () => {
@@ -137,8 +148,11 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on core (Neon branch)", () => {
   it("revoked roles are not re-granted on the next sign-in", async () => {
     await rows(admin, sql`select core.revoke_role(${bob}, 'commuter', 'integration test')`);
     await rows(bob, sql`select core.ensure_commuter('Bob')`);
-    const bobRoles = await rows(bob, sql`select role_code from core.user_role where role_code = 'commuter'`);
-    expect(bobRoles).toHaveLength(0);
+    const active = await rows(
+      bob,
+      sql`select role_code from core.user_role where role_code = 'commuter' and revoked_at is null`,
+    );
+    expect(active).toHaveLength(0);
   });
 
   it("users cannot mark their own uploads verified", async () => {

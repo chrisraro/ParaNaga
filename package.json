@@ -15,9 +15,9 @@
     "test": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:e2e": "playwright test",
-    "db:migrate": "tsx scripts/migrate.ts",
-    "db:check-rls": "tsx scripts/check-rls.ts",
-    "admin:bootstrap": "tsx scripts/bootstrap-admin.ts",
+    "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
+    "db:check-rls": "tsx --env-file-if-exists=.env.local scripts/check-rls.ts",
+    "admin:bootstrap": "tsx --env-file-if-exists=.env.local scripts/bootstrap-admin.ts",
     "check:boundaries": "tsx scripts/check-boundaries.ts",
     "check:bundle-secrets": "tsx scripts/check-bundle-secrets.ts",
     "verify": "pnpm typecheck && pnpm lint && pnpm check:boundaries && pnpm test && pnpm build && pnpm check:bundle-secrets"
