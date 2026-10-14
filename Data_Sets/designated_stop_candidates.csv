@@ -1,0 +1,33 @@
+id,label_raw,route_id,direction,source_ids,operating_status,latitude,longitude,curb_side,loading_allowed,unloading_allowed,navigation_ready
+DSC-A-01,Penafrancia - Magsaysay,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-02,UMA Residences,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-03,Starbucks,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-04,NCF Magsaysay,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-05,Philhealth,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-06,Villa Caceres,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-07,Magsaysay - Leon Aureus,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-08,Magsaysay - Mayflower,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-09,Rotonda,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-10,Bennet’s Plaza,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-11,Mother Seton,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-12,Yashano,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-13,Robinsons,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-14,Pag-Ibig ALDP,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-15,S&R,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-16,Esplanade,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-17,Fraternidad St.,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-18,Biak Na Bato St.,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-19,Boning’s Trading,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-20,Plaza Rizal,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-21,San Francisco Church,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-22,USI,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-23,Cam High,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-24,BISCAST,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-25,Civic Center,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-26,City Hall,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-27,BFP,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-28,PNR Rd.,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-29,Bus Terminal,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+DSC-A-30,Landers/STI,R8-A,clockwise,S33;S34,historical_pilot_label;current_status_unverified,,,,,,False
+WS-DECAVISTANSA,Existing authorized waiting area in Deca Vistansa,SF03,,S37,waiting_area_designated_by_2025_ordinance;field_status_unverified,,,,,,False
+WS-CARARAYAN,Existing authorized waiting area in Cararayan Proper,SF03,,S37,waiting_area_designated_by_2025_ordinance;field_status_unverified,,,,,,False

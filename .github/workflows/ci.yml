@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm check:boundaries
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm check:bundle-secrets
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+  # Uses a disposable Neon branch per run. Runs only on main or manual dispatch (never on
+  # pull requests), inside the protected `neon-ci` environment, with a least-privilege
+  # Neon API key. The seed branch must contain no real personal data.
+  # TODO: pin third-party actions to commit SHAs before the repo goes public.
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ vars.NEON_PROJECT_ID != '' && github.event_name != 'pull_request' }}
+    environment: neon-ci
+    env:
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+      NEON_DATABASE: ${{ vars.NEON_DATABASE || 'paranaga' }}
+      CI_BRANCH: ci-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          parent_branch: ${{ vars.NEON_SEED_BRANCH || 'dev' }}
+          branch_name: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          role: ${{ vars.NEON_OWNER_ROLE || 'neondb_owner' }}
+      - run: pnpm db:migrate
+        env:
+          DATABASE_URL_UNPOOLED: ${{ steps.branch.outputs.db_url }}
+      - run: pnpm db:check-rls
+        env:
+          DATABASE_URL_UNPOOLED: ${{ steps.branch.outputs.db_url }}
+      - id: app_url
+        run: |
+          url=$(npx --yes neonctl@8.4.4 connection-string "$CI_BRANCH" \
+            --project-id "$NEON_PROJECT_ID" --role-name paranaga_app --database-name "$NEON_DATABASE" --pooled)
+          echo "::add-mask::$url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      - run: pnpm test:integration
+        env:
+          TEST_OWNER_DATABASE_URL: ${{ steps.branch.outputs.db_url }}
+          TEST_APP_DATABASE_URL: ${{ steps.app_url.outputs.url }}
+      - if: always()
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          api_key: ${{ secrets.NEON_API_KEY }}
