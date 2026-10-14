@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
+/* ParaNaga design tokens (design canvas: 02 · Color, 03 · Foundations). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f6fa;
+  --foreground: #0f1e3d;
 }
 
 @theme inline {
@@ -10,17 +11,84 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-navy: #0f1e3d;
+  --color-navy-deep: #0b1630;
+  --color-navy-raised: #1d3870;
+  --color-ink-2: #4a5468;
+  --color-ink-3: #5a6478;
+  --color-canvas: #f4f6fa;
+  --color-fill: #eceff4;
+  --color-teal: #0b7a75;
+  --color-teal-bright: #2bb5ae;
+  --color-teal-soft: #e3f2f1;
+  --color-teal-ink: #075e5a;
+  --color-on-teal-bright: #04201e;
+  --color-coral: #c73a2f;
+  --color-coral-brand: #f26b5b;
+  --color-coral-bright: #ff8a7a;
+  --color-coral-soft: #fce6e3;
+  --color-coral-ink: #9e2a21;
+  --color-gold: #e8a317;
+  --color-gold-ink: #6b4a00;
+
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-rise: rise 0.9s var(--ease-out-expo) both;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-draw: draw 2.6s var(--ease-out-expo) 0.2s forwards;
+  --animate-scan: scan 2.8s ease-in-out infinite;
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-12px) rotate(-1deg); }
+  }
+  @keyframes marquee {
+    to { transform: translateX(-50%); }
+  }
+  @keyframes draw {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes scan {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(176px); }
+  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 72px;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, "SF Pro Text", var(--font-geist-sans), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 3px;
+}
+
+/* Route lines in the hero draw in once; reduced motion shows them finished. */
+.route-draw {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .route-draw { stroke-dashoffset: 0; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
