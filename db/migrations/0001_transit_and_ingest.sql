@@ -309,6 +309,7 @@ create table transit.stop_point_version (
   is_synthetic        boolean not null default false,
   created_at          timestamptz not null default now(),
   constraint stop_point_version_published_needs_approval check (status <> 'published' or navigation_approved),
+  constraint stop_point_version_stop_uq unique (id, stop_point_id),   -- target of stop_point_source's FK
   constraint stop_point_version_in_city check (extensions.ST_CoveredBy(
     geog, extensions.ST_MakeEnvelope(123.05, 13.45, 123.40, 13.80, 4326)::extensions.geography))
 );
@@ -317,14 +318,20 @@ create index stop_point_version_geog_idx on transit.stop_point_version using gis
 create unique index stop_point_version_content_uq on transit.stop_point_version (stop_point_id, content_hash)
   where content_hash is not null;
 
--- Links candidate stops to the source pins they came from (provenance never collapses).
+-- Links a candidate stop VERSION to the source pins it came from (provenance never collapses).
+-- Keyed by version so a later snapshot's pins attach to the new draft version, never to a
+-- published one (see the import_insert policy below): readers see exactly the sources behind
+-- the version their revision publishes.
 create table transit.stop_point_source (
-  stop_point_id  uuid not null references transit.stop_point (id),
-  raw_feature_id uuid not null references ingest.raw_feature (id),
-  is_synthetic   boolean not null default false,
-  primary key (stop_point_id, raw_feature_id)
+  stop_point_id         uuid not null references transit.stop_point (id),
+  stop_point_version_id uuid not null,
+  raw_feature_id        uuid not null references ingest.raw_feature (id),
+  is_synthetic          boolean not null default false,
+  primary key (stop_point_version_id, raw_feature_id),
+  foreign key (stop_point_version_id, stop_point_id) references transit.stop_point_version (id, stop_point_id)
 );
 create index stop_point_source_raw_idx on transit.stop_point_source (raw_feature_id);
+create index stop_point_source_stop_idx on transit.stop_point_source (stop_point_id);
 
 -- Remembers which candidate stop each source identity created, across snapshots.
 create table ingest.raw_feature_lineage (
@@ -791,7 +798,7 @@ begin
 
   foreach t in array array[
     'transit.route', 'transit.route_alias', 'transit.variant', 'transit.variant_version',
-    'transit.stop_point', 'transit.stop_point_version', 'transit.stop_point_source',
+    'transit.stop_point', 'transit.stop_point_version',
     'transit.terminal', 'transit.fare_rule', 'transit.fare_rule_version', 'transit.fare_observation',
     'transit.fare_conflict', 'transit.barangay', 'transit.coverage_audit', 'transit.feeder_lead',
     'transit.provider_presence', 'transit.rail_status', 'transit.designated_stop_candidate',
@@ -817,6 +824,10 @@ $$;
 -- No stops may be attached to a variant version that is already published or superseded.
 create policy import_insert on transit.route_stop for insert to paranaga_import
   with check (not transit.in_released_revision(variant_version_id));
+
+-- No source pins may be attached to a stop version that is already published or superseded.
+create policy import_insert on transit.stop_point_source for insert to paranaga_import
+  with check (not transit.in_released_revision(stop_point_version_id));
 
 -- Import may only create and edit draft revisions and their membership.
 create policy import_read on transit.revision for select to paranaga_import using (true);
@@ -938,8 +949,9 @@ select pp.revision_id, t.id, t.code, t.name, t.location_text, t.modes, t.evidenc
   join transit.terminal t on t.id = m.entity_id
  where not t.is_synthetic;
 
--- Source pins behind each published candidate stop (provenance never collapses: a stop may
--- have several). lon/lat are the verbatim numeric coordinates of the raw feature.
+-- Source pins behind each published candidate stop version (provenance never collapses: a
+-- version may have several). Joined through the member version, so pins linked to a draft
+-- version of the same stop stay hidden. lon/lat are the verbatim numeric coordinates of the raw feature.
 create view transit.v_published_stop_sources with (security_invoker = true) as
 select pp.revision_id, sp.id as stop_point_id, rf.id as raw_feature_id, rf.source_layer, rf.source_code_raw,
        rf.label_raw, rf.description_raw, rf.coordinates_raw, rf.lon, rf.lat, rf.created_at
@@ -947,7 +959,7 @@ select pp.revision_id, sp.id as stop_point_id, rf.id as raw_feature_id, rf.sourc
   join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'stop_point'
   join transit.stop_point sp on sp.id = m.entity_id
   join transit.stop_point_version spv on spv.id = m.version_id and spv.stop_point_id = sp.id
-  join transit.stop_point_source sps on sps.stop_point_id = sp.id
+  join transit.stop_point_source sps on sps.stop_point_version_id = spv.id and sps.stop_point_id = sp.id
   join ingest.raw_feature rf on rf.id = sps.raw_feature_id
  where not sp.is_synthetic and not spv.is_synthetic and not sps.is_synthetic;
 

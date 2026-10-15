@@ -1,8 +1,9 @@
 // `pnpm db:import` against a throwaway Neon branch:
 //   bash scripts/with-neon-branch.sh pnpm test:integration
-// Commits the real Data_Sets package once, checks what landed, then commits again and checks
-// that nothing changed. Counts are scoped to the import's batch and revision because other
-// integration files share the branch.
+// Commits the real Data_Sets package once (or finds it already committed by another file on the
+// shared branch), checks what landed, then commits again and checks that nothing changed. Counts
+// are scoped to the import's batch and revision because other integration files share the branch;
+// file order does not matter.
 import pg from "pg";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -27,6 +28,8 @@ const INGEST_AND_TRANSIT = [
 describe.skipIf(!ownerUrl || !appUrl)("pnpm db:import (Neon branch)", () => {
   let plan: ImportPlan;
   let first: ImportOutcome;
+  let batchIdValue = "";
+  let revisionIdValue = "";
   let owner: pg.Client;
   let app: pg.Pool;
 
@@ -57,6 +60,24 @@ describe.skipIf(!ownerUrl || !appUrl)("pnpm db:import (Neon branch)", () => {
     await owner.connect();
     app = new pg.Pool({ connectionString: appUrl, max: 1 });
     first = await commitImport(ownerUrl!, plan);
+    batchIdValue = first.batchId;
+    revisionIdValue = first.outcome === "committed"
+      ? first.revisionId
+      : (await owner.query("select id from transit.revision where label = $1", [plan.revisionLabel])).rows[0].id;
+    // Another file may have published test revisions since the import; publish (= roll back to)
+    // the Naga revision so the published-view checks below see it.
+    const current = await owner.query("select revision_id from transit.published_pointer");
+    if (current.rows[0]?.revision_id !== revisionIdValue) {
+      await owner.query("begin");
+      try {
+        await owner.query("set local role paranaga_import");
+        await owner.query("select transit.publish_revision($1)", [revisionIdValue]);
+        await owner.query("commit");
+      } catch (error) {
+        await owner.query("rollback");
+        throw error;
+      }
+    }
   }, 120_000);
 
   afterAll(async () => {
@@ -64,11 +85,11 @@ describe.skipIf(!ownerUrl || !appUrl)("pnpm db:import (Neon branch)", () => {
     await owner?.end();
   });
 
-  const batchId = () => (first.outcome === "committed" ? first.batchId : "");
-  const revisionId = () => (first.outcome === "committed" ? first.revisionId : "");
+  const batchId = () => batchIdValue;
+  const revisionId = () => revisionIdValue;
 
-  it("commits and publishes provisional-loops-2026-10-15", async () => {
-    expect(first.outcome).toBe("committed");
+  it("commits (or has committed) and publishes provisional-loops-2026-10-15", async () => {
+    expect(["committed", "unchanged"]).toContain(first.outcome);
     const pointer = await appRows(sql`select label, kind from transit.v_published_revision`);
     expect(pointer).toEqual([{ label: "provisional-loops-2026-10-15", kind: "provisional" }]);
     const batch = await asImport(async (c) =>
@@ -204,7 +225,8 @@ describe.skipIf(!ownerUrl || !appUrl)("pnpm db:import (Neon branch)", () => {
 
   it("stores fare rule version hashes that depend only on content", async () => {
     const stored = await appRows(sql`select f.code, v.content_hash from transit.fare_rule_version v
-                                       join transit.fare_rule f on f.id = v.fare_rule_id order by f.code`);
+                                       join transit.fare_rule f on f.id = v.fare_rule_id
+                                      where f.code in (${sql.join(plan.fareRules.map((f) => sql`${f.code}`), sql`, `)}) order by f.code`);
     expect(stored).toEqual(plan.fareRules.map((f) => ({ code: f.code, content_hash: f.contentHash })));
   });
 

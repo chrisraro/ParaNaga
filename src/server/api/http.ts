@@ -2,13 +2,7 @@ import "server-only";
 import type { z } from "zod";
 import type { ApiError, ApiErrorCode } from "@/domain/api/schemas";
 import { withRequestContext, type Db } from "@/server/db/context";
-
-const SAFE_REQUEST_ID = /^[A-Za-z0-9:_-]{1,64}$/;
-
-/** Client-supplied ids end up in logs and audit rows, so only a safe shape is accepted. */
-export function safeRequestId(candidate: string | null | undefined): string {
-  return candidate && SAFE_REQUEST_ID.test(candidate) ? candidate : crypto.randomUUID();
-}
+import { safeRequestId } from "@/server/request-id";
 
 export const CACHE = {
   head: "public, s-maxage=30",
@@ -19,7 +13,7 @@ export const CACHE = {
 
 export class ApiProblem extends Error {
   constructor(
-    readonly status: 400 | 404,
+    readonly status: 400 | 404 | 503,
     readonly code: ApiErrorCode,
     message: string,
   ) {
@@ -30,6 +24,7 @@ export class ApiProblem extends Error {
 
 export const badRequest = (message: string) => new ApiProblem(400, "bad_request", message);
 export const notFound = (message: string) => new ApiProblem(404, "not_found", message);
+export const unavailable = (message: string) => new ApiProblem(503, "unavailable", message);
 
 function errorResponse(status: number, code: ApiErrorCode, message: string, requestId: string): Response {
   const body: ApiError = { error: { code, message, requestId } };
@@ -55,7 +50,8 @@ export async function publicGet<S extends z.ZodType>(
 ): Promise<Response> {
   const requestId = safeRequestId(request.headers.get("x-vercel-id") ?? request.headers.get("x-request-id"));
   try {
-    const withDb = <T>(fn: (db: Db) => Promise<T>) => withRequestContext({ userId: null, requestId }, fn);
+    // One read-only REPEATABLE READ transaction per call: all statements share one snapshot.
+    const withDb = <T>(fn: (db: Db) => Promise<T>) => withRequestContext({ userId: null, requestId }, fn, { readOnly: true });
     const result = await run({ requestId, withDb });
     const body = schema.parse(result.body);
     return Response.json(body, { headers: { "Cache-Control": result.cacheControl, "X-Request-Id": requestId } });

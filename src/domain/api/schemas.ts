@@ -108,6 +108,14 @@ export const networkSnapshotSchema = z.object({
 });
 export type NetworkSnapshot = z.infer<typeof networkSnapshotSchema>;
 
+/**
+ * A snapshot is cached as immutable, so one without stops or routable variants is never sent:
+ * a published revision always has both, and an empty read means something went wrong.
+ */
+export function isCompleteSnapshot(snapshot: Pick<NetworkSnapshot, "stops" | "variants">): boolean {
+  return snapshot.stops.length > 0 && snapshot.variants.length > 0;
+}
+
 // ---------------------------------------------------------------- GET /api/v1/stops?bbox=
 
 export const stopsInBboxSchema = z.object({
@@ -144,7 +152,7 @@ export const stopDetailSchema = z.object({
   sourceMap: z
     .object({ ownerDisplayName: z.string().nullable(), ownerIdentityVerified: z.boolean().nullable() })
     .nullable(),
-  /** Other published stops whose source pin has exactly the same coordinates. */
+  /** Published stops from OTHER source layers whose source pin has exactly the same coordinates. */
   sharedCoordinate: z.array(
     z.object({ stopId: z.uuid(), name: z.string(), source: stopSourceSchema }),
   ),
@@ -266,6 +274,8 @@ export const routeDetailSchema = z.object({
   /** Legacy and local names (historical ones flagged). */
   aliases: z.array(routeAliasSchema),
   fareEvidence: z.object({
+    /** How the rules were associated: inferred from the route's mode (no stored route↔fare link). */
+    basis: z.literal("route_mode"),
     rules: z.array(fareRuleEstimateSchema),
     observations: z.array(fareObservationSchema),
     conflicts: z.array(
@@ -278,7 +288,7 @@ export type RouteDetail = z.infer<typeof routeDetailSchema>;
 
 // ---------------------------------------------------------------- errors
 
-export const API_ERROR_CODES = ["bad_request", "not_found", "internal"] as const;
+export const API_ERROR_CODES = ["bad_request", "not_found", "unavailable", "internal"] as const;
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
 
 export const apiErrorSchema = z.object({

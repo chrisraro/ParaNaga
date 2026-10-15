@@ -33,6 +33,13 @@ describe("src/server/repos reads only transit.v_published_* views", () => {
     expect(offending).toEqual([]);
   });
 
+  it("does not import the Drizzle base-table mirrors", () => {
+    const importsSchema = files(REPOS).filter((file) =>
+      /from\s+["'](?:@\/server\/db\/schema|(?:\.\.?\/)+(?:db\/)?schema)["']/.test(readFileSync(file, "utf8")),
+    );
+    expect(importsSchema.map((f) => path.relative(process.cwd(), f))).toEqual([]);
+  });
+
   it("every view it names is created by a migration", () => {
     const sql = readdirSync(MIGRATIONS).map((f) => readFileSync(path.join(MIGRATIONS, f), "utf8")).join("\n");
     const created = new Set([...sql.matchAll(/create view transit\.(v_published_[a-z_]+)/g)].map((m) => m[1]));

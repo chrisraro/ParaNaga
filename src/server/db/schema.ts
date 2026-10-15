@@ -183,6 +183,7 @@ export const stopPointVersion = transit.table("stop_point_version", {
 
 export const stopPointSource = transit.table("stop_point_source", {
   stopPointId: uuid("stop_point_id").notNull(),
+  stopPointVersionId: uuid("stop_point_version_id").notNull(),
   rawFeatureId: uuid("raw_feature_id").notNull(),
 });
 

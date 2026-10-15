@@ -183,16 +183,18 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
     expect(body.sourceMap).toEqual({ ownerDisplayName: "Tan Gumba", ownerIdentityVerified: false });
   });
 
-  it("stops/:id lists other pins at exactly the same coordinates", async () => {
+  it("stops/:id lists pins of other layers at exactly the same coordinates, never its own layer", async () => {
     const pairs = await appRows(sql`
       select a.stop_point_id as a, b.stop_point_id as b from transit.v_published_stop_sources a
         join transit.v_published_stop_sources b on b.lon = a.lon and b.lat = a.lat and b.stop_point_id <> a.stop_point_id
+                                               and b.source_layer <> a.source_layer
        order by a.source_layer, a.source_code_raw limit 1`);
     expect(pairs).toHaveLength(1);
     const { a, b } = pairs[0] as { a: string; b: string };
     const body = await ok(await stopGET(get(`/stops/${a}`), ctx({ id: a })), stopDetailSchema, "public, s-maxage=300");
     expect(body.sharedCoordinate.map((s) => s.stopId)).toContain(b);
     expect(body.sharedCoordinate.map((s) => s.stopId)).not.toContain(a);
+    expect(body.sharedCoordinate.every((s) => s.source.layer !== body.stop.source.layer)).toBe(true);
   });
 
   it("stops/:id for an unsequenced C-layer pin and for B18 (no label)", async () => {
@@ -251,6 +253,7 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
     expect(body.variants[0]).toMatchObject({ direction: "circuit", evidenceLevel: "documentary", verification: "unverified", stops: [] });
     expect(body.trials).toEqual([]);
     expect(body.aliases).toEqual([]);
+    expect(body.fareEvidence.basis).toBe("route_mode");
     expect(body.fareEvidence.rules.map((r) => r.code)).toEqual(["F01", "F02"]);
     expect(body.fareEvidence.rules.every((r) => r.isEstimate && !r.publishExact)).toBe(true);
     expect(body.sources.map((s) => s.code)).toEqual(["S01", "S02"]);
@@ -303,6 +306,50 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
     for (const [name, query] of views) expect(await appRows(query), name).toEqual([]);
   });
 
+  it("a draft source pin attached to published A1 stays invisible; the published version cannot get new pins", async () => {
+    const a1 = await stopByCode("Loop Service A", "A1");
+    const read = async () =>
+      ok(await stopGET(get(`/stops/${a1}`), ctx({ id: a1 })), stopDetailSchema, "public, s-maxage=300");
+    const before = await read();
+    expect(before.sourceRecords).toHaveLength(1);
+
+    // A later snapshot re-uses A1's stop point: new raw pin (same coordinates, another layer),
+    // new draft stop version, draft revision membership.
+    const batch = await importer.query(
+      `insert into ingest.batch (snapshot_version, mode, status, started_by) values ($1, 'dry_run', 'running', 'test') returning id`,
+      [`api:${run}:a1-reimport`]);
+    const raw = await importer.query(
+      `insert into ingest.raw_feature (batch_id, source_identity, identity_method, source_layer, source_code_raw, label_raw,
+                                       coordinates_raw, lon, lat, content_hash)
+       values ($1, $2, 'layer_code_label', 'Draft re-import', 'A1', 'Plaza Rizal (draft)', '123.1846726,13.6233869,0',
+               123.1846726, 13.6233869, 'h') returning id`, [batch.rows[0].id, `api-${run}-a1-reimport`]);
+    const spv = await importer.query(
+      `insert into transit.stop_point_version (stop_point_id, geog, source_layer, source_code_raw, label_raw)
+       values ($1, extensions.ST_SetSRID(extensions.ST_MakePoint(123.1846726, 13.6233869), 4326)::extensions.geography,
+               'Draft re-import', 'A1', 'Plaza Rizal (draft)') returning id`, [a1]);
+    await importer.query(`insert into transit.stop_point_source (stop_point_id, stop_point_version_id, raw_feature_id) values ($1, $2, $3)`,
+      [a1, spv.rows[0].id, raw.rows[0].id]);
+    const rev = await importer.query(
+      `insert into transit.revision (label, kind, status, created_by) values ($1, 'provisional', 'draft', 'test') returning id`,
+      [`api-${run}-a1-reimport`]);
+    await importer.query(`insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id) values ($1, 'stop_point', $2, $3)`,
+      [rev.rows[0].id, a1, spv.rows[0].id]);
+
+    const after = await read();
+    expect(after.sourceRecords).toEqual(before.sourceRecords);
+    expect(after.sourceRecords).toHaveLength(1);
+    expect(after.sharedCoordinate).toEqual(before.sharedCoordinate);
+    expect(after.stop).toEqual(before.stop);
+
+    // Attaching the pin to the PUBLISHED version directly is refused by RLS.
+    const published = await appRows(sql`select stop_point_version_id from transit.v_published_stops where stop_point_id = ${a1}::uuid`);
+    const refused = await importer
+      .query(`insert into transit.stop_point_source (stop_point_id, stop_point_version_id, raw_feature_id) values ($1, $2, $3)`,
+        [a1, published[0]!.stop_point_version_id, raw.rows[0].id])
+      .then(() => null, (e: { code?: string }) => e.code);
+    expect(refused).toBe("42501");
+  });
+
   /**
    * A draft revision (through paranaga_import) with one stop + source pin, a fare rule with an
    * observation and conflict citing a source nothing published cites, and a dataset note.
@@ -326,7 +373,8 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
       `insert into transit.stop_point_version (stop_point_id, geog, source_layer, source_code_raw, label_raw)
        values ($1, extensions.ST_SetSRID(extensions.ST_MakePoint(123.19, 13.62), 4326)::extensions.geography,
                'Draft layer', 'Z1', 'Draft pin') returning id`, [sp.id]);
-    await importer.query(`insert into transit.stop_point_source (stop_point_id, raw_feature_id) values ($1, $2)`, [sp.id, raw.id]);
+    await importer.query(`insert into transit.stop_point_source (stop_point_id, stop_point_version_id, raw_feature_id) values ($1, $2, $3)`,
+      [sp.id, spv.id, raw.id]);
     const rule = await one(`insert into transit.fare_rule (code, mode_code) values ($1, 'draft_mode') returning id`, [`FD-${run}-${tag}`]);
     const rv = await one(`insert into transit.fare_rule_version (fare_rule_id, base_centavos, source_codes) values ($1, 999, $2) returning id`,
       [rule.id, [sourceCode]]);

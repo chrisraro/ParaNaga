@@ -5,7 +5,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { isRole, type Role } from "@/domain/auth/permissions";
 import { withRequestContext, type RequestContext } from "@/server/db/context";
 import { profile, userRole } from "@/server/db/schema";
-import { safeRequestId } from "@/server/api/http";
+import { safeRequestId } from "@/server/request-id";
 import { neonAuth } from "./neon";
 
 export type CurrentUser = { id: string; name: string; roles: Role[] };

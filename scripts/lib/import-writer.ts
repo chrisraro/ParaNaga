@@ -180,8 +180,8 @@ async function firstImport(c: pg.ClientBase, plan: ImportPlan): Promise<ImportOu
     ["label_raw", "text"], ["content_hash", "text"]],
   { inputs: [["lon", "text"], ["lat", "text"]], computed: [["geog", point("lon", "lat")], ["status", "'candidate'"]] });
   await insertRows(c, "transit.stop_point_source", features.map((r) => ({
-    stop_point_id: r.stopPointId, raw_feature_id: r.rawId,
-  })), [["stop_point_id", "uuid"], ["raw_feature_id", "uuid"]]);
+    stop_point_id: r.stopPointId, stop_point_version_id: r.stopVersionId, raw_feature_id: r.rawId,
+  })), [["stop_point_id", "uuid"], ["stop_point_version_id", "uuid"], ["raw_feature_id", "uuid"]]);
   await insertRows(c, "ingest.raw_feature_lineage", features.map((r) => ({
     source_identity: r.sourceIdentity, stop_point_id: r.stopPointId,
   })), [["source_identity", "text"], ["stop_point_id", "uuid"]]);

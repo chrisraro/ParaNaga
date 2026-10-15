@@ -89,7 +89,7 @@ export async function getStopDetail(db: Db, revisionId: string, stopId: string):
       from transit.v_published_stop_sources me
       join transit.v_published_stop_sources other
         on other.revision_id = me.revision_id and other.lon = me.lon and other.lat = me.lat
-       and other.stop_point_id <> me.stop_point_id
+       and other.stop_point_id <> me.stop_point_id and other.source_layer <> me.source_layer
       join transit.v_published_stops st on st.revision_id = me.revision_id and st.stop_point_id = other.stop_point_id
      where me.revision_id = ${revisionId}::uuid and me.stop_point_id = ${stopId}::uuid
      order by st.source_layer, st.source_code_raw, st.stop_point_id`);
@@ -420,6 +420,7 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
     trials,
     aliases: aliases.map(toAlias),
     fareEvidence: {
+      basis: "route_mode",
       rules: rules.map(toFareRule),
       observations: observations.map((o) => ({
         code: strOrNull(o.code),
