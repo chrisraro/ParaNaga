@@ -12,7 +12,7 @@
 // Other screens talk to the home screen through the context: "Show on map" (mapFocus) and the
 // endpoint channel (requestEndpoint / requestPick), each a numbered request applied once.
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { LatLng } from "@/domain/geo/types";
 import type { EndpointWhich } from "@/domain/trip/endpoints";
 import { HomeScreen } from "@/ui/home/home-screen";
@@ -29,6 +29,7 @@ import { TabBar } from "./tab-bar";
 export function AppFrame({ children }: { children: ReactNode }) {
   const [panels, setPanels] = useState({ detail: 0, page: 0 });
   const [tabBarHides, setTabBarHides] = useState(0);
+  const [measuredClearance, setMeasuredClearance] = useState(0);
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const [endpointRequest, setEndpointRequest] = useState<EndpointRequest | null>(null);
   const returnFocus = useRef<Element | null>(null);
@@ -72,27 +73,34 @@ export function AppFrame({ children }: { children: ReactNode }) {
     setEndpointRequest((prev) => ({ kind: "pick", which, n: (prev?.n ?? 0) + 1 }));
   }, []);
 
-  // Panel closed: give focus back. The Map tab (focus on the tab bar) lands on the home heading;
-  // focus the home screen already moved (the pick panel's confirm button) stays; otherwise focus
-  // returns to what had it when the first panel opened.
+  // Panel closed, the map is showing again: decide from the destination, not from where the
+  // browser left focus (iOS Safari does not focus a tapped link). Focus the home screen already
+  // placed (the pick panel's confirm button) stays; otherwise focus returns to the home control
+  // that opened the first panel (a "Nearby stops" link, a pin); otherwise, as after the Map tab,
+  // Escape or Back from a tab page, it goes to the home heading.
   const homeLayer = useRef<HTMLDivElement>(null);
   const open = panels.detail + panels.page > 0;
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (open) return;
+    if (open) {
+      wasOpen.current = true;
+      return;
+    }
+    if (!wasOpen.current) return; // first render at /app: nothing closed
+    wasOpen.current = false;
     homeNavigation.current = null; // back on the map: nothing to go back to
     const el = returnFocus.current;
     returnFocus.current = null;
+    const home = homeLayer.current;
+    if (!home) return;
     const active = document.activeElement;
-    if (active instanceof HTMLElement && active.closest("[data-tabbar]")) {
-      homeLayer.current?.querySelector<HTMLElement>("[data-home-heading]")?.focus();
-    } else if (active instanceof HTMLElement && active !== document.body && homeLayer.current?.contains(active)) {
-      // The home screen already placed focus.
-    } else if (el instanceof HTMLElement && el.isConnected) {
-      el.focus();
-    }
+    if (active instanceof HTMLElement && active !== document.body && home.contains(active)) return;
+    if (el instanceof HTMLElement && el.isConnected && home.contains(el)) el.focus();
+    else home.querySelector<HTMLElement>("[data-home-heading]")?.focus();
   }, [open]);
 
   const tabBarVisible = panels.detail === 0 && tabBarHides === 0;
+  const tabBarClearance = tabBarVisible ? measuredClearance : 0;
   const value = useMemo(
     () => ({
       openPanel,
@@ -102,12 +110,13 @@ export function AppFrame({ children }: { children: ReactNode }) {
       showOnMap,
       hideTabBar,
       tabBarVisible,
+      tabBarClearance,
       panelOpen: open,
       endpointRequest,
       requestEndpoint,
       requestPick,
     }),
-    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, open, endpointRequest, requestEndpoint, requestPick],
+    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick],
   );
 
   return (
@@ -116,7 +125,12 @@ export function AppFrame({ children }: { children: ReactNode }) {
         <HomeScreen />
       </div>
       {children}
-      {tabBarVisible ? <TabBar /> : null}
+      {/* usePathname in a layout: Suspense keeps the static shell valid for dynamic segments. */}
+      {tabBarVisible ? (
+        <Suspense fallback={null}>
+          <TabBar onClearance={setMeasuredClearance} />
+        </Suspense>
+      ) : null}
     </AppFrameContext.Provider>
   );
 }

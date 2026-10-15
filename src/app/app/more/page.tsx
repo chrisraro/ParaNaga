@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function MorePage() {
   return (
     <PageFrame title="Settings" testId="more-page">
-      <Note testId="more-note">Settings for this phone.</Note>
+      <Note testId="more-note">No settings yet. Appearance and data options arrive in a later update.</Note>
     </PageFrame>
   );
 }

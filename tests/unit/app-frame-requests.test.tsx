@@ -4,7 +4,7 @@
 // endpointsReducer. HomeScreen itself (Leaflet map, GPS) is replaced by a probe that consumes the
 // channel exactly like it does (useApplyOnce + endpointsReducer).
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { useReducer, useState } from "react";
+import { StrictMode, useReducer, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import { endpointsReducer, initialEndpointsState } from "@/domain/trip/endpoints";
@@ -16,8 +16,11 @@ function HomeProbe() {
   const frame = useAppFrame();
   const [endpoints, dispatch] = useReducer(endpointsReducer, initialEndpointsState);
   const [, setTick] = useState(0);
+  // Like HomeScreen's recentre signal: an updater that must move by exactly 1 per request.
+  const [signal, setSignal] = useState(0);
   useApplyOnce(frame?.endpointRequest ?? null, (request) => {
     applied(request);
+    setSignal((n) => n + 1);
     if (request.kind === "pick") dispatch({ type: "pick", which: request.which });
     else dispatch({ type: "set", which: request.which, endpoint: { point: request.endpoint.point, source: "search", label: request.endpoint.label } });
   });
@@ -27,6 +30,7 @@ function HomeProbe() {
       <p data-testid="destination">{endpoints.destination ? `${endpoints.destination.label} (${endpoints.destination.source})` : "none"}</p>
       <p data-testid="picking">{endpoints.picking ?? "none"}</p>
       <p data-testid="error">{endpoints.error ?? "none"}</p>
+      <p data-testid="signal">{signal}</p>
       <button type="button" onClick={() => setTick((n) => n + 1)}>
         Re-render home
       </button>
@@ -133,5 +137,20 @@ describe("AppFrame endpoint channel", () => {
       );
     });
     expect(applied).toHaveBeenCalledTimes(1);
+  });
+
+  it("under StrictMode (double render) a request applies once and the recentre signal moves by 1", () => {
+    render(
+      <StrictMode>
+        <AppFrame>
+          <Requester />
+        </AppFrame>
+      </StrictMode>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Go there" }));
+    expect(screen.getByTestId("destination").textContent).toBe("Plaza Rizal (search)");
+    expect(screen.getByTestId("signal").textContent).toBe("1");
+    expect(new Set(applied.mock.calls.map(([r]) => r.n))).toEqual(new Set([1]));
+    expect(applied.mock.calls.length).toBe(1);
   });
 });

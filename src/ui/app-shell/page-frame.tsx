@@ -8,10 +8,10 @@
 import "@/ui/detail/detail.css";
 import "@/ui/kit/styles";
 
-import { useRef, type ReactNode } from "react";
-import { useEscapeToClose, useFocusOnMount } from "@/ui/detail/detail-frame";
+import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useEscapeToClose, useFocusOnMount } from "./panel";
 import { ScreenHeader } from "@/ui/kit/screen-header";
-import { useAppPanel } from "./app-frame-context";
+import { useAppFrame, useAppPanel } from "./app-frame-context";
 
 type Props = {
   title: string;
@@ -28,8 +28,10 @@ export function PageFrame({ title, action, header, children, testId }: Props) {
   const root = useRef<HTMLDivElement>(null);
   useEscapeToClose(root);
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
+  const clearance = useAppFrame()?.tabBarClearance ?? 0;
+  const style = { "--pn-tabbar-clearance": `${clearance}px` } as CSSProperties;
   return (
-    <div ref={root} className="pn-detail pn-page" data-testid={testId}>
+    <div ref={root} className="pn-detail pn-page" style={style} data-testid={testId}>
       <ScreenHeader title={title} headingRef={heading} action={action}>
         {header}
       </ScreenHeader>

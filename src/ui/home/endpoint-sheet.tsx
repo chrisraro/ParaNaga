@@ -9,8 +9,8 @@ import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endp
 
 export type Snap = 0 | 1 | 2;
 
-const PEEK_VISIBLE = 214;
-const HALF_VISIBLE = 444;
+export const PEEK_VISIBLE = 214;
+export const HALF_VISIBLE = 444;
 const DRAG_SLOP = 6;
 /** How far ahead (ms) a release's velocity carries the sheet before picking the nearest snap. */
 const FLING_MS = 200;
@@ -26,7 +26,7 @@ const GRABBER_LABEL: Record<Snap, string> = {
  * the start and destination rows stay above the tab bar; half and full keep their height (their
  * content scrolls, with room at the end for the tab bar), so the map keeps its view.
  */
-function offsetFor(snap: Snap, height: number, clearance = 0): number {
+export function offsetFor(snap: Snap, height: number, clearance = 0): number {
   if (snap === 2) return 0;
   return Math.max(0, height - (snap === 0 ? PEEK_VISIBLE + clearance : HALF_VISIBLE));
 }

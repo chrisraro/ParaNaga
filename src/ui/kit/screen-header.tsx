@@ -8,7 +8,7 @@
 import "./styles";
 
 import type { ReactNode, Ref } from "react";
-import { BackButton } from "@/ui/detail/detail-frame";
+import { BackButton } from "@/ui/app-shell/panel";
 
 type Props = {
   title: string;

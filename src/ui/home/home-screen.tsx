@@ -28,7 +28,6 @@ import {
   type EndpointsState,
 } from "@/domain/trip/endpoints";
 import { useAppFrame, useApplyOnce, useHideTabBar } from "@/ui/app-shell/app-frame-context";
-import { TAB_BAR_CLEARANCE } from "@/ui/app-shell/tab-bar";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail } from "@/ui/trip/trip-detail";
 import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
@@ -147,8 +146,8 @@ export function HomeScreen() {
   const [announcement, setAnnouncement] = useState("");
   // An end that was refused for being the same place as the other end (GPS start on the destination).
   const [samePlaceRefused, setSamePlaceRefused] = useState<EndpointWhich | null>(null);
-  // Inside the app frame the tab bar floats over the sheet's bottom edge.
-  const sheet = useSheet(1, frame ? TAB_BAR_CLEARANCE : 0);
+  // The tab bar floats over the sheet's bottom edge (measured; 0 while it is hidden).
+  const sheet = useSheet(1, frame?.tabBarClearance ?? 0);
   const [pickHeight, pickRef] = useMeasuredHeight();
 
   const bumpRecenter = (target: LatLng | null = null, label = "the start pin") => {
@@ -190,22 +189,28 @@ export function HomeScreen() {
   const statusCopy = liveCopy ?? lastOutcome;
 
   /** Sets an endpoint only if the reducer accepts it; announces and moves on only then. */
-  const applyEndpoint = (which: EndpointWhich, point: LatLng, source: "gps" | "map" | "search", label = ""): boolean => {
+  const applyEndpoint = (
+    which: EndpointWhich,
+    point: LatLng,
+    source: "gps" | "map" | "search",
+    label = "",
+    announce: (text: string) => void = setAnnouncement,
+  ): boolean => {
     const endpoint = { point, source, label };
     const { accepted, next } = applyIfAccepted(endpoints, which, endpoint);
     if (!accepted) {
       if (next.error === "same_place") {
         setSamePlaceRefused(which);
-        setAnnouncement(`${SAME_PLACE_TITLE}. ${samePlaceHint(which)}`);
+        announce(`${SAME_PLACE_TITLE}. ${samePlaceHint(which)}`);
       } else {
-        setAnnouncement("That spot is outside Naga City. Choose a point inside Naga City.");
+        announce("That spot is outside Naga City. Choose a point inside Naga City.");
       }
       return false;
     }
     setSamePlaceRefused(null);
     dispatch({ type: "set", which, endpoint });
     setFocused(nextFocus(next, which));
-    setAnnouncement(`${NAME[which]} set: ${endpointLabel(source, label)}`);
+    announce(`${NAME[which]} set: ${endpointLabel(source, label)}`);
     if (isReadyToPlan(next) && sheet.snap === 0) sheet.setSnap(1);
     return true;
   };
@@ -328,13 +333,13 @@ export function HomeScreen() {
     bumpRecenter();
   };
 
-  const handleChooseOnMap = (which: EndpointWhich) => {
+  const handleChooseOnMap = (which: EndpointWhich, announce: (text: string) => void = setAnnouncement) => {
     setSamePlaceRefused(null);
     // Placing a pin cancels any pending GPS request, so a late fix can't take over the pick.
     if (which === "start") setGpsIntent(false);
     setRecenterOnFix(false);
     dispatch({ type: "pick", which });
-    setAnnouncement(`Move the map to place the ${which === "start" ? "start" : "destination"} pin.`);
+    announce(`Move the map to place the ${which === "start" ? "start" : "destination"} pin.`);
   };
 
   // When the pick panel closes, focus returns to the endpoint row that was set (or cancelled).
@@ -509,21 +514,29 @@ export function HomeScreen() {
 
   // The endpoint channel: another screen (search, a place, a saved place) set an end of the trip
   // or asked to choose one on the map, then navigated here. Each request applies once, through
-  // the same rules as the sheet (inside Naga, not the same place as the other end).
+  // the same rules as the sheet (inside Naga, not the same place as the other end). It usually
+  // applies while that screen still covers the map (home inert, its live region silent), so the
+  // announcement waits until the map is showing again.
+  const [deferredAnnouncement, setDeferredAnnouncement] = useState<string | null>(null);
   useApplyOnce(frame?.endpointRequest ?? null, (request) => {
+    const announce = covered ? setDeferredAnnouncement : setAnnouncement;
     if (request.kind === "pick") {
-      handleChooseOnMap(request.which);
+      handleChooseOnMap(request.which, announce);
       return;
     }
     const { which, endpoint } = request;
     const wasGps = gpsEndpointKey(endpoints) === which;
-    if (applyEndpoint(which, endpoint.point, "search", endpoint.label)) {
+    if (applyEndpoint(which, endpoint.point, "search", endpoint.label, announce)) {
       // Like a pinned point: a pending "use current location" no longer applies to this end.
       if (which === "start") setGpsIntent(false);
       if (wasGps) setGpsStartAccuracy(null);
       bumpRecenter(endpoint.point, endpoint.label);
     }
   });
+  if (!covered && deferredAnnouncement !== null) {
+    setDeferredAnnouncement(null);
+    setAnnouncement(deferredAnnouncement);
+  }
 
   // The tab bar would cover the crosshair panel: hidden while a pin is being placed.
   useHideTabBar(picking !== null);

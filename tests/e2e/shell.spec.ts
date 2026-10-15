@@ -113,9 +113,11 @@ test.describe("phone", () => {
     await openApp(page);
     await tab(page, "More").click();
     await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeFocused();
+    await expect(page.getByTestId("more-note")).toHaveText("No settings yet. Appearance and data options arrive in a later update.");
     await page.keyboard.press("Escape");
     await expect(page).toHaveURL(/\/app$/);
     await expect(page.getByTestId("more-page")).toBeHidden();
+    await expect(homeHeading(page)).toBeFocused();
   });
 
   test("the tab bar hides in detail panels and while a pin is placed", async ({ page }) => {
@@ -147,23 +149,45 @@ test.describe("phone", () => {
     await expect(tabBar(page)).toBeVisible();
   });
 
-  test("at the peek snap the endpoint rows and the map attribution stay above the tab bar", async ({ page }) => {
-    await openApp(page);
+  /** Bottom edges of both endpoint rows and the attribution, minus the tab bar's top (≤ 0 = clear). */
+  async function overlapWithTabBar(page: Page): Promise<number> {
+    const bar = await tabBar(page).boundingBox();
+    if (!bar) return Infinity;
+    const boxes = await Promise.all([rowMain(page, "start"), rowMain(page, "destination"), page.locator(".pn-attribution")].map((l) => l.boundingBox()));
+    return Math.max(...boxes.map((b) => (b ? b.y + b.height - bar.y : Infinity)));
+  }
+
+  async function collapseToPeek(page: Page) {
     const sheet = page.getByTestId("trip-sheet");
-    const grabber = sheet.locator(".pn-grabber");
-    await grabber.focus();
+    await sheet.locator(".pn-grabber").focus();
     await page.keyboard.press("ArrowDown");
     await expect(sheet).toHaveAttribute("data-snap", "0");
-    // Let the snap transition settle.
-    await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running"));
-    await page.waitForTimeout(600);
+  }
+
+  test("at the peek snap the endpoint rows and the map attribution stay above the tab bar", async ({ page }) => {
+    await openApp(page);
+    await collapseToPeek(page);
+    // Polled: the sheet glides to the snap.
+    await expect.poll(() => overlapWithTabBar(page)).toBeLessThanOrEqual(0);
+  });
+
+  test("with a home-indicator inset the measured clearance still keeps the rows above the tab bar", async ({ page }) => {
+    // Chromium has no safe-area emulation: lift the bar the way env(safe-area-inset-bottom) = 34 px
+    // would (kit.css: bottom = max(24px, inset + 8px) = 42px). The clearance is measured, so the
+    // peek snap follows.
+    await page.addInitScript(() => {
+      document.addEventListener("DOMContentLoaded", () => {
+        const style = document.createElement("style");
+        style.textContent = ".pn-tabbar { bottom: 42px !important; }";
+        document.head.append(style);
+      });
+    });
+    await openApp(page);
+    await collapseToPeek(page);
     const bar = (await tabBar(page).boundingBox())!;
-    for (const which of ["start", "destination"] as const) {
-      const row = (await rowMain(page, which).boundingBox())!;
-      expect(row.y + row.height, `${which} row bottom`).toBeLessThanOrEqual(bar.y);
-    }
-    const attribution = (await page.locator(".pn-attribution").boundingBox())!;
-    expect(attribution.y + attribution.height).toBeLessThanOrEqual(bar.y);
+    const viewport = page.viewportSize()!;
+    expect(viewport.height - bar.y).toBeGreaterThan(100); // 42 + 66: more than the old fixed 90
+    await expect.poll(() => overlapWithTabBar(page)).toBeLessThanOrEqual(0);
   });
 
   test("the tab bar and the tab pages pass axe (light)", async ({ page }) => {

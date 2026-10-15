@@ -10,9 +10,7 @@ import "@/ui/kit/styles";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-/** Height the tab bar takes at the bottom of the screen: 24 px gap + 66 px pill (kit.css). */
-export const TAB_BAR_CLEARANCE = 90;
+import { useLayoutEffect, useRef, type RefObject } from "react";
 
 type Tab = { href: string; label: string; icon: string; strokeWidth?: number };
 
@@ -30,10 +28,34 @@ export function activeTab(pathname: string | null): string | null {
   return TABS.find((t) => t.href !== "/app" && (pathname === t.href || pathname.startsWith(`${t.href}/`)))?.href ?? null;
 }
 
-export function TabBar() {
+/**
+ * Reports how much of the bottom of the screen `ref` covers (innerHeight − its top edge): the pill,
+ * its gap and the safe-area inset (home indicator) together, as laid out, so there is one source of
+ * truth for the clearance. Re-measured on resize; reports 0 when it unmounts (the bar is hidden).
+ */
+export function useBottomClearance(ref: RefObject<HTMLElement | null>, report: (px: number) => void): void {
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const measure = () => report(Math.max(0, Math.round(window.innerHeight - el.getBoundingClientRect().top)));
+    measure();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
+    observer?.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      report(0);
+    };
+  }, [ref, report]);
+}
+
+export function TabBar({ onClearance }: { onClearance: (px: number) => void }) {
   const current = activeTab(usePathname());
+  const nav = useRef<HTMLElement>(null);
+  useBottomClearance(nav, onClearance);
   return (
-    <nav aria-label="Main" className="pn-tabbar" data-tabbar="" data-testid="tab-bar">
+    <nav ref={nav} aria-label="Main" className="pn-tabbar" data-tabbar="" data-testid="tab-bar">
       {TABS.map((tab) => (
         <Link
           key={tab.href}

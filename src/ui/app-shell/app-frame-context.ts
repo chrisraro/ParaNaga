@@ -38,6 +38,11 @@ export type AppFrameValue = {
   hideTabBar: () => () => void;
   /** The tab bar is showing (no detail panel open, nobody asked to hide it). */
   tabBarVisible: boolean;
+  /**
+   * Height of the screen bottom the tab bar covers, in px, measured (pill + gap + safe-area inset);
+   * 0 while the bar is hidden. The sheet's peek snap, its focus check and the page padding use it.
+   */
+  tabBarClearance: number;
   /** A detail panel or tab page covers the home screen (which is inert meanwhile). */
   panelOpen: boolean;
   endpointRequest: EndpointRequest | null;
@@ -84,7 +89,10 @@ export function useHideTabBar(active: boolean): void {
 /**
  * Applies each numbered request (mapFocus, endpointRequest) exactly once, during render (React's
  * "adjust state when a prop changes" pattern): a re-render never re-applies it, and a request made
- * before the caller mounted is never replayed. `apply` may set the caller's own state.
+ * before the caller mounted is never replayed. `apply` may only set the caller's own state (state
+ * setters and updaters, no other side effects), so it stays correct if React renders twice (a
+ * discarded or StrictMode render): it must be idempotent per request. Tested under StrictMode in
+ * tests/unit/app-frame-requests.test.tsx.
  */
 export function useApplyOnce<R extends { n: number }>(request: R | null, apply: (request: R) => void): void {
   const [seen, setSeen] = useState(request?.n ?? 0);
