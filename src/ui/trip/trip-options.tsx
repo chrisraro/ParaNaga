@@ -11,8 +11,8 @@ import "./trip.css";
 import { Fragment } from "react";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
-import { formatDistance, routeChipLabel, transfersText } from "@/domain/trip/present";
-import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, isNegligibleWalk, planLookups, type PlanLookups } from "./trip-parts";
+import { formatDistance, isNegligibleWalk, routeChipLabel, transfersText } from "@/domain/trip/present";
+import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, planLookups, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
   return `pn-trip-option-${optionId.replace(/[^A-Za-z0-9_-]/g, "_")}`;

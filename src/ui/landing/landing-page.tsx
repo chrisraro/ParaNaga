@@ -8,6 +8,10 @@ import { SiteHeader } from "@/ui/landing/site-header";
 // never "live", "official" or "guaranteed"; no invented counts, ratings or testimonials.
 // Honest about what ships: trips are provisional (Loops A and B, unverified pins, fare
 // estimates); features still being built say "Coming soon" and are never promised as done.
+//
+// Audit F-23: in production, Chrome may warn that /app CSS chunks were "preloaded but not used".
+// Those <link rel=preload as=style> tags are added by Next's prefetch of the <Link href="/app">
+// links below (framework behaviour, it makes opening the app fast), not by this page.
 
 const ROUTES: [string, string][] = [
   ["San Felipe", "#2F6FE4"], ["Pacol", "#7B4FD6"], ["Del Rosario · Magsaysay", "#0D827D"], ["Del Rosario · Roxas", "#B25E15"],
@@ -91,7 +95,7 @@ export function LandingPage() {
               Know your ride.<br /><span className="text-teal-bright">Find your way.</span>
             </h1>
             <p className="max-w-[520px] animate-rise text-[clamp(17px,1.6vw,20px)] leading-normal text-white/80 [animation-delay:0.24s]">
-              Where to wait, which jeepney to take, where to transfer and when to say <strong className="text-coral-bright">Para!</strong> ParaNaga turns Naga&apos;s routes into clear, step-by-step trips.
+              Where to wait, which jeepney to take, where to transfer and when to say <strong className="text-coral-bright">Para!</strong> ParaNaga turns Naga&apos;s mapped jeepney loops into step-by-step provisional trips, starting with Loops A and B.
             </p>
             <div className="flex animate-rise flex-wrap items-center gap-3 [animation-delay:0.36s]">
               <Link href="/app" className={`${ctaPrimary} h-14 px-6 text-[17px]`}>Open ParaNaga<Arrow /></Link>
@@ -117,7 +121,7 @@ export function LandingPage() {
 
       <section aria-labelledby="q-h" className="mx-auto max-w-[1180px] px-4 pt-16 md:px-8 md:pt-28">
         <div className="mb-9 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
-          <h2 id="q-h" className={`max-w-[640px] ${sectionTitle}`}>Four questions every commuter asks. Answered before you leave.</h2>
+          <h2 id="q-h" className={`max-w-[640px] ${sectionTitle}`}>Four questions every commuter asks. Here&apos;s what we can answer today.</h2>
           <p className="max-w-[380px] text-[17px] leading-relaxed text-ink-2">New to Naga, visiting for Peñafrancia, or just trying a new route: you shouldn&apos;t have to ask three strangers which jeepney to take.</p>
         </div>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">

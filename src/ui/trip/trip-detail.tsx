@@ -12,8 +12,8 @@ import "./trip.css";
 
 import { useEffect, useRef, type ReactNode } from "react";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
-import { directionText, fareChipText, formatDistance, legFareText, routeChipLabel } from "@/domain/trip/present";
-import { FareChip, LoopChip, UnverifiedBadge, isNegligibleWalk, planLookups, type PlanLookups } from "./trip-parts";
+import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel } from "@/domain/trip/present";
+import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
 
 type Props = {
   data: PlanResponse;

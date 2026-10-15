@@ -91,14 +91,24 @@ export function stopLabel(name: string, code: string | null): string {
 
 const ONLY_LOOPS = "Loops A and B are the only routes we can suggest for now.";
 
+/** The one wording for ends within SAME_PLACE_M of each other (planner reason, reducer, pick UI). */
+export const SAME_PLACE_TITLE = "Start and destination are the same place";
+
+/** A walk leg shorter than this (estimate, metres) is not a step: the point is at the stop itself. */
+export const NEGLIGIBLE_WALK_M = 15;
+
+export function isNegligibleWalk(leg: { kind: string; estimateMeters?: number }): boolean {
+  return leg.kind === "walk" && typeof leg.estimateMeters === "number" && leg.estimateMeters < NEGLIGIBLE_WALK_M;
+}
+
 /** Per-reason copy: which end is out of reach, and how far the whole walk is (an estimate). */
 export function noCoverageCopy(reason: NoCoverageReason | null, directWalkEstimateMeters: number | null): { title: string; detail: string } {
   const walk = directWalkEstimateMeters === null
     ? ONLY_LOOPS
-    : `Walking the whole way is about ${formatDistance(directWalkEstimateMeters)} (straight-line estimate; path not verified). ${ONLY_LOOPS}`;
+    : `Walking the whole way: ${formatDistance(directWalkEstimateMeters)} (straight-line estimate; path not verified). ${ONLY_LOOPS}`;
   switch (reason) {
     case "same_place":
-      return { title: "Start and destination are the same place", detail: "Move the destination pin away from your start to plan a trip." };
+      return { title: SAME_PLACE_TITLE, detail: "Move the destination pin away from your start to plan a trip." };
     case "outside_city":
       return { title: "Both points need to be inside Naga City", detail: ONLY_LOOPS };
     case "no_stop_near_origin":

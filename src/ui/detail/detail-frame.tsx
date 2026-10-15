@@ -70,10 +70,17 @@ function BackButton() {
     router.back();
   };
   // Escape closes the panel exactly like Back (history after an in-app navigation, else the map).
+  // Once per panel (a held or double Escape must not go back twice), and never while the app is
+  // covered by the large-screen overlay (inert).
+  const link = useRef<HTMLAnchorElement>(null);
+  const closing = useRef(false);
   useEffect(() => {
+    closing.current = false;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
+      if (e.key !== "Escape" || e.repeat || e.defaultPrevented || closing.current) return;
+      if (link.current?.closest("[inert]")) return;
       e.preventDefault();
+      closing.current = true;
       if (cameFromInsideApp()) router.back();
       else router.push("/app");
     };
@@ -81,7 +88,7 @@ function BackButton() {
     return () => window.removeEventListener("keydown", onKey);
   }, [router]);
   return (
-    <Link href="/app" aria-label="Back" className="pn-detail__round" onClick={onClick} data-testid="detail-back">
+    <Link ref={link} href="/app" aria-label="Back" className="pn-detail__round" onClick={onClick} data-testid="detail-back">
       <BackIcon />
     </Link>
   );
@@ -150,11 +157,14 @@ export function DetailNotFound({ what: whatProp }: { what?: NotFoundKind }) {
   const title = what === "stop" ? "Stop not found" : what === "route" ? "Route not found" : "Not found";
   // An honest tab title: the page's static metadata says "Stop · ParaNaga" (the id is only known
   // at runtime, and the response is already streaming with HTTP 200 when notFound() is reached).
+  // The cleanup restores the old title only if it is still ours: when leaving for another route,
+  // React may already have applied that route's <title> before this cleanup runs.
   useEffect(() => {
     const previous = document.title;
-    document.title = `${title} · ParaNaga`;
+    const mine = `${title} · ParaNaga`;
+    document.title = mine;
     return () => {
-      document.title = previous;
+      if (document.title === mine) document.title = previous;
     };
   }, [title]);
   const copy =

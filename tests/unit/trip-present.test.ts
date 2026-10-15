@@ -7,6 +7,7 @@ import {
   noCoverageCopy,
   ringDirection,
   routeChipLabel,
+  isNegligibleWalk,
   stopDisplayName,
   stopLabel,
   transfersText,
@@ -99,17 +100,17 @@ describe("noCoverageCopy", () => {
   it("says which end has no stop within the 600 m walk, with the direct walk estimate", () => {
     expect(noCoverageCopy("no_stop_near_origin", 1200)).toEqual({
       title: "No mapped stop within 600 m of your start",
-      detail: `Walking the whole way is about ≈ 1.2 km (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walking the whole way: ≈ 1.2 km (straight-line estimate; path not verified). ${ONLY}`,
     });
     expect(noCoverageCopy("no_stop_near_destination", 845)).toEqual({
       title: "No mapped stop within 600 m of your destination",
-      detail: `Walking the whole way is about ≈ 850 m (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walking the whole way: ≈ 850 m (straight-line estimate; path not verified). ${ONLY}`,
     });
   });
   it("no_route: stops at both ends, but no provisional ride joins them", () => {
     expect(noCoverageCopy("no_route", 1460)).toEqual({
       title: "No provisional route connects these points yet",
-      detail: `Walking the whole way is about ≈ 1.5 km (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walking the whole way: ≈ 1.5 km (straight-line estimate; path not verified). ${ONLY}`,
     });
   });
   it("same_place asks to move a pin", () => {
@@ -134,5 +135,15 @@ describe("noCoverageCopy", () => {
     expect(noCoverageCopy("walk_shorter", null)).toEqual({ title: "No provisional route nearby yet", detail: ONLY });
     expect(noCoverageCopy("no_route", null)).toEqual({ title: "No provisional route connects these points yet", detail: ONLY });
     expect(noCoverageCopy(null, null)).toEqual({ title: "No provisional route nearby yet", detail: ONLY });
+  });
+});
+
+describe("isNegligibleWalk", () => {
+  it("drops only walks whose estimate is under 15 m", () => {
+    expect(isNegligibleWalk({ kind: "walk", estimateMeters: 0 })).toBe(true);
+    expect(isNegligibleWalk({ kind: "walk", estimateMeters: 14.9 })).toBe(true);
+    expect(isNegligibleWalk({ kind: "walk", estimateMeters: 15 })).toBe(false);
+    expect(isNegligibleWalk({ kind: "ride" })).toBe(false);
+    expect(isNegligibleWalk({ kind: "walk" })).toBe(false);
   });
 });

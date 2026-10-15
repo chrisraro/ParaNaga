@@ -18,7 +18,7 @@ import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import type { Bounds, LatLng } from "@/domain/geo/types";
 import { SAME_PLACE_M } from "@/domain/planner/labels";
-import { noCoverageCopy } from "@/domain/trip/present";
+import { SAME_PLACE_TITLE, noCoverageCopy } from "@/domain/trip/present";
 import {
   endpointsReducer,
   initialEndpointsState,
@@ -51,7 +51,6 @@ const NO_PINS: readonly StopPin[] = [];
 
 const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Destination" };
 
-const SAME_PLACE_TITLE = "Start and destination are the same place";
 const samePlaceHint = (which: EndpointWhich) =>
   which === "start" ? "Move the pin away from your destination." : "Move the pin away from your start.";
 
@@ -103,6 +102,26 @@ function PillMark() {
   );
 }
 
+/** A start or destination refused for being on top of the other end (not a GPS status). */
+function SamePlaceNotice({ which, onChooseOnMap }: { which: EndpointWhich; onChooseOnMap: () => void }) {
+  return (
+    <div className="pn-status pn-status--warn" data-testid="same-place-notice">
+      <svg className="pn-status__icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+        <path d="M12 8v5M12 16h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+      <div className="pn-status__body">
+        <p className="pn-status__title">
+          {SAME_PLACE_TITLE}. {samePlaceHint(which)}
+        </p>
+        <button type="button" className="pn-status__action" onClick={onChooseOnMap}>
+          {which === "start" ? "Choose start on map" : "Choose destination on map"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function HomeScreen() {
   const geo = useGeolocation();
   const [endpoints, dispatch] = useReducer(endpointsReducer, initialEndpointsState);
@@ -135,6 +154,11 @@ export function HomeScreen() {
   };
 
   const ready = isReadyToPlan(endpoints);
+  const picking = endpoints.picking;
+  // While placing a pin: the crosshair is within SAME_PLACE_M of the other end.
+  const otherEnd = picking ? endpoints[picking === "start" ? "destination" : "start"] : null;
+  const pickSamePlace = otherEnd !== null && center.inside && haversineMeters(center.point, otherEnd.point) <= SAME_PLACE_M;
+  const pickBlocked = !center.inside || pickSamePlace;
   const plan = useTripPlan(endpoints.start, endpoints.destination);
   // The option whose detail is open, by id: option ids (variant:board:alight) survive a replan for
   // a refined GPS point, so the detail stays open unless the new plan no longer has that option.
@@ -412,11 +436,6 @@ export function HomeScreen() {
 
   // Crosshair mode: move focus to the confirm button; Escape (anywhere) cancels. When the panel
   // closes, focus goes back to the endpoint row that was set or cancelled.
-  const picking = endpoints.picking;
-  // While placing a pin: the crosshair is within SAME_PLACE_M of the other end.
-  const otherEnd = picking ? endpoints[picking === "start" ? "destination" : "start"] : null;
-  const pickSamePlace = otherEnd !== null && center.inside && haversineMeters(center.point, otherEnd.point) <= SAME_PLACE_M;
-  const pickBlocked = !center.inside || pickSamePlace;
   const confirmRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!picking) {
@@ -427,7 +446,9 @@ export function HomeScreen() {
     }
     confirmRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
+      if (e.key !== "Escape" || e.repeat) return;
+      // Not while the app is covered (large-screen overlay) and inert.
+      if (confirmRef.current?.closest("[inert]")) return;
       returnFocusTo.current = picking;
       dispatch({ type: "cancelPick" });
       setAnnouncement("Pin cancelled");
@@ -588,10 +609,7 @@ export function HomeScreen() {
             </>
           ) : null}
           {samePlaceRefused && !openOption ? (
-            <LocationStatus
-              copy={{ kind: "same_place", tone: "warn", title: `${SAME_PLACE_TITLE}. ${samePlaceHint(samePlaceRefused)}`, action: "pick_start", actionLabel: samePlaceRefused === "start" ? "Choose start on map" : "Choose destination on map" }}
-              onPickStart={() => handleChooseOnMap(samePlaceRefused)}
-            />
+            <SamePlaceNotice which={samePlaceRefused} onChooseOnMap={() => handleChooseOnMap(samePlaceRefused)} />
           ) : null}
           {showStatus && statusCopy && !openOption && !samePlaceRefused ? (
             <LocationStatus copy={statusCopy} onPickStart={() => (statusCopy.kind === "approximate" ? handleMoveStartPin() : handleChooseOnMap("start"))} />

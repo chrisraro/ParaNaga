@@ -71,24 +71,41 @@ test.describe("phone", () => {
   test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate");
 
   test.describe("F-01 a GPS start keeps its fix when the phone stands still", () => {
-    test.use({ permissions: ["geolocation"], geolocation: { ...BISCAST, accuracy: 15 } });
-
     test("after 45 s without a new fix the pill and the start stay, with the fix's age", async ({ page }) => {
       await planWith(page, NO_ROUTE_PLAN);
       await page.clock.install();
+      // One fix, stamped with the (fake) clock when the watch starts, and never another: a phone
+      // standing still. Deterministic, unlike the browser's emulated position timestamp.
+      await page.addInitScript(({ latitude, longitude }) => {
+        const geolocation = {
+          watchPosition(success: PositionCallback) {
+            const timestamp = Date.now();
+            setTimeout(() => {
+              success({
+                coords: { latitude, longitude, accuracy: 15, altitude: null, altitudeAccuracy: null, heading: null, speed: null },
+                timestamp,
+              } as unknown as GeolocationPosition);
+            }, 50);
+            return 1;
+          },
+          clearWatch() {},
+          getCurrentPosition() {},
+        };
+        Object.defineProperty(navigator, "geolocation", { value: geolocation, configurable: true });
+      }, BISCAST);
       await openApp(page);
       await page.getByRole("button", { name: "Use current location" }).click();
       const pill = page.getByTestId("accuracy-pill");
       await expect(pill).toContainText("± 15 m");
       await expect(rowMain(page, "start")).toContainText("Your location");
 
-      // Chrome fires no new position for a device that is not moving; only time passes.
+      // No new position arrives; only time passes.
       await page.clock.fastForward(45_000);
-      await expect(pill).toContainText(/last fix \d+ (s|min) ago/);
+      await expect(pill).toContainText("last fix 45 s ago");
       await expect(pill).toHaveAttribute("data-stale", "true");
       await expect(page.getByText("Finding your location…")).toHaveCount(0);
       await expect(rowMain(page, "start")).toContainText("Your location");
-      await expect(rowMain(page, "start")).toContainText(/GPS last fix \d+ (s|min) ago/);
+      await expect(rowMain(page, "start")).toContainText("GPS last fix 45 s ago");
       // The user dot stays on the map, drawn as stale (no pulse).
       await expect(page.locator(".pn-dot.pn-dot--stale")).toHaveCount(1);
     });
@@ -163,7 +180,7 @@ test.describe("phone", () => {
     await pinBoth(page);
     const card = page.getByTestId("no-provisional-route");
     await expect(card.getByRole("heading", { name: "No mapped stop within 600 m of your destination" })).toBeVisible();
-    await expect(card).toContainText("Walking the whole way is about ≈ 1.5 km (straight-line estimate; path not verified).");
+    await expect(card).toContainText("Walking the whole way: ≈ 1.5 km (straight-line estimate; path not verified).");
   });
 
   test("F-20 starting at the stop: no 'Walk ≈ 0 m' step", async ({ page }) => {
@@ -236,6 +253,27 @@ test.describe("phone", () => {
     await expect(page).toHaveTitle("Route not found · ParaNaga");
   });
 
+  test("F-10 leaving a not-found panel gives the map its own title back", async ({ page }) => {
+    await page.goto("/app/stops/not-a-uuid");
+    await expect(page).toHaveTitle("Stop not found · ParaNaga");
+    await page.getByRole("link", { name: "Back to map" }).click();
+    await expect(page).toHaveURL(/\/app$/);
+    await expect(page).toHaveTitle("App · ParaNaga");
+  });
+
+  test("F-15 a held or repeated Escape goes back only once", async ({ page }) => {
+    await openApp(page);
+    await page.getByTestId("nearby-stops").getByRole("link").first().click();
+    await expect(page).toHaveURL(/\/app\/stops\//);
+    await page.keyboard.down("Escape");
+    await page.keyboard.down("Escape"); // auto-repeat
+    await page.keyboard.up("Escape");
+    await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/\/app$/);
+    await page.waitForTimeout(300);
+    await expect(page).toHaveURL(/\/app$/);
+  });
+
   test("F-17 /app has a main landmark and no moderate-or-worse axe issues", async ({ page }) => {
     await openApp(page);
     await page.waitForFunction(() =>
@@ -277,6 +315,41 @@ test("F-04 the landing and the gate promise nothing that does not ship", async (
     expect(text, String(claim)).not.toMatch(claim);
   }
   await expect(page.getByText("Coming soon").first()).toBeVisible();
+});
+
+test.describe("desktop", () => {
+  test.skip(({ isMobile }) => isMobile, "The large-screen gate is a desktop (mouse) view");
+
+  test("F-04 the desktop gate promises no stop alerts and shows no search box", async ({ page }) => {
+    await page.goto("/app");
+    await expect(page.getByText("Large screen detected")).toBeVisible();
+    const text = await page.locator("body").innerText();
+    expect(text).not.toMatch(/stop alerts/i);
+    // The only input is the app link; the phone mock has no search field or place chips.
+    await expect(page.locator("input")).toHaveCount(1);
+    await expect(page.locator("#app-link")).toHaveCount(1);
+    await expect(page.getByText("Ateneo de Naga")).toHaveCount(0);
+  });
+
+  test("F-02 widening a window covers the app with the gate (inert) and keeps its state", async ({ page }) => {
+    await page.setViewportSize({ width: 800, height: 720 });
+    await openApp(page);
+    await chooseOnMap(page).click();
+    await page.getByRole("button", { name: "Set start here" }).click();
+    await expect(rowMain(page, "start")).toContainText("Pinned location");
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(page.getByTestId("large-screen-overlay")).toBeVisible();
+    await expect(page.getByText("Large screen detected")).toBeVisible();
+    expect(await page.getByTestId("app-root").evaluate((el) => (el as HTMLElement).inert)).toBe(true);
+    // Escape on the covered app does nothing (its listeners ignore keys while inert).
+    await page.keyboard.press("Escape");
+
+    await page.setViewportSize({ width: 800, height: 720 });
+    await expect(page.getByTestId("large-screen-overlay")).toHaveCount(0);
+    expect(await page.getByTestId("app-root").evaluate((el) => (el as HTMLElement).inert)).toBe(false);
+    await expect(rowMain(page, "start")).toContainText("Pinned location");
+  });
 });
 
 test("F-11 an unknown URL shows the branded 404 with a way back", async ({ page }) => {

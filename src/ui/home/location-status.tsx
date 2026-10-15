@@ -11,7 +11,6 @@ export type LocationStatusKind =
   | "approximate"
   | "coarse"
   | "outside_city"
-  | "same_place"
   | "denied"
   | "unavailable"
   | "timeout"
