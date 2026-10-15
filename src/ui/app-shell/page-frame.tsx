@@ -19,11 +19,13 @@ type Props = {
   action?: ReactNode;
   /** Under the title: an intro line or a segmented control. */
   header?: ReactNode;
+  /** Round Back button above the title, for a page opened from another page (Help from More). */
+  back?: boolean;
   children: ReactNode;
   testId?: string;
 };
 
-export function PageFrame({ title, action, header, children, testId }: Props) {
+export function PageFrame({ title, action, header, back = false, children, testId }: Props) {
   useAppPanel("page");
   const root = useRef<HTMLDivElement>(null);
   useEscapeToClose(root);
@@ -32,7 +34,7 @@ export function PageFrame({ title, action, header, children, testId }: Props) {
   const style = { "--pn-tabbar-clearance": `${clearance}px` } as CSSProperties;
   return (
     <div ref={root} className="pn-detail pn-page" style={style} data-testid={testId}>
-      <ScreenHeader title={title} headingRef={heading} action={action}>
+      <ScreenHeader title={title} headingRef={heading} action={action} back={back}>
         {header}
       </ScreenHeader>
       <main className="pn-page__main">{children}</main>

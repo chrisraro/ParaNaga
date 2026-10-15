@@ -220,7 +220,6 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
     newCard,
     setStatus,
   );
-  const onSave = toggle;
 
   const share = async () => {
     setStatus("");
@@ -239,7 +238,7 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
           type="button"
           className={state === "saved" ? "pn-trip-action pn-trip-action--on" : "pn-trip-action"}
           aria-disabled={waiting || unavailable ? true : undefined}
-          onClick={() => void onSave()}
+          onClick={() => void toggle()}
           data-testid="trip-save"
           data-state={state}
           aria-label={state === "saved" ? "Saved, remove from saved trips" : undefined}

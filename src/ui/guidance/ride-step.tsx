@@ -8,11 +8,13 @@
 
 import Link from "next/link";
 import type { RideView } from "@/domain/guidance/view";
+import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { UnverifiedBadge } from "@/ui/trip/trip-parts";
 import { GuidanceButtons, KeepOpen, LocationOffer, UndoButton, type StepProps } from "./guidance-parts";
 
 export const STOP_ALERT_NOTE = "Stop alerts work only while ParaNaga is open on your screen.";
 export const REPORT_DRIVER = "Problem with a driver? Report it in MyNaga";
+const MYNAGA_PATH = "/app/mynaga";
 
 function Rail({ stops }: { stops: RideView["stops"] }) {
   return (
@@ -26,6 +28,7 @@ function Rail({ stops }: { stops: RideView["stops"] }) {
 }
 
 export function RideStep({ view, onSend, location, headingRef, alertKey }: StepProps<RideView> & { alertKey: string }) {
+  const frame = useAppFrame();
   return (
     <section className="pn-guide__step" aria-labelledby="pn-guide-title" data-testid="guidance-ride">
       <h2 id="pn-guide-title" ref={headingRef} tabIndex={-1} className="pn-guide__title">
@@ -66,10 +69,9 @@ export function RideStep({ view, onSend, location, headingRef, alertKey }: StepP
       <p className="pn-guide__note">{STOP_ALERT_NOTE}</p>
       <GuidanceButtons actions={view.actions} onSend={onSend} />
       <UndoButton undo={view.undo} onSend={onSend} />
-      {/* TODO(Task 11): when the MyNaga panel lands, call frame.markHomeNavigation("/app/mynaga") on
-          this link (as the stop pins do), so closing the panel goes back to the running guidance
-          with router.back() instead of pushing a new /app entry. */}
-      <Link href="/app/mynaga" className="pn-text-btn pn-guide__report" data-testid="guidance-report-driver">
+      {/* Marked as opened from the home screen (like a stop pin), so closing MyNaga goes back in
+          history to the running guidance instead of pushing a new /app entry. */}
+      <Link href={MYNAGA_PATH} className="pn-text-btn pn-guide__report" onClick={() => frame?.markHomeNavigation(MYNAGA_PATH)} data-testid="guidance-report-driver">
         {REPORT_DRIVER}
       </Link>
     </section>

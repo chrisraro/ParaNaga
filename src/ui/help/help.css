@@ -1,0 +1,226 @@
+/* Help, Safety, About data, the articles, the sources register (artboard Help) and the MyNaga
+   handoff (artboard MyNagaHandoff). Builds on the kit (.pn-group, .pn-cell, .pn-section, .pn-btn,
+   .pn-note) and its --pn-* tokens. The emergency card and the report button use the artboard's
+   darker coral text (#9E2A21) so it keeps 4.5:1 on the coral tint; dark mode keeps the kit's. */
+
+.pn-detail {
+  --pn-help-coral-text: #9e2a21;
+}
+:root[data-theme="dark"] .pn-detail {
+  --pn-help-coral-text: var(--pn-coral-soft-text);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-detail {
+    --pn-help-coral-text: var(--pn-coral-soft-text);
+  }
+}
+
+.pn-help,
+.pn-help__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Teal icon tile in front of a Help link (32 px, as drawn). */
+.pn-help__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+
+/* Safety: "In an emergency, call 911." */
+.pn-help__emergency {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-help-coral-text);
+}
+.pn-help__emergency svg {
+  flex: none;
+}
+.pn-help__emergency p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.pn-help__tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.pn-help__tip svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--pn-accent);
+}
+
+/* Coral pill link (50 px): "Report a driver to the City in MyNaga". */
+.pn-help__report {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-help-coral-text);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+/* About data: a badge above its meaning. */
+.pn-help__badge-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px 0;
+}
+.pn-help__badge-row p {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* Articles. */
+.pn-help__article {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pn-help__article p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* Sources register: title, meta line, then the external link on its own 44 px line. */
+.pn-source {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+}
+.pn-source__title {
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.pn-source__meta {
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.pn-source__link {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: var(--pn-accent);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pn-source__none {
+  color: var(--pn-label2);
+  font-size: 14px;
+  padding-top: 4px;
+}
+
+/* MyNaga handoff steps. */
+.pn-mynaga__step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-mynaga__step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.pn-mynaga__num {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--pn-fill);
+  font-size: 13px;
+  font-weight: 700;
+}
+.pn-mynaga__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pn-mynaga__check svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--pn-label2);
+}
+.pn-mynaga__links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-mynaga__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--pn-surface);
+  color: var(--pn-accent);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+.pn-mynaga__link--primary {
+  background: var(--pn-accent);
+  color: var(--pn-on-primary);
+}
+.pn-help__report:active,
+.pn-mynaga__link:active,
+.pn-source__link:active {
+  transform: scale(0.98);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pn-help__report:active,
+  .pn-mynaga__link:active,
+  .pn-source__link:active {
+    transform: none;
+  }
+}

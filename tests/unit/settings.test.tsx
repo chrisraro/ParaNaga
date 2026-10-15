@@ -125,7 +125,9 @@ describe("More screen", () => {
     expect(screen.getByRole("switch", { name: "Low-data mode" })).toBeTruthy();
     expect(screen.getByRole("switch", { name: "High contrast" })).toBeTruthy();
     expect(screen.getByRole("switch", { name: "Trip history" }).getAttribute("aria-checked")).toBe("false");
-    expect(screen.queryByText("Help")).toBeNull(); // arrives with Task 11
+    const help = screen.getByTestId("settings-help");
+    expect(help.getAttribute("href")).toBe("/app/help");
+    expect(help.textContent).toBe("HelpSafety, how trips are planned, sources");
     await waitFor(() => expect(screen.getByTestId("settings-data-revision").textContent).toContain("provisional-loops-2026-10-15 · Oct 15, 2026"));
     expect(screen.getByTestId("settings-location-status").textContent).toBe("Not available");
   });

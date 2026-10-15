@@ -215,6 +215,21 @@ describe("useGuidanceSession", () => {
     expect(requestLock).toHaveBeenCalledTimes(2);
   });
 
+  it("moves the clock as soon as the page is visible again (stale fix shown at once)", async () => {
+    const { result } = renderHook(() => useGuidanceSession());
+    startTrip(result);
+    await flush();
+    act(() => result.current.enableLocation());
+    act(() => success!(position(LOOP_A[0]!)));
+    const before = result.current.now;
+    act(() => setVisibility("hidden"));
+    // A background tab: time passes but the interval does not fire.
+    vi.setSystemTime(NOW + 60_000);
+    act(() => setVisibility("visible"));
+    expect(result.current.now).toBe(NOW + 60_000);
+    expect(result.current.now).toBeGreaterThan(before);
+  });
+
   it("restores the step after a reload, with location off until tapped", async () => {
     const first = renderHook(() => useGuidanceSession());
     startTrip(first.result);

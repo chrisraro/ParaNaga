@@ -20,7 +20,6 @@ function SaveTripRow({ card }: { card: SavedTrip }) {
     setStatus,
   );
   const saved = kind === "saved";
-  const onToggle = toggle;
 
   return (
     <div className="pn-guide__save">
@@ -29,7 +28,7 @@ function SaveTripRow({ card }: { card: SavedTrip }) {
         className={saved ? "pn-guide__save-btn pn-guide__save-btn--on" : "pn-guide__save-btn"}
         aria-pressed={saved}
         aria-disabled={waiting || unavailable ? true : undefined}
-        onClick={() => void onToggle()}
+        onClick={() => void toggle()}
         data-testid="arrive-save"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden="true" focusable="false">

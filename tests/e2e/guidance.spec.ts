@@ -283,6 +283,39 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   expect((await geoStub(page)).calls).toBe(1);
 });
 
+test("Report it in MyNaga opens the handoff, and closing it returns to the running ride", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
+  await stubGeolocation(page, "deny");
+  await openApp(page);
+  await startGuidance(page);
+  await tap(page, "I'm at the stop");
+  await tap(page, "I boarded Loop A");
+  const rideTitle = await heading(page).textContent();
+  const stepLabel = await page.getByTestId("guidance-step-label").textContent();
+
+  await guide(page).getByTestId("guidance-report-driver").click();
+  await expect(page).toHaveURL(/\/app\/mynaga$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Report in MyNaga" })).toBeFocused();
+  await expect(page.getByTestId("app-home-layer")).toHaveAttribute("inert", "");
+
+  // Back (history, not a new /app entry): the same ride step, still running.
+  const historyLength = await page.evaluate(() => history.length);
+  await page.getByTestId("detail-back").click();
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(guide(page)).toBeVisible();
+  await expect(heading(page)).toHaveText(rideTitle!);
+  await expect(page.getByTestId("guidance-step-label")).toHaveText(stepLabel!);
+  expect(await page.evaluate(() => history.length)).toBe(historyLength);
+  expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).not.toBeNull();
+
+  // Escape closes it the same way.
+  await guide(page).getByTestId("guidance-report-driver").click();
+  await expect(page.getByRole("heading", { level: 1, name: "Report in MyNaga" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(heading(page)).toHaveText(rideTitle!);
+});
+
 test("Undo last step goes back one confirmation; after Arrive it never restarts location", async ({ page, context }) => {
   await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
   await grantLocation(context);

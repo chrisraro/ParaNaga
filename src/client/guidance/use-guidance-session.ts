@@ -122,7 +122,16 @@ export function useGuidanceSession(): UseGuidanceSession {
   useEffect(() => {
     if (!active || !geoActive) return undefined;
     const id = setInterval(() => setNow(Date.now()), TICK_MS);
-    return () => clearInterval(id);
+    // Timers are throttled or paused in a background tab: on return, move the clock at once so a
+    // stale fix is shown as stale immediately, not up to one tick later.
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") setNow(Date.now());
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [active, geoActive]);
 
   // Backstop: no watch outside an active session (restored ended state, cleared data, a session

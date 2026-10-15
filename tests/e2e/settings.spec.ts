@@ -117,8 +117,8 @@ test.describe("phone", () => {
     await expect(page.getByTestId("settings-location")).toContainText("Location access");
     await expect(page.getByText("Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.")).toBeVisible();
     await expect(page.getByTestId("settings-data-revision")).toHaveText("Data revisionosm-places-2026-10-15 · Oct 15, 2026");
-    // Help arrives with Task 11: no row until then.
-    await expect(page.getByText("Help", { exact: true })).toHaveCount(0);
+    // Help (Task 11) opens from the About group.
+    await expect(page.getByTestId("settings-help")).toHaveAttribute("href", "/app/help");
     await expect(tabBar(page).getByRole("link", { name: "More", exact: true })).toHaveAttribute("aria-current", "page");
   });
 

@@ -8,7 +8,8 @@
 // Differences from the artboard, on purpose: the Sign in card is a static "Accounts arrive later"
 // card (no accounts in this increment); Language is text, not a toggle (English only, D8); Fare
 // category has no chevron (no verified discount to choose); Location access is a status read with
-// navigator.permissions (no request is made); a "Data on this device" and an "About" group follow.
+// navigator.permissions (no request is made); a "Data on this device" and an "About" group (Help,
+// data revision) follow.
 
 import "@/ui/kit/styles";
 import "./settings.css";
@@ -22,6 +23,7 @@ import { useNetworkResource } from "@/client/network/use-network-resource";
 import { updatePrefs, usePrefs } from "@/client/prefs/use-prefs";
 import { networkHeadSchema, type NetworkHead } from "@/domain/api/schemas";
 import { locationAccessLabel } from "@/domain/device/location-permission";
+import { publishedDateText } from "@/domain/network/present";
 import type { ThemePref } from "@/domain/prefs/prefs";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { ListCell, ListGroup } from "@/ui/kit/list";
@@ -45,11 +47,9 @@ export const STATUS = {
 export const CLEAR_DATA_QUESTION = "Remove saved trips, saved places, trip history and settings from this phone?";
 export const DELETE_HISTORY_QUESTION = "Also delete the history on this phone?";
 
-const PUBLISHED_DATE = new Intl.DateTimeFormat("en-PH", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Manila" });
-
 /** "provisional-loops-2026-10-15 · Oct 15, 2026" (published date in Naga City time). */
 export function revisionLine(head: NetworkHead): string {
-  const date = head.publishedAt ? PUBLISHED_DATE.format(new Date(head.publishedAt)) : "publication date not recorded";
+  const date = publishedDateText(head.publishedAt) ?? "publication date not recorded";
   return `${head.label} · ${date}`;
 }
 
@@ -72,7 +72,8 @@ function LocationIcon() {
   );
 }
 
-function DataRevisionRow() {
+/** "Data revision · {label} · {published date}" from GET /api/v1/network/head (More, Help → About data). */
+export function DataRevisionRow({ testId = "settings-data-revision" }: { testId?: string }) {
   const head = useNetworkResource("/api/v1/network/head", networkHeadSchema);
   const seen = head.status === "ready" ? head.data : null;
   useEffect(() => {
@@ -83,7 +84,7 @@ function DataRevisionRow() {
   else if (head.status === "loading") sub = "Checking…";
   else if (head.status === "error" && head.offline) sub = "Not available offline";
   else sub = "Not available right now";
-  return <ListCell title="Data revision" sub={sub} testId="settings-data-revision" />;
+  return <ListCell title="Data revision" sub={sub} testId={testId} />;
 }
 
 export function MoreScreen() {
@@ -232,6 +233,7 @@ export function MoreScreen() {
       </section>
 
       <ListGroup title="About" testId="settings-about">
+        <ListCell title="Help" sub="Safety, how trips are planned, sources" href="/app/help" testId="settings-help" />
         <DataRevisionRow />
       </ListGroup>
 
