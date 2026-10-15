@@ -36,6 +36,15 @@ async function readView(page: Page) {
   };
 }
 
+function inMaxBounds(view: { lat: number; lng: number }) {
+  return (
+    view.lat >= NAGA_MAX_BOUNDS.south &&
+    view.lat <= NAGA_MAX_BOUNDS.north &&
+    view.lng >= NAGA_MAX_BOUNDS.west &&
+    view.lng <= NAGA_MAX_BOUNDS.east
+  );
+}
+
 function expectInsideMaxBounds(view: { lat: number; lng: number }) {
   expect(view.lat).toBeGreaterThanOrEqual(NAGA_MAX_BOUNDS.south);
   expect(view.lat).toBeLessThanOrEqual(NAGA_MAX_BOUNDS.north);
@@ -74,6 +83,23 @@ async function zoomOutTo(page: Page, target: number) {
 const pxPerDegLng = (zoom: number) => (256 * 2 ** zoom) / 360;
 const mercatorY = (lat: number) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * (180 / Math.PI);
 
+/** Resolves once data-center-* is identical across two polls spaced by the poll interval. */
+async function settled(page: Page) {
+  let previous = "";
+  await expect
+    .poll(
+      async () => {
+        const v = await readView(page);
+        const now = `${v.lat}|${v.lng}|${v.zoom}`;
+        const same = now === previous;
+        previous = now;
+        return same;
+      },
+      { intervals: [100] },
+    )
+    .toBe(true);
+}
+
 /** Pans the map by mouse drags until its centre is within ~0.002 degrees of `target`. */
 async function panTo(page: Page, target: { lat: number; lng: number }) {
   for (let attempt = 0; attempt < 14; attempt++) {
@@ -85,15 +111,8 @@ async function panTo(page: Page, target: { lat: number; lng: number }) {
     const before = await mapEl(page).getAttribute("data-center-lat");
     await drag(page, dx, dy);
     await expect.poll(() => mapEl(page).getAttribute("data-center-lat")).not.toBe(before);
-    // Let inertia settle before measuring again.
-    await expect
-      .poll(async () => {
-        const a = await readView(page);
-        await page.waitForTimeout(0);
-        const b = await readView(page);
-        return a.lat === b.lat && a.lng === b.lng;
-      })
-      .toBe(true);
+    // Let inertia settle: the centre must be unchanged across two consecutive polls.
+    await settled(page);
   }
   const final = await readView(page);
   expect(Math.abs(final.lat - target.lat)).toBeLessThan(0.002);
@@ -104,6 +123,29 @@ async function pin(page: Page, which: "start" | "destination") {
   await chooseOnMap(page).click();
   await page.getByRole("button", { name: which === "start" ? "Set start here" : "Set destination here" }).click();
   await expect(rowMain(page, which)).toContainText("Pinned location");
+}
+
+async function installWatchSpy(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as { __clearWatch: number; __watch: number };
+    w.__clearWatch = 0;
+    w.__watch = 0;
+    const geo = navigator.geolocation;
+    const clear = geo.clearWatch.bind(geo);
+    const watch = geo.watchPosition.bind(geo);
+    geo.clearWatch = (id: number) => {
+      w.__clearWatch += 1;
+      clear(id);
+    };
+    geo.watchPosition = (...args: Parameters<Geolocation["watchPosition"]>) => {
+      w.__watch += 1;
+      return watch(...args);
+    };
+  });
+  return {
+    clearCalls: () => page.evaluate(() => (window as unknown as { __clearWatch: number }).__clearWatch),
+    watchCalls: () => page.evaluate(() => (window as unknown as { __watch: number }).__watch),
+  };
 }
 
 test.describe("geolocation inside Naga", () => {
@@ -134,32 +176,17 @@ test.describe("geolocation inside Naga", () => {
   });
 
   test("a GPS destination left after a swap is released when pinned over (watch stops)", async ({ page }) => {
-    await page.addInitScript(() => {
-      const w = window as unknown as { __clearWatch: number; __watch: number };
-      w.__clearWatch = 0;
-      w.__watch = 0;
-      const geo = navigator.geolocation;
-      const clear = geo.clearWatch.bind(geo);
-      const watch = geo.watchPosition.bind(geo);
-      geo.clearWatch = (id: number) => {
-        w.__clearWatch += 1;
-        clear(id);
-      };
-      geo.watchPosition = (...args: Parameters<Geolocation["watchPosition"]>) => {
-        w.__watch += 1;
-        return watch(...args);
-      };
-    });
-    const clearCalls = () => page.evaluate(() => (window as unknown as { __clearWatch: number }).__clearWatch);
+    const spy = await installWatchSpy(page);
 
     await openApp(page);
     await useLocation(page).click();
     await expect(page.getByTestId("accuracy-pill")).toBeVisible();
+    expect(await spy.watchCalls()).toBeGreaterThan(0); // the spy really wraps the app's watch
 
     // Pin a destination while GPS is the start: the watch must keep running.
     await pin(page, "destination");
     await expect(page.getByTestId("accuracy-pill")).toBeVisible();
-    expect(await clearCalls()).toBe(0);
+    expect(await spy.clearCalls()).toBe(0);
 
     // Swap: GPS is now the destination. Replace it with a pin: no endpoint needs GPS any more.
     await page.getByRole("button", { name: "Swap start and destination" }).click();
@@ -169,7 +196,40 @@ test.describe("geolocation inside Naga", () => {
 
     await expect(page.getByTestId("accuracy-pill")).toBeHidden();
     await expect(page.getByTestId("location-status")).toBeHidden();
-    await expect.poll(clearCalls).toBeGreaterThan(0);
+    await expect.poll(spy.clearCalls).toBeGreaterThan(0);
+  });
+
+  test("clearing the GPS destination after a swap stops the watch", async ({ page }) => {
+    const spy = await installWatchSpy(page);
+    await openApp(page);
+    await useLocation(page).click();
+    await expect(page.getByTestId("accuracy-pill")).toBeVisible();
+    expect(await spy.watchCalls()).toBeGreaterThan(0);
+    expect(await spy.clearCalls()).toBe(0);
+
+    await page.getByRole("button", { name: "Swap start and destination" }).click();
+    await expect(rowMain(page, "destination")).toContainText("Your location");
+    await page.getByRole("button", { name: "Clear destination", exact: true }).click();
+
+    await expect(row(page, "destination")).toContainText("Where to?");
+    await expect(page.getByTestId("accuracy-pill")).toBeHidden();
+    await expect.poll(spy.clearCalls).toBeGreaterThan(0);
+  });
+
+  test("Clear start and destination stops the watch", async ({ page }) => {
+    const spy = await installWatchSpy(page);
+    await openApp(page);
+    await useLocation(page).click();
+    await expect(page.getByTestId("accuracy-pill")).toBeVisible();
+    expect(await spy.watchCalls()).toBeGreaterThan(0);
+    await pin(page, "destination");
+    expect(await spy.clearCalls()).toBe(0);
+
+    await page.getByRole("button", { name: "Clear start and destination" }).click();
+
+    await expect(page.getByTestId("accuracy-pill")).toBeHidden();
+    await expect(rowMain(page, "start")).toContainText("Choose start");
+    await expect.poll(spy.clearCalls).toBeGreaterThan(0);
   });
 });
 
@@ -241,7 +301,7 @@ test.describe("Naga lock", () => {
     ] as const) {
       for (let i = 0; i < 20; i++) {
         await drag(page, dx, dy);
-        expectInsideMaxBounds(await readView(page));
+        await expect.poll(async () => inMaxBounds(await readView(page))).toBe(true);
       }
     }
     // Make sure the lock was really exercised: we ended up near an edge, not still at the start.
@@ -253,9 +313,10 @@ test.describe("Naga lock", () => {
     await zoomOutTo(page, NAGA_MIN_ZOOM);
     for (let i = 0; i < 3; i++) {
       await zoomOut.click({ force: true });
+      await settled(page);
       const v = await readView(page);
-      expect(v.zoom).toBeGreaterThanOrEqual(NAGA_MIN_ZOOM);
-      expectInsideMaxBounds(v);
+      expect(v.zoom).toBe(NAGA_MIN_ZOOM); // never below the minimum
+      expect(inMaxBounds(v)).toBe(true);
     }
     await expect(mapEl(page)).toHaveAttribute("data-zoom", String(NAGA_MIN_ZOOM));
     await expect(zoomOut).toHaveAttribute("aria-disabled", "true");
@@ -278,10 +339,14 @@ test.describe("crosshair outside the city", () => {
     const confirm = page.getByRole("button", { name: "Set start here" });
     await expect(confirm).toHaveAttribute("aria-disabled", "true");
 
+    // The announcer holds a known message (the pin prompt); the forced click must leave it alone.
+    const announcer = page.getByTestId("home-announcer");
+    await expect(announcer).toHaveText("Move the map to place the start pin.");
     await confirm.click({ force: true });
     // Still picking, nothing was set, and nothing was announced as set.
     await expect(page.getByRole("region", { name: "Choose start on map" })).toBeVisible();
-    await expect(page.getByTestId("home-announcer")).not.toContainText("set:");
+    await expect(announcer).toHaveText("Move the map to place the start pin.");
+    await expect(announcer).not.toContainText("set:");
 
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(rowMain(page, "start")).toContainText("Choose start");
@@ -319,37 +384,61 @@ test.describe("focus and sheet behaviour", () => {
     const sheet = page.getByTestId("trip-sheet");
     const rest = sheet.locator(".pn-sheet__rest");
     const isInert = () => rest.evaluate((el) => (el as HTMLElement).inert);
+    const snapIs = (snap: string) => expect(sheet).toHaveAttribute("data-snap", snap);
+    const grabber = sheet.locator(".pn-grabber");
 
-    await expect(sheet).toHaveAttribute("data-snap", "1");
+    // Half: options usable, not inert.
+    await snapIs("1");
     expect(await isInert()).toBe(false);
     await expect(useLocation(page)).toBeVisible();
 
-    // Collapse to peek with the grabber (ArrowDown).
-    const grabber = sheet.locator(".pn-grabber");
+    // Full: still not inert.
+    await grabber.focus();
+    await page.keyboard.press("ArrowUp");
+    await snapIs("2");
+    expect(await isInert()).toBe(false);
+
+    // Set both endpoints so swap and both clear buttons exist, then collapse to peek.
+    await page.keyboard.press("ArrowDown");
+    await snapIs("1");
+    await pin(page, "start");
+    await pin(page, "destination");
     await grabber.focus();
     await page.keyboard.press("ArrowDown");
-    await expect(sheet).toHaveAttribute("data-snap", "0");
+    await snapIs("0");
     expect(await isInert()).toBe(true);
 
-    // Tab through the sheet: never reaches the offscreen options; rows stay reachable.
+    // Rows, swap and clear controls remain focusable at peek.
+    const alwaysReachable = [
+      rowMain(page, "start"),
+      rowMain(page, "destination"),
+      page.getByRole("button", { name: "Swap start and destination" }),
+      page.getByRole("button", { name: "Clear start", exact: true }),
+      page.getByRole("button", { name: "Clear destination", exact: true }),
+    ];
+    for (const control of alwaysReachable) {
+      await control.focus();
+      await expect(control).toBeFocused();
+    }
+
+    // Tab through the sheet: focus never lands inside the inert, offscreen part.
     await rowMain(page, "start").focus();
-    const reached = new Set<string>();
-    for (let i = 0; i < 6; i++) {
+    const visited = new Set<string>();
+    for (let i = 0; i < 8; i++) {
       await page.keyboard.press("Tab");
-      const name = await page.evaluate(() => {
+      const where = await page.evaluate(() => {
         const el = document.activeElement as HTMLElement | null;
-        if (!el || el === document.body) return "";
-        return `${el.getAttribute("aria-label") ?? ""}|${(el.textContent ?? "").slice(0, 80)}`;
+        if (!el || el === document.body) return null;
+        return {
+          inRest: el.closest(".pn-sheet__rest") !== null,
+          name: el.getAttribute("aria-label") ?? el.textContent?.slice(0, 60) ?? "",
+        };
       });
-      reached.add(name);
+      if (!where) continue;
+      expect(where.inRest, `Tab reached "${where.name}" inside the inert part`).toBe(false);
+      visited.add(where.name);
     }
-    for (const name of reached) {
-      // (focus may also land on <body> or browser chrome; only named controls matter)
-      expect(name).not.toContain("Use current location");
-      expect(name).not.toContain("Choose on map");
-    }
-    await rowMain(page, "destination").focus();
-    await expect(rowMain(page, "destination")).toBeFocused();
+    expect([...visited].some((n) => n.includes("Swap start and destination"))).toBe(true);
 
     // Fix B: tapping a row at peek expands to half and its options become usable.
     await rowMain(page, "destination").click();
