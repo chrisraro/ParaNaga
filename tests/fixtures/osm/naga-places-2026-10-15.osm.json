@@ -7,7 +7,16 @@
   "boundaryRelation": 3084673,
   "licence": "ODbL-1.0",
   "attribution": "© OpenStreetMap contributors",
-  "synthetic": true
+  "synthetic": true,
+  "removedFields": [
+   "bounds",
+   "changeset",
+   "geometry",
+   "members",
+   "nodes",
+   "uid",
+   "user"
+  ]
  },
  "response": {
   "version": 0.6,
@@ -24,9 +33,6 @@
     "lon": 123.185,
     "version": 3,
     "timestamp": "2026-01-03T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "school",
      "name": "Synthetic Test Elementary School",
@@ -47,9 +53,6 @@
     "lon": 123.184,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "place_of_worship;school",
      "religion": "christian",
@@ -63,17 +66,8 @@
      "lat": 13.625,
      "lon": 123.187
     },
-    "nodes": [
-     1,
-     2,
-     3,
-     1
-    ],
     "version": 2,
     "timestamp": "2026-01-02T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "shop": "mall",
      "name": "Fakemart Synthetic Mall",
@@ -87,12 +81,8 @@
      "lat": 13.6215,
      "lon": 123.186
     },
-    "members": [],
     "version": 5,
     "timestamp": "2026-01-05T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "leisure": "park",
      "type": "multipolygon",
@@ -107,9 +97,6 @@
     "lon": 123.1835,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "hospital"
     }
@@ -121,9 +108,6 @@
     "lon": 123.1836,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "clinic",
      "name": "   "
@@ -136,9 +120,6 @@
     "lon": 123.1765,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "marketplace",
      "name": "Synthetic Outside Market"
@@ -151,9 +132,6 @@
     "lon": 123.1849,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "restaurant",
      "name": "Synthetic Diner"
@@ -166,9 +144,6 @@
     "lon": 123.183,
     "version": 4,
     "timestamp": "2026-01-04T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "townhall",
      "name": "Synthetic Hall"
@@ -181,9 +156,6 @@
     "lon": 123.188,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "bus_station",
      "public_transport": "station",
@@ -198,17 +170,8 @@
      "lat": 13.6238,
      "lon": 123.1845
     },
-    "nodes": [
-     4,
-     5,
-     6,
-     4
-    ],
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "place": "square",
      "leisure": "park",
@@ -222,9 +185,6 @@
     "lon": 123.189,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "police",
      "name": "Synthetic Twin Name"
@@ -237,9 +197,6 @@
     "lon": 123.1892,
     "version": 2,
     "timestamp": "2026-01-02T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "office": "government",
      "name": "Synthetic Twin Name"
@@ -248,17 +205,8 @@
    {
     "type": "way",
     "id": 999000000014,
-    "nodes": [
-     7,
-     8,
-     9,
-     7
-    ],
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "post_office",
      "name": "Synthetic No Centre"
@@ -271,9 +219,6 @@
     "lon": 123.19,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "university",
      "name": "Synthetic University",
@@ -289,9 +234,6 @@
     "lon": 123.182,
     "version": 1,
     "timestamp": "2026-01-01T00:00:00Z",
-    "changeset": 1,
-    "user": "synthetic-user",
-    "uid": 1,
     "tags": {
      "amenity": "marketplace",
      "shop": "mall",

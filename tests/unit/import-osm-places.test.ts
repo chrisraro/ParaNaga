@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { NAGA_BOUNDARY } from "@/domain/geo/naga";
-import { CATEGORY_RULES, parseOsmPlaces, type OsmPlace } from "@/domain/import/osm-places";
+import { CATEGORY_RULES, parseOsmPlaces, stripOverpassResponse, type OsmPlace } from "@/domain/import/osm-places";
 import { OSM_PLACE_CATEGORIES } from "@/domain/places/osm-categories";
 
 const FIXTURE = "tests/fixtures/osm/naga-places-2026-10-15.osm.json";
@@ -81,10 +81,10 @@ describe("parseOsmPlaces on the synthetic fixture", () => {
     expect(twins.map((p) => p.key)).toEqual(["osm:node/999000000012", "osm:node/999000000013"]);
   });
 
-  it("never outputs forbidden tags or OSM user metadata", () => {
+  it("never outputs forbidden tags", () => {
     const text = JSON.stringify(parse().places);
     for (const forbidden of ["opening_hours", "phone", "website", "image", "entrance", "addr:", "religion",
-      "synthetic-user", "uid", "changeset", "+63", "synthetic.invalid", "10:00-21:00"]) {
+      "+63", "synthetic.invalid", "10:00-21:00"]) {
       expect(text).not.toContain(forbidden);
     }
     for (const p of parse().places) {
@@ -157,6 +157,72 @@ describe("parseOsmPlaces validation", () => {
   it("treats a missing synthetic flag as real data", () => {
     const real = fixture();
     delete real.header.synthetic;
+    expect(parse(real).problems).toEqual([]);
     expect(parse(real).synthetic).toBe(false);
+  });
+
+  it.each(["user", "uid", "changeset"])("refuses a file whose elements still carry contributor data (%s)", (field) => {
+    const raw = fixture();
+    raw.response.elements[3]![field] = field === "user" ? "someone" : 42;
+    raw.response.elements[5]![field] = field === "user" ? "someone" : 42;
+    const result = parse(raw);
+    expect(result.problems).toEqual([
+      "OSM snapshot: 2 element(s) carry contributor data (user, uid, changeset); write snapshots only with " +
+        "scripts/fetch-osm-places.ts, which removes it",
+    ]);
+  });
+
+  it("requires removedFields (with user, uid, changeset) on a non-synthetic file", () => {
+    const real = fixture();
+    delete real.header.synthetic;
+    delete real.header.removedFields;
+    expect(parse(real).problems[0]).toMatch(/^OSM snapshot: invalid at header\.removedFields: must list user, uid, changeset/);
+    real.header.removedFields = ["nodes"];
+    expect(parse(real).problems).toHaveLength(1);
+    // The synthetic fixture does not need it.
+    const synthetic = fixture();
+    delete synthetic.header.removedFields;
+    expect(parse(synthetic).problems).toEqual([]);
+  });
+});
+
+describe("stripOverpassResponse", () => {
+  const overpass = {
+    version: 0.6,
+    generator: "Overpass API",
+    osm3s: { timestamp_osm_base: "2026-10-15T00:00:00Z", copyright: "ODbL" },
+    remark: undefined,
+    elements: [
+      { type: "node", id: 1, lat: 13.6234, lon: 123.1847, timestamp: "2026-01-01T00:00:00Z", version: 2, changeset: 9,
+        user: "someone", uid: 7, tags: { amenity: "school", name: "Synthetic School" } },
+      { type: "way", id: 2, bounds: { minlat: 1 }, center: { lat: 13.624, lon: 123.185 }, nodes: [1, 2], version: 1,
+        timestamp: "2026-01-01T00:00:00Z", user: "x", uid: 8, changeset: 3, geometry: [], tags: { shop: "mall", name: "M" } },
+      { type: "relation", id: 3, center: { lat: 13.6235, lon: 123.1848 }, members: [{ ref: 1 }], version: 1,
+        timestamp: "2026-01-01T00:00:00Z", tags: { leisure: "park", name: "P" } },
+    ],
+  };
+
+  it("keeps only type, id, lat, lon, center, version, timestamp and tags, in that order", () => {
+    const { response, removedFields } = stripOverpassResponse(overpass);
+    expect(Object.keys(response)).toEqual(["version", "generator", "osm3s", "elements"]);
+    const elements = response.elements as Record<string, unknown>[];
+    expect(elements.map((e) => Object.keys(e))).toEqual([
+      ["type", "id", "lat", "lon", "version", "timestamp", "tags"],
+      ["type", "id", "center", "version", "timestamp", "tags"],
+      ["type", "id", "center", "version", "timestamp", "tags"],
+    ]);
+    expect(JSON.stringify(response)).not.toMatch(/someone|"uid"|"user"|changeset|"nodes"|"members"|bounds|geometry/);
+    expect(removedFields).toEqual(expect.arrayContaining(["user", "uid", "changeset", "nodes", "members", "bounds"]));
+  });
+
+  it("is deterministic and its output imports without problems", () => {
+    const a = JSON.stringify(stripOverpassResponse(overpass));
+    expect(JSON.stringify(stripOverpassResponse(structuredClone(overpass)))).toBe(a);
+    const { response, removedFields } = stripOverpassResponse(overpass);
+    const header: Record<string, unknown> = { ...fixture().header, removedFields };
+    delete header.synthetic;
+    const result = parse({ header, response });
+    expect(result.problems).toEqual([]);
+    expect(result.places.map((p) => p.key)).toEqual(["osm:node/1", "osm:way/2", "osm:relation/3"]);
   });
 });

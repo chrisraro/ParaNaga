@@ -48,9 +48,22 @@ file's `header.query`.
 ```json
 {"header": {"query": "…", "endpoint": "…", "fetchedAt": "…", "osmBaseTimestamp": "…",
             "boundaryRelation": 3084673, "licence": "ODbL-1.0",
-            "attribution": "© OpenStreetMap contributors", "responseSha256": "…"},
- "response": <the Overpass response, byte for byte>}
+            "attribution": "© OpenStreetMap contributors", "responseSha256": "…",
+            "removedFields": ["bounds", "changeset", "geometry", "members", "nodes", "uid", "user"]},
+ "response": {"version": …, "generator": "…", "osm3s": {…},
+              "elements": [{"type", "id", "lat", "lon" | "center", "version", "timestamp", "tags"}, …]}}
 ```
+
+**Contributor data is removed before the file is written.** The script keeps only `type`, `id`,
+`lat`, `lon`, `center`, `version`, `timestamp` and `tags` of each element; OSM contributor data
+(`user`, `uid`, `changeset` — personal data, not needed for the ODbL attribution) and the unused
+`nodes`, `members`, `bounds` and `geometry` are dropped, as `header.removedFields` records (required
+for real snapshots). The importer refuses any file whose elements still carry `user`, `uid` or
+`changeset`. The file is a deterministic `JSON.stringify` of header and stripped response, not
+the bytes Overpass sent; `header.responseSha256` is the sha256 of the response body **as received,
+before the removal** (a record of what was fetched — it does not match the stored response). The
+committed file's own sha256 is pinned in `ingest.source_document`, so `.gitattributes` keeps its
+bytes exact (`*.osm.json -text`).
 
 The app and the importer only read committed files; nothing calls OpenStreetMap at import, build
 or runtime. A refresh is a new dated file plus a new import, which publishes a new revision
@@ -59,14 +72,17 @@ or runtime. A refresh is a new dated file plus a new import, which publishes a n
 ## What is kept and what is dropped
 
 Kept, per named feature inside the city polygon: `name`; the aliases `name:en`, `name:fil`,
-`alt_name`, `old_name` (verbatim); the category and the tags that decided it (verbatim, for
-provenance); the coordinate (the node position, or the `center` Overpass computes for a way or
-relation — **not an entrance**); OSM type, id, version and timestamp.
+`alt_name`, `old_name` (values unchanged); the category and the tags that decided it (values
+unchanged, for provenance); the coordinate (the node position, or the `center` Overpass computes
+for a way or relation — **not an entrance**); OSM type, id, version and timestamp. In
+`ingest.raw_feature`, `coordinates_raw` for an OSM place is `String(lon),String(lat)` of the
+numbers in the committed snapshot (there is no other source text), and `source_code_raw` is the
+key `osm:{type}/{id}`.
 
 Dropped: features without a name, features outside the city polygon, features with no matching
 category tag, and every other tag — opening hours, phone, website, image, entrances, addresses,
-operator, etc. The OSM user metadata in the raw response (`user`, `uid`, `changeset`) stays only in
-the committed file and is never imported. Duplicate names are kept as separate places.
+operator, etc. — and the contributor data removed by the fetch script (above). Duplicate names are
+kept as separate places.
 
 ## Snapshots
 

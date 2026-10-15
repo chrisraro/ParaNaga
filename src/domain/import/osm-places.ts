@@ -2,7 +2,12 @@
 // written by scripts/fetch-osm-places.ts). Reads only what ParaNaga keeps from OSM: the name and
 // four alias tags, the tags that decide the category, the coordinate and the element's
 // type/id/version/timestamp. Every other tag (opening_hours, phone, website, image, entrances,
-// addresses, …) and the OSM user metadata (user, uid, changeset) is never read and never output.
+// addresses, …) is never read and never output.
+//
+// Contributor data: the fetch script removes `user`, `uid` and `changeset` (and the unused `nodes`,
+// `members`, `bounds`, `geometry`) from every element before writing the file, and records that in
+// the required `header.removedFields`. A file whose elements still carry user/uid/changeset is a
+// problem here, so an unstripped snapshot can never import (stripOverpassResponse below).
 //
 // ODbL 1.0, © OpenStreetMap contributors (see data/source/osm/README.md).
 import { z } from "zod";
@@ -41,10 +46,17 @@ export const CATEGORY_RULES: readonly Rule[] = [
   { category: "square", key: "place", values: ["square"] },
 ];
 
+/** OSM contributor metadata: never stored in a committed snapshot, never imported. */
+export const CONTRIBUTOR_FIELDS = ["user", "uid", "changeset"] as const;
+/** Every element field the fetch script removes (when present). */
+export const REMOVED_ELEMENT_FIELDS = ["bounds", "changeset", "geometry", "members", "nodes", "uid", "user"] as const;
+/** Element fields a snapshot keeps, in this order. */
+const KEPT_ELEMENT_FIELDS = ["type", "id", "lat", "lon", "center", "version", "timestamp", "tags"] as const;
+
 const latitude = z.number().min(-90).max(90);
 const longitude = z.number().min(-180).max(180);
 
-// z.object strips unknown keys, so user/uid/changeset/nodes/members never leave the parse.
+// z.object strips unknown keys; contributor fields are refused separately (CONTRIBUTOR_FIELDS).
 const elementSchema = z.object({
   type: z.enum(OSM_ELEMENT_TYPES),
   id: z.number().int().positive(),
@@ -66,7 +78,23 @@ export const osmSnapshotHeaderSchema = z.object({
   attribution: z.literal(OSM_ATTRIBUTION),
   /** Hand-made test data (tests/fixtures/osm). Never published: publish_revision refuses it. */
   synthetic: z.boolean().optional(),
+  /**
+   * sha256 of the Overpass response body exactly as received, BEFORE the contributor fields were
+   * removed (so it does not match the stored `response`; it records what was fetched).
+   */
   responseSha256: z.string().regex(/^[0-9a-f]{64}$/).optional(),
+  /** Element fields removed by the fetch script; required (with user, uid, changeset) unless synthetic. */
+  removedFields: z.array(z.string()).optional(),
+}).superRefine((h, ctx) => {
+  if (h.synthetic === true) return;
+  const removed = new Set(h.removedFields ?? []);
+  if (!CONTRIBUTOR_FIELDS.every((f) => removed.has(f))) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["removedFields"],
+      message: `must list ${CONTRIBUTOR_FIELDS.join(", ")} (contributor data is removed before a snapshot is written)`,
+    });
+  }
 });
 export type OsmSnapshotHeader = z.infer<typeof osmSnapshotHeaderSchema>;
 
@@ -167,6 +195,14 @@ export function parseOsmPlaces(snapshot: unknown, boundary: readonly LngLat[]): 
   }
   const { header, response } = parsed.data;
   const problems: string[] = [];
+  const rawElements = (snapshot as { response: { elements: Record<string, unknown>[] } }).response.elements;
+  const withContributorData = rawElements.filter((e) => CONTRIBUTOR_FIELDS.some((f) => f in e)).length;
+  if (withContributorData > 0) {
+    problems.push(
+      `OSM snapshot: ${withContributorData} element(s) carry contributor data (${CONTRIBUTOR_FIELDS.join(", ")}); ` +
+        "write snapshots only with scripts/fetch-osm-places.ts, which removes it",
+    );
+  }
   const seen = new Set<string>();
   const places: OsmPlace[] = [];
 
@@ -228,4 +264,29 @@ export function parseOsmPlaces(snapshot: unknown, boundary: readonly LngLat[]): 
     counts,
     problems,
   };
+}
+
+/**
+ * Removes contributor data and unused geometry from a decoded Overpass response: each element keeps
+ * only type, id, lat, lon, center, version, timestamp and tags (in that order); the response keeps
+ * version, generator, osm3s and elements. Deterministic (same input → same JSON.stringify output).
+ * Pure; used by scripts/fetch-osm-places.ts before anything is written.
+ */
+export function stripOverpassResponse(body: {
+  version?: unknown;
+  generator?: unknown;
+  osm3s?: unknown;
+  elements: readonly Record<string, unknown>[];
+}): { response: Record<string, unknown>; removedFields: string[] } {
+  const elements = body.elements.map((e) => {
+    const kept: Record<string, unknown> = {};
+    for (const k of KEPT_ELEMENT_FIELDS) if (e[k] !== undefined) kept[k] = e[k];
+    return kept;
+  });
+  const response: Record<string, unknown> = {};
+  if (body.version !== undefined) response.version = body.version;
+  if (body.generator !== undefined) response.generator = body.generator;
+  if (body.osm3s !== undefined) response.osm3s = body.osm3s;
+  response.elements = elements;
+  return { response, removedFields: [...REMOVED_ELEMENT_FIELDS] };
 }

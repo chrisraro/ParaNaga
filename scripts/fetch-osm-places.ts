@@ -5,10 +5,17 @@
 //
 // Sends ONE Overpass query for the area of OSM relation 3084673 (the same relation as
 // data/geo/naga-city-boundary.json) with the D10 tag filters, `nwr` + `out center meta` (ways and
-// relations get a centre; every element has version and timestamp). The raw response text is
-// embedded verbatim after a header object:
+// relations get a centre; every element has version and timestamp).
+//
+// Contributor data is removed BEFORE anything is written: each element keeps only type, id, lat,
+// lon, center, version, timestamp and tags; user, uid, changeset (personal data, not needed for
+// ODbL attribution) and the unused nodes, members, bounds and geometry are dropped
+// (stripOverpassResponse). The file is a deterministic serialization:
 //   {"header": {query, endpoint, fetchedAt, osmBaseTimestamp, boundaryRelation, licence,
-//               attribution, responseSha256}, "response": <Overpass response, byte for byte>}
+//               attribution, responseSha256, removedFields},
+//    "response": {version, generator, osm3s, elements: [...]}}
+// responseSha256 is the sha256 of the Overpass response body as received, before the removal (it
+// records what was fetched; it does not match the stored, stripped response).
 // The file is then committed and reviewed like any data file. The app and `pnpm db:import` only
 // ever read committed files: no network call at import, build or runtime. A refresh is a new
 // dated file plus a new import. Never run this in CI or at build time.
@@ -18,7 +25,13 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { NAGA_BOUNDARY } from "../src/domain/geo/naga";
-import { OSM_ATTRIBUTION, OSM_BOUNDARY_RELATION, OSM_LICENCE, parseOsmPlaces } from "../src/domain/import/osm-places";
+import {
+  OSM_ATTRIBUTION,
+  OSM_BOUNDARY_RELATION,
+  OSM_LICENCE,
+  parseOsmPlaces,
+  stripOverpassResponse,
+} from "../src/domain/import/osm-places";
 import { OSM_DIR } from "./lib/import-plan";
 
 const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
@@ -67,8 +80,11 @@ async function main(): Promise<number> {
     return 1;
   }
 
+  console.log(`\ndate (UTC): ${date}  ->  ${out}`);
   const res = await fetch(OVERPASS_ENDPOINT, {
     method: "POST",
+    // Overpass may hold a connection well past its own [timeout:180].
+    signal: AbortSignal.timeout(240_000),
     headers: {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
       "User-Agent": "ParaNaga-places-snapshot/1 (one-off owner-run fetch; Naga City commuter app)",
@@ -80,7 +96,7 @@ async function main(): Promise<number> {
     console.error(`Overpass answered HTTP ${res.status}; nothing written.\n${text.slice(0, 500)}`);
     return 1;
   }
-  let body: { osm3s?: { timestamp_osm_base?: unknown }; elements?: unknown; remark?: unknown };
+  let body: { version?: unknown; generator?: unknown; osm3s?: { timestamp_osm_base?: unknown }; elements?: unknown; remark?: unknown };
   try {
     body = JSON.parse(text) as typeof body;
   } catch {
@@ -92,10 +108,12 @@ async function main(): Promise<number> {
     console.error(`Overpass remark (partial result?): ${body.remark}\nnothing written.`);
     return 1;
   }
-  if (!Array.isArray(body.elements)) {
-    console.error("Overpass response has no elements array; nothing written.");
+  if (!Array.isArray(body.elements) || !body.elements.every((e) => e !== null && typeof e === "object")) {
+    console.error("Overpass response has no elements array of objects; nothing written.");
     return 1;
   }
+  const elementCount = body.elements.length;
+  const { response, removedFields } = stripOverpassResponse({ ...body, elements: body.elements as Record<string, unknown>[] });
 
   const header = {
     query: OVERPASS_QUERY,
@@ -105,10 +123,11 @@ async function main(): Promise<number> {
     boundaryRelation: OSM_BOUNDARY_RELATION,
     licence: OSM_LICENCE,
     attribution: OSM_ATTRIBUTION,
+    // Of the body as received, before contributor data was removed.
     responseSha256: createHash("sha256").update(text, "utf8").digest("hex"),
+    removedFields,
   };
-  // The response is embedded as the exact bytes Overpass sent (still valid JSON).
-  const file = `{"header": ${JSON.stringify(header, null, 1)},\n"response": ${text.trim()}}\n`;
+  const file = `${JSON.stringify({ header, response }, null, 1)}\n`;
 
   const parsed = parseOsmPlaces(JSON.parse(file), NAGA_BOUNDARY);
   if (parsed.problems.length > 0) {
@@ -117,7 +136,7 @@ async function main(): Promise<number> {
   }
   mkdirSync(OSM_DIR, { recursive: true });
   writeFileSync(out, file, { flag: "wx" });
-  console.log(`\nwrote ${out} (${Buffer.byteLength(file)} bytes, ${body.elements.length} elements, OSM base ${header.osmBaseTimestamp})`);
+  console.log(`\nwrote ${out} (${Buffer.byteLength(file)} bytes, ${elementCount} elements, OSM base ${header.osmBaseTimestamp})`);
   console.log(`places kept ${parsed.places.length}: ${JSON.stringify(parsed.counts)}`);
   console.log(`dropped: ${JSON.stringify(parsed.dropped)}`);
   console.log("next: review the file, update data/source/osm/README.md, commit, then pnpm db:import --dry-run");

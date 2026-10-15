@@ -29,7 +29,14 @@ export const IMPORT_ACTOR = "scripts/import-naga";
 
 export type PlacesOutcome =
   | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
-  | { outcome: "unchanged"; batchId: string; counts: Record<string, number> };
+  | {
+      outcome: "unchanged";
+      batchId: string;
+      /** Revision the committed batch published, and the one published now (they differ after a rollback). */
+      revisionLabel: string | null;
+      publishedRevisionLabel: string | null;
+      counts: Record<string, number>;
+    };
 
 type TransitOutcome =
   | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
@@ -390,6 +397,10 @@ const OSM_SOURCE_TITLE = "OpenStreetMap places snapshot";
 const OSM_SOURCE_URL = "https://www.openstreetmap.org/copyright";
 
 async function writePlaces(c: pg.ClientBase, osm: OsmPlan): Promise<PlacesOutcome> {
+  // Early, readable refusal; transit.publish_revision refuses synthetic places as the backstop.
+  if (osm.synthetic) {
+    throw new ImportRefusedError(`${osm.fileName} is synthetic test data and is never published; nothing written`);
+  }
   await c.query("select pg_advisory_xact_lock(hashtext($1))", [osm.snapshotVersion]);
 
   const prior = await c.query<{ id: string; snapshot_version: string; counts: Row }>(
@@ -432,6 +443,8 @@ async function writePlaces(c: pg.ClientBase, osm: OsmPlan): Promise<PlacesOutcom
     [batchId, documentId, osm.snapshotVersion, IMPORT_ACTOR],
   );
 
+  // coordinates_raw for OSM is `String(lon),String(lat)` of the numbers in the committed snapshot
+  // (the fetch script re-serializes the response, so there is no other source text).
   const places = osm.places.map((p) => ({ ...p, rawId: randomUUID() }));
   await insertRows(c, "ingest.raw_feature", places.map((p) => ({
     id: p.rawId, batch_id: batchId, source_identity: p.sourceIdentity, identity_method: "osm_id",
@@ -576,5 +589,14 @@ async function checkPlacesUnchanged(
       `OSM file hash matches batch ${last.id} but ${differing.length} place(s) differ; nothing written`,
     );
   }
-  return { outcome: "unchanged", batchId: last.id, counts: { places: osm.places.length } };
+  const pointer = await c.query<{ label: string }>(
+    `select r.label from transit.published_pointer p join transit.revision r on r.id = p.revision_id`,
+  );
+  return {
+    outcome: "unchanged",
+    batchId: last.id,
+    revisionLabel: typeof last.counts.revision_label === "string" ? last.counts.revision_label : null,
+    publishedRevisionLabel: pointer.rows[0]?.label ?? null,
+    counts: { places: osm.places.length },
+  };
 }

@@ -83,11 +83,16 @@ async function main(): Promise<number> {
   }
   const places = result.places;
   if (places?.outcome === "unchanged") {
-    console.log(`
-places unchanged: snapshot matches committed batch ${places.batchId}; nothing written (${places.counts.places} places)`);
+    console.log(`\nplaces unchanged: snapshot matches committed batch ${places.batchId}; nothing written (${places.counts.places} places)`);
+    console.log(`  batch revision: ${places.revisionLabel ?? "(unknown)"}; published revision: ${places.publishedRevisionLabel ?? "(none)"}`);
+    if (places.revisionLabel !== places.publishedRevisionLabel) {
+      console.warn(
+        `  WARNING: the published revision is not ${places.revisionLabel ?? "the batch's revision"} (rolled back?); ` +
+          "these places are NOT published now. Re-publish that revision with transit.publish_revision if intended.",
+      );
+    }
   } else if (places?.outcome === "committed") {
-    console.log(`
-places committed batch ${places.batchId}`);
+    console.log(`\nplaces committed batch ${places.batchId}`);
     for (const [k, v] of Object.entries(places.counts)) console.log(`  ${k.padEnd(34)} ${v}`);
     console.log(`published revision: ${places.revisionLabel} (${places.revisionId})`);
   }

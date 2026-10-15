@@ -25,11 +25,18 @@ const TABLES = [
   "transit.revision", "transit.revision_member", "transit.place", "transit.place_version",
 ];
 
-/** The fixture with the synthetic flag removed: stands in for a real snapshot (fake names, test branch only). */
-function realLikeFixture(): OsmFile {
-  const json = JSON.parse(readFileSync(FIXTURE, "utf8")) as { header: Record<string, unknown> };
+type FixtureJson = { header: Record<string, unknown>; response: { elements: Record<string, unknown>[] } };
+
+/**
+ * The fixture with the synthetic flag removed: stands in for a real snapshot (fake names, test
+ * branch only, in memory). `date` and `edit` build a later dated refresh.
+ */
+function realLikeFixture(date = "2026-10-15", edit: (json: FixtureJson) => void = () => undefined): OsmFile {
+  const json = JSON.parse(readFileSync(FIXTURE, "utf8")) as FixtureJson;
   delete json.header.synthetic;
-  return { fileName: "naga-places-2026-10-15.osm.json", bytes: Buffer.from(JSON.stringify(json, null, 1) + "\n") };
+  json.header.fetchedAt = `${date}T01:00:00Z`;
+  edit(json);
+  return { fileName: `naga-places-${date}.osm.json`, bytes: Buffer.from(JSON.stringify(json, null, 1) + "\n") };
 }
 
 describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)", () => {
@@ -103,14 +110,16 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
     await owner?.end();
   });
 
-  it("refuses to publish the synthetic fixture and writes nothing", async () => {
+  it("refuses the synthetic fixture before writing anything", async () => {
     const synthetic = buildImportPlan(readDataFiles("Data_Sets"), {
       fileName: "naga-places-2026-10-15.osm.json", bytes: readFileSync(FIXTURE),
     });
     expect(synthetic.problems).toEqual([]);
     expect(synthetic.osm?.synthetic).toBe(true);
     const before = await tableCounts();
-    await expect(commitImport(ownerUrl!, synthetic)).rejects.toThrow(/synthetic or missing members: place:/);
+    const refusal = commitImport(ownerUrl!, synthetic);
+    await expect(refusal).rejects.toBeInstanceOf(ImportRefusedError);
+    await expect(refusal).rejects.toThrow(/is synthetic test data and is never published/);
     expect(await tableCounts()).toEqual(before);
     expect(await revisionIdOf(LABEL)).toBeUndefined();
   });
@@ -196,7 +205,10 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
   it("a second run with the same files reports unchanged and writes nothing", async () => {
     const before = await tableCounts();
     const result = await commitImport(ownerUrl!, buildImportPlan(readDataFiles("Data_Sets"), realLikeFixture()));
-    expect(result).toMatchObject({ outcome: "unchanged", places: { outcome: "unchanged", counts: { places: 11 } } });
+    expect(result).toMatchObject({
+      outcome: "unchanged",
+      places: { outcome: "unchanged", revisionLabel: LABEL, publishedRevisionLabel: LABEL, counts: { places: 11 } },
+    });
     expect(await tableCounts()).toEqual(before);
     expect(await appRows(sql`select label from transit.v_published_revision`)).toEqual([{ label: LABEL }]);
   });
@@ -208,6 +220,53 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
     await expect(commitImport(ownerUrl!, buildImportPlan(readDataFiles("Data_Sets"), changed)))
       .rejects.toBeInstanceOf(ImportRefusedError);
     expect(await tableCounts()).toEqual(before);
+  });
+
+  it("a later dated snapshot reuses unchanged versions, records changed/missing, and carries transit forward", async () => {
+    const parentId = (await revisionIdOf(LABEL))!;
+    const parent = await members(parentId);
+    const refresh = realLikeFixture("2026-10-16", (json) => {
+      json.response.elements = json.response.elements.filter((e) => e.id !== 999000000013);
+      json.response.elements.find((e) => e.id === 999000000009)!.version = 5;
+    });
+    const result = await commitImport(ownerUrl!, buildImportPlan(readDataFiles("Data_Sets"), refresh));
+    expect(result.places).toMatchObject({ outcome: "committed", revisionLabel: "osm-places-2026-10-16" });
+    expect(result.places?.counts).toMatchObject({
+      places: 10, places_added: 0, places_changed: 1, places_unchanged: 9, places_missing: 1,
+      place_rows_inserted: 0, place_versions_inserted: 1, carried_members: parent.length - 11,
+    });
+
+    const childId = (await revisionIdOf("osm-places-2026-10-16"))!;
+    const child = await members(childId);
+    expect(child.filter((m) => m.entity_kind !== "place")).toEqual(parent.filter((m) => m.entity_kind !== "place"));
+    const parentPlaces = new Map(parent.filter((m) => m.entity_kind === "place").map((m) => [m.entity_id, m.version_id]));
+    const childPlaces = child.filter((m) => m.entity_kind === "place");
+    expect(childPlaces).toHaveLength(10);
+    // Same stable place ids; 9 reuse the parent's version id, 1 (the version bump) has a new one.
+    expect(childPlaces.every((m) => parentPlaces.has(m.entity_id))).toBe(true);
+    expect(childPlaces.filter((m) => parentPlaces.get(m.entity_id) === m.version_id)).toHaveLength(9);
+
+    const changes = await asImport(async (c) => (await c.query(
+      `select c.kind, count(*)::int as n from ingest.change c join ingest.batch b on b.id = c.batch_id
+        where b.snapshot_version = 'osm:relation/3084673:2026-10-16' group by 1 order by 1`)).rows);
+    expect(changes).toEqual([{ kind: "changed", n: 1 }, { kind: "missing", n: 1 }, { kind: "unchanged", n: 9 }]);
+    const parentOf = await asImport(async (c) => (await c.query(
+      "select parent_revision_id from transit.revision where id = $1", [childId])).rows[0].parent_revision_id);
+    expect(parentOf).toBe(parentId);
+
+    const sources = await appRows(sql`select code from transit.v_published_sources where code like 'OSM-%' order by code`);
+    expect(sources).toEqual([{ code: "OSM-2026-10-15" }, { code: "OSM-2026-10-16" }]);
+    const bumped = await appRows(sql`select osm_version, source_code from transit.v_published_places where osm_id = 999000000009`);
+    expect(bumped).toEqual([{ osm_version: 5, source_code: "OSM-2026-10-16" }]);
+    expect(await appRows(sql`select count(*)::int as n from transit.v_published_places where osm_id = 999000000013`))
+      .toEqual([{ n: 0 }]);
+  });
+
+  it("re-running an earlier snapshot reports unchanged but names the revision that is published instead", async () => {
+    const result = await commitImport(ownerUrl!, buildImportPlan(readDataFiles("Data_Sets"), realLikeFixture()));
+    expect(result.places).toMatchObject({
+      outcome: "unchanged", revisionLabel: LABEL, publishedRevisionLabel: "osm-places-2026-10-16",
+    });
   });
 
   it("publish_revision refuses a draft whose place member is synthetic", async () => {
