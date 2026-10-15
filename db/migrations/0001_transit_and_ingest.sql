@@ -97,12 +97,25 @@ create table ingest.change (
   unique (batch_id, source_identity)
 );
 
--- refs = sorted source identities of the records involved (stable across re-imports).
+-- True when the array has no NULLs and is strictly ascending in byte order ("C" collation),
+-- i.e. sorted and distinct. Used by the ingest.conflict CHECK.
+create function ingest.is_sorted_distinct(p text[]) returns boolean
+  language sql immutable strict
+  set search_path = pg_catalog, pg_temp
+as $$
+  select array_position(p, null) is null
+     and not exists (
+       select 1 from generate_subscripts(p, 1) i
+        where i > array_lower(p, 1) and not (p[i - 1] collate "C" < p[i] collate "C"))
+$$;
+revoke execute on function ingest.is_sorted_distinct(text[]) from public;
+
+-- refs = sorted, distinct source identities of the records involved (stable across re-imports).
 create table ingest.conflict (
   id          uuid primary key default pg_catalog.gen_random_uuid(),
   batch_id    uuid not null references ingest.batch (id),
   kind        text not null check (kind in ('code_prefix_mismatch', 'exact_coordinate_shared', 'near_duplicate', 'label_variant')),
-  refs        text[] not null check (cardinality(refs) > 0),
+  refs        text[] not null check (cardinality(refs) > 0 and ingest.is_sorted_distinct(refs)),
   detail      jsonb not null default '{}'::jsonb,
   resolution  text,
   resolved_by text,
@@ -153,6 +166,53 @@ create table transit.revision_member (
   primary key (revision_id, entity_kind, entity_id)
 );
 create index revision_member_version_idx on transit.revision_member (version_id);
+create index revision_member_entity_idx on transit.revision_member (entity_id);
+
+-- Membership is frozen once a revision leaves draft. The row lock (FOR SHARE) conflicts with
+-- publish_revision's FOR UPDATE, so a membership edit cannot race a publish. For
+-- paranaga_import the lock also passes through its UPDATE policy on revision, which only
+-- sees draft/validating rows; a revision it cannot lock counts as not a draft.
+create function transit.revision_member_guard() returns trigger
+  language plpgsql
+  set search_path = pg_catalog, transit, pg_temp
+as $$
+declare
+  v_status text;
+begin
+  if tg_op in ('UPDATE', 'DELETE') then
+    select status into v_status from transit.revision where id = old.revision_id for share;
+    if v_status is distinct from 'draft' then
+      raise exception 'revision % is not a draft; its membership is frozen', old.revision_id using errcode = '42501';
+    end if;
+  end if;
+  if tg_op in ('INSERT', 'UPDATE') then
+    select status into v_status from transit.revision where id = new.revision_id for share;
+    if v_status is distinct from 'draft' then
+      raise exception 'revision % is not a draft; its membership is frozen', new.revision_id using errcode = '42501';
+    end if;
+    return new;
+  end if;
+  return old;
+end
+$$;
+revoke execute on function transit.revision_member_guard() from public;
+create trigger revision_member_guard before insert or update or delete on transit.revision_member
+  for each row execute function transit.revision_member_guard();
+
+-- True when the id (stable entity or version) belongs to a published or superseded revision.
+-- Invoker function: callers need SELECT on revision and revision_member.
+create function transit.in_released_revision(p_id uuid) returns boolean
+  language sql stable
+  set search_path = pg_catalog, transit, pg_temp
+as $$
+  select exists (
+           select 1 from transit.revision_member m join transit.revision r on r.id = m.revision_id
+            where m.entity_id = p_id and r.status in ('published', 'superseded'))
+      or exists (
+           select 1 from transit.revision_member m join transit.revision r on r.id = m.revision_id
+            where m.version_id = p_id and r.status in ('published', 'superseded'))
+$$;
+revoke execute on function transit.in_released_revision(uuid) from public;
 
 create table transit.published_pointer (
   singleton   boolean primary key default true check (singleton),
@@ -562,6 +622,21 @@ begin
       using errcode = '23514';
   end if;
 
+  -- Each member variant's route must be a member of this revision too.
+  select string_agg(x.ref, ', ') into v_bad from (
+    select m.entity_id::text as ref
+      from transit.revision_member m
+      join transit.variant v on v.id = m.entity_id
+     where m.revision_id = p_revision and m.entity_kind = 'variant'
+       and not exists (
+         select 1 from transit.revision_member rm
+          where rm.revision_id = p_revision and rm.entity_kind = 'route' and rm.entity_id = v.route_id)
+     order by 1 limit 5) x;
+  if v_bad is not null then
+    raise exception 'revision % has variants whose route is not a member: %', p_revision, v_bad
+      using errcode = '23514';
+  end if;
+
   -- Each route stop must use the stop point version that is a member of this revision.
   select string_agg(x.ref, ', ') into v_bad from (
     select rs.variant_version_id || '#' || rs.seq as ref
@@ -591,7 +666,8 @@ begin
           case when v_rev.status = 'superseded' then 'revision.rollback' else 'revision.publish' end,
           'transit.revision', p_revision::text,
           case when v_old is null then null else jsonb_build_object('revision_id', v_old) end,
-          jsonb_build_object('revision_id', p_revision, 'label', v_rev.label, 'kind', v_rev.kind),
+          jsonb_build_object('revision_id', p_revision, 'label', v_rev.label, 'kind', v_rev.kind,
+                             'db_role', session_user),
           core.current_request_id());
 end
 $$;
@@ -604,16 +680,23 @@ grant execute on function transit.publish_revision(uuid) to paranaga_import;
 
 -- ================================================================ grants
 -- paranaga_import: writes on ingest.* and transit.* (no deletes except draft membership).
+-- Version rows, route stops and stop sources are INSERT-only: published content is immutable,
+-- a change is a new version in a new draft revision.
 grant select, insert, update on all tables in schema ingest to paranaga_import;
 grant select, insert, update on
-  transit.revision, transit.route, transit.route_alias, transit.variant, transit.variant_version,
-  transit.stop_point, transit.stop_point_version, transit.stop_point_source, transit.route_stop,
-  transit.terminal, transit.fare_rule, transit.fare_rule_version, transit.fare_observation,
-  transit.fare_conflict, transit.barangay, transit.coverage_audit, transit.feeder_lead,
-  transit.provider_presence, transit.rail_status, transit.designated_stop_candidate,
-  transit.external_destination_category, transit.dataset_note
+  transit.revision, transit.route, transit.route_alias, transit.variant, transit.stop_point,
+  transit.terminal, transit.fare_rule, transit.fare_observation, transit.fare_conflict,
+  transit.barangay, transit.coverage_audit, transit.feeder_lead, transit.provider_presence,
+  transit.rail_status, transit.designated_stop_candidate, transit.external_destination_category,
+  transit.dataset_note
+  to paranaga_import;
+grant select, insert on
+  transit.variant_version, transit.stop_point_version, transit.fare_rule_version,
+  transit.route_stop, transit.stop_point_source
   to paranaga_import;
 grant select, insert, update, delete on transit.revision_member to paranaga_import;
+grant execute on function transit.in_released_revision(uuid) to paranaga_import;
+grant execute on function ingest.is_sorted_distinct(text[]) to paranaga_import;
 grant select on transit.published_pointer to paranaga_import;
 
 -- paranaga_app: read-only public data.
@@ -668,13 +751,28 @@ end
 $$;
 
 -- Import: non-personal research tables, written only by the import script.
+-- ingest.*: free read/insert/update (provenance, not published content).
 do $$
 declare
   t text;
 begin
   foreach t in array array[
     'ingest.source', 'ingest.source_document', 'ingest.batch', 'ingest.raw_feature',
-    'ingest.raw_feature_lineage', 'ingest.change', 'ingest.conflict', 'ingest.error',
+    'ingest.raw_feature_lineage', 'ingest.change', 'ingest.conflict', 'ingest.error']
+  loop
+    execute format('create policy import_write on %s for all to paranaga_import using (true) with check (true)', t);
+  end loop;
+end
+$$;
+
+-- transit.*: read and insert anything; UPDATE only stable rows that no published or
+-- superseded revision references (those rows read 0 rows for UPDATE). Version tables,
+-- route stops and stop sources have no UPDATE grant at all.
+do $$
+declare
+  t text;
+begin
+  foreach t in array array[
     'transit.route', 'transit.route_alias', 'transit.variant', 'transit.variant_version',
     'transit.stop_point', 'transit.stop_point_version', 'transit.stop_point_source', 'transit.route_stop',
     'transit.terminal', 'transit.fare_rule', 'transit.fare_rule_version', 'transit.fare_observation',
@@ -682,10 +780,37 @@ begin
     'transit.provider_presence', 'transit.rail_status', 'transit.designated_stop_candidate',
     'transit.external_destination_category', 'transit.dataset_note']
   loop
-    execute format('create policy import_write on %s for all to paranaga_import using (true) with check (true)', t);
+    execute format('create policy import_read on %s for select to paranaga_import using (true)', t);
+  end loop;
+
+  foreach t in array array[
+    'transit.route', 'transit.route_alias', 'transit.variant', 'transit.variant_version',
+    'transit.stop_point', 'transit.stop_point_version', 'transit.stop_point_source',
+    'transit.terminal', 'transit.fare_rule', 'transit.fare_rule_version', 'transit.fare_observation',
+    'transit.fare_conflict', 'transit.barangay', 'transit.coverage_audit', 'transit.feeder_lead',
+    'transit.provider_presence', 'transit.rail_status', 'transit.designated_stop_candidate',
+    'transit.external_destination_category', 'transit.dataset_note']
+  loop
+    execute format('create policy import_insert on %s for insert to paranaga_import with check (true)', t);
+  end loop;
+
+  foreach t in array array[
+    'transit.route', 'transit.route_alias', 'transit.variant', 'transit.stop_point',
+    'transit.terminal', 'transit.fare_rule', 'transit.fare_observation', 'transit.fare_conflict',
+    'transit.barangay', 'transit.coverage_audit', 'transit.feeder_lead', 'transit.provider_presence',
+    'transit.rail_status', 'transit.designated_stop_candidate', 'transit.external_destination_category',
+    'transit.dataset_note']
+  loop
+    execute format(
+      'create policy import_update_unreleased on %s for update to paranaga_import
+         using (not transit.in_released_revision(id)) with check (not transit.in_released_revision(id))', t);
   end loop;
 end
 $$;
+
+-- No stops may be attached to a variant version that is already published or superseded.
+create policy import_insert on transit.route_stop for insert to paranaga_import
+  with check (not transit.in_released_revision(variant_version_id));
 
 -- Import may only create and edit draft revisions and their membership.
 create policy import_read on transit.revision for select to paranaga_import using (true);
@@ -721,3 +846,89 @@ end
 $$;
 create policy definer_publish on transit.revision for all to paranaga_definer using (true) with check (true);
 create policy definer_pointer on transit.published_pointer for all to paranaga_definer using (true) with check (true);
+
+-- ================================================================ published read model
+-- The app reads the current network only through these views. security_invoker = true, so
+-- the caller's grants and RLS apply. Each view starts from published_pointer → revision_member
+-- and hides synthetic rows (stable or version), so drafts and test data never leak.
+create view transit.v_published_revision with (security_invoker = true) as
+select r.id, r.seq, r.label, r.kind, r.published_at
+  from transit.published_pointer pp
+  join transit.revision r on r.id = pp.revision_id
+ where not r.is_synthetic;
+
+create view transit.v_published_routes with (security_invoker = true) as
+select pp.revision_id, t.id, t.public_code, t.official_group_number, t.name, t.mode_code, t.legal_status,
+       t.allocated_units, t.allocation_is_active_fleet_count, t.notes, t.source_codes
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'route'
+  join transit.route t on t.id = m.entity_id
+ where not t.is_synthetic;
+
+create view transit.v_published_route_aliases with (security_invoker = true) as
+select pp.revision_id, t.id, t.route_id, t.alias, t.kind, t.is_historical, t.source_code
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'route_alias'
+  join transit.route_alias t on t.id = m.entity_id
+ where not t.is_synthetic;
+
+create view transit.v_published_variants with (security_invoker = true) as
+select pp.revision_id, vv.id as variant_version_id, v.id as variant_id, v.route_id, v.direction, v.kind,
+       vv.headsign, vv.vehicle_class, vv.legal_streets, vv.trial_status, vv.effective_from,
+       vv.trial_duration_days, vv.operating_status, vv.evidence_level, vv.is_circular,
+       vv.navigation_approved, vv.source_codes, vv.notes
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'variant'
+  join transit.variant v on v.id = m.entity_id
+  join transit.variant_version vv on vv.id = m.version_id and vv.variant_id = v.id
+ where not v.is_synthetic and not vv.is_synthetic;
+
+create view transit.v_published_stops with (security_invoker = true) as
+select pp.revision_id, sp.id as stop_point_id, spv.id as stop_point_version_id, sp.name,
+       extensions.ST_X(spv.geog::extensions.geometry) as lon,
+       extensions.ST_Y(spv.geog::extensions.geometry) as lat,
+       spv.geog, spv.geog_accuracy_m, spv.status, spv.source_layer, spv.source_code_raw, spv.label_raw,
+       spv.curb_side, spv.boarding_allowed, spv.alighting_allowed, spv.sign_installed, spv.navigation_approved
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'stop_point'
+  join transit.stop_point sp on sp.id = m.entity_id
+  join transit.stop_point_version spv on spv.id = m.version_id and spv.stop_point_id = sp.id
+ where not sp.is_synthetic and not spv.is_synthetic;
+
+-- Only stops whose variant version AND stop point version are members of the published revision.
+create view transit.v_published_route_stops with (security_invoker = true) as
+select pp.revision_id, rs.variant_version_id, rs.seq, spv.stop_point_id, rs.stop_point_version_id,
+       rs.dist_along_m, rs.boarding_allowed, rs.alighting_allowed, rs.evidence_level
+  from transit.published_pointer pp
+  join transit.revision_member vm on vm.revision_id = pp.revision_id and vm.entity_kind = 'variant'
+  join transit.route_stop rs on rs.variant_version_id = vm.version_id
+  join transit.revision_member sm on sm.revision_id = pp.revision_id and sm.entity_kind = 'stop_point'
+                                 and sm.version_id = rs.stop_point_version_id
+  join transit.stop_point_version spv on spv.id = rs.stop_point_version_id
+ where not rs.is_synthetic and not spv.is_synthetic;
+
+create view transit.v_published_fare_rules with (security_invoker = true) as
+select pp.revision_id, fr.id as fare_rule_id, frv.id as fare_rule_version_id, fr.code, fr.mode_code,
+       fr.vehicle_class, frv.base_centavos, frv.base_km, frv.increment_centavos_per_km, frv.discount_percent,
+       frv.discounted_base_centavos, frv.discount_groups, frv.rounding, frv.effective_from, frv.enacted_on,
+       frv.evidence_status, frv.status, frv.publish_exact, frv.source_codes
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'fare_rule'
+  join transit.fare_rule fr on fr.id = m.entity_id
+  join transit.fare_rule_version frv on frv.id = m.version_id and frv.fare_rule_id = fr.id
+ where not fr.is_synthetic and not frv.is_synthetic;
+
+create view transit.v_published_terminals with (security_invoker = true) as
+select pp.revision_id, t.id, t.code, t.name, t.location_text, t.modes, t.evidence_status, t.notes,
+       extensions.ST_X(t.geog::extensions.geometry) as lon,
+       extensions.ST_Y(t.geog::extensions.geometry) as lat,
+       t.source_codes
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'terminal'
+  join transit.terminal t on t.id = m.entity_id
+ where not t.is_synthetic;
+
+grant select on transit.v_published_revision, transit.v_published_routes, transit.v_published_route_aliases,
+  transit.v_published_variants, transit.v_published_stops, transit.v_published_route_stops,
+  transit.v_published_fare_rules, transit.v_published_terminals
+  to paranaga_app;

@@ -4,7 +4,7 @@
 #   bash scripts/with-neon-branch.sh pnpm test:integration
 #   bash scripts/with-neon-branch.sh pnpm db:check-rls
 #
-# 1. creates branch it-<epoch> from main (inherits main's schema and migration table);
+# 1. creates branch it-<epoch>-<random hex> from main (inherits main's schema and migration table);
 # 2. applies pending migrations to it with `pnpm db:migrate`;
 # 3. gives paranaga_app and paranaga_import random passwords ON THE BRANCH ONLY
 #    (migrations keep both roles NOLOGIN);
@@ -25,30 +25,32 @@ fi
 
 PROJECT="${NEON_PROJECT_ID:-green-field-06467324}"
 PARENT="main"
-BRANCH="it-$(date +%s)"
+BRANCH="it-$(date +%s)-$(node -e "process.stdout.write(require('crypto').randomBytes(3).toString('hex'))")"
 NEON=(npx --yes neonctl@8.4.4)
 cd "$(dirname "$0")/.."
 
 redact() { sed -E 's#postgres(ql)?://[^[:space:]]+#<redacted-url>#g'; }
 
-created=0
+attempted=0
 cleanup() {
-  if [ "$created" = 1 ]; then
+  # Also runs when `branches create` failed midway; deleting an absent branch is harmless.
+  if [ "$attempted" = 1 ]; then
     if "${NEON[@]}" branches delete "$BRANCH" --project-id "$PROJECT" >/dev/null 2>&1; then
       echo "deleted branch $BRANCH"
     else
-      echo "WARNING: could not delete branch $BRANCH; delete it manually" >&2
+      echo "WARNING: could not delete branch $BRANCH (it may not exist); check neonctl branches list" >&2
     fi
   fi
 }
 trap cleanup EXIT
 
-"${NEON[@]}" branches create --project-id "$PROJECT" --name "$BRANCH" --parent "$PARENT" --output json >/dev/null
-created=1
+attempted=1
+"${NEON[@]}" branches create --project-id "$PROJECT" --name "$BRANCH" --parent "$PARENT" --output json \
+  >/dev/null 2> >(redact >&2)
 echo "created branch $BRANCH from $PARENT"
 
 OWNER_URL=$("${NEON[@]}" connection-string "$BRANCH" --project-id "$PROJECT" \
-  --database-name neondb --role-name neondb_owner 2>/dev/null)
+  --database-name neondb --role-name neondb_owner 2> >(redact >&2))
 case "$OWNER_URL" in
   postgres://*|postgresql://*) ;;
   *) echo "could not get the branch connection string" >&2; exit 1 ;;

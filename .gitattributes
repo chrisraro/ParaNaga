@@ -1,2 +1,4 @@
 # Shell scripts must keep LF endings or bash fails on Windows checkouts (autocrlf).
 *.sh text eol=lf
+# Migrations are checksummed; keep them LF everywhere (migrate.ts also normalizes).
+*.sql text eol=lf

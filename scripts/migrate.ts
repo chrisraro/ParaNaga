@@ -1,10 +1,11 @@
 // Applies db/migrations/NNNN_*.sql in order, each in its own transaction.
 // Uses the owner role on the direct (unpooled) endpoint: DATABASE_URL_UNPOOLED.
-// Applied files are checksummed; editing an applied migration is an error.
-import { createHash } from "node:crypto";
+// Applied files are checksummed (LF-normalized, see scripts/lib/migration-hash.ts);
+// editing an applied migration is an error.
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
+import { checkMigrationHash, migrationHash } from "./lib/migration-hash";
 
 const url = process.env.DATABASE_URL_UNPOOLED;
 if (!url) {
@@ -33,10 +34,27 @@ try {
 
   for (const file of files) {
     const body = await readFile(path.join(dir, file), "utf8");
-    const sha = createHash("sha256").update(body).digest("hex");
+    const sha = migrationHash(body);
     const previous = applied.get(file);
     if (previous) {
-      if (previous !== sha) throw new Error(`${file} was edited after it was applied. Add a new migration instead.`);
+      const check = checkMigrationHash(body, previous);
+      if (check === "mismatch") throw new Error(`${file} was edited after it was applied. Add a new migration instead.`);
+      if (check === "legacy") {
+        // Recorded from a CRLF checkout before hashes were normalized: rewrite to the normalized hash.
+        await client.query("begin");
+        try {
+          await client.query("update public.schema_migrations set sha256 = $2 where name = $1 and sha256 = $3", [
+            file,
+            sha,
+            previous,
+          ]);
+          await client.query("commit");
+        } catch (error) {
+          await client.query("rollback").catch(() => undefined);
+          throw error;
+        }
+        console.log(`normalized checksum of ${file}`);
+      }
       continue;
     }
     await client.query("begin");

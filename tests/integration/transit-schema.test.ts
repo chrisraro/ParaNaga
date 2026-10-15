@@ -23,7 +23,13 @@ const TABLES = [
   "transit.dataset_note",
 ];
 
-type Loop = { revisionId: string; variantVersionId: string };
+type Loop = {
+  revisionId: string;
+  routeId: string;
+  variantVersionId: string;
+  stopPointIds: string[];
+  stopVersionIds: string[];
+};
 
 describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (Neon branch)", () => {
   const run = randomUUID().slice(0, 8);
@@ -69,7 +75,13 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
   /** Seeds a draft provisional revision with a 3-stop circular variant through paranaga_import. */
   const seedLoop = async (
     tag: string,
-    opts: { syntheticStop?: boolean; seqs?: number[]; variantEvidence?: string } = {},
+    opts: {
+      syntheticStop?: boolean;
+      seqs?: number[];
+      variantEvidence?: string;
+      skipRouteMember?: boolean;
+      skipLastStopMember?: boolean;
+    } = {},
   ): Promise<Loop> =>
     asImportRole(async (c) => {
       const seqs = opts.seqs ?? [1, 2, 3];
@@ -86,10 +98,10 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
         `insert into transit.variant_version (variant_id, legal_streets, operating_status, evidence_level, is_circular, source_codes)
          values ($1, '{"circuit":["Gen. Luna St"]}', 'unverified', $2, true, '{S39}') returning id`,
         [variant.id, opts.variantEvidence ?? "provisional"]);
-      const members: [string, unknown, unknown][] = [
-        ["route", route.id, route.id],
-        ["variant", variant.id, vv.id],
-      ];
+      const members: [string, unknown, unknown][] = [["variant", variant.id, vv.id]];
+      if (!opts.skipRouteMember) members.push(["route", route.id, route.id]);
+      const stopPointIds: string[] = [];
+      const stopVersionIds: string[] = [];
       for (const [i, seq] of seqs.entries()) {
         const sp = await one(c, `insert into transit.stop_point (name) values ($1) returning id`, [`Stop ${tag} ${i}`]);
         const spv = await one(c,
@@ -101,14 +113,22 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
         await c.query(
           `insert into transit.route_stop (variant_version_id, stop_point_version_id, seq, evidence_level)
            values ($1, $2, $3, 'provisional')`, [vv.id, spv.id, seq]);
-        members.push(["stop_point", sp.id, spv.id]);
+        stopPointIds.push(sp.id as string);
+        stopVersionIds.push(spv.id as string);
+        if (!(opts.skipLastStopMember && i === seqs.length - 1)) members.push(["stop_point", sp.id, spv.id]);
       }
       for (const [kind, entityId, versionId] of members) {
         await c.query(
           `insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id) values ($1, $2, $3, $4)`,
           [rev.id, kind, entityId, versionId]);
       }
-      return { revisionId: rev.id as string, variantVersionId: vv.id as string };
+      return {
+        revisionId: rev.id as string,
+        routeId: route.id as string,
+        variantVersionId: vv.id as string,
+        stopPointIds,
+        stopVersionIds,
+      };
     });
 
   const publishAsImport = (revisionId: string) =>
@@ -270,5 +290,164 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
     await publishAsImport(first.revisionId);
     pointer = await appRows(null, sql`select revision_id from transit.published_pointer`);
     expect(pointer).toEqual([{ revision_id: first.revisionId }]);
+  });
+
+  it("records the database role of the publisher in the audit row", async () => {
+    const loop = await seedLoop("auditrole");
+    await publishAsImport(loop.revisionId);
+    const audit = await appRows(admin,
+      sql`select after->>'db_role' as db_role from core.audit_event
+           where entity_type = 'transit.revision' and entity_id = ${loop.revisionId}`);
+    expect(audit).toEqual([{ db_role: "paranaga_import" }]);
+  });
+
+  it("publish_revision refuses a variant whose route is not a member", async () => {
+    const { revisionId } = await seedLoop("noroute", { skipRouteMember: true });
+    const error = await pgCode(publishAsImport(revisionId));
+    expect(error.message).toMatch(/route/);
+  });
+
+  it("publish_revision refuses a route stop using a non-member stop version", async () => {
+    const { revisionId } = await seedLoop("nonmember", { skipLastStopMember: true });
+    const error = await pgCode(publishAsImport(revisionId));
+    expect(error.message).toMatch(/not a member/);
+  });
+
+  it("published content is immutable for paranaga_import; new versions can still be added", async () => {
+    const loop = await seedLoop("immutable");
+    await publishAsImport(loop.revisionId);
+
+    expect((await pgCode(importer.query(
+      `update transit.route_stop set seq = seq where variant_version_id = $1`, [loop.variantVersionId]))).code).toBe("42501");
+    expect((await pgCode(importer.query(
+      `update transit.stop_point_version set label_raw = 'x' where id = $1`, [loop.stopVersionIds[0]]))).code).toBe("42501");
+    expect((await pgCode(importer.query(
+      `update transit.variant_version set notes = 'x' where id = $1`, [loop.variantVersionId]))).code).toBe("42501");
+    expect((await pgCode(importer.query(
+      `delete from transit.route where id = $1`, [loop.routeId]))).code).toBe("42501");
+
+    // Stable rows referenced by a published revision are frozen (0 rows), drafts are not.
+    const frozen = await importer.query(`update transit.route set notes = 'edited' where id = $1`, [loop.routeId]);
+    expect(frozen.rowCount).toBe(0);
+    const frozenStop = await importer.query(`update transit.stop_point set name = 'x' where id = $1`, [loop.stopPointIds[0]]);
+    expect(frozenStop.rowCount).toBe(0);
+    const draft = await seedLoop("immutable-draft");
+    const editable = await importer.query(`update transit.route set notes = 'edited' where id = $1`, [draft.routeId]);
+    expect(editable.rowCount).toBe(1);
+
+    // No new stops can be attached to a published variant version.
+    expect((await pgCode(importer.query(
+      `insert into transit.route_stop (variant_version_id, stop_point_version_id, seq, evidence_level)
+       values ($1, $2, 99, 'provisional')`, [loop.variantVersionId, loop.stopVersionIds[0]]))).code).toBe("42501");
+
+    // A new version of a published stop point is fine.
+    const added = await importer.query(
+      `insert into transit.stop_point_version (stop_point_id, geog, label_raw)
+       values ($1, extensions.ST_SetSRID(extensions.ST_MakePoint(123.19, 13.62), 4326)::extensions.geography, 'moved')`,
+      [loop.stopPointIds[0]]);
+    expect(added.rowCount).toBe(1);
+  });
+
+  it("membership of published or superseded revisions cannot change", async () => {
+    const first = await seedLoop("frozen1");
+    await publishAsImport(first.revisionId);
+    const second = await seedLoop("frozen2");
+    await publishAsImport(second.revisionId); // first is now superseded
+
+    for (const revisionId of [first.revisionId, second.revisionId]) {
+      const insert = await pgCode(importer.query(
+        `insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id) values ($1, 'route', $2, $2)`,
+        [revisionId, randomUUID()]));
+      expect(insert.code).toBe("42501");
+      const removed = await importer.query(`delete from transit.revision_member where revision_id = $1`, [revisionId]);
+      expect(removed.rowCount).toBe(0);
+      const moved = await importer.query(
+        `update transit.revision_member set version_id = version_id where revision_id = $1`, [revisionId]);
+      expect(moved.rowCount).toBe(0);
+    }
+  });
+
+  it("the membership trigger refuses edits once a revision leaves draft", async () => {
+    // Exercise the trigger itself, bypassing the RLS policy: owner, with RLS unforced in a
+    // rolled-back transaction.
+    const loop = await seedLoop("trigger");
+    await publishAsImport(loop.revisionId);
+    await owner.query("begin");
+    try {
+      await owner.query("alter table transit.revision_member no force row level security");
+      await owner.query("alter table transit.revision no force row level security");
+      const error = await pgCode(owner.query(
+        `delete from transit.revision_member where revision_id = $1`, [loop.revisionId]));
+      expect(error.message).toMatch(/not a draft/);
+    } finally {
+      await owner.query("rollback");
+    }
+  });
+
+  it("paranaga_app cannot read lineage or change rows", async () => {
+    expect((await pgCode(appRows(null, sql`select * from ingest.raw_feature_lineage`))).code).toBe("42501");
+    expect((await pgCode(appRows(null, sql`select * from ingest.change`))).code).toBe("42501");
+  });
+
+  it("paranaga_import cannot read or write core tables", async () => {
+    expect((await pgCode(importer.query(`select * from core.profile`))).code).toBe("42501");
+    expect((await pgCode(importer.query(`select * from core.user_role`))).code).toBe("42501");
+    expect((await pgCode(importer.query(
+      `insert into core.audit_event (action, entity_type) values ('x', 'y')`))).code).toBe("42501");
+  });
+
+  it("conflict refs must be sorted and distinct", async () => {
+    const batch = await importer.query(
+      `insert into ingest.batch (snapshot_version, mode, status, started_by) values ($1, 'dry_run', 'running', 'test') returning id`,
+      [`mymaps:refs:${run}`]);
+    const batchId = batch.rows[0].id as string;
+    const insert = (refs: string[]) => importer.query(
+      `insert into ingest.conflict (batch_id, kind, refs) values ($1, 'exact_coordinate_shared', $2)`, [batchId, refs]);
+    await insert(["a1", "b2"]);
+    expect((await pgCode(insert(["b2", "a1"]))).code).toBe("23514");
+    expect((await pgCode(insert(["a1", "a1"]))).code).toBe("23514");
+  });
+
+  it("published views show only published, non-synthetic rows", async () => {
+    const published = await seedLoop("view-pub");
+    await publishAsImport(published.revisionId);
+    const draft = await seedLoop("view-draft");
+
+    const stops = await appRows(null, sql`select stop_point_id, lon, lat from transit.v_published_stops`);
+    const ids = new Set(stops.map((r) => r.stop_point_id));
+    for (const id of published.stopPointIds) expect(ids.has(id)).toBe(true);
+    for (const id of draft.stopPointIds) expect(ids.has(id)).toBe(false);
+    expect(stops.find((r) => r.stop_point_id === published.stopPointIds[0])).toMatchObject({ lon: 123.18, lat: 13.62 });
+
+    const routeStops = await appRows(null,
+      sql`select seq from transit.v_published_route_stops where variant_version_id = ${published.variantVersionId}::uuid order by seq`);
+    expect(routeStops.map((r) => r.seq)).toEqual([1, 2, 3]);
+    expect(await appRows(null,
+      sql`select 1 from transit.v_published_route_stops where variant_version_id = ${draft.variantVersionId}::uuid`)).toHaveLength(0);
+    expect(await appRows(null,
+      sql`select public_code from transit.v_published_routes where id = ${published.routeId}::uuid`)).toHaveLength(1);
+    expect(await appRows(null,
+      sql`select 1 from transit.v_published_variants where variant_version_id = ${published.variantVersionId}::uuid`)).toHaveLength(1);
+    expect(await appRows(null, sql`select id from transit.v_published_revision`))
+      .toEqual([{ id: published.revisionId }]);
+
+    // A synthetic row inside the published revision (only possible by bypassing RLS and
+    // publish validation) is still hidden by the views.
+    await owner.query("begin");
+    try {
+      for (const t of ["published_pointer", "revision_member", "stop_point", "stop_point_version", "route_stop"]) {
+        await owner.query(`alter table transit.${t} no force row level security`);
+      }
+      await owner.query(`update transit.stop_point_version set is_synthetic = true where id = $1`, [published.stopVersionIds[0]]);
+      const visible = await owner.query(
+        `select stop_point_id from transit.v_published_stops where stop_point_id = any($1)`, [published.stopPointIds]);
+      expect(visible.rows.map((r) => r.stop_point_id).sort()).toEqual(published.stopPointIds.slice(1).sort());
+      const visibleRouteStops = await owner.query(
+        `select seq from transit.v_published_route_stops where variant_version_id = $1 order by seq`,
+        [published.variantVersionId]);
+      expect(visibleRouteStops.rows.map((r) => r.seq)).toEqual([2, 3]);
+    } finally {
+      await owner.query("rollback");
+    }
   });
 });
