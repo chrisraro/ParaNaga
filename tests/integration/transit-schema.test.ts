@@ -200,22 +200,101 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
     const batchId = batch.rows[0].id as string;
     await importer.query(
       `insert into ingest.raw_feature (batch_id, source_identity, identity_method, source_layer, source_code_raw,
-                                       label_raw, lon, lat, properties, content_hash)
-       values ($1, $2, 'layer_code_label', 'Loop Service A', 'A1', 'Plaza Rizal', 123.1846726, 13.6233869, '{}', 'h1')`,
+                                       label_raw, coordinates_raw, lon, lat, properties, content_hash)
+       values ($1, $2, 'layer_code_label', 'Loop Service A', 'A1', 'Plaza Rizal', '123.1846726,13.6233869,0',
+               123.1846726, 13.6233869, '{}', 'h1')`,
       [batchId, `id-${run}-1`]);
     await asImportRole((c) =>
       c.query(
         `insert into ingest.raw_feature (batch_id, source_identity, identity_method, source_layer, source_code_raw,
-                                         label_raw, lon, lat, properties, content_hash)
-         values ($1, $2, 'layer_code_label', 'Loop Service A', 'A2', 'Second', 123.18, 13.62, '{}', 'h2')`,
+                                         label_raw, coordinates_raw, lon, lat, properties, content_hash)
+         values ($1, $2, 'layer_code_label', 'Loop Service A', 'A2', 'Second', '123.18,13.62', 123.18, 13.62, '{}', 'h2')`,
         [batchId, `id-${run}-2`]));
     const stored = await appRows(null,
       sql`select lon::text, lat::text from ingest.raw_feature where source_identity = ${`id-${run}-1`}`);
     expect(stored).toEqual([{ lon: "123.18467260", lat: "13.62338690" }]);
     const dup = await pgCode(importer.query(
-      `insert into ingest.raw_feature (batch_id, source_identity, identity_method, source_layer, label_raw, lon, lat, properties, content_hash)
-       values ($1, $2, 'layer_code_label', 'Loop Service A', 'dup', 123.18, 13.62, '{}', 'h')`, [batchId, `id-${run}-1`]));
+      `insert into ingest.raw_feature (batch_id, source_identity, identity_method, source_layer, label_raw, coordinates_raw, lon, lat, properties, content_hash)
+       values ($1, $2, 'layer_code_label', 'Loop Service A', 'dup', '123.18,13.62', 123.18, 13.62, '{}', 'h')`, [batchId, `id-${run}-1`]));
     expect(dup.code).toBe("23505");
+  });
+
+  it("raw_feature requires the verbatim coordinate text", async () => {
+    const batch = await importer.query(
+      `insert into ingest.batch (snapshot_version, mode, status, started_by) values ($1, 'dry_run', 'running', 'test') returning id`,
+      [`mymaps:coords:${run}`]);
+    const missing = await pgCode(importer.query(
+      `insert into ingest.raw_feature (batch_id, source_identity, identity_method, source_layer, label_raw, lon, lat, content_hash)
+       values ($1, 'no-coords', 'layer_code_label', 'Loop Service A', 'x', 123.18, 13.62, 'h')`, [batch.rows[0].id]));
+    expect(missing.code).toBe("23502");
+  });
+
+  it("ingest provenance is append-only for paranaga_import; batch outcome and conflict review stay editable", async () => {
+    const batch = await importer.query(
+      `insert into ingest.batch (snapshot_version, mode, status, started_by) values ($1, 'dry_run', 'running', 'test') returning id`,
+      [`mymaps:append:${run}`]);
+    const batchId = batch.rows[0].id as string;
+    const doc = await importer.query(
+      `insert into ingest.source_document (file_name, sha256, bytes) values ($1, repeat('a', 64), 1) returning id`,
+      [`append-${run}.kml`]);
+    const raw = await importer.query(
+      `insert into ingest.raw_feature (batch_id, source_identity, identity_method, source_layer, label_raw, coordinates_raw, lon, lat, content_hash)
+       values ($1, $2, 'layer_code_label', 'Loop Service A', 'x', '123.18,13.62', 123.18, 13.62, 'h') returning id`,
+      [batchId, `append-${run}`]);
+    const sp = await importer.query(`insert into transit.stop_point (name) values ('lineage test') returning id`);
+    await importer.query(`insert into ingest.raw_feature_lineage (source_identity, stop_point_id) values ($1, $2)`,
+      [`append-${run}`, sp.rows[0].id]);
+    await importer.query(`insert into ingest.change (batch_id, source_identity, kind) values ($1, $2, 'added')`,
+      [batchId, `append-${run}`]);
+    await importer.query(`insert into ingest.source (code, title) values ('S998', 'append test')`);
+    const conflict = await importer.query(
+      `insert into ingest.conflict (batch_id, kind, refs) values ($1, 'near_duplicate', $2) returning id`,
+      [batchId, [`append-${run}`]]);
+
+    const refused: [string, unknown[]][] = [
+      [`update ingest.raw_feature set label_raw = 'y' where id = $1`, [raw.rows[0].id]],
+      [`update ingest.source_document set bytes = 2 where id = $1`, [doc.rows[0].id]],
+      [`update ingest.raw_feature_lineage set stop_point_id = stop_point_id where source_identity = $1`, [`append-${run}`]],
+      [`update ingest.batch set snapshot_version = 'x' where id = $1`, [batchId]],
+      [`update ingest.change set kind = 'changed' where batch_id = $1`, [batchId]],
+      [`update ingest.source set title = 'x' where code = 'S998'`, []],
+      [`delete from ingest.raw_feature where id = $1`, [raw.rows[0].id]],
+    ];
+    for (const [text, values] of refused) {
+      expect((await pgCode(importer.query(text, values))).code, text).toBe("42501");
+    }
+    const finished = await importer.query(
+      `update ingest.batch set status = 'committed', counts = '{"n":1}', finished_at = now() where id = $1`, [batchId]);
+    expect(finished.rowCount).toBe(1);
+    const reviewed = await importer.query(
+      `update ingest.conflict set resolution = 'kept_both', resolved_by = 'test', resolved_at = now() where id = $1`,
+      [conflict.rows[0].id]);
+    expect(reviewed.rowCount).toBe(1);
+  });
+
+  it("unknown values are stored as NULL instead of invented defaults", async () => {
+    const rollback = new Error("rollback");
+    await asImportRole(async (c) => {
+      await c.query(`insert into ingest.source (code, title) values ('S997', 'No evidence type stated')`);
+      const route = await one(c,
+        `insert into transit.route (public_code, name) values ($1, 'Unknown mode')
+         returning id, mode_code, legal_status, allocation_is_active_fleet_count, properties`, [`NULL-${run}`]);
+      expect(route).toMatchObject({ mode_code: null, legal_status: null, allocation_is_active_fleet_count: null, properties: {} });
+      const variant = await one(c,
+        `insert into transit.variant (route_id, direction, kind) values ($1, 'inbound', 'permanent') returning id`, [route.id]);
+      const vv = await one(c,
+        `insert into transit.variant_version (variant_id, evidence_level) values ($1, 'documentary') returning operating_status`,
+        [variant.id]);
+      expect(vv.operating_status).toBeNull();
+      const feeder = await one(c,
+        `insert into transit.feeder_lead (code, name) values ($1, 'Unknown status') returning operating_status`, [`SF-${run}`]);
+      expect(feeder.operating_status).toBeNull();
+      const source = await one(c, `select evidence_type from ingest.source where code = 'S997'`);
+      expect(source.evidence_type).toBeNull();
+      throw rollback;
+    }).catch((error: unknown) => {
+      if (error !== rollback) throw error;
+    });
   });
 
   it("only one committed batch per snapshot", async () => {
@@ -449,5 +528,40 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
     } finally {
       await owner.query("rollback");
     }
+  });
+
+  it("published route stops hide synthetic variants, variant versions and stop points", async () => {
+    const loop = await seedLoop("view-synth");
+    await publishAsImport(loop.revisionId);
+    const seqs = async () => (await owner.query(
+      `select seq from transit.v_published_route_stops where variant_version_id = $1 order by seq`,
+      [loop.variantVersionId])).rows.map((r) => r.seq);
+
+    const tables = ["published_pointer", "revision_member", "stop_point", "stop_point_version", "route_stop",
+      "variant", "variant_version"];
+    const bypass = async (fn: () => Promise<void>) => {
+      await owner.query("begin");
+      try {
+        for (const t of tables) await owner.query(`alter table transit.${t} no force row level security`);
+        await fn();
+      } finally {
+        await owner.query("rollback");
+      }
+    };
+    await bypass(async () => expect(await seqs()).toEqual([1, 2, 3]));
+    await bypass(async () => {
+      await owner.query(`update transit.stop_point set is_synthetic = true where id = $1`, [loop.stopPointIds[1]]);
+      expect(await seqs()).toEqual([1, 3]);
+    });
+    await bypass(async () => {
+      await owner.query(`update transit.variant_version set is_synthetic = true where id = $1`, [loop.variantVersionId]);
+      expect(await seqs()).toEqual([]);
+    });
+    await bypass(async () => {
+      await owner.query(
+        `update transit.variant set is_synthetic = true where id = (select variant_id from transit.variant_version where id = $1)`,
+        [loop.variantVersionId]);
+      expect(await seqs()).toEqual([]);
+    });
   });
 });

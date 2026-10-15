@@ -144,7 +144,6 @@ describe("fares in centavos", () => {
       code: "F05", ruleCode: null, category: "student", amountCentavos: 1300, kind: "reported_practice", observedAt: "2026-06-22",
     });
     expect(seed.fareObservations[0]!.details).toMatchObject({ reportedBaseCentavos: 1500, calculatedDiscountedBaseCentavos: 1200 });
-    expect(seed.fareObservations[0]!.details).toMatchObject({ calculatedDiscountedBaseCentavos: 1200 });
     expect(seed.fareConflicts).toEqual([
       expect.objectContaining({ ruleCode: "F03", observationCode: "F05", observationCategory: "student", status: "open" }),
     ]);
@@ -271,6 +270,40 @@ describe("trust boundary (Zod)", () => {
     expect(out.routes[1]!.allocationIsActiveFleetCount).toBeNull();
     expect(out.integrityIssues.join("\n")).toMatch(/R1: operating_status is missing/);
     expect(out.integrityIssues.join("\n")).toMatch(/R2: allocation_is_active_fleet_count is missing/);
+  });
+
+  it("rejects fractional or negative counts and a non-positive trial duration", () => {
+    const clone = () => JSON.parse(JSON.stringify(seedJson)) as {
+      routes: Record<string, unknown>[];
+      trial_route_changes: Record<string, unknown>[];
+      barangay_audit: Record<string, unknown>[];
+    };
+    const a = clone();
+    a.routes[0]!.allocated_units = 2.5;
+    expect(() => normalizeSeed(a)).toThrow(/allocated_units/);
+    const b = clone();
+    b.routes[0]!.official_group_number = 1.5;
+    expect(() => normalizeSeed(b)).toThrow(/official_group_number/);
+    const c = clone();
+    c.trial_route_changes[0]!.duration_days = 0;
+    expect(() => normalizeSeed(c)).toThrow(/duration_days/);
+    const d = clone();
+    d.trial_route_changes[0]!.duration_days = 30.5;
+    expect(() => normalizeSeed(d)).toThrow(/duration_days/);
+    const e = clone();
+    e.barangay_audit[0]!.exact_boarding_points_verified = -1;
+    expect(() => normalizeSeed(e)).toThrow(/exact_boarding_points_verified/);
+  });
+
+  it("reports (not defaults) a missing publish_exact_trip_fares flag", () => {
+    const bad = JSON.parse(JSON.stringify(seedJson)) as { fare_rules: Record<string, unknown>[] };
+    delete bad.fare_rules[0]!.publish_exact_trip_fares;
+    delete bad.fare_rules[4]!.publish_exact_trip_fares;
+    const out = normalizeSeed(bad);
+    expect(out.fareRules[0]!.publishExact).toBeNull();
+    const issues = out.integrityIssues.join(" | ");
+    expect(issues).toMatch(/F01: publish_exact_trip_fares is missing/);
+    expect(issues).toMatch(/F05: publish_exact_trip_fares is missing/);
   });
 
   it("reports an unknown top-level key", () => {

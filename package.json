@@ -17,6 +17,7 @@
     "test:e2e": "playwright test",
     "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
     "db:check-rls": "tsx --env-file-if-exists=.env.local scripts/check-rls.ts",
+    "db:import": "tsx --env-file-if-exists=.env.local scripts/import-naga.ts",
     "admin:bootstrap": "tsx --env-file-if-exists=.env.local scripts/bootstrap-admin.ts",
     "check:boundaries": "tsx scripts/check-boundaries.ts",
     "check:bundle-secrets": "tsx scripts/check-bundle-secrets.ts",

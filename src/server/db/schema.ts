@@ -63,7 +63,7 @@ export const source = ingest.table("source", {
   code: text("code").primaryKey(),
   title: text("title").notNull(),
   url: text("url"),
-  evidenceType: text("evidence_type").notNull(),
+  evidenceType: text("evidence_type"),
   publishedOrEnacted: text("published_or_enacted"),
   checkedOn: date("checked_on"),
 });
@@ -77,6 +77,8 @@ export const rawFeature = ingest.table("raw_feature", {
   sourceCodeRaw: text("source_code_raw"),
   labelRaw: text("label_raw").notNull(),
   descriptionRaw: text("description_raw"),
+  /** Verbatim source coordinate text, e.g. "123.1846726,13.6233869,0". */
+  coordinatesRaw: text("coordinates_raw").notNull(),
   // numeric(11,8): kept as strings to preserve source precision.
   lon: numeric("lon").notNull(),
   lat: numeric("lat").notNull(),
@@ -113,12 +115,13 @@ export const route = transit.table("route", {
   publicCode: text("public_code").notNull(),
   officialGroupNumber: integer("official_group_number"),
   name: text("name").notNull(),
-  modeCode: text("mode_code").notNull(),
-  legalStatus: text("legal_status").notNull(),
+  modeCode: text("mode_code"),
+  legalStatus: text("legal_status"),
   allocatedUnits: integer("allocated_units"),
-  allocationIsActiveFleetCount: boolean("allocation_is_active_fleet_count").notNull(),
+  allocationIsActiveFleetCount: boolean("allocation_is_active_fleet_count"),
   notes: text("notes"),
   sourceCodes: text("source_codes").array().notNull(),
+  properties: jsonb("properties").$type<Record<string, unknown>>().notNull(),
   isSynthetic: boolean("is_synthetic").notNull(),
 });
 
@@ -149,7 +152,7 @@ export const variantVersion = transit.table("variant_version", {
   trialStatus: text("trial_status"),
   effectiveFrom: date("effective_from"),
   trialDurationDays: integer("trial_duration_days"),
-  operatingStatus: text("operating_status").notNull(),
+  operatingStatus: text("operating_status"),
   evidenceLevel: text("evidence_level").$type<EvidenceLevel>().notNull(),
   isCircular: boolean("is_circular").notNull(),
   navigationApproved: boolean("navigation_approved").notNull(),

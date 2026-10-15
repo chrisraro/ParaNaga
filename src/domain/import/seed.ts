@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { DetectedConflict } from "./conflicts";
 import { parseCsvObjects } from "./csv";
 import { COORDINATE_TOLERANCE_DEG, type IdentifiedStop } from "./mapped-stops";
+import { zodMessage } from "./zod-message";
 
 /**
  * Pure normalization of naga_transport_seed.json into typed rows shaped for the ingest/transit
@@ -69,7 +70,8 @@ export type FareRuleRow = {
   effectiveFrom: string | null;
   enactedOn: string | null;
   evidenceStatus: string | null;
-  publishExact: boolean;
+  /** Null when the seed omits the flag (reported in integrityIssues). */
+  publishExact: boolean | null;
   sourceCodes: string[];
 };
 
@@ -196,8 +198,10 @@ export type NormalizedSeed = {
 
 const str = z.string();
 const strs = z.array(z.string());
-const php = z.number().finite().nonnegative();
-const nn = z.number().finite().nonnegative();
+/** Peso amounts (may have centavos). */
+const php = z.number().nonnegative();
+/** Counts stored in integer columns. */
+const count = z.number().int().nonnegative();
 
 const SourceSchema = z.looseObject({
   id: str,
@@ -214,8 +218,8 @@ const RouteSchema = z.looseObject({
   mode: str,
   legal_status: str,
   operating_status: str.optional(),
-  official_group_number: nn.nullish(),
-  allocated_units: nn.nullish(),
+  official_group_number: count.nullish(),
+  allocated_units: count.nullish(),
   allocation_is_active_fleet_count: z.boolean().optional(),
   direction: str.nullish(),
   inbound_streets: strs.nullish(),
@@ -234,7 +238,7 @@ const TrialSchema = z.looseObject({
   route_id: str,
   source: str,
   adopted: str.nullish(),
-  duration_days: nn.nullish(),
+  duration_days: z.number().int().positive().nullish(),
   permanent_status: str.nullish(),
   simplified_circuit: strs.optional(),
 });
@@ -243,9 +247,9 @@ const FareSchema = z.looseObject({
   id: str,
   mode: str,
   base_php: php.nullish(),
-  base_km: nn.nullish(),
+  base_km: z.number().nonnegative().nullish(),
   additional_php_per_km: php.nullish(),
-  discount_percent: z.number().finite().min(0).max(100).nullish(),
+  discount_percent: z.number().min(0).max(100).nullish(),
   discounted_base_php: php.nullish(),
   discounted_base_php_calculated: php.nullish(),
   discount_groups: strs.nullish(),
@@ -267,8 +271,8 @@ const TerminalSchema = z.looseObject({
   modes: strs.optional(),
   evidence_status: str.nullish(),
   notes: str.nullish(),
-  latitude: z.number().finite().min(-90).max(90).nullish(),
-  longitude: z.number().finite().min(-180).max(180).nullish(),
+  latitude: z.number().min(-90).max(90).nullish(),
+  longitude: z.number().min(-180).max(180).nullish(),
   sources: strs.nullish(),
   entrances: z.array(z.unknown()).optional(),
   bays: z.array(z.unknown()).optional(),
@@ -308,7 +312,7 @@ const BarangaySchema = z.looseObject({
   name: str,
   source: str.nullish(),
   survey_status: str,
-  exact_boarding_points_verified: nn.nullish(),
+  exact_boarding_points_verified: count.nullish(),
 });
 
 const RailSchema = z.looseObject({ sources: strs.nullish() });
@@ -330,8 +334,8 @@ const SeedMappedStopSchema = z.looseObject({
   source_stop_code: str,
   label_raw: str,
   source_layer: str,
-  latitude: z.number().finite(),
-  longitude: z.number().finite(),
+  latitude: z.number(),
+  longitude: z.number(),
   code_prefix_matches_layer: z.boolean().nullish(),
 });
 
@@ -360,10 +364,7 @@ const KNOWN_TOP_LEVEL = new Set<string>([...Object.keys(SeedSchema.shape), ...NO
 
 function parseSeedSchema(input: unknown) {
   const r = SeedSchema.safeParse(input);
-  if (!r.success) {
-    const first = r.error.issues[0];
-    throw new Error(`Seed: invalid at ${first && first.path.length > 0 ? first.path.join(".") : "root"}: ${first?.message ?? "unknown error"}`);
-  }
+  if (!r.success) throw new Error(zodMessage("Seed", r.error));
   return r.data;
 }
 
@@ -461,6 +462,8 @@ export function normalizeSeed(input: unknown): NormalizedSeed {
 
   for (const o of seed.fare_rules) {
     const where = `fare_rules.${o.id}`;
+    if (o.publish_exact_trip_fares === undefined) issues.push(`fare rule ${o.id}: publish_exact_trip_fares is missing`);
+    const publishExact = o.publish_exact_trip_fares ?? null;
     if (o.reported_student_php !== undefined) {
       fareObservations.push({
         code: o.id,
@@ -472,7 +475,7 @@ export function normalizeSeed(input: unknown): NormalizedSeed {
         observedAt: o.reported_at ?? null,
         evidenceStatus: o.evidence_status ?? null,
         sourceCodes: o.sources ?? [],
-        details: { reportedBaseCentavos: centavos(o.base_php, `${where}.base_php`), publishExact: o.publish_exact_trip_fares === true },
+        details: { reportedBaseCentavos: centavos(o.base_php, `${where}.base_php`), publishExact },
       });
       continue;
     }
@@ -492,7 +495,7 @@ export function normalizeSeed(input: unknown): NormalizedSeed {
       effectiveFrom: o.effective_from ?? null,
       enactedOn: o.ordinance_enacted ?? null,
       evidenceStatus: o.evidence_status ?? null,
-      publishExact: o.publish_exact_trip_fares === true,
+      publishExact,
       sourceCodes: o.sources ?? [],
     });
   }

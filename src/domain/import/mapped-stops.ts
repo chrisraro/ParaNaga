@@ -2,6 +2,7 @@ import { z } from "zod";
 import { parseCsvObjects } from "./csv";
 import { sha256Hex } from "./hash";
 import { parseKml } from "./kml";
+import { zodMessage } from "./zod-message";
 
 export type LayerLetter = "A" | "B" | "C" | "D";
 
@@ -93,9 +94,9 @@ const GeoMetadataSchema = z.looseObject({
   shared_short_url: z.string().nullish(),
   public_owner_display_name: z.string().nullish(),
   owner_identity_or_official_role_verified: z.boolean().nullish(),
-  record_count: z.number().finite().nonnegative().nullish(),
-  exact_unique_coordinate_count: z.number().finite().nonnegative().nullish(),
-  layer_counts: z.record(z.string(), z.number().finite().nonnegative()).nullish(),
+  record_count: z.number().nonnegative().nullish(),
+  exact_unique_coordinate_count: z.number().nonnegative().nullish(),
+  layer_counts: z.record(z.string(), z.number().nonnegative()).nullish(),
   retrieved_on: z.string().nullish(),
   notes: z.string().nullish(),
 });
@@ -104,7 +105,7 @@ const GeoFeatureSchema = z.object({
   id: z.string().nullish(),
   geometry: z.object({
     type: z.literal("Point"),
-    coordinates: z.tuple([z.number().finite().min(-180).max(180), z.number().finite().min(-90).max(90)], z.number()),
+    coordinates: z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)], z.number()),
   }),
   properties: z.looseObject({
     id: z.string().nullish(),
@@ -113,7 +114,7 @@ const GeoFeatureSchema = z.object({
     label_raw: z.string(),
     route_id: z.string().nullish(),
     direction: z.string().nullish(),
-    export_position: z.number().finite().nullish(),
+    export_position: z.number().nullish(),
     operating_status: z.string().nullish(),
   }),
 });
@@ -137,11 +138,6 @@ const CsvRowSchema = z.looseObject({
   direction: z.string().optional(),
   operating_status: z.string().optional(),
 });
-
-function zodMessage(where: string, error: z.ZodError): string {
-  const first = error.issues[0];
-  return `${where}: invalid at ${first && first.path.length > 0 ? first.path.join(".") : "root"}: ${first?.message ?? "unknown error"}`;
-}
 
 export function parseGeojsonStops(text: string): { metadata: MapMetadata; records: MappedStopRecord[] } {
   const parsed = GeoCollectionSchema.safeParse(JSON.parse(text));

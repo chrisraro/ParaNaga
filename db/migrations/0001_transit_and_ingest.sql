@@ -36,7 +36,7 @@ create table ingest.source (
   code                 text primary key check (code ~ '^S[0-9]{2,3}$'),
   title                text not null,
   url                  text,
-  evidence_type        text not null,
+  evidence_type        text,          -- NULL = not stated by the research package
   published_or_enacted text,          -- verbatim: a date, a year or a description
   checked_on           date,
   created_at           timestamptz not null default now()
@@ -79,6 +79,7 @@ create table ingest.raw_feature (
   source_code_raw text,               -- verbatim; not unique across layers
   label_raw       text not null,      -- verbatim spelling
   description_raw text,
+  coordinates_raw text not null,      -- verbatim source text, e.g. "123.1846726,13.6233869,0"
   lon             numeric(11, 8) not null check (lon between -180 and 180),
   lat             numeric(11, 8) not null check (lat between -90 and 90),
   properties      jsonb not null default '{}'::jsonb,
@@ -226,12 +227,13 @@ create table transit.route (
   public_code                      text not null unique,     -- R1 … R8-D
   official_group_number            integer,
   name                             text not null,
-  mode_code                        text not null,
-  legal_status                     text not null,
+  mode_code                        text,                     -- verbatim seed mode; NULL = unknown
+  legal_status                     text,                     -- NULL = unknown
   allocated_units                  integer check (allocated_units >= 0),
-  allocation_is_active_fleet_count boolean not null default false,
+  allocation_is_active_fleet_count boolean,                  -- NULL = not stated
   notes                            text,
   source_codes                     text[] not null default '{}',
+  properties                       jsonb not null default '{}'::jsonb,  -- other seed fields, verbatim
   is_synthetic                     boolean not null default false,
   created_at                       timestamptz not null default now()
 );
@@ -265,7 +267,7 @@ create table transit.variant_version (
   trial_status        text,
   effective_from      date,
   trial_duration_days integer check (trial_duration_days > 0),
-  operating_status    text not null default 'unverified' check (operating_status in ('unverified', 'observed', 'confirmed')),
+  operating_status    text check (operating_status in ('unverified', 'observed', 'confirmed')),  -- NULL = not stated
   evidence_level      text not null check (evidence_level in ('documentary', 'provisional', 'verified')),
   is_circular         boolean not null default false,
   navigation_approved boolean not null default false,
@@ -443,7 +445,7 @@ create table transit.feeder_lead (
   code             text not null unique,     -- SF01 …
   name             text not null,
   notes            text,
-  operating_status text not null default 'unverified',
+  operating_status text,                    -- verbatim; NULL = not stated
   fare_centavos    integer check (fare_centavos >= 0),
   source_codes     text[] not null default '{}',
   is_synthetic     boolean not null default false
@@ -682,7 +684,11 @@ grant execute on function transit.publish_revision(uuid) to paranaga_import;
 -- paranaga_import: writes on ingest.* and transit.* (no deletes except draft membership).
 -- Version rows, route stops and stop sources are INSERT-only: published content is immutable,
 -- a change is a new version in a new draft revision.
-grant select, insert, update on all tables in schema ingest to paranaga_import;
+-- ingest.* is append-only provenance: INSERT only, except a batch's outcome and a conflict's
+-- review resolution.
+grant select, insert on all tables in schema ingest to paranaga_import;
+grant update (status, counts, finished_at) on ingest.batch to paranaga_import;
+grant update (resolution, resolved_by, resolved_at) on ingest.conflict to paranaga_import;
 grant select, insert, update on
   transit.revision, transit.route, transit.route_alias, transit.variant, transit.stop_point,
   transit.terminal, transit.fare_rule, transit.fare_observation, transit.fare_conflict,
@@ -751,7 +757,7 @@ end
 $$;
 
 -- Import: non-personal research tables, written only by the import script.
--- ingest.*: free read/insert/update (provenance, not published content).
+-- ingest.*: rows visible and writable to import; the column grants above limit UPDATE.
 do $$
 declare
   t text;
@@ -859,7 +865,7 @@ select r.id, r.seq, r.label, r.kind, r.published_at
 
 create view transit.v_published_routes with (security_invoker = true) as
 select pp.revision_id, t.id, t.public_code, t.official_group_number, t.name, t.mode_code, t.legal_status,
-       t.allocated_units, t.allocation_is_active_fleet_count, t.notes, t.source_codes
+       t.allocated_units, t.allocation_is_active_fleet_count, t.notes, t.source_codes, t.properties
   from transit.published_pointer pp
   join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'route'
   join transit.route t on t.id = m.entity_id
@@ -905,7 +911,11 @@ select pp.revision_id, rs.variant_version_id, rs.seq, spv.stop_point_id, rs.stop
   join transit.revision_member sm on sm.revision_id = pp.revision_id and sm.entity_kind = 'stop_point'
                                  and sm.version_id = rs.stop_point_version_id
   join transit.stop_point_version spv on spv.id = rs.stop_point_version_id
- where not rs.is_synthetic and not spv.is_synthetic;
+  join transit.stop_point sp on sp.id = spv.stop_point_id
+  join transit.variant_version vv on vv.id = rs.variant_version_id
+  join transit.variant v on v.id = vv.variant_id and v.id = vm.entity_id
+ where not rs.is_synthetic and not spv.is_synthetic and not sp.is_synthetic
+   and not vv.is_synthetic and not v.is_synthetic;
 
 create view transit.v_published_fare_rules with (security_invoker = true) as
 select pp.revision_id, fr.id as fare_rule_id, frv.id as fare_rule_version_id, fr.code, fr.mode_code,
