@@ -1,0 +1,332 @@
+{
+ "header": {
+  "query": "synthetic fixture: no Overpass query was sent",
+  "regionalQuery": "synthetic fixture: no Overpass query was sent",
+  "endpoint": "synthetic",
+  "fetchedAt": "2026-10-16T00:00:00Z",
+  "osmBaseTimestamp": null,
+  "boundaryRelation": 3084673,
+  "bufferM": 300,
+  "licence": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "synthetic": true,
+  "note": "SYNTHETIC: a hand-made fake grid with fake names for unit tests. Not OpenStreetMap data; never imported or published.",
+  "removedFields": [
+   "changeset",
+   "otherTags",
+   "uid",
+   "user"
+  ],
+  "regionalRelations": [
+   {
+    "relationId": 9000001,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "name": "Synthetic Fakeville–Mocktown",
+    "ref": null,
+    "from": "Fakeville",
+    "to": "Mocktown",
+    "lengthKm": 2.224
+   }
+  ]
+ },
+ "response": {
+  "version": 0.6,
+  "generator": "synthetic",
+  "elements": [
+   {
+    "type": "node",
+    "id": 100,
+    "lat": 13.625,
+    "lon": 123.19
+   },
+   {
+    "type": "node",
+    "id": 101,
+    "lat": 13.625,
+    "lon": 123.190925
+   },
+   {
+    "type": "node",
+    "id": 102,
+    "lat": 13.625,
+    "lon": 123.19185
+   },
+   {
+    "type": "node",
+    "id": 110,
+    "lat": 13.6241,
+    "lon": 123.19
+   },
+   {
+    "type": "node",
+    "id": 111,
+    "lat": 13.6241,
+    "lon": 123.190925
+   },
+   {
+    "type": "node",
+    "id": 112,
+    "lat": 13.6241,
+    "lon": 123.19185
+   },
+   {
+    "type": "node",
+    "id": 113,
+    "lat": 13.6241,
+    "lon": 123.192775
+   },
+   {
+    "type": "node",
+    "id": 120,
+    "lat": 13.6232,
+    "lon": 123.19
+   },
+   {
+    "type": "node",
+    "id": 121,
+    "lat": 13.6232,
+    "lon": 123.190925
+   },
+   {
+    "type": "node",
+    "id": 122,
+    "lat": 13.6232,
+    "lon": 123.19185
+   },
+   {
+    "type": "node",
+    "id": 130,
+    "lat": 13.6223,
+    "lon": 123.19
+   },
+   {
+    "type": "node",
+    "id": 201,
+    "lat": 13.6232,
+    "lon": 123.192775
+   },
+   {
+    "type": "node",
+    "id": 202,
+    "lat": 13.6229,
+    "lon": 123.193075
+   },
+   {
+    "type": "node",
+    "id": 203,
+    "lat": 13.6235,
+    "lon": 123.193075
+   },
+   {
+    "type": "node",
+    "id": 301,
+    "lat": 13.6255,
+    "lon": 123.1895,
+    "tags": {
+     "name": "Fakeville",
+     "place": "village"
+    }
+   },
+   {
+    "type": "node",
+    "id": 302,
+    "lat": 13.6228,
+    "lon": 123.1925,
+    "tags": {
+     "name": "Twinplace",
+     "place": "hamlet"
+    }
+   },
+   {
+    "type": "node",
+    "id": 303,
+    "lat": 13.626,
+    "lon": 123.193,
+    "tags": {
+     "name": "Twinplace",
+     "place": "hamlet"
+    }
+   },
+   {
+    "type": "node",
+    "id": 304,
+    "lat": 13.6245,
+    "lon": 123.1915,
+    "tags": {
+     "name": "Mock Heights",
+     "place": "neighbourhood"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     100,
+     101,
+     102
+    ],
+    "tags": {
+     "highway": "residential",
+     "name": "Fakeroad Avenue"
+    }
+   },
+   {
+    "type": "way",
+    "id": 2,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     110,
+     111,
+     112
+    ],
+    "tags": {
+     "highway": "residential",
+     "name": "Testing Street"
+    }
+   },
+   {
+    "type": "way",
+    "id": 3,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     120,
+     121,
+     122
+    ],
+    "tags": {
+     "highway": "residential",
+     "name": "Mock Lane",
+     "oneway": "yes"
+    }
+   },
+   {
+    "type": "way",
+    "id": 4,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     100,
+     110,
+     120
+    ],
+    "tags": {
+     "highway": "tertiary",
+     "name": "Sample Road",
+     "ref": "SYN-1"
+    }
+   },
+   {
+    "type": "way",
+    "id": 5,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     102,
+     112,
+     122
+    ],
+    "tags": {
+     "highway": "residential",
+     "name": "Example Drive",
+     "alt_name": "Example Dr."
+    }
+   },
+   {
+    "type": "way",
+    "id": 6,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     101,
+     111
+    ],
+    "tags": {
+     "highway": "footway",
+     "name": "Dummy Path"
+    }
+   },
+   {
+    "type": "way",
+    "id": 7,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     111,
+     121
+    ],
+    "tags": {
+     "highway": "service",
+     "name": "Private Yard Road",
+     "access": "private"
+    }
+   },
+   {
+    "type": "way",
+    "id": 8,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     112,
+     113
+    ],
+    "tags": {
+     "highway": "service",
+     "name": "Garden Walk",
+     "access": "private",
+     "foot": "yes"
+    }
+   },
+   {
+    "type": "way",
+    "id": 9,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     122,
+     201
+    ],
+    "tags": {
+     "highway": "residential",
+     "name": "Example Drive"
+    }
+   },
+   {
+    "type": "way",
+    "id": 10,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     201,
+     202,
+     203,
+     201
+    ],
+    "tags": {
+     "highway": "tertiary",
+     "junction": "roundabout",
+     "name": "Fake Circle"
+    }
+   },
+   {
+    "type": "way",
+    "id": 11,
+    "version": 1,
+    "timestamp": "2020-01-01T00:00:00Z",
+    "nodes": [
+     120,
+     130
+    ],
+    "tags": {
+     "highway": "motorway",
+     "name": "Fake Expressway",
+     "oneway": "yes"
+    }
+   }
+  ]
+ }
+}
