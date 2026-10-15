@@ -9,7 +9,7 @@ type BoundaryFile = {
 
 const outerRing = (boundary as unknown as BoundaryFile).features[0]?.geometry.coordinates[0];
 if (!outerRing || outerRing.length < 4) {
-  throw new Error("naga-city-boundary.geojson has no outer ring");
+  throw new Error("naga-city-boundary.json has no outer ring");
 }
 
 /** City outline, GeoJSON order [lng, lat]. */

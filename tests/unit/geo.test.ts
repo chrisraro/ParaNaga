@@ -44,6 +44,8 @@ describe("boundary data", () => {
       readFileSync(resolve(__dirname, "../../data/geo/naga-city-boundary.json"), "utf8"),
     ) as { features: { properties: { source: string; license: string } }[] };
     expect(NAGA_BOUNDARY).toHaveLength(1269);
+    // A GeoJSON ring is closed: the first point repeats as the last.
+    expect(NAGA_BOUNDARY[0]).toEqual(NAGA_BOUNDARY[NAGA_BOUNDARY.length - 1]);
     const props = file.features[0]!.properties;
     expect(props.source).toContain("3084673");
     expect(props.license).toContain("ODbL");
