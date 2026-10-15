@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { haversineMeters } from "@/domain/geo/geometry";
 import { isInsideNaga } from "@/domain/geo/naga";
-import { PLAN_LABELS, planTrip, type PlanOption, type RideLeg } from "@/domain/planner/plan";
+import { PLAN_LABELS, planTrip, savesWalking, type PlanOption, type RideLeg } from "@/domain/planner/plan";
 import { LINE_VARIANT_ID, LOOP_VARIANT_ID, STOP_ID, at, synthetic, syntheticSnapshot } from "../fixtures/synthetic/planner-network";
 
 const snap = syntheticSnapshot();
@@ -10,7 +11,7 @@ const seqKey = (o: PlanOption) => rideLegs(o).map((l) => l.variantId).join(">");
 describe("planTrip on the synthetic network", () => {
   it("uses a fixture explicitly marked synthetic, inside Naga", () => {
     expect(synthetic).toBe(true);
-    for (const p of [at(-700, 0), at(0, -100), at(4000, -100), at(2000, 1000), at(500, 300)]) expect(isInsideNaga(p)).toBe(true);
+    for (const p of [at(-700, 0), at(0, -100), at(4000, -100), at(2000, 1000), at(500, 300), at(500, -300), at(1300, -300)]) expect(isInsideNaga(p)).toBe(true);
   });
 
   it("rides the loop forward: P1 → P2 → P3", () => {
@@ -33,9 +34,44 @@ describe("planTrip on the synthetic network", () => {
     expect(o).toMatchObject({ rides: 1, evidence: "provisional", fare: { minCentavos: 1400, maxCentavos: 1700, status: "estimate" } });
   });
 
-  it("never rides backward: P3 → P1 would need most of the loop, longer than walking, so no option", () => {
+  it("never rides backward: P3 → P1 goes forward round most of the loop (it saves walking)", () => {
     const plan = planTrip(snap, at(2000, -100), at(0, -100));
+    expect(plan.coverage).toBe("provisional");
+    const order = snap.variants[0]!.stopIds;
+    for (const o of plan.options) {
+      for (const leg of rideLegs(o)) {
+        expect(leg.variantId).toBe(LOOP_VARIANT_ID);
+        const idx = leg.stops.map((s) => order.indexOf(s.id));
+        idx.slice(1).forEach((x, i) => expect(x).toBe((idx[i]! + 1) % order.length)); // each step is the next stop
+      }
+    }
+    const ride = rideLegs(plan.options[0]!)[0]!;
+    expect(ride.stops.map((s) => s.id)).toEqual(["P3", "P4", "P5", "P6", "P1"].map((c) => STOP_ID[c]));
+    expect(Number.isInteger(ride.distanceMeters)).toBe(true);
+    expect(ride.distanceMeters).toBeGreaterThan(3990);
+    expect(ride.distanceMeters).toBeLessThan(4010);
+  });
+
+  it("keeps a ride option only when it saves walking (estimate vs estimate)", () => {
+    expect(savesWalking(1039, 1040)).toBe(true);
+    expect(savesWalking(1040, 1040)).toBe(false);
+    for (const [o, d] of [[at(0, -100), at(2000, -100)], [at(2000, -100), at(0, -100)], [at(0, -100), at(4000, -100)]] as const) {
+      const plan = planTrip(snap, o, d);
+      for (const opt of plan.options) expect(savesWalking(opt.walkEstimateMeters, plan.directWalkEstimateMeters!)).toBe(true);
+    }
+  });
+
+  it("reports walk_shorter when rides connect but none saves walking", () => {
+    // P1 → P2 connects, but 583 m + 424 m of walking is more than walking the 800 m directly.
+    const plan = planTrip(snap, at(500, -300), at(1300, -300));
+    expect(plan).toMatchObject({ coverage: "none", reason: "walk_shorter", options: [] });
+    expect(plan.directWalkEstimateMeters).toBe(Math.round(Math.round(haversineMeters(at(500, -300), at(1300, -300))) * 1.3));
+  });
+
+  it("reports no_route when stops are in reach at both ends but no ride connects them", () => {
+    const plan = planTrip(snap, at(4000, -100), at(0, -100)); // Q3 is the end of line Q
     expect(plan).toMatchObject({ coverage: "none", reason: "no_route", options: [] });
+    expect(plan.directWalkEstimateMeters).toBe(Math.round(Math.round(haversineMeters(at(4000, -100), at(0, -100))) * 1.3));
   });
 
   it("transfers loop → line within 400 m and labels the single option with every label", () => {
@@ -65,16 +101,16 @@ describe("planTrip on the synthetic network", () => {
     expect(far).toMatchObject({ coverage: "none", reason: "no_stop_near_origin", options: [] });
     const farDest = planTrip(snap, at(0, -100), at(-700, 0));
     expect(farDest).toMatchObject({ coverage: "none", reason: "no_stop_near_destination" });
-    const wider = planTrip(snap, at(-700, 0), at(2000, -100), { maxAccessWalkM: 800 });
-    expect(wider.coverage).toBe("provisional");
-    expect((wider.options[0]!.legs[0] as { distanceMeters: number }).distanceMeters).toBeLessThanOrEqual(800);
+    expect(planTrip(snap, at(0, -100), at(2000, -100)).coverage).toBe("provisional");
+    expect(planTrip(snap, at(0, -100), at(2000, -100), { maxAccessWalkM: 50 })).toMatchObject({ coverage: "none", reason: "no_stop_near_origin" });
   });
 
-  it("puts a walk-only option first, labelled Recommended, when the destination is within the access cap", () => {
+  it("puts a walk-only option first, labelled Recommended and Fewest transfers, within the access cap", () => {
     const plan = planTrip(snap, at(500, -100), at(500, 300));
     expect(plan.coverage).toBe("provisional");
     const first = plan.options[0]!;
-    expect(first.labels).toEqual(["Recommended"]);
+    expect(first.labels).toEqual(["Recommended", "Fewest transfers"]);
+    for (const o of plan.options.slice(1)) expect(o.labels).toEqual(["Least walking"]);
     expect(first.legs).toHaveLength(1);
     expect(first).toMatchObject({ rides: 0, fare: { minCentavos: 0, maxCentavos: 0, status: "no_ride" } });
     expect(plan.notes.join(" ")).toMatch(/walk/i);
@@ -110,5 +146,7 @@ describe("planTrip on the synthetic network", () => {
   it("validates options", () => {
     expect(() => planTrip(snap, at(0, 0), at(1, 1), { maxRides: 0 })).toThrow();
     expect(() => planTrip(snap, at(0, 0), at(1, 1), { maxAccessWalkM: -1 })).toThrow();
+    expect(() => planTrip(snap, at(0, 0), at(1, 1), { maxAccessWalkM: 601 })).toThrow(/600/);
+    expect(() => planTrip(snap, at(0, 0), at(1, 1), { maxTransferWalkM: 401 })).toThrow(/400/);
   });
 });

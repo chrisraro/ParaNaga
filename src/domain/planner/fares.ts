@@ -13,6 +13,15 @@
 // Discounts are never applied (eligibility unverified). If F01 or F02 is missing or lacks a
 // base, base distance or per-km increment, the leg is "unavailable" with null amounts — there
 // is no hard-coded fallback. A trip total is the sum of its legs' ranges.
+//
+// The distance is rounded to whole metres first (the planner already passes whole metres), so
+// floating-point noise just above a whole km cannot add a kilometre to the maximum.
+//
+// Deliberately NOT read: a rule's `status` and `rounding`. Every imported fare rule is draft,
+// reported estimate data (`isEstimate: true`, `publishExact: false`) — none is an approved
+// matrix — so status cannot separate usable from unusable rules today, and the seed's rounding
+// is null (unknown), which is why the range is widened above instead. Revisit both when a
+// verified fare matrix is published.
 import type { FareRuleEstimate } from "../api/schemas";
 
 export const FARE_RULE_CODES = ["F01", "F02"] as const;
@@ -56,8 +65,9 @@ export function legFareEstimate(rideMeters: number, rules: readonly FareRuleEsti
   const low = usable(rules, "F01");
   const high = usable(rules, "F02");
   if (!low || !high) return { minCentavos: null, maxCentavos: null, status: "unavailable", ...common };
-  const min = floorPeso(low.base + Math.floor(extraMeters(low, rideMeters) / 1000) * low.perKm);
-  const max = ceilPeso(high.base + Math.ceil(extraMeters(high, rideMeters) / 1000) * high.perKm);
+  const meters = Math.round(rideMeters);
+  const min = floorPeso(low.base + Math.floor(extraMeters(low, meters) / 1000) * low.perKm);
+  const max = ceilPeso(high.base + Math.ceil(extraMeters(high, meters) / 1000) * high.perKm);
   return { minCentavos: min, maxCentavos: max, status: "estimate", ...common };
 }
 

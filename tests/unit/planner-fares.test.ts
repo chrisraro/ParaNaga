@@ -21,6 +21,11 @@ describe("legFareEstimate (F01 min, F02 max, whole pesos)", () => {
     expect(legFareEstimate(5500, rules)).toMatchObject({ minCentavos: 1600, maxCentavos: 2200 });
   });
 
+  it("rounds the distance to whole metres first, so a float just above a whole km adds nothing", () => {
+    expect(legFareEstimate(4000.0000004, rules)).toMatchObject({ minCentavos: 1400, maxCentavos: 1700 });
+    expect(legFareEstimate(4000.6, rules)).toMatchObject({ minCentavos: 1400, maxCentavos: 2000 });
+  });
+
   it("is always an approximate estimate with discounts not applied", () => {
     const f = legFareEstimate(1000, rules);
     expect(f).toMatchObject({ completeness: "estimate", approximate: true, discountsApplied: false, ruleCodes: ["F01", "F02"] });

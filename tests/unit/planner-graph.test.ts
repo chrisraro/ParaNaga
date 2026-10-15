@@ -44,6 +44,24 @@ describe("buildGraph (synthetic)", () => {
     expect(buildGraph(syntheticSnapshot(), 150).transfers[graph.variants.indexOf(loop)]![2]).toEqual([]);
   });
 
+  it("drops a circular variant's closing duplicate of its first stop", () => {
+    const s = syntheticSnapshot();
+    s.variants[0]!.stopIds = [...s.variants[0]!.stopIds, s.variants[0]!.stopIds[0]!];
+    const g = buildGraph(s, 400);
+    const v = g.variants.find((x) => x.variantId === LOOP_VARIANT_ID)!;
+    expect(v.stops).toHaveLength(6);
+    expect(v.segmentMeters.every((m) => m > 990)).toBe(true);
+    expect(forwardRides(v, 0).map((r) => r.position)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it("skips a variant that repeats a stop id elsewhere", () => {
+    const s = syntheticSnapshot();
+    const ids = s.variants[1]!.stopIds;
+    s.variants[1]!.stopIds = [ids[0]!, ids[1]!, ids[0]!, ids[2]!];
+    const g = buildGraph(s, 400);
+    expect(g.skippedVariantIds).toEqual([LINE_VARIANT_ID]);
+  });
+
   it("skips a variant that references a stop missing from the snapshot", () => {
     const s = syntheticSnapshot();
     s.variants[1]!.stopIds = [...s.variants[1]!.stopIds, "00000000-0000-4000-8000-999999999999"];

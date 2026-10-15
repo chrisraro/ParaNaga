@@ -8,7 +8,8 @@ import { buildSnapshot, parseGeojsonStops, withIdentities } from "@/domain/impor
 import { provisionalLoopSequence } from "@/domain/import/provisional-loops";
 import { normalizeSeed } from "@/domain/import/seed";
 
-const read = (f: string) => readFileSync(`Data_Sets/${f}`, "utf8");
+const DATA_SETS = new URL("../../Data_Sets/", import.meta.url);
+const read = (f: string) => readFileSync(new URL(f, DATA_SETS), "utf8");
 
 function idFor(key: string): string {
   const h = createHash("sha256").update(key).digest("hex");

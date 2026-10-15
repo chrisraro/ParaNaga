@@ -7,6 +7,9 @@
 //    position a ride may alight at most n − 1 stops later.
 //  - Boarding/alighting is allowed at every stop of a variant: the snapshot carries no boarding
 //    permission, so it is unknown — allowed, and flagged on the ride leg by the planner.
+//  - A circular variant stored closed (last stop id == first) has that closing duplicate dropped;
+//    a variant that repeats any other stop id is skipped (a ride could otherwise alight at its own
+//    boarding stop, i.e. a full circuit).
 //  - Transfers link positions of DIFFERENT variants whose stops are within the transfer cap
 //    (straight-line), including a stop shared by both (0 m).
 import type { NetworkSnapshot, Verification } from "../api/schemas";
@@ -45,8 +48,10 @@ export function buildGraph(snapshot: Pick<NetworkSnapshot, "stops" | "variants">
   const skippedVariantIds: string[] = [];
 
   for (const v of [...snapshot.variants].sort((a, b) => byString(a.variantId, b.variantId))) {
-    const stops = v.stopIds.map((id) => stopsById.get(id));
-    if (stops.some((s) => s === undefined) || stops.length < 2) {
+    let ids = v.stopIds;
+    if (v.isCircular && ids.length > 1 && ids[ids.length - 1] === ids[0]) ids = ids.slice(0, -1);
+    const stops = ids.map((id) => stopsById.get(id));
+    if (stops.some((s) => s === undefined) || stops.length < 2 || new Set(ids).size !== ids.length) {
       skippedVariantIds.push(v.variantId);
       continue;
     }

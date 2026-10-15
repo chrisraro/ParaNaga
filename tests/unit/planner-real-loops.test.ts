@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { haversineMeters } from "@/domain/geo/geometry";
 import { isInsideNaga } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
-import { planTrip, type PlanLeg, type TripPlan } from "@/domain/planner/plan";
+import { planTrip, savesWalking, type PlanLeg, type TripPlan } from "@/domain/planner/plan";
 import { realLoopsSnapshot } from "../fixtures/real-loops";
 
 const snap = realLoopsSnapshot();
@@ -47,8 +47,10 @@ function assertWellFormed(plan: TripPlan, origin: LatLng, destination: LatLng) {
       expect(r.boardingVerified).toBe(false);
       expect(r.stops.length).toBeGreaterThanOrEqual(2);
     }
-    // never longer riding than walking the whole way
-    if (o.rides > 0) expect(o.rideMeters).toBeLessThanOrEqual(Math.round(haversineMeters(origin, destination) * 1.3));
+    // a ride option is kept only when it saves walking (the planner's own predicate)
+    expect(plan.directWalkEstimateMeters).toBe(Math.round(Math.round(haversineMeters(origin, destination)) * 1.3));
+    if (o.rides > 0) expect(savesWalking(o.walkEstimateMeters, plan.directWalkEstimateMeters!)).toBe(true);
+    expect(Number.isInteger(o.rideMeters)).toBe(true);
   }
 }
 
@@ -101,19 +103,38 @@ describe("planTrip on real Loop A / Loop B", () => {
     expect(planTrip(snap, far!, stop("B12"))).toMatchObject({ coverage: "none", reason: "no_stop_near_origin" });
   });
 
-  it("property: options are contiguous and within the walk caps (seeded)", () => {
-    const c = stop("A1");
+  it("walk-only mode: no ride option walks as much as walking directly (review counterexample)", () => {
+    const origin = near(stop("A1"), -200, 200);
+    const dest = near(stop("A1"), 237, -189);
+    const plan = planTrip(snap, origin, dest);
+    const walk = plan.options[0]!;
+    expect(walk.rides).toBe(0);
+    expect(walk.labels).toEqual(["Recommended", "Fewest transfers"]);
+    for (const o of plan.options.slice(1)) {
+      expect(o.labels).toEqual(["Least walking"]);
+      expect(o.walkEstimateMeters).toBeLessThan(walk.walkEstimateMeters);
+    }
+    assertWellFormed(plan, origin, dest);
+  });
+
+  it("property: options are contiguous and within the walk caps (seeded, points near stops)", () => {
+    // Points are a random stop plus up to ±450 m each way, so most runs produce options.
     const point = fc
-      .record({ e: fc.integer({ min: -3000, max: 3000 }), n: fc.integer({ min: -3000, max: 3000 }) })
-      .map(({ e, n }) => near(c, e, n));
+      .record({ i: fc.integer({ min: 0, max: snap.stops.length - 1 }), e: fc.integer({ min: -450, max: 450 }), n: fc.integer({ min: -450, max: 450 }) })
+      .map(({ i, e, n }) => near(snap.stops[i]!, e, n));
+    let runs = 0;
+    let withOptions = 0;
     fc.assert(
       fc.property(point, point, (o, d) => {
         fc.pre(isInsideNaga(o) && isInsideNaga(d));
         const plan = planTrip(snap, o, d);
+        runs++;
+        if (plan.options.length > 0) withOptions++;
         expect(plan.coverage).toBe(plan.options.length > 0 ? "provisional" : "none");
         assertWellFormed(plan, o, d);
       }),
       { seed: 20261015, numRuns: 300 },
     );
+    expect(withOptions / runs).toBeGreaterThan(0.6);
   });
 });
