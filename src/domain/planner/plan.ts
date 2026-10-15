@@ -55,13 +55,13 @@ import type { LatLng } from "../geo/types";
 import { legFareEstimate, sumFares, type LegFare, type TripFare } from "./fares";
 import { buildGraph, forwardRides, type GraphStop, type PlannerGraph } from "./graph";
 
-export const PLAN_LABELS = ["Recommended", "Fewest transfers", "Least walking"] as const;
-export type PlanLabel = (typeof PLAN_LABELS)[number];
+import { PLAN_LABELS, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
+
+export { PLAN_LABELS, UNVERIFIED_ROUTE_BADGE, type PlanLabel };
 
 export const WALK_ESTIMATE_FACTOR = 1.3;
 export const RIDE_WEIGHT = 0.25;
 export const TRANSFER_PENALTY_M = 600;
-export const UNVERIFIED_ROUTE_BADGE = "Unverified route — confirm with the driver";
 /** Global caps (straight-line metres); callers may only tighten them. */
 export const MAX_ACCESS_WALK_M = 600;
 export const MAX_TRANSFER_WALK_M = 400;

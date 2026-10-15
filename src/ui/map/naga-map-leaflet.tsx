@@ -95,7 +95,7 @@ function TripStopMarker({ stop }: { stop: HighlightStop }) {
 }
 
 /** Fits the highlighted stops and the pins into view whenever the highlighted set changes. */
-function FitHighlights({ stops, pins }: { stops: readonly HighlightStop[] | undefined; pins: NagaMapPins | undefined }) {
+function FitHighlights({ stops, pins, paddingBottom }: { stops: readonly HighlightStop[] | undefined; pins: NagaMapPins | undefined; paddingBottom: number }) {
   const map = useMap();
   const key = stops?.map((s) => s.id).join("|") ?? "";
   const fit = useEffectEvent(() => {
@@ -105,8 +105,7 @@ function FitHighlights({ stops, pins }: { stops: readonly HighlightStop[] | unde
     if (pins?.destination) points.push([pins.destination.lat, pins.destination.lng]);
     map.fitBounds(L.latLngBounds(points), {
       paddingTopLeft: [40, 80],
-      // The half sheet covers ~260 px of the map's bottom.
-      paddingBottomRight: [40, 280],
+      paddingBottomRight: [40, paddingBottom],
       maxZoom: 17,
       animate: !prefersReducedMotion(),
     });
@@ -180,6 +179,7 @@ export default function NagaMapLeaflet({
   userStale = false,
   pins,
   highlightStops,
+  highlightPaddingBottom = 40,
   crosshair = false,
   onCenterChange,
   recenterSignal,
@@ -270,7 +270,7 @@ export default function NagaMapLeaflet({
           />
         ) : null}
         {highlightStops?.map((stop) => <TripStopMarker key={`${stop.role}:${stop.id}`} stop={stop} />)}
-        <FitHighlights stops={highlightStops} pins={pins} />
+        <FitHighlights stops={highlightStops} pins={pins} paddingBottom={highlightPaddingBottom} />
         <MapViewSync
           recenterSignal={recenterSignal}
           userFix={userFix}

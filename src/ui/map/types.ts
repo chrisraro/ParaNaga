@@ -16,6 +16,8 @@ export type NagaMapProps = {
   pins?: NagaMapPins;
   /** Trip stops to highlight; when the set changes the map fits them (and the pins) into view. */
   highlightStops?: readonly HighlightStop[];
+  /** Bottom padding (px) when fitting highlighted stops, e.g. the part of the map under a sheet. */
+  highlightPaddingBottom?: number;
   /** Fixed centre pin for "Choose on map". */
   crosshair?: boolean;
   /** Fires once when the map is ready and after every move. */

@@ -6,7 +6,8 @@
 // order of its mapped pins (never presented as verified).
 import { z } from "zod";
 import { isInsideNaga } from "../geo/naga";
-import { PLAN_LABELS, type TripPlan } from "../planner/plan";
+import { PLAN_LABELS } from "../planner/labels";
+import type { TripPlan } from "../planner/plan";
 import { ringDirection } from "../trip/present";
 import { revisionMetaSchema, verificationSchema, type NetworkSnapshot, type Parsed } from "./schemas";
 

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
-import { NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_SHORTER_PLAN } from "./fixtures/plan-responses";
+import { LEAST_WALKING_ONLY_PLAN, NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_SHORTER_PLAN } from "./fixtures/plan-responses";
 
 // Trip options and trip detail (Task 6). POST /api/v1/plan is intercepted with fixtures
 // (allowed in tests only), so nothing here needs a database. Tiles are aborted.
@@ -78,6 +78,8 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Estimate ₱14–₱17");
   await expect(cards.nth(0)).toContainText("No transfers");
   await expect(cards.nth(0)).toContainText("≈ 230 m");
+  // Ride distance on the ride leg of the strip too (decision B).
+  await expect(cards.nth(0).locator(".pn-legstrip")).toContainText("≈ 1.2 km");
   // Least walking: the long loop ride is obvious.
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1)).toContainText("Ride ≈ 5.5 km");
@@ -124,7 +126,7 @@ test("trip detail lists the legs, highlights stops as markers and draws no line"
   await expect(steps.nth(2)).toContainText("Para!");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
-  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14–₱17 · reported minimum, matrix not verified/);
+  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14–₱17 · from reported fare rules · matrix not verified/);
   await expect(detail).toContainText("Corrections open soon");
   await expect(detail.getByRole("link")).toHaveCount(0);
 
@@ -179,6 +181,34 @@ test("a server error offers a retry that recovers", async ({ page }) => {
   await error.getByRole("button", { name: "Try again" }).click();
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
   await expect(page.getByTestId("trip-error")).toHaveCount(0);
+  // Focus is not lost with the unmounted Retry button: it lands on the results heading.
+  await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
+});
+
+test("loading is announced through the persistent announcer", async ({ page }) => {
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((r) => (release = r));
+  await interceptPlan(page, async (route) => {
+    await gate;
+    await fulfill(route, PROVISIONAL_PLAN);
+  });
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-loading")).toBeVisible();
+  await expect(page.getByTestId("home-announcer")).toHaveText("Looking for provisional routes…");
+  release();
+  await expect(page.getByTestId("home-announcer")).toContainText("2 provisional trip options found");
+});
+
+test("a rejected request offers to change the points instead of a retry", async ({ page }) => {
+  await interceptPlan(page, (route) => fulfill(route, { error: { code: "bad_request", message: "x", requestId: "r1" } }, 400));
+  await openApp(page);
+  await pinBoth(page);
+  const error = page.getByTestId("trip-error");
+  await expect(error).toContainText("Couldn't plan this trip");
+  await expect(error.getByRole("button", { name: "Try again" })).toHaveCount(0);
+  await error.getByRole("button", { name: "Change start or destination" }).click();
+  await expect(page.getByTestId("endpoint-start").locator(".pn-endpoint__main")).toBeFocused();
 });
 
 test("offline shows the offline state; retry works once back online", async ({ page, context }) => {
@@ -194,4 +224,75 @@ test("offline shows the offline state; retry works once back online", async ({ p
   offline = false;
   await error.getByRole("button", { name: "Try again" }).click();
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
+});
+
+// GPS refinements of the start (Important 1 of the review): a better fix re-dispatches the start.
+test.describe("GPS refinement while results are shown", () => {
+  const BISCAST = { latitude: 13.6314651, longitude: 123.1927517 };
+  test.use({ permissions: ["geolocation"], geolocation: { ...BISCAST, accuracy: 30 } });
+
+  /** The app received the refined fix (its accuracy pill updates). */
+  const nextFixWithAccuracy = (page: Page, accuracy: number) =>
+    expect(page.getByTestId("accuracy-pill")).toContainText(`± ${accuracy} m`);
+
+  async function gpsStartAndPinDestination(page: Page) {
+    await openApp(page);
+    await page.getByRole("button", { name: "Use current location" }).click();
+    await expect(page.getByTestId("endpoint-start")).toContainText("Your location");
+    await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+    const before = await mapEl(page).getAttribute("data-center-lng");
+    await drag(page, -120, 80);
+    await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
+    await page.getByRole("button", { name: "Set destination here" }).click();
+  }
+
+  test("the open detail stays open when the replan still has the option", async ({ page, context }) => {
+    const calls = await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+    await gpsStartAndPinDestination(page);
+    await page.getByTestId("trip-option").first().click();
+    const detail = page.getByTestId("trip-detail");
+    await expect(detail).toBeVisible();
+    const before = calls.length;
+
+    // ~45 m north with a better accuracy: the start is refined and the trip replanned.
+    await context.setGeolocation({ latitude: BISCAST.latitude + 0.0004, longitude: BISCAST.longitude, accuracy: 10 });
+    await nextFixWithAccuracy(page, 10);
+    await expect.poll(() => calls.length).toBeGreaterThan(before);
+
+    await expect(detail).toBeVisible();
+    await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+    await expect(page.getByTestId("trip-loading")).toHaveCount(0);
+    await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
+  });
+
+  test("a refinement under 25 m does not replan", async ({ page, context }) => {
+    const calls = await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+    await gpsStartAndPinDestination(page);
+    await expect(page.getByTestId("trip-option")).toHaveCount(2);
+    const before = calls.length;
+
+    // ~11 m: refined start, same plan.
+    await context.setGeolocation({ latitude: BISCAST.latitude + 0.0001, longitude: BISCAST.longitude, accuracy: 10 });
+    await nextFixWithAccuracy(page, 10);
+    await expect(page.getByTestId("trip-option")).toHaveCount(2);
+    await page.waitForTimeout(300);
+    expect(calls.length).toBe(before);
+  });
+
+  test("the detail closes when the replan drops the option; focus goes to the results heading", async ({ page, context }) => {
+    let replanned = false;
+    await interceptPlan(page, (route) => fulfill(route, replanned ? LEAST_WALKING_ONLY_PLAN : PROVISIONAL_PLAN));
+    await gpsStartAndPinDestination(page);
+    await page.getByTestId("trip-option").first().click();
+    await expect(page.getByTestId("trip-detail")).toBeVisible();
+
+    replanned = true;
+    await context.setGeolocation({ latitude: BISCAST.latitude + 0.0004, longitude: BISCAST.longitude, accuracy: 10 });
+    await nextFixWithAccuracy(page, 10);
+
+    await expect(page.getByTestId("trip-detail")).toHaveCount(0);
+    await expect(page.getByTestId("trip-option")).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
+    await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
+  });
 });

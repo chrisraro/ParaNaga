@@ -50,7 +50,7 @@ export function fareChipText(fare: FareLike): string {
 /** Per ride leg, with the global caveat on where the numbers come from. */
 export function legFareText(fare: FareLike): string {
   const chip = fareChipText(fare);
-  return chip === FARE_UNAVAILABLE ? chip : `${chip} · reported minimum, matrix not verified`;
+  return chip === FARE_UNAVAILABLE ? chip : `${chip} · from reported fare rules · matrix not verified`;
 }
 
 /** "≈ 230 m" (nearest 10 m) below 1 km, else "≈ 5.5 km". */

@@ -10,11 +10,12 @@ import { noCoverageCopy } from "@/domain/trip/present";
 
 export function TripLoading() {
   return (
+    // Announced through the home announcer (a live region that is always mounted).
     <section className="pn-trip-state" aria-busy="true" data-testid="trip-loading">
       <svg className="pn-trip-state__spinner" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="42 60" strokeLinecap="round" />
       </svg>
-      <p role="status">Looking for provisional routes…</p>
+      <p>Looking for provisional routes…</p>
     </section>
   );
 }
@@ -22,18 +23,24 @@ export function TripLoading() {
 const ERROR_COPY: Record<PlanErrorKind, { title: string; detail: string }> = {
   offline: { title: "You're offline", detail: "Connect to the internet to see provisional routes." },
   server: { title: "Couldn't load trip options", detail: "Something went wrong on our side or with the connection. Try again." },
-  invalid: { title: "Couldn't plan this trip", detail: "Check that both points are inside Naga City, then try again." },
+  invalid: { title: "Couldn't plan this trip", detail: "Check that both points are inside Naga City." },
 };
 
-export function TripError({ kind, onRetry }: { kind: PlanErrorKind; onRetry: () => void }) {
+type ErrorProps = { kind: PlanErrorKind; onRetry: () => void; onChangeEndpoints: () => void };
+
+export function TripError({ kind, onRetry, onChangeEndpoints }: ErrorProps) {
   const copy = ERROR_COPY[kind];
+  // A rejected request (400) fails the same way again: offer to change the points instead.
+  const invalid = kind === "invalid";
   return (
     <section className="pn-trip-state pn-trip-state--error" role="alert" data-testid="trip-error">
       <div>
-        <h2 className="pn-trip-state__title">{copy.title}</h2>
+        <h2 className="pn-trip-state__title" tabIndex={-1} data-results-heading="">
+          {copy.title}
+        </h2>
         <p>{copy.detail}</p>
-        <button type="button" className="pn-trip-retry" onClick={onRetry}>
-          Try again
+        <button type="button" className="pn-trip-retry" onClick={invalid ? onChangeEndpoints : onRetry}>
+          {invalid ? "Change start or destination" : "Try again"}
         </button>
       </div>
     </section>
@@ -52,7 +59,9 @@ export function TripNoCoverage({ data }: { data: PlanResponse }) {
         </svg>
       </span>
       <div>
-        <h2 id="pn-no-route-title">{copy.title}</h2>
+        <h2 id="pn-no-route-title" tabIndex={-1} data-results-heading="">
+          {copy.title}
+        </h2>
         <p>{copy.detail}</p>
         <p className="pn-trip__revision pn-trip__revision--left">Transport data revision {data.revision.label}</p>
       </div>

@@ -10,7 +10,7 @@ import "./trip.css";
 
 import { Fragment } from "react";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
-import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/plan";
+import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { formatDistance, routeChipLabel, transfersText } from "@/domain/trip/present";
 import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, planLookups, type PlanLookups } from "./trip-parts";
 
@@ -44,6 +44,7 @@ function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: PlanLoo
             <>
               <span className="sr-only">Ride </span>
               <LoopChip leg={leg} direction={lookups.direction(leg.variantId)} />
+              <span className="pn-legstrip__ride">{formatDistance(leg.distanceMeters)}</span>
             </>
           )}
         </Fragment>
@@ -93,17 +94,20 @@ function OptionCard({ option, lookups, onOpen, index }: { option: PlanOptionDto;
 
 type Props = {
   data: PlanResponse;
+  /** A newer plan (refined GPS point) is on its way; these options stay until it arrives. */
+  refreshing?: boolean;
   onOpen: (optionId: string) => void;
 };
 
-export function TripOptions({ data, onOpen }: Props) {
+export function TripOptions({ data, refreshing = false, onOpen }: Props) {
   const lookups = planLookups(data);
   const extraNotes = data.plan.notes.filter((n) => n !== UNVERIFIED_ROUTE_BADGE);
   return (
-    <section className="pn-trip" aria-labelledby="pn-trip-options-title" data-testid="trip-options">
-      <h2 id="pn-trip-options-title" className="pn-trip__title">
+    <section className="pn-trip" aria-labelledby="pn-trip-options-title" aria-busy={refreshing || undefined} data-testid="trip-options">
+      <h2 id="pn-trip-options-title" className="pn-trip__title" tabIndex={-1} data-results-heading="">
         Trip options
       </h2>
+      {refreshing ? <p className="pn-trip__refreshing">Updating for your new location…</p> : null}
       <ul className="pn-trip-list">
         {data.plan.options.map((option, i) => (
           <OptionCard key={option.id} option={option} lookups={lookups} onOpen={onOpen} index={i} />

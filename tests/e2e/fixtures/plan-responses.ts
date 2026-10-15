@@ -86,3 +86,9 @@ export const WALK_SHORTER_PLAN = {
   ...NO_ROUTE_PLAN,
   plan: { ...NO_ROUTE_PLAN.plan, reason: "walk_shorter", directWalkEstimateMeters: 845 },
 };
+
+/** The same trip after a replan in which the "Recommended" option is gone. */
+export const LEAST_WALKING_ONLY_PLAN = {
+  ...PROVISIONAL_PLAN,
+  plan: { ...PROVISIONAL_PLAN.plan, options: [{ ...leastWalking, labels: ["Recommended", "Fewest transfers", "Least walking"] }] },
+};

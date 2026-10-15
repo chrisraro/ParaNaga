@@ -54,7 +54,7 @@ describe("fare chips (whole pesos, estimates only)", () => {
   });
   it("per-leg text carries the reported-minimum caveat", () => {
     expect(legFareText({ status: "estimate", minCentavos: 1400, maxCentavos: 1700 })).toBe(
-      "Estimate ₱14–₱17 · reported minimum, matrix not verified",
+      "Estimate ₱14–₱17 · from reported fare rules · matrix not verified",
     );
     expect(legFareText({ status: "unavailable", minCentavos: null, maxCentavos: null })).toBe("Fare estimate unavailable");
   });

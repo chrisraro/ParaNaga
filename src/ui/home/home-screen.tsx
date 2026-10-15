@@ -116,17 +116,23 @@ export function HomeScreen() {
 
   const ready = isReadyToPlan(endpoints);
   const plan = useTripPlan(endpoints.start?.point ?? null, endpoints.destination?.point ?? null);
-  // The option whose detail is open, tied to the plan it came from: a new plan closes it.
-  const [opened, setOpened] = useState<{ data: PlanResponse; id: string } | null>(null);
+  // The option whose detail is open, by id: option ids (variant:board:alight) survive a replan for
+  // a refined GPS point, so the detail stays open unless the new plan no longer has that option.
+  const [openedId, setOpenedId] = useState<string | null>(null);
   const planData = plan.status === "ready" ? plan.data : null;
-  const openOption = opened && planData === opened.data ? (planData.plan.options.find((o) => o.id === opened.id) ?? null) : null;
+  const openOption = openedId && planData ? (planData.plan.options.find((o) => o.id === openedId) ?? null) : null;
   const openOptionId = openOption?.id ?? null;
+  // Where focus goes once the results render: the results heading, or an option card.
+  const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);
+  if (openedId !== null && openOption === null && plan.status !== "loading") {
+    // The opened option is gone (new plan without it, an error, or the trip was cleared).
+    setOpenedId(null);
+    if (ready) setFocusTarget({ kind: "results" });
+  }
   const highlightStops = useMemo(
     () => (planData && openOptionId ? highlightsFor(planData, openOptionId) : undefined),
     [planData, openOptionId],
   );
-  // After "Back to trip options", focus returns to the card that was opened.
-  const returnToOption = useRef<string | null>(null);
   const watching = geo.state === "watching";
   const assessment = geo.assessment;
   const liveCopy = locationStatusCopy(geo.state, assessment, geo.fix?.accuracy ?? null);
@@ -157,10 +163,17 @@ export function HomeScreen() {
     bumpRecenter();
   };
 
-  // Announce each settled plan once.
-  const [seenPlan, setSeenPlan] = useState<PlanResponse | null>(null);
-  if (planData !== seenPlan) {
-    setSeenPlan(planData);
+  // Announce loading, and each settled plan whose outcome changed (a refresh that returns the
+  // same options stays quiet), through the persistent home announcer.
+  const [seenPlanStatus, setSeenPlanStatus] = useState(plan.status);
+  if (plan.status !== seenPlanStatus) {
+    setSeenPlanStatus(plan.status);
+    if (plan.status === "loading") setAnnouncement("Looking for provisional routes…");
+  }
+  const planSignature = planData ? `${planData.plan.coverage}|${planData.plan.options.map((o) => o.id).join(",")}` : null;
+  const [seenSignature, setSeenSignature] = useState<string | null>(null);
+  if (planSignature !== seenSignature) {
+    setSeenSignature(planSignature);
     if (planData) {
       const n = planData.plan.options.length;
       setAnnouncement(
@@ -295,22 +308,43 @@ export function HomeScreen() {
 
   const handleOpenOption = (id: string) => {
     if (!planData) return;
-    setOpened({ data: planData, id });
+    setFocusTarget(null);
+    setOpenedId(id);
     if (sheet.snap === 0) sheet.setSnap(1);
   };
 
   const handleCloseOption = () => {
-    returnToOption.current = opened?.id ?? null;
-    setOpened(null);
+    if (openedId) setFocusTarget({ kind: "option", id: openedId });
+    setOpenedId(null);
   };
 
+  const handleRetry = () => {
+    setFocusTarget({ kind: "results" });
+    plan.retry();
+  };
+
+  // A 400 cannot succeed on retry: send the user back to the endpoint rows.
+  const handleChangeEndpoints = () => {
+    if (sheet.snap === 0) sheet.setSnap(1);
+    document.querySelector<HTMLElement>('[data-testid="endpoint-start"] .pn-endpoint__main')?.focus();
+  };
+
+  // Move focus once its target has rendered (after a retry, once the request settles). Each
+  // request is a fresh object, consumed once.
+  const focusDone = useRef<object | null>(null);
   useEffect(() => {
-    if (openOption || returnToOption.current === null) return;
-    document.getElementById(optionDomId(returnToOption.current))?.focus();
-    returnToOption.current = null;
-  }, [openOption]);
+    if (!focusTarget || focusDone.current === focusTarget || plan.status === "loading" || openOption) return;
+    const el =
+      focusTarget.kind === "option"
+        ? document.getElementById(optionDomId(focusTarget.id))
+        : document.querySelector<HTMLElement>("[data-results-heading]");
+    if (!el) return;
+    el.focus();
+    focusDone.current = focusTarget;
+  }, [focusTarget, plan.status, openOption]);
 
   const handleClearAll = () => {
+    setFocusTarget(null);
     setGpsIntent(false);
     setRecenterOnFix(false);
     setLastOutcome(null);
@@ -383,6 +417,7 @@ export function HomeScreen() {
           userStale={assessment?.stale ?? false}
           pins={pins}
           highlightStops={highlightStops}
+          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET + 40)}
           crosshair={picking !== null}
           onCenterChange={handleCenterChange}
           recenterSignal={recenterSignal}
@@ -449,9 +484,11 @@ export function HomeScreen() {
           ) : ready ? (
             <>
               {plan.status === "loading" ? <TripLoading /> : null}
-              {plan.status === "error" ? <TripError kind={plan.kind} onRetry={plan.retry} /> : null}
+              {plan.status === "error" ? <TripError kind={plan.kind} onRetry={handleRetry} onChangeEndpoints={handleChangeEndpoints} /> : null}
               {planData && planData.plan.coverage === "none" ? <TripNoCoverage data={planData} /> : null}
-              {planData && planData.plan.coverage === "provisional" ? <TripOptions data={planData} onOpen={handleOpenOption} /> : null}
+              {planData && planData.plan.coverage === "provisional" ? (
+                <TripOptions data={planData} refreshing={plan.status === "ready" && plan.refreshing} onOpen={handleOpenOption} />
+              ) : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>
                 Clear start and destination
               </button>

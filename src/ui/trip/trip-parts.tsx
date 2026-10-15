@@ -3,7 +3,7 @@
 // always the warning "Unverified route", fares are always estimates.
 
 import type { PlanResponse, RideLegDto } from "@/domain/api/plan";
-import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/plan";
+import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { directionText, fareChipText, routeChipLabel, stopLabel, type LoopDirection } from "@/domain/trip/present";
 
 export function WalkIcon() {

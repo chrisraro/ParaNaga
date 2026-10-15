@@ -84,8 +84,21 @@ describe("buildPlanResponse", () => {
 describe("e2e plan fixtures", () => {
   it("match the response schema the client validates against", async () => {
     const f = await import("../e2e/fixtures/plan-responses");
-    for (const body of [f.PROVISIONAL_PLAN, f.NO_ROUTE_PLAN, f.WALK_SHORTER_PLAN]) {
+    for (const body of [f.PROVISIONAL_PLAN, f.NO_ROUTE_PLAN, f.WALK_SHORTER_PLAN, f.LEAST_WALKING_ONLY_PLAN]) {
       expect(planResponseSchema.safeParse(body).success).toBe(true);
     }
+  });
+});
+
+describe("shouldReplan (GPS refinements)", async () => {
+  const { shouldReplan, REPLAN_MIN_MOVE_M } = await import("@/client/trip/use-trip-plan");
+  const pair = { origin: PLAZA_RIZAL, destination: BISCAST };
+  // ~0.0001° latitude ≈ 11 m; 0.0003° ≈ 33 m.
+  const moved = (dLat: number) => ({ origin: { lat: PLAZA_RIZAL.lat + dLat, lng: PLAZA_RIZAL.lng }, destination: BISCAST });
+  it("plans the first pair", () => expect(shouldReplan(null, pair)).toBe(true));
+  it(`keeps the plan for a move under ${REPLAN_MIN_MOVE_M} m`, () => expect(shouldReplan(pair, moved(0.0001))).toBe(false));
+  it("replans for a larger move or a swap", () => {
+    expect(shouldReplan(pair, moved(0.0003))).toBe(true);
+    expect(shouldReplan(pair, { origin: BISCAST, destination: PLAZA_RIZAL })).toBe(true);
   });
 });

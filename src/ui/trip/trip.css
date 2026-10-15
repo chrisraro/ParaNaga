@@ -148,6 +148,23 @@
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
+.pn-legstrip__ride {
+  color: var(--pn-label2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.pn-trip__refreshing {
+  margin: -6px 0 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+[data-results-heading]:focus {
+  outline: none;
+}
+[data-results-heading]:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
 .pn-trip-chevron {
   color: var(--pn-label3);
 }
