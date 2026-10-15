@@ -158,6 +158,12 @@
   background: var(--pn-grabber);
 }
 
+.pn-sheet__rest {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .pn-sheet__content {
   flex: 1;
   min-height: 0;

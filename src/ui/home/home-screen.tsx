@@ -20,6 +20,7 @@ import {
 } from "@/domain/trip/endpoints";
 import { NagaMap } from "@/ui/map/naga-map";
 import { EndpointSheet, useSheet } from "./endpoint-sheet";
+import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import { LocationStatus, formatAccuracy, locationStatusCopy } from "./location-status";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
@@ -84,16 +85,26 @@ export function HomeScreen() {
   const assessment = geo.assessment;
   const statusCopy = locationStatusCopy(geo.state, assessment, geo.fix?.accuracy ?? null);
 
-  const applyEndpoint = (which: EndpointWhich, point: LatLng, source: "gps" | "map") => {
-    dispatch({ type: "set", which, endpoint: { point, source, label: "" } });
-    const after: EndpointsState = { ...endpoints, [which]: { point, source, label: "" } };
-    setFocused(nextFocus(after, which));
+  /** Sets an endpoint only if the reducer accepts it; announces and moves on only then. */
+  const applyEndpoint = (which: EndpointWhich, point: LatLng, source: "gps" | "map"): boolean => {
+    const endpoint = { point, source, label: "" };
+    const { accepted, next } = applyIfAccepted(endpoints, which, endpoint);
+    if (!accepted) {
+      setAnnouncement("That spot is outside Naga City. Choose a point inside Naga City.");
+      return false;
+    }
+    dispatch({ type: "set", which, endpoint });
+    setFocused(nextFocus(next, which));
     setAnnouncement(`${NAME[which]} set: ${source === "gps" ? "Your location" : "Pinned location"}`);
-    if (isReadyToPlan(after) && sheet.snap === 0) sheet.setSnap(1);
+    if (isReadyToPlan(next) && sheet.snap === 0) sheet.setSnap(1);
+    return true;
   };
 
   const setStartFromGps = (fix: LocationFix) => {
-    applyEndpoint("start", toPoint(fix), "gps");
+    if (!applyEndpoint("start", toPoint(fix), "gps")) {
+      setGpsIntent(false);
+      return;
+    }
     setGpsIntent(false);
     setGpsStartAccuracy(fix.accuracy);
     bumpRecenter();
@@ -101,6 +112,7 @@ export function HomeScreen() {
 
   // React to each new assessment (new fix, or the hook's staleness re-check) during render,
   // React's "adjust state when a prop changes" pattern, so no effect chains are needed.
+  const gpsKey = gpsEndpointKey(endpoints);
   const [seenStatusKind, setSeenStatusKind] = useState(statusCopy?.kind ?? null);
   if ((statusCopy?.kind ?? null) !== seenStatusKind) {
     setSeenStatusKind(statusCopy?.kind ?? null);
@@ -120,14 +132,14 @@ export function HomeScreen() {
         // Outside Naga the fix is never the start; the status card offers pinning instead.
         else if (!assessment.insideCity) setGpsIntent(false);
       } else if (
-        endpoints.start?.source === "gps" &&
-        endpoints.picking !== "start" &&
+        gpsKey !== null &&
+        endpoints.picking === null &&
         assessment.usableAsStart &&
         gpsStartAccuracy !== null &&
         fix.accuracy < gpsStartAccuracy
       ) {
-        // A better fix refines the GPS start while the user hasn't replaced it.
-        dispatch({ type: "set", which: "start", endpoint: { point: toPoint(fix), source: "gps", label: "" } });
+        // A better fix refines whichever endpoint is GPS-sourced (the destination after a swap).
+        dispatch({ type: "set", which: gpsKey, endpoint: { point: toPoint(fix), source: "gps", label: "" } });
         setGpsStartAccuracy(fix.accuracy);
       }
     }
@@ -160,37 +172,51 @@ export function HomeScreen() {
     setAnnouncement(`Move the map to place the ${which === "start" ? "start" : "destination"} pin.`);
   };
 
+  // When the pick panel closes, focus returns to the endpoint row that was set (or cancelled).
+  const returnFocusTo = useRef<EndpointWhich | null>(null);
+
   const handleConfirmPick = () => {
     const which = endpoints.picking;
     if (!which || !center.inside) return;
-    const gpsUseless = assessment !== null && !assessment.insideCity;
-    if (which === "start" && (gpsIntent || endpoints.start?.source === "gps" || gpsUseless)) {
-      // The user replaced GPS with a pin (or GPS is outside Naga): stop watching for battery.
+    const wasGps = gpsEndpointKey(endpoints) === which;
+    if (!applyEndpoint(which, center.point, "map")) return;
+    returnFocusTo.current = which;
+    if (which === "start") {
+      const gpsUseless = assessment !== null && !assessment.insideCity;
+      const next = endpointsReducer(endpoints, {
+        type: "set",
+        which,
+        endpoint: { point: center.point, source: "map", label: "" },
+      });
       setGpsIntent(false);
-      setGpsStartAccuracy(null);
-      geo.stop();
+      if (wasGps) setGpsStartAccuracy(null);
+      // The pin replaced GPS (or GPS is outside Naga): stop watching unless another endpoint needs it.
+      if ((gpsIntent || wasGps || gpsUseless) && !shouldKeepWatching(next, false)) geo.stop();
     }
-    applyEndpoint(which, center.point, "map");
   };
 
   const handleCancelPick = () => {
+    returnFocusTo.current = endpoints.picking;
     dispatch({ type: "cancelPick" });
     setAnnouncement("Pin cancelled");
   };
 
   const handleClear = (which: EndpointWhich) => {
-    if (which === "start" && endpoints.start?.source === "gps") {
-      setGpsStartAccuracy(null);
-      geo.stop();
-    }
+    const wasGps = gpsEndpointKey(endpoints) === which;
+    const next = endpointsReducer(endpoints, { type: "clear", which });
+    const intent = which === "start" ? false : gpsIntent;
     if (which === "start") setGpsIntent(false);
+    if (wasGps) {
+      setGpsStartAccuracy(null);
+      if (!shouldKeepWatching(next, intent)) geo.stop();
+    }
     dispatch({ type: "clear", which });
     setFocused(which);
     setAnnouncement(`${NAME[which]} cleared`);
   };
 
   const handleClearAll = () => {
-    if (endpoints.start?.source === "gps") geo.stop();
+    if (gpsEndpointKey(endpoints) !== null) geo.stop();
     setGpsIntent(false);
     setGpsStartAccuracy(null);
     dispatch({ type: "clearAll" });
@@ -207,11 +233,26 @@ export function HomeScreen() {
     setCenter({ point, inside });
   }, []);
 
-  // Crosshair mode: move focus to the confirm button; Escape cancels.
+  // Crosshair mode: move focus to the confirm button; Escape (anywhere) cancels. When the panel
+  // closes, focus goes back to the endpoint row that was set or cancelled.
   const picking = endpoints.picking;
   const confirmRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    if (picking) confirmRef.current?.focus();
+    if (!picking) {
+      const row = returnFocusTo.current;
+      returnFocusTo.current = null;
+      if (row) document.querySelector<HTMLElement>(`[data-testid="endpoint-${row}"] .pn-endpoint__main`)?.focus();
+      return undefined;
+    }
+    confirmRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      returnFocusTo.current = picking;
+      dispatch({ type: "cancelPick" });
+      setAnnouncement("Pin cancelled");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [picking]);
 
   const fixInside = watching && geo.fix !== null && assessment !== null && assessment.insideCity && !assessment.stale;
@@ -260,9 +301,6 @@ export function HomeScreen() {
           ref={pickRef}
           className="pn-pick"
           aria-label={picking === "start" ? "Choose start on map" : "Choose destination on map"}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") handleCancelPick();
-          }}
         >
           <p className="pn-pick__title">
             {picking === "start" ? "Move the map to your starting point" : "Move the map to your destination"}

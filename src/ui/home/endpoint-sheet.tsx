@@ -273,6 +273,15 @@ export function EndpointSheet({
           </button>
         </div>
 
+        {/* Everything below the always-visible rows. At the peek snap it sits under the screen edge,
+            so it is inert (not focusable); at half, focusing something that is cut off expands the sheet. */}
+        <div
+          className="pn-sheet__rest"
+          inert={snap === 0}
+          onFocusCapture={(e) => {
+            if (snap === 1 && e.target.getBoundingClientRect().bottom > window.innerHeight) sheet.setSnap(2);
+          }}
+        >
         {children}
 
         {focused ? (
@@ -296,6 +305,7 @@ export function EndpointSheet({
             </button>
           </div>
         ) : null}
+        </div>
       </div>
     </section>
   );
