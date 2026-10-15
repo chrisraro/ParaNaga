@@ -39,10 +39,14 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts",
     ".next-e2e/types/**/*.ts",
-    ".next-e2e/dev/types/**/*.ts"
+    ".next-e2e/dev/types/**/*.ts",
+    ".next-e2e-notiles/types/**/*.ts",
+    ".next-e2e-notiles/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "Data_Sets"
+    "Data_Sets",
+    ".next-e2e",
+    ".next-e2e-notiles"
   ]
 }

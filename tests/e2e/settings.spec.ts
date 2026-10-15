@@ -193,8 +193,9 @@ test.describe("phone", () => {
 
     // Low-data mode on (stored before load): no tile layer, no tile request.
     await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ lowData: true })), PREFS_KEY);
-    await page.reload();
+    // Reset before the reload, so a tile requested while the new page loads is caught.
     tileRequests = [];
+    await page.reload();
     await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
     const lowData = page.getByTestId("map-low-data-notice");
     await expect(lowData).toHaveText("Map background off (low-data mode)Show background once");

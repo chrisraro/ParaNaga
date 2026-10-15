@@ -34,8 +34,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // The e2e suite builds a second copy with a tile URL into its own directory
-  // (playwright.config.ts), so it never overwrites the regular build.
+  // NEXT_DIST_DIR is test-only: the e2e suite builds its own copies (.next-e2e with a tile URL,
+  // .next-e2e-notiles without) so it never overwrites the regular build (playwright.config.ts).
+  // Never set it for a deployment.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   cacheComponents: true,
   partialPrefetching: true,
