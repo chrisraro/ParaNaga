@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { searchIndexSchema, type SearchIndex } from "@/domain/api/schemas";
 import rawIndex from "../e2e/fixtures/network/search-index.json" with { type: "json" };
 import rawRoutes from "../e2e/fixtures/network/routes.json" with { type: "json" };
+import rawSources from "../e2e/fixtures/network/sources.json" with { type: "json" };
 
 const nav = vi.hoisted(() => ({ back: vi.fn(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -15,7 +16,9 @@ vi.mock("next/navigation", () => ({
 }));
 
 const { AppFrameContext, setEntryPath } = await import("@/ui/app-shell/app-frame-context");
-const { ExploreView } = await import("@/ui/explore/explore-screen");
+const { ExploreScreen, ExploreView } = await import("@/ui/explore/explore-screen");
+const { resetSearchIndexCache } = await import("@/client/search/use-search-index");
+const { CARD_LIMIT } = await import("@/domain/places/explore");
 
 const index: SearchIndex = searchIndexSchema.parse(rawIndex);
 
@@ -38,11 +41,12 @@ const frame = {
 beforeEach(() => {
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (url: string) =>
-      url === "/api/v1/routes"
-        ? new Response(JSON.stringify(rawRoutes), { status: 200, headers: { "content-type": "application/json" } })
-        : new Response("{}", { status: 404 }),
-    ),
+    vi.fn(async (url: string) => {
+      const body = url === "/api/v1/routes" ? rawRoutes : url === "/api/v1/sources" ? rawSources : null;
+      return body
+        ? new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } })
+        : new Response("{}", { status: 404 });
+    }),
   );
   setEntryPath("/app");
   window.history.replaceState(null, "", "/app/explore");
@@ -66,10 +70,16 @@ function renderExplore(data: SearchIndex = index) {
 const cards = () => screen.getAllByTestId("explore-card");
 
 describe("Explore: places by category", () => {
-  it("All lists every OpenStreetMap place A–Z as a card with Photo pending, the kind and attribution", () => {
+  it("All shows the first 12 places A–Z as cards with Photo pending, the kind and attribution; Show all reveals the rest", () => {
     renderExplore();
     expect(screen.getByRole("tab", { name: "All" }).getAttribute("aria-selected")).toBe("true");
+    expect(cards()).toHaveLength(CARD_LIMIT);
+    const showAll = screen.getByRole("button", { name: `Show all ${index.osmPlaces.length} places` });
+    fireEvent.click(showAll);
     expect(cards()).toHaveLength(index.osmPlaces.length);
+    expect(screen.queryByTestId("explore-show-all")).toBeNull();
+    // Focus moves to the first newly revealed card.
+    expect(document.activeElement).toBe(within(cards()[CARD_LIMIT]!).getByRole("link"));
     const sm = cards().find((c) => within(c).queryByRole("heading", { name: "SM City Naga" }))!;
     expect(within(sm).getByText("Photo pending")).toBeTruthy();
     expect(within(sm).getByText("Mall · from OpenStreetMap")).toBeTruthy();
@@ -80,9 +90,16 @@ describe("Explore: places by category", () => {
     expect(screen.getByRole("tabpanel", { name: "All" })).toBeTruthy();
   });
 
+  it("Jump to directory moves focus to the Directory heading", () => {
+    renderExplore();
+    fireEvent.click(screen.getByRole("link", { name: "Jump to directory" }));
+    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 2, name: "Directory" }));
+  });
+
   it("each chip lists only its categories; arrows move between chips", () => {
     renderExplore();
     fireEvent.click(screen.getByRole("tab", { name: "Markets & malls" }));
+    expect(screen.queryByTestId("explore-show-all")).toBeNull();
     expect(new Set(cards().map((c) => c.dataset.category))).toEqual(new Set(["market", "mall"]));
     expect(cards()).toHaveLength(index.osmPlaces.filter((p) => p.category === "market" || p.category === "mall").length);
     expect(screen.getByRole("tabpanel", { name: "Markets & malls" })).toBeTruthy();
@@ -98,7 +115,7 @@ describe("Explore: places by category", () => {
     renderExplore({ ...index, osmPlaces: index.osmPlaces.filter((p) => p.category !== "hospital_clinic") });
     fireEvent.click(screen.getByRole("tab", { name: "Health" }));
     expect(screen.queryAllByTestId("explore-card")).toHaveLength(0);
-    expect(screen.getByTestId("explore-empty").textContent).toBe("No health on file yet.");
+    expect(screen.getByTestId("explore-empty").textContent).toBe("No health places on file yet.");
   });
 
   it("How to commute here sets the destination to the place's coordinate and opens the map", () => {
@@ -165,7 +182,7 @@ describe("Explore: directory", () => {
     expect(rows.every((r) => r.textContent!.includes("Not surveyed"))).toBe(true);
   });
 
-  it("Leads: 5 static rows, and the rail status with its sources", () => {
+  it("Leads: 5 static rows, and the rail status with its sources", async () => {
     renderExplore();
     segment("Leads");
     const list = screen.getByTestId("explore-leads");
@@ -176,5 +193,22 @@ describe("Explore: directory", () => {
     expect(screen.getByTestId("explore-rail").textContent).toBe(
       "PNR Naga–Lupi Viejo: community reports say operational; Naga–Legazpi: community reports say suspended. Verify with PNR. Sources S19, S20, S21",
     );
+    // Once the sources register loads, S20 (not in it) is marked.
+    await waitFor(() => expect(screen.getByTestId("explore-rail-sources").textContent).toBe("Sources S19, S20 (not in register), S21"));
+  });
+});
+
+describe("Explore without the search index", () => {
+  it("shows the error with Try again, and the Routes directory still lists the 11 routes", async () => {
+    resetSearchIndexCache();
+    render(
+      <AppFrameContext.Provider value={frame}>
+        <ExploreScreen />
+      </AppFrameContext.Provider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("explore-error")).toBeTruthy());
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+    expect(screen.queryByRole("tablist", { name: "Directory sections" })).toBeNull();
+    await waitFor(() => expect(screen.getAllByTestId("explore-route")).toHaveLength(11));
   });
 });

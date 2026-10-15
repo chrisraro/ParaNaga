@@ -281,6 +281,14 @@ describe("Terminal detail", () => {
     expect(screen.getByRole("tabpanel", { name: "Hours" })).toBeTruthy();
   });
 
+  it("with no own sources but an evidence status, no chip cites the response's other sources", () => {
+    renderTerminal({ ...rawT01, terminal: { ...rawT01.terminal, sourceCodes: [] } });
+    const address = screen.getByTestId("terminal-address");
+    expect(address.textContent).toBe("Address: city source");
+    expect(address.querySelectorAll(".pn-mono")).toHaveLength(0);
+    for (const s of rawT01.sources) expect(address.textContent).not.toContain(s.code);
+  });
+
   it("address chips come only from the terminal's own sources (none: no chips)", () => {
     renderTerminal({ ...rawT01, terminal: { ...rawT01.terminal, sourceCodes: [], evidenceStatus: null } });
     expect(screen.getByTestId("terminal-address").textContent).toBe("Address: no evidence on file");

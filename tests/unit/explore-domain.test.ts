@@ -7,6 +7,8 @@ import {
   chipOfOsmCategory,
   emptyCategoryText,
   feederLeadsByCode,
+  leadStatusText,
+  railSourcesText,
   mappedStopsAZ,
   pinPlaceSub,
   placesInCategory,
@@ -56,8 +58,9 @@ describe("Explore categories", () => {
 
   it("an empty chip says so", () => {
     expect(placesInCategory([], "markets")).toEqual([]);
-    expect(emptyCategoryText("markets")).toBe("No markets & malls on file yet.");
-    expect(emptyCategoryText("health")).toBe("No health on file yet.");
+    expect(emptyCategoryText("markets")).toBe("No markets or malls on file yet.");
+    expect(emptyCategoryText("health")).toBe("No health places on file yet.");
+    expect(emptyCategoryText("government")).toBe("No government offices on file yet.");
   });
 });
 
@@ -90,5 +93,16 @@ describe("Explore directory", () => {
   it("barangays A–Z and leads by code", () => {
     expect(barangaysAZ(index.barangays)).toHaveLength(27);
     expect(feederLeadsByCode([...index.feederLeads].reverse()).map((l) => l.code)).toEqual(["SF01", "SF02", "SF03", "SF04", "SF05"]);
+  });
+
+  it("lead status: unverified reads Documented, not verified; any other status is spelled out", () => {
+    expect(leadStatusText("unverified")).toBe("Documented, not verified");
+    expect(leadStatusText(null)).toBe("Documented, not verified");
+    expect(leadStatusText("verified_by_survey")).toBe("Documented · status: verified by survey");
+  });
+
+  it("rail sources: codes the register does not list are marked", () => {
+    expect(railSourcesText(null)).toBe("S19, S20, S21");
+    expect(railSourcesText(new Set(["S19", "S21"]))).toBe("S19, S20 (not in register), S21");
   });
 });

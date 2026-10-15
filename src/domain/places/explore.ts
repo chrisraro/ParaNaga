@@ -17,18 +17,20 @@ export type ExploreCategory = {
   label: string;
   /** The D10 OpenStreetMap categories in this chip; null for All. */
   osm: readonly OsmPlaceCategory[] | null;
+  /** Plural noun for the empty line ("No health places on file yet."). */
+  noun: string;
 };
 
 /** The chips, in artboard order, mapped from the D10 categories. Every D10 category has a chip. */
 export const EXPLORE_CATEGORIES: readonly ExploreCategory[] = [
-  { id: "all", label: "All", osm: null },
-  { id: "faith", label: "Faith", osm: ["place_of_worship"] },
-  { id: "schools", label: "Schools", osm: ["school", "college_university"] },
-  { id: "markets", label: "Markets & malls", osm: ["market", "mall"] },
-  { id: "health", label: "Health", osm: ["hospital_clinic"] },
-  { id: "government", label: "Government", osm: ["government"] },
-  { id: "parks", label: "Parks & plazas", osm: ["park", "square"] },
-  { id: "terminals", label: "Terminals", osm: ["bus_terminal"] },
+  { id: "all", label: "All", osm: null, noun: "places" },
+  { id: "faith", label: "Faith", osm: ["place_of_worship"], noun: "places of worship" },
+  { id: "schools", label: "Schools", osm: ["school", "college_university"], noun: "schools" },
+  { id: "markets", label: "Markets & malls", osm: ["market", "mall"], noun: "markets or malls" },
+  { id: "health", label: "Health", osm: ["hospital_clinic"], noun: "health places" },
+  { id: "government", label: "Government", osm: ["government"], noun: "government offices" },
+  { id: "parks", label: "Parks & plazas", osm: ["park", "square"], noun: "parks or plazas" },
+  { id: "terminals", label: "Terminals", osm: ["bus_terminal"], noun: "bus stations" },
 ];
 
 export function exploreCategory(id: ExploreCategoryId): ExploreCategory {
@@ -51,10 +53,13 @@ export function placesInCategory(places: readonly SearchOsmPlace[], id: ExploreC
     .sort((a, b) => collator.compare(a.name, b.name) || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
 }
 
-/** "No markets & malls on file yet." */
+/** "No health places on file yet." */
 export function emptyCategoryText(id: ExploreCategoryId): string {
-  return `No ${exploreCategory(id).label.toLowerCase()} on file yet.`;
+  return `No ${exploreCategory(id).noun} on file yet.`;
 }
+
+/** Cards shown per chip before "Show all {n} places", so the directory below stays reachable. */
+export const CARD_LIMIT = 12;
 
 // ------------------------------------------------------------------ directory
 
@@ -113,11 +118,28 @@ export function feederLeadsByCode(leads: SearchIndex["feederLeads"]): SearchInde
 }
 
 export const LEAD_STATUS_TEXT = "Documented, not verified";
+
+/** A lead's second line from its status: "unverified" (or none) → LEAD_STATUS_TEXT; anything else spelled out. */
+export function leadStatusText(status: string | null): string {
+  if (!status || status === "unverified") return LEAD_STATUS_TEXT;
+  const text = status.replace(/[_;]+/g, " ").trim();
+  return `Documented · status: ${text}`;
+}
 export const TERMINAL_ROW_SUB = "Location not mapped";
 
-/** The rail status note of the seed (rail_status: community reports, verify with PNR). */
+/**
+ * The rail status note, copied from `rail_status` in Data_Sets/naga_transport_seed.json
+ * (naga_lupi_viejo: community_reports_operational;verify_PNR, naga_legazpi:
+ * community_reports_suspended;verify_PNR, sources S19–S21). No API carries it: update this copy
+ * with the seed.
+ */
 export const RAIL_STATUS_TEXT =
   "PNR Naga–Lupi Viejo: community reports say operational; Naga–Legazpi: community reports say suspended. Verify with PNR.";
 export const RAIL_SOURCE_CODES = ["S19", "S20", "S21"] as const;
+
+/** "S19, S20 (not in register), S21": codes the published sources register does not list are marked. */
+export function railSourcesText(registerCodes: ReadonlySet<string> | null): string {
+  return RAIL_SOURCE_CODES.map((c) => (registerCodes && !registerCodes.has(c) ? `${c} (not in register)` : c)).join(", ");
+}
 
 export const EXPLORE_PLACES_NOTE = "Places come from OpenStreetMap. Entrances, hours and photos are not mapped yet.";

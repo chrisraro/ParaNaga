@@ -283,10 +283,14 @@ export function SearchScreen() {
   const [opening, setOpening] = useState(() => ({ n: 0, query: readHashQuery() }));
   useEffect(() => {
     const query = readHashQuery();
-    if (window.location.hash) window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
     // Counting openings is the point of this effect (Activity re-show), not derived state.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setOpening((o) => ({ n: o.n + 1, query }));
+    if (!window.location.hash) return;
+    // Deferred and cancelled on cleanup, so the effect is idempotent: a Strict Mode re-run (or an
+    // Activity re-show right away) still reads the same fragment before it is dropped.
+    const t = window.setTimeout(() => window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search), 0);
+    return () => window.clearTimeout(t);
   }, []);
   return (
     <div ref={root} className="pn-detail pn-search" data-testid="search-screen">

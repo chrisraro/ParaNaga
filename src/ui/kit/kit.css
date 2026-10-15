@@ -103,6 +103,12 @@ button.pn-cell:active {
   outline-offset: 2px;
   border-radius: 10px;
 }
+.pn-cell__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
 .pn-cell__trailing {
   flex: none;
   color: var(--pn-label2);

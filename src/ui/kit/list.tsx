@@ -53,6 +53,10 @@ type CellBase = {
   /** "gold" for mapped-candidate subs (Components: "Mapped candidate · not yet verified"). */
   subTone?: "gold";
   icon?: ReactNode;
+  /** Leading content rendered as is, without the icon wrapper (a route chip). */
+  lead?: ReactNode;
+  /** Status badges under the title and sub (Explore directory rows). */
+  badges?: ReactNode;
   /** Short value on the right ("Regular", "English"). */
   trailing?: ReactNode;
   compact?: boolean;
@@ -69,15 +73,17 @@ type CellProps = CellBase &
 const isExternal = (href: string) => /^https?:\/\//.test(href);
 
 export function ListCell(props: CellProps) {
-  const { title, sub, subTone, icon, trailing, compact, testId } = props;
+  const { title, sub, subTone, icon, lead, badges, trailing, compact, testId } = props;
   const className = compact ? "pn-cell pn-cell--compact" : "pn-cell";
   const actionable = props.href !== undefined || props.onClick !== undefined;
   const body = (
     <>
       {icon ? <span className="pn-cell__icon">{icon}</span> : null}
+      {lead ?? null}
       <span className="pn-cell__text">
         <span className="pn-cell__title">{title}</span>
         {sub ? <span className={subTone === "gold" ? "pn-cell__sub pn-cell__sub--gold" : "pn-cell__sub"}>{sub}</span> : null}
+        {badges ? <span className="pn-cell__badges">{badges}</span> : null}
       </span>
       {trailing ? <span className="pn-cell__trailing">{trailing}</span> : null}
       {actionable && props.chevron !== false ? <ListChevron /> : null}

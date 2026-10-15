@@ -85,12 +85,31 @@ test("each category chip lists the OpenStreetMap places of that category only, A
   for (const [label, categories] of CHIPS) {
     await chips(page).getByRole("tab", { name: label, exact: true }).click();
     await expect(chips(page).getByRole("tab", { name: label, exact: true })).toHaveAttribute("aria-selected", "true");
-    await expect(cardNames(page)).toHaveText(namesOf(categories));
+    const names = namesOf(categories);
+    if (names.length > 12) {
+      await expect(cardNames(page)).toHaveText(names.slice(0, 12));
+      await page.getByRole("button", { name: `Show all ${names.length} places` }).click();
+    }
+    await expect(cardNames(page)).toHaveText(names);
     if (categories) {
       const shown = await page.getByTestId("explore-card").evaluateAll((els) => [...new Set(els.map((e) => (e as HTMLElement).dataset.category))]);
       expect(shown.every((c) => (categories as readonly string[]).includes(c!))).toBe(true);
     }
   }
+});
+
+test("on All only 12 cards render until Show all, and Jump to directory reaches the directory", async ({ page }) => {
+  await openExplore(page);
+  await expect(page.getByTestId("explore-card")).toHaveCount(12);
+  await page.getByRole("link", { name: "Jump to directory" }).click();
+  const heading = page.getByRole("heading", { level: 2, name: "Directory" });
+  await expect(heading).toBeFocused();
+  await expect(heading).toBeInViewport();
+  await expect(page.getByTestId("explore-card")).toHaveCount(12);
+  const showAll = page.getByRole("button", { name: `Show all ${SEARCH_INDEX.osmPlaces.length} places` });
+  await showAll.click();
+  await expect(page.getByTestId("explore-card")).toHaveCount(SEARCH_INDEX.osmPlaces.length);
+  await expect(page.getByTestId("explore-card").nth(12).getByRole("link")).toBeFocused();
 });
 
 test("How to commute here sets the destination to the place's coordinate and returns to the map", async ({ page }) => {
@@ -170,6 +189,7 @@ test("the directory: each segment lists the right count and its rows open the ri
   await expect(directory.getByTestId("explore-leads").getByRole("listitem")).toHaveCount(5);
   await expect(directory.getByTestId("explore-leads").getByRole("link")).toHaveCount(0);
   await expect(directory.getByTestId("explore-rail")).toContainText("Verify with PNR.");
+  await expect(directory.getByTestId("explore-rail-sources")).toHaveText("Sources S19, S20 (not in register), S21");
 });
 
 test("Explore passes axe (light)", async ({ page }) => {

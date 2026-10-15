@@ -3,6 +3,7 @@
 // router and a stub app frame: what it fetches (never the query), the states, the live region,
 // and what picking a result does.
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import raw from "../e2e/fixtures/network/search-index.json" with { type: "json" };
 
@@ -194,8 +195,23 @@ describe("SearchScreen", () => {
     expect(box()).toHaveProperty("value", "Plaza Rizal");
     await waitFor(() => expect(screen.getAllByTestId("search-result-pin").length).toBeGreaterThan(0));
     // Read once: the fragment leaves the history entry, so a later visit does not prefill it.
-    expect(window.location.hash).toBe("");
+    await waitFor(() => expect(window.location.hash).toBe(""));
     expect(window.location.pathname).toBe("/app/search");
+  });
+
+  it("under Strict Mode the #q= prefill survives the effect re-run, then the hash is cleared", async () => {
+    window.history.replaceState(null, "", "/app/search#q=Plaza%20Rizal");
+    render(
+      <StrictMode>
+        <AppFrameContext.Provider value={frame}>
+          <SearchScreen />
+        </AppFrameContext.Provider>
+      </StrictMode>,
+    );
+    await ready();
+    expect(box()).toHaveProperty("value", "Plaza Rizal");
+    await waitFor(() => expect(window.location.hash).toBe(""));
+    expect(box()).toHaveProperty("value", "Plaza Rizal");
   });
 
   it("routes link to route detail; old route names are not tappable", async () => {
