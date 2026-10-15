@@ -135,6 +135,8 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   });
   // A fresh visit: the map first (the router holds it for the way back), then Saved.
   await openApp(page);
+  // Count only the Saved screen's own revision check (not the map's requests on the way).
+  networkCalls.length = 0;
   await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
   await expect(card).toHaveCount(1);
   await context.setOffline(true);

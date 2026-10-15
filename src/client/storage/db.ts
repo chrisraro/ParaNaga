@@ -5,9 +5,10 @@
 //
 // Every record is written with a format version `v` (RECORD_FORMAT) and every read goes through
 // decodeStored + the Zod schemas in src/domain/saved. A record that fails (corrupted, or written by
-// a newer build in another tab) is SKIPPED AND KEPT, never deleted or rewritten: the count of
-// skipped records per store is module state (`skippedCount`), so every screen reports the same
-// number whichever component read first. Writes are validated too. Store-shape changes go through
+// a newer build in another tab) is SKIPPED AND KEPT, never deleted or rewritten by a read; every
+// read counts them again, so every screen reports the same numbers. Only damaged records (not
+// newer-format ones) can be removed, and only when the person asks (removeUnreadable). Writes are
+// validated too. Store-shape changes go through
 // `upgrade`, keyed by DB_VERSION (STORE_MIGRATIONS).
 //
 // Without IndexedDB (blocked, private mode, a failed open) reads and writes reject with
@@ -136,33 +137,52 @@ function notify(): void {
 
 // ---------------------------------------------------------------- generic helpers
 
-/** `dropped`: records of this store that could not be read; they stay stored, untouched. */
-export type ListResult<T> = { records: T[]; dropped: number };
+/**
+ * `dropped`: records of this store that could not be read; they stay stored, untouched.
+ * `unreadable`: those of them that are damaged (fail validation), which the person may remove with
+ * removeUnreadable; the rest are from a newer ParaNaga (another tab) and are never offered for removal.
+ */
+export type ListResult<T> = { records: T[]; dropped: number; unreadable: number };
 
 type Schema<T> = { safeParse: (v: unknown) => { success: true; data: T } | { success: false } };
-
-/** Keys skipped by the latest read of each store (kept in the store, never deleted). */
-const skipped = new Map<RecordStore, ReadonlySet<string>>();
-
-/** How many records of this store the last read had to skip (the same for every screen). */
-export function skippedCount(store: RecordStore): number {
-  return skipped.get(store)?.size ?? 0;
-}
 
 async function readAll<T>(store: RecordStore, schema: Schema<T>): Promise<ListResult<T>> {
   const db = await requireDb();
   const tx = db.transaction(store, "readonly");
-  const [keys, values] = await Promise.all([tx.store.getAllKeys(), tx.store.getAll()]);
+  const values = await tx.store.getAll();
   await tx.done;
   const records: T[] = [];
-  const bad = new Set<string>();
-  values.forEach((value, i) => {
+  let dropped = 0;
+  let unreadable = 0;
+  for (const value of values) {
     const decoded = decodeStored(value, schema);
     if (decoded.ok) records.push(decoded.record);
-    else bad.add(String(keys[i]));
+    else {
+      dropped += 1;
+      if (decoded.reason === "invalid") unreadable += 1;
+    }
+  }
+  return { records, dropped, unreadable };
+}
+
+const SCHEMAS: Record<RecordStore, Schema<unknown>> = { savedTrips: savedTripSchema, savedPlaces: savedPlaceSchema, history: historyEntrySchema };
+
+/**
+ * Deletes this store's damaged records (those failing validation), in one transaction that
+ * re-checks every record, so a record written meanwhile or one from a newer ParaNaga is never
+ * removed. Returns how many were removed.
+ */
+export async function removeUnreadable(store: RecordStore): Promise<number> {
+  const db = await requireDb();
+  const tx = db.transaction(store, "readwrite");
+  const [keys, values] = await Promise.all([tx.store.getAllKeys(), tx.store.getAll()]);
+  const bad = keys.filter((_, i) => {
+    const decoded = decodeStored(values[i], SCHEMAS[store]);
+    return !decoded.ok && decoded.reason === "invalid";
   });
-  skipped.set(store, bad);
-  return { records, dropped: bad.size };
+  await Promise.all([...bad.map((k) => tx.store.delete(k)), tx.done]);
+  if (bad.length > 0) notify();
+  return bad.length;
 }
 
 async function put<T extends { id: string }>(store: RecordStore, schema: { parse: (v: unknown) => T }, value: T): Promise<void> {
@@ -196,6 +216,20 @@ export async function getSavedTrip(id: string): Promise<SavedTrip | null> {
 export const putSavedTrip = (trip: SavedTrip) => put("savedTrips", savedTripSchema, trip);
 export const deleteSavedTrip = (id: string) => remove("savedTrips", id);
 
+/**
+ * "Update saved copy": the new card replaces the old one in ONE transaction, so a failure leaves
+ * exactly the old copy (never both, never neither).
+ */
+export async function replaceSavedTrip(oldId: string, trip: SavedTrip): Promise<void> {
+  const record = savedTripSchema.parse(trip);
+  const db = await requireDb();
+  const tx = db.transaction("savedTrips", "readwrite");
+  const writes: Promise<unknown>[] = [tx.store.put({ ...record, v: RECORD_FORMAT }, record.id)];
+  if (oldId !== record.id) writes.push(tx.store.delete(oldId));
+  await Promise.all([...writes, tx.done]);
+  notify();
+}
+
 // ---------------------------------------------------------------- saved places
 
 export async function listSavedPlaces(): Promise<ListResult<SavedPlace>> {
@@ -220,7 +254,7 @@ export async function listHistory(nowMs = Date.now()): Promise<ListResult<Histor
     const tx = db.transaction("history", "readwrite");
     await Promise.all([...expired.map((k) => tx.store.delete(k)), tx.done]);
   }
-  return { records: keep.sort(newestFirst((e) => e.at)), dropped: result.dropped };
+  return { ...result, records: keep.sort(newestFirst((e) => e.at)) };
 }
 
 export const addHistoryEntry = (entry: HistoryEntry) => put("history", historyEntrySchema, entry);
@@ -233,7 +267,6 @@ export async function clearHistoryStore(): Promise<void> {
   const db = await open();
   if (!db) return; // nothing stored that we could reach
   await db.clear("history");
-  skipped.delete("history");
   notify();
 }
 
@@ -261,6 +294,5 @@ export async function clearAllStores(): Promise<void> {
   if (!db) return;
   const tx = db.transaction([...STORES], "readwrite");
   await Promise.all([...STORES.map((s) => tx.objectStore(s).clear()), tx.done]);
-  skipped.clear();
   notify();
 }

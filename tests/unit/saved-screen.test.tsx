@@ -6,7 +6,7 @@ import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { planResponseSchema } from "@/domain/api/plan";
-import { buildSavedTrip } from "@/domain/saved/saved";
+import { RECORD_FORMAT, buildSavedTrip } from "@/domain/saved/saved";
 import { PROVISIONAL_PLAN, REVISION } from "../e2e/fixtures/plan-responses";
 
 const nav = vi.hoisted(() => ({ params: new URLSearchParams(), push: vi.fn() }));
@@ -160,15 +160,33 @@ describe("Saved → Trips", () => {
     expect(await screen.findByTestId("saved-trip")).toBeTruthy();
   });
 
-  it("a corrupted record is dropped with a quiet note", async () => {
+  it("a corrupted record gets a note and, after a confirmation, Remove unreadable items", async () => {
     await db.putSavedTrip(card);
     const { openDB } = await import("idb");
     const raw = await openDB(db.DEVICE_DB_NAME);
     await raw.put("savedTrips", { id: "broken" }, "broken");
     raw.close();
     renderSaved();
-    expect(await screen.findByTestId("saved-dropped")).toBeTruthy();
+    const note = await screen.findByTestId("saved-dropped");
+    expect(note.textContent).toContain("damaged and can't be read");
     expect(screen.getAllByTestId("saved-trip")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Remove unreadable items" }));
+    expect(screen.getByTestId("saved-remove-unreadable-dialog").hasAttribute("open")).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    await waitFor(() => expect(screen.queryByTestId("saved-dropped")).toBeNull());
+    expect((await db.listSavedTrips())).toMatchObject({ dropped: 0, unreadable: 0 });
+    expect(screen.getAllByTestId("saved-trip")).toHaveLength(1);
+  });
+
+  it("a record from a newer ParaNaga is only mentioned, never offered for removal", async () => {
+    const { openDB } = await import("idb");
+    const raw = await openDB(db.DEVICE_DB_NAME);
+    await raw.put("savedTrips", { ...card, id: "future", v: RECORD_FORMAT + 1 }, "future");
+    raw.close();
+    renderSaved();
+    const note = await screen.findByTestId("saved-dropped");
+    expect(note.textContent).toContain("from a newer version of ParaNaga");
+    expect(screen.queryByRole("button", { name: "Remove unreadable items" })).toBeNull();
   });
 });
 

@@ -17,7 +17,7 @@
 import "./trip.css";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { deleteSavedTrip, putSavedTrip } from "@/client/storage/db";
+import { deleteSavedTrip, putSavedTrip, replaceSavedTrip } from "@/client/storage/db";
 import { useSavedTrips } from "@/client/saved/use-saved";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
 import { buildSavedTrip, manilaDate, matchSavedTrip, shareText, type SavedEnd } from "@/domain/saved/saved";
@@ -231,9 +231,8 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
         await deleteSavedTrip(match.trip.id);
         setStatus("Removed from saved trips.");
       } else if (match.kind === "older") {
-        // Replace the copy planned on older data with this one (current data).
-        await putSavedTrip(newCard());
-        await deleteSavedTrip(match.trip.id);
+        // Replace the copy planned on older data with this one (current data), atomically.
+        await replaceSavedTrip(match.trip.id, newCard());
         setStatus("Saved copy updated to the current data.");
       } else {
         await putSavedTrip(newCard());

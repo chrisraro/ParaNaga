@@ -16,7 +16,7 @@ import { revalidateSavedTrip, type HistoryEntry, type SavedPlace, type SavedTrip
 /** `error.unavailable`: no storage on this phone (blocked, private mode), not a read failure. */
 export type DeviceList<T> =
   | { status: "loading" }
-  | { status: "ready"; records: T[]; dropped: number }
+  | { status: "ready"; records: T[]; dropped: number; unreadable: number }
   | { status: "error"; unavailable: boolean };
 
 function useDeviceList<T>(load: () => Promise<ListResult<T>>, enabled = true): DeviceList<T> {
@@ -28,7 +28,7 @@ function useDeviceList<T>(load: () => Promise<ListResult<T>>, enabled = true): D
     const read = () => {
       load().then(
         (result) => {
-          if (live) setState({ status: "ready", records: result.records, dropped: result.dropped });
+          if (live) setState({ status: "ready", records: result.records, dropped: result.dropped, unreadable: result.unreadable });
         },
         (error: unknown) => {
           if (live) setState({ status: "error", unavailable: error instanceof StorageUnavailableError });

@@ -319,13 +319,12 @@ describe("SearchScreen", () => {
     await putSavedPlace({ id: "p1", label: "The mall", point: { lat: sm.lat, lng: sm.lng }, source: "osm", savedAt: "2026-10-16T02:00:00.000Z" });
     renderSearch("save");
     await ready();
+    // The saved places are read once the saved row shows for its own name; then one tap.
+    await type("The mall");
+    await screen.findByTestId("search-group-saved");
     await type("SM City");
-    // Wait for the saved places (the saved row appears too).
-    await screen.findByTestId("search-group-saved").catch(() => null);
-    await waitFor(async () => {
-      fireEvent.click(screen.getAllByTestId("search-result-osm")[0]!);
-      expect(screen.getByTestId("search-already-saved").textContent).toBe("Already saved on this phone as “The mall”.");
-    });
+    fireEvent.click(screen.getAllByTestId("search-result-osm")[0]!);
+    expect(screen.getByTestId("search-already-saved").textContent).toBe("Already saved on this phone as “The mall”.");
     expect(screen.getByTestId("search-save-dialog").hasAttribute("open")).toBe(false);
     expect((await listSavedPlaces()).records).toHaveLength(1);
   });

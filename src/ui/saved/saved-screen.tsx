@@ -24,7 +24,7 @@ import { useId, useMemo, useState, type ReactNode } from "react";
 import { clearHistory } from "@/client/history/trip-history";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import { useHistoryList, useSavedPlaces, useSavedTrips, useTripRevalidation } from "@/client/saved/use-saved";
-import { deleteSavedPlace, deleteSavedTrip, putSavedPlace, putSavedTrip } from "@/client/storage/db";
+import { deleteSavedPlace, deleteSavedTrip, putSavedPlace, putSavedTrip, removeUnreadable } from "@/client/storage/db";
 import {
   historyLine,
   manilaDate,
@@ -49,7 +49,8 @@ const TABS: readonly SavedTab[] = ["trips", "places", "history"];
 export const TRIPS_INTRO = "Saved trips open without signal. Map tiles may be missing offline, so each card works as text.";
 export const NO_TRIPS = "No saved trips yet. Plan a trip, then tap Save on its details.";
 export const NO_PLACES = "No saved places yet.";
-const DROPPED_NOTE = "Some saved items on this phone could not be read here (they may be from a newer version of ParaNaga). They are kept as they are.";
+const NEWER_NOTE = "Some saved items on this phone are from a newer version of ParaNaga and can't be shown here. They are kept as they are.";
+const UNREADABLE_NOTE = "Some saved items on this phone are damaged and can't be read. They are kept until you remove them.";
 const UNAVAILABLE = "Saving needs storage on this phone, which is blocked or not available (for example in private browsing).";
 
 function readError(what: string, unavailable: boolean): string {
@@ -102,6 +103,49 @@ function HistoryIcon() {
 }
 
 // ------------------------------------------------------------------ shared
+
+/**
+ * Records this store could not read. Newer-format ones (another tab on a newer ParaNaga) are only
+ * mentioned; damaged ones (failed validation) can be removed, after a confirmation, and only those.
+ */
+function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | "savedPlaces" | "history"; dropped: number; unreadable: number }) {
+  const [confirm, setConfirm] = useState(false);
+  const [status, setStatus] = useState("");
+  const newer = dropped - unreadable;
+  const onRemove = () => {
+    setConfirm(false);
+    setStatus("");
+    removeUnreadable(store).then(
+      (n) => setStatus(n === 1 ? "Removed 1 damaged item." : `Removed ${n} damaged items.`),
+      () => setStatus("Could not remove on this phone."),
+    );
+  };
+  return (
+    <div data-testid="saved-dropped">
+      {newer > 0 ? <Note>{NEWER_NOTE}</Note> : null}
+      {unreadable > 0 ? (
+        <>
+          <Note>{UNREADABLE_NOTE}</Note>
+          <button type="button" className="pn-text-btn" onClick={() => setConfirm(true)} data-testid="saved-remove-unreadable">
+            Remove unreadable items
+          </button>
+          <ConfirmDialog
+            open={confirm}
+            title={unreadable === 1 ? "Remove 1 damaged item from this phone?" : `Remove ${unreadable} damaged items from this phone?`}
+            confirmLabel="Remove"
+            tone="danger"
+            onConfirm={onRemove}
+            onCancel={() => setConfirm(false)}
+            testId="saved-remove-unreadable-dialog"
+          />
+        </>
+      ) : null}
+      <p className="pn-saved__status" aria-live="polite">
+        {status}
+      </p>
+    </div>
+  );
+}
 
 /**
  * "Removed …" with Undo (the swipe-free delete), or why a removal failed. Each removal is numbered
@@ -225,7 +269,7 @@ function TripsPanel() {
   return (
     <>
       <p className="pn-saved__intro">{TRIPS_INTRO}</p>
-      {trips.dropped > 0 ? <Note testId="saved-dropped">{DROPPED_NOTE}</Note> : null}
+      {trips.dropped > 0 ? <SkippedRecords store="savedTrips" dropped={trips.dropped} unreadable={trips.unreadable} /> : null}
       {trips.records.length === 0 ? (
         <p className="pn-saved__empty" data-testid="saved-trips-empty">
           {NO_TRIPS}
@@ -296,7 +340,7 @@ function PlacesPanel() {
       <h2 id={titleId} className="pn-section__title">
         Saved places
       </h2>
-      {places.dropped > 0 ? <Note testId="saved-dropped">{DROPPED_NOTE}</Note> : null}
+      {places.dropped > 0 ? <SkippedRecords store="savedPlaces" dropped={places.dropped} unreadable={places.unreadable} /> : null}
       <ul className="pn-group" data-testid="saved-places">
         {places.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty" data-testid="saved-places-empty">
@@ -373,7 +417,7 @@ function HistoryPanel() {
       <h2 id={titleId} className="pn-section__title">
         Trip history
       </h2>
-      {history.dropped > 0 ? <Note>{DROPPED_NOTE}</Note> : null}
+      {history.dropped > 0 ? <SkippedRecords store="history" dropped={history.dropped} unreadable={history.unreadable} /> : null}
       <ul className="pn-group" data-testid="history-list">
         {history.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty">No trips in history yet.</li>

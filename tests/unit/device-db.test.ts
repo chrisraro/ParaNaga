@@ -7,7 +7,8 @@ import {
   DEVICE_DB_NAME,
   StorageUnavailableError,
   resetDeviceDbConnection,
-  skippedCount,
+  removeUnreadable,
+  replaceSavedTrip,
   addHistoryEntry,
   clearAllStores,
   clearHistoryStore,
@@ -78,9 +79,9 @@ describe("device database (IndexedDB)", () => {
     expect(await getSavedTrip("bad")).toBeNull();
     // Kept: a second reader (another screen) sees the same count, and the record is still stored.
     expect((await listSavedTrips()).dropped).toBe(1);
-    expect(skippedCount("savedTrips")).toBe(1);
+    expect(trips.unreadable).toBe(1);
     expect(await rawGet("savedTrips", "bad")).toEqual({ id: "bad", option: "nope" });
-    expect(await listSavedPlaces()).toEqual({ records: [], dropped: 1 });
+    expect(await listSavedPlaces()).toEqual({ records: [], dropped: 1, unreadable: 1 });
   });
 
   it("a newer-format record survives an older reader (and its writes)", async () => {
@@ -90,8 +91,35 @@ describe("device database (IndexedDB)", () => {
     const read = await listSavedTrips();
     expect(read.records.map((t) => t.id)).toEqual(["mine"]);
     expect(read.dropped).toBe(1);
+    // Not damaged: never offered for removal.
+    expect(read.unreadable).toBe(0);
     await deleteSavedTrip("mine");
     expect(await rawGet("savedTrips", "future")).toEqual(future);
+  });
+
+  it("removeUnreadable deletes damaged records only (newer-format and valid ones stay)", async () => {
+    const future = { ...trip("future", "2026-10-16T03:00:00.000Z"), v: RECORD_FORMAT + 1 };
+    await rawPut("savedTrips", future);
+    await rawPut("savedTrips", { id: "bad", option: "nope" });
+    await rawPut("savedTrips", { id: "bad2", v: "one" });
+    await putSavedTrip(trip("good", "2026-10-16T01:00:00.000Z"));
+    expect(await listSavedTrips()).toMatchObject({ dropped: 3, unreadable: 2 });
+    expect(await removeUnreadable("savedTrips")).toBe(2);
+    expect(await rawGet("savedTrips", "bad")).toBeUndefined();
+    expect(await rawGet("savedTrips", "future")).toEqual(future);
+    const after = await listSavedTrips();
+    expect(after.records.map((t) => t.id)).toEqual(["good"]);
+    expect(after).toMatchObject({ dropped: 1, unreadable: 0 });
+    expect(await removeUnreadable("savedTrips")).toBe(0);
+  });
+
+  it("replaceSavedTrip swaps the old copy for the new one in one write", async () => {
+    await putSavedTrip(trip("old", "2026-10-16T01:00:00.000Z"));
+    await replaceSavedTrip("old", trip("new", "2026-10-16T02:00:00.000Z"));
+    expect((await listSavedTrips()).records.map((t) => t.id)).toEqual(["new"]);
+    // An invalid new card is refused before anything changes: the old copy stays.
+    await expect(replaceSavedTrip("new", { ...trip("x", "2026-10-16T03:00:00.000Z"), id: "" })).rejects.toThrow();
+    expect((await listSavedTrips()).records.map((t) => t.id)).toEqual(["new"]);
   });
 
   it("writes carry the record format version", async () => {
