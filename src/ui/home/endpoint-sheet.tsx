@@ -244,6 +244,14 @@ export function EndpointSheet({
   children,
 }: Props) {
   const { attach, snap, offset, dragging } = sheet;
+  // Tapping a row at the peek snap lifts the sheet to half so its options aren't offscreen/inert.
+  const onRowTap = (which: EndpointWhich) => {
+    if (snap === 0) {
+      sheet.setSnap(1);
+      if (focused === which) return;
+    }
+    onFocus(which);
+  };
   const style = offset === null ? undefined : { ["--pn-sheet-offset" as string]: `${offset}px` };
   return (
     <section
@@ -257,9 +265,9 @@ export function EndpointSheet({
       <SheetGrabber sheet={sheet} />
       <div className="pn-sheet__content">
         <div className="pn-endpoints">
-          <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onFocus} onClear={onClear} />
+          <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onRowTap} onClear={onClear} />
           <div className="pn-endpoints__sep" />
-          <EndpointRow which="destination" endpoint={endpoints.destination} focused={focused === "destination"} onFocus={onFocus} onClear={onClear} />
+          <EndpointRow which="destination" endpoint={endpoints.destination} focused={focused === "destination"} onFocus={onRowTap} onClear={onClear} />
           <button
             type="button"
             className="pn-icon-btn pn-swap"

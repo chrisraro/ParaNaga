@@ -181,18 +181,18 @@ export function HomeScreen() {
     const wasGps = gpsEndpointKey(endpoints) === which;
     if (!applyEndpoint(which, center.point, "map")) return;
     returnFocusTo.current = which;
-    if (which === "start") {
-      const gpsUseless = assessment !== null && !assessment.insideCity;
-      const next = endpointsReducer(endpoints, {
-        type: "set",
-        which,
-        endpoint: { point: center.point, source: "map", label: "" },
-      });
-      setGpsIntent(false);
-      if (wasGps) setGpsStartAccuracy(null);
-      // The pin replaced GPS (or GPS is outside Naga): stop watching unless another endpoint needs it.
-      if ((gpsIntent || wasGps || gpsUseless) && !shouldKeepWatching(next, false)) geo.stop();
-    }
+    const gpsUseless = assessment !== null && !assessment.insideCity;
+    const next = endpointsReducer(endpoints, {
+      type: "set",
+      which,
+      endpoint: { point: center.point, source: "map", label: "" },
+    });
+    if (which === "start") setGpsIntent(false);
+    const intent = which === "start" ? false : gpsIntent;
+    if (wasGps) setGpsStartAccuracy(null);
+    // The pin replaced GPS (or GPS is outside Naga): stop watching unless another endpoint needs it.
+    const startNeedsStop = which === "start" && (gpsIntent || gpsUseless);
+    if ((wasGps || startNeedsStop) && !shouldKeepWatching(next, intent)) geo.stop();
   };
 
   const handleCancelPick = () => {
