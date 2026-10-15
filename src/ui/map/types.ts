@@ -8,6 +8,8 @@ export type NagaMapProps = {
   userFix?: LocationFix | null;
   /** Overrides the quality derived from `userFix.accuracy`. */
   userQuality?: FixQuality;
+  /** The fix is old: the dot is drawn dimmed and without the live pulse. */
+  userStale?: boolean;
   pins?: NagaMapPins;
   /** Fixed centre pin for "Choose on map". */
   crosshair?: boolean;
@@ -15,6 +17,8 @@ export type NagaMapProps = {
   onCenterChange?: (center: LatLng, insideCity: boolean) => void;
   /** Change this number to recentre: on the user fix when it is inside Naga, else Plaza Rizal. */
   recenterSignal?: number;
+  /** When set, the next recentre goes here (inside Naga) instead of to the user fix. */
+  recenterTarget?: LatLng | null;
   /** Shows the locate/recenter button; the parent decides whether to start GPS. */
   onLocate?: () => void;
   className?: string;

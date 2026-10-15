@@ -69,6 +69,9 @@
   fill: var(--pn-dot);
   stroke: var(--pn-marker-ring);
 }
+.pn-map .pn-dot--stale {
+  opacity: 0.45;
+}
 .pn-map .pn-dot--coarse {
   fill: #5a6478;
 }

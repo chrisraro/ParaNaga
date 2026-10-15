@@ -11,6 +11,7 @@ const NAGA_MAX_BOUNDS = { south: 13.5923285, north: 13.6843613, west: 123.165174
 const NAGA_MIN_ZOOM = 12;
 
 const PLAZA_RIZAL = { latitude: 13.6233869, longitude: 123.1846726 };
+const BISCAST = { latitude: 13.6314651, longitude: 123.1927517 };
 const PILI = { latitude: 13.5828, longitude: 123.2756 };
 /** Inside NAGA_MAX_BOUNDS but outside the city polygon (north-west of the city). */
 const OUTSIDE_POLYGON = { lat: 13.6707, lng: 123.174 };
@@ -148,11 +149,30 @@ async function installWatchSpy(page: Page) {
   };
 }
 
-test.describe("geolocation inside Naga", () => {
-  test.use({ permissions: ["geolocation"], geolocation: { ...PLAZA_RIZAL, accuracy: 15 } });
+/** Resolves when the browser delivers a position with this accuracy (a probe watch, cleared after). */
+async function nextFixWithAccuracy(page: Page, accuracy: number) {
+  await page.evaluate(
+    (target) =>
+      new Promise<void>((resolve) => {
+        const id = navigator.geolocation.watchPosition((p) => {
+          if (p.coords.accuracy === target) {
+            navigator.geolocation.clearWatch(id);
+            resolve();
+          }
+        });
+      }),
+    accuracy,
+  );
+}
 
-  test("precise fix at Plaza Rizal sets the start and centres the map", async ({ page }) => {
+test.describe("geolocation inside Naga", () => {
+  test.use({ permissions: ["geolocation"], geolocation: { ...BISCAST, accuracy: 15 } });
+
+  test("precise fix at BISCAST sets the start and centres the map", async ({ page }) => {
     await openApp(page);
+    // BISCAST is not the default centre, so a recentre is observable.
+    const before = await readView(page);
+    expect(Math.abs(before.lng - BISCAST.longitude)).toBeGreaterThan(0.004);
     await useLocation(page).click();
 
     await expect(page.getByTestId("accuracy-pill")).toContainText("± 15 m");
@@ -161,9 +181,60 @@ test.describe("geolocation inside Naga", () => {
     await expect
       .poll(async () => {
         const v = await readView(page);
-        return Math.abs(v.lat - PLAZA_RIZAL.latitude) < 0.002 && Math.abs(v.lng - PLAZA_RIZAL.longitude) < 0.002;
+        return Math.abs(v.lat - BISCAST.latitude) < 0.002 && Math.abs(v.lng - BISCAST.longitude) < 0.002;
       })
       .toBe(true);
+  });
+
+  test("a locate-only watch stops after it has recentred the map", async ({ page }) => {
+    const spy = await installWatchSpy(page);
+    await openApp(page);
+    await page.getByRole("button", { name: /locate|my location|recenter/i }).first().click();
+
+    await expect
+      .poll(async () => {
+        const v = await readView(page);
+        return Math.abs(v.lat - BISCAST.latitude) < 0.002 && Math.abs(v.lng - BISCAST.longitude) < 0.002;
+      })
+      .toBe(true);
+    expect(await spy.watchCalls()).toBeGreaterThan(0);
+    await expect.poll(spy.clearCalls).toBeGreaterThan(0);
+    await expect(row(page, "start")).not.toContainText("Your location");
+  });
+
+  test("a coarse fix inside Naga is never the start; pinning is offered", async ({ page, context }) => {
+    await context.setGeolocation({ ...BISCAST, accuracy: 250 });
+    await openApp(page);
+    await useLocation(page).click();
+
+    await expect(page.getByTestId("location-status")).toContainText("Location too rough (± 250 m)");
+    await expect(page.getByRole("button", { name: "Choose start on map" })).toBeVisible();
+    await expect(rowMain(page, "start")).toContainText("Choose start");
+    await expect(row(page, "start")).not.toContainText("Your location");
+  });
+
+  test("a precise fix arriving while the user places the start pin does not take over", async ({ page, context }) => {
+    await context.setGeolocation({ ...BISCAST, accuracy: 250 });
+    await openApp(page);
+    await useLocation(page).click();
+    await expect(page.getByTestId("location-status")).toContainText("Location too rough");
+
+    await page.getByRole("button", { name: "Choose start on map" }).click();
+    const picker = page.getByRole("region", { name: "Choose start on map" });
+    await expect(picker).toBeVisible();
+    const before = await readView(page);
+
+    // A good fix arrives mid-pick.
+    await context.setGeolocation({ ...BISCAST, accuracy: 15 });
+    await nextFixWithAccuracy(page, 15); // the browser really delivered the 15 m fix
+    // The picker must survive, the start stays empty and the map stays where the user left it.
+    await expect(picker).toBeVisible();
+    await expect.poll(async () => (await readView(page)).lng, { intervals: [200, 400, 800] }).toBeCloseTo(before.lng, 5);
+    const after = await readView(page);
+    expect(after.lat).toBeCloseTo(before.lat, 5);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(rowMain(page, "start")).toContainText("Choose start");
+    await expect(row(page, "start")).not.toContainText("Your location");
   });
 
   test("approximate fix shows the accuracy chip", async ({ page, context }) => {
@@ -237,6 +308,7 @@ test.describe("geolocation outside Naga", () => {
   test.use({ permissions: ["geolocation"], geolocation: { ...PILI, accuracy: 20 } });
 
   test("Pili fix is never the start; the map stays inside Naga", async ({ page }) => {
+    const spy = await installWatchSpy(page);
     await openApp(page);
     const before = await readView(page);
     await useLocation(page).click();
@@ -252,6 +324,11 @@ test.describe("geolocation outside Naga", () => {
     expectInsideMaxBounds(after);
     expect(after.lat).toBeCloseTo(before.lat, 4);
     expect(after.lng).toBeCloseTo(before.lng, 4);
+
+    // Nothing needs GPS: the watch is released, but the outside-Naga card stays.
+    await expect.poll(spy.clearCalls).toBeGreaterThan(0);
+    await expect(status).toContainText("You're outside Naga City");
+    await expect(page.getByRole("button", { name: "Choose start on map" })).toBeVisible();
   });
 });
 

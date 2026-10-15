@@ -59,6 +59,8 @@ describe("locationStatusCopy", () => {
       tone: "warn",
       title: "Your location is approximate. Check the pin or move it.",
       detail: "± 80 m",
+      action: "pick_start",
+      actionLabel: "Move start pin",
     });
   });
 

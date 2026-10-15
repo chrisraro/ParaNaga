@@ -26,6 +26,8 @@ export type LocationStatusCopy = {
   detail?: string;
   /** The sheet offers "Choose start on map" with this status. */
   action?: "pick_start";
+  /** Button label for `action`; defaults to "Choose start on map". */
+  actionLabel?: string;
 };
 
 const PIN_LATER = "You can still pin your start on the map.";
@@ -103,6 +105,8 @@ export function locationStatusCopy(
       tone: "warn",
       title: "Your location is approximate. Check the pin or move it.",
       ...detail,
+      action: "pick_start",
+      actionLabel: "Move start pin",
     };
   }
   return { kind: "precise", tone: "ok", title: "You are here", ...detail };
@@ -134,7 +138,7 @@ export function LocationStatus({ copy, onPickStart }: Props) {
         ) : null}
         {copy.action === "pick_start" ? (
           <button type="button" className="pn-status__action" onClick={onPickStart}>
-            Choose start on map
+            {copy.actionLabel ?? "Choose start on map"}
           </button>
         ) : null}
       </div>

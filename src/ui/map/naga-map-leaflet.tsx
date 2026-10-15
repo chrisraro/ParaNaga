@@ -79,12 +79,13 @@ type View = { lat: number; lng: number; zoom: number };
 type SyncProps = {
   recenterSignal: number | undefined;
   userFix: LocationFix | null | undefined;
+  target: LatLng | null | undefined;
   onView: (view: View) => void;
   onAnnounce: (message: string) => void;
 };
 
 /** Lives inside <MapContainer>: reports the view and handles recenter requests. */
-function MapViewSync({ recenterSignal, userFix, onView, onAnnounce }: SyncProps) {
+function MapViewSync({ recenterSignal, userFix, target, onView, onAnnounce }: SyncProps) {
   const map = useMap();
 
   const report = useEffectEvent(() => {
@@ -109,14 +110,15 @@ function MapViewSync({ recenterSignal, userFix, onView, onAnnounce }: SyncProps)
   }, [map]);
 
   const recenter = useEffectEvent(() => {
-    const fix = userFix;
+    const fix = target ?? userFix;
     const onUser = fix != null && isInsideNaga({ lat: fix.lat, lng: fix.lng });
     const center: L.LatLngTuple = onUser ? [fix.lat, fix.lng] : DEFAULT_CENTER;
     const zoom = onUser ? Math.max(map.getZoom(), LOCATE_MIN_ZOOM) : NAGA_DEFAULT_ZOOM;
     // Under reduced motion the fly-to becomes a jump (map design brief §3, Motion rules).
     if (prefersReducedMotion()) map.setView(center, zoom, { animate: false });
     else map.flyTo(center, zoom, { duration: 0.8 });
-    onAnnounce(onUser ? "Map centered on your location" : "Map centered on Naga City center");
+    const where = target ? "the start pin" : "your location";
+    onAnnounce(onUser ? `Map centered on ${where}` : "Map centered on Naga City center");
   });
 
   const lastSignal = useRef(recenterSignal);
@@ -132,10 +134,12 @@ function MapViewSync({ recenterSignal, userFix, onView, onAnnounce }: SyncProps)
 export default function NagaMapLeaflet({
   userFix,
   userQuality,
+  userStale = false,
   pins,
   crosshair = false,
   onCenterChange,
   recenterSignal,
+  recenterTarget,
   onLocate,
   className,
 }: NagaMapProps) {
@@ -204,7 +208,7 @@ export default function NagaMapLeaflet({
           positions={OUTLINE}
           pathOptions={OUTLINE_STYLE}
         />
-        <UserLocationLayer fix={userFix} quality={userQuality} />
+        <UserLocationLayer fix={userFix} quality={userQuality} stale={userStale} />
         {pins?.start ? (
           <Marker
             position={[pins.start.lat, pins.start.lng]}
@@ -224,6 +228,7 @@ export default function NagaMapLeaflet({
         <MapViewSync
           recenterSignal={recenterSignal}
           userFix={userFix}
+          target={recenterTarget}
           onView={handleView}
           onAnnounce={setAnnouncement}
         />

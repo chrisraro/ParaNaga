@@ -11,11 +11,11 @@ import { isInsideNaga } from "@/domain/geo/naga";
 const DOT_SIZE = 68;
 
 // Leaflet's default PNG marker icons break under bundlers; every marker is an inline-SVG divIcon.
-function dotIcon(coarse: boolean): L.DivIcon {
-  const pulse = coarse ? "" : `<circle class="pn-pulse" cx="34" cy="34" r="34" />`;
+function dotIcon(coarse: boolean, stale = false): L.DivIcon {
+  const pulse = coarse || stale ? "" : `<circle class="pn-pulse" cx="34" cy="34" r="34" />`;
   return L.divIcon({
     className: "pn-marker",
-    html: `<svg width="${DOT_SIZE}" height="${DOT_SIZE}" viewBox="0 0 68 68" aria-hidden="true" focusable="false">${pulse}<circle class="pn-dot${coarse ? " pn-dot--coarse" : ""}" cx="34" cy="34" r="9" stroke-width="3.5" /></svg>`,
+    html: `<svg width="${DOT_SIZE}" height="${DOT_SIZE}" viewBox="0 0 68 68" aria-hidden="true" focusable="false">${pulse}<circle class="pn-dot${coarse ? " pn-dot--coarse" : ""}${stale ? " pn-dot--stale" : ""}" cx="34" cy="34" r="9" stroke-width="3.5" /></svg>`,
     iconSize: [DOT_SIZE, DOT_SIZE],
     iconAnchor: [DOT_SIZE / 2, DOT_SIZE / 2],
   });
@@ -23,6 +23,7 @@ function dotIcon(coarse: boolean): L.DivIcon {
 
 const PRECISE_ICON = dotIcon(false);
 const COARSE_ICON = dotIcon(true);
+const STALE_ICON = dotIcon(false, true);
 
 // Stable style objects so react-leaflet only restyles the circle when the quality changes.
 const ACCURACY_STYLE: L.PathOptions = {
@@ -42,15 +43,15 @@ const COARSE_ACCURACY_STYLE: L.PathOptions = {
   interactive: false,
 };
 
-type Props = { fix: LocationFix | null | undefined; quality?: FixQuality };
+type Props = { fix: LocationFix | null | undefined; quality?: FixQuality; stale?: boolean };
 
-export function UserLocationLayer({ fix, quality }: Props) {
+export function UserLocationLayer({ fix, quality, stale = false }: Props) {
   if (!fix || !Number.isFinite(fix.lat) || !Number.isFinite(fix.lng)) return null;
   // Outside the city the map stays locked and draws nothing (Global Constraints → Outside Naga City).
   if (!isInsideNaga({ lat: fix.lat, lng: fix.lng })) return null;
 
   const coarse = (quality ?? fixQuality(fix)) === "coarse";
-  const icon = coarse ? COARSE_ICON : PRECISE_ICON;
+  const icon = coarse ? COARSE_ICON : stale ? STALE_ICON : PRECISE_ICON;
   const radius = Number.isFinite(fix.accuracy) && fix.accuracy > 0 ? fix.accuracy : 0;
   const center: L.LatLngTuple = [fix.lat, fix.lng];
 

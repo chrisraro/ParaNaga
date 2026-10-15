@@ -21,7 +21,12 @@ import {
 import { NagaMap } from "@/ui/map/naga-map";
 import { EndpointSheet, useSheet } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
-import { LocationStatus, formatAccuracy, locationStatusCopy } from "./location-status";
+import {
+  LocationStatus,
+  formatAccuracy,
+  locationStatusCopy,
+  type LocationStatusCopy,
+} from "./location-status";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
 const MAP_BOTTOM_INSET = 186;
@@ -74,16 +79,24 @@ export function HomeScreen() {
   });
   const [recenterSignal, setRecenterSignal] = useState(0);
   const [recenterOnFix, setRecenterOnFix] = useState(false);
+  // Where the next recentre goes instead of the user fix (the start pin, for "Move start pin").
+  const [recenterTarget, setRecenterTarget] = useState<LatLng | null>(null);
+  // The last "outside Naga" status card, kept after the watch stops so its copy stays visible.
+  const [lastOutcome, setLastOutcome] = useState<LocationStatusCopy | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const sheet = useSheet(1);
   const [pickHeight, pickRef] = useMeasuredHeight();
 
-  const bumpRecenter = () => setRecenterSignal((n) => n + 1);
+  const bumpRecenter = (target: LatLng | null = null) => {
+    setRecenterTarget(target);
+    setRecenterSignal((n) => n + 1);
+  };
 
   const ready = isReadyToPlan(endpoints);
   const watching = geo.state === "watching";
   const assessment = geo.assessment;
-  const statusCopy = locationStatusCopy(geo.state, assessment, geo.fix?.accuracy ?? null);
+  const liveCopy = locationStatusCopy(geo.state, assessment, geo.fix?.accuracy ?? null);
+  const statusCopy = liveCopy ?? lastOutcome;
 
   /** Sets an endpoint only if the reducer accepts it; announces and moves on only then. */
   const applyEndpoint = (which: EndpointWhich, point: LatLng, source: "gps" | "map"): boolean => {
@@ -123,14 +136,25 @@ export function HomeScreen() {
     setSeenAssessment(assessment);
     const fix = geo.fix;
     if (assessment && fix) {
-      if (recenterOnFix && assessment.insideCity) {
+      // While the user is placing a pin, a fix must not set the start or move the map.
+      const placingPin = endpoints.picking !== null;
+      if (!assessment.insideCity) {
+        // Outside Naga the fix is never the start and the map stays put. Keep the card's copy
+        // (the watch may stop below) and drop the pending requests.
+        if (liveCopy?.kind === "outside_city") setLastOutcome(liveCopy);
+        setRecenterOnFix(false);
+        setGpsIntent(false);
+      } else if (lastOutcome) {
+        setLastOutcome(null);
+      }
+      if (!placingPin && recenterOnFix && assessment.insideCity) {
         setRecenterOnFix(false);
         bumpRecenter();
       }
-      if (gpsIntent) {
+      if (placingPin) {
+        // Handled above; nothing else may touch the endpoints while a pin is being placed.
+      } else if (gpsIntent) {
         if (assessment.usableAsStart) setStartFromGps(fix);
-        // Outside Naga the fix is never the start; the status card offers pinning instead.
-        else if (!assessment.insideCity) setGpsIntent(false);
       } else if (
         gpsKey !== null &&
         endpoints.picking === null &&
@@ -144,9 +168,25 @@ export function HomeScreen() {
       }
     }
   }
-  if (gpsIntent && geo.state !== "requesting" && geo.state !== "watching") setGpsIntent(false);
+  // A transient "unavailable"/"timeout" keeps the pending request (the watch is still wanted, so a
+  // later usable fix completes the tap); a dead end (denied, unsupported, insecure, stopped) drops it.
+  const dead = geo.state === "idle" || geo.state === "denied" || geo.state === "unsupported" || geo.state === "insecure";
+  if (dead && (gpsIntent || recenterOnFix)) {
+    setGpsIntent(false);
+    setRecenterOnFix(false);
+  }
+
+  // The watch runs only while something needs it (a GPS endpoint, a pending request, or a
+  // recentre still waiting for its first fix). Everything else that ends a need just changes state.
+  const watchNeeded = shouldKeepWatching(endpoints, gpsIntent, recenterOnFix);
+  const geoStop = geo.stop;
+  const geoActive = geo.state === "requesting" || geo.state === "watching" || geo.state === "unavailable" || geo.state === "timeout";
+  useEffect(() => {
+    if (!watchNeeded && geoActive) geoStop();
+  }, [watchNeeded, geoActive, geoStop]);
 
   const handleUseCurrentLocation = () => {
+    setLastOutcome(null);
     if (watching && geo.fix) {
       const now = assessFix(geo.fix, Date.now());
       if (now.usableAsStart) {
@@ -161,6 +201,7 @@ export function HomeScreen() {
 
   const handleLocate = () => {
     if (geo.state !== "watching" && geo.state !== "requesting") {
+      setLastOutcome(null);
       setRecenterOnFix(true);
       geo.start();
     }
@@ -168,6 +209,9 @@ export function HomeScreen() {
   };
 
   const handleChooseOnMap = (which: EndpointWhich) => {
+    // Placing a pin cancels any pending GPS request, so a late fix can't take over the pick.
+    if (which === "start") setGpsIntent(false);
+    setRecenterOnFix(false);
     dispatch({ type: "pick", which });
     setAnnouncement(`Move the map to place the ${which === "start" ? "start" : "destination"} pin.`);
   };
@@ -181,18 +225,9 @@ export function HomeScreen() {
     const wasGps = gpsEndpointKey(endpoints) === which;
     if (!applyEndpoint(which, center.point, "map")) return;
     returnFocusTo.current = which;
-    const gpsUseless = assessment !== null && !assessment.insideCity;
-    const next = endpointsReducer(endpoints, {
-      type: "set",
-      which,
-      endpoint: { point: center.point, source: "map", label: "" },
-    });
     if (which === "start") setGpsIntent(false);
-    const intent = which === "start" ? false : gpsIntent;
     if (wasGps) setGpsStartAccuracy(null);
-    // The pin replaced GPS (or GPS is outside Naga): stop watching unless another endpoint needs it.
-    const startNeedsStop = which === "start" && (gpsIntent || gpsUseless);
-    if ((wasGps || startNeedsStop) && !shouldKeepWatching(next, intent)) geo.stop();
+    // The watch effect stops GPS when this pin leaves nothing needing it.
   };
 
   const handleCancelPick = () => {
@@ -202,26 +237,30 @@ export function HomeScreen() {
   };
 
   const handleClear = (which: EndpointWhich) => {
-    const wasGps = gpsEndpointKey(endpoints) === which;
-    const next = endpointsReducer(endpoints, { type: "clear", which });
-    const intent = which === "start" ? false : gpsIntent;
-    if (which === "start") setGpsIntent(false);
-    if (wasGps) {
-      setGpsStartAccuracy(null);
-      if (!shouldKeepWatching(next, intent)) geo.stop();
-    }
+    // Clearing drops any pending "use current location" (the watch effect stops GPS if unneeded).
+    if (gpsEndpointKey(endpoints) === which) setGpsStartAccuracy(null);
+    setGpsIntent(false);
+    setRecenterOnFix(false);
+    setLastOutcome(null);
     dispatch({ type: "clear", which });
     setFocused(which);
     setAnnouncement(`${NAME[which]} cleared`);
   };
 
   const handleClearAll = () => {
-    if (gpsEndpointKey(endpoints) !== null) geo.stop();
     setGpsIntent(false);
+    setRecenterOnFix(false);
+    setLastOutcome(null);
     setGpsStartAccuracy(null);
     dispatch({ type: "clearAll" });
     setFocused("start");
     setAnnouncement("Start and destination cleared");
+  };
+
+  // "Move start pin" (approximate fix): open the crosshair centred on the current start point.
+  const handleMoveStartPin = () => {
+    if (endpoints.start) bumpRecenter(endpoints.start.point);
+    handleChooseOnMap("start");
   };
 
   const handleSwap = () => {
@@ -278,10 +317,12 @@ export function HomeScreen() {
       <div className="pn-home__map">
         <NagaMap
           userFix={userFix}
+          userStale={assessment?.stale ?? false}
           pins={pins}
           crosshair={picking !== null}
           onCenterChange={handleCenterChange}
           recenterSignal={recenterSignal}
+          recenterTarget={recenterTarget}
           onLocate={handleLocate}
         />
       </div>
@@ -359,7 +400,7 @@ export function HomeScreen() {
             </>
           ) : null}
           {showStatus && statusCopy ? (
-            <LocationStatus copy={statusCopy} onPickStart={() => handleChooseOnMap("start")} />
+            <LocationStatus copy={statusCopy} onPickStart={() => (statusCopy.kind === "approximate" ? handleMoveStartPin() : handleChooseOnMap("start"))} />
           ) : null}
         </EndpointSheet>
       )}

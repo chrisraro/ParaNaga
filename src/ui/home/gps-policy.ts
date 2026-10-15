@@ -14,9 +14,16 @@ export function gpsEndpointKey(endpoints: EndpointsState): EndpointWhich | null 
   return null;
 }
 
-/** GPS keeps watching only while an endpoint is gps-sourced or a "use current location" is pending. */
-export function shouldKeepWatching(endpoints: EndpointsState, intentPending: boolean): boolean {
-  return intentPending || gpsEndpointKey(endpoints) !== null;
+/**
+ * GPS keeps watching only while an endpoint is gps-sourced, a "use current location" is pending,
+ * or the locate button's first recentre has not happened yet.
+ */
+export function shouldKeepWatching(
+  endpoints: EndpointsState,
+  intentPending: boolean,
+  recenterPending = false,
+): boolean {
+  return intentPending || recenterPending || gpsEndpointKey(endpoints) !== null;
 }
 
 /** Runs the reducer's `set` and reports whether the point was accepted (inside Naga). */

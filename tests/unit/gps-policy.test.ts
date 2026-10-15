@@ -26,6 +26,13 @@ describe("shouldKeepWatching", () => {
   it("keeps watching while a use-current-location request is pending", () => {
     expect(shouldKeepWatching(initialEndpointsState, true)).toBe(true);
   });
+  it("keeps watching while a locate recentre is still pending", () => {
+    expect(shouldKeepWatching(initialEndpointsState, false, true)).toBe(true);
+  });
+  it("stops once the recentre is done and nothing else needs GPS", () => {
+    expect(shouldKeepWatching(initialEndpointsState, false, false)).toBe(false);
+    expect(shouldKeepWatching(state({ start: pin }), false, false)).toBe(false);
+  });
   it("stops when nothing needs GPS", () => {
     expect(shouldKeepWatching(state({ start: pin }), false)).toBe(false);
     expect(shouldKeepWatching(initialEndpointsState, false)).toBe(false);
