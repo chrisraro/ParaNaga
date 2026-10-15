@@ -1,0 +1,55 @@
+{
+ "revision": {
+  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
+  "label": "modes-2026-10-16",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T22:29:16.023Z"
+ },
+ "terminal": {
+  "code": "T14",
+  "name": "Balatas Tricycle Terminal",
+  "locationText": "Balatas, near Magsaysay Ave/Balatas Rd",
+  "modes": [
+   "tricycle"
+  ],
+  "evidenceStatus": "community_only",
+  "notes": "OSM edit 2026-07-27.",
+  "sourceCodes": [
+   "N02"
+  ],
+  "lat": 13.6318672,
+  "lng": 123.1973306,
+  "kind": "terminal",
+  "verification": "community_only",
+  "statusNote": null,
+  "modeSources": {
+   "tricycle": [
+    "N02"
+   ]
+  },
+  "coordinate": {
+   "source": "osm_node",
+   "osmType": "node",
+   "osmId": 14053567159,
+   "osmVersion": 1,
+   "osmTimestamp": "2026-07-27T10:52:44.000Z",
+   "note": null,
+   "licence": "ODbL 1.0",
+   "attribution": "Map data © OpenStreetMap contributors",
+   "attributionUrl": "https://www.openstreetmap.org/copyright"
+  }
+ },
+ "routes": [],
+ "regionalServices": [],
+ "destinationCategories": [],
+ "sources": [
+  {
+   "code": "N02",
+   "title": "OpenStreetMap transport POIs in Naga (terminals, stops, stations)",
+   "url": "https://overpass-api.de/api/interpreter",
+   "evidenceType": "community_open_data",
+   "publishedOrEnacted": "osm_base 2026-10-15T20:42Z",
+   "checkedOn": "2026-10-16"
+  }
+ ]
+}

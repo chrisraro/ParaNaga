@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
+  "label": "modes-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-15T22:29:16.023Z"
  },
  "route": {
   "code": "R1",
@@ -18,6 +18,46 @@
   "verification": "unverified",
   "hasProvisionalStops": false,
   "hasTrial": false,
+  "mode": "jeepney",
+  "serviceStatus": "legal_plan",
+  "planning": "none",
+  "fleet": {
+   "label": "Traditional jeepneys",
+   "chip": "Jeepney · traditional",
+   "colourKey": "traditional_puj",
+   "classes": [
+    {
+     "code": "FL-R1-TRAD",
+     "vehicleClass": "traditional_puj",
+     "evidenceLevels": [
+      "legal_plan",
+      "owner_confirmation"
+     ],
+     "status": "operating",
+     "firstReportedOn": null,
+     "lastReportedOn": "2026-10-16",
+     "unitsNote": "PUJ Class 2 in the 2025 route plan",
+     "aircon": null,
+     "airconSourceCodes": [],
+     "cooperatives": [],
+     "sourceCodes": [
+      "N30",
+      "U01"
+     ],
+     "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+    }
+   ]
+  },
+  "operatingStatus": {
+   "status": "operating",
+   "label": "Operating (owner-confirmed 2026-10-16)",
+   "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+   "confirmedOn": "2026-10-16",
+   "confirmsServiceOnly": true,
+   "sourceCodes": [
+    "U01"
+   ]
+  },
   "notes": null,
   "sourceCodes": [
    "S01",
@@ -40,7 +80,8 @@
     "Balatas Rd",
     "Cararayan–San Isidro Rd"
    ],
-   "circuit": null
+   "circuit": null,
+   "branch": null
   },
   "additionalSourceStructures": [],
   "normalizationNote": null
@@ -48,6 +89,7 @@
  "variants": [
   {
    "variantId": "34982ac9-df4a-44af-8a90-9ffae49c078e",
+   "name": null,
    "direction": "inbound",
    "kind": "permanent",
    "evidenceLevel": "documentary",
@@ -70,7 +112,8 @@
      "Caceres St"
     ],
     "outbound": null,
-    "circuit": null
+    "circuit": null,
+    "branch": null
    },
    "notes": null,
    "sourceCodes": [
@@ -81,6 +124,7 @@
   },
   {
    "variantId": "40578b72-5444-429e-8ab7-ad0adc4bcf51",
+   "name": null,
    "direction": "outbound",
    "kind": "permanent",
    "evidenceLevel": "documentary",
@@ -101,7 +145,8 @@
      "Balatas Rd",
      "Cararayan–San Isidro Rd"
     ],
-    "circuit": null
+    "circuit": null,
+    "branch": null
    },
    "notes": null,
    "sourceCodes": [
@@ -113,6 +158,7 @@
  ],
  "trials": [],
  "aliases": [],
+ "cooperatives": [],
  "fareEvidence": {
   "basis": "route_mode",
   "rules": [
@@ -135,7 +181,9 @@
     "isEstimate": true,
     "sourceCodes": [
      "S05",
-     "S06"
+     "S06",
+     "N17",
+     "N32"
     ]
    },
    {
@@ -157,14 +205,25 @@
     "isEstimate": true,
     "sourceCodes": [
      "S05",
-     "S06"
+     "S06",
+     "N17",
+     "N32"
     ]
    }
   ],
   "observations": [],
-  "conflicts": []
+  "conflicts": [],
+  "reportedPractice": []
  },
  "sources": [
+  {
+   "code": "N30",
+   "title": "Ordinance 2025-070 LPTRP + Resolution 2025-735 Eastbound trial (= S01/S02/S03)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23 / 2025-11-11",
+   "checkedOn": "2026-10-16"
+  },
   {
    "code": "S01",
    "title": "Naga approved LPTRP, Ordinance 2025-070",
@@ -180,6 +239,14 @@
    "evidenceType": "official",
    "publishedOrEnacted": "2025-09-23",
    "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "U01",
+   "title": "Project owner confirmation to ParaNaga (2026-10-16): traditional jeepneys operate on every LPTRP route (R1–R8); air-conditioned modern jeepneys operate on R4 and R7; riders pay about P3–P5 more on R4 modern and at least P5 more on R7 modern than the traditional fare",
+   "url": null,
+   "evidenceType": "owner_confirmation",
+   "publishedOrEnacted": "2026-10-16",
+   "checkedOn": "2026-10-16"
   }
  ]
 }

@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
+  "label": "modes-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-15T22:29:16.023Z"
  },
  "osmPlaces": [
   {
@@ -3815,7 +3815,9 @@
     "Caceres St",
     "Panganiban Drive",
     "Dayangdang St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
   },
   {
    "code": "R2",
@@ -3832,7 +3834,9 @@
     "Padian St",
     "Gen. Luna St",
     "P. Burgos St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
   },
   {
    "code": "R3",
@@ -3849,7 +3853,9 @@
     "Gen. Luna St",
     "P. Burgos St",
     "J. Hernandez Ave"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
   },
   {
    "code": "R4",
@@ -3866,7 +3872,9 @@
     "J. Hernandez Ave",
     "Caceres St",
     "Dinaga St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional and modern jeepneys"
   },
   {
    "code": "R5",
@@ -3882,7 +3890,9 @@
     "Padian St",
     "Gen. Luna St",
     "P. Burgos St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
   },
   {
    "code": "R6",
@@ -3897,7 +3907,9 @@
     "Elias Angeles St",
     "Padian St",
     "Dinaga St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
   },
   {
    "code": "R7",
@@ -3914,7 +3926,9 @@
     "Elias Angeles St",
     "Padian St",
     "Dinaga St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional and modern jeepneys"
   },
   {
    "code": "R8-A",
@@ -3935,7 +3949,9 @@
     "Fraternidad St",
     "Biak na Bato St",
     "Eastbound Terminal, Anciano St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
   },
   {
    "code": "R8-B",
@@ -3957,7 +3973,9 @@
     "P. Burgos St",
     "Eastbound Terminal, Anciano St",
     "Raul S. Roco St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
   },
   {
    "code": "R8-C",
@@ -3977,7 +3995,9 @@
     "Roxas Ave",
     "Fraternidad St",
     "Biak na Bato St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
   },
   {
    "code": "R8-D",
@@ -3995,7 +4015,34 @@
     "Bagumbayan Rd",
     "Elias Angeles St",
     "Caceres St"
-   ]
+   ],
+   "mode": "jeepney",
+   "fleetLabel": "Traditional jeepneys"
+  },
+  {
+   "code": "TRI-VISTODA",
+   "name": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
+   "groupNumber": null,
+   "evidenceLevel": "documentary",
+   "hasTrial": false,
+   "streets": [
+    "Langon – Vistansa Subd – Ateneo de Naga",
+    "Langon – Sitio Salunguigui – Centro Cararayan (corner of San Miguel St and Tecla San Andres-Ziga Rd)"
+   ],
+   "mode": "tricycle",
+   "fleetLabel": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
+  },
+  {
+   "code": "TRI-DECALANGON",
+   "name": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
+   "groupNumber": null,
+   "evidenceLevel": "documentary",
+   "hasTrial": false,
+   "streets": [
+    "Cararayan Rd corner (Langon) – Salunguigui – Deca Vistansa"
+   ],
+   "mode": "tricycle",
+   "fleetLabel": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
   }
  ],
  "terminals": [
@@ -4004,9 +4051,15 @@
    "name": "Bicol Central Station",
    "locationText": "Ninoy & Cory Avenue, Triangulo",
    "modes": [
-    "bus"
+    "bus",
+    "uv_express"
    ],
-   "location": null
+   "kind": "terminal",
+   "location": {
+    "lat": 13.6192359,
+    "lng": 123.1897426,
+    "source": "osm"
+   }
   },
   {
    "code": "T02",
@@ -4014,8 +4067,9 @@
    "locationText": "Anciano Street / Naga City Subdivision area",
    "modes": [
     "jeepney",
-    "UV/van"
+    "uv_express"
    ],
+   "kind": "terminal",
    "location": null
   },
   {
@@ -4024,9 +4078,14 @@
    "locationText": "Felix Plazo Street, Sabang",
    "modes": [
     "jeepney",
-    "filcab/van"
+    "uv_express"
    ],
-   "location": null
+   "kind": "terminal",
+   "location": {
+    "lat": 13.6189669,
+    "lng": 123.1782111,
+    "source": "osm"
+   }
   },
   {
    "code": "T04",
@@ -4034,17 +4093,23 @@
    "locationText": "Queborac Drive, Bagumbayan Sur",
    "modes": [
     "jeepney",
-    "van"
+    "uv_express"
    ],
-   "location": null
+   "kind": "terminal",
+   "location": {
+    "lat": 13.6344492,
+    "lng": 123.1849067,
+    "source": "osm"
+   }
   },
   {
    "code": "T05",
    "name": "Centro loading cluster",
    "locationText": "Padian / Gen. Luna / Elias Angeles / Diaz / Dinaga / Caceres streets",
    "modes": [
-    "city_jeepney"
+    "jeepney"
    ],
+   "kind": "loading_point",
    "location": null
   },
   {
@@ -4054,6 +4119,143 @@
    "modes": [
     "rail"
    ],
+   "kind": "station",
+   "location": {
+    "lat": 13.619618,
+    "lng": 123.185879,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T07",
+   "name": "Eaglestar Naga Terminal",
+   "locationText": "OSM node south of CBD",
+   "modes": [
+    "bus"
+   ],
+   "kind": "terminal",
+   "location": {
+    "lat": 13.6163844,
+    "lng": 123.1866316,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T08",
+   "name": "Milaor Jeepney Terminal",
+   "locationText": "OSM bus_stop node",
+   "modes": [
+    "jeepney"
+   ],
+   "kind": "terminal",
+   "location": {
+    "lat": 13.6180598,
+    "lng": 123.1831728,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T09",
+   "name": "Jeepney station to Concepcion and Del Rosario",
+   "locationText": "Dinaga St, Centro",
+   "modes": [
+    "jeepney"
+   ],
+   "kind": "loading_point",
+   "location": {
+    "lat": 13.6230645,
+    "lng": 123.1859752,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T10",
+   "name": "Jeepney station to Pacol",
+   "locationText": "Centro",
+   "modes": [
+    "jeepney"
+   ],
+   "kind": "loading_point",
+   "location": {
+    "lat": 13.6209809,
+    "lng": 123.1846467,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T11",
+   "name": "Jeepney station to Carolina and Panicuason",
+   "locationText": "Centro",
+   "modes": [
+    "jeepney"
+   ],
+   "kind": "loading_point",
+   "location": {
+    "lat": 13.6210805,
+    "lng": 123.1850123,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T12",
+   "name": "Del Rosario → Centro jeepney station",
+   "locationText": "Maharlika Hwy, Del Rosario",
+   "modes": [
+    "jeepney"
+   ],
+   "kind": "loading_point",
+   "location": {
+    "lat": 13.6181576,
+    "lng": 123.2338199,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T13",
+   "name": "Gen. Luna St at Plaza Rizal (PUJ platform)",
+   "locationText": "Gen. Luna St",
+   "modes": [
+    "jeepney"
+   ],
+   "kind": "loading_point",
+   "location": {
+    "lat": 13.623659,
+    "lng": 123.1847492,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T14",
+   "name": "Balatas Tricycle Terminal",
+   "locationText": "Balatas, near Magsaysay Ave/Balatas Rd",
+   "modes": [
+    "tricycle"
+   ],
+   "kind": "terminal",
+   "location": {
+    "lat": 13.6318672,
+    "lng": 123.1973306,
+    "source": "osm"
+   }
+  },
+  {
+   "code": "T15",
+   "name": "Deca Vistansa special-trimobile waiting area",
+   "locationText": "Deca Vistansa, Pacol",
+   "modes": [
+    "tricycle"
+   ],
+   "kind": "waiting_area",
+   "location": null
+  },
+  {
+   "code": "T16",
+   "name": "Cararayan Proper special-trimobile waiting area",
+   "locationText": "Cararayan Proper",
+   "modes": [
+    "tricycle"
+   ],
+   "kind": "waiting_area",
    "location": null
   }
  ],

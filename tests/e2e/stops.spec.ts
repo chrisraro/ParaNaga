@@ -182,7 +182,7 @@ test("route R8-A: 30 provisional stops in pin order, the trial notice and an est
   await expect(trial).toContainText("adopted 11 Nov 2025 for 30 days; permanence unconfirmed");
   await expect(route.getByTestId("street-order").getByRole("listitem")).toHaveCount(ROUTE_R8A.route.legalStreets.circuit!.length);
   await expect(route.getByTestId("route-allocation")).toContainText(
-    "71 units allocated to group 8 in the plan, no per-route count (not a count of jeepneys running). Sources S01, S02 · revision osm-places-2026-10-15.",
+    "71 units allocated to group 8 in the plan, no per-route count (not a count of jeepneys running). Sources S01, S02 · revision modes-2026-10-16.",
   );
   await expect(route).toContainText("Corrections open soon");
   await expectAxeClean(page);

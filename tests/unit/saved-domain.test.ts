@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
 import type { NetworkSnapshot } from "@/domain/api/schemas";
+import { fleetSummary } from "@/domain/modes/fleet";
 import {
   HISTORY_RETENTION_DAYS,
   buildSavedTrip,
@@ -55,7 +56,7 @@ function snapshot(edit: (s: Pick<NetworkSnapshot, "revision" | "stops" | "varian
       {
         variantId: rideLeg.variantId, routeId: NEW_REVISION, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A",
         direction: "circuit", kind: "trial", evidenceLevel: "provisional", verification: "unverified", isCircular: true,
-        stopIds: plan.stops.map((x) => x.id),
+        stopIds: plan.stops.map((x) => x.id), mode: "jeepney", fleet: fleetSummary([], "jeepney"),
       },
     ],
   };
@@ -88,8 +89,8 @@ describe("saved trip card", () => {
   });
 
   it("meta line: no time, the fare chip text and the data date", () => {
-    expect(tripCardMeta(card())).toBe("Time not available · Estimate ₱14–₱17 · data from 15 Oct 2026");
-    expect(tripCardMeta(card({ publishedAt: null }))).toBe("Time not available · Estimate ₱14–₱17 · data from revision osm-places-2026-10-15");
+    expect(tripCardMeta(card())).toBe("Time not available · Estimate ₱14–₱17 · data from 16 Oct 2026");
+    expect(tripCardMeta(card({ publishedAt: null }))).toBe("Time not available · Estimate ₱14–₱17 · data from revision modes-2026-10-16");
   });
 });
 

@@ -118,7 +118,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(card).toContainText("Available offline");
   await expect(card).toContainText("From Pinned location");
   await expect(card.getByRole("heading", { level: 2 })).toHaveText("Pinned location");
-  await expect(card).toContainText("Time not available · Estimate ₱14–₱17 · data from 15 Oct 2026");
+  await expect(card).toContainText("Time not available · Estimate ₱14–₱17 · data from 16 Oct 2026");
   await expect(card).toContainText("Loop A");
   await expect(card).not.toContainText("Changed since saved");
 
@@ -148,7 +148,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(page).toHaveURL(/\/app$/);
   const detail = page.getByTestId("trip-detail");
   await expect(detail).toBeVisible();
-  await expect(detail.getByTestId("trip-reopen-note")).toContainText("shown as saved, with data from 15 Oct 2026");
+  await expect(detail.getByTestId("trip-reopen-note")).toContainText("shown as saved, with data from 16 Oct 2026");
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps).toHaveCount(4);
@@ -192,7 +192,7 @@ test("reopening after the network changed: the same rides are re-planned and say
   const save = page.getByTestId("trip-save");
   await expect(save).toHaveAttribute("data-state", "older");
   await expect(save).toHaveText("Update saved copy");
-  await expect(page.getByTestId("trip-save-older")).toHaveText("Your saved copy uses data from 15 Oct 2026.");
+  await expect(page.getByTestId("trip-save-older")).toHaveText("Your saved copy uses data from 16 Oct 2026.");
   await save.click();
   await expect(save).toHaveAttribute("data-state", "saved");
   await expect(page.getByTestId("trip-action-status")).toHaveText("Saved copy updated to the current data.");

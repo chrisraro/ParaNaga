@@ -10,6 +10,14 @@
 import { z } from "zod";
 import { NAGA_MAX_BOUNDS } from "../geo/naga";
 import { OSM_ELEMENT_TYPES, OSM_PLACE_CATEGORIES } from "../places/osm-categories";
+import {
+  COLOUR_KEYS,
+  COOPERATIVE_BASES,
+  FLEET_EVIDENCE_LEVELS,
+  FLEET_STATUSES,
+  ROUTE_MODES,
+  VEHICLE_CLASSES,
+} from "../modes/fleet";
 
 // ---------------------------------------------------------------- shared pieces
 
@@ -80,6 +88,75 @@ export const fareRuleEstimateSchema = z.object({
 });
 export type FareRuleEstimate = z.infer<typeof fareRuleEstimateSchema>;
 
+// ---------------------------------------------------------------- modes and fleets (Increment D)
+
+export const routeModeSchema = z.enum(ROUTE_MODES);
+export const SERVICE_STATUSES = ["legal_plan", "authorized_feeder", "historical_unknown"] as const;
+export const PLANNING_FLAGS = ["provisional", "none"] as const;
+
+/**
+ * One vehicle class on a route (transit.route_vehicle_class), with its evidence: every class is
+ * shown with its evidence levels, status and dates; aircon only with its sources (null = no
+ * source states it). There is no e-jeepney class.
+ */
+export const fleetClassSchema = z
+  .object({
+    code: z.string(),
+    vehicleClass: z.enum(VEHICLE_CLASSES),
+    evidenceLevels: z.array(z.enum(FLEET_EVIDENCE_LEVELS)).min(1),
+    status: z.enum(FLEET_STATUSES),
+    firstReportedOn: isoDate.nullable(),
+    lastReportedOn: isoDate.nullable(),
+    unitsNote: z.string().nullable(),
+    aircon: z.boolean().nullable(),
+    airconSourceCodes: z.array(z.string()),
+    /** Cooperative names only. */
+    cooperatives: z.array(z.string()),
+    sourceCodes: z.array(z.string()).min(1),
+    /** Evidence text, e.g. "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)". */
+    label: z.string(),
+  })
+  .refine((c) => (c.aircon === null) === (c.airconSourceCodes.length === 0), { message: "aircon needs its sources" });
+
+/** The route's fleet: label, option chip (C7), line colour key (D3) and the classes. No record → "Vehicle type not confirmed". */
+export const fleetSummarySchema = z.object({
+  label: z.string(),
+  chip: z.string(),
+  colourKey: z.enum(COLOUR_KEYS),
+  classes: z.array(fleetClassSchema),
+});
+export type FleetSummaryOut = z.infer<typeof fleetSummarySchema>;
+
+/**
+ * Owner-confirmed service (user decision 2026-10-16). Confirms SERVICE only: stop locations,
+ * stop order and paths stay unverified (`confirmsServiceOnly`), and the trip badge stays.
+ */
+export const operatingStatusSchema = z.object({
+  status: z.literal("operating"),
+  label: z.string(),
+  note: z.string(),
+  confirmedOn: isoDate,
+  confirmsServiceOnly: z.literal(true),
+  sourceCodes: z.array(z.string()).min(1),
+});
+
+/** OpenStreetMap coordinate provenance (ODbL): the terminal coordinate is never an entrance. */
+export const terminalCoordinateSchema = z.object({
+  source: z.enum(["osm_node", "osm_way_centroid"]),
+  osmType: z.enum(["node", "way"]),
+  osmId: z.number().int().positive(),
+  osmVersion: z.number().int().min(1).nullable(),
+  osmTimestamp: isoDateTime.nullable(),
+  note: z.string().nullable(),
+  licence: z.literal("ODbL 1.0"),
+  attribution: z.literal("Map data © OpenStreetMap contributors"),
+  attributionUrl: z.literal("https://www.openstreetmap.org/copyright"),
+});
+export const TERMINAL_KINDS = ["terminal", "loading_point", "waiting_area", "station"] as const;
+
+/** Fare modes the intra-city planner may use: never the regional bus/UV rules (F06–F12). */
+export const INTRA_CITY_FARE_MODES = ["traditional_jeepney", "modern_jeepney", "trimobile_e_trike_taxicle", "padyak"] as const;
+
 // ---------------------------------------------------------------- GET /api/v1/network/head
 
 export const networkHeadSchema = revisionMetaSchema;
@@ -99,13 +176,51 @@ export const snapshotVariantSchema = z.object({
   isCircular: z.boolean(),
   /** Ordered stop ids (route_stop seq 1…n). */
   stopIds: z.array(z.uuid()).min(1),
+  mode: routeModeSchema,
+  fleet: fleetSummarySchema,
 });
+
+/** A published terminal or loading point; lat/lng null when no coordinate is on file. */
+export const snapshotTerminalSchema = z
+  .object({
+    code: z.string().regex(/^T\d{2}$/),
+    name: z.string(),
+    /** Null for a legacy terminal row (revisions before the modes seed). */
+    kind: z.enum(TERMINAL_KINDS).nullable(),
+    modes: z.array(z.string()),
+    lat: latitude.nullable(),
+    lng: longitude.nullable(),
+    coordSource: z.enum(["osm_node", "osm_way_centroid"]).nullable(),
+    verification: z.string().nullable(),
+  })
+  .refine((t) => (t.lat === null) === (t.lng === null) && (t.lat === null) === (t.coordSource === null), {
+    message: "a coordinate always comes with its source",
+  });
 
 export const networkSnapshotSchema = z.object({
   revision: revisionMetaSchema,
   stops: z.array(stopSummarySchema),
   variants: z.array(snapshotVariantSchema),
-  fareRules: z.array(fareRuleEstimateSchema),
+  /** Intra-city fare rules only (INTRA_CITY_FARE_MODES): regional rules never reach the planner. */
+  fareRules: z.array(fareRuleEstimateSchema).refine(
+    (rules) => rules.every((r) => (INTRA_CITY_FARE_MODES as readonly string[]).includes(r.modeCode)),
+    { message: "the snapshot carries intra-city fare rules only" },
+  ),
+  terminals: z.array(snapshotTerminalSchema),
+  /**
+   * Every published route with its mode and fleet, including routes without a stop order (which
+   * have no variant above): chips and labels work offline for the whole network.
+   */
+  routes: z.array(
+    z.object({
+      routeId: z.uuid(),
+      routeCode: z.string(),
+      routeName: z.string(),
+      mode: routeModeSchema,
+      serviceStatus: z.enum(SERVICE_STATUSES).nullable(),
+      fleet: fleetSummarySchema,
+    }),
+  ),
 });
 export type NetworkSnapshot = z.infer<typeof networkSnapshotSchema>;
 
@@ -209,6 +324,13 @@ export const routeSummarySchema = z.object({
   verification: verificationSchema,
   hasProvisionalStops: z.boolean(),
   hasTrial: z.boolean(),
+  mode: routeModeSchema,
+  /** legal_plan (LPTRP), authorized_feeder (tricycle ordinances); null when not stated. */
+  serviceStatus: z.enum(SERVICE_STATUSES).nullable(),
+  planning: z.enum(PLANNING_FLAGS),
+  fleet: fleetSummarySchema,
+  /** Null: no owner confirmation on file. Never implies verified stops or paths. */
+  operatingStatus: operatingStatusSchema.nullable(),
 });
 export type RouteSummary = z.infer<typeof routeSummarySchema>;
 
@@ -224,11 +346,15 @@ export const legalStreetsSchema = z.object({
   inbound: z.array(z.string()).nullable(),
   outbound: z.array(z.string()).nullable(),
   circuit: z.array(z.string()).nullable(),
+  /** Street text of feeder branch variants (tricycle ordinances), verbatim. */
+  branch: z.array(z.string()).nullable(),
 });
 export type LegalStreets = z.infer<typeof legalStreetsSchema>;
 
 const routeVariantSchema = z.object({
   variantId: z.uuid(),
+  /** Feeder branch name; null for LPTRP variants. */
+  name: z.string().nullable(),
   direction: z.enum(DIRECTIONS),
   kind: z.enum(VARIANT_KINDS),
   evidenceLevel: z.enum(EVIDENCE_LEVELS),
@@ -282,6 +408,20 @@ export const routeDetailSchema = z.object({
   trials: z.array(routeVariantSchema),
   /** Legacy and local names (historical ones flagged). */
   aliases: z.array(routeAliasSchema),
+  /** Cooperative NAMES on this corridor (C8), with source and date: never chair names or addresses. */
+  cooperatives: z.array(
+    z
+      .object({
+        name: z.string(),
+        basis: z.enum(COOPERATIVE_BASES),
+        label: z.string(),
+        /** YYYY-MM or YYYY-MM-DD. */
+        reportedOn: z.string().regex(/^\d{4}-\d{2}(-\d{2})?$/).nullable(),
+        notes: z.string().nullable(),
+        sourceCodes: z.array(z.string()).min(1),
+      })
+      .strict(),
+  ),
   fareEvidence: z.object({
     /** How the rules were associated: inferred from the route's mode (no stored route↔fare link). */
     basis: z.literal("route_mode"),
@@ -289,6 +429,19 @@ export const routeDetailSchema = z.object({
     observations: z.array(fareObservationSchema),
     conflicts: z.array(
       z.object({ ruleCode: z.string(), observationCode: z.string().nullable(), status: z.string(), note: z.string().nullable() }),
+    ),
+    /** What riders report paying for one vehicle class, as a delta over the traditional fare. Never a rule. */
+    reportedPractice: z.array(
+      z.object({
+        code: z.string(),
+        vehicleClass: z.enum(VEHICLE_CLASSES),
+        deltaQualifier: z.enum(["range", "at_least"]),
+        deltaCentavosLow: z.number().int().min(0),
+        deltaCentavosHigh: z.number().int().min(0).nullable(),
+        observedOn: isoDate,
+        reportText: z.string(),
+        sourceCodes: z.array(z.string()).min(1),
+      }),
     ),
   }),
   sources: z.array(sourceSchema),
@@ -363,6 +516,9 @@ export const searchRouteSchema = z.object({
   hasTrial: z.boolean(),
   /** Distinct street names from the legal street lists and trial circuits, verbatim. */
   streets: z.array(z.string()),
+  mode: routeModeSchema,
+  /** The route's fleet sentence (fleetLabel), e.g. "Traditional and modern jeepneys". */
+  fleetLabel: z.string(),
 });
 
 export const searchTerminalSchema = z.object({
@@ -370,8 +526,10 @@ export const searchTerminalSchema = z.object({
   name: z.string(),
   locationText: z.string().nullable(),
   modes: z.array(z.string()),
-  /** No coordinates, entrances or bays are on file. */
-  location: z.null(),
+  /** Null for a legacy terminal row. */
+  kind: z.enum(TERMINAL_KINDS).nullable(),
+  /** The OpenStreetMap coordinate (ODbL) when one is on file; never an entrance or bay. */
+  location: z.object({ lat: latitude, lng: longitude, source: z.literal("osm") }).nullable(),
 });
 
 export const searchBarangaySchema = z.object({
@@ -466,6 +624,16 @@ export const terminalDetailSchema = z.object({
     /** Null: no terminal coordinate is on file. */
     lat: latitude.nullable(),
     lng: longitude.nullable(),
+    /** Null for a legacy terminal row (revisions before the modes seed). */
+    kind: z.enum(TERMINAL_KINDS).nullable(),
+    verification: z.string().nullable(),
+    statusNote: z.string().nullable(),
+    /** Sources per mode served ({ bus: ["S09", "N02"] }). */
+    modeSources: z.record(z.string(), z.array(z.string())),
+    /** Present exactly when lat/lng are: where the coordinate comes from (OpenStreetMap, ODbL). */
+    coordinate: terminalCoordinateSchema.nullable(),
+  }).refine((t) => (t.lat === null) === (t.lng === null) && (t.lat === null) === (t.coordinate === null), {
+    message: "a terminal coordinate always carries its provenance",
   }),
   /** Routes whose legal street list (legal_plan) or trial circuit (trial) names this terminal. */
   routes: z.array(
@@ -474,6 +642,35 @@ export const terminalDetailSchema = z.object({
       routeName: z.string(),
       basis: z.enum(TERMINAL_ROUTE_BASES),
       sourceCodes: z.array(z.string()),
+    }),
+  ),
+  /**
+   * Regional services (UV Express, buses, regional jeepneys) leaving from this terminal, with fare
+   * ESTIMATES from the per-km national rates. Not drawn on the map; never part of trip planning.
+   */
+  regionalServices: z.array(
+    z.object({
+      code: z.string().regex(/^RS\d{2}$/),
+      name: z.string(),
+      mode: z.enum(["uv_express", "bus", "jeepney"]),
+      operators: z.array(z.string()),
+      destination: z.string(),
+      /** Null: distance not on file. */
+      distanceKm: z.number().positive().nullable(),
+      distanceBasis: z.string().nullable(),
+      status: z.literal("community_mapped"),
+      terminalNote: z.string().nullable(),
+      notes: z.string().nullable(),
+      fareRuleCodes: z.array(z.string()),
+      fareEstimate: z.object({
+        isEstimate: z.literal(true),
+        distanceKm: z.number().nullable(),
+        lowCentavos: z.number().int().nullable(),
+        highCentavos: z.number().int().nullable(),
+        text: z.string(),
+        ruleCodes: z.array(z.string()),
+      }),
+      sourceCodes: z.array(z.string()).min(1),
     }),
   ),
   /** External destination categories whose candidate terminal is this one. */
@@ -566,5 +763,8 @@ export function parseBbox(raw: string | null | undefined): Parsed<Bbox> {
  * no known rule.
  */
 export function fareModesForRouteMode(routeMode: string | null): string[] {
-  return routeMode !== null && /^PUJ(_|$)/.test(routeMode) ? ["traditional_jeepney", "modern_jeepney"] : [];
+  if (routeMode !== null && /^PUJ(_|$)/.test(routeMode)) return ["traditional_jeepney", "modern_jeepney"];
+  // Tricycle feeders: the ₱15 minimum (Ordinance 2024-002, F03); discounts are never applied.
+  if (routeMode === "tricycle") return ["trimobile_e_trike_taxicle"];
+  return [];
 }

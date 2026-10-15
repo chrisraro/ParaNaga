@@ -1,0 +1,179 @@
+{
+ "revision": {
+  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
+  "label": "modes-2026-10-16",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T22:29:16.023Z"
+ },
+ "route": {
+  "code": "TRI-VISTODA",
+  "name": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
+  "groupNumber": null,
+  "modeCode": "tricycle",
+  "legalStatus": null,
+  "allocatedUnits": 33,
+  "allocationIsActiveFleetCount": null,
+  "groupAllocatedUnits": null,
+  "evidenceLevel": "documentary",
+  "verification": "unverified",
+  "hasProvisionalStops": false,
+  "hasTrial": false,
+  "mode": "tricycle",
+  "serviceStatus": "authorized_feeder",
+  "planning": "none",
+  "fleet": {
+   "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified",
+   "chip": "Tricycle · special trimobile",
+   "colourKey": "tricycle",
+   "classes": [
+    {
+     "code": "FL-TRI-VISTODA",
+     "vehicleClass": "tricycle",
+     "evidenceLevels": [
+      "legal_plan"
+     ],
+     "status": "planned",
+     "firstReportedOn": "2025-09-09",
+     "lastReportedOn": "2025-09-09",
+     "unitsNote": "33 special trimobile units authorized",
+     "aircon": null,
+     "airconSourceCodes": [],
+     "cooperatives": [],
+     "sourceCodes": [
+      "N06"
+     ],
+     "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
+    }
+   ]
+  },
+  "operatingStatus": null,
+  "notes": "Authorized by Ordinance 2025-067; daily operation not verified. Waiting areas: Deca Vistansa (T15) and Cararayan Proper (T16).",
+  "sourceCodes": [
+   "N06"
+  ],
+  "legalStreets": {
+   "inbound": null,
+   "outbound": null,
+   "circuit": null,
+   "branch": [
+    "Langon – Vistansa Subd – Ateneo de Naga",
+    "Langon – Sitio Salunguigui – Centro Cararayan (corner of San Miguel St and Tecla San Andres-Ziga Rd)"
+   ]
+  },
+  "additionalSourceStructures": [],
+  "normalizationNote": null
+ },
+ "variants": [
+  {
+   "variantId": "10e14adf-da84-4216-a44f-c9a38fb30843",
+   "name": "Langon – Ateneo de Naga via Vistansa Subd",
+   "direction": "branch",
+   "kind": "permanent",
+   "evidenceLevel": "documentary",
+   "verification": "unverified",
+   "isCircular": false,
+   "headsign": null,
+   "vehicleClass": null,
+   "operatingStatus": null,
+   "trialStatus": null,
+   "effectiveFrom": null,
+   "trialDurationDays": null,
+   "legalStreets": {
+    "inbound": null,
+    "outbound": null,
+    "circuit": null,
+    "branch": [
+     "Langon – Vistansa Subd – Ateneo de Naga"
+    ]
+   },
+   "notes": null,
+   "sourceCodes": [
+    "N06"
+   ],
+   "stops": []
+  },
+  {
+   "variantId": "90dae942-1749-44a8-8ac5-77b0e7b46300",
+   "name": "Langon – Centro Cararayan (San Miguel St / Tecla San Andres-Ziga Rd corner) via Sitio Salunguigui",
+   "direction": "branch",
+   "kind": "permanent",
+   "evidenceLevel": "documentary",
+   "verification": "unverified",
+   "isCircular": false,
+   "headsign": null,
+   "vehicleClass": null,
+   "operatingStatus": null,
+   "trialStatus": null,
+   "effectiveFrom": null,
+   "trialDurationDays": null,
+   "legalStreets": {
+    "inbound": null,
+    "outbound": null,
+    "circuit": null,
+    "branch": [
+     "Langon – Sitio Salunguigui – Centro Cararayan (corner of San Miguel St and Tecla San Andres-Ziga Rd)"
+    ]
+   },
+   "notes": null,
+   "sourceCodes": [
+    "N06"
+   ],
+   "stops": []
+  }
+ ],
+ "trials": [],
+ "aliases": [],
+ "cooperatives": [],
+ "fareEvidence": {
+  "basis": "route_mode",
+  "rules": [
+   {
+    "code": "F03",
+    "modeCode": "trimobile_e_trike_taxicle",
+    "vehicleClass": null,
+    "baseCentavos": 1500,
+    "baseKm": null,
+    "incrementCentavosPerKm": null,
+    "discountPercent": 20,
+    "discountedBaseCentavos": null,
+    "discountGroups": [
+     "senior",
+     "student",
+     "PWD",
+     "solo_parent_with_valid_ID"
+    ],
+    "rounding": null,
+    "effectiveFrom": null,
+    "enactedOn": "2024-01-16",
+    "evidenceStatus": "official_base;distance_matrix_missing",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S04",
+     "N33"
+    ]
+   }
+  ],
+  "observations": [],
+  "conflicts": [
+   {
+    "ruleCode": "F03",
+    "observationCode": "F05",
+    "status": "open",
+    "note": "Reported student fare 1300 centavos (2026-06-22) differs from the 20 percent discount calculated on F03 (1200 centavos, seed arithmetic). Reported practice only; never applied."
+   }
+  ],
+  "reportedPractice": []
+ },
+ "sources": [
+  {
+   "code": "N06",
+   "title": "Ordinance 2025-067 VISTODA/LAVISTODA (same as S37)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-067/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-09 (enacted)",
+   "checkedOn": "2026-10-16"
+  }
+ ]
+}

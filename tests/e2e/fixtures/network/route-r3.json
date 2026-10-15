@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
+  "label": "modes-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-15T22:29:16.023Z"
  },
  "route": {
   "code": "R3",
@@ -18,6 +18,46 @@
   "verification": "unverified",
   "hasProvisionalStops": false,
   "hasTrial": false,
+  "mode": "jeepney",
+  "serviceStatus": "legal_plan",
+  "planning": "none",
+  "fleet": {
+   "label": "Traditional jeepneys",
+   "chip": "Jeepney · traditional",
+   "colourKey": "traditional_puj",
+   "classes": [
+    {
+     "code": "FL-R3-TRAD",
+     "vehicleClass": "traditional_puj",
+     "evidenceLevels": [
+      "legal_plan",
+      "owner_confirmation"
+     ],
+     "status": "operating",
+     "firstReportedOn": null,
+     "lastReportedOn": "2026-10-16",
+     "unitsNote": "PUJ Class 2 in the 2025 route plan",
+     "aircon": null,
+     "airconSourceCodes": [],
+     "cooperatives": [],
+     "sourceCodes": [
+      "N30",
+      "U01"
+     ],
+     "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+    }
+   ]
+  },
+  "operatingStatus": {
+   "status": "operating",
+   "label": "Operating (owner-confirmed 2026-10-16)",
+   "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+   "confirmedOn": "2026-10-16",
+   "confirmsServiceOnly": true,
+   "sourceCodes": [
+    "U01"
+   ]
+  },
   "notes": "Source also lists an Almeda–Mabolo–Southbound Terminal structure. Separate branch interpretation and return path require agency clarification; do not merge the two structures.",
   "sourceCodes": [
    "S01",
@@ -41,7 +81,8 @@
     "Roxas Ave",
     "AH26",
     "Naga–Pili boundary, Del Rosario"
-   ]
+   ],
+   "branch": null
   },
   "additionalSourceStructures": [
    [
@@ -61,6 +102,7 @@
  "variants": [
   {
    "variantId": "70cda719-c174-4cd1-8487-e89c7e1352cc",
+   "name": null,
    "direction": "circuit",
    "kind": "permanent",
    "evidenceLevel": "documentary",
@@ -90,7 +132,8 @@
      "Roxas Ave",
      "AH26",
      "Naga–Pili boundary, Del Rosario"
-    ]
+    ],
+    "branch": null
    },
    "notes": "is_circular=false means the loop is not verified (the seed lists circuit_streets, return path unclear), not that the route is verified as non-circular.",
    "sourceCodes": [
@@ -102,6 +145,18 @@
  ],
  "trials": [],
  "aliases": [],
+ "cooperatives": [
+  {
+   "name": "Naga Concepcion Diversion Del Rosario Transport Cooperative",
+   "basis": "name_matches_corridor",
+   "label": "Registered cooperative whose name matches this corridor (OTC masterlist, July 2023) · route not confirmed",
+   "reportedOn": "2023-07",
+   "notes": "Registered cooperative whose name matches this corridor (OTC masterlist, July 2023) · route not confirmed",
+   "sourceCodes": [
+    "N40"
+   ]
+  }
+ ],
  "fareEvidence": {
   "basis": "route_mode",
   "rules": [
@@ -124,7 +179,9 @@
     "isEstimate": true,
     "sourceCodes": [
      "S05",
-     "S06"
+     "S06",
+     "N17",
+     "N32"
     ]
    },
    {
@@ -146,14 +203,33 @@
     "isEstimate": true,
     "sourceCodes": [
      "S05",
-     "S06"
+     "S06",
+     "N17",
+     "N32"
     ]
    }
   ],
   "observations": [],
-  "conflicts": []
+  "conflicts": [],
+  "reportedPractice": []
  },
  "sources": [
+  {
+   "code": "N30",
+   "title": "Ordinance 2025-070 LPTRP + Resolution 2025-735 Eastbound trial (= S01/S02/S03)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23 / 2025-11-11",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N40",
+   "title": "Transport Cooperative Masterlist as of July 2023 (OTC data)",
+   "url": "https://ltoportal.ph/wp-content/uploads/2023/12/TC-Masterlist-as-of-July-2023-PDF-1.pdf",
+   "evidenceType": "official_registry_via_third_party_host",
+   "publishedOrEnacted": "2023-07",
+   "checkedOn": "2026-10-16"
+  },
   {
    "code": "S01",
    "title": "Naga approved LPTRP, Ordinance 2025-070",
@@ -169,6 +245,14 @@
    "evidenceType": "official",
    "publishedOrEnacted": "2025-09-23",
    "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "U01",
+   "title": "Project owner confirmation to ParaNaga (2026-10-16): traditional jeepneys operate on every LPTRP route (R1–R8); air-conditioned modern jeepneys operate on R4 and R7; riders pay about P3–P5 more on R4 modern and at least P5 more on R7 modern than the traditional fare",
+   "url": null,
+   "evidenceType": "owner_confirmation",
+   "publishedOrEnacted": "2026-10-16",
+   "checkedOn": "2026-10-16"
   }
  ]
 }

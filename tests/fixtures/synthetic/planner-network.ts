@@ -2,6 +2,7 @@
 // positions laid out on a metre grid near Plaza Rizal so distances are easy to reason about.
 // Lives under tests/fixtures/synthetic/ only and must never be imported by src/ or shipped.
 import type { FareRuleEstimate, NetworkSnapshot } from "@/domain/api/schemas";
+import { fleetSummary } from "@/domain/modes/fleet";
 import type { LatLng } from "@/domain/geo/types";
 
 export const synthetic = true as const;
@@ -64,14 +65,16 @@ export function syntheticSnapshot(): NetworkSnapshot {
       {
         variantId: LOOP_VARIANT_ID, routeId: uuid(201), routeCode: "SYN-S", routeName: "Synthetic loop S",
         direction: "clockwise", kind: "permanent", evidenceLevel: "provisional", verification: "unverified",
-        isCircular: true, stopIds: LOOP.map((s) => STOP_ID[s.code]!),
+        isCircular: true, stopIds: LOOP.map((s) => STOP_ID[s.code]!), mode: "jeepney", fleet: fleetSummary([], "jeepney"),
       },
       {
         variantId: LINE_VARIANT_ID, routeId: uuid(202), routeCode: "SYN-Q", routeName: "Synthetic line Q",
         direction: "outbound", kind: "permanent", evidenceLevel: "provisional", verification: "unverified",
-        isCircular: false, stopIds: LINE.map((s) => STOP_ID[s.code]!),
+        isCircular: false, stopIds: LINE.map((s) => STOP_ID[s.code]!), mode: "jeepney", fleet: fleetSummary([], "jeepney"),
       },
     ],
     fareRules: SYNTHETIC_FARE_RULES,
+    terminals: [],
+    routes: [],
   };
 }

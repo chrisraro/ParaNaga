@@ -20,6 +20,7 @@ import {
   terminalNoteSentences,
   terminalRouteSub,
 } from "@/domain/places/place-detail";
+import { terminalLocationText } from "@/domain/places/explore";
 import { regionalCategoryLabel } from "@/domain/search/search";
 import { DetailError, DetailLoading, DetailNotFound, DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
 import { StatusBadge } from "@/ui/kit/badge";
@@ -119,7 +120,7 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
   const activeTabId = tabs.find((t) => t.value === tab)!.id;
 
   return (
-    <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">Location not mapped</span>} testId="terminal-detail">
+    <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">{terminalLocationText(terminal.coordinate !== null)}</span>} testId="terminal-detail">
       <main className="pn-detail__main pn-detail-in">
         <div className="pn-place__head">
           <h1 ref={heading} tabIndex={-1} className="pn-detail__title">

@@ -36,7 +36,7 @@ import {
   EXPLORE_CATEGORIES,
   EXPLORE_PLACES_NOTE,
   RAIL_STATUS_TEXT,
-  TERMINAL_ROW_SUB,
+  terminalLocationText,
   barangaysAZ,
   chipOfOsmCategory,
   emptyCategoryText,
@@ -421,7 +421,7 @@ function Terminals({ index }: { index: SearchIndex }) {
       <Count>{`${index.terminals.length} terminals`}</Count>
       <ul className="pn-group" aria-label="Terminals" data-testid="explore-terminals">
         {index.terminals.map((t) => (
-          <ListCell key={t.code} href={terminalHref(t.code)} title={t.name} sub={TERMINAL_ROW_SUB} />
+          <ListCell key={t.code} href={terminalHref(t.code)} title={t.name} sub={terminalLocationText(t.location !== null)} />
         ))}
       </ul>
     </>

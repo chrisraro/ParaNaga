@@ -98,7 +98,7 @@ describe("OfflineBanner", () => {
     render(<OfflineBanner />);
     expect(screen.getByTestId("offline-status").textContent).toBe("");
     setOnline(false);
-    expect((await screen.findByTestId("offline-banner")).textContent).toBe("Offline — data from Oct 15, 2026. Fares may have changed.");
+    expect((await screen.findByTestId("offline-banner")).textContent).toBe("Offline — data from Oct 16, 2026. Fares may have changed.");
     expect(screen.getByTestId("offline-status").getAttribute("role")).toBe("status");
     setOnline(true);
     await waitFor(() => expect(screen.queryByTestId("offline-banner")).toBeNull());
@@ -235,13 +235,13 @@ describe("/offline", () => {
     await db.putSavedTrip(card);
     render(<OfflineScreen />);
     expect(screen.getByRole("heading", { level: 1, name: "You're offline" })).toBeTruthy();
-    await waitFor(() => expect(screen.getByTestId("offline-data-date").textContent).toBe("Data from Oct 15, 2026. Fares may have changed."));
+    await waitFor(() => expect(screen.getByTestId("offline-data-date").textContent).toBe("Data from Oct 16, 2026. Fares may have changed."));
     expect(screen.getByRole("link", { name: "Open the map" }).getAttribute("href")).toBe("/app");
     expect(screen.getByRole("link", { name: "Saved" }).getAttribute("href")).toBe("/app/saved");
     const trip = await screen.findByTestId("offline-trip");
     expect(trip.textContent).toContain("To Avenue Square");
     expect(trip.textContent).toContain("Unverified route — confirm with the driver.");
-    expect(trip.textContent).toContain("data from 15 Oct 2026");
+    expect(trip.textContent).toContain("data from 16 Oct 2026");
   });
 
   it("says when no trip is saved and no data is on the phone", async () => {

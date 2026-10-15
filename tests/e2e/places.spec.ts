@@ -128,12 +128,12 @@ test("a study label: no trip action; its link searches mapped stops (query in th
   expect(urls.filter((u) => /uma/i.test(u))).toEqual([]);
 });
 
-test("T01: Loop A and Loop B with the trial line, no map, no directions button", async ({ page }) => {
+test("T01: the community-mapped badge, Loop A and Loop B with the trial line, no map, no directions button", async ({ page }) => {
   await page.goto("/app/terminals/T01");
   const detail = terminal(page);
   await expect(detail.getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBeFocused();
   await expect(detail.getByTestId("naga-map")).toHaveCount(0);
-  await expect(detail.getByTestId("terminal-pill")).toHaveText("Location not mapped");
+  await expect(detail.getByTestId("terminal-pill")).toHaveText("Community-mapped location (OpenStreetMap)");
   await expect(detail.getByRole("note")).toHaveText("Not the PNR railway station.");
   await expect(detail.getByTestId("terminal-route-legal_plan").locator(".pn-loop-chip")).toHaveText(["Loop A", "Loop B"]);
   await expect(detail.getByTestId("terminal-route-trial").first()).toContainText("Named in the Nov 2025 trial · permanence unconfirmed");

@@ -106,7 +106,7 @@ describe("Saved → Trips", () => {
     expect(tripCard.textContent).toContain("Available offline");
     expect(tripCard.textContent).toContain("From Plaza Rizal");
     expect(screen.getByRole("heading", { level: 2, name: "Avenue Square" })).toBeTruthy();
-    expect(tripCard.textContent).toContain("Time not available · Estimate ₱14–₱17 · data from 15 Oct 2026");
+    expect(tripCard.textContent).toContain("Time not available · Estimate ₱14–₱17 · data from 16 Oct 2026");
     expect(tripCard.textContent).toContain("Saved 16 Oct 2026");
     expect(tripCard.textContent).toContain("Loop A");
     await waitFor(() => expect(urls).toContain("/api/v1/network/head"));
@@ -122,7 +122,7 @@ describe("Saved → Trips", () => {
     await db.putSavedTrip(card);
     const next = "11111111-2222-4333-8444-555555555555";
     head = { ...REVISION, revisionId: next, label: "next" };
-    snapshot = { revision: head, stops: [], variants: [], fareRules: [] };
+    snapshot = { revision: head, stops: [], variants: [], fareRules: [], terminals: [], routes: [] };
     renderSaved();
     expect(await screen.findByTestId("saved-trip-changed")).toBeTruthy();
     expect(screen.getByTestId("saved-trip-changed").textContent).toBe("Changed since saved");

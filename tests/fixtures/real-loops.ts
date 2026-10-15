@@ -4,6 +4,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { NetworkSnapshot } from "@/domain/api/schemas";
+import { fleetSummary } from "@/domain/modes/fleet";
 import { buildSnapshot, parseGeojsonStops, withIdentities } from "@/domain/import/mapped-stops";
 import { provisionalLoopSequence } from "@/domain/import/provisional-loops";
 import { normalizeSeed } from "@/domain/import/seed";
@@ -43,6 +44,7 @@ export function realLoopsSnapshot(): NetworkSnapshot {
       direction: l.routeCode === "R8-A" ? ("clockwise" as const) : ("counterclockwise" as const),
       kind: "permanent" as const, evidenceLevel: "provisional" as const, verification: "unverified" as const,
       isCircular: true, stopIds: l.recs.map((r) => idFor(r.sourceIdentity)),
+      mode: "jeepney" as const, fleet: fleetSummary([], "jeepney"),
     })),
     fareRules: seed.fareRules
       .filter((f) => f.code === "F01" || f.code === "F02")
@@ -53,5 +55,7 @@ export function realLoopsSnapshot(): NetworkSnapshot {
         effectiveFrom: f.effectiveFrom, enactedOn: f.enactedOn, evidenceStatus: f.evidenceStatus, status: "reported",
         publishExact: false, isEstimate: true as const, sourceCodes: f.sourceCodes,
       })),
+    terminals: [],
+    routes: [],
   };
 }

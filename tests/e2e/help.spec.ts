@@ -65,7 +65,7 @@ test("Help opens from More with its three tabs, and Back returns to More", async
 
   await tabs(page).getByRole("tab", { name: "About data" }).click();
   await expect(page.getByTestId("help-badges").getByRole("listitem")).toHaveCount(4);
-  await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionosm-places-2026-10-15 · Oct 15, 2026");
+  await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionmodes-2026-10-16 · Oct 16, 2026");
   await expect(page.getByTestId("help-data-footer")).toHaveText("No live arrival times. Stop alerts work only while ParaNaga is open on your screen.");
 
   await page.getByTestId("help-page").getByTestId("detail-back").click();
@@ -77,7 +77,7 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   for (const [title, phrase] of [
     ["How trips are planned", "every suggestion carries the badge “Unverified route — confirm with the driver”."],
     ["Why stops are not verified yet", "Every stop on the map comes from a public My Maps snapshot (retrieved 15 October 2026)."],
-    ["Using ParaNaga offline", "Planning offline uses the data from Oct 15, 2026; fares may have changed."],
+    ["Using ParaNaga offline", "Planning offline uses the data from Oct 16, 2026; fares may have changed."],
   ] as const) {
     await page.getByTestId("help-links").getByRole("link", { name: title }).click();
     await expect(h1(page, title)).toBeFocused();
@@ -104,11 +104,16 @@ test("the sources register lists the captured sources with checked dates and saf
   for (const s of SOURCES.sources) {
     const row = page.locator(`[data-testid="source-row"][data-code="${s.code}"]`);
     await expect(row).toContainText(`${s.code} · ${s.title}`);
-    await expect(row).toContainText("· checked 15 Oct 2026");
+    await expect(row).toContainText(`· checked ${Number(s.checkedOn!.slice(8))} Oct 2026`);
     if (s.code === "S40") {
       // The KML export downloads a file: listed, never offered as a link.
       await expect(row.getByTestId("source-link")).toHaveCount(0);
       await expect(row.getByTestId("source-unlinked")).toBeVisible();
+      continue;
+    }
+    if (s.url === null) {
+      // The owner confirmation (U01) has no public address: listed, with no link.
+      await expect(row.getByTestId("source-unlinked")).toHaveText("No public address on file");
       continue;
     }
     const link = row.getByTestId("source-link");
@@ -118,7 +123,7 @@ test("the sources register lists the captured sources with checked dates and saf
   }
   // Every register href has no query string, or one on the allow-list (the My Maps viewer's ?mid=).
   const hrefs = await page.getByTestId("source-link").evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
-  expect(hrefs).toHaveLength(SOURCES.sources.length - 1);
+  expect(hrefs).toHaveLength(SOURCES.sources.filter((s) => s.url !== null).length - 1);
   for (const href of hrefs) {
     const url = new URL(href);
     expect(url.search === "" || (url.hostname === "www.google.com" && url.pathname === "/maps/d/viewer" && [...url.searchParams.keys()].join() === "mid"), href).toBe(true);
@@ -176,11 +181,11 @@ async function axeAll(page: Page) {
   for (const name of ["Safety", "About data"]) {
     await tabs(page).getByRole("tab", { name }).click();
     await expect(tabs(page).getByRole("tab", { name })).toHaveAttribute("aria-selected", "true");
-    if (name === "About data") await expect(page.getByTestId("help-data-revision")).toContainText("osm-places");
+    if (name === "About data") await expect(page.getByTestId("help-data-revision")).toContainText("modes-2026-10-16");
     await expectAxeClean(page, "help-page");
   }
   await page.goto("/app/help/using-paranaga-offline");
-  await expect(page.getByTestId("help-article-body")).toContainText("Oct 15, 2026");
+  await expect(page.getByTestId("help-article-body")).toContainText("Oct 16, 2026");
   await expectAxeClean(page, "help-article");
   await page.goto("/app/help/sources");
   await expect(page.getByTestId("source-row").first()).toBeVisible();

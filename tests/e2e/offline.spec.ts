@@ -14,7 +14,7 @@ test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate
 
 const mapEl = (page: Page) => page.getByTestId("home-screen").getByTestId("naga-map");
 const A1_ID = STOP_A1.stop.id;
-const DATA_DATE = "Oct 15, 2026";
+const DATA_DATE = "Oct 16, 2026";
 
 let calls: NetworkCalls;
 let planRequests = 0;

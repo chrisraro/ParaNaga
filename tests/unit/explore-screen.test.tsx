@@ -151,10 +151,10 @@ describe("Explore: directory", () => {
     expect(screen.getByRole("tabpanel", { name: "Mapped stops" })).toBeTruthy();
   });
 
-  it("Routes: 11 routes by group, chip, evidence and trial badges, linking to route detail", async () => {
+  it("Routes: 13 routes by group (11 LPTRP + 2 feeders), chip, evidence and trial badges, linking to route detail", async () => {
     renderExplore();
     segment("Routes");
-    await waitFor(() => expect(screen.getAllByTestId("explore-route")).toHaveLength(11));
+    await waitFor(() => expect(screen.getAllByTestId("explore-route")).toHaveLength(13));
     const rows = screen.getAllByTestId("explore-route");
     expect(screen.getByRole("heading", { level: 3, name: "Group 8" })).toBeTruthy();
     const a = rows.find((r) => r.getAttribute("href") === "/app/routes/R8-A")!;
@@ -166,13 +166,15 @@ describe("Explore: directory", () => {
     expect(r1.textContent).not.toContain("Trial");
   });
 
-  it("Terminals: 6 rows, Location not mapped, linking to terminal detail", () => {
+  it("Terminals: 16 rows, the OSM badge or Location not mapped, linking to terminal detail", () => {
     renderExplore();
     segment("Terminals");
     const rows = within(screen.getByTestId("explore-terminals")).getAllByRole("link");
-    expect(rows).toHaveLength(6);
+    expect(rows).toHaveLength(16);
     expect(rows[0]!.getAttribute("href")).toBe("/app/terminals/T01");
-    expect(rows.every((r) => r.textContent!.includes("Location not mapped"))).toBe(true);
+    expect(rows[0]!.textContent).toContain("Community-mapped location (OpenStreetMap)");
+    const unmapped = rows.filter((r) => r.textContent!.includes("Location not mapped")).map((r) => r.getAttribute("href"));
+    expect(unmapped).toEqual(["/app/terminals/T02", "/app/terminals/T05", "/app/terminals/T15", "/app/terminals/T16"]);
   });
 
   it("Barangays: 27 rows, Not surveyed, linking to place detail", () => {
@@ -201,7 +203,7 @@ describe("Explore: directory", () => {
 });
 
 describe("Explore without the search index", () => {
-  it("shows the error with Try again, and the Routes directory still lists the 11 routes", async () => {
+  it("shows the error with Try again, and the Routes directory still lists the 13 routes", async () => {
     resetSearchIndexCache();
     render(
       <AppFrameContext.Provider value={frame}>
@@ -211,6 +213,6 @@ describe("Explore without the search index", () => {
     await waitFor(() => expect(screen.getByTestId("explore-error")).toBeTruthy());
     expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
     expect(screen.queryByRole("tablist", { name: "Directory sections" })).toBeNull();
-    await waitFor(() => expect(screen.getAllByTestId("explore-route")).toHaveLength(11));
+    await waitFor(() => expect(screen.getAllByTestId("explore-route")).toHaveLength(13));
   });
 });

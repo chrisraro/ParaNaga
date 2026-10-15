@@ -75,7 +75,7 @@ describe("useTripPlan offline", () => {
     expect(result.current.offline).toBe("offline");
     expect(result.current.data.revision.revisionId).toBe(snapshot.revision.revisionId);
     expect(planCalls).toHaveLength(1);
-    expect(offlinePlanNote(result.current.data.revision.publishedAt, result.current.offline || "offline")).toBe("Planned offline from data of Oct 15, 2026. Fares may have changed.");
+    expect(offlinePlanNote(result.current.data.revision.publishedAt, result.current.offline || "offline")).toBe("Planned offline from data of Oct 16, 2026. Fares may have changed.");
     onLine.mockRestore();
   });
 
@@ -85,7 +85,7 @@ describe("useTripPlan offline", () => {
     if (result.current.status !== "ready") return;
     expect(result.current.offline).toBe("unreachable");
     expect(offlinePlanNote(result.current.data.revision.publishedAt, "unreachable")).toBe(
-      "Couldn't reach ParaNaga — planned on this phone with data from Oct 15, 2026. Fares may have changed.",
+      "Couldn't reach ParaNaga — planned on this phone with data from Oct 16, 2026. Fares may have changed.",
     );
   });
 

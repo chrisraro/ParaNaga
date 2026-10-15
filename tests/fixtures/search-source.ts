@@ -53,9 +53,11 @@ export function realSearchSource(): SearchIndexSource {
         evidenceLevel: ab ? ("provisional" as const) : ("documentary" as const), hasTrial: trials.length > 0,
         streetLists: [r.legalStreets.inbound, r.legalStreets.outbound, r.legalStreets.circuit, ...trials.map((t) => t.simplifiedCircuit)]
           .filter((l): l is string[] => l !== null),
+        mode: "jeepney" as const,
+        fleetLabel: "Vehicle type not confirmed",
       };
     }),
-    terminals: seed.terminals.map((t) => ({ code: t.code, name: t.name, locationText: t.locationText, modes: t.modes })),
+    terminals: seed.terminals.map((t) => ({ code: t.code, name: t.name, locationText: t.locationText, modes: t.modes, kind: null, location: null })),
     barangays: seed.barangays.map((b) => ({ name: b.name, surveyStatus: b.surveyStatus, sourceCode: b.sourceCode })),
     studyLabels: seed.designatedCandidates.map((d) => ({
       code: d.code, label: d.labelRaw, labelType: d.labelType, routeCode: d.routeCode, direction: d.direction,

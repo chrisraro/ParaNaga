@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   apiErrorSchema,
   fareModesForRouteMode,
+  fleetClassSchema,
+  fleetSummarySchema,
   networkHeadSchema,
+  networkSnapshotSchema,
+  operatingStatusSchema,
+  snapshotTerminalSchema,
   parseBbox,
   parseRouteCodeParam,
   parseUuidParam,
@@ -109,6 +114,62 @@ describe("fareModesForRouteMode", () => {
     expect(fareModesForRouteMode("PUJ")).toEqual(["traditional_jeepney", "modern_jeepney"]);
     expect(fareModesForRouteMode("PUJABC")).toEqual([]);
     expect(fareModesForRouteMode(null)).toEqual([]);
-    expect(fareModesForRouteMode("tricycle")).toEqual([]);
+    expect(fareModesForRouteMode("bus")).toEqual([]);
+  });
+
+  it("maps tricycle feeders to the tricycle minimum (F03 mode) only", () => {
+    expect(fareModesForRouteMode("tricycle")).toEqual(["trimobile_e_trike_taxicle"]);
+  });
+});
+
+// ---------------------------------------------------------------- modes (Increment D)
+
+const fleetClass = {
+  code: "FL-R4-MOD", vehicleClass: "modern_puj", evidenceLevels: ["official_report", "news_report", "owner_confirmation"],
+  status: "operating", firstReportedOn: "2023-04-17", lastReportedOn: "2026-10-16", unitsNote: "about 10 units", aircon: true,
+  airconSourceCodes: ["N14", "U01"], cooperatives: [], sourceCodes: ["N14", "U01"],
+  label: "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)",
+};
+const fleet = { label: "Traditional and modern jeepneys", chip: "Jeepney · traditional + modern", colourKey: "mixed_trad_modern", classes: [fleetClass] };
+const fare = (code: string, modeCode: string) => ({
+  code, modeCode, vehicleClass: null, baseCentavos: 1400, baseKm: 4, incrementCentavosPerKm: 200, discountPercent: null,
+  discountedBaseCentavos: null, discountGroups: null, rounding: null, effectiveFrom: "2026-09-28", enactedOn: null,
+  evidenceStatus: null, status: "draft", publishExact: false, isEstimate: true, sourceCodes: ["S05"],
+});
+const terminal = { code: "T01", name: "Bicol Central Station", kind: "terminal", modes: ["bus"], lat: 13.6192359, lng: 123.1897426,
+  coordSource: "osm_way_centroid", verification: "community_coordinate_official_address" };
+const snapshot = {
+  revision: { revisionId: "6f9619ff-8b86-4d11-b42d-00c04fc964ff", label: "modes-2026-10-16", kind: "provisional", publishedAt: null },
+  stops: [], variants: [], fareRules: [fare("F01", "traditional_jeepney"), fare("F03", "trimobile_e_trike_taxicle")], terminals: [terminal], routes: [],
+};
+
+describe("modes schemas", () => {
+  it("round-trip a fleet summary with an aircon source", () => {
+    expect(fleetSummarySchema.parse(fleet)).toEqual(fleet);
+    expect(fleetClassSchema.safeParse({ ...fleetClass, airconSourceCodes: [] }).success).toBe(false);
+    expect(fleetClassSchema.safeParse({ ...fleetClass, aircon: null, airconSourceCodes: [] }).success).toBe(true);
+  });
+
+  it("have no e-jeepney class or colour key", () => {
+    expect(fleetClassSchema.safeParse({ ...fleetClass, vehicleClass: "e_jeepney" }).success).toBe(false);
+    expect(fleetSummarySchema.safeParse({ ...fleet, colourKey: "e_jeepney" }).success).toBe(false);
+  });
+
+  it("round-trip a snapshot; a regional fare rule (bus/UV) is refused in it", () => {
+    expect(networkSnapshotSchema.parse(snapshot)).toEqual(snapshot);
+    expect(networkSnapshotSchema.safeParse({ ...snapshot, fareRules: [fare("F08", "bus_ordinary")] }).success).toBe(false);
+    expect(networkSnapshotSchema.safeParse({ ...snapshot, fareRules: [fare("F06", "uv_express_traditional")] }).success).toBe(false);
+  });
+
+  it("a terminal coordinate needs its source; a terminal without one is fine", () => {
+    expect(snapshotTerminalSchema.safeParse({ ...terminal, coordSource: null }).success).toBe(false);
+    expect(snapshotTerminalSchema.safeParse({ ...terminal, lat: null, lng: null, coordSource: null }).success).toBe(true);
+  });
+
+  it("operating status always says it confirms service only", () => {
+    const status = { status: "operating", label: "Operating (owner-confirmed 2026-10-16)", note: "n", confirmedOn: "2026-10-16",
+      confirmsServiceOnly: true, sourceCodes: ["U01"] };
+    expect(operatingStatusSchema.parse(status)).toEqual(status);
+    expect(operatingStatusSchema.safeParse({ ...status, confirmsServiceOnly: false }).success).toBe(false);
   });
 });

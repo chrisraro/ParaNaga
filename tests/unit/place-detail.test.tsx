@@ -259,14 +259,14 @@ describe("Terminal detail", () => {
       </AppFrameContext.Provider>,
     );
 
-  it("T01: no map, Location not mapped, the note, Loop A and Loop B with the trial line", () => {
+  it("T01: no map, the community-mapped badge, the note, Loop A and Loop B with the trial line", () => {
     renderTerminal(rawT01);
     expect(screen.getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBe(document.activeElement);
     expect(screen.queryByTestId("naga-map-stub")).toBeNull();
-    expect(screen.getByTestId("terminal-pill").textContent).toBe("Location not mapped");
-    expect(screen.getByTestId("terminal-sub").textContent).toBe("Bus · Ninoy & Cory Avenue, Triangulo");
+    expect(screen.getByTestId("terminal-pill").textContent).toBe("Community-mapped location (OpenStreetMap)");
+    expect(screen.getByTestId("terminal-sub").textContent).toBe("Bus, UV Express · Ninoy & Cory Avenue, Triangulo");
     expect(screen.getByText("Documented only")).toBeTruthy();
-    expect(screen.getByTestId("terminal-address").textContent).toBe("Address: city source S09");
+    expect(screen.getByTestId("terminal-address").textContent).toBe("Address: city source · location community-mapped S09 N02 N01");
     const note = screen.getByRole("note");
     expect(note.textContent).toBe("Not the PNR railway station.");
     const legal = screen.getAllByTestId("terminal-route-legal_plan");
@@ -307,9 +307,14 @@ describe("Terminal detail", () => {
   it("with no own sources but an evidence status, no chip cites the response's other sources", () => {
     renderTerminal({ ...rawT01, terminal: { ...rawT01.terminal, sourceCodes: [] } });
     const address = screen.getByTestId("terminal-address");
-    expect(address.textContent).toBe("Address: city source");
+    expect(address.textContent).toBe("Address: city source · location community-mapped");
     expect(address.querySelectorAll(".pn-mono")).toHaveLength(0);
     for (const s of rawT01.sources) expect(address.textContent).not.toContain(s.code);
+  });
+
+  it("a terminal without a coordinate keeps the Location not mapped pill", () => {
+    renderTerminal({ ...rawT01, terminal: { ...rawT01.terminal, lat: null, lng: null, coordinate: null } });
+    expect(screen.getByTestId("terminal-pill").textContent).toBe("Location not mapped");
   });
 
   it("address chips come only from the terminal's own sources (none: no chips)", () => {

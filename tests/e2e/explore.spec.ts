@@ -155,18 +155,19 @@ test("the directory: each segment lists the right count and its rows open the ri
 
   // Routes: 11, → route detail.
   await segments(page).getByRole("tab", { name: "Routes" }).click();
-  await expect(directory.getByTestId("explore-route")).toHaveCount(11);
+  await expect(directory.getByTestId("explore-route")).toHaveCount(13);
   await expect(directory.locator('a[href="/app/routes/R8-A"]')).toContainText("Trial — permanence unconfirmed");
   await directory.locator('a[href="/app/routes/R8-A"]').click();
   await expect(page.getByTestId("route-detail")).toBeVisible();
   await page.getByTestId("route-detail").getByTestId("detail-back").click();
   await expect(page).toHaveURL(/\/app\/explore$/);
 
-  // Terminals: 6, Location not mapped, → terminal detail.
+  // Terminals: 16, the OSM badge (or Location not mapped), → terminal detail.
   await segments(page).getByRole("tab", { name: "Terminals" }).click();
   const terminals = directory.getByTestId("explore-terminals").getByRole("link");
-  await expect(terminals).toHaveCount(6);
-  await expect(terminals.first()).toContainText("Location not mapped");
+  await expect(terminals).toHaveCount(16);
+  await expect(terminals.first()).toContainText("Community-mapped location (OpenStreetMap)");
+  await expect(terminals.nth(1)).toContainText("Location not mapped");
   await terminals.first().click();
   await expect(page.getByTestId("terminal-detail").getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBeFocused();
   await page.getByTestId("terminal-detail").getByTestId("detail-back").click();
@@ -196,7 +197,7 @@ test("Explore passes axe (light)", async ({ page }) => {
   await openExplore(page);
   await expectAxeClean(page);
   await segments(page).getByRole("tab", { name: "Routes" }).click();
-  await expect(page.getByTestId("explore-route")).toHaveCount(11);
+  await expect(page.getByTestId("explore-route")).toHaveCount(13);
   await expectAxeClean(page);
 });
 
