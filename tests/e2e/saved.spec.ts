@@ -103,10 +103,11 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await openApp(page);
   await planAndOpenTrip(page);
   const save = page.getByTestId("trip-save");
-  await expect(save).toHaveText("Save");
+  await expect(save).toHaveAccessibleName("Save");
   await save.click();
-  await expect(save).toHaveText("Saved");
-  await expect(save).toHaveAttribute("aria-pressed", "true");
+  await expect(save).toHaveAttribute("data-state", "saved");
+  // No pressed state: the name says what a tap does now.
+  await expect(save).toHaveAccessibleName("Saved, remove from saved trips");
   await expect(page.getByTestId("trip-action-status")).toContainText("Saved on this phone");
 
   await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
@@ -123,12 +124,24 @@ test("plan → Save → the card on Saved; offline the card still opens and show
 
   // A later visit, then no signal: the card opens from this phone and shows the saved steps,
   // labelled as saved.
-  await page.goto("/app/saved");
-  await expect(card).toHaveCount(1);
-  await context.setOffline(true);
-  // Routed requests would still be answered offline: the plan request now fails like the network.
+  // Routed requests would still be answered offline, so the API fails like the network from
+  // here on: the revision check (head, snapshot) and the plan.
   await page.unroute("**/api/v1/plan");
   await page.route("**/api/v1/plan", (route) => route.abort("internetdisconnected"));
+  await page.route("**/api/v1/network/**", (route) => route.abort("internetdisconnected"));
+  const networkCalls: string[] = [];
+  page.on("requestfailed", (r) => {
+    if (r.url().includes("/api/v1/network/")) networkCalls.push(r.url());
+  });
+  // A fresh visit: the map first (the router holds it for the way back), then Saved.
+  await openApp(page);
+  await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
+  await expect(card).toHaveCount(1);
+  await context.setOffline(true);
+  // The revision check failed: the card stays as saved, without a verdict.
+  await expect.poll(() => networkCalls.length).toBeGreaterThan(0);
+  await expect(card).not.toContainText("Changed since saved");
+  await expect(card.getByRole("button", { name: "Open trip" })).toBeVisible();
   await card.getByRole("button", { name: "Open trip" }).click();
   await expect(page).toHaveURL(/\/app$/);
   const detail = page.getByTestId("trip-detail");
@@ -138,7 +151,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps).toHaveCount(4);
   await expect(steps.nth(1)).toContainText("Board Loop A at Plaza Rizal (A1)");
-  await expect(detail.getByTestId("trip-save")).toHaveText("Saved");
+  await expect(detail.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
   await context.setOffline(false);
 });
 
@@ -146,7 +159,7 @@ test("reopening online re-plans on the current data and opens the same option", 
   await openApp(page);
   await planAndOpenTrip(page);
   await page.getByTestId("trip-save").click();
-  await expect(page.getByTestId("trip-save")).toHaveText("Saved");
+  await expect(page.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
   await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
   await expect(page).toHaveURL(/\/app$/);
@@ -161,7 +174,7 @@ test("reopening after the network changed: the same rides are re-planned and say
   await openApp(page);
   await planAndOpenTrip(page);
   await page.getByTestId("trip-save").click();
-  await expect(page.getByTestId("trip-save")).toHaveText("Saved");
+  await expect(page.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
 
   // A newer revision with the same rides.
   const NEXT = "11111111-2222-4333-8444-555555555555";
@@ -171,6 +184,14 @@ test("reopening after the network changed: the same rides are re-planned and say
   await page.goto("/app/saved");
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
   await expect(page.getByTestId("trip-detail").getByTestId("trip-reopen-note")).toHaveText("Re-planned on the current data");
+  // The saved copy is on older data: offer to update it rather than showing it as saved.
+  const save = page.getByTestId("trip-save");
+  await expect(save).toHaveAttribute("data-state", "older");
+  await expect(save).toHaveText("Update saved copy");
+  await expect(page.getByTestId("trip-save-older")).toHaveText("Your saved copy uses data from 15 Oct 2026.");
+  await save.click();
+  await expect(save).toHaveAttribute("data-state", "saved");
+  await expect(page.getByTestId("trip-action-status")).toHaveText("Saved copy updated to the current data.");
 
   // The saved option is gone from the current plan.
   await page.unroute("**/api/v1/plan");
@@ -243,6 +264,15 @@ test("Add a place: search in save mode, name it, and it is under Places; a tap p
   await expect(page.getByTestId("endpoint-destination").locator(".pn-endpoint__main")).toContainText("The mall");
 });
 
+async function expectTripDetailAxeClean(page: Page) {
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),
+  );
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).include('[data-testid="trip-detail"]').analyze();
+  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(serious, serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`).join("\n")).toEqual([]);
+}
+
 for (const colorScheme of ["light", "dark"] as const) {
   test.describe(`axe (${colorScheme})`, () => {
     test.use({ colorScheme });
@@ -250,8 +280,12 @@ for (const colorScheme of ["light", "dark"] as const) {
     test(`Saved has no serious or critical violations (${colorScheme})`, async ({ page }) => {
       await openApp(page);
       await planAndOpenTrip(page);
+      // Trip detail with the action row and the exact-points checkbox, before and after saving.
+      await expectTripDetailAxeClean(page);
       await page.getByTestId("trip-save").click();
-      await expect(page.getByTestId("trip-save")).toHaveText("Saved");
+      await expect(page.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
+      await page.getByLabel("Include exact points when sharing").check();
+      await expectTripDetailAxeClean(page);
       await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
       await expect(page.getByTestId("saved-trip")).toBeVisible();
       await expectAxeClean(page);

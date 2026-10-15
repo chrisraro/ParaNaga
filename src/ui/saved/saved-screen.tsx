@@ -49,7 +49,12 @@ const TABS: readonly SavedTab[] = ["trips", "places", "history"];
 export const TRIPS_INTRO = "Saved trips open without signal. Map tiles may be missing offline, so each card works as text.";
 export const NO_TRIPS = "No saved trips yet. Plan a trip, then tap Save on its details.";
 export const NO_PLACES = "No saved places yet.";
-const DROPPED_NOTE = "Some saved items on this phone could not be read and were removed.";
+const DROPPED_NOTE = "Some saved items on this phone could not be read here (they may be from a newer version of ParaNaga). They are kept as they are.";
+const UNAVAILABLE = "Saving needs storage on this phone, which is blocked or not available (for example in private browsing).";
+
+function readError(what: string, unavailable: boolean): string {
+  return unavailable ? UNAVAILABLE : `${what} could not be read on this phone.`;
+}
 
 export function parseSavedTab(raw: string | null): SavedTab {
   return TABS.includes(raw as SavedTab) ? (raw as SavedTab) : "trips";
@@ -98,32 +103,52 @@ function HistoryIcon() {
 
 // ------------------------------------------------------------------ shared
 
-/** "Removed …" with Undo (the swipe-free delete). Undo puts the record back as it was. */
-type Removed = { text: string; undo: () => Promise<void> } | null;
+/**
+ * "Removed …" with Undo (the swipe-free delete), or why a removal failed. Each removal is numbered
+ * (`n`), so a failed Undo of one removal never carries over to the next.
+ */
+type Removed = { n: number; text: string; undo: (() => Promise<void>) | null } | null;
+
+function useRemoval() {
+  const [removed, setRemoved] = useState<Removed>(null);
+  const run = (remove: () => Promise<void>, text: string, undo: () => Promise<void>) => {
+    setRemoved(null);
+    remove().then(
+      () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text, undo })),
+      () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text: "Could not remove on this phone.", undo: null })),
+    );
+  };
+  return { removed, run, clear: () => setRemoved(null) };
+}
+
+function UndoBody({ removed, onDone }: { removed: NonNullable<Removed>; onDone: () => void }) {
+  const [failed, setFailed] = useState(false);
+  const undo = removed.undo;
+  return (
+    <>
+      <span>{failed ? "Could not undo on this phone." : removed.text}</span>
+      {failed || !undo ? null : (
+        <button
+          type="button"
+          className="pn-text-btn"
+          onClick={() =>
+            undo().then(
+              () => onDone(),
+              () => setFailed(true),
+            )
+          }
+        >
+          Undo
+        </button>
+      )}
+    </>
+  );
+}
 
 function UndoNote({ removed, onDone }: { removed: Removed; onDone: () => void }) {
-  const [failed, setFailed] = useState(false);
   return (
     <div className="pn-saved__undo" role="status" data-testid="saved-undo">
-      {removed ? (
-        <>
-          <span>{failed ? "Could not undo on this phone." : removed.text}</span>
-          {failed ? null : (
-            <button
-              type="button"
-              className="pn-text-btn"
-              onClick={() =>
-                removed.undo().then(
-                  () => onDone(),
-                  () => setFailed(true),
-                )
-              }
-            >
-              Undo
-            </button>
-          )}
-        </>
-      ) : null}
+      {removed ? <UndoBody key={removed.n} removed={removed} onDone={onDone} /> : null}
     </div>
   );
 }
@@ -184,21 +209,17 @@ function TripsPanel() {
   const frame = useAppFrame();
   const router = useRouter();
   const statuses = useTripRevalidation(trips.status === "ready" ? trips.records : null);
-  const [removed, setRemoved] = useState<Removed>(null);
+  const removal = useRemoval();
 
   if (trips.status === "loading") return <Loading label="Loading saved trips" />;
-  if (trips.status === "error") return <Note testId="saved-error">Saved trips could not be read on this phone.</Note>;
+  if (trips.status === "error") return <Note testId="saved-error">{readError("Saved trips", trips.unavailable)}</Note>;
 
   const open = (trip: SavedTrip) => {
     frame?.requestTrip(trip.id);
     router.push("/app");
   };
   const remove = (trip: SavedTrip) => {
-    setRemoved(null);
-    deleteSavedTrip(trip.id).then(
-      () => setRemoved({ text: `Removed the trip to ${trip.destination.label}.`, undo: () => putSavedTrip(trip) }),
-      () => setRemoved(null),
-    );
+    removal.run(() => deleteSavedTrip(trip.id), `Removed the trip to ${trip.destination.label}.`, () => putSavedTrip(trip));
   };
 
   return (
@@ -216,7 +237,7 @@ function TripsPanel() {
           ))}
         </ul>
       )}
-      <UndoNote removed={removed} onDone={() => setRemoved(null)} />
+      <UndoNote removed={removal.removed} onDone={removal.clear} />
     </>
   );
 }
@@ -237,13 +258,13 @@ function PlaceRow({ place, onUse, onRename, onRemove }: { place: SavedPlace; onU
         <span className="sr-only">: plan a trip to here</span>
       </button>
       <div className="pn-saved-place__actions">
-        <button type="button" className="pn-text-btn" onClick={() => onUse("start")} aria-label={`Use ${place.label} as start`}>
+        <button type="button" className="pn-text-btn" onClick={() => onUse("start")} aria-label={`Use as start: ${place.label}`}>
           Use as start
         </button>
-        <button type="button" className="pn-text-btn" onClick={onRename} aria-label={`Rename ${place.label}`}>
+        <button type="button" className="pn-text-btn" onClick={onRename} aria-label={`Rename: ${place.label}`}>
           Rename
         </button>
-        <button type="button" className="pn-text-btn" onClick={onRemove} aria-label={`Remove ${place.label}`}>
+        <button type="button" className="pn-text-btn" onClick={onRemove} aria-label={`Remove: ${place.label}`}>
           Remove
         </button>
       </div>
@@ -256,22 +277,18 @@ function PlacesPanel() {
   const frame = useAppFrame();
   const router = useRouter();
   const [renaming, setRenaming] = useState<SavedPlace | null>(null);
-  const [removed, setRemoved] = useState<Removed>(null);
+  const removal = useRemoval();
   const titleId = useId();
 
   if (places.status === "loading") return <Loading label="Loading saved places" />;
-  if (places.status === "error") return <Note testId="saved-error">Saved places could not be read on this phone.</Note>;
+  if (places.status === "error") return <Note testId="saved-error">{readError("Saved places", places.unavailable)}</Note>;
 
   const use = (place: SavedPlace, which: "start" | "destination") => {
     frame?.requestEndpoint(which, { point: { ...place.point }, label: place.label, place: place.source });
     router.push("/app");
   };
   const remove = (place: SavedPlace) => {
-    setRemoved(null);
-    deleteSavedPlace(place.id).then(
-      () => setRemoved({ text: `Removed ${place.label}.`, undo: () => putSavedPlace(place) }),
-      () => setRemoved(null),
-    );
+    removal.run(() => deleteSavedPlace(place.id), `Removed ${place.label}.`, () => putSavedPlace(place));
   };
 
   return (
@@ -297,7 +314,7 @@ function PlacesPanel() {
           </Link>
         </li>
       </ul>
-      <UndoNote removed={removed} onDone={() => setRemoved(null)} />
+      <UndoNote removed={removal.removed} onDone={removal.clear} />
       <SavePlaceDialog
         open={renaming !== null}
         title="Rename place"
@@ -342,7 +359,7 @@ function HistoryPanel() {
   const titleId = useId();
   if (!historyEnabled) return <HistoryOff />;
   if (history.status === "loading") return <Loading label="Loading trip history" />;
-  if (history.status === "error") return <Note testId="saved-error">Trip history could not be read on this phone.</Note>;
+  if (history.status === "error") return <Note testId="saved-error">{readError("Trip history", history.unavailable)}</Note>;
   const onClear = () => {
     setConfirm(false);
     setStatus("");

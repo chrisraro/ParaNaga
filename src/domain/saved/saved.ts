@@ -18,6 +18,7 @@ import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel, stopLabel } from "../trip/present";
 
+/** Saved-place names: at most 40 characters, counted in code points (an emoji is one). */
 export const PLACE_LABEL_MAX = 40;
 export const HISTORY_RETENTION_DAYS = 90;
 const DAY_MS = 86_400_000;
@@ -31,7 +32,21 @@ const isoDateTime = z.iso.datetime({ offset: true });
 const recordId = z.string().min(1).max(100);
 const endLabel = z.string().min(1).max(200);
 
-export const savedEndSchema = z.object({ label: endLabel, point: pointSchema });
+/** Length in code points, never splitting a surrogate pair (the one measure for labels). */
+export function codePointLength(text: string): number {
+  return [...text].length;
+}
+
+/** The first `max` code points of `text`. */
+export function takeCodePoints(text: string, max: number): string {
+  return [...text].slice(0, max).join("");
+}
+
+export const SAVED_PLACE_SOURCES = ["osm", "pin", "pinned"] as const;
+export type SavedPlaceSource = (typeof SAVED_PLACE_SOURCES)[number];
+
+/** A trip end as saved: its label, point and, when known, what kind of place it is. */
+export const savedEndSchema = z.object({ label: endLabel, point: pointSchema, place: z.enum(SAVED_PLACE_SOURCES).optional() });
 export type SavedEnd = z.infer<typeof savedEndSchema>;
 
 /** A saved trip: self-contained (works with no network and no tiles); coordinates stay on the device. */
@@ -52,12 +67,9 @@ export const savedTripSchema = z.object({
 });
 export type SavedTrip = z.infer<typeof savedTripSchema>;
 
-export const SAVED_PLACE_SOURCES = ["osm", "pin", "pinned"] as const;
-export type SavedPlaceSource = (typeof SAVED_PLACE_SOURCES)[number];
-
 export const savedPlaceSchema = z.object({
   id: recordId,
-  label: z.string().min(1).max(PLACE_LABEL_MAX),
+  label: z.string().refine((l) => codePointLength(l) >= 1 && codePointLength(l) <= PLACE_LABEL_MAX),
   point: pointSchema,
   source: z.enum(SAVED_PLACE_SOURCES),
   savedAt: isoDateTime,
@@ -73,6 +85,34 @@ export const snapshotMetaSchema = z.object({ revisionId: z.uuid(), publishedAt: 
 export type SnapshotMeta = z.infer<typeof snapshotMetaSchema>;
 
 type Schema<T> = { safeParse: (v: unknown) => { success: true; data: T } | { success: false } };
+
+/**
+ * Format version of every stored record (`v`, written by the device store). A record of a newer
+ * format (another tab running a newer build) is skipped and kept, never rewritten or deleted;
+ * an older one is migrated on read before validation.
+ */
+export const RECORD_FORMAT = 1;
+
+export type Decoded<T> = { ok: true; record: T } | { ok: false; reason: "newer_format" | "invalid" };
+
+/** Migrations of older record formats, by the format they upgrade from (none yet). */
+const MIGRATE_FROM: Record<number, (value: Record<string, unknown>) => Record<string, unknown>> = {};
+
+/** A stored value → a validated record; records without `v` are format 1 (Increment A). */
+export function decodeStored<T>(value: unknown, schema: Schema<T>): Decoded<T> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return { ok: false, reason: "invalid" };
+  let record = value as Record<string, unknown>;
+  let v = typeof record.v === "number" && Number.isInteger(record.v) ? record.v : 1;
+  if (v > RECORD_FORMAT) return { ok: false, reason: "newer_format" };
+  while (v < RECORD_FORMAT) {
+    const migrate = MIGRATE_FROM[v];
+    if (!migrate) return { ok: false, reason: "invalid" };
+    record = migrate(record);
+    v += 1;
+  }
+  const parsed = schema.safeParse(record);
+  return parsed.success ? { ok: true, record: parsed.data } : { ok: false, reason: "invalid" };
+}
 
 /** Validates stored records: the bad ones are skipped (and counted), never thrown. */
 export function parseRecords<T>(schema: Schema<T>, raw: readonly unknown[]): { records: T[]; dropped: number } {
@@ -104,6 +144,10 @@ function optionStopIds(option: PlanOptionDto): string[] {
 
 const rideLegs = (option: PlanOptionDto) => option.legs.filter((l): l is RideLegDto => l.kind === "ride");
 
+function copyEnd(end: SavedEnd): SavedEnd {
+  return { label: end.label, point: { lat: end.point.lat, lng: end.point.lng }, ...(end.place ? { place: end.place } : {}) };
+}
+
 export function buildSavedTrip(input: {
   id: string;
   savedAt: string;
@@ -122,8 +166,8 @@ export function buildSavedTrip(input: {
     revisionLabel: data.revision.label,
     revisionKind: data.revision.kind,
     publishedAt: data.revision.publishedAt,
-    start: { label: input.start.label, point: { lat: input.start.point.lat, lng: input.start.point.lng } },
-    destination: { label: input.destination.label, point: { lat: input.destination.point.lat, lng: input.destination.point.lng } },
+    start: copyEnd(input.start),
+    destination: copyEnd(input.destination),
     option,
     stops: data.stops.filter((s) => stopIds.has(s.id)),
     variants: data.variants.filter((v) => variantIds.has(v.variantId)),
@@ -145,6 +189,20 @@ const pointKey = (p: LatLng) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
 /** Identifies "this option between these two points" (Save ↔ Saved toggle). Never shared. */
 export function savedTripKey(optionId: string, start: LatLng, destination: LatLng): string {
   return `${optionId}|${pointKey(start)}|${pointKey(destination)}`;
+}
+
+export type SavedTripMatch = { kind: "none" } | { kind: "saved"; trip: SavedTrip } | { kind: "older"; trip: SavedTrip };
+
+/**
+ * Is this option between these points saved? "saved" when a copy of the same revision exists;
+ * "older" when the only copy was planned on another revision (offer "Update saved copy").
+ */
+export function matchSavedTrip(trips: readonly SavedTrip[], optionId: string, start: LatLng, destination: LatLng, revisionId: string): SavedTripMatch {
+  const key = savedTripKey(optionId, start, destination);
+  const same = trips.filter((t) => savedTripKey(t.option.id, t.start.point, t.destination.point) === key);
+  const current = same.find((t) => t.revisionId === revisionId);
+  if (current) return { kind: "saved", trip: current };
+  return same[0] ? { kind: "older", trip: same[0] } : { kind: "none" };
 }
 
 /** Calendar date in Naga City time ("15 Oct 2026") of an ISO timestamp; null if unreadable. */
@@ -282,7 +340,7 @@ export const PLACE_LABEL_ERROR = `Enter a name of 1 to ${PLACE_LABEL_MAX} charac
 /** Plain text: control characters removed, spaces collapsed, 1–40 characters. */
 export function cleanPlaceLabel(raw: string): { ok: true; label: string } | { ok: false; message: string } {
   const label = raw.replace(/\p{Cc}/gu, (c) => (/\s/.test(c) ? " " : "")).replace(/\s+/g, " ").trim();
-  if (label.length < 1 || [...label].length > PLACE_LABEL_MAX) return { ok: false, message: PLACE_LABEL_ERROR };
+  if (label.length < 1 || codePointLength(label) > PLACE_LABEL_MAX) return { ok: false, message: PLACE_LABEL_ERROR };
   return { ok: true, label };
 }
 
@@ -318,5 +376,5 @@ export function findSavedPlace<T extends { point: LatLng }>(places: readonly T[]
 /** Name offered when saving a trip end: its label, or "Pinned location" for a pin or a GPS fix. */
 export function savePlacePrefill(end: { source: "gps" | "map" | "search"; label: string }): string {
   if (end.source !== "search") return "Pinned location";
-  return end.label.replace(/ \(mapped pin\)$/, "").slice(0, PLACE_LABEL_MAX);
+  return takeCodePoints(end.label.replace(/ \(mapped pin\)$/, ""), PLACE_LABEL_MAX);
 }

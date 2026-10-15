@@ -1,36 +1,37 @@
 "use client";
 
 // React access to the device database (src/client/storage/db.ts): saved trips, saved places and
-// trip history, re-read after every write in this tab. `dropped` counts records that failed
-// validation (removed on read) so a screen can say so quietly. Plus the Saved screen's check of
+// trip history, re-read after every write (this tab or another). `dropped` counts records that
+// could not be read (kept in the store) so a screen can say so quietly. Plus the Saved screen's check of
 // each saved trip against the published revision: GET /api/v1/network/head and, only when the
 // revision changed, GET /api/v1/network/snapshot/:revisionId (immutable, kept for the session).
 // Both GETs carry no coordinates; offline the check is skipped (the cards stay as saved).
 
 import { useEffect, useState } from "react";
 import { rememberHead } from "@/client/network/remember-head";
-import { listHistory, listSavedPlaces, listSavedTrips, subscribeDeviceStore, type ListResult } from "@/client/storage/db";
+import { StorageUnavailableError, listHistory, listSavedPlaces, listSavedTrips, subscribeDeviceStore, type ListResult } from "@/client/storage/db";
 import { networkHeadSchema, networkSnapshotSchema, type NetworkSnapshot } from "@/domain/api/schemas";
 import { revalidateSavedTrip, type HistoryEntry, type SavedPlace, type SavedTrip, type SavedTripStatus } from "@/domain/saved/saved";
 
-export type DeviceList<T> = { status: "loading" } | { status: "ready"; records: T[]; dropped: number } | { status: "error" };
+/** `error.unavailable`: no storage on this phone (blocked, private mode), not a read failure. */
+export type DeviceList<T> =
+  | { status: "loading" }
+  | { status: "ready"; records: T[]; dropped: number }
+  | { status: "error"; unavailable: boolean };
 
 function useDeviceList<T>(load: () => Promise<ListResult<T>>, enabled = true): DeviceList<T> {
   const [state, setState] = useState<DeviceList<T>>({ status: "loading" });
   useEffect(() => {
     if (!enabled) return undefined;
     let live = true;
-    // Records dropped by an earlier read stay counted, so the note does not vanish on the re-read.
-    let dropped = 0;
+    // Unreadable records are kept in the store, so every read reports the same count.
     const read = () => {
       load().then(
         (result) => {
-          if (!live) return;
-          dropped += result.dropped;
-          setState({ status: "ready", records: result.records, dropped });
+          if (live) setState({ status: "ready", records: result.records, dropped: result.dropped });
         },
-        () => {
-          if (live) setState({ status: "error" });
+        (error: unknown) => {
+          if (live) setState({ status: "error", unavailable: error instanceof StorageUnavailableError });
         },
       );
     };

@@ -2,9 +2,12 @@ import "fake-indexeddb/auto";
 import { openDB } from "idb";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { planResponseSchema } from "@/domain/api/plan";
-import { buildSavedTrip, type HistoryEntry, type SavedPlace } from "@/domain/saved/saved";
+import { RECORD_FORMAT, buildSavedTrip, type HistoryEntry, type SavedPlace } from "@/domain/saved/saved";
 import {
   DEVICE_DB_NAME,
+  StorageUnavailableError,
+  resetDeviceDbConnection,
+  skippedCount,
   addHistoryEntry,
   clearAllStores,
   clearHistoryStore,
@@ -36,6 +39,13 @@ const trip = (id: string, savedAt: string) =>
 const place = (id: string, label = "Home"): SavedPlace => ({ id, label, point: { lat: 13.62, lng: 123.18 }, source: "pinned", savedAt: "2026-10-16T02:00:00.000Z" });
 
 /** Writes a value straight into a store, as a corrupted or foreign record would be. */
+async function rawGet(store: string, key: string): Promise<unknown> {
+  const db = await openDB(DEVICE_DB_NAME);
+  const value = await db.get(store, key);
+  db.close();
+  return value;
+}
+
 async function rawPut(store: string, value: unknown) {
   const db = await openDB(DEVICE_DB_NAME);
   await db.put(store, value, (value as { id: string }).id);
@@ -58,7 +68,7 @@ describe("device database (IndexedDB)", () => {
     expect(await getSavedTrip("a")).toBeNull();
   });
 
-  it("drops corrupted records quietly (counted, removed), never throws", async () => {
+  it("skips unreadable records (counted the same for every reader) and keeps them, never throws", async () => {
     await putSavedTrip(trip("good", "2026-10-16T01:00:00.000Z"));
     await rawPut("savedTrips", { id: "bad", option: "nope" });
     await rawPut("savedPlaces", { id: "bad-place", label: "" });
@@ -66,10 +76,42 @@ describe("device database (IndexedDB)", () => {
     expect(trips.records.map((t) => t.id)).toEqual(["good"]);
     expect(trips.dropped).toBe(1);
     expect(await getSavedTrip("bad")).toBeNull();
-    // Removed, so the note is shown once.
-    expect((await listSavedTrips()).dropped).toBe(0);
-    const places = await listSavedPlaces();
-    expect(places).toEqual({ records: [], dropped: 1 });
+    // Kept: a second reader (another screen) sees the same count, and the record is still stored.
+    expect((await listSavedTrips()).dropped).toBe(1);
+    expect(skippedCount("savedTrips")).toBe(1);
+    expect(await rawGet("savedTrips", "bad")).toEqual({ id: "bad", option: "nope" });
+    expect(await listSavedPlaces()).toEqual({ records: [], dropped: 1 });
+  });
+
+  it("a newer-format record survives an older reader (and its writes)", async () => {
+    const future = { ...trip("future", "2026-10-16T03:00:00.000Z"), v: RECORD_FORMAT + 1, newField: { kind: "from a newer build" } };
+    await rawPut("savedTrips", future);
+    await putSavedTrip(trip("mine", "2026-10-16T01:00:00.000Z"));
+    const read = await listSavedTrips();
+    expect(read.records.map((t) => t.id)).toEqual(["mine"]);
+    expect(read.dropped).toBe(1);
+    await deleteSavedTrip("mine");
+    expect(await rawGet("savedTrips", "future")).toEqual(future);
+  });
+
+  it("writes carry the record format version", async () => {
+    await putSavedPlace(place("p1"));
+    expect(await rawGet("savedPlaces", "p1")).toMatchObject({ id: "p1", v: RECORD_FORMAT });
+  });
+
+  it("without IndexedDB, reads and writes say storage is unavailable (never an empty list)", async () => {
+    await resetDeviceDbConnection();
+    vi.stubGlobal("indexedDB", undefined);
+    try {
+      await expect(listSavedTrips()).rejects.toBeInstanceOf(StorageUnavailableError);
+      await expect(listSavedPlaces()).rejects.toBeInstanceOf(StorageUnavailableError);
+      await expect(countHistory()).rejects.toBeInstanceOf(StorageUnavailableError);
+      await expect(getSavedTrip("x")).rejects.toBeInstanceOf(StorageUnavailableError);
+      await expect(putSavedPlace(place("p"))).rejects.toBeInstanceOf(StorageUnavailableError);
+    } finally {
+      vi.unstubAllGlobals();
+      await resetDeviceDbConnection();
+    }
   });
 
   it("refuses to write an invalid record", async () => {

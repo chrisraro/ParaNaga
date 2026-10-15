@@ -116,7 +116,7 @@ describe("OpenStreetMap place", () => {
     expect(osmLink.getAttribute("target")).toBe("_blank");
     expect(screen.getByTestId("place-photo").textContent).toBe("Photo pendingPhotos open with community corrections.");
     // Save place (Task 8): a real button, not pressed while the place is not saved.
-    expect(screen.getByTestId("place-save").textContent).toBe("Save place");
+    expect(screen.getByTestId("place-save").getAttribute("data-state")).toBe("none");
     // Map centred on the place with one named marker.
     const map = screen.getByTestId("naga-map-stub");
     expect(map.getAttribute("data-marker")).toBe("SM City Naga");
@@ -127,16 +127,19 @@ describe("OpenStreetMap place", () => {
     const { clearAllStores, listSavedPlaces } = await import("@/client/storage/db");
     await clearAllStores();
     renderPlace(smRef());
-    const save = await screen.findByRole("button", { name: "Save place", pressed: false });
+    const save = await screen.findByRole("button", { name: "Save place" });
+    // A tap does nothing until the saved places are read (never a duplicate).
+    await waitFor(() => expect(save.getAttribute("aria-disabled")).toBeNull());
     fireEvent.click(save);
     const input = screen.getByTestId("place-save-dialog").querySelector("input")!;
     expect(input.value).toBe("SM City Naga");
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    await screen.findByRole("button", { name: "Saved", pressed: true });
+    // The name says what a tap does now (no pressed state).
+    await screen.findByRole("button", { name: "Saved, remove from saved places" });
     expect((await listSavedPlaces()).records).toMatchObject([{ label: "SM City Naga", point: { lat: SM.lat, lng: SM.lng }, source: "osm" }]);
     // Pressing Saved removes it again.
-    fireEvent.click(screen.getByRole("button", { name: "Saved" }));
-    await screen.findByRole("button", { name: "Save place", pressed: false });
+    fireEvent.click(screen.getByRole("button", { name: "Saved, remove from saved places" }));
+    await screen.findByRole("button", { name: "Save place" });
     expect((await listSavedPlaces()).records).toEqual([]);
   });
 

@@ -4,7 +4,12 @@ import type { NetworkSnapshot } from "@/domain/api/schemas";
 import {
   HISTORY_RETENTION_DAYS,
   buildSavedTrip,
+  RECORD_FORMAT,
   cleanPlaceLabel,
+  codePointLength,
+  decodeStored,
+  matchSavedTrip,
+  takeCodePoints,
   findSavedPlace,
   savePlacePrefill,
   historyEntrySchema,
@@ -236,5 +241,42 @@ describe("matching saved places", () => {
     expect(savePlacePrefill({ source: "gps", label: "Your location" })).toBe("Pinned location");
     expect(savePlacePrefill({ source: "search", label: "Plaza Rizal (mapped pin)" })).toBe("Plaza Rizal");
     expect(savePlacePrefill({ source: "search", label: "SM City Naga" })).toBe("SM City Naga");
+  });
+});
+
+describe("record format and decoding", () => {
+  it("a newer-format record is skipped as newer (kept by the store), an invalid one as invalid", () => {
+    const good = card();
+    expect(decodeStored({ ...good, v: RECORD_FORMAT }, savedTripSchema)).toEqual({ ok: true, record: good });
+    expect(decodeStored(good, savedTripSchema)).toEqual({ ok: true, record: good });
+    expect(decodeStored({ ...good, v: RECORD_FORMAT + 1, extra: "future" }, savedTripSchema)).toEqual({ ok: false, reason: "newer_format" });
+    expect(decodeStored({ id: "x" }, savedTripSchema)).toEqual({ ok: false, reason: "invalid" });
+    expect(decodeStored(null, savedTripSchema)).toEqual({ ok: false, reason: "invalid" });
+  });
+});
+
+describe("labels count code points", () => {
+  it("never splits a surrogate pair and counts an emoji once", () => {
+    const label = "🏠".repeat(40);
+    expect(codePointLength(label)).toBe(40);
+    expect(cleanPlaceLabel(label)).toEqual({ ok: true, label });
+    expect(savedPlaceSchema.safeParse({ id: "p", label, point: { lat: 13.6, lng: 123.1 }, source: "pinned", savedAt: "2026-10-16T02:00:00.000Z" }).success).toBe(true);
+    expect(takeCodePoints("🏠".repeat(41), 40)).toBe(label);
+    expect(savePlacePrefill({ source: "search", label: "🏠".repeat(45) })).toBe(label);
+  });
+});
+
+describe("matchSavedTrip", () => {
+  it("saved on this revision, saved on an older one, or not saved", () => {
+    const c = card();
+    expect(matchSavedTrip([c], option.id, START.point, DEST.point, REVISION.revisionId)).toEqual({ kind: "saved", trip: c });
+    expect(matchSavedTrip([c], option.id, START.point, DEST.point, NEW_REVISION)).toEqual({ kind: "older", trip: c });
+    expect(matchSavedTrip([c], "other", START.point, DEST.point, REVISION.revisionId)).toEqual({ kind: "none" });
+  });
+
+  it("keeps where a trip end came from", () => {
+    const c = buildSavedTrip({ id: "t", savedAt: "2026-10-16T02:00:00.000Z", data: plan, option, start: { ...START, place: "osm" }, destination: DEST });
+    expect(savedTripSchema.parse(c).start.place).toBe("osm");
+    expect(c.destination).not.toHaveProperty("place");
   });
 });

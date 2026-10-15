@@ -8,7 +8,7 @@ import "@/ui/kit/styles";
 import "./saved.css";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { PLACE_LABEL_MAX, cleanPlaceLabel } from "@/domain/saved/saved";
+import { PLACE_LABEL_MAX, cleanPlaceLabel, takeCodePoints } from "@/domain/saved/saved";
 
 type Props = {
   open: boolean;
@@ -34,7 +34,7 @@ export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Sav
   if (openedWith.open !== open || (open && openedWith.label !== initialLabel)) {
     setOpenedWith({ open, label: initialLabel });
     if (open) {
-      setValue(initialLabel.slice(0, PLACE_LABEL_MAX));
+      setValue(takeCodePoints(initialLabel, PLACE_LABEL_MAX));
       setError(null);
       setBusy(false);
     }
@@ -116,13 +116,13 @@ export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Sav
           className="pn-saved-dialog__input"
           type="text"
           value={value}
-          maxLength={PLACE_LABEL_MAX}
           autoComplete="off"
           enterKeyHint="done"
           aria-invalid={error ? true : undefined}
           aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}
           onChange={(e) => {
-            setValue(e.target.value);
+            // Capped in code points (an emoji counts once), the same measure as the check.
+            setValue(takeCodePoints(e.target.value, PLACE_LABEL_MAX));
             if (error) setError(null);
           }}
         />

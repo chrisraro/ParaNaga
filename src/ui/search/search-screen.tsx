@@ -22,7 +22,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "rea
 import { useSavedPlaces } from "@/client/saved/use-saved";
 import { useSearchIndex } from "@/client/search/use-search-index";
 import { putSavedPlace } from "@/client/storage/db";
-import type { SavedPlaceSource } from "@/domain/saved/saved";
+import { findSavedPlace, type SavedPlaceSource } from "@/domain/saved/saved";
 import { GROUP_LIMIT, countResults, resultSubtitle, searchIndex, type SearchGroup, type SearchGroupId, type SearchResult } from "@/domain/search/search";
 import { queryFromHash } from "@/domain/places/place-detail";
 import { actionFor, noticeFor, parseSearchPurpose, type SearchAction, type SearchPurpose } from "@/domain/search/select";
@@ -357,6 +357,7 @@ function SearchBody({
   const groups = useMemo(() => (index ? searchIndex(index, debounced, { regional, saved }) : []), [index, debounced, regional, saved]);
   // for=save: the place whose name is being chosen.
   const [saving, setSaving] = useState<Extract<SearchAction, { type: "save" }>["place"] | null>(null);
+  const [alreadySaved, setAlreadySaved] = useState<{ query: string; label: string } | null>(null);
   const total = countResults(groups);
   const hasQuery = debounced.trim() !== "";
   const openNotice = notice && notice.query === debounced ? notice.result : null;
@@ -378,7 +379,13 @@ function SearchBody({
   const onSelect = (result: SearchResult) => {
     const action = actionFor(result, purpose);
     if (action.type === "endpoint") setEnd(action.which, action.endpoint);
-    else if (action.type === "save") setSaving(action.place);
+    else if (action.type === "save") {
+      // Never save the same point twice; wait for the saved places before deciding.
+      if (savedPlaces.status === "loading") return;
+      const existing = savedPlaces.status === "ready" ? findSavedPlace(savedPlaces.records, action.place.point) : null;
+      if (existing) setAlreadySaved({ query: debounced, label: existing.label });
+      else setSaving(action.place);
+    }
     else if (action.type === "notice") setNotice({ query: debounced, result });
   };
   const savePlace = async (label: string) => {
@@ -506,6 +513,11 @@ function SearchBody({
           </div>
         ) : null}
 
+        {alreadySaved && alreadySaved.query === debounced ? (
+          <p className="pn-search__already" role="status" data-testid="search-already-saved">
+            Already saved on this phone as “{alreadySaved.label}”.
+          </p>
+        ) : null}
         {openNotice ? (
           <NoticeCard
             result={openNotice}

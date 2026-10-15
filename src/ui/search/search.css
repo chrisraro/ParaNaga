@@ -201,3 +201,13 @@
   height: 34px;
   border-radius: 50%;
 }
+
+.pn-search__already {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-size: 15px;
+  font-weight: 600;
+}

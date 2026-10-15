@@ -20,7 +20,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { deleteSavedTrip, putSavedTrip } from "@/client/storage/db";
 import { useSavedTrips } from "@/client/saved/use-saved";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
-import { buildSavedTrip, savedTripKey, shareText, type SavedEnd } from "@/domain/saved/saved";
+import { buildSavedTrip, manilaDate, matchSavedTrip, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel } from "@/domain/trip/present";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
@@ -214,20 +214,29 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
   const [exactPoints, setExactPoints] = useState(false);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const key = savedTripKey(option.id, ends.start.point, ends.destination.point);
-  const saved = trips.status === "ready" ? (trips.records.find((t) => savedTripKey(t.option.id, t.start.point, t.destination.point) === key) ?? null) : null;
+  // Saved on this plan's revision, saved on an older one (offer to update the copy), or not saved.
+  const match = trips.status === "ready" ? matchSavedTrip(trips.records, option.id, ends.start.point, ends.destination.point, data.revision.revisionId) : null;
+  const state = match?.kind ?? "none";
   const waiting = busy || trips.status === "loading";
+  const unavailable = trips.status === "error" && trips.unavailable;
 
-  const toggleSave = async () => {
-    if (waiting) return;
+  const newCard = () => buildSavedTrip({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), data, option, start: ends.start, destination: ends.destination });
+
+  const onSave = async () => {
+    if (waiting || !match) return;
     setBusy(true);
     setStatus("");
     try {
-      if (saved) {
-        await deleteSavedTrip(saved.id);
+      if (match.kind === "saved") {
+        await deleteSavedTrip(match.trip.id);
         setStatus("Removed from saved trips.");
+      } else if (match.kind === "older") {
+        // Replace the copy planned on older data with this one (current data).
+        await putSavedTrip(newCard());
+        await deleteSavedTrip(match.trip.id);
+        setStatus("Saved copy updated to the current data.");
       } else {
-        await putSavedTrip(buildSavedTrip({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), data, option, start: ends.start, destination: ends.destination }));
+        await putSavedTrip(newCard());
         setStatus("Saved on this phone. It opens without signal from Saved.");
       }
     } catch {
@@ -249,18 +258,26 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
   return (
     <div className="pn-trip-actions" data-testid="trip-actions">
       <div className="pn-trip-actions__row">
+        {/* Not a pressed-state toggle: the name says what a tap does ("Saved, remove…"). */}
         <button
           type="button"
-          className={saved ? "pn-trip-action pn-trip-action--on" : "pn-trip-action"}
-          aria-pressed={saved !== null}
-          aria-disabled={waiting ? true : undefined}
-          onClick={() => void toggleSave()}
+          className={state === "saved" ? "pn-trip-action pn-trip-action--on" : "pn-trip-action"}
+          aria-disabled={waiting || unavailable ? true : undefined}
+          onClick={() => void onSave()}
           data-testid="trip-save"
+          data-state={state}
+          aria-label={state === "saved" ? "Saved, remove from saved trips" : undefined}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={state === "none" ? "none" : "currentColor"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden="true" focusable="false">
             <path d="M6 3h12v18l-6-4.5L6 21z" />
           </svg>
-          {saved ? "Saved" : "Save"}
+          {state === "saved" ? (
+            "Saved"
+          ) : state === "older" ? (
+            "Update saved copy"
+          ) : (
+            "Save"
+          )}
         </button>
         <button type="button" className="pn-trip-action" onClick={() => void share()} data-testid="trip-share">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
@@ -269,6 +286,12 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
           Share
         </button>
       </div>
+      {match?.kind === "older" ? (
+        <p className="pn-trip-actions__status" data-testid="trip-save-older">
+          Your saved copy uses data from {manilaDate(match.trip.publishedAt) ?? `revision ${match.trip.revisionLabel}`}.
+        </p>
+      ) : null}
+      {unavailable ? <p className="pn-trip-actions__status">Saving needs storage on this phone, which is not available.</p> : null}
       <div className="pn-trip-actions__check">
         <input id={`${id}-exact`} type="checkbox" checked={exactPoints} onChange={(e) => setExactPoints(e.target.checked)} data-testid="trip-share-exact" />
         <label htmlFor={`${id}-exact`}>Include exact points when sharing</label>

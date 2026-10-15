@@ -135,6 +135,21 @@ describe("Saved → Trips", () => {
     expect(await screen.findByRole("button", { name: "Open trip" })).toBeTruthy();
   });
 
+  it("a failed Undo does not carry over to the next removal", async () => {
+    await db.putSavedPlace({ id: "a", label: "Alpha", point: { lat: 13.61, lng: 123.18 }, source: "pinned", savedAt: "2026-10-16T02:00:00.000Z" });
+    await db.putSavedPlace({ id: "b", label: "Beta", point: { lat: 13.62, lng: 123.18 }, source: "pinned", savedAt: "2026-10-16T01:00:00.000Z" });
+    renderSaved("places");
+    fireEvent.click(await screen.findByRole("button", { name: "Remove: Alpha" }));
+    await screen.findByText("Removed Alpha.");
+    const put = vi.spyOn(db, "putSavedPlace").mockRejectedValueOnce(new Error("blocked"));
+    fireEvent.click(screen.getByRole("button", { name: "Undo" }));
+    await screen.findByText("Could not undo on this phone.");
+    put.mockRestore();
+    fireEvent.click(screen.getByRole("button", { name: "Remove: Beta" }));
+    await screen.findByText("Removed Beta.");
+    expect(screen.getByRole("button", { name: "Undo" })).toBeTruthy();
+  });
+
   it("Remove has an Undo note that puts the trip back", async () => {
     await db.putSavedTrip(card);
     renderSaved();
@@ -171,16 +186,16 @@ describe("Saved → Places", () => {
     expect(row.textContent).toContain("Saved place · OpenStreetMap");
     fireEvent.click(screen.getByRole("button", { name: /^SM City Naga/ }));
     expect(frame.requestEndpoint).toHaveBeenLastCalledWith("destination", { point: { lat: 13.62, lng: 123.19 }, label: "SM City Naga", place: "osm" });
-    fireEvent.click(screen.getByRole("button", { name: "Use SM City Naga as start" }));
+    fireEvent.click(screen.getByRole("button", { name: "Use as start: SM City Naga" }));
     expect(frame.requestEndpoint).toHaveBeenLastCalledWith("start", { point: { lat: 13.62, lng: 123.19 }, label: "SM City Naga", place: "osm" });
 
-    fireEvent.click(screen.getByRole("button", { name: "Rename SM City Naga" }));
+    fireEvent.click(screen.getByRole("button", { name: "Rename: SM City Naga" }));
     const input = screen.getByTestId("saved-rename-dialog").querySelector("input")!;
     fireEvent.change(input, { target: { value: "The mall" } });
     fireEvent.click(screen.getByRole("button", { name: "Rename" }));
     await screen.findByRole("button", { name: /^The mall/ });
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove The mall" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove: The mall" }));
     await screen.findByTestId("saved-places-empty");
     expect((await db.listSavedPlaces()).records).toEqual([]);
   });
