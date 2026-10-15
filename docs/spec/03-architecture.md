@@ -4,7 +4,7 @@
 
 ```
                 ┌──────────────────────── Browser (PWA) ────────────────────────┐
-                │ Next.js RSC + client islands · MapLibre GL · TanStack Query    │
+                │ Next.js RSC + client islands · React-Leaflet · TanStack Query    │
                 │ Service worker (Serwist) · IndexedDB (saved cards, snapshots)  │
                 └───────────────┬───────────────────────────────┬───────────────┘
                                 │ HTTPS (same origin)           │ PMTiles range requests
@@ -40,7 +40,7 @@ One deployable (Next.js on Vercel) plus managed Neon services. No Redis, separat
 | UI | Tailwind CSS v4, Radix primitives (shadcn/ui source), Lucide icons, `next-themes` | Tokens as CSS variables |
 | Forms | React Hook Form + Zod resolvers | Same Zod schemas on the server |
 | Server state | TanStack Query v5 | Query keys include `revisionId` |
-| Map | MapLibre GL JS v5 + `pmtiles` protocol | Lazy-loaded client component |
+| Map | React-Leaflet + Leaflet raster tiles (ADR 009; supersedes MapLibre GL + `pmtiles`) | Client-only component (`next/dynamic`, `ssr: false`) |
 | i18n | `next-intl` | `en`, `fil`; `bcl` behind a reviewed-translation flag |
 | DB | Neon Postgres 17 with `postgis`, `pg_trgm`, `unaccent`, `pgcrypto`, `btree_gist` in schema `extensions` | |
 | ORM / migrations | Drizzle ORM; drizzle-kit generates **SQL files**; PostGIS, RLS and functions hand-written in SQL | Migrations reviewed as SQL |
@@ -314,6 +314,7 @@ Accepted types: JPEG, PNG, WebP. HEIC is converted to JPEG **on the client** (ca
 | 006 | Self-hosted Protomaps PMTiles (OSM) | MapTiler, Stadia | not asked | Adopted: offline download legally possible, predictable cost; `TileProvider` keeps MapTiler as an option |
 | 007 | No Neon Data API; server-only DB access | Data API + JWT RLS | not asked | Adopted: smaller attack surface |
 | 008 | Image moderation by humans until a vision adapter is chosen | Third-party vision API | not asked | Adopted; the brief forbids sending images to Jev |
+| 009 | React-Leaflet raster tiles instead of MapLibre; MapTiler production tiles | MapLibre GL + PMTiles (ADR 006) | MapTiler tiles p=0.89 → act | Adopted: user decision 2026-10-15 for the map (supersedes the MapLibre row); MapTiler for production tiles, OSM tiles only for dev/test |
 
 Jev's answers are logged as decision evidence; the ADR owner makes the final call — the same relationship the app has with Jev.
 
@@ -343,8 +344,11 @@ JEV_DAILY_BUDGET_REQUESTS=5000
 AUTO_PUBLISH_ENABLED=false
 JEV_COMPLAINTS_ENABLED=false   # on only after DPIA + OpenRouter zero-retention confirmed
 # Map (public)
-NEXT_PUBLIC_TILES_URL=
-NEXT_PUBLIC_TILES_ATTRIBUTION=© OpenStreetMap contributors
+# Unset: OSM tiles outside production (dev/test only); no basemap in production.
+# Production (MapTiler): NEXT_PUBLIC_TILE_URL=https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=YOUR_KEY
+#                        NEXT_PUBLIC_TILE_ATTRIBUTION=© MapTiler © OpenStreetMap contributors
+NEXT_PUBLIC_TILE_URL=
+NEXT_PUBLIC_TILE_ATTRIBUTION=© OpenStreetMap contributors
 # Optional providers (server-only)
 GEOCODER_PROVIDER=none
 WALK_ROUTER_PROVIDER=none
