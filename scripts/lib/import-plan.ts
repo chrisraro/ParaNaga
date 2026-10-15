@@ -21,6 +21,7 @@ import {
   normalizeSeed,
   surveyTemplateNote,
   type DatasetNoteRow,
+  type FareRuleRow,
   type NormalizedSeed,
   type RouteRow,
 } from "../../src/domain/import/seed";
@@ -91,14 +92,20 @@ export type ImportPlan = {
   documents: DocumentRow[];
   /** sha256 over the sorted "file:sha256" lines; equal hashes mean identical inputs. */
   documentsHash: string;
+  identified: IdentifiedStop[];
   rawFeatures: PlannedRawFeature[];
   conflicts: DetectedConflict[];
   seed: NormalizedSeed;
+  fareRules: PlannedFareRule[];
   variants: PlannedVariant[];
   datasetNotes: DatasetNoteRow[];
   counts: Record<string, number>;
+  /** Collections intentionally not written, with the reason. */
+  deferred: Record<string, string>;
   problems: string[];
 };
+
+export type PlannedFareRule = FareRuleRow & { contentHash: string };
 
 const OPERATING_STATUSES = new Set(["unverified", "observed", "confirmed"]);
 const LOOP_ROUTES = new Set(["R8-A", "R8-B"]);
@@ -151,7 +158,16 @@ function routeVariants(route: RouteRow, records: IdentifiedStop[], problems: str
       problems.push(`route ${route.publicCode}: loop direction "${String(route.direction)}" is not clockwise/counterclockwise`);
       return out;
     }
-    const documentary = { ...base, evidenceLevel: "documentary" as const, legalStreets: { circuit }, isCircular: isLoop };
+    const documentary = {
+      ...base,
+      evidenceLevel: "documentary" as const,
+      legalStreets: { circuit },
+      isCircular: isLoop,
+      notes: isLoop
+        ? null
+        : "is_circular=false means the loop is not verified (the seed lists circuit_streets, return path unclear), " +
+          "not that the route is verified as non-circular.",
+    };
     const versions: PlannedVariantVersion[] = [];
     if (LOOP_ROUTES.has(route.publicCode)) {
       const seq = provisionalLoopSequence(records, route.publicCode) ?? [];
@@ -218,10 +234,11 @@ export function buildImportPlan(files: DataFiles): ImportPlan {
   problems.push(...crossCheckSeedMappedStops(seed.mappedStopRecords, identified, conflicts));
   problems.push(...unmappedData(seed));
 
-  const rawFeatures = identified.map((r): PlannedRawFeature => ({
-    ...toRawFeatureRow(r),
-    coordinatesRaw: r.coordinatesRaw!,
-    stopName: r.label.trim() === "" ? r.code : r.label,
+  const rawFeatures = planRawFeatures(identified, problems);
+  const fareRules = seed.fareRules.map((f): PlannedFareRule => ({
+    ...f,
+    // Content only (no ids), so the same seed row always hashes the same.
+    contentHash: sha256Hex(JSON.stringify(["fare_rule_version", f])),
   }));
 
   const variants = seed.routes.flatMap((r) => routeVariants(r, identified, problems));
@@ -247,7 +264,10 @@ export function buildImportPlan(files: DataFiles): ImportPlan {
     variants.push({ routeCode: t.routeCode, direction, kind: "trial", versions: [makeVersion(t.routeCode, direction, "trial", v, true)] });
   }
 
-  const datasetNotes = [...seed.datasetNotes, surveyTemplateNote(parseSurveyTemplate(text("field_survey_template.csv")))];
+  const datasetNotes = [
+    ...seed.datasetNotes.map((n) => (n.key === "public_stop_map" ? publicStopMapNote(n, problems) : n)),
+    surveyTemplateNote(parseSurveyTemplate(text("field_survey_template.csv"))),
+  ];
 
   const documents = DATA_FILES.map((fileName): DocumentRow => {
     const isExport = fileName === "naga_mapped_stops_source.kml";
@@ -276,7 +296,6 @@ export function buildImportPlan(files: DataFiles): ImportPlan {
     conflicts_near_duplicate: conflicts.filter((c) => c.kind === "near_duplicate").length,
     stop_points: rawFeatures.length,
     routes: seed.routes.length,
-    route_aliases: 0,
     variants: variants.length,
     variant_versions: versions.length,
     route_stops: versions.reduce((n, v) => n + v.routeStops.length, 0),
@@ -301,12 +320,62 @@ export function buildImportPlan(files: DataFiles): ImportPlan {
     revisionLabel: `provisional-loops-${retrievedOn}`,
     documents,
     documentsHash,
+    identified,
     rawFeatures,
     conflicts,
     seed,
+    fareRules,
     variants,
     datasetNotes,
     counts,
+    deferred: { route_aliases: "deferred (no structured source)" },
     problems,
+  };
+}
+
+/** Raw feature rows; a record without verbatim coordinate text is a problem, not a row. */
+export function planRawFeatures(identified: IdentifiedStop[], problems: string[]): PlannedRawFeature[] {
+  const out: PlannedRawFeature[] = [];
+  for (const r of identified) {
+    if (r.coordinatesRaw === null) {
+      problems.push(`${r.sourceLayer}/${r.code}: no verbatim coordinate text`);
+      continue;
+    }
+    out.push({ ...toRawFeatureRow(r), coordinatesRaw: r.coordinatesRaw, stopName: r.label.trim() === "" ? r.code : r.label });
+  }
+  return out;
+}
+
+/**
+ * The only public_stop_map fields that may be published (spec 04 §4.7 step 8): the map owner's
+ * public display name and the verification flag, plus a record of what was left out. Every other
+ * key (including any naming other people) stays only in provenance: the seed file's sha256 in
+ * ingest.source_document.
+ */
+export const PUBLIC_STOP_MAP_KEYS = [
+  "public_owner_display_name",
+  "owner_identity_or_official_role_verified",
+  "omitted_keys_count",
+  "omitted_keys_note",
+] as const;
+
+function publicStopMapNote(note: DatasetNoteRow, problems: string[]): DatasetNoteRow {
+  const value = note.value;
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    problems.push("public_stop_map is not an object");
+    return note;
+  }
+  const source = value as Record<string, unknown>;
+  const kept = ["public_owner_display_name", "owner_identity_or_official_role_verified"].filter((k) => k in source);
+  if (kept.length !== 2) problems.push("public_stop_map lacks the owner display name or verification flag");
+  return {
+    key: note.key,
+    value: {
+      ...Object.fromEntries(kept.map((k) => [k, source[k]])),
+      omitted_keys_count: Object.keys(source).length - kept.length,
+      omitted_keys_note:
+        "Other fields of the source public_stop_map object are not published; they are kept only in provenance " +
+        "(sha256 of naga_transport_seed.json in ingest.source_document).",
+    },
   };
 }

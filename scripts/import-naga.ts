@@ -18,6 +18,7 @@ function printPlan(plan: ImportPlan) {
   for (const d of plan.documents) console.log(`  document ${d.fileName}  sha256 ${d.sha256}  ${d.bytes} bytes`);
   console.log("counts:");
   for (const [k, v] of Object.entries(plan.counts)) console.log(`  ${k.padEnd(34)} ${v}`);
+  for (const [k, v] of Object.entries(plan.deferred)) console.log(`  ${k.padEnd(34)} ${v}`);
   console.log(`conflicts (${plan.conflicts.length}, recorded for review, never auto-resolved):`);
   for (const c of plan.conflicts) {
     const records = (c.detail.records as { sourceLayer: string; code: string; label: string }[] | undefined) ??

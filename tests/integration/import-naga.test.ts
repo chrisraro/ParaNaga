@@ -7,7 +7,7 @@ import pg from "pg";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { runInRequestContext } from "@/server/db/run-in-context";
-import { buildImportPlan, readDataFiles, type ImportPlan } from "../../scripts/lib/import-plan";
+import { buildImportPlan, PUBLIC_STOP_MAP_KEYS, readDataFiles, type ImportPlan } from "../../scripts/lib/import-plan";
 import { commitImport, ImportRefusedError, type ImportOutcome } from "../../scripts/lib/import-writer";
 
 const ownerUrl = process.env.TEST_OWNER_DATABASE_URL;
@@ -190,10 +190,22 @@ describe.skipIf(!ownerUrl || !appUrl)("pnpm db:import (Neon branch)", () => {
       external_destination_category: 5, fare_conflict: 1, fare_observation: 1, fare_rule: 4, feeder_lead: 5,
       provider_presence: 3, rail_status: 4, route: 11, stop_point: 128, terminal: 6, variant: 18,
     });
-    const owner = await appRows(sql`select value->>'public_owner_display_name' as owner,
-                                           value->>'owner_identity_or_official_role_verified' as verified
-                                      from transit.dataset_note where key = 'public_stop_map'`);
-    expect(owner).toEqual([{ owner: "Tan Gumba", verified: "false" }]);
+    const notes = await appRows(sql`select value from transit.dataset_note where key = 'public_stop_map'`);
+    expect(notes).toHaveLength(1);
+    const value = notes[0]!.value as Record<string, unknown>;
+    // Nothing beyond the attribution fields spec 04 §4.7 step 8 allows (plus the omission record).
+    expect(Object.keys(value).sort()).toEqual([...PUBLIC_STOP_MAP_KEYS].sort());
+    expect(value).toMatchObject({
+      public_owner_display_name: "Tan Gumba",
+      owner_identity_or_official_role_verified: false,
+      omitted_keys_count: 12,
+    });
+  });
+
+  it("stores fare rule version hashes that depend only on content", async () => {
+    const stored = await appRows(sql`select f.code, v.content_hash from transit.fare_rule_version v
+                                       join transit.fare_rule f on f.id = v.fare_rule_id order by f.code`);
+    expect(stored).toEqual(plan.fareRules.map((f) => ({ code: f.code, content_hash: f.contentHash })));
   });
 
   it("paranaga_app reads the published stops", async () => {
@@ -214,6 +226,14 @@ describe.skipIf(!ownerUrl || !appUrl)("pnpm db:import (Neon branch)", () => {
     const changed = { ...plan, documentsHash: "0".repeat(64) };
     await expect(commitImport(ownerUrl!, changed)).rejects.toBeInstanceOf(ImportRefusedError);
     expect(await tableCounts()).toEqual(before);
+  });
+
+  it("refuses a new snapshot of an already-imported map without writing", async () => {
+    const before = await tableCounts();
+    const later = { ...plan, snapshotVersion: `mymaps:${plan.mapId}:2099-01-01`, revisionLabel: "provisional-loops-2099-01-01" };
+    await expect(commitImport(ownerUrl!, later)).rejects.toBeInstanceOf(ImportRefusedError);
+    expect(await tableCounts()).toEqual(before);
+    expect(await appRows(sql`select label from transit.v_published_revision`)).toEqual([{ label: "provisional-loops-2026-10-15" }]);
   });
 
   it("refuses a plan with problems before connecting", async () => {

@@ -1,6 +1,6 @@
 // Database half of `pnpm db:import --commit`. Runs the whole write in ONE transaction on the
 // owner connection, as `SET LOCAL ROLE paranaga_import`, under
-// pg_advisory_xact_lock(hashtext(snapshot_version)).
+// pg_advisory_xact_lock(hashtext(snapshot_version)) and pg_advisory_xact_lock(hashtext(map_id)).
 //
 // Idempotency (Task 1 made released rows immutable):
 //   - no committed batch for this map yet          -> first import: insert everything, publish;
@@ -9,7 +9,7 @@
 //   - anything else (same snapshot with other files, or a new snapshot of an imported map)
 //                                                  -> refused: the changed-data path is not built yet.
 // Ids are generated here so related rows can be inserted in bulk without RETURNING lookups.
-import { createHash, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import pg from "pg";
 import type { ImportPlan } from "./import-plan";
 
@@ -67,6 +67,10 @@ export async function commitImport(connectionString: string, plan: ImportPlan): 
     try {
       await client.query("set local role paranaga_import");
       await client.query("select pg_advisory_xact_lock(hashtext($1))", [plan.snapshotVersion]);
+      // The prior-batch lookup is per map, not per snapshot: also lock the map id so two first
+      // imports of the same map with different retrieved_on dates are serialized by design
+      // (not only by the unique route/source keys failing the second one).
+      await client.query("select pg_advisory_xact_lock(hashtext($1))", [plan.mapId]);
       const result = await writeInTransaction(client, plan);
       await client.query(result.outcome === "unchanged" ? "rollback" : "commit");
       return result;
@@ -227,7 +231,7 @@ async function firstImport(c: pg.ClientBase, plan: ImportPlan): Promise<ImportOu
     ["source_codes", "jsonb", textArrayNotNull("source_codes")]],
   { inputs: [["lon", "float8"], ["lat", "float8"]], computed: [["geog", point("lon", "lat")]] });
 
-  const fareRules = seed.fareRules.map((f) => ({ ...f, id: randomUUID(), versionId: randomUUID() }));
+  const fareRules = plan.fareRules.map((f) => ({ ...f, id: randomUUID(), versionId: randomUUID() }));
   await insertRows(c, "transit.fare_rule", fareRules.map((f) => ({ id: f.id, code: f.code, mode_code: f.modeCode })),
     [["id", "uuid"], ["code", "text"], ["mode_code", "text"]]);
   await insertRows(c, "transit.fare_rule_version", fareRules.map((f) => ({
@@ -236,16 +240,21 @@ async function firstImport(c: pg.ClientBase, plan: ImportPlan): Promise<ImportOu
     discounted_base_centavos: f.discountedBaseCentavos, discount_groups: f.discountGroups, rounding: f.rounding,
     effective_from: f.effectiveFrom, enacted_on: f.enactedOn, evidence_status: f.evidenceStatus,
     publish_exact: f.publishExact, source_codes: f.sourceCodes,
-    content_hash: sha256(JSON.stringify(["fare_rule_version", f])),
+    content_hash: f.contentHash,
   })), [["id", "uuid"], ["fare_rule_id", "uuid"], ["base_centavos", "integer"], ["base_km", "numeric"],
     ["increment_centavos_per_km", "integer"], ["discount_percent", "numeric"], ["discounted_base_centavos", "integer"],
     ["discount_groups", "jsonb", textArray("discount_groups")], ["rounding", "text"], ["effective_from", "date"],
     ["enacted_on", "date"], ["evidence_status", "text"], ["publish_exact", "boolean"],
     ["source_codes", "jsonb", textArrayNotNull("source_codes")], ["content_hash", "text"]]);
 
+  const ruleId = (ruleCode: string, observationCode: string) => {
+    const rule = fareRules.find((f) => f.code === ruleCode);
+    if (!rule) throw new Error(`fare observation ${observationCode}: unknown fare rule ${ruleCode}`);
+    return rule.id;
+  };
   const observations = seed.fareObservations.map((o) => ({ ...o, id: randomUUID() }));
   await insertRows(c, "transit.fare_observation", observations.map((o) => ({
-    id: o.id, code: o.code, fare_rule_id: o.ruleCode === null ? null : fareRules.find((f) => f.code === o.ruleCode)?.id,
+    id: o.id, code: o.code, fare_rule_id: o.ruleCode === null ? null : ruleId(o.ruleCode, o.code),
     mode_code: o.modeCode, amount_centavos: o.amountCentavos, category: o.category, kind: o.kind,
     observed_at: o.observedAt, evidence_status: o.evidenceStatus, source_codes: o.sourceCodes, details: o.details,
   })), [["id", "uuid"], ["code", "text"], ["fare_rule_id", "uuid"], ["mode_code", "text"], ["amount_centavos", "integer"],
@@ -351,8 +360,4 @@ async function firstImport(c: pg.ClientBase, plan: ImportPlan): Promise<ImportOu
     })],
   );
   return { outcome: "committed", batchId, revisionId, revisionLabel: plan.revisionLabel, counts };
-}
-
-function sha256(text: string): string {
-  return createHash("sha256").update(text, "utf8").digest("hex");
 }

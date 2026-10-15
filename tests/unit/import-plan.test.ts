@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildImportPlan, DATA_FILES, readDataFiles, type DataFiles } from "../../scripts/lib/import-plan";
+import {
+  buildImportPlan,
+  DATA_FILES,
+  PUBLIC_STOP_MAP_KEYS,
+  planRawFeatures,
+  readDataFiles,
+  type DataFiles,
+} from "../../scripts/lib/import-plan";
 
 const files = readDataFiles("Data_Sets");
 const plan = buildImportPlan(files);
@@ -97,9 +104,41 @@ describe("buildImportPlan on the research package", () => {
     expect(plan.datasetNotes).toHaveLength(10);
   });
 
+  it("hashes fare rule versions from content only, so two plans agree", () => {
+    const again = buildImportPlan(files);
+    expect(plan.fareRules.map((f) => f.contentHash)).toEqual(again.fareRules.map((f) => f.contentHash));
+    expect(new Set(plan.fareRules.map((f) => f.contentHash)).size).toBe(4);
+    for (const f of plan.fareRules) expect(f.contentHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("publishes only the allowed attribution fields of public_stop_map and records the omission", () => {
+    const note = plan.datasetNotes.find((n) => n.key === "public_stop_map")!;
+    const value = note.value as Record<string, unknown>;
+    expect(Object.keys(value).sort()).toEqual([...PUBLIC_STOP_MAP_KEYS].sort());
+    expect(value).toMatchObject({
+      public_owner_display_name: "Tan Gumba",
+      owner_identity_or_official_role_verified: false,
+      omitted_keys_count: 12,
+    });
+    expect(value.omitted_keys_note).toMatch(/provenance/);
+  });
+
+  it("says in R3/R4 notes that is_circular=false is unverified, not verified non-circular", () => {
+    for (const code of ["R3", "R4"]) {
+      const v = plan.variants.find((x) => x.routeCode === code)!;
+      expect(v.versions[0]).toMatchObject({ isCircular: false });
+      expect(v.versions[0]!.notes).toMatch(/not verified/);
+    }
+  });
+
+  it("reports aliases as deferred", () => {
+    expect(plan.deferred).toEqual({ route_aliases: "deferred (no structured source)" });
+    expect(plan.counts).not.toHaveProperty("route_aliases");
+  });
+
   it("counts every collection", () => {
     expect(plan.counts).toMatchObject({
-      documents: 7, sources: 42, raw_features: 128, stop_points: 128, routes: 11, route_aliases: 0,
+      documents: 7, sources: 42, raw_features: 128, stop_points: 128, routes: 11,
       variants: 18, variant_versions: 20, route_stops: 61, fare_rules: 4, fare_observations: 1,
       fare_conflicts: 1, terminals: 6, feeder_leads: 5, providers: 3, rail_status: 4, barangays: 27,
       coverage_audits: 27, designated_stop_candidates: 32, external_destination_categories: 5, dataset_notes: 10,
@@ -108,6 +147,14 @@ describe("buildImportPlan on the research package", () => {
 });
 
 describe("buildImportPlan refuses bad input", () => {
+  it("reports a record without verbatim coordinate text as a problem", () => {
+    const problems: string[] = [];
+    const rows = planRawFeatures([{ ...plan.identified[0]!, coordinatesRaw: null }, plan.identified[1]!], problems);
+    expect(rows).toHaveLength(1);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/no verbatim coordinate text/);
+  });
+
   it("reports a seed integrity issue", () => {
     const bad = buildImportPlan(tamper("naga_transport_seed.json", (t) => t.replace('"timezone"', '"surprise": 1, "timezone"')));
     expect(bad.problems.join("\n")).toMatch(/surprise/);
@@ -120,7 +167,7 @@ describe("buildImportPlan refuses bad input", () => {
 
   it("reports a format disagreement between KML and CSV", () => {
     const bad = buildImportPlan(tamper("naga_mapped_stops.csv", (t) => t.replace("Plaza Rizal", "Plaza Rizal X")));
-    expect(bad.problems.length).toBeGreaterThan(0);
+    expect(bad.problems).toContain('CSV is missing Loop Service A/A1 "Plaza Rizal" present in KML');
   });
 
   it("reports seed data the schema has no place for instead of dropping it", () => {
