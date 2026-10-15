@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { STALE_MS } from "@/domain/geo/location-fix";
+import { paraSuggested } from "@/domain/guidance/progress";
 import {
   GUIDANCE_SESSION_MAX_AGE_MS,
   currentStep,
@@ -32,7 +33,9 @@ describe("reduceSession: a two-ride trip, every change confirmed by the person",
     expect(s.atStop).toBe(true);
     s = reduceSession(s, tap("boarded"));
     expect(currentStep(s).kind).toBe("ride");
-    expect(s).toMatchObject({ stepIndex: 1, atStop: false, ride: { passedIndex: 0, alightNear: false, gpsSeen: false, stopIsNext: false, paraAcknowledged: false } });
+    expect(s).toMatchObject({ stepIndex: 1, atStop: false, ride: { passedIndex: 0, alightNear: false, nearStopBefore: false, gpsSeen: false, stopIsNext: false, paraAcknowledged: false } });
+    // "I said Para" before any suggestion is ignored (a stale or double tap).
+    expect(reduceSession(s, tap("paraAcknowledged"))).toBe(s);
     s = reduceSession(s, tap("nextStopIsMine"));
     expect(s.ride?.stopIsNext).toBe(true);
     s = reduceSession(s, tap("paraAcknowledged"));
@@ -76,11 +79,12 @@ describe("invalid transitions are ignored (the same object comes back)", () => {
   it.each([
     ["walk_to_board", [], ["nextStopIsMine", "paraAcknowledged", "gotOff", "missedStop", "arrived"]],
     ["walk_to_board at stop", ["atStop"], ["atStop", "gotOff", "arrived"]],
-    ["ride", ["boarded"], ["atStop", "boarded", "arrived"]],
-    ["ride after Para", ["boarded", "paraAcknowledged"], ["paraAcknowledged", "nextStopIsMine"]],
+    ["ride", ["boarded"], ["atStop", "boarded", "arrived", "paraAcknowledged"]],
+    ["ride after Para", ["boarded", "nextStopIsMine", "paraAcknowledged"], ["paraAcknowledged", "nextStopIsMine"]],
     ["walk_to_destination", ["boarded", "gotOff"], ["atStop", "boarded", "gotOff", "missedStop", "paraAcknowledged"]],
     ["arrived", ["boarded", "gotOff", "arrived"], ["arrived", "boarded", "gotOff", "atStop"]],
-    ["ended", ["end"], ["end", "atStop", "boarded", "arrived"]],
+    ["ended", ["end"], ["end", "back", "atStop", "boarded", "arrived"]],
+    ["first step, nothing tapped", [], ["back"]],
   ] as const)("%s", (_, before, ignored) => {
     const s = run(startSession(tripOf(oneRide()), NOW), ...before.map(tap));
     for (const t of ignored) expect(reduceSession(s, tap(t))).toBe(s);
@@ -93,10 +97,12 @@ describe("location fixes", () => {
     const moved = reduceSession(riding, { type: "fix", fix: fixAt(LOOP_A[2]!, 10, NOW), now: NOW });
     expect(moved.ride).toMatchObject({ passedIndex: 2, gpsSeen: true });
     expect(moved).toMatchObject({ stepIndex: riding.stepIndex, status: "active" });
-    // Even at the alighting stop: no "got off" without the tap.
-    const atEnd = reduceSession(moved, { type: "fix", fix: fixAt(LOOP_A[5]!, 5, NOW), now: NOW });
+    // A jump to the alighting pin out of pin order moves nothing.
+    expect(reduceSession(moved, { type: "fix", fix: fixAt(LOOP_A[5]!, 5, NOW), now: NOW })).toBe(moved);
+    // In order up to the alighting stop: still no "got off" without the tap.
+    const atEnd = [3, 4, 5].reduce((s, i) => reduceSession(s, { type: "fix", fix: fixAt(LOOP_A[i]!, 5, NOW), now: NOW }), moved);
     expect(atEnd.stepIndex).toBe(riding.stepIndex);
-    expect(atEnd.ride).toMatchObject({ passedIndex: 5, alightNear: true, paraAcknowledged: false });
+    expect(atEnd.ride).toMatchObject({ passedIndex: 5, alightNear: true, nearStopBefore: true, paraAcknowledged: false });
   });
 
   it("are ignored while walking (walk progress is derived, not stored)", () => {
@@ -127,10 +133,10 @@ describe("location fixes", () => {
 // ---------------------------------------------------------------- properties over any event sequence
 
 const eventArb: fc.Arbitrary<GuidanceEvent> = fc.oneof(
-  fc.constantFrom(...(["atStop", "boarded", "nextStopIsMine", "paraAcknowledged", "gotOff", "missedStop", "arrived", "end"] as const)).map(tap),
+  fc.constantFrom(...(["atStop", "boarded", "nextStopIsMine", "paraAcknowledged", "gotOff", "missedStop", "arrived", "end", "back"] as const)).map(tap),
   fc
     .record({
-      i: fc.integer({ min: 0, max: 9 }),
+      i: fc.integer({ min: 0, max: 10 }),
       d: fc.double({ min: -0.002, max: 0.002, noNaN: true }),
       accuracy: fc.double({ min: 0, max: 120, noNaN: true }),
       age: fc.integer({ min: 0, max: 2 * STALE_MS }),
@@ -143,21 +149,24 @@ const eventArb: fc.Arbitrary<GuidanceEvent> = fc.oneof(
 const optionArb = fc.constantFrom(walkOnly(), oneRide(), oneRide(5), twoRides(), twoRides(8));
 
 describe("session properties (fixed seeds)", () => {
-  it("any event sequence keeps the invariants; steps advance by one and only on a confirmation", () => {
+  it("any event sequence keeps the invariants; steps move by one and only on a confirmation (or its undo)", () => {
     fc.assert(
       fc.property(optionArb, fc.array(eventArb, { maxLength: 40 }), (option, events) => {
         let s = startSession(tripOf(option), NOW);
         for (const e of events) {
           const next = reduceSession(s, e);
-          const stepMoved = next.stepIndex !== s.stepIndex;
-          if (stepMoved && (e.type === "fix" || next.stepIndex !== s.stepIndex + 1)) return false;
-          if (stepMoved && e.type !== "boarded" && e.type !== "gotOff") return false;
+          const delta = next.stepIndex - s.stepIndex;
+          if (delta === 1 && e.type !== "boarded" && e.type !== "gotOff") return false;
+          if (delta === -1 && e.type !== "back") return false;
+          if (Math.abs(delta) > 1) return false;
+          if (next.ride?.paraAcknowledged && !paraSuggested(next.ride)) return false;
           if (next.status !== s.status && e.type === "fix") return false;
           if (s.status === "ended" && next !== s) return false;
           const step = currentStep(next);
           if ((step.kind === "ride" && next.status === "active") !== (next.ride !== null)) return false;
           if (next.ride && (next.ride.passedIndex < 0 || step.kind !== "ride" || next.ride.passedIndex > step.stops.length - 1)) return false;
           if (s.ride && next.ride && next.stepIndex === s.stepIndex && next.ride.passedIndex < s.ride.passedIndex) return false;
+          if (s.ride && next.ride && next.stepIndex === s.stepIndex && next.ride.passedIndex - s.ride.passedIndex > 2) return false;
           if (next.status === "arrived" && step.kind !== "walk_to_destination") return false;
           s = next;
         }
@@ -178,6 +187,35 @@ describe("session properties (fixed seeds)", () => {
   });
 });
 
+describe("back (undo the last confirmation)", () => {
+  const start = startSession(tripOf(twoRides()), NOW);
+
+  it("undoes, one tap at a time, in reverse order", () => {
+    const atStop = run(start, tap("atStop"));
+    expect(reduceSession(atStop, tap("back"))).toEqual(start);
+    const riding = run(atStop, tap("boarded"));
+    // Boarded by mistake: back at the boarding stop (confirmed there).
+    expect(reduceSession(riding, tap("back"))).toEqual(atStop);
+    const said = run(riding, tap("nextStopIsMine"), tap("paraAcknowledged"));
+    const unsaid = reduceSession(said, tap("back"));
+    expect(unsaid.ride).toMatchObject({ stopIsNext: true, paraAcknowledged: false });
+    expect(reduceSession(unsaid, tap("back")).ride).toMatchObject({ stopIsNext: false });
+    // Got off by mistake: back on the ride, with a fresh count (no GPS claim survives).
+    const off = run(said, tap("gotOff"));
+    const backOn = reduceSession(off, tap("back"));
+    expect(backOn).toMatchObject({ stepIndex: 1, atStop: false, ride: { passedIndex: 0, gpsSeen: false, stopIsNext: false, paraAcknowledged: false } });
+  });
+
+  it("arrived and missed stop can be undone; ended cannot", () => {
+    const arrived = run(start, tap("boarded"), tap("gotOff"), tap("boarded"), tap("gotOff"), tap("arrived"));
+    expect(reduceSession(arrived, tap("back"))).toMatchObject({ status: "active", stepIndex: 4 });
+    const missed = run(start, tap("boarded"), tap("missedStop"));
+    expect(reduceSession(missed, tap("back"))).toMatchObject({ status: "active", stepIndex: 1, ride: { passedIndex: 0 } });
+    const ended = run(start, tap("end"));
+    expect(reduceSession(ended, tap("back"))).toBe(ended);
+  });
+});
+
 describe("parseSession (sessionStorage is untrusted)", () => {
   const s = run(startSession(tripOf(twoRides()), NOW), tap("boarded"));
   const raw = JSON.parse(serializeSession(s)) as Record<string, unknown>;
@@ -195,6 +233,10 @@ describe("parseSession (sessionStorage is untrusted)", () => {
     expect(parseSession(bad({ ride: { ...(raw.ride as object), passedIndex: 6 } }), NOW)).toBeNull();
     expect(parseSession(bad({ status: "live" }), NOW)).toBeNull();
     expect(parseSession(bad({ eta: 5 }), NOW)).toBeNull(); // strict: no extra (time) fields
+    expect(parseSession(bad({ ride: { ...(raw.ride as object), paraAcknowledged: true } }), NOW)).toBeNull(); // Para said, never suggested
+    expect(parseSession(bad({ status: "missed_stop", stepIndex: 2, ride: null }), NOW)).toBeNull(); // missed stop on a walk step
+    const trip = raw.trip as { stops: { id: string; name: string; code: string | null }[] };
+    expect(parseSession(bad({ trip: { ...trip, stops: [{ ...trip.stops[0]!, name: "x".repeat(201) }] } }), NOW)).toBeNull();
   });
 
   it("drops a session older than the maximum age", () => {

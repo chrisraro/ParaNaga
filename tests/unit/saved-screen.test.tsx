@@ -176,6 +176,22 @@ describe("Saved → Trips", () => {
     await waitFor(() => expect(screen.queryByTestId("saved-dropped")).toBeNull());
     expect((await db.listSavedTrips())).toMatchObject({ dropped: 0, unreadable: 0 });
     expect(screen.getAllByTestId("saved-trip")).toHaveLength(1);
+    // The result is announced and survives the notes; focus lands on it (Trips has no heading).
+    const status = screen.getByTestId("saved-dropped-status");
+    expect(status.textContent).toBe("Removed 1 damaged item.");
+    expect(document.activeElement).toBe(status);
+  });
+
+  it("removing a damaged saved place moves focus to the Saved places heading", async () => {
+    const { openDB } = await import("idb");
+    const raw = await openDB(db.DEVICE_DB_NAME);
+    await raw.put("savedPlaces", { id: "broken" }, "broken");
+    raw.close();
+    renderSaved("places");
+    fireEvent.click(await screen.findByRole("button", { name: "Remove unreadable items" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+    await waitFor(() => expect(screen.getByTestId("saved-dropped-status").textContent).toBe("Removed 1 damaged item."));
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Saved places" }));
   });
 
   it("a record from a newer ParaNaga is only mentioned, never offered for removal", async () => {

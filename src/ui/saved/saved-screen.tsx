@@ -20,7 +20,7 @@ import "./saved.css";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { clearHistory } from "@/client/history/trip-history";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import { useHistoryList, useSavedPlaces, useSavedTrips, useTripRevalidation } from "@/client/saved/use-saved";
@@ -107,43 +107,63 @@ function HistoryIcon() {
 /**
  * Records this store could not read. Newer-format ones (another tab on a newer ParaNaga) are only
  * mentioned; damaged ones (failed validation) can be removed, after a confirmation, and only those.
+ * Always mounted (the notes show only while something is skipped), so the "Removed …" status
+ * outlives the notes; after a removal focus goes to the section heading (or to the status itself).
  */
-function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | "savedPlaces" | "history"; dropped: number; unreadable: number }) {
+function SkippedRecords({
+  store,
+  dropped,
+  unreadable,
+  headingRef,
+}: {
+  store: "savedTrips" | "savedPlaces" | "history";
+  dropped: number;
+  unreadable: number;
+  headingRef?: RefObject<HTMLHeadingElement | null>;
+}) {
   const [confirm, setConfirm] = useState(false);
   const [status, setStatus] = useState("");
+  const statusRef = useRef<HTMLParagraphElement>(null);
   const newer = dropped - unreadable;
   const onRemove = () => {
     setConfirm(false);
     setStatus("");
     removeUnreadable(store).then(
-      (n) => setStatus(n === 1 ? "Removed 1 damaged item." : `Removed ${n} damaged items.`),
+      (n) => {
+        setStatus(n === 1 ? "Removed 1 damaged item." : `Removed ${n} damaged items.`);
+        (headingRef?.current ?? statusRef.current)?.focus();
+      },
       () => setStatus("Could not remove on this phone."),
     );
   };
   return (
-    <div data-testid="saved-dropped">
-      {newer > 0 ? <Note>{NEWER_NOTE}</Note> : null}
-      {unreadable > 0 ? (
-        <>
-          <Note>{UNREADABLE_NOTE}</Note>
-          <button type="button" className="pn-text-btn" onClick={() => setConfirm(true)} data-testid="saved-remove-unreadable">
-            Remove unreadable items
-          </button>
-          <ConfirmDialog
-            open={confirm}
-            title={unreadable === 1 ? "Remove 1 damaged item from this phone?" : `Remove ${unreadable} damaged items from this phone?`}
-            confirmLabel="Remove"
-            tone="danger"
-            onConfirm={onRemove}
-            onCancel={() => setConfirm(false)}
-            testId="saved-remove-unreadable-dialog"
-          />
-        </>
+    <>
+      {dropped > 0 ? (
+        <div data-testid="saved-dropped">
+          {newer > 0 ? <Note>{NEWER_NOTE}</Note> : null}
+          {unreadable > 0 ? (
+            <>
+              <Note>{UNREADABLE_NOTE}</Note>
+              <button type="button" className="pn-text-btn" onClick={() => setConfirm(true)} data-testid="saved-remove-unreadable">
+                Remove unreadable items
+              </button>
+            </>
+          ) : null}
+        </div>
       ) : null}
-      <p className="pn-saved__status" aria-live="polite">
+      <ConfirmDialog
+        open={confirm && unreadable > 0}
+        title={unreadable === 1 ? "Remove 1 damaged item from this phone?" : `Remove ${unreadable} damaged items from this phone?`}
+        confirmLabel="Remove"
+        tone="danger"
+        onConfirm={onRemove}
+        onCancel={() => setConfirm(false)}
+        testId="saved-remove-unreadable-dialog"
+      />
+      <p ref={statusRef} tabIndex={-1} className="pn-saved__status" aria-live="polite" data-testid="saved-dropped-status">
         {status}
       </p>
-    </div>
+    </>
   );
 }
 
@@ -269,7 +289,7 @@ function TripsPanel() {
   return (
     <>
       <p className="pn-saved__intro">{TRIPS_INTRO}</p>
-      {trips.dropped > 0 ? <SkippedRecords store="savedTrips" dropped={trips.dropped} unreadable={trips.unreadable} /> : null}
+      <SkippedRecords store="savedTrips" dropped={trips.dropped} unreadable={trips.unreadable} />
       {trips.records.length === 0 ? (
         <p className="pn-saved__empty" data-testid="saved-trips-empty">
           {NO_TRIPS}
@@ -323,6 +343,7 @@ function PlacesPanel() {
   const [renaming, setRenaming] = useState<SavedPlace | null>(null);
   const removal = useRemoval();
   const titleId = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   if (places.status === "loading") return <Loading label="Loading saved places" />;
   if (places.status === "error") return <Note testId="saved-error">{readError("Saved places", places.unavailable)}</Note>;
@@ -337,10 +358,10 @@ function PlacesPanel() {
 
   return (
     <section className="pn-section" aria-labelledby={titleId}>
-      <h2 id={titleId} className="pn-section__title">
+      <h2 id={titleId} ref={headingRef} tabIndex={-1} className="pn-section__title">
         Saved places
       </h2>
-      {places.dropped > 0 ? <SkippedRecords store="savedPlaces" dropped={places.dropped} unreadable={places.unreadable} /> : null}
+      <SkippedRecords store="savedPlaces" dropped={places.dropped} unreadable={places.unreadable} headingRef={headingRef} />
       <ul className="pn-group" data-testid="saved-places">
         {places.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty" data-testid="saved-places-empty">
@@ -401,6 +422,7 @@ function HistoryPanel() {
   const [confirm, setConfirm] = useState(false);
   const [status, setStatus] = useState("");
   const titleId = useId();
+  const headingRef = useRef<HTMLHeadingElement>(null);
   if (!historyEnabled) return <HistoryOff />;
   if (history.status === "loading") return <Loading label="Loading trip history" />;
   if (history.status === "error") return <Note testId="saved-error">{readError("Trip history", history.unavailable)}</Note>;
@@ -414,10 +436,10 @@ function HistoryPanel() {
   };
   return (
     <section className="pn-section" aria-labelledby={titleId} data-testid="history-on">
-      <h2 id={titleId} className="pn-section__title">
+      <h2 id={titleId} ref={headingRef} tabIndex={-1} className="pn-section__title">
         Trip history
       </h2>
-      {history.dropped > 0 ? <SkippedRecords store="history" dropped={history.dropped} unreadable={history.unreadable} /> : null}
+      <SkippedRecords store="history" dropped={history.dropped} unreadable={history.unreadable} headingRef={headingRef} />
       <ul className="pn-group" data-testid="history-list">
         {history.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty">No trips in history yet.</li>

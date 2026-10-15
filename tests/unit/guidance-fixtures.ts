@@ -105,3 +105,22 @@ export const tripOf = (opt: PlanOptionDto, destinationLabel: string | null = "SM
 
 /** A location fix at a point, precise and fresh by default. */
 export const fixAt = (p: { lat: number; lng: number }, accuracy = 10, timestamp = 1_000_000) => ({ lat: p.lat, lng: p.lng, accuracy, timestamp });
+
+/**
+ * A U-shaped circuit: out north along one street (stops 0–4, 200 m apart), back south along a
+ * parallel street ≈ 97 m east (stops 5–9). The alighting stop 9 sits beside the boarding stop 0.
+ */
+export const U_LOOP = [
+  ...Array.from({ length: 5 }, (_, i) => ({ lat: BASE.lat + i * STEP_LAT, lng: BASE.lng })),
+  ...Array.from({ length: 5 }, (_, i) => ({ lat: BASE.lat + (4 - i) * STEP_LAT, lng: BASE.lng + 0.0009 })),
+];
+
+/** A full circle (radius 300 m, 10 stops); the alighting pin is ≈ 42 m from the boarding pin. */
+export const FULL_CIRCLE = [0, 40, 80, 120, 160, 200, 240, 280, 320, 352].map((deg) => {
+  const rad = (deg * Math.PI) / 180;
+  const centre = { lat: BASE.lat + 0.004, lng: BASE.lng };
+  return {
+    lat: centre.lat - (300 / 111_320) * Math.cos(rad),
+    lng: centre.lng + (300 / (111_320 * Math.cos((centre.lat * Math.PI) / 180))) * Math.sin(rad),
+  };
+});

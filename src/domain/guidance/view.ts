@@ -5,17 +5,29 @@
 // appears anywhere, nothing says "live", and there is no curb, crossing, boarding side, signboard
 // text or entrance, because none of them exists in the data; the artboards' versions of those lines
 // are replaced by a plain "not mapped / not on file" note with a next step. "Para! Next stop is
-// yours" is a suggestion shown only on a ride the person confirmed boarding, after they said their
-// stop is next or a precise fix put them at the stop before the alighting pin or within 300 m of
-// it; it is the only assertive announcement. GPS proposes ("You look close to …"), the person
+// yours" is a suggestion shown only on a ride the person confirmed boarding, by the single rule
+// `paraSuggested` (progress.ts): they said their stop is next, or a precise (<= 30 m) fix put them,
+// in pin order, at the stop before the alighting pin or within 300 m of it; it is the only
+// assertive announcement. The ride screen reads the session only: every usable fix must be
+// dispatched to the session as a `fix` event (so progress survives a reload); the `fix` argument
+// here feeds the walk screens. GPS proposes ("You look close to …"), the person
 // confirms with the buttons, whose events the session reducer applies.
 import { STALE_MS, type LocationFix } from "../geo/location-fix";
 import { COMPASS_WORDS } from "../geo/bearing";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance } from "../trip/present";
-import { rideProgress, usableFix, walkProgress, type RideProgress, type WalkProgress } from "./progress";
-import { sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
-import type { GuidanceStep, RideRef, RideStep, StopRef, TransferStep, WalkToBoardStep, WalkToDestinationStep } from "./steps";
+import { paraSuggested, usableFix, walkProgress, type WalkProgress } from "./progress";
+import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
+import {
+  UNNAMED_DESTINATION,
+  type GuidanceStep,
+  type RideRef,
+  type RideStep,
+  type StopRef,
+  type TransferStep,
+  type WalkToBoardStep,
+  type WalkToDestinationStep,
+} from "./steps";
 
 export const GUIDANCE_COPY = {
   keepOpen: "Keep ParaNaga open for guidance.",
@@ -42,7 +54,9 @@ export const GUIDANCE_COPY = {
   paraAckBody: (stop: string) => `Step off when the jeepney stops at ${stop}, then tap “I got off”.`,
   stopIsNext: "Your stop is next",
   arrivedTitle: "You've arrived",
-  arrivedBody: (destination: string) => `${destination}. Guidance has ended and ParaNaga has stopped using your location.`,
+  arrivedBody: (destination: string | null) =>
+    `${destination ? `${destination}.` : "You're at your destination."} Guidance has ended and ParaNaga has stopped using your location.`,
+  undo: "Undo last step",
   missedTitle: "Missed your stop?",
   missedBody: "Get off when the jeepney next stops, then plan again from where you are.",
 } as const;
@@ -66,6 +80,8 @@ export type WalkView = {
   nextRide: { chip: string; routeName: string; direction: string | null; badge: string } | null;
   keepOpen: string;
   actions: GuidanceAction[];
+  /** Undo the last confirmation (a mis-tap); null when there is nothing to undo. */
+  undo: GuidanceAction | null;
   live: LiveMessage;
   usesLocation: true;
 };
@@ -86,6 +102,8 @@ export type RideView = {
   reportDriver: true;
   keepOpen: string;
   actions: GuidanceAction[];
+  /** Undo the last confirmation (a mis-tap); null when there is nothing to undo. */
+  undo: GuidanceAction | null;
   live: LiveMessage;
   usesLocation: true;
 };
@@ -97,17 +115,31 @@ export type ArriveView = {
   body: string;
   summary: { walkText: string; rides: { chip: string; stopsText: string }[]; fareText: string };
   actions: GuidanceAction[];
+  undo: GuidanceAction | null;
   live: LiveMessage;
   usesLocation: false;
 };
 
-export type MissedView = { screen: "missed"; title: string; body: string; replan: true; usesLocation: false; actions: GuidanceAction[]; live: LiveMessage };
+export type MissedView = {
+  screen: "missed";
+  title: string;
+  body: string;
+  replan: true;
+  usesLocation: false;
+  actions: GuidanceAction[];
+  undo: GuidanceAction | null;
+  live: LiveMessage;
+};
 export type EndedView = { screen: "ended"; usesLocation: false };
 
 export type GuidanceView = WalkView | RideView | ArriveView | MissedView | EndedView;
 
 const END: GuidanceAction = { event: "end", label: GUIDANCE_COPY.endGuidance, kind: "secondary" };
 const stopsCount = (n: number) => (n === 1 ? "1 stop" : `${n} stops`);
+
+function undoAction(session: GuidanceSession): GuidanceAction | null {
+  return reduceSession(session, { type: "back" }) === session ? null : { event: "back", label: GUIDANCE_COPY.undo, kind: "secondary" };
+}
 
 function stepLabel(index: number, total: number, kind: GuidanceStep["kind"]): string {
   const name = kind === "ride" ? "Ride" : kind === "transfer" ? "Transfer" : "Walk";
@@ -160,7 +192,13 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     const chip = step.nextRide.routeChip;
     const at = session.atStop;
     if (at) title = `Wait for ${chip} at ${step.target.label}`;
-    else if (step.kind === "transfer") title = step.negligible ? `Change at ${step.from.label}` : `Walk to ${step.target.label}`;
+    else if (step.kind === "transfer") {
+      title = !step.negligible
+        ? `Walk to ${step.target.label}`
+        : step.from.stopId === step.target.stopId
+          ? `Change at ${step.from.label}`
+          : `Change to ${chip} at ${step.target.label}`;
+    }
     else title = step.negligible ? `Start at ${step.target.label}` : `Walk to ${step.target.label}`;
     if (step.kind === "transfer") {
       subtitle = `${step.from.label} → ${step.target.label}`;
@@ -191,22 +229,17 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     nextRide,
     keepOpen: GUIDANCE_COPY.keepOpen,
     actions,
+    undo: undoAction(session),
     live: { politeness: "polite", text: proposal ?? (progress ? distanceText! : title) },
     usesLocation: true,
   };
 }
 
-/** Para is offered on a confirmed ride after a manual advance, or a precise fix at the stop before alighting or within 300 m of it. */
-function paraSuggested(ride: RideState, progress: RideProgress, alightIndex: number): boolean {
-  if (ride.stopIsNext || progress.alightNear) return true;
-  return progress.passedIndex >= 1 && progress.passedIndex >= alightIndex - 1;
-}
-
-function rideView(ride: RideState, step: RideStep, total: number, fix: LocationFix | null, now: number): RideView {
+function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number): RideView {
   const alightIndex = step.stops.length - 1;
-  const progress = rideProgress(step.stops, ride, fix, now);
-  const gps = ride.gpsSeen || progress.fromGps;
-  const suggested = paraSuggested(ride, progress, alightIndex);
+  const gps = ride.gpsSeen;
+  const suggested = paraSuggested(ride);
+  const stopsRemaining = Math.max(0, alightIndex - ride.passedIndex);
   const alight = step.alight.label;
   const chip = step.ride.routeChip;
   const direction = directionText(step.ride.loopDirection, "long");
@@ -214,7 +247,7 @@ function rideView(ride: RideState, step: RideStep, total: number, fix: LocationF
   let title: string;
   if (ride.paraAcknowledged) title = GUIDANCE_COPY.paraAckTitle;
   else if (suggested) title = GUIDANCE_COPY.stopIsNext;
-  else if (gps) title = `${stopsCount(progress.stopsRemaining)} to go`;
+  else if (gps) title = `${stopsCount(stopsRemaining)} to go`;
   else title = `Ride to ${alight}`;
 
   const para = ride.paraAcknowledged
@@ -240,17 +273,18 @@ function rideView(ride: RideState, step: RideStep, total: number, fix: LocationF
     boardedText: `${step.board.label} · boarded`,
     alightText: `Get off · ${alight}`,
     countText: gps
-      ? `${progress.passedIndex} of ${stopsCount(step.stopsToRide)} passed, by pin order`
+      ? `${ride.passedIndex} of ${stopsCount(step.stopsToRide)} passed, by pin order`
       : `${stopsCount(step.stopsToRide)} after ${step.board.label}, by pin order`,
     countNote: GUIDANCE_COPY.stopsByPinOrder,
     stops: step.stops.map((s: StopRef, i) => ({
       label: s.label,
-      state: i === 0 ? "boarded" : i === alightIndex ? "alight" : i <= progress.passedIndex ? "passed" : "ahead",
+      state: i === 0 ? "boarded" : i === alightIndex ? "alight" : i <= ride.passedIndex ? "passed" : "ahead",
     })),
     para,
     reportDriver: true,
     keepOpen: GUIDANCE_COPY.keepOpen,
     actions,
+    undo: undoAction(session),
     live: para && !para.acknowledged ? { politeness: "assertive", text: GUIDANCE_COPY.paraTitle } : { politeness: "polite", text: title },
     usesLocation: true,
   };
@@ -259,19 +293,20 @@ function rideView(ride: RideState, step: RideStep, total: number, fix: LocationF
 function arriveView(session: GuidanceSession, steps: GuidanceStep[]): ArriveView {
   const option = session.trip.option;
   const last = steps.at(-1);
-  const destination = last?.kind === "walk_to_destination" ? last.target.name : "";
+  const named = last?.kind === "walk_to_destination" && last.target.name !== UNNAMED_DESTINATION ? last.target.name : null;
   const title = GUIDANCE_COPY.arrivedTitle;
   return {
     screen: "arrive",
     stepLabel: `Trip complete · Step ${steps.length} of ${steps.length}`,
     title,
-    body: GUIDANCE_COPY.arrivedBody(destination),
+    body: GUIDANCE_COPY.arrivedBody(named),
     summary: {
       walkText: `${formatDistance(option.walkEstimateMeters)} walk · estimate`,
       rides: steps.flatMap((s) => (s.kind === "ride" ? [{ chip: s.ride.routeChip, stopsText: stopsCount(s.stopsToRide) }] : [])),
       fareText: fareChipText(option.fare),
     },
     actions: [{ event: "end", label: GUIDANCE_COPY.done, kind: "primary" }],
+    undo: undoAction(session),
     live: { politeness: "polite", text: title },
     usesLocation: false,
   };
@@ -287,12 +322,13 @@ export function guidanceView(session: GuidanceSession, fix: LocationFix | null, 
       replan: true,
       usesLocation: false,
       actions: [{ event: "end", label: GUIDANCE_COPY.endGuidance, kind: "primary" }],
+      undo: undoAction(session),
       live: { politeness: "polite", text: GUIDANCE_COPY.missedTitle },
     };
   }
   const steps = sessionSteps(session);
   if (session.status === "arrived") return arriveView(session, steps);
   const step = steps[session.stepIndex]!;
-  if (step.kind === "ride") return rideView(session.ride!, step, steps.length, fix, now);
+  if (step.kind === "ride") return rideView(session, session.ride!, step, steps.length);
   return walkView(session, step, steps.length, fix, now);
 }

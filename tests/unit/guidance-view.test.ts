@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
+import { haversineMeters } from "@/domain/geo/geometry";
 import { STALE_MS, type LocationFix } from "@/domain/geo/location-fix";
+import { ALIGHT_NEAR_M, STOP_PASS_RADIUS_M, preciseFix } from "@/domain/guidance/progress";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { reduceSession, startSession, type GuidanceEvent, type GuidanceSession } from "@/domain/guidance/session";
 import { GUIDANCE_COPY, guidanceView, type GuidanceView } from "@/domain/guidance/view";
+import { currentStep } from "@/domain/guidance/session";
 import { BASE, DEST, LOOP_A, LOOP_B, STEP_LAT, fixAt, oneRide, tripOf, twoRides, walkOnly } from "./guidance-fixtures";
 
 const NOW = 1_000_000;
@@ -101,8 +104,14 @@ describe("Ride", () => {
     expect(v.para).toBeNull();
   });
 
-  it("Para! only near the alighting pin (precise GPS) — an assertive suggestion — then 'I said Para'", () => {
+  it("a fix far ahead in pin order (a jump to the stop before alighting) shows nothing", () => {
     const s = reduceSession(boarded, fixEvent(fixAt(LOOP_A[4]!, 10, NOW)));
+    expect(s.ride).toMatchObject({ passedIndex: 0, alightNear: false, nearStopBefore: false });
+    expect(guidanceView(s, null, NOW).screen === "ride" && (guidanceView(s, null, NOW) as { para: unknown }).para).toBeNull();
+  });
+
+  it("Para! once precise fixes reach the stop before alighting in pin order — an assertive suggestion — then 'I said Para'", () => {
+    const s = [2, 4].reduce((acc, i) => reduceSession(acc, fixEvent(fixAt(LOOP_A[i]!, 10, NOW))), boarded);
     const v = guidanceView(s, null, NOW);
     if (v.screen !== "ride") throw new Error(v.screen);
     expect(v.title).toBe("Your stop is next");
@@ -122,14 +131,29 @@ describe("Ride", () => {
     expect(v.screen === "ride" && v.para?.title).toBe("Para! Next stop is yours");
   });
 
-  it("a two-stop ride does not shout Para on boarding (pin order alone is not enough)", () => {
+  it("a two-stop ride: pin order alone (no fix, or a fix far away) shows no Para", () => {
     const opt = oneRide();
     const legs = opt.legs.map((l) => (l.kind === "ride" ? { ...l, stops: l.stops.slice(0, 2) } : l));
     const s = run(startSession(tripOf({ ...opt, legs }), NOW), "boarded");
     const v = guidanceView(s, null, NOW);
     expect(v.screen === "ride" && v.para).toBeNull();
-    const far = reduceSession(s, fixEvent(fixAt({ lat: BASE.lat - 0.004, lng: BASE.lng }, 10, NOW)));
+    const far = reduceSession(s, fixEvent(fixAt({ lat: BASE.lat - 0.004, lng: BASE.lng }, 10, NOW))); // ≈ 445 m away
     expect(guidanceView(far, null, NOW).screen === "ride" && (guidanceView(far, null, NOW) as { para: unknown }).para).toBeNull();
+  });
+
+  it("a two-stop ride: a precise fix at the boarding pin (200 m from the alighting pin) does suggest Para — truthfully, the next stop is yours; a 40 m fix does not", () => {
+    const opt = oneRide();
+    const legs = opt.legs.map((l) => (l.kind === "ride" ? { ...l, stops: l.stops.slice(0, 2) } : l));
+    const s = run(startSession(tripOf({ ...opt, legs }), NOW), "boarded");
+    const polite = reduceSession(s, fixEvent(fixAt(LOOP_A[0]!, 40, NOW)));
+    expect(guidanceView(polite, null, NOW).screen === "ride" && (guidanceView(polite, null, NOW) as { para: unknown }).para).toBeNull();
+    const precise = reduceSession(s, fixEvent(fixAt(LOOP_A[0]!, 10, NOW)));
+    const v = guidanceView(precise, null, NOW);
+    expect(v.screen === "ride" && v.para?.title).toBe("Para! Next stop is yours");
+  });
+
+  it("the ride screen reads the session only (a fix not dispatched as an event shows nothing)", () => {
+    expect(guidanceView(boarded, fixAt(LOOP_A[1]!, 5, NOW), NOW)).toEqual(guidanceView(boarded, null, NOW));
   });
 });
 
@@ -154,9 +178,13 @@ describe("Transfer", () => {
     expect(at.screen === "walk" && at.checklist?.[1]?.done).toBe(true);
   });
 
-  it("a change at the same stop says so", () => {
+  it("a change at the same spot says so; a 0 m change between two different stops names the target", () => {
     const v = guidanceView(run(startSession(tripOf(twoRides(8)), NOW), "boarded", "gotOff"), null, NOW);
-    expect(v.screen === "walk" && v.title).toBe("Change at Naga Cathedral");
+    expect(v.screen === "walk" && v.title).toBe("Change to Loop B at Del Rosario");
+    const opt = twoRides();
+    const noWalk = { ...opt, legs: opt.legs.filter((_, i) => i !== 2) };
+    const w = guidanceView(run(startSession(tripOf(noWalk), NOW), "boarded", "gotOff"), null, NOW);
+    expect(w.screen === "walk" && w.title).toBe("Change to Loop B at Del Rosario");
   });
 });
 
@@ -189,6 +217,13 @@ describe("Walk to destination and Arrive", () => {
     });
     expect(v.usesLocation).toBe(false);
     expect(labels(v)).toEqual(["primary:end:Done"]);
+    expect(v.undo).toEqual({ event: "back", label: "Undo last step", kind: "secondary" });
+  });
+
+  it("Arrive without a destination name starts with a sentence", () => {
+    const s = run(startSession(tripOf(walkOnly(), null), NOW), "arrived");
+    const v = guidanceView(s, null, NOW);
+    expect(v.screen === "arrive" && v.body).toBe("You're at your destination. Guidance has ended and ParaNaga has stopped using your location.");
   });
 
   it("a walk-only trip is a single walk step", () => {
@@ -207,6 +242,7 @@ describe("Missed stop and ended", () => {
       replan: true,
       usesLocation: false,
       actions: [{ event: "end", label: "End guidance", kind: "primary" }],
+      undo: { event: "back", label: "Undo last step", kind: "secondary" },
       live: { politeness: "polite", text: "Missed your stop?" },
     });
   });
@@ -243,13 +279,15 @@ function strings(value: unknown): string[] {
 }
 
 const eventArb: fc.Arbitrary<GuidanceEvent> = fc.oneof(
-  fc.constantFrom(...(["atStop", "boarded", "nextStopIsMine", "paraAcknowledged", "gotOff", "missedStop", "arrived", "end"] as const)).map(tap),
-  fc
+  { arbitrary: fc.constantFrom(...(["atStop", "boarded", "nextStopIsMine", "paraAcknowledged", "gotOff", "missedStop", "arrived", "end", "back"] as const)).map(tap), weight: 3 },
+  // Exactly at a pin, precise: lets rides progress in order.
+  { arbitrary: fc.integer({ min: 0, max: 10 }).map((i) => fixEvent(fixAt([...LOOP_A, ...LOOP_B][i]!, 8, NOW))), weight: 4 },
+  { arbitrary: fc
     .record({ i: fc.integer({ min: 0, max: 10 }), d: fc.double({ min: -0.003, max: 0.003, noNaN: true }), accuracy: fc.double({ min: 0, max: 150, noNaN: true }) })
     .map(({ i, d, accuracy }) => {
       const p = i === 10 ? DEST : [...LOOP_A, ...LOOP_B][i]!;
       return fixEvent({ lat: p.lat + d, lng: p.lng + d / 2, accuracy, timestamp: NOW });
-    }),
+    }), weight: 2 },
 );
 const fixArb = fc.option(
   fc
@@ -271,19 +309,38 @@ describe("view properties (fixed seeds)", () => {
     );
   });
 
-  it("Para appears only on a ride the person confirmed, after a manual advance or a precise fix near the alighting pin or the stop before it", () => {
+  it("Para appears only after a manual advance, or a dispatched precise fix on this ride within 300 m of the alighting pin in pin order, or within 120 m of a stop ≥ max(1, alight − 1)", () => {
+    let shownCount = 0;
+    let gpsShownCount = 0;
     fc.assert(
-      fc.property(optionArb, fc.array(eventArb, { maxLength: 30 }), fixArb, (option, events, fix) => {
-        const s = events.reduce(reduceSession, startSession(tripOf(option), NOW));
+      fc.property(optionArb, fc.array(eventArb, { maxLength: 40 }), fixArb, (option, events, fix) => {
+        let s = startSession(tripOf(option), NOW);
+        let justified = false;
+        // Board first (ignored on a walk-only trip) so the sequence exercises rides.
+        for (const e of [tap("boarded"), ...events]) {
+          const next = reduceSession(s, e);
+          if (next.stepIndex !== s.stepIndex || (s.ride === null && next.ride !== null)) justified = false;
+          const step = currentStep(next);
+          if (e.type === "fix" && next.ride && step.kind === "ride" && preciseFix(e.fix, e.now)) {
+            const alight = step.stops.length - 1;
+            const nearAlight = haversineMeters(e.fix, step.stops[alight]!) <= ALIGHT_NEAR_M && next.ride.passedIndex >= alight - 2;
+            const nearBefore = step.stops.some((st, k) => k >= Math.max(1, alight - 1) && haversineMeters(e.fix, st) <= STOP_PASS_RADIUS_M);
+            if (nearAlight || nearBefore) justified = true;
+          }
+          s = next;
+        }
         const v = guidanceView(s, fix, NOW);
-        const shown = v.screen === "ride" && v.para !== null && !v.para.acknowledged;
+        const shown = v.screen === "ride" && v.para !== null;
         if (!shown) return true;
-        const ride = s.ride!;
-        const gps = events.some((e) => e.type === "fix") || fix !== null;
-        return s.status === "active" && (ride.stopIsNext || gps);
+        shownCount += 1;
+        if (!s.ride!.stopIsNext) gpsShownCount += 1;
+        return s.status === "active" && (s.ride!.stopIsNext || justified);
       }),
-      { seed: 516, numRuns: 500 },
+      { seed: 516, numRuns: 2000 },
     );
+    // The property must actually exercise Para.
+    expect(shownCount).toBeGreaterThan(25);
+    expect(gpsShownCount).toBeGreaterThan(5);
   });
 
   it("the assertive announcement is used for Para only", () => {
