@@ -89,35 +89,3 @@ describe("e2e plan fixtures", () => {
     }
   });
 });
-
-describe("shouldReplan (GPS refinements only)", async () => {
-  const { shouldReplan, REPLAN_MIN_MOVE_M } = await import("@/client/trip/use-trip-plan");
-  type Source = "gps" | "map" | "search";
-  const end = (lat: number, lng: number, source: Source) => ({ point: { lat, lng }, source });
-  const pair = (origin: ReturnType<typeof end>, destination = end(BISCAST.lat, BISCAST.lng, "map")) => ({ origin, destination });
-  // ~0.0001° latitude ≈ 11 m; 0.0003° ≈ 33 m.
-  const gpsStart = pair(end(PLAZA_RIZAL.lat, PLAZA_RIZAL.lng, "gps"));
-
-  it("plans the first pair", () => expect(shouldReplan(null, gpsStart)).toBe(true));
-  it("an unchanged pair does not replan", () => expect(shouldReplan(gpsStart, pair(end(PLAZA_RIZAL.lat, PLAZA_RIZAL.lng, "gps")))).toBe(false));
-  it(`a GPS refinement under ${REPLAN_MIN_MOVE_M} m does not replan`, () => {
-    expect(shouldReplan(gpsStart, pair(end(PLAZA_RIZAL.lat + 0.0001, PLAZA_RIZAL.lng, "gps")))).toBe(false);
-  });
-  it(`a GPS refinement of ${REPLAN_MIN_MOVE_M} m or more replans`, () => {
-    expect(shouldReplan(gpsStart, pair(end(PLAZA_RIZAL.lat + 0.0003, PLAZA_RIZAL.lng, "gps")))).toBe(true);
-  });
-  it(`a pin moved by hand under ${REPLAN_MIN_MOVE_M} m always replans`, () => {
-    const pinned = pair(end(PLAZA_RIZAL.lat, PLAZA_RIZAL.lng, "map"));
-    expect(shouldReplan(pinned, pair(end(PLAZA_RIZAL.lat + 0.0001, PLAZA_RIZAL.lng, "map")))).toBe(true);
-    // the destination pin too
-    expect(shouldReplan(pinned, pair(end(PLAZA_RIZAL.lat, PLAZA_RIZAL.lng, "map"), end(BISCAST.lat + 0.00005, BISCAST.lng, "map")))).toBe(true);
-  });
-  it("a search pick, or switching from GPS to a hand pin at the same spot, replans", () => {
-    expect(shouldReplan(gpsStart, pair(end(PLAZA_RIZAL.lat + 0.00005, PLAZA_RIZAL.lng, "search")))).toBe(true);
-    expect(shouldReplan(gpsStart, pair(end(PLAZA_RIZAL.lat, PLAZA_RIZAL.lng, "map")))).toBe(true);
-  });
-  it("a swap replans", () => {
-    const g = gpsStart;
-    expect(shouldReplan(g, { origin: g.destination, destination: g.origin })).toBe(true);
-  });
-});

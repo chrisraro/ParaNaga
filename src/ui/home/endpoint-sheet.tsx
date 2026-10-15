@@ -181,6 +181,11 @@ function PinIcon() {
   );
 }
 
+/** DOM id of an endpoint row's main button, so the screen can move focus to it. */
+export function endpointRowMainId(which: EndpointWhich): string {
+  return `pn-endpoint-${which}-main`;
+}
+
 type RowProps = {
   which: EndpointWhich;
   endpoint: Endpoint | null;
@@ -193,7 +198,7 @@ type RowProps = {
 function EndpointRow({ which, endpoint, focused, sub, onFocus, onClear }: RowProps) {
   return (
     <div className={focused ? "pn-endpoint pn-endpoint--focused" : "pn-endpoint"} data-testid={`endpoint-${which}`}>
-      <button type="button" className="pn-endpoint__main" aria-pressed={focused} onClick={() => onFocus(which)}>
+      <button type="button" id={endpointRowMainId(which)} className="pn-endpoint__main" aria-pressed={focused} onClick={() => onFocus(which)}>
         <span className={`pn-endpoint__icon pn-endpoint__icon--${which}`}>
           {which === "start" ? <StartIcon /> : <DestinationIcon />}
         </span>

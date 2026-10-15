@@ -4,18 +4,14 @@
 // Coordinates go only in the request body (never a URL), the response is validated against the
 // shared schema, and a superseded request is aborted so a late reply never shows for old pins.
 //
-// GPS refinements: a GPS-sourced endpoint that moves less than REPLAN_MIN_MOVE_M from the point
-// last planned for does not trigger a new plan (a pin placed by hand or from search always
-// replans, however small the move), and while a newer plan is in flight the last ready plan stays
-// on screen (`refreshing: true`) instead of being replaced by a loading state.
+// Replanning rules live in domain/trip/replan.ts: a GPS refinement under 25 m does not replan; a
+// hand pin or search pick always does. Only while a GPS-refinement replan is in flight does the
+// last ready plan stay on screen (`refreshing: true`); any other replan shows loading, so the
+// previous trip's options never appear for a deliberately changed trip.
 
 import { useEffect, useState } from "react";
 import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
-import { haversineMeters } from "@/domain/geo/geometry";
-import type { LatLng } from "@/domain/geo/types";
-import type { EndpointSource } from "@/domain/trip/endpoints";
-
-export const REPLAN_MIN_MOVE_M = 25;
+import { isGpsRefinement, shouldReplan, type PlanEnd, type PlanPair } from "@/domain/trip/replan";
 
 export type PlanErrorKind = "offline" | "server" | "invalid";
 
@@ -27,26 +23,13 @@ export type TripPlanState =
 
 type Outcome = { status: "ready"; data: PlanResponse } | { status: "error"; kind: PlanErrorKind };
 type Settled = { key: string } & Outcome;
-export type PlanEnd = { point: LatLng; source: EndpointSource };
-type Pair = { origin: PlanEnd; destination: PlanEnd };
+/** The pair planned for, and whether it differs from the previous one only by GPS refinements. */
+type Planned = PlanPair & { gpsRefinement: boolean };
 
-const keyOf = (p: Pair, attempt: number) =>
+const keyOf = (p: PlanPair, attempt: number) =>
   `${p.origin.point.lat},${p.origin.point.lng}>${p.destination.point.lat},${p.destination.point.lng}#${attempt}`;
 
-/** Whether one end changed enough to plan again: only a GPS refinement under the threshold is ignored. */
-function endChanged(prev: PlanEnd, next: PlanEnd): boolean {
-  if (prev.point.lat === next.point.lat && prev.point.lng === next.point.lng && prev.source === next.source) return false;
-  if (prev.source === "gps" && next.source === "gps") return haversineMeters(prev.point, next.point) >= REPLAN_MIN_MOVE_M;
-  return true; // placed by hand or from search (or the source changed): always a deliberate choice
-}
-
-/** True when `next` should be planned for instead of `prev`. */
-export function shouldReplan(prev: Pair | null, next: Pair): boolean {
-  if (!prev) return true;
-  return endChanged(prev.origin, next.origin) || endChanged(prev.destination, next.destination);
-}
-
-async function requestPlan(pair: Pair, signal: AbortSignal): Promise<Outcome> {
+async function requestPlan(pair: PlanPair, signal: AbortSignal): Promise<Outcome> {
   const origin = pair.origin.point;
   const destination = pair.destination.point;
   let response: Response;
@@ -72,10 +55,10 @@ async function requestPlan(pair: Pair, signal: AbortSignal): Promise<Outcome> {
 export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null): TripPlanState & { retry: () => void } {
   const [attempt, setAttempt] = useState(0);
   const [settled, setSettled] = useState<Settled | null>(null);
-  // The last ready plan, kept on screen while a newer request is in flight.
+  // The last ready plan, kept on screen only while a GPS-refinement replan is in flight.
   const [lastReady, setLastReady] = useState<PlanResponse | null>(null);
-  // The pair actually planned for; small moves of an end keep it (no replan).
-  const [planned, setPlanned] = useState<Pair | null>(null);
+  // The pair actually planned for; small GPS moves of an end keep it (no replan).
+  const [planned, setPlanned] = useState<Planned | null>(null);
 
   // "Adjust state while rendering": track the endpoints, dropping everything when one is cleared.
   if (!origin || !destination) {
@@ -83,7 +66,12 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
     if (lastReady !== null) setLastReady(null);
   } else {
     const next = { origin, destination };
-    if (shouldReplan(planned, next)) setPlanned(next);
+    if (shouldReplan(planned, next)) {
+      const gpsRefinement = isGpsRefinement(planned, next);
+      setPlanned({ ...next, gpsRefinement });
+      // A deliberate change starts fresh: the previous trip's results must never show for it.
+      if (!gpsRefinement && lastReady !== null) setLastReady(null);
+    }
   }
 
   const key = planned ? keyOf(planned, attempt) : null;
@@ -107,7 +95,9 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
   const retry = () => setAttempt((n) => n + 1);
   if (key === null) return { status: "idle", retry };
   if (!settled || settled.key !== key) {
-    return lastReady ? { status: "ready", data: lastReady, refreshing: true, retry } : { status: "loading", retry };
+    return planned?.gpsRefinement && lastReady
+      ? { status: "ready", data: lastReady, refreshing: true, retry }
+      : { status: "loading", retry };
   }
   return settled.status === "ready"
     ? { status: "ready", data: settled.data, refreshing: false, retry }

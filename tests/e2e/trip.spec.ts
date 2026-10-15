@@ -226,6 +226,55 @@ test("offline shows the offline state; retry works once back online", async ({ p
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
 });
 
+test("moving a pin by hand never shows the previous trip's options while the new plan loads", async ({ page }) => {
+  let gated = false;
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((r) => (release = r));
+  await interceptPlan(page, async (route) => {
+    if (gated) await gate;
+    await fulfill(route, PROVISIONAL_PLAN);
+  });
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+
+  gated = true;
+  await page.getByTestId("endpoint-destination").locator(".pn-endpoint__main").click();
+  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  const before = await mapEl(page).getAttribute("data-center-lng");
+  await drag(page, 40, 0);
+  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
+  await page.getByRole("button", { name: "Set destination here" }).click();
+
+  await expect(page.getByTestId("trip-loading")).toBeVisible();
+  await expect(page.getByTestId("trip-option")).toHaveCount(0);
+  await expect(page.getByText("Updating for your new location…")).toHaveCount(0);
+  release();
+  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+});
+
+test("a pending focus move is dropped when an endpoint is cleared", async ({ page }) => {
+  await interceptPlan(page, async (route, n) => {
+    if (n === 1) return fulfill(route, { error: { code: "unavailable", message: "x", requestId: "r1" } }, 503);
+    if (n === 2) return new Promise<void>(() => undefined); // the retry never settles
+    return fulfill(route, PROVISIONAL_PLAN);
+  });
+  await openApp(page);
+  await pinBoth(page);
+  await page.getByTestId("trip-error").getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByTestId("trip-loading")).toBeVisible();
+
+  // Clear the destination while the retry is pending, then set it again.
+  await page.getByRole("button", { name: "Clear destination", exact: true }).click();
+  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await page.getByRole("button", { name: "Set destination here" }).click();
+
+  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  // Focus stays where the pin flow put it (the destination row), not on the results heading.
+  await expect(page.getByTestId("endpoint-destination").locator(".pn-endpoint__main")).toBeFocused();
+  await expect(page.getByRole("heading", { name: "Trip options" })).not.toBeFocused();
+});
+
 // GPS refinements of the start (Important 1 of the review): a better fix re-dispatches the start.
 test.describe("GPS refinement while results are shown", () => {
   const BISCAST = { latitude: 13.6314651, longitude: 123.1927517 };
@@ -275,8 +324,14 @@ test.describe("GPS refinement while results are shown", () => {
     await context.setGeolocation({ latitude: BISCAST.latitude + 0.0001, longitude: BISCAST.longitude, accuracy: 10 });
     await nextFixWithAccuracy(page, 10);
     await expect(page.getByTestId("trip-option")).toHaveCount(2);
-    await page.waitForTimeout(300);
-    expect(calls.length).toBe(before);
+
+    // A later refinement that does cross 25 m (from the planned point) replans exactly once, so
+    // the 11 m one above sent no request.
+    await context.setGeolocation({ latitude: BISCAST.latitude + 0.0004, longitude: BISCAST.longitude, accuracy: 5 });
+    await nextFixWithAccuracy(page, 5);
+    await expect.poll(() => calls.length).toBeGreaterThan(before);
+    await expect(page.getByTestId("trip-option")).toHaveCount(2);
+    expect(calls.length).toBe(before + 1);
   });
 
   test("the detail closes when the replan drops the option; focus goes to the results heading", async ({ page, context }) => {

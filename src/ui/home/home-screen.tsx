@@ -25,7 +25,7 @@ import { TripDetail } from "@/ui/trip/trip-detail";
 import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
-import { EndpointSheet, useSheet } from "./endpoint-sheet";
+import { EndpointSheet, endpointRowMainId, useSheet } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
   LocationStatus,
@@ -124,6 +124,8 @@ export function HomeScreen() {
   const openOptionId = openOption?.id ?? null;
   // Where focus goes once the results render: the results heading, or an option card.
   const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);
+  // No trip, no pending focus move: a stale request must not pull focus once a trip is set again.
+  if (plan.status === "idle" && focusTarget !== null) setFocusTarget(null);
   if (openedId !== null && openOption === null && plan.status !== "loading") {
     // The opened option is gone (new plan without it, an error, or the trip was cleared).
     setOpenedId(null);
@@ -296,6 +298,7 @@ export function HomeScreen() {
   };
 
   const handleClear = (which: EndpointWhich) => {
+    setFocusTarget(null);
     // Clearing drops any pending "use current location" (the watch effect stops GPS if unneeded).
     if (gpsEndpointKey(endpoints) === which) setGpsStartAccuracy(null);
     setGpsIntent(false);
@@ -326,7 +329,7 @@ export function HomeScreen() {
   // A 400 cannot succeed on retry: send the user back to the endpoint rows.
   const handleChangeEndpoints = () => {
     if (sheet.snap === 0) sheet.setSnap(1);
-    document.querySelector<HTMLElement>('[data-testid="endpoint-start"] .pn-endpoint__main')?.focus();
+    document.getElementById(endpointRowMainId("start"))?.focus();
   };
 
   // Move focus once its target has rendered (after a retry, once the request settles). Each
@@ -377,7 +380,7 @@ export function HomeScreen() {
     if (!picking) {
       const row = returnFocusTo.current;
       returnFocusTo.current = null;
-      if (row) document.querySelector<HTMLElement>(`[data-testid="endpoint-${row}"] .pn-endpoint__main`)?.focus();
+      if (row) document.getElementById(endpointRowMainId(row))?.focus();
       return undefined;
     }
     confirmRef.current?.focus();
