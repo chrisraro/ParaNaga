@@ -9,7 +9,7 @@ import "@/ui/trip/trip.css";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, type MouseEvent, type ReactNode, type RefObject } from "react";
 import { cameFromInsideApp, useAppPanel } from "@/ui/app-shell/app-frame-context";
 
 export function BackIcon() {
@@ -59,26 +59,19 @@ export function CandidateRing({ size = 30, onRoute = false }: { size?: number; o
 }
 
 /**
- * Round "Back" button: history back after an in-app navigation (map → stop → route), otherwise a
- * link to the map, so a page opened from a shared link never leaves the site.
+ * Escape closes the panel whose root is `panel`, exactly like Back (history after an in-app
+ * navigation, else the map). Once per panel (a held or double Escape must not go back twice), and
+ * never while the app is covered by the large-screen overlay or a modal (inert), or when something
+ * inside already handled the key (a dialog calls preventDefault).
  */
-function BackButton() {
+export function useEscapeToClose(panel: RefObject<HTMLElement | null>) {
   const router = useRouter();
-  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !cameFromInsideApp()) return;
-    e.preventDefault();
-    router.back();
-  };
-  // Escape closes the panel exactly like Back (history after an in-app navigation, else the map).
-  // Once per panel (a held or double Escape must not go back twice), and never while the app is
-  // covered by the large-screen overlay (inert).
-  const link = useRef<HTMLAnchorElement>(null);
   const closing = useRef(false);
   useEffect(() => {
     closing.current = false;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape" || e.repeat || e.defaultPrevented || closing.current) return;
-      if (link.current?.closest("[inert]")) return;
+      if (!panel.current || panel.current.closest("[inert]")) return;
       e.preventDefault();
       closing.current = true;
       if (cameFromInsideApp()) router.back();
@@ -86,9 +79,22 @@ function BackButton() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [router]);
+  }, [router, panel]);
+}
+
+/**
+ * Round "Back" button: history back after an in-app navigation (map → stop → route), otherwise a
+ * link to the map, so a page opened from a shared link never leaves the site.
+ */
+export function BackButton() {
+  const router = useRouter();
+  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !cameFromInsideApp()) return;
+    e.preventDefault();
+    router.back();
+  };
   return (
-    <Link ref={link} href="/app" aria-label="Back" className="pn-detail__round" onClick={onClick} data-testid="detail-back">
+    <Link href="/app" aria-label="Back" className="pn-detail__round" onClick={onClick} data-testid="detail-back">
       <BackIcon />
     </Link>
   );
@@ -103,11 +109,16 @@ type PanelProps = {
   testId?: string;
 };
 
-/** Full-screen panel: marks itself open on the app frame (the map underneath turns inert). */
+/**
+ * Full-screen detail panel: marks itself open on the app frame (the map underneath turns inert and
+ * the tab bar hides), with a Back button; Escape goes back too.
+ */
 export function DetailPanel({ title, action, children, testId }: PanelProps) {
-  useAppPanel();
+  useAppPanel("detail");
+  const root = useRef<HTMLDivElement>(null);
+  useEscapeToClose(root);
   return (
-    <div className="pn-detail" data-testid={testId}>
+    <div ref={root} className="pn-detail" data-testid={testId}>
       <header className="pn-detail__header">
         <BackButton />
         <span className="pn-detail__header-title">{title}</span>

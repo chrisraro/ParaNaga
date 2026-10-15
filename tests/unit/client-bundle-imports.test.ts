@@ -16,7 +16,8 @@ function walk(dir: string): string[] {
 describe("client bundle imports", () => {
   it("zod jitless is set once, first, from the top-most client entry (instrumentation-client)", () => {
     const entry = read("instrumentation-client.ts");
-    const firstImport = entry.split("\n").find((l) => l.startsWith("import "));
+    // A Windows checkout (core.autocrlf) has CRLF line ends.
+    const firstImport = entry.split(/\r?\n/).find((l) => l.startsWith("import "));
     expect(firstImport).toBe('import "./client/zod-jitless";');
     const others = [...walk(path.join(SRC, "client")), ...walk(path.join(SRC, "ui")), ...walk(path.join(SRC, "app"))]
       .filter((f) => !f.endsWith("zod-jitless.ts"))

@@ -1,9 +1,11 @@
 /* Home screen S1 chrome (.superpowers/sdd/map-design-brief.md §1, §3, §4). Tokens are the
    brief's Home `t` values; dark mode follows prefers-color-scheme like the map chrome. */
 
-/* Shared with the Stop / Route detail screens (.pn-detail, src/ui/detail/detail.css). */
+/* Shared with the Stop / Route detail screens and tab pages (.pn-detail, src/ui/detail/detail.css)
+   and the tab bar (.pn-tabbar, src/ui/kit/kit.css). */
 .pn-home,
-.pn-detail {
+.pn-detail,
+.pn-tabbar {
   --pn-surface: #ffffff;
   --pn-fill: #eceff4;
   --pn-label: #0f1e3d;
@@ -43,7 +45,8 @@
 
 @media (prefers-color-scheme: dark) {
   .pn-home,
-  .pn-detail {
+  .pn-detail,
+  .pn-tabbar {
     --pn-surface: #111a2e;
     --pn-fill: #1a2540;
     --pn-label: #f2f5fa;
@@ -179,7 +182,8 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 0 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  /* --pn-sheet-clearance: room for the tab bar over the sheet (set by endpoint-sheet.tsx). */
+  padding: 0 16px calc(24px + env(safe-area-inset-bottom, 0px) + var(--pn-sheet-clearance, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
 }

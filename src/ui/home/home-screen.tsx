@@ -20,13 +20,15 @@ import type { Bounds, LatLng } from "@/domain/geo/types";
 import { SAME_PLACE_M } from "@/domain/planner/labels";
 import { SAME_PLACE_TITLE, noCoverageCopy } from "@/domain/trip/present";
 import {
+  endpointLabel,
   endpointsReducer,
   initialEndpointsState,
   isReadyToPlan,
   type EndpointWhich,
   type EndpointsState,
 } from "@/domain/trip/endpoints";
-import { useAppFrame } from "@/ui/app-shell/app-frame-context";
+import { useAppFrame, useApplyOnce, useHideTabBar } from "@/ui/app-shell/app-frame-context";
+import { TAB_BAR_CLEARANCE } from "@/ui/app-shell/tab-bar";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail } from "@/ui/trip/trip-detail";
 import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
@@ -123,6 +125,7 @@ function SamePlaceNotice({ which, onChooseOnMap }: { which: EndpointWhich; onCho
 }
 
 export function HomeScreen() {
+  const frame = useAppFrame();
   const geo = useGeolocation();
   const [endpoints, dispatch] = useReducer(endpointsReducer, initialEndpointsState);
   const [focused, setFocused] = useState<EndpointWhich | null>("start");
@@ -144,7 +147,8 @@ export function HomeScreen() {
   const [announcement, setAnnouncement] = useState("");
   // An end that was refused for being the same place as the other end (GPS start on the destination).
   const [samePlaceRefused, setSamePlaceRefused] = useState<EndpointWhich | null>(null);
-  const sheet = useSheet(1);
+  // Inside the app frame the tab bar floats over the sheet's bottom edge.
+  const sheet = useSheet(1, frame ? TAB_BAR_CLEARANCE : 0);
   const [pickHeight, pickRef] = useMeasuredHeight();
 
   const bumpRecenter = (target: LatLng | null = null, label = "the start pin") => {
@@ -186,8 +190,8 @@ export function HomeScreen() {
   const statusCopy = liveCopy ?? lastOutcome;
 
   /** Sets an endpoint only if the reducer accepts it; announces and moves on only then. */
-  const applyEndpoint = (which: EndpointWhich, point: LatLng, source: "gps" | "map"): boolean => {
-    const endpoint = { point, source, label: "" };
+  const applyEndpoint = (which: EndpointWhich, point: LatLng, source: "gps" | "map" | "search", label = ""): boolean => {
+    const endpoint = { point, source, label };
     const { accepted, next } = applyIfAccepted(endpoints, which, endpoint);
     if (!accepted) {
       if (next.error === "same_place") {
@@ -201,7 +205,7 @@ export function HomeScreen() {
     setSamePlaceRefused(null);
     dispatch({ type: "set", which, endpoint });
     setFocused(nextFocus(next, which));
-    setAnnouncement(`${NAME[which]} set: ${source === "gps" ? "Your location" : "Pinned location"}`);
+    setAnnouncement(`${NAME[which]} set: ${endpointLabel(source, label)}`);
     if (isReadyToPlan(next) && sheet.snap === 0) sheet.setSnap(1);
     return true;
   };
@@ -435,9 +439,12 @@ export function HomeScreen() {
   }, []);
 
   // Crosshair mode: move focus to the confirm button; Escape (anywhere) cancels. When the panel
-  // closes, focus goes back to the endpoint row that was set or cancelled.
+  // closes, focus goes back to the endpoint row that was set or cancelled. A pick requested from
+  // another screen starts while that screen still covers the map: focus moves once it closes.
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const covered = frame?.panelOpen ?? false;
   useEffect(() => {
+    if (covered) return undefined;
     if (!picking) {
       const row = returnFocusTo.current;
       returnFocusTo.current = null;
@@ -455,7 +462,7 @@ export function HomeScreen() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [picking]);
+  }, [picking, covered]);
 
   // An aged fix (a phone standing still gets no new fixes) stays on screen while it is a trip
   // endpoint, dimmed and with its age; without a GPS endpoint only a fresh fix shows.
@@ -487,7 +494,6 @@ export function HomeScreen() {
   const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
   const tripDetailOpen = ready && openOption !== null;
   const stopsInView = useStopsInView(viewBounds, !tripDetailOpen);
-  const frame = useAppFrame();
   const markHomeNavigation = frame?.markHomeNavigation;
   const handleStopSelect = useCallback(
     (id: string) => {
@@ -499,16 +505,34 @@ export function HomeScreen() {
   );
 
   // "Show on map" from a stop panel: centre the map on that stop (adjusted during render).
-  const mapFocus = frame?.mapFocus ?? null;
-  const [seenFocus, setSeenFocus] = useState(mapFocus?.n ?? 0);
-  if (mapFocus && mapFocus.n !== seenFocus) {
-    setSeenFocus(mapFocus.n);
-    bumpRecenter(mapFocus.point, "the stop");
-  }
+  useApplyOnce(frame?.mapFocus ?? null, (focus) => bumpRecenter(focus.point, "the stop"));
+
+  // The endpoint channel: another screen (search, a place, a saved place) set an end of the trip
+  // or asked to choose one on the map, then navigated here. Each request applies once, through
+  // the same rules as the sheet (inside Naga, not the same place as the other end).
+  useApplyOnce(frame?.endpointRequest ?? null, (request) => {
+    if (request.kind === "pick") {
+      handleChooseOnMap(request.which);
+      return;
+    }
+    const { which, endpoint } = request;
+    const wasGps = gpsEndpointKey(endpoints) === which;
+    if (applyEndpoint(which, endpoint.point, "search", endpoint.label)) {
+      // Like a pinned point: a pending "use current location" no longer applies to this end.
+      if (which === "start") setGpsIntent(false);
+      if (wasGps) setGpsStartAccuracy(null);
+      bumpRecenter(endpoint.point, endpoint.label);
+    }
+  });
+
+  // The tab bar would cover the crosshair panel: hidden while a pin is being placed.
+  useHideTabBar(picking !== null);
 
   return (
     <main className="pn-home" style={rootStyle} data-testid="home-screen">
-      <h1 className="sr-only">ParaNaga trip planner</h1>
+      <h1 className="sr-only" tabIndex={-1} data-home-heading="">
+        ParaNaga trip planner
+      </h1>
       <div className="pn-home__map">
         <NagaMap
           userFix={userFix}

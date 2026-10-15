@@ -3,8 +3,8 @@
 // always the warning "Unverified route", fares are always estimates.
 
 import type { PlanResponse, RideLegDto } from "@/domain/api/plan";
-import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { directionText, fareChipText, routeChipLabel, stopLabel, type LoopDirection } from "@/domain/trip/present";
+import { StatusBadge } from "@/ui/kit/badge";
 
 export function WalkIcon() {
   return (
@@ -25,15 +25,7 @@ export function Chevron() {
 
 /** Warning-style badge (never the teal "Verified route"). */
 export function UnverifiedBadge() {
-  return (
-    <span className="pn-trip-badge" data-testid="unverified-badge">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" focusable="false">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 8v5M12 16h.01" />
-      </svg>
-      {UNVERIFIED_ROUTE_BADGE}
-    </span>
-  );
+  return <StatusBadge variant="unverified-route" testId="unverified-badge" />;
 }
 
 type FareLike = { status: string; minCentavos: number | null; maxCentavos: number | null };
