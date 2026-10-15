@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { isCompleteSearchIndex, searchIndexSchema } from "@/domain/api/schemas";
 import { haversineMeters } from "@/domain/geo/geometry";
-import { buildSearchIndex, groupPinPlaces, type SearchSourceStop } from "@/domain/search/index-build";
+import { barangayKey, barangayKeys, buildSearchIndex, groupPinPlaces, type SearchSourceStop } from "@/domain/search/index-build";
 import { LEGACY_ROUTE_NAMES } from "@/domain/search/legacy-route-names";
 import { foldText } from "@/domain/search/normalize";
 import { realSearchSource } from "../fixtures/search-source";
@@ -152,5 +152,24 @@ describe("groupPinPlaces", () => {
 
   it("skips blank and null labels", () => {
     expect(groupPinPlaces([pin(id(1), "", 13.62, 123.18), pin(id(2), "  ", 13.62, 123.18), pin(id(3), null, 13.62, 123.18)])).toEqual([]);
+  });
+});
+
+describe("barangay keys", () => {
+  it("never produce an empty key", () => {
+    expect(barangayKey("Bagumbayan Norte")).toBe("bagumbayan-norte");
+    expect(barangayKey(" — ")).toBe("barangay");
+  });
+
+  it("suffix names that fold to the same key, deterministically in input order", () => {
+    expect(barangayKeys(["San Felipe", "SAN FELIPE", "San  Félipe", "Abella"])).toEqual(["san-felipe", "san-felipe-2", "san-felipe-3", "abella"]);
+    expect(barangayKeys(["—", "?"])).toEqual(["barangay", "barangay-2"]);
+  });
+
+  it("the index builder applies them, and the schema refuses duplicate keys", () => {
+    const twice = buildSearchIndex({ ...source, barangays: [...source.barangays, { ...source.barangays[0]!, name: source.barangays[0]!.name.toUpperCase() }] });
+    expect(() => searchIndexSchema.parse(twice)).not.toThrow();
+    const duplicated = { ...index, barangays: [...index.barangays, index.barangays[0]!] };
+    expect(searchIndexSchema.safeParse(duplicated).success).toBe(false);
   });
 });

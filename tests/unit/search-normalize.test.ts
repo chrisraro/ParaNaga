@@ -1,7 +1,7 @@
 // Pure text helpers for search (src/domain/search/normalize.ts): used by the server-side index
 // builder to group pin labels and by the client (Task 5) to match queries. No I/O.
 import { describe, expect, it } from "vitest";
-import { foldText, matchScore, rankByQuery, tokenize } from "@/domain/search/normalize";
+import { compactText, foldText, matchScore, rankByQuery, tokenize } from "@/domain/search/normalize";
 
 describe("foldText", () => {
   it("applies NFC, trims, collapses spaces, case-folds and strips diacritics", () => {
@@ -31,6 +31,14 @@ describe("tokenize", () => {
   });
 });
 
+describe("compactText", () => {
+  it("folds and drops everything that is not a letter or digit", () => {
+    expect(compactText("R8-A")).toBe("r8a");
+    expect(compactText(" r8 a ")).toBe("r8a");
+    expect(compactText("Peñafrancia - Magsaysay")).toBe("penafranciamagsaysay");
+  });
+});
+
 describe("matchScore", () => {
   const f = (text: string, weight = 1) => [{ text, weight }];
 
@@ -53,6 +61,15 @@ describe("matchScore", () => {
   it("ignores accents and case in both query and text", () => {
     expect(matchScore("PENAFRANCIA", f("Peñafrancia Ave"))).toBeGreaterThan(0);
     expect(matchScore("peñafrancia", f("Penafrancia Ave"))).toBeGreaterThan(0);
+  });
+
+  it("matches route codes typed without punctuation (compact comparison, digit queries only)", () => {
+    for (const q of ["R8A", "r8a", "r8-a", "R8 A"]) expect(matchScore(q, f("R8-A"))).toBeGreaterThanOrEqual(0.7);
+    expect(matchScore("8a", f("R8-A"))).toBeGreaterThan(0);
+    expect(matchScore("8a", f("R8-A"))).toBeLessThan(matchScore("r8a", f("R8-A")));
+    expect(matchScore("r8b", f("R8-A"))).toBe(0);
+    // Without a digit, words are not squeezed together ("zab" must not match "Plaza Bennett").
+    expect(matchScore("zab", f("Plaza Bennett"))).toBe(0);
   });
 
   it("takes the best weighted field", () => {

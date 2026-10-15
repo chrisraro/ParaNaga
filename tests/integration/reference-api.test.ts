@@ -184,7 +184,7 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
 
     const bytes = Buffer.byteLength(raw);
     const gzip = gzipSync(raw).byteLength;
-    console.log(JSON.stringify({
+    if (capture) console.log(JSON.stringify({
       event: "search_index_size", rawBytes: bytes, gzipBytes: gzip,
       counts: Object.fromEntries(Object.entries(index).filter(([, v]) => Array.isArray(v)).map(([k, v]) => [k, (v as unknown[]).length])),
       pins: pinned.length,
@@ -248,8 +248,50 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     expect(codes.filter((c) => !cited.includes(c))).toEqual(["S28"]);
     expect(codes).toEqual([...codes].sort());
     expect(new Set(codes).size).toBe(codes.length);
-    console.log(JSON.stringify({ event: "sources_count", count: codes.length }));
+    if (capture) console.log(JSON.stringify({ event: "sources_count", count: codes.length }));
     saveFixture("sources.json", raw);
+  });
+
+  // Draft-only and synthetic rows never reach the new views. Everything is written in one owner
+  // transaction that is rolled back, and read in that same transaction (the owner is not a member
+  // of paranaga_app, and the uncommitted rows are invisible to other connections): the base tables
+  // show all three rows, the views only the control. The hiding is the views' own filter
+  // (published pointer → revision_member, not is_synthetic); paranaga_app's grants on these views
+  // are covered by the "cannot write" test above and db:check-rls. The published
+  // revision's membership is frozen by a trigger, which the owner disables inside the transaction
+  // only (rolled back with it) to add the synthetic and control members.
+  it("the views hide draft-only and synthetic barangays and study labels", async () => {
+    const tag = `zz-it-${run}`;
+    await owner.query("begin");
+    try {
+      const draft = (await owner.query<{ id: string }>(
+        "insert into transit.revision (label, kind, created_by) values ($1, 'provisional', 'reference-api test') returning id", [`${tag}-draft`],
+      )).rows[0]!.id;
+      const barangay = async (name: string, synthetic: boolean) =>
+        (await owner.query<{ id: string }>("insert into transit.barangay (name, is_synthetic) values ($1, $2) returning id", [name, synthetic])).rows[0]!.id;
+      const label = async (code: string, synthetic: boolean) =>
+        (await owner.query<{ id: string }>(
+          "insert into transit.designated_stop_candidate (code, label_raw, is_synthetic) values ($1, $1, $2) returning id", [code, synthetic],
+        )).rows[0]!.id;
+      const member = (rev: string, kind: string, id: string) =>
+        owner.query("insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id) values ($1, $2, $3, $3)", [rev, kind, id]);
+
+      await member(draft, "barangay", await barangay(`${tag} draft`, false));
+      await member(draft, "designated_stop_candidate", await label(`${tag}-DRAFT`, false));
+      await owner.query("alter table transit.revision_member disable trigger revision_member_guard");
+      await member(revisionId, "barangay", await barangay(`${tag} synthetic`, true));
+      await member(revisionId, "designated_stop_candidate", await label(`${tag}-SYNTH`, true));
+      // Control: a real member of the published revision does show, so the test can fail.
+      await member(revisionId, "barangay", await barangay(`${tag} control`, false));
+      await member(revisionId, "designated_stop_candidate", await label(`${tag}-CONTROL`, false));
+
+      const names = async (query: string) => (await owner.query<{ v: string }>(query, [`${tag}%`])).rows.map((r) => r.v).sort();
+      expect(await names("select name as v from transit.barangay where name like $1")).toEqual([`${tag} control`, `${tag} draft`, `${tag} synthetic`]);
+      expect(await names("select name as v from transit.v_published_barangays where name like $1")).toEqual([`${tag} control`]);
+      expect(await names("select code as v from transit.v_published_designated_stop_candidates where code like $1")).toEqual([`${tag}-CONTROL`]);
+    } finally {
+      await owner.query("rollback");
+    }
   });
 
   // Last: it republishes, which resets published_at (captured fixtures keep main's value).

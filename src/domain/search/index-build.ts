@@ -10,7 +10,8 @@
 //  - legacy (1993) names are historical hints with mappedRouteCode null.
 import type { OsmPlace, RevisionMeta, SearchIndex, SearchPinPlace } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
-import { compareCodeUnits, sha256Hex } from "../import/hash";
+import { sha256Hex } from "../import/hash";
+import { compareCodeUnits } from "../text/compare";
 import { LEGACY_ROUTE_NAMES } from "./legacy-route-names";
 import { foldText, tokenize } from "./normalize";
 
@@ -104,12 +105,31 @@ export function groupPinPlaces(stops: readonly SearchSourceStop[]): SearchPinPla
 
 const distinct = (values: Iterable<string>): string[] => [...new Set(values)];
 
-/** URL-safe key from the folded name ("Bagumbayan Norte" → "bagumbayan-norte"). */
+/**
+ * URL-safe key from the folded name ("Bagumbayan Norte" → "bagumbayan-norte"); a name without
+ * letters or digits gets "barangay" (never an empty key, which the schema rejects).
+ */
 export function barangayKey(name: string): string {
-  return tokenize(name).join("-");
+  return tokenize(name).join("-") || "barangay";
+}
+
+/**
+ * Keys for a list of barangay names, unique within the list: a repeated key (two names that fold
+ * the same) gets a deterministic suffix in input order ("san-felipe", "san-felipe-2").
+ */
+export function barangayKeys(names: readonly string[]): string[] {
+  const used = new Set<string>();
+  return names.map((name) => {
+    const base = barangayKey(name);
+    let key = base;
+    for (let n = 2; used.has(key); n += 1) key = `${base}-${n}`;
+    used.add(key);
+    return key;
+  });
 }
 
 export function buildSearchIndex(source: SearchIndexSource): SearchIndex {
+  const barangayKeyList = barangayKeys(source.barangays.map((b) => b.name));
   return {
     revision: source.revision,
     osmPlaces: source.places.map((p) => ({
@@ -132,8 +152,8 @@ export function buildSearchIndex(source: SearchIndexSource): SearchIndex {
       streets: distinct(r.streetLists.flat()),
     })),
     terminals: source.terminals.map((t) => ({ ...t, location: null })),
-    barangays: source.barangays.map((b) => ({
-      key: barangayKey(b.name),
+    barangays: source.barangays.map((b, i) => ({
+      key: barangayKeyList[i]!,
       name: b.name,
       surveyStatus: b.surveyStatus,
       sourceCode: b.sourceCode,

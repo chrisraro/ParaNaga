@@ -2,6 +2,7 @@ import "server-only";
 import { sql, type SQL } from "drizzle-orm";
 import type { SourceList, TerminalDetail } from "@/domain/api/schemas";
 import { routesNamingTerminal, type TerminalRouteVariant } from "@/domain/network/terminal-routes";
+import { compareCodeUnits } from "@/domain/text/compare";
 import type { SearchIndexSource } from "@/domain/search/index-build";
 import type { Db } from "@/server/db/context";
 import { getPublishedRevision, listRoutes } from "./network-repo";
@@ -206,10 +207,13 @@ export async function getTerminalDetail(db: Db, revisionId: string, code: string
 export async function listSources(db: Db, revisionId: string, codeCited: readonly string[]): Promise<SourceList["sources"]> {
   const cited = await sourcesFor(db, revisionId, null);
   const extra = codeCited.filter((c) => !cited.some((s) => s.code === c));
-  if (extra.length === 0) return cited;
-  const found = await rows(db, sql`
+  const found =
+    extra.length === 0
+      ? []
+      : await rows(db, sql`
     select code, title, url, evidence_type, published_or_enacted, checked_on::text as checked_on
       from transit.v_published_source_catalog
      where revision_id = ${revisionId}::uuid and code in (${sql.join(extra.map((c) => sql`${c}`), sql`, `)})`);
-  return [...cited, ...found.map(toSource)].sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
+  // One ordering rule in every path (code units, not the database collation).
+  return [...cited, ...found.map(toSource)].sort((a, b) => compareCodeUnits(a.code, b.code));
 }

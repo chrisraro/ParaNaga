@@ -3,7 +3,7 @@
 // case-insensitive exact substring ("Eastbound Terminal, Anciano St" names "Eastbound Terminal").
 // Basis: a permanent variant's legal street list → "legal_plan"; a trial circuit → "trial". This
 // is document text, not a stop: no boarding point or bay is implied.
-import { compareCodeUnits } from "../import/hash";
+import { compareCodeUnits } from "../text/compare";
 
 export type TerminalRouteVariant = {
   routeCode: string;

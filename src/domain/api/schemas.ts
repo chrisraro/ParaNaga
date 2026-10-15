@@ -423,7 +423,10 @@ export const searchIndexSchema = z.object({
   pinPlaces: z.array(searchPinPlaceSchema),
   routes: z.array(searchRouteSchema),
   terminals: z.array(searchTerminalSchema),
-  barangays: z.array(searchBarangaySchema),
+  /** Keys are unique: a place-detail URL names exactly one barangay. */
+  barangays: z.array(searchBarangaySchema).refine((list) => new Set(list.map((b) => b.key)).size === list.length, {
+    message: "barangay keys must be unique",
+  }),
   studyLabels: z.array(searchStudyLabelSchema),
   destinationCategories: z.array(searchDestinationCategorySchema),
   feederLeads: z.array(searchFeederLeadSchema),
