@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { clearDeviceData } from "@/client/device-data";
 import { useLocationPermission } from "@/client/geo/use-location-permission";
 import { clearHistory, hasHistory } from "@/client/history/trip-history";
+import { rememberHead } from "@/client/network/remember-head";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { updatePrefs, usePrefs } from "@/client/prefs/use-prefs";
 import { networkHeadSchema, type NetworkHead } from "@/domain/api/schemas";
@@ -73,6 +74,10 @@ function LocationIcon() {
 
 function DataRevisionRow() {
   const head = useNetworkResource("/api/v1/network/head", networkHeadSchema);
+  const seen = head.status === "ready" ? head.data : null;
+  useEffect(() => {
+    if (seen) rememberHead(seen);
+  }, [seen]);
   let sub: string;
   if (head.status === "ready") sub = revisionLine(head.data);
   else if (head.status === "loading") sub = "Checking…";

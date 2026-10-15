@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { PageFrame } from "@/ui/app-shell/page-frame";
-import { Note } from "@/ui/kit/note";
+import { SavedScreen } from "@/ui/saved/saved-screen";
 
 export const metadata: Metadata = {
   title: "Saved",
   description: "Trips and places saved on this phone.",
 };
 
-// Tab page over the mounted home map. Saved trips and places live on the device (decision D3);
-// nothing can be saved yet, so the page says so.
+// Tab page over the mounted home map. Saved trips, places and history live on this phone
+// (IndexedDB, decision D3) and are read in the browser; the section comes from ?tab= (inside
+// Suspense, so the shell stays static).
 export default function SavedPage() {
   return (
     <PageFrame title="Saved" testId="saved-page">
-      <Note testId="saved-empty">Nothing saved on this phone yet.</Note>
+      <Suspense fallback={null}>
+        <SavedScreen />
+      </Suspense>
     </PageFrame>
   );
 }

@@ -5,8 +5,8 @@
 // place comes from the cached search index of the published revision (useSearchIndex), so a
 // place URL reaches no new API. Honesty: only the first two kinds have a location and can be a
 // trip start or destination; nothing invents an entrance, hours, photos or ratings. The artboard's
-// "Report" link and the round Save button are not rendered: corrections open with Increment B,
-// saving places with Task 8 (plain notes say so, no dead buttons).
+// "Report" link is not rendered (corrections open with Increment B). The two kinds with a location
+// have "Save place" (Task 8): saved on this phone, never sent anywhere.
 
 import "@/ui/kit/styles";
 import "./places.css";
@@ -42,13 +42,13 @@ import { ListCell } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Segmented } from "@/ui/kit/segmented";
+import { SavePlaceButton } from "@/ui/saved/save-place-button";
 import { NagaMap } from "@/ui/map/naga-map";
 
 const TITLE = "Place";
 /** Street level: a mapped-pin group spans at most 60 m, so its pins all show. */
 const PLACE_ZOOM = 17;
 const NOT_SOURCED = "Hours, photos and ratings are not shown unless sourced.";
-const SAVE_NOTE = "Saving places on this phone opens soon.";
 
 export function PlaceDetailScreen({ placeRef }: { placeRef: PlaceRef }) {
   const state = useSearchIndex();
@@ -233,7 +233,7 @@ function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: S
         <PlaceHead title={place.name} kind={`${OSM_CATEGORY_LABEL[place.category]} · from OpenStreetMap`} badges={["osm"]} />
         <PlanTrip name={place.name} point={point} label={place.name} />
         <Note testId="place-location-note">Location from OpenStreetMap — entrance not mapped.</Note>
-        <Note testId="place-save-note">{SAVE_NOTE}</Note>
+        <SavePlaceButton label={place.name} point={point} source="osm" testId="place-save" />
         <FactRows rows={rows} label="About this place" />
         <section className="pn-section" aria-labelledby={`${uid}-near`}>
           <h2 id={`${uid}-near`} className="pn-section__title">
@@ -319,7 +319,7 @@ function PinPlaceView({ place }: { place: SearchPinPlace }) {
         <PlaceHead title={place.label} kind={`Mapped stop · ${n === 1 ? "1 pin" : `${n} pins`}`} badges={["candidate"]} />
         <PlanTrip name={place.label} point={point} label={pinPlaceEndpointLabel(place.label)} />
         <Note testId="place-location-note">Trips use unverified mapped pins.</Note>
-        <Note testId="place-save-note">{SAVE_NOTE}</Note>
+        <SavePlaceButton label={place.label} point={point} source="pin" testId="place-save" />
         <section className="pn-section" aria-labelledby={`${uid}-pins`}>
           <h2 id={`${uid}-pins`} className="pn-section__title">
             Pins with this name

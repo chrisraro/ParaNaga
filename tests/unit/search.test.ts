@@ -169,25 +169,25 @@ describe("endpointForResult", () => {
 
   it("an OpenStreetMap place: its coordinate and name", () => {
     const sm = index.osmPlaces.find((p) => p.name === "SM City Naga")!;
-    expect(endpointForResult(find("SM City", "osm"))).toEqual({ point: { lat: sm.lat, lng: sm.lng }, label: "SM City Naga" });
+    expect(endpointForResult(find("SM City", "osm"))).toEqual({ point: { lat: sm.lat, lng: sm.lng }, label: "SM City Naga", place: "osm" });
   });
 
   it("a mapped-pin place: its first on-route pin, labelled as a mapped pin", () => {
     const plaza = index.pinPlaces.find((p) => p.label === "Plaza Rizal")!;
     const onRoute = plaza.pins.find((p) => p.onRoute)!;
-    expect(endpointForResult(find("Plaza Rizal", "pin"))).toEqual({ point: { lat: onRoute.lat, lng: onRoute.lng }, label: "Plaza Rizal (mapped pin)" });
+    expect(endpointForResult(find("Plaza Rizal", "pin"))).toEqual({ point: { lat: onRoute.lat, lng: onRoute.lng }, label: "Plaza Rizal (mapped pin)", place: "pin" });
   });
 
   it("a mapped-pin place with no on-route pin: its first pin", () => {
     const offRoute = index.pinPlaces.find((p) => p.pins.every((x) => !x.onRoute))!;
     const result = searchIndex(index, offRoute.label, off).flatMap((g) => g.results).find((r) => r.kind === "pin" && r.key === offRoute.key)!;
-    expect(endpointForResult(result)).toEqual({ point: { lat: offRoute.pins[0]!.lat, lng: offRoute.pins[0]!.lng }, label: `${offRoute.label} (mapped pin)` });
+    expect(endpointForResult(result)).toEqual({ point: { lat: offRoute.pins[0]!.lat, lng: offRoute.pins[0]!.lng }, label: `${offRoute.label} (mapped pin)`, place: "pin" });
   });
 
   it("a saved place: its stored point", () => {
     const saved = [{ id: "s1", label: "Work", point: { lat: 13.62, lng: 123.19 } }];
     const result = searchIndex(index, "work", { regional: false, saved })[0]!.results[0]!;
-    expect(endpointForResult(result)).toEqual({ point: { lat: 13.62, lng: 123.19 }, label: "Work" });
+    expect(endpointForResult(result)).toEqual({ point: { lat: 13.62, lng: 123.19 }, label: "Work", place: "pinned" });
   });
 
   it("nothing without a location: routes, terminals, barangays, study labels, old names, regional", () => {

@@ -1,12 +1,15 @@
 "use client";
 
 // The home screen's bottom sheet ("Trip planner"): Start and Destination rows, the options for
-// the focused row, and whatever cards the screen passes in. Snaps follow the map design brief
+// the focused row ("Save this place" too once that end is set), and whatever cards the screen
+// passes in. Snaps follow the map design brief
 // §1 (visible 214 / 444 / full); drag with the grabber, or tap / arrow-key it.
 
 import Link from "next/link";
 import { useCallback, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { savePlacePrefill } from "@/domain/saved/saved";
 import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
+import { SavePlaceButton } from "@/ui/saved/save-place-button";
 
 export type Snap = 0 | 1 | 2;
 
@@ -197,6 +200,19 @@ function PinIcon() {
   );
 }
 
+/** "Save this place" for a set trip end (a pin or GPS fix is saved as "Pinned location"). */
+function SaveEnd({ endpoint }: { endpoint: Endpoint }) {
+  return (
+    <SavePlaceButton
+      variant="option"
+      label={savePlacePrefill(endpoint)}
+      point={endpoint.point}
+      source={endpoint.place ?? "pinned"}
+      testId="endpoint-save-place"
+    />
+  );
+}
+
 /** DOM id of an endpoint row's main button, so the screen can move focus to it. */
 export function endpointRowMainId(which: EndpointWhich): string {
   return `pn-endpoint-${which}-main`;
@@ -354,6 +370,7 @@ export function EndpointSheet({
               </span>
               Search places and stops
             </Link>
+            {endpoints[focused] ? <SaveEnd endpoint={endpoints[focused]} /> : null}
           </div>
         ) : null}
         {detailOpen ? null : after}

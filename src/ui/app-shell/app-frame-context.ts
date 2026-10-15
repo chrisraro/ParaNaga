@@ -5,13 +5,17 @@
 
 import { createContext, useContext, useLayoutEffect, useState } from "react";
 import type { LatLng } from "@/domain/geo/types";
+import type { SavedPlaceSource } from "@/domain/saved/saved";
 import type { EndpointWhich } from "@/domain/trip/endpoints";
 
 /** A request to centre the home map on a point ("Show on map"); `n` makes each request new. */
 export type MapFocus = { point: LatLng; n: number };
 
 /** A place chosen on another screen (search, place detail, saved place) for the trip. */
-export type RequestedEndpoint = { point: LatLng; label: string };
+export type RequestedEndpoint = { point: LatLng; label: string; place?: SavedPlaceSource };
+
+/** "Open trip" on a saved trip card: the home screen restores it by id (applied once, `n`). */
+export type TripRequest = { savedTripId: string; n: number };
 
 /**
  * A request from another screen to the home trip sheet, applied once by the home screen (`n`
@@ -52,6 +56,12 @@ export type AppFrameValue = {
   requestPick: (which: EndpointWhich) => void;
   /** "Use current location" for the start, tapped on another screen (search). */
   requestGps: () => void;
+  tripRequest: TripRequest | null;
+  /**
+   * Reopen a saved trip (Saved → "Open trip" / "Review changes"): the home screen restores both
+   * endpoints, re-plans on the current data and shows the saved option (or what changed).
+   */
+  requestTrip: (savedTripId: string) => void;
 };
 
 export const AppFrameContext = createContext<AppFrameValue | null>(null);

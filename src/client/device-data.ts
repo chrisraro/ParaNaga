@@ -1,12 +1,13 @@
 "use client";
 
 // "Clear data on this device" (Settings → Data on this device). One entry point that later tasks
-// extend as they add stores: IndexedDB saved trips / places / history (Task 8) and the runtime
-// caches of the service worker (Task 12). Today it removes what exists: the preferences and any
-// other ParaNaga keys in localStorage, and ParaNaga's sessionStorage keys (guidance state).
+// extend as they add stores (the runtime caches of the service worker, Task 12). Today it removes
+// the preferences and any other ParaNaga keys in localStorage, ParaNaga's sessionStorage keys
+// (guidance state), and every IndexedDB store: saved trips, saved places, trip history and the
+// last-seen revision (Task 8).
 
 import { resetPrefs } from "@/client/prefs/use-prefs";
-import { clearHistory } from "@/client/history/trip-history";
+import { clearAllStores } from "@/client/storage/db";
 
 /** Every key ParaNaga writes to Web Storage starts with this. */
 export const STORAGE_PREFIX = "paranaga.";
@@ -33,7 +34,7 @@ export async function clearDeviceData(): Promise<void> {
   clearStorage(() => window.sessionStorage);
   clearStorage(() => window.localStorage);
   try {
-    await clearHistory();
+    await clearAllStores();
   } finally {
     // Even if a store failed (the caller reports it): re-read the (now empty) preferences,
     // re-apply the default theme and tell every screen.

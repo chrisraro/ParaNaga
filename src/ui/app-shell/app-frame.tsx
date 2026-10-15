@@ -10,7 +10,8 @@
 // to the home heading when the Map tab closed it.
 //
 // Other screens talk to the home screen through the context: "Show on map" (mapFocus) and the
-// endpoint channel (requestEndpoint / requestPick / requestGps), each a numbered request applied once.
+// endpoint channel (requestEndpoint / requestPick / requestGps) and requestTrip (reopen a saved trip),
+// each a numbered request applied once.
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { LatLng } from "@/domain/geo/types";
@@ -23,6 +24,7 @@ import {
   type MapFocus,
   type PanelKind,
   type RequestedEndpoint,
+  type TripRequest,
 } from "./app-frame-context";
 import { TabBar } from "./tab-bar";
 
@@ -32,6 +34,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const [measuredClearance, setMeasuredClearance] = useState(0);
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const [endpointRequest, setEndpointRequest] = useState<EndpointRequest | null>(null);
+  const [tripRequest, setTripRequest] = useState<TripRequest | null>(null);
   const returnFocus = useRef<Element | null>(null);
   // The stop path the user opened straight from the home map (pin tap or Nearby-stops link).
   // "Show on map" may go back in history only while that panel is the one showing.
@@ -67,13 +70,17 @@ export function AppFrame({ children }: { children: ReactNode }) {
   }, []);
 
   const requestEndpoint = useCallback((which: EndpointWhich, endpoint: RequestedEndpoint) => {
-    setEndpointRequest((prev) => ({ kind: "set", which, endpoint: { point: { ...endpoint.point }, label: endpoint.label }, n: (prev?.n ?? 0) + 1 }));
+    const copy: RequestedEndpoint = { point: { ...endpoint.point }, label: endpoint.label, ...(endpoint.place ? { place: endpoint.place } : {}) };
+    setEndpointRequest((prev) => ({ kind: "set", which, endpoint: copy, n: (prev?.n ?? 0) + 1 }));
   }, []);
   const requestPick = useCallback((which: EndpointWhich) => {
     setEndpointRequest((prev) => ({ kind: "pick", which, n: (prev?.n ?? 0) + 1 }));
   }, []);
   const requestGps = useCallback(() => {
     setEndpointRequest((prev) => ({ kind: "gps", n: (prev?.n ?? 0) + 1 }));
+  }, []);
+  const requestTrip = useCallback((savedTripId: string) => {
+    setTripRequest((prev) => ({ savedTripId, n: (prev?.n ?? 0) + 1 }));
   }, []);
 
   // Panel closed, the map is showing again: decide from the destination, not from where the
@@ -119,8 +126,10 @@ export function AppFrame({ children }: { children: ReactNode }) {
       requestEndpoint,
       requestPick,
       requestGps,
+      tripRequest,
+      requestTrip,
     }),
-    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick, requestGps],
+    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick, requestGps, tripRequest, requestTrip],
   );
 
   return (

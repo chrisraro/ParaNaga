@@ -2,7 +2,13 @@
 
 // Home screen S1 (/app): the Naga-locked map, the "Location ± N m" pill, and the trip sheet.
 // Anyone, inside Naga or not, can set a start and destination by GPS (only a fresh, inside-city,
-// not-coarse fix) or by pinning in crosshair mode. Coordinates stay in React state only.
+// not-coarse fix) or by pinning in crosshair mode. Coordinates stay in React state only (and in
+// the device database when the user saves a trip or a place).
+//
+// A saved trip reopened from Saved (requestTrip) restores both ends and re-plans on the current
+// data. While that plan loads (or fails, offline) the saved option shows as saved, labelled with
+// its data date; once the plan is in, the same option opens ("Re-planned on the current data" when
+// the revision changed), or the options show under "Route changed since you saved this".
 
 import "./home-screen.css";
 
@@ -10,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, useState } from "react";
 import { useGeolocation } from "@/client/geo/use-geolocation";
 import { useStopsInView } from "@/client/map/use-stops-in-view";
+import { getSavedTrip } from "@/client/storage/db";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
 import type { PlanResponse } from "@/domain/api/plan";
 import type { StopPin } from "@/domain/api/schemas";
@@ -17,7 +24,9 @@ import { haversineMeters } from "@/domain/geo/geometry";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import type { Bounds, LatLng } from "@/domain/geo/types";
+import type { Endpoint } from "@/domain/trip/endpoints";
 import { SAME_PLACE_M } from "@/domain/planner/labels";
+import { manilaDate, resolveReopen, samePoint, savedTripResponse, type SavedPlaceSource, type SavedTrip } from "@/domain/saved/saved";
 import { SAME_PLACE_TITLE, noCoverageCopy } from "@/domain/trip/present";
 import {
   endpointLabel,
@@ -29,7 +38,7 @@ import {
 } from "@/domain/trip/endpoints";
 import { useAppFrame, useApplyOnce, useHideTabBar } from "@/ui/app-shell/app-frame-context";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
-import { TripDetail } from "@/ui/trip/trip-detail";
+import { TripDetail, type TripEnds, type TripNote } from "@/ui/trip/trip-detail";
 import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
@@ -75,6 +84,26 @@ function highlightsFor(data: PlanResponse, optionId: string): HighlightStop[] {
       { id: alight.id, lat: alight.lat, lng: alight.lng, role: "alight" as const, label: lookups.stopName(alight.id, alight.name) },
     ];
   });
+}
+
+/** A trip end as saved or shared: a GPS fix becomes a fixed point ("Pinned location"). */
+function endFor(endpoint: Endpoint): TripEnds["start"] {
+  return { label: endpoint.source === "gps" ? "Pinned location" : endpoint.label, point: { ...endpoint.point } };
+}
+
+/**
+ * A saved trip being reopened. "waiting": the re-plan has not settled, the saved option shows as
+ * saved; "changed": the options show under the changed note; "done": nothing more to do.
+ * `dismissed`: the user went back from the saved option before the re-plan settled.
+ */
+type Restored = { card: SavedTrip; phase: "waiting" | "changed" | "done"; dismissed: boolean };
+
+/** The note on a saved option shown as saved: checking, or why the current data is not in. */
+function storedNote(card: SavedTrip, error: "offline" | "server" | "invalid" | null): TripNote {
+  const date = manilaDate(card.publishedAt) ?? `revision ${card.revisionLabel}`;
+  if (error === "offline") return { text: `Offline: shown as saved, with data from ${date}. It may have changed since.`, tone: "warning" };
+  if (error) return { text: `Could not check the current data: shown as saved, with data from ${date}.`, tone: "warning" };
+  return { text: `Saved trip, data from ${date}. Checking the current data…`, tone: "info" };
 }
 
 function toPoint(fix: LocationFix): LatLng {
@@ -169,6 +198,35 @@ export function HomeScreen() {
   const planData = plan.status === "ready" ? plan.data : null;
   const openOption = openedId && planData ? (planData.plan.options.find((o) => o.id === openedId) ?? null) : null;
   const openOptionId = openOption?.id ?? null;
+  // A saved trip being reopened (see Restored), and the note shown on the option it opened.
+  const [restored, setRestored] = useState<Restored | null>(null);
+  const [reopenNote, setReopenNote] = useState<TripNote | null>(null);
+  const restoredActive =
+    restored !== null &&
+    endpoints.start !== null &&
+    endpoints.destination !== null &&
+    samePoint(endpoints.start.point, restored.card.start.point) &&
+    samePoint(endpoints.destination.point, restored.card.destination.point);
+  if (restored !== null && !restoredActive) {
+    // An end changed (cleared, swapped, re-pinned): this is a new trip now.
+    setRestored(null);
+    setReopenNote(null);
+  }
+  if (restored && restoredActive && restored.phase === "waiting" && plan.status === "ready" && !plan.refreshing) {
+    const outcome = resolveReopen(restored.card, plan.data);
+    if (outcome.kind === "changed") {
+      setRestored({ ...restored, phase: "changed" });
+    } else {
+      setRestored({ ...restored, phase: "done" });
+      if (!restored.dismissed) {
+        setOpenedId(outcome.optionId);
+        setReopenNote(outcome.kind === "replanned" ? { text: "Re-planned on the current data", tone: "info" } : null);
+      }
+    }
+  }
+  // The saved option, shown as saved while the re-plan is pending or failed.
+  const storedShown = ready && restored !== null && restoredActive && restored.phase === "waiting" && !restored.dismissed;
+  const storedData = useMemo(() => (restored ? savedTripResponse(restored.card) : null), [restored]);
   // Where focus goes once the results render: the results heading, or an option card.
   const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);
   // No trip, no pending focus move: a stale request must not pull focus once a trip is set again.
@@ -178,9 +236,15 @@ export function HomeScreen() {
     setOpenedId(null);
     if (ready) setFocusTarget({ kind: "results" });
   }
+  const storedOptionId = storedShown && restored ? restored.card.option.id : null;
   const highlightStops = useMemo(
-    () => (planData && openOptionId ? highlightsFor(planData, openOptionId) : undefined),
-    [planData, openOptionId],
+    () =>
+      storedOptionId && storedData
+        ? highlightsFor(storedData, storedOptionId)
+        : planData && openOptionId
+          ? highlightsFor(planData, openOptionId)
+          : undefined,
+    [planData, openOptionId, storedData, storedOptionId],
   );
   const watching = geo.state === "watching";
   const assessment = geo.assessment;
@@ -195,8 +259,9 @@ export function HomeScreen() {
     source: "gps" | "map" | "search",
     label = "",
     announce: (text: string) => void = setAnnouncement,
+    place?: SavedPlaceSource,
   ): boolean => {
-    const endpoint = { point, source, label };
+    const endpoint: Endpoint = { point, source, label, ...(place ? { place } : {}) };
     const { accepted, next } = applyIfAccepted(endpoints, which, endpoint);
     if (!accepted) {
       if (next.error === "same_place") {
@@ -389,6 +454,13 @@ export function HomeScreen() {
   const handleCloseOption = () => {
     if (openedId) setFocusTarget({ kind: "option", id: openedId });
     setOpenedId(null);
+    setReopenNote(null);
+  };
+
+  // Back from the saved option before the re-plan settled: show the plan's state instead.
+  const handleCloseStored = () => {
+    if (restored) setRestored({ ...restored, dismissed: true });
+    setFocusTarget({ kind: "results" });
   };
 
   const handleRetry = () => {
@@ -497,7 +569,7 @@ export function HomeScreen() {
   // while a trip detail highlights its own stops. A tap opens the stop panel over the map.
   const router = useRouter();
   const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
-  const tripDetailOpen = ready && openOption !== null;
+  const tripDetailOpen = ready && (openOption !== null || storedShown);
   const stopsInView = useStopsInView(viewBounds, !tripDetailOpen);
   const markHomeNavigation = frame?.markHomeNavigation;
   const handleStopSelect = useCallback(
@@ -543,13 +615,58 @@ export function HomeScreen() {
     }
     const { which, endpoint } = request;
     const wasGps = gpsEndpointKey(endpoints) === which;
-    if (applyEndpoint(which, endpoint.point, "search", endpoint.label, announce)) {
+    if (applyEndpoint(which, endpoint.point, "search", endpoint.label, announce, endpoint.place)) {
       // Like a pinned point: a pending "use current location" no longer applies to this end.
       if (which === "start") setGpsIntent(false);
       if (wasGps) setGpsStartAccuracy(null);
       bumpRecenter(endpoint.point, endpoint.label);
     }
   });
+  // "Open trip" on a saved trip card: load it from the device, then restore both ends (state only,
+  // through the same reducer), so the plan below re-plans on the current data.
+  const [tripLoad, setTripLoad] = useState<{ id: string; n: number } | null>(null);
+  useApplyOnce(frame?.tripRequest ?? null, (request) => setTripLoad({ id: request.savedTripId, n: request.n }));
+  const restoreTrip = useEffectEvent((card: SavedTrip | null) => {
+    const announce = covered ? setDeferredAnnouncement : setAnnouncement;
+    if (!card) {
+      announce("That saved trip is no longer on this phone.");
+      return;
+    }
+    setFocusTarget(null);
+    setGpsIntent(false);
+    setRecenterOnFix(false);
+    setLastOutcome(null);
+    setGpsStartAccuracy(null);
+    setSamePlaceRefused(null);
+    dispatch({ type: "clearAll" });
+    dispatch({ type: "set", which: "start", endpoint: { point: card.start.point, source: "search", label: card.start.label } });
+    dispatch({ type: "set", which: "destination", endpoint: { point: card.destination.point, source: "search", label: card.destination.label } });
+    setFocused(null);
+    setOpenedId(null);
+    setReopenNote(null);
+    setRestored({ card, phase: "waiting", dismissed: false });
+    // Always re-plan on the current data, even when these ends are the trip already on screen.
+    plan.retry();
+    if (sheet.snap === 0) sheet.setSnap(1);
+    bumpRecenter(card.start.point, card.start.label);
+    announce(`Saved trip: ${card.start.label} to ${card.destination.label}.`);
+  });
+  useEffect(() => {
+    if (!tripLoad) return undefined;
+    let live = true;
+    getSavedTrip(tripLoad.id).then(
+      (card) => {
+        if (live) restoreTrip(card);
+      },
+      () => {
+        if (live) restoreTrip(null);
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [tripLoad]);
+
   if (!covered && deferredAnnouncement !== null) {
     setDeferredAnnouncement(null);
     setAnnouncement(deferredAnnouncement);
@@ -644,13 +761,32 @@ export function HomeScreen() {
           onSwap={handleSwap}
           onUseCurrentLocation={() => handleUseCurrentLocation()}
           onChooseOnMap={handleChooseOnMap}
-          detailOpen={ready && openOption !== null}
+          detailOpen={tripDetailOpen}
           after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
         >
-          {ready && openOption && planData ? (
-            <TripDetail data={planData} option={openOption} onBack={handleCloseOption} />
+          {storedShown && restored && storedData ? (
+            <TripDetail
+              data={storedData}
+              option={restored.card.option}
+              onBack={handleCloseStored}
+              ends={{ start: restored.card.start, destination: restored.card.destination }}
+              note={storedNote(restored.card, plan.status === "error" ? plan.kind : null)}
+            />
+          ) : ready && openOption && planData && endpoints.start && endpoints.destination ? (
+            <TripDetail
+              data={planData}
+              option={openOption}
+              onBack={handleCloseOption}
+              ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
+              note={reopenNote}
+            />
           ) : ready ? (
             <>
+              {restored && restoredActive && restored.phase === "changed" ? (
+                <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-changed-note">
+                  Route changed since you saved this
+                </p>
+              ) : null}
               {plan.status === "loading" ? <TripLoading /> : null}
               {plan.status === "error" ? <TripError kind={plan.kind} onRetry={handleRetry} onChangeEndpoints={handleChangeEndpoints} /> : null}
               {planData && planData.plan.coverage === "none" ? <TripNoCoverage data={planData} /> : null}

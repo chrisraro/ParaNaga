@@ -13,6 +13,7 @@
 
 import { useEffect, useState } from "react";
 import { networkHeadSchema, searchIndexSchema, type SearchIndex } from "@/domain/api/schemas";
+import { rememberHead } from "@/client/network/remember-head";
 
 export type SearchProblem = "offline" | "failed";
 
@@ -41,6 +42,7 @@ async function getJson(url: string, signal: AbortSignal): Promise<unknown> {
 async function loadIndex(signal: AbortSignal): Promise<{ index: SearchIndex; problem: SearchProblem | null }> {
   try {
     const head = networkHeadSchema.parse(await getJson("/api/v1/network/head", signal));
+    rememberHead(head);
     let index = byRevision.get(head.revisionId);
     if (!index) {
       index = searchIndexSchema.parse(await getJson(`/api/v1/network/search-index/${encodeURIComponent(head.revisionId)}`, signal));

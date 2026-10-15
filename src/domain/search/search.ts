@@ -13,6 +13,7 @@
 //
 // Honesty: only OpenStreetMap places, mapped-pin places and saved places have a location
 // (endpointForResult); everything else opens its own screen or notice and is never a trip end.
+import type { SavedPlaceSource } from "../saved/saved";
 import type { SearchIndex } from "../api/schemas";
 import type { LatLng } from "../geo/types";
 import type { OsmPlaceCategory } from "../places/osm-categories";
@@ -33,8 +34,8 @@ const FUZZY = 20;
 const SECONDARY = SUBSTRING;
 const FAR = 1_000_000;
 
-/** A place saved on this phone (Task 8 stores them; search only reads label and point). */
-export type SavedPlaceInput = { id: string; label: string; point: LatLng };
+/** A place saved on this phone (Task 8 stores them; search reads label, point and origin). */
+export type SavedPlaceInput = { id: string; label: string; point: LatLng; source?: SavedPlaceSource };
 
 export type SearchOptions = {
   /** "Include regional connections": destination categories and feeder leads. */
@@ -46,7 +47,7 @@ type Ranked = { score: number; offset: number };
 
 export type SearchResult = Ranked &
   (
-    | { kind: "saved"; id: string; title: string; point: LatLng }
+    | { kind: "saved"; id: string; title: string; point: LatLng; source: SavedPlaceSource }
     | { kind: "osm"; key: string; title: string; category: OsmPlaceCategory; point: LatLng }
     | { kind: "pin"; key: string; title: string; loops: string[]; point: LatLng }
     | {
@@ -277,7 +278,7 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
   };
 
   for (const s of options.saved ?? []) {
-    add({ kind: "saved", id: s.id, title: s.label, point: { ...s.point }, ...best([s.label]) });
+    add({ kind: "saved", id: s.id, title: s.label, point: { ...s.point }, source: s.source ?? "pinned", ...best([s.label]) });
   }
   for (const p of index.osmPlaces) {
     add({ kind: "osm", key: p.key, title: p.name, category: p.category, point: { lat: p.lat, lng: p.lng }, ...best([p.name, ...p.aliases]) });
@@ -338,13 +339,14 @@ export function countResults(groups: readonly SearchGroup[]): number {
  * mapped-pin places at their first on-route pin (labelled as a mapped pin), saved places at their
  * stored point. Everything else has no location on file: null.
  */
-export function endpointForResult(result: SearchResult): { point: LatLng; label: string } | null {
+export function endpointForResult(result: SearchResult): { point: LatLng; label: string; place: SavedPlaceSource } | null {
   switch (result.kind) {
     case "osm":
+      return { point: { ...result.point }, label: result.title, place: "osm" };
     case "saved":
-      return { point: { ...result.point }, label: result.title };
+      return { point: { ...result.point }, label: result.title, place: result.source };
     case "pin":
-      return { point: { ...result.point }, label: pinPlaceEndpointLabel(result.title) };
+      return { point: { ...result.point }, label: pinPlaceEndpointLabel(result.title), place: "pin" };
     default:
       return null;
   }

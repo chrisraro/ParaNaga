@@ -74,7 +74,7 @@ test.describe("phone", () => {
     await tab(page, "Saved").click();
     await expect(page).toHaveURL(/\/app\/saved$/);
     await expect(page.getByRole("heading", { level: 1, name: "Saved" })).toBeFocused();
-    await expect(page.getByTestId("saved-empty")).toHaveText("Nothing saved on this phone yet.");
+    await expect(page.getByTestId("saved-trips-empty")).toHaveText("No saved trips yet. Plan a trip, then tap Save on its details.");
     await expect(tab(page, "Saved")).toHaveAttribute("aria-current", "page");
 
     await tab(page, "More").click();

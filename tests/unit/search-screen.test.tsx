@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 // The Search screen (src/ui/search/search-screen.tsx) with the real captured index, a mocked
 // router and a stub app frame: what it fetches (never the query), the states, the live region,
-// and what picking a result does.
+// and what picking a result does. Saved places live in IndexedDB (fake-indexeddb here).
+import "fake-indexeddb/auto";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -17,6 +18,7 @@ vi.mock("next/navigation", () => ({
 const { AppFrameContext, setEntryPath } = await import("@/ui/app-shell/app-frame-context");
 const { SEARCH_DEBOUNCE_MS, SearchScreen } = await import("@/ui/search/search-screen");
 const { resetSearchIndexCache } = await import("@/client/search/use-search-index");
+const { clearAllStores, listSavedPlaces, putSavedPlace } = await import("@/client/storage/db");
 
 const HEAD = raw.revision;
 const frame = {
@@ -33,13 +35,16 @@ const frame = {
   requestEndpoint: vi.fn(),
   requestPick: vi.fn(),
   requestGps: vi.fn(),
+  tripRequest: null,
+  requestTrip: vi.fn(),
 };
 
 let urls: string[] = [];
 let failing = false;
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 
-beforeEach(() => {
+beforeEach(async () => {
+  await clearAllStores();
   urls = [];
   failing = false;
   resetSearchIndexCache();
@@ -160,7 +165,7 @@ describe("SearchScreen", () => {
     await type("SM City");
     fireEvent.click(screen.getAllByTestId("search-result-osm")[0]!);
     const sm = raw.osmPlaces.find((p) => p.name === "SM City Naga")!;
-    expect(frame.requestEndpoint).toHaveBeenCalledWith("destination", { point: { lat: sm.lat, lng: sm.lng }, label: "SM City Naga" });
+    expect(frame.requestEndpoint).toHaveBeenCalledWith("destination", { point: { lat: sm.lat, lng: sm.lng }, label: "SM City Naga", place: "osm" });
     expect(nav.back).toHaveBeenCalledTimes(1);
   });
 
@@ -285,16 +290,19 @@ describe("SearchScreen", () => {
     await waitFor(() => expect(screen.getByTestId("search-error").textContent).toBe("Search data couldn't load. Try again.Try again"));
   });
 
-  it("Close on a notice puts focus back on the row that opened it", async () => {
-    renderSearch("save");
+  it("a saved place is searched; its notice offers both trip ends and Close puts focus back on its row", async () => {
+    await putSavedPlace({ id: "p1", label: "Lola's house", point: { lat: 13.625, lng: 123.185 }, source: "pinned", savedAt: "2026-10-16T02:00:00.000Z" });
+    renderSearch();
     await ready();
-    await type("SM City");
-    const row = screen.getAllByTestId("search-result-osm")[0]!;
+    await type("Lola");
+    const row = await screen.findByTestId("search-result-saved");
+    expect(screen.getByTestId("search-group-saved").textContent).toContain("Lola's house");
     fireEvent.click(row);
-    expect(document.activeElement?.textContent).toBe("SM City Naga");
+    expect(document.activeElement?.textContent).toBe("Lola's house");
+    expect(screen.getByRole("button", { name: "Set as start" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByTestId("search-notice")).toBeNull();
-    expect(document.activeElement).toBe(screen.getAllByTestId("search-result-osm")[0]);
+    expect(document.activeElement).toBe(screen.getByTestId("search-result-saved"));
   });
 
   it("Show all moves focus to the first row it revealed", async () => {
@@ -306,13 +314,26 @@ describe("SearchScreen", () => {
     expect(document.activeElement).toBe(rows[5]);
   });
 
-  it("for=save: the page note says saving opens soon; the notice gives the place's facts once", async () => {
+  it("for=save: a place opens the name dialog prefilled; Save stores it on this phone and goes back", async () => {
     renderSearch("save");
     await ready();
-    expect(screen.getByTestId("search-save-note").textContent).toBe("Saving places on this phone opens soon.");
+    expect(screen.getByTestId("search-save-note").textContent).toBe("Pick a place to save on this phone. OpenStreetMap places and mapped pins can be saved.");
+    expect(screen.queryByText(/opens soon/)).toBeNull();
     await type("SM City");
     fireEvent.click(screen.getAllByTestId("search-result-osm")[0]!);
-    expect(screen.getByTestId("search-notice").textContent).not.toMatch(/opens soon/);
-    expect(screen.getAllByText(/Saving places on this phone opens soon\./)).toHaveLength(1);
+    const dialog = screen.getByTestId("search-save-dialog");
+    const input = dialog.querySelector("input")!;
+    expect(input.value).toBe("SM City Naga");
+    // Too long or empty names are refused with a message.
+    fireEvent.change(input, { target: { value: "   " } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(dialog.textContent).toContain("Enter a name of 1 to 40 characters.");
+    fireEvent.change(input, { target: { value: "  The   mall " } });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(nav.back).toHaveBeenCalledTimes(1));
+    const sm = raw.osmPlaces.find((p) => p.name === "SM City Naga")!;
+    const { records } = await listSavedPlaces();
+    expect(records).toMatchObject([{ label: "The mall", point: { lat: sm.lat, lng: sm.lng }, source: "osm" }]);
+    expect(frame.requestEndpoint).not.toHaveBeenCalled();
   });
 });

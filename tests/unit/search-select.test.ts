@@ -39,21 +39,22 @@ describe("actionFor", () => {
     }
   });
 
-  it("browsing (no purpose): places open their place detail; saving: a notice", () => {
+  it("browsing (no purpose): places open their place detail; for=save: the save dialog", () => {
     const sm = find("SM City", "osm");
     const key = sm.kind === "osm" ? sm.key : "";
     expect(key).toMatch(/^osm:(node|way|relation)\/\d+$/);
     expect(actionFor(sm, null)).toEqual({ type: "open", href: `/app/places/osm/${key.slice("osm:".length)}` });
     const plaza = find("Plaza Rizal", "pin");
     expect(actionFor(plaza, null)).toEqual({ type: "open", href: `/app/places/pin/${plaza.kind === "pin" ? plaza.key : ""}` });
-    expect(actionFor(sm, "save")).toEqual({ type: "notice" });
-    expect(actionFor(plaza, "save")).toEqual({ type: "notice" });
+    expect(actionFor(sm, "save")).toEqual({ type: "save", place: { label: "SM City Naga", point: sm.kind === "osm" ? sm.point : null, source: "osm" } });
+    // The place's own name (not the "(mapped pin)" endpoint label) is offered.
+    expect(actionFor(plaza, "save")).toMatchObject({ type: "save", place: { label: "Plaza Rizal", source: "pin" } });
   });
 
   it("a regional category without a terminal and a saved place (browsing) show a notice", () => {
     const regional = { kind: "regional", title: "Somewhere", category: "eastbound", terminalCode: null, terminalName: null, score: 100, offset: 0 } as const;
     expect(actionFor(regional, null)).toEqual({ type: "notice" });
-    const saved = { kind: "saved", id: "s1", title: "Home", point: { lat: 13.62, lng: 123.19 }, score: 100, offset: 0 } as const;
+    const saved = { kind: "saved", id: "s1", title: "Home", point: { lat: 13.62, lng: 123.19 }, source: "pinned", score: 100, offset: 0 } as const;
     expect(actionFor(saved, null)).toEqual({ type: "notice" });
     expect(actionFor(saved, "start")).toMatchObject({ type: "endpoint", which: "start" });
   });
@@ -97,14 +98,12 @@ describe("noticeFor", () => {
     }
   });
 
-  it("for=save: the notice gives the place's facts (the page note alone says saving opens soon)", () => {
-    const n = noticeFor(find("SM City", "osm"), "save");
-    expect(n.body).toBe("Mall. Location from OpenStreetMap — entrance not mapped.");
-    expect(n.body).not.toMatch(/opens soon/);
+  it("for=save: a saved place is already saved (a notice without trip actions)", () => {
+    const saved = { kind: "saved", id: "s1", title: "Home", point: { lat: 13.62, lng: 123.19 }, source: "pinned", score: 100, offset: 0 } as const;
+    expect(actionFor(saved, "save")).toEqual({ type: "notice" });
+    const n = noticeFor(saved, "save");
+    expect(n.body).toBe("Already saved on this phone.");
     expect(n.endpoint).toBeNull();
-    expect(n.osm).toBe(true);
-    expect(noticeFor(find("Plaza Rizal", "pin"), "save").body).toBe(
-      "Mapped stop candidate (Loop A, Loop B, Loop C, Loop D), not verified for navigation. Trips from mapped pins are unverified.",
-    );
+    expect(noticeFor(saved, null).body).toBe("Saved place on this phone.");
   });
 });

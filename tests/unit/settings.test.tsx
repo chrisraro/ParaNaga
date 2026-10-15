@@ -16,6 +16,18 @@ vi.mock("@/client/history/trip-history", () => ({
   },
 }));
 
+// The device database (IndexedDB): "Clear data on this device" empties every store.
+const device = vi.hoisted(() => ({ cleared: 0, failClear: false, metas: [] as unknown[] }));
+vi.mock("@/client/storage/db", () => ({
+  clearAllStores: async () => {
+    if (device.failClear) throw new Error("idb unavailable");
+    device.cleared += 1;
+  },
+  writeSnapshotMeta: async (meta: unknown) => {
+    device.metas.push(meta);
+  },
+}));
+
 const { clearDeviceData } = await import("@/client/device-data");
 const { readPrefs, updatePrefs, usePrefs } = await import("@/client/prefs/use-prefs");
 const { CLEAR_DATA_QUESTION, DELETE_HISTORY_QUESTION, MoreScreen, STATUS, revisionLine } = await import("@/ui/settings/more-screen");
@@ -27,6 +39,9 @@ beforeEach(() => {
   history.cleared = 0;
   history.failCheck = false;
   history.failClear = false;
+  device.cleared = 0;
+  device.failClear = false;
+  device.metas = [];
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(HEAD), { status: 200, headers: { "content-type": "application/json" } })));
 });
 
@@ -83,7 +98,7 @@ describe("clearDeviceData", () => {
     expect(localStorage.getItem("someone-else")).toBe("keep");
     expect(sessionStorage.getItem("someone-else")).toBe("keep");
     expect(readPrefs()).toEqual(DEFAULT_PREFS);
-    expect(history.cleared).toBe(1);
+    expect(device.cleared).toBe(1);
     expect(document.documentElement.getAttribute("data-theme")).toBe("system");
     expect(document.documentElement.hasAttribute("data-contrast")).toBe(false);
   });
@@ -92,7 +107,7 @@ describe("clearDeviceData", () => {
 describe("clearDeviceData when a store fails", () => {
   it("still resets the settings, then reports the failure to the caller", async () => {
     updatePrefs({ theme: "dark" });
-    history.failClear = true;
+    device.failClear = true;
     await expect(clearDeviceData()).rejects.toThrow();
     expect(localStorage.getItem(PREFS_STORAGE_KEY)).toBeNull();
     expect(readPrefs()).toEqual(DEFAULT_PREFS);
@@ -191,7 +206,7 @@ describe("More screen status and errors", () => {
   };
 
   it("says when clearing failed", async () => {
-    history.failClear = true;
+    device.failClear = true;
     render(<MoreScreen />);
     clearOnce();
     await waitFor(() => expect(status()).toBe(STATUS.clearFailed));

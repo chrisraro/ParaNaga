@@ -36,6 +36,8 @@ const frame = {
   requestEndpoint: vi.fn(),
   requestPick: vi.fn(),
   requestGps: vi.fn(),
+  tripRequest: null,
+  requestTrip: vi.fn(),
 };
 
 beforeEach(() => {

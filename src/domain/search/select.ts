@@ -1,10 +1,12 @@
-// What picking a search result does: set a trip end, open the result's own screen (place,
-// terminal, route detail), or show an honest notice where no screen exists (saving places
-// arrives with Task 8; a regional category without a terminal). Pure: the search screen turns
-// the action into navigation or an endpoint request.
+// What picking a search result does: set a trip end, save a place (for=save: an OpenStreetMap or
+// mapped-pin place opens the name dialog), open the result's own screen (place, terminal, route
+// detail), or show an honest notice where no screen exists (a saved place, a regional category
+// without a terminal). Pure: the search screen turns the action into navigation, an endpoint
+// request or the save dialog.
 import { OSM_CATEGORY_LABEL } from "../places/osm-categories";
 import { barangayHref, osmPlaceHref, pinPlaceHref, studyLabelHref, terminalHref } from "../places/place-detail";
 import type { LatLng } from "../geo/types";
+import type { SavedPlaceSource } from "../saved/saved";
 import { endpointForResult, regionalCategoryLabel, type SearchResult } from "./search";
 
 /** `?for=` of /app/search: which trip end a pick sets, or a place to save; null = browsing. */
@@ -16,7 +18,9 @@ export function parseSearchPurpose(raw: string | null | undefined): SearchPurpos
 
 export type SearchAction =
   /** Set that trip end through the endpoint channel, then return to the map. */
-  | { type: "endpoint"; which: "start" | "destination"; endpoint: { point: LatLng; label: string } }
+  | { type: "endpoint"; which: "start" | "destination"; endpoint: { point: LatLng; label: string; place: SavedPlaceSource } }
+  /** for=save: name and store this place on the phone. `label` is the place's own name. */
+  | { type: "save"; place: { label: string; point: LatLng; source: SavedPlaceSource } }
   /** The result's own screen (place, terminal or route detail). */
   | { type: "open"; href: string }
   /** An inline notice on the search screen (saving a place, a saved place, a category without a terminal). */
@@ -52,8 +56,10 @@ export function actionFor(result: SearchResult, purpose: SearchPurpose | null): 
   if (result.kind === "legacy" || result.kind === "feeder") return { type: "none" };
   const endpoint = endpointForResult(result);
   if (endpoint && (purpose === "start" || purpose === "destination")) return { type: "endpoint", which: purpose, endpoint };
-  // Saving a place is not built yet (Task 8): the notice gives the place's facts, the page note says so.
-  if (endpoint && purpose === "save") return { type: "notice" };
+  // A saved place is already saved: its notice says so.
+  if (endpoint && purpose === "save") {
+    return result.kind === "saved" ? { type: "notice" } : { type: "save", place: { label: result.title, point: endpoint.point, source: endpoint.place } };
+  }
   const href = detailHref(result);
   return href ? { type: "open", href } : { type: "notice" };
 }
@@ -62,7 +68,7 @@ export type SearchNotice = {
   title: string;
   body: string;
   /** Present for a saved place while browsing: "Set as start" / "Set as destination". */
-  endpoint: { point: LatLng; label: string } | null;
+  endpoint: { point: LatLng; label: string; place: SavedPlaceSource } | null;
   /** The place comes from OpenStreetMap: show the attribution with the notice. */
   osm: boolean;
 };
@@ -88,7 +94,7 @@ export function noticeFor(result: SearchResult, purpose: SearchPurpose | null): 
         osm: false,
       };
     case "saved":
-      return { title: result.title, body: "Saved place on this phone.", endpoint, osm: false };
+      return { title: result.title, body: purpose === "save" ? "Already saved on this phone." : "Saved place on this phone.", endpoint, osm: false };
     case "terminal":
       return {
         title: result.title,

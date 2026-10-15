@@ -7,8 +7,9 @@
 //
 // Picking: with for=start|destination an OpenStreetMap or mapped-pin place sets that trip end
 // through the endpoint channel and returns to the map; otherwise a result opens its own screen
-// (place, terminal, route detail). An honest inline notice remains only where no screen exists
-// (saving a place, Task 8; a saved place). "Use current location" and "Choose on map" hand the
+// (place, terminal, route detail). With for=save an OpenStreetMap or mapped-pin place opens the
+// name dialog and is saved on this phone (Task 8). An honest inline notice remains only where no
+// screen exists (a saved place). Saved places are searched too (read from this phone). "Use current location" and "Choose on map" hand the
 // request to the home screen, which owns the GPS watch and the crosshair. A `#q=` fragment
 // (src/domain/places/place-detail.ts searchHref) prefills the box; fragments never reach a server.
 
@@ -18,10 +19,13 @@ import "@/ui/kit/styles";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useSavedPlaces } from "@/client/saved/use-saved";
 import { useSearchIndex } from "@/client/search/use-search-index";
+import { putSavedPlace } from "@/client/storage/db";
+import type { SavedPlaceSource } from "@/domain/saved/saved";
 import { GROUP_LIMIT, countResults, resultSubtitle, searchIndex, type SearchGroup, type SearchGroupId, type SearchResult } from "@/domain/search/search";
 import { queryFromHash } from "@/domain/places/place-detail";
-import { actionFor, noticeFor, parseSearchPurpose, type SearchPurpose } from "@/domain/search/select";
+import { actionFor, noticeFor, parseSearchPurpose, type SearchAction, type SearchPurpose } from "@/domain/search/select";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
 import { useEscapeToClose } from "@/ui/app-shell/panel";
 import { StatusBadge } from "@/ui/kit/badge";
@@ -29,6 +33,7 @@ import { ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Switch } from "@/ui/kit/switch";
+import { SavePlaceDialog } from "@/ui/saved/save-place-dialog";
 
 export const SEARCH_DEBOUNCE_MS = 150;
 const FAILED_COPY = "Search data couldn't load. Try again.";
@@ -212,7 +217,7 @@ function NoticeCard({
 }: {
   result: SearchResult;
   purpose: SearchPurpose | null;
-  onSet: (which: "start" | "destination", endpoint: { point: { lat: number; lng: number }; label: string }) => void;
+  onSet: (which: "start" | "destination", endpoint: { point: { lat: number; lng: number }; label: string; place?: SavedPlaceSource }) => void;
   onClose: () => void;
 }) {
   const notice = noticeFor(result, purpose);
@@ -344,7 +349,14 @@ function SearchBody({
   const debounced = query.trim() === "" ? "" : typed;
 
   const index = indexState.status === "ready" ? indexState.index : null;
-  const groups = useMemo(() => (index ? searchIndex(index, debounced, { regional, saved: [] }) : []), [index, debounced, regional]);
+  const savedPlaces = useSavedPlaces();
+  const saved = useMemo(
+    () => (savedPlaces.status === "ready" ? savedPlaces.records.map((p) => ({ id: p.id, label: p.label, point: p.point, source: p.source })) : []),
+    [savedPlaces],
+  );
+  const groups = useMemo(() => (index ? searchIndex(index, debounced, { regional, saved }) : []), [index, debounced, regional, saved]);
+  // for=save: the place whose name is being chosen.
+  const [saving, setSaving] = useState<Extract<SearchAction, { type: "save" }>["place"] | null>(null);
   const total = countResults(groups);
   const hasQuery = debounced.trim() !== "";
   const openNotice = notice && notice.query === debounced ? notice.result : null;
@@ -359,14 +371,23 @@ function SearchBody({
     if ((purpose === "start" || purpose === "destination") && cameFromInsideApp()) router.back();
     else router.push("/app");
   };
-  const setEnd = (which: "start" | "destination", endpoint: { point: { lat: number; lng: number }; label: string }) => {
+  const setEnd = (which: "start" | "destination", endpoint: { point: { lat: number; lng: number }; label: string; place?: SavedPlaceSource }) => {
     frame?.requestEndpoint(which, endpoint);
     returnToMap();
   };
   const onSelect = (result: SearchResult) => {
     const action = actionFor(result, purpose);
     if (action.type === "endpoint") setEnd(action.which, action.endpoint);
+    else if (action.type === "save") setSaving(action.place);
     else if (action.type === "notice") setNotice({ query: debounced, result });
+  };
+  const savePlace = async (label: string) => {
+    if (!saving) return;
+    await putSavedPlace({ id: crypto.randomUUID(), label, point: { ...saving.point }, source: saving.source, savedAt: new Date().toISOString() });
+    setSaving(null);
+    // Back to Saved → Places, where "Add a place" opened this search.
+    if (cameFromInsideApp()) router.back();
+    else router.push("/app/saved?tab=places");
   };
 
   const liveText = !hasQuery || !index ? "" : total === 1 ? "1 result" : `${total} results`;
@@ -458,7 +479,9 @@ function SearchBody({
           </li>
         </ul>
         {regional ? <Note testId="search-regional-note">{REGIONAL_NOTE}</Note> : null}
-        {purpose === "save" ? <Note testId="search-save-note">Saving places on this phone opens soon.</Note> : null}
+        {purpose === "save" ? (
+          <Note testId="search-save-note">Pick a place to save on this phone. OpenStreetMap places and mapped pins can be saved.</Note>
+        ) : null}
 
         {indexState.status === "loading" ? <SkeletonRows /> : null}
         {indexState.status === "error" ? (
@@ -519,6 +542,14 @@ function SearchBody({
       <p className="sr-only" aria-live="polite" data-testid="search-announcer">
         {liveText}
       </p>
+      <SavePlaceDialog
+        open={saving !== null}
+        title="Save place"
+        initialLabel={saving?.label ?? ""}
+        onSave={savePlace}
+        onCancel={() => setSaving(null)}
+        testId="search-save-dialog"
+      />
     </div>
   );
 }

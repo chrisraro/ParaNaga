@@ -161,14 +161,15 @@ test("no match, regional connections, and a barangay opens its place detail", as
   await expect(page.getByTestId("place-detail").getByRole("heading", { level: 1, name: "Abella" })).toBeFocused();
 });
 
-test("for=save: a place opens a notice whose Close returns focus to its row", async ({ page }) => {
+test("for=save: a place opens the name dialog, whose Cancel returns focus to its row", async ({ page }) => {
   await page.goto("/app/search?for=save");
   await searchBox(page).fill("SM City");
   await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
-  await expect(page.getByTestId("search-notice")).toContainText("Location from OpenStreetMap — entrance not mapped");
-  await expect(page.getByRole("heading", { level: 2, name: "SM City Naga" })).toBeFocused();
-  await page.getByTestId("search-notice").getByRole("button", { name: "Close" }).click();
-  await expect(page.getByTestId("search-notice")).toHaveCount(0);
+  const dialog = page.getByTestId("search-save-dialog");
+  await expect(dialog.getByRole("heading", { name: "Save place" })).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("SM City Naga");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
   await expect(page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" })).toBeFocused();
 });
 
@@ -288,7 +289,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       await page.goto("/app/search?for=save");
       await searchBox(page).fill("SM City");
       await page.getByTestId("search-result-osm").first().click();
-      await expect(page.getByTestId("search-notice")).toBeVisible();
+      await expect(page.getByTestId("search-save-dialog")).toBeVisible();
       await expectAxeClean(page);
     });
   });

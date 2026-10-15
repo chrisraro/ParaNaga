@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 // Place detail (src/ui/places/place-detail.tsx) and Terminal detail
 // (src/ui/terminals/terminal-detail.tsx) with the real captured data, a mocked router, a stub
-// app frame and a stub map: what each kind of place shows, and what its action does.
+// app frame and a stub map: what each kind of place shows, and what its action does. Saved
+// places live in IndexedDB (fake-indexeddb here).
+import "fake-indexeddb/auto";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { searchIndexSchema, terminalDetailSchema, type SearchIndex } from "@/domain/api/schemas";
@@ -53,6 +55,8 @@ const frame = {
   requestEndpoint: vi.fn(),
   requestPick: vi.fn(),
   requestGps: vi.fn(),
+  tripRequest: null,
+  requestTrip: vi.fn(),
 };
 
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
@@ -111,13 +115,29 @@ describe("OpenStreetMap place", () => {
     expect(osmLink.getAttribute("rel")).toBe("noopener noreferrer");
     expect(osmLink.getAttribute("target")).toBe("_blank");
     expect(screen.getByTestId("place-photo").textContent).toBe("Photo pendingPhotos open with community corrections.");
-    // Saving opens with Task 8: a note, no button.
-    expect(screen.getByTestId("place-save-note").textContent).toBe("Saving places on this phone opens soon.");
-    expect(screen.queryByRole("button", { name: /save/i })).toBeNull();
+    // Save place (Task 8): a real button, not pressed while the place is not saved.
+    expect(screen.getByTestId("place-save").textContent).toBe("Save place");
     // Map centred on the place with one named marker.
     const map = screen.getByTestId("naga-map-stub");
     expect(map.getAttribute("data-marker")).toBe("SM City Naga");
     expect(Number(map.getAttribute("data-lat"))).toBe(SM.lat);
+  });
+
+  it("Save place names the place (prefilled), stores it on this phone and then reads Saved", async () => {
+    const { clearAllStores, listSavedPlaces } = await import("@/client/storage/db");
+    await clearAllStores();
+    renderPlace(smRef());
+    const save = await screen.findByRole("button", { name: "Save place", pressed: false });
+    fireEvent.click(save);
+    const input = screen.getByTestId("place-save-dialog").querySelector("input")!;
+    expect(input.value).toBe("SM City Naga");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    await screen.findByRole("button", { name: "Saved", pressed: true });
+    expect((await listSavedPlaces()).records).toMatchObject([{ label: "SM City Naga", point: { lat: SM.lat, lng: SM.lng }, source: "osm" }]);
+    // Pressing Saved removes it again.
+    fireEvent.click(screen.getByRole("button", { name: "Saved" }));
+    await screen.findByRole("button", { name: "Save place", pressed: false });
+    expect((await listSavedPlaces()).records).toEqual([]);
   });
 
   it("lists nearest mapped stops within 600 m as links to stop detail", () => {
