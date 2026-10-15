@@ -4,6 +4,7 @@
 // the focused row, and whatever cards the screen passes in. Snaps follow the map design brief
 // §1 (visible 214 / 444 / full); drag with the grabber, or tap / arrow-key it.
 
+import Link from "next/link";
 import { useCallback, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
 
@@ -179,6 +180,14 @@ function LocateIcon() {
     </svg>
   );
 }
+function SearchIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2.2" />
+      <path d="M20 20l-3.5-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
 function PinIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -339,6 +348,12 @@ export function EndpointSheet({
               </span>
               Choose on map
             </button>
+            <Link href={`/app/search?for=${focused}`} className="pn-option" data-testid="endpoint-search">
+              <span className="pn-option__icon">
+                <SearchIcon />
+              </span>
+              Search places and stops
+            </Link>
           </div>
         ) : null}
         {detailOpen ? null : after}

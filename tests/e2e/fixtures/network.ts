@@ -18,6 +18,7 @@ import routeR8B from "./network/route-r8-b.json" with { type: "json" };
 import routeR8C from "./network/route-r8-c.json" with { type: "json" };
 import routeR8D from "./network/route-r8-d.json" with { type: "json" };
 import routesList from "./network/routes.json" with { type: "json" };
+import searchIndex from "./network/search-index.json" with { type: "json" };
 import stopA1 from "./network/stop-a1.json" with { type: "json" };
 import stopB18 from "./network/stop-b18.json" with { type: "json" };
 import stopCFirst from "./network/stop-c-first.json" with { type: "json" };
@@ -39,16 +40,19 @@ const json = (route: Route, body: unknown, status = 200) =>
 const notFound = (route: Route) => json(route, { error: { code: "not_found", message: "Not found.", requestId: "e2e" } }, 404);
 
 export const ROUTES_LIST = routesList;
+/** The captured search index of the published revision (233 OSM places, 47 mapped-pin places …). */
+export const SEARCH_INDEX = searchIndex;
 
-export type NetworkCalls = { bboxes: string[]; stops: string[]; routes: string[]; routeLists: number };
+export type NetworkCalls = { bboxes: string[]; stops: string[]; routes: string[]; routeLists: number; searchIndexes: string[] };
 
 /**
  * Answers /api/v1/stops?bbox= (the real 128 pins filtered to the box), /api/v1/stops/:id for the
  * captured stops, /api/v1/routes (the captured list of 11), /api/v1/routes/:code for the
- * captured routes and /api/v1/network/head (the captured revision); anything else is a 404.
+ * captured routes, /api/v1/network/head (the captured revision) and
+ * /api/v1/network/search-index/:revisionId (that revision only); anything else is a 404.
  */
 export async function routeNetwork(page: Page): Promise<NetworkCalls> {
-  const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0 };
+  const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [] };
   await page.route(/\/api\/v1\/stops(\?|\/|$)/, async (route) => {
     const url = new URL(route.request().url());
     const id = /\/api\/v1\/stops\/([^/?]+)/.exec(url.pathname)?.[1];
@@ -65,6 +69,11 @@ export async function routeNetwork(page: Page): Promise<NetworkCalls> {
   });
   // The published revision (Settings → About): the revision every captured response names.
   await page.route(/\/api\/v1\/network\/head(\?.*)?$/, (route) => json(route, stopsAll.revision));
+  await page.route(/\/api\/v1\/network\/search-index\/[^/?]+$/, (route) => {
+    const id = decodeURIComponent(/search-index\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);
+    calls.searchIndexes.push(id);
+    return id === searchIndex.revision.revisionId ? json(route, searchIndex) : notFound(route);
+  });
   await page.route(/\/api\/v1\/routes(\?.*)?$/, async (route) => {
     calls.routeLists += 1;
     return json(route, routesList);

@@ -17,5 +17,19 @@ export const OSM_PLACE_CATEGORIES = [
 
 export type OsmPlaceCategory = (typeof OSM_PLACE_CATEGORIES)[number];
 
+/** Display name of each category ("Mall · from OpenStreetMap"). */
+export const OSM_CATEGORY_LABEL: Record<OsmPlaceCategory, string> = {
+  mall: "Mall",
+  market: "Market",
+  school: "School",
+  college_university: "College or university",
+  hospital_clinic: "Hospital or clinic",
+  place_of_worship: "Place of worship",
+  government: "Government office",
+  bus_terminal: "Bus station",
+  park: "Park",
+  square: "Plaza",
+};
+
 export const OSM_ELEMENT_TYPES = ["node", "way", "relation"] as const;
 export type OsmElementType = (typeof OSM_ELEMENT_TYPES)[number];

@@ -1,0 +1,203 @@
+/* Search (artboard Search). A full-screen panel (.pn-detail: tokens, background, z-index) with
+   the artboard's header: a 44 px rounded field with the search glyph, the clear button and a
+   "Cancel" text button. Cells, groups, badges and notes come from the kit (src/ui/kit/styles.ts). */
+
+.pn-search__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 10px;
+  background: var(--pn-bg);
+}
+.pn-search__field {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 8px 0 12px;
+  border-radius: 12px;
+  background: var(--pn-fill);
+  color: var(--pn-label2);
+}
+.pn-search__field:focus-within {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
+.pn-search__field > svg {
+  flex: none;
+}
+.pn-search__input {
+  flex-grow: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pn-label);
+  font: inherit;
+  font-size: 17px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.pn-search__input::placeholder {
+  color: var(--pn-label2);
+  opacity: 1;
+}
+.pn-search__input::-webkit-search-cancel-button,
+.pn-search__input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+/* 28 px glyph inside a 44 px target. */
+.pn-search__clear {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.pn-search__clear svg {
+  box-sizing: content-box;
+  padding: 9px;
+  border-radius: 50%;
+  background: var(--pn-caption);
+  color: var(--pn-bg);
+}
+.pn-search__cancel {
+  flex: none;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pn-accent);
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.pn-search__main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+}
+
+/* Options card: "Use current location", "Choose on map", the regional switch. */
+.pn-search__option {
+  gap: 12px;
+}
+.pn-search__option-icon {
+  display: flex;
+  flex: none;
+  color: var(--pn-accent);
+}
+
+.pn-search__cell {
+  min-height: 64px;
+}
+.pn-search__cell .pn-cell__text {
+  gap: 3px;
+}
+.pn-search__cell .pn-badge {
+  margin-top: 2px;
+}
+.pn-search__kind {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--pn-fill);
+  color: var(--pn-label2);
+}
+.pn-search__kind--coral {
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-coral-ink, var(--pn-coral-soft-text));
+}
+.pn-search__kind--teal {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-search__kind--gold {
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+}
+.pn-search__more {
+  margin-left: 4px;
+}
+
+.pn-search__empty {
+  margin: 0 4px;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.pn-search__error {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+}
+.pn-search__error p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.pn-search__notice {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-search__notice-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+.pn-search__notice-title:focus {
+  outline: none;
+}
+.pn-search__notice-actions {
+  display: flex;
+  gap: 10px;
+}
+.pn-search__notice-actions .pn-btn {
+  flex: 1 1 0;
+  min-height: 48px;
+}
+
+.pn-search__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+}
+.pn-search__skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pn-search__skeleton-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}

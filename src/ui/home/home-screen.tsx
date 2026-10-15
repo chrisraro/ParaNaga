@@ -7,7 +7,7 @@
 import "./home-screen.css";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, useState } from "react";
 import { useGeolocation } from "@/client/geo/use-geolocation";
 import { useStopsInView } from "@/client/map/use-stops-in-view";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
@@ -518,8 +518,23 @@ export function HomeScreen() {
   // applies while that screen still covers the map (home inert, its live region silent), so the
   // announcement waits until the map is showing again.
   const [deferredAnnouncement, setDeferredAnnouncement] = useState<string | null>(null);
+  // "Use current location" tapped on the search screen: the GPS watch lives here, so the request
+  // is recorded during render (state only) and the location request starts in an effect.
+  const [gpsRequest, setGpsRequest] = useState(0);
+  const handledGpsRequest = useRef(0);
+  const startGpsRequest = useEffectEvent(() => handleUseCurrentLocation());
+  useEffect(() => {
+    if (gpsRequest === handledGpsRequest.current) return;
+    handledGpsRequest.current = gpsRequest;
+    startGpsRequest();
+  }, [gpsRequest]);
   useApplyOnce(frame?.endpointRequest ?? null, (request) => {
     const announce = covered ? setDeferredAnnouncement : setAnnouncement;
+    if (request.kind === "gps") {
+      setFocused("start");
+      setGpsRequest((n) => n + 1);
+      return;
+    }
     if (request.kind === "pick") {
       handleChooseOnMap(request.which, announce);
       return;

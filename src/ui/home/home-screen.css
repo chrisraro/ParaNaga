@@ -137,7 +137,8 @@
   color: inherit;
   -webkit-tap-highlight-color: transparent;
 }
-.pn-home button:focus-visible {
+.pn-home button:focus-visible,
+.pn-home a.pn-option:focus-visible {
   outline: 3px solid #2bb5ae;
   outline-offset: 2px;
 }
@@ -371,6 +372,10 @@
   font-size: 17px;
   text-align: left;
   cursor: pointer;
+}
+a.pn-option {
+  color: inherit;
+  text-decoration: none;
 }
 .pn-option:last-child {
   border-bottom: 0;

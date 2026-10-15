@@ -10,7 +10,7 @@
 // to the home heading when the Map tab closed it.
 //
 // Other screens talk to the home screen through the context: "Show on map" (mapFocus) and the
-// endpoint channel (requestEndpoint / requestPick), each a numbered request applied once.
+// endpoint channel (requestEndpoint / requestPick / requestGps), each a numbered request applied once.
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { LatLng } from "@/domain/geo/types";
@@ -72,6 +72,9 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const requestPick = useCallback((which: EndpointWhich) => {
     setEndpointRequest((prev) => ({ kind: "pick", which, n: (prev?.n ?? 0) + 1 }));
   }, []);
+  const requestGps = useCallback(() => {
+    setEndpointRequest((prev) => ({ kind: "gps", n: (prev?.n ?? 0) + 1 }));
+  }, []);
 
   // Panel closed, the map is showing again: decide from the destination, not from where the
   // browser left focus (iOS Safari does not focus a tapped link). Focus the home screen already
@@ -115,8 +118,9 @@ export function AppFrame({ children }: { children: ReactNode }) {
       endpointRequest,
       requestEndpoint,
       requestPick,
+      requestGps,
     }),
-    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick],
+    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick, requestGps],
   );
 
   return (

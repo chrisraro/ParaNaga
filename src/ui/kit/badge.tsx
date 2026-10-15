@@ -14,7 +14,8 @@ export type BadgeVariant =
   | "unverified-route"
   | "not-surveyed"
   | "historical"
-  | "osm";
+  | "osm"
+  | "provisional-stops";
 
 const ICON_PROPS = {
   width: 12,
@@ -93,6 +94,17 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
       <svg {...ICON_PROPS} strokeWidth={2.6}>
         <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
         <path d="M3 3v5h5M12 8v4l3 2" />
+      </svg>
+    ),
+  },
+  // Routes whose stop order is provisional (Loops A and B, on unverified mapped pins).
+  "provisional-stops": {
+    text: "Provisional stops",
+    className: "pn-badge pn-badge--candidate",
+    icon: (
+      <svg {...ICON_PROPS} strokeWidth={3}>
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
       </svg>
     ),
   },

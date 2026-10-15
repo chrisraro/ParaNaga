@@ -4,6 +4,8 @@
 // Shows the source pin verbatim (layer, code, coordinates, raw description), the provisional
 // routes whose pin order lists it, and honest unknowns where the artboard has survey data.
 
+import "@/ui/kit/styles";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
@@ -16,7 +18,7 @@ import {
   sourceCoordinatesText,
   stopStatusBadge,
 } from "@/domain/network/present";
-import { directionText, stopDisplayName } from "@/domain/trip/present";
+import { directionText, stopDisplayName, stopLabel } from "@/domain/trip/present";
 import { cameFromInsideApp, useAppFrame } from "@/ui/app-shell/app-frame-context";
 import {
   CandidateRing,
@@ -58,6 +60,44 @@ function ShowOnMap({ lat, lng }: { lat: number; lng: number }) {
     >
       <MapIcon />
     </button>
+  );
+}
+
+/** Back to the map: history when the map opened this panel, else open it (no extra entry otherwise). */
+function useReturnToMap() {
+  const frame = useAppFrame();
+  const router = useRouter();
+  return () => {
+    if (cameFromInsideApp() && frame?.isHomeNavigation(window.location.pathname)) router.back();
+    else router.push("/app");
+  };
+}
+
+/**
+ * "Set as start" / "Set as destination": the pin's coordinate becomes that trip end through the
+ * endpoint channel (same rules as the sheet), then the map shows again.
+ */
+function UseAsEndpoint({ stop }: { stop: StopDetail["stop"] }) {
+  const frame = useAppFrame();
+  const returnToMap = useReturnToMap();
+  if (!frame) return null;
+  const label = stopLabel(stop.name, stop.source.code);
+  const set = (which: "start" | "destination") => {
+    frame.requestEndpoint(which, { point: { lat: stop.lat, lng: stop.lng }, label });
+    returnToMap();
+  };
+  return (
+    <section className="pn-section" aria-label="Use this pin for a trip" data-testid="stop-use-as">
+      <div className="pn-detail__row" style={{ gap: 24 }}>
+        <button type="button" className="pn-text-btn" onClick={() => set("start")}>
+          Set as start
+        </button>
+        <button type="button" className="pn-text-btn" onClick={() => set("destination")}>
+          Set as destination
+        </button>
+      </div>
+      <p className="pn-note-plain">Trips from mapped pins are unverified.</p>
+    </section>
   );
 }
 
@@ -104,6 +144,8 @@ export function StopDetailView({ data }: { data: StopDetail }) {
             <strong>Not verified for navigation.</strong> {snapshotSourceText(latestRetrievedOn(sourceRecords))}
           </p>
         </div>
+
+        <UseAsEndpoint stop={stop} />
 
         {sourceRecords.map((record, i) => (
           <section key={`${record.layer}:${record.code}:${i}`} className="pn-card" aria-label={sourceRecords.length > 1 ? `Source record ${i + 1}` : "Source record"} data-testid="source-record">

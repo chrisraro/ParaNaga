@@ -15,12 +15,14 @@ export type RequestedEndpoint = { point: LatLng; label: string };
 
 /**
  * A request from another screen to the home trip sheet, applied once by the home screen (`n`
- * makes each request new): set the start or destination to a place, or open "Choose on map".
- * The caller then navigates to /app.
+ * makes each request new): set the start or destination to a place, open "Choose on map", or
+ * "Use current location" for the start (the user tapped it on that screen; the home screen owns
+ * the GPS watch). The caller then navigates to /app.
  */
 export type EndpointRequest =
   | { kind: "set"; which: EndpointWhich; endpoint: RequestedEndpoint; n: number }
-  | { kind: "pick"; which: EndpointWhich; n: number };
+  | { kind: "pick"; which: EndpointWhich; n: number }
+  | { kind: "gps"; n: number };
 
 /** A detail panel (stop, route, place, terminal: Back button, no tab bar) or a tab page. */
 export type PanelKind = "detail" | "page";
@@ -48,6 +50,8 @@ export type AppFrameValue = {
   endpointRequest: EndpointRequest | null;
   requestEndpoint: (which: EndpointWhich, endpoint: RequestedEndpoint) => void;
   requestPick: (which: EndpointWhich) => void;
+  /** "Use current location" for the start, tapped on another screen (search). */
+  requestGps: () => void;
 };
 
 export const AppFrameContext = createContext<AppFrameValue | null>(null);

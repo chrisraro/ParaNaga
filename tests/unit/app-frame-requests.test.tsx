@@ -18,10 +18,13 @@ function HomeProbe() {
   const [, setTick] = useState(0);
   // Like HomeScreen's recentre signal: an updater that must move by exactly 1 per request.
   const [signal, setSignal] = useState(0);
+  // Like HomeScreen's pending "Use current location": state only, the GPS starts in an effect.
+  const [gpsRequests, setGpsRequests] = useState(0);
   useApplyOnce(frame?.endpointRequest ?? null, (request) => {
     applied(request);
     setSignal((n) => n + 1);
-    if (request.kind === "pick") dispatch({ type: "pick", which: request.which });
+    if (request.kind === "gps") setGpsRequests((n) => n + 1);
+    else if (request.kind === "pick") dispatch({ type: "pick", which: request.which });
     else dispatch({ type: "set", which: request.which, endpoint: { point: request.endpoint.point, source: "search", label: request.endpoint.label } });
   });
   return (
@@ -31,6 +34,7 @@ function HomeProbe() {
       <p data-testid="picking">{endpoints.picking ?? "none"}</p>
       <p data-testid="error">{endpoints.error ?? "none"}</p>
       <p data-testid="signal">{signal}</p>
+      <p data-testid="gps">{gpsRequests}</p>
       <button type="button" onClick={() => setTick((n) => n + 1)}>
         Re-render home
       </button>
@@ -57,6 +61,9 @@ function Requester() {
       </button>
       <button type="button" onClick={() => frame.requestPick("start")}>
         Pick start
+      </button>
+      <button type="button" onClick={() => frame.requestGps()}>
+        Use my location
       </button>
     </>
   );
@@ -152,5 +159,20 @@ describe("AppFrame endpoint channel", () => {
     expect(screen.getByTestId("signal").textContent).toBe("1");
     expect(new Set(applied.mock.calls.map(([r]) => r.n))).toEqual(new Set([1]));
     expect(applied.mock.calls.length).toBe(1);
+  });
+
+  it("a GPS request (Use current location on the search screen) reaches the home screen once", () => {
+    render(
+      <StrictMode>
+        <AppFrame>
+          <Requester />
+        </AppFrame>
+      </StrictMode>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Use my location" }));
+    expect(screen.getByTestId("gps").textContent).toBe("1");
+    expect(applied.mock.calls.map(([r]) => r.kind)).toEqual(["gps"]);
+    fireEvent.click(screen.getByRole("button", { name: "Re-render home" }));
+    expect(screen.getByTestId("gps").textContent).toBe("1");
   });
 });
