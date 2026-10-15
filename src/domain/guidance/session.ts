@@ -44,6 +44,11 @@ export type GuidanceSession = {
   atStop: boolean;
   /** Present exactly while an active session is on a ride step. */
   ride: RideState | null;
+  /**
+   * The ride just left by "I got off" / "I missed my stop", kept so `back` restores it exactly
+   * (a mis-tap one stop early must not restart the count); cleared on the next boarding.
+   */
+  lastRide: RideState | null;
 };
 
 export type GuidanceEvent =
@@ -62,7 +67,7 @@ const NEW_RIDE: RideState = { ...NEW_RIDE_MEMORY, gpsSeen: false, stopIsNext: fa
 
 /** The first step is always walk_to_board or walk_to_destination (guidanceSteps), never a ride. */
 export function startSession(trip: GuidanceTrip, now: number): GuidanceSession {
-  return { v: GUIDANCE_SESSION_FORMAT, trip, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null };
+  return { v: GUIDANCE_SESSION_FORMAT, trip, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null };
 }
 
 export function sessionSteps(session: GuidanceSession): GuidanceStep[] {
@@ -84,13 +89,14 @@ function nextStep(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSess
 /**
  * Undo the last confirmation: arrived → back on the last walk; missed stop → back on the ride;
  * at the stop → not yet; Para said → not yet; "my stop is next" → not yet; boarded → back at the
- * boarding stop; got off → back on the ride. A ride re-entered this way starts a fresh stop count
- * (no GPS claim survives the undo). Nothing to undo on the first step before any tap, or once ended.
+ * boarding stop; got off → back on the ride. A ride re-entered this way gets its memory back
+ * exactly as it was left (`lastRide`). Nothing to undo on the first step before any tap, or once
+ * ended.
  */
 function back(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSession {
   if (session.status === "ended") return session;
   if (session.status === "arrived") return { ...session, status: "active" };
-  if (session.status === "missed_stop") return { ...session, status: "active", ride: NEW_RIDE };
+  if (session.status === "missed_stop") return { ...session, status: "active", ride: session.lastRide ?? NEW_RIDE, lastRide: null };
   const step = steps[session.stepIndex]!;
   if (session.atStop) return { ...session, atStop: false };
   if (step.kind === "ride" && session.ride) {
@@ -99,11 +105,11 @@ function back(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSession 
     return { ...session, stepIndex: session.stepIndex - 1, atStop: true, ride: null };
   }
   if (session.stepIndex === 0) return session;
-  return { ...session, stepIndex: session.stepIndex - 1, atStop: false, ride: NEW_RIDE };
+  return { ...session, stepIndex: session.stepIndex - 1, atStop: false, ride: session.lastRide ?? NEW_RIDE, lastRide: null };
 }
 
 export function reduceSession(session: GuidanceSession, event: GuidanceEvent): GuidanceSession {
-  if (event.type === "end") return session.status === "ended" ? session : { ...session, status: "ended", ride: null };
+  if (event.type === "end") return session.status === "ended" ? session : { ...session, status: "ended", ride: null, lastRide: null };
   if (event.type === "back") return back(session, sessionSteps(session));
   if (session.status !== "active") return session;
 
@@ -116,22 +122,30 @@ export function reduceSession(session: GuidanceSession, event: GuidanceEvent): G
     case "atStop":
       return boarding && !session.atStop ? { ...session, atStop: true } : session;
     case "boarded":
-      return boarding ? nextStep(session, steps) : session;
+      return boarding ? { ...nextStep(session, steps), lastRide: null } : session;
     case "nextStopIsMine":
       return ride && !paraSuggested(ride) && !ride.paraAcknowledged ? { ...session, ride: { ...ride, stopIsNext: true } } : session;
     case "paraAcknowledged":
       return ride && paraSuggested(ride) && !ride.paraAcknowledged ? { ...session, ride: { ...ride, paraAcknowledged: true } } : session;
     case "gotOff":
-      return ride ? nextStep(session, steps) : session;
+      return ride ? { ...nextStep(session, steps), lastRide: ride } : session;
     case "missedStop":
-      return ride ? { ...session, status: "missed_stop", ride: null } : session;
+      return ride ? { ...session, status: "missed_stop", ride: null, lastRide: ride } : session;
     case "arrived":
       return step.kind === "walk_to_destination" ? { ...session, status: "arrived" } : session;
     case "fix": {
       if (!ride || step.kind !== "ride" || !usableFix(event.fix, event.now)) return session;
       const p = rideProgress(step.stops, ride, event.fix, event.now);
-      if (p.passedIndex === ride.passedIndex && p.alightNear === ride.alightNear && p.nearStopBefore === ride.nearStopBefore && ride.gpsSeen) return session;
-      return { ...session, ride: { ...ride, passedIndex: p.passedIndex, alightNear: p.alightNear, nearStopBefore: p.nearStopBefore, gpsSeen: true } };
+      const memory: RideMemory = {
+        passedIndex: p.passedIndex,
+        countLost: p.countLost,
+        pendingIndex: p.pendingIndex,
+        alightNear: p.alightNear,
+        nearStopBefore: p.nearStopBefore,
+      };
+      const same = (Object.keys(memory) as (keyof RideMemory)[]).every((k) => memory[k] === ride[k]);
+      if (same && ride.gpsSeen) return session;
+      return { ...session, ride: { ...ride, ...memory, gpsSeen: true } };
     }
   }
 }
@@ -145,6 +159,17 @@ const tripSchema = z.strictObject({
   destinationLabel: z.string().max(200).nullable(),
 });
 
+const rideSchema = z.strictObject({
+  passedIndex: z.number().int().nonnegative(),
+  countLost: z.boolean(),
+  pendingIndex: z.number().int().nonnegative().nullable(),
+  alightNear: z.boolean(),
+  nearStopBefore: z.boolean(),
+  gpsSeen: z.boolean(),
+  stopIsNext: z.boolean(),
+  paraAcknowledged: z.boolean(),
+});
+
 const sessionSchema = z.strictObject({
   v: z.literal(GUIDANCE_SESSION_FORMAT),
   trip: tripSchema,
@@ -152,16 +177,8 @@ const sessionSchema = z.strictObject({
   status: z.enum(["active", "missed_stop", "arrived", "ended"]),
   stepIndex: z.number().int().nonnegative(),
   atStop: z.boolean(),
-  ride: z
-    .strictObject({
-      passedIndex: z.number().int().nonnegative(),
-      alightNear: z.boolean(),
-      nearStopBefore: z.boolean(),
-      gpsSeen: z.boolean(),
-      stopIsNext: z.boolean(),
-      paraAcknowledged: z.boolean(),
-    })
-    .nullable(),
+  ride: rideSchema.nullable(),
+  lastRide: rideSchema.nullable(),
 });
 
 /** The session's own invariants (a hand-edited or stale record must not crash the screens). */
@@ -176,11 +193,20 @@ function consistent(s: GuidanceSession): boolean {
   if (!step) return false;
   const onRide = step.kind === "ride" && s.status === "active";
   if (onRide !== (s.ride !== null)) return false;
-  if (s.ride && step.kind === "ride" && s.ride.passedIndex > step.stops.length - 1) return false;
+  const fits = (ride: RideState, rideStep: GuidanceStep | undefined) =>
+    rideStep?.kind === "ride" &&
+    ride.passedIndex <= rideStep.stops.length - 1 &&
+    (ride.pendingIndex === null || ride.pendingIndex <= rideStep.stops.length - 1) &&
+    (!ride.paraAcknowledged || paraSuggested(ride));
+  if (s.ride && !fits(s.ride, step)) return false;
+  if (s.lastRide) {
+    // Kept only off a ride: on the step after it, or on the ride itself after "I missed my stop".
+    if (s.status === "ended" || onRide) return false;
+    if (!fits(s.lastRide, s.status === "missed_stop" ? step : steps[s.stepIndex - 1])) return false;
+  }
   if (s.atStop && step.kind !== "walk_to_board" && step.kind !== "transfer") return false;
   if (s.status === "arrived" && step.kind !== "walk_to_destination") return false;
   if (s.status === "missed_stop" && step.kind !== "ride") return false;
-  if (s.ride && s.ride.paraAcknowledged && !paraSuggested(s.ride)) return false;
   return true;
 }
 

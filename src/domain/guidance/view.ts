@@ -237,7 +237,8 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
 
 function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number): RideView {
   const alightIndex = step.stops.length - 1;
-  const gps = ride.gpsSeen;
+  // A GPS-backed count only while GPS still supports it (countLost: the jeepney is past the window).
+  const gps = ride.gpsSeen && !ride.countLost;
   const suggested = paraSuggested(ride);
   const stopsRemaining = Math.max(0, alightIndex - ride.passedIndex);
   const alight = step.alight.label;
@@ -278,7 +279,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
     countNote: GUIDANCE_COPY.stopsByPinOrder,
     stops: step.stops.map((s: StopRef, i) => ({
       label: s.label,
-      state: i === 0 ? "boarded" : i === alightIndex ? "alight" : i <= ride.passedIndex ? "passed" : "ahead",
+      state: i === 0 ? "boarded" : i === alightIndex ? "alight" : gps && i <= ride.passedIndex ? "passed" : "ahead",
     })),
     para,
     reportDriver: true,

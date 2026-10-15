@@ -152,6 +152,30 @@ describe("Ride", () => {
     expect(v.screen === "ride" && v.para?.title).toBe("Para! Next stop is yours");
   });
 
+  it("after a GPS gap the count is dropped (no-GPS copy, no GPS Para) until two in-order fixes resync it", () => {
+    const at = (i: number) => fixEvent(fixAt(LOOP_A[i]!, 10, NOW));
+    const lost = [1, 4].map(at).reduce(reduceSession, boarded);
+    const v = guidanceView(lost, null, NOW);
+    if (v.screen !== "ride") throw new Error(v.screen);
+    expect(v.title).toBe("Ride to Naga Cathedral");
+    expect(v.countText).toBe("5 stops after Plaza Rizal (A1), by pin order");
+    expect(v.stops.map((x) => x.state)).toEqual(["boarded", "ahead", "ahead", "ahead", "ahead", "alight"]);
+    expect(v.para).toBeNull();
+    const synced = reduceSession(lost, at(5));
+    const w = guidanceView(synced, null, NOW);
+    expect(w.screen === "ride" && w.para?.title).toBe("Para! Next stop is yours");
+  });
+
+  it("Undo after 'I got off' at the alighting pin never shows a restarted count", () => {
+    const atEnd = [1, 2, 3, 4, 5].map((i) => fixEvent(fixAt(LOOP_A[i]!, 10, NOW))).reduce(reduceSession, boarded);
+    const undone = reduceSession(reduceSession(reduceSession(atEnd, tap("gotOff")), tap("back")), fixEvent(fixAt(LOOP_A[5]!, 10, NOW)));
+    const v = guidanceView(undone, null, NOW);
+    if (v.screen !== "ride") throw new Error(v.screen);
+    expect(v.title).toBe("Your stop is next");
+    expect(v.title).not.toBe("5 stops to go");
+    expect(v.para?.title).toBe("Para! Next stop is yours");
+  });
+
   it("the ride screen reads the session only (a fix not dispatched as an event shows nothing)", () => {
     expect(guidanceView(boarded, fixAt(LOOP_A[1]!, 5, NOW), NOW)).toEqual(guidanceView(boarded, null, NOW));
   });

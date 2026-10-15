@@ -24,6 +24,8 @@ const NOW = 1_000_000;
 const STOPS = LOOP_A.map((p) => ({ lat: p.lat, lng: p.lng }));
 const START: RideMemory = NEW_RIDE_MEMORY;
 const mem = (passedIndex: number, more: Partial<RideMemory> = {}): RideMemory => ({ ...START, passedIndex, ...more });
+/** 8 stops 200 m apart, northward. */
+const EIGHT = Array.from({ length: 8 }, (_, i) => ({ lat: BASE.lat + i * STEP_LAT, lng: BASE.lng }));
 /** Spacing 400 m: the stop before alighting is further than 300 m from the alighting pin. */
 const WIDE = Array.from({ length: 4 }, (_, i) => ({ lat: BASE.lat + 2 * i * STEP_LAT, lng: BASE.lng }));
 
@@ -146,6 +148,56 @@ describe("rideProgress: strictly by pin order", () => {
   });
 });
 
+describe("after a GPS gap: honest fallback, then resync on two in-order fixes", () => {
+  const ride = (fixes: { lat: number; lng: number }[], stops = EIGHT, from: RideMemory = START) =>
+    fixes.reduce((m, at) => rideProgress(stops, m, fixAt(at, 10, NOW), NOW), from);
+
+  it("8 stops, 200 m apart: a fix at 1, then 4, 5, 6 — lost at 4, resynced at 5, Para at 6", () => {
+    const at1 = ride([EIGHT[1]!]);
+    expect(at1).toMatchObject({ passedIndex: 1, countLost: false });
+    const at4 = ride([EIGHT[4]!], EIGHT, at1);
+    expect(at4).toMatchObject({ passedIndex: 1, countLost: true, pendingIndex: 4, alightNear: false, nearStopBefore: false });
+    expect(paraSuggested({ ...at4, stopIsNext: false })).toBe(false);
+    const at5 = ride([EIGHT[5]!], EIGHT, at4);
+    expect(at5).toMatchObject({ passedIndex: 5, countLost: false, pendingIndex: null });
+    const at6 = ride([EIGHT[6]!], EIGHT, at5);
+    expect(at6).toMatchObject({ passedIndex: 6, nearStopBefore: true, alightNear: true });
+    expect(paraSuggested({ ...at6, stopIsNext: false })).toBe(true);
+    // The reviewer's sequence (1, 4, 5, 6, 7) ends at the alighting stop with Para.
+    expect(ride([EIGHT[1]!, EIGHT[4]!, EIGHT[5]!, EIGHT[6]!, EIGHT[7]!])).toMatchObject({ passedIndex: 7, countLost: false, nearStopBefore: true });
+  });
+
+  it("while the count is lost, Para from GPS is off (manual only)", () => {
+    const lost = { ...START, passedIndex: 1, countLost: true, alightNear: true };
+    expect(paraSuggested({ ...lost, stopIsNext: false })).toBe(false);
+    expect(paraSuggested({ ...lost, stopIsNext: true })).toBe(true);
+  });
+
+  it("no resync on one beyond fix, on a decreasing pair, or on a pair broken by another fix", () => {
+    expect(ride([EIGHT[4]!]).passedIndex).toBe(0);
+    expect(ride([EIGHT[5]!, EIGHT[4]!]).passedIndex).toBe(0);
+    const between = { lat: BASE.lat + 4.5 * STEP_LAT, lng: BASE.lng + 0.003 }; // ≈ 340 m off the line: matches nothing
+    const broken = ride([EIGHT[4]!, between, EIGHT[5]!]);
+    expect(broken).toMatchObject({ passedIndex: 0, countLost: true, pendingIndex: 5 });
+  });
+
+  it("an in-window match clears the lost count", () => {
+    const lost = ride([EIGHT[4]!]);
+    expect(lost.countLost).toBe(true);
+    expect(ride([EIGHT[1]!], EIGHT, lost)).toMatchObject({ passedIndex: 1, countLost: false, pendingIndex: null });
+  });
+
+  it("U-loop with a gap: return-street stops beside earlier stops are never a resync target", () => {
+    const from1 = { ...START, passedIndex: 1 };
+    // Return-street stops 6 and 7 sit beside outbound stops 3 and 2.
+    expect(ride([U_LOOP[6]!, U_LOOP[7]!], U_LOOP, from1).passedIndex).toBe(1);
+    expect(ride([U_LOOP[7]!, U_LOOP[8]!], U_LOOP, START).passedIndex).toBe(0);
+    expect(ride([U_LOOP[8]!, U_LOOP[9]!], U_LOOP, START)).toMatchObject({ passedIndex: 0, alightNear: false, nearStopBefore: false });
+    // A real gap on the outbound street does resync.
+    expect(ride([U_LOOP[3]!, U_LOOP[4]!], U_LOOP, START).passedIndex).toBe(4);
+  });
+});
+
 describe("Para paths, each in isolation", () => {
   it("path 1: the person says their stop is next (no GPS)", () => {
     expect(paraSuggested({ ...START, stopIsNext: true })).toBe(true);
@@ -222,15 +274,54 @@ const fixArb = (stops: P[]) =>
 const RIDES: P[][] = [STOPS, STOPS.slice(0, 2), STOPS.slice(0, 3), U_LOOP, FULL_CIRCLE, WIDE];
 const rideArb = fc.integer({ min: 0, max: RIDES.length - 1 }).chain((r) => fc.tuple(fc.constant(RIDES[r]!), fc.array(fixArb(RIDES[r]!), { maxLength: 40 })));
 
+const RIDES_WITH_GAPS = [...RIDES, EIGHT];
+const gapRideArb = fc
+  .integer({ min: 0, max: RIDES_WITH_GAPS.length - 1 })
+  .chain((r) => fc.tuple(fc.constant(RIDES_WITH_GAPS[r]!), fc.array(fixArb(RIDES_WITH_GAPS[r]!), { maxLength: 40 })));
+
 describe("ride progress properties", () => {
-  it("monotonic, in range, at most two stops per fix, latched Para flags", () => {
+  it("a GPS-backed count is only shown when a usable fix matched the counted stop after the last beyond-window fix", () => {
+    fc.assert(
+      fc.property(gapRideArb, ([stops, fixes]) => {
+        const alight = stops.length - 1;
+        let m: RideMemory = START;
+        let seen = false;
+        let lastBeyond = -1;
+        let lastAnchor = -1;
+        for (const [t, fix] of fixes.entries()) {
+          const next = rideProgress(stops, m, fix, NOW);
+          if (usableFix(fix, NOW)) {
+            seen = true;
+            const d = stops.map((st) => haversineMeters(fix, st));
+            const nearest = Math.min(...d);
+            // "Beyond" is judged against the window after this fix (a resync fix is its own anchor).
+            const windowEnd = Math.min(alight, next.passedIndex + STOP_WINDOW);
+            const nearestIndex = d.indexOf(nearest);
+            if (nearestIndex > windowEnd && d.slice(next.passedIndex + 1, windowEnd + 1).every((x) => x > STOP_PASS_RADIUS_M)) lastBeyond = t;
+            if (d[next.passedIndex]! <= STOP_PASS_RADIUS_M) lastAnchor = t;
+          }
+          const shown = seen && !next.countLost;
+          if (shown && lastBeyond >= 0 && !(lastAnchor > lastBeyond)) return false;
+          m = next;
+        }
+        return true;
+      }),
+      { seed: 404, numRuns: 600 },
+    );
+  });
+
+  it("monotonic, in range, at most two stops per fix unless resynced, latched Para flags", () => {
     fc.assert(
       fc.property(rideArb, ([stops, fixes]) => {
         let m: RideMemory = START;
         for (const fix of fixes) {
           const next = rideProgress(stops, m, fix, NOW);
           if (next.passedIndex < m.passedIndex || next.passedIndex > stops.length - 1) return false;
-          if (next.passedIndex - m.passedIndex > STOP_WINDOW) return false;
+          // Beyond the window only as the second of two in-order beyond-window matches.
+          if (next.passedIndex - m.passedIndex > STOP_WINDOW) {
+            if (m.pendingIndex === null || next.passedIndex <= m.pendingIndex) return false;
+            if (haversineMeters(fix, stops[next.passedIndex]!) > STOP_PASS_RADIUS_M) return false;
+          }
           if ((m.alightNear && !next.alightNear) || (m.nearStopBefore && !next.nearStopBefore)) return false;
           if (next.stopsRemaining !== stops.length - 1 - next.passedIndex) return false;
           m = next;
@@ -282,7 +373,7 @@ describe("ride progress properties", () => {
         fc.boolean(),
         fixArb(STOPS).filter((f) => !usableFix(f, NOW)),
         (passedIndex, alightNear, nearStopBefore, fix) => {
-          const next = rideProgress(STOPS, { passedIndex, alightNear, nearStopBefore }, fix, NOW);
+          const next = rideProgress(STOPS, { ...START, passedIndex, alightNear, nearStopBefore }, fix, NOW);
           return next.passedIndex === passedIndex && next.alightNear === alightNear && next.nearStopBefore === nearStopBefore && next.fromGps === false;
         },
       ),

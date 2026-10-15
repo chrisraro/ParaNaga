@@ -20,7 +20,7 @@ import "./saved.css";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useId, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { clearHistory } from "@/client/history/trip-history";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import { useHistoryList, useSavedPlaces, useSavedTrips, useTripRevalidation } from "@/client/saved/use-saved";
@@ -108,19 +108,9 @@ function HistoryIcon() {
  * Records this store could not read. Newer-format ones (another tab on a newer ParaNaga) are only
  * mentioned; damaged ones (failed validation) can be removed, after a confirmation, and only those.
  * Always mounted (the notes show only while something is skipped), so the "Removed …" status
- * outlives the notes; after a removal focus goes to the section heading (or to the status itself).
+ * outlives the notes; after a removal focus goes to that status line, so it is read out.
  */
-function SkippedRecords({
-  store,
-  dropped,
-  unreadable,
-  headingRef,
-}: {
-  store: "savedTrips" | "savedPlaces" | "history";
-  dropped: number;
-  unreadable: number;
-  headingRef?: RefObject<HTMLHeadingElement | null>;
-}) {
+function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | "savedPlaces" | "history"; dropped: number; unreadable: number }) {
   const [confirm, setConfirm] = useState(false);
   const [status, setStatus] = useState("");
   const statusRef = useRef<HTMLParagraphElement>(null);
@@ -131,7 +121,7 @@ function SkippedRecords({
     removeUnreadable(store).then(
       (n) => {
         setStatus(n === 1 ? "Removed 1 damaged item." : `Removed ${n} damaged items.`);
-        (headingRef?.current ?? statusRef.current)?.focus();
+        statusRef.current?.focus();
       },
       () => setStatus("Could not remove on this phone."),
     );
@@ -343,7 +333,6 @@ function PlacesPanel() {
   const [renaming, setRenaming] = useState<SavedPlace | null>(null);
   const removal = useRemoval();
   const titleId = useId();
-  const headingRef = useRef<HTMLHeadingElement>(null);
 
   if (places.status === "loading") return <Loading label="Loading saved places" />;
   if (places.status === "error") return <Note testId="saved-error">{readError("Saved places", places.unavailable)}</Note>;
@@ -358,10 +347,10 @@ function PlacesPanel() {
 
   return (
     <section className="pn-section" aria-labelledby={titleId}>
-      <h2 id={titleId} ref={headingRef} tabIndex={-1} className="pn-section__title">
+      <h2 id={titleId} className="pn-section__title">
         Saved places
       </h2>
-      <SkippedRecords store="savedPlaces" dropped={places.dropped} unreadable={places.unreadable} headingRef={headingRef} />
+      <SkippedRecords store="savedPlaces" dropped={places.dropped} unreadable={places.unreadable} />
       <ul className="pn-group" data-testid="saved-places">
         {places.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty" data-testid="saved-places-empty">
@@ -422,7 +411,6 @@ function HistoryPanel() {
   const [confirm, setConfirm] = useState(false);
   const [status, setStatus] = useState("");
   const titleId = useId();
-  const headingRef = useRef<HTMLHeadingElement>(null);
   if (!historyEnabled) return <HistoryOff />;
   if (history.status === "loading") return <Loading label="Loading trip history" />;
   if (history.status === "error") return <Note testId="saved-error">{readError("Trip history", history.unavailable)}</Note>;
@@ -436,10 +424,10 @@ function HistoryPanel() {
   };
   return (
     <section className="pn-section" aria-labelledby={titleId} data-testid="history-on">
-      <h2 id={titleId} ref={headingRef} tabIndex={-1} className="pn-section__title">
+      <h2 id={titleId} className="pn-section__title">
         Trip history
       </h2>
-      <SkippedRecords store="history" dropped={history.dropped} unreadable={history.unreadable} headingRef={headingRef} />
+      <SkippedRecords store="history" dropped={history.dropped} unreadable={history.unreadable} />
       <ul className="pn-group" data-testid="history-list">
         {history.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty">No trips in history yet.</li>

@@ -13,6 +13,13 @@
 //    nearest of ALL the ride's stops: on a circuit whose return street runs beside the outbound
 //    one, or a full circle whose alighting pin sits by the boarding pin, a stop further along the
 //    order never wins. The index never decreases.
+//  - After a GPS gap the jeepney may be past the window. A usable fix whose nearest stop lies
+//    beyond the window while it is more than 120 m from every window stop sets `countLost`: the
+//    view then drops to the no-GPS copy and Para is manual only. The count resyncs (jumps ahead,
+//    clearing `countLost`) only when two CONSECUTIVE usable fixes match stops beyond the window in
+//    strictly increasing pin order, each the nearest of all stops (tie tolerance) and none within
+//    120 m of a stop at or before the window (so a parallel return street, which runs beside
+//    earlier stops, is never a resync target). Any in-window or current-stop match also clears it.
 //  - Para (the only assertive output, decision A) needs a PRECISE fix (≤ PRECISE_M = 30 m):
 //    `alightNear` when such a fix is within 300 m of the alighting pin while pin order agrees
 //    (passed index ≥ alighting index − 2); `nearStopBefore` when such a fix matches, in order, a
@@ -74,6 +81,10 @@ export function walkProgress(target: LatLng, fix: LocationFix | null, now: numbe
 export type RideMemory = {
   /** Index into the ride's stops of the last stop passed; 0 = the boarding stop. */
   passedIndex: number;
+  /** GPS says the jeepney is past the window: the count is not shown until it resyncs. */
+  countLost: boolean;
+  /** The previous usable fix's beyond-window match (first half of a resync), else null. */
+  pendingIndex: number | null;
   /** A precise fix was within 300 m of the alighting pin while pin order agreed. */
   alightNear: boolean;
   /** A precise fix matched, in order, the stop before the alighting stop (or the alighting stop). */
@@ -87,11 +98,11 @@ export type RideProgress = RideMemory & {
   fromGps: boolean;
 };
 
-export const NEW_RIDE_MEMORY: RideMemory = { passedIndex: 0, alightNear: false, nearStopBefore: false };
+export const NEW_RIDE_MEMORY: RideMemory = { passedIndex: 0, countLost: false, pendingIndex: null, alightNear: false, nearStopBefore: false };
 
-/** The single Para rule: the person said so, or a precise fix put them there in pin order. */
+/** The single Para rule: the person said so, or a precise fix put them there in pin order (count not lost). */
 export function paraSuggested(ride: RideMemory & { stopIsNext: boolean }): boolean {
-  return ride.stopIsNext || ride.alightNear || ride.nearStopBefore;
+  return ride.stopIsNext || (!ride.countLost && (ride.alightNear || ride.nearStopBefore));
 }
 
 function summarize(stops: readonly LatLng[], memory: RideMemory, fromGps: boolean): RideProgress {
@@ -107,21 +118,53 @@ export function rideProgress(stops: readonly LatLng[], memory: RideMemory, fix: 
   const distances = stops.map((s) => haversineMeters(fix, s));
   const nearest = Math.min(...distances);
   const matches = (i: number) => distances[i]! <= STOP_PASS_RADIUS_M && distances[i]! <= nearest + NEAREST_TOLERANCE_M;
+  const windowEnd = Math.min(alightIndex, current.passedIndex + STOP_WINDOW);
 
   let passedIndex = current.passedIndex;
-  let matched = matches(passedIndex) ? passedIndex : -1;
-  for (let i = current.passedIndex + 1; i <= Math.min(alightIndex, current.passedIndex + STOP_WINDOW); i++) {
+  let countLost = current.countLost;
+  let pendingIndex: number | null = null;
+  let matched = -1;
+  for (let i = current.passedIndex + 1; i <= windowEnd; i++) {
     if (matches(i)) {
       passedIndex = i;
       matched = i;
       break;
     }
   }
+  if (matched < 0 && matches(current.passedIndex)) matched = current.passedIndex;
+
+  if (matched >= 0) {
+    countLost = false;
+  } else {
+    // Beyond the window: the nearest stop is further along than the window, and no window stop is near.
+    const nearestIndex = distances.indexOf(nearest);
+    const farFromWindow = distances.slice(current.passedIndex + 1, windowEnd + 1).every((d) => d > STOP_PASS_RADIUS_M);
+    if (nearestIndex > windowEnd && farFromWindow) countLost = true;
+    // A resync candidate: the first beyond-window match, not beside any stop at or before the window.
+    let candidate = -1;
+    for (let k = windowEnd + 1; k <= alightIndex; k++) {
+      if (matches(k)) {
+        candidate = k;
+        break;
+      }
+    }
+    if (candidate >= 0) {
+      const besideEarlier = stops.slice(0, windowEnd + 1).some((st) => haversineMeters(st, stops[candidate]!) <= STOP_PASS_RADIUS_M);
+      if (besideEarlier) candidate = -1;
+    }
+    if (candidate >= 0 && current.pendingIndex !== null && candidate > current.pendingIndex) {
+      passedIndex = candidate;
+      matched = candidate;
+      countLost = false;
+    } else if (candidate >= 0) {
+      pendingIndex = candidate;
+    }
+  }
 
   let { alightNear, nearStopBefore } = current;
-  if (preciseFix(fix, now)) {
+  if (preciseFix(fix, now) && !countLost) {
     if (passedIndex >= alightIndex - 2 && distances[alightIndex]! <= ALIGHT_NEAR_M) alightNear = true;
     if (matched >= Math.max(1, alightIndex - 1)) nearStopBefore = true;
   }
-  return summarize(stops, { passedIndex, alightNear, nearStopBefore }, true);
+  return summarize(stops, { passedIndex, countLost, pendingIndex, alightNear, nearStopBefore }, true);
 }

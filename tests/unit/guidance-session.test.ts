@@ -21,7 +21,7 @@ const tap = (type: Exclude<GuidanceEvent["type"], "fix">): GuidanceEvent => ({ t
 describe("startSession", () => {
   it("starts on the first step, nothing confirmed", () => {
     const s = startSession(tripOf(twoRides()), NOW);
-    expect(s).toMatchObject({ v: 1, startedAt: NOW, status: "active", stepIndex: 0, atStop: false, ride: null });
+    expect(s).toMatchObject({ v: 1, startedAt: NOW, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null });
     expect(currentStep(s).kind).toBe("walk_to_board");
   });
 });
@@ -97,8 +97,10 @@ describe("location fixes", () => {
     const moved = reduceSession(riding, { type: "fix", fix: fixAt(LOOP_A[2]!, 10, NOW), now: NOW });
     expect(moved.ride).toMatchObject({ passedIndex: 2, gpsSeen: true });
     expect(moved).toMatchObject({ stepIndex: riding.stepIndex, status: "active" });
-    // A jump to the alighting pin out of pin order moves nothing.
-    expect(reduceSession(moved, { type: "fix", fix: fixAt(LOOP_A[5]!, 5, NOW), now: NOW })).toBe(moved);
+    // A jump to the alighting pin out of pin order moves nothing: the count is marked lost, no Para.
+    const jumped = reduceSession(moved, { type: "fix", fix: fixAt(LOOP_A[5]!, 5, NOW), now: NOW });
+    expect(jumped.ride).toMatchObject({ passedIndex: 2, countLost: true, alightNear: false, nearStopBefore: false });
+    expect(paraSuggested(jumped.ride!)).toBe(false);
     // In order up to the alighting stop: still no "got off" without the tap.
     const atEnd = [3, 4, 5].reduce((s, i) => reduceSession(s, { type: "fix", fix: fixAt(LOOP_A[i]!, 5, NOW), now: NOW }), moved);
     expect(atEnd.stepIndex).toBe(riding.stepIndex);
@@ -166,7 +168,7 @@ describe("session properties (fixed seeds)", () => {
           if ((step.kind === "ride" && next.status === "active") !== (next.ride !== null)) return false;
           if (next.ride && (next.ride.passedIndex < 0 || step.kind !== "ride" || next.ride.passedIndex > step.stops.length - 1)) return false;
           if (s.ride && next.ride && next.stepIndex === s.stepIndex && next.ride.passedIndex < s.ride.passedIndex) return false;
-          if (s.ride && next.ride && next.stepIndex === s.stepIndex && next.ride.passedIndex - s.ride.passedIndex > 2) return false;
+          if (s.ride && next.ride && next.stepIndex === s.stepIndex && next.ride.passedIndex - s.ride.passedIndex > 2 && s.ride.pendingIndex === null) return false;
           if (next.status === "arrived" && step.kind !== "walk_to_destination") return false;
           s = next;
         }
@@ -200,10 +202,14 @@ describe("back (undo the last confirmation)", () => {
     const unsaid = reduceSession(said, tap("back"));
     expect(unsaid.ride).toMatchObject({ stopIsNext: true, paraAcknowledged: false });
     expect(reduceSession(unsaid, tap("back")).ride).toMatchObject({ stopIsNext: false });
-    // Got off by mistake: back on the ride, with a fresh count (no GPS claim survives).
+    // Got off by mistake: back on the ride exactly as it was left.
     const off = run(said, tap("gotOff"));
+    expect(off.lastRide).toEqual(said.ride);
     const backOn = reduceSession(off, tap("back"));
-    expect(backOn).toMatchObject({ stepIndex: 1, atStop: false, ride: { passedIndex: 0, gpsSeen: false, stopIsNext: false, paraAcknowledged: false } });
+    expect(backOn).toMatchObject({ stepIndex: 1, atStop: false, lastRide: null });
+    expect(backOn.ride).toEqual(said.ride);
+    // Boarding the next ride forgets the snapshot.
+    expect(run(off, tap("boarded")).lastRide).toBeNull();
   });
 
   it("arrived and missed stop can be undone; ended cannot", () => {
@@ -213,6 +219,37 @@ describe("back (undo the last confirmation)", () => {
     expect(reduceSession(missed, tap("back"))).toMatchObject({ status: "active", stepIndex: 1, ride: { passedIndex: 0 } });
     const ended = run(start, tap("end"));
     expect(reduceSession(ended, tap("back"))).toBe(ended);
+  });
+});
+
+describe("undo after leaving a ride keeps its progress (lastRide)", () => {
+  const fix = (i: number) => ({ type: "fix" as const, fix: fixAt(LOOP_A[i]!, 10, NOW), now: NOW });
+  const boarded = run(startSession(tripOf(oneRide()), NOW), tap("boarded"));
+
+  it("'I got off' at the alighting pin, then Undo: still at the alighting stop with Para, never a restart", () => {
+    const atEnd = run(boarded, fix(1), fix(2), fix(3), fix(4), fix(5));
+    expect(atEnd.ride).toMatchObject({ passedIndex: 5, nearStopBefore: true });
+    const undone = run(atEnd, tap("gotOff"), tap("back"));
+    expect(undone.ride).toEqual(atEnd.ride);
+    expect(paraSuggested(undone.ride!)).toBe(true);
+    // A further fix at the alighting pin keeps it there.
+    expect(reduceSession(undone, fix(5)).ride?.passedIndex).toBe(5);
+  });
+
+  it("'I got off' too early, then Undo: GPS Para can still fire further on", () => {
+    const early = run(boarded, fix(1), fix(2), fix(3));
+    expect(paraSuggested(early.ride!)).toBe(false);
+    const undone = run(early, tap("gotOff"), tap("back"));
+    const later = reduceSession(undone, fix(4));
+    expect(later.ride).toMatchObject({ passedIndex: 4, nearStopBefore: true });
+    expect(paraSuggested(later.ride!)).toBe(true);
+  });
+
+  it("'I missed my stop', then Undo: the ride comes back as it was", () => {
+    const ridden = run(boarded, fix(1), fix(2));
+    const undone = run(ridden, tap("missedStop"), tap("back"));
+    expect(undone).toMatchObject({ status: "active", lastRide: null });
+    expect(undone.ride).toEqual(ridden.ride);
   });
 });
 
@@ -235,6 +272,11 @@ describe("parseSession (sessionStorage is untrusted)", () => {
     expect(parseSession(bad({ eta: 5 }), NOW)).toBeNull(); // strict: no extra (time) fields
     expect(parseSession(bad({ ride: { ...(raw.ride as object), paraAcknowledged: true } }), NOW)).toBeNull(); // Para said, never suggested
     expect(parseSession(bad({ status: "missed_stop", stepIndex: 2, ride: null }), NOW)).toBeNull(); // missed stop on a walk step
+    expect(parseSession(bad({ lastRide: raw.ride }), NOW)).toBeNull(); // a snapshot while still on the ride
+    expect(parseSession(bad({ stepIndex: 0, ride: null, lastRide: raw.ride }), NOW)).toBeNull(); // a snapshot with no ride before
+    expect(parseSession(bad({ ride: { ...(raw.ride as object), pendingIndex: 99 } }), NOW)).toBeNull();
+    const off = reduceSession(s, tap("gotOff"));
+    expect(parseSession(serializeSession(off), NOW)).toEqual(off);
     const trip = raw.trip as { stops: { id: string; name: string; code: string | null }[] };
     expect(parseSession(bad({ trip: { ...trip, stops: [{ ...trip.stops[0]!, name: "x".repeat(201) }] } }), NOW)).toBeNull();
   });
