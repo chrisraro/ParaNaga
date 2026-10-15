@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { PhoneFrame, RidePreview, SearchPreview, TripPreview } from "@/ui/landing/phone-screens";
+import { HomePreview, PhoneFrame, RidePreview, TripPreview } from "@/ui/landing/phone-screens";
 
+// What ships today: pin both ends (place search is coming soon), compare provisional trips
+// (unverified, fare estimates), then follow the steps.
 const STEPS = [
-  { title: "Search a place", body: "Type a landmark, barangay or stop. Local names like Centro or Diversion work too.", screen: <SearchPreview /> },
-  { title: "Pick a verified trip", body: "Compare options by walking, transfers and fare, with every unknown marked.", screen: <TripPreview /> },
-  { title: "Walk, ride, Para!", body: "Step-by-step guidance to the right curb, the right signboard and the right stop.", screen: <RidePreview /> },
+  { title: "Pin your start and destination", body: "Use your location or move the map to drop a pin. Place search is coming soon.", screen: <HomePreview /> },
+  { title: "Compare provisional trips", body: "Options by walking, transfers and an estimated fare, each marked unverified, so you confirm with the driver.", screen: <TripPreview /> },
+  { title: "Walk, ride, Para!", body: "Step by step: where to walk, which loop to board and the stop to get off at.", screen: <RidePreview /> },
 ];
 
 export function HowItWorks() {
   const [step, setStep] = useState(0);
   return (
-    <section id="how" aria-labelledby="how-h" className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-12 px-4 pt-16 md:px-8 md:pt-28">
+    <section id="how" aria-labelledby="how-h" className="mx-auto scroll-mt-20 flex max-w-[1180px] flex-wrap items-center gap-12 px-4 pt-16 md:px-8 md:pt-28">
       <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-5">
         <span className="font-mono text-[13px] font-semibold uppercase tracking-[0.08em] text-teal">How it works</span>
         <h2 id="how-h" className="text-[clamp(32px,4.4vw,52px)] font-extrabold leading-[1.04] tracking-[-0.035em]">

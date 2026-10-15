@@ -11,7 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/app",
     scope: "/",
     display: "standalone",
-    orientation: "portrait",
+    // Landscape is supported (spec 6.6; the app gate follows the device, not the width).
+    orientation: "any",
     background_color: "#0f1e3d",
     theme_color: "#0f1e3d",
     lang: "en",
