@@ -8,16 +8,35 @@
 //                                                  -> "unchanged": nothing is written;
 //   - anything else (same snapshot with other files, or a new snapshot of an imported map)
 //                                                  -> refused: the changed-data path is not built yet.
+//
+// OpenStreetMap places (Task 3, plan.osm) run after the transit part, in the same transaction,
+// under pg_advisory_xact_lock(hashtext(<osm snapshot_version>)):
+//   - no committed batch for this OSM snapshot     -> a new draft revision `osm-places-<date>` that
+//       copies the published revision's membership (ids only, its place members dropped), adds one
+//       place member per kept place (new place / place_version rows only where the content is
+//       new) and publishes it through transit.publish_revision. Transit entities are carried
+//       forward unchanged, so stop and route ids stay valid. Released rows are never updated.
+//   - committed batch with the same file hash and raw-feature content -> "unchanged", nothing written;
+//   - same date with another file, or older than a committed snapshot -> refused.
+// No OSM snapshot file -> places are skipped and the transit behaviour is unchanged.
 // Ids are generated here so related rows can be inserted in bulk without RETURNING lookups.
 import { randomUUID } from "node:crypto";
 import pg from "pg";
-import type { ImportPlan } from "./import-plan";
+import { sha256Hex } from "../../src/domain/import/hash";
+import type { ImportPlan, OsmPlan } from "./import-plan";
 
 export const IMPORT_ACTOR = "scripts/import-naga";
 
-export type ImportOutcome =
+export type PlacesOutcome =
+  | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
+  | { outcome: "unchanged"; batchId: string; counts: Record<string, number> };
+
+type TransitOutcome =
   | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
   | { outcome: "unchanged"; batchId: string; publishedRevisionLabel: string | null; counts: Record<string, number> };
+
+/** The transit outcome (top level, as before) plus the OSM places outcome (null: no snapshot file). */
+export type ImportOutcome = TransitOutcome & { places: PlacesOutcome | null };
 
 export class ImportRefusedError extends Error {}
 
@@ -71,9 +90,11 @@ export async function commitImport(connectionString: string, plan: ImportPlan): 
       // imports of the same map with different retrieved_on dates are serialized by design
       // (not only by the unique route/source keys failing the second one).
       await client.query("select pg_advisory_xact_lock(hashtext($1))", [plan.mapId]);
-      const result = await writeInTransaction(client, plan);
-      await client.query(result.outcome === "unchanged" ? "rollback" : "commit");
-      return result;
+      const transit = await writeInTransaction(client, plan);
+      const places = plan.osm ? await writePlaces(client, plan.osm) : null;
+      const wrote = transit.outcome === "committed" || places?.outcome === "committed";
+      await client.query(wrote ? "commit" : "rollback");
+      return { ...transit, places };
     } catch (error) {
       await client.query("rollback").catch(() => undefined);
       throw error;
@@ -83,10 +104,11 @@ export async function commitImport(connectionString: string, plan: ImportPlan): 
   }
 }
 
-async function writeInTransaction(c: pg.ClientBase, plan: ImportPlan): Promise<ImportOutcome> {
+async function writeInTransaction(c: pg.ClientBase, plan: ImportPlan): Promise<TransitOutcome> {
   const prior = await c.query<{ id: string; snapshot_version: string; counts: Row }>(
     `select id, snapshot_version, counts from ingest.batch
-      where mode = 'commit' and status = 'committed' and split_part(snapshot_version, ':', 2) = $1
+      where mode = 'commit' and status = 'committed' and split_part(snapshot_version, ':', 1) = 'mymaps'
+        and split_part(snapshot_version, ':', 2) = $1
       order by finished_at desc nulls last, started_at desc limit 1`,
     [plan.mapId],
   );
@@ -99,7 +121,7 @@ async function checkUnchanged(
   c: pg.ClientBase,
   plan: ImportPlan,
   last: { id: string; snapshot_version: string; counts: Row },
-): Promise<ImportOutcome> {
+): Promise<TransitOutcome> {
   if (last.snapshot_version !== plan.snapshotVersion || last.counts.documents_sha256 !== plan.documentsHash) {
     throw new ImportRefusedError(
       `the files differ from the last committed batch (${last.snapshot_version}); importing changed data ` +
@@ -123,7 +145,7 @@ async function checkUnchanged(
   return { outcome: "unchanged", batchId: last.id, publishedRevisionLabel: pointer.rows[0]?.label ?? null, counts: plan.counts };
 }
 
-async function firstImport(c: pg.ClientBase, plan: ImportPlan): Promise<ImportOutcome> {
+async function firstImport(c: pg.ClientBase, plan: ImportPlan): Promise<TransitOutcome> {
   const { seed } = plan;
   const batchId = randomUUID();
   const revisionId = randomUUID();
@@ -360,4 +382,199 @@ async function firstImport(c: pg.ClientBase, plan: ImportPlan): Promise<ImportOu
     })],
   );
   return { outcome: "committed", batchId, revisionId, revisionLabel: plan.revisionLabel, counts };
+}
+
+// ================================================================ OpenStreetMap places
+
+const OSM_SOURCE_TITLE = "OpenStreetMap places snapshot";
+const OSM_SOURCE_URL = "https://www.openstreetmap.org/copyright";
+
+async function writePlaces(c: pg.ClientBase, osm: OsmPlan): Promise<PlacesOutcome> {
+  await c.query("select pg_advisory_xact_lock(hashtext($1))", [osm.snapshotVersion]);
+
+  const prior = await c.query<{ id: string; snapshot_version: string; counts: Row }>(
+    `select id, snapshot_version, counts from ingest.batch
+      where mode = 'commit' and status = 'committed' and split_part(snapshot_version, ':', 1) = 'osm'
+      order by split_part(snapshot_version, ':', 3) desc, finished_at desc nulls last`,
+  );
+  const same = prior.rows.find((b) => b.snapshot_version === osm.snapshotVersion);
+  if (same) return checkPlacesUnchanged(c, osm, same);
+  const newer = prior.rows.find((b) => b.snapshot_version > osm.snapshotVersion);
+  if (newer) {
+    throw new ImportRefusedError(
+      `OSM snapshot ${osm.fileName} is older than the committed ${newer.snapshot_version}; nothing written`,
+    );
+  }
+
+  const published = await c.query<{ id: string; kind: string; label: string }>(
+    `select r.id, r.kind, r.label from transit.published_pointer p join transit.revision r on r.id = p.revision_id`,
+  );
+  const base = published.rows[0];
+  if (!base) throw new ImportRefusedError("no published revision to carry forward; import the transit files first");
+
+  // ---------------------------------------------------------------- ingest provenance
+  const batchId = randomUUID();
+  const documentId = randomUUID();
+  await c.query(
+    `insert into ingest.source (code, title, url, evidence_type, published_or_enacted, checked_on)
+     values ($1, $2, $3, 'open_data', $4, $5::date)`,
+    [osm.sourceCode, OSM_SOURCE_TITLE, OSM_SOURCE_URL,
+      osm.header.osmBaseTimestamp === null ? null : `OSM data as of ${osm.header.osmBaseTimestamp}`, osm.fetchDate],
+  );
+  await c.query(
+    `insert into ingest.source_document (id, source_code, file_name, sha256, bytes, retrieved_on)
+     values ($1, $2, $3, $4, $5, $6::date)`,
+    [documentId, osm.sourceCode, osm.fileName, osm.sha256, osm.bytes, osm.fetchDate],
+  );
+  await c.query(
+    `insert into ingest.batch (id, source_document_id, snapshot_version, mode, status, started_by)
+     values ($1, $2, $3, 'commit', 'running', $4)`,
+    [batchId, documentId, osm.snapshotVersion, IMPORT_ACTOR],
+  );
+
+  const places = osm.places.map((p) => ({ ...p, rawId: randomUUID() }));
+  await insertRows(c, "ingest.raw_feature", places.map((p) => ({
+    id: p.rawId, batch_id: batchId, source_identity: p.sourceIdentity, identity_method: "osm_id",
+    source_layer: "osm", source_code_raw: p.key, label_raw: p.name, coordinates_raw: `${p.lng},${p.lat}`,
+    lon: p.lng, lat: p.lat, content_hash: p.contentHash,
+    properties: {
+      osm_type: p.osmType, osm_id: p.osmId, osm_version: p.osmVersion, osm_timestamp: p.osmTimestamp,
+      category: p.category, aliases: p.aliases, tags: p.tags,
+    },
+  })), [["id", "uuid"], ["batch_id", "uuid"], ["source_identity", "text"], ["identity_method", "text"],
+    ["source_layer", "text"], ["source_code_raw", "text"], ["label_raw", "text"], ["coordinates_raw", "text"],
+    ["lon", "numeric"], ["lat", "numeric"], ["properties", "jsonb"], ["content_hash", "text"]]);
+  const rawIdByKey = new Map(places.map((p) => [p.key, p.rawId]));
+
+  // ---------------------------------------------------------------- places and versions (insert-only)
+  const existingPlaces = await c.query<{ id: string; osm_type: string; osm_id: string; is_synthetic: boolean }>(
+    `select p.id, p.osm_type, p.osm_id::text as osm_id, p.is_synthetic
+       from transit.place p
+       join jsonb_to_recordset($1::jsonb) as x(osm_type text, osm_id bigint)
+         on x.osm_type = p.osm_type and x.osm_id = p.osm_id`,
+    [JSON.stringify(places.map((p) => ({ osm_type: p.osmType, osm_id: p.osmId })))],
+  );
+  const existingByKey = new Map(existingPlaces.rows.map((r) => [`osm:${r.osm_type}/${r.osm_id}`, r]));
+  const mismatched = existingPlaces.rows.filter((r) => r.is_synthetic !== osm.synthetic);
+  if (mismatched.length > 0) {
+    throw new ImportRefusedError(
+      `${mismatched.length} existing place(s) differ in is_synthetic from ${osm.fileName}; nothing written`,
+    );
+  }
+  const newPlaces = places.filter((p) => !existingByKey.has(p.key)).map((p) => ({ key: p.key, id: randomUUID(), p }));
+  await insertRows(c, "transit.place", newPlaces.map(({ id, p }) => ({
+    id, osm_type: p.osmType, osm_id: p.osmId, is_synthetic: osm.synthetic,
+  })), [["id", "uuid"], ["osm_type", "text"], ["osm_id", "bigint"], ["is_synthetic", "boolean"]]);
+  const placeId = new Map<string, string>([
+    ...[...existingByKey].map(([k, r]): [string, string] => [k, r.id]),
+    ...newPlaces.map((n): [string, string] => [n.key, n.id]),
+  ]);
+
+  const existingVersions = await c.query<{ id: string; place_id: string; content_hash: string; is_synthetic: boolean }>(
+    `select id, place_id, content_hash, is_synthetic from transit.place_version where place_id = any($1::uuid[])`,
+    [existingPlaces.rows.map((r) => r.id)],
+  );
+  const versionByContent = new Map(existingVersions.rows.map((v) => [`${v.place_id}:${v.content_hash}`, v]));
+  const planned = places.map((p) => {
+    const pid = placeId.get(p.key)!;
+    const existing = versionByContent.get(`${pid}:${p.contentHash}`);
+    if (existing && existing.is_synthetic !== osm.synthetic) {
+      throw new ImportRefusedError(`place version of ${p.key} differs in is_synthetic from ${osm.fileName}; nothing written`);
+    }
+    const change = existing ? "unchanged" : existingByKey.has(p.key) ? "changed" : "added";
+    return { p, placeId: pid, versionId: existing?.id ?? randomUUID(), isNew: !existing, change };
+  });
+  await insertRows(c, "transit.place_version", planned.filter((x) => x.isNew).map((x) => ({
+    id: x.versionId, place_id: x.placeId, name: x.p.name, aliases: x.p.aliases, category: x.p.category,
+    lon: x.p.lng, lat: x.p.lat, osm_version: x.p.osmVersion, osm_timestamp: x.p.osmTimestamp,
+    source_code: osm.sourceCode, raw_feature_id: rawIdByKey.get(x.p.key), content_hash: x.p.contentHash,
+    is_synthetic: osm.synthetic,
+  })), [["id", "uuid"], ["place_id", "uuid"], ["name", "text"], ["aliases", "jsonb", textArrayNotNull("aliases")],
+    ["category", "text"], ["osm_version", "integer"], ["osm_timestamp", "timestamptz"], ["source_code", "text"],
+    ["raw_feature_id", "uuid"], ["content_hash", "text"], ["is_synthetic", "boolean"]],
+  { inputs: [["lon", "float8"], ["lat", "float8"]], computed: [["geog", point("lon", "lat")]] });
+
+  // Places of the published revision that this snapshot no longer has (recorded, not carried).
+  const previous = await c.query<{ osm_type: string; osm_id: string }>(
+    `select p.osm_type, p.osm_id::text as osm_id
+       from transit.revision_member m join transit.place p on p.id = m.entity_id
+      where m.revision_id = $1 and m.entity_kind = 'place'`,
+    [base.id],
+  );
+  const kept = new Set(places.map((p) => p.key));
+  const missing = previous.rows.map((r) => `osm:${r.osm_type}/${r.osm_id}`).filter((k) => !kept.has(k));
+  await insertRows(c, "ingest.change", [
+    ...planned.map((x) => ({ batch_id: batchId, source_identity: x.p.sourceIdentity, kind: x.change })),
+    ...missing.map((k) => ({ batch_id: batchId, source_identity: sha256Hex(k), kind: "missing" })),
+  ], [["batch_id", "uuid"], ["source_identity", "text"], ["kind", "text"]]);
+
+  // ---------------------------------------------------------------- revision: carry forward + places
+  const revisionId = randomUUID();
+  await c.query(
+    `insert into transit.revision (id, label, kind, status, created_by, parent_revision_id, content_hash)
+     values ($1, $2, $3, 'draft', $4, $5, $6)`,
+    [revisionId, osm.revisionLabel, base.kind, IMPORT_ACTOR, base.id, osm.sha256],
+  );
+  // Ids only: the same stable entities and versions as the published revision, minus its places.
+  const carried = await c.query(
+    `insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id)
+     select $1, entity_kind, entity_id, version_id from transit.revision_member
+      where revision_id = $2 and entity_kind <> 'place'`,
+    [revisionId, base.id],
+  );
+  await insertRows(c, "transit.revision_member", planned.map((x) => ({
+    revision_id: revisionId, entity_kind: "place", entity_id: x.placeId, version_id: x.versionId,
+  })), [["revision_id", "uuid"], ["entity_kind", "text"], ["entity_id", "uuid"], ["version_id", "uuid"]]);
+
+  // Refuses synthetic places (0003) and any other invalid member.
+  await c.query("select transit.publish_revision($1)", [revisionId]);
+
+  const count = (kind: string) => planned.filter((x) => x.change === kind).length;
+  const carriedMembers = carried.rowCount ?? 0;
+  const counts: Record<string, number> = {
+    places: places.length,
+    ...Object.fromEntries(Object.entries(osm.counts).map(([k, v]) => [`places_${k}`, v])),
+    ...Object.fromEntries(Object.entries(osm.dropped).map(([k, v]) => [`dropped_${k}`, v])),
+    places_added: count("added"),
+    places_changed: count("changed"),
+    places_unchanged: count("unchanged"),
+    places_missing: missing.length,
+    place_rows_inserted: newPlaces.length,
+    place_versions_inserted: planned.filter((x) => x.isNew).length,
+    carried_members: carriedMembers,
+    revision_members: carriedMembers + planned.length,
+  };
+  await c.query(
+    `update ingest.batch set status = 'committed', finished_at = now(), counts = $2::jsonb where id = $1`,
+    [batchId, JSON.stringify({
+      ...counts, document_sha256: osm.sha256, file: osm.fileName, revision_id: revisionId,
+      revision_label: osm.revisionLabel, parent_revision_id: base.id, parent_revision_label: base.label,
+    })],
+  );
+  return { outcome: "committed", batchId, revisionId, revisionLabel: osm.revisionLabel, counts };
+}
+
+async function checkPlacesUnchanged(
+  c: pg.ClientBase,
+  osm: OsmPlan,
+  last: { id: string; snapshot_version: string; counts: Row },
+): Promise<PlacesOutcome> {
+  if (last.counts.document_sha256 !== osm.sha256) {
+    throw new ImportRefusedError(
+      `${osm.fileName} differs from the committed OSM batch ${last.id} of the same date; a refresh is a new ` +
+        "dated file. Nothing was written.",
+    );
+  }
+  const stored = await c.query<{ source_identity: string; content_hash: string }>(
+    "select source_identity, content_hash from ingest.raw_feature where batch_id = $1",
+    [last.id],
+  );
+  const storedHashes = new Map(stored.rows.map((r) => [r.source_identity, r.content_hash]));
+  const differing = osm.places.filter((p) => storedHashes.get(p.sourceIdentity) !== p.contentHash);
+  if (stored.rows.length !== osm.places.length || differing.length > 0) {
+    throw new ImportRefusedError(
+      `OSM file hash matches batch ${last.id} but ${differing.length} place(s) differ; nothing written`,
+    );
+  }
+  return { outcome: "unchanged", batchId: last.id, counts: { places: osm.places.length } };
 }

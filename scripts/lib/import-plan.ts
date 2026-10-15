@@ -2,9 +2,10 @@
 // Task 2 parsers and cross-checks, and returns every row the writer will insert plus a list of
 // problems. The writer refuses to touch the database while `problems` is non-empty.
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { detectConflicts, type DetectedConflict } from "../../src/domain/import/conflicts";
+import { NAGA_BOUNDARY } from "../../src/domain/geo/naga";
 import { sha256Hex } from "../../src/domain/import/hash";
 import {
   buildSnapshot,
@@ -14,6 +15,7 @@ import {
   type IdentifiedStop,
   type RawFeatureRow,
 } from "../../src/domain/import/mapped-stops";
+import { parseOsmPlaces, type OsmDropReason, type OsmPlace, type OsmSnapshotHeader } from "../../src/domain/import/osm-places";
 import { provisionalLoopSequence, type LoopSequenceItem } from "../../src/domain/import/provisional-loops";
 import {
   crossCheckDesignatedCsv,
@@ -26,6 +28,7 @@ import {
   type RouteRow,
 } from "../../src/domain/import/seed";
 import { parseSurveyTemplate } from "../../src/domain/import/survey-template";
+import type { OsmPlaceCategory } from "../../src/domain/places/osm-categories";
 
 export const DATA_FILES = [
   "naga_mapped_stops_source.kml",
@@ -102,6 +105,8 @@ export type ImportPlan = {
   counts: Record<string, number>;
   /** Collections intentionally not written, with the reason. */
   deferred: Record<string, string>;
+  /** The newest committed OpenStreetMap places snapshot, or null when none is committed yet. */
+  osm: OsmPlan | null;
   problems: string[];
 };
 
@@ -215,9 +220,11 @@ function unmappedData(seed: NormalizedSeed): string[] {
   return issues;
 }
 
-export function buildImportPlan(files: DataFiles): ImportPlan {
+export function buildImportPlan(files: DataFiles, osmFile: OsmFile | null = null): ImportPlan {
   const text = (f: DataFileName) => files[f].toString("utf8");
   const problems: string[] = [];
+  const osm = osmFile ? buildOsmPlan(osmFile) : null;
+  if (osm) problems.push(...osm.problems);
 
   const snapshot = buildSnapshot(text("naga_mapped_stops_source.kml"), text("naga_mapped_stops.geojson"), text("naga_mapped_stops.csv"));
   problems.push(...snapshot.errors);
@@ -329,6 +336,7 @@ export function buildImportPlan(files: DataFiles): ImportPlan {
     datasetNotes,
     counts,
     deferred: { route_aliases: "deferred (no structured source)" },
+    osm,
     problems,
   };
 }
@@ -377,5 +385,74 @@ function publicStopMapNote(note: DatasetNoteRow, problems: string[]): DatasetNot
         "Other fields of the source public_stop_map object are not published; they are kept only in provenance " +
         "(sha256 of naga_transport_seed.json in ingest.source_document).",
     },
+  };
+}
+
+// ---------------------------------------------------------------- OpenStreetMap places snapshot
+
+export const OSM_DIR = "data/source/osm";
+export const OSM_FILE_RE = /^naga-places-(\d{4}-\d{2}-\d{2})\.osm\.json$/;
+
+export type OsmFile = { fileName: string; bytes: Buffer };
+
+/** The newest `naga-places-YYYY-MM-DD.osm.json` in `dir` (by the date in its name), or null. */
+export function readNewestOsmSnapshot(dir: string = OSM_DIR): OsmFile | null {
+  if (!existsSync(dir)) return null;
+  const newest = readdirSync(dir).filter((f) => OSM_FILE_RE.test(f)).sort().at(-1);
+  return newest ? { fileName: newest, bytes: readFileSync(path.join(dir, newest)) } : null;
+}
+
+export type OsmPlan = {
+  fileName: string;
+  sha256: string;
+  bytes: number;
+  /** Fetch date (YYYY-MM-DD): the file name's date, which must equal the header's fetchedAt date. */
+  fetchDate: string;
+  /** ingest.source code, e.g. OSM-2026-10-15. */
+  sourceCode: string;
+  /** ingest.batch.snapshot_version, e.g. osm:relation/3084673:2026-10-15. */
+  snapshotVersion: string;
+  revisionLabel: string;
+  header: OsmSnapshotHeader;
+  synthetic: boolean;
+  places: OsmPlace[];
+  dropped: Record<OsmDropReason, number>;
+  counts: Record<OsmPlaceCategory, number>;
+  problems: string[];
+};
+
+export function buildOsmPlan(file: OsmFile): OsmPlan {
+  const problems: string[] = [];
+  const nameDate = OSM_FILE_RE.exec(file.fileName)?.[1] ?? "";
+  if (!nameDate) problems.push(`${file.fileName}: not named naga-places-YYYY-MM-DD.osm.json`);
+  let json: unknown = null;
+  try {
+    json = JSON.parse(file.bytes.toString("utf8"));
+  } catch (error) {
+    problems.push(`${file.fileName}: not valid JSON (${(error as Error).message})`);
+  }
+  const parsed = parseOsmPlaces(json, NAGA_BOUNDARY);
+  problems.push(...parsed.problems.map((p) => `${file.fileName}: ${p}`));
+  if (parsed.problems.length === 0) {
+    if (parsed.fetchDate !== nameDate) {
+      problems.push(`${file.fileName}: header fetchedAt date ${parsed.fetchDate} differs from the file name date`);
+    }
+    if (parsed.places.length === 0) problems.push(`${file.fileName}: no places kept`);
+  }
+  const fetchDate = nameDate || parsed.fetchDate;
+  return {
+    fileName: file.fileName,
+    sha256: createHash("sha256").update(file.bytes).digest("hex"),
+    bytes: file.bytes.byteLength,
+    fetchDate,
+    sourceCode: `OSM-${fetchDate}`,
+    snapshotVersion: `osm:relation/${parsed.header.boundaryRelation ?? "?"}:${fetchDate}`,
+    revisionLabel: `osm-places-${fetchDate}`,
+    header: parsed.header,
+    synthetic: parsed.synthetic,
+    places: parsed.places,
+    dropped: parsed.dropped,
+    counts: parsed.counts,
+    problems,
   };
 }

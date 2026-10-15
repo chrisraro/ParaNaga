@@ -9,6 +9,7 @@
 //  - NULL from the database stays null (unknown), never 0 or false.
 import { z } from "zod";
 import { NAGA_MAX_BOUNDS } from "../geo/naga";
+import { OSM_ELEMENT_TYPES, OSM_PLACE_CATEGORIES } from "../places/osm-categories";
 
 // ---------------------------------------------------------------- shared pieces
 
@@ -293,6 +294,30 @@ export const routeDetailSchema = z.object({
   sources: z.array(sourceSchema),
 });
 export type RouteDetail = z.infer<typeof routeDetailSchema>;
+
+// ---------------------------------------------------------------- OpenStreetMap places
+
+/**
+ * A named place from the committed OpenStreetMap snapshot (ODbL, © OpenStreetMap contributors).
+ * A place, not transport data: the coordinate is the OSM node or the element's centre, never an
+ * entrance; no hours, photos or ratings exist.
+ */
+export const osmPlaceSchema = z.object({
+  /** "osm:{type}/{id}", stable across snapshots. */
+  key: z.string().regex(/^osm:(node|way|relation)\/[1-9][0-9]*$/),
+  name: z.string().min(1),
+  /** name:en, name:fil, alt_name, old_name — verbatim. */
+  aliases: z.array(z.string()),
+  category: z.enum(OSM_PLACE_CATEGORIES),
+  lat: latitude,
+  lng: longitude,
+  osmType: z.enum(OSM_ELEMENT_TYPES),
+  osmId: z.number().int().positive(),
+  osmVersion: z.number().int().min(1),
+  /** ingest.source code of the snapshot, e.g. OSM-2026-10-15. */
+  sourceCode: z.string().regex(/^OSM-\d{4}-\d{2}-\d{2}$/),
+});
+export type OsmPlace = z.infer<typeof osmPlaceSchema>;
 
 // ---------------------------------------------------------------- errors
 

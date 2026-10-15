@@ -6,8 +6,13 @@
 // transaction as paranaga_import (owner connection, DATABASE_URL_UNPOOLED) and publishes
 // through transit.publish_revision; a rerun with the same files writes nothing.
 // Any parsing error, integrity issue or cross-check disagreement aborts before any write.
+//
+// OpenStreetMap places: the newest committed data/source/osm/naga-places-YYYY-MM-DD.osm.json (if
+// any) is read too; no network call is ever made here. With transit unchanged and a new snapshot,
+// --commit publishes a new revision osm-places-<date> that carries the transit data forward
+// (scripts/lib/import-writer.ts). Without a snapshot file, places are skipped.
 // Connection strings are never printed.
-import { buildImportPlan, readDataFiles, type ImportPlan } from "./lib/import-plan";
+import { buildImportPlan, OSM_DIR, readDataFiles, readNewestOsmSnapshot, type ImportPlan } from "./lib/import-plan";
 import { commitImport } from "./lib/import-writer";
 
 const redact = (text: string) => text.replace(/postgres(ql)?:\/\/\S+/g, "<redacted-url>");
@@ -27,6 +32,18 @@ function printPlan(plan: ImportPlan) {
     console.log(`  ${c.kind}${meters}: ${records.map((r) => `${r.sourceLayer}/${r.code} "${r.label}"`).join(" | ")}`);
   }
   console.log(`fare conflicts: ${plan.seed.fareConflicts.map((f) => `${f.observationCode} vs ${f.ruleCode} (${f.status})`).join(", ")}`);
+  const osm = plan.osm;
+  if (!osm) {
+    console.log(`OpenStreetMap places: no snapshot in ${OSM_DIR}; skipped`);
+    return;
+  }
+  console.log(`OpenStreetMap places: ${osm.fileName}${osm.synthetic ? "  (SYNTHETIC test data: publish will be refused)" : ""}`);
+  console.log(`  document ${osm.fileName}  sha256 ${osm.sha256}  ${osm.bytes} bytes`);
+  console.log(`  snapshot ${osm.snapshotVersion}  source ${osm.sourceCode}  revision ${osm.revisionLabel}`);
+  console.log(`  places kept ${osm.places.length}:`);
+  for (const [k, v] of Object.entries(osm.counts)) console.log(`    ${k.padEnd(32)} ${v}`);
+  console.log("  dropped:");
+  for (const [k, v] of Object.entries(osm.dropped)) console.log(`    ${k.padEnd(32)} ${v}`);
 }
 
 async function main(): Promise<number> {
@@ -37,7 +54,7 @@ async function main(): Promise<number> {
     return 2;
   }
 
-  const plan = buildImportPlan(readDataFiles("Data_Sets"));
+  const plan = buildImportPlan(readDataFiles("Data_Sets"), readNewestOsmSnapshot());
   printPlan(plan);
   if (plan.problems.length > 0) {
     console.error(`\nABORTED: ${plan.problems.length} problem(s); nothing written:`);
@@ -63,6 +80,16 @@ async function main(): Promise<number> {
     console.log(`\ncommitted batch ${result.batchId}`);
     console.log(`  added ${"revision_members".padEnd(34)} ${result.counts.revision_members}`);
     console.log(`published revision: ${result.revisionLabel} (${result.revisionId})`);
+  }
+  const places = result.places;
+  if (places?.outcome === "unchanged") {
+    console.log(`
+places unchanged: snapshot matches committed batch ${places.batchId}; nothing written (${places.counts.places} places)`);
+  } else if (places?.outcome === "committed") {
+    console.log(`
+places committed batch ${places.batchId}`);
+    for (const [k, v] of Object.entries(places.counts)) console.log(`  ${k.padEnd(34)} ${v}`);
+    console.log(`published revision: ${places.revisionLabel} (${places.revisionId})`);
   }
   return 0;
 }

@@ -8,6 +8,7 @@ import { StatusBadge, badgeText, type BadgeVariant } from "@/ui/kit/badge";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
+import { OSM_COPYRIGHT_URL, OsmAttribution } from "@/ui/kit/osm-attribution";
 
 afterEach(cleanup);
 
@@ -20,6 +21,7 @@ describe("StatusBadge", () => {
     "unverified-route": UNVERIFIED_ROUTE_BADGE,
     "not-surveyed": "Not surveyed",
     historical: "Historical name — not mapped",
+    osm: "OpenStreetMap",
   };
 
   it.each(Object.entries(expected))("%s renders its text with an icon (never colour alone)", (variant, text) => {
@@ -153,5 +155,18 @@ describe("ConfirmDialog", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
     expect(onConfirm).toHaveBeenCalledOnce();
     expect(dialog.hasAttribute("open")).toBe(false);
+  });
+});
+
+describe("OsmAttribution", () => {
+  it("credits OpenStreetMap contributors under the ODbL with a safe link to the copyright page", () => {
+    render(<OsmAttribution testId="osm" />);
+    const note = screen.getByTestId("osm");
+    expect(note.textContent).toBe("© OpenStreetMap contributors (ODbL)");
+    const link = within(note).getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" });
+    expect(link.getAttribute("href")).toBe("https://www.openstreetmap.org/copyright");
+    expect(OSM_COPYRIGHT_URL).toBe("https://www.openstreetmap.org/copyright");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(link.getAttribute("target")).toBe("_blank");
   });
 });

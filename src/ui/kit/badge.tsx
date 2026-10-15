@@ -13,7 +13,8 @@ export type BadgeVariant =
   | "trial"
   | "unverified-route"
   | "not-surveyed"
-  | "historical";
+  | "historical"
+  | "osm";
 
 const ICON_PROPS = {
   width: 12,
@@ -92,6 +93,17 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
       <svg {...ICON_PROPS} strokeWidth={2.6}>
         <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
         <path d="M3 3v5h5M12 8v4l3 2" />
+      </svg>
+    ),
+  },
+  // Source badge on every OpenStreetMap place (with OsmAttribution on the same screen).
+  osm: {
+    text: "OpenStreetMap",
+    className: "pn-badge pn-badge--evidence",
+    icon: (
+      <svg {...ICON_PROPS} strokeWidth={2.6}>
+        <path d="M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11z" />
+        <circle cx="12" cy="10" r="2" />
       </svg>
     ),
   },
