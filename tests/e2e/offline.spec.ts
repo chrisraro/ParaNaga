@@ -20,6 +20,9 @@ let calls: NetworkCalls;
 let planRequests = 0;
 
 test.beforeEach(async ({ context, page }) => {
+  // Every test installs a worker (and the update tests a second one): more than the default 30 s
+  // on a loaded machine.
+  test.slow();
   await context.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
   planRequests = 0;
   await context.route("**/api/v1/plan", (route) => {
@@ -43,7 +46,7 @@ test.afterEach(async ({ page }) => {
  * First visit online: the worker installs (the shells), takes control, and the page hands it the
  * head and snapshot it fetched before that (no second download).
  */
-async function firstVisit(page: Page) {
+async function firstVisit(page: Page, { backgroundIndex = true }: { backgroundIndex?: boolean } = {}) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
   await page.evaluate(async () => {
@@ -53,6 +56,13 @@ async function firstVisit(page: Page) {
   await expect
     .poll(() => page.evaluate(async () => (await caches.keys()).some((n) => n.startsWith("pn-snapshot-"))))
     .toBe(true);
+  // The one background fetch of the search index (not with Low-data mode) has finished, so no
+  // request is in flight in the worker when a test goes offline or deploys a new version.
+  if (backgroundIndex) {
+    await expect
+      .poll(() => page.evaluate(async () => (await caches.keys()).some((n) => n.startsWith("pn-search-index-"))), { timeout: 20_000 })
+      .toBe(true);
+  }
 }
 
 /**
@@ -126,18 +136,24 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
   await expect(page.getByRole("heading", { level: 1, name: "You're offline" })).toBeVisible();
 });
 
-test("offline: search works from the cached index, from a cold start", async ({ page, context }) => {
+test("offline: search works from a cold start without searching first (index fetched once in the background)", async ({ page, context }) => {
+  // After the worker takes control the index of the current revision is fetched once, when idle
+  // (firstVisit waits for it to be cached).
   await firstVisit(page);
-  // The index is cached when search is first used (never downloaded ahead, low-data friendly).
-  const before = calls.searchIndexes.length;
-  await page.goto("/app/search?for=destination");
-  await searchBox(page).fill("SM City");
-  await expect(page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" })).toBeVisible();
-  expect(calls.searchIndexes.length).toBe(before + 1);
+  expect(calls.searchIndexes).toEqual([SNAPSHOT.revision.revisionId]);
   await goOffline(context);
   await page.goto("/app/search?for=destination");
   await searchBox(page).fill("SM City");
   await expect(page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" })).toBeVisible();
+});
+
+test("Low-data mode: the search index is not fetched in the background", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("paranaga.prefs", JSON.stringify({ theme: "system", highContrast: false, lowData: true, historyEnabled: false }));
+  });
+  await firstVisit(page, { backgroundIndex: false });
+  await page.waitForTimeout(12_000); // past the idle callback's 10 s timeout
+  expect(calls.searchIndexes).toEqual([]);
 });
 
 test("offline: the tab bar opens the cached shells by document navigation", async ({ page, context }) => {
@@ -246,6 +262,36 @@ test("update: new worker bytes at the same URL wait; the card offers Reload, and
   await expect(page.getByTestId("update-prompt")).toHaveCount(0);
 });
 
+test("update: Later hides the card; More still offers Update ready — Reload", async ({ page, context }) => {
+  // Records what the page asks a worker to do (activation itself is covered by the Reload tests:
+  // under heavy parallel load Chromium may hold a waiting version back while the active worker is
+  // busy, which would only make this test slow, not tell us more).
+  await page.addInitScript(() => {
+    const post = ServiceWorker.prototype.postMessage;
+    const w = window as unknown as { __swMessages: unknown[] };
+    w.__swMessages = [];
+    ServiceWorker.prototype.postMessage = function (this: ServiceWorker, message: unknown, ...rest: unknown[]) {
+      w.__swMessages.push(message);
+      return (post as (...args: unknown[]) => void).call(this, message, ...rest);
+    } as typeof post;
+  });
+  await firstVisit(page);
+  await deployNextVersion(page, context, "later");
+  const prompt = page.getByTestId("update-prompt");
+  await expect(prompt).toBeVisible();
+  await prompt.getByRole("button", { name: "Later" }).click();
+  await expect(prompt).toHaveCount(0);
+  // Hidden for this page session, not gone: More offers the same Reload.
+  await page.getByTestId("tab-more").click();
+  const row = page.getByTestId("settings-update");
+  await expect(row).toContainText("Update ready — Reload");
+  await expect(page.getByTestId("update-prompt")).toHaveCount(0);
+  await row.click();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __swMessages?: unknown[] }).__swMessages ?? []).catch(() => ["reloaded"]))
+    .toEqual(expect.arrayContaining([expect.objectContaining({ type: "SKIP_WAITING" })]));
+});
+
 test("update in two tabs: Reload in one; the other's card goes away instead of staying dead", async ({ page, context }) => {
   await firstVisit(page);
   const other = await context.newPage();
@@ -280,10 +326,14 @@ test("update: the card never shows during guidance, and appears once it ends", a
  * /serwist/sw.js, so the browser's own update check finds new bytes at the same URL.
  */
 async function deployNextVersion(page: Page, context: BrowserContext, variant: string) {
-  await context.addCookies([{ name: "e2e-sw-variant", value: variant, url: page.url() }]);
+  await context.addCookies([{ name: "e2e-sw-variant", value: variant, url: new URL("/", page.url()).href }]); // path "/"
   await page.evaluate(async () => {
     await (await navigator.serviceWorker.getRegistration())?.update();
   });
+  // Installing the new version (it caches the shells) can take a while on a loaded machine.
+  await expect
+    .poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting)), { timeout: 20_000 })
+    .toBe(true);
 }
 
 for (const colorScheme of ["light", "dark"] as const) {

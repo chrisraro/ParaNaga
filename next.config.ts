@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 import { withSerwist } from "@serwist/turbopack";
+import { testOnlyEnvProblem } from "./src/domain/pwa/build-guard";
+
+// Test-only switches never reach a deployment build (Task 12).
+const envProblem = testOnlyEnvProblem(process.env);
+if (envProblem) throw new Error(envProblem);
 
 // Baseline headers for every response. The CSP starts in Report-Only mode
 // (docs/spec/05-security.md §5.10) and is enforced once MapLibre, PMTiles and
@@ -44,6 +49,12 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   poweredByHeader: false,
   serverExternalPackages: ["pg"],
+  cacheLife: {
+    // The bundled service worker (src/app/serwist/[path]/route.ts) is built once, at build time,
+    // and must never be regenerated within a deployment: regenerating needs the build output and
+    // esbuild, which a deployed function does not have. ~10 years; a new deployment is a new build.
+    serviceWorker: { stale: 315_360_000, revalidate: 315_360_000, expire: 315_360_000 + 86_400 },
+  },
   experimental: {
     // Soft navigations, prefetches and Server Actions stay pending offline and retry on
     // reconnect instead of throwing (useOffline from next/offline drives the offline UI, Task 12).

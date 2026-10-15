@@ -66,6 +66,12 @@
   font-weight: 700;
   cursor: pointer;
 }
+.pn-update .pn-update__later {
+  padding: 0 12px;
+  background: transparent;
+  color: var(--pn-accent);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
+}
 .pn-update button:focus-visible {
   outline: 3px solid #2bb5ae;
   outline-offset: 2px;

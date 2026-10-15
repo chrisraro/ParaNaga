@@ -26,6 +26,9 @@ let watched = new WeakSet<ServiceWorker>();
 const listeners = new Set<() => void>();
 let reloadPage = () => window.location.reload();
 
+/** "Later" on the card: hidden for this page session (More → App still offers Reload). */
+let later = false;
+
 function setWaiting(worker: ServiceWorker | null): void {
   if (waiting === worker) return;
   waiting = worker;
@@ -49,7 +52,14 @@ function watch(worker: ServiceWorker): void {
   watched.add(worker);
   worker.addEventListener("statechange", () => {
     consider(worker);
-    if (waiting === worker && !initiated && (isActive(worker) || worker.state === "redundant")) setWaiting(null);
+    if (waiting !== worker) return;
+    if (worker.state === "redundant") {
+      // Superseded (e.g. a newer version arrived before it activated): a later one can be applied.
+      initiated = false;
+      setWaiting(null);
+    } else if (!initiated && isActive(worker)) {
+      setWaiting(null);
+    }
   });
 }
 
@@ -112,8 +122,21 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+/** A new version is waiting (More → App shows "Update ready — Reload" while it is). */
 export function useUpdateReady(): boolean {
   return useSyncExternalStore(subscribe, () => waiting !== null, () => false);
+}
+
+/** The floating card: a waiting version the person has not put off with "Later". */
+export function useUpdateCard(): boolean {
+  return useSyncExternalStore(subscribe, () => waiting !== null && !later, () => false);
+}
+
+/** "Later": hides the card for this page session; the update stays available in More. */
+export function postponeUpdate(): void {
+  if (later) return;
+  later = true;
+  for (const listener of [...listeners]) listener();
 }
 
 /**
@@ -140,6 +163,7 @@ export function resetServiceWorkerForTests(): void {
   registration = null;
   started = false;
   initiated = false;
+  later = false;
   controllerListener = false;
   watched = new WeakSet();
   listeners.clear();

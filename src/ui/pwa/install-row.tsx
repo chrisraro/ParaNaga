@@ -3,16 +3,20 @@
 // More → App: install ParaNaga. Only what the browser really offers: a button when it has fired
 // `beforeinstallprompt` (Android / Chromium), the Share → "Add to Home Screen" steps on iPhone and
 // iPad, "Installed" inside the installed app, and plain text pointing to the browser menu
-// otherwise. No fake prompt, no button that does nothing.
+// otherwise. No fake prompt, no button that does nothing. While a new version waits, the group also
+// offers "Update ready — Reload" (the card's Reload, still there after "Later").
 
 import { useState } from "react";
+import { getGuidanceSnapshot } from "@/client/guidance/guidance-store";
 import { iosInstallText, promptInstall, useInstallState } from "@/client/pwa/install";
+import { applyUpdate, useUpdateReady } from "@/client/pwa/register-sw";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 
 export const OTHER_INSTALL_TEXT = "To add ParaNaga to your home screen, use your browser’s menu (Install app or Add to Home screen).";
 
 export function InstallRow() {
   const state = useInstallState();
+  const updateReady = useUpdateReady();
   const [dismissed, setDismissed] = useState(false);
 
   let cell;
@@ -50,6 +54,16 @@ export function InstallRow() {
   return (
     <ListGroup title="App" testId="settings-app">
       {cell}
+      {updateReady ? (
+        <ListCell
+          title="Update ready — Reload"
+          sub="A new version of ParaNaga is ready."
+          onClick={() => {
+            if (getGuidanceSnapshot() === null) applyUpdate();
+          }}
+          testId="settings-update"
+        />
+      ) : null}
     </ListGroup>
   );
 }

@@ -43,14 +43,16 @@ const serwist = createSerwistRoute({
 export const generateStaticParams = serwist.generateStaticParams;
 
 /**
- * The bundled worker, cached for the life of the build ("use cache"): with Cache Components a
+ * The bundled worker, cached for the life of the deployment ("use cache" with the
+ * "serviceWorker" profile of next.config.ts: ~10 years, so it is never regenerated at runtime,
+ * where the build output and esbuild are not available). With Cache Components a
  * route handler is prerendered only if its I/O (here globbing the build output and running
  * esbuild) happens inside a cache scope, otherwise the route becomes request-time and would bundle
  * at runtime, where the build output is not available.
  */
 async function workerScript(): Promise<string> {
   "use cache";
-  cacheLife("max");
+  cacheLife("serviceWorker");
   const response = await serwist.GET(new Request("http://localhost/serwist/sw.js"), { params: Promise.resolve({ path: "sw.js" }) });
   return response.text();
 }

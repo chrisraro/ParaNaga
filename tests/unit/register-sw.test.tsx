@@ -4,7 +4,7 @@
 // the card; Reload asks once and reloads once; a version already active just reloads.
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { applyUpdate, resetServiceWorkerForTests, setReloadForTests, trackRegistration, useUpdateReady } from "@/client/pwa/register-sw";
+import { applyUpdate, postponeUpdate, resetServiceWorkerForTests, setReloadForTests, trackRegistration, useUpdateCard, useUpdateReady } from "@/client/pwa/register-sw";
 
 class FakeWorker extends EventTarget {
   postMessage = vi.fn();
@@ -130,5 +130,38 @@ describe("applyUpdate", () => {
     act(() => applyUpdate());
     expect(next.postMessage).not.toHaveBeenCalled();
     expect(reloads).toBe(1);
+  });
+
+  it("a version this tab asked for that becomes redundant releases Reload for the next one", () => {
+    const reg = new FakeRegistration();
+    const first = new FakeWorker("installed");
+    reg.waiting = first;
+    const { result } = renderHook(() => useUpdateReady());
+    track(reg);
+    act(() => applyUpdate());
+    expect(first.postMessage).toHaveBeenCalledTimes(1);
+    act(() => first.set("redundant")); // superseded before it activated
+    expect(result.current).toBe(false);
+    const second = new FakeWorker("installing");
+    reg.installing = second;
+    fire(reg, "updatefound");
+    act(() => second.set("installed"));
+    expect(result.current).toBe(true);
+    act(() => applyUpdate());
+    expect(second.postMessage).toHaveBeenCalledWith({ type: "SKIP_WAITING" });
+  });
+});
+
+describe("Later", () => {
+  it("hides the card for this page session while the update stays ready", () => {
+    const reg = new FakeRegistration();
+    reg.waiting = new FakeWorker("installed");
+    const card = renderHook(() => useUpdateCard());
+    const ready = renderHook(() => useUpdateReady());
+    track(reg);
+    expect(card.result.current).toBe(true);
+    act(() => postponeUpdate());
+    expect(card.result.current).toBe(false);
+    expect(ready.result.current).toBe(true);
   });
 });

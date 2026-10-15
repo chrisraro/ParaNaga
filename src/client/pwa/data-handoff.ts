@@ -5,8 +5,8 @@
 // controls it, so the worker never sees those responses. Instead of downloading them again at
 // install (wasteful, and against low-data mode), the page keeps its own copies here and posts them
 // to the worker once it is active; the worker stores only what its allow-list accepts
-// (acceptHandoff in src/domain/pwa/sw-routes.ts). A page already controlled sends nothing: the
-// worker saw those responses itself.
+// (acceptHandoff in src/domain/pwa/sw-routes.ts). A request made while the page was already
+// controlled is never offered: the worker saw that response itself.
 
 import { HANDOFF_MESSAGE, type HandoffEntry } from "@/domain/pwa/sw-routes";
 import { serviceWorkerEnabled } from "./register-sw";
@@ -14,9 +14,20 @@ import { serviceWorkerEnabled } from "./register-sw";
 const pending = new Map<string, HandoffEntry>();
 let scheduled = false;
 
-/** Offers a fetched JSON response (its text and Cache-Control) to the worker. Best effort. */
-export function offerToWorker(url: string, body: string, cacheControl: string | null): void {
-  if (!serviceWorkerEnabled() || !cacheControl || navigator.serviceWorker.controller) return;
+/**
+ * Whether the worker will see a request started now. Read it BEFORE the fetch: a request that
+ * starts uncontrolled bypasses the worker even if the worker takes control while it runs.
+ */
+export function workerSeesRequests(): boolean {
+  return !serviceWorkerEnabled() || navigator.serviceWorker.controller !== null;
+}
+
+/**
+ * Offers a fetched JSON response (its text and Cache-Control) to the worker, when the request
+ * went around it (`sawRequest` false, captured with workerSeesRequests() before the fetch).
+ */
+export function offerToWorker(url: string, body: string, cacheControl: string | null, sawRequest: boolean): void {
+  if (sawRequest || !serviceWorkerEnabled() || !cacheControl) return;
   pending.set(url, { url, body, cacheControl });
   if (scheduled) return;
   scheduled = true;

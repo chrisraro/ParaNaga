@@ -133,6 +133,25 @@ describe("UpdatePrompt", () => {
     expect(sw2.addEventListener).toHaveBeenCalledWith("controllerchange", expect.any(Function));
   });
 
+  it("Later hides the card; More → App keeps Update ready — Reload", () => {
+    const worker = { postMessage: vi.fn() } as unknown as ServiceWorker;
+    Object.defineProperty(navigator, "serviceWorker", { value: { addEventListener: vi.fn(), controller: null }, configurable: true });
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    render(
+      <>
+        <UpdatePrompt />
+        <InstallRow />
+      </>,
+    );
+    expect(screen.queryByTestId("settings-update")).toBeNull();
+    act(() => sw.setWaitingForTests(worker));
+    fireEvent.click(screen.getByRole("button", { name: "Later" }));
+    expect(screen.queryByTestId("update-prompt")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /Update ready — Reload/ }));
+    expect(worker.postMessage).toHaveBeenCalledWith({ type: "SKIP_WAITING" });
+    delete (navigator as unknown as { serviceWorker?: unknown }).serviceWorker;
+  });
+
   it("never shows, and never reloads, during guidance", () => {
     guidance.active = true;
     const worker = { postMessage: vi.fn() } as unknown as ServiceWorker;

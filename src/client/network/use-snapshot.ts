@@ -13,7 +13,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { rememberHead } from "@/client/network/remember-head";
-import { offerToWorker } from "@/client/pwa/data-handoff";
+import { offerToWorker, workerSeesRequests } from "@/client/pwa/data-handoff";
 import { readSnapshotMeta } from "@/client/storage/db";
 import { networkHeadSchema, networkSnapshotSchema, type NetworkSnapshot } from "@/domain/api/schemas";
 
@@ -33,12 +33,13 @@ function set(next: SnapshotState): void {
 }
 
 async function getJson(url: string): Promise<unknown> {
+  const sawRequest = workerSeesRequests();
   const response = await fetch(url, { headers: { accept: "application/json" } });
   if (!response.ok) throw new Error(`GET ${url} failed with ${response.status}`);
   const text = await response.text();
   const body: unknown = JSON.parse(text);
   // First visit: the worker did not see this response; give it the page's copy.
-  offerToWorker(url, text, response.headers.get("Cache-Control"));
+  offerToWorker(url, text, response.headers.get("Cache-Control"), sawRequest);
   return body;
 }
 
