@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { haversineMeters } from "@/domain/geo/geometry";
-import { detectConflicts } from "@/domain/import/conflicts";
+import { detectConflicts, labelsSimilar } from "@/domain/import/conflicts";
 import { parseSurveyTemplate } from "@/domain/import/survey-template";
 import { provisionalLoopSequence } from "@/domain/import/provisional-loops";
 import {
@@ -13,7 +13,9 @@ import {
   parseGeojsonStops,
   parseKmlStops,
   sourceIdentity,
+  toRawFeatureRow,
   withIdentities,
+  type IdentifiedStop,
   type MappedStopRecord,
 } from "@/domain/import/mapped-stops";
 
@@ -235,5 +237,52 @@ describe("field_survey_template.csv", () => {
     expect(cols).toHaveLength(45);
     expect(cols[0]).toBe("record_id");
     expect(cols.at(-1)).toBe("source_program");
+  });
+});
+
+describe("labelsSimilar", () => {
+  it("accepts equal labels, case/punctuation variants and word containment", () => {
+    expect(labelsSimilar("Plaza Rizal", "plaza  rizal")).toBe(true);
+    expect(labelsSimilar("Plaza Rizal", "Plaza Rizal Naga")).toBe(true);
+    expect(labelsSimilar("E-Mall", "E-Mall/Plaza Quince Martires")).toBe(true);
+    expect(labelsSimilar("Cor. Peñafrancia Ave & Magsaysay Ave.", "Cor. Peñafrancia Ave & Magsaysay Ave")).toBe(true);
+  });
+  it("uses a Jaccard threshold of 0.5 for partial overlap", () => {
+    expect(labelsSimilar("a b c", "a b d")).toBe(true); // 2/4
+    expect(labelsSimilar("a b c", "a d e")).toBe(false); // 1/5
+  });
+  it("rejects unrelated and empty labels", () => {
+    expect(labelsSimilar("Plaza Rizal", "Naga City Market")).toBe(false);
+    expect(labelsSimilar("", "City Hall")).toBe(false);
+    expect(labelsSimilar("", "")).toBe(false);
+  });
+
+  it("does not report a pair within 15 m whose labels are unrelated", () => {
+    const mk = (layer: "A" | "B", code: string, label: string, lng: number): IdentifiedStop => ({
+      ...kml[0]!, layer, sourceLayer: `Loop Service ${layer}`, code, label, lat: 13.62, lng,
+      sourceIdentity: code, identityMethod: "layer_code_label", identityKey: code,
+    });
+    const near = [mk("A", "A1", "Plaza Rizal", 123.1), mk("B", "B1", "Naga City Market", 123.10005)];
+    expect(detectConflicts(near).filter((c) => c.kind === "near_duplicate")).toEqual([]);
+    const similar = [mk("A", "A1", "Plaza Rizal", 123.1), mk("B", "B1", "Plaza Rizal", 123.10005)];
+    expect(detectConflicts(similar).filter((c) => c.kind === "near_duplicate")).toHaveLength(1);
+  });
+});
+
+describe("input validation and raw rows", () => {
+  it("toRawFeatureRow keeps verbatim coordinate text and refuses a record without it", () => {
+    const [first] = withIdentities(kml, geojson.metadata.mapId);
+    expect(toRawFeatureRow(first!)).toMatchObject({ lonText: "123.1846726", latText: "13.6233869", labelRaw: "Plaza Rizal" });
+    expect(() => toRawFeatureRow({ ...first!, coordinatesRaw: null })).toThrow(/verbatim/);
+  });
+
+  it("GeoJSON and CSV rows are schema-validated", () => {
+    const bad = JSON.parse(geojsonText) as { features: { geometry: { coordinates: unknown[] } }[] };
+    bad.features[0]!.geometry.coordinates = ["x", 1];
+    expect(() => parseGeojsonStops(JSON.stringify(bad))).toThrow(/GeoJSON/);
+    expect(() => parseCsvStops(csvText.replace("13.6233869", "abc"))).toThrow(/row 2/);
+    const noCount = JSON.parse(geojsonText) as { metadata: Record<string, unknown> };
+    delete noCount.metadata.record_count;
+    expect(parseGeojsonStops(JSON.stringify(noCount)).metadata.recordCount).toBeNull();
   });
 });

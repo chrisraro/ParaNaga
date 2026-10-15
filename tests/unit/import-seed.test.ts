@@ -1,6 +1,16 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { crossCheckDesignatedCsv, normalizeSeed, type NormalizedSeed } from "@/domain/import/seed";
+import { detectConflicts } from "@/domain/import/conflicts";
+import { buildSnapshot, withIdentities } from "@/domain/import/mapped-stops";
+import {
+  crossCheckDesignatedCsv,
+  crossCheckSeedMappedStops,
+  normalizeSeed,
+  pesosToCentavos,
+  surveyTemplateNote,
+  type NormalizedSeed,
+} from "@/domain/import/seed";
+import { parseSurveyTemplate } from "@/domain/import/survey-template";
 
 const read = (f: string) => readFileSync(`Data_Sets/${f}`, "utf8");
 const seedJson: unknown = JSON.parse(read("naga_transport_seed.json"));
@@ -25,12 +35,16 @@ describe("normalizeSeed counts", () => {
       "coverage_claim",
       "dataset_version",
       "designated_stop_program",
+      "geography",
+      "navigation_ready",
       "public_stop_map",
+      "researched_on",
       "stop_inventory_gaps",
+      "timezone",
     ]);
   });
 
-  it("has no integrity issues except the one documented non-S source reference", () => {
+  it("has no integrity issues", () => {
     expect(seed.integrityIssues).toEqual([]);
   });
 });
@@ -107,9 +121,9 @@ describe("fares in centavos", () => {
   it("F02 modern jeepney: 1700 base, +240/km", () => {
     expect(rule("F02")).toMatchObject({ baseCentavos: 1700, baseKm: 4, incrementCentavosPerKm: 240 });
   });
-  it("F03 trimobile: 1500 base, 20 % discount, calculated discounted base 1200, unknown km stays null", () => {
+  it("F03 trimobile: 1500 base, 20 % discount; the seed's calculated 1200 is NOT stored as a rule value", () => {
     const f03 = rule("F03");
-    expect(f03).toMatchObject({ baseCentavos: 1500, discountPercent: 20, discountedBaseCentavos: 1200, baseKm: null, incrementCentavosPerKm: null, effectiveFrom: null, enactedOn: "2024-01-16" });
+    expect(f03).toMatchObject({ baseCentavos: 1500, discountPercent: 20, discountedBaseCentavos: null, baseKm: null, incrementCentavosPerKm: null, effectiveFrom: null, enactedOn: "2024-01-16" });
     expect(f03.discountGroups).toEqual(["senior", "student", "PWD", "solo_parent_with_valid_ID"]);
   });
   it("F04 padyak: 1000 base, 800 discounted", () => {
@@ -130,6 +144,7 @@ describe("fares in centavos", () => {
       code: "F05", ruleCode: null, category: "student", amountCentavos: 1300, kind: "reported_practice", observedAt: "2026-06-22",
     });
     expect(seed.fareObservations[0]!.details).toMatchObject({ reportedBaseCentavos: 1500, calculatedDiscountedBaseCentavos: 1200 });
+    expect(seed.fareObservations[0]!.details).toMatchObject({ calculatedDiscountedBaseCentavos: 1200 });
     expect(seed.fareConflicts).toEqual([
       expect.objectContaining({ ruleCode: "F03", observationCode: "F05", observationCategory: "student", status: "open" }),
     ]);
@@ -216,5 +231,76 @@ describe("designated stop candidates", () => {
     expect(crossCheckDesignatedCsv(seed.designatedCandidates, csv).join("\n")).toMatch(/DSC-A-02/);
     const fewer = read("designated_stop_candidates.csv").trimEnd().split(/\r?\n/).slice(0, -1).join("\n");
     expect(crossCheckDesignatedCsv(seed.designatedCandidates, fewer).join("\n")).toMatch(/count/i);
+  });
+});
+
+function withFare(patch: Record<string, unknown>) {
+  const base = JSON.parse(JSON.stringify(seedJson)) as { fare_rules: Record<string, unknown>[] };
+  const f05 = base.fare_rules.find((f) => f.id === "F05")!;
+  Object.assign(f05, patch);
+  return base;
+}
+
+describe("trust boundary (Zod)", () => {
+  it("rejects a null, string or negative reported_student_php instead of coercing it to a fare", () => {
+    expect(() => normalizeSeed(withFare({ reported_student_php: null }))).toThrow(/reported_student_php/);
+    expect(() => normalizeSeed(withFare({ reported_student_php: "13" }))).toThrow(/reported_student_php/);
+    expect(() => normalizeSeed(withFare({ reported_student_php: -13 }))).toThrow(/reported_student_php/);
+  });
+
+  it("rejects a non-numeric base fare", () => {
+    const bad = JSON.parse(JSON.stringify(seedJson)) as { fare_rules: Record<string, unknown>[] };
+    bad.fare_rules[0]!.base_php = "14";
+    expect(() => normalizeSeed(bad)).toThrow(/base_php/);
+  });
+
+  it("pesosToCentavos rejects non-finite, negative, non-number and fractional-centavo input", () => {
+    for (const v of [Number.NaN, Number.POSITIVE_INFINITY, -1, null, "13", 0.005]) {
+      expect(() => pesosToCentavos(v as number)).toThrow();
+    }
+    expect(pesosToCentavos(2.4)).toBe(240);
+    expect(pesosToCentavos(0)).toBe(0);
+  });
+
+  it("reports (not defaults) a missing operating_status or allocation flag", () => {
+    const bad = JSON.parse(JSON.stringify(seedJson)) as { routes: Record<string, unknown>[] };
+    delete bad.routes[0]!.operating_status;
+    delete bad.routes[1]!.allocation_is_active_fleet_count;
+    const out = normalizeSeed(bad);
+    expect(out.routes[0]!.operatingStatus).toBeNull();
+    expect(out.routes[1]!.allocationIsActiveFleetCount).toBeNull();
+    expect(out.integrityIssues.join("\n")).toMatch(/R1: operating_status is missing/);
+    expect(out.integrityIssues.join("\n")).toMatch(/R2: allocation_is_active_fleet_count is missing/);
+  });
+
+  it("reports an unknown top-level key", () => {
+    const out = normalizeSeed({ ...(seedJson as object), surprise: 1 });
+    expect(out.integrityIssues).toEqual(['Unknown top-level seed key "surprise" is not mapped']);
+  });
+});
+
+describe("seed mapped_stop_records and survey note", () => {
+  const read2 = (f: string) => readFileSync(`Data_Sets/${f}`, "utf8");
+  const snap = buildSnapshot(read2("naga_mapped_stops_source.kml"), read2("naga_mapped_stops.geojson"), read2("naga_mapped_stops.csv"));
+  const identified = withIdentities(snap.records, snap.metadata.mapId);
+  const conflicts = detectConflicts(identified);
+
+  it("agrees with the snapshot and with detectConflicts on the code-prefix mismatches", () => {
+    expect(seed.mappedStopRecords).toHaveLength(128);
+    expect(seed.mappedStopRecords.filter((m) => m.codePrefixMatchesLayer === false)).toHaveLength(53);
+    expect(crossCheckSeedMappedStops(seed.mappedStopRecords, identified, conflicts)).toEqual([]);
+  });
+
+  it("reports a disagreement", () => {
+    const changed = seed.mappedStopRecords.map((m, i) => (i === 0 ? { ...m, codePrefixMatchesLayer: false } : m));
+    expect(crossCheckSeedMappedStops(changed, identified, conflicts).join("\n")).toMatch(/MYM-A-001/);
+    expect(crossCheckSeedMappedStops(seed.mappedStopRecords.slice(1), identified, conflicts).join("\n")).toMatch(/count/);
+  });
+
+  it("surveyTemplateNote builds a dataset_note row with the 45 columns", () => {
+    const cols = parseSurveyTemplate(read2("field_survey_template.csv"));
+    const note = surveyTemplateNote(cols);
+    expect(note.key).toBe("survey_template_columns");
+    expect(note.value).toEqual({ columns: cols, count: 45 });
   });
 });

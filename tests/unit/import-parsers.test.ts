@@ -37,6 +37,10 @@ describe("parseCsv (RFC 4180)", () => {
     expect(() => parseCsv('a\nx"y\n')).toThrow(/quote/i);
   });
 
+  it("parseCsvObjects ignores trailing blank lines", () => {
+    expect(parseCsvObjects("a,b\n1,2\n\n\n").rows).toEqual([{ a: "1", b: "2" }]);
+  });
+
   it("parseCsvObjects maps rows to headers and rejects ragged rows and duplicate headers", () => {
     expect(parseCsvObjects("a,b\n1,2\n")).toEqual({ header: ["a", "b"], rows: [{ a: "1", b: "2" }] });
     expect(() => parseCsvObjects("a,b\n1\n")).toThrow(/row 2/);

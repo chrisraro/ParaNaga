@@ -80,7 +80,10 @@ export function parseCsv(input: string): string[][] {
 export type CsvTable = { header: string[]; rows: Record<string, string>[] };
 
 export function parseCsvObjects(input: string): CsvTable {
-  const [header, ...body] = parseCsv(input);
+  const records = parseCsv(input);
+  // a re-export may end with blank lines; they parse as one empty field
+  while (records.length > 1 && records[records.length - 1]!.length === 1 && records[records.length - 1]![0] === "") records.pop();
+  const [header, ...body] = records;
   if (!header) throw new Error("CSV: empty file");
   if (new Set(header).size !== header.length) throw new Error("CSV: duplicate header column");
   const rows = body.map((cells, idx) => {

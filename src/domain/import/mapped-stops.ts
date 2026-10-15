@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { parseCsvObjects } from "./csv";
 import { sha256Hex } from "./hash";
 import { parseKml } from "./kml";
@@ -40,7 +41,7 @@ export type MapMetadata = {
   sharedShortUrl: string | null;
   publicOwnerDisplayName: string | null;
   ownerIdentityOrOfficialRoleVerified: boolean | null;
-  recordCount: number;
+  recordCount: number | null;
   exactUniqueCoordinateCount: number | null;
   layerCounts: Record<string, number>;
   retrievedOn: string | null;
@@ -85,87 +86,123 @@ export function parseKmlStops(xml: string): MappedStopRecord[] {
   }));
 }
 
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
-const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
-const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+const GeoMetadataSchema = z.looseObject({
+  map_id: z.string().min(1),
+  title: z.string().nullish(),
+  viewer_url: z.string().nullish(),
+  shared_short_url: z.string().nullish(),
+  public_owner_display_name: z.string().nullish(),
+  owner_identity_or_official_role_verified: z.boolean().nullish(),
+  record_count: z.number().finite().nonnegative().nullish(),
+  exact_unique_coordinate_count: z.number().finite().nonnegative().nullish(),
+  layer_counts: z.record(z.string(), z.number().finite().nonnegative()).nullish(),
+  retrieved_on: z.string().nullish(),
+  notes: z.string().nullish(),
+});
+
+const GeoFeatureSchema = z.object({
+  id: z.string().nullish(),
+  geometry: z.object({
+    type: z.literal("Point"),
+    coordinates: z.tuple([z.number().finite().min(-180).max(180), z.number().finite().min(-90).max(90)], z.number()),
+  }),
+  properties: z.looseObject({
+    id: z.string().nullish(),
+    source_layer: z.string(),
+    source_stop_code: z.string(),
+    label_raw: z.string(),
+    route_id: z.string().nullish(),
+    direction: z.string().nullish(),
+    export_position: z.number().finite().nullish(),
+    operating_status: z.string().nullish(),
+  }),
+});
+
+const GeoCollectionSchema = z.looseObject({
+  name: z.string().nullish(),
+  metadata: GeoMetadataSchema,
+  features: z.array(GeoFeatureSchema),
+});
+
+const coordText = z.string().regex(/^-?\d+(\.\d+)?$/, "coordinate must be a decimal number");
+
+const CsvRowSchema = z.looseObject({
+  id: z.string(),
+  source_layer: z.string(),
+  source_stop_code: z.string(),
+  label_raw: z.string(),
+  latitude: coordText,
+  longitude: coordText,
+  route_id: z.string().optional(),
+  direction: z.string().optional(),
+  operating_status: z.string().optional(),
+});
+
+function zodMessage(where: string, error: z.ZodError): string {
+  const first = error.issues[0];
+  return `${where}: invalid at ${first && first.path.length > 0 ? first.path.join(".") : "root"}: ${first?.message ?? "unknown error"}`;
+}
 
 export function parseGeojsonStops(text: string): { metadata: MapMetadata; records: MappedStopRecord[] } {
-  const root: unknown = JSON.parse(text);
-  if (!isObj(root) || !Array.isArray(root.features) || !isObj(root.metadata)) {
-    throw new Error("GeoJSON: expected a FeatureCollection with metadata and features");
-  }
-  const m = root.metadata;
-  const mapId = str(m.map_id);
-  if (!mapId) throw new Error("GeoJSON: metadata.map_id is missing");
+  const parsed = GeoCollectionSchema.safeParse(JSON.parse(text));
+  if (!parsed.success) throw new Error(zodMessage("GeoJSON", parsed.error));
+  const { metadata: m, features } = parsed.data;
   const metadata: MapMetadata = {
-    mapId,
-    title: str(m.title) ?? str(root.name) ?? "",
-    viewerUrl: str(m.viewer_url),
-    sharedShortUrl: str(m.shared_short_url),
-    publicOwnerDisplayName: str(m.public_owner_display_name),
-    ownerIdentityOrOfficialRoleVerified:
-      typeof m.owner_identity_or_official_role_verified === "boolean" ? m.owner_identity_or_official_role_verified : null,
-    recordCount: num(m.record_count) ?? -1,
-    exactUniqueCoordinateCount: num(m.exact_unique_coordinate_count),
-    layerCounts: isObj(m.layer_counts) ? (Object.fromEntries(Object.entries(m.layer_counts).filter(([, v]) => typeof v === "number")) as Record<string, number>) : {},
-    retrievedOn: str(m.retrieved_on),
-    notes: str(m.notes),
+    mapId: m.map_id,
+    title: m.title ?? parsed.data.name ?? "",
+    viewerUrl: m.viewer_url ?? null,
+    sharedShortUrl: m.shared_short_url ?? null,
+    publicOwnerDisplayName: m.public_owner_display_name ?? null,
+    ownerIdentityOrOfficialRoleVerified: m.owner_identity_or_official_role_verified ?? null,
+    recordCount: m.record_count ?? null,
+    exactUniqueCoordinateCount: m.exact_unique_coordinate_count ?? null,
+    layerCounts: m.layer_counts ?? {},
+    retrievedOn: m.retrieved_on ?? null,
+    notes: m.notes ?? null,
     raw: m,
   };
-
-  const records = root.features.map((f: unknown, i: number): MappedStopRecord => {
-    if (!isObj(f) || !isObj(f.properties) || !isObj(f.geometry)) throw new Error(`GeoJSON: feature ${i} is malformed`);
+  const records = features.map((f): MappedStopRecord => {
     const p = f.properties;
-    const coords = f.geometry.coordinates;
-    if (f.geometry.type !== "Point" || !Array.isArray(coords) || typeof coords[0] !== "number" || typeof coords[1] !== "number") {
-      throw new Error(`GeoJSON: feature ${i} is not a Point`);
-    }
-    const sourceLayer = str(p.source_layer);
-    const code = str(p.source_stop_code);
-    const label = str(p.label_raw);
-    if (sourceLayer === null || code === null || label === null) throw new Error(`GeoJSON: feature ${i} lacks layer, code or label`);
     return {
-      packageId: str(p.id) ?? str(f.id),
-      sourceLayer,
-      layer: layerFromName(sourceLayer),
-      code,
-      label,
+      packageId: p.id ?? f.id ?? null,
+      sourceLayer: p.source_layer,
+      layer: layerFromName(p.source_layer),
+      code: p.source_stop_code,
+      label: p.label_raw,
       descriptionRaw: null,
       coordinatesRaw: null,
-      lat: coords[1],
-      lng: coords[0],
-      routeId: str(p.route_id),
-      direction: str(p.direction),
-      exportPosition: num(p.export_position),
-      operatingStatus: str(p.operating_status),
+      lat: f.geometry.coordinates[1],
+      lng: f.geometry.coordinates[0],
+      routeId: p.route_id ?? null,
+      direction: p.direction ?? null,
+      exportPosition: p.export_position ?? null,
+      operatingStatus: p.operating_status ?? null,
       properties: p,
     };
   });
   return { metadata, records };
 }
 
+/**
+ * The CSV has separate latitude and longitude columns, so `coordinatesRaw` is assembled as
+ * "lng,lat" from the two verbatim cell strings (not a source-authored coordinate string).
+ */
 export function parseCsvStops(text: string): MappedStopRecord[] {
-  const { header, rows } = parseCsvObjects(text);
-  for (const col of ["id", "source_layer", "source_stop_code", "label_raw", "latitude", "longitude"]) {
-    if (!header.includes(col)) throw new Error(`Mapped stops CSV lacks column ${col}`);
-  }
-  return rows.map((r, i) => {
-    const lat = Number(r.latitude);
-    const lng = Number(r.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || r.latitude === "" || r.longitude === "") {
-      throw new Error(`Mapped stops CSV row ${i + 2}: unusable coordinates`);
-    }
-    const sourceLayer = r.source_layer!;
+  const { rows } = parseCsvObjects(text);
+  return rows.map((raw, i) => {
+    const parsed = CsvRowSchema.safeParse(raw);
+    if (!parsed.success) throw new Error(zodMessage(`Mapped stops CSV row ${i + 2}`, parsed.error));
+    const r = parsed.data;
     return {
       packageId: r.id || null,
-      sourceLayer,
-      layer: layerFromName(sourceLayer),
-      code: r.source_stop_code!,
-      label: r.label_raw!,
+      sourceLayer: r.source_layer,
+      layer: layerFromName(r.source_layer),
+      code: r.source_stop_code,
+      label: r.label_raw,
       descriptionRaw: null,
       coordinatesRaw: `${r.longitude},${r.latitude}`,
-      lat,
-      lng,
+      lat: Number(r.latitude),
+      lng: Number(r.longitude),
       routeId: r.route_id || null,
       direction: r.direction || null,
       exportPosition: null,
@@ -246,7 +283,7 @@ export function buildSnapshot(kmlXml: string, geojsonText: string, csvText: stri
   const csv = parseCsvStops(csvText);
   const errors = crossCheck(kml, geo.records, csv);
 
-  if (geo.metadata.recordCount !== geo.records.length) {
+  if (geo.metadata.recordCount !== null && geo.metadata.recordCount !== geo.records.length) {
     errors.push(`GeoJSON metadata record_count ${geo.metadata.recordCount} != ${geo.records.length} features`);
   }
   const distinct = new Set(kml.map((r) => `${r.lat},${r.lng}`)).size;
@@ -325,9 +362,9 @@ export type RawFeatureRow = {
 
 export function toRawFeatureRow(record: IdentifiedStop): RawFeatureRow {
   const raw = record.coordinatesRaw;
-  const parts = raw === null ? [] : raw.split(",");
-  const lonText = parts[0] ?? String(record.lng);
-  const latText = parts[1] ?? String(record.lat);
+  if (raw === null) throw new Error(`toRawFeatureRow: ${record.sourceLayer}/${record.code} has no verbatim coordinate text`);
+  const [lonText, latText] = raw.split(",");
+  if (lonText === undefined || latText === undefined) throw new Error(`toRawFeatureRow: unusable coordinate text "${raw}"`);
   const contentHash = sha256Hex(JSON.stringify([record.sourceLayer, record.code, record.label, lonText, latText]));
   return {
     sourceIdentity: record.sourceIdentity,
