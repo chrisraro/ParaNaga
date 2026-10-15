@@ -35,6 +35,11 @@ describe("buildRoadGraph: classes and access", () => {
     expect(ways(vehicle)).toEqual([1, 2, 3, 4, 5, 9, 10, 11]);
   });
 
+  it("vehicle: highway=busway is drivable (controller ruling: PUVs use it)", () => {
+    const g = buildRoadGraph(roads((f) => setTags(f, 6, { highway: "busway" })), { profile: "vehicle" });
+    expect(ways(g)).toContain(6);
+  });
+
   it("walk: no motorway; access=private excluded unless foot=yes", () => {
     expect(ways(walk)).toEqual([1, 2, 3, 4, 5, 6, 8, 9, 10]);
     expect(wayEdges(walk, 7)).toEqual([]);

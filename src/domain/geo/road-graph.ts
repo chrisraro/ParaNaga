@@ -1,7 +1,7 @@
 // Road graph built from a parsed OpenStreetMap road snapshot (src/domain/import/osm-roads.ts).
 //
 // Two profiles:
-//   vehicle — drivable classes (motorway … residential, unclassified, service, living_street, *_link),
+//   vehicle — drivable classes (motorway … residential, unclassified, service, living_street, *_link, busway),
 //             one-way respected (oneway=yes|1|true, oneway=-1, junction=roundabout|circular);
 //             access=no|private and area=yes ways are left out (no public vehicle passes there).
 //   walk    — D7: every highway class except motorway, motorway_link, construction, proposed (and
@@ -23,7 +23,7 @@ export type RoadProfile = "vehicle" | "walk";
 
 const DRIVABLE = new Set([
   "motorway", "trunk", "primary", "secondary", "tertiary", "unclassified", "residential", "service", "living_street",
-  "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link",
+  "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link", "busway",
 ]);
 const NOT_WALKABLE = new Set(["motorway", "motorway_link", "construction", "proposed", "abandoned", "disused", "razed"]);
 

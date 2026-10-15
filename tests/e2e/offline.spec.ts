@@ -266,12 +266,13 @@ test("update: Later hides the card; More still offers Update ready — Reload", 
   // Records what the page asks a worker to do (activation itself is covered by the Reload tests:
   // under heavy parallel load Chromium may hold a waiting version back while the active worker is
   // busy, which would only make this test slow, not tell us more).
+  // Recorded in sessionStorage, not on window: SKIP_WAITING activates the new version and the page
+  // may reload before the poll below reads it, which would reset a window variable.
   await page.addInitScript(() => {
     const post = ServiceWorker.prototype.postMessage;
-    const w = window as unknown as { __swMessages: unknown[] };
-    w.__swMessages = [];
     ServiceWorker.prototype.postMessage = function (this: ServiceWorker, message: unknown, ...rest: unknown[]) {
-      w.__swMessages.push(message);
+      const seen = JSON.parse(sessionStorage.getItem("__swMessages") ?? "[]") as unknown[];
+      sessionStorage.setItem("__swMessages", JSON.stringify([...seen, message]));
       return (post as (...args: unknown[]) => void).call(this, message, ...rest);
     } as typeof post;
   });
@@ -288,7 +289,7 @@ test("update: Later hides the card; More still offers Update ready — Reload", 
   await expect(page.getByTestId("update-prompt")).toHaveCount(0);
   await row.click();
   await expect
-    .poll(() => page.evaluate(() => (window as unknown as { __swMessages?: unknown[] }).__swMessages ?? []).catch(() => ["reloaded"]))
+    .poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("__swMessages") ?? "[]") as unknown[]).catch(() => []))
     .toEqual(expect.arrayContaining([expect.objectContaining({ type: "SKIP_WAITING" })]));
 });
 

@@ -167,7 +167,7 @@ bytes exact.
   stripped, case-folded, `Ave`/`St`/`Dr`/`Rd`/`Hwy`/`Gen.` expanded, punctuation removed);
   `matchStreet` checks `name`, `alt_name`, `old_name`, `official_name` and reviewed aliases.
 - `src/domain/geo/road-graph.ts`: `buildRoadGraph(roads, {profile})`. **vehicle**: drivable
-  classes, one-way respected (`oneway=yes|1|-1`, `junction=roundabout`), `access=no|private` and
+  classes plus `busway`, one-way respected (`oneway=yes|1|-1`, `junction=roundabout`), `access=no|private` and
   `area=yes` left out. **walk** (D7): every class except `motorway`, `motorway_link`,
   `construction`, `proposed` (and the lifecycle values `abandoned`, `disused`, `razed`); `foot=no`
   excluded; `access=private|no` excluded unless `foot=yes|designated`; undirected. Degree-2 nodes
