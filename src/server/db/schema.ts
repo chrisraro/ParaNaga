@@ -66,6 +66,10 @@ export const source = ingest.table("source", {
   evidenceType: text("evidence_type"),
   publishedOrEnacted: text("published_or_enacted"),
   checkedOn: date("checked_on"),
+  // 0006
+  publisher: text("publisher"),
+  licence: text("licence"),
+  extraUrls: text("extra_urls").array().notNull(),
 });
 
 export const rawFeature = ingest.table("raw_feature", {
@@ -110,6 +114,8 @@ export const publishedPointer = transit.table("published_pointer", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
 });
 
+export type TransitMode = "jeepney" | "tricycle" | "uv_express" | "bus" | "rail";
+
 export const route = transit.table("route", {
   id: uuid("id").primaryKey(),
   publicCode: text("public_code").notNull(),
@@ -123,6 +129,10 @@ export const route = transit.table("route", {
   sourceCodes: text("source_codes").array().notNull(),
   properties: jsonb("properties").$type<Record<string, unknown>>().notNull(),
   isSynthetic: boolean("is_synthetic").notNull(),
+  // 0006
+  mode: text("mode").$type<TransitMode>().notNull(),
+  serviceStatus: text("service_status").$type<"legal_plan" | "authorized_feeder" | "historical_unknown">(),
+  planning: text("planning").$type<"provisional" | "none">().notNull(),
 });
 
 export const routeAlias = transit.table("route_alias", {
@@ -139,6 +149,8 @@ export const variant = transit.table("variant", {
   routeId: uuid("route_id").notNull(),
   direction: text("direction").notNull(),
   kind: text("kind").notNull(),
+  /** 0006: tells apart the branch variants of one feeder route; NULL for LPTRP variants. */
+  name: text("name"),
 });
 
 export type EvidenceLevel = "documentary" | "provisional" | "verified";
@@ -158,6 +170,8 @@ export const variantVersion = transit.table("variant_version", {
   navigationApproved: boolean("navigation_approved").notNull(),
   sourceCodes: text("source_codes").array().notNull(),
   notes: text("notes"),
+  /** 0006: tracing anchors of a feeder variant, verbatim from the reviewed modes seed. */
+  anchors: jsonb("anchors").$type<unknown[]>(),
 });
 
 export const stopPoint = transit.table("stop_point", {
@@ -229,4 +243,125 @@ export const fareRuleVersion = transit.table("fare_rule_version", {
   status: text("status").notNull(),
   publishExact: boolean("publish_exact").notNull(),
   sourceCodes: text("source_codes").array().notNull(),
+  // 0006
+  ruleText: text("rule_text"),
+  notes: text("notes"),
+});
+
+// ---------------------------------------------------------------- modes, fleets, terminals (0006)
+
+export const terminalVersion = transit.table("terminal_version", {
+  id: uuid("id").primaryKey(),
+  terminalId: uuid("terminal_id").notNull(),
+  name: text("name").notNull(),
+  kind: text("kind").$type<"terminal" | "loading_point" | "waiting_area" | "station">().notNull(),
+  locationText: text("location_text"),
+  modes: text("modes").array().$type<TransitMode[]>().notNull(),
+  modesRaw: text("modes_raw").array().notNull(),
+  modeSources: jsonb("mode_sources").$type<Partial<Record<TransitMode, string[]>>>().notNull(),
+  geog: geography("geog"),
+  coordSource: text("coord_source").$type<"osm_node" | "osm_way_centroid">(),
+  osmType: text("osm_type").$type<"node" | "way">(),
+  osmId: bigint("osm_id", { mode: "number" }),
+  osmVersion: integer("osm_version"),
+  osmTimestamp: timestamp("osm_timestamp", { withTimezone: true }),
+  coordNote: text("coord_note"),
+  coordReadFrom: text("coord_read_from"),
+  verification: text("verification").notNull(),
+  statusNote: text("status_note"),
+  notes: text("notes"),
+  sourceCodes: text("source_codes").array().notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export type VehicleClass = "traditional_puj" | "modern_puj" | "tricycle" | "e_tricycle" | "uv_express" | "bus";
+
+export const routeVehicleClass = transit.table("route_vehicle_class", {
+  id: uuid("id").primaryKey(),
+  routeId: uuid("route_id").notNull(),
+  code: text("code").notNull(),
+  vehicleClass: text("vehicle_class").$type<VehicleClass>().notNull(),
+  evidenceLevels: text("evidence_levels").array().notNull(),
+  status: text("status").$type<"planned" | "reported" | "reported_not_confirmed" | "operating">().notNull(),
+  firstReportedOn: date("first_reported_on"),
+  lastReportedOn: date("last_reported_on"),
+  unitsNote: text("units_note"),
+  aircon: boolean("aircon"),
+  airconSourceCodes: text("aircon_source_codes").array().notNull(),
+  cooperatives: text("cooperatives").array().notNull(),
+  conflictNotes: text("conflict_notes").array().notNull(),
+  notes: text("notes"),
+  sourceCodes: text("source_codes").array().notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+/** Cooperative names only: there is no chair or address column (C8). */
+export const routeCooperative = transit.table("route_cooperative", {
+  id: uuid("id").primaryKey(),
+  routeId: uuid("route_id").notNull(),
+  name: text("name").notNull(),
+  basis: text("basis").$type<"corridor_reported" | "name_matches_corridor">().notNull(),
+  reportedOn: text("reported_on"),
+  notes: text("notes"),
+  sourceCodes: text("source_codes").array().notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const routeOperatingStatus = transit.table("route_operating_status", {
+  id: uuid("id").primaryKey(),
+  routeId: uuid("route_id").notNull(),
+  operatingStatus: text("operating_status").$type<"operating">().notNull(),
+  statusNote: text("status_note").notNull(),
+  confirmedOn: date("confirmed_on").notNull(),
+  sourceCodes: text("source_codes").array().notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const routeFareObservation = transit.table("route_fare_observation", {
+  id: uuid("id").primaryKey(),
+  routeId: uuid("route_id").notNull(),
+  code: text("code").notNull(),
+  vehicleClass: text("vehicle_class").$type<VehicleClass>().notNull(),
+  kind: text("kind").$type<"reported_practice">().notNull(),
+  relativeTo: text("relative_to").$type<"traditional_fare">().notNull(),
+  deltaQualifier: text("delta_qualifier").$type<"range" | "at_least">().notNull(),
+  deltaCentavosLow: integer("delta_centavos_low").notNull(),
+  deltaCentavosHigh: integer("delta_centavos_high"),
+  observedOn: date("observed_on").notNull(),
+  reportText: text("report_text").notNull(),
+  notes: text("notes"),
+  sourceCodes: text("source_codes").array().notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const regionalService = transit.table("regional_service", {
+  id: uuid("id").primaryKey(),
+  code: text("code").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const regionalServiceVersion = transit.table("regional_service_version", {
+  id: uuid("id").primaryKey(),
+  regionalServiceId: uuid("regional_service_id").notNull(),
+  mode: text("mode").$type<"uv_express" | "bus" | "jeepney">().notNull(),
+  name: text("name").notNull(),
+  operators: text("operators").array().notNull(),
+  terminalCode: text("terminal_code").notNull(),
+  terminalNote: text("terminal_note"),
+  destination: text("destination").notNull(),
+  osmRelationIds: bigint("osm_relation_ids", { mode: "number" }).array().notNull(),
+  osmRelationVersions: integer("osm_relation_versions").array(),
+  distanceKm: numeric("distance_km"),
+  distanceBasis: text("distance_basis"),
+  status: text("status").$type<"community_mapped">().notNull(),
+  fareRuleCodes: text("fare_rule_codes").array().notNull(),
+  notes: text("notes"),
+  sourceCodes: text("source_codes").array().notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
 });

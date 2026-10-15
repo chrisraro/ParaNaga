@@ -29,6 +29,9 @@ import {
 } from "../../src/domain/import/seed";
 import { parseSurveyTemplate } from "../../src/domain/import/survey-template";
 import type { OsmPlaceCategory } from "../../src/domain/places/osm-categories";
+import { buildModesPlan, type ModesFile, type ModesPlan } from "./modes-plan";
+
+export { MODES_DIR, readNewestModesSeed, type ModesFile, type ModesPlan } from "./modes-plan";
 
 export const DATA_FILES = [
   "naga_mapped_stops_source.kml",
@@ -107,6 +110,8 @@ export type ImportPlan = {
   deferred: Record<string, string>;
   /** The newest committed OpenStreetMap places snapshot, or null when none is committed yet. */
   osm: OsmPlan | null;
+  /** The newest reviewed modes seed (data/source/research), or null when none is given. */
+  modes: ModesPlan | null;
   problems: string[];
 };
 
@@ -220,7 +225,11 @@ function unmappedData(seed: NormalizedSeed): string[] {
   return issues;
 }
 
-export function buildImportPlan(files: DataFiles, osmFile: OsmFile | null = null): ImportPlan {
+export function buildImportPlan(
+  files: DataFiles,
+  osmFile: OsmFile | null = null,
+  modesFile: ModesFile | null = null,
+): ImportPlan {
   const text = (f: DataFileName) => files[f].toString("utf8");
   const problems: string[] = [];
   const osm = osmFile ? buildOsmPlan(osmFile) : null;
@@ -240,6 +249,8 @@ export function buildImportPlan(files: DataFiles, osmFile: OsmFile | null = null
   problems.push(...crossCheckDesignatedCsv(seed.designatedCandidates, text("designated_stop_candidates.csv")));
   problems.push(...crossCheckSeedMappedStops(seed.mappedStopRecords, identified, conflicts));
   problems.push(...unmappedData(seed));
+  const modes = modesFile ? buildModesPlan(modesFile, seed) : null;
+  if (modes) problems.push(...modes.problems);
 
   const rawFeatures = planRawFeatures(identified, problems);
   const fareRules = seed.fareRules.map((f): PlannedFareRule => ({
@@ -337,6 +348,7 @@ export function buildImportPlan(files: DataFiles, osmFile: OsmFile | null = null
     counts,
     deferred: { route_aliases: "deferred (no structured source)" },
     osm,
+    modes,
     problems,
   };
 }

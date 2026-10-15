@@ -19,13 +19,28 @@
 //   - committed batch with the same file hash and raw-feature content -> "unchanged", nothing written;
 //   - same date with another file, or older than a committed snapshot -> refused.
 // No OSM snapshot file -> places are skipped and the transit behaviour is unchanged.
+//
+// The reviewed modes seed (plan.modes, Increment D Task 2) runs last, in the same transaction:
+// scripts/lib/modes-writer.ts (new revision `modes-<date>` carrying the published one forward).
 // Ids are generated here so related rows can be inserted in bulk without RETURNING lookups.
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { sha256Hex } from "../../src/domain/import/hash";
 import type { ImportPlan, OsmPlan } from "./import-plan";
+import { writeModes, type ModesOutcome } from "./modes-writer";
+import {
+  IMPORT_ACTOR,
+  ImportRefusedError,
+  insertRows,
+  point,
+  publishedIncludes,
+  textArray,
+  textArrayNotNull,
+  type Row,
+} from "./sql-rows";
 
-export const IMPORT_ACTOR = "scripts/import-naga";
+export { IMPORT_ACTOR, ImportRefusedError } from "./sql-rows";
+export type { ModesOutcome } from "./modes-writer";
 
 export type PlacesOutcome =
   | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
@@ -35,6 +50,8 @@ export type PlacesOutcome =
       /** Revision the committed batch published, and the one published now (they differ after a rollback). */
       revisionLabel: string | null;
       publishedRevisionLabel: string | null;
+      /** True when every place member of the batch revision is in the published revision (a later revision may carry them). */
+      publishedIncludesBatch: boolean;
       counts: Record<string, number>;
     };
 
@@ -42,47 +59,11 @@ type TransitOutcome =
   | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
   | { outcome: "unchanged"; batchId: string; publishedRevisionLabel: string | null; counts: Record<string, number> };
 
-/** The transit outcome (top level, as before) plus the OSM places outcome (null: no snapshot file). */
-export type ImportOutcome = TransitOutcome & { places: PlacesOutcome | null };
-
-export class ImportRefusedError extends Error {}
-
-type Row = Record<string, unknown>;
-
-type Column = [name: string, type: string, expr?: string];
-
 /**
- * Bulk insert: `insert into <table> (<cols>) select <exprs> from jsonb_to_recordset($1) as x(<fields>)`.
- * Each column is also a recordset field and reads x.<name> unless it has an expression.
- * `inputs` are recordset fields that only feed expressions; `computed` are columns with no field.
+ * The transit outcome (top level, as before) plus the OSM places outcome and the modes seed
+ * outcome (null: no such file).
  */
-async function insertRows(
-  c: pg.ClientBase,
-  table: string,
-  rows: Row[],
-  columns: Column[],
-  extra: { inputs?: [string, string][]; computed?: [string, string][] } = {},
-) {
-  if (rows.length === 0) return 0;
-  const targets: [string, string][] = [...columns.map(([n, , e]): [string, string] => [n, e ?? `x.${n}`]), ...(extra.computed ?? [])];
-  const fields = [...columns.map(([n, t]) => `${n} ${t}`), ...(extra.inputs ?? []).map(([n, t]) => `${n} ${t}`)];
-  const result = await c.query(
-    `insert into ${table} (${targets.map(([n]) => n).join(", ")})
-     select ${targets.map(([, e]) => e).join(", ")} from jsonb_to_recordset($1::jsonb) as x(${fields.join(", ")})`,
-    [JSON.stringify(rows)],
-  );
-  if (result.rowCount !== rows.length) throw new Error(`${table}: inserted ${result.rowCount} of ${rows.length} rows`);
-  return rows.length;
-}
-
-/** jsonb array (or null) -> text[] (or null), keeping order. */
-const textArray = (col: string) =>
-  `case when x.${col} is null or jsonb_typeof(x.${col}) = 'null' then null
-        else array(select e from jsonb_array_elements_text(x.${col}) with ordinality t(e, i) order by i) end`;
-const textArrayNotNull = (col: string) => `coalesce(${textArray(col)}, '{}')`;
-const point = (lon: string, lat: string) =>
-  `case when x.${lon} is null or x.${lat} is null then null else
-     extensions.ST_SetSRID(extensions.ST_MakePoint(x.${lon}::float8, x.${lat}::float8), 4326)::extensions.geography end`;
+export type ImportOutcome = TransitOutcome & { places: PlacesOutcome | null; modes: ModesOutcome | null };
 
 export async function commitImport(connectionString: string, plan: ImportPlan): Promise<ImportOutcome> {
   if (plan.problems.length > 0) throw new ImportRefusedError(`plan has ${plan.problems.length} problem(s); nothing written`);
@@ -99,9 +80,10 @@ export async function commitImport(connectionString: string, plan: ImportPlan): 
       await client.query("select pg_advisory_xact_lock(hashtext($1))", [plan.mapId]);
       const transit = await writeInTransaction(client, plan);
       const places = plan.osm ? await writePlaces(client, plan.osm) : null;
-      const wrote = transit.outcome === "committed" || places?.outcome === "committed";
+      const modes = plan.modes ? await writeModes(client, plan.modes) : null;
+      const wrote = transit.outcome === "committed" || places?.outcome === "committed" || modes?.outcome === "committed";
       await client.query(wrote ? "commit" : "rollback");
-      return { ...transit, places };
+      return { ...transit, places, modes };
     } catch (error) {
       await client.query("rollback").catch(() => undefined);
       throw error;
@@ -110,6 +92,8 @@ export async function commitImport(connectionString: string, plan: ImportPlan): 
     await client.end();
   }
 }
+
+const LOOP_PLANNING = new Set(["R8-A", "R8-B"]);
 
 async function writeInTransaction(c: pg.ClientBase, plan: ImportPlan): Promise<TransitOutcome> {
   const prior = await c.query<{ id: string; snapshot_version: string; counts: Row }>(
@@ -223,10 +207,13 @@ async function firstImport(c: pg.ClientBase, plan: ImportPlan): Promise<TransitO
     name: r.name, mode_code: r.modeCode, legal_status: r.legalStatus, allocated_units: r.allocatedUnits,
     allocation_is_active_fleet_count: r.allocationIsActiveFleetCount, notes: r.notes, source_codes: r.sourceCodes,
     properties: r.extra,
+    // 0006: every Data_Sets route is an LPTRP jeepney route; Loops A/B are the provisional planner loops.
+    mode: "jeepney", service_status: "legal_plan", planning: LOOP_PLANNING.has(r.publicCode) ? "provisional" : "none",
   })), [["id", "uuid"], ["public_code", "text"], ["official_group_number", "integer"], ["name", "text"],
     ["mode_code", "text"], ["legal_status", "text"], ["allocated_units", "integer"],
     ["allocation_is_active_fleet_count", "boolean"], ["notes", "text"],
-    ["source_codes", "jsonb", textArrayNotNull("source_codes")], ["properties", "jsonb"]]);
+    ["source_codes", "jsonb", textArrayNotNull("source_codes")], ["properties", "jsonb"],
+    ["mode", "text"], ["service_status", "text"], ["planning", "text"]]);
 
   const variants = plan.variants.map((v) => ({
     ...v, id: randomUUID(), versions: v.versions.map((x) => ({ ...x, id: randomUUID() })),
@@ -592,11 +579,13 @@ async function checkPlacesUnchanged(
   const pointer = await c.query<{ label: string }>(
     `select r.label from transit.published_pointer p join transit.revision r on r.id = p.revision_id`,
   );
+  const batchRevision = typeof last.counts.revision_id === "string" ? last.counts.revision_id : null;
   return {
     outcome: "unchanged",
     batchId: last.id,
     revisionLabel: typeof last.counts.revision_label === "string" ? last.counts.revision_label : null,
     publishedRevisionLabel: pointer.rows[0]?.label ?? null,
+    publishedIncludesBatch: batchRevision !== null && (await publishedIncludes(c, batchRevision, ["place"])),
     counts: { places: osm.places.length },
   };
 }

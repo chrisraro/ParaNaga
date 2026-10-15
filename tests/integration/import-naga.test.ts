@@ -224,9 +224,12 @@ describe.skipIf(!ownerUrl || !appUrl)("pnpm db:import (Neon branch)", () => {
   });
 
   it("stores fare rule version hashes that depend only on content", async () => {
+    // The import revision's versions (a later modes seed adds versions of F01–F03 with more sources).
     const stored = await appRows(sql`select f.code, v.content_hash from transit.fare_rule_version v
                                        join transit.fare_rule f on f.id = v.fare_rule_id
-                                      where f.code in (${sql.join(plan.fareRules.map((f) => sql`${f.code}`), sql`, `)}) order by f.code`);
+                                       join transit.revision_member m on m.entity_kind = 'fare_rule' and m.version_id = v.id
+                                      where m.revision_id = ${revisionIdValue}::uuid
+                                        and f.code in (${sql.join(plan.fareRules.map((f) => sql`${f.code}`), sql`, `)}) order by f.code`);
     expect(stored).toEqual(plan.fareRules.map((f) => ({ code: f.code, content_hash: f.contentHash })));
   });
 
