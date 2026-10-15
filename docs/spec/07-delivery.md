@@ -100,3 +100,34 @@ Field kit: `field_survey_template.csv` (45 columns) imports through the survey m
 - [ ] Decide tile hosting: PMTiles extract for the Naga region (OSM, ODbL attribution) in `public-media` or a CDN.
 - [ ] Legal: privacy notice, terms, AI-processing disclosure, DPO contact; trademark/domain check for "ParaNaga".
 - [ ] Reviewer recruitment: at least one transport-data reviewer and one complaint reviewer who are not the same person as the community moderator.
+
+## 7.8 Readiness: data import + provisional planner (15 Oct 2026)
+
+**Delivered**
+
+- All Data_Sets imported with provenance and conflicts; published revision `provisional-loops-2026-10-15`.
+- Loops A and B planner, public API (`/api/v1/network`, `/stops`, `/routes`, `/plan`), and trip, stop and route screens.
+
+**User decisions**
+
+- Provisional loops on unverified pins, always badged "Unverified route"; no exact fares; no drawn path.
+- Only Loops A and B are sequenced. Walk caps 600 m / 400 m; walking distances are straight-line x 1.3 estimates.
+- Ride rule "must save walking": a ride that does not shorten the walk is rejected, up to one circuit.
+- Fare wording: "from reported fare rules · matrix not verified".
+
+**Still blocks verified routing**
+
+- No directed shapes, reviewed stop sequences, curb sides or boarding points (§7.5 items 1-3).
+- No terminal coordinates and no exact fares (§7.5 items 4-5).
+- Loops C and D stop order unknown; route alias mapping unresolved.
+- No changed-data importer, so corrections need a new tool before any re-import.
+
+**Follow-ups**
+
+- Snapshot caching by revision and a rate limit on `/api/v1/plan`, before any public announcement.
+- Import-time check that pin-order ring direction matches the documented loop direction.
+- A reader role that owns the views, with base-table SELECT revoked from `paranaga_app`; `check-rls` coverage of views.
+- Update policy for `ingest.batch.counts` (only while `status = 'running'`).
+- Reword "(from pin order)" direction text to the documented direction.
+- Home map: bbox query strings reach platform access logs (read pins from the immutable snapshot or snap coarser); add `stale-while-revalidate` to list caching.
+- Landing page mockup shows "Exact · [₱ fare]"; remove or reword.

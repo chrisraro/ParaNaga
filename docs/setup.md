@@ -68,6 +68,38 @@ It refuses to run if an admin already exists. Grant other roles from the admin c
 
 Create a GitHub environment `neon-ci` (with required reviewers if you like) holding secret `NEON_API_KEY` (least-privilege key); add repository variables `NEON_PROJECT_ID`, `NEON_SEED_BRANCH=dev`, `NEON_OWNER_ROLE` (the owner role name), `NEON_DATABASE`. On pushes to `master` or manual runs (never on pull requests), the `database` job creates a branch, migrates, runs the RLS check and integration tests, and deletes the branch. Keep real personal data out of the seed branch.
 
+## Transit data import
+
+`pnpm db:import` loads the research snapshot (`Data_Sets/`) into the `ingest` and `transit` schemas and publishes the provisional revision `provisional-loops-2026-10-15`.
+
+```bash
+pnpm db:import --dry-run   # parse, check, and report counts; writes nothing
+pnpm db:import --commit    # write everything in one transaction
+```
+
+- It connects with the owner URL `DATABASE_URL_UNPOOLED` from `.env.local`, then runs the whole write as `paranaga_import` in a single transaction.
+- It aborts, writing nothing, on any data-check problem.
+- A second `--commit` on the same data reports `unchanged`. A changed-data import is refused for now (a versioned importer is a follow-up).
+- Integration tests and RLS checks against a throwaway Neon branch: `bash scripts/with-neon-branch.sh pnpm test:integration` (also works with `pnpm db:check-rls`).
+
+### Production runbook
+
+Run in this order. The app code needs migration 0002 and a published revision, so merge only after step 8.
+
+1. **Backup branch.** In Neon, branch `main` as `pre-data-import-YYYY-MM-DD`:
+   ```bash
+   neonctl branches create --project-id <project-id> --parent main --name pre-data-import-YYYY-MM-DD
+   ```
+2. `pnpm db:migrate` against `main` (0000 checksum normalized, then 0001 and 0002). On an older database the first run prints "normalized checksum of 0000_foundation.sql"; that is expected.
+3. `pnpm db:check-rls`.
+4. Confirm `main` has no `transit` or `ingest` rows.
+5. `pnpm db:import --dry-run`, and read the counts.
+6. `pnpm db:import --commit`.
+7. `pnpm db:import --commit` again; expect `unchanged`.
+8. Smoke a preview deployment: `GET /api/v1/network/head`, `/stops?bbox=…`, `/stops/:id`, `/routes/R8-A`, and `POST /api/v1/plan` for a pair across Loops A and B (badge present, fare is a range). Then merge.
+
+**Rollback:** the publish is irreversible in place. Restore or reset `main` from the backup branch (Neon console: restore or reset from the backup branch), then redeploy the previous app version.
+
 ## Health endpoint
 
 `GET /api/health` returns only `{ "ok": true }` publicly. With `Authorization: Bearer $CRON_SECRET` it also probes the database and reports which providers are configured (never their values).

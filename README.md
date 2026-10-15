@@ -4,7 +4,7 @@
 
 ParaNaga is a mobile-first commuter web app (PWA) for **Naga City, Camarines Sur, Philippines**. It helps tourists, students, newcomers and residents answer the everyday questions: where to wait, which jeepney and direction to take, what it costs, where to transfer, and when to get off. People can also report corrections, share commuting tips, and privately report a driver, with a handoff to the city's official MyNaga app.
 
-> **Status: early development.** Increment 0 (foundation) is built. There are no commuter screens yet, and no trip is presented as verified until reviewers publish checked route data.
+> **Status: early development.** Foundation and the data import are built. A provisional planner covers Loops A and B on unverified pins, always badged, with no exact fares and no drawn path. No trip is presented as verified until reviewers publish checked route data.
 
 ## Principles
 
@@ -43,6 +43,7 @@ pnpm dev
 | `pnpm test:integration` | Row-level-security tests against a throwaway Neon branch |
 | `pnpm db:migrate` | Apply `db/migrations/*.sql` (owner role, direct endpoint) |
 | `pnpm db:check-rls` | Fail if a table lacks forced RLS, a definer function is unsafe, or a runtime role can bypass RLS |
+| `pnpm db:import --dry-run\|--commit` | Import the research snapshot and publish the provisional revision (owner URL, one transaction) |
 | `pnpm admin:bootstrap --email …` | One-time first admin |
 
 Copy `.env.example` to `.env.local` and fill it in per [docs/setup.md](docs/setup.md). Never commit real values.
