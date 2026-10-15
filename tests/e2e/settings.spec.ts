@@ -46,7 +46,7 @@ async function openSettings(page: Page) {
   await page.goto("/app/more");
   await expect(settingsHeading(page)).toBeVisible();
   // Hydrated: the controls respond once React owns them.
-  await expect(page.getByTestId("settings-data-revision")).toContainText("provisional-loops-2026-10-15");
+  await expect(page.getByTestId("settings-data-revision")).toContainText("osm-places-2026-10-15");
 }
 
 async function openHome(page: Page) {
@@ -116,7 +116,7 @@ test.describe("phone", () => {
     await expect(page.getByTestId("settings-display")).toContainText("Reduce motionFollows your device setting");
     await expect(page.getByTestId("settings-location")).toContainText("Location access");
     await expect(page.getByText("Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.")).toBeVisible();
-    await expect(page.getByTestId("settings-data-revision")).toHaveText("Data revisionprovisional-loops-2026-10-15 · Oct 15, 2026");
+    await expect(page.getByTestId("settings-data-revision")).toHaveText("Data revisionosm-places-2026-10-15 · Oct 15, 2026");
     // Help arrives with Task 11: no row until then.
     await expect(page.getByText("Help", { exact: true })).toHaveCount(0);
     await expect(tabBar(page).getByRole("link", { name: "More", exact: true })).toHaveAttribute("aria-current", "page");

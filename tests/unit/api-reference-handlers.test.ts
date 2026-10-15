@@ -9,12 +9,15 @@ import {
   type TerminalDetail,
 } from "@/domain/api/schemas";
 import type { SearchIndexSource } from "@/domain/search/index-build";
+import { buildSearchIndex } from "@/domain/search/index-build";
+import { INDEX_CODE_SOURCE_CODES } from "@/domain/search/legacy-route-names";
 import { realSearchSource } from "../fixtures/search-source";
 
 const calls: { options: unknown }[] = [];
 let source: SearchIndexSource | null = null;
 let terminal: Omit<TerminalDetail, "revision"> | null = null;
 const terminalCodes: string[] = [];
+const sourceCalls: unknown[][] = [];
 
 const revisionId = "6f9619ff-8b86-4d11-b42d-00c04fc964ff";
 const revision = { revisionId, label: "r", kind: "provisional" as const, publishedAt: "2026-10-15T00:00:00.000Z" };
@@ -32,9 +35,9 @@ vi.mock("@/server/repos/reference-repo", () => ({
     terminalCodes.push(code);
     return code === "T01" ? terminal : null;
   },
-  listSources: async () => [
+  listSources: async (...args: unknown[]) => (sourceCalls.push(args.slice(1)), [
     { code: "S01", title: "Ordinance", url: null, evidenceType: "official", publishedOrEnacted: "2025-09-23", checkedOn: "2026-10-15" },
-  ],
+  ]),
 }));
 
 const { GET: searchIndex } = await import("@/app/api/v1/network/search-index/[revisionId]/route");
@@ -125,6 +128,15 @@ describe("GET /api/v1/terminals/:code", () => {
 });
 
 describe("GET /api/v1/sources", () => {
+  it("asks for the sources the index cites from code (S28, legacy names) as well", async () => {
+    sourceCalls.length = 0;
+    await sourcesGET(new Request(`${base}/sources`));
+    expect(sourceCalls).toEqual([[revisionId, ["S28"]]]);
+    const index = buildSearchIndex(real());
+    const codeCited = [...new Set(index.legacyNames.map((n) => n.sourceCode))];
+    expect([...INDEX_CODE_SOURCE_CODES]).toEqual(codeCited);
+  });
+
   it("serves the register with the reference cache header", async () => {
     const response = await sourcesGET(new Request(`${base}/sources`));
     expect(response.status).toBe(200);

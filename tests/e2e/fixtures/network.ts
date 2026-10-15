@@ -1,8 +1,10 @@
 // Request-interception fixtures for the public network API (tests only). The JSON files next to
-// this one are REAL responses of /api/v1/stops?bbox=, /api/v1/stops/:id, /api/v1/routes and /api/v1/routes/:code,
-// captured from a throwaway Neon branch with the Naga import applied (revision
-// provisional-loops-2026-10-15); the client validates them with the shared schemas, so a schema
-// drift fails the run. No e2e test reaches a database.
+// this one are REAL responses of /api/v1/stops?bbox=, /api/v1/stops/:id, /api/v1/routes, /api/v1/routes/:code,
+// /api/v1/network/search-index/:revisionId, /api/v1/terminals/T01 and /api/v1/sources, captured from a
+// throwaway branch of Neon main (CAPTURE_E2E_FIXTURES=1 with tests/integration/reference-api.test.ts),
+// all naming main's published revision osm-places-2026-10-15; network/head answers with that same
+// revision. The client validates them with the shared schemas, so a schema drift fails the run.
+// No e2e test reaches a database.
 import type { Page, Route } from "@playwright/test";
 import routeR1 from "./network/route-r1.json" with { type: "json" };
 import routeR2 from "./network/route-r2.json" with { type: "json" };

@@ -54,6 +54,15 @@ select pp.revision_id, s.code, s.title, s.url, s.evidence_type, s.published_or_e
          union select unnest(x.source_codes) from transit.v_published_destination_categories x
          union select unnest(x.source_codes) from transit.v_published_feeder_leads x);
 
-grant select on transit.v_published_barangays, transit.v_published_designated_stop_candidates,
+-- The full source catalogue next to the published revision. The app reads it ONLY for codes the
+-- published read model cites outside the database: the search index's legacy-name hints cite S28
+-- (src/domain/search/legacy-route-names.ts), which no published row references. Rows are the
+-- imported ingest.source records, never invented; a code missing here is simply not listed.
+create view transit.v_published_source_catalog with (security_invoker = true) as
+select pp.revision_id, s.code, s.title, s.url, s.evidence_type, s.published_or_enacted, s.checked_on
+  from transit.published_pointer pp
+  cross join ingest.source s;
+
+grant select on transit.v_published_source_catalog, transit.v_published_barangays, transit.v_published_designated_stop_candidates,
   transit.v_published_destination_categories, transit.v_published_feeder_leads, transit.v_published_sources
   to paranaga_app;

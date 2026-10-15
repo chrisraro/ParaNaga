@@ -19,3 +19,6 @@ export const LEGACY_ROUTE_NAMES: readonly LegacyRouteName[] = NAMES.map((name) =
   year: 1993 as const,
   mappedRouteCode: null,
 }));
+
+/** Source codes the search index cites from code rather than from published rows (the sources register lists them too). */
+export const INDEX_CODE_SOURCE_CODES: readonly string[] = [...new Set(LEGACY_ROUTE_NAMES.map((n) => n.sourceCode))];

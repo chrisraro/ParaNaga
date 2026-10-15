@@ -1,10 +1,11 @@
 // The captured reference responses (tests/e2e/fixtures/network, REAL data from a throwaway Neon
 // branch: CAPTURE_E2E_FIXTURES=1 with tests/integration/reference-api.test.ts) still match the
 // shared schemas, so a schema change cannot silently break the e2e fixtures.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { searchIndexSchema, sourceListSchema, terminalDetailSchema } from "@/domain/api/schemas";
+import { revisionMetaSchema, searchIndexSchema, sourceListSchema, terminalDetailSchema } from "@/domain/api/schemas";
+import { REVISION as PLAN_REVISION } from "../e2e/fixtures/plan-responses";
 
 const read = (name: string) => JSON.parse(readFileSync(path.resolve("tests/e2e/fixtures/network", name), "utf8"));
 
@@ -17,6 +18,13 @@ describe("reference fixtures", () => {
     expect(index.revision.label).toBe("osm-places-2026-10-15");
     expect(t01.revision).toEqual(index.revision);
     expect(sources.revision).toEqual(index.revision);
+  });
+
+  it("every captured network fixture and the plan fixture name that same revision (network/head answers with it)", () => {
+    const files = readdirSync(path.resolve("tests/e2e/fixtures/network")).filter((f) => f.endsWith(".json"));
+    expect(files.length).toBeGreaterThanOrEqual(19);
+    for (const f of files) expect(revisionMetaSchema.parse(read(f).revision), f).toEqual(index.revision);
+    expect(PLAN_REVISION).toEqual(index.revision);
   });
 
   it("carry the real counts", () => {

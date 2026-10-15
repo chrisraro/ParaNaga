@@ -55,14 +55,18 @@ async function sourcesFor(db: Db, revisionId: string, codes: string[] | null) {
      where revision_id = ${revisionId}::uuid
        ${codes === null ? sql`` : sql`and code in (${sql.join(codes.map((c) => sql`${c}`), sql`, `)})`}
      order by code`);
-  return found.map((s) => ({
+  return found.map(toSource);
+}
+
+function toSource(s: Row): SourceList["sources"][number] {
+  return {
     code: str(s.code),
     title: str(s.title),
     url: strOrNull(s.url),
     evidenceType: strOrNull(s.evidence_type),
     publishedOrEnacted: strOrNull(s.published_or_enacted),
     checkedOn: strOrNull(s.checked_on),
-  }));
+  };
 }
 
 // ---------------------------------------------------------------- search index
@@ -195,7 +199,17 @@ export async function getTerminalDetail(db: Db, revisionId: string, code: string
 
 // ---------------------------------------------------------------- sources register
 
-/** Every source the published revision cites, ordered by code. */
-export async function listSources(db: Db, revisionId: string): Promise<SourceList["sources"]> {
-  return sourcesFor(db, revisionId, null);
+/**
+ * Every source the published revision cites, plus `codeCited` (sources the read model cites from
+ * code, e.g. S28 for the legacy-name hints) when the catalogue has them; ordered by code.
+ */
+export async function listSources(db: Db, revisionId: string, codeCited: readonly string[]): Promise<SourceList["sources"]> {
+  const cited = await sourcesFor(db, revisionId, null);
+  const extra = codeCited.filter((c) => !cited.some((s) => s.code === c));
+  if (extra.length === 0) return cited;
+  const found = await rows(db, sql`
+    select code, title, url, evidence_type, published_or_enacted, checked_on::text as checked_on
+      from transit.v_published_source_catalog
+     where revision_id = ${revisionId}::uuid and code in (${sql.join(extra.map((c) => sql`${c}`), sql`, `)})`);
+  return [...cited, ...found.map(toSource)].sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0));
 }

@@ -3,7 +3,8 @@
 //   bash scripts/with-neon-branch.sh pnpm test:integration
 // The handlers run as in production (withRequestContext → pool on PARANAGA_DATABASE_URL as
 // paranaga_app). Restores the previously published revision afterwards.
-// CAPTURE_E2E_FIXTURES=1 also writes the real responses to tests/e2e/fixtures/network/.
+// CAPTURE_E2E_FIXTURES=1 also writes the real responses to tests/e2e/fixtures/network/: the new
+// reference fixtures AND the older stop/route fixtures, so every e2e fixture names one revision.
 import { randomUUID } from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
@@ -16,6 +17,11 @@ import { getPool } from "@/server/db/client";
 import { GET as searchIndexGET } from "@/app/api/v1/network/search-index/[revisionId]/route";
 import { GET as terminalGET } from "@/app/api/v1/terminals/[code]/route";
 import { GET as sourcesGET } from "@/app/api/v1/sources/route";
+import { GET as stopsGET } from "@/app/api/v1/stops/route";
+import { GET as stopGET } from "@/app/api/v1/stops/[id]/route";
+import { GET as routesGET } from "@/app/api/v1/routes/route";
+import { GET as routeGET } from "@/app/api/v1/routes/[code]/route";
+import { NAGA_MAX_BOUNDS } from "@/domain/geo/naga";
 import { buildImportPlan, readDataFiles, readNewestOsmSnapshot } from "../../scripts/lib/import-plan";
 import { commitImport } from "../../scripts/lib/import-writer";
 
@@ -32,7 +38,7 @@ const REFERENCE_CACHE = "public, s-maxage=300, stale-while-revalidate=600";
 
 const VIEWS = [
   "v_published_barangays", "v_published_designated_stop_candidates",
-  "v_published_destination_categories", "v_published_feeder_leads",
+  "v_published_destination_categories", "v_published_feeder_leads", "v_published_source_catalog",
 ] as const;
 
 async function okText(response: Response, cache: string): Promise<string> {
@@ -104,6 +110,29 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     await owner?.end();
   });
 
+  // ---------------------------------------------------------------- e2e fixture capture
+
+  it.runIf(capture)("captures the stop and route fixtures from the same published revision", async () => {
+    const b = NAGA_MAX_BOUNDS;
+    const all = await okText(await stopsGET(get(`/stops?bbox=${b.west},${b.south},${b.east},${b.north}`)), "public, s-maxage=300");
+    expect(JSON.parse(all).stops).toHaveLength(128);
+    saveFixture("stops-all.json", all);
+    const stopId = async (layer: string, code: string) =>
+      String((await appRows(sql`select stop_point_id from transit.v_published_stops
+                                 where source_layer = ${layer} and source_code_raw = ${code}`))[0]!.stop_point_id);
+    for (const [file, layer, code] of [
+      ["stop-a1.json", "Loop Service A", "A1"], ["stop-b18.json", "Loop Service B", "B18"], ["stop-c-first.json", "Loop Service C", "A1"],
+    ] as const) {
+      const id = await stopId(layer, code);
+      saveFixture(file, await okText(await stopGET(get(`/stops/${id}`), ctx({ id })), "public, s-maxage=300"));
+    }
+    const list = await okText(await routesGET(get("/routes")), "public, s-maxage=300");
+    saveFixture("routes.json", list);
+    for (const code of ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8-A", "R8-B", "R8-C", "R8-D"]) {
+      saveFixture(`route-${code.toLowerCase()}.json`, await okText(await routeGET(get(`/routes/${code}`), ctx({ code })), "public, s-maxage=300"));
+    }
+  });
+
   // ---------------------------------------------------------------- views (0004)
 
   it("paranaga_app reads the four reference views", async () => {
@@ -121,16 +150,6 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       const update = await pgCode(appRows(sql.raw(`update transit.${view} set revision_id = revision_id`)));
       const del = await pgCode(appRows(sql.raw(`delete from transit.${view}`)));
       for (const code of [insert, update, del]) expect(["42501", "55000"]).toContain(code);
-    }
-  });
-
-  it("the views hide rows of a non-published revision (pointer moved to the transit-only revision)", async () => {
-    await publish(transitRevisionId);
-    try {
-      const rev = (await appRows(sql`select distinct revision_id from transit.v_published_barangays`)).map((r) => r.revision_id);
-      expect(rev).toEqual([transitRevisionId]);
-    } finally {
-      await publish(revisionId);
     }
   });
 
@@ -209,14 +228,38 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
 
   // ---------------------------------------------------------------- sources
 
-  it("sources register includes S22 (barangays), S33 (study labels) and the OSM snapshot, ordered by code", async () => {
+  it("sources register includes S22 (barangays), S33 (study labels), S28 (legacy names) and the OSM snapshot, ordered by code", async () => {
     const raw = await okText(await sourcesGET(get("/sources")), REFERENCE_CACHE);
     const body = sourceListSchema.parse(JSON.parse(raw));
     const codes = body.sources.map((s) => s.code);
-    expect(codes).toEqual(expect.arrayContaining(["S22", "S33", "S34", "S26", "S13", "OSM-2026-10-15"]));
+    expect(codes).toEqual(expect.arrayContaining(["S22", "S33", "S34", "S26", "S13", "S28", "OSM-2026-10-15"]));
+    // S28 is cited only by the index's legacy-name hints; its row is the imported one, verbatim.
+    expect(body.sources.find((s) => s.code === "S28")).toMatchObject({
+      title: "Legacy transport code/colors", publishedOrEnacted: "1993", evidenceType: "official_historical",
+    });
+    // Every source the search index cites is in the register; nothing else is added.
+    const index = searchIndexSchema.parse(await (await searchIndexGET(get(`/network/search-index/${revisionId}`), ctx({ revisionId }))).json());
+    const indexCodes = new Set([
+      ...index.osmPlaces.map((p) => p.sourceCode), ...index.barangays.flatMap((b) => (b.sourceCode ? [b.sourceCode] : [])),
+      ...index.studyLabels.flatMap((l) => l.sourceCodes), ...index.legacyNames.map((n) => n.sourceCode),
+    ]);
+    for (const code of indexCodes) expect(codes).toContain(code);
+    const cited = (await appRows(sql`select code from transit.v_published_sources`)).map((r) => String(r.code));
+    expect(codes.filter((c) => !cited.includes(c))).toEqual(["S28"]);
     expect(codes).toEqual([...codes].sort());
     expect(new Set(codes).size).toBe(codes.length);
     console.log(JSON.stringify({ event: "sources_count", count: codes.length }));
     saveFixture("sources.json", raw);
+  });
+
+  // Last: it republishes, which resets published_at (captured fixtures keep main's value).
+  it("the views hide rows of a non-published revision (pointer moved to the transit-only revision)", async () => {
+    await publish(transitRevisionId);
+    try {
+      const rev = (await appRows(sql`select distinct revision_id from transit.v_published_barangays`)).map((r) => r.revision_id);
+      expect(rev).toEqual([transitRevisionId]);
+    } finally {
+      await publish(revisionId);
+    }
   });
 });
