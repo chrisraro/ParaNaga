@@ -38,6 +38,12 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   poweredByHeader: false,
   serverExternalPackages: ["pg"],
+  experimental: {
+    // The Tailwind CSS loader's output was served from a stale build cache after
+    // globals.css changed (old base styles + new utilities), on Vercel too since it
+    // restores .next/cache. Production builds always compile fresh; dev keeps its cache.
+    turbopackFileSystemCacheForBuild: false,
+  },
   turbopack: {
     rules: {
       "*.css": {
