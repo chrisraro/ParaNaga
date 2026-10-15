@@ -8,6 +8,7 @@
 
 import { resetPrefs } from "@/client/prefs/use-prefs";
 import { clearAllStores } from "@/client/storage/db";
+import { forgetGuidance } from "@/client/guidance/guidance-store";
 
 /** Every key ParaNaga writes to Web Storage starts with this. */
 export const STORAGE_PREFIX = "paranaga.";
@@ -32,6 +33,8 @@ function clearStorage(get: () => Storage): void {
 /** Removes everything ParaNaga keeps on this device; settings go back to their defaults. */
 export async function clearDeviceData(): Promise<void> {
   clearStorage(() => window.sessionStorage);
+  // A running guidance session is forgotten too (its keys were just removed).
+  forgetGuidance();
   clearStorage(() => window.localStorage);
   try {
     await clearAllStores();

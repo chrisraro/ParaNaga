@@ -9,15 +9,25 @@
 // data. While that plan loads (or fails, offline) the saved option shows as saved, labelled with
 // its data date; once the plan is in, the same option opens ("Re-planned on the current data" when
 // the revision changed), or the options show under "Route changed since you saved this".
+//
+// Guidance (Task 10): "Start trip" in Trip detail starts a session; while it runs the sheet shows
+// the Walk / Ride / Transfer / Arrive step instead of the planner, the tab bar is hidden, the map
+// highlights only the current leg's stops (markers, never a line) and shows the user dot only when
+// guidance uses location (its own watch, from a tap). A reload resumes the step from
+// sessionStorage. "End guidance" puts the trip back in the options; Arrive → "Done" clears it;
+// a missed stop plans again from the current fix (or asks where you are on the map).
 
 import "./home-screen.css";
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, useState } from "react";
 import { useGeolocation } from "@/client/geo/use-geolocation";
+import { useGuidanceSession } from "@/client/guidance/use-guidance-session";
 import { useStopsInView } from "@/client/map/use-stops-in-view";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
-import type { PlanResponse } from "@/domain/api/plan";
+import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
+import { currentStep, type GuidanceSession } from "@/domain/guidance/session";
+import { guidanceSteps } from "@/domain/guidance/steps";
 import type { StopPin } from "@/domain/api/schemas";
 import { haversineMeters } from "@/domain/geo/geometry";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
@@ -25,7 +35,7 @@ import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import type { Bounds, LatLng } from "@/domain/geo/types";
 import type { Endpoint } from "@/domain/trip/endpoints";
 import { SAME_PLACE_M } from "@/domain/planner/labels";
-import type { SavedPlaceSource, SavedTrip } from "@/domain/saved/saved";
+import { buildSavedTrip, type SavedPlaceSource, type SavedTrip } from "@/domain/saved/saved";
 import { SAME_PLACE_TITLE, noCoverageCopy } from "@/domain/trip/present";
 import {
   endpointLabel,
@@ -36,6 +46,7 @@ import {
   type EndpointsState,
 } from "@/domain/trip/endpoints";
 import { useAppFrame, useApplyOnce, useHideTabBar } from "@/ui/app-shell/app-frame-context";
+import { Guidance } from "@/ui/guidance/guidance";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail, type TripEnds } from "@/ui/trip/trip-detail";
 import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
@@ -95,6 +106,44 @@ function endFor(endpoint: Endpoint): TripEnds["start"] {
   };
 }
 
+/** Guidance: the current leg's stops only (where to board, or board and get off on a ride). */
+function guidanceHighlights(session: GuidanceSession): HighlightStop[] {
+  if (session.status !== "active") return [];
+  const step = currentStep(session);
+  if (step.kind === "walk_to_board" || step.kind === "transfer") {
+    return [{ id: step.target.stopId, lat: step.target.lat, lng: step.target.lng, role: "board", label: step.target.label }];
+  }
+  if (step.kind === "ride") {
+    return [
+      { id: step.board.stopId, lat: step.board.lat, lng: step.board.lng, role: "board", label: step.board.label },
+      { id: step.alight.stopId, lat: step.alight.lat, lng: step.alight.lng, role: "alight", label: step.alight.label },
+    ];
+  }
+  return [];
+}
+
+/** The trip as guidance needs it (labels, codes, loop directions) and as a saved-trip card. */
+function guidanceTripFor(data: PlanResponse, option: PlanOptionDto, ends: TripEnds) {
+  const card = buildSavedTrip({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), data, option, start: ends.start, destination: ends.destination });
+  return {
+    card,
+    trip: {
+      option,
+      stops: card.stops.map((s) => ({ id: s.id, name: s.name, code: s.code })),
+      variants: card.variants.map((v) => ({ variantId: v.variantId, loopDirection: v.loopDirection })),
+      destinationLabel: ends.destination.label,
+    },
+  };
+}
+
+/** A saved-trip end back as a trip endpoint (as chosen in search). */
+function endpointFromSaved(end: SavedTrip["start"]): Endpoint {
+  return { point: { ...end.point }, source: "search", label: end.label, ...(end.place ? { place: end.place } : {}) };
+}
+
+/** Pick-mode prompt after a missed stop with no usable fix. */
+const PICK_WHERE_YOU_ARE = "Choose where you are on the map";
+
 function toPoint(fix: LocationFix): LatLng {
   return { lat: fix.lat, lng: fix.lng };
 }
@@ -144,6 +193,10 @@ function SamePlaceNotice({ which, onChooseOnMap }: { which: EndpointWhich; onCho
 export function HomeScreen() {
   const frame = useAppFrame();
   const geo = useGeolocation();
+  const guidance = useGuidanceSession();
+  const guiding = guidance.session !== null;
+  // The pick panel's title when it asks where you are (after a missed stop); cleared when it closes.
+  const [pickPrompt, setPickPrompt] = useState<string | null>(null);
   const [endpoints, dispatch] = useReducer(endpointsReducer, initialEndpointsState);
   const [focused, setFocused] = useState<EndpointWhich | null>("start");
   // The user tapped "Use current location" and no usable fix has arrived yet.
@@ -209,15 +262,25 @@ export function HomeScreen() {
   }
   const storedData = stored?.data ?? null;
   const storedOptionId = stored?.option.id ?? null;
+  const guidanceSession = guidance.session;
   const highlightStops = useMemo(
     () =>
-      storedOptionId && storedData
+      guidanceSession
+        ? guidanceHighlights(guidanceSession)
+        : storedOptionId && storedData
         ? highlightsFor(storedData, storedOptionId)
         : planData && openOptionId
           ? highlightsFor(planData, openOptionId)
           : undefined,
-    [planData, openOptionId, storedData, storedOptionId],
+    [planData, openOptionId, storedData, storedOptionId, guidanceSession],
   );
+  // Guidance: the destination pin is the trip's own end (the endpoints are gone after a reload).
+  const guidanceTrip = guidanceSession?.trip ?? null;
+  const guidanceDestination = useMemo(() => {
+    if (!guidanceTrip) return null;
+    const last = guidanceSteps(guidanceTrip).at(-1);
+    return last?.kind === "walk_to_destination" ? { lat: last.target.lat, lng: last.target.lng } : null;
+  }, [guidanceTrip]);
   const watching = geo.state === "watching";
   const assessment = geo.assessment;
   const gpsKey = gpsEndpointKey(endpoints);
@@ -340,7 +403,8 @@ export function HomeScreen() {
 
   // The watch runs only while something needs it (a GPS endpoint, a pending request, or a
   // recentre still waiting for its first fix). Everything else that ends a need just changes state.
-  const watchNeeded = shouldKeepWatching(endpoints, gpsIntent, recenterOnFix);
+  // Guidance has its own watch (from a tap): the planner's watch stops while it runs.
+  const watchNeeded = !guiding && shouldKeepWatching(endpoints, gpsIntent, recenterOnFix);
   const geoStop = geo.stop;
   const geoActive = geo.state === "requesting" || geo.state === "watching" || geo.state === "unavailable" || geo.state === "timeout";
   useEffect(() => {
@@ -532,17 +596,21 @@ export function HomeScreen() {
   const attributionBottom = Math.max(0, (picking ? pickHeight : sheet.visible) - MAP_BOTTOM_INSET);
   const rootStyle = { ["--naga-map-attribution-bottom" as string]: `${Math.round(attributionBottom)}px` };
 
-  const pins = {
-    ...(endpoints.start && picking !== "start" ? { start: endpoints.start.point } : {}),
-    ...(endpoints.destination && picking !== "destination" ? { destination: endpoints.destination.point } : {}),
-  };
+  const pins = guiding
+    ? guidanceDestination
+      ? { destination: guidanceDestination }
+      : {}
+    : {
+        ...(endpoints.start && picking !== "start" ? { start: endpoints.start.point } : {}),
+        ...(endpoints.destination && picking !== "destination" ? { destination: endpoints.destination.point } : {}),
+      };
 
   // Mapped stop pins: shown while exploring and while placing a pin (not tappable then); hidden
   // while a trip detail highlights its own stops. A tap opens the stop panel over the map.
   const router = useRouter();
   const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
   const tripDetailOpen = ready && (openOption !== null || stored !== null);
-  const stopsInView = useStopsInView(viewBounds, !tripDetailOpen);
+  const stopsInView = useStopsInView(viewBounds, !tripDetailOpen && !guiding);
   const markHomeNavigation = frame?.markHomeNavigation;
   const handleStopSelect = useCallback(
     (id: string) => {
@@ -621,8 +689,88 @@ export function HomeScreen() {
     setAnnouncement(deferredAnnouncement);
   }
 
-  // The tab bar would cover the crosshair panel: hidden while a pin is being placed.
-  useHideTabBar(picking !== null);
+  // The tab bar would cover the crosshair panel: hidden while a pin is being placed, and while
+  // guidance runs (the steps need the whole sheet).
+  useHideTabBar(picking !== null || guiding);
+  if (!picking && pickPrompt !== null) setPickPrompt(null);
+
+  // "Start trip": the history entry (when on), the session, and location only if already allowed.
+  const handleStart = (data: PlanResponse, option: PlanOptionDto, ends: TripEnds) => {
+    const { trip, card } = guidanceTripFor(data, option, ends);
+    guidance.start(trip, card);
+    if (sheet.snap === 0) sheet.setSnap(1);
+    setAnnouncement("Guidance started.");
+  };
+
+  // Put the trip's ends back (after a reload the planner has none), nothing else.
+  const restoreEnds = (card: SavedTrip) => {
+    dispatch({ type: "clearAll" });
+    dispatch({ type: "set", which: "start", endpoint: endpointFromSaved(card.start) });
+    dispatch({ type: "set", which: "destination", endpoint: endpointFromSaved(card.destination) });
+    setFocused(null);
+  };
+
+  // "End guidance" (confirmed): the trip stays in the options.
+  const handleEndGuidance = () => {
+    const card = guidance.card;
+    guidance.send({ type: "end" });
+    if (card && (!endpoints.start || !endpoints.destination)) restoreEnds(card);
+    reopen.dismissStored();
+    setOpenedId(null);
+    setFocusTarget({ kind: "results" });
+    setAnnouncement("Guidance ended. Your trip is in the options.");
+  };
+
+  // Arrive → "Done": clear the trip, back to the map.
+  const handleDone = () => {
+    guidance.send({ type: "end" });
+    reopen.dismissStored();
+    setOpenedId(null);
+    handleClearAll();
+    document.querySelector<HTMLElement>("[data-home-heading]")?.focus();
+  };
+
+  // Missed stop → plan again to the same destination: from the current fix when it is usable
+  // inside Naga, else the start is chosen on the map ("Choose where you are on the map").
+  const handleReplan = () => {
+    const card = guidance.card;
+    // The last fix guidance received (the watch stopped at "I missed my stop"); used only while
+    // still fresh, precise enough and inside Naga (assessFix → usableAsStart).
+    const fix = guidance.location.fix;
+    guidance.send({ type: "end" });
+    reopen.dismissStored();
+    setOpenedId(null);
+    setFocusTarget(null);
+    setGpsIntent(false);
+    setRecenterOnFix(false);
+    setLastOutcome(null);
+    setGpsStartAccuracy(null);
+    setSamePlaceRefused(null);
+    dispatch({ type: "clearAll" });
+    if (!card) {
+      setFocused("start");
+      return;
+    }
+    const destination = endpointFromSaved(card.destination);
+    dispatch({ type: "set", which: "destination", endpoint: destination });
+    const withDestination = endpointsReducer(initialEndpointsState, { type: "set", which: "destination", endpoint: destination });
+    if (fix && assessFix(fix, Date.now()).usableAsStart) {
+      const start: Endpoint = { point: toPoint(fix), source: "gps", label: "" };
+      if (applyIfAccepted(withDestination, "start", start).accepted) {
+        dispatch({ type: "set", which: "start", endpoint: start });
+        setGpsStartAccuracy(fix.accuracy);
+        setFocused(null);
+        setFocusTarget({ kind: "results" });
+        if (sheet.snap === 0) sheet.setSnap(1);
+        bumpRecenter();
+        setAnnouncement("Planning again from your location.");
+        return;
+      }
+    }
+    setPickPrompt(PICK_WHERE_YOU_ARE);
+    dispatch({ type: "pick", which: "start" });
+    setAnnouncement(`${PICK_WHERE_YOU_ARE}.`);
+  };
 
   return (
     <main className="pn-home" style={rootStyle} data-testid="home-screen">
@@ -631,8 +779,8 @@ export function HomeScreen() {
       </h1>
       <div className="pn-home__map">
         <NagaMap
-          userFix={userFix}
-          userStale={assessment?.stale ?? false}
+          userFix={guiding ? (guidance.location.watching ? guidance.location.fix : null) : userFix}
+          userStale={guiding ? false : (assessment?.stale ?? false)}
           pins={pins}
           highlightStops={highlightStops}
           highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET + 40)}
@@ -641,7 +789,7 @@ export function HomeScreen() {
           recenterSignal={recenterSignal}
           recenterTarget={recenterTarget}
           recenterTargetLabel={recenterLabel}
-          stopPins={tripDetailOpen ? NO_PINS : stopsInView.stops}
+          stopPins={tripDetailOpen || guiding ? NO_PINS : stopsInView.stops}
           stopPinsInteractive={picking === null}
           onStopSelect={handleStopSelect}
           onBoundsChange={setViewBounds}
@@ -649,7 +797,7 @@ export function HomeScreen() {
         />
       </div>
 
-      {fixInside && geo.fix ? (
+      {!guiding && fixInside && geo.fix ? (
         <div
           className={`${assessment?.quality === "precise" ? "pn-pill" : "pn-pill pn-pill--approximate"}${fixAge ? " pn-pill--stale" : ""}`}
           data-testid="accuracy-pill"
@@ -670,7 +818,7 @@ export function HomeScreen() {
           aria-label={picking === "start" ? "Choose start on map" : "Choose destination on map"}
         >
           <p className="pn-pick__title">
-            {picking === "start" ? "Move the map to your starting point" : "Move the map to your destination"}
+            {picking === "start" ? (pickPrompt ?? "Move the map to your starting point") : "Move the map to your destination"}
           </p>
           {!center.inside ? (
             <p id="pn-pick-blocked" className="pn-pick__hint pn-pick__hint--warn" data-testid="pick-outside-hint">
@@ -710,11 +858,20 @@ export function HomeScreen() {
           onSwap={handleSwap}
           onUseCurrentLocation={() => handleUseCurrentLocation()}
           onChooseOnMap={handleChooseOnMap}
-          detailOpen={tripDetailOpen}
+          detailOpen={tripDetailOpen || guiding}
           after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
         >
-          {stored ? (
-            <TripDetail data={stored.data} option={stored.option} onBack={handleCloseStored} ends={stored.ends} note={stored.note} />
+          {guiding ? (
+            <Guidance guidance={guidance} covered={covered} onEnd={handleEndGuidance} onDone={handleDone} onReplan={handleReplan} />
+          ) : stored ? (
+            <TripDetail
+              data={stored.data}
+              option={stored.option}
+              onBack={handleCloseStored}
+              ends={stored.ends}
+              note={stored.note}
+              onStart={() => handleStart(stored.data, stored.option, stored.ends)}
+            />
           ) : ready && openOption && planData && endpoints.start && endpoints.destination ? (
             <TripDetail
               data={planData}
@@ -722,6 +879,7 @@ export function HomeScreen() {
               onBack={handleCloseOption}
               ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
               note={reopen.note}
+              onStart={() => handleStart(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) })}
             />
           ) : ready ? (
             <>
@@ -741,10 +899,10 @@ export function HomeScreen() {
               </button>
             </>
           ) : null}
-          {samePlaceRefused && !openOption ? (
+          {samePlaceRefused && !openOption && !guiding ? (
             <SamePlaceNotice which={samePlaceRefused} onChooseOnMap={() => handleChooseOnMap(samePlaceRefused)} />
           ) : null}
-          {showStatus && statusCopy && !openOption && !samePlaceRefused ? (
+          {showStatus && statusCopy && !openOption && !samePlaceRefused && !guiding ? (
             <LocationStatus copy={statusCopy} onPickStart={() => (statusCopy.kind === "approximate" ? handleMoveStartPin() : handleChooseOnMap("start"))} />
           ) : null}
         </EndpointSheet>

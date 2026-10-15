@@ -10,8 +10,8 @@
 //
 // Actions (Task 8): Save ("Save" / "Saved", a saved trip on this phone) and Share (the Web Share
 // API with a text-only summary, else copy to the clipboard: "Copied"). The summary names places
-// and stops only; exact points are added only when "Include exact points" is ticked. Start
-// (guidance) arrives with Task 10. An optional note above the steps says how the trip was
+// and stops only; exact points are added only when "Include exact points" is ticked. "Start
+// trip" (Task 10) starts guidance in this sheet. An optional note above the steps says how the trip was
 // reopened ("Re-planned on the current data", or that it is shown as saved, offline).
 
 import "./trip.css";
@@ -36,6 +36,8 @@ type Props = {
   ends?: TripEnds | null;
   /** How this trip was reopened from Saved; shown above the steps. */
   note?: TripNote | null;
+  /** "Start trip": starts guidance (Task 10). Without it there is no Start button. */
+  onStart?: (() => void) | null;
 };
 
 const CANDIDATE = "Mapped candidate · not yet verified";
@@ -302,7 +304,9 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
   );
 }
 
-export function TripDetail({ data, option, onBack, ends = null, note = null }: Props) {
+export const START_TRIP = "Start trip";
+
+export function TripDetail({ data, option, onBack, ends = null, note = null, onStart = null }: Props) {
   const lookups = planLookups(data);
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Focus the heading when an option opens, and again once the map shows (a trip reopened from
@@ -335,6 +339,11 @@ export function TripDetail({ data, option, onBack, ends = null, note = null }: P
         <p className={note.tone === "warning" ? "pn-trip-reopen pn-trip-reopen--warn" : "pn-trip-reopen"} data-testid="trip-reopen-note">
           {note.text}
         </p>
+      ) : null}
+      {onStart ? (
+        <button type="button" className="pn-btn pn-btn--primary pn-trip-start" onClick={onStart} data-testid="trip-start">
+          {START_TRIP}
+        </button>
       ) : null}
       {ends ? <TripActions data={data} option={option} ends={ends} /> : null}
 

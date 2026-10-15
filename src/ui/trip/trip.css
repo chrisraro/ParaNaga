@@ -637,3 +637,8 @@
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
 }
+
+/* "Start trip" (guidance, Task 10): the primary action of Trip detail (>= 48 px). */
+.pn-trip-start {
+  min-height: 52px;
+}
