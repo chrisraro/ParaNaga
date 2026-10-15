@@ -16,12 +16,9 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const [panels, setPanels] = useState(0);
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const returnFocus = useRef<Element | null>(null);
-  // Synchronous bookkeeping for "opened from home": panel → panel navigation closes one panel and
-  // opens the next in the same commit, so a close followed by an open before the next microtask
-  // means the new panel came from another panel.
-  const openCount = useRef(0);
-  const justClosed = useRef(false);
-  const fromHome = useRef(true);
+  // The stop path the user opened straight from the home map (pin tap or Nearby-stops link).
+  // "Show on map" may go back in history only while that panel is the one showing.
+  const homeNavigation = useRef<string | null>(null);
 
   useEffect(() => {
     setEntryPath(window.location.pathname);
@@ -31,20 +28,17 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const openPanel = useCallback(() => {
     const active = document.activeElement;
     if (!returnFocus.current && active && active !== document.body) returnFocus.current = active;
-    fromHome.current = openCount.current === 0 && !justClosed.current;
-    openCount.current += 1;
+    // A panel for another path (a link followed inside a panel) ends the home-started navigation.
+    // The loading → content swap of the same page keeps it (same path).
+    if (homeNavigation.current !== null && window.location.pathname !== homeNavigation.current) homeNavigation.current = null;
     setPanels((n) => n + 1);
-    return () => {
-      openCount.current -= 1;
-      justClosed.current = true;
-      queueMicrotask(() => {
-        justClosed.current = false;
-      });
-      setPanels((n) => n - 1);
-    };
+    return () => setPanels((n) => n - 1);
   }, []);
 
-  const openedFromHome = useCallback(() => fromHome.current, []);
+  const markHomeNavigation = useCallback((path: string) => {
+    homeNavigation.current = path;
+  }, []);
+  const isHomeNavigation = useCallback((path: string) => homeNavigation.current === path, []);
 
   const showOnMap = useCallback((point: LatLng) => {
     setMapFocus((prev) => ({ point, n: (prev?.n ?? 0) + 1 }));
@@ -54,14 +48,15 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const open = panels > 0;
   useEffect(() => {
     if (open) return;
+    homeNavigation.current = null; // back on the map: nothing to go back to
     const el = returnFocus.current;
     returnFocus.current = null;
     if (el instanceof HTMLElement && el.isConnected) el.focus();
   }, [open]);
 
   const value = useMemo(
-    () => ({ openPanel, openedFromHome, mapFocus, showOnMap }),
-    [openPanel, openedFromHome, mapFocus, showOnMap],
+    () => ({ openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap }),
+    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap],
   );
 
   return (

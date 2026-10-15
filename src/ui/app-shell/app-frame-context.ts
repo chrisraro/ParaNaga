@@ -11,8 +11,10 @@ export type MapFocus = { point: LatLng; n: number };
 export type AppFrameValue = {
   /** Registers an open panel; returns the unregister function. */
   openPanel: () => () => void;
-  /** Whether the panel open now was opened straight from the home map (not from another panel). */
-  openedFromHome: () => boolean;
+  /** Records that the home map (pin tap or Nearby-stops link) is opening the panel at `path`. */
+  markHomeNavigation: (path: string) => void;
+  /** True while the panel at `path` is the one opened straight from the home map. */
+  isHomeNavigation: (path: string) => boolean;
   mapFocus: MapFocus | null;
   showOnMap: (point: LatLng) => void;
 };

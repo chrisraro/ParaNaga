@@ -18,9 +18,11 @@ type Props = {
   center: LatLng;
   status: "idle" | "loading" | "ready" | "error";
   truncated: boolean;
+  /** Called with the stop path when a row is followed (lets "Show on map" go back in history). */
+  onOpen?: (path: string) => void;
 };
 
-export function NearbyStops({ stops, center, status, truncated }: Props) {
+export function NearbyStops({ stops, center, status, truncated, onOpen }: Props) {
   const nearest = nearestStops(stops, center, NEARBY_LIMIT);
   let empty: string | null = null;
   if (nearest.length === 0) {
@@ -43,7 +45,7 @@ export function NearbyStops({ stops, center, status, truncated }: Props) {
         <ul className="pn-nearby__list">
           {nearest.map((s) => (
             <li key={s.id}>
-              <Link href={`/app/stops/${s.id}`} className="pn-nearby__cell">
+              <Link href={`/app/stops/${s.id}`} className="pn-nearby__cell" onClick={() => onOpen?.(`/app/stops/${s.id}`)}>
                 <CandidateRing size={30} onRoute={s.routeCodes.length > 0} />
                 <span className="pn-nearby__text">
                   <strong>{stopLabel(s.name, s.source.code)}</strong>

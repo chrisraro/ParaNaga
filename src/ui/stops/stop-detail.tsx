@@ -52,7 +52,7 @@ function ShowOnMap({ lat, lng }: { lat: number; lng: number }) {
         frame.showOnMap({ lat, lng });
         // Opened from the map in this session: go back to it (no extra history entry). Otherwise
         // (a shared link, or reached from another panel) open the map.
-        if (cameFromInsideApp() && frame.openedFromHome()) router.back();
+        if (cameFromInsideApp() && frame.isHomeNavigation(window.location.pathname)) router.back();
         else router.push("/app");
       }}
     >

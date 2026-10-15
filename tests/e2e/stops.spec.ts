@@ -302,3 +302,49 @@ for (const fixture of ALL_ROUTES) {
     await expectAxeClean(page);
   });
 }
+
+test.describe("Show on map history", () => {
+  async function tapA1(page: Page) {
+    await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
+    const a1 = await screenPoint(page, STOP_A1.stop.lat, STOP_A1.stop.lng);
+    await page.mouse.click(a1.x, a1.y);
+    await expect(page).toHaveURL(new RegExp(`/app/stops/${A1_ID}$`));
+    await expect(page.getByRole("heading", { level: 1, name: "Plaza Rizal" })).toBeVisible();
+  }
+  const showOnMap = (page: Page) => page.getByTestId("stop-detail").filter({ visible: true }).getByRole("button", { name: "Show on map" });
+
+  test("from a pin tap it goes back in history (Back does not reopen the stop)", async ({ page }) => {
+    await routeNetwork(page);
+    await openApp(page);
+    await tapA1(page);
+    await showOnMap(page).click();
+    await expect(page).toHaveURL(/\/app$/);
+    await page.goBack();
+    expect(page.url()).not.toContain(`/app/stops/${A1_ID}`);
+  });
+
+  test("from a Nearby stops link it goes back in history too", async ({ page }) => {
+    await routeNetwork(page);
+    await openApp(page);
+    await page.getByTestId("nearby-stops").getByRole("link").first().click();
+    await expect(page).toHaveURL(new RegExp(`/app/stops/${A1_ID}$`));
+    await showOnMap(page).click();
+    await expect(page).toHaveURL(/\/app$/);
+    await page.goBack();
+    expect(page.url()).not.toContain(`/app/stops/${A1_ID}`);
+  });
+
+  test("after panel → panel links (stop → route → stop) it opens the map as a new entry", async ({ page }) => {
+    await routeNetwork(page);
+    await openApp(page);
+    await tapA1(page);
+    await page.getByTestId("serving-routes").getByRole("link").click();
+    await expect(page).toHaveURL(/\/app\/routes\/R8-A$/);
+    await page.getByTestId("route-stops").getByRole("link").first().click();
+    await expect(page).toHaveURL(new RegExp(`/app/stops/${A1_ID}$`));
+    await showOnMap(page).click();
+    await expect(page).toHaveURL(/\/app$/);
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`/app/stops/${A1_ID}$`));
+  });
+});

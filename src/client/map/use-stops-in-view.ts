@@ -34,6 +34,11 @@ async function requestStops(key: string, signal: AbortSignal): Promise<Entry> {
   return { stops: all.slice(0, MAX_STOP_PINS), truncated: all.length > MAX_STOP_PINS };
 }
 
+/**
+ * `view` must be referentially stable between map moves (e.g. React state set from `moveend`): a new
+ * bounds object is how the hook learns the map moved, and after a failure each new object retries.
+ * Building it during render (`{ ...bounds }`) would retry after every render.
+ */
 export function useStopsInView(view: Bounds | null, enabled = true): StopsInView {
   const bbox = view ? viewBbox(view) : null;
   const key = enabled && bbox ? bboxParam(bbox) : null;

@@ -427,10 +427,19 @@ export function HomeScreen() {
   const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
   const tripDetailOpen = ready && openOption !== null;
   const stopsInView = useStopsInView(viewBounds, !tripDetailOpen);
-  const handleStopSelect = useCallback((id: string) => router.push(`/app/stops/${id}`), [router]);
+  const frame = useAppFrame();
+  const markHomeNavigation = frame?.markHomeNavigation;
+  const handleStopSelect = useCallback(
+    (id: string) => {
+      const path = `/app/stops/${id}`;
+      markHomeNavigation?.(path);
+      router.push(path);
+    },
+    [router, markHomeNavigation],
+  );
 
   // "Show on map" from a stop panel: centre the map on that stop (adjusted during render).
-  const mapFocus = useAppFrame()?.mapFocus ?? null;
+  const mapFocus = frame?.mapFocus ?? null;
   const [seenFocus, setSeenFocus] = useState(mapFocus?.n ?? 0);
   if (mapFocus && mapFocus.n !== seenFocus) {
     setSeenFocus(mapFocus.n);
@@ -512,7 +521,7 @@ export function HomeScreen() {
           onUseCurrentLocation={handleUseCurrentLocation}
           onChooseOnMap={handleChooseOnMap}
           detailOpen={ready && openOption !== null}
-          after={<NearbyStops stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
+          after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
         >
           {ready && openOption && planData ? (
             <TripDetail data={planData} option={openOption} onBack={handleCloseOption} />

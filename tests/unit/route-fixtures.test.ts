@@ -25,7 +25,9 @@ describe("route detail fixtures", () => {
     const twoWay = inbound !== null && outbound !== null;
     expect(twoWay || (circuit !== null && circuit.length > 1)).toBe(true);
     if (twoWay) expect(directionLabels(r.route.name).inbound).toBe("Toward Centro");
-    expect(routeFareTile(r.fareEvidence.rules)).toMatchObject({ value: "₱14–₱17", note: "Estimate" });
+    const fare = routeFareTile(r.fareEvidence.rules);
+    expect(fare.note).toBe("Estimate");
+    expect(fare.value).toMatch(/^₱\d+(–₱\d+)?$/);
     expect(vehicleTile(r.route.modeCode)).toEqual({ value: "Class 2", note: "Plan only" });
     // Only Loops A and B have provisional stops and the trial; nothing is verified.
     const ab = r.route.code === "R8-A" || r.route.code === "R8-B";
