@@ -277,25 +277,41 @@ export function SearchScreen() {
   const root = useRef<HTMLDivElement>(null);
   useEscapeToClose(root);
   const indexState = useSearchIndex();
-  const [opened, setOpened] = useState(0);
-  // Counting openings is the point of this effect (Activity re-show), not derived state.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => setOpened((n) => n + 1), []);
+  // Each opening may carry a query in a "#q=" fragment (a "Search mapped stops for …" link). It is
+  // read once per opening, then dropped from this history entry, so coming back here later does
+  // not prefill the old label over what the user typed (no request is made).
+  const [opening, setOpening] = useState(() => ({ n: 0, query: readHashQuery() }));
+  useEffect(() => {
+    const query = readHashQuery();
+    if (window.location.hash) window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+    // Counting openings is the point of this effect (Activity re-show), not derived state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpening((o) => ({ n: o.n + 1, query }));
+  }, []);
   return (
     <div ref={root} className="pn-detail pn-search" data-testid="search-screen">
-      <SearchBody key={opened} purpose={purpose} indexState={indexState} />
+      <SearchBody key={opening.n} purpose={purpose} indexState={indexState} initialQuery={opening.query} />
     </div>
   );
 }
 
-function SearchBody({ purpose, indexState }: { purpose: SearchPurpose | null; indexState: ReturnType<typeof useSearchIndex> }) {
+const readHashQuery = () => (typeof window === "undefined" ? "" : queryFromHash(window.location.hash));
+
+function SearchBody({
+  purpose,
+  indexState,
+  initialQuery,
+}: {
+  purpose: SearchPurpose | null;
+  indexState: ReturnType<typeof useSearchIndex>;
+  initialQuery: string;
+}) {
   const frame = useAppFrame();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const body = useRef<HTMLDivElement>(null);
 
   // Prefilled from a "Search mapped stops for …" link (#q=), read once per opening.
-  const [initialQuery] = useState(() => (typeof window === "undefined" ? "" : queryFromHash(window.location.hash)));
   const [query, setQuery] = useState(initialQuery);
   const [typed, setTyped] = useState(initialQuery);
   const [regional, setRegional] = useState(false);

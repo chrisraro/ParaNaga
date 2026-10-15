@@ -51,6 +51,7 @@ function InfoIcon() {
 
 function RoutesPanel({ data }: { data: TerminalDetail }) {
   const { routes, destinationCategories } = data;
+  const uid = useId();
   return (
     <>
       {routes.length === 0 ? (
@@ -75,8 +76,10 @@ function RoutesPanel({ data }: { data: TerminalDetail }) {
         </ul>
       )}
       {destinationCategories.length > 0 ? (
-        <section className="pn-section" aria-label="Regional destinations">
-          <h2 className="pn-section__title">Regional destinations</h2>
+        <section className="pn-section" aria-labelledby={`${uid}-regional`}>
+          <h2 id={`${uid}-regional`} className="pn-section__title">
+            Regional destinations
+          </h2>
           <ul className="pn-group" data-testid="terminal-destinations">
             {destinationCategories.map((c) => (
               <li key={c.category} className="pn-cell">
@@ -98,20 +101,22 @@ function RoutesPanel({ data }: { data: TerminalDetail }) {
 }
 
 export function TerminalDetailView({ data }: { data: TerminalDetail }) {
-  const { terminal, sources } = data;
+  const { terminal } = data;
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const uid = useId();
   const [tab, setTab] = useState<Tab>("routes");
   const panelId = `${uid}-panel`;
   const notes = terminalNoteSentences(terminal.code, data.destinationCategories.length > 0);
   const sub = [terminalModesText(terminal.modes), terminal.locationText].filter(Boolean).join(" · ");
-  const sourceChips = terminal.sourceCodes.length > 0 ? terminal.sourceCodes : sources.map((s) => s.code);
+  // Only the terminal's own sources back its address; the route and trial sources say nothing
+  // about it, so none → no chips (the evidence label then says "no evidence on file").
+  const sourceChips = terminal.sourceCodes;
   const tabs = [
-    { value: "routes", label: "Routes", controls: panelId },
-    { value: "entrances", label: "Entrances", controls: panelId },
-    { value: "hours", label: "Hours", controls: panelId },
+    { value: "routes", label: "Routes", controls: panelId, id: `${uid}-tab-routes` },
+    { value: "entrances", label: "Entrances", controls: panelId, id: `${uid}-tab-entrances` },
+    { value: "hours", label: "Hours", controls: panelId, id: `${uid}-tab-hours` },
   ] as const;
-  const tabLabel = tabs.find((t) => t.value === tab)!.label;
+  const activeTabId = tabs.find((t) => t.value === tab)!.id;
 
   return (
     <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">Location not mapped</span>} testId="terminal-detail">
@@ -148,7 +153,7 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
 
         <Segmented options={tabs} value={tab} onChange={setTab} label="Terminal sections" variant="tablist" testId="terminal-tabs" />
 
-        <div id={panelId} role="tabpanel" aria-label={tabLabel} className="pn-terminal__panel" data-testid={`terminal-panel-${tab}`}>
+        <div id={panelId} role="tabpanel" aria-labelledby={activeTabId} className="pn-terminal__panel" data-testid={`terminal-panel-${tab}`}>
           {tab === "routes" ? <RoutesPanel data={data} /> : null}
           {tab === "entrances" ? (
             <div className="pn-terminal__empty">

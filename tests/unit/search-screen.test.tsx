@@ -193,6 +193,9 @@ describe("SearchScreen", () => {
     await ready();
     expect(box()).toHaveProperty("value", "Plaza Rizal");
     await waitFor(() => expect(screen.getAllByTestId("search-result-pin").length).toBeGreaterThan(0));
+    // Read once: the fragment leaves the history entry, so a later visit does not prefill it.
+    expect(window.location.hash).toBe("");
+    expect(window.location.pathname).toBe("/app/search");
   });
 
   it("routes link to route detail; old route names are not tappable", async () => {

@@ -7,7 +7,6 @@
 import "@/ui/kit/styles";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { stopDetailSchema, type StopDetail } from "@/domain/api/schemas";
@@ -19,7 +18,7 @@ import {
   stopStatusBadge,
 } from "@/domain/network/present";
 import { directionText, stopDisplayName, stopLabel } from "@/domain/trip/present";
-import { cameFromInsideApp, useAppFrame } from "@/ui/app-shell/app-frame-context";
+import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import {
   CandidateRing,
   ChevronRight,
@@ -44,7 +43,7 @@ export function StopDetailScreen({ id }: { id: string }) {
 
 function ShowOnMap({ lat, lng }: { lat: number; lng: number }) {
   const frame = useAppFrame();
-  const router = useRouter();
+  const returnToMap = useReturnToMap();
   if (!frame) return null;
   return (
     <button
@@ -53,10 +52,7 @@ function ShowOnMap({ lat, lng }: { lat: number; lng: number }) {
       aria-label="Show on map"
       onClick={() => {
         frame.showOnMap({ lat, lng });
-        // Opened from the map in this session: go back to it (no extra history entry). Otherwise
-        // (a shared link, or reached from another panel) open the map.
-        if (cameFromInsideApp() && frame.isHomeNavigation(window.location.pathname)) router.back();
-        else router.push("/app");
+        returnToMap();
       }}
     >
       <MapIcon />

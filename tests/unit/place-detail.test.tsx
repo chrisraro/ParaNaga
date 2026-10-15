@@ -78,6 +78,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
   setEntryPath(null);
+  nav.pathname = "/app/places/x";
 });
 
 function renderPlace(ref: Parameters<typeof PlaceDetailView>[0]["placeRef"]) {
@@ -265,6 +266,24 @@ describe("Terminal detail", () => {
     );
     fireEvent.click(screen.getByRole("tab", { name: "Hours" }));
     expect(screen.getByRole("tabpanel").textContent).toBe("Opening hoursNot on fileEvidenceNone on file");
+  });
+
+  it("the tab panel is labelled by the active tab; Regional destinations by its heading", () => {
+    renderTerminal({
+      ...rawT01,
+      destinationCategories: [{ category: "eastbound", destinations: ["Pili"], evidenceStatus: null, sourceCodes: ["S12"] }],
+    });
+    const panel = screen.getByRole("tabpanel");
+    expect(panel.getAttribute("aria-labelledby")).toBe(screen.getByRole("tab", { name: "Routes" }).id);
+    expect(screen.getByRole("tabpanel", { name: "Routes" })).toBe(panel);
+    expect(screen.getByRole("region", { name: "Regional destinations" }).getAttribute("aria-label")).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Hours" }));
+    expect(screen.getByRole("tabpanel", { name: "Hours" })).toBeTruthy();
+  });
+
+  it("address chips come only from the terminal's own sources (none: no chips)", () => {
+    renderTerminal({ ...rawT01, terminal: { ...rawT01.terminal, sourceCodes: [], evidenceStatus: null } });
+    expect(screen.getByTestId("terminal-address").textContent).toBe("Address: no evidence on file");
   });
 
   it("T06: the rail station note and no route plan", () => {

@@ -11,7 +11,7 @@ import "./styles";
 
 import { useRef, type CSSProperties, type KeyboardEvent } from "react";
 
-export type SegmentedOption<V extends string> = { value: V; label: string; controls?: string };
+export type SegmentedOption<V extends string> = { value: V; label: string; controls?: string; /** Element id of the tab (a tabpanel's aria-labelledby). */ id?: string };
 
 type Props<V extends string> = {
   options: readonly SegmentedOption<V>[];
@@ -62,6 +62,7 @@ export function Segmented<V extends string>({ options, value, onChange, label, v
             ref={(el) => {
               buttons.current[i] = el;
             }}
+            id={o.id}
             type="button"
             role={tabs ? "tab" : "radio"}
             aria-checked={tabs ? undefined : on}

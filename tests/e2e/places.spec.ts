@@ -118,8 +118,11 @@ test("a study label: no trip action; its link searches mapped stops (query in th
   const detail = place(page);
   await expect(detail.getByRole("heading", { level: 1, name: "UMA Residences" })).toBeFocused();
   await expect(detail.getByTestId("place-cta")).toHaveCount(0);
-  await detail.getByRole("link", { name: "Search mapped stops for “UMA Residences”" }).click();
-  await expect(page).toHaveURL(/\/app\/search#q=UMA%20Residences$/);
+  const link = detail.getByRole("link", { name: "Search mapped stops for “UMA Residences”" });
+  await expect(link).toHaveAttribute("href", "/app/search#q=UMA%20Residences");
+  await link.click();
+  // The fragment is read once, then dropped from the history entry.
+  await expect(page).toHaveURL(/\/app\/search$/);
   await expect(page.getByRole("searchbox", { name: "Search places, stops and routes" })).toHaveValue("UMA Residences");
   await expect(page.getByTestId("search-announcer")).toHaveText(/^\d+ results?$/);
   expect(urls.filter((u) => /uma/i.test(u))).toEqual([]);
@@ -160,7 +163,7 @@ test("unknown terminal and place links get the not-found panel", async ({ page }
   await expect(page.getByTestId("detail-not-found").getByRole("heading", { level: 1 })).toBeVisible();
 });
 
-test("Escape closes a place panel back to the map", async ({ page }) => {
+test("Escape closes a place panel back to where it was opened", async ({ page }) => {
   await openApp(page);
   await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Explore", exact: true }).click();
   await page.getByTestId("explore-search").click();

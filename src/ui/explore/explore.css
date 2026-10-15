@@ -1,0 +1,251 @@
+/* Explore (artboard Explore). A tab page (.pn-detail.pn-page); tokens from home-screen.css /
+   detail.css / kit.css. Category chips, place cards (tinted tile + "Photo pending"), and the
+   directory under them. Dark blocks are written twice like home-screen.css. */
+
+.pn-page {
+  --pn-explore-chip-on-bg: #0f1e3d;
+  --pn-explore-chip-on-text: #ffffff;
+  --pn-explore-photo-chip: rgba(255, 255, 255, 0.82);
+  --pn-explore-ink: #24324f;
+  --pn-explore-faith: linear-gradient(135deg, #ede6fa, #f4f6fa);
+  --pn-explore-schools: linear-gradient(135deg, #e0e9fb, #f4f6fa);
+  --pn-explore-markets: linear-gradient(135deg, #fce6e3, #f4f6fa);
+  --pn-explore-health: linear-gradient(135deg, #e3f4ea, #f4f6fa);
+  --pn-explore-government: linear-gradient(135deg, #e6eaf2, #f4f6fa);
+  --pn-explore-parks: linear-gradient(135deg, #ddf0ee, #f4f6fa);
+  --pn-explore-terminals: linear-gradient(135deg, #fbefd6, #f4f6fa);
+}
+:root[data-theme="dark"] .pn-page {
+  --pn-explore-chip-on-bg: #f2f5fa;
+  --pn-explore-chip-on-text: #0b1220;
+  --pn-explore-photo-chip: rgba(11, 18, 32, 0.72);
+  --pn-explore-ink: #c7cedc;
+  --pn-explore-faith: linear-gradient(135deg, #2a2140, #1a2540);
+  --pn-explore-schools: linear-gradient(135deg, #1b2d4f, #1a2540);
+  --pn-explore-markets: linear-gradient(135deg, #3a2420, #1a2540);
+  --pn-explore-health: linear-gradient(135deg, #17352a, #1a2540);
+  --pn-explore-government: linear-gradient(135deg, #222c44, #1a2540);
+  --pn-explore-parks: linear-gradient(135deg, #12343a, #1a2540);
+  --pn-explore-terminals: linear-gradient(135deg, #3a3020, #1a2540);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-page {
+    --pn-explore-chip-on-bg: #f2f5fa;
+    --pn-explore-chip-on-text: #0b1220;
+    --pn-explore-photo-chip: rgba(11, 18, 32, 0.72);
+    --pn-explore-ink: #c7cedc;
+    --pn-explore-faith: linear-gradient(135deg, #2a2140, #1a2540);
+    --pn-explore-schools: linear-gradient(135deg, #1b2d4f, #1a2540);
+    --pn-explore-markets: linear-gradient(135deg, #3a2420, #1a2540);
+    --pn-explore-health: linear-gradient(135deg, #17352a, #1a2540);
+    --pn-explore-government: linear-gradient(135deg, #222c44, #1a2540);
+    --pn-explore-parks: linear-gradient(135deg, #12343a, #1a2540);
+    --pn-explore-terminals: linear-gradient(135deg, #3a3020, #1a2540);
+  }
+}
+
+.pn-explore__intro {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+
+/* ------------------------------------------------------------------ chips */
+.pn-explore__chips {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 2px 16px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pn-explore__chips::-webkit-scrollbar {
+  display: none;
+}
+.pn-explore__chip {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-fill);
+  color: var(--pn-label);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.pn-explore__chip[aria-selected="true"] {
+  background: var(--pn-explore-chip-on-bg);
+  color: var(--pn-explore-chip-on-text);
+}
+
+/* ------------------------------------------------------------------ cards */
+.pn-explore__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-explore__card {
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--pn-surface);
+  box-shadow: 0 1px 3px var(--pn-shadow);
+  /* Long lists (All has every place): skip layout of cards far off screen. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}
+.pn-explore__tile {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  height: 112px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  color: var(--pn-explore-ink);
+}
+.pn-explore__tile--faith {
+  background: var(--pn-explore-faith);
+}
+.pn-explore__tile--schools {
+  background: var(--pn-explore-schools);
+}
+.pn-explore__tile--markets {
+  background: var(--pn-explore-markets);
+}
+.pn-explore__tile--health {
+  background: var(--pn-explore-health);
+}
+.pn-explore__tile--government {
+  background: var(--pn-explore-government);
+}
+.pn-explore__tile--parks {
+  background: var(--pn-explore-parks);
+}
+.pn-explore__tile--terminals {
+  background: var(--pn-explore-terminals);
+}
+.pn-explore__photo {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--pn-explore-photo-chip);
+  color: var(--pn-label2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pn-explore__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px 14px;
+}
+.pn-explore__name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.pn-explore__name-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.pn-explore__name-link .pn-cell__chevron {
+  flex: none;
+  color: var(--pn-label2);
+}
+.pn-explore__kind {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+.pn-explore__commute {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.08s ease-out;
+}
+.pn-explore__commute:active {
+  transform: scale(0.98);
+}
+.pn-explore__empty {
+  margin: 0;
+  padding: 16px 14px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+
+/* ------------------------------------------------------------------ directory */
+.pn-explore__directory {
+  gap: 12px;
+  margin-top: 8px;
+}
+.pn-explore__directory-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.pn-explore__directory .pn-seg__btn {
+  min-height: 44px;
+  padding: 0 2px;
+  font-size: 13px;
+  line-height: 1.15;
+}
+.pn-explore__dir-panel,
+.pn-explore__route-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pn-explore__count {
+  margin: 0 4px;
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+.pn-explore__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.pn-explore__rail {
+  margin: 0 4px;
+  color: var(--pn-caption, var(--pn-label2));
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-explore__chip,
+  .pn-explore__commute {
+    transition: none;
+  }
+  .pn-explore__commute:active {
+    transform: none;
+  }
+}

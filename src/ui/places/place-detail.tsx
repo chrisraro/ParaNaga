@@ -192,7 +192,7 @@ function PlaceMap({ children }: { children: ReactNode }) {
 // ------------------------------------------------------------------ OpenStreetMap place
 
 function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: SearchOsmPlace; type: OsmElementType; id: string }) {
-  const point = { lat: place.lat, lng: place.lng };
+  const point = useMemo(() => ({ lat: place.lat, lng: place.lng }), [place.lat, place.lng]);
   const uid = useId();
   const nearby = nearestMappedStops(index, point);
   const rows: Row[] = [
@@ -294,7 +294,7 @@ function useMyMapsSourceText(stopId: string): string {
 function PinPlaceView({ place }: { place: SearchPinPlace }) {
   const router = useRouter();
   const uid = useId();
-  const point = pinPlacePoint(place);
+  const point = useMemo(() => pinPlacePoint(place), [place]);
   const sourceText = useMyMapsSourceText(pinPlaceMainPin(place).stopId);
   const mapPins = useMemo(() => pinsForMap(place), [place]);
   const spellings = otherSpellings(place);

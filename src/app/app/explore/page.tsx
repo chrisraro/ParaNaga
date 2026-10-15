@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageFrame } from "@/ui/app-shell/page-frame";
-import { RouteDirectory } from "@/ui/explore/route-directory";
+import { ExploreScreen } from "@/ui/explore/explore-screen";
 
 export const metadata: Metadata = {
   title: "Explore",
-  description: "What ParaNaga has on file for Naga City: the routes of the approved plan.",
+  description: "Places in Naga from OpenStreetMap, and how to get there, plus everything ParaNaga has on file.",
 };
 
 function SearchAction() {
@@ -19,12 +19,18 @@ function SearchAction() {
   );
 }
 
-// Tab page over the mounted home map (src/ui/app-shell/app-frame.tsx). Static shell; the route
-// list is fetched in the browser from /api/v1/routes. The round action opens Search (artboard).
+// Tab page over the mounted home map (src/ui/app-shell/app-frame.tsx). Static shell; the places
+// and the directory come from the cached search index (and /api/v1/routes) in the browser. The
+// round action opens Search (artboard).
 export default function ExplorePage() {
   return (
-    <PageFrame title="Explore" action={<SearchAction />} testId="explore-page">
-      <RouteDirectory />
+    <PageFrame
+      title="Explore"
+      action={<SearchAction />}
+      header={<p className="pn-explore__intro">Places in Naga, and how to get there.</p>}
+      testId="explore-page"
+    >
+      <ExploreScreen />
     </PageFrame>
   );
 }

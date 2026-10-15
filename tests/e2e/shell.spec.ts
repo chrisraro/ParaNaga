@@ -68,8 +68,8 @@ test.describe("phone", () => {
     await expect(tab(page, "Explore")).toHaveAttribute("aria-current", "page");
     await expect(tab(page, "Map")).not.toHaveAttribute("aria-current", "page");
     await expect(page.getByTestId("app-home-layer")).toHaveAttribute("inert", "");
-    // The Explore directory lists the 11 routes of the approved plan.
-    await expect(page.getByTestId("explore-routes").getByRole("listitem")).toHaveCount(11);
+    // Explore lists the OpenStreetMap places as cards.
+    await expect(page.getByTestId("explore-card").first()).toBeVisible();
 
     await tab(page, "Saved").click();
     await expect(page).toHaveURL(/\/app\/saved$/);
@@ -133,6 +133,7 @@ test.describe("phone", () => {
 
     // A route opened from Explore is a detail panel: no tab bar; Back returns to Explore with it.
     await tab(page, "Explore").click();
+    await page.getByRole("tablist", { name: "Directory sections" }).getByRole("tab", { name: "Routes" }).click();
     await page.getByTestId("explore-routes").getByRole("link").first().click();
     await expect(page.getByTestId("route-detail")).toBeVisible();
     await expect(tabBar(page)).toHaveCount(0);
@@ -196,7 +197,7 @@ test.describe("phone", () => {
     for (const [name, title] of PAGES) {
       await tab(page, name).click();
       await expect(page.getByRole("heading", { level: 1, name: title })).toBeFocused();
-      if (name === "Explore") await expect(page.getByTestId("explore-routes")).toBeVisible();
+      if (name === "Explore") await expect(page.getByTestId("explore-card").first()).toBeVisible();
       await expectAxeClean(page);
     }
   });
@@ -210,7 +211,7 @@ test.describe("phone", () => {
       for (const [name, title] of PAGES) {
         await tab(page, name).click();
         await expect(page.getByRole("heading", { level: 1, name: title })).toBeFocused();
-        if (name === "Explore") await expect(page.getByTestId("explore-routes")).toBeVisible();
+        if (name === "Explore") await expect(page.getByTestId("explore-card").first()).toBeVisible();
         await expectAxeClean(page);
       }
     });
