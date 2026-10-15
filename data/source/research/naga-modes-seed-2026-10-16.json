@@ -1,0 +1,3415 @@
+{
+  "header": {
+    "schemaVersion": 1,
+    "preparedOn": "2026-10-16",
+    "preparedFrom": [
+      "naga-transport-candidates-2026-10.json@sha256:38b5bab9cc1f925133035a13034db8c53a8f6e30eb6a0acd9a468a6cd1e16f0a",
+      "Data_Sets/naga_transport_seed.json@sha256:ae68c5ddf410a55688fcfaf4bf09680db0699cc1a080b4b9d36381393e5aed79",
+      "data/source/osm/naga-places-2026-10-15.osm.json@sha256:38bf7571f20fb57b95f5af7bd48fdcc081b2a878a2ec07cbf41ea656dec15a9e"
+    ],
+    "reviewer": "controller",
+    "jevModel": "typesafe/jev-1.13-20260917"
+  },
+  "sources": [
+    {
+      "code": "N01",
+      "title": "OpenStreetMap route relations in Naga bbox (Overpass API)",
+      "url": "https://overpass-api.de/api/interpreter",
+      "extra_urls": [],
+      "publisher": "OpenStreetMap contributors",
+      "date": "osm_base 2026-10-15T20:40Z",
+      "type": "community_open_data",
+      "licence": "ODbL 1.0",
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.03,
+          "p_current_2026_10": 0.67,
+          "p_claim_supported": 0.32
+        },
+        "jev_claim": "Regional routes mapped; no intra-city Naga PUJ relation"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N02",
+      "title": "OpenStreetMap transport POIs in Naga (terminals, stops, stations)",
+      "url": "https://overpass-api.de/api/interpreter",
+      "extra_urls": [],
+      "publisher": "OpenStreetMap contributors",
+      "date": "osm_base 2026-10-15T20:42Z",
+      "type": "community_open_data",
+      "licence": "ODbL 1.0",
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.03,
+          "p_current_2026_10": 0.77,
+          "p_claim_supported": 0.91
+        },
+        "jev_claim": "Community coordinates usable as candidates pending field check"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N03",
+      "title": "Ordinance 2026-023 Slow-Moving Vehicle Lane",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2026-023/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2026-02-24 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.95,
+          "p_current_2026_10": 0.87,
+          "p_claim_supported": 0.59
+        },
+        "jev_claim": "Tricycles/stopping PUVs keep outermost lane; no fare provisions"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N04",
+      "title": "Ordinance 2025-110 Amending Truck Ban",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-110/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-12-09 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.91,
+          "p_current_2026_10": 0.69,
+          "p_claim_supported": 0.65
+        },
+        "jev_claim": "Peak windows 6-8, 11-13, 16-19 on Roxas Ave"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N05",
+      "title": "Ordinance 2025-023 Deca Vistansa–Langon special trimobile route",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-023/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-03-18 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.91,
+          "p_current_2026_10": 0.68,
+          "p_claim_supported": 0.9
+        },
+        "jev_claim": "10 additional special units, Langon–Deca Vistansa via Salunguigui"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N06",
+      "title": "Ordinance 2025-067 VISTODA/LAVISTODA (same as S37)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-067/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-09-09 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.92,
+          "p_current_2026_10": 0.72,
+          "p_claim_supported": 0.95
+        },
+        "jev_claim": "33 units authorised on route; waiting areas"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N07",
+      "title": "Ordinance 2026-038 Emergency Fuel Assistance (jeepney cooperatives)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-2026-038/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2026-04-08 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.91,
+          "p_current_2026_10": 0.6,
+          "p_claim_supported": 0.72
+        },
+        "jev_claim": "Traditional and modern jeepneys under cooperatives in 2026"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N08",
+      "title": "Ordinance 2025-128 E-bike / micro-mobility registration",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-128/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-12-19 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.93,
+          "p_current_2026_10": 0.77,
+          "p_claim_supported": 0.95
+        },
+        "jev_claim": "E-trike passenger service only with franchise/PUV registration"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N09",
+      "title": "Ordinance 2017-036 new e-jeepney route (signed PDF, visually read)",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord2017-036.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2017-06-06 (enacted)",
+      "type": "official_historical",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.87,
+          "p_current_2026_10": 0.23,
+          "p_claim_supported": 0.07
+        },
+        "jev_claim": "Claim tested: route operating Oct 2026 (NOT supported)"
+      },
+      "review": {
+        "decision": "exclude",
+        "reason": "E-jeepney dropped by user decision 2026-10-16: the 2017 route is not imported, so its only source is not either",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N10",
+      "title": "Resolution 2025-128 90-day LPTRP dry run Loops C/D + M.T. Villanueva bike-lane experiment",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/04/Resno-2025-128-LPTRP-Dry-Run-and-Protected-Bicycle-Lane.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-03-18 (adopted)",
+      "type": "official_historical",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.93,
+          "p_current_2026_10": 0.19,
+          "p_claim_supported": 0.94
+        },
+        "jev_claim": "Loop C/D dry-run street sequences authorised Mar 2025"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N11",
+      "title": "Ordinance 93-049 Transport and Traffic Code (same as S28)",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1993-049/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1993 (amended to 2019)",
+      "type": "official_historical",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.92,
+          "p_current_2026_10": 0.49,
+          "p_claim_supported": 0.76
+        },
+        "jev_claim": "Claim tested: today's rush hours = code's 1993 windows"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N12",
+      "title": "Ordinance 2022-013 temporary Eastbound PUJ/van terminal (Ruby Shelter, CBD II)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2022-013/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2022-02-15 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.94,
+          "p_current_2026_10": 0.25,
+          "p_claim_supported": 0.96
+        },
+        "jev_claim": "Eastbound terminal CBD II, Ruby Shelter, P40/P60 dispatch fee"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N13",
+      "title": "Proposed TODA and PODA Accreditation Ordinance (NB11_2026-0772)",
+      "url": "https://www2.naga.gov.ph/proposed-ordinance/proposed-toda-and-poda-accreditation-ordinance-of-naga-city/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2026-04-30 (filed; proposed)",
+      "type": "official_proposal",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.73,
+          "p_current_2026_10": 0.31,
+          "p_claim_supported": 0.04
+        },
+        "jev_claim": "Claim tested: an enacted TODA registry exists (NOT supported)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N14",
+      "title": "CDA Region 5: Modern PUV Launch in Naga City",
+      "url": "https://cda.gov.ph/region-5/modern-puv-launch-in-naga-city/",
+      "extra_urls": [],
+      "publisher": "Cooperative Development Authority Region V",
+      "date": "2023-04-18",
+      "type": "government_news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.88,
+          "p_current_2026_10": 0.48,
+          "p_claim_supported": 0.95
+        },
+        "jev_claim": "NACIATRASCO aircon modern PUVs on Del Rosario–Panganiban–Centro"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N15",
+      "title": "Brigada News Naga: coop consolidation (2024-01-08) and Carolina Panicuason coop trip limits (2024-06-24)",
+      "url": "https://www.brigadanews.ph/biyahe-ng-ilang-traditional-jeepney-sa-naga-city-nilimitahan/",
+      "extra_urls": [
+        "https://www.brigadanews.ph/ilang-jeepney-cooperative-sa-naga-city-nakapag-consolidate-na-para-sa-jeepney-modernization/"
+      ],
+      "publisher": "Brigada News FM Naga",
+      "date": "2024-01-08; 2024-06-24",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.1,
+          "p_current_2026_10": 0.36,
+          "p_claim_supported": 0.7
+        },
+        "jev_claim": "Coops on Carolina/Panicuason and Cararayan–San Isidro"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N16",
+      "title": "SafeTravelPH: Naga SimEx support (2025-08-18, upd 2025-09-09) and tricycle research with BISCAST (2025-11-20)",
+      "url": "https://www.safetravelph.org/post/naga-city-gets-support-from-safetravelph-for-ptmp-route-simulation-exercise",
+      "extra_urls": [
+        "https://www.safetravelph.org/post/elevating-tricycle-mobility-through-data-research-local-innovation-safetravelph-biscast-naga-city"
+      ],
+      "publisher": "SafeTravelPH Mobility Innovations Organization",
+      "date": "2025-08-18 / 2025-11-20",
+      "type": "project_participant",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.06,
+          "p_current_2026_10": 0.27,
+          "p_claim_supported": 0.8
+        },
+        "jev_claim": "Baseline jeepney speed ~10 kph mid-2025"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N17",
+      "title": "Philstar: Jeepney fares up to P14 starting Sept 28",
+      "url": "https://www.philstar.com/headlines/2026/09/27/2559277/jeepney-fares-p14-starting-sept-28-buses-taxis-tnvs-also-hike-rates",
+      "extra_urls": [],
+      "publisher": "The Philippine Star",
+      "date": "2026-09-27",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.1,
+          "p_current_2026_10": 0.79,
+          "p_claim_supported": 0.95
+        },
+        "jev_claim": "P14/P17 first 4 km, P2.00/P2.40 per km"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N18",
+      "title": "Commutetour: Naga Bicol Central Terminal bus schedule",
+      "url": "https://ph.commutetour.com/ph/terminal/naga-bicol-central-terminal/",
+      "extra_urls": [],
+      "publisher": "commutetour.com (private aggregator)",
+      "date": "2026-01-17 (page update)",
+      "type": "aggregator",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.04,
+          "p_current_2026_10": 0.09,
+          "p_claim_supported": 0.07
+        },
+        "jev_claim": "Claim tested: current Oct-2026 BCS fares (NOT supported)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N19",
+      "title": "Wikivoyage: Naga",
+      "url": "https://en.wikivoyage.org/wiki/Naga",
+      "extra_urls": [],
+      "publisher": "Wikivoyage contributors",
+      "date": "listings 'updated Oct 2023'",
+      "type": "community_wiki",
+      "licence": "CC BY-SA",
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.04,
+          "p_current_2026_10": 0.4,
+          "p_claim_supported": 0.97
+        },
+        "jev_claim": "Eastbound van terminal Waling-Waling St; Westbound Felix Plazo; 5AM-6PM"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N20",
+      "title": "NagaCityGuide: Getting Around Naga City (same as S30)",
+      "url": "https://www.nagacityguide.com/getting-around-naga-city-your-commuters-guide-to-tricycles-jeepneys-e-jeep-vans-ride-hailing-apps/",
+      "extra_urls": [],
+      "publisher": "NagaCityGuide.com",
+      "date": "2025-10-13",
+      "type": "secondary_guide",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.04,
+          "p_current_2026_10": 0.71,
+          "p_claim_supported": 0.95
+        },
+        "jev_claim": "Peak 7-9 AM, 4-6 PM; Magsaysay and CBD busy"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N21",
+      "title": "PNR Bicol status: bicoltraininfo.com fan page (as of 2026-10-15) + Wikipedia Naga/Ligao station",
+      "url": "https://www.bicoltraininfo.com/",
+      "extra_urls": [
+        "https://en.wikipedia.org/wiki/Naga_station"
+      ],
+      "publisher": "Dekada Riles (fan) / Wikipedia",
+      "date": "2026-10-15 / 2026-08-23",
+      "type": "community_unconfirmed",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.04,
+          "p_current_2026_10": 0.64,
+          "p_claim_supported": 0.94
+        },
+        "jev_claim": "Naga–Lupi Viejo operating, Naga–Legazpi suspended"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N22",
+      "title": "TopGear PH M.T. Villanueva redevelopment (2026-06-26) + Street Journal traffic summit (2025-12-29)",
+      "url": "https://www.topgear.com.ph/mobility/naga-city-redevelops-road-active-urban-mobility-a4682-20260626",
+      "extra_urls": [
+        "https://streetjournalms.com/naga-city-to-conduct-summits-on-waste-traffic-in-2026/"
+      ],
+      "publisher": "TopGear Philippines / Street Journal Multimedia",
+      "date": "2026-06-26 / 2025-12-29",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.07,
+          "p_current_2026_10": 0.69,
+          "p_claim_supported": 0.79
+        },
+        "jev_claim": "M.T. Villanueva busiest; city planning congestion measures"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N23",
+      "title": "Naga CDP 2011-2020 Ch.1 Quick Facts (vehicle counts)",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2022/07/CDP-2011-20-Chapter-1-Quick-Facts-About-Naga-City.pdf",
+      "extra_urls": [],
+      "publisher": "City Government of Naga (CPDO)",
+      "date": "c.2011 (plan period 2011-2020)",
+      "type": "official_historical",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.9,
+          "p_current_2026_10": 0.15,
+          "p_claim_supported": 0.31
+        },
+        "jev_claim": "Claim tested: today's counts (NOT supported; historical)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N24",
+      "title": "Google Maps Platform ToS (mod. 2026-08-26), Service Specific Terms §19 Routes API (mod. 2026-10-15), Routes API policies (upd. 2026-10-13)",
+      "url": "https://cloud.google.com/maps-platform/terms",
+      "extra_urls": [
+        "https://cloud.google.com/maps-platform/terms/maps-service-terms",
+        "https://developers.google.com/maps/documentation/routes/policies"
+      ],
+      "publisher": "Google",
+      "date": "2026-08-26 / 2026-10-15 / 2026-10-13",
+      "type": "provider_terms",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.96,
+          "p_current_2026_10": 0.84,
+          "p_claim_supported": 0.68
+        },
+        "jev_claim": "No Routes content with non-Google map; no caching except lat/lng 30 days"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N25",
+      "title": "Mapbox Product Terms (July 21, 2026)",
+      "url": "https://www.mapbox.com/legal/product-terms",
+      "extra_urls": [],
+      "publisher": "Mapbox",
+      "date": "2026-07-21",
+      "type": "provider_terms",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.95,
+          "p_current_2026_10": 0.72,
+          "p_claim_supported": 0.84
+        },
+        "jev_claim": "Navigation API results: no cache/store; Traffic Data internal eval only without order"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N26",
+      "title": "TomTom developer pricing + Terms and Conditions",
+      "url": "https://docs.tomtom.com/pricing",
+      "extra_urls": [
+        "https://www.tomtom.com/legal/terms-and-conditions/"
+      ],
+      "publisher": "TomTom",
+      "date": "retrieved 2026-10-16 (T&C for orders after 2025-09-01)",
+      "type": "provider_terms",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.93,
+          "p_current_2026_10": 0.68,
+          "p_claim_supported": 0.97
+        },
+        "jev_claim": "Free monthly: Routing 20,000; Flow Segment Data 20,000"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N27",
+      "title": "Waze for Cities partner help: program and how to apply",
+      "url": "https://support.google.com/waze/partners/answer/10618477",
+      "extra_urls": [
+        "https://support.google.com/waze/partners/answer/10453062"
+      ],
+      "publisher": "Waze / Google",
+      "date": "retrieved 2026-10-16",
+      "type": "provider_terms",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.83,
+          "p_current_2026_10": 0.59,
+          "p_claim_supported": 0.43
+        },
+        "jev_claim": "Govt agencies/road operators only; LGU could apply"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N28",
+      "title": "Tolentino & Sigua, Characteristics of Walking and Cycling in Metro Manila, Philippine Transportation Journal 5(1)",
+      "url": "https://ncts.upd.edu.ph/tssp/wp-content/uploads/2022/12/TSSP2022_Vol5-No1_02-Tolentino-and-Sigua.pdf",
+      "extra_urls": [],
+      "publisher": "UP NCTS / TSSP",
+      "date": "2022",
+      "type": "academic",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.83,
+          "p_current_2026_10": 0.76,
+          "p_claim_supported": 0.95
+        },
+        "jev_claim": "Walking speed 4.238 km/h used"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N29",
+      "title": "Fajardo, Tiglao et al., Optimizing Route-based Fleet Size ... Puerto Princesa City (TSSP 2025)",
+      "url": "https://ncts.upd.edu.ph/tssp/wp-content/uploads/2026/02/TSSP2025-02-Revised-Paper.pdf",
+      "extra_urls": [],
+      "publisher": "SafeTravelPH / UP NCPAG / TSSP",
+      "date": "2025 conf. (uploaded 2026-02)",
+      "type": "academic_comparable_city",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.9,
+          "p_current_2026_10": 0.77,
+          "p_claim_supported": 0.82
+        },
+        "jev_claim": "Comparable city peak jeepney 13-15 km/h vs 30 km/h LPTRP assumption"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N30",
+      "title": "Ordinance 2025-070 LPTRP + Resolution 2025-735 Eastbound trial (= S01/S02/S03)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+      "extra_urls": [
+        "https://www2.naga.gov.ph/sp_resolutions/2025-735/"
+      ],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-09-23 / 2025-11-11",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.89,
+          "p_current_2026_10": 0.77,
+          "p_claim_supported": 0.8
+        },
+        "jev_claim": "LPTRP is current legal network; A/B Eastbound trial permanence unconfirmed"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N31",
+      "title": "Terminal ordinances 2021-087 (LCC southbound), 2016-034 (Queborac northbound), 2006-044 (terminal categories) (= S10/S11/S12)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2021-087/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2021-11-09 / 2016-06-24 / 2006-09-11",
+      "type": "official_historical",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.81,
+          "p_current_2026_10": 0.32,
+          "p_claim_supported": 0.22
+        },
+        "jev_claim": "Claim tested: terminals in use today (NOT directly supported)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N32",
+      "title": "PIA: LTFRB reminds PUV operators to display updated fare matrix (= S05)",
+      "url": "https://pia.gov.ph/news/luzon/ncr/ltfrb-reminds-puv-operators-drivers-to-display-updated-fare-matrix",
+      "extra_urls": [],
+      "publisher": "Philippine Information Agency",
+      "date": "2026-09-28",
+      "type": "government_news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.58,
+          "p_current_2026_10": 0.8,
+          "p_claim_supported": 0.94
+        },
+        "jev_claim": "New fares from 28 Sep 2026 require displayed matrix"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N33",
+      "title": "Ordinance 2024-002 trimobile/e-trike/taxicle fare P15 (= S04)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2024-002/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2024-01-16 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.96,
+          "p_current_2026_10": 0.84,
+          "p_claim_supported": 0.89
+        },
+        "jev_claim": "P15 minimum with 20% discount is current"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N34",
+      "title": "Google Maps Platform pricing",
+      "url": "https://developers.google.com/maps/billing-and-pricing/pricing",
+      "extra_urls": [],
+      "publisher": "Google",
+      "date": "2026-10-14 (page update)",
+      "type": "provider_terms",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.96,
+          "p_current_2026_10": 0.9,
+          "p_claim_supported": 0.93
+        },
+        "jev_claim": "Routes Essentials 10k free/month, Pro 5k"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N35",
+      "title": "Ordinance 2026-062 CitiZend digital reporting of traffic-code violations",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2026-062/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2026-05-26 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.89,
+          "p_current_2026_10": 0.82,
+          "p_claim_supported": 0.05
+        },
+        "jev_claim": "Claim tested: names corridors/peak hours (NOT supported)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N36",
+      "title": "City news: Naga City Transport group supports jeep modernization",
+      "url": "https://www2.naga.gov.ph/naga-city-transport-group-supports-govts-jeep-modernization-program/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "2023-03-09",
+      "type": "official_news_historical",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.85,
+          "p_current_2026_10": 0.52,
+          "p_claim_supported": 0.54
+        },
+        "jev_claim": "Naga-Daraga Transport Cooperative exists"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N37",
+      "title": "HERE pricing page (no free-tier figures retrievable)",
+      "url": "https://www.here.com/get-started/pricing",
+      "extra_urls": [],
+      "publisher": "HERE",
+      "date": "retrieved 2026-10-16",
+      "type": "provider_terms",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": null,
+        "jev_claim": "not scored: page returned no terms/limits"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N38",
+      "title": "Brigada News: NACIATRASCO, ibinahagi ang kagandahan ng modernized jeepney",
+      "url": "https://www.brigadanews.ph/naciatrasco-ibinahagi-ang-kagandahan-ng-modernized-jeepney/",
+      "extra_urls": [],
+      "publisher": "Brigada News FM Naga",
+      "date": "2024-01-16",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.14,
+          "p_current_2026_10": 0.25,
+          "p_claim_supported": 0.9
+        },
+        "jev_claim": "Jan 2024: 10 modern units Del Rosario–Panganiban–Centro, 5 Panicuason–Carolina–Centro (NACIATRASCO)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N39",
+      "title": "Brigada News: Pagbusisi ng jeepney modernization ... – NACIATRASCO",
+      "url": "https://www.brigadanews.ph/pagbusisi-ng-jeepney-modernization-dapat-isagawa-sa-kabila-ng-magandang-epekto-nito-naciatrasco/",
+      "extra_urls": [],
+      "publisher": "Brigada News FM Naga",
+      "date": "2024-05-07",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.11,
+          "p_current_2026_10": 0.59,
+          "p_claim_supported": 0.81
+        },
+        "jev_claim": "NACIATRASCO operating modern units May 2024; P5,000–7,000 daily quota per unit"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N40",
+      "title": "Transport Cooperative Masterlist as of July 2023 (OTC data)",
+      "url": "https://ltoportal.ph/wp-content/uploads/2023/12/TC-Masterlist-as-of-July-2023-PDF-1.pdf",
+      "extra_urls": [],
+      "publisher": "Office of Transportation Cooperatives (PDF hosted by ltoportal.ph, third-party host)",
+      "date": "2023-07",
+      "type": "official_registry_via_third_party_host",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.85,
+          "p_current_2026_10": 0.25,
+          "p_claim_supported": 0.89
+        },
+        "jev_claim": "Registered Del Rosario, Carolina–Panicuason, Pacol coops with chairpersons"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "N41",
+      "title": "CDA Region V: CamSur MPC signs Koop Kapatid MOA with NACIATRASCO and CAPATRANSCO",
+      "url": "https://cda.gov.ph/region-5/inspiring-change-and-cooperative-growth-camsur-multi-purpose-cooperative-signs-memorandum-of-agreement-on-koop-kapatid-program-with-two-2-transport-cooperatives-in-naga-city/",
+      "extra_urls": [],
+      "publisher": "Cooperative Development Authority Region V",
+      "date": "2023-10-09 (MOA 2023-10-05)",
+      "type": "government_news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.13-20260917",
+          "p_primary_official": 0.79,
+          "p_current_2026_10": 0.42,
+          "p_claim_supported": 0.83
+        },
+        "jev_claim": "CAPATRANSCO financing for modern PUVs arranged Oct 2023"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Verbatim from the research register; Jev scores kept as provenance only",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "U01",
+      "title": "Project owner confirmation to ParaNaga (2026-10-16): traditional jeepneys operate on every LPTRP route (R1–R8); air-conditioned modern jeepneys operate on R4 and R7; riders pay about P3–P5 more on R4 modern and at least P5 more on R7 modern than the traditional fare",
+      "url": null,
+      "extra_urls": [],
+      "publisher": "ParaNaga project owner",
+      "date": "2026-10-16",
+      "type": "owner_confirmation",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "scope": "Confirms service only; not stop locations, stop order or paths"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16 (D2 as amended)",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "terminals": [
+    {
+      "code": "T01",
+      "name": "Bicol Central Station",
+      "kind": "terminal",
+      "location_text": "Ninoy & Cory Avenue, Triangulo",
+      "modes": [
+        "bus",
+        "uv_express"
+      ],
+      "modes_raw": [
+        "bus",
+        "uv_express"
+      ],
+      "mode_sources": {
+        "bus": [
+          "S09",
+          "N02"
+        ],
+        "uv_express": [
+          "N01"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6192359,
+        "lng": 123.1897426,
+        "coord_source": "osm_way_centroid",
+        "osm_type": "way",
+        "osm_id": 293702439,
+        "osm_version": 6,
+        "osm_timestamp": "2025-09-01T08:09:32Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": "centroid, not an entrance"
+      },
+      "verification": "community_coordinate_official_address",
+      "status_note": "UV Express mode from community-mapped OSM route tags (Tabaco UV); confirm",
+      "notes": "Map each passenger entrance and bus bay; do not confuse BCS with PNR railway station.",
+      "source_codes": [
+        "S09",
+        "N02",
+        "N01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T01: BCS way centroid; bus [S09, N02], uv_express [N01, community]",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T02",
+      "name": "Eastbound Terminal",
+      "kind": "terminal",
+      "location_text": "Anciano Street / Naga City Subdivision area",
+      "modes": [
+        "jeepney",
+        "uv_express"
+      ],
+      "modes_raw": [
+        "jeepney",
+        "UV/van"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "S03",
+          "N12"
+        ],
+        "uv_express": [
+          "N12"
+        ]
+      },
+      "coordinate": null,
+      "verification": "official_location_text_conflicting_street",
+      "status_note": "Street conflicts: Anciano St vs Waling-Waling St",
+      "notes": "Confirm current compound entrances, bay assignments and aliases such as Central Jeep Terminal.",
+      "source_codes": [
+        "S03",
+        "S12",
+        "N12",
+        "N30",
+        "N19"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T02: no sourced coordinate (not in OSM); street conflict recorded",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T03",
+      "name": "LCC / Integrated Southbound Terminal",
+      "kind": "terminal",
+      "location_text": "Felix Plazo Street, Sabang",
+      "modes": [
+        "jeepney",
+        "uv_express"
+      ],
+      "modes_raw": [
+        "jeepney",
+        "filcab/van"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "S10",
+          "N31"
+        ],
+        "uv_express": [
+          "S10",
+          "N31",
+          "N19"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6189669,
+        "lng": 123.1782111,
+        "coord_source": "osm_way_centroid",
+        "osm_type": "way",
+        "osm_id": 23670386,
+        "osm_version": 4,
+        "osm_timestamp": "2022-04-22T14:17:30Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": "centroid, not an entrance"
+      },
+      "verification": "community_coordinate_official_historical_franchise",
+      "status_note": "franchise to about July 2025; renewal not found",
+      "notes": "The retrieved three-year franchise is historical. Current renewal and each destination bay unverified.",
+      "source_codes": [
+        "S10",
+        "N02",
+        "N31",
+        "N19"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T03: LCC way centroid",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T04",
+      "name": "Integrated Northbound Terminal",
+      "kind": "terminal",
+      "location_text": "Queborac Drive, Bagumbayan Sur",
+      "modes": [
+        "jeepney",
+        "uv_express"
+      ],
+      "modes_raw": [
+        "jeepney",
+        "van"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "S11",
+          "N31"
+        ],
+        "uv_express": [
+          "S11",
+          "N31"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6344492,
+        "lng": 123.1849067,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 4545731100,
+        "osm_version": 4,
+        "osm_timestamp": "2025-08-31T09:44:06Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": null
+      },
+      "verification": "community_coordinate_official_historical_franchise",
+      "status_note": "franchise (Ordinance 2016-034) was for 3 years; current franchise not found",
+      "notes": "Confirm entrances, current operators and Canaman/Calabanga terminal practices.",
+      "source_codes": [
+        "S11",
+        "S12",
+        "N02",
+        "N31"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T04: node 4545731100",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T05",
+      "name": "Centro loading cluster",
+      "kind": "loading_point",
+      "location_text": "Padian / Gen. Luna / Elias Angeles / Diaz / Dinaga / Caceres streets",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "city_jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "S01"
+        ]
+      },
+      "coordinate": null,
+      "verification": "official_street_structure",
+      "status_note": null,
+      "notes": "This is a cluster, not one fixed terminal. Record a separate curb for each direction and variant.",
+      "source_codes": [
+        "S01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T05: unchanged from Data_Sets",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T06",
+      "name": "Naga PNR railway station",
+      "kind": "station",
+      "location_text": "Naga City; exact passenger entrance not verified",
+      "modes": [
+        "rail"
+      ],
+      "modes_raw": [
+        "rail"
+      ],
+      "mode_sources": {
+        "rail": [
+          "S19",
+          "S21",
+          "N21"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.619618,
+        "lng": 123.185879,
+        "coord_source": "osm_way_centroid",
+        "osm_type": "way",
+        "osm_id": 23662289,
+        "osm_version": 7,
+        "osm_timestamp": "2026-03-30T17:55:06Z",
+        "read_from": "N02 Overpass center; OSM API 0.6 element read 2026-10-16 (version, timestamp); timestamp precedes N02 osm_base 2026-10-15T20:42Z",
+        "coord_note": "building centroid, not an entrance"
+      },
+      "verification": "community_coordinate",
+      "status_note": "Naga–Legazpi reported suspended; Naga–Lupi Viejo reported running (fan site, 15 Oct 2026) · confirm with PNR",
+      "notes": "Current tickets, timetable, rail corridor status and exact entrance need PNR confirmation.",
+      "source_codes": [
+        "S19",
+        "S21",
+        "N02",
+        "N21"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T06: PNR way centroid",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T07",
+      "name": "Eaglestar Naga Terminal",
+      "kind": "terminal",
+      "location_text": "OSM node south of CBD",
+      "modes": [
+        "bus"
+      ],
+      "modes_raw": [
+        "bus"
+      ],
+      "mode_sources": {
+        "bus": [
+          "N02"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6163844,
+        "lng": 123.1866316,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 5947830172,
+        "osm_version": 2,
+        "osm_timestamp": "2020-03-15T11:30:33Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": null
+      },
+      "verification": "community_only",
+      "status_note": "OSM 2020 edit; operation unverified",
+      "notes": "Private bus terminal.",
+      "source_codes": [
+        "N02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T07",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T08",
+      "name": "Milaor Jeepney Terminal",
+      "kind": "terminal",
+      "location_text": "OSM bus_stop node",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "N02"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6180598,
+        "lng": 123.1831728,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 4545730692,
+        "osm_version": 2,
+        "osm_timestamp": "2017-08-29T18:32:16Z",
+        "read_from": "OSM API 0.6 element read 2026-10-16 (version, timestamp); timestamp precedes N02 osm_base 2026-10-15T20:42Z",
+        "coord_note": null
+      },
+      "verification": "community_only",
+      "status_note": null,
+      "notes": null,
+      "source_codes": [
+        "N02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T08",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T09",
+      "name": "Jeepney station to Concepcion and Del Rosario",
+      "kind": "loading_point",
+      "location_text": "Dinaga St, Centro",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "N02",
+          "N30"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6230645,
+        "lng": 123.1859752,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 4850021524,
+        "osm_version": 3,
+        "osm_timestamp": "2024-08-20T16:47:30Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": null
+      },
+      "verification": "community_coordinate_matches_LPTRP_street",
+      "status_note": null,
+      "notes": "Consistent with R4 using Dinaga St; curb side unverified.",
+      "source_codes": [
+        "N02",
+        "N30"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T09",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T10",
+      "name": "Jeepney station to Pacol",
+      "kind": "loading_point",
+      "location_text": "Centro",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "N02"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6209809,
+        "lng": 123.1846467,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 4850042233,
+        "osm_version": 1,
+        "osm_timestamp": "2017-05-12T16:54:58Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": null
+      },
+      "verification": "community_only_old",
+      "status_note": null,
+      "notes": "OSM 2017 edit. Centro boarding point for R6 Pacol per OSM name (2017).",
+      "source_codes": [
+        "N02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T10",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T11",
+      "name": "Jeepney station to Carolina and Panicuason",
+      "kind": "loading_point",
+      "location_text": "Centro",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "N02"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6210805,
+        "lng": 123.1850123,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 4850021531,
+        "osm_version": 1,
+        "osm_timestamp": "2017-05-12T16:54:57Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": null
+      },
+      "verification": "community_only_old",
+      "status_note": null,
+      "notes": "OSM 2017 edit. Centro boarding point for R7 Carolina/Panicuason per OSM name (2017).",
+      "source_codes": [
+        "N02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T11",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T12",
+      "name": "Del Rosario → Centro jeepney station",
+      "kind": "loading_point",
+      "location_text": "Maharlika Hwy, Del Rosario",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "N02"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6181576,
+        "lng": 123.2338199,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 5054596823,
+        "osm_version": 2,
+        "osm_timestamp": "2019-09-30T01:15:08Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": null
+      },
+      "verification": "community_only",
+      "status_note": null,
+      "notes": "OSM 2019 edit. Boarding point toward Centro (via Panganiban, Magsaysay or Roxas) per OSM name.",
+      "source_codes": [
+        "N02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T12",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T13",
+      "name": "Gen. Luna St at Plaza Rizal (PUJ platform)",
+      "kind": "loading_point",
+      "location_text": "Gen. Luna St",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "N02"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.623659,
+        "lng": 123.1847492,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 4850021530,
+        "osm_version": 6,
+        "osm_timestamp": "2026-04-06T08:09:36Z",
+        "read_from": "OSM API 0.6 element read 2026-10-16 (version, timestamp); timestamp precedes N02 osm_base 2026-10-15T20:42Z",
+        "coord_note": null
+      },
+      "verification": "community_only",
+      "status_note": null,
+      "notes": "Tagged network=LTFRB Region V by the mapper; not an official LTFRB dataset.",
+      "source_codes": [
+        "N02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T13",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T14",
+      "name": "Balatas Tricycle Terminal",
+      "kind": "terminal",
+      "location_text": "Balatas, near Magsaysay Ave/Balatas Rd",
+      "modes": [
+        "tricycle"
+      ],
+      "modes_raw": [
+        "tricycle"
+      ],
+      "mode_sources": {
+        "tricycle": [
+          "N02"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6318672,
+        "lng": 123.1973306,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 14053567159,
+        "osm_version": 1,
+        "osm_timestamp": "2026-07-27T10:52:44Z",
+        "read_from": "OSM API 0.6 element read 2026-10-16 (version, timestamp); timestamp precedes N02 osm_base 2026-10-15T20:42Z",
+        "coord_note": null
+      },
+      "verification": "community_only",
+      "status_note": null,
+      "notes": "OSM edit 2026-07-27.",
+      "source_codes": [
+        "N02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T14",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T15",
+      "name": "Deca Vistansa special-trimobile waiting area",
+      "kind": "waiting_area",
+      "location_text": "Deca Vistansa, Pacol",
+      "modes": [
+        "tricycle"
+      ],
+      "modes_raw": [
+        "tricycle"
+      ],
+      "mode_sources": {
+        "tricycle": [
+          "N06"
+        ]
+      },
+      "coordinate": null,
+      "verification": "official_text_no_coordinate",
+      "status_note": null,
+      "notes": "Existing authorized waiting area (Ordinance 2025-067); no sourced coordinate.",
+      "source_codes": [
+        "N06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T15: no coordinate [N06]",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T16",
+      "name": "Cararayan Proper special-trimobile waiting area",
+      "kind": "waiting_area",
+      "location_text": "Cararayan Proper",
+      "modes": [
+        "tricycle"
+      ],
+      "modes_raw": [
+        "tricycle"
+      ],
+      "mode_sources": {
+        "tricycle": [
+          "N06"
+        ]
+      },
+      "coordinate": null,
+      "verification": "official_text_no_coordinate",
+      "status_note": null,
+      "notes": "Existing authorized waiting area (Ordinance 2025-067); no sourced coordinate.",
+      "source_codes": [
+        "N06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief T16: no coordinate [N06]",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CT-UV-SOUTHBOUND-OSM",
+      "name": "'UV-Express Southbound Terminal' (OSM name)",
+      "kind": "terminal",
+      "location_text": "OSM node east of BCS",
+      "modes": [
+        "uv_express"
+      ],
+      "modes_raw": [
+        "uv_express"
+      ],
+      "mode_sources": {
+        "uv_express": [
+          "N02"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.6187773,
+        "lng": 123.1935127,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 4545731190,
+        "osm_version": 3,
+        "osm_timestamp": "2024-08-11T08:23:41Z",
+        "read_from": "data/source/osm/naga-places-2026-10-15.osm.json (OSM-2026-10-15)",
+        "coord_note": null
+      },
+      "verification": "community_only_conflict",
+      "status_note": null,
+      "notes": "Coordinate lies about 0.4 km east of BCS, not at the LCC/Sabang southbound site.",
+      "source_codes": [
+        "N02",
+        "N31"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "OSM name conflicts with the official southbound site (LCC, Sabang); field-verify",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CT-R4-CENTRO-LOAD",
+      "name": "R4 Centro loop (Arana St / J. Hernandez Ave / Caceres St / Dinaga St)",
+      "kind": "loading_point",
+      "location_text": "LPTRP R4 circuit through Centro",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "N30"
+        ]
+      },
+      "coordinate": null,
+      "verification": "official_route_text_no_stop",
+      "status_note": null,
+      "notes": "No designated stop list for R4 found.",
+      "source_codes": [
+        "N30",
+        "N14"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "A route circuit, not a terminal; covered by T05 (Centro loading cluster) and T09",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "code": "TRI-VISTODA",
+      "name": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
+      "mode": "tricycle",
+      "service_status": "authorized_feeder",
+      "allocated_units": 33,
+      "operator_text": "VISTODA and LAVISTODA (consolidated)",
+      "enacted_on": "2025-09-09",
+      "restrictions": [
+        "No entry to Tecla San Andres-Ziga Rd"
+      ],
+      "conflict_notes": [],
+      "notes": "Authorized by Ordinance 2025-067; daily operation not verified. Waiting areas: Deca Vistansa (T15) and Cararayan Proper (T16).",
+      "variants": [
+        {
+          "direction": "branch",
+          "name": "Langon – Ateneo de Naga via Vistansa Subd",
+          "street_text": "Langon – Vistansa Subd – Ateneo de Naga",
+          "anchors": [
+            {
+              "kind": "place_name",
+              "name": "Langon"
+            },
+            {
+              "kind": "place_name",
+              "name": "Vistansa"
+            },
+            {
+              "kind": "osm_places_snapshot",
+              "key": "osm:way/222268858"
+            }
+          ]
+        },
+        {
+          "direction": "branch",
+          "name": "Langon – Centro Cararayan (San Miguel St / Tecla San Andres-Ziga Rd corner) via Sitio Salunguigui",
+          "street_text": "Langon – Sitio Salunguigui – Centro Cararayan (corner of San Miguel St and Tecla San Andres-Ziga Rd)",
+          "anchors": [
+            {
+              "kind": "place_name",
+              "name": "Langon"
+            },
+            {
+              "kind": "place_name",
+              "name": "Salunguigui"
+            },
+            {
+              "kind": "junction",
+              "streets": [
+                "San Miguel St",
+                "Tecla San Andres-Ziga Rd"
+              ]
+            }
+          ]
+        }
+      ],
+      "source_codes": [
+        "N06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief: authorized feeder, 33 units [N06]; two branch variants",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "TRI-DECALANGON",
+      "name": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
+      "mode": "tricycle",
+      "service_status": "authorized_feeder",
+      "allocated_units": 10,
+      "operator_text": null,
+      "enacted_on": "2025-03-18",
+      "restrictions": [
+        "Plying Cararayan main road strictly prohibited"
+      ],
+      "conflict_notes": [
+        "title says Cararayan proper; Section 1 says Deca Vistansa proper"
+      ],
+      "notes": "probably superseded by Ordinance 2025-067",
+      "variants": [
+        {
+          "direction": "branch",
+          "name": "Langon (Cararayan Rd corner) – Deca Vistansa via Salunguigui",
+          "street_text": "Cararayan Rd corner (Langon) – Salunguigui – Deca Vistansa",
+          "anchors": [
+            {
+              "kind": "place_name",
+              "name": "Langon"
+            },
+            {
+              "kind": "place_name",
+              "name": "Salunguigui"
+            },
+            {
+              "kind": "place_name",
+              "name": "Deca Vistansa"
+            }
+          ]
+        }
+      ],
+      "source_codes": [
+        "N05"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief: authorized feeder, 10 units [N05], with conflict note",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "routeStatusUpdates": [
+    {
+      "route_code": "R1",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R2",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R3",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R4",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R5",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R6",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R7",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R8-A",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R8-B",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R8-C",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R8-D",
+      "operating_status": "operating",
+      "status_note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "User decision 2026-10-16: traditional jeepneys confirmed operating on all routes (service only)",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "fleet": [
+    {
+      "code": "FL-R1-TRAD",
+      "route_code": "R1",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R2-TRAD",
+      "route_code": "R2",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R3-TRAD",
+      "route_code": "R3",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R4-TRAD",
+      "route_code": "R4",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R5-TRAD",
+      "route_code": "R5",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R6-TRAD",
+      "route_code": "R6",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R7-TRAD",
+      "route_code": "R7",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R8-A-TRAD",
+      "route_code": "R8-A",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R8-B-TRAD",
+      "route_code": "R8-B",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R8-C-TRAD",
+      "route_code": "R8-C",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R8-D-TRAD",
+      "route_code": "R8-D",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "The route plan's class is the planned class; traditional service confirmed by the project owner (U01).",
+      "source_codes": [
+        "N30",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C1 + user decision 2026-10-16: traditional jeepneys operate on every LPTRP route",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R4-MOD",
+      "route_code": "R4",
+      "vehicle_class": "modern_puj",
+      "evidence_levels": [
+        "official_report",
+        "news_report",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": "2023-04-17",
+      "last_reported_on": "2026-10-16",
+      "units_note": "about 10 air-conditioned units (2023–2024 reports); current count not confirmed",
+      "aircon": true,
+      "aircon_source_codes": [
+        "N14",
+        "U01"
+      ],
+      "cooperatives": [
+        "Naga City Allied Transport Cooperative (NACIATRASCO)"
+      ],
+      "conflict_notes": [],
+      "notes": "Propulsion not stated by any source; never labelled e-jeepney.",
+      "source_codes": [
+        "N14",
+        "N38",
+        "N39",
+        "N41",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C2 as amended 2026-10-16: modern jeepneys operating now on R4 (owner confirmation U01)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-R7-MOD",
+      "route_code": "R7",
+      "vehicle_class": "modern_puj",
+      "evidence_levels": [
+        "official_report",
+        "news_report",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": "2024-01-16",
+      "last_reported_on": "2026-10-16",
+      "units_note": "about 5 units (2024 reports); current count not confirmed",
+      "aircon": true,
+      "aircon_source_codes": [
+        "U01"
+      ],
+      "cooperatives": [
+        "Naga City Allied Transport Cooperative (NACIATRASCO)",
+        "Carolina Panicuason Transport Cooperative (CAPATRANSCO)"
+      ],
+      "conflict_notes": [
+        "the two cooperatives' 5 units may be the same vehicles"
+      ],
+      "notes": "Propulsion not stated by any source; never labelled e-jeepney.",
+      "source_codes": [
+        "N38",
+        "N15",
+        "N41",
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C3 as amended 2026-10-16: modern jeepneys operating now on R7 (owner confirmation U01)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-TRI-VISTODA",
+      "route_code": "TRI-VISTODA",
+      "vehicle_class": "tricycle",
+      "evidence_levels": [
+        "legal_plan"
+      ],
+      "status": "planned",
+      "first_reported_on": "2025-09-09",
+      "last_reported_on": "2025-09-09",
+      "units_note": "33 special trimobile units authorized",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "Authorized; operation not verified.",
+      "source_codes": [
+        "N06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief fleet row TRI-*",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-TRI-DECALANGON",
+      "route_code": "TRI-DECALANGON",
+      "vehicle_class": "tricycle",
+      "evidence_levels": [
+        "legal_plan"
+      ],
+      "status": "planned",
+      "first_reported_on": "2025-03-18",
+      "last_reported_on": "2025-03-18",
+      "units_note": "10 special trimobile units authorized",
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": "Authorized; operation not verified; probably superseded by Ordinance 2025-067.",
+      "source_codes": [
+        "N05"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief fleet row TRI-*",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "cooperatives": [
+    {
+      "route_code": "R4",
+      "name": "Naga City Allied Transport Cooperative (NACIATRASCO)",
+      "basis": "corridor_reported",
+      "reported_on": "2024-01-16",
+      "notes": null,
+      "source_codes": [
+        "N14",
+        "N38"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief C8",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R7",
+      "name": "Naga City Allied Transport Cooperative (NACIATRASCO)",
+      "basis": "corridor_reported",
+      "reported_on": "2024-01-16",
+      "notes": null,
+      "source_codes": [
+        "N38"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief C8",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R7",
+      "name": "Carolina Panicuason Transport Cooperative (CAPATRANSCO)",
+      "basis": "corridor_reported",
+      "reported_on": "2024-06-24",
+      "notes": "Corridor inferred from the cooperative name and N15.",
+      "source_codes": [
+        "N15",
+        "N41"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief C8",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R4",
+      "name": "Centro Panganiban Del Rosario Transport Cooperative",
+      "basis": "name_matches_corridor",
+      "reported_on": "2023-07",
+      "notes": "Registered cooperative whose name matches this corridor (OTC masterlist, July 2023) · route not confirmed",
+      "source_codes": [
+        "N40"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief C8 (registry name match)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R4",
+      "name": "Del Rosario Panganiban Centro Bagong Pag-Asa Transport Cooperative (DCPC-BAPAGTRANSCO)",
+      "basis": "name_matches_corridor",
+      "reported_on": "2023-07",
+      "notes": "Registered cooperative whose name matches this corridor (OTC masterlist, July 2023) · route not confirmed",
+      "source_codes": [
+        "N40"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief C8 (registry name match)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R3",
+      "name": "Naga Concepcion Diversion Del Rosario Transport Cooperative",
+      "basis": "name_matches_corridor",
+      "reported_on": "2023-07",
+      "notes": "Registered cooperative whose name matches this corridor (OTC masterlist, July 2023) · route not confirmed",
+      "source_codes": [
+        "N40"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief C8 (registry name match)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": "R6",
+      "name": "Naga City – Pacol Allied Transport Cooperative",
+      "basis": "name_matches_corridor",
+      "reported_on": "2023-07",
+      "notes": "Registered cooperative whose name matches this corridor (OTC masterlist, July 2023) · route not confirmed",
+      "source_codes": [
+        "N40"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief C8 (registry name match)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "route_code": null,
+      "name": "Magsaysay Allied Transport Cooperative (MATCo)",
+      "basis": "name_matches_corridor",
+      "reported_on": "2023-07",
+      "notes": null,
+      "source_codes": [
+        "N40"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "corridor unclear (R2 or R8); registry address error",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "regionalServices": [
+    {
+      "code": "RS01",
+      "mode": "jeepney",
+      "name": "Naga–Goa",
+      "operators": [],
+      "terminal_code": "T03",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "Goa",
+      "osm_relation_ids": [
+        11498944,
+        11498945
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F01"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief regional services table",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "RS02",
+      "mode": "bus",
+      "name": "Florencia Naga–Goa",
+      "operators": [
+        "Florencia Transport Services Inc."
+      ],
+      "terminal_code": "T01",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "Goa",
+      "osm_relation_ids": [
+        11495322,
+        11495323
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief regional services table",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "RS03",
+      "mode": "bus",
+      "name": "Florencia/JC Liner Naga–Lagonoy",
+      "operators": [
+        "Florencia Transport Services Inc.",
+        "JC Liner Corporation"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "Lagonoy",
+      "osm_relation_ids": [
+        11495326,
+        11495327
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief regional services table",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "RS04",
+      "mode": "jeepney",
+      "name": "Naga–Pasacao",
+      "operators": [],
+      "terminal_code": "T03",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "Pasacao",
+      "osm_relation_ids": [
+        14065995,
+        14065996
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F01"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief regional services table",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "RS05",
+      "mode": "uv_express",
+      "name": "UV Express Naga–Tabaco via Sabluyon",
+      "operators": [],
+      "terminal_code": "T01",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "Tabaco",
+      "osm_relation_ids": [
+        11498948,
+        11498949
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F06",
+        "F07"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief regional services table",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "RS06",
+      "mode": "bus",
+      "name": "PITX–Naga (Philtranco; Bicol Isarog)",
+      "operators": [
+        "Philtranco",
+        "Bicol Isarog"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "PITX (Parañaque)",
+      "osm_relation_ids": [
+        9732639,
+        10594406,
+        10939369
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief regional services table",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "RS07",
+      "mode": "bus",
+      "name": "Santa Rosa ITT–Naga (Raymond)",
+      "operators": [
+        "Raymond Transportation"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "Santa Rosa ITT",
+      "osm_relation_ids": [
+        11488879
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief regional services table",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "C-OSM-SABANG-UV",
+      "mode": "uv_express",
+      "name": "UV Express Naga–Sabang",
+      "operators": [],
+      "terminal_code": "T03",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "Sabang",
+      "osm_relation_ids": [
+        3635597,
+        8203308
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F06",
+        "F07"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "which Sabang is unconfirmed",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "C-OSM-SABANG-PUJ",
+      "mode": "jeepney",
+      "name": "Jeepney Naga–Sabang",
+      "operators": [],
+      "terminal_code": "T03",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "Sabang",
+      "osm_relation_ids": [
+        11495324,
+        11495325
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F01"
+      ],
+      "notes": null,
+      "source_codes": [
+        "N01"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "which Sabang is unconfirmed",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "fareRules": [
+    {
+      "code": "F06",
+      "mode": "uv_express_traditional",
+      "base_php": null,
+      "base_km": null,
+      "additional_php_per_km": 2.6,
+      "effective_from": "2026-09-28",
+      "evidence_status": "provisional_national_rate",
+      "publish_exact": false,
+      "rule_text": "Provisional: P2.60/km (traditional UV); no minimum stated",
+      "notes": null,
+      "source_codes": [
+        "N17"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief new fare rules F06–F12 (national rates from 2026-09-28)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "F07",
+      "mode": "uv_express_modern",
+      "base_php": null,
+      "base_km": null,
+      "additional_php_per_km": 3,
+      "effective_from": "2026-09-28",
+      "evidence_status": "provisional_national_rate",
+      "publish_exact": false,
+      "rule_text": "Provisional: P3.00/km (modern UV); no minimum stated",
+      "notes": null,
+      "source_codes": [
+        "N17"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief new fare rules F06–F12 (national rates from 2026-09-28)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "F08",
+      "mode": "bus_ordinary",
+      "base_php": 12,
+      "base_km": 5,
+      "additional_php_per_km": 2.2,
+      "effective_from": "2026-09-28",
+      "evidence_status": "national_rate_reported",
+      "publish_exact": false,
+      "rule_text": "Ordinary: P12.00 first 5 km + P2.20/km",
+      "notes": null,
+      "source_codes": [
+        "N17"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief new fare rules F06–F12 (national rates from 2026-09-28)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "F09",
+      "mode": "bus_aircon",
+      "base_php": null,
+      "base_km": null,
+      "additional_php_per_km": 2.45,
+      "effective_from": "2026-09-28",
+      "evidence_status": "national_rate_reported",
+      "publish_exact": false,
+      "rule_text": "Aircon P2.45/km",
+      "notes": null,
+      "source_codes": [
+        "N17"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief new fare rules F06–F12 (national rates from 2026-09-28)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "F10",
+      "mode": "bus_deluxe",
+      "base_php": null,
+      "base_km": null,
+      "additional_php_per_km": 2.6,
+      "effective_from": "2026-09-28",
+      "evidence_status": "national_rate_reported",
+      "publish_exact": false,
+      "rule_text": "Deluxe P2.60/km",
+      "notes": null,
+      "source_codes": [
+        "N17"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief new fare rules F06–F12 (national rates from 2026-09-28)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "F11",
+      "mode": "bus_super_deluxe",
+      "base_php": null,
+      "base_km": null,
+      "additional_php_per_km": 2.7,
+      "effective_from": "2026-09-28",
+      "evidence_status": "national_rate_reported",
+      "publish_exact": false,
+      "rule_text": "Super deluxe P2.70/km",
+      "notes": null,
+      "source_codes": [
+        "N17"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief new fare rules F06–F12 (national rates from 2026-09-28)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "F12",
+      "mode": "bus_luxury",
+      "base_php": null,
+      "base_km": null,
+      "additional_php_per_km": 3.35,
+      "effective_from": "2026-09-28",
+      "evidence_status": "national_rate_reported",
+      "publish_exact": false,
+      "rule_text": "Luxury P3.35/km",
+      "notes": null,
+      "source_codes": [
+        "N17"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief new fare rules F06–F12 (national rates from 2026-09-28)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CF-REGIONAL-OBS-2026-01",
+      "mode": "bus_regional_ticket_observed",
+      "base_php": null,
+      "base_km": null,
+      "additional_php_per_km": null,
+      "effective_from": null,
+      "evidence_status": "aggregator_outdated",
+      "publish_exact": false,
+      "rule_text": "Observed pre-hike ticket prices from BCS (Jan 2026)",
+      "notes": "Jev p(current) = 0.09",
+      "source_codes": [
+        "N18"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "pre-hike regional prices (p current 0.09)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CF-TERMINAL-FEE-EB",
+      "mode": "terminal_dispatch_fee",
+      "base_php": 40,
+      "base_km": null,
+      "additional_php_per_km": null,
+      "effective_from": "2022-02-15",
+      "evidence_status": "official_historical",
+      "publish_exact": false,
+      "rule_text": "Eastbound terminal dispatch fee P40/jeepney, P60/van (operator fee, not passenger fare)",
+      "notes": null,
+      "source_codes": [
+        "N12"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "Eastbound dispatch fee is an operator fee, not a passenger fare",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "fareObservations": [
+    {
+      "code": "FO-R4-MOD",
+      "route_code": "R4",
+      "vehicle_class": "modern_puj",
+      "kind": "reported_practice",
+      "relative_to": "traditional_fare",
+      "delta_qualifier": "range",
+      "delta_centavos_low": 300,
+      "delta_centavos_high": 500,
+      "observed_on": "2026-10-16",
+      "report_text": "R4 modern fare is about P3–P5 more than the traditional fare",
+      "notes": "Reported practice; estimates for the modern class span the national modern rule (F02) and traditional + this delta.",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Owner fact 2026-10-16 (coordinator): observation, not a rule",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FO-R7-MOD",
+      "route_code": "R7",
+      "vehicle_class": "modern_puj",
+      "kind": "reported_practice",
+      "relative_to": "traditional_fare",
+      "delta_qualifier": "at_least",
+      "delta_centavos_low": 500,
+      "delta_centavos_high": null,
+      "observed_on": "2026-10-16",
+      "report_text": "R7 modern fare is at least P5 more than the traditional fare",
+      "notes": "Reported practice; estimates for the modern class span the national modern rule (F02) and traditional + this delta.",
+      "source_codes": [
+        "U01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Owner fact 2026-10-16 (coordinator): observation, not a rule",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "fareRuleSourceAdditions": [
+    {
+      "rule_code": "F01",
+      "add_source_codes": [
+        "N17",
+        "N32"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "J7: values equal the national 2026-09-28 rate; sources added",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "rule_code": "F02",
+      "add_source_codes": [
+        "N17",
+        "N32"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "J7: values equal the national 2026-09-28 rate; sources added",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "rule_code": "F03",
+      "add_source_codes": [
+        "N33"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "N33 is Ordinance 2024-002 (same as S04)",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "etaParams": [
+    {
+      "key": "walk_speed_kmh",
+      "value_low": 4.238,
+      "value_high": 4.238,
+      "unit": "km_per_h",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "walk"
+      ],
+      "is_assumption": false,
+      "assumption_note": null,
+      "basis": "Walking speed 4.238 km/h, Metro Manila study (Tolentino & Sigua 2022)",
+      "source_codes": [
+        "N28"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "D8",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "walk_slowdown_factor",
+      "value_low": 1,
+      "value_high": 1.25,
+      "unit": "factor",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "walk"
+      ],
+      "is_assumption": true,
+      "assumption_note": "A1: crossings, waiting at roads, slower walkers (high end = low end × 1.25); no source",
+      "basis": "ParaNaga assumption A1",
+      "source_codes": [],
+      "review": {
+        "decision": "import",
+        "reason": "D8 assumption A1",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "jeepney_speed_offpeak_kmh",
+      "value_low": 10,
+      "value_high": 15,
+      "unit": "km_per_h",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "jeepney"
+      ],
+      "is_assumption": false,
+      "assumption_note": null,
+      "basis": "Naga baseline about 10 km/h (SafeTravelPH SimEx); comparable-city observed upper about 15 km/h (Puerto Princesa)",
+      "source_codes": [
+        "N16",
+        "N29"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "D9",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "jeepney_speed_peak_kmh",
+      "value_low": 7,
+      "value_high": 13,
+      "unit": "km_per_h",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "jeepney"
+      ],
+      "is_assumption": true,
+      "assumption_note": "A2: the low end (7 km/h) is 30% below the Naga ~10 km/h baseline, an assumption; the high end (13) is N29's 13.3 rounded down",
+      "basis": "High end from N29 (observed peak 13.3 km/h); low end assumption A2",
+      "source_codes": [
+        "N29"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "D9 (mixed band: high end sourced, low end assumption A2)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "peak_windows",
+      "value_low": null,
+      "value_high": null,
+      "unit": "windows",
+      "windows": [
+        {
+          "start": "06:00",
+          "end": "08:00"
+        },
+        {
+          "start": "11:00",
+          "end": "13:00"
+        },
+        {
+          "start": "16:00",
+          "end": "19:00"
+        }
+      ],
+      "days": "every_day",
+      "applies_to": [
+        "jeepney"
+      ],
+      "is_assumption": true,
+      "assumption_note": "A3: applied every day; no day-of-week source",
+      "basis": "Ordinance 2025-110 peak-hour truck ban on Roxas Ave (Asia/Manila)",
+      "source_codes": [
+        "N04"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "D9 (windows sourced; every-day application assumption A3)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "tricycle_speed_kmh",
+      "value_low": 19.9,
+      "value_high": 19.9,
+      "unit": "km_per_h",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "tricycle"
+      ],
+      "is_assumption": false,
+      "assumption_note": null,
+      "basis": "PIDS Metro Manila drive cycle (search excerpt only)",
+      "source_codes": [],
+      "review": {
+        "decision": "exclude",
+        "reason": "unverified excerpt (PIDS page 404)",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "streetAliases": [],
+  "conflicts": [
+    {
+      "code": "CX01",
+      "topic": "Cooperative chairpersons",
+      "description": "Chairperson names for NACIATRASCO and CAPATRANSCO are swapped between N41 and N14/N40. Names are not stored and never shown.",
+      "refs": [
+        "FL-R4-MOD",
+        "FL-R7-MOD"
+      ],
+      "source_codes": [
+        "N14",
+        "N40",
+        "N41"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C8",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX02",
+      "topic": "R7 modern units",
+      "description": "the two cooperatives' 5 units may be the same vehicles",
+      "refs": [
+        "FL-R7-MOD"
+      ],
+      "source_codes": [
+        "N38",
+        "N15",
+        "N41"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "C3",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX03",
+      "topic": "OSM 'UV-Express Southbound Terminal'",
+      "description": "OSM name conflicts with the official southbound site (LCC, Sabang); the node lies about 0.4 km east of BCS; field-verify",
+      "refs": [
+        "CT-UV-SOUTHBOUND-OSM",
+        "T03"
+      ],
+      "source_codes": [
+        "N02",
+        "N31"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Brief exclusion of CT-UV-SOUTHBOUND-OSM",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX04",
+      "topic": "Eastbound terminal street",
+      "description": "Anciano St (Res. 2025-735) vs Waling-Waling St (Wikivoyage); neither gives a coordinate",
+      "refs": [
+        "T02"
+      ],
+      "source_codes": [
+        "S03",
+        "N30",
+        "N19"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research conflict 3",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX05",
+      "topic": "Deca–Langon route wording",
+      "description": "title says Cararayan proper; Section 1 says Deca Vistansa proper",
+      "refs": [
+        "TRI-DECALANGON"
+      ],
+      "source_codes": [
+        "N05"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research conflict 7",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX06",
+      "topic": "MATCo registry entry",
+      "description": "The masterlist files MATCo under Albay although it lists a Naga location (registry address error); corridor unclear (R2 or R8)",
+      "refs": [],
+      "source_codes": [
+        "N40"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research conflict (registry)",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX07",
+      "topic": "Tricycle fare ordinance number",
+      "description": "Search summaries cite Ordinance 2026-023; that ordinance is the slow-moving vehicle lane. The fare is in Ordinance 2024-002.",
+      "refs": [
+        "F03"
+      ],
+      "source_codes": [
+        "N03",
+        "N33"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research conflict 1",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX08",
+      "topic": "Rush-hour windows",
+      "description": "Three different window sets: 1993 Traffic Code, 2025 truck ban, a commuter guide. The 2025 truck ban (N04) is used.",
+      "refs": [
+        "peak_windows"
+      ],
+      "source_codes": [
+        "N11",
+        "N04",
+        "N20"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research conflict 5",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX09",
+      "topic": "Bicol Central Station ticket prices",
+      "description": "All retrieved destination prices predate the 28 Sep 2026 increase; not used.",
+      "refs": [
+        "CF-REGIONAL-OBS-2026-01"
+      ],
+      "source_codes": [
+        "N18"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research conflict 6",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ]
+}

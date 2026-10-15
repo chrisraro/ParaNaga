@@ -1,0 +1,568 @@
+{
+  "header": {
+    "schemaVersion": 1,
+    "preparedOn": "2026-10-16",
+    "preparedFrom": [
+      "synthetic fixture (hand-made, fake names)"
+    ],
+    "reviewer": "test",
+    "jevModel": "typesafe/jev-1.13-20260917",
+    "synthetic": true
+  },
+  "sources": [
+    {
+      "code": "X01",
+      "title": "Synthetic Ordinance of Testville",
+      "url": null,
+      "extra_urls": [],
+      "publisher": "Testville Council (fake)",
+      "date": "2026-01-01",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "X02",
+      "title": "Synthetic owner note",
+      "url": null,
+      "extra_urls": [],
+      "publisher": "Fake owner",
+      "date": "2026-10-16",
+      "type": "owner_confirmation",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "terminals": [
+    {
+      "code": "T90",
+      "name": "Testville Synthetic Terminal",
+      "kind": "terminal",
+      "location_text": "Fake Street",
+      "modes": [
+        "jeepney"
+      ],
+      "modes_raw": [
+        "jeepney"
+      ],
+      "mode_sources": {
+        "jeepney": [
+          "X01"
+        ]
+      },
+      "coordinate": {
+        "lat": 13.62,
+        "lng": 123.19,
+        "coord_source": "osm_node",
+        "osm_type": "node",
+        "osm_id": 999000001,
+        "osm_version": 1,
+        "osm_timestamp": "2026-01-01T00:00:00Z",
+        "read_from": "synthetic",
+        "coord_note": null
+      },
+      "verification": "synthetic",
+      "status_note": null,
+      "notes": null,
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "T91",
+      "name": "Testville Synthetic Waiting Area",
+      "kind": "waiting_area",
+      "location_text": null,
+      "modes": [
+        "tricycle"
+      ],
+      "modes_raw": [
+        "tricycle"
+      ],
+      "mode_sources": {
+        "tricycle": [
+          "X01"
+        ]
+      },
+      "coordinate": null,
+      "verification": "synthetic",
+      "status_note": null,
+      "notes": null,
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "SYN-EXCLUDED",
+      "name": "Testville Excluded Terminal",
+      "kind": "terminal",
+      "location_text": null,
+      "modes": [
+        "bus"
+      ],
+      "modes_raw": [
+        "bus"
+      ],
+      "mode_sources": {
+        "bus": [
+          "X01"
+        ]
+      },
+      "coordinate": null,
+      "verification": "synthetic",
+      "status_note": null,
+      "notes": null,
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "synthetic exclusion",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "code": "TRI-TESTVILLE",
+      "name": "Testville Synthetic Feeder",
+      "mode": "tricycle",
+      "service_status": "authorized_feeder",
+      "allocated_units": 3,
+      "operator_text": null,
+      "enacted_on": "2026-01-01",
+      "restrictions": [
+        "No entry to Fake Lane"
+      ],
+      "conflict_notes": [],
+      "notes": null,
+      "variants": [
+        {
+          "direction": "branch",
+          "name": "Fakeplace – Testville",
+          "street_text": "Fakeplace – Fake Street – Testville",
+          "anchors": [
+            {
+              "kind": "place_name",
+              "name": "Fakeplace"
+            },
+            {
+              "kind": "junction",
+              "streets": [
+                "Fake Street",
+                "Mock Avenue"
+              ]
+            }
+          ]
+        }
+      ],
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "routeStatusUpdates": [
+    {
+      "route_code": "R1",
+      "operating_status": "operating",
+      "status_note": "Synthetic: service only; stop locations unverified",
+      "confirmed_on": "2026-10-16",
+      "source_codes": [
+        "X02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "fleet": [
+    {
+      "code": "FL-SYN-TRAD",
+      "route_code": "R1",
+      "vehicle_class": "traditional_puj",
+      "evidence_levels": [
+        "legal_plan",
+        "owner_confirmation"
+      ],
+      "status": "operating",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": null,
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": null,
+      "source_codes": [
+        "X01",
+        "X02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-SYN-MOD",
+      "route_code": "R1",
+      "vehicle_class": "modern_puj",
+      "evidence_levels": [
+        "user_report"
+      ],
+      "status": "reported_not_confirmed",
+      "first_reported_on": null,
+      "last_reported_on": "2026-10-16",
+      "units_note": null,
+      "aircon": true,
+      "aircon_source_codes": [
+        "X02"
+      ],
+      "cooperatives": [
+        "Testville Fake Cooperative"
+      ],
+      "conflict_notes": [],
+      "notes": null,
+      "source_codes": [
+        "X02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "FL-SYN-TRI",
+      "route_code": "TRI-TESTVILLE",
+      "vehicle_class": "tricycle",
+      "evidence_levels": [
+        "legal_plan"
+      ],
+      "status": "planned",
+      "first_reported_on": "2026-01-01",
+      "last_reported_on": "2026-01-01",
+      "units_note": null,
+      "aircon": null,
+      "aircon_source_codes": [],
+      "cooperatives": [],
+      "conflict_notes": [],
+      "notes": null,
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "cooperatives": [
+    {
+      "route_code": "R1",
+      "name": "Testville Fake Cooperative",
+      "basis": "name_matches_corridor",
+      "reported_on": "2026-01",
+      "notes": null,
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "regionalServices": [
+    {
+      "code": "RS90",
+      "mode": "bus",
+      "name": "Testville – Mockton",
+      "operators": [
+        "Fake Bus Co."
+      ],
+      "terminal_code": "T90",
+      "terminal_note": "synthetic",
+      "destination": "Mockton",
+      "osm_relation_ids": [
+        999000002
+      ],
+      "status": "community_mapped",
+      "fare_rule_codes": [
+        "F90"
+      ],
+      "notes": null,
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "fareRules": [
+    {
+      "code": "F90",
+      "mode": "bus_ordinary",
+      "base_php": null,
+      "base_km": null,
+      "additional_php_per_km": 1.5,
+      "effective_from": "2026-01-01",
+      "evidence_status": "national_rate_reported",
+      "publish_exact": false,
+      "rule_text": "Synthetic P1.50/km",
+      "notes": null,
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "fareObservations": [
+    {
+      "code": "FO-SYN-MOD",
+      "route_code": "R1",
+      "vehicle_class": "modern_puj",
+      "kind": "reported_practice",
+      "relative_to": "traditional_fare",
+      "delta_qualifier": "range",
+      "delta_centavos_low": 100,
+      "delta_centavos_high": 200,
+      "observed_on": "2026-10-16",
+      "report_text": "Synthetic: about P1–P2 more",
+      "notes": null,
+      "source_codes": [
+        "X02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "fareRuleSourceAdditions": [
+    {
+      "rule_code": "F01",
+      "add_source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "etaParams": [
+    {
+      "key": "walk_speed_kmh",
+      "value_low": 4.238,
+      "value_high": 4.238,
+      "unit": "km_per_h",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "walk"
+      ],
+      "is_assumption": false,
+      "assumption_note": null,
+      "basis": "Synthetic basis",
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "walk_slowdown_factor",
+      "value_low": 1,
+      "value_high": 1.25,
+      "unit": "factor",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "walk"
+      ],
+      "is_assumption": true,
+      "assumption_note": "A1: crossings, waiting at roads, slower walkers (high end = low end × 1.25); no source",
+      "basis": "Synthetic basis",
+      "source_codes": [],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "jeepney_speed_offpeak_kmh",
+      "value_low": 10,
+      "value_high": 15,
+      "unit": "km_per_h",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "jeepney"
+      ],
+      "is_assumption": false,
+      "assumption_note": null,
+      "basis": "Synthetic basis",
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "jeepney_speed_peak_kmh",
+      "value_low": 7,
+      "value_high": 13,
+      "unit": "km_per_h",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "jeepney"
+      ],
+      "is_assumption": true,
+      "assumption_note": "A2: the low end (7 km/h) is 30% below the Naga ~10 km/h baseline, an assumption; the high end (13) is N29's 13.3 rounded down",
+      "basis": "Synthetic basis",
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "peak_windows",
+      "value_low": null,
+      "value_high": null,
+      "unit": "windows",
+      "windows": [
+        {
+          "start": "06:00",
+          "end": "08:00"
+        },
+        {
+          "start": "11:00",
+          "end": "13:00"
+        },
+        {
+          "start": "16:00",
+          "end": "19:00"
+        }
+      ],
+      "days": "every_day",
+      "applies_to": [
+        "jeepney"
+      ],
+      "is_assumption": true,
+      "assumption_note": "A3: applied every day; no day-of-week source",
+      "basis": "Synthetic basis",
+      "source_codes": [
+        "X01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "key": "tricycle_speed_kmh",
+      "value_low": 19.9,
+      "value_high": 19.9,
+      "unit": "km_per_h",
+      "windows": null,
+      "days": null,
+      "applies_to": [
+        "tricycle"
+      ],
+      "is_assumption": false,
+      "assumption_note": null,
+      "basis": "Synthetic basis",
+      "source_codes": [],
+      "review": {
+        "decision": "exclude",
+        "reason": "synthetic exclusion",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "streetAliases": [
+    {
+      "legal_name": "Fake St",
+      "osm_name": "Fake Street",
+      "reason": "synthetic abbreviation",
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
+  "conflicts": [
+    {
+      "code": "CX90",
+      "topic": "Synthetic conflict",
+      "description": "Two fake sources disagree",
+      "refs": [
+        "T90"
+      ],
+      "source_codes": [
+        "X01",
+        "X02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "synthetic test record",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ]
+}
