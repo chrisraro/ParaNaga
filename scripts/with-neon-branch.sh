@@ -14,6 +14,10 @@
 #    (environment variables take precedence over .env.local in `tsx --env-file`);
 # 5. always deletes the branch (trap EXIT).
 #
+# Every integration run needs a fresh branch: the suite publishes test revisions and moves the
+# published pointer, so run `pnpm test:integration` only through this script (one new branch per
+# run), never twice against one DATABASE_URL.
+#
 # Connection strings and passwords live only in shell variables; every line of output
 # passes through a filter that redacts postgres URLs.
 set -euo pipefail

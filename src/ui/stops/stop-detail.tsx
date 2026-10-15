@@ -30,6 +30,7 @@ import {
   MapIcon,
   WarnIcon,
   useFocusOnMount,
+  useReturnToMap,
 } from "@/ui/detail/detail-frame";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
@@ -61,16 +62,6 @@ function ShowOnMap({ lat, lng }: { lat: number; lng: number }) {
       <MapIcon />
     </button>
   );
-}
-
-/** Back to the map: history when the map opened this panel, else open it (no extra entry otherwise). */
-function useReturnToMap() {
-  const frame = useAppFrame();
-  const router = useRouter();
-  return () => {
-    if (cameFromInsideApp() && frame?.isHomeNavigation(window.location.pathname)) router.back();
-    else router.push("/app");
-  };
 }
 
 /**

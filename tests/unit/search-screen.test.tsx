@@ -163,15 +163,36 @@ describe("SearchScreen", () => {
     expect(nav.back).toHaveBeenCalledTimes(1);
   });
 
-  it("a barangay opens an honest notice instead of setting anything", async () => {
+  it("places, terminals, barangays and study labels link to their own screens (no notice)", async () => {
     renderSearch("start");
     await ready();
     await type("Abella");
-    fireEvent.click(screen.getByTestId("search-result-barangay"));
-    const notice = screen.getByTestId("search-notice");
-    expect(notice.textContent).toContain("cannot be a trip start or destination");
-    expect(document.activeElement?.textContent).toBe("Abella");
+    expect(screen.getByTestId("search-result-barangay").getAttribute("href")).toBe("/app/places/barangay/abella");
+    await type("Bicol Central");
+    expect(screen.getByTestId("search-result-terminal").getAttribute("href")).toBe("/app/terminals/T01");
+    await type("UMA Residences");
+    expect(screen.getByTestId("search-result-study").getAttribute("href")).toMatch(/^\/app\/places\/study\/DSC-/);
+    expect(screen.queryByTestId("search-notice")).toBeNull();
     expect(frame.requestEndpoint).not.toHaveBeenCalled();
+  });
+
+  it("browsing: an OpenStreetMap place and a mapped-pin place open place detail", async () => {
+    renderSearch();
+    await ready();
+    await type("SM City");
+    const sm = raw.osmPlaces.find((p) => p.name === "SM City Naga")!;
+    expect(screen.getAllByTestId("search-result-osm")[0]!.getAttribute("href")).toBe(`/app/places/osm/${sm.key.slice("osm:".length)}`);
+    await type("Plaza Rizal");
+    const plaza = raw.pinPlaces.find((p) => p.label === "Plaza Rizal")!;
+    expect(screen.getAllByTestId("search-result-pin")[0]!.getAttribute("href")).toBe(`/app/places/pin/${plaza.key}`);
+  });
+
+  it("a #q= fragment prefills the box and shows its results", async () => {
+    window.history.replaceState(null, "", "/app/search#q=Plaza%20Rizal");
+    renderSearch();
+    await ready();
+    expect(box()).toHaveProperty("value", "Plaza Rizal");
+    await waitFor(() => expect(screen.getAllByTestId("search-result-pin").length).toBeGreaterThan(0));
   });
 
   it("routes link to route detail; old route names are not tappable", async () => {
@@ -246,13 +267,15 @@ describe("SearchScreen", () => {
   });
 
   it("Close on a notice puts focus back on the row that opened it", async () => {
-    renderSearch("start");
+    renderSearch("save");
     await ready();
-    await type("Abella");
-    fireEvent.click(screen.getByTestId("search-result-barangay"));
+    await type("SM City");
+    const row = screen.getAllByTestId("search-result-osm")[0]!;
+    fireEvent.click(row);
+    expect(document.activeElement?.textContent).toBe("SM City Naga");
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByTestId("search-notice")).toBeNull();
-    expect(document.activeElement).toBe(screen.getByTestId("search-result-barangay"));
+    expect(document.activeElement).toBe(screen.getAllByTestId("search-result-osm")[0]);
   });
 
   it("Show all moves focus to the first row it revealed", async () => {

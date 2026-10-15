@@ -1,0 +1,44 @@
+{
+ "revision": {
+  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
+  "label": "osm-places-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T12:59:57.089Z"
+ },
+ "terminal": {
+  "code": "T06",
+  "name": "Naga PNR railway station",
+  "locationText": "Naga City; exact passenger entrance not verified",
+  "modes": [
+   "rail"
+  ],
+  "evidenceStatus": "station_exists;entrance_unverified",
+  "notes": "Current tickets, timetable, rail corridor status and exact entrance need PNR confirmation.",
+  "sourceCodes": [
+   "S19",
+   "S21"
+  ],
+  "lat": null,
+  "lng": null
+ },
+ "routes": [],
+ "destinationCategories": [],
+ "sources": [
+  {
+   "code": "S19",
+   "title": "PNR operating documents and timetable index",
+   "url": "https://sites.google.com/pnr.gov.ph/operations/documentation",
+   "evidenceType": "official",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S21",
+   "title": "PIA historical rail resumption",
+   "url": "https://pia.gov.ph/news/legazpi-naga-train-service-resumes/",
+   "evidenceType": "government_news_historical",
+   "publishedOrEnacted": "2025-03-05",
+   "checkedOn": "2026-10-15"
+  }
+ ]
+}

@@ -1,7 +1,9 @@
-// What picking a search result does, and the honest notice shown for results whose own screen
-// does not exist yet (Place and Terminal detail arrive with Task 6; saving places with Task 8).
-// Pure: the search screen turns the action into navigation or an endpoint request.
+// What picking a search result does: set a trip end, open the result's own screen (place,
+// terminal, route detail), or show an honest notice where no screen exists (saving places
+// arrives with Task 8; a regional category without a terminal). Pure: the search screen turns
+// the action into navigation or an endpoint request.
 import { OSM_CATEGORY_LABEL } from "../places/osm-categories";
+import { barangayHref, osmPlaceHref, pinPlaceHref, studyLabelHref, terminalHref } from "../places/place-detail";
 import type { LatLng } from "../geo/types";
 import { endpointForResult, regionalCategoryLabel, type SearchResult } from "./search";
 
@@ -15,25 +17,51 @@ export function parseSearchPurpose(raw: string | null | undefined): SearchPurpos
 export type SearchAction =
   /** Set that trip end through the endpoint channel, then return to the map. */
   | { type: "endpoint"; which: "start" | "destination"; endpoint: { point: LatLng; label: string } }
-  /** An existing screen (route detail). */
+  /** The result's own screen (place, terminal or route detail). */
   | { type: "open"; href: string }
-  /** An inline notice on the search screen (no screen to open yet, or nothing to set). */
+  /** An inline notice on the search screen (saving a place, a saved place, a category without a terminal). */
   | { type: "notice" }
   /** Not tappable (old route names, feeder leads). */
   | { type: "none" };
 
+/** The detail screen of a result, or null when it has none. */
+export function detailHref(result: SearchResult): string | null {
+  switch (result.kind) {
+    case "osm":
+      return osmPlaceHref(result.key);
+    case "pin":
+      return pinPlaceHref(result.key);
+    case "route":
+      return `/app/routes/${encodeURIComponent(result.code)}`;
+    case "terminal":
+      return terminalHref(result.code);
+    case "barangay":
+      return barangayHref(result.key);
+    case "study":
+      return studyLabelHref(result.code);
+    case "regional":
+      return result.terminalCode ? terminalHref(result.terminalCode) : null;
+    case "saved":
+    case "legacy":
+    case "feeder":
+      return null;
+  }
+}
+
 export function actionFor(result: SearchResult, purpose: SearchPurpose | null): SearchAction {
-  if (result.kind === "route") return { type: "open", href: `/app/routes/${encodeURIComponent(result.code)}` };
   if (result.kind === "legacy" || result.kind === "feeder") return { type: "none" };
   const endpoint = endpointForResult(result);
   if (endpoint && (purpose === "start" || purpose === "destination")) return { type: "endpoint", which: purpose, endpoint };
-  return { type: "notice" };
+  // Saving a place is not built yet (Task 8): the notice gives the place's facts, the page note says so.
+  if (endpoint && purpose === "save") return { type: "notice" };
+  const href = detailHref(result);
+  return href ? { type: "open", href } : { type: "notice" };
 }
 
 export type SearchNotice = {
   title: string;
   body: string;
-  /** Present for places with a location (browsing): "Set as start" / "Set as destination". */
+  /** Present for a saved place while browsing: "Set as start" / "Set as destination". */
   endpoint: { point: LatLng; label: string } | null;
   /** The place comes from OpenStreetMap: show the attribution with the notice. */
   osm: boolean;
@@ -41,25 +69,21 @@ export type SearchNotice = {
 
 const NOT_A_TRIP_END = "so it cannot be a trip start or destination";
 
+/** The facts shown when a result has no screen to open (see actionFor); never "opens soon" copy. */
 export function noticeFor(result: SearchResult, purpose: SearchPurpose | null): SearchNotice {
-  const endpoint = endpointForResult(result);
-  if (purpose === "save" && endpoint) {
-    // Saving is not built yet: the page note says so once; the notice gives the place's facts.
-    const facts = noticeFor(result, null);
-    return { ...facts, body: facts.body.replace(/ Place details open soon\.$/, ""), endpoint: null };
-  }
+  const endpoint = purpose === "save" ? null : endpointForResult(result);
   switch (result.kind) {
     case "osm":
       return {
         title: result.title,
-        body: `${OSM_CATEGORY_LABEL[result.category]}. Location from OpenStreetMap — entrance not mapped. Place details open soon.`,
+        body: `${OSM_CATEGORY_LABEL[result.category]}. Location from OpenStreetMap — entrance not mapped.`,
         endpoint,
         osm: true,
       };
     case "pin":
       return {
         title: result.title,
-        body: `Mapped stop candidate${result.loops.length > 0 ? ` (${result.loops.join(", ")})` : ""}, not verified for navigation. Trips from mapped pins are unverified. Place details open soon.`,
+        body: `Mapped stop candidate${result.loops.length > 0 ? ` (${result.loops.join(", ")})` : ""}, not verified for navigation. Trips from mapped pins are unverified.`,
         endpoint,
         osm: false,
       };
@@ -68,14 +92,14 @@ export function noticeFor(result: SearchResult, purpose: SearchPurpose | null): 
     case "terminal":
       return {
         title: result.title,
-        body: `Terminal${result.locationText ? ` · ${result.locationText}` : ""}. Its location is not mapped, ${NOT_A_TRIP_END}. Terminal details open soon.`,
+        body: `Terminal${result.locationText ? ` · ${result.locationText}` : ""}. Its location is not mapped, ${NOT_A_TRIP_END}.`,
         endpoint: null,
         osm: false,
       };
     case "barangay":
       return {
         title: result.title,
-        body: `Barangay · not surveyed. No boundary or centre is on file, ${NOT_A_TRIP_END}. Barangay details open soon.`,
+        body: `Barangay · not surveyed. No boundary or centre is on file, ${NOT_A_TRIP_END}.`,
         endpoint: null,
         osm: false,
       };
@@ -91,7 +115,7 @@ export function noticeFor(result: SearchResult, purpose: SearchPurpose | null): 
     case "regional":
       return {
         title: result.title,
-        body: `${regionalCategoryLabel(result.category)} destinations are listed${result.terminalName ? ` for ${result.terminalName}` : ""}. Individual services are not verified, and the terminal's location is not mapped. Terminal details open soon.`,
+        body: `${regionalCategoryLabel(result.category)} destinations are listed${result.terminalName ? ` for ${result.terminalName}` : ""}. Individual services are not verified${result.terminalName ? ", and the terminal's location is not mapped" : ""}.`,
         endpoint: null,
         osm: false,
       };

@@ -13,9 +13,15 @@ const serverOnlyStub = fileURLToPath(new URL("./node_modules/server-only/empty.j
  */
 class NameSequencer extends BaseSequencer {
   override async sort(files: TestSpecification[]): Promise<TestSpecification[]> {
+    const isIntegration = (f: TestSpecification) => f.project.name === "integration";
     const first = process.env.INTEGRATION_FIRST;
     const rank = (f: TestSpecification) => (first && f.moduleId.includes(first) ? 0 : 1);
-    return [...files].sort((a, b) => rank(a) - rank(b) || (a.moduleId < b.moduleId ? -1 : a.moduleId > b.moduleId ? 1 : 0));
+    const integration = files
+      .filter(isIntegration)
+      .sort((a, b) => rank(a) - rank(b) || (a.moduleId < b.moduleId ? -1 : a.moduleId > b.moduleId ? 1 : 0));
+    // Every other project keeps Vitest's default order (failed first, then slowest first).
+    const others = await super.sort(files.filter((f) => !isIntegration(f)));
+    return [...others, ...integration];
   }
 }
 
@@ -46,8 +52,8 @@ export default defineConfig({
         },
       },
     ],
-    // Root-level only (Vitest does not allow a sequencer per project); unit files run in parallel
-    // anyway, so the order only matters for the sequential integration project.
+    // Root-level only (Vitest does not allow a sequencer per project); it orders only the
+    // integration project's files and hands every other file to the default sequencer.
     sequence: { sequencer: NameSequencer },
     coverage: { provider: "v8", include: ["src/domain/**", "src/server/**"] },
   },

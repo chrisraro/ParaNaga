@@ -33,4 +33,13 @@ describe("reference fixtures", () => {
     expect(t01.routes.map((r) => r.basis)).toEqual(["legal_plan", "trial", "legal_plan", "trial"]);
     expect(sources.sources.map((s) => s.code)).toEqual(expect.arrayContaining(["S22", "S33", "OSM-2026-10-15"]));
   });
+
+  it("terminal-t06.json (built from the seed until the next capture) agrees with the index and lists no routes", () => {
+    const t06 = terminalDetailSchema.parse(read("terminal-t06.json"));
+    const entry = index.terminals.find((t) => t.code === "T06")!;
+    expect(t06.terminal).toMatchObject({ code: "T06", name: entry.name, locationText: entry.locationText, modes: entry.modes, lat: null, lng: null });
+    expect(t06.routes).toEqual([]);
+    expect(t06.destinationCategories).toEqual([]);
+    for (const s of t06.sources) expect(sources.sources).toContainEqual(s);
+  });
 });

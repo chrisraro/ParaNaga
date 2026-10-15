@@ -8,9 +8,9 @@ import "./detail.css";
 import "@/ui/trip/trip.css";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
-import { useAppPanel } from "@/ui/app-shell/app-frame-context";
+import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
 import { BackButton, useEscapeToClose, useFocusOnMount } from "@/ui/app-shell/panel";
 
 // Shared panel behaviour lives in the shell (src/ui/app-shell/panel.tsx); re-exported for the
@@ -53,6 +53,19 @@ export function CandidateRing({ size = 30, onRoute = false }: { size?: number; o
       {onRoute ? <circle cx="20" cy="20" r="5" fill="#E8A317" /> : null}
     </svg>
   );
+}
+
+/**
+ * Back to the map after setting a trip end: history when the map opened this panel, else open the
+ * map (no extra history entry otherwise).
+ */
+export function useReturnToMap(): () => void {
+  const frame = useAppFrame();
+  const router = useRouter();
+  return () => {
+    if (cameFromInsideApp() && frame?.isHomeNavigation(window.location.pathname)) router.back();
+    else router.push("/app");
+  };
 }
 
 type PanelProps = {
@@ -98,20 +111,36 @@ export function DetailLoading({ title }: { title: string }) {
 
 // The header names the screen; the h1 says "not found" (the page itself gets no header name, so
 // "Not found" is never shown twice).
-const SCREEN_NAME = { stop: "Stop", route: "Route", page: "" } as const;
+const SCREEN_NAME = { stop: "Stop", route: "Route", place: "Place", terminal: "Terminal", page: "" } as const;
 type NotFoundKind = keyof typeof SCREEN_NAME;
 
 function kindFromPath(pathname: string | null): NotFoundKind {
   if (pathname?.startsWith("/app/stops/")) return "stop";
   if (pathname?.startsWith("/app/routes/")) return "route";
+  if (pathname?.startsWith("/app/places/")) return "place";
+  if (pathname?.startsWith("/app/terminals/")) return "terminal";
   return "page";
 }
+
+const NOT_FOUND_COPY: Record<NotFoundKind, { title: string; copy: string }> = {
+  stop: {
+    title: "Stop not found",
+    copy: "No published stop has this link. It may have been removed or replaced in a newer data revision.",
+  },
+  route: { title: "Route not found", copy: "No published route has this code." },
+  place: {
+    title: "Place not found",
+    copy: "No place on file has this link. It may have been removed or renamed in a newer data revision.",
+  },
+  terminal: { title: "Terminal not found", copy: "No terminal on file has this code." },
+  page: { title: "Not found", copy: "There is nothing at this link." },
+};
 
 export function DetailNotFound({ what: whatProp }: { what?: NotFoundKind }) {
   const pathname = usePathname();
   const what = whatProp ?? kindFromPath(pathname);
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
-  const title = what === "stop" ? "Stop not found" : what === "route" ? "Route not found" : "Not found";
+  const { title, copy } = NOT_FOUND_COPY[what];
   // An honest tab title: the page's static metadata says "Stop · ParaNaga" (the id is only known
   // at runtime, and the response is already streaming with HTTP 200 when notFound() is reached).
   // The cleanup restores the old title only if it is still ours: when leaving for another route,
@@ -124,12 +153,6 @@ export function DetailNotFound({ what: whatProp }: { what?: NotFoundKind }) {
       if (document.title === mine) document.title = previous;
     };
   }, [title]);
-  const copy =
-    what === "stop"
-      ? "No published stop has this link. It may have been removed or replaced in a newer data revision."
-      : what === "route"
-        ? "No published route has this code."
-        : "There is nothing at this link.";
   return (
     <DetailPanel title={SCREEN_NAME[what]} testId="detail-not-found">
       <main className="pn-detail__state">

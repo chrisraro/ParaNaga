@@ -217,9 +217,11 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     const t02 = terminalDetailSchema.parse(await (await terminalGET(get("/terminals/T02"), ctx({ code: "T02" }))).json());
     expect(t02.routes.map((r) => [r.routeCode, r.basis])).toEqual([["R8-A", "trial"], ["R8-B", "trial"]]);
     expect(t02.destinationCategories.map((c) => c.category)).toEqual(["eastbound"]);
-    const t06 = terminalDetailSchema.parse(await (await terminalGET(get("/terminals/T06"), ctx({ code: "T06" }))).json());
+    const t06Raw = await okText(await terminalGET(get("/terminals/T06"), ctx({ code: "T06" })), REFERENCE_CACHE);
+    const t06 = terminalDetailSchema.parse(JSON.parse(t06Raw));
     expect(t06.routes).toEqual([]);
     expect(t06.terminal.lat).toBeNull();
+    saveFixture("terminal-t06.json", t06Raw);
   });
 
   it("terminals: 404 for an unknown code", async () => {

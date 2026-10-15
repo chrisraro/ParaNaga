@@ -23,6 +23,11 @@ import stopA1 from "./network/stop-a1.json" with { type: "json" };
 import stopB18 from "./network/stop-b18.json" with { type: "json" };
 import stopCFirst from "./network/stop-c-first.json" with { type: "json" };
 import stopsAll from "./network/stops-all.json" with { type: "json" };
+import sourcesList from "./network/sources.json" with { type: "json" };
+import terminalT01 from "./network/terminal-t01.json" with { type: "json" };
+// T06 is built from Data_Sets/naga_transport_seed.json and the captured sources until the next
+// capture run writes it (tests/integration/reference-api.test.ts saves it too).
+import terminalT06 from "./network/terminal-t06.json" with { type: "json" };
 
 export const STOPS_ALL = stopsAll;
 export const STOP_A1 = stopA1;
@@ -43,16 +48,22 @@ export const ROUTES_LIST = routesList;
 /** The captured search index of the published revision (233 OSM places, 47 mapped-pin places …). */
 export const SEARCH_INDEX = searchIndex;
 
-export type NetworkCalls = { bboxes: string[]; stops: string[]; routes: string[]; routeLists: number; searchIndexes: string[] };
+export const TERMINAL_T01 = terminalT01;
+export const TERMINAL_T06 = terminalT06;
+export const SOURCES = sourcesList;
+const TERMINALS = new Map([terminalT01, terminalT06].map((t) => [t.terminal.code, t]));
+
+export type NetworkCalls = { bboxes: string[]; stops: string[]; routes: string[]; routeLists: number; searchIndexes: string[]; terminals: string[] };
 
 /**
  * Answers /api/v1/stops?bbox= (the real 128 pins filtered to the box), /api/v1/stops/:id for the
  * captured stops, /api/v1/routes (the captured list of 11), /api/v1/routes/:code for the
- * captured routes, /api/v1/network/head (the captured revision) and
- * /api/v1/network/search-index/:revisionId (that revision only); anything else is a 404.
+ * captured routes, /api/v1/network/head (the captured revision),
+ * /api/v1/network/search-index/:revisionId (that revision only), /api/v1/terminals/:code (T01,
+ * T06) and /api/v1/sources; anything else is a 404.
  */
 export async function routeNetwork(page: Page): Promise<NetworkCalls> {
-  const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [] };
+  const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [], terminals: [] };
   await page.route(/\/api\/v1\/stops(\?|\/|$)/, async (route) => {
     const url = new URL(route.request().url());
     const id = /\/api\/v1\/stops\/([^/?]+)/.exec(url.pathname)?.[1];
@@ -84,5 +95,12 @@ export async function routeNetwork(page: Page): Promise<NetworkCalls> {
     const body = ROUTES.get(code);
     return body ? json(route, body) : notFound(route);
   });
+  await page.route(/\/api\/v1\/terminals\/[^/?]+$/, (route) => {
+    const code = decodeURIComponent(/\/api\/v1\/terminals\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!).toUpperCase();
+    calls.terminals.push(code);
+    const body = TERMINALS.get(code);
+    return body ? json(route, body) : notFound(route);
+  });
+  await page.route(/\/api\/v1\/sources(\?.*)?$/, (route) => json(route, sourcesList));
   return calls;
 }

@@ -63,11 +63,14 @@ const OUTLINE_STYLE: L.PathOptions = {
 
 const LEAFLET_URL = "https://leafletjs.com";
 
-function pinIcon(kind: "start" | "destination"): L.DivIcon {
-  const label = kind === "start" ? "Start point" : "Destination";
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+function pinIcon(kind: "start" | "destination", label = kind === "start" ? "Start point" : "Destination"): L.DivIcon {
   return L.divIcon({
     className: "pn-marker",
-    html: `<svg width="30" height="30" viewBox="0 0 30 30" role="img" aria-label="${label}"><circle class="pn-pin pn-pin--${kind}" cx="15" cy="15" r="12" stroke-width="3" /><circle cx="15" cy="15" r="5" fill="#FFFFFF" /></svg>`,
+    html: `<svg width="30" height="30" viewBox="0 0 30 30" role="img" aria-label="${escapeHtml(label)}"><circle class="pn-pin pn-pin--${kind}" cx="15" cy="15" r="12" stroke-width="3" /><circle cx="15" cy="15" r="5" fill="#FFFFFF" /></svg>`,
     iconSize: [30, 30],
     iconAnchor: [15, 15],
   });
@@ -76,8 +79,10 @@ function pinIcon(kind: "start" | "destination"): L.DivIcon {
 const START_ICON = pinIcon("start");
 const DESTINATION_ICON = pinIcon("destination");
 
-function escapeHtml(text: string): string {
-  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+/** A place's own marker (place detail): destination style, named after the place. */
+function PlaceMarker({ point, label }: { point: LatLng; label: string }) {
+  const icon = useMemo(() => pinIcon("destination", label), [label]);
+  return <Marker position={[point.lat, point.lng]} icon={icon} interactive={false} keyboard={false} />;
 }
 
 /** Boarding (filled) / getting-off (hollow) stop marker: a DOM marker, so no path is added. */
@@ -204,6 +209,9 @@ export default function NagaMapLeaflet({
   recenterTargetLabel = "the start pin",
   onLocate,
   className,
+  initialView,
+  placeMarker,
+  label = "Map of Naga City",
 }: NagaMapProps) {
   const reducedMotion = useReducedMotion();
   const [tiles] = useState(currentTileConfig);
@@ -244,7 +252,7 @@ export default function NagaMapLeaflet({
     <div
       data-testid="naga-map"
       role="region"
-      aria-label="Map of Naga City"
+      aria-label={label}
       data-center-lat={view ? view.lat.toFixed(6) : undefined}
       data-center-lng={view ? view.lng.toFixed(6) : undefined}
       data-zoom={view ? String(view.zoom) : undefined}
@@ -254,8 +262,8 @@ export default function NagaMapLeaflet({
       <MapContainer
         ref={setMap}
         className="pn-map-leaflet"
-        center={DEFAULT_CENTER}
-        zoom={NAGA_DEFAULT_ZOOM}
+        center={initialView ? [initialView.center.lat, initialView.center.lng] : DEFAULT_CENTER}
+        zoom={initialView?.zoom ?? NAGA_DEFAULT_ZOOM}
         minZoom={NAGA_MIN_ZOOM}
         maxZoom={NAGA_MAX_ZOOM}
         maxBounds={MAX_BOUNDS}
@@ -296,6 +304,7 @@ export default function NagaMapLeaflet({
             keyboard={false}
           />
         ) : null}
+        {placeMarker ? <PlaceMarker point={placeMarker.point} label={placeMarker.label} /> : null}
         {highlightStops?.map((stop) => <TripStopMarker key={`${stop.role}:${stop.id}`} stop={stop} />)}
         <FitHighlights stops={highlightStops} pins={pins} paddingBottom={highlightPaddingBottom} />
         <MapViewSync

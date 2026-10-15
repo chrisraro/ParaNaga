@@ -28,15 +28,34 @@ describe("actionFor", () => {
     for (const purpose of [null, "start", "save"] as const) expect(actionFor(find("R8A", "route"), purpose)).toEqual({ type: "open", href: "/app/routes/R8-A" });
   });
 
-  it("no location (terminal, barangay, study label, regional) → a notice, never an endpoint", () => {
-    for (const r of [find("Centro loading", "terminal"), find("Abella", "barangay"), find("Starbucks", "study"), find("Iriga", "regional", true)]) {
-      expect(actionFor(r, "destination")).toEqual({ type: "notice" });
+  it("no location (terminal, barangay, study label, regional): its own screen, never an endpoint", () => {
+    const abella = find("Abella", "barangay");
+    const starbucks = find("Starbucks", "study");
+    for (const purpose of [null, "destination", "save"] as const) {
+      expect(actionFor(find("Centro loading", "terminal"), purpose)).toEqual({ type: "open", href: "/app/terminals/T05" });
+      expect(actionFor(abella, purpose)).toEqual({ type: "open", href: "/app/places/barangay/abella" });
+      expect(actionFor(starbucks, purpose)).toEqual({ type: "open", href: `/app/places/study/${starbucks.kind === "study" ? starbucks.code : ""}` });
+      expect(actionFor(find("Iriga", "regional", true), purpose)).toEqual({ type: "open", href: "/app/terminals/T02" });
     }
   });
 
-  it("browsing (no purpose) or saving: places open a notice", () => {
-    expect(actionFor(find("SM City", "osm"), null)).toEqual({ type: "notice" });
-    expect(actionFor(find("SM City", "osm"), "save")).toEqual({ type: "notice" });
+  it("browsing (no purpose): places open their place detail; saving: a notice", () => {
+    const sm = find("SM City", "osm");
+    const key = sm.kind === "osm" ? sm.key : "";
+    expect(key).toMatch(/^osm:(node|way|relation)\/\d+$/);
+    expect(actionFor(sm, null)).toEqual({ type: "open", href: `/app/places/osm/${key.slice("osm:".length)}` });
+    const plaza = find("Plaza Rizal", "pin");
+    expect(actionFor(plaza, null)).toEqual({ type: "open", href: `/app/places/pin/${plaza.kind === "pin" ? plaza.key : ""}` });
+    expect(actionFor(sm, "save")).toEqual({ type: "notice" });
+    expect(actionFor(plaza, "save")).toEqual({ type: "notice" });
+  });
+
+  it("a regional category without a terminal and a saved place (browsing) show a notice", () => {
+    const regional = { kind: "regional", title: "Somewhere", category: "eastbound", terminalCode: null, terminalName: null, score: 100, offset: 0 } as const;
+    expect(actionFor(regional, null)).toEqual({ type: "notice" });
+    const saved = { kind: "saved", id: "s1", title: "Home", point: { lat: 13.62, lng: 123.19 }, score: 100, offset: 0 } as const;
+    expect(actionFor(saved, null)).toEqual({ type: "notice" });
+    expect(actionFor(saved, "start")).toMatchObject({ type: "endpoint", which: "start" });
   });
 
   it("old route names and feeder leads are not tappable", () => {
@@ -48,6 +67,7 @@ describe("actionFor", () => {
 describe("noticeFor", () => {
   it("an OpenStreetMap place: entrance not mapped, can be set as an end, with attribution", () => {
     const n = noticeFor(find("SM City", "osm"), null);
+    expect(n.body).toBe("Mall. Location from OpenStreetMap — entrance not mapped.");
     expect(n.body).toContain("Location from OpenStreetMap — entrance not mapped");
     expect(n.endpoint?.label).toBe("SM City Naga");
     expect(n.osm).toBe(true);
@@ -67,8 +87,14 @@ describe("noticeFor", () => {
     }
     const regional = noticeFor(find("Iriga", "regional", true), null);
     expect(regional.body).toBe(
-      "Eastbound destinations are listed for Eastbound Terminal. Individual services are not verified, and the terminal's location is not mapped. Terminal details open soon.",
+      "Eastbound destinations are listed for Eastbound Terminal. Individual services are not verified, and the terminal's location is not mapped.",
     );
+  });
+
+  it("no notice promises a screen that opens soon", () => {
+    for (const r of [find("SM City", "osm"), find("Plaza Rizal", "pin"), find("Centro loading", "terminal"), find("Abella", "barangay")]) {
+      expect(noticeFor(r, null).body).not.toMatch(/open soon/);
+    }
   });
 
   it("for=save: the notice gives the place's facts (the page note alone says saving opens soon)", () => {

@@ -17,6 +17,7 @@ import type { SearchIndex } from "../api/schemas";
 import type { LatLng } from "../geo/types";
 import type { OsmPlaceCategory } from "../places/osm-categories";
 import { OSM_CATEGORY_LABEL } from "../places/osm-categories";
+import { pinPlaceEndpointLabel, pinPlacePoint } from "../places/place-detail";
 import { compactText, foldText, isCodeLikeQuery, tokenize } from "./normalize";
 
 export const GROUP_LIMIT = 5;
@@ -146,20 +147,21 @@ function better(a: Ranked, b: Ranked): Ranked {
 
 /** Folded text, words and compact form of one indexed string, computed once per index. */
 type Prepared = { folded: string; words: string[]; compact: string };
-const PREPARED = new WeakMap<object, Map<string, Prepared>>();
-let prepared = new Map<string, Prepared>();
+/** The folded forms of one index's strings (passed down explicitly: no module-level state). */
+type FoldCache = Map<string, Prepared>;
+const PREPARED = new WeakMap<object, FoldCache>();
 
-function prepare(text: string): Prepared {
-  let p = prepared.get(text);
+function prepare(cache: FoldCache, text: string): Prepared {
+  let p = cache.get(text);
   if (!p) {
     p = { folded: foldText(text), words: tokenize(text), compact: compactText(text) };
-    prepared.set(text, p);
+    cache.set(text, p);
   }
   return p;
 }
 
-function textScore(query: Query, text: string, fuzzy = true): Ranked {
-  const { folded, words, compact } = prepare(text);
+function textScore(query: Query, text: string, cache: FoldCache, fuzzy = true): Ranked {
+  const { folded, words, compact } = prepare(cache, text);
   if (folded === "") return NONE;
   let best = NONE;
   if (folded === query.folded) return { score: EXACT, offset: 0 };
@@ -179,8 +181,8 @@ function textScore(query: Query, text: string, fuzzy = true): Ranked {
   return best;
 }
 
-function bestOf(query: Query, texts: readonly string[], fuzzy = true): Ranked {
-  return texts.reduce<Ranked>((acc, t) => better(acc, textScore(query, t, fuzzy)), NONE);
+function bestOf(query: Query, texts: readonly string[], cache: FoldCache, fuzzy = true): Ranked {
+  return texts.reduce<Ranked>((acc, t) => better(acc, textScore(query, t, cache, fuzzy)), NONE);
 }
 
 // ------------------------------------------------------------------ copy helpers
@@ -245,11 +247,6 @@ function evidenceOf(level: SearchIndex["routes"][number]["evidenceLevel"]): "doc
   return "documented";
 }
 
-/** The pin a mapped-pin place is used at: its first on-route pin, else its first pin. */
-function pinPoint(place: SearchIndex["pinPlaces"][number]): LatLng {
-  const pin = place.pins.find((p) => p.onRoute) ?? place.pins[0]!;
-  return { lat: pin.lat, lng: pin.lng };
-}
 
 function compareResults(a: SearchResult & { i: number }, b: SearchResult & { i: number }): number {
   return (
@@ -271,48 +268,50 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
     cache = new Map();
     PREPARED.set(index, cache);
   }
-  prepared = cache;
+  const fold = cache;
+  const best = (texts: readonly string[]) => bestOf(query, texts, fold);
+  const hits = (text: string) => textScore(query, text, fold, false).score > 0;
   const out: (SearchResult & { i: number })[] = [];
   const add = (r: SearchResult) => {
     if (r.score > 0) out.push({ ...r, i: out.length });
   };
 
   for (const s of options.saved ?? []) {
-    add({ kind: "saved", id: s.id, title: s.label, point: { ...s.point }, ...bestOf(query, [s.label]) });
+    add({ kind: "saved", id: s.id, title: s.label, point: { ...s.point }, ...best([s.label]) });
   }
   for (const p of index.osmPlaces) {
-    add({ kind: "osm", key: p.key, title: p.name, category: p.category, point: { lat: p.lat, lng: p.lng }, ...bestOf(query, [p.name, ...p.aliases]) });
+    add({ kind: "osm", key: p.key, title: p.name, category: p.category, point: { lat: p.lat, lng: p.lng }, ...best([p.name, ...p.aliases]) });
   }
   for (const p of index.pinPlaces) {
     const loops = [...new Set(p.pins.flatMap((x) => (x.layer ? [loopName(x.layer)] : [])))].sort();
-    add({ kind: "pin", key: p.key, title: p.label, loops, point: pinPoint(p), ...bestOf(query, [p.label, ...p.spellings]) });
+    add({ kind: "pin", key: p.key, title: p.label, loops, point: pinPlacePoint(p), ...best([p.label, ...p.spellings]) });
   }
   for (const r of index.routes) {
     const title = `${r.code} ${r.name}`;
-    const own = bestOf(query, [r.code, r.name, title]);
-    const street = r.streets.find((s) => textScore(query, s, false).score > 0) ?? null;
+    const own = best([r.code, r.name, title]);
+    const street = r.streets.find((s) => hits(s)) ?? null;
     const viaStreet = street !== null && own.score < SECONDARY;
     const rank = viaStreet ? { score: SECONDARY, offset: FAR - 2 } : own;
     add({ kind: "route", code: r.code, title, evidence: evidenceOf(r.evidenceLevel), matchedStreet: viaStreet ? street : null, ...rank });
   }
   for (const t of index.terminals) {
-    const own = bestOf(query, [t.name]);
-    const where = t.locationText && textScore(query, t.locationText, false).score > 0 ? { score: SECONDARY, offset: FAR - 2 } : NONE;
+    const own = best([t.name]);
+    const where = t.locationText && hits(t.locationText) ? { score: SECONDARY, offset: FAR - 2 } : NONE;
     add({ kind: "terminal", code: t.code, title: t.name, locationText: t.locationText, ...better(own, where) });
   }
-  for (const b of index.barangays) add({ kind: "barangay", key: b.key, title: b.name, ...bestOf(query, [b.name]) });
+  for (const b of index.barangays) add({ kind: "barangay", key: b.key, title: b.name, ...best([b.name]) });
   for (const s of index.studyLabels) {
-    add({ kind: "study", code: s.code, title: s.label, routeCode: s.routeCode, direction: s.direction, ...bestOf(query, [s.label]) });
+    add({ kind: "study", code: s.code, title: s.label, routeCode: s.routeCode, direction: s.direction, ...best([s.label]) });
   }
-  for (const n of index.legacyNames) add({ kind: "legacy", title: n.name, sourceCode: n.sourceCode, year: n.year, ...bestOf(query, [n.name]) });
+  for (const n of index.legacyNames) add({ kind: "legacy", title: n.name, sourceCode: n.sourceCode, year: n.year, ...best([n.name]) });
   if (options.regional) {
     const terminalName = (code: string | null) => index.terminals.find((t) => t.code === code)?.name ?? null;
     for (const c of index.destinationCategories) {
       for (const d of c.destinations) {
-        add({ kind: "regional", title: d, category: c.category, terminalCode: c.terminalCode, terminalName: terminalName(c.terminalCode), ...bestOf(query, [d]) });
+        add({ kind: "regional", title: d, category: c.category, terminalCode: c.terminalCode, terminalName: terminalName(c.terminalCode), ...best([d]) });
       }
     }
-    for (const f of index.feederLeads) add({ kind: "feeder", code: f.code, title: f.name, ...bestOf(query, [f.name]) });
+    for (const f of index.feederLeads) add({ kind: "feeder", code: f.code, title: f.name, ...best([f.name]) });
   }
 
   out.sort(compareResults);
@@ -345,7 +344,7 @@ export function endpointForResult(result: SearchResult): { point: LatLng; label:
     case "saved":
       return { point: { ...result.point }, label: result.title };
     case "pin":
-      return { point: { ...result.point }, label: `${result.title} (mapped pin)` };
+      return { point: { ...result.point }, label: pinPlaceEndpointLabel(result.title) };
     default:
       return null;
   }

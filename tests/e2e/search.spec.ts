@@ -143,7 +143,7 @@ test('"Diversion": the corner first, old names footnoted, OSM attributed; a rout
   await expect(page.getByRole("heading", { level: 1, name: "Centro–Magsaysay Loop A" })).toBeVisible();
 });
 
-test("no match, regional connections and an honest notice for a barangay", async ({ page }) => {
+test("no match, regional connections, and a barangay opens its place detail", async ({ page }) => {
   await page.goto("/app/search?for=start");
   await searchBox(page).fill("xyz");
   await expect(page.getByTestId("search-empty")).toHaveText("No match in Naga — try a place, stop name, street, route or barangay.");
@@ -157,12 +157,36 @@ test("no match, regional connections and an honest notice for a barangay", async
   await expect(searchBox(page)).toBeFocused();
   await searchBox(page).fill("Abella");
   await page.getByTestId("search-result-barangay").click();
-  await expect(page.getByTestId("search-notice")).toContainText("cannot be a trip start or destination");
-  await expect(page.getByRole("heading", { level: 2, name: "Abella" })).toBeFocused();
-  // Close returns focus to the row that opened the notice.
+  await expect(page).toHaveURL(/\/app\/places\/barangay\/abella$/);
+  await expect(page.getByTestId("place-detail").getByRole("heading", { level: 1, name: "Abella" })).toBeFocused();
+});
+
+test("for=save: a place opens a notice whose Close returns focus to its row", async ({ page }) => {
+  await page.goto("/app/search?for=save");
+  await searchBox(page).fill("SM City");
+  await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
+  await expect(page.getByTestId("search-notice")).toContainText("Location from OpenStreetMap — entrance not mapped");
+  await expect(page.getByRole("heading", { level: 2, name: "SM City Naga" })).toBeFocused();
   await page.getByTestId("search-notice").getByRole("button", { name: "Close" }).click();
   await expect(page.getByTestId("search-notice")).toHaveCount(0);
-  await expect(page.getByTestId("search-result-barangay")).toBeFocused();
+  await expect(page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" })).toBeFocused();
+});
+
+test("a search pick within 25 m of the other trip end is refused with the same-place notice", async ({ page }) => {
+  await openApp(page);
+  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await searchBox(page).fill("plaza rizal");
+  await page.getByTestId("search-group-places").getByRole("button", { name: /^Plaza Rizal Mapped stop/ }).click();
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(rowMain(page, "start")).toContainText("Plaza Rizal (mapped pin)");
+  // The destination search picks the same pin: refused, with the notice, and nothing is set.
+  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await expect(page).toHaveURL(/\/app\/search\?for=destination$/);
+  await searchBox(page).fill("plaza rizal");
+  await page.getByTestId("search-group-places").getByRole("button", { name: /^Plaza Rizal Mapped stop/ }).click();
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(page.getByTestId("same-place-notice")).toContainText("Start and destination are the same place");
+  await expect(rowMain(page, "destination")).not.toContainText("Plaza Rizal");
 });
 
 test('"Show all" moves focus to the first row it revealed', async ({ page }) => {
@@ -221,7 +245,7 @@ test.describe("with location permission", () => {
   });
 });
 
-test("from Explore (browsing): a place opens a notice whose Set as start returns to the map", async ({ page }) => {
+test("from Explore (browsing): a place opens place detail, whose Plan trip from sets the start", async ({ page }) => {
   await openApp(page);
   await page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Explore", exact: true }).click();
   await page.getByTestId("explore-search").click();
@@ -229,10 +253,11 @@ test("from Explore (browsing): a place opens a notice whose Set as start returns
   await expect(page.getByTestId("search-screen").getByRole("button", { name: "Choose on map" })).toHaveCount(0);
   await searchBox(page).fill("SM City");
   await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
-  const notice = page.getByTestId("search-notice");
-  await expect(notice).toContainText("Location from OpenStreetMap — entrance not mapped");
-  await expect(notice.getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" })).toBeVisible();
-  await notice.getByRole("button", { name: "Set as start" }).click();
+  await expect(page).toHaveURL(/\/app\/places\/osm\/(node|way|relation)\/\d+$/);
+  const detail = page.getByTestId("place-detail");
+  await expect(detail.getByTestId("place-location-note")).toHaveText("Location from OpenStreetMap — entrance not mapped.");
+  await detail.getByRole("radio", { name: "Directions from here" }).click();
+  await detail.getByRole("button", { name: "Plan trip from SM City Naga" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(rowMain(page, "start")).toContainText("SM City Naga");
 });
@@ -259,7 +284,10 @@ for (const colorScheme of ["light", "dark"] as const) {
       await expectAxeClean(page);
       await searchBox(page).fill("Centro");
       await page.getByRole("button", { name: /^Show all/ }).first().click();
-      await page.getByTestId("search-result-terminal").first().click();
+      await expectAxeClean(page);
+      await page.goto("/app/search?for=save");
+      await searchBox(page).fill("SM City");
+      await page.getByTestId("search-result-osm").first().click();
       await expect(page.getByTestId("search-notice")).toBeVisible();
       await expectAxeClean(page);
     });

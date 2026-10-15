@@ -1,0 +1,184 @@
+/* Place detail and Terminal detail (artboards PlaceDetail, TerminalDetail). Full-screen panels
+   (.pn-detail) over the home map; tokens from home-screen.css / detail.css. Only what the shared
+   classes (.pn-btn, .pn-section, .pn-group, .pn-badge, .pn-note-plain) do not already cover. */
+
+/* Map preview of a place with a location (OpenStreetMap or mapped pins). */
+.pn-place__map {
+  position: relative;
+  height: 220px;
+  margin: 12px 16px 0;
+  overflow: hidden;
+  border-radius: 20px;
+  /* Zoom capsule near the preview's top-right corner (no locate button here). */
+  --naga-map-controls-top: -104px;
+}
+
+.pn-place__head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pn-place__kind {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+
+.pn-place__cta {
+  gap: 10px;
+  min-height: 52px;
+}
+
+.pn-place__link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Grouped fact rows: label (small), value, muted line. */
+.pn-place__facts {
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+}
+.pn-place__fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+}
+.pn-place__fact + .pn-place__fact {
+  border-top: 1px solid var(--pn-sep);
+}
+.pn-place__fact-label {
+  color: var(--pn-caption);
+  font-size: 13px;
+}
+.pn-place__fact-value {
+  margin: 0;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+.pn-place__fact-sub {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.pn-place__fact-sub a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 15px;
+}
+
+/* "Photo pending" row (text only). */
+.pn-place__photo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+}
+.pn-place__photo-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--pn-fill);
+  color: var(--pn-label2);
+}
+.pn-place__photo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pn-place__photo-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.pn-place__photo-sub {
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------ Terminal detail */
+
+/* "Location not mapped" pill in the header (the artboard's map-overlay pill). */
+.pn-terminal__pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--pn-surface);
+  box-shadow: 0 1px 3px var(--pn-shadow);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pn-terminal__address {
+  color: var(--pn-caption);
+  font-size: 13px;
+}
+.pn-terminal__info {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--pn-fill);
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pn-terminal__info svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--pn-accent);
+}
+.pn-terminal__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-terminal__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 14px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+}
+.pn-terminal__empty-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+.pn-terminal__empty-text {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pn-terminal__hours {
+  margin: 0;
+  padding: 0 14px;
+}
+.pn-terminal__hours dd {
+  margin: 0;
+}
+.pn-terminal__hours .pn-kv + .pn-kv {
+  border-top: 1px solid var(--pn-sep);
+}

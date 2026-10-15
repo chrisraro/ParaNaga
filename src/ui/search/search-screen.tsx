@@ -6,10 +6,11 @@
 // map (tab bar hidden, Escape or Cancel goes back).
 //
 // Picking: with for=start|destination an OpenStreetMap or mapped-pin place sets that trip end
-// through the endpoint channel and returns to the map; routes open route detail; things without
-// a location (terminals, barangays, study labels, regional destinations) show an honest inline
-// notice until their own screens exist (Task 6). "Use current location" and "Choose on map" hand
-// the request to the home screen, which owns the GPS watch and the crosshair.
+// through the endpoint channel and returns to the map; otherwise a result opens its own screen
+// (place, terminal, route detail). An honest inline notice remains only where no screen exists
+// (saving a place, Task 8; a saved place). "Use current location" and "Choose on map" hand the
+// request to the home screen, which owns the GPS watch and the crosshair. A `#q=` fragment
+// (src/domain/places/place-detail.ts searchHref) prefills the box; fragments never reach a server.
 
 import "./search.css";
 import "@/ui/kit/styles";
@@ -19,6 +20,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSearchIndex } from "@/client/search/use-search-index";
 import { GROUP_LIMIT, countResults, resultSubtitle, searchIndex, type SearchGroup, type SearchGroupId, type SearchResult } from "@/domain/search/search";
+import { queryFromHash } from "@/domain/places/place-detail";
 import { actionFor, noticeFor, parseSearchPurpose, type SearchPurpose } from "@/domain/search/select";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
 import { useEscapeToClose } from "@/ui/app-shell/panel";
@@ -292,23 +294,24 @@ function SearchBody({ purpose, indexState }: { purpose: SearchPurpose | null; in
   const input = useRef<HTMLInputElement>(null);
   const body = useRef<HTMLDivElement>(null);
 
-  const [query, setQuery] = useState("");
-  const [typed, setTyped] = useState("");
+  // Prefilled from a "Search mapped stops for …" link (#q=), read once per opening.
+  const [initialQuery] = useState(() => (typeof window === "undefined" ? "" : queryFromHash(window.location.hash)));
+  const [query, setQuery] = useState(initialQuery);
+  const [typed, setTyped] = useState(initialQuery);
   const [regional, setRegional] = useState(false);
   // "Show all" and the open notice belong to one (debounced) query. The notice remembers the
   // row that opened it, so Close puts focus back there.
   const [expanded, setExpanded] = useState<{ query: string; ids: SearchGroupId[] }>({ query: "", ids: [] });
   const [notice, setNotice] = useState<{ query: string; result: SearchResult } | null>(null);
   // A row to focus once it has rendered (after Close, or the first row "Show all" revealed).
+  // One attempt only: if the row is gone (the query changed meanwhile), the request is dropped,
+  // so a row with that key reappearing later never takes focus.
   const pendingFocus = useRef<string | null>(null);
   useEffect(() => {
     const key = pendingFocus.current;
     if (!key) return;
-    const el = body.current?.querySelector<HTMLElement>(`[data-result-key="${CSS.escape(key)}"]`);
-    if (el) {
-      pendingFocus.current = null;
-      el.focus();
-    }
+    pendingFocus.current = null;
+    body.current?.querySelector<HTMLElement>(`[data-result-key="${CSS.escape(key)}"]`)?.focus();
   });
 
   useEffect(() => input.current?.focus(), []);
