@@ -95,3 +95,9 @@ kept as separate places.
 
 Test data lives elsewhere: `tests/fixtures/osm/` holds a hand-made extract with fake names, flagged
 `"synthetic": true`; `transit.publish_revision` refuses to publish synthetic places.
+
+## Snapshots
+
+| File | Fetched (UTC) | OSM base | Elements | Places kept | sha256 |
+|---|---|---|---|---|---|
+| `naga-places-2026-10-15.osm.json` | 2026-10-15 | 2026-10-15T12:56:10Z | 261 | 233 (28 unnamed dropped) | `38bf7571f20fb57b95f5af7bd48fdcc081b2a878a2ec07cbf41ea656dec15a9e` |
