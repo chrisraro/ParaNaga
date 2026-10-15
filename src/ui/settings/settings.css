@@ -64,3 +64,15 @@
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
 }
+
+/* Until the stored preferences are on screen (data-ready, set after mount) the controls do not
+   animate: a stored Dark or an active switch appears in place instead of sliding from the
+   server-rendered defaults. The wrapper adds no box (display: contents). */
+.pn-settings {
+  display: contents;
+}
+.pn-settings:not([data-ready]) .pn-seg__thumb,
+.pn-settings:not([data-ready]) .pn-switch,
+.pn-settings:not([data-ready]) .pn-switch__knob {
+  transition: none;
+}

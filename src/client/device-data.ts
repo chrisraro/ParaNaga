@@ -32,7 +32,11 @@ function clearStorage(get: () => Storage): void {
 export async function clearDeviceData(): Promise<void> {
   clearStorage(() => window.sessionStorage);
   clearStorage(() => window.localStorage);
-  await clearHistory();
-  // Re-reads the (now empty) preferences, re-applies the default theme and tells every screen.
-  resetPrefs();
+  try {
+    await clearHistory();
+  } finally {
+    // Even if a store failed (the caller reports it): re-read the (now empty) preferences,
+    // re-apply the default theme and tell every screen.
+    resetPrefs();
+  }
 }

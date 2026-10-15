@@ -13,7 +13,7 @@
 import "@/ui/kit/styles";
 import "./settings.css";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { clearDeviceData } from "@/client/device-data";
 import { useLocationPermission } from "@/client/geo/use-location-permission";
 import { clearHistory, hasHistory } from "@/client/history/trip-history";
@@ -33,6 +33,13 @@ const THEME_OPTIONS: readonly SegmentedOption<ThemePref>[] = [
   { value: "dark", label: "Dark" },
   { value: "system", label: "System" },
 ];
+
+export const STATUS = {
+  cleared: "Data on this phone removed. Settings are back to their defaults.",
+  clearFailed: "Some data could not be removed. Try again.",
+  historyDeleted: "Trip history on this phone deleted.",
+  historyDeleteFailed: "The trip history could not be deleted. Try again.",
+} as const;
 
 export const CLEAR_DATA_QUESTION = "Remove saved trips, saved places, trip history and settings from this phone?";
 export const DELETE_HISTORY_QUESTION = "Also delete the history on this phone?";
@@ -79,26 +86,58 @@ export function MoreScreen() {
   const permission = useLocationPermission();
   const [confirmClear, setConfirmClear] = useState(false);
   const [askDeleteHistory, setAskDeleteHistory] = useState(false);
+  // The status line is a live region: emptied on every change and before each new message, so a
+  // repeated message (clearing twice) is announced again and no stale result stays on screen.
   const [status, setStatus] = useState("");
+  // Controls animate only once the stored values are showing (see settings.css).
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const change = (patch: Parameters<typeof updatePrefs>[0]) => {
+    setStatus("");
+    updatePrefs(patch);
+  };
 
   const onHistoryChange = (enabled: boolean) => {
-    updatePrefs({ historyEnabled: enabled });
-    setStatus("");
+    change({ historyEnabled: enabled });
     if (enabled) return;
-    // Recording stops at once; existing history is only deleted if the user says so.
-    void hasHistory().then((exists) => {
-      if (exists) setAskDeleteHistory(true);
-    });
+    // Recording stops at once; existing history is only deleted if the user says so. If the check
+    // fails, nothing is deleted and nothing is asked.
+    hasHistory().then(
+      (exists) => {
+        if (exists) setAskDeleteHistory(true);
+      },
+      () => undefined,
+    );
   };
 
   const onClear = async () => {
     setConfirmClear(false);
-    await clearDeviceData();
-    setStatus("Data on this phone removed. Settings are back to their defaults.");
+    setStatus("");
+    try {
+      await clearDeviceData();
+      setStatus(STATUS.cleared);
+    } catch {
+      setStatus(STATUS.clearFailed);
+    }
+  };
+
+  const onDeleteHistory = async () => {
+    setAskDeleteHistory(false);
+    setStatus("");
+    try {
+      await clearHistory();
+      setStatus(STATUS.historyDeleted);
+    } catch {
+      setStatus(STATUS.historyDeleteFailed);
+    }
   };
 
   return (
-    <>
+    <div className="pn-settings" data-ready={ready ? "" : undefined}>
       <div className="pn-card pn-settings__account" data-testid="settings-account">
         <span className="pn-settings__avatar">
           <AccountIcon />
@@ -121,7 +160,7 @@ export function MoreScreen() {
               label="Appearance"
               options={THEME_OPTIONS}
               value={prefs.theme}
-              onChange={(theme) => updatePrefs({ theme })}
+              onChange={(theme) => change({ theme })}
               testId="settings-appearance"
             />
           </li>
@@ -137,7 +176,7 @@ export function MoreScreen() {
             label="Low-data mode"
             hint="Hide the map background; pins and trip steps still show"
             checked={prefs.lowData}
-            onChange={(lowData) => updatePrefs({ lowData })}
+            onChange={(lowData) => change({ lowData })}
             testId="settings-low-data"
           />
         </li>
@@ -146,7 +185,7 @@ export function MoreScreen() {
             label="High contrast"
             hint="Stronger text and borders"
             checked={prefs.highContrast}
-            onChange={(highContrast) => updatePrefs({ highContrast })}
+            onChange={(highContrast) => change({ highContrast })}
             testId="settings-high-contrast"
           />
         </li>
@@ -206,13 +245,10 @@ export function MoreScreen() {
         confirmLabel="Delete"
         cancelLabel="Keep"
         tone="danger"
-        onConfirm={() => {
-          setAskDeleteHistory(false);
-          void clearHistory().then(() => setStatus("Trip history on this phone deleted."));
-        }}
+        onConfirm={() => void onDeleteHistory()}
         onCancel={() => setAskDeleteHistory(false)}
         testId="settings-history-dialog"
       />
-    </>
+    </div>
   );
 }

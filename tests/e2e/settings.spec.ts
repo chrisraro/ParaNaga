@@ -184,20 +184,30 @@ test.describe("phone", () => {
     await expect(page.locator("html")).not.toHaveAttribute("data-contrast", /.*/);
   });
 
-  test("Low-data mode draws no map background and requests no tiles", async ({ page }) => {
-    await setStoredPrefs(page, { lowData: true });
+  test("the map requests tiles normally, none in low-data mode, and again after Show background once", async ({ page }) => {
+    // Positive control: this build has a tile URL (playwright.config.ts), so the map requests tiles.
     await openHome(page);
+    await expect.poll(() => tileRequests.length).toBeGreaterThan(0);
+    await expect(page.getByTestId("map-low-data-notice")).toHaveCount(0);
+    await expect(page.locator(".pn-attribution")).not.toContainText("Boundary");
+
+    // Low-data mode on (stored before load): no tile layer, no tile request.
+    await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ lowData: true })), PREFS_KEY);
+    await page.reload();
+    tileRequests = [];
+    await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
     const lowData = page.getByTestId("map-low-data-notice");
-    const unavailable = page.getByText("Map background unavailable");
-    await expect(lowData.or(unavailable)).toBeVisible();
+    await expect(lowData).toHaveText("Map background off (low-data mode)Show background once");
     // Pins still show.
     await expect(page.getByTestId("naga-map")).not.toHaveAttribute("data-stop-pins", "0");
-    expect(tileRequests).toEqual([]);
-    await expect(page.locator(".leaflet-tile")).toHaveCount(0);
-
-    test.skip((await lowData.count()) === 0, "no tile URL is configured in this build: there is no background to turn off");
-    await expect(lowData).toHaveText("Map background off (low-data mode)Show background once");
     await expect(page.locator(".pn-attribution")).toContainText("Boundary © OpenStreetMap contributors");
+    await expect(page.locator(".leaflet-tile-pane .leaflet-layer")).toHaveCount(0);
+    // Pan and zoom: still nothing requested.
+    await page.getByRole("button", { name: "Zoom in" }).click();
+    await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
+    expect(tileRequests).toEqual([]);
+
+    // Once, on request.
     await lowData.getByRole("button", { name: "Show background once" }).click();
     await expect.poll(() => tileRequests.length).toBeGreaterThan(0);
     await expect(lowData).toHaveCount(0);
@@ -207,10 +217,22 @@ test.describe("phone", () => {
     await openSettings(page);
     await page.getByRole("switch", { name: "Low-data mode" }).click();
     await expect(page.getByRole("switch", { name: "Low-data mode" })).toHaveAttribute("aria-checked", "true");
+    tileRequests = [];
     await tabBar(page).getByRole("link", { name: "Map", exact: true }).click();
     await expect(page.getByTestId("trip-sheet")).toBeVisible();
     await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
-    await expect(page.locator(".leaflet-tile")).toHaveCount(0);
+    await expect(page.getByTestId("map-low-data-notice")).toBeVisible();
+    await expect(page.locator(".leaflet-tile-pane .leaflet-layer")).toHaveCount(0);
+    expect(tileRequests).toEqual([]);
+  });
+
+  // Regular build, no tile URL (project "no-tiles"): there is no background to turn off.
+  test("without a tile URL, low-data mode keeps the 'Map background unavailable' notice @no-tiles", async ({ page }) => {
+    await setStoredPrefs(page, { lowData: true });
+    await openHome(page);
+    await expect(page.getByText("Map background unavailable")).toBeVisible();
+    await expect(page.getByTestId("map-low-data-notice")).toHaveCount(0);
+    expect(tileRequests).toEqual([]);
   });
 
   test("Trip history switches on and off without a question while no history exists", async ({ page }) => {

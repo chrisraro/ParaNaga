@@ -3,10 +3,14 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_PREFS, PREFS_STORAGE_KEY } from "@/domain/prefs/prefs";
 
-const history = vi.hoisted(() => ({ exists: false, cleared: 0 }));
+const history = vi.hoisted(() => ({ exists: false, cleared: 0, failCheck: false, failClear: false }));
 vi.mock("@/client/history/trip-history", () => ({
-  hasHistory: async () => history.exists,
+  hasHistory: async () => {
+    if (history.failCheck) throw new Error("idb unavailable");
+    return history.exists;
+  },
   clearHistory: async () => {
+    if (history.failClear) throw new Error("idb unavailable");
     history.cleared += 1;
     history.exists = false;
   },
@@ -14,13 +18,15 @@ vi.mock("@/client/history/trip-history", () => ({
 
 const { clearDeviceData } = await import("@/client/device-data");
 const { readPrefs, updatePrefs, usePrefs } = await import("@/client/prefs/use-prefs");
-const { CLEAR_DATA_QUESTION, DELETE_HISTORY_QUESTION, MoreScreen, revisionLine } = await import("@/ui/settings/more-screen");
+const { CLEAR_DATA_QUESTION, DELETE_HISTORY_QUESTION, MoreScreen, STATUS, revisionLine } = await import("@/ui/settings/more-screen");
 
 const HEAD = { revisionId: "703dc1be-879e-43be-91cb-d9a472b56dd1", label: "provisional-loops-2026-10-15", kind: "provisional", publishedAt: "2026-10-15T08:55:12.774Z" };
 
 beforeEach(() => {
   history.exists = false;
   history.cleared = 0;
+  history.failCheck = false;
+  history.failClear = false;
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(HEAD), { status: 200, headers: { "content-type": "application/json" } })));
 });
 
@@ -80,6 +86,17 @@ describe("clearDeviceData", () => {
     expect(history.cleared).toBe(1);
     expect(document.documentElement.getAttribute("data-theme")).toBe("system");
     expect(document.documentElement.hasAttribute("data-contrast")).toBe(false);
+  });
+});
+
+describe("clearDeviceData when a store fails", () => {
+  it("still resets the settings, then reports the failure to the caller", async () => {
+    updatePrefs({ theme: "dark" });
+    history.failClear = true;
+    await expect(clearDeviceData()).rejects.toThrow();
+    expect(localStorage.getItem(PREFS_STORAGE_KEY)).toBeNull();
+    expect(readPrefs()).toEqual(DEFAULT_PREFS);
+    expect(document.documentElement.getAttribute("data-theme")).toBe("system");
   });
 });
 
@@ -163,5 +180,67 @@ describe("More screen", () => {
     await waitFor(() => expect(localStorage.getItem(PREFS_STORAGE_KEY)).toBeNull());
     await waitFor(() => expect(screen.getByRole("radio", { name: "System" }).getAttribute("aria-checked")).toBe("true"));
     expect(screen.getByRole("switch", { name: "Low-data mode" }).getAttribute("aria-checked")).toBe("false");
+  });
+});
+
+describe("More screen status and errors", () => {
+  const status = () => screen.getByTestId("settings-status").textContent;
+  const clearOnce = () => {
+    fireEvent.click(screen.getByRole("button", { name: "Clear data on this device" }));
+    fireEvent.click(screen.getByRole("button", { name: "Remove" }));
+  };
+
+  it("says when clearing failed", async () => {
+    history.failClear = true;
+    render(<MoreScreen />);
+    clearOnce();
+    await waitFor(() => expect(status()).toBe(STATUS.clearFailed));
+  });
+
+  it("empties the status before a repeated message (re-announced) and on any change", async () => {
+    render(<MoreScreen />);
+    clearOnce();
+    await waitFor(() => expect(status()).toBe(STATUS.cleared));
+    const seen: string[] = [];
+    const observer = new MutationObserver(() => seen.push(status() ?? ""));
+    observer.observe(screen.getByTestId("settings-status"), { childList: true, characterData: true, subtree: true });
+    clearOnce();
+    await waitFor(() => expect(seen.at(-1)).toBe(STATUS.cleared));
+    expect(seen).toContain("");
+    observer.disconnect();
+
+    fireEvent.click(screen.getByRole("switch", { name: "Low-data mode" }));
+    expect(status()).toBe("");
+  });
+
+  it("asks nothing and deletes nothing when the history check fails", async () => {
+    updatePrefs({ historyEnabled: true });
+    history.exists = true;
+    history.failCheck = true;
+    render(<MoreScreen />);
+    fireEvent.click(screen.getByRole("switch", { name: "Trip history" }));
+    await act(async () => {});
+    expect(screen.getByTestId("settings-history-dialog").hasAttribute("open")).toBe(false);
+    expect(stored().historyEnabled).toBe(false);
+    expect(history.cleared).toBe(0);
+  });
+
+  it("says when deleting the history failed", async () => {
+    updatePrefs({ historyEnabled: true });
+    history.exists = true;
+    history.failClear = true;
+    render(<MoreScreen />);
+    fireEvent.click(screen.getByRole("switch", { name: "Trip history" }));
+    await waitFor(() => expect(screen.getByTestId("settings-history-dialog").hasAttribute("open")).toBe(true));
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(status()).toBe(STATUS.historyDeleteFailed));
+  });
+
+  it("controls animate only after the first frame (no slide from the server defaults)", async () => {
+    updatePrefs({ theme: "dark" });
+    const { container } = render(<MoreScreen />);
+    const root = container.querySelector(".pn-settings")!;
+    expect(root.hasAttribute("data-ready")).toBe(false);
+    await waitFor(() => expect(root.hasAttribute("data-ready")).toBe(true));
   });
 });

@@ -41,6 +41,10 @@
 :root[data-contrast="more"] .pn-detail {
   --pn-label3: var(--pn-label);
 }
+/* High contrast: the fare chip's outline in its text colour (the gold ring is ≈ 2.2:1). */
+:root[data-contrast="more"] .pn-fare-chip {
+  border-color: currentColor;
+}
 
 .pn-trip {
   flex: none;

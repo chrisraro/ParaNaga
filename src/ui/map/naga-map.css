@@ -55,6 +55,15 @@
 :root[data-contrast="more"] .pn-map {
   --pn-label2: var(--pn-label);
   --pn-sep: color-mix(in srgb, var(--pn-label) 55%, transparent);
+  --pn-accent: #085e5a;
+}
+:root[data-contrast="more"][data-theme="dark"] .pn-map {
+  --pn-accent: #3cc4bd;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast="more"]:not([data-theme="light"]) .pn-map {
+    --pn-accent: #3cc4bd;
+  }
 }
 
 .pn-map .pn-map-leaflet {

@@ -87,6 +87,23 @@ body {
   font-family: -apple-system, "SF Pro Text", var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* The app (/app, where .pn-home is mounted) follows the theme to the edges: browser-drawn parts
+   (scrollbars of the panels, native controls, the canvas) and the body behind the screens. The
+   landing page has no dark design and stays light. Same attribute + media pattern as the
+   stylesheets (Settings → Appearance). */
+:root[data-theme="dark"]:has(.pn-home) {
+  color-scheme: dark;
+  --background: #0b1220;
+  --foreground: #f2f5fa;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):has(.pn-home) {
+    color-scheme: dark;
+    --background: #0b1220;
+    --foreground: #f2f5fa;
+  }
+}
+
 :focus-visible {
   outline: 3px solid #2bb5ae;
   outline-offset: 3px;
