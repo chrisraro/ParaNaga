@@ -49,9 +49,15 @@ export const CATEGORY_RULES: readonly Rule[] = [
 /** OSM contributor metadata: never stored in a committed snapshot, never imported. */
 export const CONTRIBUTOR_FIELDS = ["user", "uid", "changeset"] as const;
 /** Every element field the fetch script removes (when present). */
-export const REMOVED_ELEMENT_FIELDS = ["bounds", "changeset", "geometry", "members", "nodes", "uid", "user"] as const;
+export const REMOVED_ELEMENT_FIELDS = ["bounds", "changeset", "geometry", "members", "nodes", "otherTags", "uid", "user"] as const;
 /** Element fields a snapshot keeps, in this order. */
 const KEPT_ELEMENT_FIELDS = ["type", "id", "lat", "lon", "center", "version", "timestamp", "tags"] as const;
+/** Tags a snapshot keeps: name, the alias tags and every key the category rules read. */
+export const KEPT_TAGS: ReadonlySet<string> = new Set([
+  "name",
+  ...OSM_ALIAS_TAGS,
+  ...CATEGORY_RULES.flatMap((r) => [r.key, ...Object.keys(r.also ?? {})]),
+]);
 
 const latitude = z.number().min(-90).max(90);
 const longitude = z.number().min(-180).max(180);
@@ -268,9 +274,11 @@ export function parseOsmPlaces(snapshot: unknown, boundary: readonly LngLat[]): 
 
 /**
  * Removes contributor data and unused geometry from a decoded Overpass response: each element keeps
- * only type, id, lat, lon, center, version, timestamp and tags (in that order); the response keeps
- * version, generator, osm3s and elements. Deterministic (same input → same JSON.stringify output).
- * Pure; used by scripts/fetch-osm-places.ts before anything is written.
+ * only type, id, lat, lon, center, version, timestamp and tags (in that order), and of the tags only
+ * those the importer reads (KEPT_TAGS: name, the alias tags and the category keys, in their received
+ * order; "otherTags" in removedFields); the response keeps version, generator, osm3s and elements.
+ * Deterministic (same input → same JSON.stringify output). Pure; used by
+ * scripts/fetch-osm-places.ts before anything is written.
  */
 export function stripOverpassResponse(body: {
   version?: unknown;
@@ -281,6 +289,9 @@ export function stripOverpassResponse(body: {
   const elements = body.elements.map((e) => {
     const kept: Record<string, unknown> = {};
     for (const k of KEPT_ELEMENT_FIELDS) if (e[k] !== undefined) kept[k] = e[k];
+    if (kept.tags !== null && typeof kept.tags === "object") {
+      kept.tags = Object.fromEntries(Object.entries(kept.tags as Record<string, unknown>).filter(([k]) => KEPT_TAGS.has(k)));
+    }
     return kept;
   });
   const response: Record<string, unknown> = {};

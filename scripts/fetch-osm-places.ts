@@ -9,7 +9,8 @@
 //
 // Contributor data is removed BEFORE anything is written: each element keeps only type, id, lat,
 // lon, center, version, timestamp and tags; user, uid, changeset (personal data, not needed for
-// ODbL attribution) and the unused nodes, members, bounds and geometry are dropped
+// ODbL attribution) and the unused nodes, members, bounds and geometry are dropped, and the tags
+// are cut to the ones the importer reads (name, alias tags, category keys; "otherTags")
 // (stripOverpassResponse). The file is a deterministic serialization:
 //   {"header": {query, endpoint, fetchedAt, osmBaseTimestamp, boundaryRelation, licence,
 //               attribution, responseSha256, removedFields},

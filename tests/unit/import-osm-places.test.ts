@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { NAGA_BOUNDARY } from "@/domain/geo/naga";
-import { CATEGORY_RULES, parseOsmPlaces, stripOverpassResponse, type OsmPlace } from "@/domain/import/osm-places";
+import { CATEGORY_RULES, KEPT_TAGS, parseOsmPlaces, stripOverpassResponse, type OsmPlace } from "@/domain/import/osm-places";
 import { OSM_PLACE_CATEGORIES } from "@/domain/places/osm-categories";
 
 const FIXTURE = "tests/fixtures/osm/naga-places-2026-10-15.osm.json";
@@ -212,7 +212,26 @@ describe("stripOverpassResponse", () => {
       ["type", "id", "center", "version", "timestamp", "tags"],
     ]);
     expect(JSON.stringify(response)).not.toMatch(/someone|"uid"|"user"|changeset|"nodes"|"members"|bounds|geometry/);
-    expect(removedFields).toEqual(expect.arrayContaining(["user", "uid", "changeset", "nodes", "members", "bounds"]));
+    expect(removedFields).toEqual(expect.arrayContaining(["user", "uid", "changeset", "nodes", "members", "bounds", "otherTags"]));
+  });
+
+  it("keeps only the tags the importer reads, and the parser output is unchanged", () => {
+    expect([...KEPT_TAGS].sort()).toEqual([
+      "alt_name", "amenity", "bus", "leisure", "name", "name:en", "name:fil", "office", "old_name", "place",
+      "public_transport", "shop",
+    ]);
+    const noisy = structuredClone(overpass);
+    Object.assign(noisy.elements[0]!.tags, {
+      phone: "+63 000", opening_hours: "24/7", note: "n", fixme: "f", source: "survey", "name:en": "Synthetic School EN",
+    });
+    const { response } = stripOverpassResponse(noisy);
+    const tags = (response.elements as { tags: Record<string, string> }[])[0]!.tags;
+    expect(tags).toEqual({ amenity: "school", name: "Synthetic School", "name:en": "Synthetic School EN" });
+    // The fixture's places parse identically after stripping its extra tags.
+    const raw = fixture();
+    const stripped = stripOverpassResponse(raw.response as Parameters<typeof stripOverpassResponse>[0]);
+    expect(JSON.stringify(stripped.response)).not.toMatch(/opening_hours|phone|website|image|entrance|addr:|religion|"type":"multipolygon"/);
+    expect(parse({ header: raw.header, response: stripped.response }).places).toEqual(parse().places);
   });
 
   it("is deterministic and its output imports without problems", () => {

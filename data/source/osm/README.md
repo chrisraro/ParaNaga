@@ -49,7 +49,7 @@ file's `header.query`.
 {"header": {"query": "…", "endpoint": "…", "fetchedAt": "…", "osmBaseTimestamp": "…",
             "boundaryRelation": 3084673, "licence": "ODbL-1.0",
             "attribution": "© OpenStreetMap contributors", "responseSha256": "…",
-            "removedFields": ["bounds", "changeset", "geometry", "members", "nodes", "uid", "user"]},
+            "removedFields": ["bounds", "changeset", "geometry", "members", "nodes", "otherTags", "uid", "user"]},
  "response": {"version": …, "generator": "…", "osm3s": {…},
               "elements": [{"type", "id", "lat", "lon" | "center", "version", "timestamp", "tags"}, …]}}
 ```
@@ -57,8 +57,11 @@ file's `header.query`.
 **Contributor data is removed before the file is written.** The script keeps only `type`, `id`,
 `lat`, `lon`, `center`, `version`, `timestamp` and `tags` of each element; OSM contributor data
 (`user`, `uid`, `changeset` — personal data, not needed for the ODbL attribution) and the unused
-`nodes`, `members`, `bounds` and `geometry` are dropped, as `header.removedFields` records (required
-for real snapshots). The importer refuses any file whose elements still carry `user`, `uid` or
+`nodes`, `members`, `bounds` and `geometry` are dropped. Of the tags, only those the importer reads
+are kept — `name`, `name:en`, `name:fil`, `alt_name`, `old_name` and the category keys `amenity`,
+`shop`, `office`, `leisure`, `place`, `public_transport`, `bus`; every other tag (phone, opening
+hours, website, notes, fixme, source, addresses, …) is dropped (`otherTags`). `header.removedFields`
+records all of this (required for real snapshots). The importer refuses any file whose elements still carry `user`, `uid` or
 `changeset`. The file is a deterministic `JSON.stringify` of header and stripped response, not
 the bytes Overpass sent; `header.responseSha256` is the sha256 of the response body **as received,
 before the removal** (a record of what was fetched — it does not match the stored response). The
