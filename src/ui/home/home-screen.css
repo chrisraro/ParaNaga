@@ -5,9 +5,11 @@
    before the first paint). High contrast (`:root[data-contrast="more"]`) comes after the dark blocks. */
 
 /* Shared with the Stop / Route detail screens and tab pages (.pn-detail, src/ui/detail/detail.css)
-   and the tab bar (.pn-tabbar, src/ui/kit/kit.css). */
+   the tab bar (.pn-tabbar, src/ui/kit/kit.css) and the offline / update / install UI (.pn-pwa,
+   src/ui/pwa/pwa.css). */
 .pn-home,
 .pn-detail,
+.pn-pwa,
 .pn-tabbar {
   --pn-surface: #ffffff;
   --pn-fill: #eceff4;
@@ -48,6 +50,7 @@
 
 :root[data-theme="dark"] .pn-home,
 :root[data-theme="dark"] .pn-detail,
+:root[data-theme="dark"] .pn-pwa,
 :root[data-theme="dark"] .pn-tabbar {
   --pn-surface: #111a2e;
   --pn-fill: #1a2540;
@@ -75,6 +78,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-home,
   :root:not([data-theme="light"]) .pn-detail,
+  :root:not([data-theme="light"]) .pn-pwa,
   :root:not([data-theme="light"]) .pn-tabbar {
     --pn-surface: #111a2e;
     --pn-fill: #1a2540;
@@ -106,6 +110,7 @@
    the values derive from the scheme's own --pn-label. */
 :root[data-contrast="more"] .pn-home,
 :root[data-contrast="more"] .pn-detail,
+:root[data-contrast="more"] .pn-pwa,
 :root[data-contrast="more"] .pn-tabbar {
   --pn-label2: var(--pn-label);
   --pn-sep: color-mix(in srgb, var(--pn-label) 55%, transparent);
@@ -119,6 +124,7 @@
 /* Dark + high contrast: #3cc4bd on #111a2e ≈ 8:1. */
 :root[data-contrast="more"][data-theme="dark"] .pn-home,
 :root[data-contrast="more"][data-theme="dark"] .pn-detail,
+:root[data-contrast="more"][data-theme="dark"] .pn-pwa,
 :root[data-contrast="more"][data-theme="dark"] .pn-tabbar {
   --pn-accent: #3cc4bd;
   --pn-teal-soft-text: #5fd4cd;
@@ -126,6 +132,7 @@
 @media (prefers-color-scheme: dark) {
   :root[data-contrast="more"]:not([data-theme="light"]) .pn-home,
   :root[data-contrast="more"]:not([data-theme="light"]) .pn-detail,
+  :root[data-contrast="more"]:not([data-theme="light"]) .pn-pwa,
   :root[data-contrast="more"]:not([data-theme="light"]) .pn-tabbar {
     --pn-accent: #3cc4bd;
     --pn-teal-soft-text: #5fd4cd;

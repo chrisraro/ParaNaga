@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
+import { withSerwist } from "@serwist/turbopack";
 
 // Baseline headers for every response. The CSP starts in Report-Only mode
 // (docs/spec/05-security.md §5.10) and is enforced once MapLibre, PMTiles and
-// the service worker have been verified under it.
+// the service worker have been verified under it. The service worker (/serwist/sw.js, Task 12)
+// fetches same-origin only (connect-src 'self') and is a same-origin script (worker-src 'self').
 const cspReportOnly = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -43,6 +45,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["pg"],
   experimental: {
+    // Soft navigations, prefetches and Server Actions stay pending offline and retry on
+    // reconnect instead of throwing (useOffline from next/offline drives the offline UI, Task 12).
+    useOffline: true,
     // The Tailwind CSS loader's output was served from a stale build cache after
     // globals.css changed (old base styles + new utilities), on Vercel too since it
     // restores .next/cache. Production builds always compile fresh; dev keeps its cache.
@@ -57,8 +62,13 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // The service worker script: always revalidated, so an update is found on the next visit.
+      { source: "/serwist/:path*", headers: [{ key: "Cache-Control", value: "no-cache" }] },
+    ];
   },
 };
 
-export default nextConfig;
+// withSerwist keeps esbuild (used to bundle the service worker at build time) out of the server bundle.
+export default withSerwist(nextConfig);

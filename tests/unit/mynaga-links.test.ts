@@ -91,8 +91,10 @@ describe("sources register lines", () => {
       const href = externalHref(s.url);
       if (href === null) continue;
       const url = new URL(href);
-      const allowed = QUERY_ALLOW_LIST.some((a) => url.hostname === a.host && url.pathname === a.path);
-      expect(url.search === "" || allowed, s.code).toBe(true);
+      if (url.search === "") continue;
+      const entry = QUERY_ALLOW_LIST.find((a) => url.hostname === a.host && url.pathname === a.path);
+      expect(entry, s.code).toBeDefined();
+      expect([...url.searchParams.keys()].sort(), s.code).toEqual([...entry!.params].sort());
     }
   });
 

@@ -4,6 +4,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { STOP_SNAPSHOT_SOURCE_CODES } from "@/domain/sources/stop-snapshot-sources";
+import { buildImportPlan, readDataFiles } from "../../scripts/lib/import-plan";
 
 const geojson = JSON.parse(readFileSync("Data_Sets/naga_mapped_stops.geojson", "utf8")) as { features: { properties: { source_ids?: string[] } }[] };
 const seed = JSON.parse(readFileSync("Data_Sets/naga_transport_seed.json", "utf8")) as {
@@ -21,7 +22,9 @@ describe("stop snapshot sources", () => {
   it("exist in the source catalogue; the import files the KML export under S40", () => {
     const ids = seed.sources.map((s) => s.id);
     for (const code of STOP_SNAPSHOT_SOURCE_CODES) expect(ids).toContain(code);
-    expect(readFileSync("scripts/lib/import-plan.ts", "utf8")).toMatch(/isExport \? "S40" : null/);
+    const documents = buildImportPlan(readDataFiles("Data_Sets")).documents;
+    const filed = documents.filter((d) => d.sourceCode !== null).map((d) => [d.fileName, d.sourceCode]);
+    expect(filed).toEqual([["naga_mapped_stops_source.kml", "S40"]]);
   });
 
   it("leave out S41/S42, which no stop record cites", () => {

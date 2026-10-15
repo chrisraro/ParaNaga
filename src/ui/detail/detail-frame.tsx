@@ -12,6 +12,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
 import { BackButton, useEscapeToClose, useFocusOnMount } from "@/ui/app-shell/panel";
+import { useIsOffline } from "@/client/pwa/connectivity";
+import { OFFLINE_PANEL_TEXT } from "@/domain/pwa/offline-copy";
 
 // Shared panel behaviour lives in the shell (src/ui/app-shell/panel.tsx); re-exported for the
 // detail screens that import it from here.
@@ -97,7 +99,22 @@ export function DetailPanel({ title, action, children, testId }: PanelProps) {
   );
 }
 
+/**
+ * The panel's loading state. Offline (useOffline: the page's data cannot arrive until the network
+ * returns, Next keeps the navigation pending and retries it), it says so instead of a skeleton;
+ * the home map and its trip stay as they were underneath (F-03).
+ */
 export function DetailLoading({ title }: { title: string }) {
+  const offline = useIsOffline();
+  if (offline) {
+    return (
+      <DetailPanel title={title} testId="detail-offline">
+        <div className="pn-detail__state" role="status">
+          <p>{OFFLINE_PANEL_TEXT}</p>
+        </div>
+      </DetailPanel>
+    );
+  }
   return (
     <DetailPanel title={title} testId="detail-loading">
       <div className="pn-detail__state" role="status" aria-label={`Loading ${title.toLowerCase()}`}>

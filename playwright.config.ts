@@ -22,7 +22,10 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
-  use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
+  // The service worker (Task 12) is blocked by default: the specs answer the API with page routes,
+  // which never see a worker's own requests. tests/e2e/offline.spec.ts allows it and routes on the
+  // browser context instead.
+  use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure", serviceWorkers: "block" },
   projects: [
     { name: "mobile", grepInvert: NO_TILES, use: { ...devices["Pixel 7"] } },
     { name: "desktop", grepInvert: NO_TILES, use: { ...devices["Desktop Chrome"] } },

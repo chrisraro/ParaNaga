@@ -23,6 +23,7 @@ import { locationAccessLabel } from "@/domain/device/location-permission";
 import type { ThemePref } from "@/domain/prefs/prefs";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { DataRevisionRow } from "./data-revision-row";
+import { InstallRow } from "@/ui/pwa/install-row";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { Segmented, type SegmentedOption } from "@/ui/kit/segmented";
@@ -207,6 +208,8 @@ export function MoreScreen() {
           {status}
         </p>
       </section>
+
+      <InstallRow />
 
       <ListGroup title="About" testId="settings-about">
         <ListCell title="Help" sub="Safety, how trips are planned, sources" href="/app/help" testId="settings-help" />

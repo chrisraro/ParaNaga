@@ -90,7 +90,13 @@ test.describe("phone", () => {
     );
     // The account card is static, not a link.
     await expect(page.getByTestId("settings-account").locator("a")).toHaveCount(0);
-    await expect(page.getByTestId("more-page").getByRole("heading", { level: 2 })).toHaveText(["General", "Display and data", "Location", "Data on this device", "About"]);
+    await expect(page.getByTestId("more-page").getByRole("heading", { level: 2 })).toHaveText(["General", "Display and data", "Location", "Data on this device", "App", "About"]);
+    // Install: only what the browser offers. Headless Chromium has made no install offer, so the
+    // row is text pointing to the browser menu, never a button that does nothing.
+    const install = page.getByTestId("settings-install");
+    await expect(install).toContainText("Install ParaNaga");
+    await expect(install).toContainText("use your browser’s menu");
+    await expect(install.getByRole("button")).toHaveCount(0);
     const general = page.getByTestId("settings-general");
     await expect(general).toContainText("LanguageFilipino arrives after a reviewed translation.English");
     await expect(general).toContainText("Fare categoryRegular");

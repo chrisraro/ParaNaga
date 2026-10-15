@@ -21,6 +21,7 @@ const { NO_PLACES, NO_TRIPS, TRIPS_INTRO, SavedScreen } = await import("@/ui/sav
 const db = await import("@/client/storage/db");
 const { recordTrip } = await import("@/client/history/trip-history");
 const { updatePrefs } = await import("@/client/prefs/use-prefs");
+const { resetSnapshotForTests } = await import("@/client/network/use-snapshot");
 
 const plan = planResponseSchema.parse(PROVISIONAL_PLAN);
 const card = buildSavedTrip({
@@ -56,6 +57,8 @@ let snapshot: unknown = null;
 let urls: string[] = [];
 
 beforeEach(async () => {
+  // The published snapshot is shared per page (use-snapshot.ts): every test starts without one.
+  resetSnapshotForTests();
   await db.clearAllStores();
   localStorage.clear();
   head = REVISION;
@@ -108,7 +111,7 @@ describe("Saved → Trips", () => {
     expect(tripCard.textContent).toContain("Loop A");
     await waitFor(() => expect(urls).toContain("/api/v1/network/head"));
     expect(tripCard.textContent).not.toContain("Changed since saved");
-    // No coordinates go anywhere: the only requests are the head (same revision: no snapshot).
+    // No coordinates go anywhere: the only requests are the head and the snapshot of its revision.
     expect(urls.every((u) => !/13\.6|123\.1/.test(u))).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Open trip" }));
     expect(frame.requestTrip).toHaveBeenCalledWith("t1");

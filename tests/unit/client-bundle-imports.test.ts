@@ -25,11 +25,18 @@ describe("client bundle imports", () => {
     expect(others.map((f) => path.relative(SRC, f))).toEqual([]);
   });
 
-  it("UI and client code import planner copy from labels.ts, never the planner at runtime", () => {
-    const offenders = [...walk(path.join(SRC, "client")), ...walk(path.join(SRC, "ui"))].filter((f) =>
+  it("UI and client code import planner copy from labels.ts; only offline planning loads the planner, on demand", () => {
+    const importers = [...walk(path.join(SRC, "client")), ...walk(path.join(SRC, "ui"))].filter((f) =>
       /^import\s+(?!type\b)[^;]*from\s+["']@\/domain\/planner\/(plan|graph|fares)["']/m.test(readFileSync(f, "utf8")),
     );
-    expect(offenders.map((f) => path.relative(SRC, f))).toEqual([]);
+    // Task 12: plan-offline.ts runs the planner in the browser on the cached snapshot. It is only
+    // reached through a dynamic import, so the planner stays out of the initial bundle.
+    expect(importers.map((f) => path.relative(SRC, f).split(path.sep).join("/"))).toEqual(["client/trip/plan-offline.ts"]);
+    const staticImporters = [...walk(path.join(SRC, "client")), ...walk(path.join(SRC, "ui")), ...walk(path.join(SRC, "app"))].filter((f) =>
+      /^\s*(?:import|export)\s+(?!type\b)[^;]*from\s+["'][^"']*plan-offline["']/m.test(readFileSync(f, "utf8")),
+    );
+    expect(staticImporters).toEqual([]);
+    expect(read("client/trip/use-trip-plan.ts")).toContain('import("./plan-offline")');
   });
 
   it("no module reachable from src/client or src/ui imports node:crypto (directly or through @/ and relative imports)", () => {

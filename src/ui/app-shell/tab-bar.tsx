@@ -5,12 +5,17 @@
 // Map · Explore · Saved · More (decision D4: no Community tab until it has content). The current
 // tab carries aria-current="page". AppFrame hides it in detail panels, while a pin is being placed
 // and while guidance runs.
+//
+// Offline (Task 12): a soft navigation cannot reach the server, so while useIsOffline() is true
+// the tabs are plain links (a document navigation) and the service worker serves the tab's
+// static shell from its cache.
 
 import "@/ui/kit/styles";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef, type RefObject } from "react";
+import { useIsOffline } from "@/client/pwa/connectivity";
 
 type Tab = { href: string; label: string; icon: string; strokeWidth?: number };
 
@@ -52,12 +57,14 @@ export function useBottomClearance(ref: RefObject<HTMLElement | null>, report: (
 
 export function TabBar({ onClearance }: { onClearance: (px: number) => void }) {
   const current = activeTab(usePathname());
+  const offline = useIsOffline();
+  const Anchor = offline ? "a" : Link;
   const nav = useRef<HTMLElement>(null);
   useBottomClearance(nav, onClearance);
   return (
     <nav ref={nav} aria-label="Main" className="pn-tabbar" data-tabbar="" data-testid="tab-bar">
       {TABS.map((tab) => (
-        <Link
+        <Anchor
           key={tab.href}
           href={tab.href}
           className="pn-tabbar__tab"
@@ -68,7 +75,7 @@ export function TabBar({ onClearance }: { onClearance: (px: number) => void }) {
             <path d={tab.icon} />
           </svg>
           <span className="pn-tabbar__label">{tab.label}</span>
-        </Link>
+        </Anchor>
       ))}
     </nav>
   );

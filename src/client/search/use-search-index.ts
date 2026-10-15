@@ -3,8 +3,8 @@
 // The search index of the published revision (decision D1): GET /api/v1/network/head for the
 // revision, then GET /api/v1/network/search-index/:revisionId once per revision, validated with
 // the shared Zod schema and kept in memory for the session. Queries never leave the browser:
-// these two GETs carry no query text. (The service worker of Task 12 adds a persistent copy; its
-// cache key must include the build, see the Task 4 review.)
+// these two GETs carry no query text. The service worker (Task 12) keeps a persistent copy per
+// revision (in the URL) and build (in its cache name), so search works offline.
 //
 // A failed head or index request with an index already in memory: that index is used, and
 // `problem` says why the data may be old: "offline" only when the browser says it has no

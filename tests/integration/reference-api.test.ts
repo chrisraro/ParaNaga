@@ -6,7 +6,6 @@
 // CAPTURE_E2E_FIXTURES=1 also writes the real responses to tests/e2e/fixtures/network/: the new
 // reference fixtures AND the older stop/route fixtures, so every e2e fixture names one revision.
 import { randomUUID } from "node:crypto";
-import { writeFileSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import pg from "pg";
 import { sql } from "drizzle-orm";
@@ -15,6 +14,7 @@ import { apiErrorSchema, searchIndexSchema, sourceListSchema, terminalDetailSche
 import { runInRequestContext } from "@/server/db/run-in-context";
 import { getPool } from "@/server/db/client";
 import { GET as searchIndexGET } from "@/app/api/v1/network/search-index/[revisionId]/route";
+import { GET as snapshotGET } from "@/app/api/v1/network/snapshot/[revisionId]/route";
 import { GET as terminalGET } from "@/app/api/v1/terminals/[code]/route";
 import { GET as sourcesGET } from "@/app/api/v1/sources/route";
 import { GET as stopsGET } from "@/app/api/v1/stops/route";
@@ -24,6 +24,7 @@ import { GET as routeGET } from "@/app/api/v1/routes/[code]/route";
 import { NAGA_MAX_BOUNDS } from "@/domain/geo/naga";
 import { buildImportPlan, readDataFiles, readNewestOsmSnapshot } from "../../scripts/lib/import-plan";
 import { commitImport } from "../../scripts/lib/import-writer";
+import { writeFixture } from "./fixture-capture";
 
 const ownerUrl = process.env.TEST_OWNER_DATABASE_URL;
 const appUrl = process.env.TEST_APP_DATABASE_URL;
@@ -54,8 +55,9 @@ async function notFound(response: Response) {
   expect(apiErrorSchema.parse(await response.json()).error.code).toBe("not_found");
 }
 
+/** Keeps the committed publishedAt (the branch republish resets it): see fixture-capture.ts. */
 function saveFixture(name: string, raw: string) {
-  if (capture) writeFileSync(`tests/e2e/fixtures/network/${name}`, JSON.stringify(JSON.parse(raw), null, 1) + "\n");
+  if (capture) writeFixture(name, raw);
 }
 
 describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference read model (Neon branch)", () => {
@@ -126,6 +128,11 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       const id = await stopId(layer, code);
       saveFixture(file, await okText(await stopGET(get(`/stops/${id}`), ctx({ id })), "public, s-maxage=300"));
     }
+    // The immutable snapshot the app reads its pins and offline plans from (decision D2, Task 12).
+    const snapshot = await okText(
+      await snapshotGET(get(`/network/snapshot/${revisionId}`), ctx({ revisionId })), "public, s-maxage=31536000, immutable");
+    expect(JSON.parse(snapshot).stops).toHaveLength(128);
+    saveFixture("snapshot.json", snapshot);
     const list = await okText(await routesGET(get("/routes")), "public, s-maxage=300");
     saveFixture("routes.json", list);
     for (const code of ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8-A", "R8-B", "R8-C", "R8-D"]) {

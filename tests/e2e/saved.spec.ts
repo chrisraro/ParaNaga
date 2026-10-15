@@ -183,6 +183,8 @@ test("reopening after the network changed: the same rides are re-planned and say
   const next = { ...PROVISIONAL_PLAN, revision: { ...PROVISIONAL_PLAN.revision, revisionId: NEXT }, plan: { ...PROVISIONAL_PLAN.plan, revisionId: NEXT } };
   await page.unroute("**/api/v1/plan");
   await page.route("**/api/v1/plan", (route) => fulfill(route, next));
+  // The published head moves to it too (its snapshot is not part of the fixtures: no verdict on the card).
+  await page.route("**/api/v1/network/head", (route) => fulfill(route, next.revision));
   await page.goto("/app/saved");
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
   await expect(page.getByTestId("trip-detail").getByTestId("trip-reopen-note")).toHaveText("Re-planned on the current data");

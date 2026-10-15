@@ -17,6 +17,8 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type React
 import type { LatLng } from "@/domain/geo/types";
 import type { EndpointWhich } from "@/domain/trip/endpoints";
 import { HomeScreen } from "@/ui/home/home-screen";
+import { OfflineBanner } from "@/ui/pwa/offline-banner";
+import { UpdatePrompt } from "@/ui/pwa/update-prompt";
 import {
   AppFrameContext,
   setEntryPath,
@@ -144,6 +146,9 @@ export function AppFrame({ children }: { children: ReactNode }) {
           <TabBar onClearance={setMeasuredClearance} />
         </Suspense>
       ) : null}
+      {/* Offline banner and the "new version" card (Task 12): above every panel, never blocking. */}
+      <OfflineBanner />
+      <UpdatePrompt />
     </AppFrameContext.Provider>
   );
 }

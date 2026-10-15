@@ -24,6 +24,7 @@ import { useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, us
 import { useGeolocation } from "@/client/geo/use-geolocation";
 import { useStopsInView } from "@/client/map/use-stops-in-view";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
+import { offlinePlanNote } from "@/domain/pwa/offline-copy";
 import type { PlanResponse } from "@/domain/api/plan";
 import type { StopPin } from "@/domain/api/schemas";
 import { haversineMeters } from "@/domain/geo/geometry";
@@ -775,7 +776,7 @@ export function HomeScreen() {
               option={openOption}
               onBack={handleCloseOption}
               ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
-              note={reopen.note}
+              note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt), tone: "warning" } : null)}
               onStart={() => guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) })}
             />
           ) : ready ? (
@@ -783,6 +784,11 @@ export function HomeScreen() {
               {reopen.changed ? (
                 <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-changed-note">
                   Route changed since you saved this
+                </p>
+              ) : null}
+              {plan.status === "ready" && plan.offline ? (
+                <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-offline-note">
+                  {offlinePlanNote(plan.data.revision.publishedAt)}
                 </p>
               ) : null}
               {plan.status === "loading" ? <TripLoading /> : null}
