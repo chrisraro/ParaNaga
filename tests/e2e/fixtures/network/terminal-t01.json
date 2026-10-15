@@ -1,0 +1,94 @@
+{
+ "revision": {
+  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
+  "label": "osm-places-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T13:12:54.592Z"
+ },
+ "terminal": {
+  "code": "T01",
+  "name": "Bicol Central Station",
+  "locationText": "Ninoy & Cory Avenue, Triangulo",
+  "modes": [
+   "bus"
+  ],
+  "evidenceStatus": "official_address",
+  "notes": "Map each passenger entrance and bus bay; do not confuse BCS with PNR railway station.",
+  "sourceCodes": [
+   "S09"
+  ],
+  "lat": null,
+  "lng": null
+ },
+ "routes": [
+  {
+   "routeCode": "R8-A",
+   "routeName": "Centro–Magsaysay Loop A",
+   "basis": "legal_plan",
+   "sourceCodes": [
+    "S01",
+    "S02"
+   ]
+  },
+  {
+   "routeCode": "R8-A",
+   "routeName": "Centro–Magsaysay Loop A",
+   "basis": "trial",
+   "sourceCodes": [
+    "S03"
+   ]
+  },
+  {
+   "routeCode": "R8-B",
+   "routeName": "Centro–Magsaysay Loop B",
+   "basis": "legal_plan",
+   "sourceCodes": [
+    "S01",
+    "S02"
+   ]
+  },
+  {
+   "routeCode": "R8-B",
+   "routeName": "Centro–Magsaysay Loop B",
+   "basis": "trial",
+   "sourceCodes": [
+    "S03"
+   ]
+  }
+ ],
+ "destinationCategories": [],
+ "sources": [
+  {
+   "code": "S01",
+   "title": "Naga approved LPTRP, Ordinance 2025-070",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S02",
+   "title": "Signed LPTRP ordinance PDF",
+   "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/10/Ordno-2025-070-Institutionalizing-the-Approved-LPTRP.pdf",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S03",
+   "title": "Loop A/B Eastbound trial, Resolution 2025-735",
+   "url": "https://www2.naga.gov.ph/sp_resolutions/2025-735/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-11-11",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S09",
+   "title": "Bicol Central Station address",
+   "url": "https://www2.naga.gov.ph/2023-city-service/request-for-terminal-pass/",
+   "evidenceType": "official",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  }
+ ]
+}

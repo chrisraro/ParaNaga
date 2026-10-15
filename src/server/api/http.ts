@@ -8,6 +8,7 @@ export const CACHE = {
   head: "public, s-maxage=30",
   immutable: "public, s-maxage=31536000, immutable",
   list: "public, s-maxage=300",
+  reference: "public, s-maxage=300, stale-while-revalidate=600",
   none: "no-store",
 } as const;
 
