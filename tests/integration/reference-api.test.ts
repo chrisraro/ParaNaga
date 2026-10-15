@@ -230,7 +230,7 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
 
   // ---------------------------------------------------------------- sources
 
-  it("sources register includes S22 (barangays), S33 (study labels), S28 (legacy names) and the OSM snapshot, ordered by code", async () => {
+  it("sources register includes S22 (barangays), S33 (study labels), S28 (legacy names), S39/S40 (stop snapshot) and the OSM snapshot, ordered by code", async () => {
     const raw = await okText(await sourcesGET(get("/sources")), REFERENCE_CACHE);
     const body = sourceListSchema.parse(JSON.parse(raw));
     const codes = body.sources.map((s) => s.code);
@@ -247,7 +247,17 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     ]);
     for (const code of indexCodes) expect(codes).toContain(code);
     const cited = (await appRows(sql`select code from transit.v_published_sources`)).map((r) => String(r.code));
-    expect(codes.filter((c) => !cited.includes(c))).toEqual(["S28"]);
+    // Added from code: S28 (legacy names) and, because stops are published, the My Maps snapshot
+    // behind every stop pin (S39 viewer, S40 KML export). S41/S42 are cited by nothing published.
+    expect(codes.filter((c) => !cited.includes(c))).toEqual(["S28", "S39", "S40"]);
+    expect(codes).not.toContain("S41");
+    expect(codes).not.toContain("S42");
+    expect(body.sources.find((s) => s.code === "S39")).toMatchObject({
+      title: "Naga City Designated Stops – public Google My Maps",
+      url: "https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4",
+      checkedOn: "2026-10-15",
+    });
+    expect(body.sources.find((s) => s.code === "S40")).toMatchObject({ title: "Public Google My Maps KML export", checkedOn: "2026-10-15" });
     expect(codes).toEqual([...codes].sort());
     expect(new Set(codes).size).toBe(codes.length);
     if (capture) console.log(JSON.stringify({ event: "sources_count", count: codes.length }));

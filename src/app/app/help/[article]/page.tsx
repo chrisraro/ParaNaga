@@ -5,6 +5,9 @@ import { DetailLoading } from "@/ui/detail/detail-frame";
 import { ARTICLES, findArticle } from "@/ui/help/articles";
 import { HelpArticleScreen } from "@/ui/help/help-article";
 
+// Static metadata: with Partial Prefetching the slug is runtime data in the fallback shell, which
+// generateMetadata may not read (even with "use cache"), so the article screen names the tab
+// itself once it renders (src/ui/help/help-article.tsx).
 export const metadata: Metadata = {
   title: "Help",
   description: "ParaNaga help: how trips are planned, why stops are not verified yet, using ParaNaga offline.",

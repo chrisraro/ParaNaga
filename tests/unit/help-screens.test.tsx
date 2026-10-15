@@ -59,6 +59,7 @@ describe("Help", () => {
       ["Report a problem with a driver", "/app/mynaga"],
     ]);
     expect(screen.getByTestId("help-independent").textContent).toBe(INDEPENDENT_NOTE);
+    expect(screen.getByRole("tabpanel").getAttribute("tabindex")).toBe("0");
   });
 
   it("Safety: 911, the tips and the MyNaga button; the tab is kept in the URL", () => {
@@ -99,10 +100,14 @@ describe("Help articles", () => {
         "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied. There are no times: ParaNaga does not know when jeepneys run.",
     );
     expect(fetched).toEqual([]);
+    expect(document.title).toBe("How trips are planned · ParaNaga");
   });
 
-  it("Using ParaNaga offline names the published date of the data", async () => {
+  it("Using ParaNaga offline names the published date of the data, never a placeholder", async () => {
     render(<HelpArticleScreen slug="using-paranaga-offline" />);
+    // Until the date is known, the dated paragraph is not rendered (nothing like "…" is read).
+    expect(screen.getByTestId("help-article-body").textContent).not.toContain("Planning offline");
+    expect(screen.getByTestId("help-article-body").textContent).not.toContain("…");
     await waitFor(() => expect(screen.getByTestId("help-article-body").textContent).toContain("Planning offline uses the data from Oct 15, 2026; fares may have changed."));
   });
 });
@@ -138,6 +143,12 @@ describe("MyNaga handoff", () => {
       expect(l.getAttribute("rel")).toBe("noopener noreferrer");
     }
     expect(screen.getByTestId("mynaga-later").textContent).toBe(LATER_NOTE);
+    // Steps 1 and 2 are numbered; "After you submit in MyNaga" is not a step to take.
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
+      "1Prepare what you will share",
+      "2Open MyNaga and submit there",
+      "After you submit in MyNaga",
+    ]);
     expect(screen.getByTestId("mynaga-footer").textContent).toBe(MYNAGA_FOOTER);
     // Nothing is copied, prepared or sent: no buttons, no inputs, no request.
     expect(screen.queryAllByRole("button")).toHaveLength(0);

@@ -3,7 +3,9 @@
 // Sources and dates (spec S22; Help → About data): the register of every source the published
 // revision cites (GET /api/v1/sources), ordered by code. Each row: "{code} · {title}", "{evidence
 // type} · published {date or text} · checked {date}", and "Open source" when the source has an
-// http(s) address, opened in a new tab with rel="noopener noreferrer" and nothing appended. The
+// http(s) address with no query string, or an allow-listed one (externalHref: the My Maps viewer
+// S39), opened in a new tab with rel="noopener noreferrer" and nothing appended; the KML export
+// (S40) is listed without a link, since it downloads a file. The
 // only attribution of the public stop map is its owner's display name, never as a verified identity.
 
 import "@/ui/kit/styles";
@@ -67,7 +69,9 @@ export function SourcesScreen() {
                         <ExternalIcon />
                       </a>
                     ) : (
-                      <span className="pn-source__none">No public link on file</span>
+                      <span className="pn-source__none" data-testid="source-unlinked">
+                        {s.url ? "Address on file, not offered as a link (it downloads a file or carries extra parameters)" : "No public address on file"}
+                      </span>
                     )}
                   </li>
                 );

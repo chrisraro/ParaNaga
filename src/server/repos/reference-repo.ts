@@ -202,11 +202,22 @@ export async function getTerminalDetail(db: Db, revisionId: string, code: string
 
 /**
  * Every source the published revision cites, plus `codeCited` (sources the read model cites from
- * code, e.g. S28 for the legacy-name hints) when the catalogue has them; ordered by code.
+ * code, e.g. S28 for the legacy-name hints) and, while the revision publishes any stop,
+ * `stopSnapshotCodes` (the My Maps snapshot behind every stop pin, S39/S40), each only when the
+ * catalogue has it; ordered by code.
  */
-export async function listSources(db: Db, revisionId: string, codeCited: readonly string[]): Promise<SourceList["sources"]> {
+export async function listSources(
+  db: Db,
+  revisionId: string,
+  codeCited: readonly string[],
+  stopSnapshotCodes: readonly string[] = [],
+): Promise<SourceList["sources"]> {
   const cited = await sourcesFor(db, revisionId, null);
-  const extra = codeCited.filter((c) => !cited.some((s) => s.code === c));
+  const hasStops =
+    stopSnapshotCodes.length > 0 &&
+    (await rows(db, sql`select 1 from transit.v_published_stops where revision_id = ${revisionId}::uuid limit 1`)).length > 0;
+  const wanted = [...new Set([...codeCited, ...(hasStops ? stopSnapshotCodes : [])])];
+  const extra = wanted.filter((c) => !cited.some((s) => s.code === c));
   const found =
     extra.length === 0
       ? []

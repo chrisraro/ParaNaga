@@ -10,6 +10,8 @@
   --pn-tab-idle: #24324f;
   --pn-seg-on: #ffffff;
   --pn-switch-off: #c9d1dd;
+  /* Coral text strong enough for 4.5:1 on --pn-coral-soft-bg (artboard Help coralSoftText). */
+  --pn-coral-strong-text: #9e2a21;
 }
 :root[data-theme="dark"] .pn-home,
 :root[data-theme="dark"] .pn-detail,
@@ -17,6 +19,7 @@
   --pn-tab-idle: #c7cedc;
   --pn-seg-on: #2a3654;
   --pn-switch-off: #3a4866;
+  --pn-coral-strong-text: var(--pn-coral-soft-text);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-home,
@@ -25,6 +28,7 @@
     --pn-tab-idle: #c7cedc;
     --pn-seg-on: #2a3654;
     --pn-switch-off: #3a4866;
+    --pn-coral-strong-text: var(--pn-coral-soft-text);
   }
 }
 :root[data-contrast="more"] .pn-home,

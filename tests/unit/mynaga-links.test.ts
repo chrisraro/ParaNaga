@@ -2,7 +2,8 @@
 // sources register formatting. Pure domain, no DOM.
 import { describe, expect, it } from "vitest";
 import { MYNAGA_LINKS, detectPlatform, mynagaLinksFor } from "@/domain/mynaga/links";
-import { externalHref, sourceMetaLine, sourceTitleLine } from "@/domain/sources/present";
+import { QUERY_ALLOW_LIST, externalHref, sourceMetaLine, sourceTitleLine } from "@/domain/sources/present";
+import SOURCES from "../e2e/fixtures/network/sources.json" with { type: "json" };
 
 const BRIEF_URLS = [
   "https://play.google.com/store/apps/details?id=com.easybusph.myNaga",
@@ -73,6 +74,26 @@ describe("sources register lines", () => {
     expect(sourceMetaLine({ ...source, evidenceType: null, publishedOrEnacted: "2025-09-10; updated 2025-09-23" })).toBe(
       "Evidence type not recorded · published 2025-09-10; updated 2025-09-23 · checked 15 Oct 2026",
     );
+  });
+
+  it("links a query string only for the allow-listed pages (My Maps viewer, Play listing)", () => {
+    expect(externalHref("https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4")).not.toBeNull();
+    // S40: the KML export downloads a file, so it is never offered as a link.
+    expect(externalHref("https://www.google.com/maps/d/kml?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4&forcekml=1")).toBeNull();
+    expect(externalHref("https://www.google.com/maps/d/viewer?mid=x&ll=1,2")).toBeNull();
+    expect(externalHref("https://example.org/page?ref=paranaga")).toBeNull();
+    expect(externalHref("https://example.org/page")).toBe("https://example.org/page");
+    for (const link of MYNAGA_LINKS) expect(externalHref(link.url)).toBe(link.url);
+  });
+
+  it("every register address in the fixture links only with an empty query or an allow-listed one", () => {
+    for (const s of SOURCES.sources) {
+      const href = externalHref(s.url);
+      if (href === null) continue;
+      const url = new URL(href);
+      const allowed = QUERY_ALLOW_LIST.some((a) => url.hostname === a.host && url.pathname === a.path);
+      expect(url.search === "" || allowed, s.code).toBe(true);
+    }
   });
 
   it("links only http(s) addresses", () => {

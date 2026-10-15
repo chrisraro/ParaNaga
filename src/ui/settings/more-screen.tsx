@@ -18,14 +18,11 @@ import { useEffect, useState } from "react";
 import { clearDeviceData } from "@/client/device-data";
 import { useLocationPermission } from "@/client/geo/use-location-permission";
 import { clearHistory, hasHistory } from "@/client/history/trip-history";
-import { rememberHead } from "@/client/network/remember-head";
-import { useNetworkResource } from "@/client/network/use-network-resource";
 import { updatePrefs, usePrefs } from "@/client/prefs/use-prefs";
-import { networkHeadSchema, type NetworkHead } from "@/domain/api/schemas";
 import { locationAccessLabel } from "@/domain/device/location-permission";
-import { publishedDateText } from "@/domain/network/present";
 import type { ThemePref } from "@/domain/prefs/prefs";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
+import { DataRevisionRow } from "./data-revision-row";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { Segmented, type SegmentedOption } from "@/ui/kit/segmented";
@@ -47,12 +44,6 @@ export const STATUS = {
 export const CLEAR_DATA_QUESTION = "Remove saved trips, saved places, trip history and settings from this phone?";
 export const DELETE_HISTORY_QUESTION = "Also delete the history on this phone?";
 
-/** "provisional-loops-2026-10-15 · Oct 15, 2026" (published date in Naga City time). */
-export function revisionLine(head: NetworkHead): string {
-  const date = publishedDateText(head.publishedAt) ?? "publication date not recorded";
-  return `${head.label} · ${date}`;
-}
-
 function AccountIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
@@ -70,21 +61,6 @@ function LocationIcon() {
       </svg>
     </span>
   );
-}
-
-/** "Data revision · {label} · {published date}" from GET /api/v1/network/head (More, Help → About data). */
-export function DataRevisionRow({ testId = "settings-data-revision" }: { testId?: string }) {
-  const head = useNetworkResource("/api/v1/network/head", networkHeadSchema);
-  const seen = head.status === "ready" ? head.data : null;
-  useEffect(() => {
-    if (seen) rememberHead(seen);
-  }, [seen]);
-  let sub: string;
-  if (head.status === "ready") sub = revisionLine(head.data);
-  else if (head.status === "loading") sub = "Checking…";
-  else if (head.status === "error" && head.offline) sub = "Not available offline";
-  else sub = "Not available right now";
-  return <ListCell title="Data revision" sub={sub} testId={testId} />;
 }
 
 export function MoreScreen() {

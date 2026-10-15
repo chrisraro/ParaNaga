@@ -81,6 +81,7 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   ] as const) {
     await page.getByTestId("help-links").getByRole("link", { name: title }).click();
     await expect(h1(page, title)).toBeFocused();
+    await expect(page).toHaveTitle(`${title} · ParaNaga`);
     // Earlier panels stay mounted (hidden) under the open one: act on the visible one.
     await expect(page.getByTestId("help-article-body").filter({ visible: true })).toContainText(phrase);
     await page.getByTestId("help-article").filter({ visible: true }).getByTestId("detail-back").click();
@@ -99,15 +100,28 @@ test("the sources register lists the captured sources with checked dates and saf
   const codes = await rows.evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.code));
   expect(codes).toEqual(SOURCES.sources.map((s) => s.code));
   // The S01–S42 research codes on file (a subset: only those the published revision cites).
-  expect(codes.filter((c) => /^S\d\d$/.test(c ?? ""))).toEqual(expect.arrayContaining(["S01", "S22", "S28", "S33", "S34", "S37"]));
+  expect(codes.filter((c) => /^S\d\d$/.test(c ?? ""))).toEqual(expect.arrayContaining(["S01", "S22", "S28", "S33", "S34", "S37", "S39", "S40"]));
   for (const s of SOURCES.sources) {
     const row = page.locator(`[data-testid="source-row"][data-code="${s.code}"]`);
     await expect(row).toContainText(`${s.code} · ${s.title}`);
     await expect(row).toContainText("· checked 15 Oct 2026");
+    if (s.code === "S40") {
+      // The KML export downloads a file: listed, never offered as a link.
+      await expect(row.getByTestId("source-link")).toHaveCount(0);
+      await expect(row.getByTestId("source-unlinked")).toBeVisible();
+      continue;
+    }
     const link = row.getByTestId("source-link");
     await expect(link).toHaveAttribute("href", s.url!);
     await expect(link).toHaveAttribute("target", "_blank");
     await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  }
+  // Every register href has no query string, or one on the allow-list (the My Maps viewer's ?mid=).
+  const hrefs = await page.getByTestId("source-link").evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
+  expect(hrefs).toHaveLength(SOURCES.sources.length - 1);
+  for (const href of hrefs) {
+    const url = new URL(href);
+    expect(url.search === "" || (url.hostname === "www.google.com" && url.pathname === "/maps/d/viewer" && [...url.searchParams.keys()].join() === "mid"), href).toBe(true);
   }
   await expect(page.getByTestId("sources-owner-note")).toHaveText("The public My Maps owner is listed as “Tan Gumba”; the owner's identity is not verified.");
 });

@@ -1,19 +1,7 @@
 /* Help, Safety, About data, the articles, the sources register (artboard Help) and the MyNaga
    handoff (artboard MyNagaHandoff). Builds on the kit (.pn-group, .pn-cell, .pn-section, .pn-btn,
-   .pn-note) and its --pn-* tokens. The emergency card and the report button use the artboard's
-   darker coral text (#9E2A21) so it keeps 4.5:1 on the coral tint; dark mode keeps the kit's. */
-
-.pn-detail {
-  --pn-help-coral-text: #9e2a21;
-}
-:root[data-theme="dark"] .pn-detail {
-  --pn-help-coral-text: var(--pn-coral-soft-text);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .pn-detail {
-    --pn-help-coral-text: var(--pn-coral-soft-text);
-  }
-}
+   .pn-note) and its --pn-* tokens. The emergency card and the report button use the kit's
+   --pn-coral-strong-text, which keeps 4.5:1 on the coral tint. */
 
 .pn-help,
 .pn-help__panel {
@@ -43,7 +31,7 @@
   padding: 14px;
   border-radius: 16px;
   background: var(--pn-coral-soft-bg);
-  color: var(--pn-help-coral-text);
+  color: var(--pn-coral-strong-text);
 }
 .pn-help__emergency svg {
   flex: none;
@@ -78,7 +66,7 @@
   padding: 0 16px;
   border-radius: 999px;
   background: var(--pn-coral-soft-bg);
-  color: var(--pn-help-coral-text);
+  color: var(--pn-coral-strong-text);
   font-size: 17px;
   font-weight: 600;
   text-align: center;

@@ -205,6 +205,22 @@
    "evidenceType": "official",
    "publishedOrEnacted": "2025-09-09",
    "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S39",
+   "title": "Naga City Designated Stops – public Google My Maps",
+   "url": "https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4",
+   "evidenceType": "public_map;metadata_and_points_retrieved",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S40",
+   "title": "Public Google My Maps KML export",
+   "url": "https://www.google.com/maps/d/kml?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4&forcekml=1",
+   "evidenceType": "public_export;retrieved_and_parsed",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
   }
  ]
 }

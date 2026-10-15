@@ -30,7 +30,8 @@ vi.mock("@/client/storage/db", () => ({
 
 const { clearDeviceData } = await import("@/client/device-data");
 const { readPrefs, updatePrefs, usePrefs } = await import("@/client/prefs/use-prefs");
-const { CLEAR_DATA_QUESTION, DELETE_HISTORY_QUESTION, MoreScreen, STATUS, revisionLine } = await import("@/ui/settings/more-screen");
+const { CLEAR_DATA_QUESTION, DELETE_HISTORY_QUESTION, MoreScreen, STATUS } = await import("@/ui/settings/more-screen");
+const { revisionLine } = await import("@/ui/settings/data-revision-row");
 
 const HEAD = { revisionId: "703dc1be-879e-43be-91cb-d9a472b56dd1", label: "provisional-loops-2026-10-15", kind: "provisional", publishedAt: "2026-10-15T08:55:12.774Z" };
 

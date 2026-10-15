@@ -128,10 +128,10 @@ describe("GET /api/v1/terminals/:code", () => {
 });
 
 describe("GET /api/v1/sources", () => {
-  it("asks for the sources the index cites from code (S28, legacy names) as well", async () => {
+  it("asks for the sources the index cites from code (S28, legacy names) and the stop snapshot (S39, S40) as well", async () => {
     sourceCalls.length = 0;
     await sourcesGET(new Request(`${base}/sources`));
-    expect(sourceCalls).toEqual([[revisionId, ["S28"]]]);
+    expect(sourceCalls).toEqual([[revisionId, ["S28"], ["S39", "S40"]]]);
     const index = buildSearchIndex(real());
     const codeCited = [...new Set(index.legacyNames.map((n) => n.sourceCode))];
     expect([...INDEX_CODE_SOURCE_CODES]).toEqual(codeCited);

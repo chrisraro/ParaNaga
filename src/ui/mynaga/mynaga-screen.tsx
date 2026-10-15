@@ -5,7 +5,8 @@
 // screen says what to have ready and opens one of MyNaga's four verified public entry points
 // (src/domain/mynaga/links.ts) in a new tab, exactly as written (no deep link, nothing appended).
 // The store that matches this phone is listed first. Step 3 of the artboard ("Tell us if you
-// submitted it") is a plain note until private reports exist.
+// submitted it") becomes an unnumbered "After you submit in MyNaga" with a plain note until
+// private reports exist.
 
 import "@/ui/kit/styles";
 import "@/ui/help/help.css";
@@ -107,10 +108,11 @@ export function MyNagaScreen() {
           </ul>
         </section>
 
-        <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-s3">
-          <StepTitle n={3} id="pn-mynaga-s3">
-            Coming later
-          </StepTitle>
+        {/* Not a numbered step: nothing to do here yet (the artboard's "Tell us if you submitted it"). */}
+        <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-after">
+          <h2 id="pn-mynaga-after" className="pn-mynaga__step-title">
+            After you submit in MyNaga
+          </h2>
           <Note testId="mynaga-later">{LATER_NOTE}</Note>
         </section>
 

@@ -5,7 +5,10 @@
 // Saved. Differences from the artboard, on purpose:
 //  - Help: "Report a correction", the private driver report and "My reports" arrive in Increment
 //    B; "Report a problem with a driver" opens the MyNaga handoff instead (D9).
-//  - Safety: the emergency number is the national 911 (brief copy); "does not monitor reports"
+//  - Safety: the emergency number is the national 911, as the spec prescribes
+//    (docs/spec/02-features.md:104, "urgent situations show official emergency numbers (911)").
+//    TODO(data task): add a sources-register row for the national Emergency 911 hotline with a
+//    checked date, so the number is traceable from the app. "does not monitor reports"
 //    without "in real time" (nothing is monitored at all); the tips say only what the data allows
 //    (no stop side, no verified signboards); the button opens MyNaga, not a private report.
 //  - About data: every badge says what it means today (nothing is verified; Loops A and B plan on
@@ -21,7 +24,7 @@ import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { Segmented, type SegmentedOption } from "@/ui/kit/segmented";
 import { StatusBadge, type BadgeVariant } from "@/ui/kit/badge";
-import { DataRevisionRow } from "@/ui/settings/more-screen";
+import { DataRevisionRow } from "@/ui/settings/data-revision-row";
 import { ARTICLES, articleHref, type ArticleSlug } from "./articles";
 
 export type HelpTab = "help" | "safety" | "data";
@@ -163,7 +166,7 @@ export function HelpScreen() {
   return (
     <div className="pn-help" data-testid="help-screen">
       <Segmented options={TAB_OPTIONS} value={tab} onChange={choose} label="Help sections" variant="tablist" testId="help-tabs" />
-      <div id="pn-help-panel" role="tabpanel" aria-labelledby={`pn-help-tab-${tab}`} className="pn-help__panel" data-testid={`help-panel-${tab}`}>
+      <div id="pn-help-panel" role="tabpanel" aria-labelledby={`pn-help-tab-${tab}`} className="pn-help__panel" tabIndex={0} data-testid={`help-panel-${tab}`}>
         {PANELS[tab]()}
       </div>
     </div>
