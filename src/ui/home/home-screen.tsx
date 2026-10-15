@@ -115,7 +115,7 @@ export function HomeScreen() {
   };
 
   const ready = isReadyToPlan(endpoints);
-  const plan = useTripPlan(endpoints.start?.point ?? null, endpoints.destination?.point ?? null);
+  const plan = useTripPlan(endpoints.start, endpoints.destination);
   // The option whose detail is open, by id: option ids (variant:board:alight) survive a replan for
   // a refined GPS point, so the detail stays open unless the new plan no longer has that option.
   const [openedId, setOpenedId] = useState<string | null>(null);

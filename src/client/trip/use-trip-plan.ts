@@ -4,14 +4,16 @@
 // Coordinates go only in the request body (never a URL), the response is validated against the
 // shared schema, and a superseded request is aborted so a late reply never shows for old pins.
 //
-// GPS refinements: an endpoint that moves less than REPLAN_MIN_MOVE_M from the point last planned
-// for does not trigger a new plan, and while a newer plan is in flight the last ready plan stays
+// GPS refinements: a GPS-sourced endpoint that moves less than REPLAN_MIN_MOVE_M from the point
+// last planned for does not trigger a new plan (a pin placed by hand or from search always
+// replans, however small the move), and while a newer plan is in flight the last ready plan stays
 // on screen (`refreshing: true`) instead of being replaced by a loading state.
 
 import { useEffect, useState } from "react";
 import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
 import { haversineMeters } from "@/domain/geo/geometry";
 import type { LatLng } from "@/domain/geo/types";
+import type { EndpointSource } from "@/domain/trip/endpoints";
 
 export const REPLAN_MIN_MOVE_M = 25;
 
@@ -25,21 +27,28 @@ export type TripPlanState =
 
 type Outcome = { status: "ready"; data: PlanResponse } | { status: "error"; kind: PlanErrorKind };
 type Settled = { key: string } & Outcome;
-type Pair = { origin: LatLng; destination: LatLng };
+export type PlanEnd = { point: LatLng; source: EndpointSource };
+type Pair = { origin: PlanEnd; destination: PlanEnd };
 
-const keyOf = (p: Pair, attempt: number) => `${p.origin.lat},${p.origin.lng}>${p.destination.lat},${p.destination.lng}#${attempt}`;
+const keyOf = (p: Pair, attempt: number) =>
+  `${p.origin.point.lat},${p.origin.point.lng}>${p.destination.point.lat},${p.destination.point.lng}#${attempt}`;
 
-/** True when `next` should be planned for instead of `prev` (no prior pair, or an end moved ≥ the threshold). */
+/** Whether one end changed enough to plan again: only a GPS refinement under the threshold is ignored. */
+function endChanged(prev: PlanEnd, next: PlanEnd): boolean {
+  if (prev.point.lat === next.point.lat && prev.point.lng === next.point.lng && prev.source === next.source) return false;
+  if (prev.source === "gps" && next.source === "gps") return haversineMeters(prev.point, next.point) >= REPLAN_MIN_MOVE_M;
+  return true; // placed by hand or from search (or the source changed): always a deliberate choice
+}
+
+/** True when `next` should be planned for instead of `prev`. */
 export function shouldReplan(prev: Pair | null, next: Pair): boolean {
   if (!prev) return true;
-  return (
-    haversineMeters(prev.origin, next.origin) >= REPLAN_MIN_MOVE_M ||
-    haversineMeters(prev.destination, next.destination) >= REPLAN_MIN_MOVE_M
-  );
+  return endChanged(prev.origin, next.origin) || endChanged(prev.destination, next.destination);
 }
 
 async function requestPlan(pair: Pair, signal: AbortSignal): Promise<Outcome> {
-  const { origin, destination } = pair;
+  const origin = pair.origin.point;
+  const destination = pair.destination.point;
   let response: Response;
   try {
     response = await fetch("/api/v1/plan", {
@@ -60,7 +69,7 @@ async function requestPlan(pair: Pair, signal: AbortSignal): Promise<Outcome> {
   return parsed.success ? { status: "ready", data: parsed.data } : { status: "error", kind: "server" };
 }
 
-export function useTripPlan(origin: LatLng | null, destination: LatLng | null): TripPlanState & { retry: () => void } {
+export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null): TripPlanState & { retry: () => void } {
   const [attempt, setAttempt] = useState(0);
   const [settled, setSettled] = useState<Settled | null>(null);
   // The last ready plan, kept on screen while a newer request is in flight.
