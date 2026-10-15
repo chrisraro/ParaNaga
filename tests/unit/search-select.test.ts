@@ -71,9 +71,14 @@ describe("noticeFor", () => {
     );
   });
 
-  it("for=save: saving is not available yet, said plainly", () => {
+  it("for=save: the notice gives the place's facts (the page note alone says saving opens soon)", () => {
     const n = noticeFor(find("SM City", "osm"), "save");
-    expect(n.body).toBe("Saving places on this phone opens soon.");
+    expect(n.body).toBe("Mall. Location from OpenStreetMap — entrance not mapped.");
+    expect(n.body).not.toMatch(/opens soon/);
     expect(n.endpoint).toBeNull();
+    expect(n.osm).toBe(true);
+    expect(noticeFor(find("Plaza Rizal", "pin"), "save").body).toBe(
+      "Mapped stop candidate (Loop A, Loop B, Loop C, Loop D), not verified for navigation. Trips from mapped pins are unverified.",
+    );
   });
 });

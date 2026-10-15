@@ -6,16 +6,22 @@
 // these two GETs carry no query text. (The service worker of Task 12 adds a persistent copy; its
 // cache key must include the build, see the Task 4 review.)
 //
-// Offline (head or index request fails) with an index already in memory: that index is used and
-// `offline` is true, so the screen says which data it is searching. Nothing in memory: "error".
+// A failed head or index request with an index already in memory: that index is used, and
+// `problem` says why the data may be old: "offline" only when the browser says it has no
+// connection (navigator.onLine false), else "failed" (a 5xx, a bad response). Nothing in memory:
+// "error", with the same distinction.
 
 import { useEffect, useState } from "react";
 import { networkHeadSchema, searchIndexSchema, type SearchIndex } from "@/domain/api/schemas";
 
+export type SearchProblem = "offline" | "failed";
+
 export type SearchIndexState =
   | { status: "loading" }
-  | { status: "ready"; index: SearchIndex; offline: boolean }
-  | { status: "error" };
+  | { status: "ready"; index: SearchIndex; problem: SearchProblem | null }
+  | { status: "error"; problem: SearchProblem };
+
+const problemNow = (): SearchProblem => (typeof navigator !== "undefined" && navigator.onLine === false ? "offline" : "failed");
 
 const byRevision = new Map<string, SearchIndex>();
 let latest: SearchIndex | null = null;
@@ -32,7 +38,7 @@ async function getJson(url: string, signal: AbortSignal): Promise<unknown> {
   return response.json();
 }
 
-async function loadIndex(signal: AbortSignal): Promise<{ index: SearchIndex; offline: boolean }> {
+async function loadIndex(signal: AbortSignal): Promise<{ index: SearchIndex; problem: SearchProblem | null }> {
   try {
     const head = networkHeadSchema.parse(await getJson("/api/v1/network/head", signal));
     let index = byRevision.get(head.revisionId);
@@ -41,9 +47,9 @@ async function loadIndex(signal: AbortSignal): Promise<{ index: SearchIndex; off
       byRevision.set(head.revisionId, index);
     }
     latest = index;
-    return { index, offline: false };
+    return { index, problem: null };
   } catch (error) {
-    if (!signal.aborted && latest) return { index: latest, offline: true };
+    if (!signal.aborted && latest) return { index: latest, problem: problemNow() };
     throw error;
   }
 }
@@ -51,23 +57,24 @@ async function loadIndex(signal: AbortSignal): Promise<{ index: SearchIndex; off
 export function useSearchIndex(): SearchIndexState & { retry: () => void } {
   const [attempt, setAttempt] = useState(0);
   // An index already loaded this session shows at once while the head is checked again.
-  const [state, setState] = useState<SearchIndexState>(() => (latest ? { status: "ready", index: latest, offline: false } : { status: "loading" }));
+  const [state, setState] = useState<SearchIndexState>(() => (latest ? { status: "ready", index: latest, problem: null } : { status: "loading" }));
 
   useEffect(() => {
     const controller = new AbortController();
     loadIndex(controller.signal).then(
-      ({ index, offline }) => {
-        if (!controller.signal.aborted) setState({ status: "ready", index, offline });
+      ({ index, problem }) => {
+        if (!controller.signal.aborted) setState({ status: "ready", index, problem });
       },
       () => {
-        if (!controller.signal.aborted) setState({ status: "error" });
+        if (!controller.signal.aborted) setState({ status: "error", problem: problemNow() });
       },
     );
     return () => controller.abort();
   }, [attempt]);
 
   const retry = () => {
-    setState({ status: "loading" });
+    // Results already shown stay while retrying; only an empty screen shows the skeleton.
+    setState((prev) => (prev.status === "ready" ? prev : { status: "loading" }));
     setAttempt((n) => n + 1);
   };
   return { ...state, retry };

@@ -117,6 +117,10 @@
   align-items: center;
   gap: 8px;
 }
+/* A row of text buttons ("Set as start" / "Set as destination"). */
+.pn-detail__row--actions {
+  gap: 24px;
+}
 .pn-detail__caption {
   color: var(--pn-caption);
   font-size: 13px;

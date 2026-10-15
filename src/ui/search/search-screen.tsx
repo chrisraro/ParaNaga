@@ -29,6 +29,7 @@ import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Switch } from "@/ui/kit/switch";
 
 export const SEARCH_DEBOUNCE_MS = 150;
+const FAILED_COPY = "Search data couldn't load. Try again.";
 const EMPTY_COPY = "No match in Naga — try a place, stop name, street, route or barangay.";
 const REGIONAL_NOTE = "Regional connections on: terminal destination categories are included. Individual services are not verified.";
 
@@ -133,10 +134,11 @@ function ResultRow({ result, purpose, onSelect }: { result: SearchResult; purpos
     </>
   );
   const testId = `search-result-${result.kind}`;
+  const key = resultKey(result);
   if (action.type === "open") {
     return (
       <li>
-        <Link href={action.href} className="pn-cell pn-search__cell" data-testid={testId}>
+        <Link href={action.href} className="pn-cell pn-search__cell" data-testid={testId} data-result-key={key}>
           {body}
         </Link>
       </li>
@@ -145,7 +147,8 @@ function ResultRow({ result, purpose, onSelect }: { result: SearchResult; purpos
   if (action.type === "none") {
     return (
       <li>
-        <div className="pn-cell pn-search__cell" data-testid={testId}>
+        {/* Not tappable; focusable only by script (after "Show all"), never in the tab order. */}
+        <div className="pn-cell pn-search__cell" tabIndex={-1} data-testid={testId} data-result-key={key}>
           {body}
         </div>
       </li>
@@ -153,7 +156,7 @@ function ResultRow({ result, purpose, onSelect }: { result: SearchResult; purpos
   }
   return (
     <li>
-      <button type="button" className="pn-cell pn-search__cell" onClick={() => onSelect(result)} data-testid={testId}>
+      <button type="button" className="pn-cell pn-search__cell" onClick={() => onSelect(result)} data-testid={testId} data-result-key={key}>
         {body}
       </button>
     </li>
@@ -260,36 +263,55 @@ function SkeletonRows() {
   );
 }
 
+/**
+ * The route component. The /app routes stay mounted while hidden (Activity) and their effects
+ * re-run when shown again, so each opening bumps `opened` and the body is keyed on it: every
+ * search starts fresh (query, notice, "Show all", regional switch), with the keyboard on the box.
+ */
 export function SearchScreen() {
   const params = useSearchParams();
   const purpose = parseSearchPurpose(params.get("for"));
   useAppPanel("detail");
   const root = useRef<HTMLDivElement>(null);
   useEscapeToClose(root);
+  const indexState = useSearchIndex();
+  const [opened, setOpened] = useState(0);
+  // Counting openings is the point of this effect (Activity re-show), not derived state.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setOpened((n) => n + 1), []);
+  return (
+    <div ref={root} className="pn-detail pn-search" data-testid="search-screen">
+      <SearchBody key={opened} purpose={purpose} indexState={indexState} />
+    </div>
+  );
+}
+
+function SearchBody({ purpose, indexState }: { purpose: SearchPurpose | null; indexState: ReturnType<typeof useSearchIndex> }) {
   const frame = useAppFrame();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
-  const indexState = useSearchIndex();
+  const body = useRef<HTMLDivElement>(null);
 
   const [query, setQuery] = useState("");
   const [typed, setTyped] = useState("");
   const [regional, setRegional] = useState(false);
-  // "Show all" and the open notice belong to one (debounced) query.
+  // "Show all" and the open notice belong to one (debounced) query. The notice remembers the
+  // row that opened it, so Close puts focus back there.
   const [expanded, setExpanded] = useState<{ query: string; ids: SearchGroupId[] }>({ query: "", ids: [] });
   const [notice, setNotice] = useState<{ query: string; result: SearchResult } | null>(null);
-
-  // Each opening starts fresh, with the keyboard on the search box (artboard). The route stays
-  // mounted while hidden (Activity), and effects re-run when it shows again: a search opened for
-  // the destination must not show the start's earlier query and results.
+  // A row to focus once it has rendered (after Close, or the first row "Show all" revealed).
+  const pendingFocus = useRef<string | null>(null);
   useEffect(() => {
-    const fresh = () => {
-      setQuery("");
-      setTyped("");
-      setNotice(null);
-    };
-    fresh();
-    input.current?.focus();
-  }, []);
+    const key = pendingFocus.current;
+    if (!key) return;
+    const el = body.current?.querySelector<HTMLElement>(`[data-result-key="${CSS.escape(key)}"]`);
+    if (el) {
+      pendingFocus.current = null;
+      el.focus();
+    }
+  });
+
+  useEffect(() => input.current?.focus(), []);
 
   // Debounced: results follow typing after a short pause; clearing the box is immediate.
   useEffect(() => {
@@ -328,7 +350,7 @@ export function SearchScreen() {
   const date = index ? publishedDate(index.revision.publishedAt) : null;
 
   return (
-    <div ref={root} className="pn-detail pn-search" data-testid="search-screen">
+    <div ref={body}>
       <h1 className="sr-only">Search</h1>
       <header className="pn-search__header">
         <div className="pn-search__field">
@@ -372,6 +394,8 @@ export function SearchScreen() {
 
       <main className="pn-search__main">
         <ul className="pn-group" aria-label="Search options">
+          {/* Decision (Task 5): "Use current location" is offered for the start only, like the
+              home sheet: GPS sets the start, never the destination. */}
           {purpose === "start" ? (
             <li>
               <button
@@ -416,19 +440,37 @@ export function SearchScreen() {
         {indexState.status === "loading" ? <SkeletonRows /> : null}
         {indexState.status === "error" ? (
           <div className="pn-search__error" data-testid="search-error">
-            <p>Search needs a connection the first time. Try again.</p>
+            <p>{indexState.problem === "offline" ? "Search needs a connection the first time. Try again." : FAILED_COPY}</p>
             <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
               Try again
             </button>
           </div>
         ) : null}
-        {indexState.status === "ready" && indexState.offline ? (
+        {indexState.status === "ready" && indexState.problem === "offline" ? (
           <Note icon testId="search-offline">
             Offline · searching data from {date ?? `revision ${indexState.index.revision.label}`}
           </Note>
         ) : null}
+        {indexState.status === "ready" && indexState.problem === "failed" ? (
+          <div className="pn-search__error" data-testid="search-failed">
+            <p>{FAILED_COPY}</p>
+            <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
+              Try again
+            </button>
+          </div>
+        ) : null}
 
-        {openNotice ? <NoticeCard result={openNotice} purpose={purpose} onSet={setEnd} onClose={() => setNotice(null)} /> : null}
+        {openNotice ? (
+          <NoticeCard
+            result={openNotice}
+            purpose={purpose}
+            onSet={setEnd}
+            onClose={() => {
+              pendingFocus.current = resultKey(openNotice);
+              setNotice(null);
+            }}
+          />
+        ) : null}
 
         {index && hasQuery && total === 0 ? (
           <p className="pn-search__empty" data-testid="search-empty">
@@ -440,7 +482,11 @@ export function SearchScreen() {
             key={g.id}
             group={g}
             expanded={expandedIds.includes(g.id)}
-            onExpand={() => setExpanded({ query: debounced, ids: [...expandedIds, g.id] })}
+            onExpand={() => {
+              // The button goes away: focus moves to the first row it revealed.
+              pendingFocus.current = resultKey(g.results[GROUP_LIMIT]!);
+              setExpanded({ query: debounced, ids: [...expandedIds, g.id] });
+            }}
             purpose={purpose}
             onSelect={onSelect}
           />

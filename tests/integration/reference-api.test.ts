@@ -278,6 +278,9 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
 
       await member(draft, "barangay", await barangay(`${tag} draft`, false));
       await member(draft, "designated_stop_candidate", await label(`${tag}-DRAFT`, false));
+      // NOTE: ALTER TABLE takes an ACCESS EXCLUSIVE lock on transit.revision_member until the
+      // rollback. Safe only because integration files never run in parallel (fileParallelism:
+      // false in vitest.config.ts); enabling parallelism would block or deadlock other files.
       await owner.query("alter table transit.revision_member disable trigger revision_member_guard");
       await member(revisionId, "barangay", await barangay(`${tag} synthetic`, true));
       await member(revisionId, "designated_stop_candidate", await label(`${tag}-SYNTH`, true));

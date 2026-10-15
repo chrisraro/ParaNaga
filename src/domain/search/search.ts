@@ -6,10 +6,10 @@
 // a digit is also compared without separators, so "R8A", "r8a" and "8a" find R8-A. A route found
 // only through a street of its legal plan scores as a substring (40) and says so.
 //
-// Order: groups by their best result; results by score, then by where the match starts in the
-// text (a match at the start of a name beats one deep inside a long name), then by kind order
-// (Saved, Places: OpenStreetMap then mapped pins, Routes, Terminals, Barangays, Study labels, Old
-// names, Regional), then index order.
+// Order: groups in a fixed order (GROUP_ORDER: Saved, Places, Routes, Terminals, Barangays,
+// Study labels, Old route names, Regional), so unmapped 1993 names never lead. Inside a group:
+// score, then where the match starts in the text (a match at the start of a name beats one deep
+// inside a long name), then kind order (OpenStreetMap before mapped pins), then index order.
 //
 // Honesty: only OpenStreetMap places, mapped-pin places and saved places have a location
 // (endpointForResult); everything else opens its own screen or notice and is never a trip end.
@@ -85,6 +85,9 @@ const GROUP_OF: Record<SearchResultKind, SearchGroupId> = {
   regional: "regional",
   feeder: "regional",
 };
+/** Display order of the groups (brief and artboard): fixed, whatever the scores. */
+export const GROUP_ORDER: readonly SearchGroupId[] = ["saved", "places", "routes", "terminals", "barangays", "study", "legacy", "regional"];
+
 export const GROUP_TITLE: Record<SearchGroupId, string> = {
   saved: "Saved",
   places: "Places",
@@ -141,13 +144,26 @@ function better(a: Ranked, b: Ranked): Ranked {
   return b.score > a.score || (b.score === a.score && b.offset < a.offset) ? b : a;
 }
 
+/** Folded text, words and compact form of one indexed string, computed once per index. */
+type Prepared = { folded: string; words: string[]; compact: string };
+const PREPARED = new WeakMap<object, Map<string, Prepared>>();
+let prepared = new Map<string, Prepared>();
+
+function prepare(text: string): Prepared {
+  let p = prepared.get(text);
+  if (!p) {
+    p = { folded: foldText(text), words: tokenize(text), compact: compactText(text) };
+    prepared.set(text, p);
+  }
+  return p;
+}
+
 function textScore(query: Query, text: string, fuzzy = true): Ranked {
-  const folded = foldText(text);
+  const { folded, words, compact } = prepare(text);
   if (folded === "") return NONE;
   let best = NONE;
   if (folded === query.folded) return { score: EXACT, offset: 0 };
   if (folded.startsWith(query.folded)) return { score: PREFIX, offset: 0 };
-  const words = tokenize(text);
   if (query.tokens.length > 0 && query.tokens.every((q) => words.some((w) => w.startsWith(q)))) {
     const firstWord = words.find((w) => w.startsWith(query.tokens[0]!))!;
     best = { score: WORD_PREFIX, offset: Math.max(0, folded.indexOf(firstWord)) };
@@ -155,7 +171,6 @@ function textScore(query: Query, text: string, fuzzy = true): Ranked {
     best = { score: SUBSTRING, offset: folded.indexOf(query.folded) };
   }
   if (query.codeLike) {
-    const compact = compactText(text);
     if (compact === query.compact) best = better(best, { score: EXACT, offset: 0 });
     else if (compact.startsWith(query.compact)) best = better(best, { score: PREFIX, offset: 0 });
     else if (compact.includes(query.compact)) best = better(best, { score: SUBSTRING, offset: compact.indexOf(query.compact) });
@@ -250,6 +265,13 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
   const folded = foldText(rawQuery);
   if (folded === "") return [];
   const query: Query = { folded, tokens: tokenize(rawQuery), codeLike: isCodeLikeQuery(rawQuery), compact: compactText(rawQuery) };
+  // Folding (NFC/NFD, case, accents) of the index's strings happens once per index object.
+  let cache = PREPARED.get(index);
+  if (!cache) {
+    cache = new Map();
+    PREPARED.set(index, cache);
+  }
+  prepared = cache;
   const out: (SearchResult & { i: number })[] = [];
   const add = (r: SearchResult) => {
     if (r.score > 0) out.push({ ...r, i: out.length });
@@ -295,6 +317,7 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
 
   out.sort(compareResults);
   const groups = new Map<SearchGroupId, SearchResult[]>();
+  for (const id of GROUP_ORDER) groups.set(id, []);
   for (const ranked of out) {
     const { i, ...r } = ranked;
     void i; // only used for the stable sort above
@@ -303,8 +326,8 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
     list.push(r as SearchResult);
     groups.set(id, list);
   }
-  // Map insertion order follows the first (best) result of each group.
-  return [...groups].map(([id, results]) => ({ id, title: GROUP_TITLE[id], results }));
+  // Fixed group order (brief, artboard): current data first, old route names (hints only) last.
+  return [...groups].filter(([, results]) => results.length > 0).map(([id, results]) => ({ id, title: GROUP_TITLE[id], results }));
 }
 
 export function countResults(groups: readonly SearchGroup[]): number {

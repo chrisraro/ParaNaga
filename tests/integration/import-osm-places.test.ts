@@ -5,8 +5,11 @@
 // to exercise the new-revision path (transit carried forward, then "unchanged" on re-run).
 // The real-like copies use dates that can never collide with a real snapshot (2099-01-01, and
 // 2099-01-02 for the refresh): a branch of main already holds the real osm-places-2026-10-15.
-// Assertions are relative to the revision published when the file starts (whatever main or an
-// earlier test file left), which is published again afterwards.
+// The start revision is resolved by label, never adopted from the pointer (another test file
+// may have left a throwaway revision published): the newest real osm-places-* revision (on a
+// branch of main: osm-places-2026-10-15), else the transit import's revision. It is published
+// explicitly before the tests and again afterwards. Assertions on carried-forward data compare
+// with what that revision holds (128 stops and 11 routes on the real data).
 import { readFileSync } from "node:fs";
 import pg from "pg";
 import { sql } from "drizzle-orm";
@@ -101,12 +104,16 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
     await owner.connect();
     app = new pg.Pool({ connectionString: appUrl, max: 1 });
     // The transit import may already be on the branch (it is on main, with the real OSM places
-    // revision published on top). Whatever is published now is the base the tests build on.
+    // revision published on top). The base is chosen by label (see the file header).
     transitPlan = buildImportPlan(readDataFiles("Data_Sets"));
     await commitImport(ownerUrl!, transitPlan);
-    const current = await owner.query<{ revision_id: string }>("select revision_id from transit.published_pointer");
-    startRevisionId = current.rows[0]?.revision_id ?? (await revisionIdOf(transitPlan.revisionLabel))!;
-    if (!current.rows[0]) await publish(startRevisionId);
+    const realOsm = await owner.query<{ id: string }>(
+      `select id from transit.revision
+        where label like 'osm-places-%' and label not like 'osm-places-2099-%' and not is_synthetic
+        order by seq desc limit 1`,
+    );
+    startRevisionId = realOsm.rows[0]?.id ?? (await revisionIdOf(transitPlan.revisionLabel))!;
+    await publish(startRevisionId);
   }, 120_000);
 
   afterAll(async () => {

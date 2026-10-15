@@ -88,7 +88,7 @@ function UseAsEndpoint({ stop }: { stop: StopDetail["stop"] }) {
   };
   return (
     <section className="pn-section" aria-label="Use this pin for a trip" data-testid="stop-use-as">
-      <div className="pn-detail__row" style={{ gap: 24 }}>
+      <div className="pn-detail__row pn-detail__row--actions">
         <button type="button" className="pn-text-btn" onClick={() => set("start")}>
           Set as start
         </button>

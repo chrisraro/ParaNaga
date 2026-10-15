@@ -44,7 +44,9 @@ const NOT_A_TRIP_END = "so it cannot be a trip start or destination";
 export function noticeFor(result: SearchResult, purpose: SearchPurpose | null): SearchNotice {
   const endpoint = endpointForResult(result);
   if (purpose === "save" && endpoint) {
-    return { title: result.title, body: "Saving places on this phone opens soon.", endpoint: null, osm: result.kind === "osm" };
+    // Saving is not built yet: the page note says so once; the notice gives the place's facts.
+    const facts = noticeFor(result, null);
+    return { ...facts, body: facts.body.replace(/ Place details open soon\.$/, ""), endpoint: null };
   }
   switch (result.kind) {
     case "osm":

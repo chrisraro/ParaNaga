@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { searchIndexSchema } from "@/domain/api/schemas";
 import {
   GROUP_LIMIT,
+  GROUP_ORDER,
   bigramDice,
   countResults,
   endpointForResult,
@@ -110,7 +111,14 @@ describe("searchIndex: ranking", () => {
     expect(searchIndex(index, "rzl", off)).toEqual([]);
   });
 
-  it("orders groups by their best score, ties by kind order; Places list OpenStreetMap before mapped pins", () => {
+  it("orders groups in the fixed order of the brief; old route names never lead", () => {
+    const groups = searchIndex(index, "magsaysay", off);
+    expect(groups.map((g) => g.id)).toEqual(["places", "routes", "study", "legacy"]);
+    expect(groups[0]!.id).toBe("places");
+    expect(GROUP_ORDER).toEqual(["saved", "places", "routes", "terminals", "barangays", "study", "legacy", "regional"]);
+  });
+
+  it("orders results by score inside a group; Places list OpenStreetMap before mapped pins on a tie", () => {
     const groups = searchIndex(index, "Plaza Rizal", off);
     expect(groups[0]!.id).toBe("places");
     const places = groups[0]!.results;

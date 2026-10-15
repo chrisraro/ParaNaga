@@ -60,6 +60,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.clearAllMocks();
   setEntryPath(null);
@@ -204,9 +205,11 @@ describe("SearchScreen", () => {
 
   it("no connection and nothing cached: says so, and Try again works", async () => {
     failing = true;
+    const online = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     renderSearch();
     await waitFor(() => expect(screen.getByTestId("search-error").textContent).toContain("Search needs a connection the first time. Try again."));
     failing = false;
+    online.mockReturnValue(true);
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(screen.queryByTestId("search-error")).toBeNull());
     await ready();
@@ -217,9 +220,57 @@ describe("SearchScreen", () => {
     await ready();
     first.unmount();
     failing = true;
+    vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     renderSearch();
     await waitFor(() => expect(screen.getByTestId("search-offline").textContent).toBe("Offline · searching data from 15 Oct 2026"));
     await type("plaza rizal");
     expect(screen.getByTestId("search-group-places")).toBeTruthy();
+  });
+
+  it("a server error (online) is not called offline: the cached index stays, with a retry", async () => {
+    const first = renderSearch();
+    await ready();
+    first.unmount();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 503 })));
+    renderSearch();
+    await waitFor(() => expect(screen.getByTestId("search-failed").textContent).toContain("Search data couldn't load. Try again."));
+    expect(screen.queryByTestId("search-offline")).toBeNull();
+    await type("plaza rizal");
+    expect(screen.getByTestId("search-group-places")).toBeTruthy();
+  });
+
+  it("nothing cached and a server error: says the data couldn't load", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
+    renderSearch();
+    await waitFor(() => expect(screen.getByTestId("search-error").textContent).toBe("Search data couldn't load. Try again.Try again"));
+  });
+
+  it("Close on a notice puts focus back on the row that opened it", async () => {
+    renderSearch("start");
+    await ready();
+    await type("Abella");
+    fireEvent.click(screen.getByTestId("search-result-barangay"));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByTestId("search-notice")).toBeNull();
+    expect(document.activeElement).toBe(screen.getByTestId("search-result-barangay"));
+  });
+
+  it("Show all moves focus to the first row it revealed", async () => {
+    renderSearch();
+    await ready();
+    await type("Centro");
+    fireEvent.click(screen.getByRole("button", { name: "Show all 11" }));
+    const rows = screen.getByTestId("search-group-routes").querySelectorAll("li > *");
+    expect(document.activeElement).toBe(rows[5]);
+  });
+
+  it("for=save: the page note says saving opens soon; the notice gives the place's facts once", async () => {
+    renderSearch("save");
+    await ready();
+    expect(screen.getByTestId("search-save-note").textContent).toBe("Saving places on this phone opens soon.");
+    await type("SM City");
+    fireEvent.click(screen.getAllByTestId("search-result-osm")[0]!);
+    expect(screen.getByTestId("search-notice").textContent).not.toMatch(/opens soon/);
+    expect(screen.getAllByText(/Saving places on this phone opens soon\./)).toHaveLength(1);
   });
 });

@@ -159,6 +159,33 @@ test("no match, regional connections and an honest notice for a barangay", async
   await page.getByTestId("search-result-barangay").click();
   await expect(page.getByTestId("search-notice")).toContainText("cannot be a trip start or destination");
   await expect(page.getByRole("heading", { level: 2, name: "Abella" })).toBeFocused();
+  // Close returns focus to the row that opened the notice.
+  await page.getByTestId("search-notice").getByRole("button", { name: "Close" }).click();
+  await expect(page.getByTestId("search-notice")).toHaveCount(0);
+  await expect(page.getByTestId("search-result-barangay")).toBeFocused();
+});
+
+test('"Show all" moves focus to the first row it revealed', async ({ page }) => {
+  await page.goto("/app/search");
+  await searchBox(page).fill("Centro");
+  const routes = page.getByTestId("search-group-routes");
+  await expect(routes.locator("li")).toHaveCount(5);
+  await routes.getByRole("button", { name: "Show all 11" }).click();
+  await expect(routes.locator("li")).toHaveCount(11);
+  await expect(routes.locator("li").nth(5).locator("a")).toBeFocused();
+});
+
+test("reopening Search starts fresh: query and regional switch reset", async ({ page }) => {
+  await openApp(page);
+  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await searchBox(page).fill("Iriga");
+  await page.getByRole("switch", { name: "Include regional connections" }).click();
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page).toHaveURL(/\/app$/);
+  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await expect(searchBox(page)).toHaveValue("");
+  await expect(searchBox(page)).toBeFocused();
+  await expect(page.getByRole("switch", { name: "Include regional connections" })).toHaveAttribute("aria-checked", "false");
 });
 
 test("Cancel and Escape go back to the map", async ({ page }) => {

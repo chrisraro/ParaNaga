@@ -134,12 +134,17 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
   const publishAsImport = (revisionId: string) =>
     importer.query("select transit.publish_revision($1)", [revisionId]);
 
+  // The revision published when this file starts. Its tests publish throwaway 3-stop revisions;
+  // afterAll publishes this one again so no later file inherits a test revision.
+  let previousPointer: string | undefined;
+
   beforeAll(async () => {
     owner = new pg.Client({ connectionString: ownerUrl });
     await owner.connect();
     importer = new pg.Client({ connectionString: importUrl });
     await importer.connect();
     app = new pg.Pool({ connectionString: appUrl, max: 1 });
+    previousPointer = (await owner.query<{ revision_id: string }>("select revision_id from transit.published_pointer")).rows[0]?.revision_id;
     await owner.query("begin");
     await owner.query("set local role paranaga_definer");
     await owner.query("insert into core.profile (user_id, display_name) values ($1, $1)", [admin]);
@@ -148,6 +153,10 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
   });
 
   afterAll(async () => {
+    if (previousPointer && importer) {
+      const now = (await owner.query<{ revision_id: string }>("select revision_id from transit.published_pointer")).rows[0]?.revision_id;
+      if (now !== previousPointer) await publishAsImport(previousPointer);
+    }
     await app?.end();
     await importer?.end();
     await owner?.end();

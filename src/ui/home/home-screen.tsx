@@ -215,8 +215,8 @@ export function HomeScreen() {
     return true;
   };
 
-  const setStartFromGps = (fix: LocationFix) => {
-    if (!applyEndpoint("start", toPoint(fix), "gps")) {
+  const setStartFromGps = (fix: LocationFix, announce: (text: string) => void = setAnnouncement) => {
+    if (!applyEndpoint("start", toPoint(fix), "gps", "", announce)) {
       setGpsIntent(false);
       return;
     }
@@ -310,12 +310,12 @@ export function HomeScreen() {
     if (!watchNeeded && geoActive) geoStop();
   }, [watchNeeded, geoActive, geoStop]);
 
-  const handleUseCurrentLocation = () => {
+  const handleUseCurrentLocation = (announce: (text: string) => void = setAnnouncement) => {
     setLastOutcome(null);
     if (watching && geo.fix) {
       const now = assessFix(geo.fix, Date.now());
       if (now.usableAsStart) {
-        setStartFromGps(geo.fix);
+        setStartFromGps(geo.fix, announce);
         return;
       }
     }
@@ -522,7 +522,9 @@ export function HomeScreen() {
   // is recorded during render (state only) and the location request starts in an effect.
   const [gpsRequest, setGpsRequest] = useState(0);
   const handledGpsRequest = useRef(0);
-  const startGpsRequest = useEffectEvent(() => handleUseCurrentLocation());
+  // While the search panel still covers the map (home inert, its live region silent), a fix that
+  // is already usable sets the start at once: its announcement waits like the other requests'.
+  const startGpsRequest = useEffectEvent(() => handleUseCurrentLocation(covered ? setDeferredAnnouncement : setAnnouncement));
   useEffect(() => {
     if (gpsRequest === handledGpsRequest.current) return;
     handledGpsRequest.current = gpsRequest;
@@ -640,7 +642,7 @@ export function HomeScreen() {
           onFocus={setFocused}
           onClear={handleClear}
           onSwap={handleSwap}
-          onUseCurrentLocation={handleUseCurrentLocation}
+          onUseCurrentLocation={() => handleUseCurrentLocation()}
           onChooseOnMap={handleChooseOnMap}
           detailOpen={ready && openOption !== null}
           after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
