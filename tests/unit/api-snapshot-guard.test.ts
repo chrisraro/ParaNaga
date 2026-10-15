@@ -35,10 +35,16 @@ describe("network/snapshot completeness guard", () => {
     calls.length = 0;
   });
 
-  it("isCompleteSnapshot needs stops and variants", () => {
+  it("isCompleteSnapshot needs stops only (publish does not require routable variants)", () => {
     expect(isCompleteSnapshot({ stops: [stop], variants: [variant] })).toBe(true);
+    expect(isCompleteSnapshot({ stops: [stop], variants: [] })).toBe(true);
     expect(isCompleteSnapshot({ stops: [], variants: [variant] })).toBe(false);
-    expect(isCompleteSnapshot({ stops: [stop], variants: [] })).toBe(false);
+  });
+
+  it("serves a snapshot with stops but no variants (nothing routable yet)", async () => {
+    snapshot = { revision, stops: [stop], variants: [], fareRules: [] };
+    const response = await request();
+    expect(response.status).toBe(200);
   });
 
   it("serves a complete snapshot as immutable, read in a read-only transaction", async () => {
@@ -51,7 +57,6 @@ describe("network/snapshot completeness guard", () => {
 
   it.each([
     ["no stops", { stops: [], variants: [variant] }],
-    ["no variants", { stops: [stop], variants: [] }],
     ["nothing", { stops: [], variants: [] }],
   ])("returns 503 no-store for %s", async (_name, part) => {
     snapshot = { revision, fareRules: [], ...part } as NetworkSnapshot;

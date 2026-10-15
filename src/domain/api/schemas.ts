@@ -109,11 +109,13 @@ export const networkSnapshotSchema = z.object({
 export type NetworkSnapshot = z.infer<typeof networkSnapshotSchema>;
 
 /**
- * A snapshot is cached as immutable, so one without stops or routable variants is never sent:
- * a published revision always has both, and an empty read means something went wrong.
+ * A snapshot is cached as immutable, so one without stops is never sent: a published revision
+ * always has stops, and an empty read means something went wrong. Variants are NOT required —
+ * publish does not enforce routable variants (a revision may carry candidate stops only), and
+ * the planner then reports no coverage.
  */
 export function isCompleteSnapshot(snapshot: Pick<NetworkSnapshot, "stops" | "variants">): boolean {
-  return snapshot.stops.length > 0 && snapshot.variants.length > 0;
+  return snapshot.stops.length > 0;
 }
 
 // ---------------------------------------------------------------- GET /api/v1/stops?bbox=
