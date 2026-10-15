@@ -5,18 +5,21 @@
 // current step: Walk, Ride, Transfer, Arrive, or "Missed your stop?". Everything shown comes from
 // the guidance view (src/domain/guidance/view.ts).
 //
-// Accessibility: focus moves to the step's heading whenever the step or its buttons change (the
-// tapped button is usually gone). One polite live region carries the view's `live` text, throttled
-// for the walking distance (src/domain/guidance/announce.ts) and held while another screen covers
-// the map (the home screen is inert then); "Para! Next stop is yours" is the only assertive
-// message, as its own role="alert".
+// Accessibility: focus moves to the step's heading when the step or screen changes, after a tap on
+// a guidance button (the person acted; the tapped button is often gone), or when the focused
+// element was removed. GPS alone never moves focus (it would cut the Para alert short). One polite
+// live region carries the view's `live` text through the throttle (src/domain/guidance/announce.ts,
+// reset whenever focus moves to the heading) and waits while another screen covers the map (the
+// home screen is inert then); "Para! Next stop is yours" is the only assertive message, as its own
+// role="alert". The accuracy chip shows only a fresh fix (assessFix), styled by its quality.
 
 import "./guidance.css";
 import "@/ui/trip/trip.css";
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { UseGuidanceSession, GuidanceTap } from "@/client/guidance/use-guidance-session";
-import { nextPoliteAnnouncement, type Announcement } from "@/domain/guidance/announce";
+import { liveKind, nextPolite, resetAnnouncer, type Announcer } from "@/domain/guidance/announce";
+import { assessFix } from "@/domain/geo/location-fix";
 import type { GuidanceView, MissedView } from "@/domain/guidance/view";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { formatAccuracy } from "@/ui/home/location-status";
@@ -44,9 +47,8 @@ type Props = {
 
 type ShownView = Exclude<GuidanceView, { screen: "ended" }>;
 
-function focusKey(view: ShownView, stepIndex: number): string {
-  return `${view.screen}:${stepIndex}:${view.actions.map((a) => a.event).join(",")}`;
-}
+const stepKeyOf = (view: ShownView, stepIndex: number) => `${view.screen}:${stepIndex}`;
+const actionsKeyOf = (view: ShownView) => view.actions.map((a) => a.event).join(",") + (view.undo ? ",back" : "");
 
 function MissedStep({ view, onSend, onReplan, headingRef }: { view: MissedView; onSend: (e: GuidanceTap) => void; onReplan: () => void; headingRef: RefObject<HTMLHeadingElement | null> }) {
   return (
@@ -65,10 +67,12 @@ function MissedStep({ view, onSend, onReplan, headingRef }: { view: MissedView; 
   );
 }
 
-function Header({ view, location, onEnd }: { view: ShownView; location: UseGuidanceSession["location"]; onEnd: () => void }) {
+function Header({ view, location, now, onEnd }: { view: ShownView; location: UseGuidanceSession["location"]; now: number; onEnd: () => void }) {
   const [confirming, setConfirming] = useState(false);
   const stepLabel = view.screen === "missed" ? null : view.stepLabel;
-  const accuracy = location.watching && location.fix ? location.fix.accuracy : null;
+  // Only a fix that is still fresh is shown; an old one (hidden page, timeouts) is not "± N m" now.
+  const assessment = location.watching && location.fix ? assessFix(location.fix, now) : null;
+  const accuracy = assessment && !assessment.stale ? location.fix!.accuracy : null;
   return (
     <div className="pn-guide-head" data-testid="guidance-header">
       {view.screen !== "arrive" ? (
@@ -89,7 +93,11 @@ function Header({ view, location, onEnd }: { view: ShownView; location: UseGuida
         </span>
       ) : null}
       {accuracy !== null ? (
-        <span className={accuracy <= 30 ? "pn-guide-head__acc" : "pn-guide-head__acc pn-guide-head__acc--approx"} data-testid="guidance-accuracy">
+        <span
+          className={assessment?.quality === "precise" ? "pn-guide-head__acc" : "pn-guide-head__acc pn-guide-head__acc--approx"}
+          data-testid="guidance-accuracy"
+          data-quality={assessment?.quality}
+        >
           <span className="sr-only">GPS accuracy </span>
           {formatAccuracy(accuracy)}
         </span>
@@ -113,31 +121,45 @@ function Header({ view, location, onEnd }: { view: ShownView; location: UseGuida
 }
 
 export function Guidance({ guidance, covered, onEnd, onDone, onReplan }: Props) {
-  const { view, session, location, send, enableLocation, now, card } = guidance;
+  const { view, session, location, enableLocation, now, card } = guidance;
   const headingRef = useRef<HTMLHeadingElement>(null);
   const shown = view && view.screen !== "ended" ? view : null;
-  const key = shown && session ? focusKey(shown, session.stepIndex) : "";
+  const stepKey = shown && session ? stepKeyOf(shown, session.stepIndex) : "";
+  const actionsKey = shown ? actionsKeyOf(shown) : "";
   const polite = shown && shown.live.politeness === "polite" ? shown.live.text : null;
 
-  // The polite region: the first text of each step is read through the focused heading, so it is
-  // only recorded; later changes go through the throttle, and wait while the map is covered.
-  const [seenKey, setSeenKey] = useState(key);
-  const [announced, setAnnounced] = useState<Announcement | null>(() => (polite ? { text: polite, at: now } : null));
+  // A tap on a guidance button: the result is read through the focused heading.
+  const [taps, setTaps] = useState(0);
+  const send = (event: GuidanceTap) => {
+    setTaps((n) => n + 1);
+    guidance.send(event);
+  };
+  const focusKey = `${stepKey}|${taps}`;
+
+  // The polite region: reset (only recorded) whenever focus goes to the heading; later changes go
+  // through the throttle, and wait while the map is covered.
+  const [seenKey, setSeenKey] = useState(focusKey);
+  const [announcer, setAnnouncer] = useState<Announcer>(() => resetAnnouncer(polite, now));
   const [liveText, setLiveText] = useState("");
-  if (key !== seenKey) {
-    setSeenKey(key);
-    setAnnounced(polite ? { text: polite, at: now } : null);
-  } else if (!covered && polite) {
-    const next = nextPoliteAnnouncement(announced, polite, now);
-    if (next) {
-      setAnnounced(next);
-      setLiveText(next.text);
-    }
+  if (focusKey !== seenKey) {
+    setSeenKey(focusKey);
+    setAnnouncer(resetAnnouncer(polite, now));
+  } else if (!covered && polite && shown) {
+    const next = nextPolite(announcer, polite, liveKind(shown), now);
+    if (next.state !== announcer) setAnnouncer(next.state);
+    if (next.say) setLiveText(next.say);
   }
 
   useEffect(() => {
-    if (!covered && key) headingRef.current?.focus();
-  }, [key, covered]);
+    if (!covered && stepKey) headingRef.current?.focus();
+  }, [focusKey, stepKey, covered]);
+
+  // The buttons changed without a tap (GPS): keep focus unless its element is gone.
+  useEffect(() => {
+    if (covered || !actionsKey) return;
+    const active = document.activeElement;
+    if (!active || active === document.body || !active.isConnected) headingRef.current?.focus();
+  }, [actionsKey, covered]);
 
   if (!shown) return null;
   const locationUi: LocationUi = { state: location.state, watching: location.watching, onEnable: enableLocation };
@@ -145,7 +167,7 @@ export function Guidance({ guidance, covered, onEnd, onDone, onReplan }: Props) 
 
   return (
     <div className="pn-guide" data-testid="guidance" data-screen={shown.screen}>
-      <Header view={shown} location={location} onEnd={onEnd} />
+      <Header view={shown} location={location} now={now} onEnd={onEnd} />
       {shown.screen === "walk" && shown.stepKind === "transfer" ? (
         <TransferStep view={shown} {...stepProps} />
       ) : shown.screen === "walk" ? (

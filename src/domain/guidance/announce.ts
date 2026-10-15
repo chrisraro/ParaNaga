@@ -1,16 +1,35 @@
 // Throttle for the guidance screens' polite live region. Pure.
 //
-// The walk distance with GPS changes on every fix; a screen reader must not be flooded with it.
-// A distance update (the same "≈ N m to {stop} in a straight line" line with another N) is
-// announced only once DISTANCE_ANNOUNCE_MS have passed AND it moved by DISTANCE_ANNOUNCE_M since
-// the last announced distance. Any other change (a new step, a proposal such as "You look
-// close to …", a stop count) is announced at once. The assertive "Para! Next stop is yours" never
-// goes through here: it is its own role="alert".
+// GPS changes the walk view's `live` text on every fix, and under jitter it flips between the
+// distance, "You look close to …" and the step title (a fix crossing the 50 m usability gate or
+// the near-target radius). A screen reader must not be flooded, so within a step (the announcer is
+// reset whenever focus moves to the step heading, which reads the title):
+//  - a fall-back to the title is never announced (the heading already said it);
+//  - the first "You look close to …" is announced at once, then latched: never again in the step;
+//  - a distance is announced only once ANNOUNCE_MS have passed since the last announcement (or
+//    the step start) AND it moved by DISTANCE_ANNOUNCE_M since the last announced distance;
+//  - any other change (a GPS stop count) at most once per ANNOUNCE_MS.
+// So after the first proposal no two announcements are ever closer than ANNOUNCE_MS. The
+// assertive "Para! Next stop is yours" never goes through here: it is its own role="alert".
 
-export const DISTANCE_ANNOUNCE_MS = 15_000;
+import type { GuidanceView } from "./view";
+
+export const ANNOUNCE_MS = 15_000;
+/** Kept for the brief's wording: distance updates at most every 15 s. */
+export const DISTANCE_ANNOUNCE_MS = ANNOUNCE_MS;
 export const DISTANCE_ANNOUNCE_M = 50;
 
-export type Announcement = { text: string; at: number };
+export type LiveKind = "fallback" | "proposal" | "distance" | "change";
+
+export type Announcer = {
+  /** When the last announcement (or the step start) happened. */
+  at: number;
+  /** The last text announced (or recorded at the step start). */
+  text: string | null;
+  /** The last announced walk distance in this step. */
+  distance: number | null;
+  proposalSaid: boolean;
+};
 
 const DISTANCE = /^(?:≈ (\d+)|Under 10) m to (.+) in a straight line$/;
 
@@ -21,15 +40,36 @@ export function walkDistanceOf(text: string): number | null {
   return m[1] === undefined ? 0 : Number(m[1]);
 }
 
-const distanceTarget = (text: string): string | null => DISTANCE.exec(text)?.[2] ?? null;
-
-/** What to announce now, or null to stay quiet (same text, or a distance update held back). */
-export function nextPoliteAnnouncement(prev: Announcement | null, text: string, now: number): Announcement | null {
-  if (prev && prev.text === text) return null;
-  const meters = walkDistanceOf(text);
-  const prevMeters = prev ? walkDistanceOf(prev.text) : null;
-  if (prev && meters !== null && prevMeters !== null && distanceTarget(text) === distanceTarget(prev.text)) {
-    if (now - prev.at < DISTANCE_ANNOUNCE_MS || Math.abs(meters - prevMeters) < DISTANCE_ANNOUNCE_M) return null;
+/** What kind of polite change a view's live text is. */
+export function liveKind(view: GuidanceView): LiveKind {
+  if (view.screen === "ended") return "change";
+  const text = view.live.text;
+  if (view.screen === "walk") {
+    if (text === view.title) return "fallback";
+    if (text.startsWith("You look close to")) return "proposal";
+    if (walkDistanceOf(text) !== null) return "distance";
   }
-  return { text, at: now };
+  return "change";
+}
+
+/** A new step (focus moved to its heading): `text` was read through the heading, so only recorded. */
+export function resetAnnouncer(text: string | null, now: number): Announcer {
+  return { at: now, text, distance: text === null ? null : walkDistanceOf(text), proposalSaid: false };
+}
+
+/** The announcer after `text`, and what to say now (null: stay quiet). */
+export function nextPolite(state: Announcer, text: string, kind: LiveKind, now: number): { state: Announcer; say: string | null } {
+  const quiet = { state, say: null };
+  if (text === state.text || kind === "fallback") return quiet;
+  if (kind === "proposal") {
+    if (state.proposalSaid) return quiet;
+    return { state: { ...state, at: now, text, proposalSaid: true }, say: text };
+  }
+  if (now - state.at < ANNOUNCE_MS) return quiet;
+  if (kind === "distance") {
+    const meters = walkDistanceOf(text)!;
+    if (state.distance !== null && Math.abs(meters - state.distance) < DISTANCE_ANNOUNCE_M) return quiet;
+    return { state: { ...state, at: now, text, distance: meters }, say: text };
+  }
+  return { state: { ...state, at: now, text }, say: text };
 }

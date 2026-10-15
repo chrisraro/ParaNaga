@@ -66,6 +66,9 @@ export function RideStep({ view, onSend, location, headingRef, alertKey }: StepP
       <p className="pn-guide__note">{STOP_ALERT_NOTE}</p>
       <GuidanceButtons actions={view.actions} onSend={onSend} />
       <UndoButton undo={view.undo} onSend={onSend} />
+      {/* TODO(Task 11): when the MyNaga panel lands, call frame.markHomeNavigation("/app/mynaga") on
+          this link (as the stop pins do), so closing the panel goes back to the running guidance
+          with router.back() instead of pushing a new /app entry. */}
       <Link href="/app/mynaga" className="pn-text-btn pn-guide__report" data-testid="guidance-report-driver">
         {REPORT_DRIVER}
       </Link>

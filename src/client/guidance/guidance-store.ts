@@ -28,6 +28,9 @@ export type GuidanceState = { session: GuidanceSession; card: SavedTrip };
 
 // undefined: not read yet.
 let state: GuidanceState | null | undefined;
+// A stored record was unreadable, inconsistent or too old: removed on the next subscribe (a
+// commit-phase call), never from inside getSnapshot (which runs during render).
+let dropStored = false;
 const listeners = new Set<() => void>();
 
 function storage(): Storage | null {
@@ -79,7 +82,7 @@ function load(now: number): GuidanceState | null {
   }
   // Ended sessions are never kept; anything unreadable, too old or half-written is dropped.
   if (!session || !card || session.status === "ended" || card.option.id !== session.trip.option.id) {
-    removeKeys();
+    dropStored = true;
     return null;
   }
   return { session, card };
@@ -90,6 +93,10 @@ function emit(): void {
 }
 
 export function subscribeGuidance(listener: () => void): () => void {
+  if (dropStored && state === null) {
+    dropStored = false;
+    removeKeys();
+  }
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
@@ -141,5 +148,6 @@ export function forgetGuidance(): void {
 /** Tests only: the next read goes back to sessionStorage. */
 export function resetGuidanceStoreForTests(): void {
   state = undefined;
+  dropStored = false;
   listeners.clear();
 }

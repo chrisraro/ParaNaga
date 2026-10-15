@@ -137,7 +137,7 @@ describe("useGuidanceSession", () => {
     expect(stored?.ride?.passedIndex).toBe(1);
   });
 
-  it("stops the watch and releases the wake lock before Arrive renders, and never restarts on undo", async () => {
+  it("stops the watch and releases the wake lock on Arrive, and never restarts on undo", async () => {
     const { result } = renderHook(() => useGuidanceSession());
     startTrip(result);
     await flush();
@@ -145,12 +145,7 @@ describe("useGuidanceSession", () => {
     act(() => result.current.enableLocation());
     act(() => result.current.send({ type: "boarded" }));
     act(() => result.current.send({ type: "gotOff" }));
-    let watchingWhenArriveRendered: boolean | null = null;
-    clearWatch.mockImplementation(() => {
-      watchingWhenArriveRendered = false;
-    });
     act(() => result.current.send({ type: "arrived" }));
-    expect(watchingWhenArriveRendered).toBe(false);
     expect(clearWatch).toHaveBeenCalledWith(1);
     expect(release).toHaveBeenCalled();
     expect(result.current.view?.screen).toBe("arrive");
@@ -161,6 +156,28 @@ describe("useGuidanceSession", () => {
     await flush();
     expect(result.current.view?.screen).toBe("walk");
     expect(watchPosition).toHaveBeenCalledTimes(1);
+  });
+
+  it("the first render of Arrive already has the watch cleared and the wake lock released", async () => {
+    let clearsAtArrive: number | null = null;
+    let releasesAtArrive: number | null = null;
+    const { result } = renderHook(() => {
+      const r = useGuidanceSession();
+      if (r.view?.screen === "arrive" && clearsAtArrive === null) {
+        clearsAtArrive = clearWatch.mock.calls.length;
+        releasesAtArrive = release.mock.calls.length;
+      }
+      return r;
+    });
+    startTrip(result);
+    await flush();
+    act(() => result.current.enableLocation());
+    act(() => result.current.send({ type: "boarded" }));
+    act(() => result.current.send({ type: "gotOff" }));
+    expect(clearWatch).not.toHaveBeenCalled();
+    act(() => result.current.send({ type: "arrived" }));
+    expect(clearsAtArrive).toBe(1);
+    expect(releasesAtArrive).toBe(1);
   });
 
   it("End removes both keys, stops the watch and frees the wake lock", async () => {

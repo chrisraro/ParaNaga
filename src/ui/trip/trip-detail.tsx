@@ -17,10 +17,9 @@
 import "./trip.css";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { deleteSavedTrip, putSavedTrip, replaceSavedTrip } from "@/client/storage/db";
-import { useSavedTrips } from "@/client/saved/use-saved";
+import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
-import { buildSavedTrip, manilaDate, matchSavedTrip, shareText, type SavedEnd } from "@/domain/saved/saved";
+import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel } from "@/domain/trip/present";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
@@ -211,41 +210,17 @@ const SHARE_STATUS: Record<ShareOutcome, string> = {
 };
 
 function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds }) {
-  const trips = useSavedTrips();
   const id = useId();
   const [exactPoints, setExactPoints] = useState(false);
   const [status, setStatus] = useState("");
-  const [busy, setBusy] = useState(false);
-  // Saved on this plan's revision, saved on an older one (offer to update the copy), or not saved.
-  const match = trips.status === "ready" ? matchSavedTrip(trips.records, option.id, ends.start.point, ends.destination.point, data.revision.revisionId) : null;
-  const state = match?.kind ?? "none";
-  const waiting = busy || trips.status === "loading";
-  const unavailable = trips.status === "error" && trips.unavailable;
-
   const newCard = () => buildSavedTrip({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), data, option, start: ends.start, destination: ends.destination });
-
-  const onSave = async () => {
-    if (waiting || !match) return;
-    setBusy(true);
-    setStatus("");
-    try {
-      if (match.kind === "saved") {
-        await deleteSavedTrip(match.trip.id);
-        setStatus("Removed from saved trips.");
-      } else if (match.kind === "older") {
-        // Replace the copy planned on older data with this one (current data), atomically.
-        await replaceSavedTrip(match.trip.id, newCard());
-        setStatus("Saved copy updated to the current data.");
-      } else {
-        await putSavedTrip(newCard());
-        setStatus("Saved on this phone. It opens without signal from Saved.");
-      }
-    } catch {
-      setStatus("Could not save on this phone.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  // Saved on this plan's revision, saved on an older one (offer to update the copy), or not saved.
+  const { match, kind: state, waiting, unavailable, toggle } = useSavedTripToggle(
+    { optionId: option.id, start: ends.start.point, destination: ends.destination.point, revisionId: data.revision.revisionId },
+    newCard,
+    setStatus,
+  );
+  const onSave = toggle;
 
   const share = async () => {
     setStatus("");

@@ -7,44 +7,20 @@
 // entrance (none is mapped).
 
 import { useState } from "react";
-import { deleteSavedTrip, putSavedTrip, replaceSavedTrip } from "@/client/storage/db";
-import { useSavedTrips } from "@/client/saved/use-saved";
+import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { ArriveView } from "@/domain/guidance/view";
-import { matchSavedTrip, type SavedTrip } from "@/domain/saved/saved";
+import type { SavedTrip } from "@/domain/saved/saved";
 import { RouteChip, UndoButton, type StepProps } from "./guidance-parts";
 
 function SaveTripRow({ card }: { card: SavedTrip }) {
-  const trips = useSavedTrips();
-  const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
-  const match =
-    trips.status === "ready" ? matchSavedTrip(trips.records, card.option.id, card.start.point, card.destination.point, card.revisionId) : null;
-  const saved = match?.kind === "saved";
-  const unavailable = trips.status === "error" && trips.unavailable;
-  const waiting = busy || trips.status === "loading";
-
-  const onToggle = async () => {
-    if (waiting || unavailable || !match) return;
-    setBusy(true);
-    setStatus("");
-    try {
-      const fresh: SavedTrip = { ...card, id: crypto.randomUUID(), savedAt: new Date().toISOString() };
-      if (match.kind === "saved") {
-        await deleteSavedTrip(match.trip.id);
-        setStatus("Removed from saved trips.");
-      } else if (match.kind === "older") {
-        await replaceSavedTrip(match.trip.id, fresh);
-        setStatus("Saved on this phone.");
-      } else {
-        await putSavedTrip(fresh);
-        setStatus("Saved on this phone.");
-      }
-    } catch {
-      setStatus("Could not save on this phone.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const { kind, waiting, unavailable, toggle } = useSavedTripToggle(
+    { optionId: card.option.id, start: card.start.point, destination: card.destination.point, revisionId: card.revisionId },
+    () => ({ ...card, id: crypto.randomUUID(), savedAt: new Date().toISOString() }),
+    setStatus,
+  );
+  const saved = kind === "saved";
+  const onToggle = toggle;
 
   return (
     <div className="pn-guide__save">
@@ -94,7 +70,9 @@ export function ArriveStep({ view, onSend, headingRef, card, onDone }: Omit<Step
       {card ? <SaveTripRow card={card} /> : null}
       {/* "Done" is the view's `end` action: it also clears the trip (the screen's onDone). */}
       <div className="pn-guide__actions">
-        {view.actions.map((a) => (
+        {view.actions
+          .filter((a) => a.event === "end")
+          .map((a) => (
           <button key={a.event} type="button" className="pn-btn pn-btn--primary" onClick={onDone} data-testid="guidance-done">
             {a.label}
           </button>
