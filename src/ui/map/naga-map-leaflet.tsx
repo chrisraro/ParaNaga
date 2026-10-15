@@ -7,7 +7,7 @@ import "leaflet/dist/leaflet.css";
 import "./naga-map.css";
 
 import L from "leaflet";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polygon, TileLayer, useMap } from "react-leaflet";
 import { OSM_ATTRIBUTION, attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { prefersReducedMotion, useReducedMotion } from "@/client/map/use-reduced-motion";
@@ -22,9 +22,10 @@ import {
   NAGA_MIN_ZOOM,
   isInsideNaga,
 } from "@/domain/geo/naga";
-import type { LatLng } from "@/domain/geo/types";
+import type { Bounds, LatLng } from "@/domain/geo/types";
 import { MapControls } from "./map-controls";
-import type { NagaMapProps } from "./types";
+import { StopsLayer } from "./stops-layer";
+import type { HighlightStop, NagaMapPins, NagaMapProps } from "./types";
 import { UserLocationLayer } from "./user-location-layer";
 
 const MAX_BOUNDS: L.LatLngBoundsLiteral = [
@@ -74,23 +75,74 @@ function pinIcon(kind: "start" | "destination"): L.DivIcon {
 const START_ICON = pinIcon("start");
 const DESTINATION_ICON = pinIcon("destination");
 
-type View = { lat: number; lng: number; zoom: number };
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
+/** Boarding (filled) / getting-off (hollow) stop marker: a DOM marker, so no path is added. */
+function tripStopIcon(stop: HighlightStop): L.DivIcon {
+  const label = escapeHtml(`${stop.role === "board" ? "Board at" : "Get off at"} ${stop.label}`);
+  return L.divIcon({
+    className: `pn-trip-stop pn-trip-stop--${stop.role}`,
+    html: `<svg width="24" height="24" viewBox="0 0 24 24" role="img" aria-label="${label}"><circle class="pn-trip-stop__ring" cx="12" cy="12" r="8" /></svg>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+}
+
+function TripStopMarker({ stop }: { stop: HighlightStop }) {
+  const icon = useMemo(() => tripStopIcon(stop), [stop]);
+  return <Marker position={[stop.lat, stop.lng]} icon={icon} interactive={false} keyboard={false} />;
+}
+
+/** Fits the highlighted stops and the pins into view whenever the highlighted set changes. */
+function FitHighlights({ stops, pins, paddingBottom }: { stops: readonly HighlightStop[] | undefined; pins: NagaMapPins | undefined; paddingBottom: number }) {
+  const map = useMap();
+  const key = stops?.map((s) => s.id).join("|") ?? "";
+  const fit = useEffectEvent(() => {
+    if (!stops || stops.length === 0) return;
+    const points: L.LatLngTuple[] = stops.map((s) => [s.lat, s.lng]);
+    if (pins?.start) points.push([pins.start.lat, pins.start.lng]);
+    if (pins?.destination) points.push([pins.destination.lat, pins.destination.lng]);
+    map.fitBounds(L.latLngBounds(points), {
+      paddingTopLeft: [40, 80],
+      // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
+      // locate controls (48 px wide, 16 px from the edge): 64 + 13 + a gap.
+      paddingBottomRight: [84, paddingBottom],
+      maxZoom: 17,
+      animate: !prefersReducedMotion(),
+    });
+  });
+  useEffect(() => {
+    if (key) fit();
+  }, [key]);
+  return null;
+}
+
+type View = { lat: number; lng: number; zoom: number; bounds: Bounds };
 
 type SyncProps = {
   recenterSignal: number | undefined;
   userFix: LocationFix | null | undefined;
   target: LatLng | null | undefined;
+  targetLabel: string;
   onView: (view: View) => void;
   onAnnounce: (message: string) => void;
 };
 
 /** Lives inside <MapContainer>: reports the view and handles recenter requests. */
-function MapViewSync({ recenterSignal, userFix, target, onView, onAnnounce }: SyncProps) {
+function MapViewSync({ recenterSignal, userFix, target, targetLabel, onView, onAnnounce }: SyncProps) {
   const map = useMap();
 
   const report = useEffectEvent(() => {
     const center = map.getCenter();
-    onView({ lat: center.lat, lng: center.lng, zoom: map.getZoom() });
+    const b = map.getBounds();
+    onView({
+      lat: center.lat,
+      lng: center.lng,
+      zoom: map.getZoom(),
+      bounds: { west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() },
+    });
   });
 
   // Report once when ready (guarded so StrictMode's effect replay doesn't fire it twice),
@@ -117,13 +169,15 @@ function MapViewSync({ recenterSignal, userFix, target, onView, onAnnounce }: Sy
     // Under reduced motion the fly-to becomes a jump (map design brief §3, Motion rules).
     if (prefersReducedMotion()) map.setView(center, zoom, { animate: false });
     else map.flyTo(center, zoom, { duration: 0.8 });
-    const where = target ? "the start pin" : "your location";
+    const where = target ? targetLabel : "your location";
     onAnnounce(onUser ? `Map centered on ${where}` : "Map centered on Naga City center");
   });
 
-  const lastSignal = useRef(recenterSignal);
+  // Starts at 0 (the screens' initial signal), not the current value: a recentre requested before
+  // this client-only map finished loading (e.g. "Show on map" from a directly opened stop) still runs.
+  const lastSignal = useRef<number | undefined>(0);
   useEffect(() => {
-    if (lastSignal.current === recenterSignal) return;
+    if (recenterSignal === undefined || lastSignal.current === recenterSignal) return;
     lastSignal.current = recenterSignal;
     recenter();
   }, [recenterSignal]);
@@ -136,10 +190,17 @@ export default function NagaMapLeaflet({
   userQuality,
   userStale = false,
   pins,
+  highlightStops,
+  highlightPaddingBottom = 40,
+  stopPins,
+  stopPinsInteractive = true,
+  onStopSelect,
+  onBoundsChange,
   crosshair = false,
   onCenterChange,
   recenterSignal,
   recenterTarget,
+  recenterTargetLabel = "the start pin",
   onLocate,
   className,
 }: NagaMapProps) {
@@ -157,6 +218,7 @@ export default function NagaMapLeaflet({
     setView(next);
     const center: LatLng = { lat: next.lat, lng: next.lng };
     onCenterChange?.(center, isInsideNaga(center));
+    onBoundsChange?.(next.bounds);
   };
 
   const zoomBy = (delta: 1 | -1) => {
@@ -179,6 +241,7 @@ export default function NagaMapLeaflet({
       data-center-lat={view ? view.lat.toFixed(6) : undefined}
       data-center-lng={view ? view.lng.toFixed(6) : undefined}
       data-zoom={view ? String(view.zoom) : undefined}
+      data-stop-pins={stopPins ? stopPins.length : 0}
       className={className ? `pn-map ${className}` : "pn-map"}
     >
       <MapContainer
@@ -208,6 +271,7 @@ export default function NagaMapLeaflet({
           positions={OUTLINE}
           pathOptions={OUTLINE_STYLE}
         />
+        {stopPins ? <StopsLayer stops={stopPins} interactive={stopPinsInteractive} onSelect={onStopSelect} /> : null}
         <UserLocationLayer fix={userFix} quality={userQuality} stale={userStale} />
         {pins?.start ? (
           <Marker
@@ -225,10 +289,13 @@ export default function NagaMapLeaflet({
             keyboard={false}
           />
         ) : null}
+        {highlightStops?.map((stop) => <TripStopMarker key={`${stop.role}:${stop.id}`} stop={stop} />)}
+        <FitHighlights stops={highlightStops} pins={pins} paddingBottom={highlightPaddingBottom} />
         <MapViewSync
           recenterSignal={recenterSignal}
           userFix={userFix}
           target={recenterTarget}
+          targetLabel={recenterTargetLabel}
           onView={handleView}
           onAnnounce={setAnnouncement}
         />

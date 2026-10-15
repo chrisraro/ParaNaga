@@ -1,5 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
+import { routeNetwork } from "./fixtures/network";
 
 // Map core e2e (Task 7). Phone-only: on desktop /app shows the large-screen gate.
 // Tiles are aborted everywhere, so nothing depends on the network.
@@ -18,6 +20,11 @@ const OUTSIDE_POLYGON = { lat: 13.6707, lng: 123.174 };
 
 test.beforeEach(async ({ page }) => {
   await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
+  await routeNetwork(page);
+  // Trip planning is covered by trip.spec.ts; here it answers "no coverage" so no test needs a database.
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(NO_ROUTE_PLAN) }),
+  );
 });
 
 const mapEl = (page: Page) => page.getByTestId("naga-map");
@@ -346,7 +353,7 @@ test.describe("geolocation denied", () => {
 });
 
 test.describe("pinning without GPS", () => {
-  test("start and destination pins show the honest card with no line between them", async ({ page }) => {
+  test("start and destination pins show the trip result with no line between them", async ({ page }) => {
     await openApp(page);
     const pathsBefore = await overlayPaths(page).count();
     expect(pathsBefore).toBeGreaterThan(0); // boundary outline + mask
@@ -360,8 +367,8 @@ test.describe("pinning without GPS", () => {
     await expect.poll(async () => (await readView(page)).lng).not.toBe(view.lng);
     await page.getByRole("button", { name: "Set destination here" }).click();
 
-    await expect(page.getByTestId("no-verified-commute")).toContainText("No verified commute yet for this trip");
-    await expect(page.getByRole("heading", { name: "No verified commute yet for this trip" })).toBeVisible();
+    await expect(page.getByTestId("no-provisional-route")).toContainText("Loops A and B are the only routes we can suggest for now.");
+    await expect(page.getByRole("heading", { name: "No provisional route connects these points yet" })).toBeVisible();
     await expect(page.locator(".leaflet-marker-pane").getByRole("img")).toHaveCount(2);
     expect(await overlayPaths(page).count()).toBe(pathsBefore);
   });
@@ -479,6 +486,9 @@ test.describe("focus and sheet behaviour", () => {
     await page.keyboard.press("ArrowDown");
     await snapIs("1");
     await pin(page, "start");
+    // Move away first: a destination on top of the start is refused (same place).
+    await drag(page, -120, 80);
+    await settled(page);
     await pin(page, "destination");
     await grabber.focus();
     await page.keyboard.press("ArrowDown");

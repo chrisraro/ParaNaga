@@ -12,14 +12,26 @@ export type RequestContext = {
   requestId: string;
 };
 
+export type ContextOptions = {
+  /**
+   * Public reads: one REPEATABLE READ, READ ONLY transaction, so every statement sees the same
+   * snapshot (a publish committing mid-request cannot mix two revisions in one response).
+   */
+  readOnly?: boolean;
+};
+
+export const BEGIN_READ_WRITE = "begin";
+export const BEGIN_READ_ONLY = "begin isolation level repeatable read read only";
+
 export async function runInRequestContext<T>(
   pool: Pool,
   ctx: RequestContext,
   fn: (db: Db) => Promise<T>,
+  options: ContextOptions = {},
 ): Promise<T> {
   const client = await pool.connect();
   try {
-    await client.query("begin");
+    await client.query(options.readOnly ? BEGIN_READ_ONLY : BEGIN_READ_WRITE);
     await client.query(
       "select set_config('app.user_id', $1, true), set_config('app.request_id', $2, true)",
       [ctx.userId ?? "", ctx.requestId],

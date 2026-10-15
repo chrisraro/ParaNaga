@@ -151,4 +151,22 @@ describe("isReadyToPlan", () => {
     const full = endpointsReducer(half, { type: "set", which: "destination", endpoint: search });
     expect(isReadyToPlan(full)).toBe(true);
   });
+
+  it("refuses an end 25 m or less from the other end as the same place, keeping the pick open", () => {
+    const near = { lat: PLAZA.lat + 0.0001, lng: PLAZA.lng }; // ≈ 11 m north of PLAZA
+    const withStart = endpointsReducer(initialEndpointsState, { type: "set", which: "start", endpoint: gps });
+    const picking = endpointsReducer(withStart, { type: "pick", which: "destination" });
+    const refused = endpointsReducer(picking, { type: "set", which: "destination", endpoint: { point: near, source: "map", label: "" } });
+    expect(refused.error).toBe("same_place");
+    expect(refused.destination).toBeNull();
+    expect(refused.picking).toBe("destination");
+    // The same rule protects the start.
+    const withDest = endpointsReducer(initialEndpointsState, { type: "set", which: "destination", endpoint: { point: near, source: "map", label: "" } });
+    expect(endpointsReducer(withDest, { type: "set", which: "start", endpoint: gps }).error).toBe("same_place");
+    // Resetting the same end (a GPS refinement) is not compared with itself.
+    expect(endpointsReducer(withStart, { type: "set", which: "start", endpoint: { point: near, source: "gps", label: "" } }).error).toBeNull();
+    // Farther than 25 m is accepted.
+    const far = { lat: PLAZA.lat + 0.0003, lng: PLAZA.lng }; // ≈ 33 m
+    expect(endpointsReducer(picking, { type: "set", which: "destination", endpoint: { point: far, source: "map", label: "" } }).error).toBeNull();
+  });
 });

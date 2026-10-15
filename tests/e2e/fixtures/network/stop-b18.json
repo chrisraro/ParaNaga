@@ -1,0 +1,57 @@
+{
+ "revision": {
+  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
+  "label": "provisional-loops-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T08:55:12.774Z"
+ },
+ "stop": {
+  "id": "d045958b-928f-486c-a835-bfd9a74b87a0",
+  "name": "B18",
+  "lat": 13.6266719,
+  "lng": 123.1992224,
+  "status": "candidate",
+  "navigationApproved": false,
+  "source": {
+   "layer": "Loop Service B",
+   "code": "B18",
+   "label": ""
+  },
+  "accuracyM": null,
+  "curbSide": null,
+  "boardingAllowed": null,
+  "alightingAllowed": null,
+  "signInstalled": null
+ },
+ "sourceRecords": [
+  {
+   "layer": "Loop Service B",
+   "code": "B18",
+   "label": "",
+   "description": "",
+   "coordinatesRaw": "123.1992224,13.6266719,0",
+   "lat": 13.6266719,
+   "lng": 123.1992224,
+   "retrievedOn": "2026-10-15"
+  }
+ ],
+ "sourceMap": {
+  "ownerDisplayName": "Tan Gumba",
+  "ownerIdentityVerified": false
+ },
+ "sharedCoordinate": [],
+ "servingRoutes": [
+  {
+   "routeCode": "R8-B",
+   "routeName": "Centro–Magsaysay Loop B",
+   "variantId": "858df840-a106-4899-b912-9ca61868fedf",
+   "direction": "counterclockwise",
+   "kind": "permanent",
+   "evidenceLevel": "provisional",
+   "verification": "unverified",
+   "isCircular": true,
+   "seq": 18
+  }
+ ],
+ "passingNearby": []
+}

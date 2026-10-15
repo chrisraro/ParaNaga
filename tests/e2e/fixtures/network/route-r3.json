@@ -1,0 +1,174 @@
+{
+ "revision": {
+  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
+  "label": "provisional-loops-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T08:55:12.774Z"
+ },
+ "route": {
+  "code": "R3",
+  "name": "Centro–Del Rosario via Roxas Avenue",
+  "groupNumber": 3,
+  "modeCode": "PUJ_Class_2_plan",
+  "legalStatus": "approved_plan",
+  "allocatedUnits": 28,
+  "allocationIsActiveFleetCount": false,
+  "groupAllocatedUnits": null,
+  "evidenceLevel": "documentary",
+  "verification": "unverified",
+  "hasProvisionalStops": false,
+  "hasTrial": false,
+  "notes": "Source also lists an Almeda–Mabolo–Southbound Terminal structure. Separate branch interpretation and return path require agency clarification; do not merge the two structures.",
+  "sourceCodes": [
+   "S01",
+   "S02"
+  ],
+  "legalStreets": {
+   "inbound": null,
+   "outbound": null,
+   "circuit": [
+    "Naga–Pili boundary, Del Rosario",
+    "AH26",
+    "Roxas Ave",
+    "Fraternidad St",
+    "Biak na Bato St",
+    "Gen. Luna St",
+    "P. Burgos St",
+    "J. Hernandez Ave",
+    "Gen. Luna St",
+    "Biak na Bato St",
+    "Fraternidad St",
+    "Roxas Ave",
+    "AH26",
+    "Naga–Pili boundary, Del Rosario"
+   ]
+  },
+  "additionalSourceStructures": [
+   [
+    "Naga–Pili boundary, Del Rosario",
+    "AH26",
+    "Almeda Highway",
+    "Roxas Ave",
+    "AH26",
+    "Mabolo",
+    "Camaligan–Gainza Rd",
+    "Felix Plazo St",
+    "Southbound Terminal"
+   ]
+  ],
+  "normalizationNote": "PDF prints Felix Plaxo; normalized provisionally to Felix Plazo, supported by the terminal ordinance. Confirm junction topology."
+ },
+ "variants": [
+  {
+   "variantId": "183eb153-6bc4-4c7b-9f70-9384da23c0d1",
+   "direction": "circuit",
+   "kind": "permanent",
+   "evidenceLevel": "documentary",
+   "verification": "unverified",
+   "isCircular": false,
+   "headsign": null,
+   "vehicleClass": null,
+   "operatingStatus": "unverified",
+   "trialStatus": null,
+   "effectiveFrom": null,
+   "trialDurationDays": null,
+   "legalStreets": {
+    "inbound": null,
+    "outbound": null,
+    "circuit": [
+     "Naga–Pili boundary, Del Rosario",
+     "AH26",
+     "Roxas Ave",
+     "Fraternidad St",
+     "Biak na Bato St",
+     "Gen. Luna St",
+     "P. Burgos St",
+     "J. Hernandez Ave",
+     "Gen. Luna St",
+     "Biak na Bato St",
+     "Fraternidad St",
+     "Roxas Ave",
+     "AH26",
+     "Naga–Pili boundary, Del Rosario"
+    ]
+   },
+   "notes": "is_circular=false means the loop is not verified (the seed lists circuit_streets, return path unclear), not that the route is verified as non-circular.",
+   "sourceCodes": [
+    "S01",
+    "S02"
+   ],
+   "stops": []
+  }
+ ],
+ "trials": [],
+ "aliases": [],
+ "fareEvidence": {
+  "basis": "route_mode",
+  "rules": [
+   {
+    "code": "F01",
+    "modeCode": "traditional_jeepney",
+    "vehicleClass": null,
+    "baseCentavos": 1400,
+    "baseKm": 4,
+    "incrementCentavosPerKm": 200,
+    "discountPercent": null,
+    "discountedBaseCentavos": null,
+    "discountGroups": null,
+    "rounding": null,
+    "effectiveFrom": "2026-09-28",
+    "enactedOn": null,
+    "evidenceStatus": "national_rates_reported;local_matrix_not_retrieved",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S05",
+     "S06"
+    ]
+   },
+   {
+    "code": "F02",
+    "modeCode": "modern_jeepney",
+    "vehicleClass": null,
+    "baseCentavos": 1700,
+    "baseKm": 4,
+    "incrementCentavosPerKm": 240,
+    "discountPercent": null,
+    "discountedBaseCentavos": null,
+    "discountGroups": null,
+    "rounding": null,
+    "effectiveFrom": "2026-09-28",
+    "enactedOn": null,
+    "evidenceStatus": "national_rates_reported;vehicle_class_and_local_matrix_required",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S05",
+     "S06"
+    ]
+   }
+  ],
+  "observations": [],
+  "conflicts": []
+ },
+ "sources": [
+  {
+   "code": "S01",
+   "title": "Naga approved LPTRP, Ordinance 2025-070",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S02",
+   "title": "Signed LPTRP ordinance PDF",
+   "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/10/Ordno-2025-070-Institutionalizing-the-Approved-LPTRP.pdf",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  }
+ ]
+}

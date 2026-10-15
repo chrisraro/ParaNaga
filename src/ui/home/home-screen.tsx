@@ -6,11 +6,19 @@
 
 import "./home-screen.css";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useGeolocation } from "@/client/geo/use-geolocation";
+import { useStopsInView } from "@/client/map/use-stops-in-view";
+import { useTripPlan } from "@/client/trip/use-trip-plan";
+import type { PlanResponse } from "@/domain/api/plan";
+import type { StopPin } from "@/domain/api/schemas";
+import { haversineMeters } from "@/domain/geo/geometry";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
-import type { LatLng } from "@/domain/geo/types";
+import type { Bounds, LatLng } from "@/domain/geo/types";
+import { SAME_PLACE_M } from "@/domain/planner/labels";
+import { SAME_PLACE_TITLE, noCoverageCopy } from "@/domain/trip/present";
 import {
   endpointsReducer,
   initialEndpointsState,
@@ -18,25 +26,54 @@ import {
   type EndpointWhich,
   type EndpointsState,
 } from "@/domain/trip/endpoints";
-import { NagaMap } from "@/ui/map/naga-map";
-import { EndpointSheet, useSheet } from "./endpoint-sheet";
+import { useAppFrame } from "@/ui/app-shell/app-frame-context";
+import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
+import { TripDetail } from "@/ui/trip/trip-detail";
+import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
+import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
+import { planLookups } from "@/ui/trip/trip-parts";
+import { EndpointSheet, endpointRowMainId, useSheet } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
   LocationStatus,
   formatAccuracy,
+  formatFixAge,
   locationStatusCopy,
   type LocationStatusCopy,
 } from "./location-status";
+import { NearbyStops } from "./nearby-stops";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
 const MAP_BOTTOM_INSET = 186;
 
+/** Pins while a trip detail is open: the layer stays mounted (one canvas for the session), just empty. */
+const NO_PINS: readonly StopPin[] = [];
+
 const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Destination" };
+
+const samePlaceHint = (which: EndpointWhich) =>
+  which === "start" ? "Move the pin away from your destination." : "Move the pin away from your start.";
 
 /** Which row to offer next after `which` was just set. */
 function nextFocus(state: EndpointsState, which: EndpointWhich): EndpointWhich | null {
   if (which === "start") return state.destination ? null : "destination";
   return state.start ? null : "start";
+}
+
+/** Boarding and getting-off stops of an option's ride legs, for the map (markers only). */
+function highlightsFor(data: PlanResponse, optionId: string): HighlightStop[] {
+  const option = data.plan.options.find((o) => o.id === optionId);
+  if (!option) return [];
+  const lookups = planLookups(data);
+  return option.legs.flatMap((leg) => {
+    if (leg.kind !== "ride") return [];
+    const board = leg.stops[0]!;
+    const alight = leg.stops[leg.stops.length - 1]!;
+    return [
+      { id: board.id, lat: board.lat, lng: board.lng, role: "board" as const, label: lookups.stopName(board.id, board.name) },
+      { id: alight.id, lat: alight.lat, lng: alight.lng, role: "alight" as const, label: lookups.stopName(alight.id, alight.name) },
+    ];
+  });
 }
 
 function toPoint(fix: LocationFix): LatLng {
@@ -65,6 +102,26 @@ function PillMark() {
   );
 }
 
+/** A start or destination refused for being on top of the other end (not a GPS status). */
+function SamePlaceNotice({ which, onChooseOnMap }: { which: EndpointWhich; onChooseOnMap: () => void }) {
+  return (
+    <div className="pn-status pn-status--warn" data-testid="same-place-notice">
+      <svg className="pn-status__icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+        <path d="M12 8v5M12 16h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+      <div className="pn-status__body">
+        <p className="pn-status__title">
+          {SAME_PLACE_TITLE}. {samePlaceHint(which)}
+        </p>
+        <button type="button" className="pn-status__action" onClick={onChooseOnMap}>
+          {which === "start" ? "Choose start on map" : "Choose destination on map"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function HomeScreen() {
   const geo = useGeolocation();
   const [endpoints, dispatch] = useReducer(endpointsReducer, initialEndpointsState);
@@ -81,21 +138,51 @@ export function HomeScreen() {
   const [recenterOnFix, setRecenterOnFix] = useState(false);
   // Where the next recentre goes instead of the user fix (the start pin, for "Move start pin").
   const [recenterTarget, setRecenterTarget] = useState<LatLng | null>(null);
+  const [recenterLabel, setRecenterLabel] = useState("the start pin");
   // The last "outside Naga" status card, kept after the watch stops so its copy stays visible.
   const [lastOutcome, setLastOutcome] = useState<LocationStatusCopy | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  // An end that was refused for being the same place as the other end (GPS start on the destination).
+  const [samePlaceRefused, setSamePlaceRefused] = useState<EndpointWhich | null>(null);
   const sheet = useSheet(1);
   const [pickHeight, pickRef] = useMeasuredHeight();
 
-  const bumpRecenter = (target: LatLng | null = null) => {
+  const bumpRecenter = (target: LatLng | null = null, label = "the start pin") => {
     setRecenterTarget(target);
+    setRecenterLabel(label);
     setRecenterSignal((n) => n + 1);
   };
 
   const ready = isReadyToPlan(endpoints);
+  const picking = endpoints.picking;
+  // While placing a pin: the crosshair is within SAME_PLACE_M of the other end.
+  const otherEnd = picking ? endpoints[picking === "start" ? "destination" : "start"] : null;
+  const pickSamePlace = otherEnd !== null && center.inside && haversineMeters(center.point, otherEnd.point) <= SAME_PLACE_M;
+  const pickBlocked = !center.inside || pickSamePlace;
+  const plan = useTripPlan(endpoints.start, endpoints.destination);
+  // The option whose detail is open, by id: option ids (variant:board:alight) survive a replan for
+  // a refined GPS point, so the detail stays open unless the new plan no longer has that option.
+  const [openedId, setOpenedId] = useState<string | null>(null);
+  const planData = plan.status === "ready" ? plan.data : null;
+  const openOption = openedId && planData ? (planData.plan.options.find((o) => o.id === openedId) ?? null) : null;
+  const openOptionId = openOption?.id ?? null;
+  // Where focus goes once the results render: the results heading, or an option card.
+  const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);
+  // No trip, no pending focus move: a stale request must not pull focus once a trip is set again.
+  if (plan.status === "idle" && focusTarget !== null) setFocusTarget(null);
+  if (openedId !== null && openOption === null && plan.status !== "loading") {
+    // The opened option is gone (new plan without it, an error, or the trip was cleared).
+    setOpenedId(null);
+    if (ready) setFocusTarget({ kind: "results" });
+  }
+  const highlightStops = useMemo(
+    () => (planData && openOptionId ? highlightsFor(planData, openOptionId) : undefined),
+    [planData, openOptionId],
+  );
   const watching = geo.state === "watching";
   const assessment = geo.assessment;
-  const liveCopy = locationStatusCopy(geo.state, assessment, geo.fix?.accuracy ?? null);
+  const gpsKey = gpsEndpointKey(endpoints);
+  const liveCopy = locationStatusCopy(geo.state, assessment, geo.fix?.accuracy ?? null, { gpsEndpointSet: gpsKey !== null });
   const statusCopy = liveCopy ?? lastOutcome;
 
   /** Sets an endpoint only if the reducer accepts it; announces and moves on only then. */
@@ -103,9 +190,15 @@ export function HomeScreen() {
     const endpoint = { point, source, label: "" };
     const { accepted, next } = applyIfAccepted(endpoints, which, endpoint);
     if (!accepted) {
-      setAnnouncement("That spot is outside Naga City. Choose a point inside Naga City.");
+      if (next.error === "same_place") {
+        setSamePlaceRefused(which);
+        setAnnouncement(`${SAME_PLACE_TITLE}. ${samePlaceHint(which)}`);
+      } else {
+        setAnnouncement("That spot is outside Naga City. Choose a point inside Naga City.");
+      }
       return false;
     }
+    setSamePlaceRefused(null);
     dispatch({ type: "set", which, endpoint });
     setFocused(nextFocus(next, which));
     setAnnouncement(`${NAME[which]} set: ${source === "gps" ? "Your location" : "Pinned location"}`);
@@ -123,9 +216,30 @@ export function HomeScreen() {
     bumpRecenter();
   };
 
+  // Announce loading, and each settled plan whose outcome changed (a refresh that returns the
+  // same options stays quiet), through the persistent home announcer.
+  const [seenPlanStatus, setSeenPlanStatus] = useState(plan.status);
+  if (plan.status !== seenPlanStatus) {
+    setSeenPlanStatus(plan.status);
+    if (plan.status === "loading") setAnnouncement("Looking for provisional routes…");
+  }
+  const planSignature = planData ? `${planData.plan.coverage}|${planData.plan.options.map((o) => o.id).join(",")}` : null;
+  const [seenSignature, setSeenSignature] = useState<string | null>(null);
+  if (planSignature !== seenSignature) {
+    setSeenSignature(planSignature);
+    if (planData) {
+      const n = planData.plan.options.length;
+      const anyRide = planData.plan.options.some((o) => o.rides > 0);
+      setAnnouncement(
+        planData.plan.coverage === "none"
+          ? noCoverageCopy(planData.plan.reason, planData.plan.directWalkEstimateMeters).title
+          : `${n} provisional trip ${n === 1 ? "option" : "options"} found.${anyRide ? " Unverified route — confirm with the driver." : ""}`,
+      );
+    }
+  }
+
   // React to each new assessment (new fix, or the hook's staleness re-check) during render,
   // React's "adjust state when a prop changes" pattern, so no effect chains are needed.
-  const gpsKey = gpsEndpointKey(endpoints);
   const [seenStatusKind, setSeenStatusKind] = useState(statusCopy?.kind ?? null);
   if ((statusCopy?.kind ?? null) !== seenStatusKind) {
     setSeenStatusKind(statusCopy?.kind ?? null);
@@ -160,7 +274,9 @@ export function HomeScreen() {
         endpoints.picking === null &&
         assessment.usableAsStart &&
         gpsStartAccuracy !== null &&
-        fix.accuracy < gpsStartAccuracy
+        fix.accuracy < gpsStartAccuracy &&
+        // Never refine onto the other end (same place) or outside the city.
+        applyIfAccepted(endpoints, gpsKey, { point: toPoint(fix), source: "gps", label: "" }).accepted
       ) {
         // A better fix refines whichever endpoint is GPS-sourced (the destination after a swap).
         dispatch({ type: "set", which: gpsKey, endpoint: { point: toPoint(fix), source: "gps", label: "" } });
@@ -209,6 +325,7 @@ export function HomeScreen() {
   };
 
   const handleChooseOnMap = (which: EndpointWhich) => {
+    setSamePlaceRefused(null);
     // Placing a pin cancels any pending GPS request, so a late fix can't take over the pick.
     if (which === "start") setGpsIntent(false);
     setRecenterOnFix(false);
@@ -222,6 +339,10 @@ export function HomeScreen() {
   const handleConfirmPick = () => {
     const which = endpoints.picking;
     if (!which || !center.inside) return;
+    if (pickSamePlace) {
+      setAnnouncement(`${SAME_PLACE_TITLE}. ${samePlaceHint(which)}`);
+      return;
+    }
     const wasGps = gpsEndpointKey(endpoints) === which;
     if (!applyEndpoint(which, center.point, "map")) return;
     returnFocusTo.current = which;
@@ -237,21 +358,62 @@ export function HomeScreen() {
   };
 
   const handleClear = (which: EndpointWhich) => {
+    setFocusTarget(null);
     // Clearing drops any pending "use current location" (the watch effect stops GPS if unneeded).
     if (gpsEndpointKey(endpoints) === which) setGpsStartAccuracy(null);
     setGpsIntent(false);
     setRecenterOnFix(false);
     setLastOutcome(null);
+    setSamePlaceRefused(null);
     dispatch({ type: "clear", which });
     setFocused(which);
     setAnnouncement(`${NAME[which]} cleared`);
   };
 
+  const handleOpenOption = (id: string) => {
+    if (!planData) return;
+    setFocusTarget(null);
+    setOpenedId(id);
+    if (sheet.snap === 0) sheet.setSnap(1);
+  };
+
+  const handleCloseOption = () => {
+    if (openedId) setFocusTarget({ kind: "option", id: openedId });
+    setOpenedId(null);
+  };
+
+  const handleRetry = () => {
+    setFocusTarget({ kind: "results" });
+    plan.retry();
+  };
+
+  // A 400 cannot succeed on retry: send the user back to the endpoint rows.
+  const handleChangeEndpoints = () => {
+    if (sheet.snap === 0) sheet.setSnap(1);
+    document.getElementById(endpointRowMainId("start"))?.focus();
+  };
+
+  // Move focus once its target has rendered (after a retry, once the request settles). Each
+  // request is a fresh object, consumed once.
+  const focusDone = useRef<object | null>(null);
+  useEffect(() => {
+    if (!focusTarget || focusDone.current === focusTarget || plan.status === "loading" || openOption) return;
+    const el =
+      focusTarget.kind === "option"
+        ? document.getElementById(optionDomId(focusTarget.id))
+        : document.querySelector<HTMLElement>("[data-results-heading]");
+    if (!el) return;
+    el.focus();
+    focusDone.current = focusTarget;
+  }, [focusTarget, plan.status, openOption]);
+
   const handleClearAll = () => {
+    setFocusTarget(null);
     setGpsIntent(false);
     setRecenterOnFix(false);
     setLastOutcome(null);
     setGpsStartAccuracy(null);
+    setSamePlaceRefused(null);
     dispatch({ type: "clearAll" });
     setFocused("start");
     setAnnouncement("Start and destination cleared");
@@ -274,18 +436,19 @@ export function HomeScreen() {
 
   // Crosshair mode: move focus to the confirm button; Escape (anywhere) cancels. When the panel
   // closes, focus goes back to the endpoint row that was set or cancelled.
-  const picking = endpoints.picking;
   const confirmRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!picking) {
       const row = returnFocusTo.current;
       returnFocusTo.current = null;
-      if (row) document.querySelector<HTMLElement>(`[data-testid="endpoint-${row}"] .pn-endpoint__main`)?.focus();
+      if (row) document.getElementById(endpointRowMainId(row))?.focus();
       return undefined;
     }
     confirmRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
+      if (e.key !== "Escape" || e.repeat) return;
+      // Not while the app is covered (large-screen overlay) and inert.
+      if (confirmRef.current?.closest("[inert]")) return;
       returnFocusTo.current = picking;
       dispatch({ type: "cancelPick" });
       setAnnouncement("Pin cancelled");
@@ -294,11 +457,18 @@ export function HomeScreen() {
     return () => window.removeEventListener("keydown", onKey);
   }, [picking]);
 
-  const fixInside = watching && geo.fix !== null && assessment !== null && assessment.insideCity && !assessment.stale;
+  // An aged fix (a phone standing still gets no new fixes) stays on screen while it is a trip
+  // endpoint, dimmed and with its age; without a GPS endpoint only a fresh fix shows.
+  const fixAged = assessment?.stale === true;
+  const fixInside = watching && geo.fix !== null && assessment !== null && assessment.insideCity && (!fixAged || gpsKey !== null);
+  const fixAge = fixAged && assessment ? formatFixAge(assessment.ageMs) : null;
   const userFix = watching ? geo.fix : null;
   // The status card is about the start; once the user pinned a start it stops nagging.
   const showStatus = statusCopy !== null && statusCopy.kind !== "precise" && (!endpoints.start || endpoints.start.source === "gps");
-  const startSub = gpsIntent && !endpoints.start && statusCopy?.kind === "requesting" ? "Finding your location…" : undefined;
+  const gpsSub = fixAge && gpsKey !== null ? `GPS ${fixAge}` : undefined;
+  const startSub =
+    gpsIntent && !endpoints.start && statusCopy?.kind === "requesting" ? "Finding your location…" : gpsKey === "start" ? gpsSub : undefined;
+  const destinationSub = gpsKey === "destination" ? gpsSub : undefined;
 
   // The map ends MAP_BOTTOM_INSET above the screen bottom (just under the peek sheet's top), so
   // its centre (recentre target, crosshair) is never hidden behind the sheet. The attribution
@@ -311,29 +481,65 @@ export function HomeScreen() {
     ...(endpoints.destination && picking !== "destination" ? { destination: endpoints.destination.point } : {}),
   };
 
+  // Mapped stop pins: shown while exploring and while placing a pin (not tappable then); hidden
+  // while a trip detail highlights its own stops. A tap opens the stop panel over the map.
+  const router = useRouter();
+  const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
+  const tripDetailOpen = ready && openOption !== null;
+  const stopsInView = useStopsInView(viewBounds, !tripDetailOpen);
+  const frame = useAppFrame();
+  const markHomeNavigation = frame?.markHomeNavigation;
+  const handleStopSelect = useCallback(
+    (id: string) => {
+      const path = `/app/stops/${id}`;
+      markHomeNavigation?.(path);
+      router.push(path);
+    },
+    [router, markHomeNavigation],
+  );
+
+  // "Show on map" from a stop panel: centre the map on that stop (adjusted during render).
+  const mapFocus = frame?.mapFocus ?? null;
+  const [seenFocus, setSeenFocus] = useState(mapFocus?.n ?? 0);
+  if (mapFocus && mapFocus.n !== seenFocus) {
+    setSeenFocus(mapFocus.n);
+    bumpRecenter(mapFocus.point, "the stop");
+  }
+
   return (
-    <div className="pn-home" style={rootStyle} data-testid="home-screen">
+    <main className="pn-home" style={rootStyle} data-testid="home-screen">
       <h1 className="sr-only">ParaNaga trip planner</h1>
       <div className="pn-home__map">
         <NagaMap
           userFix={userFix}
           userStale={assessment?.stale ?? false}
           pins={pins}
+          highlightStops={highlightStops}
+          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET + 40)}
           crosshair={picking !== null}
           onCenterChange={handleCenterChange}
           recenterSignal={recenterSignal}
           recenterTarget={recenterTarget}
+          recenterTargetLabel={recenterLabel}
+          stopPins={tripDetailOpen ? NO_PINS : stopsInView.stops}
+          stopPinsInteractive={picking === null}
+          onStopSelect={handleStopSelect}
+          onBoundsChange={setViewBounds}
           onLocate={handleLocate}
         />
       </div>
 
       {fixInside && geo.fix ? (
         <div
-          className={assessment?.quality === "precise" ? "pn-pill" : "pn-pill pn-pill--approximate"}
+          className={`${assessment?.quality === "precise" ? "pn-pill" : "pn-pill pn-pill--approximate"}${fixAge ? " pn-pill--stale" : ""}`}
           data-testid="accuracy-pill"
+          data-stale={fixAge ? "true" : undefined}
         >
           <PillMark />
-          <span>Location {formatAccuracy(geo.fix.accuracy)}</span>
+          <span>
+            Location {formatAccuracy(geo.fix.accuracy)}
+            {fixAge ? ` · ${fixAge}` : null}
+          </span>
         </div>
       ) : null}
 
@@ -346,19 +552,23 @@ export function HomeScreen() {
           <p className="pn-pick__title">
             {picking === "start" ? "Move the map to your starting point" : "Move the map to your destination"}
           </p>
-          {center.inside ? (
-            <p className="pn-pick__hint">The pin marks the centre of the map.</p>
-          ) : (
-            <p id="pn-pick-outside" className="pn-pick__hint pn-pick__hint--warn" data-testid="pick-outside-hint">
+          {!center.inside ? (
+            <p id="pn-pick-blocked" className="pn-pick__hint pn-pick__hint--warn" data-testid="pick-outside-hint">
               Move the pin inside Naga City
             </p>
+          ) : pickSamePlace ? (
+            <p id="pn-pick-blocked" className="pn-pick__hint pn-pick__hint--warn" data-testid="pick-same-place-hint">
+              {SAME_PLACE_TITLE}. {samePlaceHint(picking)}
+            </p>
+          ) : (
+            <p className="pn-pick__hint">The pin marks the centre of the map.</p>
           )}
           <button
             ref={confirmRef}
             type="button"
             className="pn-btn pn-btn--primary"
-            aria-disabled={center.inside ? undefined : true}
-            aria-describedby={center.inside ? undefined : "pn-pick-outside"}
+            aria-disabled={pickBlocked ? true : undefined}
+            aria-describedby={pickBlocked ? "pn-pick-blocked" : undefined}
             onClick={handleConfirmPick}
           >
             {picking === "start" ? "Set start here" : "Set destination here"}
@@ -373,33 +583,35 @@ export function HomeScreen() {
           endpoints={endpoints}
           focused={focused}
           startSub={startSub}
-          onFocus={(which) => setFocused((f) => (f === which ? null : which))}
+          destinationSub={destinationSub}
+          // Activating a row always shows its options (a first tap on the highlighted row must not hide them).
+          onFocus={setFocused}
           onClear={handleClear}
           onSwap={handleSwap}
           onUseCurrentLocation={handleUseCurrentLocation}
           onChooseOnMap={handleChooseOnMap}
+          detailOpen={ready && openOption !== null}
+          after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
         >
-          {ready ? (
+          {ready && openOption && planData ? (
+            <TripDetail data={planData} option={openOption} onBack={handleCloseOption} />
+          ) : ready ? (
             <>
-              <section className="pn-honest" aria-labelledby="pn-honest-title" data-testid="no-verified-commute">
-                <span className="pn-honest__icon" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" focusable="false">
-                    <circle cx="6" cy="18" r="2.5" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="18" cy="6" r="2.5" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <path d="M8 16.5L16 7.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="2 3.2" />
-                  </svg>
-                </span>
-                <div>
-                  <h2 id="pn-honest-title">No verified commute yet for this trip</h2>
-                  <p>{"We're still checking routes and stops on the street. Trip options appear here once a route is verified."}</p>
-                </div>
-              </section>
+              {plan.status === "loading" ? <TripLoading /> : null}
+              {plan.status === "error" ? <TripError kind={plan.kind} onRetry={handleRetry} onChangeEndpoints={handleChangeEndpoints} /> : null}
+              {planData && planData.plan.coverage === "none" ? <TripNoCoverage data={planData} /> : null}
+              {planData && planData.plan.coverage === "provisional" ? (
+                <TripOptions data={planData} refreshing={plan.status === "ready" && plan.refreshing} onOpen={handleOpenOption} />
+              ) : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>
                 Clear start and destination
               </button>
             </>
           ) : null}
-          {showStatus && statusCopy ? (
+          {samePlaceRefused && !openOption ? (
+            <SamePlaceNotice which={samePlaceRefused} onChooseOnMap={() => handleChooseOnMap(samePlaceRefused)} />
+          ) : null}
+          {showStatus && statusCopy && !openOption && !samePlaceRefused ? (
             <LocationStatus copy={statusCopy} onPickStart={() => (statusCopy.kind === "approximate" ? handleMoveStartPin() : handleChooseOnMap("start"))} />
           ) : null}
         </EndpointSheet>
@@ -408,6 +620,6 @@ export function HomeScreen() {
       <p className="sr-only" aria-live="polite" data-testid="home-announcer">
         {announcement}
       </p>
-    </div>
+    </main>
   );
 }

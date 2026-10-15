@@ -217,7 +217,8 @@
 .pn-map .pn-map-notice {
   position: absolute;
   left: 8px;
-  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 8px);
+  /* Above the attribution strip (24 px links) with a gap, never under it. */
+  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 32px);
   z-index: 1000;
   margin: 0;
   padding: 4px 10px;
@@ -254,4 +255,19 @@
   .pn-map .pn-glass {
     background: #111a2e;
   }
+}
+
+/* Highlighted boarding / alighting stops on the map (markers only, never a line). */
+.pn-trip-stop svg {
+  display: block;
+}
+.pn-trip-stop__ring {
+  fill: #ffffff;
+  stroke: #3e4c6b;
+  stroke-width: 4;
+}
+.pn-trip-stop--board .pn-trip-stop__ring {
+  fill: #3e4c6b;
+  stroke: #ffffff;
+  stroke-width: 3;
 }

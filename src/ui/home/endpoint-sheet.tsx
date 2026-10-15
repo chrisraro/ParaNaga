@@ -181,6 +181,11 @@ function PinIcon() {
   );
 }
 
+/** DOM id of an endpoint row's main button, so the screen can move focus to it. */
+export function endpointRowMainId(which: EndpointWhich): string {
+  return `pn-endpoint-${which}-main`;
+}
+
 type RowProps = {
   which: EndpointWhich;
   endpoint: Endpoint | null;
@@ -193,7 +198,7 @@ type RowProps = {
 function EndpointRow({ which, endpoint, focused, sub, onFocus, onClear }: RowProps) {
   return (
     <div className={focused ? "pn-endpoint pn-endpoint--focused" : "pn-endpoint"} data-testid={`endpoint-${which}`}>
-      <button type="button" className="pn-endpoint__main" aria-pressed={focused} onClick={() => onFocus(which)}>
+      <button type="button" id={endpointRowMainId(which)} className="pn-endpoint__main" aria-pressed={focused} onClick={() => onFocus(which)}>
         <span className={`pn-endpoint__icon pn-endpoint__icon--${which}`}>
           {which === "start" ? <StartIcon /> : <DestinationIcon />}
         </span>
@@ -220,15 +225,21 @@ type Props = {
   sheet: SheetControl;
   endpoints: EndpointsState;
   focused: EndpointWhich | null;
-  /** Shown under the Start row while GPS is being asked for the start. */
+  /** Shown under the Start row (GPS being asked for the start, or the age of its GPS fix). */
   startSub?: string | undefined;
+  /** Shown under the Destination row (the age of its GPS fix, after a swap). */
+  destinationSub?: string | undefined;
   onFocus: (which: EndpointWhich) => void;
   onClear: (which: EndpointWhich) => void;
   onSwap: () => void;
   onUseCurrentLocation: () => void;
   onChooseOnMap: (which: EndpointWhich) => void;
-  /** Cards between the endpoint rows and the options (honest card, location status). */
+  /** Cards between the endpoint rows and the options (trip results, location status). */
   children?: ReactNode;
+  /** Trip detail is open: the sheet shows only `children` (no endpoint rows or options). */
+  detailOpen?: boolean;
+  /** Below the endpoint options (the "Nearby stops" list). Hidden while trip detail is open. */
+  after?: ReactNode;
 };
 
 export function EndpointSheet({
@@ -236,12 +247,15 @@ export function EndpointSheet({
   endpoints,
   focused,
   startSub,
+  destinationSub,
   onFocus,
   onClear,
   onSwap,
   onUseCurrentLocation,
   onChooseOnMap,
   children,
+  detailOpen = false,
+  after,
 }: Props) {
   const { attach, snap, offset, dragging } = sheet;
   // Tapping a row at the peek snap lifts the sheet to half so its options aren't offscreen/inert.
@@ -264,10 +278,11 @@ export function EndpointSheet({
     >
       <SheetGrabber sheet={sheet} />
       <div className="pn-sheet__content">
+        {detailOpen ? null : (
         <div className="pn-endpoints">
           <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onRowTap} onClear={onClear} />
           <div className="pn-endpoints__sep" />
-          <EndpointRow which="destination" endpoint={endpoints.destination} focused={focused === "destination"} onFocus={onRowTap} onClear={onClear} />
+          <EndpointRow which="destination" endpoint={endpoints.destination} focused={focused === "destination"} sub={destinationSub} onFocus={onRowTap} onClear={onClear} />
           <button
             type="button"
             className="pn-icon-btn pn-swap"
@@ -280,19 +295,21 @@ export function EndpointSheet({
             </svg>
           </button>
         </div>
+        )}
 
         {/* Everything below the always-visible rows. At the peek snap it sits under the screen edge,
             so it is inert (not focusable); at half, focusing something that is cut off expands the sheet. */}
         <div
           className="pn-sheet__rest"
-          inert={snap === 0}
+          inert={snap === 0 && !detailOpen}
           onFocusCapture={(e) => {
-            if (snap === 1 && e.target.getBoundingClientRect().bottom > window.innerHeight) sheet.setSnap(2);
+            // Trip detail stays operable at the peek snap (its header is visible there).
+            if (snap !== 2 && e.target.getBoundingClientRect().bottom > window.innerHeight) sheet.setSnap(snap === 0 ? 1 : 2);
           }}
         >
         {children}
 
-        {focused ? (
+        {focused && !detailOpen ? (
           <div role="group" aria-labelledby="pn-options-title">
             <h2 id="pn-options-title" className="pn-section-title">
               {focused === "start" ? "Set start" : "Set destination"}
@@ -313,6 +330,7 @@ export function EndpointSheet({
             </button>
           </div>
         ) : null}
+        {detailOpen ? null : after}
         </div>
       </div>
     </section>

@@ -55,10 +55,12 @@ export function SiteHeader() {
           </svg>
         </button>
       </nav>
+      {/* An overlay below the sticky header (out of the page flow), so opening or closing it never
+          shifts the page: a section link lands its heading just below the header (scroll-mt). */}
       <div
         id="mobile-menu"
-        className={`grid transition-[grid-template-rows,opacity] duration-400 ease-sheet md:hidden ${
-          open ? "grid-rows-[1fr] border-t border-white/10 opacity-100" : "grid-rows-[0fr] opacity-0"
+        className={`absolute inset-x-0 top-full grid bg-navy transition-[grid-template-rows,opacity] duration-400 ease-sheet md:hidden ${
+          open ? "grid-rows-[1fr] border-t border-white/10 opacity-100 shadow-[0_18px_40px_rgba(0,0,0,0.3)]" : "grid-rows-[0fr] opacity-0"
         }`}
         inert={!open}
       >

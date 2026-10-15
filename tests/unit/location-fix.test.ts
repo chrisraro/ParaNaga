@@ -156,6 +156,7 @@ describe("assessFix", () => {
       stale: false,
       insideCity: true,
       usableAsStart: true,
+      ageMs: 0,
     });
   });
 
@@ -180,5 +181,10 @@ describe("assessFix", () => {
     const result = assessFix(fix(5, now - 30_001), now);
     expect(result.stale).toBe(true);
     expect(result.usableAsStart).toBe(false);
+    expect(result.ageMs).toBe(30_001);
+  });
+
+  it("never reports a negative age (clock skew)", () => {
+    expect(assessFix(fix(5, now + 2_000), now).ageMs).toBe(0);
   });
 });

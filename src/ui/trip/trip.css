@@ -1,0 +1,548 @@
+/* Trip options / trip detail (artboards TripOptions, TripDetail; chips from Components).
+   Lives inside .pn-home (and .pn-detail, which reuses the loop chip and badges), so it reuses
+   their --pn-* tokens; the few extra ones are defined here with the artboards' light and dark values. */
+
+.pn-home,
+.pn-detail {
+  --pn-label3: #8a95ab;
+  --pn-gold-text: #6b4a00;
+  --pn-gold-ring: #e8a317;
+  --pn-loop-bg: #3e4c6b;
+  --pn-sign-bg: #0f1e3d;
+  --pn-sign-rim: rgba(15, 30, 61, 0);
+  --pn-glow: rgba(11, 122, 117, 0.12);
+  --pn-coral-ink: #9e2a21;
+}
+@media (prefers-color-scheme: dark) {
+  .pn-home,
+  .pn-detail {
+    --pn-label3: #8a95ab;
+    --pn-gold-text: #f2c877;
+    --pn-gold-ring: #e8a317;
+    --pn-loop-bg: #3e4c6b;
+    --pn-sign-bg: #1a2540;
+    --pn-sign-rim: rgba(242, 245, 250, 0.12);
+    --pn-glow: rgba(43, 181, 174, 0.18);
+    --pn-coral-ink: #ffa394;
+  }
+}
+
+.pn-trip {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pn-trip__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.pn-trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Option card: one button. */
+.pn-trip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring), 0 1px 3px var(--pn-shadow);
+  color: var(--pn-label);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.08s ease-out, box-shadow 0.2s ease;
+}
+.pn-trip-card--primary {
+  box-shadow: 0 0 0 2px var(--pn-accent), 0 8px 24px var(--pn-glow);
+}
+.pn-trip-card:active {
+  transform: scale(0.98);
+}
+.pn-trip-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pn-trip-card__label {
+  color: var(--pn-label2);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pn-trip-card__label--primary {
+  color: var(--pn-teal-soft-text);
+}
+.pn-trip-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+.pn-trip-card__head strong {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.pn-trip-card__time {
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+.pn-trip-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--pn-sep);
+}
+.pn-trip-card__transfers {
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+
+/* Warning badge: "Unverified route — confirm with the driver". */
+.pn-trip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  min-height: 24px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.pn-trip-badge svg {
+  flex: none;
+}
+
+/* Leg strip. */
+.pn-legstrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.pn-legstrip__walk {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--pn-label2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.pn-legstrip__ride {
+  color: var(--pn-label2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.pn-trip__refreshing {
+  margin: -6px 0 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+[data-results-heading]:focus {
+  outline: none;
+}
+[data-results-heading]:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
+.pn-trip-chevron {
+  color: var(--pn-label3);
+}
+.pn-loop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pn-loop-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 8px 0 3px;
+  border-radius: 7px;
+  background: var(--pn-loop-bg);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pn-loop-chip__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.22);
+}
+.pn-loop__dir {
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+
+/* Fare chips (Components: "Partial · 1 leg unknown" gold outline; "Fare unknown" dashed). */
+.pn-fare-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border: 1.5px solid var(--pn-gold-ring);
+  border-radius: 999px;
+  color: var(--pn-gold-text);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pn-fare-chip--none {
+  border-style: dashed;
+  border-color: var(--pn-label3);
+  color: var(--pn-label2);
+}
+
+/* "Some walking legs…" warning card and the revision footer. */
+.pn-trip-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.pn-trip-warn svg {
+  flex: none;
+  margin-top: 1px;
+}
+.pn-trip-warn p {
+  margin: 0;
+}
+.pn-trip-warn p + p {
+  margin-top: 4px;
+}
+.pn-trip__revision {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+  text-align: center;
+}
+.pn-honest .pn-trip__revision--left {
+  margin-top: 8px;
+  font-size: 13px;
+  text-align: left;
+}
+
+/* Loading / error states. */
+.pn-trip-state {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--pn-fill);
+  font-size: 15px;
+}
+.pn-trip-state p {
+  margin: 0;
+}
+.pn-trip-state--error {
+  align-items: flex-start;
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-coral-soft-text);
+}
+.pn-trip-state__title {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.pn-trip-state__spinner {
+  flex: none;
+  color: var(--pn-accent);
+  animation: pn-spin 1s linear infinite;
+}
+.pn-trip-retry {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  margin-top: 10px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring);
+  color: var(--pn-accent);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Trip detail. */
+.pn-trip-detail__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pn-trip-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring), 0 1px 3px var(--pn-shadow);
+  color: var(--pn-label);
+  cursor: pointer;
+}
+.pn-trip-detail__soon {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.pn-trip-detail__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.pn-trip-detail__title:focus {
+  outline: none;
+}
+.pn-trip-detail__title:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
+.pn-trip-detail__labels {
+  margin: -6px 0 0;
+  color: var(--pn-teal-soft-text);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pn-trip-detail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+
+/* Timeline: 36px rail + body, like the artboard's grid. */
+.pn-tl {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-tl__step {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  column-gap: 12px;
+}
+.pn-tl__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.pn-tl__line {
+  flex-grow: 1;
+  margin: 2px 0;
+}
+.pn-tl__line--walk {
+  width: 0;
+  border-left: 4px dotted var(--pn-label3);
+}
+.pn-tl__line--ride {
+  width: 8px;
+  border-radius: 4px;
+  background: var(--pn-loop-bg);
+}
+.pn-tl__body {
+  padding-bottom: 18px;
+}
+.pn-tl__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pn-tl__title {
+  font-size: 17px;
+  font-weight: 600;
+}
+.pn-tl__sub {
+  margin: 2px 0 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+.pn-tl__sub--gold {
+  color: var(--pn-gold-text);
+  font-size: 14px;
+}
+.pn-tl-dot {
+  stroke: var(--pn-surface);
+}
+.pn-tl-dot--origin {
+  fill: #0b7a75;
+}
+.pn-tl-dot--walk {
+  fill: var(--pn-label3);
+}
+.pn-tl-dot--board {
+  fill: var(--pn-loop-bg);
+}
+.pn-tl-dot--alight {
+  fill: var(--pn-surface);
+  stroke: var(--pn-loop-bg);
+}
+.pn-tl-dot--dest {
+  fill: #c73a2f;
+}
+
+.pn-sign {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--pn-sign-bg);
+  box-shadow: inset 0 0 0 1px var(--pn-sign-rim);
+  color: #ffffff;
+}
+.pn-sign__kicker {
+  color: #a9b3c7;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pn-sign__text {
+  font-size: 17px;
+  font-weight: 600;
+}
+.pn-sign .pn-loop {
+  align-self: flex-start;
+}
+.pn-sign .pn-loop-chip {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.pn-para {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-coral-ink);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pn-para__word {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.pn-fares {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--pn-fill);
+}
+.pn-fares h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.pn-fares__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.pn-fares__row span:last-child {
+  color: var(--pn-gold-text);
+  font-weight: 600;
+  text-align: right;
+}
+.pn-fares__row--total {
+  padding-top: 8px;
+  border-top: 1px solid var(--pn-sep);
+  font-weight: 700;
+}
+.pn-fares__note {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Entrance (artboard .pn-in); reduced motion fades instead. */
+.pn-trip-in {
+  animation: pn-trip-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes pn-trip-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pn-trip-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-trip-in {
+    animation: pn-trip-fade 0.15s both;
+  }
+  .pn-trip-card {
+    transition: none;
+  }
+  .pn-trip-card:active {
+    transform: none;
+  }
+  .pn-trip-state__spinner {
+    animation: none;
+  }
+}

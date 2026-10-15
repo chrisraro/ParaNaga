@@ -37,12 +37,26 @@ export function formatAccuracy(metres: number): string {
   return `± ${Math.round(metres)} m`;
 }
 
+/** "last fix 45 s ago" / "last fix 2 min ago": the age of the fix an endpoint was set from. */
+export function formatFixAge(ageMs: number): string {
+  const s = Math.round(Math.max(0, ageMs) / 1000);
+  if (s < 5) return "last fix just now";
+  if (s < 60) return `last fix ${s} s ago`;
+  return `last fix ${Math.round(s / 60)} min ago`;
+}
+
 const known = (metres: number | null): metres is number => metres !== null && Number.isFinite(metres);
 
 export function locationStatusCopy(
   state: GeolocationState,
   assessment: FixAssessment | null,
   accuracy: number | null,
+  /**
+   * gpsEndpointSet: a trip endpoint already comes from GPS. A fix that has aged past STALE_MS can
+   * no longer become a NEW start, but it stays the honest position of that endpoint (a phone that
+   * is not moving gets no new fixes), so it must not flip back to "Finding your location…".
+   */
+  { gpsEndpointSet = false }: { gpsEndpointSet?: boolean } = {},
 ): LocationStatusCopy | null {
   switch (state) {
     case "idle":
@@ -82,7 +96,7 @@ export function locationStatusCopy(
       break;
   }
 
-  if (state === "requesting" || assessment === null || assessment.stale) {
+  if (state === "requesting" || assessment === null || (assessment.stale && !gpsEndpointSet)) {
     return { kind: "requesting", tone: "neutral", title: "Finding your location…" };
   }
   // Outside the city the fix is never the start, whatever its accuracy.
@@ -90,7 +104,7 @@ export function locationStatusCopy(
     return {
       kind: "outside_city",
       tone: "info",
-      title: "You're outside Naga City. Pin your starting point in Naga, or search for a place.",
+      title: "You're outside Naga City. Pin your starting point in Naga, or choose a point on the map.",
       action: "pick_start",
     };
   }

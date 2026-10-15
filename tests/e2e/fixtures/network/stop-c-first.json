@@ -1,0 +1,55 @@
+{
+ "revision": {
+  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
+  "label": "provisional-loops-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T08:55:12.774Z"
+ },
+ "stop": {
+  "id": "8818c73e-a424-4a22-bfc7-be4af7211451",
+  "name": "Plaza Rizal",
+  "lat": 13.6233869,
+  "lng": 123.1846726,
+  "status": "candidate",
+  "navigationApproved": false,
+  "source": {
+   "layer": "Loop Service C",
+   "code": "A1",
+   "label": "Plaza Rizal"
+  },
+  "accuracyM": null,
+  "curbSide": null,
+  "boardingAllowed": null,
+  "alightingAllowed": null,
+  "signInstalled": null
+ },
+ "sourceRecords": [
+  {
+   "layer": "Loop Service C",
+   "code": "A1",
+   "label": "Plaza Rizal",
+   "description": "Plaza Rizal",
+   "coordinatesRaw": "123.1846726,13.6233869,0",
+   "lat": 13.6233869,
+   "lng": 123.1846726,
+   "retrievedOn": "2026-10-15"
+  }
+ ],
+ "sourceMap": {
+  "ownerDisplayName": "Tan Gumba",
+  "ownerIdentityVerified": false
+ },
+ "sharedCoordinate": [
+  {
+   "stopId": "ea5c4666-ebc7-4090-8eaf-f2aa28831e44",
+   "name": "Plaza Rizal",
+   "source": {
+    "layer": "Loop Service A",
+    "code": "A1",
+    "label": "Plaza Rizal"
+   }
+  }
+ ],
+ "servingRoutes": [],
+ "passingNearby": []
+}

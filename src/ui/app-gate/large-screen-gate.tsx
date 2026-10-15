@@ -66,7 +66,7 @@ export function LargeScreenGate() {
           </span>
           <h1 id="gate-h" className="animate-rise text-[clamp(36px,4.6vw,56px)] font-extrabold leading-[1.02] tracking-[-0.04em] [animation-delay:0.1s]">ParaNaga rides in your pocket.</h1>
           <p className="animate-rise text-lg leading-relaxed text-white/80 [animation-delay:0.1s]">
-            The app guides you on the street with your location, stop alerts and one-hand controls, so it only opens on phones and small tablets. Scan the code to continue on your phone.
+            The app guides you on the street with your location, the map and one-hand controls, so it only opens on phones and small tablets. Scan the code to continue on your phone.
           </p>
 
           <div className="flex animate-rise flex-wrap items-center gap-5 rounded-3xl bg-white/[0.06] p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] [animation-delay:0.2s]">

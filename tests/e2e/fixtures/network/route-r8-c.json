@@ -1,0 +1,158 @@
+{
+ "revision": {
+  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
+  "label": "provisional-loops-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T08:55:12.774Z"
+ },
+ "route": {
+  "code": "R8-C",
+  "name": "Centro–Magsaysay Loop C",
+  "groupNumber": 8,
+  "modeCode": "PUJ_Class_2_plan",
+  "legalStatus": "approved_plan",
+  "allocatedUnits": null,
+  "allocationIsActiveFleetCount": false,
+  "groupAllocatedUnits": 71,
+  "evidenceLevel": "documentary",
+  "verification": "unverified",
+  "hasProvisionalStops": false,
+  "hasTrial": false,
+  "notes": "71 units allocated to group 8 collectively; no per-loop unit count retrieved. Street order is document-derived, not a surveyed shape. Aureus/Mayflower slash requires clarification where present.",
+  "sourceCodes": [
+   "S01",
+   "S02"
+  ],
+  "legalStreets": {
+   "inbound": null,
+   "outbound": null,
+   "circuit": [
+    "Gen. Luna St",
+    "P. Burgos St",
+    "Peñafrancia Ave",
+    "Diaz St",
+    "Elias Angeles St",
+    "Bagumbayan Sur Rd",
+    "M.T. Villanueva Ave",
+    "Magsaysay Ave",
+    "Roxas Ave",
+    "Fraternidad St",
+    "Biak na Bato St",
+    "Gen. Luna St"
+   ]
+  },
+  "additionalSourceStructures": [],
+  "normalizationNote": null
+ },
+ "variants": [
+  {
+   "variantId": "3c8c5deb-f937-4a6a-b13c-c9b57bd96231",
+   "direction": "clockwise",
+   "kind": "permanent",
+   "evidenceLevel": "documentary",
+   "verification": "unverified",
+   "isCircular": true,
+   "headsign": null,
+   "vehicleClass": null,
+   "operatingStatus": "unverified",
+   "trialStatus": null,
+   "effectiveFrom": null,
+   "trialDurationDays": null,
+   "legalStreets": {
+    "inbound": null,
+    "outbound": null,
+    "circuit": [
+     "Gen. Luna St",
+     "P. Burgos St",
+     "Peñafrancia Ave",
+     "Diaz St",
+     "Elias Angeles St",
+     "Bagumbayan Sur Rd",
+     "M.T. Villanueva Ave",
+     "Magsaysay Ave",
+     "Roxas Ave",
+     "Fraternidad St",
+     "Biak na Bato St",
+     "Gen. Luna St"
+    ]
+   },
+   "notes": null,
+   "sourceCodes": [
+    "S01",
+    "S02"
+   ],
+   "stops": []
+  }
+ ],
+ "trials": [],
+ "aliases": [],
+ "fareEvidence": {
+  "basis": "route_mode",
+  "rules": [
+   {
+    "code": "F01",
+    "modeCode": "traditional_jeepney",
+    "vehicleClass": null,
+    "baseCentavos": 1400,
+    "baseKm": 4,
+    "incrementCentavosPerKm": 200,
+    "discountPercent": null,
+    "discountedBaseCentavos": null,
+    "discountGroups": null,
+    "rounding": null,
+    "effectiveFrom": "2026-09-28",
+    "enactedOn": null,
+    "evidenceStatus": "national_rates_reported;local_matrix_not_retrieved",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S05",
+     "S06"
+    ]
+   },
+   {
+    "code": "F02",
+    "modeCode": "modern_jeepney",
+    "vehicleClass": null,
+    "baseCentavos": 1700,
+    "baseKm": 4,
+    "incrementCentavosPerKm": 240,
+    "discountPercent": null,
+    "discountedBaseCentavos": null,
+    "discountGroups": null,
+    "rounding": null,
+    "effectiveFrom": "2026-09-28",
+    "enactedOn": null,
+    "evidenceStatus": "national_rates_reported;vehicle_class_and_local_matrix_required",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S05",
+     "S06"
+    ]
+   }
+  ],
+  "observations": [],
+  "conflicts": []
+ },
+ "sources": [
+  {
+   "code": "S01",
+   "title": "Naga approved LPTRP, Ordinance 2025-070",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S02",
+   "title": "Signed LPTRP ordinance PDF",
+   "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/10/Ordno-2025-070-Institutionalizing-the-Approved-LPTRP.pdf",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  }
+ ]
+}
