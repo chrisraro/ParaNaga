@@ -7,7 +7,7 @@ const cspReportOnly = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://tile.openstreetmap.org https://api.maptiler.com",
   "connect-src 'self'",
   "worker-src 'self' blob:",
   "child-src blob:",

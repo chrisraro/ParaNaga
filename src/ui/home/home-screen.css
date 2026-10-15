@@ -1,0 +1,532 @@
+/* Home screen S1 chrome (.superpowers/sdd/map-design-brief.md §1, §3, §4). Tokens are the
+   brief's Home `t` values; dark mode follows prefers-color-scheme like the map chrome. */
+
+.pn-home {
+  --pn-surface: #ffffff;
+  --pn-fill: #eceff4;
+  --pn-label: #0f1e3d;
+  --pn-label2: #4a5468;
+  --pn-sep: rgba(15, 30, 61, 0.08);
+  --pn-ring: rgba(15, 30, 61, 0.1);
+  --pn-shadow: rgba(15, 30, 61, 0.14);
+  --pn-glass: rgba(255, 255, 255, 0.62);
+  --pn-glass-edge: rgba(255, 255, 255, 0.95);
+  --pn-grabber: rgba(15, 30, 61, 0.25);
+  --pn-accent: #0b7a75;
+  --pn-on-primary: #ffffff;
+  --pn-teal-soft-bg: rgba(11, 122, 117, 0.14);
+  --pn-teal-soft-text: #075e5a;
+  --pn-coral-soft-bg: #fce6e3;
+  --pn-coral-soft-text: #c73a2f;
+  --pn-warn-bg: #fff4dc;
+  --pn-warn-text: #5a3f00;
+  --pn-warn-ring: #e8a317;
+  --pn-mark-teal: #0b7a75;
+  --pn-mark-coral: #c73a2f;
+  --pn-dest: #c73a2f;
+
+  /* Controls and the pill sit just under the status bar / notch. */
+  --naga-map-controls-top: calc(env(safe-area-inset-top, 0px) + 16px);
+  --pn-sheet-top: calc(var(--naga-map-controls-top) + 10px);
+
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--pn-surface);
+  color: var(--pn-label);
+}
+
+@media (prefers-color-scheme: dark) {
+  .pn-home {
+    --pn-surface: #111a2e;
+    --pn-fill: #1a2540;
+    --pn-label: #f2f5fa;
+    --pn-label2: #a9b3c7;
+    --pn-sep: rgba(242, 245, 250, 0.1);
+    --pn-ring: rgba(242, 245, 250, 0.12);
+    --pn-shadow: rgba(0, 0, 0, 0.45);
+    --pn-glass: rgba(17, 26, 46, 0.62);
+    --pn-glass-edge: rgba(255, 255, 255, 0.14);
+    --pn-grabber: rgba(242, 245, 250, 0.3);
+    --pn-accent: #2bb5ae;
+    --pn-on-primary: #04201e;
+    --pn-teal-soft-bg: rgba(43, 181, 174, 0.16);
+    --pn-teal-soft-text: #5fd4cd;
+    --pn-coral-soft-bg: rgba(255, 138, 122, 0.16);
+    --pn-coral-soft-text: #ffa394;
+    --pn-warn-bg: rgba(242, 184, 75, 0.14);
+    --pn-warn-text: #f2c877;
+    --pn-warn-ring: rgba(242, 184, 75, 0.55);
+    --pn-mark-teal: #2bb5ae;
+    --pn-mark-coral: #ff8a7a;
+    --pn-dest: #ff8a7a;
+  }
+}
+
+:where(.pn-home) :where(button) {
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.pn-home button:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
+
+/* The map is its own stacking context so Leaflet's z-indexes never cover the sheet. */
+.pn-home__map {
+  position: absolute;
+  inset: 0 0 186px; /* MAP_BOTTOM_INSET in home-screen.tsx */
+  isolation: isolate;
+  z-index: 0;
+}
+
+/* Top-left accuracy pill: "Location ± 25 m". */
+.pn-pill {
+  position: absolute;
+  top: var(--naga-map-controls-top);
+  left: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--pn-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 var(--pn-glass-edge),
+    0 6px 18px var(--pn-shadow);
+  color: var(--pn-label);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pn-pill--approximate {
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Bottom sheet ("Trip planner"). Position = translateY(offset); snaps from the brief. */
+.pn-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--pn-sheet-top);
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  border-radius: 28px 28px 0 0;
+  background: var(--pn-surface);
+  box-shadow: 0 -8px 32px var(--pn-shadow);
+  transform: translateY(var(--pn-sheet-offset, calc(100% - 444px)));
+  transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+.pn-sheet--dragging {
+  transition: none;
+}
+
+/* Grabber: full-width 44px target (min touch size); the visible pill is 36x5. */
+.pn-grabber {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  margin-bottom: -10px;
+  padding: 0;
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.pn-grabber::before {
+  content: "";
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--pn-grabber);
+}
+
+.pn-sheet__rest {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pn-sheet__content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Start / destination card. */
+.pn-endpoints {
+  position: relative;
+  flex: none;
+  border-radius: 14px;
+  background: var(--pn-fill);
+}
+.pn-endpoints__sep {
+  height: 1px;
+  margin: 0 64px 0 54px;
+  background: var(--pn-sep);
+}
+.pn-endpoint {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding-right: 56px;
+  border-radius: 14px;
+}
+.pn-endpoint--focused {
+  box-shadow: inset 0 0 0 2px var(--pn-accent);
+}
+.pn-endpoint__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 4px 0 14px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.pn-endpoint__icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+}
+.pn-endpoint__icon--start {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-accent);
+}
+.pn-endpoint__icon--destination {
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-dest);
+}
+.pn-endpoint__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pn-endpoint__value {
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pn-endpoint__value--empty {
+  color: var(--pn-label2);
+  font-weight: 400;
+}
+.pn-endpoint__sub {
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+.pn-icon-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--pn-label2);
+  cursor: pointer;
+}
+.pn-swap {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring);
+  color: var(--pn-label);
+}
+.pn-swap:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+/* "Set start" options, like the Search sheet's rows. */
+.pn-section-title {
+  margin: 0 0 4px;
+  color: var(--pn-label2);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.pn-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--pn-sep);
+  background: transparent;
+  font-size: 17px;
+  text-align: left;
+  cursor: pointer;
+}
+.pn-option:last-child {
+  border-bottom: 0;
+}
+.pn-option__icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-accent);
+}
+
+/* Location status card (tones map onto the brief's banners). */
+.pn-status {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.pn-status p {
+  margin: 0;
+}
+.pn-status--neutral,
+.pn-status--info {
+  background: var(--pn-fill);
+  color: var(--pn-label);
+}
+.pn-status--ok {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-status--warn {
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+}
+.pn-status--error {
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-coral-soft-text);
+}
+.pn-status__icon {
+  flex: none;
+  margin-top: 1px;
+}
+.pn-status__spinner {
+  transform-origin: center;
+  animation: pn-spin 1s linear infinite;
+}
+@keyframes pn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.pn-status__body {
+  flex: 1;
+  min-width: 0;
+}
+.pn-status__title {
+  font-weight: 600;
+}
+.pn-status__detail {
+  margin-top: 2px;
+}
+.pn-status__action {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  margin-top: 10px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring);
+  color: var(--pn-accent);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pn-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--pn-surface);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Honest card when both ends are set (Global Constraints → Honesty). */
+.pn-honest {
+  flex: none;
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring);
+}
+.pn-honest__icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-honest h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.pn-honest p {
+  margin: 4px 0 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.pn-text-btn {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--pn-accent);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Crosshair confirm panel ("Set start here"). */
+.pn-pick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-radius: 28px 28px 0 0;
+  background: var(--pn-surface);
+  box-shadow: 0 -8px 32px var(--pn-shadow);
+}
+.pn-pick__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+.pn-pick__hint {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.pn-pick__hint--warn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+  font-weight: 600;
+}
+.pn-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.08s ease-out;
+}
+.pn-btn:active:not([aria-disabled="true"]) {
+  transform: scale(0.97);
+}
+.pn-btn--primary {
+  height: 50px;
+  background: var(--pn-accent);
+  color: var(--pn-on-primary);
+  font-size: 17px;
+}
+.pn-btn--primary[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pn-btn--secondary {
+  height: 44px;
+  background: var(--pn-fill);
+  font-size: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-sheet {
+    transition: opacity 0.15s;
+  }
+  .pn-status__spinner {
+    animation: none;
+  }
+  .pn-btn {
+    transition: none;
+  }
+  .pn-btn:active:not([aria-disabled="true"]) {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .pn-pill {
+    background: var(--pn-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

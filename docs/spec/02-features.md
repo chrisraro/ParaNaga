@@ -5,7 +5,7 @@ Priority: **P0** = first vertical slice, **P1** = v1 launch, **P2** = after laun
 ## A. Map and discovery
 
 ### F-A1 Home map — P0
-Full-screen MapLibre map centred on Naga (loop pins span approx. 123.183–123.201 E, 13.616–13.634 N; the service-area polygon covers all 27 barangays). Search bar on top, draggable bottom sheet (peek / half / full), recenter, layer/legend button, low-data toggle.
+Full-screen React-Leaflet map centred on Naga (loop pins span approx. 123.183–123.201 E, 13.616–13.634 N; the service-area polygon covers all 27 barangays). Search bar on top, draggable bottom sheet (peek / half / full), recenter, layer/legend button, low-data toggle.
 - Layers: verified stops (solid), mapped candidates (hollow + badge), terminals, route shapes (only when reviewed), disruptions.
 - Stops render as a GeoJSON source with symbol/circle layers, never as DOM markers.
 - Rules: candidate pins never get connecting lines; no route line is drawn from unordered pins.
