@@ -5,3 +5,9 @@ export const PLAN_LABELS = ["Recommended", "Fewest transfers", "Least walking"] 
 export type PlanLabel = (typeof PLAN_LABELS)[number];
 
 export const UNVERIFIED_ROUTE_BADGE = "Unverified route — confirm with the driver";
+
+/** Ends this close (straight-line metres) are the same place: nothing to plan. */
+export const SAME_PLACE_M = 25;
+
+/** Global access/egress walk cap (straight-line metres); the planner may only tighten it. */
+export const MAX_ACCESS_WALK_M = 600;

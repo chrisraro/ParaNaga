@@ -30,7 +30,10 @@
 // a single walk option comes first, labelled "Recommended" and "Fewest transfers" (0 rides),
 // with a note; ride options (all of which walk less, by rule 1) compete only for "Least walking".
 //
-// No coverage: `reason` says why — outside_city, no_stop_near_origin, no_stop_near_destination,
+// Same place: ends SAME_PLACE_M (25 m) or less apart have nothing to plan → coverage "none",
+// reason same_place (checked before anything else inside the city; no walk-only option).
+//
+// No coverage: `reason` says why — outside_city, same_place, no_stop_near_origin, no_stop_near_destination,
 // walk_shorter (stops are in reach but no ride option saves walking: some trip reached the
 // destination without saving walking, or a branch was pruned because its walking alone could
 // not), or no_route (stops in reach at both ends but no ride connects them).
@@ -55,15 +58,14 @@ import type { LatLng } from "../geo/types";
 import { legFareEstimate, sumFares, type LegFare, type TripFare } from "./fares";
 import { buildGraph, forwardRides, type GraphStop, type PlannerGraph } from "./graph";
 
-import { PLAN_LABELS, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
+import { MAX_ACCESS_WALK_M, PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
 
-export { PLAN_LABELS, UNVERIFIED_ROUTE_BADGE, type PlanLabel };
+export { MAX_ACCESS_WALK_M, PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel };
 
 export const WALK_ESTIMATE_FACTOR = 1.3;
 export const RIDE_WEIGHT = 0.25;
 export const TRANSFER_PENALTY_M = 600;
-/** Global caps (straight-line metres); callers may only tighten them. */
-export const MAX_ACCESS_WALK_M = 600;
+/** Global caps (straight-line metres; MAX_ACCESS_WALK_M lives in labels.ts); callers may only tighten them. */
 export const MAX_TRANSFER_WALK_M = 400;
 
 export type PlannerOptions = { maxAccessWalkM: number; maxTransferWalkM: number; maxRides: number };
@@ -125,7 +127,8 @@ export type PlanOption = {
   evidence: "provisional";
 };
 
-export type NoCoverageReason = "outside_city" | "no_stop_near_origin" | "no_stop_near_destination" | "walk_shorter" | "no_route";
+export type NoCoverageReason =
+  | "outside_city" | "same_place" | "no_stop_near_origin" | "no_stop_near_destination" | "walk_shorter" | "no_route";
 
 export type TripPlan = {
   revisionId: string;
@@ -335,10 +338,12 @@ export function planTrip(
   });
   if (!validPoint(origin) || !validPoint(destination)) return none("outside_city", null);
 
-  const graph = buildGraph(snapshot, opts.maxTransferWalkM);
   const rawDirect = haversineMeters(origin, destination);
   const direct = Math.round(rawDirect);
   const directEstimate = estimate(direct);
+  if (rawDirect <= SAME_PLACE_M) return none("same_place", directEstimate);
+
+  const graph = buildGraph(snapshot, opts.maxTransferWalkM);
   const { candidates, anyAccess, anyEgress, walkShorter } = search(graph, origin, destination, opts, directEstimate);
 
   const walkOnly = rawDirect <= opts.maxAccessWalkM;

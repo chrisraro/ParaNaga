@@ -3,13 +3,14 @@
 // Data shape: GeolocationState string, FixAssessment | null, accuracy in metres | null.
 import { describe, expect, it } from "vitest";
 import type { FixAssessment } from "@/domain/geo/location-fix";
-import { formatAccuracy, locationStatusCopy } from "@/ui/home/location-status";
+import { formatAccuracy, formatFixAge, locationStatusCopy } from "@/ui/home/location-status";
 
 const assessment = (over: Partial<FixAssessment> = {}): FixAssessment => ({
   quality: "precise",
   stale: false,
   insideCity: true,
   usableAsStart: true,
+  ageMs: 0,
   ...over,
 });
 
@@ -88,7 +89,7 @@ describe("locationStatusCopy", () => {
       expect(copy).toEqual({
         kind: "outside_city",
         tone: "info",
-        title: "You're outside Naga City. Pin your starting point in Naga, or search for a place.",
+        title: "You're outside Naga City. Pin your starting point in Naga, or choose a point on the map.",
         action: "pick_start",
       });
     }
@@ -141,5 +142,31 @@ describe("locationStatusCopy", () => {
   it("falls back to an unknown accuracy without inventing a number", () => {
     const copy = locationStatusCopy("watching", assessment({ quality: "coarse", usableAsStart: false }), null);
     expect(copy?.title).toBe("Location too rough. Pin your start on the map.");
+  });
+
+  it("keeps an aged fix once it is a trip endpoint (no 'Finding your location…' after 30 s)", () => {
+    const stale = assessment({ stale: true, usableAsStart: false, ageMs: 45_000 });
+    expect(locationStatusCopy("watching", stale, 12, { gpsEndpointSet: true })?.kind).toBe("precise");
+    expect(locationStatusCopy("watching", { ...stale, quality: "approximate" }, 80, { gpsEndpointSet: true })?.kind).toBe(
+      "approximate",
+    );
+    // Without a GPS endpoint, an aged fix still means "finding" (it cannot become a new start).
+    expect(locationStatusCopy("watching", stale, 12, { gpsEndpointSet: false })?.kind).toBe("requesting");
+    expect(locationStatusCopy("watching", stale, 12)?.kind).toBe("requesting");
+  });
+
+  it("an aged fix outside the city still says so, endpoint or not", () => {
+    const stale = assessment({ stale: true, insideCity: false, usableAsStart: false, ageMs: 45_000 });
+    expect(locationStatusCopy("watching", stale, 12, { gpsEndpointSet: true })?.kind).toBe("outside_city");
+  });
+});
+
+describe("formatFixAge", () => {
+  it("says how old the last fix is, in seconds then minutes", () => {
+    expect(formatFixAge(0)).toBe("last fix just now");
+    expect(formatFixAge(4_400)).toBe("last fix just now");
+    expect(formatFixAge(45_200)).toBe("last fix 45 s ago");
+    expect(formatFixAge(59_600)).toBe("last fix 1 min ago");
+    expect(formatFixAge(125_000)).toBe("last fix 2 min ago");
   });
 });

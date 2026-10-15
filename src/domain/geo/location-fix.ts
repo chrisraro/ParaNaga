@@ -56,11 +56,14 @@ export type FixAssessment = {
   stale: boolean;
   insideCity: boolean;
   usableAsStart: boolean;
+  /** How old the fix is, in ms (never negative). */
+  ageMs: number;
 };
 
 export function assessFix(fix: LocationFix, now: number): FixAssessment {
   const quality = fixQuality(fix);
   const stale = isStale(fix, now);
   const insideCity = isInsideNaga({ lat: fix.lat, lng: fix.lng });
-  return { quality, stale, insideCity, usableAsStart: quality !== "coarse" && !stale && insideCity };
+  const ageMs = Math.max(0, now - fix.timestamp);
+  return { quality, stale, insideCity, usableAsStart: quality !== "coarse" && !stale && insideCity, ageMs };
 }

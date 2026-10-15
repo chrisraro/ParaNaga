@@ -150,6 +150,35 @@ export function trialNoticeText(
 
 // ---------------------------------------------------------------- nearby list (map alternative)
 
+/**
+ * Groups pins that share exactly the same coordinates (the same source point imported in two
+ * layers, e.g. Loop A's A1 and Loop C's A1), then returns the `limit` groups nearest to `center`,
+ * nearest first; ties and the order inside a group keep input order. The first pin of a group is
+ * one a provisional route lists (`routeCodes` non-empty) when there is one, like a map tap.
+ */
+export function nearestStopGroups<T extends LatLng & { routeCodes?: readonly string[] }>(
+  stops: readonly T[],
+  center: LatLng,
+  limit: number,
+): T[][] {
+  const groups = new Map<string, T[]>();
+  for (const stop of stops) {
+    const key = `${stop.lat},${stop.lng}`;
+    const group = groups.get(key);
+    if (group) group.push(stop);
+    else groups.set(key, [stop]);
+  }
+  const ordered = [...groups.values()].map((g) => {
+    const i = g.findIndex((s) => (s.routeCodes?.length ?? 0) > 0);
+    return i > 0 ? [g[i]!, ...g.slice(0, i), ...g.slice(i + 1)] : g;
+  });
+  return nearestStops(
+    ordered.map((g) => ({ lat: g[0]!.lat, lng: g[0]!.lng, g })),
+    center,
+    limit,
+  ).map((x) => x.g);
+}
+
 /** The `limit` stops nearest to `center` (straight line), nearest first; ties keep input order. */
 export function nearestStops<T extends LatLng>(stops: readonly T[], center: LatLng, limit: number): T[] {
   return stops

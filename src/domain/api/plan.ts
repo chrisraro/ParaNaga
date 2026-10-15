@@ -102,7 +102,7 @@ export const planResponseSchema = z.object({
   plan: z.object({
     revisionId: z.uuid(),
     coverage: z.enum(["provisional", "none"]),
-    reason: z.enum(["outside_city", "no_stop_near_origin", "no_stop_near_destination", "walk_shorter", "no_route"]).nullable(),
+    reason: z.enum(["outside_city", "same_place", "no_stop_near_origin", "no_stop_near_destination", "walk_shorter", "no_route"]).nullable(),
     directWalkEstimateMeters: meters.nullable(),
     options: z.array(planOptionSchema).max(3),
     notes: z.array(z.string()),

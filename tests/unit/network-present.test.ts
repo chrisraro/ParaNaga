@@ -5,6 +5,7 @@ import {
   formatIsoDate,
   latestRetrievedOn,
   modeLabel,
+  nearestStopGroups,
   nearestStops,
   routeFareTile,
   routeGroupText,
@@ -135,5 +136,18 @@ describe("nearestStops", () => {
     ];
     expect(nearestStops(stops, { lat: 13.6233869, lng: 123.1846726 }, 2).map((s) => s.id)).toEqual(["near", "mid"]);
     expect(nearestStops(stops, { lat: 13.6233869, lng: 123.1846726 }, 0)).toEqual([]);
+  });
+});
+
+describe("nearestStopGroups", () => {
+  it("puts pins with exactly the same coordinates in one group, the on-route pin first", () => {
+    const stops = [
+      { id: "c-a1", lat: 13.6233869, lng: 123.1846726, routeCodes: [] as string[] },
+      { id: "a-a1", lat: 13.6233869, lng: 123.1846726, routeCodes: ["R8-A"] },
+      { id: "close-but-not-same", lat: 13.623387, lng: 123.1846726, routeCodes: [] as string[] },
+      { id: "far", lat: 13.64, lng: 123.2, routeCodes: ["R8-B"] },
+    ];
+    const groups = nearestStopGroups(stops, { lat: 13.6233869, lng: 123.1846726 }, 2);
+    expect(groups.map((g) => g.map((s) => s.id))).toEqual([["a-a1", "c-a1"], ["close-but-not-same"]]);
   });
 });

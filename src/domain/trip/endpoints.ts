@@ -1,4 +1,6 @@
+import { haversineMeters } from "@/domain/geo/geometry";
 import { isInsideNaga } from "@/domain/geo/naga";
+import { SAME_PLACE_M } from "@/domain/planner/labels";
 import type { LatLng } from "@/domain/geo/types";
 
 export type EndpointSource = "gps" | "map" | "search";
@@ -10,7 +12,8 @@ export type EndpointsState = {
   start: Endpoint | null;
   destination: Endpoint | null;
   picking: EndpointWhich | null;
-  error: "outside_city" | null;
+  /** Why the last `set` was refused: outside the city, or within SAME_PLACE_M of the other end. */
+  error: "outside_city" | "same_place" | null;
 };
 
 export type EndpointsAction =
@@ -47,6 +50,8 @@ export function endpointsReducer(state: EndpointsState, action: EndpointsAction)
     case "set": {
       const { point, source, label } = action.endpoint;
       if (!isInsideNaga(point)) return { ...state, error: "outside_city" };
+      const other = state[action.which === "start" ? "destination" : "start"];
+      if (other && haversineMeters(point, other.point) <= SAME_PLACE_M) return { ...state, error: "same_place" };
       const endpoint: Endpoint = { point: { ...point }, source, label: endpointLabel(source, label) };
       return { ...state, [action.which]: endpoint, picking: null, error: null };
     }

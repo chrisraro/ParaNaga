@@ -116,6 +116,13 @@ describe("planTrip on the synthetic network", () => {
     expect(plan.notes.join(" ")).toMatch(/walk/i);
   });
 
+  it("refuses ends 25 m apart or closer as the same place (no walk-only option, no badge note)", () => {
+    for (const d of [at(0, -100), at(15, -100), at(25, -100)]) {
+      expect(planTrip(snap, at(0, -100), d)).toMatchObject({ coverage: "none", reason: "same_place", options: [], notes: [] });
+    }
+    expect(planTrip(snap, at(0, -100), at(30, -100)).reason).not.toBe("same_place");
+  });
+
   it("rejects points outside Naga", () => {
     expect(planTrip(snap, { lat: 14.5, lng: 121 }, at(0, 0))).toMatchObject({ coverage: "none", reason: "outside_city", options: [] });
   });

@@ -7,6 +7,7 @@ import {
   noCoverageCopy,
   ringDirection,
   routeChipLabel,
+  stopDisplayName,
   stopLabel,
   transfersText,
 } from "@/domain/trip/present";
@@ -83,23 +84,55 @@ describe("labels", () => {
   });
   it("stop label adds the code once", () => {
     expect(stopLabel("Plaza Rizal", "A1")).toBe("Plaza Rizal (A1)");
-    expect(stopLabel("B18", "B18")).toBe("B18");
+    // A pin with an empty source label (its name falls back to the code) never borrows a name.
+    expect(stopLabel("B18", "B18")).toBe("Unnamed pin B18");
+    expect(stopDisplayName("B18", "B18")).toBe("Unnamed pin B18");
+    expect(stopDisplayName("Plaza Rizal", "A1")).toBe("Plaza Rizal");
+    // Verbatim source typos stay as they are.
+    expect(stopLabel("Villla Caceres", "A7")).toBe("Villla Caceres (A7)");
     expect(stopLabel("Somewhere", null)).toBe("Somewhere");
   });
 });
 
 describe("noCoverageCopy", () => {
-  const brief = { title: "No provisional route nearby yet", detail: "Loops A and B are the only routes we can suggest for now." };
-  it.each(["no_route", "no_stop_near_origin", "no_stop_near_destination", "outside_city"] as const)("%s uses the brief's lines", (reason) => {
-    expect(noCoverageCopy(reason, 1200)).toEqual(brief);
+  const ONLY = "Loops A and B are the only routes we can suggest for now.";
+  it("says which end has no stop within the 600 m walk, with the direct walk estimate", () => {
+    expect(noCoverageCopy("no_stop_near_origin", 1200)).toEqual({
+      title: "No mapped stop within 600 m of your start",
+      detail: `Walking the whole way is about ≈ 1.2 km (straight-line estimate; path not verified). ${ONLY}`,
+    });
+    expect(noCoverageCopy("no_stop_near_destination", 845)).toEqual({
+      title: "No mapped stop within 600 m of your destination",
+      detail: `Walking the whole way is about ≈ 850 m (straight-line estimate; path not verified). ${ONLY}`,
+    });
+  });
+  it("no_route: stops at both ends, but no provisional ride joins them", () => {
+    expect(noCoverageCopy("no_route", 1460)).toEqual({
+      title: "No provisional route connects these points yet",
+      detail: `Walking the whole way is about ≈ 1.5 km (straight-line estimate; path not verified). ${ONLY}`,
+    });
+  });
+  it("same_place asks to move a pin", () => {
+    expect(noCoverageCopy("same_place", 10)).toEqual({
+      title: "Start and destination are the same place",
+      detail: "Move the destination pin away from your start to plan a trip.",
+    });
+  });
+  it("outside_city asks for points inside the city", () => {
+    expect(noCoverageCopy("outside_city", null)).toEqual({
+      title: "Both points need to be inside Naga City",
+      detail: ONLY,
+    });
   });
   it("walk_shorter names the direct walk estimate", () => {
     expect(noCoverageCopy("walk_shorter", 845)).toEqual({
       title: "Walking (≈ 850 m) is shorter than any ride we can suggest.",
-      detail: "Straight-line estimate; path not verified. Loops A and B are the only routes we can suggest for now.",
+      detail: `Straight-line estimate; path not verified. ${ONLY}`,
     });
   });
-  it("walk_shorter without an estimate falls back to the brief's lines", () => {
-    expect(noCoverageCopy("walk_shorter", null)).toEqual(brief);
+  it("without an estimate it never invents one", () => {
+    expect(noCoverageCopy("walk_shorter", null)).toEqual({ title: "No provisional route nearby yet", detail: ONLY });
+    expect(noCoverageCopy("no_route", null)).toEqual({ title: "No provisional route connects these points yet", detail: ONLY });
+    expect(noCoverageCopy(null, null)).toEqual({ title: "No provisional route nearby yet", detail: ONLY });
   });
 });

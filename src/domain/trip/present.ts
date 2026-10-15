@@ -4,6 +4,7 @@
 // "≈" estimates, a loop's direction is derived from the order of its mapped pins and labelled so,
 // and no-coverage copy never implies a verified route exists.
 import type { LatLng } from "../geo/types";
+import { MAX_ACCESS_WALK_M } from "../planner/labels";
 import type { NoCoverageReason } from "../planner/plan";
 
 export type LoopDirection = "clockwise" | "counterclockwise";
@@ -72,20 +73,49 @@ export function routeChipLabel(routeCode: string, routeName: string): string {
   return loop ? `Loop ${loop[1]}` : routeCode;
 }
 
-/** "Plaza Rizal (A1)"; just the code when the pin has no separate label. */
+/**
+ * The stop's own name, verbatim (source typos kept). A pin whose source label is empty is named
+ * after its code by the import; it shows as "Unnamed pin B18", never with another pin's name.
+ */
+export function stopDisplayName(name: string, code: string | null): string {
+  if (code && name === code) return `Unnamed pin ${code}`;
+  return name || (code ? `Unnamed pin ${code}` : "Unnamed stop");
+}
+
+/** "Plaza Rizal (A1)"; "Unnamed pin B18" when the pin has no separate label. */
 export function stopLabel(name: string, code: string | null): string {
-  if (!code || name === code) return name || code || "Unnamed stop";
-  return `${name} (${code})`;
+  const display = stopDisplayName(name, code);
+  if (!code || display === `Unnamed pin ${code}`) return display;
+  return `${display} (${code})`;
 }
 
 const ONLY_LOOPS = "Loops A and B are the only routes we can suggest for now.";
 
+/** Per-reason copy: which end is out of reach, and how far the whole walk is (an estimate). */
 export function noCoverageCopy(reason: NoCoverageReason | null, directWalkEstimateMeters: number | null): { title: string; detail: string } {
-  if (reason === "walk_shorter" && directWalkEstimateMeters !== null) {
-    return {
-      title: `Walking (${formatDistance(directWalkEstimateMeters)}) is shorter than any ride we can suggest.`,
-      detail: `Straight-line estimate; path not verified. ${ONLY_LOOPS}`,
-    };
+  const walk = directWalkEstimateMeters === null
+    ? ONLY_LOOPS
+    : `Walking the whole way is about ${formatDistance(directWalkEstimateMeters)} (straight-line estimate; path not verified). ${ONLY_LOOPS}`;
+  switch (reason) {
+    case "same_place":
+      return { title: "Start and destination are the same place", detail: "Move the destination pin away from your start to plan a trip." };
+    case "outside_city":
+      return { title: "Both points need to be inside Naga City", detail: ONLY_LOOPS };
+    case "no_stop_near_origin":
+      return { title: `No mapped stop within ${MAX_ACCESS_WALK_M} m of your start`, detail: walk };
+    case "no_stop_near_destination":
+      return { title: `No mapped stop within ${MAX_ACCESS_WALK_M} m of your destination`, detail: walk };
+    case "no_route":
+      return { title: "No provisional route connects these points yet", detail: walk };
+    case "walk_shorter":
+      if (directWalkEstimateMeters !== null) {
+        return {
+          title: `Walking (${formatDistance(directWalkEstimateMeters)}) is shorter than any ride we can suggest.`,
+          detail: `Straight-line estimate; path not verified. ${ONLY_LOOPS}`,
+        };
+      }
+      return { title: "No provisional route nearby yet", detail: ONLY_LOOPS };
+    default:
+      return { title: "No provisional route nearby yet", detail: ONLY_LOOPS };
   }
-  return { title: "No provisional route nearby yet", detail: ONLY_LOOPS };
 }
