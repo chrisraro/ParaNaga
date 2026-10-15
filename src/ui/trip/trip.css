@@ -13,9 +13,20 @@
   --pn-glow: rgba(11, 122, 117, 0.12);
   --pn-coral-ink: #9e2a21;
 }
+:root[data-theme="dark"] .pn-home,
+:root[data-theme="dark"] .pn-detail {
+  --pn-label3: #8a95ab;
+  --pn-gold-text: #f2c877;
+  --pn-gold-ring: #e8a317;
+  --pn-loop-bg: #3e4c6b;
+  --pn-sign-bg: #1a2540;
+  --pn-sign-rim: rgba(242, 245, 250, 0.12);
+  --pn-glow: rgba(43, 181, 174, 0.18);
+  --pn-coral-ink: #ffa394;
+}
 @media (prefers-color-scheme: dark) {
-  .pn-home,
-  .pn-detail {
+  :root:not([data-theme="light"]) .pn-home,
+  :root:not([data-theme="light"]) .pn-detail {
     --pn-label3: #8a95ab;
     --pn-gold-text: #f2c877;
     --pn-gold-ring: #e8a317;
@@ -25,6 +36,14 @@
     --pn-glow: rgba(43, 181, 174, 0.18);
     --pn-coral-ink: #ffa394;
   }
+}
+:root[data-contrast="more"] .pn-home,
+:root[data-contrast="more"] .pn-detail {
+  --pn-label3: var(--pn-label);
+}
+/* High contrast: the fare chip's outline in its text colour (the gold ring is ≈ 2.2:1). */
+:root[data-contrast="more"] .pn-fare-chip {
+  border-color: currentColor;
 }
 
 .pn-trip {
@@ -545,4 +564,81 @@
   .pn-trip-state__spinner {
     animation: none;
   }
+}
+
+/* ------------------------------------------------------------------ Trip detail actions (Task 8) */
+.pn-trip-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pn-trip-actions__row {
+  display: flex;
+  gap: 10px;
+}
+.pn-trip-action {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pn-trip-action--on {
+  background: var(--pn-accent);
+  color: var(--pn-on-primary);
+}
+.pn-trip-action[aria-disabled="true"] {
+  cursor: progress;
+}
+.pn-trip-action:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
+.pn-trip-actions__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+.pn-trip-actions__check input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--pn-accent);
+}
+.pn-trip-actions__status {
+  margin: 0;
+  min-height: 1.2em;
+  color: var(--pn-label2);
+  font-size: 14px;
+}
+.pn-trip-reopen {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+.pn-trip-reopen--warn {
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+}
+
+/* "Start trip" (guidance, Task 10): the primary action of Trip detail (>= 48 px). */
+.pn-trip-start {
+  min-height: 52px;
 }

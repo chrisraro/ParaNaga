@@ -9,16 +9,15 @@ import "@/ui/trip/trip.css";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
-import { cameFromInsideApp, useAppPanel } from "@/ui/app-shell/app-frame-context";
+import { useEffect, useRef, type ReactNode } from "react";
+import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
+import { BackButton, useEscapeToClose, useFocusOnMount } from "@/ui/app-shell/panel";
+import { useIsOffline } from "@/client/pwa/connectivity";
+import { OFFLINE_PANEL_TEXT } from "@/domain/pwa/offline-copy";
 
-export function BackIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M15 5l-7 7 7 7" />
-    </svg>
-  );
-}
+// Shared panel behaviour lives in the shell (src/ui/app-shell/panel.tsx); re-exported for the
+// detail screens that import it from here.
+export { BackIcon, useFocusOnMount } from "@/ui/app-shell/panel";
 
 export function MapIcon() {
   return (
@@ -59,39 +58,16 @@ export function CandidateRing({ size = 30, onRoute = false }: { size?: number; o
 }
 
 /**
- * Round "Back" button: history back after an in-app navigation (map → stop → route), otherwise a
- * link to the map, so a page opened from a shared link never leaves the site.
+ * Back to the map after setting a trip end: history when the map opened this panel, else open the
+ * map (no extra history entry otherwise).
  */
-function BackButton() {
+export function useReturnToMap(): () => void {
+  const frame = useAppFrame();
   const router = useRouter();
-  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !cameFromInsideApp()) return;
-    e.preventDefault();
-    router.back();
+  return () => {
+    if (cameFromInsideApp() && frame?.isHomeNavigation(window.location.pathname)) router.back();
+    else router.push("/app");
   };
-  // Escape closes the panel exactly like Back (history after an in-app navigation, else the map).
-  // Once per panel (a held or double Escape must not go back twice), and never while the app is
-  // covered by the large-screen overlay (inert).
-  const link = useRef<HTMLAnchorElement>(null);
-  const closing = useRef(false);
-  useEffect(() => {
-    closing.current = false;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || e.repeat || e.defaultPrevented || closing.current) return;
-      if (link.current?.closest("[inert]")) return;
-      e.preventDefault();
-      closing.current = true;
-      if (cameFromInsideApp()) router.back();
-      else router.push("/app");
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [router]);
-  return (
-    <Link ref={link} href="/app" aria-label="Back" className="pn-detail__round" onClick={onClick} data-testid="detail-back">
-      <BackIcon />
-    </Link>
-  );
 }
 
 type PanelProps = {
@@ -103,11 +79,16 @@ type PanelProps = {
   testId?: string;
 };
 
-/** Full-screen panel: marks itself open on the app frame (the map underneath turns inert). */
+/**
+ * Full-screen detail panel: marks itself open on the app frame (the map underneath turns inert and
+ * the tab bar hides), with a Back button; Escape goes back too.
+ */
 export function DetailPanel({ title, action, children, testId }: PanelProps) {
-  useAppPanel();
+  useAppPanel("detail");
+  const root = useRef<HTMLDivElement>(null);
+  useEscapeToClose(root);
   return (
-    <div className="pn-detail" data-testid={testId}>
+    <div ref={root} className="pn-detail" data-testid={testId}>
       <header className="pn-detail__header">
         <BackButton />
         <span className="pn-detail__header-title">{title}</span>
@@ -118,16 +99,22 @@ export function DetailPanel({ title, action, children, testId }: PanelProps) {
   );
 }
 
-/** Focuses the screen's h1 once it has rendered (the panel replaced the whole view). */
-export function useFocusOnMount<T extends HTMLElement>(ready: boolean) {
-  const ref = useRef<T>(null);
-  useEffect(() => {
-    if (ready) ref.current?.focus();
-  }, [ready]);
-  return ref;
-}
-
+/**
+ * The panel's loading state. Offline (useOffline: the page's data cannot arrive until the network
+ * returns, Next keeps the navigation pending and retries it), it says so instead of a skeleton;
+ * the home map and its trip stay as they were underneath (F-03).
+ */
 export function DetailLoading({ title }: { title: string }) {
+  const offline = useIsOffline();
+  if (offline) {
+    return (
+      <DetailPanel title={title} testId="detail-offline">
+        <div className="pn-detail__state" role="status">
+          <p>{OFFLINE_PANEL_TEXT}</p>
+        </div>
+      </DetailPanel>
+    );
+  }
   return (
     <DetailPanel title={title} testId="detail-loading">
       <div className="pn-detail__state" role="status" aria-label={`Loading ${title.toLowerCase()}`}>
@@ -141,20 +128,36 @@ export function DetailLoading({ title }: { title: string }) {
 
 // The header names the screen; the h1 says "not found" (the page itself gets no header name, so
 // "Not found" is never shown twice).
-const SCREEN_NAME = { stop: "Stop", route: "Route", page: "" } as const;
+const SCREEN_NAME = { stop: "Stop", route: "Route", place: "Place", terminal: "Terminal", page: "" } as const;
 type NotFoundKind = keyof typeof SCREEN_NAME;
 
 function kindFromPath(pathname: string | null): NotFoundKind {
   if (pathname?.startsWith("/app/stops/")) return "stop";
   if (pathname?.startsWith("/app/routes/")) return "route";
+  if (pathname?.startsWith("/app/places/")) return "place";
+  if (pathname?.startsWith("/app/terminals/")) return "terminal";
   return "page";
 }
+
+const NOT_FOUND_COPY: Record<NotFoundKind, { title: string; copy: string }> = {
+  stop: {
+    title: "Stop not found",
+    copy: "No published stop has this link. It may have been removed or replaced in a newer data revision.",
+  },
+  route: { title: "Route not found", copy: "No published route has this code." },
+  place: {
+    title: "Place not found",
+    copy: "No place on file has this link. It may have been removed or renamed in a newer data revision.",
+  },
+  terminal: { title: "Terminal not found", copy: "No terminal on file has this code." },
+  page: { title: "Not found", copy: "There is nothing at this link." },
+};
 
 export function DetailNotFound({ what: whatProp }: { what?: NotFoundKind }) {
   const pathname = usePathname();
   const what = whatProp ?? kindFromPath(pathname);
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
-  const title = what === "stop" ? "Stop not found" : what === "route" ? "Route not found" : "Not found";
+  const { title, copy } = NOT_FOUND_COPY[what];
   // An honest tab title: the page's static metadata says "Stop · ParaNaga" (the id is only known
   // at runtime, and the response is already streaming with HTTP 200 when notFound() is reached).
   // The cleanup restores the old title only if it is still ours: when leaving for another route,
@@ -167,12 +170,6 @@ export function DetailNotFound({ what: whatProp }: { what?: NotFoundKind }) {
       if (document.title === mine) document.title = previous;
     };
   }, [title]);
-  const copy =
-    what === "stop"
-      ? "No published stop has this link. It may have been removed or replaced in a newer data revision."
-      : what === "route"
-        ? "No published route has this code."
-        : "There is nothing at this link.";
   return (
     <DetailPanel title={SCREEN_NAME[what]} testId="detail-not-found">
       <main className="pn-detail__state">

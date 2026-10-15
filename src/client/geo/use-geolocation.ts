@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   assessFix,
   pickBetterFix,
@@ -39,11 +39,19 @@ function toFix(position: GeolocationPosition): LocationFix {
   return { lat: latitude, lng: longitude, accuracy, timestamp: position.timestamp, heading, speed };
 }
 
+export type UseGeolocationOptions = {
+  /**
+   * Called with every position the watch delivers (raw, before pickBetterFix keeps the better of
+   * two) and the time it arrived: guidance feeds each one to its session as a `fix` event.
+   */
+  onFix?: (fix: LocationFix, now: number) => void;
+};
+
 /**
  * Honest, battery-safe wrapper around the Geolocation API. Coordinates stay in React state only:
  * no network, no storage. The watch runs only after start(), and never while the tab is hidden.
  */
-export function useGeolocation(): UseGeolocation {
+export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocation {
   const [state, setState] = useState<GeolocationState>("idle");
   const [fix, setFix] = useState<LocationFix | null>(null);
   const [assessment, setAssessment] = useState<FixAssessment | null>(null);
@@ -54,6 +62,10 @@ export function useGeolocation(): UseGeolocation {
   const wanted = useRef(false);
   // True once the current start() session has received a success (fixRef may hold an older session's fix).
   const sessionHasFix = useRef(false);
+  const onFixRef = useRef(options.onFix);
+  useLayoutEffect(() => {
+    onFixRef.current = options.onFix;
+  });
 
   const clear = useCallback(() => {
     if (watchId.current !== null) {
@@ -67,12 +79,14 @@ export function useGeolocation(): UseGeolocation {
     watchId.current = navigator.geolocation.watchPosition(
       (position) => {
         const now = Date.now();
-        const next = pickBetterFix(fixRef.current, toFix(position), now);
+        const raw = toFix(position);
+        const next = pickBetterFix(fixRef.current, raw, now);
         fixRef.current = next;
         sessionHasFix.current = true;
         setFix(next);
         setAssessment(assessFix(next, now));
         setState("watching");
+        onFixRef.current?.(raw, now);
       },
       (err) => {
         if (err.code === PERMISSION_DENIED) {

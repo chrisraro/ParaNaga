@@ -211,10 +211,11 @@ test.describe("phone", () => {
     expect(rowBox.x + rowBox.width).toBeLessThanOrEqual(swapBox.x);
   });
 
-  test("F-07 'Map background unavailable' sits above the attribution", async ({ page }) => {
+  // Runs against the regular build (no tile URL), project "no-tiles" (playwright.config.ts).
+  test("F-07 'Map background unavailable' sits above the attribution @no-tiles", async ({ page }) => {
     await openApp(page);
     const notice = page.locator(".pn-map-notice");
-    test.skip((await notice.count()) === 0, "a tile URL is configured in this build");
+    await expect(notice).toHaveText("Map background unavailable");
     const n = (await notice.boundingBox())!;
     const a = (await page.locator(".pn-attribution").boundingBox())!;
     expect(n.y + n.height).toBeLessThanOrEqual(a.y);

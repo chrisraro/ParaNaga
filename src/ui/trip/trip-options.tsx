@@ -23,7 +23,7 @@ function headline(option: PlanOptionDto): string {
   return `Ride ${formatDistance(option.rideMeters)}`;
 }
 
-function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: PlanLookups }) {
+export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: PlanLookups }) {
   // A walk of a few metres (start or end at the stop itself) is not a step.
   const legs = option.legs.filter((leg) => !(option.rides > 0 && isNegligibleWalk(leg)));
   return (

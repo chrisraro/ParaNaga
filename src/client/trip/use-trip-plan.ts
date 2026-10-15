@@ -8,20 +8,30 @@
 // hand pin or search pick always does. Only while a GPS-refinement replan is in flight does the
 // last ready plan stay on screen (`refreshing: true`); any other replan shows loading, so the
 // previous trip's options never appear for a deliberately changed trip.
+//
+// Offline (Task 12): when the request cannot reach the server, the plan is made in the browser on
+// the snapshot this phone holds (plan-offline.ts) and marked `offline` with that data's published
+// date; without a snapshot the error says "offline" (only when the browser knows it is).
 
 import { useEffect, useState } from "react";
 import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
 import { isGpsRefinement, shouldReplan, type PlanEnd, type PlanPair } from "@/domain/trip/replan";
 
 export type PlanErrorKind = "offline" | "server" | "invalid";
+export type PlannedOnPhone = false | "offline" | "unreachable";
 
 export type TripPlanState =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "ready"; data: PlanResponse; refreshing: boolean }
+  /**
+   * `offline`: planned in the browser from the snapshot on this phone (its published date is in
+   * data.revision) because the server could not be reached: "offline" when the browser says it has
+   * no connection, "unreachable" otherwise; false for a server plan.
+   */
+  | { status: "ready"; data: PlanResponse; refreshing: boolean; offline: PlannedOnPhone }
   | { status: "error"; kind: PlanErrorKind };
 
-type Outcome = { status: "ready"; data: PlanResponse } | { status: "error"; kind: PlanErrorKind };
+type Outcome = { status: "ready"; data: PlanResponse; offline: PlannedOnPhone } | { status: "error"; kind: PlanErrorKind };
 type Settled = { key: string } & Outcome;
 /** The pair planned for, and whether it differs from the previous one only by GPS refinements. */
 type Planned = PlanPair & { gpsRefinement: boolean };
@@ -43,20 +53,28 @@ async function requestPlan(pair: PlanPair, signal: AbortSignal): Promise<Outcome
     });
   } catch (error) {
     if (signal.aborted) throw error;
-    // A network failure: say "offline" only when the browser knows it is.
+    // The server cannot be reached: plan on this phone's snapshot if it has one.
+    // Loaded on demand: the planner is in its own chunk (precached by the service worker).
+    const offline = await import("./plan-offline")
+      .then(({ planOffline }) => planOffline(origin, destination))
+      .catch(() => ({ status: "unavailable" as const }));
+    if (signal.aborted) throw error;
+    if (offline.status === "ready") return { status: "ready", data: offline.data, offline: navigator.onLine === false ? "offline" : "unreachable" };
+    if (offline.status === "invalid") return { status: "error", kind: "invalid" };
+    // No snapshot either: say "offline" only when the browser knows it is.
     return { status: "error", kind: navigator.onLine === false ? "offline" : "server" };
   }
   if (response.status >= 500 || response.status === 404) return { status: "error", kind: "server" };
   if (!response.ok) return { status: "error", kind: "invalid" };
   const parsed = planResponseSchema.safeParse(await response.json().catch(() => null));
-  return parsed.success ? { status: "ready", data: parsed.data } : { status: "error", kind: "server" };
+  return parsed.success ? { status: "ready", data: parsed.data, offline: false } : { status: "error", kind: "server" };
 }
 
 export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null): TripPlanState & { retry: () => void } {
   const [attempt, setAttempt] = useState(0);
   const [settled, setSettled] = useState<Settled | null>(null);
   // The last ready plan, kept on screen only while a GPS-refinement replan is in flight.
-  const [lastReady, setLastReady] = useState<PlanResponse | null>(null);
+  const [lastReady, setLastReady] = useState<{ data: PlanResponse; offline: PlannedOnPhone } | null>(null);
   // The pair actually planned for; small GPS moves of an end keep it (no replan).
   const [planned, setPlanned] = useState<Planned | null>(null);
 
@@ -85,7 +103,7 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
       (result) => {
         if (controller.signal.aborted) return;
         setSettled({ key, ...result });
-        setLastReady(result.status === "ready" ? result.data : null);
+        setLastReady(result.status === "ready" ? { data: result.data, offline: result.offline } : null);
       },
       () => undefined, // aborted: a newer request owns the state
     );
@@ -98,10 +116,10 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
   if (key === null) return { status: "idle", retry };
   if (!settled || settled.key !== key) {
     return planned?.gpsRefinement && lastReady
-      ? { status: "ready", data: lastReady, refreshing: true, retry }
+      ? { status: "ready", data: lastReady.data, refreshing: true, offline: lastReady.offline, retry }
       : { status: "loading", retry };
   }
   return settled.status === "ready"
-    ? { status: "ready", data: settled.data, refreshing: false, retry }
+    ? { status: "ready", data: settled.data, refreshing: false, offline: settled.offline, retry }
     : { status: "error", kind: settled.kind, retry };
 }

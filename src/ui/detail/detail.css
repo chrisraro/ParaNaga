@@ -15,12 +15,20 @@
   background: var(--pn-bg);
   color: var(--pn-label);
 }
+:root[data-theme="dark"] .pn-detail {
+  --pn-bg: #0b1220;
+  --pn-caption: #8a95ab;
+  --pn-route-line: #8a9bc4;
+}
 @media (prefers-color-scheme: dark) {
-  .pn-detail {
+  :root:not([data-theme="light"]) .pn-detail {
     --pn-bg: #0b1220;
     --pn-caption: #8a95ab;
     --pn-route-line: #8a9bc4;
   }
+}
+:root[data-contrast="more"] .pn-detail {
+  --pn-caption: var(--pn-label);
 }
 
 :where(.pn-detail) :where(button) {
@@ -44,7 +52,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 0;
+  padding: calc(env(safe-area-inset-top, 0px) + var(--pn-offline-inset, 0px) + 16px) 16px 0;
 }
 .pn-detail__header-title {
   font-size: 17px;
@@ -108,6 +116,10 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+/* A row of text buttons ("Set as start" / "Set as destination"). */
+.pn-detail__row--actions {
+  gap: 24px;
 }
 .pn-detail__caption {
   color: var(--pn-caption);

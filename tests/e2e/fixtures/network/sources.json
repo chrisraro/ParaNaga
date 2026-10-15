@@ -1,0 +1,226 @@
+{
+ "revision": {
+  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
+  "label": "osm-places-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T12:59:57.089Z"
+ },
+ "sources": [
+  {
+   "code": "OSM-2026-10-15",
+   "title": "OpenStreetMap places snapshot",
+   "url": "https://www.openstreetmap.org/copyright",
+   "evidenceType": "open_data",
+   "publishedOrEnacted": "OSM data as of 2026-10-15T12:56:10Z",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S01",
+   "title": "Naga approved LPTRP, Ordinance 2025-070",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S02",
+   "title": "Signed LPTRP ordinance PDF",
+   "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/10/Ordno-2025-070-Institutionalizing-the-Approved-LPTRP.pdf",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S03",
+   "title": "Loop A/B Eastbound trial, Resolution 2025-735",
+   "url": "https://www2.naga.gov.ph/sp_resolutions/2025-735/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-11-11",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S04",
+   "title": "Local minimum fare and discounts, Ordinance 2024-002",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2024-002/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2024-01-16",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S05",
+   "title": "PIA: implementation of updated PUV matrices",
+   "url": "https://pia.gov.ph/news/luzon/ncr/ltfrb-reminds-puv-operators-drivers-to-display-updated-fare-matrix",
+   "evidenceType": "government_news",
+   "publishedOrEnacted": "2026-09-28",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S06",
+   "title": "PhilSTAR Life: September fare rates",
+   "url": "https://philstarlife.com/news-and-views/486689-dotr-approves-puv-fare-hikes-effective-sept-28",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2026-09-26",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S07",
+   "title": "Naga local fare reduction and padyak rates",
+   "url": "https://www2.naga.gov.ph/riding-public-hails-naga-citys-reduction-of-transport-fare/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2022-10-11",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S08",
+   "title": "EASTTODA reported fares",
+   "url": "https://naga.bomboradyo.com/easttoda-nagrereklamo-sa-ilegal-na-e-trike-at-habal-habal-kita-ng-mga-driver-bumagsak/",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2026-06-22",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S09",
+   "title": "Bicol Central Station address",
+   "url": "https://www2.naga.gov.ph/2023-city-service/request-for-terminal-pass/",
+   "evidenceType": "official",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S10",
+   "title": "Southbound terminal, Ordinance 2021-087",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2021-087/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2021-11-16",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S11",
+   "title": "Northbound terminal, Ordinance 2016-034",
+   "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2016-034/",
+   "evidenceType": "official_historical",
+   "publishedOrEnacted": "2016-06-24",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S12",
+   "title": "Terminal destination categories, Ordinance 2006-044",
+   "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2006-044/",
+   "evidenceType": "official_historical",
+   "publishedOrEnacted": "2006-09-11",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S13",
+   "title": "2026 festival traffic advisory",
+   "url": "https://tourism.naga.gov.ph/traffic-advisory-penafrancia-festival-parade-routes/",
+   "evidenceType": "official_event_only",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S19",
+   "title": "PNR operating documents and timetable index",
+   "url": "https://sites.google.com/pnr.gov.ph/operations/documentation",
+   "evidenceType": "official",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S21",
+   "title": "PIA historical rail resumption",
+   "url": "https://pia.gov.ph/news/legazpi-naga-train-service-resumes/",
+   "evidenceType": "government_news_historical",
+   "publishedOrEnacted": "2025-03-05",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S22",
+   "title": "PSA Naga barangays",
+   "url": "https://psa.gov.ph/classification/psgc/barangays/0501724000",
+   "evidenceType": "official",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S23",
+   "title": "Special upper barangay trimobiles, Ordinance 1998-103",
+   "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1998-103/",
+   "evidenceType": "official_historical",
+   "publishedOrEnacted": "1998-09-30",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S24",
+   "title": "Palmera-Cararayan, Ordinance 2020-052",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2020-052/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2020-06-09",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S25",
+   "title": "St. James-St. Andrew padyak, Ordinance 2022-009",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2022-009/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2022-01-25",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S26",
+   "title": "City transport ordinance index, including Deca route",
+   "url": "https://www2.naga.gov.ph/transport-and-traffic/",
+   "evidenceType": "official_index",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S28",
+   "title": "Legacy transport code/colors",
+   "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1993-049/",
+   "evidenceType": "official_historical",
+   "publishedOrEnacted": "1993",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S33",
+   "title": "SafeTravelPH report with LGU Loop A stop graphic",
+   "url": "https://www.safetravelph.org/post/jeepney-modernization-needs-more-than-formulas-initial-lessons-from-naga-city",
+   "evidenceType": "project_participant",
+   "publishedOrEnacted": "2025-09-10; updated 2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S34",
+   "title": "LGU-branded Loop A clockwise stop schematic hosted by SafeTravelPH",
+   "url": "https://static.wixstatic.com/media/17915d_39dfca6796bc46f9b910a654ad7a67b8~mv2.png",
+   "evidenceType": "LGU_branded_graphic_via_project_participant;visually_inspected",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S37",
+   "title": "VISTODA/LAVISTODA waiting stations, Ordinance 2025-067",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-067/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-09",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S39",
+   "title": "Naga City Designated Stops – public Google My Maps",
+   "url": "https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4",
+   "evidenceType": "public_map;metadata_and_points_retrieved",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S40",
+   "title": "Public Google My Maps KML export",
+   "url": "https://www.google.com/maps/d/kml?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4&forcekml=1",
+   "evidenceType": "public_export;retrieved_and_parsed",
+   "publishedOrEnacted": null,
+   "checkedOn": "2026-10-15"
+  }
+ ]
+}

@@ -9,6 +9,7 @@
 //  - NULL from the database stays null (unknown), never 0 or false.
 import { z } from "zod";
 import { NAGA_MAX_BOUNDS } from "../geo/naga";
+import { OSM_ELEMENT_TYPES, OSM_PLACE_CATEGORIES } from "../places/osm-categories";
 
 // ---------------------------------------------------------------- shared pieces
 
@@ -293,6 +294,208 @@ export const routeDetailSchema = z.object({
   sources: z.array(sourceSchema),
 });
 export type RouteDetail = z.infer<typeof routeDetailSchema>;
+
+// ---------------------------------------------------------------- OpenStreetMap places
+
+/**
+ * A named place from the committed OpenStreetMap snapshot (ODbL, © OpenStreetMap contributors).
+ * A place, not transport data: the coordinate is the OSM node or the element's centre, never an
+ * entrance; no hours, photos or ratings exist.
+ */
+export const osmPlaceSchema = z.object({
+  /** "osm:{type}/{id}", stable across snapshots. */
+  key: z.string().regex(/^osm:(node|way|relation)\/[1-9][0-9]*$/),
+  name: z.string().min(1),
+  /** name:en, name:fil, alt_name, old_name — verbatim. */
+  aliases: z.array(z.string()),
+  category: z.enum(OSM_PLACE_CATEGORIES),
+  lat: latitude,
+  lng: longitude,
+  osmType: z.enum(OSM_ELEMENT_TYPES),
+  osmId: z.number().int().positive(),
+  osmVersion: z.number().int().min(1),
+  /** ingest.source code of the snapshot, e.g. OSM-2026-10-15. */
+  sourceCode: z.string().regex(/^OSM-\d{4}-\d{2}-\d{2}$/),
+});
+export type OsmPlace = z.infer<typeof osmPlaceSchema>;
+
+// ---------------------------------------------------------------- GET /api/v1/network/search-index/:revisionId
+
+/**
+ * One immutable JSON per published revision, searched in the browser (decision D1). Built
+ * server-side from the v_published_* views only (src/domain/search/index-build.ts).
+ * Only OpenStreetMap places and mapped-pin places carry coordinates. Terminals, barangays and
+ * 2025 study labels have NO location on file: `location: null` says so explicitly, and nothing
+ * is ever inferred for them. Legacy (1993) names are historical hints, never linked to a route.
+ */
+export const searchOsmPlaceSchema = osmPlaceSchema.omit({ osmType: true, osmId: true });
+export type SearchOsmPlace = z.infer<typeof searchOsmPlaceSchema>;
+
+export const searchPinSchema = z.object({
+  stopId: z.uuid(),
+  /** Source stop code (A1, B30 …); null when the source has none. */
+  code: z.string().nullable(),
+  /** Source layer verbatim ("Loop Service A"). */
+  layer: z.string().nullable(),
+  lat: latitude,
+  lng: longitude,
+  /** True when a published variant lists this pin in its (provisional) stop order. */
+  onRoute: z.boolean(),
+});
+
+/** Mapped candidate pins sharing one normalized raw label within 60 m of the group's first pin. */
+export const searchPinPlaceSchema = z.object({
+  /** sha256(normalized label + first stop id), hex, first 16 chars; stable per revision. */
+  key: z.string().regex(/^[0-9a-f]{16}$/),
+  /** The most frequent raw spelling. */
+  label: z.string().min(1),
+  /** Every raw spelling in the group, verbatim, first seen first. */
+  spellings: z.array(z.string().min(1)).min(1),
+  pins: z.array(searchPinSchema).min(1),
+});
+export type SearchPinPlace = z.infer<typeof searchPinPlaceSchema>;
+
+export const searchRouteSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  groupNumber: z.number().int().nullable(),
+  evidenceLevel: z.enum(EVIDENCE_LEVELS).nullable(),
+  hasTrial: z.boolean(),
+  /** Distinct street names from the legal street lists and trial circuits, verbatim. */
+  streets: z.array(z.string()),
+});
+
+export const searchTerminalSchema = z.object({
+  code: z.string().regex(/^T\d{2}$/),
+  name: z.string(),
+  locationText: z.string().nullable(),
+  modes: z.array(z.string()),
+  /** No coordinates, entrances or bays are on file. */
+  location: z.null(),
+});
+
+export const searchBarangaySchema = z.object({
+  /** URL-safe key from the folded name ("bagumbayan-norte"). */
+  key: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  name: z.string(),
+  surveyStatus: z.string(),
+  sourceCode: z.string().nullable(),
+  /** No boundary or centroid is on file. */
+  location: z.null(),
+});
+
+export const searchStudyLabelSchema = z.object({
+  code: z.string(),
+  label: z.string(),
+  labelType: z.string().nullable(),
+  routeCode: z.string().nullable(),
+  direction: z.string().nullable(),
+  sourceContext: z.string().nullable(),
+  sourceCodes: z.array(z.string()),
+  /** A schematic label from the 2025 study, not a curb: no coordinate exists. */
+  location: z.null(),
+});
+
+export const searchDestinationCategorySchema = z.object({
+  category: z.string(),
+  destinations: z.array(z.string()),
+  terminalCode: z.string().nullable(),
+});
+
+export const searchFeederLeadSchema = z.object({
+  code: z.string(),
+  name: z.string(),
+  status: z.string().nullable(),
+});
+
+export const legacyRouteNameSchema = z.object({
+  name: z.string(),
+  sourceCode: z.literal("S28"),
+  year: z.literal(1993),
+  /** Always null: the 1993 names are not mapped to current routes (decision Q2). */
+  mappedRouteCode: z.null(),
+});
+export type LegacyRouteName = z.infer<typeof legacyRouteNameSchema>;
+
+export const searchIndexSchema = z.object({
+  revision: revisionMetaSchema,
+  osmPlaces: z.array(searchOsmPlaceSchema),
+  pinPlaces: z.array(searchPinPlaceSchema),
+  routes: z.array(searchRouteSchema),
+  terminals: z.array(searchTerminalSchema),
+  /** Keys are unique: a place-detail URL names exactly one barangay. */
+  barangays: z.array(searchBarangaySchema).refine((list) => new Set(list.map((b) => b.key)).size === list.length, {
+    message: "barangay keys must be unique",
+  }),
+  studyLabels: z.array(searchStudyLabelSchema),
+  destinationCategories: z.array(searchDestinationCategorySchema),
+  feederLeads: z.array(searchFeederLeadSchema),
+  legacyNames: z.array(legacyRouteNameSchema),
+});
+export type SearchIndex = z.infer<typeof searchIndexSchema>;
+
+/**
+ * The index is cached as immutable, so an empty read is never sent: a published revision always
+ * has labelled candidate pins and routes (same rule as isCompleteSnapshot, which needs stops).
+ */
+export function isCompleteSearchIndex(index: Pick<SearchIndex, "pinPlaces" | "routes">): boolean {
+  return index.pinPlaces.length > 0 && index.routes.length > 0;
+}
+
+// ---------------------------------------------------------------- GET /api/v1/terminals/:code
+
+export const terminalCodeParamSchema = z.string().regex(/^T\d{2}$/);
+
+export function parseTerminalCodeParam(raw: unknown): Parsed<string> {
+  const parsed = terminalCodeParamSchema.safeParse(typeof raw === "string" ? raw.toUpperCase() : raw);
+  return parsed.success ? { ok: true, value: parsed.data } : { ok: false, message: "code must be a terminal code such as T01." };
+}
+
+export const TERMINAL_ROUTE_BASES = ["legal_plan", "trial"] as const;
+
+export const terminalDetailSchema = z.object({
+  revision: revisionMetaSchema,
+  terminal: z.object({
+    code: z.string().regex(/^T\d{2}$/),
+    name: z.string(),
+    locationText: z.string().nullable(),
+    modes: z.array(z.string()),
+    evidenceStatus: z.string().nullable(),
+    notes: z.string().nullable(),
+    sourceCodes: z.array(z.string()),
+    /** Null: no terminal coordinate is on file. */
+    lat: latitude.nullable(),
+    lng: longitude.nullable(),
+  }),
+  /** Routes whose legal street list (legal_plan) or trial circuit (trial) names this terminal. */
+  routes: z.array(
+    z.object({
+      routeCode: z.string(),
+      routeName: z.string(),
+      basis: z.enum(TERMINAL_ROUTE_BASES),
+      sourceCodes: z.array(z.string()),
+    }),
+  ),
+  /** External destination categories whose candidate terminal is this one. */
+  destinationCategories: z.array(
+    z.object({
+      category: z.string(),
+      destinations: z.array(z.string()),
+      evidenceStatus: z.string().nullable(),
+      sourceCodes: z.array(z.string()),
+    }),
+  ),
+  sources: z.array(sourceSchema),
+});
+export type TerminalDetail = z.infer<typeof terminalDetailSchema>;
+
+// ---------------------------------------------------------------- GET /api/v1/sources
+
+export const sourceListSchema = z.object({
+  revision: revisionMetaSchema,
+  sources: z.array(sourceSchema),
+});
+export type SourceList = z.infer<typeof sourceListSchema>;
 
 // ---------------------------------------------------------------- errors
 

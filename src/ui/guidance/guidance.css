@@ -1,0 +1,399 @@
+/* Guidance steps in the home sheet (artboards Walk / Ride / Transfer / Arrive). Tokens are the
+   home screen's (.pn-home, home-screen.css and trip.css), so light, dark and high contrast follow. */
+
+.pn-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 6px;
+}
+
+/* Header: round End, the step pill, the GPS accuracy pill. */
+.pn-guide-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.pn-guide-head__end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-fill);
+  color: var(--pn-label);
+  cursor: pointer;
+}
+.pn-guide-head__step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--pn-fill);
+  font-size: 15px;
+  font-weight: 600;
+}
+.pn-guide-head__step--done {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-guide-head__acc {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pn-guide-head__acc--approx {
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+}
+
+.pn-guide__step {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pn-guide__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.pn-guide__title:focus {
+  outline: none;
+}
+.pn-guide__title:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
+.pn-guide__title--big {
+  font-size: 30px;
+}
+.pn-guide__body {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 17px;
+  line-height: 1.45;
+}
+.pn-guide__sub {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pn-guide__note,
+.pn-guide__keep {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.pn-guide__keep {
+  text-align: center;
+}
+.pn-guide__note:empty {
+  display: none;
+}
+
+/* Walk: the distance line (artboard's big number) and direction. */
+.pn-guide__distance {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.pn-guide__direction {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.pn-guide__card {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--pn-fill);
+  font-size: 16px;
+  line-height: 1.4;
+}
+.pn-guide__card--warn {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--pn-warn-ring);
+}
+.pn-guide__card--near {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-weight: 600;
+}
+
+.pn-guide__loc {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pn-guide__loc--off {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+}
+.pn-guide__use-loc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pn-guide__next {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.pn-guide__next-row,
+.pn-guide__transfer-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+}
+.pn-guide__transfer-line > span:first-child {
+  color: var(--pn-label);
+  font-size: 16px;
+  font-weight: 600;
+}
+.pn-guide__route-name {
+  color: var(--pn-label);
+  font-weight: 600;
+}
+
+/* Transfer checklist. */
+.pn-guide__checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-guide__check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+.pn-guide__check-mark {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--pn-fill);
+  font-size: 14px;
+  font-weight: 700;
+}
+.pn-guide__check--done .pn-guide__check-mark {
+  background: var(--pn-accent);
+  color: var(--pn-on-primary);
+}
+.pn-guide__check[aria-current="step"] {
+  font-weight: 600;
+}
+.pn-guide__check[aria-current="step"] .pn-guide__check-mark {
+  box-shadow: inset 0 0 0 2px var(--pn-accent);
+}
+
+/* Ride progress: the dot rail (decorative; the count says it in words). */
+.pn-guide__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pn-fill);
+}
+.pn-guide__count {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+.pn-rail {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+}
+.pn-rail__track {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 12px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--pn-sep);
+}
+.pn-rail__dot {
+  position: relative;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--pn-surface);
+  box-shadow: inset 0 0 0 3px var(--pn-label2);
+}
+.pn-rail__dot--boarded,
+.pn-rail__dot--passed {
+  background: var(--pn-label2);
+}
+.pn-rail__dot--alight {
+  width: 20px;
+  height: 20px;
+  background: var(--pn-dest);
+  box-shadow: 0 0 0 3px var(--pn-surface);
+}
+.pn-guide__rail-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.pn-guide__rail-alight {
+  color: var(--pn-label);
+  font-weight: 600;
+  text-align: right;
+}
+
+/* "Para! Next stop is yours": the one loud card. White on #c73a2f ≈ 5.2:1. */
+.pn-guide__para {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #c73a2f;
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.pn-guide__para p {
+  margin: 0;
+}
+.pn-guide__para-word {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.pn-guide__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pn-guide__actions .pn-btn--primary {
+  min-height: 52px;
+}
+.pn-guide__actions .pn-btn--secondary {
+  min-height: 48px;
+}
+.pn-guide__undo,
+.pn-guide__report {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-decoration: none;
+}
+.pn-guide__report:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
+
+/* Arrive. */
+.pn-guide__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--pn-fill);
+  font-size: 15px;
+}
+.pn-guide__summary-ride {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pn-guide__save {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pn-guide__save-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  text-align: left;
+  cursor: pointer;
+}
+.pn-guide__save-btn--on {
+  background: var(--pn-accent);
+  color: var(--pn-on-primary);
+}
+.pn-guide__save-btn[aria-disabled="true"] {
+  cursor: progress;
+}
+.pn-guide__save-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+.pn-guide__save-text strong {
+  font-size: 16px;
+}

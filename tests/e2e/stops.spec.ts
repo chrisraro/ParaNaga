@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
-import { ALL_ROUTES, ROUTE_R8A, STOP_A1, STOPS_ALL, routeNetwork } from "./fixtures/network";
+import { ALL_ROUTES, ROUTE_R8A, SNAPSHOT, STOP_A1, STOPS_ALL, routeNetwork } from "./fixtures/network";
 
 // Stop pins on the map, Stop detail and Route detail (Task 7). The network API is answered with
 // REAL responses captured from a throwaway Neon branch (fixtures/network); tiles are aborted.
@@ -51,13 +51,14 @@ async function expectAxeClean(page: Page) {
   expect(serious, JSON.stringify(serious.map((v) => [v.id, v.nodes.map((n) => n.target)]), null, 1)).toEqual([]);
 }
 
-test("pins load for the view as one canvas layer, debounced, with no lines and no extra DOM markers", async ({ page }) => {
+test("pins come from the snapshot as one canvas layer, with no lines and no extra DOM markers", async ({ page }) => {
   const calls = await routeNetwork(page);
   await openApp(page);
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
-  // One request for the settled view; the bbox is snapped and inside the Naga bounds.
-  expect(calls.bboxes.length).toBe(1);
-  expect(calls.bboxes[0]).toMatch(/^123\.\d+,13\.\d+,123\.\d+,13\.\d+$/);
+  // Decision D2: one snapshot of the published revision, filtered in the browser; the map view
+  // never goes to the server (no stops?bbox= request).
+  expect(calls.snapshots).toEqual([SNAPSHOT.revision.revisionId]);
+  expect(calls.bboxes).toEqual([]);
   // Canvas, not DOM markers or SVG paths: the overlay paths are only the boundary and the mask.
   await expect(page.locator(".leaflet-overlay-pane canvas")).toHaveCount(1);
   expect(await overlayPaths(page).count()).toBe(2);
@@ -181,7 +182,7 @@ test("route R8-A: 30 provisional stops in pin order, the trial notice and an est
   await expect(trial).toContainText("adopted 11 Nov 2025 for 30 days; permanence unconfirmed");
   await expect(route.getByTestId("street-order").getByRole("listitem")).toHaveCount(ROUTE_R8A.route.legalStreets.circuit!.length);
   await expect(route.getByTestId("route-allocation")).toContainText(
-    "71 units allocated to group 8 in the plan, no per-route count (not a count of jeepneys running). Sources S01, S02 · revision provisional-loops-2026-10-15.",
+    "71 units allocated to group 8 in the plan, no per-route count (not a count of jeepneys running). Sources S01, S02 · revision osm-places-2026-10-15.",
   );
   await expect(route).toContainText("Corrections open soon");
   await expectAxeClean(page);

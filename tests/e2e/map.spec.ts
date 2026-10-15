@@ -225,6 +225,8 @@ test.describe("geolocation inside Naga", () => {
     await openApp(page);
     await useLocation(page).click();
     await expect(page.getByTestId("location-status")).toContainText("Location too rough");
+    // The rough fix recentres the map (0.8 s fly-to); let it land before the pick reads the view.
+    await expect.poll(async () => (await readView(page)).lng).toBeCloseTo(BISCAST.longitude, 4);
 
     await page.getByRole("button", { name: "Choose start on map" }).click();
     const picker = page.getByRole("region", { name: "Choose start on map" });

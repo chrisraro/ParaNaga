@@ -1,0 +1,181 @@
+// @vitest-environment jsdom
+// Facts: new test file for Task 11 (Help, articles, sources register, MyNaga handoff) and the ride
+// step's "Report it in MyNaga" link, which must mark the navigation as started from the home
+// screen (frame.markHomeNavigation) so closing MyNaga returns to the running guidance.
+import "fake-indexeddb/auto";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { startSession, reduceSession } from "@/domain/guidance/session";
+import { guidanceView } from "@/domain/guidance/view";
+import { MYNAGA_LINKS } from "@/domain/mynaga/links";
+import SOURCES from "../e2e/fixtures/network/sources.json" with { type: "json" };
+import { oneRide, tripOf } from "./guidance-fixtures";
+
+const nav = vi.hoisted(() => ({ params: new URLSearchParams() }));
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => nav.params,
+  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  usePathname: () => "/app/help",
+}));
+vi.mock("next/link", () => ({ default: ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => <a href={href} {...rest}>{children}</a> }));
+
+const { AppFrameContext } = await import("@/ui/app-shell/app-frame-context");
+const { BADGE_MEANINGS, DATA_FOOTER, HelpScreen, INDEPENDENT_NOTE, SAFETY_TIPS } = await import("@/ui/help/help-screen");
+const { HelpArticleScreen } = await import("@/ui/help/help-article");
+const { MAP_OWNER_NOTE, SourcesScreen } = await import("@/ui/help/sources-screen");
+const { LATER_NOTE, MYNAGA_FOOTER, MyNagaScreen, PREPARE_ITEMS } = await import("@/ui/mynaga/mynaga-screen");
+const { RideStep } = await import("@/ui/guidance/ride-step");
+
+const HEAD = { revisionId: "67e56657-7542-462e-b57c-eb14439a0c7a", label: "osm-places-2026-10-15", kind: "provisional", publishedAt: "2026-10-15T12:59:57.089Z" };
+
+let fetched: string[] = [];
+beforeEach(() => {
+  nav.params = new URLSearchParams();
+  fetched = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) => {
+      fetched.push(url);
+      const body = url.includes("/sources") ? SOURCES : HEAD;
+      return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+    }),
+  );
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+
+describe("Help", () => {
+  it("opens on Help with the three articles, the MyNaga link and the independence note", () => {
+    render(<HelpScreen />);
+    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["Help", "Safety", "About data"]);
+    const links = within(screen.getByTestId("help-links")).getAllByRole("link");
+    expect(links.map((l) => [l.textContent, l.getAttribute("href")])).toEqual([
+      ["How trips are planned", "/app/help/how-trips-are-planned"],
+      ["Why stops are not verified yet", "/app/help/why-stops-are-not-verified"],
+      ["Using ParaNaga offline", "/app/help/using-paranaga-offline"],
+      ["Report a problem with a driver", "/app/mynaga"],
+    ]);
+    expect(screen.getByTestId("help-independent").textContent).toBe(INDEPENDENT_NOTE);
+    expect(screen.getByRole("tabpanel").getAttribute("tabindex")).toBe("0");
+  });
+
+  it("Safety: 911, the tips and the MyNaga button; the tab is kept in the URL", () => {
+    const replace = vi.spyOn(window.history, "replaceState");
+    render(<HelpScreen />);
+    fireEvent.click(screen.getByRole("tab", { name: "Safety" }));
+    expect(replace).toHaveBeenLastCalledWith(window.history.state, "", "/app/help?tab=safety");
+    expect(screen.getByTestId("help-emergency").textContent).toBe("In an emergency, call 911. ParaNaga does not monitor reports and cannot send help.");
+    expect(within(screen.getByTestId("help-tips")).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...SAFETY_TIPS]);
+    const report = screen.getByTestId("help-report-driver");
+    expect(report.textContent).toBe("Report a driver to the City in MyNaga");
+    expect(report.getAttribute("href")).toBe("/app/mynaga");
+  });
+
+  it("About data: badge meanings, the data revision, sources link and footer", async () => {
+    nav.params = new URLSearchParams("tab=data");
+    render(<HelpScreen />);
+    const rows = within(screen.getByTestId("help-badges")).getAllByRole("listitem");
+    expect(rows.map((r) => r.textContent)).toEqual([
+      `Verified${BADGE_MEANINGS[0]!.text}`,
+      `Mapped candidate${BADGE_MEANINGS[1]!.text}`,
+      `Documented only${BADGE_MEANINGS[2]!.text}`,
+      `Unverified route — confirm with the driver${BADGE_MEANINGS[3]!.text}`,
+    ]);
+    expect(screen.getByTestId("help-sources-link").getAttribute("href")).toBe("/app/help/sources");
+    expect(screen.getByTestId("help-data-footer").textContent).toBe(DATA_FOOTER);
+    await waitFor(() => expect(screen.getByTestId("help-data-revision").textContent).toBe("Data revisionosm-places-2026-10-15 · Oct 15, 2026"));
+  });
+});
+
+describe("Help articles", () => {
+  it("How trips are planned: exact copy, no network request", () => {
+    render(<HelpArticleScreen slug="how-trips-are-planned" />);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("How trips are planned");
+    expect(screen.getByTestId("help-article-body").textContent).toBe(
+      "ParaNaga suggests trips on Loops A and B only. Their stop order comes from the order of pins on a public map, not from a field survey, so every suggestion carries the badge “Unverified route — confirm with the driver”." +
+        "Walks to and from a stop are capped at 600 m, and 400 m between rides. Walking distances are straight-line estimates (× 1.3); paths and crossings are not checked." +
+        "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied. There are no times: ParaNaga does not know when jeepneys run.",
+    );
+    expect(fetched).toEqual([]);
+    expect(document.title).toBe("How trips are planned · ParaNaga");
+  });
+
+  it("Using ParaNaga offline names the published date of the data, never a placeholder", async () => {
+    render(<HelpArticleScreen slug="using-paranaga-offline" />);
+    // Until the date is known, the dated paragraph is not rendered (nothing like "…" is read).
+    expect(screen.getByTestId("help-article-body").textContent).not.toContain("Planning offline");
+    expect(screen.getByTestId("help-article-body").textContent).not.toContain("…");
+    await waitFor(() => expect(screen.getByTestId("help-article-body").textContent).toContain("Planning offline uses the data from Oct 15, 2026; fares may have changed."));
+  });
+});
+
+describe("Sources register", () => {
+  it("lists every source with its dates and an external link, and the map owner note", async () => {
+    render(<SourcesScreen />);
+    await waitFor(() => expect(screen.getAllByTestId("source-row")).toHaveLength(SOURCES.sources.length));
+    const s01 = screen.getAllByTestId("source-row").find((r) => r.dataset.code === "S01")!;
+    expect(s01.textContent).toContain("S01 · Naga approved LPTRP, Ordinance 2025-070");
+    expect(s01.textContent).toContain("Official · published 23 Sep 2025 · checked 15 Oct 2026");
+    const link = within(s01).getByRole("link", { name: "Open source S01 (opens in a new tab)" });
+    expect(link.getAttribute("href")).toBe("https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/");
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(screen.getByTestId("sources-owner-note").textContent).toBe(MAP_OWNER_NOTE);
+  });
+});
+
+describe("MyNaga handoff", () => {
+  it("shows the note, the checklist, the four verified links (store for this phone first) and the footer", () => {
+    const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)");
+    render(<MyNagaScreen />);
+    expect(screen.getByTestId("mynaga-independent").textContent).toBe(
+      "ParaNaga is independent. It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.",
+    );
+    expect(within(screen.getByTestId("mynaga-prepare")).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...PREPARE_ITEMS]);
+    const links = within(screen.getByTestId("mynaga-links")).getAllByRole("link");
+    expect(links.map((l) => l.textContent)).toEqual(["Get MyNaga on the App Store", "Get MyNaga on Google Play", "Open mynaga.app", "About MyNaga (City of Naga)"]);
+    for (const l of links) {
+      expect(MYNAGA_LINKS.map((m) => m.url)).toContain(l.getAttribute("href"));
+      expect(l.getAttribute("target")).toBe("_blank");
+      expect(l.getAttribute("rel")).toBe("noopener noreferrer");
+    }
+    expect(screen.getByTestId("mynaga-later").textContent).toBe(LATER_NOTE);
+    // Steps 1 and 2 are numbered; "After you submit in MyNaga" is not a step to take.
+    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
+      "1Prepare what you will share",
+      "2Open MyNaga and submit there",
+      "After you submit in MyNaga",
+    ]);
+    expect(screen.getByTestId("mynaga-footer").textContent).toBe(MYNAGA_FOOTER);
+    // Nothing is copied, prepared or sent: no buttons, no inputs, no request.
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+    expect(screen.queryAllByRole("textbox")).toHaveLength(0);
+    expect(fetched).toEqual([]);
+    ua.mockRestore();
+  });
+});
+
+describe("Ride step → MyNaga", () => {
+  it("marks the MyNaga navigation as started from the home screen", () => {
+    const T0 = 1_000_000;
+    let s = startSession(tripOf(oneRide()), T0);
+    s = reduceSession(s, { type: "atStop" });
+    s = reduceSession(s, { type: "boarded" });
+    const view = guidanceView(s, null, T0);
+    if (view.screen !== "ride") throw new Error(`expected the ride step, got ${view.screen}`);
+    const markHomeNavigation = vi.fn();
+    const frame = { markHomeNavigation } as unknown as React.ContextType<typeof AppFrameContext>;
+    render(
+      <AppFrameContext.Provider value={frame}>
+        <RideStep view={view} onSend={vi.fn()} location={{ state: "idle", watching: false, onEnable: vi.fn() }} headingRef={{ current: null }} alertKey="k" />
+      </AppFrameContext.Provider>,
+    );
+    const link = screen.getByTestId("guidance-report-driver");
+    expect(link.getAttribute("href")).toBe("/app/mynaga");
+    fireEvent.click(link);
+    expect(markHomeNavigation).toHaveBeenCalledWith("/app/mynaga");
+  });
+});

@@ -19,6 +19,15 @@ export function formatIsoDate(iso: string | null | undefined): string | null {
   return `${day} ${month} ${m[1]}`;
 }
 
+const PUBLISHED_DATE = new Intl.DateTimeFormat("en-PH", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Manila" });
+
+/** A revision's published timestamp as a Naga City calendar date ("Oct 15, 2026"); null if unknown. */
+export function publishedDateText(publishedAt: string | null | undefined): string | null {
+  if (!publishedAt) return null;
+  const date = new Date(publishedAt);
+  return Number.isNaN(date.getTime()) ? null : PUBLISHED_DATE.format(date);
+}
+
 /** The newest retrieved date among the stop's source records (ISO dates sort as text). */
 export function latestRetrievedOn(records: readonly { retrievedOn: string | null }[]): string | null {
   return records.reduce<string | null>((best, r) => (r.retrievedOn && (!best || r.retrievedOn > best) ? r.retrievedOn : best), null);

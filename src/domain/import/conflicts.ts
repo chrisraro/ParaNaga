@@ -1,5 +1,5 @@
 import { haversineMeters } from "@/domain/geo/geometry";
-import { compareCodeUnits } from "./hash";
+import { compareCodeUnits } from "../text/compare";
 import { normalizeLabel, type IdentifiedStop } from "./mapped-stops";
 
 export type ConflictKind = "code_prefix_mismatch" | "exact_coordinate_shared" | "near_duplicate";

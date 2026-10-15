@@ -1,16 +1,20 @@
 "use client";
 
 // The home screen's bottom sheet ("Trip planner"): Start and Destination rows, the options for
-// the focused row, and whatever cards the screen passes in. Snaps follow the map design brief
+// the focused row ("Save this place" too once that end is set), and whatever cards the screen
+// passes in. Snaps follow the map design brief
 // §1 (visible 214 / 444 / full); drag with the grabber, or tap / arrow-key it.
 
+import Link from "next/link";
 import { useCallback, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { savePlacePrefill } from "@/domain/saved/saved";
 import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
+import { SavePlaceButton } from "@/ui/saved/save-place-button";
 
 export type Snap = 0 | 1 | 2;
 
-const PEEK_VISIBLE = 214;
-const HALF_VISIBLE = 444;
+export const PEEK_VISIBLE = 214;
+export const HALF_VISIBLE = 444;
 const DRAG_SLOP = 6;
 /** How far ahead (ms) a release's velocity carries the sheet before picking the nearest snap. */
 const FLING_MS = 200;
@@ -21,9 +25,14 @@ const GRABBER_LABEL: Record<Snap, string> = {
   2: "Collapse sheet",
 };
 
-function offsetFor(snap: Snap, height: number): number {
+/**
+ * `clearance`: what the tab bar covers at the bottom of the screen. The peek snap rises by it so
+ * the start and destination rows stay above the tab bar; half and full keep their height (their
+ * content scrolls, with room at the end for the tab bar), so the map keeps its view.
+ */
+export function offsetFor(snap: Snap, height: number, clearance = 0): number {
   if (snap === 2) return 0;
-  return Math.max(0, height - (snap === 0 ? PEEK_VISIBLE : HALF_VISIBLE));
+  return Math.max(0, height - (snap === 0 ? PEEK_VISIBLE + clearance : HALF_VISIBLE));
 }
 
 export type SheetControl = {
@@ -39,9 +48,11 @@ export type SheetControl = {
   visible: number;
   dragging: boolean;
   attach: (el: HTMLElement | null) => (() => void) | undefined;
+  /** Height the tab bar covers at the bottom of the sheet, in px (0 without a tab bar). */
+  clearance: number;
 };
 
-export function useSheet(initial: Snap = 1): SheetControl {
+export function useSheet(initial: Snap = 1, clearance = 0): SheetControl {
   const [snap, setSnap] = useState<Snap>(initial);
   const [height, setHeight] = useState<number | null>(null);
   const [drag, setDrag] = useState<number | null>(null);
@@ -54,9 +65,9 @@ export function useSheet(initial: Snap = 1): SheetControl {
     return () => observer.disconnect();
   }, []);
 
-  const offset = height === null ? null : (drag ?? offsetFor(snap, height));
+  const offset = height === null ? null : (drag ?? offsetFor(snap, height, clearance));
   const visible = height === null || offset === null ? HALF_VISIBLE : height - offset;
-  return { snap, setSnap, height, setDrag, offset, visible, dragging: drag !== null, attach };
+  return { snap, setSnap, height, setDrag, offset, visible, dragging: drag !== null, attach, clearance };
 }
 
 type Gesture = { id: number; startY: number; base: number; lastY: number; lastT: number; v: number; moved: boolean };
@@ -66,11 +77,11 @@ type Gesture = { id: number; startY: number; base: number; lastY: number; lastT:
  * to step. touch-action: none (CSS) so the browser never scrolls instead.
  */
 function SheetGrabber({ sheet }: { sheet: SheetControl }) {
-  const { snap, setSnap, height, setDrag } = sheet;
+  const { snap, setSnap, height, setDrag, clearance } = sheet;
   const gesture = useRef<Gesture | null>(null);
   const suppressClick = useRef(false);
 
-  const clampOffset = (value: number, h: number) => Math.min(offsetFor(0, h), Math.max(0, value));
+  const clampOffset = (value: number, h: number) => Math.min(offsetFor(0, h, clearance), Math.max(0, value));
 
   const onPointerDown = (e: PointerEvent<HTMLButtonElement>) => {
     suppressClick.current = false;
@@ -79,7 +90,7 @@ function SheetGrabber({ sheet }: { sheet: SheetControl }) {
     gesture.current = {
       id: e.pointerId,
       startY: e.clientY,
-      base: offsetFor(snap, height),
+      base: offsetFor(snap, height, clearance),
       lastY: e.clientY,
       lastT: e.timeStamp,
       v: 0,
@@ -106,7 +117,7 @@ function SheetGrabber({ sheet }: { sheet: SheetControl }) {
     const projected = clampOffset(g.base + (e.clientY - g.startY), height) + g.v * FLING_MS;
     const snaps: Snap[] = [0, 1, 2];
     const nearest = snaps.reduce((best, s) =>
-      Math.abs(offsetFor(s, height) - projected) < Math.abs(offsetFor(best, height) - projected) ? s : best,
+      Math.abs(offsetFor(s, height, clearance) - projected) < Math.abs(offsetFor(best, height, clearance) - projected) ? s : best,
     );
     setSnap(nearest);
     setDrag(null);
@@ -172,12 +183,33 @@ function LocateIcon() {
     </svg>
   );
 }
+function SearchIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2.2" />
+      <path d="M20 20l-3.5-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    </svg>
+  );
+}
 function PinIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
       <circle cx="12" cy="9.8" r="2.2" fill="currentColor" />
     </svg>
+  );
+}
+
+/** "Save this place" for a set trip end (a pin or GPS fix is saved as "Pinned location"). */
+function SaveEnd({ endpoint }: { endpoint: Endpoint }) {
+  return (
+    <SavePlaceButton
+      variant="option"
+      label={savePlacePrefill(endpoint)}
+      point={endpoint.point}
+      source={endpoint.place ?? "pinned"}
+      testId="endpoint-save-place"
+    />
   );
 }
 
@@ -266,7 +298,10 @@ export function EndpointSheet({
     }
     onFocus(which);
   };
-  const style = offset === null ? undefined : { ["--pn-sheet-offset" as string]: `${offset}px` };
+  const style = {
+    ...(offset === null ? {} : { ["--pn-sheet-offset" as string]: `${offset}px` }),
+    ["--pn-sheet-clearance" as string]: `${sheet.clearance}px`,
+  };
   return (
     <section
       ref={attach}
@@ -297,14 +332,15 @@ export function EndpointSheet({
         </div>
         )}
 
-        {/* Everything below the always-visible rows. At the peek snap it sits under the screen edge,
-            so it is inert (not focusable); at half, focusing something that is cut off expands the sheet. */}
+        {/* Everything below the always-visible rows. At the peek snap it sits under the screen edge
+            (and the tab bar), so it is inert (not focusable); at half, focusing something that is
+            cut off or under the tab bar expands the sheet. */}
         <div
           className="pn-sheet__rest"
           inert={snap === 0 && !detailOpen}
           onFocusCapture={(e) => {
             // Trip detail stays operable at the peek snap (its header is visible there).
-            if (snap !== 2 && e.target.getBoundingClientRect().bottom > window.innerHeight) sheet.setSnap(snap === 0 ? 1 : 2);
+            if (snap !== 2 && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) sheet.setSnap(snap === 0 ? 1 : 2);
           }}
         >
         {children}
@@ -328,6 +364,13 @@ export function EndpointSheet({
               </span>
               Choose on map
             </button>
+            <Link href={`/app/search?for=${focused}`} className="pn-option" data-testid="endpoint-search">
+              <span className="pn-option__icon">
+                <SearchIcon />
+              </span>
+              Search places and stops
+            </Link>
+            {endpoints[focused] ? <SaveEnd endpoint={endpoints[focused]} /> : null}
           </div>
         ) : null}
         {detailOpen ? null : after}

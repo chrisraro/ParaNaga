@@ -7,18 +7,36 @@
 //   Walk ≈ m to destination · path not verified
 // then the fare per ride leg as estimates, and a plain "Corrections open soon." note (no
 // correction flow yet, so no link and nothing that looks like a control). The map highlights the boarding/alighting stops only.
+//
+// Actions (Task 8): Save ("Save" / "Saved", a saved trip on this phone) and Share (the Web Share
+// API with a text-only summary, else copy to the clipboard: "Copied"). The summary names places
+// and stops only; exact points are added only when "Include exact points" is ticked. "Start
+// trip" (Task 10) starts guidance in this sheet. An optional note above the steps says how the trip was
+// reopened ("Re-planned on the current data", or that it is shown as saved, offline).
 
 import "./trip.css";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
+import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel } from "@/domain/trip/present";
+import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
+
+export type TripEnds = { start: SavedEnd; destination: SavedEnd };
+export type TripNote = { text: string; tone: "info" | "warning" };
 
 type Props = {
   data: PlanResponse;
   option: PlanOptionDto;
   onBack: () => void;
+  /** The trip's ends (labels and points), for Save and Share. Without them there are no actions. */
+  ends?: TripEnds | null;
+  /** How this trip was reopened from Saved; shown above the steps. */
+  note?: TripNote | null;
+  /** "Start trip": starts guidance (Task 10). Without it there is no Start button. */
+  onStart?: (() => void) | null;
 };
 
 const CANDIDATE = "Mapped candidate · not yet verified";
@@ -164,12 +182,113 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups): Step[] {
   ];
 }
 
-export function TripDetail({ data, option, onBack }: Props) {
+type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";
+
+async function shareOrCopy(text: string): Promise<ShareOutcome> {
+  if (typeof navigator.share === "function") {
+    try {
+      await navigator.share({ text });
+      return "shared";
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return "cancelled";
+      // Not allowed here (no user activation, unsupported data): fall back to the clipboard.
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    return "copied";
+  } catch {
+    return "failed";
+  }
+}
+
+const SHARE_STATUS: Record<ShareOutcome, string> = {
+  shared: "Shared",
+  copied: "Copied",
+  cancelled: "",
+  failed: "Could not share or copy on this phone.",
+};
+
+function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds }) {
+  const id = useId();
+  const [exactPoints, setExactPoints] = useState(false);
+  const [status, setStatus] = useState("");
+  const newCard = () => buildSavedTrip({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), data, option, start: ends.start, destination: ends.destination });
+  // Saved on this plan's revision, saved on an older one (offer to update the copy), or not saved.
+  const { match, kind: state, waiting, unavailable, toggle } = useSavedTripToggle(
+    { optionId: option.id, start: ends.start.point, destination: ends.destination.point, revisionId: data.revision.revisionId },
+    newCard,
+    setStatus,
+  );
+
+  const share = async () => {
+    setStatus("");
+    const text = shareText(
+      { start: ends.start, destination: ends.destination, option, stops: data.stops, variants: data.variants, revisionLabel: data.revision.label },
+      { exactPoints },
+    );
+    setStatus(SHARE_STATUS[await shareOrCopy(text)]);
+  };
+
+  return (
+    <div className="pn-trip-actions" data-testid="trip-actions">
+      <div className="pn-trip-actions__row">
+        {/* Not a pressed-state toggle: the name says what a tap does ("Saved, remove…"). */}
+        <button
+          type="button"
+          className={state === "saved" ? "pn-trip-action pn-trip-action--on" : "pn-trip-action"}
+          aria-disabled={waiting || unavailable ? true : undefined}
+          onClick={() => void toggle()}
+          data-testid="trip-save"
+          data-state={state}
+          aria-label={state === "saved" ? "Saved, remove from saved trips" : undefined}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill={state === "none" ? "none" : "currentColor"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden="true" focusable="false">
+            <path d="M6 3h12v18l-6-4.5L6 21z" />
+          </svg>
+          {state === "saved" ? (
+            "Saved"
+          ) : state === "older" ? (
+            "Update saved copy"
+          ) : (
+            "Save"
+          )}
+        </button>
+        <button type="button" className="pn-trip-action" onClick={() => void share()} data-testid="trip-share">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+            <path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6" />
+          </svg>
+          Share
+        </button>
+      </div>
+      {match?.kind === "older" ? (
+        <p className="pn-trip-actions__status" data-testid="trip-save-older">
+          Your saved copy uses data from {manilaDate(match.trip.publishedAt) ?? `revision ${match.trip.revisionLabel}`}.
+        </p>
+      ) : null}
+      {unavailable ? <p className="pn-trip-actions__status">Saving needs storage on this phone, which is not available.</p> : null}
+      <div className="pn-trip-actions__check">
+        <input id={`${id}-exact`} type="checkbox" checked={exactPoints} onChange={(e) => setExactPoints(e.target.checked)} data-testid="trip-share-exact" />
+        <label htmlFor={`${id}-exact`}>Include exact points when sharing</label>
+      </div>
+      <p className="pn-trip-actions__status" aria-live="polite" data-testid="trip-action-status">
+        {status}
+      </p>
+    </div>
+  );
+}
+
+export const START_TRIP = "Start trip";
+
+export function TripDetail({ data, option, onBack, ends = null, note = null, onStart = null }: Props) {
   const lookups = planLookups(data);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  // Focus the heading when an option opens, and again once the map shows (a trip reopened from
+  // Saved mounts while the Saved page still covers the home screen, which is inert then).
+  const covered = useAppFrame()?.panelOpen ?? false;
   useEffect(() => {
-    headingRef.current?.focus();
-  }, [option.id]);
+    if (!covered) headingRef.current?.focus();
+  }, [option.id, covered]);
   const rides = option.legs.filter((l): l is RideLegDto => l.kind === "ride");
 
   return (
@@ -190,6 +309,17 @@ export function TripDetail({ data, option, onBack }: Props) {
         <FareChip fare={option.fare} />
       </div>
       {rides.length > 0 ? <UnverifiedBadge /> : null}
+      {note ? (
+        <p className={note.tone === "warning" ? "pn-trip-reopen pn-trip-reopen--warn" : "pn-trip-reopen"} data-testid="trip-reopen-note">
+          {note.text}
+        </p>
+      ) : null}
+      {onStart ? (
+        <button type="button" className="pn-btn pn-btn--primary pn-trip-start" onClick={onStart} data-testid="trip-start">
+          {START_TRIP}
+        </button>
+      ) : null}
+      {ends ? <TripActions data={data} option={option} ends={ends} /> : null}
 
       <ol className="pn-tl" aria-label="Trip steps">
         {steps(option, lookups).map((step) => (

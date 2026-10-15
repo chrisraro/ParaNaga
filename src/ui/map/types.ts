@@ -45,4 +45,10 @@ export type NagaMapProps = {
   /** Shows the locate/recenter button; the parent decides whether to start GPS. */
   onLocate?: () => void;
   className?: string;
+  /** Where the map opens (default: Naga City centre at the default zoom). Read once, at mount. */
+  initialView?: { center: LatLng; zoom: number };
+  /** One place marker in the destination style (place detail), named for screen readers. */
+  placeMarker?: { point: LatLng; label: string };
+  /** Accessible name of the map region (default "Map of Naga City"). */
+  label?: string;
 };

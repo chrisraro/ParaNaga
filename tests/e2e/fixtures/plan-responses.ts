@@ -4,7 +4,8 @@
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
-export const REVISION = { revisionId: id(1), label: "provisional-loops-2026-10-15", kind: "provisional", publishedAt: "2026-10-15T00:00:00.000Z" };
+// The published revision every captured network fixture names (fixtures/network/*.json).
+export const REVISION = { revisionId: "67e56657-7542-462e-b57c-eb14439a0c7a", label: "osm-places-2026-10-15", kind: "provisional", publishedAt: "2026-10-15T12:59:57.089Z" };
 const LOOP_A = id(100);
 
 const ORIGIN = { kind: "origin", lat: 13.6224, lng: 123.1838, stopId: null, name: null };
@@ -130,3 +131,50 @@ export const WALK_FIRST_PLAN = {
     ],
   },
 };
+
+// Two rides with a transfer (guidance, Task 10): Loop A from Plaza Rizal to Magsaysay Junction,
+// walk to a Loop B pin, Loop B two stops on, walk to the destination.
+const LOOP_B = id(200);
+const B1 = { id: id(21), name: "Del Rosario", lat: 13.6272, lng: 123.1893 };
+const B2 = { id: id(22), name: "Mother Seton Hospital", lat: 13.6287, lng: 123.1902 };
+const B3 = { id: id(23), name: "Avenue Plaza", lat: 13.6301, lng: 123.1909 };
+
+const twoRides = {
+  id: `${LOOP_A}:${A1.id}:${A3.id}|${LOOP_B}:${B1.id}:${B3.id}`,
+  labels: ["Recommended"],
+  legs: [
+    { kind: "walk", from: ORIGIN, to: asStop(A1), distanceMeters: 177, estimateMeters: 230, pathVerified: false },
+    {
+      kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
+      stops: [A1, A2, A3], distanceMeters: 560, approximate: true, boardingVerified: false, pathVerified: false,
+      fare: legFare(1400, 1700),
+    },
+    { kind: "walk", from: asStop(A3), to: asStop(B1), distanceMeters: 60, estimateMeters: 78, pathVerified: false },
+    {
+      kind: "ride", variantId: LOOP_B, routeCode: "R8-B", routeName: "Centro–Panganiban Loop B", verification: "unverified",
+      stops: [B1, B2, B3], distanceMeters: 380, approximate: true, boardingVerified: false, pathVerified: false,
+      fare: legFare(1400, 1700),
+    },
+    { kind: "walk", from: asStop(B3), to: DESTINATION, distanceMeters: 50, estimateMeters: 65, pathVerified: false },
+  ],
+  rides: 2, walkMeters: 287, walkEstimateMeters: 373, rideMeters: 940, score: 900, fare: { minCentavos: 2800, maxCentavos: 3400, status: "estimate", completeness: "estimate" },
+  evidence: "provisional",
+};
+
+export const TWO_RIDE_PLAN = {
+  ...PROVISIONAL_PLAN,
+  plan: { ...PROVISIONAL_PLAN.plan, options: [twoRides] },
+  stops: [
+    ...PROVISIONAL_PLAN.stops,
+    { id: B1.id, name: B1.name, code: "B1" },
+    { id: B2.id, name: B2.name, code: "B2" },
+    { id: B3.id, name: B3.name, code: "B3" },
+  ],
+  variants: [
+    ...PROVISIONAL_PLAN.variants,
+    { variantId: LOOP_B, routeCode: "R8-B", routeName: "Centro–Panganiban Loop B", isCircular: true, loopDirection: "counterclockwise" },
+  ],
+};
+
+/** Loop A pins, for fake location fixes along the ride. */
+export const LOOP_A_PINS = { A1, A2, A3, A4, A5 };

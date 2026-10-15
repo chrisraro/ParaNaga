@@ -1,0 +1,245 @@
+{
+ "header": {
+  "query": "SYNTHETIC FIXTURE - not an Overpass response. Hand-made for tests; every name is fake.",
+  "endpoint": "synthetic://tests/fixtures/osm",
+  "fetchedAt": "2026-10-15T01:00:00Z",
+  "osmBaseTimestamp": "2026-10-15T00:59:00Z",
+  "boundaryRelation": 3084673,
+  "licence": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "synthetic": true,
+  "removedFields": [
+   "bounds",
+   "changeset",
+   "geometry",
+   "members",
+   "nodes",
+   "uid",
+   "user"
+  ]
+ },
+ "response": {
+  "version": 0.6,
+  "generator": "synthetic fixture",
+  "osm3s": {
+   "timestamp_osm_base": "2026-10-15T00:59:00Z",
+   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+   {
+    "type": "node",
+    "id": 999000000001,
+    "lat": 13.624,
+    "lon": 123.185,
+    "version": 3,
+    "timestamp": "2026-01-03T00:00:00Z",
+    "tags": {
+     "amenity": "school",
+     "name": "Synthetic Test Elementary School",
+     "name:en": "Synthetic Test Elementary",
+     "alt_name": "STES",
+     "opening_hours": "Mo-Fr 07:00-17:00",
+     "phone": "+63 000 000 0000",
+     "website": "https://synthetic.invalid",
+     "image": "https://synthetic.invalid/x.jpg",
+     "entrance": "main",
+     "addr:street": "Synthetic Street"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000002,
+    "lat": 13.6228,
+    "lon": 123.184,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "place_of_worship;school",
+     "religion": "christian",
+     "name": "Synthetic Chapel School"
+    }
+   },
+   {
+    "type": "way",
+    "id": 999000000003,
+    "center": {
+     "lat": 13.625,
+     "lon": 123.187
+    },
+    "version": 2,
+    "timestamp": "2026-01-02T00:00:00Z",
+    "tags": {
+     "shop": "mall",
+     "name": "Fakemart Synthetic Mall",
+     "opening_hours": "10:00-21:00"
+    }
+   },
+   {
+    "type": "relation",
+    "id": 999000000004,
+    "center": {
+     "lat": 13.6215,
+     "lon": 123.186
+    },
+    "version": 5,
+    "timestamp": "2026-01-05T00:00:00Z",
+    "tags": {
+     "leisure": "park",
+     "type": "multipolygon",
+     "name": "Synthetic Test Park",
+     "old_name": "Old Synthetic Park"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000005,
+    "lat": 13.6232,
+    "lon": 123.1835,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "hospital"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000006,
+    "lat": 13.6233,
+    "lon": 123.1836,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "clinic",
+     "name": "   "
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000007,
+    "lat": 13.61,
+    "lon": 123.1765,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "marketplace",
+     "name": "Synthetic Outside Market"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000008,
+    "lat": 13.6236,
+    "lon": 123.1849,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "restaurant",
+     "name": "Synthetic Diner"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000009,
+    "lat": 13.6245,
+    "lon": 123.183,
+    "version": 4,
+    "timestamp": "2026-01-04T00:00:00Z",
+    "tags": {
+     "amenity": "townhall",
+     "name": "Synthetic Hall"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000010,
+    "lat": 13.621,
+    "lon": 123.188,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "bus_station",
+     "public_transport": "station",
+     "bus": "yes",
+     "name": "Synthetic Bus Station"
+    }
+   },
+   {
+    "type": "way",
+    "id": 999000000011,
+    "center": {
+     "lat": 13.6238,
+     "lon": 123.1845
+    },
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "place": "square",
+     "leisure": "park",
+     "name": "Synthetic Plaza"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000012,
+    "lat": 13.622,
+    "lon": 123.189,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "police",
+     "name": "Synthetic Twin Name"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000013,
+    "lat": 13.6222,
+    "lon": 123.1892,
+    "version": 2,
+    "timestamp": "2026-01-02T00:00:00Z",
+    "tags": {
+     "office": "government",
+     "name": "Synthetic Twin Name"
+    }
+   },
+   {
+    "type": "way",
+    "id": 999000000014,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "post_office",
+     "name": "Synthetic No Centre"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000015,
+    "lat": 13.626,
+    "lon": 123.19,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "university",
+     "name": "Synthetic University",
+     "name:fil": "Pamantasang Synthetic",
+     "name:en": "",
+     "old_name": "Synthetic College"
+    }
+   },
+   {
+    "type": "node",
+    "id": 999000000016,
+    "lat": 13.6255,
+    "lon": 123.182,
+    "version": 1,
+    "timestamp": "2026-01-01T00:00:00Z",
+    "tags": {
+     "amenity": "marketplace",
+     "shop": "mall",
+     "name": "Synthetic Public Market"
+    }
+   }
+  ]
+ }
+}

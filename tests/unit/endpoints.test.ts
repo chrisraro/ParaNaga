@@ -169,4 +169,12 @@ describe("isReadyToPlan", () => {
     const far = { lat: PLAZA.lat + 0.0003, lng: PLAZA.lng }; // ≈ 33 m
     expect(endpointsReducer(picking, { type: "set", which: "destination", endpoint: { point: far, source: "map", label: "" } }).error).toBeNull();
   });
+
+  it("refuses a search pick about 15 m from the other end (two pins of one corner) as the same place", () => {
+    const corner = { lat: PLAZA.lat + 0.000135, lng: PLAZA.lng }; // ≈ 15 m north of PLAZA
+    const withStart = endpointsReducer(initialEndpointsState, { type: "set", which: "start", endpoint: { point: PLAZA, source: "search", label: "Plaza Rizal (mapped pin)" } });
+    const refused = endpointsReducer(withStart, { type: "set", which: "destination", endpoint: { point: corner, source: "search", label: "Plaza Rizal (mapped pin)" } });
+    expect(refused.error).toBe("same_place");
+    expect(refused.destination).toBeNull();
+  });
 });

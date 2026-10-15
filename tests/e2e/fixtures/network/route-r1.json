@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
-  "label": "provisional-loops-2026-10-15",
+  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
+  "label": "osm-places-2026-10-15",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T08:55:12.774Z"
+  "publishedAt": "2026-10-15T12:59:57.089Z"
  },
  "route": {
   "code": "R1",
@@ -47,7 +47,7 @@
  },
  "variants": [
   {
-   "variantId": "eaa5c13c-348a-4910-b382-db01de596a76",
+   "variantId": "34982ac9-df4a-44af-8a90-9ffae49c078e",
    "direction": "inbound",
    "kind": "permanent",
    "evidenceLevel": "documentary",
@@ -80,7 +80,7 @@
    "stops": []
   },
   {
-   "variantId": "935e0670-faff-411f-8677-5299db6c4127",
+   "variantId": "40578b72-5444-429e-8ab7-ad0adc4bcf51",
    "direction": "outbound",
    "kind": "permanent",
    "evidenceLevel": "documentary",
