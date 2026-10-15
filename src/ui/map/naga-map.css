@@ -255,3 +255,18 @@
     background: #111a2e;
   }
 }
+
+/* Highlighted boarding / alighting stops on the map (markers only, never a line). */
+.pn-trip-stop svg {
+  display: block;
+}
+.pn-trip-stop__ring {
+  fill: #ffffff;
+  stroke: #3e4c6b;
+  stroke-width: 4;
+}
+.pn-trip-stop--board .pn-trip-stop__ring {
+  fill: #3e4c6b;
+  stroke: #ffffff;
+  stroke-width: 3;
+}

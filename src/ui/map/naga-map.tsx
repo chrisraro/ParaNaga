@@ -6,7 +6,7 @@
 import dynamic from "next/dynamic";
 import type { NagaMapProps } from "./types";
 
-export type { NagaMapPins, NagaMapProps } from "./types";
+export type { HighlightStop, NagaMapPins, NagaMapProps } from "./types";
 
 function MapPlaceholder() {
   return <div className="pn-map-placeholder h-full w-full bg-[#f2efe9] dark:bg-[#1e2633]" aria-hidden="true" />;

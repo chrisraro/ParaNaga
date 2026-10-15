@@ -3,6 +3,9 @@ import type { LatLng } from "@/domain/geo/types";
 
 export type NagaMapPins = { start?: LatLng; destination?: LatLng };
 
+/** A stop to highlight for a trip (boarding or getting off). Drawn as a marker, never joined by a line. */
+export type HighlightStop = { id: string; lat: number; lng: number; role: "board" | "alight"; label: string };
+
 export type NagaMapProps = {
   /** Latest GPS fix. Never panned to, and not drawn, when it is outside Naga City. */
   userFix?: LocationFix | null;
@@ -11,6 +14,8 @@ export type NagaMapProps = {
   /** The fix is old: the dot is drawn dimmed and without the live pulse. */
   userStale?: boolean;
   pins?: NagaMapPins;
+  /** Trip stops to highlight; when the set changes the map fits them (and the pins) into view. */
+  highlightStops?: readonly HighlightStop[];
   /** Fixed centre pin for "Choose on map". */
   crosshair?: boolean;
   /** Fires once when the map is ready and after every move. */

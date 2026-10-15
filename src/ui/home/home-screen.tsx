@@ -6,8 +6,10 @@
 
 import "./home-screen.css";
 
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useGeolocation } from "@/client/geo/use-geolocation";
+import { useTripPlan } from "@/client/trip/use-trip-plan";
+import type { PlanResponse } from "@/domain/api/plan";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
@@ -18,7 +20,11 @@ import {
   type EndpointWhich,
   type EndpointsState,
 } from "@/domain/trip/endpoints";
-import { NagaMap } from "@/ui/map/naga-map";
+import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
+import { TripDetail } from "@/ui/trip/trip-detail";
+import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
+import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
+import { planLookups } from "@/ui/trip/trip-parts";
 import { EndpointSheet, useSheet } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
@@ -37,6 +43,22 @@ const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Dest
 function nextFocus(state: EndpointsState, which: EndpointWhich): EndpointWhich | null {
   if (which === "start") return state.destination ? null : "destination";
   return state.start ? null : "start";
+}
+
+/** Boarding and getting-off stops of an option's ride legs, for the map (markers only). */
+function highlightsFor(data: PlanResponse, optionId: string): HighlightStop[] {
+  const option = data.plan.options.find((o) => o.id === optionId);
+  if (!option) return [];
+  const lookups = planLookups(data);
+  return option.legs.flatMap((leg) => {
+    if (leg.kind !== "ride") return [];
+    const board = leg.stops[0]!;
+    const alight = leg.stops[leg.stops.length - 1]!;
+    return [
+      { id: board.id, lat: board.lat, lng: board.lng, role: "board" as const, label: lookups.stopName(board.id, board.name) },
+      { id: alight.id, lat: alight.lat, lng: alight.lng, role: "alight" as const, label: lookups.stopName(alight.id, alight.name) },
+    ];
+  });
 }
 
 function toPoint(fix: LocationFix): LatLng {
@@ -93,6 +115,18 @@ export function HomeScreen() {
   };
 
   const ready = isReadyToPlan(endpoints);
+  const plan = useTripPlan(endpoints.start?.point ?? null, endpoints.destination?.point ?? null);
+  // The option whose detail is open, tied to the plan it came from: a new plan closes it.
+  const [opened, setOpened] = useState<{ data: PlanResponse; id: string } | null>(null);
+  const planData = plan.status === "ready" ? plan.data : null;
+  const openOption = opened && planData === opened.data ? (planData.plan.options.find((o) => o.id === opened.id) ?? null) : null;
+  const openOptionId = openOption?.id ?? null;
+  const highlightStops = useMemo(
+    () => (planData && openOptionId ? highlightsFor(planData, openOptionId) : undefined),
+    [planData, openOptionId],
+  );
+  // After "Back to trip options", focus returns to the card that was opened.
+  const returnToOption = useRef<string | null>(null);
   const watching = geo.state === "watching";
   const assessment = geo.assessment;
   const liveCopy = locationStatusCopy(geo.state, assessment, geo.fix?.accuracy ?? null);
@@ -122,6 +156,18 @@ export function HomeScreen() {
     setGpsStartAccuracy(fix.accuracy);
     bumpRecenter();
   };
+
+  // Announce each settled plan once.
+  const [seenPlan, setSeenPlan] = useState<PlanResponse | null>(null);
+  if (planData !== seenPlan) {
+    setSeenPlan(planData);
+    if (planData) {
+      const n = planData.plan.options.length;
+      setAnnouncement(
+        planData.plan.coverage === "none" ? "No provisional route nearby yet" : `${n} provisional trip ${n === 1 ? "option" : "options"} found. Unverified route — confirm with the driver.`,
+      );
+    }
+  }
 
   // React to each new assessment (new fix, or the hook's staleness re-check) during render,
   // React's "adjust state when a prop changes" pattern, so no effect chains are needed.
@@ -247,6 +293,23 @@ export function HomeScreen() {
     setAnnouncement(`${NAME[which]} cleared`);
   };
 
+  const handleOpenOption = (id: string) => {
+    if (!planData) return;
+    setOpened({ data: planData, id });
+    if (sheet.snap === 0) sheet.setSnap(1);
+  };
+
+  const handleCloseOption = () => {
+    returnToOption.current = opened?.id ?? null;
+    setOpened(null);
+  };
+
+  useEffect(() => {
+    if (openOption || returnToOption.current === null) return;
+    document.getElementById(optionDomId(returnToOption.current))?.focus();
+    returnToOption.current = null;
+  }, [openOption]);
+
   const handleClearAll = () => {
     setGpsIntent(false);
     setRecenterOnFix(false);
@@ -319,6 +382,7 @@ export function HomeScreen() {
           userFix={userFix}
           userStale={assessment?.stale ?? false}
           pins={pins}
+          highlightStops={highlightStops}
           crosshair={picking !== null}
           onCenterChange={handleCenterChange}
           recenterSignal={recenterSignal}
@@ -378,28 +442,22 @@ export function HomeScreen() {
           onSwap={handleSwap}
           onUseCurrentLocation={handleUseCurrentLocation}
           onChooseOnMap={handleChooseOnMap}
+          detailOpen={ready && openOption !== null}
         >
-          {ready ? (
+          {ready && openOption && planData ? (
+            <TripDetail data={planData} option={openOption} onBack={handleCloseOption} />
+          ) : ready ? (
             <>
-              <section className="pn-honest" aria-labelledby="pn-honest-title" data-testid="no-verified-commute">
-                <span className="pn-honest__icon" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" focusable="false">
-                    <circle cx="6" cy="18" r="2.5" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <circle cx="18" cy="6" r="2.5" fill="none" stroke="currentColor" strokeWidth="2" />
-                    <path d="M8 16.5L16 7.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="2 3.2" />
-                  </svg>
-                </span>
-                <div>
-                  <h2 id="pn-honest-title">No verified commute yet for this trip</h2>
-                  <p>{"We're still checking routes and stops on the street. Trip options appear here once a route is verified."}</p>
-                </div>
-              </section>
+              {plan.status === "loading" ? <TripLoading /> : null}
+              {plan.status === "error" ? <TripError kind={plan.kind} onRetry={plan.retry} /> : null}
+              {planData && planData.plan.coverage === "none" ? <TripNoCoverage data={planData} /> : null}
+              {planData && planData.plan.coverage === "provisional" ? <TripOptions data={planData} onOpen={handleOpenOption} /> : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>
                 Clear start and destination
               </button>
             </>
           ) : null}
-          {showStatus && statusCopy ? (
+          {showStatus && statusCopy && !openOption ? (
             <LocationStatus copy={statusCopy} onPickStart={() => (statusCopy.kind === "approximate" ? handleMoveStartPin() : handleChooseOnMap("start"))} />
           ) : null}
         </EndpointSheet>

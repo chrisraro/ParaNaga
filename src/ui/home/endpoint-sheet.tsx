@@ -227,8 +227,10 @@ type Props = {
   onSwap: () => void;
   onUseCurrentLocation: () => void;
   onChooseOnMap: (which: EndpointWhich) => void;
-  /** Cards between the endpoint rows and the options (honest card, location status). */
+  /** Cards between the endpoint rows and the options (trip results, location status). */
   children?: ReactNode;
+  /** Trip detail is open: the sheet shows only `children` (no endpoint rows or options). */
+  detailOpen?: boolean;
 };
 
 export function EndpointSheet({
@@ -242,6 +244,7 @@ export function EndpointSheet({
   onUseCurrentLocation,
   onChooseOnMap,
   children,
+  detailOpen = false,
 }: Props) {
   const { attach, snap, offset, dragging } = sheet;
   // Tapping a row at the peek snap lifts the sheet to half so its options aren't offscreen/inert.
@@ -264,6 +267,7 @@ export function EndpointSheet({
     >
       <SheetGrabber sheet={sheet} />
       <div className="pn-sheet__content">
+        {detailOpen ? null : (
         <div className="pn-endpoints">
           <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onRowTap} onClear={onClear} />
           <div className="pn-endpoints__sep" />
@@ -280,19 +284,21 @@ export function EndpointSheet({
             </svg>
           </button>
         </div>
+        )}
 
         {/* Everything below the always-visible rows. At the peek snap it sits under the screen edge,
             so it is inert (not focusable); at half, focusing something that is cut off expands the sheet. */}
         <div
           className="pn-sheet__rest"
-          inert={snap === 0}
+          inert={snap === 0 && !detailOpen}
           onFocusCapture={(e) => {
-            if (snap === 1 && e.target.getBoundingClientRect().bottom > window.innerHeight) sheet.setSnap(2);
+            // Trip detail stays operable at the peek snap (its header is visible there).
+            if (snap !== 2 && e.target.getBoundingClientRect().bottom > window.innerHeight) sheet.setSnap(snap === 0 ? 1 : 2);
           }}
         >
         {children}
 
-        {focused ? (
+        {focused && !detailOpen ? (
           <div role="group" aria-labelledby="pn-options-title">
             <h2 id="pn-options-title" className="pn-section-title">
               {focused === "start" ? "Set start" : "Set destination"}

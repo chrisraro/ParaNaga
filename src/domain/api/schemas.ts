@@ -290,7 +290,7 @@ export type RouteDetail = z.infer<typeof routeDetailSchema>;
 
 // ---------------------------------------------------------------- errors
 
-export const API_ERROR_CODES = ["bad_request", "not_found", "unavailable", "internal"] as const;
+export const API_ERROR_CODES = ["bad_request", "not_found", "payload_too_large", "unavailable", "internal"] as const;
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
 
 export const apiErrorSchema = z.object({
