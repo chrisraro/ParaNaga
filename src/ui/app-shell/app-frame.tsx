@@ -10,23 +10,41 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { LatLng } from "@/domain/geo/types";
 import { HomeScreen } from "@/ui/home/home-screen";
-import { AppFrameContext, recordEntryPath, type MapFocus } from "./app-frame-context";
+import { AppFrameContext, setEntryPath, type MapFocus } from "./app-frame-context";
 
 export function AppFrame({ children }: { children: ReactNode }) {
   const [panels, setPanels] = useState(0);
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const returnFocus = useRef<Element | null>(null);
+  // Synchronous bookkeeping for "opened from home": panel → panel navigation closes one panel and
+  // opens the next in the same commit, so a close followed by an open before the next microtask
+  // means the new panel came from another panel.
+  const openCount = useRef(0);
+  const justClosed = useRef(false);
+  const fromHome = useRef(true);
 
   useEffect(() => {
-    recordEntryPath();
+    setEntryPath(window.location.pathname);
+    return () => setEntryPath(null);
   }, []);
 
   const openPanel = useCallback(() => {
     const active = document.activeElement;
     if (!returnFocus.current && active && active !== document.body) returnFocus.current = active;
+    fromHome.current = openCount.current === 0 && !justClosed.current;
+    openCount.current += 1;
     setPanels((n) => n + 1);
-    return () => setPanels((n) => n - 1);
+    return () => {
+      openCount.current -= 1;
+      justClosed.current = true;
+      queueMicrotask(() => {
+        justClosed.current = false;
+      });
+      setPanels((n) => n - 1);
+    };
   }, []);
+
+  const openedFromHome = useCallback(() => fromHome.current, []);
 
   const showOnMap = useCallback((point: LatLng) => {
     setMapFocus((prev) => ({ point, n: (prev?.n ?? 0) + 1 }));
@@ -41,7 +59,10 @@ export function AppFrame({ children }: { children: ReactNode }) {
     if (el instanceof HTMLElement && el.isConnected) el.focus();
   }, [open]);
 
-  const value = useMemo(() => ({ openPanel, mapFocus, showOnMap }), [openPanel, mapFocus, showOnMap]);
+  const value = useMemo(
+    () => ({ openPanel, openedFromHome, mapFocus, showOnMap }),
+    [openPanel, openedFromHome, mapFocus, showOnMap],
+  );
 
   return (
     <AppFrameContext.Provider value={value}>

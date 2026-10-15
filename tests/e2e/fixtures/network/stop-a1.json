@@ -1,12 +1,12 @@
 {
  "revision": {
-  "revisionId": "7140f69e-bf1d-4697-b37c-68d7a57a582a",
+  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
   "label": "provisional-loops-2026-10-15",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T08:24:37.444Z"
+  "publishedAt": "2026-10-15T08:55:12.774Z"
  },
  "stop": {
-  "id": "b376df52-2f2b-4137-aa12-fa6f13a888fe",
+  "id": "ea5c4666-ebc7-4090-8eaf-f2aa28831e44",
   "name": "Plaza Rizal",
   "lat": 13.6233869,
   "lng": 123.1846726,
@@ -41,7 +41,7 @@
  },
  "sharedCoordinate": [
   {
-   "stopId": "1a57d133-4e29-4985-9b32-62f47db4c062",
+   "stopId": "8818c73e-a424-4a22-bfc7-be4af7211451",
    "name": "Plaza Rizal",
    "source": {
     "layer": "Loop Service C",
@@ -54,7 +54,7 @@
   {
    "routeCode": "R8-A",
    "routeName": "Centro–Magsaysay Loop A",
-   "variantId": "0f87b9d0-f704-4515-b39f-05ae99bca82b",
+   "variantId": "24a1b2eb-155d-41fd-8528-f41f3befefc9",
    "direction": "clockwise",
    "kind": "permanent",
    "evidenceLevel": "provisional",

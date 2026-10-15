@@ -12,6 +12,7 @@ import { useGeolocation } from "@/client/geo/use-geolocation";
 import { useStopsInView } from "@/client/map/use-stops-in-view";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
 import type { PlanResponse } from "@/domain/api/plan";
+import type { StopPin } from "@/domain/api/schemas";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import type { Bounds, LatLng } from "@/domain/geo/types";
@@ -40,6 +41,9 @@ import { NearbyStops } from "./nearby-stops";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
 const MAP_BOTTOM_INSET = 186;
+
+/** Pins while a trip detail is open: the layer stays mounted (one canvas for the session), just empty. */
+const NO_PINS: readonly StopPin[] = [];
 
 const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Destination" };
 
@@ -448,7 +452,7 @@ export function HomeScreen() {
           recenterSignal={recenterSignal}
           recenterTarget={recenterTarget}
           recenterTargetLabel={recenterLabel}
-          stopPins={tripDetailOpen ? undefined : stopsInView.stops}
+          stopPins={tripDetailOpen ? NO_PINS : stopsInView.stops}
           stopPinsInteractive={picking === null}
           onStopSelect={handleStopSelect}
           onBoundsChange={setViewBounds}

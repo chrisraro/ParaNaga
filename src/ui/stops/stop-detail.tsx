@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { stopDetailSchema, type StopDetail } from "@/domain/api/schemas";
 import {
@@ -17,7 +17,7 @@ import {
   stopStatusBadge,
 } from "@/domain/network/present";
 import { directionText } from "@/domain/trip/present";
-import { useAppFrame } from "@/ui/app-shell/app-frame-context";
+import { cameFromInsideApp, useAppFrame } from "@/ui/app-shell/app-frame-context";
 import {
   CandidateRing,
   ChevronRight,
@@ -50,7 +50,10 @@ function ShowOnMap({ lat, lng }: { lat: number; lng: number }) {
       aria-label="Show on map"
       onClick={() => {
         frame.showOnMap({ lat, lng });
-        router.push("/app");
+        // Opened from the map in this session: go back to it (no extra history entry). Otherwise
+        // (a shared link, or reached from another panel) open the map.
+        if (cameFromInsideApp() && frame.openedFromHome()) router.back();
+        else router.push("/app");
       }}
     >
       <MapIcon />
@@ -73,6 +76,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
   const { stop, sourceRecords, sharedCoordinate, servingRoutes, passingNearby, sourceMap, revision } = data;
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const [nearbyOpen, setNearbyOpen] = useState(false);
+  const uid = useId(); // per instance: a hidden previous stop panel may still be mounted
   const layers = sharedLayers(sharedCoordinate);
   const onRoute = servingRoutes.length > 0;
 
@@ -133,8 +137,8 @@ export function StopDetailView({ data }: { data: StopDetail }) {
           </section>
         ))}
 
-        <section className="pn-section" aria-labelledby="pn-serving-title">
-          <h2 id="pn-serving-title" className="pn-section__title">
+        <section className="pn-section" aria-labelledby={`${uid}-serving`}>
+          <h2 id={`${uid}-serving`} className="pn-section__title">
             Routes serving this stop
           </h2>
           <ul className="pn-group" data-testid="serving-routes">
@@ -167,7 +171,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
             type="button"
             className="pn-disclosure"
             aria-expanded={nearbyOpen}
-            aria-controls="pn-nearby"
+            aria-controls={`${uid}-nearby`}
             onClick={() => setNearbyOpen((o) => !o)}
           >
             <span>Passing nearby · not confirmed to stop</span>
@@ -175,7 +179,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
               <path d="M6 9l6 6 6-6" />
             </svg>
           </button>
-          <div id="pn-nearby" hidden={!nearbyOpen} className="pn-disclosure-panel">
+          <div id={`${uid}-nearby`} hidden={!nearbyOpen} className="pn-disclosure-panel">
             <ul className="pn-group">
               {passingNearby.length === 0 ? (
                 <li className="pn-cell pn-cell--empty">Not yet surveyed</li>

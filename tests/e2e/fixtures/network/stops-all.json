@@ -1,13 +1,13 @@
 {
  "revision": {
-  "revisionId": "7140f69e-bf1d-4697-b37c-68d7a57a582a",
+  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
   "label": "provisional-loops-2026-10-15",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T08:24:37.444Z"
+  "publishedAt": "2026-10-15T08:55:12.774Z"
  },
  "stops": [
   {
-   "id": "b376df52-2f2b-4137-aa12-fa6f13a888fe",
+   "id": "ea5c4666-ebc7-4090-8eaf-f2aa28831e44",
    "name": "Plaza Rizal",
    "lat": 13.6233869,
    "lng": 123.1846726,
@@ -23,7 +23,7 @@
    ]
   },
   {
-   "id": "c1efed05-63e2-41ae-ba72-e437388f9928",
+   "id": "86e57029-70f8-4f2b-b2f2-6a5d2f97f19a",
    "name": "Plaza Quince Martires",
    "lat": 13.6244338,
    "lng": 123.1861778,
@@ -39,7 +39,7 @@
    ]
   },
   {
-   "id": "bc2bda7c-8a9a-4231-aedb-2e814aa8bf7a",
+   "id": "bd7e2635-47bd-4f14-9252-e34b736e5e8a",
    "name": "USI/Centro Square",
    "lat": 13.6276709,
    "lng": 123.1887035,
@@ -55,7 +55,7 @@
    ]
   },
   {
-   "id": "8fb0f5c8-b082-4a59-a4e8-0d83253e3e5f",
+   "id": "063ae654-3720-4e69-9a2a-731b7830f788",
    "name": "Cam High/Naga Central School",
    "lat": 13.6298321,
    "lng": 123.190976,
@@ -71,7 +71,7 @@
    ]
   },
   {
-   "id": "87e7e52e-d4c1-4c88-a544-ecf14488f956",
+   "id": "a5369d96-8d7b-4bf6-a7fe-67b2e4e36418",
    "name": "BISCAST",
    "lat": 13.6314651,
    "lng": 123.1927517,
@@ -87,7 +87,7 @@
    ]
   },
   {
-   "id": "67788973-a4d5-4581-b44e-6d1b23fb6bb4",
+   "id": "b777ef41-f22c-43a5-a4f8-1da443fe6f77",
    "name": "Cor. Peñafrancia Ave & Magsaysay Ave.",
    "lat": 13.6328896,
    "lng": 123.1942656,
@@ -103,7 +103,7 @@
    ]
   },
   {
-   "id": "679da8fa-cb46-4b83-9e7c-86c207d8f89e",
+   "id": "bc173063-834a-4643-8782-3302e0bd4503",
    "name": "Avenue Hotel/UMA Residence",
    "lat": 13.632102,
    "lng": 123.1958976,
@@ -119,7 +119,7 @@
    ]
   },
   {
-   "id": "a2623ce6-d05d-41a7-8f17-b2576da058d8",
+   "id": "7687d0fb-2e1f-4211-91a5-2c977230e208",
    "name": "Cor. Magsaysay Ave. & Dayangdang St",
    "lat": 13.6309839,
    "lng": 123.1970077,
@@ -135,7 +135,7 @@
    ]
   },
   {
-   "id": "aa77629e-7a06-43c1-be7c-776ba6d78388",
+   "id": "c2dfc488-ba41-4448-8101-bf17b39184a3",
    "name": "NCF Magsaysay",
    "lat": 13.6299067,
    "lng": 123.1979773,
@@ -151,7 +151,7 @@
    ]
   },
   {
-   "id": "a98c0b74-809b-4c04-bfd3-2be18a4e39bc",
+   "id": "45b8b541-faa0-430d-bb50-a3064b054507",
    "name": "Westpark/Philhealth",
    "lat": 13.6292228,
    "lng": 123.1985007,
@@ -167,7 +167,7 @@
    ]
   },
   {
-   "id": "326f203b-b3f5-498c-b657-c5a824993257",
+   "id": "08977218-7dd5-4037-918a-55fe64d9b255",
    "name": "Civic Centre",
    "lat": 13.628149,
    "lng": 123.1978132,
@@ -183,7 +183,7 @@
    ]
   },
   {
-   "id": "62e62011-4e78-4ecc-b5fa-4153408f02b9",
+   "id": "1b7703e8-b7f8-48f4-b132-107d29049fbb",
    "name": "City Hall",
    "lat": 13.6265116,
    "lng": 123.1990963,
@@ -199,7 +199,7 @@
    ]
   },
   {
-   "id": "63ea43ea-ffa2-4786-a9e4-a9ec9b0455ac",
+   "id": "e4d49512-c547-4166-807c-a7db3f5e0f24",
    "name": "BFP/BIR",
    "lat": 13.6249841,
    "lng": 123.1995469,
@@ -215,7 +215,7 @@
    ]
   },
   {
-   "id": "c99d0883-096d-481e-9313-565fbb30a33e",
+   "id": "ab5f94cb-bc7f-468a-81bb-f04b9413d804",
    "name": "Villla Caceres",
    "lat": 13.6277598,
    "lng": 123.1997995,
@@ -231,7 +231,7 @@
    ]
   },
   {
-   "id": "20f2af5f-2faf-484f-997e-fc94f752aae4",
+   "id": "9e239806-6a09-4dac-925f-6306c5a56287",
    "name": "Cor. Magsaysay Ave. & Leon Aureus St.",
    "lat": 13.6261192,
    "lng": 123.200876,
@@ -247,7 +247,7 @@
    ]
   },
   {
-   "id": "96861b74-1432-4eb9-9a53-5c440c009b52",
+   "id": "462248da-e9b2-4ed2-90e9-9cecef33c320",
    "name": "Cor. Magsaysay Ave. & Mayflower St.",
    "lat": 13.623996,
    "lng": 123.2008868,
@@ -263,7 +263,7 @@
    ]
   },
   {
-   "id": "eee3b6bc-8703-434e-9ca4-b63d8463f545",
+   "id": "f1c1adf5-230f-4729-a630-ebefe18b2389",
    "name": "Rotonda",
    "lat": 13.6204547,
    "lng": 123.2006852,
@@ -279,7 +279,7 @@
    ]
   },
   {
-   "id": "bb071160-bf05-46cd-8076-e5821440f152",
+   "id": "11b9291f-4381-4117-a704-15dd48f1ca26",
    "name": "Bennett's Plaza",
    "lat": 13.6185759,
    "lng": 123.1985904,
@@ -295,7 +295,7 @@
    ]
   },
   {
-   "id": "b993816b-e0ca-4899-9cb8-b5fd4fc8dd2f",
+   "id": "534362e3-1ca6-4523-bd5d-07dd9176c3e0",
    "name": "Mother Seton Hospital",
    "lat": 13.6176694,
    "lng": 123.1970291,
@@ -311,7 +311,7 @@
    ]
   },
   {
-   "id": "aa1e9e32-6fee-42c9-bf77-5ce12de32b07",
+   "id": "476a53b0-1ac4-4e47-8400-2da30e0149e3",
    "name": "Yashano Mall/M Plaza",
    "lat": 13.6166307,
    "lng": 123.1951644,
@@ -327,7 +327,7 @@
    ]
   },
   {
-   "id": "863fa6d3-4e17-49d6-a886-4d7a7593c698",
+   "id": "aa672e00-f67c-4e84-8c94-0c8336f44357",
    "name": "Robinsons Mall/Banko Central ng Pilipinas",
    "lat": 13.6157173,
    "lng": 123.1925205,
@@ -343,7 +343,7 @@
    ]
   },
   {
-   "id": "1a4ee964-2f09-461d-a197-7db3c019baf5",
+   "id": "6927049d-dfbb-4b98-9b29-8445b6f7b2d8",
    "name": "ALDP Mall/Pag-Ibig",
    "lat": 13.6160052,
    "lng": 123.1907468,
@@ -359,7 +359,7 @@
    ]
   },
   {
-   "id": "5da87722-445e-4982-af20-b4ce648127af",
+   "id": "bd73d3f4-91ba-483a-81cd-a38b3bbb7974",
    "name": "STI College/Landers",
    "lat": 13.6179234,
    "lng": 123.1908514,
@@ -375,7 +375,7 @@
    ]
   },
   {
-   "id": "1d3abe4b-0203-4b33-bd6c-3b69da8cc939",
+   "id": "7f712fed-f0c6-4f47-9278-7b3aec9ec7d4",
    "name": "Bus Terminal",
    "lat": 13.6189216,
    "lng": 123.1890866,
@@ -391,7 +391,7 @@
    ]
   },
   {
-   "id": "8aecd459-c342-4702-9c48-d98804a25fdb",
+   "id": "f60d49a4-00a8-4ffb-a118-a5c80977646b",
    "name": "PNR Road",
    "lat": 13.6173035,
    "lng": 123.1880936,
@@ -407,7 +407,7 @@
    ]
   },
   {
-   "id": "8c645151-f9cc-4ebb-9e01-a68973ddd3da",
+   "id": "e3ac216e-66e4-4acd-b593-1d4616cf3233",
    "name": "S&R",
    "lat": 13.6162097,
    "lng": 123.1890293,
@@ -423,7 +423,7 @@
    ]
   },
   {
-   "id": "df8e9bf1-7d27-4f72-a995-ec9216dc84d4",
+   "id": "13e0b14f-888a-4734-9b98-d66d50109abc",
    "name": "BIcol River Esplanade",
    "lat": 13.6165957,
    "lng": 123.1864136,
@@ -439,7 +439,7 @@
    ]
   },
   {
-   "id": "79cd1518-8c02-415b-b8c8-1a259146c2d3",
+   "id": "51bdb501-1bc0-4c1b-bc26-e6f7ba3b734d",
    "name": "Fraternidad St.",
    "lat": 13.6166855,
    "lng": 123.1838985,
@@ -455,7 +455,7 @@
    ]
   },
   {
-   "id": "be39c135-6742-405d-8242-28df7122c26a",
+   "id": "8f88f1c5-f0d6-4a96-ac3b-f90c6f984f0e",
    "name": "101 Shopping Centre",
    "lat": 13.6185569,
    "lng": 123.183673,
@@ -471,7 +471,7 @@
    ]
   },
   {
-   "id": "399ba824-f70c-423f-b8ac-704c1cc8f45d",
+   "id": "27c84b43-2b06-4a1a-b09c-b24cbc0d8e01",
    "name": "Naga City Market",
    "lat": 13.621666,
    "lng": 123.1842716,
@@ -487,7 +487,7 @@
    ]
   },
   {
-   "id": "27d9913f-508a-4a96-8b5a-ca8fc4abaeb9",
+   "id": "1262c15c-6738-4bd8-a5dc-6abeabbff84f",
    "name": "Plaza Rizal",
    "lat": 13.6232548,
    "lng": 123.185086,
@@ -503,7 +503,7 @@
    ]
   },
   {
-   "id": "12725cc6-2c21-4601-97b7-9ed6783d248c",
+   "id": "399081cf-39b9-409d-8448-53cfebd8cb01",
    "name": "Naga City Market",
    "lat": 13.6210147,
    "lng": 123.1840106,
@@ -519,7 +519,7 @@
    ]
   },
   {
-   "id": "ae76f888-0611-420a-9fec-2ce51c444661",
+   "id": "c33874f3-2f24-415d-90c9-1c652963cf4a",
    "name": "101 Shopping Centre",
    "lat": 13.6183652,
    "lng": 123.183465,
@@ -535,7 +535,7 @@
    ]
   },
   {
-   "id": "ed194d6d-19e0-4689-8fb2-7ab0c08a99ba",
+   "id": "6590fa5a-7866-4f7d-adee-ea2176ff7792",
    "name": "Cor. Diversion Rd. & Fraternidad St.",
    "lat": 13.616439,
    "lng": 123.1847296,
@@ -551,7 +551,7 @@
    ]
   },
   {
-   "id": "624929f4-26a1-43e8-bf79-4144cb348bca",
+   "id": "cff61092-a93a-46a3-9730-9ebe79a9413f",
    "name": "BIcol River Esplanade",
    "lat": 13.6164679,
    "lng": 123.1862188,
@@ -567,7 +567,7 @@
    ]
   },
   {
-   "id": "051c1db4-0299-45e4-88aa-ad0c7e1d39b7",
+   "id": "21d2b420-b495-43db-a9c9-6e4aa4b2f833",
    "name": "PNR Road",
    "lat": 13.6173902,
    "lng": 123.1883366,
@@ -583,7 +583,7 @@
    ]
   },
   {
-   "id": "e483c382-f5dc-4470-bbb7-cd5364dfa9b3",
+   "id": "0191d5bc-50a5-4ddf-bf0a-27ddc67d7706",
    "name": "Bus Terminal",
    "lat": 13.6186967,
    "lng": 123.1891074,
@@ -599,7 +599,7 @@
    ]
   },
   {
-   "id": "247ad1d0-7316-4c4f-9c63-3209a6b0fecf",
+   "id": "8ee14a16-247f-4638-b724-73b7415bcb01",
    "name": "STI College/Landers",
    "lat": 13.6178597,
    "lng": 123.1906439,
@@ -615,7 +615,7 @@
    ]
   },
   {
-   "id": "228835f1-0d2a-42c8-8949-ac734dd88e53",
+   "id": "c6815679-28a5-4f7a-8930-251197f07c28",
    "name": "S&R",
    "lat": 13.6160537,
    "lng": 123.1890343,
@@ -631,7 +631,7 @@
    ]
   },
   {
-   "id": "0ff2a002-56ba-4457-996c-828fdc693828",
+   "id": "d38e2710-1c1e-43d9-aa3e-f1b4f769f29d",
    "name": "ALDP Mall/Pag-Ibig",
    "lat": 13.615822,
    "lng": 123.1907239,
@@ -647,7 +647,7 @@
    ]
   },
   {
-   "id": "d701f80e-138f-4e27-93e3-b041168fd26f",
+   "id": "072f8009-8830-4783-849c-462dcfc2a54c",
    "name": "Robinsons Mall/Banko Central ng Pilipinas",
    "lat": 13.6155551,
    "lng": 123.1927602,
@@ -663,7 +663,7 @@
    ]
   },
   {
-   "id": "1baf6e7d-9cb6-4e9a-b950-521c5c248e72",
+   "id": "0455d51e-6af4-4213-83ad-dc58b3376ef0",
    "name": "Yashano Mall/M Plaza",
    "lat": 13.6164729,
    "lng": 123.1952572,
@@ -679,7 +679,7 @@
    ]
   },
   {
-   "id": "037f83ed-64ca-48b1-9ad0-f298ea3c1fe6",
+   "id": "f25f7777-2293-4ee7-9626-68639879dd56",
    "name": "Mother Seton Hospital",
    "lat": 13.6175984,
    "lng": 123.1972154,
@@ -695,7 +695,7 @@
    ]
   },
   {
-   "id": "0f481914-dd0e-4011-b483-6b25a95a96a6",
+   "id": "7af4e0ff-2cca-4d80-9c9c-1ca6f6df0689",
    "name": "Bennett's Plaza",
    "lat": 13.6182747,
    "lng": 123.198405,
@@ -711,7 +711,7 @@
    ]
   },
   {
-   "id": "4d2d4941-f12c-441b-91c3-5486dd425409",
+   "id": "ad7a357c-ceb9-48ef-9c31-98d9a6d31f4f",
    "name": "Rotonda",
    "lat": 13.6214426,
    "lng": 123.2011051,
@@ -727,7 +727,7 @@
    ]
   },
   {
-   "id": "8f503ebb-f6b1-4e63-9ae0-e328f0f74438",
+   "id": "d7f4dd16-54b0-4fad-a9f0-8d3206aff6cd",
    "name": "Cor. Magsaysay Ave. & Mayflower St.",
    "lat": 13.6239018,
    "lng": 123.2011408,
@@ -743,7 +743,7 @@
    ]
   },
   {
-   "id": "05e99cb2-23f0-4a64-b46b-83a9743e7db0",
+   "id": "d2e351dc-bea2-445f-815d-36febbc2d73b",
    "name": "BFP/BIR",
    "lat": 13.6249848,
    "lng": 123.1997631,
@@ -759,7 +759,7 @@
    ]
   },
   {
-   "id": "f8c8efc5-691b-406c-8303-e3196ae94173",
+   "id": "d045958b-928f-486c-a835-bfd9a74b87a0",
    "name": "B18",
    "lat": 13.6266719,
    "lng": 123.1992224,
@@ -775,7 +775,7 @@
    ]
   },
   {
-   "id": "22813ca5-0678-4a87-a99d-f0152c3e5754",
+   "id": "003ddec1-ad9c-47bd-bd0f-acd998834bef",
    "name": "B19",
    "lat": 13.6279812,
    "lng": 123.1981041,
@@ -791,7 +791,7 @@
    ]
   },
   {
-   "id": "5f69e026-164f-4d9b-8bd1-fc80e15aecf8",
+   "id": "565978fe-db00-40f2-a0c6-6f1948de4caa",
    "name": "Cor. Magsaysay Ave. & Leon Aureus St.",
    "lat": 13.6264882,
    "lng": 123.2008883,
@@ -807,7 +807,7 @@
    ]
   },
   {
-   "id": "0185b0e9-a9c5-4018-af8d-27f7d2040d23",
+   "id": "2d5e816d-32f6-4cae-bd2f-5c4e06dd68ba",
    "name": "Villla Caceres",
    "lat": 13.6278605,
    "lng": 123.1998742,
@@ -823,7 +823,7 @@
    ]
   },
   {
-   "id": "540c2080-6842-412a-8f21-714f9e877de5",
+   "id": "f0168d2d-5006-46d9-8d49-35f84037be91",
    "name": "Westpark/Philhealth",
    "lat": 13.6292459,
    "lng": 123.198745,
@@ -839,7 +839,7 @@
    ]
   },
   {
-   "id": "bb56288c-5d3d-4136-a681-2854c2837f45",
+   "id": "c789b807-80ca-4901-9c22-06306155558c",
    "name": "NCF Magsaysay",
    "lat": 13.6299849,
    "lng": 123.1980793,
@@ -855,7 +855,7 @@
    ]
   },
   {
-   "id": "9e15b963-d12a-48d8-ab32-9be7e49334b3",
+   "id": "52669b75-77b3-4e95-824c-828209a73b3e",
    "name": "Cor. Magsaysay Ave. & Dayangdang St",
    "lat": 13.6316088,
    "lng": 123.1966893,
@@ -871,7 +871,7 @@
    ]
   },
   {
-   "id": "71e6187b-0cc1-432f-a002-c523d3273bf8",
+   "id": "e9ae942e-dea2-4d3a-90b8-fb6360c18f61",
    "name": "Avenue Hotel/UMA Residence",
    "lat": 13.6321528,
    "lng": 123.1960653,
@@ -887,7 +887,7 @@
    ]
   },
   {
-   "id": "48cd7ecd-6de5-4aee-af77-30733b834218",
+   "id": "52d01b8e-fef6-48b0-9791-b31507b6e7a4",
    "name": "Cor. Peñafrancia Ave & Magsaysay Ave",
    "lat": 13.6329889,
    "lng": 123.1941831,
@@ -903,7 +903,7 @@
    ]
   },
   {
-   "id": "30f7debc-8a3a-44ff-8509-9076f7a46297",
+   "id": "d3fd8852-2b5a-4481-a272-f46295faac8f",
    "name": "BISCAST",
    "lat": 13.6315759,
    "lng": 123.192658,
@@ -919,7 +919,7 @@
    ]
   },
   {
-   "id": "0173fb4b-4937-4843-b57b-3aa34cc899b6",
+   "id": "9b1d6d15-3a2e-40a5-b6b1-d43440159769",
    "name": "Cam High/Naga Central School",
    "lat": 13.6299509,
    "lng": 123.1908639,
@@ -935,7 +935,7 @@
    ]
   },
   {
-   "id": "4b02648e-a05c-4d89-9048-f60063c824b9",
+   "id": "6a406e09-18e5-4b7b-9674-ca9028adc618",
    "name": "USI",
    "lat": 13.6278131,
    "lng": 123.1881629,
@@ -951,7 +951,7 @@
    ]
   },
   {
-   "id": "cdb8b2e7-8057-41f5-b012-3fe134dfb88f",
+   "id": "ff98b748-e196-44ae-ab37-47bccc5ea3e5",
    "name": "Naga Cathedral",
    "lat": 13.6272763,
    "lng": 123.1870736,
@@ -967,7 +967,7 @@
    ]
   },
   {
-   "id": "77945358-4b6d-4af7-b240-f5bdb696510b",
+   "id": "1f61fc4b-79a6-4f36-898e-5492eb1eeca4",
    "name": "E-Mall",
    "lat": 13.6251079,
    "lng": 123.1859734,
@@ -983,7 +983,7 @@
    ]
   },
   {
-   "id": "1a57d133-4e29-4985-9b32-62f47db4c062",
+   "id": "8818c73e-a424-4a22-bfc7-be4af7211451",
    "name": "Plaza Rizal",
    "lat": 13.6233869,
    "lng": 123.1846726,
@@ -997,7 +997,7 @@
    "routeCodes": []
   },
   {
-   "id": "7cb55c10-6a55-49db-ac02-17bde38a7620",
+   "id": "fb446b93-8982-42e1-ae8b-014bba63a87a",
    "name": "San Fransisco Parish/Plaza Quince Martires",
    "lat": 13.6244247,
    "lng": 123.1861684,
@@ -1011,7 +1011,7 @@
    "routeCodes": []
   },
   {
-   "id": "98f0984c-ca6b-40e1-bdc1-3c3e80bc7b84",
+   "id": "6543f289-36e8-4a5d-b3d1-e1c0aa8c018b",
    "name": "Avenue Hotel/UMA Residence",
    "lat": 13.632102,
    "lng": 123.1958976,
@@ -1025,7 +1025,7 @@
    "routeCodes": []
   },
   {
-   "id": "1bcf5005-ff13-4ad4-8128-8cdac1d32780",
+   "id": "a5e0d7db-73da-47ff-b8cb-9d901d44fa5a",
    "name": "Cor. Magsaysay Ave. & Dayangdang St",
    "lat": 13.6309852,
    "lng": 123.1970077,
@@ -1039,7 +1039,7 @@
    "routeCodes": []
   },
   {
-   "id": "f4c60139-0b08-4c86-972b-50e521c69cd1",
+   "id": "087b77fa-2b29-4f6a-bd6a-e06e7a496725",
    "name": "NCF Magsaysay",
    "lat": 13.6299067,
    "lng": 123.1979773,
@@ -1053,7 +1053,7 @@
    "routeCodes": []
   },
   {
-   "id": "61ded291-dda3-45fd-8011-44ec100f2f9d",
+   "id": "5ce33bb3-84a2-43e6-a8de-115214a88122",
    "name": "Downtown District Hotel",
    "lat": 13.6257968,
    "lng": 123.1864866,
@@ -1067,7 +1067,7 @@
    "routeCodes": []
   },
   {
-   "id": "332d3da8-9fc0-4abe-be24-e19e5f0a6e75",
+   "id": "d4a67602-296a-4813-a0ac-4988352fe70d",
    "name": "Naga Cathedral",
    "lat": 13.6271576,
    "lng": 123.1872994,
@@ -1081,7 +1081,7 @@
    "routeCodes": []
   },
   {
-   "id": "bef07294-794e-41c2-a324-7d54d0921f8a",
+   "id": "727f732d-e0ef-42b6-85a7-f78a9b01acaa",
    "name": "USI/Ateneo Ave.",
    "lat": 13.6290106,
    "lng": 123.1878649,
@@ -1095,7 +1095,7 @@
    "routeCodes": []
   },
   {
-   "id": "faaaada7-ab07-4e7e-986a-8d722aba59c3",
+   "id": "25f8895d-f978-4d93-810e-1e1972dc6052",
    "name": "Ocampo St.",
    "lat": 13.6321529,
    "lng": 123.1877839,
@@ -1109,7 +1109,7 @@
    "routeCodes": []
   },
   {
-   "id": "40080735-cab7-4480-b80d-9d7c9a06d60b",
+   "id": "fb3db3da-f85b-4834-996a-70d9ead4b5bd",
    "name": "Cor. Magsaysay Extension & Bagumbayan Sur",
    "lat": 13.634123,
    "lng": 123.1876057,
@@ -1123,7 +1123,7 @@
    "routeCodes": []
   },
   {
-   "id": "e93d0853-0a7e-45a8-8ddf-473942262637",
+   "id": "a8409bfa-ff89-4c5e-b869-a2d6b88ec5d0",
    "name": "Jacob",
    "lat": 13.6340388,
    "lng": 123.1899757,
@@ -1137,7 +1137,7 @@
    "routeCodes": []
   },
   {
-   "id": "2d3f58a3-3bbb-4045-a4f1-3d38a1d86edb",
+   "id": "b77fbfcb-b80b-467e-85cd-889db846df36",
    "name": "Cam High/NCF",
    "lat": 13.633623,
    "lng": 123.192217,
@@ -1151,7 +1151,7 @@
    "routeCodes": []
   },
   {
-   "id": "4e3a1d1d-7600-4518-8921-0aa4700084f7",
+   "id": "461fc7d0-fb93-43e1-a59b-54bb90867220",
    "name": "Cor. Magsaysay & Peñafrancia Ave.",
    "lat": 13.6333978,
    "lng": 123.1940142,
@@ -1165,7 +1165,7 @@
    "routeCodes": []
   },
   {
-   "id": "fd203bd3-e73a-49ae-bd9e-b08b1ad23b19",
+   "id": "1fa11a28-44d3-432c-9f60-bc36ae21b3bc",
    "name": "Westpark/Philhealth",
    "lat": 13.6292228,
    "lng": 123.1985007,
@@ -1179,7 +1179,7 @@
    "routeCodes": []
   },
   {
-   "id": "914e7a8a-1556-4aa8-87f2-d58a7cb98327",
+   "id": "7108b6fa-2021-403b-a3a7-d22666f8ba84",
    "name": "Civic Centre",
    "lat": 13.6281558,
    "lng": 123.1978198,
@@ -1193,7 +1193,7 @@
    "routeCodes": []
   },
   {
-   "id": "f333173d-a39a-44fd-aa7d-c43ca1eff6da",
+   "id": "18fc46e2-2faa-480b-b2cc-44a4da125431",
    "name": "City Hall",
    "lat": 13.626509,
    "lng": 123.199099,
@@ -1207,7 +1207,7 @@
    "routeCodes": []
   },
   {
-   "id": "3ce4dc1d-105c-4f73-875b-a0543dbf8e09",
+   "id": "f8ca80f1-11ca-4acc-9969-e0f08d95d9c8",
    "name": "BFP/BIR",
    "lat": 13.624988,
    "lng": 123.1995509,
@@ -1221,7 +1221,7 @@
    "routeCodes": []
   },
   {
-   "id": "af1de7be-a984-4f5d-b4ef-0028d341d01b",
+   "id": "4ea78c33-4a36-4aba-8a31-8a193913ab6b",
    "name": "Villla Caceres",
    "lat": 13.6277598,
    "lng": 123.1997995,
@@ -1235,7 +1235,7 @@
    "routeCodes": []
   },
   {
-   "id": "ecf2fbf7-e0b8-4bd0-ab69-c694b7d0cad5",
+   "id": "ffc78994-7ad1-4f37-a2ef-7433c1fd343d",
    "name": "Cor. Magsaysay Ave. & Leon Aureus St.",
    "lat": 13.6261127,
    "lng": 123.200876,
@@ -1249,7 +1249,7 @@
    "routeCodes": []
   },
   {
-   "id": "5c663ba0-7485-4796-89f0-ddb1be560b84",
+   "id": "3b76e70a-dbd2-448d-a2e1-8114e8ebff82",
    "name": "Cor. Magsaysay Ave. & Mayflower St.",
    "lat": 13.6239699,
    "lng": 123.2008761,
@@ -1263,7 +1263,7 @@
    "routeCodes": []
   },
   {
-   "id": "7525555d-d3a8-480d-bb42-69a85961cbe3",
+   "id": "0f47bfcf-9812-44c8-9a72-69e0ccb88d50",
    "name": "Rotonda",
    "lat": 13.6204549,
    "lng": 123.200684,
@@ -1277,7 +1277,7 @@
    "routeCodes": []
   },
   {
-   "id": "77f9bb8f-f51c-4578-bb72-487d03809249",
+   "id": "ec3120a6-f38e-4eeb-bb92-e4d047f0af19",
    "name": "Bennett's Plaza",
    "lat": 13.6185759,
    "lng": 123.1985917,
@@ -1291,7 +1291,7 @@
    "routeCodes": []
   },
   {
-   "id": "98740de1-50c3-41f5-96b8-ad001576cadf",
+   "id": "defcc65c-ae05-4ffd-b3cb-041238931e0e",
    "name": "Mother Seton Hospital",
    "lat": 13.6176655,
    "lng": 123.1970278,
@@ -1305,7 +1305,7 @@
    "routeCodes": []
   },
   {
-   "id": "d612b7f3-d3e9-443f-87d8-bb0e2263759d",
+   "id": "3a2c2b68-18a8-4a22-96f8-50e981e26358",
    "name": "Yashano Mall/M Plaza",
    "lat": 13.6166163,
    "lng": 123.1951631,
@@ -1319,7 +1319,7 @@
    "routeCodes": []
   },
   {
-   "id": "92969687-6bce-419f-9c91-4099133ff6d6",
+   "id": "7220a3e0-db7e-4ac3-8d23-cafb5a0a312c",
    "name": "Robinsons Mall/Banko Central ng Pilipinas",
    "lat": 13.6157199,
    "lng": 123.1925178,
@@ -1333,7 +1333,7 @@
    "routeCodes": []
   },
   {
-   "id": "c583f41d-9483-49b7-bf5b-10607b59d9be",
+   "id": "805e2029-d2f6-4a5a-bf15-553f63f60750",
    "name": "ALDP Mall/Pag-Ibig",
    "lat": 13.6160011,
    "lng": 123.1907486,
@@ -1347,7 +1347,7 @@
    "routeCodes": []
   },
   {
-   "id": "f28c605b-58f6-429b-879a-d94fb37187a9",
+   "id": "66cb1047-5e05-4c68-a2b9-cb5193e284a9",
    "name": "STI College/Landers",
    "lat": 13.6179234,
    "lng": 123.1908514,
@@ -1361,7 +1361,7 @@
    "routeCodes": []
   },
   {
-   "id": "937910b6-299e-48f3-baea-74ee3c8206d3",
+   "id": "473f668b-212c-4e5a-8151-85f37f731082",
    "name": "Bus Terminal",
    "lat": 13.6189216,
    "lng": 123.1890866,
@@ -1375,7 +1375,7 @@
    "routeCodes": []
   },
   {
-   "id": "bbc69aeb-ccdb-431c-a7ee-a7b56adbec5c",
+   "id": "15215ec1-5f90-4298-9a40-5f7c8986a246",
    "name": "PNR Road",
    "lat": 13.6173041,
    "lng": 123.1880962,
@@ -1389,7 +1389,7 @@
    "routeCodes": []
   },
   {
-   "id": "48c2b0d5-20e7-4293-9295-ee0e48684ae1",
+   "id": "01e2c402-ae6f-452f-b8c2-4b947d154cff",
    "name": "S&R",
    "lat": 13.6162097,
    "lng": 123.1890293,
@@ -1403,7 +1403,7 @@
    "routeCodes": []
   },
   {
-   "id": "19b97f00-a814-445c-aa4f-d4ed93a3faba",
+   "id": "2a30134c-0d3c-427b-b17d-5e9e9b65a14f",
    "name": "BIcol River Esplanade",
    "lat": 13.6165935,
    "lng": 123.1864133,
@@ -1417,7 +1417,7 @@
    "routeCodes": []
   },
   {
-   "id": "ba66102c-840b-4d36-80d9-e9e3fa6c3cab",
+   "id": "1a235032-00b6-463c-a8af-9b402f983017",
    "name": "Fraternidad St.",
    "lat": 13.6166855,
    "lng": 123.1838985,
@@ -1431,7 +1431,7 @@
    "routeCodes": []
   },
   {
-   "id": "913205bd-2081-4c47-9cce-c7acd6de6f2c",
+   "id": "761f4e41-70b3-4340-b06f-8c5560e302b4",
    "name": "101 Shopping Centre",
    "lat": 13.6185686,
    "lng": 123.1836676,
@@ -1445,7 +1445,7 @@
    "routeCodes": []
   },
   {
-   "id": "778e26a7-bc4d-49af-a924-a8ad02b186df",
+   "id": "9c3c43e5-b57f-4e0e-b941-f0f81f17ac7e",
    "name": "Naga City Market",
    "lat": 13.6216739,
    "lng": 123.1842703,
@@ -1459,7 +1459,7 @@
    "routeCodes": []
   },
   {
-   "id": "113060f0-db0a-4e57-b727-934ea26af532",
+   "id": "71e55c94-1cbf-441d-9ef2-c6a6c61a99ea",
    "name": "Plaza Rizal",
    "lat": 13.6232548,
    "lng": 123.185086,
@@ -1473,7 +1473,7 @@
    "routeCodes": []
   },
   {
-   "id": "79ac8b45-ef76-412a-aaba-4414ddd33bfe",
+   "id": "ac9d3c05-ccc5-4ad0-862a-30527bf6e9bd",
    "name": "Naga City Market",
    "lat": 13.621021,
    "lng": 123.1840057,
@@ -1487,7 +1487,7 @@
    "routeCodes": []
   },
   {
-   "id": "0b17bf8b-764b-4776-9751-2ecc80c40a3a",
+   "id": "8f7679da-73bf-407b-8e17-fcceb4183a34",
    "name": "101 Shopping Centre",
    "lat": 13.6183651,
    "lng": 123.1834704,
@@ -1501,7 +1501,7 @@
    "routeCodes": []
   },
   {
-   "id": "930e17a8-d88b-4359-9fb6-ebd95a2b482c",
+   "id": "beead1e5-f6fb-4075-a3db-572729746bae",
    "name": "Cor. Diversion Rd. & Fraternidad St.",
    "lat": 13.6164834,
    "lng": 123.1847391,
@@ -1515,7 +1515,7 @@
    "routeCodes": []
   },
   {
-   "id": "13f496b0-bbc5-4b07-a0ab-53a9ecba32f9",
+   "id": "b45aa173-1f0f-46e2-9ee1-933fe7880465",
    "name": "BIcol River Esplanade",
    "lat": 13.6164679,
    "lng": 123.1862228,
@@ -1529,7 +1529,7 @@
    "routeCodes": []
   },
   {
-   "id": "71c668fe-8d66-4a7f-b1c7-80d1f97a9f82",
+   "id": "f4c7ef43-e1b2-49d8-a45b-a63b1976044b",
    "name": "PNR Road",
    "lat": 13.6174012,
    "lng": 123.1883294,
@@ -1543,7 +1543,7 @@
    "routeCodes": []
   },
   {
-   "id": "7e8520c6-2e77-4fa6-9058-54525bd237c6",
+   "id": "b72af027-8c3f-4600-8d31-fd6ab4854ad5",
    "name": "Bus Terminal",
    "lat": 13.6187201,
    "lng": 123.1891288,
@@ -1557,7 +1557,7 @@
    "routeCodes": []
   },
   {
-   "id": "f566bd6c-1917-4436-ba74-aaabdc310a50",
+   "id": "e4d23564-c76e-4ddd-8deb-2e009c8cd941",
    "name": "STI College/Landers",
    "lat": 13.6178532,
    "lng": 123.1906412,
@@ -1571,7 +1571,7 @@
    "routeCodes": []
   },
   {
-   "id": "b37a0f41-8af0-4434-9de7-dadb6363b9c3",
+   "id": "e207be4b-c173-4d59-a864-fd87b31da7dd",
    "name": "S&R",
    "lat": 13.6160539,
    "lng": 123.1890394,
@@ -1585,7 +1585,7 @@
    "routeCodes": []
   },
   {
-   "id": "8f11225f-13f3-45b9-904b-6fd5be47503a",
+   "id": "65b0b91e-13c1-4172-93dd-324f956e2a4f",
    "name": "Cor. Magsaysay & Peñafrancia Ave.",
    "lat": 13.6335483,
    "lng": 123.1940304,
@@ -1599,7 +1599,7 @@
    "routeCodes": []
   },
   {
-   "id": "6bd64dce-3cdb-4f41-ba38-ae3f495a76a3",
+   "id": "0688080f-f110-4be2-8521-f589410745d4",
    "name": "Cam High/NCF",
    "lat": 13.633776,
    "lng": 123.1922303,
@@ -1613,7 +1613,7 @@
    "routeCodes": []
   },
   {
-   "id": "14b19eed-77ba-4011-be87-50cc83eade83",
+   "id": "64255851-fbcd-434c-91ce-11a9c4bcb322",
    "name": "Jacob",
    "lat": 13.6341934,
    "lng": 123.1900064,
@@ -1627,7 +1627,7 @@
    "routeCodes": []
   },
   {
-   "id": "edea38b3-eade-4e15-b2c6-b9e971ebb6ce",
+   "id": "c4cd0dca-59d9-472b-a140-6e40501d6ed3",
    "name": "Cor. Magsaysay Extension & Bagumbayan Sur",
    "lat": 13.6343011,
    "lng": 123.1875888,
@@ -1641,7 +1641,7 @@
    "routeCodes": []
   },
   {
-   "id": "4b518052-04c5-4a24-a035-a593b5e6e170",
+   "id": "83c8ba72-8e85-4b5f-83c8-0cabbdfc351a",
    "name": "Ocampo St.",
    "lat": 13.6320061,
    "lng": 123.1876901,
@@ -1655,7 +1655,7 @@
    "routeCodes": []
   },
   {
-   "id": "5e07b95a-9ac7-4f7a-a49f-8a3040cf7285",
+   "id": "7ab1e738-f212-43b0-a375-1d545860784f",
    "name": "USI/Ateneo Ave.",
    "lat": 13.6294487,
    "lng": 123.1877824,
@@ -1669,7 +1669,7 @@
    "routeCodes": []
   },
   {
-   "id": "405f2e74-a108-48a4-84b3-a1e0b8307462",
+   "id": "0713bd55-08c7-417c-b645-d0a8d202e4b9",
    "name": "ALDP Mall/Pag-Ibig",
    "lat": 13.6158211,
    "lng": 123.1907315,
@@ -1683,7 +1683,7 @@
    "routeCodes": []
   },
   {
-   "id": "d8c088f9-f575-4cb1-be50-93772f6540c6",
+   "id": "af8abd2e-fe7e-4935-b06d-0bd58f28dac6",
    "name": "Robinsons Mall/Banko Central ng Pilipinas",
    "lat": 13.6155537,
    "lng": 123.1927589,
@@ -1697,7 +1697,7 @@
    "routeCodes": []
   },
   {
-   "id": "8c1cb4e9-1dcb-4481-959a-d9fa56dd4467",
+   "id": "190b9561-df00-4647-93f8-5392d958f3e8",
    "name": "Yashano Mall/M Plaza",
    "lat": 13.6164742,
    "lng": 123.1952572,
@@ -1711,7 +1711,7 @@
    "routeCodes": []
   },
   {
-   "id": "31bfcf66-1009-4fbc-a6ec-e342a790b44c",
+   "id": "3801d5fd-083a-4c0b-a97f-165f6f0cc7fc",
    "name": "Mother Seton Hospital",
    "lat": 13.6175984,
    "lng": 123.1972154,
@@ -1725,7 +1725,7 @@
    "routeCodes": []
   },
   {
-   "id": "cb12c808-cfc7-4719-97b7-f89a3a3a7ee4",
+   "id": "29970bab-7f6a-49b9-aa04-1224cf7825a2",
    "name": "Bennett's Plaza",
    "lat": 13.618276,
    "lng": 123.198405,
@@ -1739,7 +1739,7 @@
    "routeCodes": []
   },
   {
-   "id": "e4ef3a12-2928-444f-a96a-da0bc907d2f1",
+   "id": "f7799993-7906-438e-a753-6bd6e65e2adf",
    "name": "Rotonda",
    "lat": 13.621453,
    "lng": 123.2011078,
@@ -1753,7 +1753,7 @@
    "routeCodes": []
   },
   {
-   "id": "4f079636-0d1d-4546-ab37-6cdcbaf72e0a",
+   "id": "5f6d42b8-f97a-460e-9f7f-3f29c134dbba",
    "name": "Cor. Magsaysay Ave. & Mayflower St.",
    "lat": 13.623894,
    "lng": 123.2011381,
@@ -1767,7 +1767,7 @@
    "routeCodes": []
   },
   {
-   "id": "6e5c7956-6271-4bfe-a039-b3663abb75f3",
+   "id": "ae1b414f-10c2-4b27-836c-d3743bb647aa",
    "name": "BFP/BIR",
    "lat": 13.6249874,
    "lng": 123.1997671,
@@ -1781,7 +1781,7 @@
    "routeCodes": []
   },
   {
-   "id": "36517b1c-0c49-43fe-b4a9-43bfa2b05689",
+   "id": "9a00dc17-91e5-46fa-8142-255dd33c02cf",
    "name": "City Hall",
    "lat": 13.6266745,
    "lng": 123.1992197,
@@ -1795,7 +1795,7 @@
    "routeCodes": []
   },
   {
-   "id": "f22f5c53-31f6-4777-b211-e40fffe685a8",
+   "id": "0e5dbe99-d139-440b-8495-59cc6b037bfe",
    "name": "Civic Centre",
    "lat": 13.6279759,
    "lng": 123.1980961,
@@ -1809,7 +1809,7 @@
    "routeCodes": []
   },
   {
-   "id": "d7ec464e-3990-4ac5-9605-b9c5a6030b78",
+   "id": "0c61cee1-225b-417e-b397-0bca8a6cfdbe",
    "name": "Cor. Magsaysay Ave. & Leon Aureus St.",
    "lat": 13.6264895,
    "lng": 123.2008897,
@@ -1823,7 +1823,7 @@
    "routeCodes": []
   },
   {
-   "id": "9c3ae835-af75-4484-b891-010c2d39a4df",
+   "id": "30a8d342-f170-4317-a1ca-6f744a8d1389",
    "name": "Villla Caceres",
    "lat": 13.6278631,
    "lng": 123.1998729,
@@ -1837,7 +1837,7 @@
    "routeCodes": []
   },
   {
-   "id": "e2801573-791a-448c-b6e9-434b5ccc2a3e",
+   "id": "73df5e65-87c0-458b-938d-6794f188488b",
    "name": "Westpark/Philhealth",
    "lat": 13.6292511,
    "lng": 123.1987369,
@@ -1851,7 +1851,7 @@
    "routeCodes": []
   },
   {
-   "id": "8fe0ba1c-a514-42c8-8719-5db29148920f",
+   "id": "479717c6-04a9-408d-bf0c-b76046ef7d0e",
    "name": "NCF Magsaysay",
    "lat": 13.6299849,
    "lng": 123.1980793,
@@ -1865,7 +1865,7 @@
    "routeCodes": []
   },
   {
-   "id": "39a787ff-d773-4f1c-9449-f569d1305e4b",
+   "id": "ced4bfb0-5a29-4534-be0e-33da75b49cc5",
    "name": "Cor. Magsaysay Ave. & Dayangdang St",
    "lat": 13.6316034,
    "lng": 123.196698,
@@ -1879,7 +1879,7 @@
    "routeCodes": []
   },
   {
-   "id": "49655129-3bd9-4e77-900b-776fdde4e572",
+   "id": "7e67b266-6302-4ed2-a65a-4bbef27cb8c8",
    "name": "Avenue Hotel/UMA Residence",
    "lat": 13.6321528,
    "lng": 123.1960653,
@@ -1893,7 +1893,7 @@
    "routeCodes": []
   },
   {
-   "id": "a63b2a10-6a97-4c51-8db0-2f5e446a09a2",
+   "id": "f8583ce7-9a38-439b-912f-46fdcb8b1c46",
    "name": "Naga Cathedral",
    "lat": 13.6272763,
    "lng": 123.1870736,
@@ -1907,7 +1907,7 @@
    "routeCodes": []
   },
   {
-   "id": "f76fc4b4-2fd6-4085-9e54-3a4bcb6866ae",
+   "id": "8382cbd1-4b8b-4e8f-9efb-b3c8b0aa0b91",
    "name": "E-Mall/Plaza Quince Martires",
    "lat": 13.625107,
    "lng": 123.185969,

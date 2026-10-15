@@ -5,7 +5,7 @@
 // request is aborted, answers are validated with the shared schema and kept per bbox for the
 // session. The bbox is never logged. A failure keeps the pins already shown: the map never blocks.
 
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { stopsInBboxSchema, type StopPin } from "@/domain/api/schemas";
 import { bboxParam, viewBbox } from "@/domain/geo/bbox";
 import type { Bounds } from "@/domain/geo/types";
@@ -39,12 +39,19 @@ export function useStopsInView(view: Bounds | null, enabled = true): StopsInView
   const key = enabled && bbox ? bboxParam(bbox) : null;
   const [entries, setEntries] = useState<ReadonlyMap<string, Entry>>(() => new Map());
   const [shownKey, setShownKey] = useState<string | null>(null);
-  const [failedKey, setFailedKey] = useState<string | null>(null);
+  // The view (bounds object) a request failed for: any later map move retries, even inside the
+  // same grid cell, so "Move the map to try again" is true.
+  const [failed, setFailed] = useState<{ key: string; view: Bounds | null } | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const viewNow = useEffectEvent(() => view);
 
   const hit = key === null ? undefined : entries.get(key);
   // A cached view shows at once; adjust the "last shown" view during render, not in an effect.
   if (hit && shownKey !== key) setShownKey(key);
-  if (failedKey !== null && failedKey !== key) setFailedKey(null);
+  if (failed !== null && (failed.key !== key || failed.view !== view)) {
+    setFailed(null);
+    if (failed.key === key) setAttempt((n) => n + 1);
+  }
   const cached = hit !== undefined;
 
   useEffect(() => {
@@ -62,7 +69,7 @@ export function useStopsInView(view: Bounds | null, enabled = true): StopsInView
           setShownKey(key);
         },
         () => {
-          if (!controller.signal.aborted) setFailedKey(key);
+          if (!controller.signal.aborted) setFailed({ key, view: viewNow() });
         },
       );
     }, STOPS_DEBOUNCE_MS);
@@ -70,10 +77,10 @@ export function useStopsInView(view: Bounds | null, enabled = true): StopsInView
       clearTimeout(timer);
       controller.abort();
     };
-  }, [key, cached]);
+  }, [key, cached, attempt]);
 
   if (!enabled) return { stops: NONE.stops, status: "idle", truncated: false };
   const shown = hit ?? (shownKey !== null ? entries.get(shownKey) : undefined) ?? NONE;
-  const status = key === null ? "idle" : hit ? "ready" : failedKey === key ? "error" : "loading";
+  const status = key === null ? "idle" : hit ? "ready" : failed?.key === key ? "error" : "loading";
   return { stops: shown.stops, status, truncated: shown.truncated };
 }

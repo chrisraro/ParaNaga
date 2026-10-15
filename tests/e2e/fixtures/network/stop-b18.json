@@ -1,12 +1,12 @@
 {
  "revision": {
-  "revisionId": "7140f69e-bf1d-4697-b37c-68d7a57a582a",
+  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
   "label": "provisional-loops-2026-10-15",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T08:24:37.444Z"
+  "publishedAt": "2026-10-15T08:55:12.774Z"
  },
  "stop": {
-  "id": "f8c8efc5-691b-406c-8303-e3196ae94173",
+  "id": "d045958b-928f-486c-a835-bfd9a74b87a0",
   "name": "B18",
   "lat": 13.6266719,
   "lng": 123.1992224,
@@ -44,7 +44,7 @@
   {
    "routeCode": "R8-B",
    "routeName": "Centro–Magsaysay Loop B",
-   "variantId": "5805b067-06e1-485b-b852-3dde6984180b",
+   "variantId": "858df840-a106-4899-b912-9ca61868fedf",
    "direction": "counterclockwise",
    "kind": "permanent",
    "evidenceLevel": "provisional",

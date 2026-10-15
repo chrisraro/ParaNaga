@@ -11,18 +11,22 @@ export type MapFocus = { point: LatLng; n: number };
 export type AppFrameValue = {
   /** Registers an open panel; returns the unregister function. */
   openPanel: () => () => void;
+  /** Whether the panel open now was opened straight from the home map (not from another panel). */
+  openedFromHome: () => boolean;
   mapFocus: MapFocus | null;
   showOnMap: (point: LatLng) => void;
 };
 
 export const AppFrameContext = createContext<AppFrameValue | null>(null);
 
-// Where this browser tab entered /app. "Back" uses history only after an in-app navigation, so a
-// detail page opened from a shared link goes to the map instead of leaving the site.
+// Where this browser tab entered the mounted /app frame. "Back" uses history only after an in-app
+// navigation, so a detail page opened from a shared link goes to the map instead of leaving the
+// site. Set when an AppFrame mounts and cleared when it unmounts (or is hidden), so leaving /app
+// and coming back starts over.
 let entryPath: string | null = null;
 
-export function recordEntryPath(): void {
-  entryPath ??= window.location.pathname;
+export function setEntryPath(path: string | null): void {
+  entryPath = path;
 }
 
 /** True when the current page was reached by navigating inside the app (history has our page). */

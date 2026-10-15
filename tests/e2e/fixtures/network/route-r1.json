@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "7140f69e-bf1d-4697-b37c-68d7a57a582a",
+  "revisionId": "703dc1be-879e-43be-91cb-d9a472b56dd1",
   "label": "provisional-loops-2026-10-15",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T08:24:37.444Z"
+  "publishedAt": "2026-10-15T08:55:12.774Z"
  },
  "route": {
   "code": "R1",
@@ -47,7 +47,7 @@
  },
  "variants": [
   {
-   "variantId": "5070751f-75a9-4923-83ea-6eda49c5601e",
+   "variantId": "eaa5c13c-348a-4910-b382-db01de596a76",
    "direction": "inbound",
    "kind": "permanent",
    "evidenceLevel": "documentary",
@@ -80,7 +80,7 @@
    "stops": []
   },
   {
-   "variantId": "fa6cff7d-6e38-4d53-9883-9589e9df57c8",
+   "variantId": "935e0670-faff-411f-8677-5299db6c4127",
    "direction": "outbound",
    "kind": "permanent",
    "evidenceLevel": "documentary",

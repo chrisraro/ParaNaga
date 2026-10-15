@@ -43,12 +43,15 @@ export function StopsLayer({ stops, interactive, onSelect }: Props) {
     if (best) onSelect?.(best.id);
   });
 
+  // The renderer joins the map lazily (Map.getRenderer adds it); remove it with the group so a
+  // remount never leaves an orphaned canvas and its move/zoom listeners behind.
   useEffect(() => {
     group.addTo(map);
     return () => {
       group.remove();
+      renderer.remove();
     };
-  }, [map, group]);
+  }, [map, group, renderer]);
 
   useEffect(() => {
     group.clearLayers();

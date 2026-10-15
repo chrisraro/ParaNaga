@@ -5,11 +5,16 @@
 // drift fails the run. No e2e test reaches a database.
 import type { Page, Route } from "@playwright/test";
 import routeR1 from "./network/route-r1.json" with { type: "json" };
+import routeR2 from "./network/route-r2.json" with { type: "json" };
 import routeR3 from "./network/route-r3.json" with { type: "json" };
+import routeR4 from "./network/route-r4.json" with { type: "json" };
 import routeR5 from "./network/route-r5.json" with { type: "json" };
+import routeR6 from "./network/route-r6.json" with { type: "json" };
+import routeR7 from "./network/route-r7.json" with { type: "json" };
 import routeR8A from "./network/route-r8-a.json" with { type: "json" };
 import routeR8B from "./network/route-r8-b.json" with { type: "json" };
 import routeR8C from "./network/route-r8-c.json" with { type: "json" };
+import routeR8D from "./network/route-r8-d.json" with { type: "json" };
 import stopA1 from "./network/stop-a1.json" with { type: "json" };
 import stopB18 from "./network/stop-b18.json" with { type: "json" };
 import stopCFirst from "./network/stop-c-first.json" with { type: "json" };
@@ -21,7 +26,9 @@ export const ROUTE_R3 = routeR3;
 export const ROUTE_R8A = routeR8A;
 
 const STOPS = new Map([stopA1, stopB18, stopCFirst].map((s) => [s.stop.id, s]));
-const ROUTES = new Map([routeR1, routeR3, routeR5, routeR8A, routeR8B, routeR8C].map((r) => [r.route.code, r]));
+/** All 11 routes of the approved plan, as captured. */
+export const ALL_ROUTES = [routeR1, routeR2, routeR3, routeR4, routeR5, routeR6, routeR7, routeR8A, routeR8B, routeR8C, routeR8D];
+const ROUTES = new Map(ALL_ROUTES.map((r) => [r.route.code, r]));
 
 const json = (route: Route, body: unknown, status = 200) =>
   route.fulfill({ status, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(body) });

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
-import { ROUTE_R8A, STOP_A1, STOPS_ALL, routeNetwork } from "./fixtures/network";
+import { ALL_ROUTES, ROUTE_R8A, STOP_A1, STOPS_ALL, routeNetwork } from "./fixtures/network";
 
 // Stop pins on the map, Stop detail and Route detail (Task 7). The network API is answered with
 // REAL responses captured from a throwaway Neon branch (fixtures/network); tiles are aborted.
@@ -103,7 +103,7 @@ test("tapping a pin opens the stop with exactly the source pin's layer, coordina
   await expect(nearby).toHaveAttribute("aria-expanded", "false");
   await nearby.click();
   await expect(nearby).toHaveAttribute("aria-expanded", "true");
-  await expect(detail.locator("#pn-nearby")).toContainText("Not yet surveyed");
+  await expect(detail.locator(".pn-disclosure-panel")).toContainText("Not yet surveyed");
 
   // The map underneath is inert while the panel is open.
   await expect(page.getByTestId("app-home-layer")).toHaveAttribute("inert", "");
@@ -273,3 +273,32 @@ test.describe("dark mode", () => {
     await expectAxeClean(page);
   });
 });
+
+// Every route of the approved plan renders its detail screen (real captured responses).
+for (const fixture of ALL_ROUTES) {
+  const { code, name, hasProvisionalStops } = fixture.route;
+  const { inbound, outbound, circuit } = fixture.route.legalStreets;
+  test(`route detail renders for ${code}`, async ({ page }) => {
+    await routeNetwork(page);
+    await page.goto(`/app/routes/${code}`);
+    const route = page.getByTestId("route-detail");
+    await expect(route.getByRole("heading", { level: 1, name })).toBeVisible();
+    await expect(route.locator(".pn-loop-chip")).toHaveCount(1);
+    await expect(route.getByTestId("route-evidence")).toHaveText(hasProvisionalStops ? "Provisional stops" : "Documented only");
+    await expect(route.getByTestId("fare-tile")).toContainText("₱14–₱17");
+    await expect(route.getByTestId("fare-tile")).toContainText("Estimate");
+    const streets = route.getByTestId("street-order").getByRole("listitem");
+    if (inbound && outbound) {
+      await expect(route.getByRole("radiogroup", { name: "Direction" })).toBeVisible();
+      await expect(streets).toHaveCount(inbound.length);
+      await route.getByRole("radio").nth(1).click();
+      await expect(streets).toHaveCount(outbound.length);
+    } else {
+      await expect(route.getByRole("radiogroup", { name: "Direction" })).toHaveCount(0);
+      await expect(streets).toHaveCount(circuit!.length);
+    }
+    await expect(route.getByTestId("route-stops")).toHaveCount(hasProvisionalStops ? 1 : 0);
+    await expect(route).not.toContainText(/exact|street order not recorded/i);
+    await expectAxeClean(page);
+  });
+}

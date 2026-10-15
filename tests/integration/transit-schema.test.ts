@@ -189,6 +189,9 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
 
   it("paranaga_app cannot read internal ingest tables", async () => {
     expect((await pgCode(appRows(null, sql`select * from ingest.batch`))).code).toBe("42501");
+    // 0002: only the link columns behind v_published_stop_sources are readable.
+    expect((await pgCode(appRows(null, sql`select started_by from ingest.batch`))).code).toBe("42501");
+    expect(await appRows(null, sql`select id, source_document_id from ingest.batch`)).toEqual(expect.any(Array));
     expect((await pgCode(appRows(null, sql`select * from ingest.error`))).code).toBe("42501");
     expect(await appRows(null, sql`select * from ingest.source`)).toEqual(expect.any(Array));
   });

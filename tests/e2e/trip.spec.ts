@@ -149,6 +149,24 @@ test("trip detail lists the legs, highlights stops as markers and draws no line"
   await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
 });
 
+test("opening and closing a trip detail keeps exactly one stop-pin canvas", async ({ page }) => {
+  await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+  await openApp(page);
+  await pinBoth(page);
+  const canvases = page.locator(".leaflet-overlay-pane canvas");
+  await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
+  await expect(canvases).toHaveCount(1);
+  for (let i = 0; i < 2; i++) {
+    await page.getByTestId("trip-option").first().click();
+    await expect(page.getByTestId("trip-detail")).toBeVisible();
+    await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
+    await page.getByRole("button", { name: "Back to trip options" }).click();
+    await expect(page.getByTestId("trip-detail")).toHaveCount(0);
+    await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
+  }
+  await expect(canvases).toHaveCount(1);
+});
+
 test("no coverage keeps a clear message", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, NO_ROUTE_PLAN));
   await openApp(page);

@@ -121,7 +121,7 @@ export function DetailLoading({ title }: { title: string }) {
   );
 }
 
-const SCREEN_NAME = { stop: "Stop", route: "Route", page: "" } as const;
+const SCREEN_NAME = { stop: "Stop", route: "Route", page: "Not found" } as const;
 
 export function DetailNotFound({ what = "page" }: { what?: keyof typeof SCREEN_NAME }) {
   const heading = useFocusOnMount<HTMLHeadingElement>(true);

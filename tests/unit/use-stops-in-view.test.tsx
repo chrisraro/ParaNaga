@@ -122,3 +122,20 @@ describe("useStopsInView", () => {
     expect(error).not.toHaveBeenCalled();
   });
 });
+
+describe("useStopsInView retry", () => {
+  it("retries a failed view on the next map move, even inside the same grid cell", async () => {
+    const { result, rerender } = renderHook(({ v }) => useStopsInView(v), { initialProps: { v: VIEW_A } });
+    act(() => vi.advanceTimersByTime(STOPS_DEBOUNCE_MS));
+    await settle(0, {}, 503);
+    expect(result.current.status).toBe("error");
+    act(() => vi.advanceTimersByTime(STOPS_DEBOUNCE_MS * 2));
+    expect(fetchMock).toHaveBeenCalledTimes(1); // no retry loop without a move
+    rerender({ v: { ...VIEW_A_PAN } });
+    expect(result.current.status).toBe("loading");
+    act(() => vi.advanceTimersByTime(STOPS_DEBOUNCE_MS));
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await settle(1, stopsAll);
+    expect(result.current.status).toBe("ready");
+  });
+});

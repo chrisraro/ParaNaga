@@ -6,7 +6,7 @@
 // estimate range from the reported rules or "Unknown"; service hours were not observed.
 
 import Link from "next/link";
-import { useState, type KeyboardEvent } from "react";
+import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { routeDetailSchema, type RouteDetail } from "@/domain/api/schemas";
 import {
@@ -81,6 +81,9 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const { route, variants, trials, fareEvidence, sources, revision } = data;
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const [direction, setDirection] = useState<Direction>("inbound");
+  // Ids are per instance: Next keeps a left page mounted (hidden), so two route panels can coexist.
+  const uid = useId();
+  const dirButtons = useRef<Record<Direction, HTMLButtonElement | null>>({ inbound: null, outbound: null });
 
   const group = routeGroupText(route.groupNumber, route.modeCode);
   const fare = routeFareTile(fareEvidence.rules);
@@ -100,7 +103,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
     e.preventDefault();
     const next: Direction = direction === "inbound" ? "outbound" : "inbound";
     setDirection(next);
-    document.getElementById(`pn-dir-${next}`)?.focus();
+    dirButtons.current[next]?.focus();
   };
 
   return (
@@ -163,7 +166,9 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             {(["inbound", "outbound"] as const).map((d) => (
               <button
                 key={d}
-                id={`pn-dir-${d}`}
+                ref={(el) => {
+                  dirButtons.current[d] = el;
+                }}
                 type="button"
                 role="radio"
                 aria-checked={direction === d}
@@ -179,8 +184,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         ) : null}
 
         {shown ? (
-          <section className="pn-section" aria-labelledby="pn-streets-title">
-            <h2 id="pn-streets-title" className="pn-section__title">
+          <section className="pn-section" aria-labelledby={`${uid}-streets`}>
+            <h2 id={`${uid}-streets`} className="pn-section__title">
               {isCircuit ? "Street order · circuit" : "Street order"}
               {structures.length > 0 ? " · structure 1" : ""}
             </h2>
@@ -196,8 +201,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         )}
 
         {structures.map((streets, i) => (
-          <section key={i} className="pn-section" aria-labelledby={`pn-structure-${i}`} data-testid="extra-structure">
-            <h2 id={`pn-structure-${i}`} className="pn-section__title">
+          <section key={i} className="pn-section" aria-labelledby={`${uid}-structure-${i}`} data-testid="extra-structure">
+            <h2 id={`${uid}-structure-${i}`} className="pn-section__title">
               Street order · structure {i + 2} (also in the source)
             </h2>
             <StreetList streets={streets} circuit={false} label={`Street order, structure ${i + 2}`} />
@@ -211,10 +216,10 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         ) : null}
 
         {trials.map((trial) => (
-          <section key={trial.variantId} className="pn-section" aria-labelledby={`pn-trial-${trial.variantId}`} data-testid="trial-notice">
+          <section key={trial.variantId} className="pn-section" aria-labelledby={`${uid}-trial-${trial.variantId}`} data-testid="trial-notice">
             <div role="note" className="pn-note pn-note--small">
               <WarnIcon size={18} />
-              <p id={`pn-trial-${trial.variantId}`}>{trialNoticeText(trial, sources)}</p>
+              <p id={`${uid}-trial-${trial.variantId}`}>{trialNoticeText(trial, sources)}</p>
             </div>
             {trial.legalStreets.circuit ? (
               <StreetList streets={trial.legalStreets.circuit} circuit label="Trial street order" />
@@ -223,8 +228,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         ))}
 
         {ordered.map((variant) => (
-          <section key={variant.variantId} className="pn-section" aria-labelledby={`pn-stops-${variant.variantId}`}>
-            <h2 id={`pn-stops-${variant.variantId}`} className="pn-section__title">
+          <section key={variant.variantId} className="pn-section" aria-labelledby={`${uid}-stops-${variant.variantId}`}>
+            <h2 id={`${uid}-stops-${variant.variantId}`} className="pn-section__title">
               {variant.evidenceLevel === "provisional" ? "Provisional stops" : "Stops"} · {variant.stops.length} in pin order
             </h2>
             {variant.direction === "clockwise" || variant.direction === "counterclockwise" ? (

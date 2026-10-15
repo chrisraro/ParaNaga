@@ -30,7 +30,13 @@ export type NagaMapProps = {
   crosshair?: boolean;
   /** Fires once when the map is ready and after every move. */
   onCenterChange?: (center: LatLng, insideCity: boolean) => void;
-  /** Change this number to recentre: on the user fix when it is inside Naga, else Plaza Rizal. */
+  /**
+   * Change this number to recentre: on the user fix when it is inside Naga, else Plaza Rizal.
+   * Invariant: it starts at 0 and only ever increases for the lifetime of the screen that owns it.
+   * The map treats any value other than 0 seen at mount as a pending request (so a recentre asked
+   * for before this lazily loaded map existed still runs); a map remounted under a screen whose
+   * signal is already above 0 would therefore replay the last recentre once.
+   */
   recenterSignal?: number;
   /** When set, the next recentre goes here (inside Naga) instead of to the user fix. */
   recenterTarget?: LatLng | null;
