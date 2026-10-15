@@ -217,7 +217,8 @@
 .pn-map .pn-map-notice {
   position: absolute;
   left: 8px;
-  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 8px);
+  /* Above the attribution strip (24 px links) with a gap, never under it. */
+  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 32px);
   z-index: 1000;
   margin: 0;
   padding: 4px 10px;

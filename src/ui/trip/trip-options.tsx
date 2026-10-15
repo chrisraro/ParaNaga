@@ -12,7 +12,7 @@ import { Fragment } from "react";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { formatDistance, routeChipLabel, transfersText } from "@/domain/trip/present";
-import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, planLookups, type PlanLookups } from "./trip-parts";
+import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, isNegligibleWalk, planLookups, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
   return `pn-trip-option-${optionId.replace(/[^A-Za-z0-9_-]/g, "_")}`;
@@ -24,9 +24,11 @@ function headline(option: PlanOptionDto): string {
 }
 
 function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: PlanLookups }) {
+  // A walk of a few metres (start or end at the stop itself) is not a step.
+  const legs = option.legs.filter((leg) => !(option.rides > 0 && isNegligibleWalk(leg)));
   return (
     <span className="pn-legstrip">
-      {option.legs.map((leg, i) => (
+      {legs.map((leg, i) => (
         <Fragment key={i}>
           {i > 0 ? (
             <>
@@ -70,8 +72,13 @@ function OptionCard({ option, lookups, onOpen, index }: { option: PlanOptionDto;
           <span className={primary ? "pn-trip-card__label pn-trip-card__label--primary" : "pn-trip-card__label"}>
             {option.labels.join(" · ")}
           </span>
-          <span className="sr-only">. </span>
-          <UnverifiedBadge />
+          {/* The driver caveat belongs to rides only; a walk has no driver. */}
+          {option.rides > 0 ? (
+            <>
+              <span className="sr-only">. </span>
+              <UnverifiedBadge />
+            </>
+          ) : null}
         </span>
         <span className="pn-trip-card__head">
           <strong>{headline(option)}</strong>

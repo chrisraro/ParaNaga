@@ -74,6 +74,11 @@ export function LoopChip({
   );
 }
 
+/** A walk leg too short to be a step (the point is at the stop): under ≈ 15 m, estimate. */
+export const NEGLIGIBLE_WALK_M = 15;
+export const isNegligibleWalk = (leg: { kind: string; estimateMeters?: number }) =>
+  leg.kind === "walk" && (leg.estimateMeters ?? Infinity) < NEGLIGIBLE_WALK_M;
+
 export type PlanLookups = {
   stopName: (id: string, fallback: string) => string;
   direction: (variantId: string) => LoopDirection | null;

@@ -5,15 +5,15 @@
 //   Board Loop A at <stop> · direction (from pin order) · "Signboard not yet verified" · ride N stops
 //   Get off at <stop> + "Para!" tip (no buzz promise: there is no live tracking)
 //   Walk ≈ m to destination · path not verified
-// then the fare per ride leg as estimates, and "Corrections open soon" (no correction flow yet,
-// so no link and no disabled control). The map highlights the boarding/alighting stops only.
+// then the fare per ride leg as estimates, and a plain "Corrections open soon." note (no
+// correction flow yet, so no link and nothing that looks like a control). The map highlights the boarding/alighting stops only.
 
 import "./trip.css";
 
 import { useEffect, useRef, type ReactNode } from "react";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
 import { directionText, fareChipText, formatDistance, legFareText, routeChipLabel } from "@/domain/trip/present";
-import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
+import { FareChip, LoopChip, UnverifiedBadge, isNegligibleWalk, planLookups, type PlanLookups } from "./trip-parts";
 
 type Props = {
   data: PlanResponse;
@@ -66,6 +66,28 @@ function steps(option: PlanOptionDto, lookups: PlanLookups): Step[] {
   const out: Step[] = [];
   const last = option.legs.length - 1;
   option.legs.forEach((leg, i) => {
+    if (leg.kind === "walk" && option.rides > 0 && isNegligibleWalk(leg)) {
+      // The point is at the stop itself: no "Walk ≈ 0 m" step. The first such leg becomes a
+      // "Start at" step (board here), a transfer one is folded into the next "Board" step, and
+      // the last one turns the final step into "Arrive".
+      if (i === 0) {
+        const name = leg.to.stopId ? lookups.stopName(leg.to.stopId, leg.to.name ?? "the stop") : (leg.to.name ?? "the stop");
+        out.push({
+          key: `w${i}`,
+          marker: "origin",
+          rail: "walk",
+          body: (
+            <>
+              <strong className="pn-tl__title">Start at {name}</strong>
+              <p className="pn-tl__sub">Board here</p>
+            </>
+          ),
+        });
+      } else if (i === last) {
+        out.push({ key: `w${i}`, marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive: your destination is at this stop</strong> });
+      }
+      return;
+    }
     if (leg.kind === "walk") {
       // The final walk carries the destination marker (artboard); a walk-only trip keeps the
       // origin marker and ends with an "Arrive" step.
@@ -158,7 +180,6 @@ export function TripDetail({ data, option, onBack }: Props) {
             <path d="M10 2L2 10l8 8" />
           </svg>
         </button>
-        <span className="pn-trip-detail__corrections">Corrections open soon</span>
       </div>
       <h2 id="pn-trip-detail-title" ref={headingRef} tabIndex={-1} className="pn-trip-detail__title">
         To your destination
@@ -168,7 +189,7 @@ export function TripDetail({ data, option, onBack }: Props) {
         <span>Time not available</span>
         <FareChip fare={option.fare} />
       </div>
-      <UnverifiedBadge />
+      {rides.length > 0 ? <UnverifiedBadge /> : null}
 
       <ol className="pn-tl" aria-label="Trip steps">
         {steps(option, lookups).map((step) => (
@@ -207,6 +228,7 @@ export function TripDetail({ data, option, onBack }: Props) {
           </>
         )}
       </section>
+      <p className="pn-trip-detail__soon">Corrections open soon.</p>
     </section>
   );
 }

@@ -106,7 +106,9 @@ function FitHighlights({ stops, pins, paddingBottom }: { stops: readonly Highlig
     if (pins?.destination) points.push([pins.destination.lat, pins.destination.lng]);
     map.fitBounds(L.latLngBounds(points), {
       paddingTopLeft: [40, 80],
-      paddingBottomRight: [40, paddingBottom],
+      // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
+      // locate controls (48 px wide, 16 px from the edge): 64 + 13 + a gap.
+      paddingBottomRight: [84, paddingBottom],
       maxZoom: 17,
       animate: !prefersReducedMotion(),
     });

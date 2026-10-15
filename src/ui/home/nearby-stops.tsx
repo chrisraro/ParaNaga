@@ -7,7 +7,7 @@
 import Link from "next/link";
 import type { StopPin } from "@/domain/api/schemas";
 import type { LatLng } from "@/domain/geo/types";
-import { nearestStops } from "@/domain/network/present";
+import { nearestStopGroups } from "@/domain/network/present";
 import { stopLabel } from "@/domain/trip/present";
 import { CandidateRing, ChevronRight } from "@/ui/detail/detail-frame";
 
@@ -23,7 +23,8 @@ type Props = {
 };
 
 export function NearbyStops({ stops, center, status, truncated, onOpen }: Props) {
-  const nearest = nearestStops(stops, center, NEARBY_LIMIT);
+  // Pins at exactly the same point (one source point listed in two layers) share one row.
+  const nearest = nearestStopGroups(stops, center, NEARBY_LIMIT);
   let empty: string | null = null;
   if (nearest.length === 0) {
     empty =
@@ -43,22 +44,31 @@ export function NearbyStops({ stops, center, status, truncated, onOpen }: Props)
         <p className="pn-nearby__empty">{empty}</p>
       ) : (
         <ul className="pn-nearby__list">
-          {nearest.map((s) => (
-            <li key={s.id}>
-              <Link href={`/app/stops/${s.id}`} className="pn-nearby__cell" onClick={() => onOpen?.(`/app/stops/${s.id}`)}>
-                <CandidateRing size={30} onRoute={s.routeCodes.length > 0} />
-                <span className="pn-nearby__text">
-                  <strong>{stopLabel(s.name, s.source.code)}</strong>
-                  <span className="pn-nearby__sub">
-                    Mapped candidate · not yet verified
-                    {s.routeCodes.length > 0 ? ` · on provisional ${s.routeCodes.join(", ")}` : ""}
+          {nearest.map((group) => {
+            const s = group[0]!;
+            const routeCodes = [...new Set(group.flatMap((p) => p.routeCodes))];
+            const layers = group
+              .map((p) => (p.source.layer ? `${p.source.layer}${group.length > 1 && p.source.code ? ` (${p.source.code})` : ""}` : null))
+              .filter((l): l is string => l !== null);
+            return (
+              <li key={s.id}>
+                <Link href={`/app/stops/${s.id}`} className="pn-nearby__cell" onClick={() => onOpen?.(`/app/stops/${s.id}`)}>
+                  <CandidateRing size={30} onRoute={routeCodes.length > 0} />
+                  <span className="pn-nearby__text">
+                    <strong>{stopLabel(s.name, s.source.code)}</strong>
+                    <span className="pn-nearby__sub">
+                      Mapped candidate · not yet verified
+                      {routeCodes.length > 0 ? ` · on provisional ${routeCodes.join(", ")}` : ""}
+                    </span>
+                    {layers.length > 0 ? (
+                      <span className="pn-nearby__layer">{group.length > 1 ? `Same point in ${layers.join(" · ")}` : layers[0]}</span>
+                    ) : null}
                   </span>
-                  {s.source.layer ? <span className="pn-nearby__layer">{s.source.layer}</span> : null}
-                </span>
-                <ChevronRight />
-              </Link>
-            </li>
-          ))}
+                  <ChevronRight />
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
       {truncated ? <p className="pn-nearby__hint">Zoom in to see every pin in this area.</p> : null}

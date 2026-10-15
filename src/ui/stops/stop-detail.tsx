@@ -16,7 +16,7 @@ import {
   sourceCoordinatesText,
   stopStatusBadge,
 } from "@/domain/network/present";
-import { directionText } from "@/domain/trip/present";
+import { directionText, stopDisplayName } from "@/domain/trip/present";
 import { cameFromInsideApp, useAppFrame } from "@/ui/app-shell/app-frame-context";
 import {
   CandidateRing,
@@ -87,7 +87,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
           <CandidateRing size={40} onRoute={onRoute} />
           <div className="pn-detail__head-text">
             <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
-              {stop.name}
+              {stopDisplayName(stop.name, stop.source.code)}
             </h1>
             <span className="pn-badge pn-badge--candidate" data-testid="stop-status-badge">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true" focusable="false">
@@ -210,7 +210,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
           </div>
         </dl>
 
-        <p className="pn-soon">Verification opens soon</p>
+        <p className="pn-soon">Verification opens soon.</p>
 
         <p className="pn-footnote">
           {sourceMap?.ownerDisplayName

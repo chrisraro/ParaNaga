@@ -225,8 +225,10 @@ type Props = {
   sheet: SheetControl;
   endpoints: EndpointsState;
   focused: EndpointWhich | null;
-  /** Shown under the Start row while GPS is being asked for the start. */
+  /** Shown under the Start row (GPS being asked for the start, or the age of its GPS fix). */
   startSub?: string | undefined;
+  /** Shown under the Destination row (the age of its GPS fix, after a swap). */
+  destinationSub?: string | undefined;
   onFocus: (which: EndpointWhich) => void;
   onClear: (which: EndpointWhich) => void;
   onSwap: () => void;
@@ -245,6 +247,7 @@ export function EndpointSheet({
   endpoints,
   focused,
   startSub,
+  destinationSub,
   onFocus,
   onClear,
   onSwap,
@@ -279,7 +282,7 @@ export function EndpointSheet({
         <div className="pn-endpoints">
           <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onRowTap} onClear={onClear} />
           <div className="pn-endpoints__sep" />
-          <EndpointRow which="destination" endpoint={endpoints.destination} focused={focused === "destination"} onFocus={onRowTap} onClear={onClear} />
+          <EndpointRow which="destination" endpoint={endpoints.destination} focused={focused === "destination"} sub={destinationSub} onFocus={onRowTap} onClear={onClear} />
           <button
             type="button"
             className="pn-icon-btn pn-swap"

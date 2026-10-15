@@ -8,7 +8,7 @@ import "./detail.css";
 import "@/ui/trip/trip.css";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
 import { cameFromInsideApp, useAppPanel } from "@/ui/app-shell/app-frame-context";
 
@@ -69,6 +69,17 @@ function BackButton() {
     e.preventDefault();
     router.back();
   };
+  // Escape closes the panel exactly like Back (history after an in-app navigation, else the map).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      e.preventDefault();
+      if (cameFromInsideApp()) router.back();
+      else router.push("/app");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
   return (
     <Link href="/app" aria-label="Back" className="pn-detail__round" onClick={onClick} data-testid="detail-back">
       <BackIcon />
@@ -77,7 +88,7 @@ function BackButton() {
 }
 
 type PanelProps = {
-  /** Screen name in the header ("Stop", "Route"). */
+  /** Screen name in the header ("Stop", "Route"); empty for none. */
   title: string;
   /** Round action on the right of the header; a spacer keeps the title centred without one. */
   action?: ReactNode;
@@ -121,10 +132,31 @@ export function DetailLoading({ title }: { title: string }) {
   );
 }
 
-const SCREEN_NAME = { stop: "Stop", route: "Route", page: "Not found" } as const;
+// The header names the screen; the h1 says "not found" (the page itself gets no header name, so
+// "Not found" is never shown twice).
+const SCREEN_NAME = { stop: "Stop", route: "Route", page: "" } as const;
+type NotFoundKind = keyof typeof SCREEN_NAME;
 
-export function DetailNotFound({ what = "page" }: { what?: keyof typeof SCREEN_NAME }) {
+function kindFromPath(pathname: string | null): NotFoundKind {
+  if (pathname?.startsWith("/app/stops/")) return "stop";
+  if (pathname?.startsWith("/app/routes/")) return "route";
+  return "page";
+}
+
+export function DetailNotFound({ what: whatProp }: { what?: NotFoundKind }) {
+  const pathname = usePathname();
+  const what = whatProp ?? kindFromPath(pathname);
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
+  const title = what === "stop" ? "Stop not found" : what === "route" ? "Route not found" : "Not found";
+  // An honest tab title: the page's static metadata says "Stop · ParaNaga" (the id is only known
+  // at runtime, and the response is already streaming with HTTP 200 when notFound() is reached).
+  useEffect(() => {
+    const previous = document.title;
+    document.title = `${title} · ParaNaga`;
+    return () => {
+      document.title = previous;
+    };
+  }, [title]);
   const copy =
     what === "stop"
       ? "No published stop has this link. It may have been removed or replaced in a newer data revision."
@@ -135,7 +167,7 @@ export function DetailNotFound({ what = "page" }: { what?: keyof typeof SCREEN_N
     <DetailPanel title={SCREEN_NAME[what]} testId="detail-not-found">
       <main className="pn-detail__state">
         <h1 ref={heading} tabIndex={-1}>
-          {what === "stop" ? "Stop not found" : what === "route" ? "Route not found" : "Not found"}
+          {title}
         </h1>
         <p>{copy}</p>
         <Link href="/app" className="pn-detail__retry" style={{ display: "inline-flex", alignItems: "center" }}>

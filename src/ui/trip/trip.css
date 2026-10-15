@@ -320,9 +320,11 @@
   color: var(--pn-label);
   cursor: pointer;
 }
-.pn-trip-detail__corrections {
+.pn-trip-detail__soon {
+  margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 .pn-trip-detail__title {
   margin: 0;

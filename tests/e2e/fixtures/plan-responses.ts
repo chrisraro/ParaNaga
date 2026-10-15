@@ -92,3 +92,41 @@ export const LEAST_WALKING_ONLY_PLAN = {
   ...PROVISIONAL_PLAN,
   plan: { ...PROVISIONAL_PLAN.plan, options: [{ ...leastWalking, labels: ["Recommended", "Fewest transfers", "Least walking"] }] },
 };
+
+/** The origin is the boarding stop itself: the first walk is 0 m (F-20). */
+export const AT_STOP_PLAN = {
+  ...PROVISIONAL_PLAN,
+  plan: {
+    ...PROVISIONAL_PLAN.plan,
+    options: [
+      {
+        ...recommended,
+        legs: [
+          { kind: "walk", from: { ...ORIGIN, lat: A1.lat, lng: A1.lng }, to: asStop(A1), distanceMeters: 0, estimateMeters: 0, pathVerified: false },
+          ...recommended.legs.slice(1),
+        ],
+        walkMeters: 92, walkEstimateMeters: 120,
+      },
+    ],
+  },
+};
+
+/** A short trip: walking first (no ride, so no driver badge), one ride option for least walking (F-05). */
+export const WALK_FIRST_PLAN = {
+  ...PROVISIONAL_PLAN,
+  plan: {
+    ...PROVISIONAL_PLAN.plan,
+    directWalkEstimateMeters: 390,
+    options: [
+      {
+        id: "walk",
+        labels: ["Recommended", "Fewest transfers"],
+        legs: [{ kind: "walk", from: ORIGIN, to: DESTINATION, distanceMeters: 300, estimateMeters: 390, pathVerified: false }],
+        rides: 0, walkMeters: 300, walkEstimateMeters: 390, rideMeters: 0, score: 390,
+        fare: { minCentavos: 0, maxCentavos: 0, status: "no_ride", completeness: "estimate" },
+        evidence: "provisional",
+      },
+      { ...leastWalking, labels: ["Least walking"] },
+    ],
+  },
+};

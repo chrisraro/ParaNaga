@@ -174,7 +174,7 @@ test("no coverage keeps a clear message", async ({ page }) => {
   await pinBoth(page);
 
   const card = page.getByTestId("no-provisional-route");
-  await expect(card.getByRole("heading", { name: "No provisional route nearby yet" })).toBeVisible();
+  await expect(card.getByRole("heading", { name: "No provisional route connects these points yet" })).toBeVisible();
   await expect(card).toContainText("Loops A and B are the only routes we can suggest for now.");
   await expect(page.getByTestId("trip-option")).toHaveCount(0);
   expect(await overlayPaths(page).count()).toBe(pathsBefore);

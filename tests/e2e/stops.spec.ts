@@ -236,7 +236,7 @@ test("Show on map closes the stop and centres the map on it", async ({ page }) =
   await routeNetwork(page);
   await page.goto(`/app/stops/${B18.id}`);
   const detail = page.getByTestId("stop-detail");
-  await expect(detail.getByRole("heading", { level: 1, name: "B18" })).toBeVisible();
+  await expect(detail.getByRole("heading", { level: 1, name: "Unnamed pin B18" })).toBeVisible();
   await expect(detail.getByTestId("source-description")).toContainText("Raw description: empty");
   await detail.getByRole("button", { name: "Show on map" }).click();
   await expect(page).toHaveURL(/\/app$/);
@@ -251,7 +251,7 @@ test("unknown or malformed ids and codes show a not-found panel", async ({ page 
   await expect(page.getByRole("link", { name: "Back to map" })).toBeVisible();
 
   await page.goto("/app/stops/not-a-uuid");
-  await expect(page.getByRole("heading", { level: 1, name: "Not found" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Stop not found" })).toBeVisible();
 
   await page.goto("/app/routes/R99");
   await expect(page.getByRole("heading", { level: 1, name: "Route not found" })).toBeVisible();

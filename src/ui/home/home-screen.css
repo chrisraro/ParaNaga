@@ -111,6 +111,10 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+/* An aged fix: the mark dims (the text keeps full contrast and says how old the fix is). */
+.pn-pill--stale svg {
+  opacity: 0.45;
+}
 .pn-pill--approximate {
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
@@ -196,7 +200,8 @@
   display: flex;
   align-items: center;
   min-height: 56px;
-  padding-right: 56px;
+  /* The rows (and the focused row's outline) stop short of the swap button's column. */
+  margin-right: 56px;
   border-radius: 14px;
 }
 .pn-endpoint--focused {

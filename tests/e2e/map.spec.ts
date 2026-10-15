@@ -368,7 +368,7 @@ test.describe("pinning without GPS", () => {
     await page.getByRole("button", { name: "Set destination here" }).click();
 
     await expect(page.getByTestId("no-provisional-route")).toContainText("Loops A and B are the only routes we can suggest for now.");
-    await expect(page.getByRole("heading", { name: "No provisional route nearby yet" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "No provisional route connects these points yet" })).toBeVisible();
     await expect(page.locator(".leaflet-marker-pane").getByRole("img")).toHaveCount(2);
     expect(await overlayPaths(page).count()).toBe(pathsBefore);
   });
@@ -486,6 +486,9 @@ test.describe("focus and sheet behaviour", () => {
     await page.keyboard.press("ArrowDown");
     await snapIs("1");
     await pin(page, "start");
+    // Move away first: a destination on top of the start is refused (same place).
+    await drag(page, -120, 80);
+    await settled(page);
     await pin(page, "destination");
     await grabber.focus();
     await page.keyboard.press("ArrowDown");

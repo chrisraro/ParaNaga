@@ -317,16 +317,13 @@ a.pn-cell:active {
   opacity: 0.86;
 }
 
-/* Honest "not yet" line where the artboard has a button ("Verification opens soon"). */
+/* Honest "not yet" note where the artboard has a button ("Verification opens soon."): plain,
+   muted text, so it never reads as a (disabled) control. */
 .pn-soon {
   margin: 0;
-  padding: 14px;
-  border-radius: 999px;
-  background: var(--pn-fill);
   color: var(--pn-label2);
-  font-size: 15px;
-  font-weight: 600;
-  text-align: center;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 /* Route tiles (Fare / Service / Vehicle). */

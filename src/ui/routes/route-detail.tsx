@@ -265,7 +265,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             ))}
           </ul>
         ) : null}
-        <p className="pn-soon">Corrections open soon</p>
+        <p className="pn-soon">Corrections open soon.</p>
       </main>
     </DetailPanel>
   );
