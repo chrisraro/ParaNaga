@@ -17,6 +17,7 @@ import {
   FLEET_STATUSES,
   ROUTE_MODES,
   VEHICLE_CLASSES,
+  fleetSummary,
 } from "../modes/fleet";
 
 // ---------------------------------------------------------------- shared pieces
@@ -128,6 +129,14 @@ export const fleetSummarySchema = z.object({
 export type FleetSummaryOut = z.infer<typeof fleetSummarySchema>;
 
 /**
+ * For responses cached under an older shape (before the modes fields existed): a stale body reads
+ * as "Vehicle type not confirmed" instead of failing the client parse. Never asserts a class.
+ */
+const unconfirmedFleet = () => fleetSummary([], "jeepney");
+/** Every route before the modes seed was a jeepney route (migration 0006 default). */
+const legacyRouteMode = () => routeModeSchema.default("jeepney");
+
+/**
  * Owner-confirmed service (user decision 2026-10-16). Confirms SERVICE only: stop locations,
  * stop order and paths stay unverified (`confirmsServiceOnly`), and the trip badge stays.
  */
@@ -176,8 +185,8 @@ export const snapshotVariantSchema = z.object({
   isCircular: z.boolean(),
   /** Ordered stop ids (route_stop seq 1…n). */
   stopIds: z.array(z.uuid()).min(1),
-  mode: routeModeSchema,
-  fleet: fleetSummarySchema,
+  mode: legacyRouteMode(),
+  // No `fleet`: the route's fleet is in `routes[]` (join by routeId), sent once per route.
 });
 
 /** A published terminal or loading point; lat/lng null when no coordinate is on file. */
@@ -206,7 +215,7 @@ export const networkSnapshotSchema = z.object({
     (rules) => rules.every((r) => (INTRA_CITY_FARE_MODES as readonly string[]).includes(r.modeCode)),
     { message: "the snapshot carries intra-city fare rules only" },
   ),
-  terminals: z.array(snapshotTerminalSchema),
+  terminals: z.array(snapshotTerminalSchema).default(() => []),
   /**
    * Every published route with its mode and fleet, including routes without a stop order (which
    * have no variant above): chips and labels work offline for the whole network.
@@ -216,11 +225,11 @@ export const networkSnapshotSchema = z.object({
       routeId: z.uuid(),
       routeCode: z.string(),
       routeName: z.string(),
-      mode: routeModeSchema,
-      serviceStatus: z.enum(SERVICE_STATUSES).nullable(),
-      fleet: fleetSummarySchema,
+      mode: legacyRouteMode(),
+      serviceStatus: z.enum(SERVICE_STATUSES).nullable().default(null),
+      fleet: fleetSummarySchema.default(unconfirmedFleet),
     }),
-  ),
+  ).default(() => []),
 });
 export type NetworkSnapshot = z.infer<typeof networkSnapshotSchema>;
 
@@ -516,9 +525,9 @@ export const searchRouteSchema = z.object({
   hasTrial: z.boolean(),
   /** Distinct street names from the legal street lists and trial circuits, verbatim. */
   streets: z.array(z.string()),
-  mode: routeModeSchema,
+  mode: legacyRouteMode(),
   /** The route's fleet sentence (fleetLabel), e.g. "Traditional and modern jeepneys". */
-  fleetLabel: z.string(),
+  fleetLabel: z.string().default(() => unconfirmedFleet().label),
 });
 
 export const searchTerminalSchema = z.object({
@@ -527,9 +536,9 @@ export const searchTerminalSchema = z.object({
   locationText: z.string().nullable(),
   modes: z.array(z.string()),
   /** Null for a legacy terminal row. */
-  kind: z.enum(TERMINAL_KINDS).nullable(),
+  kind: z.enum(TERMINAL_KINDS).nullable().default(null),
   /** The OpenStreetMap coordinate (ODbL) when one is on file; never an entrance or bay. */
-  location: z.object({ lat: latitude, lng: longitude, source: z.literal("osm") }).nullable(),
+  location: z.object({ lat: latitude, lng: longitude, source: z.literal("osm") }).nullable().default(null),
 });
 
 export const searchBarangaySchema = z.object({

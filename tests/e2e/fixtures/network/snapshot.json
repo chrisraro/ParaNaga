@@ -1714,34 +1714,7 @@
     "cbfda920-cb97-4c39-abf3-196679f6a7e7",
     "e3bc0522-9d04-4a9c-8f29-d4eee79d63d0"
    ],
-   "mode": "jeepney",
-   "fleet": {
-    "label": "Traditional jeepneys",
-    "chip": "Jeepney · traditional",
-    "colourKey": "traditional_puj",
-    "classes": [
-     {
-      "code": "FL-R8-A-TRAD",
-      "vehicleClass": "traditional_puj",
-      "evidenceLevels": [
-       "legal_plan",
-       "owner_confirmation"
-      ],
-      "status": "operating",
-      "firstReportedOn": null,
-      "lastReportedOn": "2026-10-16",
-      "unitsNote": "PUJ Class 2 in the 2025 route plan",
-      "aircon": null,
-      "airconSourceCodes": [],
-      "cooperatives": [],
-      "sourceCodes": [
-       "N30",
-       "U01"
-      ],
-      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
-     }
-    ]
-   }
+   "mode": "jeepney"
   },
   {
    "variantId": "9ddd04ca-ab7d-413e-8fd3-7d7f1a3ed7eb",
@@ -1786,34 +1759,7 @@
     "a58df5fc-5a67-4e98-8973-97b6e45444e4",
     "f0c10e2e-7d72-4257-acf6-2ea20bbfb410"
    ],
-   "mode": "jeepney",
-   "fleet": {
-    "label": "Traditional jeepneys",
-    "chip": "Jeepney · traditional",
-    "colourKey": "traditional_puj",
-    "classes": [
-     {
-      "code": "FL-R8-B-TRAD",
-      "vehicleClass": "traditional_puj",
-      "evidenceLevels": [
-       "legal_plan",
-       "owner_confirmation"
-      ],
-      "status": "operating",
-      "firstReportedOn": null,
-      "lastReportedOn": "2026-10-16",
-      "unitsNote": "PUJ Class 2 in the 2025 route plan",
-      "aircon": null,
-      "airconSourceCodes": [],
-      "cooperatives": [],
-      "sourceCodes": [
-       "N30",
-       "U01"
-      ],
-      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
-     }
-    ]
-   }
+   "mode": "jeepney"
   }
  ],
  "fareRules": [

@@ -318,7 +318,6 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
       isCircular: Boolean(r.is_circular),
       stopIds: strArray(r.stop_ids),
       mode: r.mode as RouteMode,
-      fleet: fleetSummary(fleet.get(str(r.route_id)) ?? [], r.mode as RouteMode),
     })),
     fareRules: fares.map(toFareRule),
     terminals: terminals.map((t) => {

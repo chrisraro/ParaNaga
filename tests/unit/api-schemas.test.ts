@@ -11,6 +11,7 @@ import {
   parseBbox,
   parseRouteCodeParam,
   parseUuidParam,
+  searchIndexSchema,
   stopSummarySchema,
   variantVerification,
 } from "@/domain/api/schemas";
@@ -164,6 +165,41 @@ describe("modes schemas", () => {
   it("a terminal coordinate needs its source; a terminal without one is fine", () => {
     expect(snapshotTerminalSchema.safeParse({ ...terminal, coordSource: null }).success).toBe(false);
     expect(snapshotTerminalSchema.safeParse({ ...terminal, lat: null, lng: null, coordSource: null }).success).toBe(true);
+  });
+
+  it("a stale old-shape snapshot (no terminals, routes, mode or fleet) degrades instead of failing", () => {
+    const routeId = "33333333-3333-4333-8333-333333333333";
+    const old = {
+      revision: snapshot.revision, stops: [], fareRules: [],
+      variants: [{ variantId: "22222222-2222-4222-8222-222222222222", routeId, routeCode: "R8-A", routeName: "Loop A",
+        direction: "clockwise", kind: "permanent", evidenceLevel: "provisional", verification: "unverified", isCircular: true,
+        stopIds: ["11111111-1111-4111-8111-111111111111"] }],
+    };
+    const parsed = networkSnapshotSchema.parse(old);
+    expect(parsed.terminals).toEqual([]);
+    expect(parsed.routes).toEqual([]);
+    expect(parsed.variants[0]!.mode).toBe("jeepney");
+    const withRoute = networkSnapshotSchema.parse({ ...old, routes: [{ routeId, routeCode: "R8-A", routeName: "Loop A", mode: "jeepney", serviceStatus: null }] });
+    expect(withRoute.routes[0]!.fleet).toMatchObject({ label: "Vehicle type not confirmed", colourKey: "unconfirmed", classes: [] });
+  });
+
+  it("snapshot variants carry no fleet (clients join routes[] by routeId)", () => {
+    const v = { variantId: "22222222-2222-4222-8222-222222222222", routeId: "33333333-3333-4333-8333-333333333333", routeCode: "R8-A",
+      routeName: "Loop A", direction: "clockwise", kind: "permanent", evidenceLevel: "provisional", verification: "unverified",
+      isCircular: true, stopIds: ["11111111-1111-4111-8111-111111111111"], mode: "jeepney", fleet: fleet };
+    expect(networkSnapshotSchema.parse({ ...snapshot, variants: [v] }).variants[0]).not.toHaveProperty("fleet");
+  });
+
+  it("a stale old-shape search index (no mode, fleetLabel, kind or location) degrades instead of failing", () => {
+    const index = {
+      revision: snapshot.revision, osmPlaces: [], pinPlaces: [], barangays: [], studyLabels: [], destinationCategories: [],
+      feederLeads: [], legacyNames: [],
+      routes: [{ code: "R1", name: "Route 1", groupNumber: 1, evidenceLevel: null, hasTrial: false, streets: [] }],
+      terminals: [{ code: "T01", name: "Bus terminal", locationText: null, modes: [] }],
+    };
+    const parsed = searchIndexSchema.parse(index);
+    expect(parsed.routes[0]).toMatchObject({ mode: "jeepney", fleetLabel: "Vehicle type not confirmed" });
+    expect(parsed.terminals[0]).toMatchObject({ kind: null, location: null });
   });
 
   it("operating status always says it confirms service only", () => {

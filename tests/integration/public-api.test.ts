@@ -401,8 +401,10 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
       }
       expect(route("TRI-VISTODA")).toMatchObject({ mode: "tricycle", serviceStatus: "authorized_feeder", fleet: { colourKey: "tricycle" } });
 
-      // Only R8-A/R8-B have a stop order; their variants carry mode and fleet. Feeders (no stops) are absent.
-      expect(body.variants.map((v) => [v.routeCode, v.mode, v.fleet.colourKey])).toEqual([
+      // Only R8-A/R8-B have a stop order; their variants carry the mode, and the fleet joins by routeId. Feeders (no stops) are absent.
+      expect(body.variants.every((v) => !("fleet" in v))).toBe(true);
+      const fleetOf = (routeId: string) => body.routes.find((r) => r.routeId === routeId)!.fleet;
+      expect(body.variants.map((v) => [v.routeCode, v.mode, fleetOf(v.routeId).colourKey])).toEqual([
         ["R8-A", "jeepney", "traditional_puj"], ["R8-B", "jeepney", "traditional_puj"],
       ]);
       // Bus and UV rules (F06–F12) never reach the planner.

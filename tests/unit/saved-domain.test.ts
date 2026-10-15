@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
 import type { NetworkSnapshot } from "@/domain/api/schemas";
-import { fleetSummary } from "@/domain/modes/fleet";
 import {
   HISTORY_RETENTION_DAYS,
   buildSavedTrip,
@@ -56,7 +55,7 @@ function snapshot(edit: (s: Pick<NetworkSnapshot, "revision" | "stops" | "varian
       {
         variantId: rideLeg.variantId, routeId: NEW_REVISION, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A",
         direction: "circuit", kind: "trial", evidenceLevel: "provisional", verification: "unverified", isCircular: true,
-        stopIds: plan.stops.map((x) => x.id), mode: "jeepney", fleet: fleetSummary([], "jeepney"),
+        stopIds: plan.stops.map((x) => x.id), mode: "jeepney",
       },
     ],
   };
