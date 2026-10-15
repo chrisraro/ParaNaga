@@ -1,5 +1,5 @@
-/* Naga map chrome (.superpowers/sdd/map-design-brief.md). Scoped to .pn-map; tokens switch
-   for dark mode via prefers-color-scheme, like the rest of the design canvas. */
+/* Naga map chrome (.superpowers/sdd/map-design-brief.md). Scoped to .pn-map. Dark tokens apply
+   for <html data-theme="dark">, and for System (any other value) when the device prefers dark. */
 
 .pn-map {
   --pn-glass: rgba(255, 255, 255, 0.62);
@@ -22,8 +22,22 @@
   background: var(--pn-land);
 }
 
+:root[data-theme="dark"] .pn-map {
+  --pn-glass: rgba(17, 26, 46, 0.62);
+  --pn-glass-edge: rgba(255, 255, 255, 0.14);
+  --pn-shadow: rgba(0, 0, 0, 0.45);
+  --pn-sep: rgba(242, 245, 250, 0.1);
+  --pn-label: #f2f5fa;
+  --pn-label2: #a9b3c7;
+  --pn-accent: #2bb5ae;
+  --pn-land: #1e2633;
+  --pn-attr-bg: rgba(17, 26, 46, 0.75);
+  --pn-marker-ring: #0b1220;
+  --pn-dot: #2bb5ae;
+  --pn-crosshair: #f2f5fa;
+}
 @media (prefers-color-scheme: dark) {
-  .pn-map {
+  :root:not([data-theme="light"]) .pn-map {
     --pn-glass: rgba(17, 26, 46, 0.62);
     --pn-glass-edge: rgba(255, 255, 255, 0.14);
     --pn-shadow: rgba(0, 0, 0, 0.45);
@@ -38,6 +52,10 @@
     --pn-crosshair: #f2f5fa;
   }
 }
+:root[data-contrast="more"] .pn-map {
+  --pn-label2: var(--pn-label);
+  --pn-sep: color-mix(in srgb, var(--pn-label) 55%, transparent);
+}
 
 .pn-map .pn-map-leaflet {
   position: absolute;
@@ -50,8 +68,11 @@
 .pn-map .pn-mask {
   fill-opacity: 0.28;
 }
+:root[data-theme="dark"] .pn-map .pn-mask {
+  fill-opacity: 0.45;
+}
 @media (prefers-color-scheme: dark) {
-  .pn-map .pn-mask {
+  :root:not([data-theme="light"]) .pn-map .pn-mask {
     fill-opacity: 0.45;
   }
 }
@@ -251,8 +272,13 @@
     backdrop-filter: none;
   }
 }
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme="dark"] .pn-map .pn-glass {
+    background: #111a2e;
+  }
+}
 @media (prefers-reduced-transparency: reduce) and (prefers-color-scheme: dark) {
-  .pn-map .pn-glass {
+  :root:not([data-theme="light"]) .pn-map .pn-glass {
     background: #111a2e;
   }
 }
@@ -270,4 +296,31 @@
   fill: #3e4c6b;
   stroke: #ffffff;
   stroke-width: 3;
+}
+
+/* Low-data mode (Settings): the notice carries a text button to load the background once. */
+.pn-map .pn-map-notice--action {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  max-width: calc(100% - 80px); /* clear of the zoom / locate controls on the right */
+  padding: 0 6px 0 12px;
+  border-radius: 22px;
+  pointer-events: auto;
+}
+.pn-map .pn-map-notice__btn {
+  min-height: 44px; /* artboard target size */
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  color: var(--pn-accent);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.pn-map .pn-map-notice__btn:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
 }

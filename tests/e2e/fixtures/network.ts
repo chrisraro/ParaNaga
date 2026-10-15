@@ -42,8 +42,8 @@ export type NetworkCalls = { bboxes: string[]; stops: string[]; routes: string[]
 
 /**
  * Answers /api/v1/stops?bbox= (the real 128 pins filtered to the box), /api/v1/stops/:id for the
- * captured stops, /api/v1/routes (the captured list of 11) and /api/v1/routes/:code for the
- * captured routes; anything else is a 404.
+ * captured stops, /api/v1/routes (the captured list of 11), /api/v1/routes/:code for the
+ * captured routes and /api/v1/network/head (the captured revision); anything else is a 404.
  */
 export async function routeNetwork(page: Page): Promise<NetworkCalls> {
   const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0 };
@@ -61,6 +61,8 @@ export async function routeNetwork(page: Page): Promise<NetworkCalls> {
     const stops = stopsAll.stops.filter((p) => p.lng >= w && p.lng <= e && p.lat >= s && p.lat <= n);
     return json(route, { revision: stopsAll.revision, stops });
   });
+  // The published revision (Settings → About): the revision every captured response names.
+  await page.route(/\/api\/v1\/network\/head(\?.*)?$/, (route) => json(route, stopsAll.revision));
   await page.route(/\/api\/v1\/routes(\?.*)?$/, async (route) => {
     calls.routeLists += 1;
     return json(route, routesList);

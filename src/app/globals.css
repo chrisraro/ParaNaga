@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Tailwind's `dark:` follows the app's theme (Settings → Appearance; public/theme-init.js sets
+   <html data-theme> before the first paint): Dark always, System when the device prefers dark,
+   never Light. Same rule as the stylesheets' `:root[data-theme="dark"]` /
+   `:root:not([data-theme="light"])` blocks. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
 /* ParaNaga design tokens (design canvas: 02 · Color, 03 · Foundations). */
 :root {
   --background: #f4f6fa;

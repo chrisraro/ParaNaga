@@ -1,0 +1,66 @@
+/* Settings ("More" tab; artboard Settings). Builds on the kit (.pn-card, .pn-group, .pn-cell,
+   .pn-seg, .pn-switch-row, .pn-btn) and its --pn-* tokens; only the account card, the appearance
+   row and the icon tile are drawn here. */
+
+.pn-settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Account card: static (no accounts in this increment), 44 px avatar as drawn. */
+.pn-settings__account {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.pn-settings__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--pn-fill);
+  color: var(--pn-label2);
+}
+.pn-settings__account-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pn-settings__account-text strong {
+  font-size: 17px;
+  font-weight: 600;
+}
+.pn-settings__account-text span {
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+/* Appearance: label above a full-width Light / Dark / System segmented control. */
+.pn-settings__appearance {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0 14px;
+}
+.pn-settings__row-label {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* 30 px teal tile in front of "Location access". */
+.pn-settings__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}

@@ -11,14 +11,46 @@
   --pn-seg-on: #ffffff;
   --pn-switch-off: #c9d1dd;
 }
+:root[data-theme="dark"] .pn-home,
+:root[data-theme="dark"] .pn-detail,
+:root[data-theme="dark"] .pn-tabbar {
+  --pn-tab-idle: #c7cedc;
+  --pn-seg-on: #2a3654;
+  --pn-switch-off: #3a4866;
+}
 @media (prefers-color-scheme: dark) {
-  .pn-home,
-  .pn-detail,
-  .pn-tabbar {
+  :root:not([data-theme="light"]) .pn-home,
+  :root:not([data-theme="light"]) .pn-detail,
+  :root:not([data-theme="light"]) .pn-tabbar {
     --pn-tab-idle: #c7cedc;
     --pn-seg-on: #2a3654;
     --pn-switch-off: #3a4866;
   }
+}
+:root[data-contrast="more"] .pn-home,
+:root[data-contrast="more"] .pn-detail,
+:root[data-contrast="more"] .pn-tabbar {
+  --pn-tab-idle: var(--pn-label);
+  --pn-switch-off: color-mix(in srgb, var(--pn-label) 55%, transparent);
+}
+/* High contrast: badges get a solid border in their text colour (the dashed ones keep the dash,
+   which is part of their meaning: trial, historical), and the tab bar a solid surface. */
+:root[data-contrast="more"] .pn-badge,
+:root[data-contrast="more"] .pn-trip-badge {
+  border: 1.5px solid currentColor;
+  box-shadow: none;
+}
+:root[data-contrast="more"] .pn-badge--trial,
+:root[data-contrast="more"] .pn-badge--historical {
+  border-style: dashed;
+}
+:root[data-contrast="more"] .pn-tabbar {
+  background: var(--pn-surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    inset 0 0 0 1.5px var(--pn-sep),
+    0 12px 32px var(--pn-shadow);
 }
 
 /* ------------------------------------------------------------------ Screen header (large title) */
@@ -114,7 +146,8 @@ button.pn-cell:active {
 }
 
 /* ------------------------------------------------------------------ Segmented control */
-.pn-seg--kit {
+/* Doubled class: detail.css's .pn-seg (2 columns) may load after this file. */
+.pn-seg.pn-seg--kit {
   grid-template-columns: repeat(var(--pn-seg-count, 2), minmax(0, 1fr));
 }
 .pn-seg__thumb {

@@ -113,7 +113,7 @@ test.describe("phone", () => {
     await openApp(page);
     await tab(page, "More").click();
     await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeFocused();
-    await expect(page.getByTestId("more-note")).toHaveText("No settings yet. Appearance and data options arrive in a later update.");
+    await expect(page.getByTestId("settings-account")).toContainText("Accounts arrive later");
     await page.keyboard.press("Escape");
     await expect(page).toHaveURL(/\/app$/);
     await expect(page.getByTestId("more-page")).toBeHidden();

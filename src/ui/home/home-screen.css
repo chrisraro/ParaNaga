@@ -1,5 +1,8 @@
 /* Home screen S1 chrome (.superpowers/sdd/map-design-brief.md §1, §3, §4). Tokens are the
-   brief's Home `t` values; dark mode follows prefers-color-scheme like the map chrome. */
+   brief's Home `t` values. Theme (Settings → Appearance): every dark block is written twice,
+   `:root[data-theme="dark"] …` and `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) … }`,
+   so System follows the device and Light / Dark override it (public/theme-init.js sets the attribute
+   before the first paint). High contrast (`:root[data-contrast="more"]`) comes after the dark blocks. */
 
 /* Shared with the Stop / Route detail screens and tab pages (.pn-detail, src/ui/detail/detail.css)
    and the tab bar (.pn-tabbar, src/ui/kit/kit.css). */
@@ -43,10 +46,36 @@
   color: var(--pn-label);
 }
 
+:root[data-theme="dark"] .pn-home,
+:root[data-theme="dark"] .pn-detail,
+:root[data-theme="dark"] .pn-tabbar {
+  --pn-surface: #111a2e;
+  --pn-fill: #1a2540;
+  --pn-label: #f2f5fa;
+  --pn-label2: #a9b3c7;
+  --pn-sep: rgba(242, 245, 250, 0.1);
+  --pn-ring: rgba(242, 245, 250, 0.12);
+  --pn-shadow: rgba(0, 0, 0, 0.45);
+  --pn-glass: rgba(17, 26, 46, 0.62);
+  --pn-glass-edge: rgba(255, 255, 255, 0.14);
+  --pn-grabber: rgba(242, 245, 250, 0.3);
+  --pn-accent: #2bb5ae;
+  --pn-on-primary: #04201e;
+  --pn-teal-soft-bg: rgba(43, 181, 174, 0.16);
+  --pn-teal-soft-text: #5fd4cd;
+  --pn-coral-soft-bg: rgba(255, 138, 122, 0.16);
+  --pn-coral-soft-text: #ffa394;
+  --pn-warn-bg: rgba(242, 184, 75, 0.14);
+  --pn-warn-text: #f2c877;
+  --pn-warn-ring: rgba(242, 184, 75, 0.55);
+  --pn-mark-teal: #2bb5ae;
+  --pn-mark-coral: #ff8a7a;
+  --pn-dest: #ff8a7a;
+}
 @media (prefers-color-scheme: dark) {
-  .pn-home,
-  .pn-detail,
-  .pn-tabbar {
+  :root:not([data-theme="light"]) .pn-home,
+  :root:not([data-theme="light"]) .pn-detail,
+  :root:not([data-theme="light"]) .pn-tabbar {
     --pn-surface: #111a2e;
     --pn-fill: #1a2540;
     --pn-label: #f2f5fa;
@@ -70,6 +99,18 @@
     --pn-mark-coral: #ff8a7a;
     --pn-dest: #ff8a7a;
   }
+}
+
+/* High contrast (Settings → High contrast, <html data-contrast="more">): secondary text takes the
+   primary label colour (≥ 7:1 on every surface), separators and rings ≥ 3:1. Works in both schemes:
+   the values derive from the scheme's own --pn-label. */
+:root[data-contrast="more"] .pn-home,
+:root[data-contrast="more"] .pn-detail,
+:root[data-contrast="more"] .pn-tabbar {
+  --pn-label2: var(--pn-label);
+  --pn-sep: color-mix(in srgb, var(--pn-label) 55%, transparent);
+  --pn-ring: color-mix(in srgb, var(--pn-label) 55%, transparent);
+  --pn-grabber: color-mix(in srgb, var(--pn-label) 55%, transparent);
 }
 
 :where(.pn-home) :where(button) {

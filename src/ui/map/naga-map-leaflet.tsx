@@ -11,6 +11,7 @@ import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polygon, TileLayer, useMap } from "react-leaflet";
 import { OSM_ATTRIBUTION, attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { prefersReducedMotion, useReducedMotion } from "@/client/map/use-reduced-motion";
+import { usePrefs } from "@/client/prefs/use-prefs";
 import type { LocationFix } from "@/domain/geo/location-fix";
 import {
   NAGA_BOUNDARY,
@@ -206,9 +207,15 @@ export default function NagaMapLeaflet({
 }: NagaMapProps) {
   const reducedMotion = useReducedMotion();
   const [tiles] = useState(currentTileConfig);
+  // Low-data mode (Settings): no tile layer, so no tile is requested, until the user asks for the
+  // background once (for as long as the map stays mounted).
+  const { lowData } = usePrefs();
+  const [backgroundOnce, setBackgroundOnce] = useState(false);
+  const tileUrl = lowData && !backgroundOnce ? null : tiles.url;
   // No basemap: only the OSM boundary data needs crediting.
-  const [attribution] = useState(() =>
-    attributionParts(tiles.url === null ? OSM_ATTRIBUTION : tiles.attribution),
+  const attribution = useMemo(
+    () => attributionParts(tileUrl === null ? OSM_ATTRIBUTION : tiles.attribution),
+    [tileUrl, tiles.attribution],
   );
   const [map, setMap] = useState<L.Map | null>(null);
   const [view, setView] = useState<View | null>(null);
@@ -260,8 +267,8 @@ export default function NagaMapLeaflet({
         markerZoomAnimation={!reducedMotion}
         inertia={!reducedMotion}
       >
-        {tiles.url ? (
-          <TileLayer url={tiles.url} bounds={MAX_BOUNDS} minZoom={NAGA_MIN_ZOOM} maxZoom={NAGA_MAX_ZOOM} />
+        {tileUrl ? (
+          <TileLayer url={tileUrl} bounds={MAX_BOUNDS} minZoom={NAGA_MIN_ZOOM} maxZoom={NAGA_MAX_ZOOM} />
         ) : null}
         <Polygon
           positions={MASK_RINGS}
@@ -323,7 +330,16 @@ export default function NagaMapLeaflet({
         onLocate={onLocate}
       />
 
-      {tiles.url ? null : <p className="pn-map-notice">Map background unavailable</p>}
+      {tiles.url === null ? (
+        <p className="pn-map-notice">Map background unavailable</p>
+      ) : tileUrl === null ? (
+        <p className="pn-map-notice pn-map-notice--action" data-testid="map-low-data-notice">
+          <span>Map background off (low-data mode)</span>
+          <button type="button" className="pn-map-notice__btn" onClick={() => setBackgroundOnce(true)}>
+            Show background once
+          </button>
+        </p>
+      ) : null}
 
       <div className="pn-attribution">
         <a href={LEAFLET_URL} target="_blank" rel="noopener noreferrer">
@@ -331,7 +347,7 @@ export default function NagaMapLeaflet({
         </a>
         <span aria-hidden="true">|</span>
         <span>
-          {tiles.url === null ? "Boundary " : null}
+          {tileUrl === null ? "Boundary " : null}
           {attribution.map((part, i) =>
             part.href ? (
               <a key={i} href={part.href} target="_blank" rel="noopener noreferrer">

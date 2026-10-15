@@ -9,7 +9,7 @@
 import L from "leaflet";
 import { useEffect, useEffectEvent, useMemo } from "react";
 import { useMap } from "react-leaflet";
-import { usePrefersDark } from "@/client/map/use-prefers-dark";
+import { useColorScheme } from "@/client/map/use-color-scheme";
 import type { StopPin } from "@/domain/api/schemas";
 
 const AMBER = "#E8A317";
@@ -27,7 +27,7 @@ type Props = {
 
 export function StopsLayer({ stops, interactive, onSelect }: Props) {
   const map = useMap();
-  const dark = usePrefersDark();
+  const dark = useColorScheme() === "dark";
   // Tolerance widens the tap target around each ring (≈ 26 px across).
   const renderer = useMemo(() => L.canvas({ padding: 0.25, tolerance: 6 }), []);
   const group = useMemo(() => L.layerGroup(), []);

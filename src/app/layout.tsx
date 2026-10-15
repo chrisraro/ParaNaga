@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { DocumentPrefs } from "@/ui/theme/document-prefs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,11 +32,23 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
+    // public/theme-init.js sets data-theme / data-contrast on <html> before the first paint (from
+    // the device preferences), so the attributes differ from the server render on purpose.
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        {/* Must block: it runs before the first paint so a Dark choice never flashes light. A
+            same-origin file (not inline) so it passes script-src 'self'. */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="/theme-init.js" />
+      </head>
+      <body className="min-h-full flex flex-col">
+        <DocumentPrefs />
+        {children}
+      </body>
     </html>
   );
 }

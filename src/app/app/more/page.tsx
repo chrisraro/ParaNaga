@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import { PageFrame } from "@/ui/app-shell/page-frame";
-import { Note } from "@/ui/kit/note";
+import { MoreScreen } from "@/ui/settings/more-screen";
 
 export const metadata: Metadata = {
   title: "Settings",
   description: "Settings for ParaNaga on this phone.",
 };
 
-// The "More" tab (artboard Settings) over the mounted home map. No settings exist yet, so the page
-// has no controls.
+// The "More" tab (artboard Settings) over the mounted home map. Static shell: every value comes
+// from this device (preferences, permission state) or /api/v1 in the browser.
 export default function MorePage() {
   return (
     <PageFrame title="Settings" testId="more-page">
-      <Note testId="more-note">No settings yet. Appearance and data options arrive in a later update.</Note>
+      <MoreScreen />
     </PageFrame>
   );
 }
