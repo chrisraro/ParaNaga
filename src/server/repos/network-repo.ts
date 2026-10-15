@@ -12,6 +12,7 @@ import {
   type RouteList,
   type RouteSummary,
   type StopDetail,
+  type StopPin,
   type StopSummary,
 } from "@/domain/api/schemas";
 import type { Db } from "@/server/db/context";
@@ -63,13 +64,21 @@ function toStop(r: Row): StopSummary {
 // Natural order by layer then code (A1, A2 … A10), then id for stability.
 const STOP_ORDER = sql`source_layer nulls last, length(source_code_raw) nulls last, source_code_raw, stop_point_id`;
 
-export async function getStopsInBbox(db: Db, revisionId: string, bbox: Bbox): Promise<StopSummary[]> {
+export async function getStopsInBbox(db: Db, revisionId: string, bbox: Bbox): Promise<StopPin[]> {
   const found = await rows(db, sql`
-    select ${STOP_COLUMNS} from transit.v_published_stops
-     where revision_id = ${revisionId}::uuid
-       and lon between ${bbox.west} and ${bbox.east} and lat between ${bbox.south} and ${bbox.north}
+    select ${STOP_COLUMNS},
+           array(select distinct r.public_code
+                   from transit.v_published_route_stops rs
+                   join transit.v_published_variants v
+                     on v.revision_id = rs.revision_id and v.variant_version_id = rs.variant_version_id
+                   join transit.v_published_routes r on r.revision_id = v.revision_id and r.id = v.route_id
+                  where rs.revision_id = s.revision_id and rs.stop_point_id = s.stop_point_id
+                  order by r.public_code)::text[] as route_codes
+      from transit.v_published_stops s
+     where s.revision_id = ${revisionId}::uuid
+       and s.lon between ${bbox.west} and ${bbox.east} and s.lat between ${bbox.south} and ${bbox.north}
      order by ${STOP_ORDER}`);
-  return found.map(toStop);
+  return found.map((r) => ({ ...toStop(r), routeCodes: strArray(r.route_codes) }));
 }
 
 export async function getStopDetail(db: Db, revisionId: string, stopId: string): Promise<Omit<StopDetail, "revision"> | null> {
@@ -79,7 +88,8 @@ export async function getStopDetail(db: Db, revisionId: string, stopId: string):
   if (!s) return null;
 
   const sources = await rows(db, sql`
-    select source_layer, source_code_raw, label_raw, description_raw, coordinates_raw, lon::float8 as lon, lat::float8 as lat
+    select source_layer, source_code_raw, label_raw, description_raw, coordinates_raw, lon::float8 as lon, lat::float8 as lat,
+           retrieved_on::text as retrieved_on
       from transit.v_published_stop_sources
      where revision_id = ${revisionId}::uuid and stop_point_id = ${stopId}::uuid
      order by created_at desc, raw_feature_id`);
@@ -125,6 +135,7 @@ export async function getStopDetail(db: Db, revisionId: string, stopId: string):
       coordinatesRaw: str(r.coordinates_raw),
       lat: Number(r.lat),
       lng: Number(r.lon),
+      retrievedOn: strOrNull(r.retrieved_on),
     })),
     sourceMap: map
       ? {

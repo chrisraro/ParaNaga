@@ -1,5 +1,6 @@
 import type { FixQuality, LocationFix } from "@/domain/geo/location-fix";
-import type { LatLng } from "@/domain/geo/types";
+import type { StopPin } from "@/domain/api/schemas";
+import type { Bounds, LatLng } from "@/domain/geo/types";
 
 export type NagaMapPins = { start?: LatLng; destination?: LatLng };
 
@@ -18,6 +19,13 @@ export type NagaMapProps = {
   highlightStops?: readonly HighlightStop[];
   /** Bottom padding (px) when fitting highlighted stops, e.g. the part of the map under a sheet. */
   highlightPaddingBottom?: number;
+  /** Mapped stop pins to draw (one canvas layer). Never joined by lines. */
+  stopPins?: readonly StopPin[];
+  /** Whether tapping a stop pin selects it (false while placing a pin). */
+  stopPinsInteractive?: boolean;
+  onStopSelect?: (stopId: string) => void;
+  /** Fires once when the map is ready and after every move, with the visible bounds. */
+  onBoundsChange?: (bounds: Bounds) => void;
   /** Fixed centre pin for "Choose on map". */
   crosshair?: boolean;
   /** Fires once when the map is ready and after every move. */
@@ -26,6 +34,8 @@ export type NagaMapProps = {
   recenterSignal?: number;
   /** When set, the next recentre goes here (inside Naga) instead of to the user fix. */
   recenterTarget?: LatLng | null;
+  /** How the recentre announcement names `recenterTarget` (default "the start pin"). */
+  recenterTargetLabel?: string;
   /** Shows the locate/recenter button; the parent decides whether to start GPS. */
   onLocate?: () => void;
   className?: string;

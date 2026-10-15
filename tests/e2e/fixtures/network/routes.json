@@ -1,0 +1,215 @@
+{
+ "revision": {
+  "revisionId": "7140f69e-bf1d-4697-b37c-68d7a57a582a",
+  "label": "provisional-loops-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T08:24:37.444Z"
+ },
+ "groups": [
+  {
+   "groupNumber": 1,
+   "routes": [
+    {
+     "code": "R1",
+     "name": "Centro–San Isidro via Cararayan",
+     "groupNumber": 1,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": 20,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    }
+   ]
+  },
+  {
+   "groupNumber": 2,
+   "routes": [
+    {
+     "code": "R2",
+     "name": "Centro–Del Rosario via Magsaysay Avenue",
+     "groupNumber": 2,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": 22,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    }
+   ]
+  },
+  {
+   "groupNumber": 3,
+   "routes": [
+    {
+     "code": "R3",
+     "name": "Centro–Del Rosario via Roxas Avenue",
+     "groupNumber": 3,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": 28,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    }
+   ]
+  },
+  {
+   "groupNumber": 4,
+   "routes": [
+    {
+     "code": "R4",
+     "name": "Centro–Del Rosario via Panganiban Drive",
+     "groupNumber": 4,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": 55,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    }
+   ]
+  },
+  {
+   "groupNumber": 5,
+   "routes": [
+    {
+     "code": "R5",
+     "name": "Centro–San Felipe",
+     "groupNumber": 5,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": 33,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    }
+   ]
+  },
+  {
+   "groupNumber": 6,
+   "routes": [
+    {
+     "code": "R6",
+     "name": "Centro–Pacol",
+     "groupNumber": 6,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": 29,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    }
+   ]
+  },
+  {
+   "groupNumber": 7,
+   "routes": [
+    {
+     "code": "R7",
+     "name": "Centro–Carolina–Panicuason",
+     "groupNumber": 7,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": 24,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    }
+   ]
+  },
+  {
+   "groupNumber": 8,
+   "routes": [
+    {
+     "code": "R8-A",
+     "name": "Centro–Magsaysay Loop A",
+     "groupNumber": 8,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": null,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": 71,
+     "aliases": [],
+     "evidenceLevel": "provisional",
+     "verification": "unverified",
+     "hasProvisionalStops": true,
+     "hasTrial": true
+    },
+    {
+     "code": "R8-B",
+     "name": "Centro–Magsaysay Loop B",
+     "groupNumber": 8,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": null,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": 71,
+     "aliases": [],
+     "evidenceLevel": "provisional",
+     "verification": "unverified",
+     "hasProvisionalStops": true,
+     "hasTrial": true
+    },
+    {
+     "code": "R8-C",
+     "name": "Centro–Magsaysay Loop C",
+     "groupNumber": 8,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": null,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": 71,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    },
+    {
+     "code": "R8-D",
+     "name": "Centro–Magsaysay Loop D",
+     "groupNumber": 8,
+     "modeCode": "PUJ_Class_2_plan",
+     "legalStatus": "approved_plan",
+     "allocatedUnits": null,
+     "allocationIsActiveFleetCount": false,
+     "groupAllocatedUnits": 71,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false
+    }
+   ]
+  }
+ ]
+}

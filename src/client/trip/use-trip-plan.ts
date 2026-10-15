@@ -74,6 +74,8 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
     }
   }
 
+  // `planned.gpsRefinement` is intentionally not reset after the request settles: it only matters
+  // while a request for this pair is in flight, and the next endpoint change recomputes it.
   const key = planned ? keyOf(planned, attempt) : null;
 
   useEffect(() => {

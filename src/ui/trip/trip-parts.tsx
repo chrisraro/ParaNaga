@@ -48,15 +48,23 @@ export function FareChip({ fare }: { fare: FareLike }) {
   );
 }
 
-/** Route chip, e.g. "Loop A" with its loop arrow, optionally followed by the direction. */
-export function LoopChip({ leg, direction }: { leg: Pick<RideLegDto, "routeCode" | "routeName">; direction?: LoopDirection | null }) {
+/** Route chip, e.g. "Loop A" with its loop arrow (or an arrow for a line route), optionally followed by the direction. */
+export function LoopChip({
+  leg,
+  direction,
+  icon = "loop",
+}: {
+  leg: Pick<RideLegDto, "routeCode" | "routeName">;
+  direction?: LoopDirection | null;
+  icon?: "loop" | "line";
+}) {
   const dir = directionText(direction ?? null, "short");
   return (
     <span className="pn-loop">
       <span className="pn-loop-chip">
         <span className="pn-loop-chip__icon">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-            <path d="M20 12a8 8 0 1 1-3-6.2M20 4v5h-5" />
+            <path d={icon === "loop" ? "M20 12a8 8 0 1 1-3-6.2M20 4v5h-5" : "M5 12h14M13 6l6 6-6 6"} />
           </svg>
         </span>
         {routeChipLabel(leg.routeCode, leg.routeName)}

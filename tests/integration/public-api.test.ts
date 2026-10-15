@@ -156,11 +156,15 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
     expect(small.stops).toContainEqual(expect.objectContaining({
       name: "Plaza Rizal", lat: 13.6233869, lng: 123.1846726, status: "candidate",
       source: { layer: "Loop Service A", code: "A1", label: "Plaza Rizal" },
+      routeCodes: ["R8-A"],
     }));
+    // Pins of the unsequenced C and D layers are on no route order.
+    expect(small.stops.filter((s) => /Loop Service [CD]/.test(s.source.layer ?? "")).every((s) => s.routeCodes.length === 0)).toBe(true);
 
     const b = NAGA_MAX_BOUNDS;
     const all = await ok(await stopsGET(get(`/stops?bbox=${b.west},${b.south},${b.east},${b.north}`)), stopsInBboxSchema, "public, s-maxage=300");
     expect(all.stops).toHaveLength(128);
+    expect(all.stops.filter((s) => s.routeCodes.length > 0)).toHaveLength(61); // A1–A30 and B1–B31
   });
 
   // ---------------------------------------------------------------- stops/:id
@@ -175,6 +179,7 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
     expect(body.sourceRecords).toEqual([expect.objectContaining({
       layer: "Loop Service A", code: "A1", label: "Plaza Rizal",
       coordinatesRaw: "123.1846726,13.6233869,0", lat: 13.6233869, lng: 123.1846726,
+      retrievedOn: "2026-10-15",
     })]);
     expect(body.servingRoutes).toEqual([expect.objectContaining({
       routeCode: "R8-A", seq: 1, evidenceLevel: "provisional", verification: "unverified", isCircular: true,

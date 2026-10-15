@@ -120,9 +120,13 @@ export function isCompleteSnapshot(snapshot: Pick<NetworkSnapshot, "stops" | "va
 
 // ---------------------------------------------------------------- GET /api/v1/stops?bbox=
 
+/** A map pin: the stop plus the public codes of routes whose published stop order lists it. */
+export const stopPinSchema = stopSummarySchema.extend({ routeCodes: z.array(z.string()) });
+export type StopPin = z.infer<typeof stopPinSchema>;
+
 export const stopsInBboxSchema = z.object({
   revision: revisionMetaSchema,
-  stops: z.array(stopSummarySchema),
+  stops: z.array(stopPinSchema),
 });
 export type StopsInBbox = z.infer<typeof stopsInBboxSchema>;
 
@@ -137,6 +141,8 @@ export const stopSourceRecordSchema = z.object({
   coordinatesRaw: z.string(),
   lat: latitude,
   lng: longitude,
+  /** Retrieved date of the source snapshot this pin was imported from; null when not recorded. */
+  retrievedOn: isoDate.nullable(),
 });
 
 export const stopDetailSchema = z.object({

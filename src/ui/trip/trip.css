@@ -1,8 +1,9 @@
 /* Trip options / trip detail (artboards TripOptions, TripDetail; chips from Components).
-   Lives inside .pn-home, so it reuses its --pn-* tokens; the few extra ones are defined here
-   with the artboards' light and dark values. */
+   Lives inside .pn-home (and .pn-detail, which reuses the loop chip and badges), so it reuses
+   their --pn-* tokens; the few extra ones are defined here with the artboards' light and dark values. */
 
-.pn-home {
+.pn-home,
+.pn-detail {
   --pn-label3: #8a95ab;
   --pn-gold-text: #6b4a00;
   --pn-gold-ring: #e8a317;
@@ -13,7 +14,8 @@
   --pn-coral-ink: #9e2a21;
 }
 @media (prefers-color-scheme: dark) {
-  .pn-home {
+  .pn-home,
+  .pn-detail {
     --pn-label3: #8a95ab;
     --pn-gold-text: #f2c877;
     --pn-gold-ring: #e8a317;

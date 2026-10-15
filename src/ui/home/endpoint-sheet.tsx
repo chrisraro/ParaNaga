@@ -236,6 +236,8 @@ type Props = {
   children?: ReactNode;
   /** Trip detail is open: the sheet shows only `children` (no endpoint rows or options). */
   detailOpen?: boolean;
+  /** Below the endpoint options (the "Nearby stops" list). Hidden while trip detail is open. */
+  after?: ReactNode;
 };
 
 export function EndpointSheet({
@@ -250,6 +252,7 @@ export function EndpointSheet({
   onChooseOnMap,
   children,
   detailOpen = false,
+  after,
 }: Props) {
   const { attach, snap, offset, dragging } = sheet;
   // Tapping a row at the peek snap lifts the sheet to half so its options aren't offscreen/inert.
@@ -324,6 +327,7 @@ export function EndpointSheet({
             </button>
           </div>
         ) : null}
+        {detailOpen ? null : after}
         </div>
       </div>
     </section>

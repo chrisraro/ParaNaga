@@ -6,13 +6,15 @@
 
 import "./home-screen.css";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useGeolocation } from "@/client/geo/use-geolocation";
+import { useStopsInView } from "@/client/map/use-stops-in-view";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
 import type { PlanResponse } from "@/domain/api/plan";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
-import type { LatLng } from "@/domain/geo/types";
+import type { Bounds, LatLng } from "@/domain/geo/types";
 import {
   endpointsReducer,
   initialEndpointsState,
@@ -20,6 +22,7 @@ import {
   type EndpointWhich,
   type EndpointsState,
 } from "@/domain/trip/endpoints";
+import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail } from "@/ui/trip/trip-detail";
 import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
@@ -33,6 +36,7 @@ import {
   locationStatusCopy,
   type LocationStatusCopy,
 } from "./location-status";
+import { NearbyStops } from "./nearby-stops";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
 const MAP_BOTTOM_INSET = 186;
@@ -103,14 +107,16 @@ export function HomeScreen() {
   const [recenterOnFix, setRecenterOnFix] = useState(false);
   // Where the next recentre goes instead of the user fix (the start pin, for "Move start pin").
   const [recenterTarget, setRecenterTarget] = useState<LatLng | null>(null);
+  const [recenterLabel, setRecenterLabel] = useState("the start pin");
   // The last "outside Naga" status card, kept after the watch stops so its copy stays visible.
   const [lastOutcome, setLastOutcome] = useState<LocationStatusCopy | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const sheet = useSheet(1);
   const [pickHeight, pickRef] = useMeasuredHeight();
 
-  const bumpRecenter = (target: LatLng | null = null) => {
+  const bumpRecenter = (target: LatLng | null = null, label = "the start pin") => {
     setRecenterTarget(target);
+    setRecenterLabel(label);
     setRecenterSignal((n) => n + 1);
   };
 
@@ -411,6 +417,22 @@ export function HomeScreen() {
     ...(endpoints.destination && picking !== "destination" ? { destination: endpoints.destination.point } : {}),
   };
 
+  // Mapped stop pins: shown while exploring and while placing a pin (not tappable then); hidden
+  // while a trip detail highlights its own stops. A tap opens the stop panel over the map.
+  const router = useRouter();
+  const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
+  const tripDetailOpen = ready && openOption !== null;
+  const stopsInView = useStopsInView(viewBounds, !tripDetailOpen);
+  const handleStopSelect = useCallback((id: string) => router.push(`/app/stops/${id}`), [router]);
+
+  // "Show on map" from a stop panel: centre the map on that stop (adjusted during render).
+  const mapFocus = useAppFrame()?.mapFocus ?? null;
+  const [seenFocus, setSeenFocus] = useState(mapFocus?.n ?? 0);
+  if (mapFocus && mapFocus.n !== seenFocus) {
+    setSeenFocus(mapFocus.n);
+    bumpRecenter(mapFocus.point, "the stop");
+  }
+
   return (
     <div className="pn-home" style={rootStyle} data-testid="home-screen">
       <h1 className="sr-only">ParaNaga trip planner</h1>
@@ -425,6 +447,11 @@ export function HomeScreen() {
           onCenterChange={handleCenterChange}
           recenterSignal={recenterSignal}
           recenterTarget={recenterTarget}
+          recenterTargetLabel={recenterLabel}
+          stopPins={tripDetailOpen ? undefined : stopsInView.stops}
+          stopPinsInteractive={picking === null}
+          onStopSelect={handleStopSelect}
+          onBoundsChange={setViewBounds}
           onLocate={handleLocate}
         />
       </div>
@@ -481,6 +508,7 @@ export function HomeScreen() {
           onUseCurrentLocation={handleUseCurrentLocation}
           onChooseOnMap={handleChooseOnMap}
           detailOpen={ready && openOption !== null}
+          after={<NearbyStops stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
         >
           {ready && openOption && planData ? (
             <TripDetail data={planData} option={openOption} onBack={handleCloseOption} />

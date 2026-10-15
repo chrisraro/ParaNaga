@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
+import { routeNetwork } from "./fixtures/network";
 
 // Map core e2e (Task 7). Phone-only: on desktop /app shows the large-screen gate.
 // Tiles are aborted everywhere, so nothing depends on the network.
@@ -19,6 +20,7 @@ const OUTSIDE_POLYGON = { lat: 13.6707, lng: 123.174 };
 
 test.beforeEach(async ({ page }) => {
   await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
+  await routeNetwork(page);
   // Trip planning is covered by trip.spec.ts; here it answers "no coverage" so no test needs a database.
   await page.route("**/api/v1/plan", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(NO_ROUTE_PLAN) }),

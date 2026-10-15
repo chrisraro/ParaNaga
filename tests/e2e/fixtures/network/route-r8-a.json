@@ -1,0 +1,627 @@
+{
+ "revision": {
+  "revisionId": "7140f69e-bf1d-4697-b37c-68d7a57a582a",
+  "label": "provisional-loops-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T08:24:37.444Z"
+ },
+ "route": {
+  "code": "R8-A",
+  "name": "Centro–Magsaysay Loop A",
+  "groupNumber": 8,
+  "modeCode": "PUJ_Class_2_plan",
+  "legalStatus": "approved_plan",
+  "allocatedUnits": null,
+  "allocationIsActiveFleetCount": false,
+  "groupAllocatedUnits": 71,
+  "evidenceLevel": "provisional",
+  "verification": "unverified",
+  "hasProvisionalStops": true,
+  "hasTrial": true,
+  "notes": "71 units allocated to group 8 collectively; no per-loop unit count retrieved. Street order is document-derived, not a surveyed shape. Aureus/Mayflower slash requires clarification where present.",
+  "sourceCodes": [
+   "S01",
+   "S02"
+  ],
+  "legalStreets": {
+   "inbound": null,
+   "outbound": null,
+   "circuit": [
+    "Gen. Luna St",
+    "P. Burgos St",
+    "Peñafrancia Ave",
+    "Magsaysay Ave",
+    "Taal Ave",
+    "J. Miranda Ave",
+    "Leon SA Aureus St / Mayflower St",
+    "Magsaysay Ave",
+    "Roxas Ave",
+    "Bicol Central Station",
+    "Roxas Ave",
+    "Fraternidad St",
+    "Biak na Bato St",
+    "Gen. Luna St"
+   ]
+  },
+  "additionalSourceStructures": [],
+  "normalizationNote": null
+ },
+ "variants": [
+  {
+   "variantId": "0f87b9d0-f704-4515-b39f-05ae99bca82b",
+   "direction": "clockwise",
+   "kind": "permanent",
+   "evidenceLevel": "provisional",
+   "verification": "unverified",
+   "isCircular": true,
+   "headsign": null,
+   "vehicleClass": null,
+   "operatingStatus": "unverified",
+   "trialStatus": null,
+   "effectiveFrom": null,
+   "trialDurationDays": null,
+   "legalStreets": {
+    "inbound": null,
+    "outbound": null,
+    "circuit": [
+     "Gen. Luna St",
+     "P. Burgos St",
+     "Peñafrancia Ave",
+     "Magsaysay Ave",
+     "Taal Ave",
+     "J. Miranda Ave",
+     "Leon SA Aureus St / Mayflower St",
+     "Magsaysay Ave",
+     "Roxas Ave",
+     "Bicol Central Station",
+     "Roxas Ave",
+     "Fraternidad St",
+     "Biak na Bato St",
+     "Gen. Luna St"
+    ]
+   },
+   "notes": "Provisional stop order by pin code (A1… / B1…), not a surveyed sequence.",
+   "sourceCodes": [
+    "S01",
+    "S02"
+   ],
+   "stops": [
+    {
+     "id": "b376df52-2f2b-4137-aa12-fa6f13a888fe",
+     "name": "Plaza Rizal",
+     "lat": 13.6233869,
+     "lng": 123.1846726,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A1",
+      "label": "Plaza Rizal"
+     },
+     "seq": 1
+    },
+    {
+     "id": "c1efed05-63e2-41ae-ba72-e437388f9928",
+     "name": "Plaza Quince Martires",
+     "lat": 13.6244338,
+     "lng": 123.1861778,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A2",
+      "label": "Plaza Quince Martires"
+     },
+     "seq": 2
+    },
+    {
+     "id": "bc2bda7c-8a9a-4231-aedb-2e814aa8bf7a",
+     "name": "USI/Centro Square",
+     "lat": 13.6276709,
+     "lng": 123.1887035,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A3",
+      "label": "USI/Centro Square"
+     },
+     "seq": 3
+    },
+    {
+     "id": "8fb0f5c8-b082-4a59-a4e8-0d83253e3e5f",
+     "name": "Cam High/Naga Central School",
+     "lat": 13.6298321,
+     "lng": 123.190976,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A4",
+      "label": "Cam High/Naga Central School"
+     },
+     "seq": 4
+    },
+    {
+     "id": "87e7e52e-d4c1-4c88-a544-ecf14488f956",
+     "name": "BISCAST",
+     "lat": 13.6314651,
+     "lng": 123.1927517,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A5",
+      "label": "BISCAST"
+     },
+     "seq": 5
+    },
+    {
+     "id": "67788973-a4d5-4581-b44e-6d1b23fb6bb4",
+     "name": "Cor. Peñafrancia Ave & Magsaysay Ave.",
+     "lat": 13.6328896,
+     "lng": 123.1942656,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A6",
+      "label": "Cor. Peñafrancia Ave & Magsaysay Ave."
+     },
+     "seq": 6
+    },
+    {
+     "id": "679da8fa-cb46-4b83-9e7c-86c207d8f89e",
+     "name": "Avenue Hotel/UMA Residence",
+     "lat": 13.632102,
+     "lng": 123.1958976,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A7",
+      "label": "Avenue Hotel/UMA Residence"
+     },
+     "seq": 7
+    },
+    {
+     "id": "a2623ce6-d05d-41a7-8f17-b2576da058d8",
+     "name": "Cor. Magsaysay Ave. & Dayangdang St",
+     "lat": 13.6309839,
+     "lng": 123.1970077,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A8",
+      "label": "Cor. Magsaysay Ave. & Dayangdang St"
+     },
+     "seq": 8
+    },
+    {
+     "id": "aa77629e-7a06-43c1-be7c-776ba6d78388",
+     "name": "NCF Magsaysay",
+     "lat": 13.6299067,
+     "lng": 123.1979773,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A9",
+      "label": "NCF Magsaysay"
+     },
+     "seq": 9
+    },
+    {
+     "id": "a98c0b74-809b-4c04-bfd3-2be18a4e39bc",
+     "name": "Westpark/Philhealth",
+     "lat": 13.6292228,
+     "lng": 123.1985007,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A10",
+      "label": "Westpark/Philhealth"
+     },
+     "seq": 10
+    },
+    {
+     "id": "326f203b-b3f5-498c-b657-c5a824993257",
+     "name": "Civic Centre",
+     "lat": 13.628149,
+     "lng": 123.1978132,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A11",
+      "label": "Civic Centre"
+     },
+     "seq": 11
+    },
+    {
+     "id": "62e62011-4e78-4ecc-b5fa-4153408f02b9",
+     "name": "City Hall",
+     "lat": 13.6265116,
+     "lng": 123.1990963,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A12",
+      "label": "City Hall"
+     },
+     "seq": 12
+    },
+    {
+     "id": "63ea43ea-ffa2-4786-a9e4-a9ec9b0455ac",
+     "name": "BFP/BIR",
+     "lat": 13.6249841,
+     "lng": 123.1995469,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A13",
+      "label": "BFP/BIR"
+     },
+     "seq": 13
+    },
+    {
+     "id": "c99d0883-096d-481e-9313-565fbb30a33e",
+     "name": "Villla Caceres",
+     "lat": 13.6277598,
+     "lng": 123.1997995,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A14",
+      "label": "Villla Caceres"
+     },
+     "seq": 14
+    },
+    {
+     "id": "20f2af5f-2faf-484f-997e-fc94f752aae4",
+     "name": "Cor. Magsaysay Ave. & Leon Aureus St.",
+     "lat": 13.6261192,
+     "lng": 123.200876,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A15",
+      "label": "Cor. Magsaysay Ave. & Leon Aureus St."
+     },
+     "seq": 15
+    },
+    {
+     "id": "96861b74-1432-4eb9-9a53-5c440c009b52",
+     "name": "Cor. Magsaysay Ave. & Mayflower St.",
+     "lat": 13.623996,
+     "lng": 123.2008868,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A16",
+      "label": "Cor. Magsaysay Ave. & Mayflower St."
+     },
+     "seq": 16
+    },
+    {
+     "id": "eee3b6bc-8703-434e-9ca4-b63d8463f545",
+     "name": "Rotonda",
+     "lat": 13.6204547,
+     "lng": 123.2006852,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A17",
+      "label": "Rotonda"
+     },
+     "seq": 17
+    },
+    {
+     "id": "bb071160-bf05-46cd-8076-e5821440f152",
+     "name": "Bennett's Plaza",
+     "lat": 13.6185759,
+     "lng": 123.1985904,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A18",
+      "label": "Bennett's Plaza"
+     },
+     "seq": 18
+    },
+    {
+     "id": "b993816b-e0ca-4899-9cb8-b5fd4fc8dd2f",
+     "name": "Mother Seton Hospital",
+     "lat": 13.6176694,
+     "lng": 123.1970291,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A19",
+      "label": "Mother Seton Hospital"
+     },
+     "seq": 19
+    },
+    {
+     "id": "aa1e9e32-6fee-42c9-bf77-5ce12de32b07",
+     "name": "Yashano Mall/M Plaza",
+     "lat": 13.6166307,
+     "lng": 123.1951644,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A20",
+      "label": "Yashano Mall/M Plaza"
+     },
+     "seq": 20
+    },
+    {
+     "id": "863fa6d3-4e17-49d6-a886-4d7a7593c698",
+     "name": "Robinsons Mall/Banko Central ng Pilipinas",
+     "lat": 13.6157173,
+     "lng": 123.1925205,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A21",
+      "label": "Robinsons Mall/Banko Central ng Pilipinas"
+     },
+     "seq": 21
+    },
+    {
+     "id": "1a4ee964-2f09-461d-a197-7db3c019baf5",
+     "name": "ALDP Mall/Pag-Ibig",
+     "lat": 13.6160052,
+     "lng": 123.1907468,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A22",
+      "label": "ALDP Mall/Pag-Ibig"
+     },
+     "seq": 22
+    },
+    {
+     "id": "5da87722-445e-4982-af20-b4ce648127af",
+     "name": "STI College/Landers",
+     "lat": 13.6179234,
+     "lng": 123.1908514,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A23",
+      "label": "STI College/Landers"
+     },
+     "seq": 23
+    },
+    {
+     "id": "1d3abe4b-0203-4b33-bd6c-3b69da8cc939",
+     "name": "Bus Terminal",
+     "lat": 13.6189216,
+     "lng": 123.1890866,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A24",
+      "label": "Bus Terminal"
+     },
+     "seq": 24
+    },
+    {
+     "id": "8aecd459-c342-4702-9c48-d98804a25fdb",
+     "name": "PNR Road",
+     "lat": 13.6173035,
+     "lng": 123.1880936,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A25",
+      "label": "PNR Road"
+     },
+     "seq": 25
+    },
+    {
+     "id": "8c645151-f9cc-4ebb-9e01-a68973ddd3da",
+     "name": "S&R",
+     "lat": 13.6162097,
+     "lng": 123.1890293,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A26",
+      "label": "S&R"
+     },
+     "seq": 26
+    },
+    {
+     "id": "df8e9bf1-7d27-4f72-a995-ec9216dc84d4",
+     "name": "BIcol River Esplanade",
+     "lat": 13.6165957,
+     "lng": 123.1864136,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A27",
+      "label": "BIcol River Esplanade"
+     },
+     "seq": 27
+    },
+    {
+     "id": "79cd1518-8c02-415b-b8c8-1a259146c2d3",
+     "name": "Fraternidad St.",
+     "lat": 13.6166855,
+     "lng": 123.1838985,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A28",
+      "label": "Fraternidad St."
+     },
+     "seq": 28
+    },
+    {
+     "id": "be39c135-6742-405d-8242-28df7122c26a",
+     "name": "101 Shopping Centre",
+     "lat": 13.6185569,
+     "lng": 123.183673,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A29",
+      "label": "101 Shopping Centre"
+     },
+     "seq": 29
+    },
+    {
+     "id": "399ba824-f70c-423f-b8ac-704c1cc8f45d",
+     "name": "Naga City Market",
+     "lat": 13.621666,
+     "lng": 123.1842716,
+     "status": "candidate",
+     "navigationApproved": false,
+     "source": {
+      "layer": "Loop Service A",
+      "code": "A30",
+      "label": "Naga City Market"
+     },
+     "seq": 30
+    }
+   ]
+  }
+ ],
+ "trials": [
+  {
+   "variantId": "5b6a2b0b-7ce9-4831-9ca1-c4cc46a7fdb4",
+   "direction": "clockwise",
+   "kind": "trial",
+   "evidenceLevel": "documentary",
+   "verification": "unverified",
+   "isCircular": true,
+   "headsign": null,
+   "vehicleClass": null,
+   "operatingStatus": null,
+   "trialStatus": "permanence_unconfirmed",
+   "effectiveFrom": "2025-11-11",
+   "trialDurationDays": 30,
+   "legalStreets": {
+    "inbound": null,
+    "outbound": null,
+    "circuit": [
+     "Gen. Luna St",
+     "P. Burgos St",
+     "Peñafrancia Ave",
+     "Magsaysay Ave",
+     "Roxas Ave",
+     "Eastbound Terminal, Anciano St",
+     "Bicol Central Station",
+     "Roxas Ave",
+     "Biak na Bato St",
+     "Gen. Luna St"
+    ]
+   },
+   "notes": null,
+   "sourceCodes": [
+    "S03"
+   ],
+   "stops": []
+  }
+ ],
+ "aliases": [],
+ "fareEvidence": {
+  "basis": "route_mode",
+  "rules": [
+   {
+    "code": "F01",
+    "modeCode": "traditional_jeepney",
+    "vehicleClass": null,
+    "baseCentavos": 1400,
+    "baseKm": 4,
+    "incrementCentavosPerKm": 200,
+    "discountPercent": null,
+    "discountedBaseCentavos": null,
+    "discountGroups": null,
+    "rounding": null,
+    "effectiveFrom": "2026-09-28",
+    "enactedOn": null,
+    "evidenceStatus": "national_rates_reported;local_matrix_not_retrieved",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S05",
+     "S06"
+    ]
+   },
+   {
+    "code": "F02",
+    "modeCode": "modern_jeepney",
+    "vehicleClass": null,
+    "baseCentavos": 1700,
+    "baseKm": 4,
+    "incrementCentavosPerKm": 240,
+    "discountPercent": null,
+    "discountedBaseCentavos": null,
+    "discountGroups": null,
+    "rounding": null,
+    "effectiveFrom": "2026-09-28",
+    "enactedOn": null,
+    "evidenceStatus": "national_rates_reported;vehicle_class_and_local_matrix_required",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S05",
+     "S06"
+    ]
+   }
+  ],
+  "observations": [],
+  "conflicts": []
+ },
+ "sources": [
+  {
+   "code": "S01",
+   "title": "Naga approved LPTRP, Ordinance 2025-070",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S02",
+   "title": "Signed LPTRP ordinance PDF",
+   "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/10/Ordno-2025-070-Institutionalizing-the-Approved-LPTRP.pdf",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S03",
+   "title": "Loop A/B Eastbound trial, Resolution 2025-735",
+   "url": "https://www2.naga.gov.ph/sp_resolutions/2025-735/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-11-11",
+   "checkedOn": "2026-10-15"
+  }
+ ]
+}

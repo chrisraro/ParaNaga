@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_SHORTER_PLAN } from "./fixtures/plan-responses";
+import { routeNetwork } from "./fixtures/network";
 
 // Trip options and trip detail (Task 6). POST /api/v1/plan is intercepted with fixtures
 // (allowed in tests only), so nothing here needs a database. Tiles are aborted.
@@ -28,6 +29,7 @@ const fulfill = (route: Route, body: unknown, status = 200) =>
 
 test.beforeEach(async ({ page }) => {
   await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
+  await routeNetwork(page);
 });
 
 async function openApp(page: Page) {
@@ -296,7 +298,15 @@ test.describe("GPS refinement while results are shown", () => {
   }
 
   test("the open detail stays open when the replan still has the option", async ({ page, context }) => {
-    const calls = await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+    // The refinement's plan response is held until the checks below have run, so they see the
+    // screen WHILE the replan is in flight (not after it settled).
+    let gated = false;
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((r) => (release = r));
+    const calls = await interceptPlan(page, async (route) => {
+      if (gated) await gate;
+      await fulfill(route, PROVISIONAL_PLAN);
+    });
     await gpsStartAndPinDestination(page);
     await page.getByTestId("trip-option").first().click();
     const detail = page.getByTestId("trip-detail");
@@ -304,10 +314,18 @@ test.describe("GPS refinement while results are shown", () => {
     const before = calls.length;
 
     // ~45 m north with a better accuracy: the start is refined and the trip replanned.
+    gated = true;
     await context.setGeolocation({ latitude: BISCAST.latitude + 0.0004, longitude: BISCAST.longitude, accuracy: 10 });
     await nextFixWithAccuracy(page, 10);
     await expect.poll(() => calls.length).toBeGreaterThan(before);
 
+    // In flight: the detail stays, its heading keeps focus, and no loading state replaces it.
+    await expect(detail).toBeVisible();
+    await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+    await expect(page.getByTestId("trip-loading")).toHaveCount(0);
+    release();
+
+    // Settled: still open and focused.
     await expect(detail).toBeVisible();
     await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);

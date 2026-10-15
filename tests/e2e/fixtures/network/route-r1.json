@@ -1,0 +1,185 @@
+{
+ "revision": {
+  "revisionId": "7140f69e-bf1d-4697-b37c-68d7a57a582a",
+  "label": "provisional-loops-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T08:24:37.444Z"
+ },
+ "route": {
+  "code": "R1",
+  "name": "Centro–San Isidro via Cararayan",
+  "groupNumber": 1,
+  "modeCode": "PUJ_Class_2_plan",
+  "legalStatus": "approved_plan",
+  "allocatedUnits": 20,
+  "allocationIsActiveFleetCount": false,
+  "groupAllocatedUnits": null,
+  "evidenceLevel": "documentary",
+  "verification": "unverified",
+  "hasProvisionalStops": false,
+  "hasTrial": false,
+  "notes": null,
+  "sourceCodes": [
+   "S01",
+   "S02"
+  ],
+  "legalStreets": {
+   "inbound": [
+    "Cararayan–San Isidro Rd",
+    "Balatas Rd",
+    "Magsaysay Ave",
+    "Peñafrancia Ave",
+    "Diaz St",
+    "Elias Angeles St",
+    "Caceres St"
+   ],
+   "outbound": [
+    "Elias Angeles St",
+    "Panganiban Drive",
+    "Dayangdang St",
+    "Balatas Rd",
+    "Cararayan–San Isidro Rd"
+   ],
+   "circuit": null
+  },
+  "additionalSourceStructures": [],
+  "normalizationNote": null
+ },
+ "variants": [
+  {
+   "variantId": "5070751f-75a9-4923-83ea-6eda49c5601e",
+   "direction": "inbound",
+   "kind": "permanent",
+   "evidenceLevel": "documentary",
+   "verification": "unverified",
+   "isCircular": false,
+   "headsign": null,
+   "vehicleClass": null,
+   "operatingStatus": "unverified",
+   "trialStatus": null,
+   "effectiveFrom": null,
+   "trialDurationDays": null,
+   "legalStreets": {
+    "inbound": [
+     "Cararayan–San Isidro Rd",
+     "Balatas Rd",
+     "Magsaysay Ave",
+     "Peñafrancia Ave",
+     "Diaz St",
+     "Elias Angeles St",
+     "Caceres St"
+    ],
+    "outbound": null,
+    "circuit": null
+   },
+   "notes": null,
+   "sourceCodes": [
+    "S01",
+    "S02"
+   ],
+   "stops": []
+  },
+  {
+   "variantId": "fa6cff7d-6e38-4d53-9883-9589e9df57c8",
+   "direction": "outbound",
+   "kind": "permanent",
+   "evidenceLevel": "documentary",
+   "verification": "unverified",
+   "isCircular": false,
+   "headsign": null,
+   "vehicleClass": null,
+   "operatingStatus": "unverified",
+   "trialStatus": null,
+   "effectiveFrom": null,
+   "trialDurationDays": null,
+   "legalStreets": {
+    "inbound": null,
+    "outbound": [
+     "Elias Angeles St",
+     "Panganiban Drive",
+     "Dayangdang St",
+     "Balatas Rd",
+     "Cararayan–San Isidro Rd"
+    ],
+    "circuit": null
+   },
+   "notes": null,
+   "sourceCodes": [
+    "S01",
+    "S02"
+   ],
+   "stops": []
+  }
+ ],
+ "trials": [],
+ "aliases": [],
+ "fareEvidence": {
+  "basis": "route_mode",
+  "rules": [
+   {
+    "code": "F01",
+    "modeCode": "traditional_jeepney",
+    "vehicleClass": null,
+    "baseCentavos": 1400,
+    "baseKm": 4,
+    "incrementCentavosPerKm": 200,
+    "discountPercent": null,
+    "discountedBaseCentavos": null,
+    "discountGroups": null,
+    "rounding": null,
+    "effectiveFrom": "2026-09-28",
+    "enactedOn": null,
+    "evidenceStatus": "national_rates_reported;local_matrix_not_retrieved",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S05",
+     "S06"
+    ]
+   },
+   {
+    "code": "F02",
+    "modeCode": "modern_jeepney",
+    "vehicleClass": null,
+    "baseCentavos": 1700,
+    "baseKm": 4,
+    "incrementCentavosPerKm": 240,
+    "discountPercent": null,
+    "discountedBaseCentavos": null,
+    "discountGroups": null,
+    "rounding": null,
+    "effectiveFrom": "2026-09-28",
+    "enactedOn": null,
+    "evidenceStatus": "national_rates_reported;vehicle_class_and_local_matrix_required",
+    "status": "draft",
+    "publishExact": false,
+    "isEstimate": true,
+    "sourceCodes": [
+     "S05",
+     "S06"
+    ]
+   }
+  ],
+  "observations": [],
+  "conflicts": []
+ },
+ "sources": [
+  {
+   "code": "S01",
+   "title": "Naga approved LPTRP, Ordinance 2025-070",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "S02",
+   "title": "Signed LPTRP ordinance PDF",
+   "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/10/Ordno-2025-070-Institutionalizing-the-Approved-LPTRP.pdf",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23",
+   "checkedOn": "2026-10-15"
+  }
+ ]
+}

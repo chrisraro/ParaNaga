@@ -1,7 +1,9 @@
 /* Home screen S1 chrome (.superpowers/sdd/map-design-brief.md §1, §3, §4). Tokens are the
    brief's Home `t` values; dark mode follows prefers-color-scheme like the map chrome. */
 
-.pn-home {
+/* Shared with the Stop / Route detail screens (.pn-detail, src/ui/detail/detail.css). */
+.pn-home,
+.pn-detail {
   --pn-surface: #ffffff;
   --pn-fill: #eceff4;
   --pn-label: #0f1e3d;
@@ -24,7 +26,9 @@
   --pn-mark-teal: #0b7a75;
   --pn-mark-coral: #c73a2f;
   --pn-dest: #c73a2f;
+}
 
+.pn-home {
   /* Controls and the pill sit just under the status bar / notch. */
   --naga-map-controls-top: calc(env(safe-area-inset-top, 0px) + 16px);
   --pn-sheet-top: calc(var(--naga-map-controls-top) + 10px);
@@ -38,7 +42,8 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .pn-home {
+  .pn-home,
+  .pn-detail {
     --pn-surface: #111a2e;
     --pn-fill: #1a2540;
     --pn-label: #f2f5fa;
@@ -529,4 +534,67 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+
+/* "Nearby stops" (Components · List cells): the list path to the map's stop pins. */
+.pn-nearby {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pn-nearby__hint,
+.pn-nearby__empty {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.pn-nearby__empty {
+  padding: 12px 0;
+  font-size: 15px;
+}
+.pn-nearby__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-nearby__list > li + li {
+  border-top: 1px solid var(--pn-sep);
+}
+.pn-nearby__cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 6px 0;
+  color: var(--pn-label);
+  text-decoration: none;
+}
+.pn-nearby__cell:focus-visible {
+  outline: 3px solid #2bb5ae;
+  outline-offset: 2px;
+}
+.pn-nearby__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.pn-nearby__text strong {
+  font-size: 17px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.pn-nearby__sub {
+  color: var(--pn-warn-text);
+  font-size: 14px;
+}
+.pn-nearby__layer {
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+.pn-nearby .pn-cell__chevron {
+  flex: none;
+  color: var(--pn-label2);
 }

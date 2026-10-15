@@ -1,0 +1,67 @@
+{
+ "revision": {
+  "revisionId": "7140f69e-bf1d-4697-b37c-68d7a57a582a",
+  "label": "provisional-loops-2026-10-15",
+  "kind": "provisional",
+  "publishedAt": "2026-10-15T08:24:37.444Z"
+ },
+ "stop": {
+  "id": "b376df52-2f2b-4137-aa12-fa6f13a888fe",
+  "name": "Plaza Rizal",
+  "lat": 13.6233869,
+  "lng": 123.1846726,
+  "status": "candidate",
+  "navigationApproved": false,
+  "source": {
+   "layer": "Loop Service A",
+   "code": "A1",
+   "label": "Plaza Rizal"
+  },
+  "accuracyM": null,
+  "curbSide": null,
+  "boardingAllowed": null,
+  "alightingAllowed": null,
+  "signInstalled": null
+ },
+ "sourceRecords": [
+  {
+   "layer": "Loop Service A",
+   "code": "A1",
+   "label": "Plaza Rizal",
+   "description": "Plaza Rizal",
+   "coordinatesRaw": "123.1846726,13.6233869,0",
+   "lat": 13.6233869,
+   "lng": 123.1846726,
+   "retrievedOn": "2026-10-15"
+  }
+ ],
+ "sourceMap": {
+  "ownerDisplayName": "Tan Gumba",
+  "ownerIdentityVerified": false
+ },
+ "sharedCoordinate": [
+  {
+   "stopId": "1a57d133-4e29-4985-9b32-62f47db4c062",
+   "name": "Plaza Rizal",
+   "source": {
+    "layer": "Loop Service C",
+    "code": "A1",
+    "label": "Plaza Rizal"
+   }
+  }
+ ],
+ "servingRoutes": [
+  {
+   "routeCode": "R8-A",
+   "routeName": "Centro–Magsaysay Loop A",
+   "variantId": "0f87b9d0-f704-4515-b39f-05ae99bca82b",
+   "direction": "clockwise",
+   "kind": "permanent",
+   "evidenceLevel": "provisional",
+   "verification": "unverified",
+   "isCircular": true,
+   "seq": 1
+  }
+ ],
+ "passingNearby": []
+}
