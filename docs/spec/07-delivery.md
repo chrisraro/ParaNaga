@@ -111,8 +111,8 @@ Field kit: `field_survey_template.csv` (45 columns) imports through the survey m
 **User decisions**
 
 - Provisional loops on unverified pins, always badged "Unverified route"; no exact fares; no drawn path.
-- Only Loops A and B are sequenced. Walk caps 600 m / 400 m; walking distances are straight-line x 1.3 estimates.
-- Ride rule "must save walking": a ride that does not shorten the walk is rejected, up to one circuit.
+- Only Loops A and B are sequenced. Walks are capped at 600 m to or from a stop and 400 m between rides (straight-line); walking distances are straight-line x 1.3 estimates.
+- Ride rule "must save walking": a ride option is kept only when its total walking is less than walking the whole way; a ride never goes more than one full loop circuit.
 - Fare wording: "from reported fare rules · matrix not verified".
 
 **Still blocks verified routing**
