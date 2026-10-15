@@ -5,17 +5,15 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 import { isRole, type Role } from "@/domain/auth/permissions";
 import { withRequestContext, type RequestContext } from "@/server/db/context";
 import { profile, userRole } from "@/server/db/schema";
+import { safeRequestId } from "@/server/api/http";
 import { neonAuth } from "./neon";
 
 export type CurrentUser = { id: string; name: string; roles: Role[] };
 
-const SAFE_REQUEST_ID = /^[A-Za-z0-9:_-]{1,64}$/;
-
 // Client-supplied ids end up in logs and audit rows, so accept only a safe shape.
 export const requestId = cache(async (): Promise<string> => {
   const h = await headers();
-  const candidate = h.get("x-vercel-id") ?? h.get("x-request-id");
-  return candidate && SAFE_REQUEST_ID.test(candidate) ? candidate : crypto.randomUUID();
+  return safeRequestId(h.get("x-vercel-id") ?? h.get("x-request-id"));
 });
 
 /**

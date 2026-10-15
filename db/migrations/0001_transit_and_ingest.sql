@@ -938,7 +938,56 @@ select pp.revision_id, t.id, t.code, t.name, t.location_text, t.modes, t.evidenc
   join transit.terminal t on t.id = m.entity_id
  where not t.is_synthetic;
 
+-- Source pins behind each published candidate stop (provenance never collapses: a stop may
+-- have several). lon/lat are the verbatim numeric coordinates of the raw feature.
+create view transit.v_published_stop_sources with (security_invoker = true) as
+select pp.revision_id, sp.id as stop_point_id, rf.id as raw_feature_id, rf.source_layer, rf.source_code_raw,
+       rf.label_raw, rf.description_raw, rf.coordinates_raw, rf.lon, rf.lat, rf.created_at
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'stop_point'
+  join transit.stop_point sp on sp.id = m.entity_id
+  join transit.stop_point_version spv on spv.id = m.version_id and spv.stop_point_id = sp.id
+  join transit.stop_point_source sps on sps.stop_point_id = sp.id
+  join ingest.raw_feature rf on rf.id = sps.raw_feature_id
+ where not sp.is_synthetic and not spv.is_synthetic and not sps.is_synthetic;
+
+create view transit.v_published_fare_observations with (security_invoker = true) as
+select pp.revision_id, o.id, o.code, o.fare_rule_id, o.mode_code, o.amount_centavos, o.category, o.kind,
+       o.observed_at, o.evidence_status, o.source_codes, o.details
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'fare_observation'
+  join transit.fare_observation o on o.id = m.entity_id
+ where not o.is_synthetic;
+
+create view transit.v_published_fare_conflicts with (security_invoker = true) as
+select pp.revision_id, k.id, k.fare_rule_id, k.fare_observation_id, k.status, k.note
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'fare_conflict'
+  join transit.fare_conflict k on k.id = m.entity_id
+ where not k.is_synthetic;
+
+create view transit.v_published_dataset_notes with (security_invoker = true) as
+select pp.revision_id, n.id, n.key, n.value
+  from transit.published_pointer pp
+  join transit.revision_member m on m.revision_id = pp.revision_id and m.entity_kind = 'dataset_note'
+  join transit.dataset_note n on n.id = m.entity_id
+ where not n.is_synthetic;
+
+-- Sources cited by the published revision (ingest.source rows are not revisioned themselves).
+create view transit.v_published_sources with (security_invoker = true) as
+select pp.revision_id, s.code, s.title, s.url, s.evidence_type, s.published_or_enacted, s.checked_on
+  from transit.published_pointer pp
+  join ingest.source s on s.code in (
+         select unnest(x.source_codes) from transit.v_published_routes x
+         union select unnest(x.source_codes) from transit.v_published_variants x
+         union select unnest(x.source_codes) from transit.v_published_fare_rules x
+         union select unnest(x.source_codes) from transit.v_published_fare_observations x
+         union select unnest(x.source_codes) from transit.v_published_terminals x
+         union select x.source_code from transit.v_published_route_aliases x where x.source_code is not null);
+
 grant select on transit.v_published_revision, transit.v_published_routes, transit.v_published_route_aliases,
   transit.v_published_variants, transit.v_published_stops, transit.v_published_route_stops,
-  transit.v_published_fare_rules, transit.v_published_terminals
+  transit.v_published_fare_rules, transit.v_published_terminals, transit.v_published_stop_sources,
+  transit.v_published_fare_observations, transit.v_published_fare_conflicts, transit.v_published_dataset_notes,
+  transit.v_published_sources
   to paranaga_app;
