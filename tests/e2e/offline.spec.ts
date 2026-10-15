@@ -39,7 +39,10 @@ test.afterEach(async ({ page }) => {
   expect(violations, "CSP (report-only) violations").toEqual([]);
 });
 
-/** First visit online: the worker installs (shells + head, snapshot, search index) and takes control. */
+/**
+ * First visit online: the worker installs (the shells), takes control, and the page hands it the
+ * head and snapshot it fetched before that (no second download).
+ */
 async function firstVisit(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
@@ -47,6 +50,9 @@ async function firstVisit(page: Page) {
     await navigator.serviceWorker.ready;
   });
   await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  await expect
+    .poll(() => page.evaluate(async () => (await caches.keys()).some((n) => n.startsWith("pn-snapshot-"))))
+    .toBe(true);
 }
 
 /**
@@ -104,8 +110,12 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
     ["/app/more", "Settings"],
   ] as const) {
     await page.goto(path);
-    await expect(page.getByRole("heading", { level: 1, name: heading }), path).toBeVisible();
-    await expect(page.getByTestId("offline-banner")).toBeVisible();
+    const h1 = page.getByRole("heading", { level: 1, name: heading });
+    await expect(h1, path).toBeVisible();
+    const banner = page.getByTestId("offline-banner");
+    await expect(banner).toBeVisible();
+    // The banner sits above the screen's own header, never over its heading.
+    await expect.poll(async () => (await banner.boundingBox())!.y + (await banner.boundingBox())!.height <= (await h1.boundingBox())!.y, path).toBe(true);
   }
   // A stop detail is rendered per request (never cached): the offline page, not a browser error.
   await page.goto(`/app/stops/${A1_ID}`);
@@ -118,6 +128,12 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
 
 test("offline: search works from the cached index, from a cold start", async ({ page, context }) => {
   await firstVisit(page);
+  // The index is cached when search is first used (never downloaded ahead, low-data friendly).
+  const before = calls.searchIndexes.length;
+  await page.goto("/app/search?for=destination");
+  await searchBox(page).fill("SM City");
+  await expect(page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" })).toBeVisible();
+  expect(calls.searchIndexes.length).toBe(before + 1);
   await goOffline(context);
   await page.goto("/app/search?for=destination");
   await searchBox(page).fill("SM City");
@@ -196,44 +212,62 @@ test("Clear data on this device removes the data caches; the app still opens off
   await page.getByTestId("settings-clear-dialog").getByRole("button", { name: "Remove" }).click();
   await expect(page.getByTestId("settings-status")).toHaveText("Data on this phone removed. Settings are back to their defaults.");
   const names = await page.evaluate(() => caches.keys());
-  expect(names.filter((n) => /^pn-(head|snapshot|search-index|reference)-/.test(n))).toEqual([]);
+  // The stop read earlier and the reference data are gone. (The map still open under More loads
+  // the current head and snapshot afresh, as a new visit would, so those may be back.)
+  expect(names.filter((n) => /^pn-(search-index|reference)-/.test(n))).toEqual([]);
+  expect((await cacheEntries(page)).some((e) => e.url.endsWith(`/api/v1/stops/${A1_ID}`))).toBe(false);
   expect(names.some((n) => n.startsWith("pn-shell-"))).toBe(true);
   expect(names.some((n) => n.includes("precache"))).toBe(true);
-  // The app code stays: the map still opens offline (without data, and it says so).
+  // The app code stays: the map still opens offline.
   await goOffline(context);
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("offline-banner")).toHaveText("Offline — no transport data saved on this phone yet.");
+  await expect(page.getByTestId("offline-banner")).toBeVisible();
 });
 
-test("update: a new version waits; the card offers Reload, and Reload switches to it", async ({ page }) => {
-  await pointRegisterAtNextVersion(page);
+test("update: new worker bytes at the same URL wait; the card offers Reload, and Reload switches to them", async ({ page, context }) => {
   await firstVisit(page);
-  const first = await page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.active?.scriptURL ?? null);
+  const first = await page.evaluate(() => navigator.serviceWorker.controller?.scriptURL ?? null);
   expect(first).toMatch(/\/serwist\/sw\.js$/);
   await expect(page.getByTestId("update-prompt")).toHaveCount(0);
-  await deployNextVersion(page);
+  await deployNextVersion(page, context, "next");
   // It installs and waits: nothing reloads by itself.
   const prompt = page.getByTestId("update-prompt");
   await expect(prompt).toContainText("A new version of ParaNaga is ready.");
   expect(await page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(true);
+  const before = await page.evaluate(() => performance.timeOrigin);
   // Tapping Reload activates the waiting version, and the page reloads once it controls it.
   await Promise.all([page.waitForEvent("load"), prompt.getByRole("button", { name: "Reload" }).click()]);
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  // The new version controls the reloaded page; nothing is left waiting.
-  expect(await page.evaluate(() => navigator.serviceWorker.controller?.scriptURL)).toMatch(/\/serwist\/sw\.js\?e2e=next$/);
+  expect(await page.evaluate(() => performance.timeOrigin)).not.toBe(before);
+  // Same URL, new version in control; nothing left waiting, no card.
+  expect(await page.evaluate(() => navigator.serviceWorker.controller?.scriptURL)).toBe(first);
   expect(await page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(false);
   await expect(page.getByTestId("update-prompt")).toHaveCount(0);
 });
 
-test("update: the card never shows during guidance, and appears once it ends", async ({ page }) => {
-  await pointRegisterAtNextVersion(page);
+test("update in two tabs: Reload in one; the other's card goes away instead of staying dead", async ({ page, context }) => {
+  await firstVisit(page);
+  const other = await context.newPage();
+  await other.goto("/app/saved");
+  await expect.poll(() => other.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  await deployNextVersion(page, context, "two-tabs");
+  await expect(page.getByTestId("update-prompt")).toBeVisible();
+  // Every tab of the registration sees the new version install and wait.
+  await expect(other.getByTestId("update-prompt")).toBeVisible();
+  await Promise.all([other.waitForEvent("load"), other.getByTestId("update-prompt").getByRole("button", { name: "Reload" }).click()]);
+  // The first tab is now controlled by the new version too: no card with a Reload that does nothing.
+  await expect(page.getByTestId("update-prompt")).toHaveCount(0);
+  await other.close();
+});
+
+test("update: the card never shows during guidance, and appears once it ends", async ({ page, context }) => {
   await firstVisit(page);
   await setEnds(page);
   await page.getByTestId("trip-option").first().click();
   await page.getByTestId("trip-start").click();
   await expect(page.getByTestId("guidance")).toBeVisible();
-  await deployNextVersion(page);
+  await deployNextVersion(page, context, "guidance");
   await expect.poll(() => page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(true);
   await expect(page.getByTestId("update-prompt")).toHaveCount(0);
   await page.getByRole("button", { name: "End guidance" }).click();
@@ -242,25 +276,13 @@ test("update: the card never shows during guidance, and appears once it ends", a
 });
 
 /**
- * Worker scripts are fetched by the browser itself (no route sees them), so a "new deployment" is
- * the same build under another script URL, which the browser installs as an update of the
- * registration exactly like a changed /serwist/sw.js. Once switched, the app's own register()
- * call is pointed at it too (this tab only), so a reload does not register the old URL again.
+ * A new deployment: the e2e build (PARANAGA_E2E_SW_VARIANT=1) appends this cookie's value to
+ * /serwist/sw.js, so the browser's own update check finds new bytes at the same URL.
  */
-async function pointRegisterAtNextVersion(page: Page) {
-  await page.addInitScript(() => {
-    const register = ServiceWorkerContainer.prototype.register;
-    ServiceWorkerContainer.prototype.register = function (url: string | URL, options?: RegistrationOptions) {
-      const next = sessionStorage.getItem("e2e.sw-next");
-      return register.call(this, next && String(url) === "/serwist/sw.js" ? next : url, options);
-    };
-  });
-}
-
-async function deployNextVersion(page: Page) {
+async function deployNextVersion(page: Page, context: BrowserContext, variant: string) {
+  await context.addCookies([{ name: "e2e-sw-variant", value: variant, url: page.url() }]);
   await page.evaluate(async () => {
-    sessionStorage.setItem("e2e.sw-next", "/serwist/sw.js?e2e=next");
-    await navigator.serviceWorker.register("/serwist/sw.js", { scope: "/", updateViaCache: "none" });
+    await (await navigator.serviceWorker.getRegistration())?.update();
   });
 }
 

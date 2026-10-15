@@ -4,7 +4,7 @@
 
 .pn-offline-banner {
   position: fixed;
-  z-index: 1200; /* above the map, the sheet and the panels */
+  z-index: 2150; /* above the panels (.pn-detail, 2000) and the tab bar (2100) */
   top: calc(env(safe-area-inset-top, 0px) + 8px);
   left: 16px;
   right: 16px;
@@ -33,7 +33,7 @@
 
 .pn-update {
   position: fixed;
-  z-index: 1250;
+  z-index: 2200; /* above the panels and the tab bar, so Reload is always reachable */
   left: 16px;
   right: 16px;
   bottom: calc(max(var(--pn-tabbar-clearance, 0px), env(safe-area-inset-bottom, 0px)) + 16px);
@@ -177,21 +177,4 @@
 }
 .pn-offline__meta {
   padding: 0 16px 16px;
-}
-
-/* Install (More). */
-.pn-install__btn {
-  min-height: 48px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--pn-accent);
-  color: var(--pn-on-primary);
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-.pn-install__btn:focus-visible {
-  outline: 3px solid #2bb5ae;
-  outline-offset: 2px;
 }

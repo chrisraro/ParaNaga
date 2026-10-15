@@ -17,9 +17,17 @@ export function offlineDataLine(publishedAt: string | null | undefined, hasData:
   return date ? `Data from ${date}. Fares may have changed.` : "Data from your last visit. Fares may have changed.";
 }
 
-/** The note on a plan made in the browser from the cached snapshot. */
-export function offlinePlanNote(publishedAt: string | null | undefined): string {
+/**
+ * The note on a plan made in the browser from the cached snapshot: "offline" when the phone has no
+ * connection, "unreachable" when it has one but ParaNaga's server could not be reached.
+ */
+export function offlinePlanNote(publishedAt: string | null | undefined, reason: "offline" | "unreachable" = "offline"): string {
   const date = publishedDateText(publishedAt);
+  if (reason === "unreachable") {
+    return date
+      ? `Couldn't reach ParaNaga — planned on this phone with data from ${date}. Fares may have changed.`
+      : "Couldn't reach ParaNaga — planned on this phone with the data it has. Fares may have changed.";
+  }
   return date
     ? `Planned offline from data of ${date}. Fares may have changed.`
     : "Planned offline from the data on this phone. Fares may have changed.";

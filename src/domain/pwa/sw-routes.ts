@@ -7,7 +7,8 @@
 //    from the build output; they never reach these rules.
 //  - Navigations to the static shells: NetworkFirst (3 s), falling back to the copy cached at
 //    install. Any other navigation: network, falling back to /offline. HTML is never cached at
-//    runtime (dynamic pages are `private, no-store`).
+//    runtime (dynamic pages are `private, no-store`). Navigations to /api/**, /admin/** and
+//    /account/** are not touched at all (auth redirect flows bypass the worker).
 //  - Runtime data caches, GET and same-origin only: the immutable snapshot and search index of a
 //    revision (CacheFirst, 3 revisions each), the published head (NetworkFirst, 2 s), and the
 //    reference reads (StaleWhileRevalidate, 200 entries, 30 days).
@@ -80,7 +81,8 @@ export function classifyRequest(info: SwRequestInfo): SwRoute {
   const path = info.url.pathname;
   if (isRscRequest(info)) return NETWORK_ONLY;
   if (info.mode === "navigate") {
-    if (PRIVATE_SECTIONS.test(path) || path.startsWith("/api/")) return { kind: "navigate" };
+    // Auth redirects (/api/auth/** callbacks), admin and account never pass through the worker.
+    if (PRIVATE_SECTIONS.test(path) || path.startsWith("/api/")) return NETWORK_ONLY;
     const shell = shellFor(path);
     return shell ? { kind: "shell", path: shell } : { kind: "navigate" };
   }
@@ -154,4 +156,38 @@ export function linkedIconUrls(manifestUrls: readonly string[]): string[] {
     if (m) out.push(`/${m[1]}.${m[3]}?${m[1]}.${m[2]}.${m[3]}`);
   }
   return out;
+}
+
+/** The page's copies of data it fetched before the worker controlled it (see data-handoff.ts). */
+export const HANDOFF_MESSAGE = "STORE_FETCHED_DATA";
+export const HANDOFF_MAX_BYTES = 2_000_000;
+export type HandoffEntry = { url: string; body: string; cacheControl: string };
+export type AcceptedHandoff = HandoffEntry & { cache: "head" | "snapshot" | "search-index" };
+
+/**
+ * Checks one entry the page offers: a same-origin URL that the allow-list would store as the
+ * head, a snapshot or a search index, a JSON body of bounded size, and a Cache-Control that may be
+ * stored. Anything else is refused (null), so the handoff can never widen what is cached.
+ */
+export function acceptHandoff(entry: unknown, origin: string): AcceptedHandoff | null {
+  if (!entry || typeof entry !== "object") return null;
+  const { url, body, cacheControl } = entry as Record<string, unknown>;
+  if (typeof url !== "string" || typeof body !== "string" || typeof cacheControl !== "string") return null;
+  if (body.length > HANDOFF_MAX_BYTES) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url, origin);
+  } catch {
+    return null;
+  }
+  const route = classifyRequest({ method: "GET", url: parsed, origin, mode: "cors", headers: { get: () => null } });
+  const cache = route.kind === "cache-first" ? route.cache : route.kind === "network-first" ? route.cache : null;
+  if (!cache) return null;
+  if (!isCacheableResponse({ status: 200, headers: { get: (n: string) => (n.toLowerCase() === "cache-control" ? cacheControl : null) } })) return null;
+  try {
+    JSON.parse(body);
+  } catch {
+    return null;
+  }
+  return { url: parsed.href, body, cacheControl, cache };
 }

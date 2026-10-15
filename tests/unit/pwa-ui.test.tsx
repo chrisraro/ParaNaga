@@ -33,7 +33,7 @@ const db = await import("@/client/storage/db");
 const { resetSnapshotForTests } = await import("@/client/network/use-snapshot");
 const { clearRuntimeCaches } = await import("@/client/device-data");
 const { UpdatePrompt, UPDATE_TEXT } = await import("@/ui/pwa/update-prompt");
-const { InstallRow, IOS_INSTALL_TEXT, OTHER_INSTALL_TEXT } = await import("@/ui/pwa/install-row");
+const { InstallRow, OTHER_INSTALL_TEXT } = await import("@/ui/pwa/install-row");
 const { OfflineBanner } = await import("@/ui/pwa/offline-banner");
 const { OfflineScreen } = await import("@/ui/pwa/offline-screen");
 const { DetailLoading } = await import("@/ui/detail/detail-frame");
@@ -155,6 +155,21 @@ describe("install", () => {
     expect(install.isIos("Mozilla/5.0 (Linux; Android 14; Pixel 7)", 5)).toBe(false);
   });
 
+  it("words the Share steps for the device", () => {
+    expect(install.iosInstallText("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)")).toBe("On iPhone: tap Share, then “Add to Home Screen”.");
+    expect(install.iosInstallText("Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X)")).toBe("On iPad: tap Share, then “Add to Home Screen”.");
+    expect(install.iosInstallText("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)")).toBe("On iPad: tap Share, then “Add to Home Screen”.");
+  });
+
+  it("adopts an install offer kept by theme-init.js before hydration", () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    const early = Object.assign(new Event("beforeinstallprompt"), { prompt: vi.fn(), userChoice: Promise.resolve({ outcome: "dismissed" as const }) });
+    (window as unknown as { __pnInstallPrompt?: Event }).__pnInstallPrompt = early;
+    install.listenForInstallPrompt();
+    expect(install.installState()).toBe("prompt");
+    expect((window as unknown as { __pnInstallPrompt?: Event }).__pnInstallPrompt).toBeUndefined();
+  });
+
   it("offers the browser's own prompt only after beforeinstallprompt, and only on a tap", async () => {
     vi.stubGlobal("matchMedia", () => ({ matches: false }));
     install.listenForInstallPrompt();
@@ -176,7 +191,7 @@ describe("install", () => {
     vi.stubGlobal("matchMedia", () => ({ matches: false }));
     vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)");
     const { unmount } = render(<InstallRow />);
-    expect(screen.getByTestId("settings-install").textContent).toContain(IOS_INSTALL_TEXT);
+    expect(screen.getByTestId("settings-install").textContent).toContain("On iPhone: tap Share, then “Add to Home Screen”.");
     expect(screen.queryByRole("button")).toBeNull();
     unmount();
     vi.stubGlobal("matchMedia", (q: string) => ({ matches: q === "(display-mode: standalone)" }));

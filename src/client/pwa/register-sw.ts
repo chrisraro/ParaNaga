@@ -19,7 +19,12 @@ export const SW_SCOPE = "/";
 let waiting: ServiceWorker | null = null;
 let registration: ServiceWorkerRegistration | null = null;
 let started = false;
+/** This tab asked the waiting worker to take over (and will reload once it has). */
+let initiated = false;
+let controllerListener = false;
+let watched = new WeakSet<ServiceWorker>();
 const listeners = new Set<() => void>();
+let reloadPage = () => window.location.reload();
 
 function setWaiting(worker: ServiceWorker | null): void {
   if (waiting === worker) return;
@@ -27,19 +32,57 @@ function setWaiting(worker: ServiceWorker | null): void {
   for (const listener of [...listeners]) listener();
 }
 
-/** A worker counts as an update only when it waits behind one that already controls this page. */
-function track(reg: ServiceWorkerRegistration): void {
+const isActive = (worker: ServiceWorker) => worker.state === "activating" || worker.state === "activated";
+
+/** A worker counts as an update only when it waits behind another one that controls this page. */
+function consider(worker: ServiceWorker): void {
+  const controller = navigator.serviceWorker.controller;
+  if (worker.state === "installed" && controller && controller !== worker) setWaiting(worker);
+}
+
+/**
+ * Follows a worker's state: it becomes the update when installed, and stops being one once it
+ * activates (here or in another tab / the installed app window) or becomes redundant.
+ */
+function watch(worker: ServiceWorker): void {
+  if (watched.has(worker)) return;
+  watched.add(worker);
+  worker.addEventListener("statechange", () => {
+    consider(worker);
+    if (waiting === worker && !initiated && (isActive(worker) || worker.state === "redundant")) setWaiting(null);
+  });
+}
+
+/**
+ * One listener per page. A controller change this tab asked for reloads it (once); any other
+ * (another tab tapped Reload) means nothing is waiting any more.
+ */
+function listenForControllerChange(): void {
+  if (controllerListener) return;
+  controllerListener = true;
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (initiated) {
+      if (reloaded) return;
+      reloaded = true;
+      reloadPage();
+    } else {
+      setWaiting(null);
+    }
+  });
+}
+
+/** Tracks a registration for updates (exported for tests). */
+export function trackRegistration(reg: ServiceWorkerRegistration): void {
   registration = reg;
-  const consider = (worker: ServiceWorker | null) => {
-    if (worker && worker.state === "installed" && navigator.serviceWorker.controller) setWaiting(worker);
-  };
-  consider(reg.waiting);
+  listenForControllerChange();
+  if (reg.waiting) {
+    watch(reg.waiting);
+    consider(reg.waiting);
+  }
+  if (reg.installing) watch(reg.installing);
   reg.addEventListener("updatefound", () => {
-    const worker = reg.installing;
-    worker?.addEventListener("statechange", () => {
-      consider(worker);
-      if (worker.state === "redundant" && waiting === worker) setWaiting(null);
-    });
+    if (reg.installing) watch(reg.installing);
   });
 }
 
@@ -53,7 +96,7 @@ export function registerServiceWorker(): void {
   if (started || !serviceWorkerEnabled()) return;
   started = true;
   const register = () => {
-    navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE, updateViaCache: "none" }).then(track, () => undefined);
+    navigator.serviceWorker.register(SW_URL, { scope: SW_SCOPE, updateViaCache: "none" }).then(trackRegistration, () => undefined);
   };
   if (document.readyState === "complete") register();
   else window.addEventListener("load", register, { once: true });
@@ -74,18 +117,20 @@ export function useUpdateReady(): boolean {
 }
 
 /**
- * Activates the waiting version and reloads into it. Does nothing without one. The caller must
- * not offer this during guidance (UpdatePrompt checks it again before calling).
+ * Activates the waiting version and reloads into it. Does nothing without one. If that version is
+ * already active (Reload tapped in another tab), this tab just reloads. The caller must not offer
+ * this during guidance (UpdatePrompt checks it again before calling).
  */
 export function applyUpdate(): void {
   const worker = waiting;
   if (!worker) return;
-  let reloaded = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (reloaded) return;
-    reloaded = true;
-    window.location.reload();
-  });
+  if (isActive(worker) || navigator.serviceWorker.controller === worker) {
+    reloadPage();
+    return;
+  }
+  if (initiated) return; // already asked; the reload follows the controller change
+  initiated = true;
+  listenForControllerChange();
   worker.postMessage({ type: "SKIP_WAITING" });
 }
 
@@ -94,7 +139,16 @@ export function resetServiceWorkerForTests(): void {
   waiting = null;
   registration = null;
   started = false;
+  initiated = false;
+  controllerListener = false;
+  watched = new WeakSet();
   listeners.clear();
+  reloadPage = () => window.location.reload();
+}
+
+/** Tests only: observe reloads (jsdom cannot reload). */
+export function setReloadForTests(reload: () => void): void {
+  reloadPage = reload;
 }
 
 /** Tests only: pretend a version is waiting. */

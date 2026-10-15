@@ -5,15 +5,19 @@
 // Which request goes where is decided by the pure allow-list in src/domain/pwa/sw-routes.ts
 // (unit-tested); this file only wires it to Serwist:
 //  - precache: build assets, icons, public files (/theme-init.js) from the build manifest;
-//  - the static shells (/app, /app/saved, …, /offline) cached at install, served NetworkFirst (3 s);
+//  - the static shells (/app, /app/saved, …, /offline) cached at install (each checked storable),
+//    served NetworkFirst (3 s);
 //    any other navigation goes to the network and falls back to /offline;
 //  - data caches keyed by revision (in the URL) AND build id (in the cache name), so a deploy that
-//    changes a response shape never reads an old copy;
+//    changes a response shape never reads an old copy; no data is downloaded at install: the page
+//    hands over the copies it fetched before this worker controlled it (STORE_FETCHED_DATA);
 //  - everything else never touches a cache (POST /api/v1/plan, RSC, auth, admin, tiles).
 // A new worker waits until the app asks it to take over (the "Reload" card, never mid-guidance).
 import { CacheFirst, ExpirationPlugin, NetworkFirst, Serwist, StaleWhileRevalidate, type PrecacheEntry, type SerwistGlobalConfig, type SerwistPlugin } from "serwist";
 import {
+  acceptHandoff,
   buildIdFromManifest,
+  HANDOFF_MESSAGE,
   cacheName,
   classifyRequest,
   HEAD_TIMEOUT_S,
@@ -75,18 +79,19 @@ async function offlinePage(): Promise<Response> {
 
 /** NetworkFirst with a timeout for a static shell; its install-time copy when the network fails. */
 async function shellNavigation(request: Request, path: string): Promise<Response> {
-  const network = fetch(request);
-  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), NAVIGATION_TIMEOUT_S * 1000));
-  try {
-    const first = await Promise.race([network, timeout]);
-    if (first) return first;
-  } catch {
-    // offline: fall through to the cached copy
-  }
+  // A failed fetch resolves to null (never an unhandled rejection, even after the timeout won).
+  const network = fetch(request).catch(() => null);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), NAVIGATION_TIMEOUT_S * 1000);
+  });
+  const first = await Promise.race([network, timeout]);
+  clearTimeout(timer);
+  if (first) return first;
   const cached = await cachedShell(path);
   if (cached) return cached;
   // No copy (should not happen after install): wait for the network after all, else /offline.
-  return network.catch(() => offlinePage());
+  return (await network) ?? offlinePage();
 }
 
 async function otherNavigation(request: Request): Promise<Response> {
@@ -133,43 +138,54 @@ const serwist = new Serwist({
 });
 
 /**
- * Best effort at install: the published head, its snapshot and its search index, through the same
- * strategies (and so the same allow-list, expiry and cache names), so the map, its pins, search
- * and offline planning work offline after the very first visit (the page's own requests on that
- * visit happened before this worker controlled it). Never fails the install.
+ * The shells of THIS build (they reference this build's chunks), bypassing the HTTP cache. Each
+ * must be storable (a 200 that is neither private nor no-store): otherwise the install fails
+ * loudly instead of storing per-request HTML.
  */
-async function warmNetworkData(event: ExtendableEvent): Promise<void> {
-  const get = (url: string) => new Request(url, { headers: { accept: "application/json" } });
-  try {
-    const head = (await (await strategies.head.handle({ event, request: get("/api/v1/network/head") })).json()) as { revisionId?: unknown };
-    if (typeof head.revisionId !== "string") return;
-    const id = encodeURIComponent(head.revisionId);
-    await Promise.all([
-      strategies.snapshot.handle({ event, request: get(`/api/v1/network/snapshot/${id}`) }),
-      strategies["search-index"].handle({ event, request: get(`/api/v1/network/search-index/${id}`) }),
-    ]);
-  } catch {
-    // Offline or a server error: the caches fill as the app is used.
-  }
+async function cacheShells(): Promise<void> {
+  const cache = await caches.open(SHELL_CACHE);
+  await Promise.all(
+    SHELL_PATHS.map(async (path) => {
+      const response = await fetch(new Request(path, { cache: "reload" }));
+      if (!isCacheableResponse(response)) {
+        throw new Error(`Shell ${path} cannot be cached (status ${response.status}, Cache-Control ${response.headers.get("Cache-Control")})`);
+      }
+      await cache.put(path, response);
+    }),
+  );
 }
 
 self.addEventListener("install", (event) => {
-  // The shells of THIS build (they reference this build's chunks), bypassing the HTTP cache.
-  event.waitUntil(
-    Promise.all([
-      caches.open(SHELL_CACHE).then((cache) => cache.addAll(SHELL_PATHS.map((p) => new Request(p, { cache: "reload" })))),
-      warmNetworkData(event),
-    ]),
-  );
+  // No data is downloaded at install (low-data friendly): the page hands over what it already
+  // fetched before this worker controlled it (STORE_FETCHED_DATA below), and everything else is
+  // cached as it is used (the search index on the first search).
+  event.waitUntil(cacheShells());
 });
+
+/** Stores the page's copies of the head / snapshot / search index unless one is cached already. */
+async function storeHandoff(entries: unknown): Promise<void> {
+  if (!Array.isArray(entries)) return;
+  for (const entry of entries) {
+    const accepted = acceptHandoff(entry, self.location.origin);
+    if (!accepted) continue;
+    const cache = await caches.open(cacheName(accepted.cache, BUILD_ID));
+    if (accepted.cache !== "head" && (await cache.match(accepted.url))) continue;
+    const headers = { "Content-Type": "application/json", "Cache-Control": accepted.cacheControl, Date: new Date().toUTCString() };
+    await cache.put(accepted.url, new Response(accepted.body, { status: 200, headers }));
+  }
+}
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(caches.keys().then((names) => Promise.all(outdatedCaches(names, BUILD_ID).map((n) => caches.delete(n)))));
 });
 
 self.addEventListener("message", (event) => {
-  const data = event.data as { type?: unknown } | null;
+  const data = event.data as { type?: unknown; entries?: unknown } | null;
   if (data?.type === "SKIP_WAITING") void self.skipWaiting();
+  // Only from a page of this origin (a WindowClient); anything else is ignored.
+  if (data?.type === HANDOFF_MESSAGE && event.source && "url" in event.source && new URL(event.source.url).origin === self.location.origin) {
+    event.waitUntil(storeHandoff(data.entries));
+  }
 });
 
 serwist.addEventListeners();

@@ -6,10 +6,9 @@
 // otherwise. No fake prompt, no button that does nothing.
 
 import { useState } from "react";
-import { promptInstall, useInstallState } from "@/client/pwa/install";
+import { iosInstallText, promptInstall, useInstallState } from "@/client/pwa/install";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 
-export const IOS_INSTALL_TEXT = "On iPhone: tap Share, then “Add to Home Screen”.";
 export const OTHER_INSTALL_TEXT = "To add ParaNaga to your home screen, use your browser’s menu (Install app or Add to Home screen).";
 
 export function InstallRow() {
@@ -35,7 +34,7 @@ export function InstallRow() {
       />
     );
   } else if (state === "ios") {
-    cell = <ListCell title="Install ParaNaga" sub={IOS_INSTALL_TEXT} testId="settings-install" />;
+    cell = <ListCell title="Install ParaNaga" sub={iosInstallText(navigator.userAgent)} testId="settings-install" />;
   } else if (state === "other") {
     cell = (
       <ListCell

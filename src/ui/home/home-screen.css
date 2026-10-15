@@ -37,7 +37,7 @@
 
 .pn-home {
   /* Controls and the pill sit just under the status bar / notch. */
-  --naga-map-controls-top: calc(env(safe-area-inset-top, 0px) + 16px);
+  --naga-map-controls-top: calc(env(safe-area-inset-top, 0px) + var(--pn-offline-inset, 0px) + 16px);
   --pn-sheet-top: calc(var(--naga-map-controls-top) + 10px);
 
   position: relative;

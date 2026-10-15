@@ -18,15 +18,20 @@ import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
 import { isGpsRefinement, shouldReplan, type PlanEnd, type PlanPair } from "@/domain/trip/replan";
 
 export type PlanErrorKind = "offline" | "server" | "invalid";
+export type PlannedOnPhone = false | "offline" | "unreachable";
 
 export type TripPlanState =
   | { status: "idle" }
   | { status: "loading" }
-  /** `offline`: planned in the browser from the snapshot on this phone (its published date is in data.revision). */
-  | { status: "ready"; data: PlanResponse; refreshing: boolean; offline: boolean }
+  /**
+   * `offline`: planned in the browser from the snapshot on this phone (its published date is in
+   * data.revision) because the server could not be reached: "offline" when the browser says it has
+   * no connection, "unreachable" otherwise; false for a server plan.
+   */
+  | { status: "ready"; data: PlanResponse; refreshing: boolean; offline: PlannedOnPhone }
   | { status: "error"; kind: PlanErrorKind };
 
-type Outcome = { status: "ready"; data: PlanResponse; offline: boolean } | { status: "error"; kind: PlanErrorKind };
+type Outcome = { status: "ready"; data: PlanResponse; offline: PlannedOnPhone } | { status: "error"; kind: PlanErrorKind };
 type Settled = { key: string } & Outcome;
 /** The pair planned for, and whether it differs from the previous one only by GPS refinements. */
 type Planned = PlanPair & { gpsRefinement: boolean };
@@ -54,7 +59,7 @@ async function requestPlan(pair: PlanPair, signal: AbortSignal): Promise<Outcome
       .then(({ planOffline }) => planOffline(origin, destination))
       .catch(() => ({ status: "unavailable" as const }));
     if (signal.aborted) throw error;
-    if (offline.status === "ready") return { status: "ready", data: offline.data, offline: true };
+    if (offline.status === "ready") return { status: "ready", data: offline.data, offline: navigator.onLine === false ? "offline" : "unreachable" };
     if (offline.status === "invalid") return { status: "error", kind: "invalid" };
     // No snapshot either: say "offline" only when the browser knows it is.
     return { status: "error", kind: navigator.onLine === false ? "offline" : "server" };
@@ -69,7 +74,7 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
   const [attempt, setAttempt] = useState(0);
   const [settled, setSettled] = useState<Settled | null>(null);
   // The last ready plan, kept on screen only while a GPS-refinement replan is in flight.
-  const [lastReady, setLastReady] = useState<{ data: PlanResponse; offline: boolean } | null>(null);
+  const [lastReady, setLastReady] = useState<{ data: PlanResponse; offline: PlannedOnPhone } | null>(null);
   // The pair actually planned for; small GPS moves of an end keep it (no replan).
   const [planned, setPlanned] = useState<Planned | null>(null);
 

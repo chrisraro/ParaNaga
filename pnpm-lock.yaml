@@ -11,6 +11,9 @@ importers:
       '@neondatabase/auth':
         specifier: 0.6.0-beta
         version: 0.6.0-beta(ba6534e1f5296d332d29167ddeee5dc9)
+      '@serwist/turbopack':
+        specifier: 9.5.12
+        version: 9.5.12(@swc/helpers@0.5.23)(esbuild@0.28.2)(next@16.4.1(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
       '@vercel/functions':
         specifier: ^3.9.11
         version: 3.9.11
@@ -54,9 +57,6 @@ importers:
       '@playwright/test':
         specifier: ^1.64.0
         version: 1.64.0
-      '@serwist/turbopack':
-        specifier: 9.5.12
-        version: 9.5.12(@swc/helpers@0.5.23)(esbuild@0.28.2)(next@16.4.1(@babel/core@7.29.7(supports-color@7.2.0))(@playwright/test@1.64.0)(@types/node@22.20.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react@19.3.0)(typescript@5.9.3)
       '@tailwindcss/turbopack':
         specifier: ^4
         version: 4.3.3

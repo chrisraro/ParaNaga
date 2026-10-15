@@ -34,7 +34,9 @@ export default defineConfig({
   webServer: [
     {
       command: `pnpm build && pnpm start --port ${PORT}`,
-      env: { NEXT_DIST_DIR: ".next-e2e", NEXT_PUBLIC_TILE_URL: E2E_TILE_URL },
+      // PARANAGA_E2E_SW_VARIANT: test-only, lets offline.spec.ts publish new worker bytes at the
+      // same URL through a cookie (src/app/serwist/[path]/route.ts). Never set for a deployment.
+      env: { NEXT_DIST_DIR: ".next-e2e", NEXT_PUBLIC_TILE_URL: E2E_TILE_URL, PARANAGA_E2E_SW_VARIANT: "1" },
       url: `http://localhost:${PORT}/api/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,

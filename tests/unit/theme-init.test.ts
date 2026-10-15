@@ -20,6 +20,16 @@ afterEach(() => {
 });
 
 describe("public/theme-init.js", () => {
+  it("keeps an early install offer without showing it (and stays tiny)", () => {
+    runThemeInit();
+    const event = new Event("beforeinstallprompt", { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect((window as unknown as { __pnInstallPrompt?: Event }).__pnInstallPrompt).toBe(event);
+    delete (window as unknown as { __pnInstallPrompt?: Event }).__pnInstallPrompt;
+    expect(SCRIPT.length).toBeLessThan(3000);
+  });
+
   it("reads the same storage key as the app", () => {
     expect(SCRIPT).toContain(`"${PREFS_STORAGE_KEY}"`);
   });

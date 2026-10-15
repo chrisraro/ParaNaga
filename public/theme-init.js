@@ -4,7 +4,10 @@
 //   data-theme    = "light" | "dark" | "system"   (System follows prefers-color-scheme in CSS)
 //   data-contrast = "more" when High contrast is on (attribute absent otherwise)
 // on <html>. A same-origin file rather than an inline script, so it passes a script-src 'self' CSP.
-// Bad or missing data falls back to the defaults (System, normal contrast). No globals.
+// Bad or missing data falls back to the defaults (System, normal contrast).
+// It also keeps an early install offer (Task 12): Chromium may fire `beforeinstallprompt` before
+// the app hydrates, so the event is held (never shown) on window.__pnInstallPrompt for More → App.
+// That is its only global.
 (function () {
   var root = document.documentElement;
   var theme = "system";
@@ -21,4 +24,8 @@
   root.setAttribute("data-theme", theme);
   if (contrast) root.setAttribute("data-contrast", "more");
   else root.removeAttribute("data-contrast");
+  window.addEventListener("beforeinstallprompt", function (event) {
+    event.preventDefault();
+    window.__pnInstallPrompt = event;
+  });
 })();

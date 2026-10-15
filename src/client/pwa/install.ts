@@ -25,6 +25,12 @@ function emit(): void {
 export function listenForInstallPrompt(): void {
   if (listening || typeof window === "undefined") return;
   listening = true;
+  // An offer that came before hydration was kept by public/theme-init.js.
+  const early = (window as Window & { __pnInstallPrompt?: InstallPromptEvent }).__pnInstallPrompt;
+  if (early) {
+    deferred = early;
+    delete (window as Window & { __pnInstallPrompt?: InstallPromptEvent }).__pnInstallPrompt;
+  }
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault(); // keep it for the button; never shown unasked
     deferred = event as InstallPromptEvent;
@@ -45,6 +51,12 @@ function isStandalone(): boolean {
 /** iPhone, iPad (including iPadOS reporting as a Mac with touch) and iPod. */
 export function isIos(userAgent: string, maxTouchPoints: number): boolean {
   return /iPad|iPhone|iPod/.test(userAgent) || (/Macintosh/.test(userAgent) && maxTouchPoints > 1);
+}
+
+/** "On iPhone: …" / "On iPad: …" (Share, then “Add to Home Screen”). */
+export function iosInstallText(userAgent: string): string {
+  const device = /iPhone|iPod/.test(userAgent) ? "iPhone" : "iPad";
+  return `On ${device}: tap Share, then “Add to Home Screen”.`;
 }
 
 export function installState(): InstallState {

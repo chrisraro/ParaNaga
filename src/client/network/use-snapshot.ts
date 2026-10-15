@@ -13,6 +13,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { rememberHead } from "@/client/network/remember-head";
+import { offerToWorker } from "@/client/pwa/data-handoff";
 import { readSnapshotMeta } from "@/client/storage/db";
 import { networkHeadSchema, networkSnapshotSchema, type NetworkSnapshot } from "@/domain/api/schemas";
 
@@ -34,7 +35,11 @@ function set(next: SnapshotState): void {
 async function getJson(url: string): Promise<unknown> {
   const response = await fetch(url, { headers: { accept: "application/json" } });
   if (!response.ok) throw new Error(`GET ${url} failed with ${response.status}`);
-  return response.json();
+  const text = await response.text();
+  const body: unknown = JSON.parse(text);
+  // First visit: the worker did not see this response; give it the page's copy.
+  offerToWorker(url, text, response.headers.get("Cache-Control"));
+  return body;
 }
 
 async function currentRevisionId(): Promise<string | null> {
@@ -83,6 +88,15 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+/**
+ * "Clear data on this device": drops the snapshot held in memory. Screens that still use one load
+ * it afresh from the network (as on a new visit); nothing old stays on screen.
+ */
+export function forgetSnapshot(): void {
+  inflight = null;
+  set(IDLE);
+}
+
 /** Tests only. */
 export function resetSnapshotForTests(): void {
   state = IDLE;
@@ -96,9 +110,12 @@ export function resetSnapshotForTests(): void {
  */
 export function useSnapshot(enabled = true): SnapshotState & { retry: () => void } {
   const current = useSyncExternalStore(subscribe, () => state, () => IDLE);
+  const idle = current.status === "idle";
+  useEffect(() => {
+    if (enabled && idle) void loadSnapshot();
+  }, [enabled, idle]);
   useEffect(() => {
     if (!enabled) return undefined;
-    if (state.status === "idle") void loadSnapshot();
     const recheck = () => void loadSnapshot();
     window.addEventListener("online", recheck);
     return () => window.removeEventListener("online", recheck);

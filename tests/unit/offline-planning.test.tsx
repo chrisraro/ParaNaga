@@ -67,14 +67,26 @@ describe("planOffline", () => {
 });
 
 describe("useTripPlan offline", () => {
-  it("falls back to the offline plan, marked offline, when the server cannot be reached", async () => {
+  it("falls back to the plan made on the phone; without a connection it is marked offline", async () => {
+    const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     const { result } = renderHook(() => useTripPlan(end(ORIGIN), end(DESTINATION)));
     await waitFor(() => expect(result.current.status).toBe("ready"));
     if (result.current.status !== "ready") return;
-    expect(result.current.offline).toBe(true);
+    expect(result.current.offline).toBe("offline");
     expect(result.current.data.revision.revisionId).toBe(snapshot.revision.revisionId);
     expect(planCalls).toHaveLength(1);
-    expect(offlinePlanNote(result.current.data.revision.publishedAt)).toBe("Planned offline from data of Oct 15, 2026. Fares may have changed.");
+    expect(offlinePlanNote(result.current.data.revision.publishedAt, result.current.offline || "offline")).toBe("Planned offline from data of Oct 15, 2026. Fares may have changed.");
+    onLine.mockRestore();
+  });
+
+  it("with a connection but no server, it says ParaNaga could not be reached (not offline)", async () => {
+    const { result } = renderHook(() => useTripPlan(end(ORIGIN), end(DESTINATION)));
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    if (result.current.status !== "ready") return;
+    expect(result.current.offline).toBe("unreachable");
+    expect(offlinePlanNote(result.current.data.revision.publishedAt, "unreachable")).toBe(
+      "Couldn't reach ParaNaga — planned on this phone with data from Oct 15, 2026. Fares may have changed.",
+    );
   });
 
   it("says offline (not a server error) when nothing is cached and the browser is offline", async () => {

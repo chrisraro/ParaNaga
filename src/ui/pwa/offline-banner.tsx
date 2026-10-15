@@ -7,7 +7,7 @@
 
 import "./pwa.css";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useIsOffline } from "@/client/pwa/connectivity";
 import { useSnapshot } from "@/client/network/use-snapshot";
 import { readSnapshotMeta } from "@/client/storage/db";
@@ -33,11 +33,31 @@ export function OfflineBanner() {
   }, [offline]);
 
   const known = snapshot !== null || meta !== undefined;
+  const banner = useRef<HTMLParagraphElement>(null);
   const text = offline && known ? offlineBannerText(snapshot?.revision.publishedAt ?? meta?.publishedAt, snapshot !== null || Boolean(meta)) : null;
+  // While it shows, every screen's top chrome (panel headers, map controls, search bar) moves down
+  // by its height (--pn-offline-inset), so the banner never covers a Back button or a title.
+  useLayoutEffect(() => {
+    const el = banner.current;
+    const root = document.documentElement;
+    if (!el) {
+      root.style.removeProperty("--pn-offline-inset");
+      return undefined;
+    }
+    const measure = () => root.style.setProperty("--pn-offline-inset", `${Math.ceil(el.getBoundingClientRect().height) + 8}px`);
+    measure();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
+    observer?.observe(el);
+    return () => {
+      observer?.disconnect();
+      root.style.removeProperty("--pn-offline-inset");
+    };
+  }, [text]);
+
   return (
     <div className="pn-pwa" role="status" data-testid="offline-status">
       {text ? (
-        <p className="pn-offline-banner" data-testid="offline-banner">
+        <p ref={banner} className="pn-offline-banner" data-testid="offline-banner">
           {text}
         </p>
       ) : null}

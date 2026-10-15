@@ -14,6 +14,7 @@
 import { useEffect, useState } from "react";
 import { networkHeadSchema, searchIndexSchema, type SearchIndex } from "@/domain/api/schemas";
 import { rememberHead } from "@/client/network/remember-head";
+import { offerToWorker } from "@/client/pwa/data-handoff";
 
 export type SearchProblem = "offline" | "failed";
 
@@ -36,7 +37,11 @@ export function resetSearchIndexCache(): void {
 async function getJson(url: string, signal: AbortSignal): Promise<unknown> {
   const response = await fetch(url, { signal, headers: { accept: "application/json" } });
   if (!response.ok) throw new Error(`GET ${url} failed with ${response.status}`);
-  return response.json();
+  const text = await response.text();
+  const body: unknown = JSON.parse(text);
+  // First visit: the worker did not see this response; give it the page's copy.
+  offerToWorker(url, text, response.headers.get("Cache-Control"));
+  return body;
 }
 
 async function loadIndex(signal: AbortSignal): Promise<{ index: SearchIndex; problem: SearchProblem | null }> {

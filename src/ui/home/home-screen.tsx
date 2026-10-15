@@ -776,7 +776,7 @@ export function HomeScreen() {
               option={openOption}
               onBack={handleCloseOption}
               ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
-              note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt), tone: "warning" } : null)}
+              note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline), tone: "warning" } : null)}
               onStart={() => guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) })}
             />
           ) : ready ? (
@@ -788,7 +788,7 @@ export function HomeScreen() {
               ) : null}
               {plan.status === "ready" && plan.offline ? (
                 <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-offline-note">
-                  {offlinePlanNote(plan.data.revision.publishedAt)}
+                  {offlinePlanNote(plan.data.revision.publishedAt, plan.offline)}
                 </p>
               ) : null}
               {plan.status === "loading" ? <TripLoading /> : null}

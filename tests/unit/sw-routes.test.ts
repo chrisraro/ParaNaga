@@ -30,8 +30,14 @@ describe("classifyRequest: navigations", () => {
   });
 
   it("sends any other navigation to the network, with /offline as the fallback", () => {
-    for (const path of [`/app/stops/${REV}`, "/app/help/sources", "/app/routes/R8-A", "/", "/admin", "/admin/revisions", "/account/me", "/api/auth/session"]) {
+    for (const path of [`/app/stops/${REV}`, "/app/help/sources", "/app/routes/R8-A", "/"]) {
       expect(classifyRequest(nav(path)), path).toEqual({ kind: "navigate" });
+    }
+  });
+
+  it("leaves navigations to /api/** (auth callbacks), /admin and /account to the browser", () => {
+    for (const path of ["/admin", "/admin/revisions", "/account/me", "/api/auth/callback/google?code=x", "/api/v1/sources"]) {
+      expect(classifyRequest(nav(path)), path).toEqual({ kind: "network-only" });
     }
   });
 });
@@ -158,5 +164,29 @@ describe("linkedIconUrls", () => {
     ).toEqual(["/favicon.ico?favicon.0fl-w0s_qt298.ico", "/icon.svg?icon.25hlxt1g3l7pc.svg", "/apple-icon.png?apple-icon.3wkkerl5waqa4.png"]);
     // At build time the manifest still names the dist dir.
     expect(linkedIconUrls([".next-e2e/static/media/icon.25hlxt1g3l7pc.svg"])).toEqual(["/icon.svg?icon.25hlxt1g3l7pc.svg"]);
+  });
+});
+
+describe("acceptHandoff", () => {
+  it("accepts the head, a snapshot and a search index the page already fetched", async () => {
+    const { acceptHandoff } = await import("@/domain/pwa/sw-routes");
+    const ok = (url: string, cacheControl = "public, s-maxage=31536000, immutable") => acceptHandoff({ url, body: "{}", cacheControl }, ORIGIN);
+    expect(ok(`/api/v1/network/snapshot/${REV}`)?.cache).toBe("snapshot");
+    expect(ok(`/api/v1/network/search-index/${REV}`)?.cache).toBe("search-index");
+    expect(ok("/api/v1/network/head", "public, s-maxage=30")).toEqual({ url: `${ORIGIN}/api/v1/network/head`, body: "{}", cacheControl: "public, s-maxage=30", cache: "head" });
+  });
+
+  it("refuses anything the allow-list would not store that way", async () => {
+    const { acceptHandoff } = await import("@/domain/pwa/sw-routes");
+    const try_ = (e: unknown) => acceptHandoff(e, ORIGIN);
+    expect(try_({ url: "/api/v1/plan", body: "{}", cacheControl: "public" })).toBeNull();
+    expect(try_({ url: "/api/v1/sources", body: "{}", cacheControl: "public" })).toBeNull(); // SWR, fetched normally
+    expect(try_({ url: `https://evil.example/api/v1/network/snapshot/${REV}`, body: "{}", cacheControl: "public" })).toBeNull();
+    expect(try_({ url: `/api/v1/network/snapshot/${REV}?x=1`, body: "{}", cacheControl: "public" })).toBeNull();
+    expect(try_({ url: `/api/v1/network/snapshot/${REV}`, body: "{}", cacheControl: "no-store" })).toBeNull();
+    expect(try_({ url: `/api/v1/network/snapshot/${REV}`, body: "<html>", cacheControl: "public" })).toBeNull();
+    expect(try_({ url: `/api/v1/network/snapshot/${REV}`, body: "x".repeat(2_000_001), cacheControl: "public" })).toBeNull();
+    expect(try_(null)).toBeNull();
+    expect(try_({ url: 1 })).toBeNull();
   });
 });

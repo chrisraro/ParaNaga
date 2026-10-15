@@ -50,17 +50,16 @@ export const REAL_CACHE = {
 } as const;
 type CacheKind = keyof typeof REAL_CACHE;
 
-// "no-store" unless the suite asks for the real headers (the service worker stores only those).
-let realCache = false;
-const json = (route: Route, body: unknown, status = 200, kind: CacheKind = "short") =>
+/** A JSON answer: "no-store" unless `real` asks for the production header of `kind`. */
+const reply = (real: boolean) => (route: Route, body: unknown, status = 200, kind: CacheKind = "short") =>
   route.fulfill({
     status,
     contentType: "application/json",
-    headers: { "cache-control": realCache && status === 200 ? REAL_CACHE[kind] : "no-store" },
+    headers: { "cache-control": real && status === 200 ? REAL_CACHE[kind] : "no-store" },
     body: JSON.stringify(body),
   });
 
-const notFound = (route: Route) => json(route, { error: { code: "not_found", message: "Not found.", requestId: "e2e" } }, 404);
+const notFound = (route: Route) => reply(false)(route, { error: { code: "not_found", message: "Not found.", requestId: "e2e" } }, 404);
 
 export const ROUTES_LIST = routesList;
 /** The captured search index of the published revision (233 OSM places, 47 mapped-pin places …). */
@@ -97,7 +96,8 @@ export type NetworkCalls = {
  * (otherwise no-store), so the service worker's allow-list really stores them.
  */
 export async function routeNetwork(target: Page | BrowserContext, opts: { realCacheHeaders?: boolean } = {}): Promise<NetworkCalls> {
-  realCache = opts.realCacheHeaders ?? false;
+  // Passed to every handler through this closure: each call keeps its own setting.
+  const json = reply(opts.realCacheHeaders ?? false);
   const page = target;
   const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [], snapshots: [], heads: 0, terminals: [] };
   await page.route(/\/api\/v1\/stops(\?|\/|$)/, async (route) => {
