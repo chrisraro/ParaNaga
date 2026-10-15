@@ -850,3 +850,10 @@ None block Task 1. Every product call above is either a Jev decision (J1–J8), 
    - the 2025 LPTRP tricycle-zone map.
 
    Only the City PSO or the cooperatives office can supply them. Should ParaNaga prepare a short data-request letter for you to send? Nothing would be sent on your behalf.
+
+## User decisions (2026-10-16, supersede conflicting items above)
+
+- **E-jeepney: dropped.** The 2017 e-jeepney loop is not confirmed and not running; do not import, show, search or plan it anywhere (remove it from the seed, candidates and UI tasks).
+- **Modern jeepneys on R4 and R7: operating now.** The project owner confirms modernized jeepneys run today on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason). Record the owner confirmation as source `U01` ("project owner confirmation", dated 2026-10-16) alongside N14/N38/N39/N41; status `operating`; label "Traditional and modern jeepneys" with no "last reported 2024" caveat.
+- **No modern-unit claim on other routes.** R2, R3, R5, R6 and R8 are traditional jeepney only (drop the R6/R2/R3 "reported, not confirmed" modern entries).
+- **Traditional jeepneys: confirmed operating on all routes.** The owner confirms traditional jeepneys run today on every LPTRP route group (R1–R8). Route operating status becomes `operating (owner-confirmed 2026-10-16)`. This confirms service, not stop locations, stop order or paths: stop pins, pin order (Loops A/B) and drawn paths keep their unverified/approximate labels and the trip badge stays.
