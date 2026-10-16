@@ -203,6 +203,82 @@ describe("traceVariant: street-list mode", () => {
   });
 });
 
+describe("traceVariant: oneway_conflict is judged per stretch", () => {
+  const south = (p: LatLng, m: number): LatLng => ({ lat: p.lat - m / M_PER_DEG_LAT, lng: p.lng });
+  const mid = (a: LatLng, b: LatLng): LatLng => ({ lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 });
+  const eastboundRow2 = (p: Piece[], extra: Record<string, string> = {}) => {
+    for (let c = 0; c + 1 < N; c++) retag(p, [2, c], [2, c + 1], { oneway: "yes", ...extra });
+  };
+  const conflicts = (r: ReturnType<typeof traceVariant>) => (r.ok ? r.offListSegments.filter((x) => x.reason === "oneway_conflict") : []);
+
+  it("a listed divided road (same-named opposite carriageway) never gives oneway_conflict", () => {
+    // Row 2: eastbound grid row plus a westbound carriageway 40 m south, joined at every column by
+    // short unnamed links. Driving west means two 40 m links: real detours, not a mapping conflict.
+    const g = grid((p, nodes) => {
+      eastboundRow2(p);
+      let id = 900;
+      for (let c = 0; c < N; c++) nodes.set(2000 + c, south(at(2, c), 40));
+      for (let c = 0; c + 1 < N; c++) p.push({ id: id++, nodes: [2000 + c + 1, 2000 + c], tags: { highway: "residential", name: "Row 2 St", oneway: "yes" } });
+      for (let c = 0; c < N; c++) p.push({ id: id++, nodes: [nid(2, c), 2000 + c], tags: { highway: "residential" } });
+    });
+    const r = traceVariant(input({ streets: ["Col 4 Ave", "Row 2 St", "Col 1 Ave"] }), g, []);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.offListSegments.length).toBeGreaterThan(0);
+    expect(conflicts(r)).toEqual([]);
+  });
+
+  it("a listed roundabout is never reversed: its detour is off_list_detour", () => {
+    const g = grid((p) => eastboundRow2(p, { junction: "roundabout" }));
+    const r = traceVariant(input({ streets: ["Col 5 Ave", "Row 2 St", "Col 0 Ave"] }), g, []);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.offListSegments.length).toBeGreaterThan(0);
+    expect(conflicts(r)).toEqual([]);
+  });
+
+  it("an unrelated connector in a conflicting leg stays off_list_detour", () => {
+    // Pin A sits on "Gate Rd" (Col 5 between rows 4 and 5, off the list); pin B is on the eastbound
+    // Row 2, west of A. The leg: Gate Rd (connector, also used by the re-route), Col 5 (listed),
+    // then a detour over Row 3 and Col 1 because Row 2 cannot be driven west.
+    const g = grid((p) => {
+      eastboundRow2(p);
+      retag(p, [4, 5], [5, 5], { name: "Gate Rd" });
+    });
+    const pins = [mid(at(4, 5), at(5, 5)), mid(at(2, 1), at(2, 2))];
+    const r = traceVariant(input({ streets: ["Col 5 Ave", "Row 2 St"], pins }), g, []);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const gate = r.offListSegments.find((x) => x.streets.some((y) => y.name === "gate road"))!;
+    expect(gate.reason).toBe("off_list_detour");
+    expect(gate.streets).toEqual([{ name: "gate road", m: 50 }]);
+    const detour = r.offListSegments.find((x) => x.streets.some((y) => y.name === "row 3 street"))!;
+    expect(detour.reason).toBe("oneway_conflict");
+  });
+
+  it("the open-run start honours one-way: the far end that cannot be driven toward the next street is skipped", () => {
+    // Row 2 one-way east, then Col 2: the far end (2,5) cannot drive west to (2,2); (2,0) can.
+    const g = grid((p) => eastboundRow2(p));
+    const r = traceVariant(input({ streets: ["Row 2 St", "Col 2 Ave"] }), g, []);
+    expect(r.status).toBe("ok");
+    if (!r.ok) return;
+    expect(r.line[0]!.lng).toBeCloseTo(at(2, 0).lng, 9);
+    expect(r.quality.offListShare).toBe(0);
+  });
+});
+
+describe("traceVariant: termini cap", () => {
+  it("a terminus more than 500 m from its street is ignored and reported", () => {
+    const far = { lat: at(0, 1).lat + 600 / M_PER_DEG_LAT, lng: at(0, 1).lng };
+    const r = traceVariant(input({ streets: ["Row 0 St", "Col 3 Ave"], termini: { start: far } }), plain, []);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.quality.terminiIgnored).toEqual([{ end: "start", distM: expect.closeTo(600, -1) }]);
+    expect(r.quality.terminusSnapM).toBeNull();
+    expect(r.line[0]!.lng).toBeCloseTo(at(0, 0).lng, 9);
+  });
+});
+
 describe("traceVariant: pin mode", () => {
   const north = (p: LatLng, m: number): LatLng => ({ lat: p.lat + m / M_PER_DEG_LAT, lng: p.lng });
   const mid = (a: LatLng, b: LatLng): LatLng => ({ lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 });

@@ -133,7 +133,7 @@ function main(): number {
     const off = q.offListShare === null ? "n/a" : `${(100 * q.gateOffListShare!).toFixed(1)} % (raw ${(100 * q.offListShare).toFixed(1)} %)`;
     const notes = [...q.unmatchedStreets.map((x) => `unmatched: ${x}`), ...q.landmarksUnresolved.map((x) => `landmark: ${x}`), ...q.anchorsUnresolved.map((x) => `anchor: ${x}`),
       ...q.disjointPairs.map((x) => `no junction: ${x}`), ...(r.ok
-        ? r.offListSegments.filter((x) => x.lengthM >= 50 && (r.status === "flagged" || x.reason === "terminal_access")).map((x) => `${x.reason} ${x.lengthM} m @${Math.round(x.fromM)} m: ${x.streets.map((y) => `${y.name} ${y.m}`).join(", ")}`)
+        ? r.offListSegments.filter((x) => x.lengthM >= 50 && (r.status === "flagged" || x.reason !== "off_list_detour")).map((x) => `${x.reason} ${x.lengthM} m @${Math.round(x.fromM)} m: ${x.streets.map((y) => `${y.name} ${y.m}`).join(", ")}${x.against ? ` (against one-way ${x.against.join(", ")})` : ""}`)
         : []), ...q.unsnappedPins.map((x) => `pin ${x + 1} unsnapped`)].join("; ");
     rows.push(`| ${job.id} | ${result} | ${coverage} | ${off} | ${(q.lengthM / 1000).toFixed(2)} | ${q.gaps} | ${q.maxSnapM ?? "–"} | ${q.terminusSnapM ?? "–"} | ${notes || "–"} |`);
   }

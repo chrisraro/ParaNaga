@@ -49,6 +49,8 @@ export type RoadEdge = {
   reverse: boolean;
   /** The edge over the same polyline in the other direction; null on a one-way piece. */
   twin: number | null;
+  /** Set on pieces of a roundabout (junction=roundabout|circular). */
+  roundabout?: true;
 };
 
 export type SpatialGrid = {
@@ -142,7 +144,7 @@ export function buildRoadGraph(roads: Pick<OsmRoads, "ways" | "nodes">, options:
       const b = nodeIndex.get(w.nodeIds[i]!)!;
       const lengthM = polylineLength(coords);
       start = i;
-      const base = { wayId: w.id, names, lengthM };
+      const base = { wayId: w.id, names, lengthM, ...(w.tags.junction === "roundabout" || w.tags.junction === "circular" ? { roundabout: true as const } : {}) };
       const fwd = dir.forward ? edges.push({ index: edges.length, from: a, to: b, ...base, coords, reverse: false, twin: null }) - 1 : -1;
       const back = dir.backward
         ? edges.push({ index: edges.length, from: b, to: a, ...base, coords: [...coords].reverse(), reverse: true, twin: null }) - 1

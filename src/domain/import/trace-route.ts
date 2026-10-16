@@ -25,20 +25,24 @@
 //
 // Result status (controller rulings 2026-10-16):
 //   ok      — every listed street matched, continuous, every pin snapped within 60 m, and the gate
-//             off-list share ≤ 15 %. Drawn solid; its off-list segments (short connectors) render
-//             solid too.
-//   flagged — the same but the gate off-list share is > 15 %. Drawn; its off-list segments render
-//             DASHED (dashing applies only to flagged traces) with "street order conflicts with
-//             one-way mapping — confirm on the ground" (oneway_conflict) or the generic caution
-//             (off_list_detour), plus a route-detail note.
+//             off-list share ≤ 15 %. Drawn solid; its off_list_detour segments (short connectors)
+//             render solid too, but its oneway_conflict segments render DASHED with "street order
+//             conflicts with one-way mapping — confirm on the ground" (ruling, fix round 1).
+//   flagged — the same but the gate off-list share is > 15 %. Drawn; all its off-list segments
+//             except terminal_access render DASHED, with the one-way caution (oneway_conflict) or
+//             the generic caution (off_list_detour), plus a route-detail note.
 //   fail    — no line: an unresolved anchor, pin or street, or no connected path.
 // Off-list segment reasons:
 //   terminal_access — a stretch of at most 1 km that reaches a listed terminal (`terminals`, e.g.
 //                     Bicol Central Station; some point within 250 m of it): the road that only
 //                     connects the terminal to the listed streets. Recorded, rendered as normal (never dashed) with the note
 //                     "terminal access road", and excluded from the gate off-list share;
-//   oneway_conflict — re-routing the leg with the listed one-way streets usable both ways uses such a
-//                     reversed street and removes at least half of the leg's off-list length;
+//   oneway_conflict — judged per stretch: re-routing its leg with the listed one-way streets usable
+//                     both ways (never roundabout pieces, never one carriageway of a divided road
+//                     whose same-named opposite carriageway exists) replaces THAT stretch — between
+//                     the points where the leg leaves and rejoins the re-route (within 30 m) around
+//                     the stretch, the re-route drives a reversed listed street and less than half
+//                     the stretch's off-list length. Checked before terminal_access;
 //   off_list_detour — any other off-list stretch.
 //
 // Pure and deterministic: ties go to the lower node index (node indices follow OSM node ids).
@@ -54,8 +58,12 @@ export const MAX_OFF_LIST_SHARE = 0.15;
 export const PIN_SNAP_MAX_M = 60;
 /** A pin prefers an edge it can be driven along in the route's direction within this distance. */
 export const PIN_DIRECTION_SNAP_M = 25;
-/** A relaxed re-route (listed one-ways usable both ways) that removes at least this share of a leg's off-list length marks the leg oneway_conflict. */
+/** A relaxed re-route (listed one-ways usable both ways) must remove at least this share of a stretch's off-list length for oneway_conflict. */
 const ONEWAY_CONFLICT_GAIN = 0.5;
+/** The relaxed re-route must pass within this distance of an off-list stretch's start and end. */
+const CONFLICT_MATCH_M = 30;
+/** A route terminus farther than this from its street is ignored (reported in terminiIgnored). */
+export const TERMINUS_MAX_M = 500;
 /** A landmark or point anchor (a terminal centroid, a place node) snaps within this distance. */
 export const LANDMARK_SNAP_MAX_M = 200;
 
@@ -112,6 +120,8 @@ export type TraceQuality = {
   maxLandmarkSnapM: number | null;
   /** Largest distance from a terminus to the street node used for it; null without termini. */
   terminusSnapM: number | null;
+  /** Termini farther than TERMINUS_MAX_M from their street, ignored (the street's far end is used). */
+  terminiIgnored: { end: "start" | "end"; distM: number }[];
   /** Indices of pins with no drivable edge within PIN_SNAP_MAX_M. */
   unsnappedPins: number[];
   continuous: boolean;
@@ -146,6 +156,8 @@ export type OffListSegment = {
   /** Normalized OSM names (or "(unnamed)") with metres, longest first. */
   streets: { name: string; m: number }[];
   reason: OffListReason;
+  /** oneway_conflict only: the listed streets (normalized names) mapped one-way against the travel order. */
+  against?: string[];
 };
 
 type Drawn = { line: LatLng[]; lengthM: number; stopMeasures: number[]; quality: TraceQuality; offListSegments: OffListSegment[] };
@@ -332,9 +344,28 @@ function route(graph: RoadGraph, from: Spot & { kind: "node" | "point" }, to: Sp
   return { pieces, end };
 }
 
+/** A one-way piece with a same-named one-way piece running the other way within this distance is a divided road. */
+const DIVIDED_ROAD_M = 60;
+
+/** Whether a one-way edge is one carriageway of a divided road (a same-named opposite one-way piece nearby). */
+function isDividedCarriageway(graph: RoadGraph, e: RoadEdge): boolean {
+  if (e.names.length === 0) return false;
+  const mid = e.coords[Math.floor(e.coords.length / 2)]!;
+  const own = bearing(e.coords[0]!, e.coords[e.coords.length - 1]!);
+  for (const h of edgesWithin(graph, mid, DIVIDED_ROAD_M)) {
+    const f = h.edge;
+    if (f.index === e.index || f.twin !== null || !f.names.some((n) => e.names.includes(n))) continue;
+    const other = bearing(f.coords[h.seg - 1]!, f.coords[h.seg]!);
+    if (angleBetween(own, other) > 135) return true;
+  }
+  return false;
+}
+
 /**
- * The graph plus a reversed copy of every one-way edge (indices after the real ones; `reverseOf`
- * maps them back). Used only to test whether an off-list detour is caused by listed one-ways.
+ * The graph plus a reversed copy of every one-way edge that a vehicle could plausibly be expected to
+ * drive the other way if the mapping were wrong (indices after the real ones; `reverseOf` maps them
+ * back): never a roundabout piece, never one carriageway of a divided road. Used only to test
+ * whether an off-list stretch is caused by listed one-ways.
  */
 type Relaxed = { graph: RoadGraph; reverseOf: Map<number, number>; realEdges: number };
 const relaxedCache = new WeakMap<RoadGraph, Relaxed>();
@@ -345,7 +376,7 @@ function relaxedGraph(graph: RoadGraph): Relaxed {
   const out = graph.out.map((l) => [...l]);
   const reverseOf = new Map<number, number>();
   for (const e of graph.edges) {
-    if (e.twin !== null) continue;
+    if (e.twin !== null || e.roundabout || isDividedCarriageway(graph, e)) continue;
     const index = edges.length;
     edges.push({ ...e, index, from: e.to, to: e.from, coords: [...e.coords].reverse(), reverse: !e.reverse, twin: null });
     out[e.to]!.push(index);
@@ -410,12 +441,14 @@ class LineBuilder {
   start(p: LatLng) {
     if (this.current.length === 0) this.current.push(p);
   }
-  segments: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean; minTerminalM: number }[] = [];
-  private open: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean; minTerminalM: number } | null = null;
+  segments: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean; against: Set<string>; minTerminalM: number }[] = [];
+  private open: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean; against: Set<string>; minTerminalM: number } | null = null;
   /** Distance from a point to the nearest listed terminal (Infinity without terminals). */
   terminalDist: (p: LatLng) => number = () => Infinity;
-  add(leg: Leg, conflict = false) {
-    for (const piece of leg.pieces) {
+  /** Appends a leg; `conflictPieces` maps indices of its pieces in a oneway_conflict stretch to the listed streets driven against. */
+  add(leg: Leg, conflictPieces: ReadonlyMap<number, readonly string[]> = new Map()) {
+    for (const [pieceIndex, piece] of leg.pieces.entries()) {
+      const conflict = conflictPieces.has(pieceIndex);
       for (const p of piece.coords) {
         const last = this.current[this.current.length - 1];
         if (last && last.lat === p.lat && last.lng === p.lng) continue;
@@ -428,13 +461,16 @@ class LineBuilder {
             const name = this.nameOf(piece.edge);
             this.offListByName.set(name, (this.offListByName.get(name) ?? 0) + m);
             if (!this.open) {
-              this.open = { fromM: this.currentLength - m, toM: this.currentLength, streets: new Map(), conflict: false, minTerminalM: this.terminalDist(last) };
+              this.open = { fromM: this.currentLength - m, toM: this.currentLength, streets: new Map(), conflict: false, against: new Set(), minTerminalM: this.terminalDist(last) };
               this.segments.push(this.open);
             }
             this.open.minTerminalM = Math.min(this.open.minTerminalM, this.terminalDist(p));
             this.open.toM = this.currentLength;
             this.open.streets.set(name, (this.open.streets.get(name) ?? 0) + m);
-            if (conflict) this.open.conflict = true;
+            if (conflict) {
+              this.open.conflict = true;
+              for (const n of conflictPieces.get(pieceIndex)!) this.open.against.add(n);
+            }
           } else this.open = null;
         }
         this.current.push(p);
@@ -519,11 +555,54 @@ function nearestNode(graph: RoadGraph, street: StreetInfo, p: LatLng): { node: n
   return { node: best, distM: bestD };
 }
 
-/** The end of a street farthest (straight line) from the nearest of `from`; ties: lower node index. */
-function farEnd(graph: RoadGraph, street: StreetInfo, from: readonly LatLng[]): number {
-  let best = street.ends[0]!;
+function reachable(graph: RoadGraph, street: StreetInfo, from: number, targets: readonly number[], directed: boolean): boolean {
+  const want = new Set(targets);
+  const seen = new Set([from]);
+  const stack = [from];
+  while (stack.length > 0) {
+    const u = stack.pop()!;
+    if (want.has(u)) return true;
+    for (const e of graph.out[u]!) {
+      const edge = graph.edges[e]!;
+      if (!street.edges.has(e)) continue;
+      if (!seen.has(edge.to)) {
+        seen.add(edge.to);
+        stack.push(edge.to);
+      }
+    }
+    if (!directed) {
+      // Undirected: also walk the street's pieces backwards.
+      for (const e of street.edges) {
+        const edge = graph.edges[e]!;
+        if (edge.to === u && !seen.has(edge.from)) {
+          seen.add(edge.from);
+          stack.push(edge.from);
+        }
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * False only when `targets` are connected to `from` along this street but cannot be driven to in
+ * that direction (a one-way street entered from the wrong end). A street with a gap is not judged.
+ */
+function reachesAlong(graph: RoadGraph, street: StreetInfo, from: number, targets: readonly number[]): boolean {
+  return reachable(graph, street, from, targets, true) || !reachable(graph, street, from, targets, false);
+}
+
+/**
+ * The end of a street farthest (straight line) from the nearest of `from`; ties: lower node index.
+ * With `drivable`, ends for which it holds (the street can be driven in the travel direction
+ * from or to them) are preferred; when none does, every end is considered.
+ */
+function farEnd(graph: RoadGraph, street: StreetInfo, from: readonly LatLng[], drivable?: (node: number) => boolean): number {
+  const usable = drivable ? street.ends.filter(drivable) : [];
+  const ends = usable.length > 0 ? usable : street.ends;
+  let best = ends[0]!;
   let bestD = -1;
-  for (const n of street.ends) {
+  for (const n of ends) {
     const p = graph.nodes[n]!;
     const d = Math.min(...from.map((q) => haversineMeters(p, q)));
     if (d > bestD) {
@@ -542,7 +621,7 @@ type Waypoint = { target: Spot; current: StreetInfo | null };
 function emptyQuality(mode: TraceQuality["mode"]): TraceQuality {
   return {
     builderVersion: TRACE_BUILDER_VERSION, mode, listedStreets: 0, matchedStreets: 0, unmatchedStreets: [], landmarksUnresolved: [],
-    anchorsUnresolved: [], disjointPairs: [], offListShare: null, gateOffListShare: null, terminalAccessM: 0, offListStreets: [], maxSnapM: null, maxLandmarkSnapM: null, terminusSnapM: null, unsnappedPins: [],
+    anchorsUnresolved: [], disjointPairs: [], offListShare: null, gateOffListShare: null, terminalAccessM: 0, offListStreets: [], maxSnapM: null, maxLandmarkSnapM: null, terminusSnapM: null, terminiIgnored: [], unsnappedPins: [],
     continuous: true, gaps: 0, lengthM: 0,
   };
 }
@@ -588,18 +667,74 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
   const legOffListM = (pieces: readonly Piece[], isOff: (e: number) => boolean) =>
     pieces.reduce((sum, p) => (isOff(p.edge) ? sum + cumulative(p.coords)[p.coords.length - 1]! : sum), 0);
   /**
-   * Whether a leg's off-list detour is caused by listed one-way streets: re-routing with listed
-   * one-ways usable both ways uses such a reversed edge and removes at least half the off-list length.
+   * The pieces of a leg that belong to oneway_conflict stretches. A stretch (consecutive off-list
+   * pieces) is a conflict when, with the leg re-routed with listed one-ways usable both ways (see
+   * relaxedGraph), the re-route between where the leg leaves it before the stretch and rejoins it
+   * after (points within CONFLICT_MATCH_M) drives a reversed listed street and less than half the
+   * stretch's off-list length.
    */
-  const onewayConflict = (from: Spot & { kind: "node" | "point" }, to: Spot, weight: (e: number) => number, leg: Leg): boolean => {
-    const off = legOffListM(leg.pieces, offList);
-    if (off <= 0) return false;
+  const onewayConflicts = (from: Spot & { kind: "node" | "point" }, to: Spot, weight: (e: number) => number, leg: Leg): Map<number, string[]> => {
+    const out = new Map<number, string[]>();
+    const stretches: number[][] = [];
+    leg.pieces.forEach((p, i) => {
+      if (!offList(p.edge)) return;
+      const lastStretch = stretches[stretches.length - 1];
+      if (lastStretch && lastStretch[lastStretch.length - 1] === i - 1) lastStretch.push(i);
+      else stretches.push([i]);
+    });
+    if (stretches.length === 0) return out;
     const relaxed = relaxedGraph(graph);
     const real = (e: number) => relaxed.reverseOf.get(e) ?? e;
     const w = (e: number) => (e < relaxed.realEdges ? weight(e) : listed.has(real(e)) ? weight(real(e)) : Infinity);
     const alt = route(relaxed.graph, from, to, w);
-    if (!alt || !alt.pieces.some((p) => p.edge >= relaxed.realEdges)) return false;
-    return legOffListM(alt.pieces, (e) => offList(real(e))) <= off * (1 - ONEWAY_CONFLICT_GAIN);
+    if (!alt || !alt.pieces.some((p) => p.edge >= relaxed.realEdges)) return out;
+    // The re-route as points, each with the edge of the segment that ends there.
+    const pts: { p: LatLng; edge: number }[] = [];
+    for (const piece of alt.pieces) for (const p of piece.coords) pts.push({ p, edge: piece.edge });
+    // The original leg as points, each with the piece of the segment that ends there.
+    const orig: { p: LatLng; piece: number }[] = [];
+    leg.pieces.forEach((piece, k) => piece.coords.forEach((p) => orig.push({ p, piece: k })));
+    /** Index of the re-route point within CONFLICT_MATCH_M of `q` (nearest; at or after `after`), or -1. */
+    const onAlt = (q: LatLng, after: number): number => {
+      let best = -1;
+      let bestD = CONFLICT_MATCH_M;
+      for (let i = after; i < pts.length; i++) {
+        const d = haversineMeters(pts[i]!.p, q);
+        if (d <= bestD) {
+          bestD = d;
+          best = i;
+        }
+      }
+      return best;
+    };
+    for (const stretch of stretches) {
+      const firstPiece = stretch[0]!;
+      const lastPiece = stretch[stretch.length - 1]!;
+      // Where the leg and the re-route diverge before the stretch and meet again after it.
+      let i0 = orig.findIndex((o) => o.piece === firstPiece);
+      let a0 = -1;
+      for (; i0 >= 0; i0--) if ((a0 = onAlt(orig[i0]!.p, 0)) >= 0) break;
+      if (a0 < 0) continue;
+      let i1 = orig.length - 1 - [...orig].reverse().findIndex((o) => o.piece === lastPiece);
+      let a1 = -1;
+      for (; i1 < orig.length; i1++) if ((a1 = onAlt(orig[i1]!.p, a0)) >= 0) break;
+      if (a1 < 0) continue;
+      // Between them the re-route must drive a reversed listed street and avoid most of the stretch.
+      let reversed = false;
+      const against = new Set<string>();
+      let altOff = 0;
+      for (let i = a0 + 1; i <= a1; i++) {
+        const e = pts[i]!.edge;
+        if (e >= relaxed.realEdges) {
+          reversed = true;
+          against.add(relaxed.graph.edges[e]!.names[0] ?? "(unnamed)");
+        }
+        if (offList(real(e))) altOff += haversineMeters(pts[i - 1]!.p, pts[i]!.p);
+      }
+      const stretchOff = legOffListM(stretch.map((i) => leg.pieces[i]!), offList);
+      if (reversed && altOff < stretchOff * (1 - ONEWAY_CONFLICT_GAIN)) for (const i of stretch) out.set(i, [...against].sort());
+    }
+    return out;
   };
 
   /** Follows waypoints from `start`; a waypoint that cannot be reached is a gap. */
@@ -610,7 +745,7 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
       const weight = weightFor(w);
       const leg = route(graph, pos, w.target, weight);
       if (leg) {
-        line.add(leg, hasList && onewayConflict(pos, w.target, weight, leg));
+        line.add(leg, hasList ? onewayConflicts(pos, w.target, weight, leg) : undefined);
         pos = leg.end;
       } else {
         const here = spotPoint(graph, pos);
@@ -732,12 +867,10 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
         const first = wps[0]!.target;
         const startAt = (node: number | null): Spot & { kind: "node" | "point" } =>
           first.kind === "point" ? first : first.kind === "node" ? first : { kind: "node", node: node ?? first.nodes[0]! };
-        const probe = new LineBuilder(offList);
         let pos = startAt(null);
         for (const w of [...wps.slice(1), wps[0]!]) {
           const leg = route(graph, pos, w.target, weightFor(w));
           if (!leg) break;
-          probe.add(leg);
           pos = leg.end;
         }
         const start = startAt(first.kind === "nodes" && pos.kind === "node" ? pos.node : null);
@@ -754,22 +887,29 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
       const head = run[0]!;
       let start: Spot & { kind: "node" | "point" };
       if (head.kind === "landmark") start = head.spot;
-      else if (runIndex === 0 && input.termini?.start) {
-        const t = nearestNode(graph, head.info, input.termini.start);
-        terminusSnaps.push(t.distM);
-        start = { kind: "node", node: t.node };
-      } else {
-        const toward = wps[0] ? targetPoints(wps[0].target) : [];
-        start = { kind: "node", node: toward.length > 0 ? farEnd(graph, head.info, toward) : head.info.ends[0]! };
+      else {
+        const t = runIndex === 0 && input.termini?.start ? nearestNode(graph, head.info, input.termini.start) : null;
+        if (t && t.distM <= TERMINUS_MAX_M) {
+          terminusSnaps.push(t.distM);
+          start = { kind: "node", node: t.node };
+        } else {
+          if (t) q.terminiIgnored.push({ end: "start", distM: round(t.distM, 1) });
+          const toward = wps[0] ? targetPoints(wps[0].target) : [];
+          const targets = wps[0]?.target.kind === "nodes" ? wps[0].target.nodes : null;
+          start = { kind: "node", node: toward.length > 0 ? farEnd(graph, head.info, toward, targets ? (n) => reachesAlong(graph, head.info, n, targets) : undefined) : head.info.ends[0]! };
+        }
       }
       const pos = follow(start, wps, weightFor);
       const tail = run[run.length - 1]!;
       if (tail.kind === "street") {
-        let end = farEnd(graph, tail.info, [spotPoint(graph, pos)]);
+        const from = pos;
+        let end = farEnd(graph, tail.info, [spotPoint(graph, pos)], from.kind === "node" ? (n) => reachesAlong(graph, tail.info, from.node, [n]) : undefined);
         if (runIndex === nonEmpty.length - 1 && input.termini?.end) {
           const t = nearestNode(graph, tail.info, input.termini.end);
-          terminusSnaps.push(t.distM);
-          end = t.node;
+          if (t.distM <= TERMINUS_MAX_M) {
+            terminusSnaps.push(t.distM);
+            end = t.node;
+          } else q.terminiIgnored.push({ end: "end", distM: round(t.distM, 1) });
         }
         follow(pos, [{ target: { kind: "node", node: end }, current: tail.info }], weightFor);
       }
@@ -809,9 +949,10 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
     toM: round(sg.toM, 1),
     lengthM: round(sg.toM - sg.fromM, 1),
     streets: [...sg.streets].map(([name, m]) => ({ name, m: round(m, 0) })).sort((a, b) => b.m - a.m || (a.name < b.name ? -1 : 1)),
-    reason: isTerminalAccess(sg) ? "terminal_access" : sg.conflict ? "oneway_conflict" : "off_list_detour",
+    reason: sg.conflict ? "oneway_conflict" : isTerminalAccess(sg) ? "terminal_access" : "off_list_detour",
+    ...(sg.conflict ? { against: [...sg.against].sort() } : {}),
   }));
-  const terminalM = line.segments.filter(isTerminalAccess).reduce((sum, sg) => sum + (sg.toM - sg.fromM), 0);
+  const terminalM = line.segments.filter((sg) => !sg.conflict && isTerminalAccess(sg)).reduce((sum, sg) => sum + (sg.toM - sg.fromM), 0);
   q.terminalAccessM = round(terminalM, 1);
   q.gateOffListShare = hasList ? (line.lengthM > 0 ? round(Math.max(0, line.offListM - terminalM) / line.lengthM, 4) : 0) : null;
   const drawn: Drawn = { line: line.parts[0]!, lengthM: q.lengthM, stopMeasures: stopMeasures.map((m) => round(m, 1)), quality: q, offListSegments };
