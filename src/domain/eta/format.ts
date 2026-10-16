@@ -55,7 +55,7 @@ export const TRICYCLE_NOT_ESTIMATED = capitalise(notEstimated(["tricycle"]));
 export function formatTotal(t: EtaTotal): string {
   const waiting = t.rides === 0 ? "" : t.rides === 1 ? " + waiting (unknown)" : ` + waiting (unknown, ${t.rides} rides)`;
   if (t.lowMin === null || t.highMin === null) return `${capitalise(notEstimated(t.unestimatedModes))}${waiting}`;
-  if (t.highMin === 0) return "No walking"; // only 0 m walks: nothing to estimate
+  if (t.highMin === 0 && t.walkOnly && !t.partial) return "No walking"; // only 0 m walks: nothing to estimate
   const walk = t.walkOnly ? " walk" : "";
   const partial = t.partial ? ` · ${notEstimated(t.unestimatedModes)}` : "";
   return `Estimate ${formatRange(t.lowMin, t.highMin)}${walk}${waiting}${partial}`;

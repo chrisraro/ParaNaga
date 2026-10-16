@@ -139,16 +139,22 @@ The Increment D release adds migrations 0006-0009 (modes, fleet, terminals, shap
    ```
    It writes `tests/e2e/fixtures/network/*.json` from `main`'s published revision. Fixtures that already name that revision keep their committed `publishedAt`; a new revision id brings its real production date. Then update `REVISION` in `tests/e2e/fixtures/plan-responses.ts` (id, label, `publishedAt`) and any spec that asserts the revision label or date, and run the e2e suite. `reference-api.test.ts` publishes the modes seed in its `beforeAll`: never point it at `main`.
 
-**Rollback.** A published revision is never edited; the pointer moves. To return to the previous data, publish the superseded revision again as `paranaga_import` (the only role that may call it), against the production owner URL:
+**Rollback.** A published revision is never edited; the pointer moves. Order matters:
+
+1. **Redeploy the previous app version first.** It must tolerate the newer revision's extra rows (the additive tables and the modes, lines and terminal records); it does not read them, so it keeps working while the pointer still names the new revision. Do not move the pointer under the running Increment D app: it needs the new revision's endpoints.
+2. **Then publish the superseded revision again.** Only `paranaga_import` may execute `publish_revision`, so run this against the production owner URL (psql or any owner connection):
 
 ```sql
+begin;
+set local role paranaga_import;
 select transit.publish_revision('<previous revision id>');
+commit;
 ```
 
 - The previous revision is `osm-places-2026-10-15` (the id you noted in step 1; it is `superseded` now, which `publish_revision` accepts and audits as `revision.rollback`). Do not restore `modes-2026-10-16`: it is an intermediate revision without paths or the walk graph.
-- Re-publishing the previous revision does not remove the new rows or revisions; running `pnpm db:import --commit` later warns "(rolled back?)" and offers to re-publish. If the data itself is damaged, reset `main` from the `pre-increment-d-YYYY-MM-DD` backup branch in the Neon console instead.
-- The migrations stay applied (they are additive, and the previous app version does not read the new tables). Redeploy the previous app version afterwards: the Increment D app reads modes, lines and walk-graph endpoints that the old revision does not serve. Phones refetch by revision id, so they follow the pointer.
-- To go forward again: `select transit.publish_revision('<modes-lines revision id>');`.
+- Re-publishing the previous revision does not remove the new rows or revisions; running `pnpm db:import --commit` later only prints a "(rolled back?)" warning; it never re-publishes by itself. If the data itself is damaged, reset `main` from the `pre-increment-d-YYYY-MM-DD` backup branch in the Neon console instead.
+- The migrations stay applied (they are additive, and the previous app version does not read the new tables). The Increment D app reads modes, lines and walk-graph endpoints that the old revision does not serve, which is why the old app goes first. Phones refetch by revision id, so they follow the pointer.
+- To go forward again: deploy the Increment D app, then publish `<modes-lines revision id>` with the same `begin; set local role paranaga_import; …; commit;` block.
 
 **`NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY`** (optional interactive Street View, Maps Embed API only):
 
