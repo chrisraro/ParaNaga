@@ -7,7 +7,7 @@
 //    naming its data date (never as the current plan);
 //  - once the plan is in: the same option opens (onOpen), with "Re-planned on the current data"
 //    when the revision changed; or, when it is gone or its rides changed, the options show under
-//    "Route changed since you saved this".
+//    "Changed since saved".
 // Changing an end ends the reopen. Render-phase updates only set state ("adjust state while
 // rendering"); the device read happens in an effect.
 
@@ -54,7 +54,7 @@ type Args = {
 export type SavedTripReopen = {
   /** The saved option shown as saved (re-plan pending or failed), or null. */
   stored: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds; note: TripNote } | null;
-  /** Show "Route changed since you saved this" above the options. */
+  /** Show "Changed since saved" above the options. */
   changed: boolean;
   /** Note for the live option the reopen opened ("Re-planned on the current data"). */
   note: TripNote | null;

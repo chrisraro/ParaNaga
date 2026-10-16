@@ -22,7 +22,7 @@ export function TripLoading() {
 
 const ERROR_COPY: Record<PlanErrorKind, { title: string; detail: string }> = {
   offline: { title: "You're offline", detail: "Connect to plan a trip." },
-  server: { title: "Couldn't load options", detail: "Try again." },
+  server: { title: "Couldn't load options", detail: "Something went wrong." },
   invalid: { title: "Couldn't plan this trip", detail: "Both points must be in Naga City." },
 };
 

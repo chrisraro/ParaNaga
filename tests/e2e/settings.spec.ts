@@ -46,7 +46,7 @@ async function openSettings(page: Page) {
   await page.goto("/app/more");
   await expect(settingsHeading(page)).toBeVisible();
   // Hydrated: the controls respond once React owns them.
-  await expect(page.getByTestId("settings-data-revision")).toContainText("modes-lines-2026-10-16");
+  await expect(page.getByTestId("settings-sources")).toBeVisible();
 }
 
 async function openHome(page: Page) {
@@ -86,7 +86,7 @@ test.describe("phone", () => {
   test("the Settings screen shows its sections with the exact copy", async ({ page }) => {
     await openSettings(page);
     await expect(page.getByTestId("settings-account")).toHaveText(
-      "Accounts arrive laterEverything works without one. Saved trips and places stay on this phone.",
+      "No account neededSaved trips and places stay on this phone.",
     );
     // The account card is static, not a link.
     await expect(page.getByTestId("settings-account").locator("a")).toHaveCount(0);
@@ -98,10 +98,10 @@ test.describe("phone", () => {
     await expect(install).toContainText("use your browser’s menu");
     await expect(install.getByRole("button")).toHaveCount(0);
     const general = page.getByTestId("settings-general");
-    await expect(general).toContainText("LanguageFilipino arrives after a reviewed translation.English");
+    await expect(general).toContainText("LanguageFilipino planned.English");
     await expect(general).toContainText("Fare categoryRegular");
     await expect(page.getByTestId("settings-fare-note")).toHaveText(
-      "Discounts for students, seniors and PWD apply only where a verified fare rule allows them. None is verified yet, so ParaNaga shows regular fares.",
+      "Discounts aren’t applied: no verified rule yet. Regular fares shown.",
     );
     await expect(page.getByRole("radiogroup", { name: "Appearance" }).getByRole("radio")).toHaveText(["Light", "Dark", "System"]);
     await expect(page.getByRole("radio", { name: "System" })).toHaveAttribute("aria-checked", "true");
@@ -122,7 +122,8 @@ test.describe("phone", () => {
     await expect(page.getByTestId("settings-display")).toContainText("Reduce motionFollows your device setting");
     await expect(page.getByTestId("settings-location")).toContainText("Location access");
     await expect(page.getByText("Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.")).toBeVisible();
-    await expect(page.getByTestId("settings-data-revision")).toHaveText("Data revisionmodes-lines-2026-10-16 · Oct 16, 2026");
+    await expect(page.getByTestId("settings-sources")).toHaveText("Sources and credits");
+    await expect(page.getByTestId("settings-data-revision")).toHaveCount(0);
     // Help (Task 11) opens from the About group.
     await expect(page.getByTestId("settings-help")).toHaveAttribute("href", "/app/help");
     await expect(tabBar(page).getByRole("link", { name: "More", exact: true })).toHaveAttribute("aria-current", "page");

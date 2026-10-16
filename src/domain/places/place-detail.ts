@@ -253,5 +253,5 @@ export function terminalNoteSentences(code: string, hasDestinationCategories: bo
 
 /** The second line of a route that names the terminal. */
 export function terminalRouteSub(basis: "legal_plan" | "trial"): string {
-  return basis === "trial" ? "Trial · permanence unconfirmed" : "Legal route plan";
+  return basis === "trial" ? "Nov 2025 trial" : "Legal route plan";
 }

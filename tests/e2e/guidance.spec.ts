@@ -19,8 +19,8 @@ const guide = (page: Page) => page.getByTestId("guidance");
 const heading = (page: Page) => guide(page).getByRole("heading", { level: 2 });
 const SESSION_KEY = "paranaga.guidance";
 /** 1,240 m at 10–15 km/h (off-peak) and 7–13 km/h (peak), rounded outward. */
-const RIDE_LEFT_OFFPEAK = "About 4–8 min of riding left (estimate)";
-const RIDE_LEFT_PEAK = "About 5–11 min of riding left (estimate)";
+const RIDE_LEFT_OFFPEAK = "≈ 4–8 min left (estimate)";
+const RIDE_LEFT_PEAK = "≈ 5–11 min left (estimate)";
 
 type GeoStub = { watches: Map<number, unknown>; calls: number; mode: "allow" | "deny"; emit: (lat: number, lng: number, accuracy?: number) => void };
 
@@ -173,10 +173,11 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(heading(page)).toHaveText("Walk to Plaza Rizal (A1)");
   await expect(heading(page)).toBeFocused();
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 1 of 3 · Walk");
-  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 230 m walk · straight-line estimate, path not verified");
-  await expect(guide(page)).toContainText("Boarding side isn't mapped. Ask the driver or people waiting where Loop A stops.");
-  await expect(guide(page)).toContainText("Keep ParaNaga open for guidance.");
-  await expect(page.getByTestId("guidance-next-ride")).toContainText("Unverified route — confirm with the driver");
+  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 230 m");
+  await expect(guide(page)).toContainText("Ask where Loop A stops.");
+  // Walk steps carry the one full caution and no keep-open line (that is on ride steps).
+  await expect(guide(page).getByTestId("unverified-badge")).toHaveText("Unverified route — confirm with the driver");
+  await expect(page.getByTestId("guidance-keep-open")).toHaveCount(0);
   await expect(tabBar(page)).toBeHidden();
   await expectHonest(page);
 
@@ -184,29 +185,29 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 1 });
   await emit(page, { lat: 13.6224, lng: 123.1838 }, 12);
   await expect(page.getByTestId("guidance-accuracy")).toHaveText("GPS accuracy ± 12 m");
-  await expect(page.getByTestId("guidance-distance")).toHaveText(/^≈ \d+ m to Plaza Rizal \(A1\) in a straight line$/);
+  await expect(page.getByTestId("guidance-distance")).toHaveText(/^≈ \d+ m( · \w+)?$/);
   await emit(page, A1, 8);
-  await expect(page.getByTestId("guidance-proposal")).toContainText("You look close to Plaza Rizal (A1).");
+  await expect(page.getByTestId("guidance-proposal")).toContainText("Close to Plaza Rizal (A1).");
 
   await tap(page, "I'm at the stop");
   await expect(heading(page)).toHaveText("Wait for Loop A at Plaza Rizal (A1)");
-  await expect(guide(page)).toContainText("Signboard text isn't on file.");
+  await expect(guide(page)).toContainText("Signboard unverified.");
   await tap(page, "I boarded Loop A");
 
   // Ride: the rail follows the fixes in pin order.
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 2 of 3 · Ride");
-  await expect(page.getByTestId("guidance-ride-time")).toHaveText(/^About \d+–\d+ min of riding left \(estimate\)$/);
-  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop A · clockwise (from pin order)");
+  await expect(page.getByTestId("guidance-ride-time")).toHaveText(/^≈ [0-9]+–[0-9]+ min left \(estimate\)$/);
+  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop A · clockwise");
   await expect(page.getByTestId("ride-progress")).toContainText("Plaza Rizal (A1) · boarded");
   await expect(page.getByTestId("ride-progress")).toContainText("Get off · Avenue Square (A5)");
   await expectHonest(page);
   await emit(page, A2);
-  await expect(page.getByTestId("ride-count")).toHaveText("1 of 4 stops passed, by pin order");
+  await expect(page.getByTestId("ride-count")).toHaveText("1 of 4 stops");
   await expect(heading(page)).toHaveText("3 stops to go");
   await expect(page.getByTestId("ride-rail").locator('[data-state="passed"]')).toHaveCount(1);
   await expect(page.getByTestId("para-alert")).toHaveCount(0);
   await emit(page, A3);
-  await expect(page.getByTestId("ride-count")).toHaveText("2 of 4 stops passed, by pin order");
+  await expect(page.getByTestId("ride-count")).toHaveText("2 of 4 stops");
   await emit(page, A4);
   const alert = page.getByRole("alert").filter({ hasText: "Para! Next stop is yours" });
   await expect(alert).toHaveCount(1);
@@ -217,7 +218,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await tap(page, "I said “Para”");
   await expect(alert).toHaveCount(0);
   await expect(page.getByTestId("para-acknowledged")).toContainText("Step off when the jeepney stops at Avenue Square (A5)");
-  await expect(guide(page).getByRole("link", { name: "Problem with a driver? Report it in MyNaga" })).toHaveAttribute("href", "/app/mynaga");
+  await expect(guide(page).getByRole("link", { name: "Report a driver" })).toHaveAttribute("href", "/app/mynaga");
   await tap(page, "I got off");
 
   // Last walk, then Arrive: watch and wake lock stopped.
@@ -225,10 +226,10 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(heading(page)).toHaveText("Walk to Pinned location");
   await tap(page, "I've arrived");
   await expect(heading(page)).toHaveText("You've arrived");
-  await expect(page.getByTestId("arrive-body")).toHaveText("Pinned location. Guidance has ended and ParaNaga has stopped using your location.");
+  await expect(page.getByTestId("arrive-body")).toHaveText("Pinned location. Location use stopped.");
   expect((await geoStub(page)).watches).toBe(0);
   await expect(page.getByTestId("guidance-accuracy")).toHaveCount(0);
-  await expect(page.getByTestId("arrive-summary")).toContainText("≈ 350 m walk · estimate");
+  await expect(page.getByTestId("arrive-summary")).toContainText("≈ 350 m walk");
   await expect(page.getByTestId("arrive-summary")).toContainText(/Estimate ₱14(?!–)/);
   await expect(guide(page)).not.toContainText(/rate|rating|helpful/i);
   await expectHonest(page);
@@ -239,8 +240,8 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(save).toHaveAttribute("aria-pressed", "false");
   await save.click();
   await expect(save).toHaveAttribute("aria-pressed", "true");
-  await expect(save).toContainText("Trip saved");
-  await expect(save).toContainText("Available offline in Saved");
+  await expect(save).toContainText("Saved");
+  await expect(save).toContainText("Works offline");
 
   await page.getByTestId("trip-sheet").getByRole("button", { name: "Done" }).click();
   await expect(guide(page)).toHaveCount(0);
@@ -261,7 +262,7 @@ for (const [clock, ride] of [["09:30", RIDE_LEFT_OFFPEAK], ["07:10", RIDE_LEFT_P
     await stubGeolocation(page, "deny");
     await openApp(page);
     await startGuidance(page);
-    await expect(page.getByTestId("guidance-time")).toHaveText(/^About \d+–\d+ min to Plaza Rizal \(A1\) \(estimate\)$/);
+    await expect(page.getByTestId("guidance-time")).toHaveText(/^≈ [0-9]+–[0-9]+ min \(estimate\)$/);
     await tap(page, "I'm at the stop");
     await tap(page, "I boarded Loop A");
     await expect(page.getByTestId("guidance-ride-time")).toHaveText(ride);
@@ -279,15 +280,16 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   expect(await geoStub(page)).toEqual({ watches: 0, calls: 0 });
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 1 of 5 · Walk");
   await page.getByTestId("guidance-use-location").click();
-  await expect(page.getByTestId("guidance-location-off")).toHaveText("Location is off. Follow the steps and tap “I'm at the stop” when you get there.");
+  await expect(page.getByTestId("guidance-location-off")).toHaveText("Location off. Tap “I'm at the stop” when there.");
   expect((await geoStub(page)).watches).toBe(0);
   await expectAxeClean(page);
 
   await tap(page, "I'm at the stop");
   await tap(page, "I boarded Loop A");
   await expect(heading(page)).toHaveText("Ride to Magsaysay Junction (A3)");
-  await expect(page.getByTestId("ride-count")).toHaveText("2 stops after Plaza Rizal (A1), by pin order");
-  await expect(guide(page)).toContainText("Stop alerts work only while ParaNaga is open on your screen.");
+  await expect(page.getByTestId("ride-count")).toHaveText("2 stops after Plaza Rizal (A1)");
+  await expect(page.getByTestId("guidance-keep-open")).toHaveText("Keep this screen open.");
+  await expect(guide(page)).not.toContainText("Stop alerts work only");
   await tap(page, "My stop is next");
   await expect(page.getByRole("alert").filter({ hasText: "Para! Next stop is yours" })).toHaveCount(1);
   await tap(page, "I said “Para”");
@@ -301,14 +303,14 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expect(checklist).toHaveCount(3);
   await expect(checklist.nth(0)).toContainText("Got off at Magsaysay Junction (A3)");
   await expect(checklist.nth(1)).toHaveAttribute("aria-current", "step");
-  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 80 m walk · straight-line estimate, path not verified");
+  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 80 m");
   await expectHonest(page);
   await expectAxeClean(page);
   await tap(page, "I'm at the stop");
-  await expect(guide(page)).toContainText("Signboard text isn't on file. Before you get on, ask the driver: “Loop B?”");
+  await expect(guide(page)).toContainText("Signboard unverified. Ask the driver: “Loop B?”");
   await tap(page, "I boarded Loop B");
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 4 of 5 · Ride");
-  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop B · counterclockwise (from pin order)");
+  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop B · counterclockwise");
   await tap(page, "I got off");
   await tap(page, "I've arrived");
   await expect(heading(page)).toHaveText("You've arrived");
@@ -375,7 +377,7 @@ test("Undo last step goes back one confirmation; after Arrive it never restarts 
   await tap(page, "I got off");
   await tap(page, "I've arrived");
   expect((await geoStub(page)).watches).toBe(0);
-  await expect(page.getByTestId("guidance-undo")).toHaveText("Undo last step");
+  await expect(page.getByTestId("guidance-undo")).toHaveText("Undo");
   await page.getByTestId("guidance-undo").click();
   await expect(heading(page)).toHaveText("Walk to Pinned location");
   // Location stays off until tapped again.
@@ -404,7 +406,7 @@ test("a reload resumes the step with location off; End guidance puts the trip ba
   await context.setGeolocation({ latitude: 13.6228, longitude: 123.1842, accuracy: 80 });
   await page.getByTestId("guidance-use-location").click();
   await expect(page.getByTestId("guidance-accuracy")).toHaveText("GPS accuracy ± 80 m");
-  await expect(page.getByTestId("guidance-location-note")).toHaveText("Your location is approximate (± 80 m), so distance and direction are hidden.");
+  await expect(page.getByTestId("guidance-location-note")).toHaveText("Location too rough (± 80 m): distance hidden.");
   await expectAxeClean(page);
 
   await page.getByRole("button", { name: "End guidance" }).click();
@@ -433,7 +435,7 @@ test("missed stop with a fresh fix plans again from there", async ({ page, conte
   await tap(page, "I boarded Loop A");
   await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 1 });
   await emit(page, A2);
-  await expect(page.getByTestId("ride-count")).toHaveText("1 of 4 stops passed, by pin order");
+  await expect(page.getByTestId("ride-count")).toHaveText("1 of 4 stops");
 
   await tap(page, "I missed my stop");
   await expect(heading(page)).toHaveText("Missed your stop?");

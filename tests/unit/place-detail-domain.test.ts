@@ -129,6 +129,6 @@ describe("terminal copy", () => {
     ]);
     expect(terminalNoteSentences("T05", false)).toEqual([]);
     expect(terminalRouteSub("legal_plan")).toBe("Legal route plan");
-    expect(terminalRouteSub("trial")).toBe("Trial · permanence unconfirmed");
+    expect(terminalRouteSub("trial")).toBe("Nov 2025 trial");
   });
 });

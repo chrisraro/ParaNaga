@@ -152,23 +152,24 @@ test("a terminal away from stops still opens on a tap (T04, Integrated Northboun
   // (No T04 detail fixture is captured: the URL is the assertion.)
 });
 
-test("T01 detail: the coordinate badge, OSM provenance and attribution, RS05 with a UV fare estimate", async ({ page }) => {
+test("T01 detail: the coordinate badge, one Sources link, RS05 with a UV fare estimate", async ({ page }) => {
   await page.goto("/app/terminals/T01");
   const detail = terminal(page);
   await expect(detail.getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBeFocused();
-  await expect(detail.getByTestId("terminal-pill")).toHaveText("Community-mapped location (OpenStreetMap)");
+  await expect(detail.getByTestId("terminal-pill")).toHaveText("Community-mapped");
   const map = detail.getByTestId("naga-map");
   await expect(map).toHaveAttribute("aria-label", "Map of Bicol Central Station");
   await expect(map.getByRole("img", { name: "Bicol Central Station, Bus and UV Express terminal, community-mapped location" })).toHaveCount(1);
-  await expect(detail.getByTestId("terminal-location")).toContainText("OSM way/293702439 v6 · centroid, not an entrance");
-  const attribution = detail.getByTestId("terminal-osm-attribution").getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" });
-  await expect(attribution).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
+  await expect(detail.getByTestId("terminal-location")).toContainText("Mapped point · centroid, not an entrance");
+  await expect(detail.getByTestId("terminal-osm-attribution")).toHaveCount(0);
+  await expect(detail.getByTestId("detail-sources")).toHaveAttribute("href", "/app/help/sources?osm=way/293702439&v=6");
   await expect(detail.getByTestId("terminal-directions-note")).toHaveCount(0);
   await expect(detail).not.toContainText("regional services are not mapped");
   const rs05 = detail.getByTestId("terminal-regional-RS05");
   await expect(rs05.getByTestId("mode-chip")).toHaveText("UV");
   await expect(rs05).toContainText("Tabaco");
   await expect(rs05).toContainText("≈ 94 km by the community-mapped route · Estimate ₱245–₱283");
+  await expect(rs05).not.toContainText("Sources");
   await expect(rs05).toContainText("operator prices may differ");
 
   await detail.getByRole("button", { name: "Directions to here" }).click();
@@ -203,7 +204,7 @@ test("a trip ending at T14 shows the tricycle hint: ₱15, no discount, confirm 
   await expect(hint).toContainText("confirm with the driver");
   await expect(hint.getByTestId("tricycle-hint-time")).toHaveText("Tricycle time not estimated");
   await expect(hint).not.toContainText(/\d+\s*min/);
-  await expect(hint.getByTestId("tricycle-hint-sources")).toContainText("N33");
+  await expect(hint.getByTestId("tricycle-hint-sources")).toHaveCount(0);
   // Below the options, never one of them.
   await expect(page.getByTestId("trip-option").filter({ hasText: /tricycle/i })).toHaveCount(0);
   await expect(homeMap(page).locator('[data-code="T14"]')).toHaveClass(/pn-terminal-marker--emphasized/);

@@ -183,15 +183,15 @@ test("Low-data mode: street paths download only on the tap, then stay stored (Ta
   const detail = page.getByTestId("trip-detail");
   const download = detail.getByTestId("walk-graph-download");
   await expect(download).toHaveText("Download street paths (≈ 80 KB)");
-  await expect(detail).not.toContainText("Approximate walking path");
+  await expect(detail.locator("[data-path=street]")).toHaveCount(0);
   expect(calls.walkGraphs).toEqual([]);
   const a11y = await new AxeBuilder({ page }).include('[data-testid="trip-sheet"]').withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
   expect(a11y.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => v.id)).toEqual([]);
 
   await download.click();
-  await expect(detail).toContainText("Approximate walking path");
+  await expect(detail.locator("[data-path=street]").first()).toBeAttached();
   await expect(detail.getByTestId("walk-graph-offer")).toHaveCount(0);
-  await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+  await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
   expect(calls.walkGraphs).toEqual([SNAPSHOT.revision.revisionId]);
   await expect
     .poll(async () => (await cacheEntries(page)).some((e) => e.url.endsWith(`/api/v1/network/walk-graph/${SNAPSHOT.revision.revisionId}`)))
@@ -202,7 +202,7 @@ test("Low-data mode: street paths download only on the tap, then stay stored (Ta
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
   await setEnds(page);
   await chooseOption(page);
-  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect(page.getByTestId("trip-detail").locator("[data-path=street]").first()).toBeAttached();
   await expect(page.getByTestId("walk-graph-offer")).toHaveCount(0);
   expect(calls.walkGraphs).toEqual([SNAPSHOT.revision.revisionId]);
 });
@@ -237,7 +237,7 @@ test("offline after one online trip: overview, ride lines and street walk paths 
   await setEnds(page);
   await chooseOption(page);
   // Online: the walk graph is fetched the first time a trip is shown, and the worker keeps it.
-  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect(page.getByTestId("trip-detail").locator("[data-path=street]").first()).toBeAttached();
   await expect
     .poll(async () => (await page.evaluate(() => caches.keys())).filter((n) => /^pn-(lines-f\d+|walk-graph)-/.test(n)).length)
     .toBe(2);
@@ -257,7 +257,7 @@ test("offline after one online trip: overview, ride lines and street walk paths 
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
   // Street paths, not straight lines: the walk graph came from the cache.
-  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect(page.getByTestId("trip-detail").locator("[data-path=street]").first()).toBeAttached();
   await expect(page.getByTestId("trip-detail")).not.toContainText("Street paths need a connection");
   // Neither the lines nor the walk graph tried the network: both came from Cache Storage.
   expect(attemptsTo(/\/api\/v1\/network\/(lines|walk-graph)\//)).toEqual([]);
@@ -365,7 +365,7 @@ test("Clear data on this device removes the data caches; the app still opens off
   // A trip shown once stores the walk graph (and the overview stored the lines).
   await setEnds(page);
   await chooseOption(page);
-  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect(page.getByTestId("trip-detail").locator("[data-path=street]").first()).toBeAttached();
   await expect
     .poll(async () => (await page.evaluate(() => caches.keys())).filter((n) => /^pn-(lines-f\d+|walk-graph)-/.test(n)).length)
     .toBe(2);

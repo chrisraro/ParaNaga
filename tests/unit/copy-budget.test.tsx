@@ -31,7 +31,10 @@ export const GUIDANCE_WALK_WORDS = 22;
 function visibleWords(el: Element, { skipButtons = false }: { skipButtons?: boolean } = {}): number {
   const clone = el.cloneNode(true) as Element;
   clone.querySelectorAll(skipButtons ? ".sr-only, [hidden], button" : ".sr-only, [hidden]").forEach((n) => n.remove());
-  return (clone.textContent ?? "").split(/\s+/).filter((t) => /[\p{L}\p{N}]/u.test(t)).length;
+  const walker = clone.ownerDocument.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+  const parts: string[] = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) parts.push(n.textContent ?? "");
+  return parts.join(" ").split(/\s+/).filter((t) => /[\p{L}\p{N}]/u.test(t)).length;
 }
 
 beforeEach(() => {

@@ -191,7 +191,7 @@ function TerminalFacts({ terminal }: { terminal: TerminalInfo }) {
     <dl className="pn-place__facts" aria-label="About this terminal">
       <div className="pn-place__fact" data-testid="terminal-location">
         <dt className="pn-place__fact-label">Location</dt>
-        <dd className="pn-place__fact-value">{terminal.coordinate ? "Mapped point" : "Location not mapped"}</dd>
+        <dd className="pn-place__fact-value">{terminal.coordinate ? `Mapped point${terminal.coordinate.note ? ` · ${terminal.coordinate.note}` : ""}` : "Location not mapped"}</dd>
       </div>
       {modes.length > 0 ? (
         <div className="pn-place__fact" data-testid="terminal-modes">

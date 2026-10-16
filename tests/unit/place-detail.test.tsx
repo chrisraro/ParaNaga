@@ -278,14 +278,14 @@ describe("Terminal detail", () => {
     const trial = screen.getAllByTestId("terminal-route-trial");
     expect(legal.map((a) => a.querySelector(".pn-loop-chip")!.textContent)).toEqual(["Loop A", "Loop B"]);
     expect(legal[0]!.textContent).toContain("Legal route plan");
-    expect(trial[0]!.textContent).toContain("Trial · permanence unconfirmed");
+    expect(trial[0]!.textContent).toContain("Nov 2025 trial");
     expect(trial[0]!.textContent).toContain("Trial — permanence unconfirmed");
     expect(legal[0]!.getAttribute("href")).toBe("/app/routes/R8-A");
     expect(screen.getByText("Bays not mapped.")).toBeTruthy();
     // A coordinate is on file: no "unmapped" copy anywhere, the provenance row and the attribution.
     expect(screen.queryByTestId("terminal-directions-note")).toBeNull();
     expect(document.body.textContent).not.toMatch(/regional services are not mapped|until the terminal's location is mapped/);
-    expect(screen.getByTestId("terminal-location").textContent).toBe("LocationMapped point");
+    expect(screen.getByTestId("terminal-location").textContent).toBe("LocationMapped point · centroid, not an entrance");
     expect(screen.queryByTestId("terminal-osm-attribution")).toBeNull();
     expect(screen.getByTestId("detail-sources").getAttribute("href")).toBe("/app/help/sources?osm=way/293702439&v=6");
     expect(screen.getByTestId("terminal-status-note").textContent).toBe(rawT01.terminal.statusNote);

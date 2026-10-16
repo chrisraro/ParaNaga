@@ -66,14 +66,12 @@ async function expectAxeClean(page: Page) {
   expect(serious, serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`).join("\n")).toEqual([]);
 }
 
-test("header, intro, search action, the note and the OpenStreetMap attribution", async ({ page }) => {
+test("header, intro and search action; the sourcing note and attribution are on Sources and credits", async ({ page }) => {
   await openExplore(page);
   const explore = page.getByTestId("explore-page");
   await expect(explore.getByText("Places in Naga, and how to get there.")).toBeVisible();
-  await expect(explore.getByTestId("explore-places-note")).toContainText("Sourced photos show landmarks; entrances and hours remain unverified.");
-  const attribution = explore.getByTestId("explore-osm-attribution").getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" });
-  await expect(attribution).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
-  await expect(attribution).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(explore.getByTestId("explore-places-note")).toHaveCount(0);
+  await expect(explore.getByTestId("explore-osm-attribution")).toHaveCount(0);
   await expect(page.getByTestId("explore-card").first().getByText("Photo pending")).toBeVisible();
   await page.getByTestId("explore-search").click();
   await expect(page).toHaveURL(/\/app\/search$/);
@@ -196,7 +194,7 @@ test("the directory: each segment lists the right count and its rows open the ri
   await expect(directory.getByTestId("explore-leads").getByRole("listitem")).toHaveCount(5);
   await expect(directory.getByTestId("explore-leads").getByRole("link")).toHaveCount(0);
   await expect(directory.getByTestId("explore-rail")).toContainText("Verify with PNR.");
-  await expect(directory.getByTestId("explore-rail-sources")).toHaveText("Sources S19, S20 (not in register), S21");
+  await expect(directory.getByTestId("explore-rail-sources")).toHaveCount(0);
 });
 
 test("Explore passes axe (light)", async ({ page }) => {

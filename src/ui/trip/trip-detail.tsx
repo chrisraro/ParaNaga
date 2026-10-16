@@ -26,7 +26,8 @@ import type { EtaModel } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
 import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
 import { formatLeg } from "@/domain/eta/format";
-import { WALK_LOADING_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
+import { WALK_PATHS_OFFLINE_NOTE } from "@/domain/pwa/offline-copy";
+import { WALK_LOADING_LABEL, WALK_OFFLINE_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { LineNotesView } from "@/ui/map/line-notes-view";
 import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
@@ -130,7 +131,8 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
         body: (
           <>
             <strong className="pn-tl__title">{walkTitle(leg, lookups)}</strong>
-            <WalkTime leg={etaLeg} />
+            <WalkTime leg={etaLeg} path={(leg as { path?: { kind?: string } }).path?.kind === "path" ? "street" : "straight"} />
+            {(leg as { path?: { label?: string } }).path?.label === WALK_OFFLINE_LABEL ? <p className="pn-tl__sub">{WALK_PATHS_OFFLINE_NOTE}</p> : null}
           </>
         ),
       });
@@ -211,10 +213,10 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
 }
 
 /** "≈ 5–7 min walk" (+ " · path not verified" on a walk), the range spoken in words; "Tricycle time not estimated". */
-function LegTime({ leg, note }: { leg: EtaLeg; note?: string }) {
+function LegTime({ leg, note, path }: { leg: EtaLeg; note?: string; path?: "street" | "straight" }) {
   const text = leg.estimated && note ? `${formatLeg(leg)} · ${note}` : formatLeg(leg);
   return (
-    <p className="pn-tl__sub pn-tl__sub--time" data-testid="leg-time">
+    <p className="pn-tl__sub pn-tl__sub--time" data-testid="leg-time" data-path={path}>
       <SpokenRange text={text} range={leg} />
     </p>
   );
@@ -222,9 +224,9 @@ function LegTime({ leg, note }: { leg: EtaLeg; note?: string }) {
 
 const WALK_NOTE = "path not verified";
 
-/** A walk’s one line: the time with "path not verified", or just that note without an estimate. */
-function WalkTime({ leg }: { leg?: EtaLeg }) {
-  return leg ? <LegTime leg={leg} note={WALK_NOTE} /> : <p className="pn-tl__sub">Path not verified</p>;
+/** A walk’s one line: the time with "path not verified" (data-path says street path or straight line), or just that note without an estimate. */
+function WalkTime({ leg, path }: { leg?: EtaLeg; path: "street" | "straight" }) {
+  return leg ? <LegTime leg={leg} note={WALK_NOTE} path={path} /> : <p className="pn-tl__sub" data-path={path}>Path not verified</p>;
 }
 
 type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";

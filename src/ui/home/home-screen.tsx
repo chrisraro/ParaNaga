@@ -1020,7 +1020,7 @@ export function HomeScreen() {
             <>
               {reopen.changed ? (
                 <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-changed-note">
-                  Route changed since you saved this
+                  Changed since saved
                 </p>
               ) : null}
               {plan.status === "ready" && plan.offline ? (

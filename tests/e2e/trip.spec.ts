@@ -78,26 +78,24 @@ test("trip options show the unverified badge, estimate chips and honest time est
   const cards = options.getByTestId("trip-option");
   await expect(cards).toHaveCount(2);
   for (const card of await cards.all()) {
-    await expect(card.getByTestId("unverified-badge")).toHaveText(BADGE);
+    // A card is minimal: the caution chip (the full badge is in the detail), the route, an estimated range.
+    await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
+    await expect(card.getByTestId("unverified-badge")).toHaveCount(0);
     await expect(card).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
     await expect(card).toContainText("Loop A");
-    await expect(card).toContainText("clockwise");
+    await expect(card.locator('abbr[title="Estimate"]').first()).toHaveText("Est.Estimate");
   }
-  await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Estimate ₱14");
+  await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱14");
   await expect(cards.nth(0)).toContainText("No transfers");
-  await expect(cards.nth(0)).toContainText("≈ 230 m");
-  // Ride distance on the ride leg of the strip too (decision B).
-  await expect(cards.nth(0).locator(".pn-legstrip")).toContainText("≈ 1.2 km");
-  // Least walking: the long loop ride is obvious.
+  // Leg-by-leg text, distances, the vehicle chip and the footers are not on the card.
+  await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|clockwise|Walk|Jeepney/);
   await expect(cards.nth(1)).toContainText("Least walking");
-  await expect(cards.nth(1)).toContainText("Ride ≈ 5.5 km");
-  await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Estimate ₱16–₱18");
+  await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱16–₱18");
 
-  // Accessible names carry the label and the fare estimate.
-  await expect(page.getByRole("button", { name: /Recommended · Fewest transfers.*Estimate ₱14(?!–)/ })).toBeVisible();
+  // Accessible names carry the label, the caution and the fare estimate, with the full word.
+  await expect(page.getByRole("button", { name: /Recommended.*Unverified route.*Loop A.*Estimate ₱14(?!–)/ })).toBeVisible();
 
-  await expect(options).toContainText("Walking distances are estimates; paths not verified.");
-  await expect(options).toContainText("Transport data revision modes-lines-2026-10-16");
+  await expect(options).not.toContainText(/Walking distances|revision|Source/);
   await expect(page.getByText("Verified route", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Exact|arrive/i)).toHaveCount(0);
   await expect(page.getByTestId("no-verified-commute")).toHaveCount(0);
@@ -143,7 +141,7 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
 
   await chooseOption(page);
   const detail = page.getByTestId("trip-detail");
-  await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+  await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
   await expect(detail).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
@@ -153,16 +151,19 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps.nth(0)).toContainText("Walk ≈ 230 m to Plaza Rizal (A1)");
   await expect(steps.nth(0)).toContainText("path not verified");
   await expect(steps.nth(1)).toContainText("Board Loop A at Plaza Rizal (A1)");
-  await expect(steps.nth(1)).toContainText("Direction: clockwise (from pin order)");
-  await expect(steps.nth(1)).toContainText("Signboard not yet verified");
-  await expect(steps.nth(1)).toContainText("Ride 4 stops");
+  await expect(steps.nth(1)).toContainText("Clockwise");
+  await expect(steps.nth(1)).toContainText("Signboard unverified");
+  await expect(steps.nth(1)).toContainText("4 stops · ≈ 1.2 km");
+  await expect(steps.nth(1)).toContainText("Approximate path, not a verified route shape");
+  await expect(steps).not.toContainText(["Mapped candidate"]);
   await expect(steps.nth(2)).toContainText("Get off at Avenue Square (A5)");
-  await expect(steps.nth(2)).toContainText("Para!");
+  await expect(steps.nth(2)).toContainText("Say “Para!” near here");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
-  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14 · traditional jeepney rate · from reported fare rules · matrix not verified/);
-  await expect(detail).toContainText("Corrections open soon");
-  await expect(detail.getByRole("link")).toHaveCount(0);
+  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14$/);
+  await expect(detail).not.toContainText(/Corrections|from reported fare rules|matrix not verified/);
+  // Only two links: the Sources link in the top bar and the fare basis.
+  await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated"]);
 
   // Boarding and getting-off stops are DOM markers above the trip's own lines (Task 12); the
   // routes overview is not drawn while a trip is shown.
@@ -198,7 +199,7 @@ async function expectAxeClean(page: Page, selector: string) {
 
 const TIMES = {
   "09:30": { peak: null, first: EST_0930_FIRST, second: EST_0930_SECOND },
-  "07:10": { peak: "Peak hours · slower estimate (06:00–08:00)", first: EST_0710_FIRST, second: EST_0710_SECOND },
+  "07:10": { peak: "Peak hours: slower (06:00–08:00)", first: EST_0710_FIRST, second: EST_0710_SECOND },
 } as const;
 
 for (const colorScheme of ["light", "dark"] as const) {
@@ -214,8 +215,8 @@ for (const colorScheme of ["light", "dark"] as const) {
       const cards = page.getByTestId("trip-option");
       await expect(cards.nth(0).getByTestId("trip-option-time")).toContainText(want.first);
       await expect(cards.nth(1).getByTestId("trip-option-time")).toContainText(want.second);
-      if (want.peak) await expect(cards.nth(0).getByTestId("trip-peak-note")).toHaveText(want.peak);
-      else await expect(page.getByTestId("trip-peak-note")).toHaveCount(0);
+      // The peak note is in the detail only; the card's range already includes the peak band.
+      await expect(page.getByTestId("trip-option").getByTestId("trip-peak-note")).toHaveCount(0);
       // The range is spoken in words in the card's accessible name.
       await expect(cards.nth(0)).toHaveAccessibleName(/Estimate \d+ to \d+ minutes \+ waiting \(unknown\)/);
       await expectAxeClean(page, '[data-testid="trip-sheet"]');
@@ -225,7 +226,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       await expect(detail.getByTestId("trip-detail-time")).toContainText(want.first);
       if (want.peak) await expect(detail.getByTestId("trip-peak-note")).toHaveText(want.peak);
       else await expect(detail.getByTestId("trip-peak-note")).toHaveCount(0);
-      await expect(detail.getByTestId("leg-time").filter({ hasText: "ride" })).toContainText(/^≈ \d+–\d+ min ride · along the approximate path/);
+      await expect(detail.getByTestId("leg-time").filter({ hasText: "ride" })).toHaveText(/^≈ \d+–\d+ min ride$/);
       await expect(detail.getByTestId("ride-fleet-class").first()).toContainText(/^Traditional jeepney · operating \(owner-confirmed/);
       await expectAxeClean(page, '[data-testid="trip-sheet"]');
 
@@ -281,7 +282,7 @@ test("no coverage keeps a clear message", async ({ page }) => {
 
   const card = page.getByTestId("no-provisional-route");
   await expect(card.getByRole("heading", { name: "No provisional route connects these points yet" })).toBeVisible();
-  await expect(card).toContainText("Loops A and B are the only routes we can suggest for now.");
+  await expect(card).toContainText("Only Loops A and B for now.");
   await expect(page.getByTestId("trip-option")).toHaveCount(0);
   expect(await overlayPaths(page).count()).toBe(pathsBefore);
 });
@@ -303,7 +304,7 @@ test("a server error offers a retry that recovers", async ({ page }) => {
   await pinBoth(page);
 
   const error = page.getByTestId("trip-error");
-  await expect(error).toContainText("Couldn't load trip options");
+  await expect(error).toContainText("Couldn't load options");
   await error.getByRole("button", { name: "Try again" }).click();
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
   await expect(page.getByTestId("trip-error")).toHaveCount(0);
@@ -322,9 +323,9 @@ test("loading is announced through the persistent announcer", async ({ page }) =
   await openApp(page);
   await pinBoth(page);
   await expect(page.getByTestId("trip-loading")).toBeVisible();
-  await expect(page.getByTestId("home-announcer")).toHaveText("Looking for provisional routes…");
+  await expect(page.getByTestId("home-announcer")).toHaveText("Looking for routes…");
   release();
-  await expect(page.getByTestId("home-announcer")).toContainText("2 provisional trip options found");
+  await expect(page.getByTestId("home-announcer")).toContainText("2 options found");
 });
 
 test("a rejected request offers to change the points instead of a retry", async ({ page }) => {
@@ -375,7 +376,7 @@ test("moving a pin by hand never shows the previous trip's options while the new
 
   await expect(page.getByTestId("trip-loading")).toBeVisible();
   await expect(page.getByTestId("trip-option")).toHaveCount(0);
-  await expect(page.getByText("Updating for your new location…")).toHaveCount(0);
+  await expect(page.getByText("Updating…")).toHaveCount(0);
   release();
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
 });
@@ -446,13 +447,13 @@ test.describe("GPS refinement while results are shown", () => {
 
     // In flight: the detail stays, its heading keeps focus, and no loading state replaces it.
     await expect(detail).toBeVisible();
-    await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+    await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);
     release();
 
     // Settled: still open and focused.
     await expect(detail).toBeVisible();
-    await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+    await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);
     await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
   });

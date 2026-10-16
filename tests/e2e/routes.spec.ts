@@ -46,7 +46,7 @@ test("R4 route detail shows fleet label and no chair names", async ({ page }) =>
   // Cooperatives section and footnote
   const coopsSection = page.getByTestId("route-cooperatives-section");
   await expect(coopsSection).toBeVisible();
-  await expect(page.getByTestId("cooperatives-footnote")).toHaveText("Cooperative leaders' names are not shown; sources disagree.");
+  await expect(page.getByTestId("cooperatives-footnote")).toHaveText("Leaders' names not shown.");
 
   // Crucial check: never show chair or leader names, nor addresses
   const allText = await route.innerText();

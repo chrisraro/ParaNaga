@@ -60,10 +60,10 @@ test("an OpenStreetMap place: map at its coordinate, attribution, and Plan trip 
   await expect(map).toHaveAttribute("aria-label", "Map of SM City Naga");
   await expect(map).toHaveAttribute("data-center-lat", SM.lat.toFixed(6));
   await expect(map.getByRole("img", { name: "SM City Naga" })).toHaveCount(1);
-  await expect(detail.getByTestId("place-location-note")).toHaveText("Location from OpenStreetMap — entrance not mapped.");
-  const attribution = detail.getByTestId("place-osm-attribution").getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" });
-  await expect(attribution).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
-  await expect(detail.getByTestId("place-osm-link")).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(detail.getByTestId("place-entrance")).toContainText("Not mapped. Trips end at the map point.");
+  // Attribution, the OSM object and the snapshot are on Sources and credits: one link away.
+  await expect(detail.getByTestId("place-osm-attribution")).toHaveCount(0);
+  await expect(detail.getByTestId("detail-sources")).toHaveAttribute("href", /^\/app\/help\/sources\?osm=(node|way|relation)\/[0-9]+&v=[0-9]+$/);
   await expect(detail.getByTestId("place-nearest-stops").getByRole("link").first()).toHaveAttribute("href", /^\/app\/stops\//);
 
   await detail.getByRole("button", { name: "Plan trip to SM City Naga" }).click();
@@ -90,7 +90,8 @@ test("Plaza Rizal from search: Plan trip to Plaza Rizal sets the destination at 
   await expect(detail.getByTestId("place-kind")).toHaveText(`Mapped stop · ${PLAZA.pins.length} pins`);
   await expect(detail.getByTestId("place-pins").getByRole("link")).toHaveCount(PLAZA.pins.length);
   await expect(detail.getByTestId("naga-map")).toHaveAttribute("data-stop-pins", String(PLAZA.pins.length));
-  await expect(detail.getByTestId("place-source")).toContainText("Public My Maps snapshot · retrieved 15 Oct 2026");
+  await expect(detail.getByTestId("place-source")).toHaveCount(0);
+  await expect(detail.getByTestId("detail-sources")).toHaveAttribute("href", /\/app\/help\/sources\?stop=/);
   await detail.getByRole("button", { name: "Plan trip to Plaza Rizal" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(rowMain(page, "destination")).toContainText("Plaza Rizal (mapped pin)");
@@ -105,7 +106,7 @@ test("a barangay: no map; its CTA opens Choose on map for that end", async ({ pa
   const detail = place(page);
   await expect(detail.getByRole("heading", { level: 1, name: "Abella" })).toBeFocused();
   await expect(detail.getByTestId("naga-map")).toHaveCount(0);
-  await expect(detail.getByTestId("place-source")).toContainText("PSA Naga barangays · checked 15 Oct 2026");
+  await expect(detail.getByTestId("place-source")).toHaveCount(0);
   await detail.getByRole("button", { name: "Choose a point in Abella on the map" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByRole("button", { name: "Set destination here" })).toBeFocused();
@@ -133,16 +134,16 @@ test("T01: the community-mapped badge and map, Loop A and Loop B with the trial 
   const detail = terminal(page);
   await expect(detail.getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBeFocused();
   await expect(detail.getByTestId("naga-map")).toHaveAttribute("aria-label", "Map of Bicol Central Station");
-  await expect(detail.getByTestId("terminal-pill")).toHaveText("Community-mapped location (OpenStreetMap)");
+  await expect(detail.getByTestId("terminal-pill")).toHaveText("Community-mapped");
   await expect(detail.getByRole("note")).toHaveText("Not the PNR railway station.");
   await expect(detail.getByTestId("terminal-route-legal_plan").locator(".pn-loop-chip")).toHaveText(["Loop A", "Loop B"]);
-  await expect(detail.getByTestId("terminal-route-trial").first()).toContainText("Named in the Nov 2025 trial · permanence unconfirmed");
+  await expect(detail.getByTestId("terminal-route-trial").first()).toContainText("Nov 2025 trial");
   await expect(detail.getByTestId("terminal-route-trial").first()).toContainText("Trial — permanence unconfirmed");
   await expect(detail.getByTestId("terminal-directions-note")).toHaveCount(0);
   await expect(detail.getByRole("button", { name: "Directions to here" })).toBeVisible();
-  await expect(detail.getByTestId("terminal-osm-attribution")).toBeVisible();
+  await expect(detail.getByTestId("terminal-osm-attribution")).toHaveCount(0);
   await detail.getByRole("tab", { name: "Hours" }).click();
-  await expect(detail.getByRole("tabpanel")).toContainText("Opening hoursNot on file");
+  await expect(detail.getByRole("tabpanel")).toContainText("HoursNot on file");
   await detail.getByRole("tab", { name: "Routes" }).click();
   await detail.getByTestId("terminal-route-legal_plan").first().click();
   await expect(page).toHaveURL(/\/app\/routes\/R8-A$/);
@@ -154,9 +155,9 @@ test("T06: no route plan names it", async ({ page }) => {
   await expect(detail.getByRole("heading", { level: 1, name: "Naga PNR railway station" })).toBeFocused();
   await expect(detail.getByTestId("terminal-no-routes")).toHaveText("No route plan names this terminal yet.");
   await expect(detail.getByRole("note")).toHaveText("Not Bicol Central Station (the bus terminal).");
-  await expect(detail.getByTestId("terminal-location")).toContainText("OSM way/23662289 v7 · building centroid, not an entrance");
+  await expect(detail.getByTestId("terminal-location")).toContainText("Mapped point · building centroid, not an entrance");
   await expect(detail.getByTestId("terminal-status-note")).toContainText("confirm with PNR");
-  await expect(detail.getByTestId("terminal-osm-attribution")).toBeVisible();
+  await expect(detail.getByTestId("terminal-osm-attribution")).toHaveCount(0);
 });
 
 test("unknown terminal and place links get the not-found panel", async ({ page }) => {
