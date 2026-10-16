@@ -51,7 +51,7 @@ import { TripDetail, type TripEnds } from "@/ui/trip/trip-detail";
 import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
-import { EndpointSheet, PEEK_NOTE_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, endpointRowMainId, useSheet, type Snap } from "./endpoint-sheet";
+import { EndpointSheet, PEEK_NOTE_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, TINY_SHEET, endpointRowMainId, mapInsetFor, useSheet, type Snap } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
   LocationStatus,
@@ -82,9 +82,6 @@ import {
 } from "@/ui/map/map-layer-policy";
 import { routeFitPoints } from "@/ui/map/route-fit";
 import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
-
-/** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
-const MAP_BOTTOM_INSET = 186;
 
 /** Pins while a trip detail is open: the layer stays mounted (one canvas for the session), just empty. */
 const NO_PINS: readonly StopPin[] = [];
@@ -603,11 +600,15 @@ export function HomeScreen() {
     gpsIntent && !endpoints.start && statusCopy?.kind === "requesting" ? "Finding your location…" : gpsKey === "start" ? gpsSub : undefined;
   const destinationSub = gpsKey === "destination" ? gpsSub : undefined;
 
-  // The map ends MAP_BOTTOM_INSET above the screen bottom (just under the peek sheet's top), so
-  // its centre (recentre target, crosshair) is never hidden behind the sheet. The attribution
-  // rides the sheet's top edge, measured from the map's bottom.
-  const attributionBottom = Math.max(0, (picking ? pickHeight : sheet.visible) - MAP_BOTTOM_INSET);
-  const rootStyle = { ["--naga-map-attribution-bottom" as string]: `${Math.round(attributionBottom)}px` };
+  // The map ends mapInset above the screen bottom (just under the peek sheet's top, 186 px on a
+  // phone held upright), so its centre (recentre target, crosshair) is never hidden behind the
+  // sheet. The attribution rides the sheet's top edge, measured from the map's bottom.
+  const mapInset = mapInsetFor(sheet.height);
+  const attributionBottom = Math.max(0, (picking ? pickHeight : sheet.visible) - mapInset);
+  const rootStyle = {
+    ["--naga-map-attribution-bottom" as string]: `${Math.round(attributionBottom)}px`,
+    ["--pn-map-inset" as string]: `${mapInset}px`,
+  };
 
   const pins = guiding
     ? home.destination
@@ -842,7 +843,10 @@ export function HomeScreen() {
 
   // The tab bar would cover the crosshair panel: hidden while a pin is being placed, and while
   // guidance runs (the steps need the whole sheet).
-  useHideTabBar(picking !== null || guiding);
+  // About 300 px of height (400 % zoom, a phone on its side): the tab bar would leave no room for
+  // the content at half and full, so it steps aside there; collapsing to peek brings it back.
+  const tinySheet = sheet.height !== null && sheet.height < TINY_SHEET && sheet.snap > 0;
+  useHideTabBar(picking !== null || guiding || tinySheet);
   if (!picking && pickPrompt !== null) setPickPrompt(null);
 
   const guidanceActions = homeGuidanceActions({
@@ -881,7 +885,7 @@ export function HomeScreen() {
           userStale={guiding ? false : (assessment?.stale ?? false)}
           pins={pins}
           highlightStops={highlightStops}
-          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET)}
+          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - mapInset)}
           refitSignal={sheet.snap}
           fitBoundsCoords={routeFitCoords}
           fitId={previewOption?.id ?? "ends"}

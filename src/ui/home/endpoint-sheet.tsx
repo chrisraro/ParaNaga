@@ -20,6 +20,19 @@ export const PEEK_OPTIONS_VISIBLE = 276;
 /** One staleness line (offline plan, changed since saved) under the best option at the peek snap. */
 export const PEEK_NOTE_VISIBLE = 24;
 export const HALF_VISIBLE = 444;
+/**
+ * Short or zoomed screens (landscape, 400 % zoom): peek and half never take more than this share
+ * of the sheet's height, so a strip of map always stays above the sheet (full still covers it).
+ */
+export const MAP_MIN_SHARE = 0.25;
+/**
+ * Below this sheet height (a viewport of about 300 px: 400 % zoom, a small phone on its side) the
+ * peek is the grabber alone over the tab bar (the content is inert there), and the tab bar steps
+ * aside at half and full so the content keeps its room.
+ */
+export const TINY_SHEET = 280;
+/** The grabber's own height: all the tiny peek shows above the tab bar. */
+const GRABBER_VISIBLE = 44;
 const DRAG_SLOP = 6;
 /** How far ahead (ms) a release's velocity carries the sheet before picking the nearest snap. */
 const FLING_MS = 200;
@@ -37,7 +50,18 @@ const GRABBER_LABEL: Record<Snap, string> = {
  */
 export function offsetFor(snap: Snap, height: number, clearance = 0, peek = PEEK_VISIBLE): number {
   if (snap === 2) return 0;
-  return Math.max(0, height - (snap === 0 ? peek + clearance : HALF_VISIBLE));
+  if (snap === 0 && height < TINY_SHEET) return Math.max(0, height - GRABBER_VISIBLE - clearance);
+  const visible = Math.min(snap === 0 ? peek + clearance : HALF_VISIBLE, height * (1 - MAP_MIN_SHARE));
+  return Math.max(0, Math.round(height - visible));
+}
+
+/**
+ * How far above the screen bottom the map ends: just under the plain peek sheet's top (minus its
+ * 28 px corner), so the map centre is never behind the sheet. Shrinks with the clamped peek.
+ */
+export function mapInsetFor(height: number | null): number {
+  const peek = height === null ? PEEK_VISIBLE : Math.min(PEEK_VISIBLE, height * (1 - MAP_MIN_SHARE));
+  return Math.max(0, Math.round(peek - 28));
 }
 
 /** The sheet is getting taller on screen (its offset shrinks): its bottom padding must follow at once. */
@@ -305,6 +329,8 @@ export function EndpointSheet({
   summary,
 }: Props) {
   const { attach, snap, offset, dragging } = sheet;
+  // Tiny peek: only the grabber shows; the rows and the footer lie under the tab bar.
+  const tinyPeek = snap === 0 && sheet.height !== null && sheet.height < TINY_SHEET;
   // Growing: the padding that stands for the off-screen part shrinks with the lift, not 360 ms
   // later (the content would leave a blank strip under it while the sheet slides up).
   const [seenOffset, setSeenOffset] = useState(offset);
@@ -351,7 +377,7 @@ export function EndpointSheet({
     >
       <SheetGrabber sheet={sheet} />
       <SheetFooterContext.Provider value={footer}>
-      <div className="pn-sheet__content">
+      <div className="pn-sheet__content" inert={tinyPeek}>
         {detailOpen ? null : (
         <div className="pn-endpoints">
           <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onRowTap} onClear={onClear} />
@@ -423,9 +449,11 @@ export function EndpointSheet({
         ) : null}
         {detailOpen ? null : after}
         </div>
+        {/* Last in the scroller but positioned on the sheet (it is not scrolled); on short screens
+            (home-screen.css) it is in flow at the end of the content instead. */}
+        <div ref={setFooter} className="pn-sheet-footer" role="group" aria-label="Actions" />
       </div>
       </SheetFooterContext.Provider>
-      <div ref={setFooter} className="pn-sheet-footer" role="group" aria-label="Actions" />
     </section>
   );
 }

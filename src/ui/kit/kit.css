@@ -332,6 +332,25 @@ button.pn-cell:active {
   font-size: 10px;
   font-weight: 600;
 }
+/* Short screens (landscape, 200-400 % zoom): a compact bar, icons only (the labels stay the tabs'
+   accessible names), so it covers 60 px instead of 90. */
+@media (max-height: 480px) {
+  .pn-tabbar {
+    bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) + 4px));
+    padding: 4px;
+  }
+  .pn-tabbar__tab {
+    height: 44px;
+  }
+  .pn-tabbar__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
 .pn-tabbar__tab:focus-visible {
   outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;

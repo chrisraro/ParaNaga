@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HALF_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, offsetFor, sheetGrows } from "@/ui/home/endpoint-sheet";
+import { HALF_VISIBLE, MAP_MIN_SHARE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, mapInsetFor, offsetFor, sheetGrows } from "@/ui/home/endpoint-sheet";
 
 describe("offsetFor with a taller peek (options listed)", () => {
   it("defaults to the 214 px peek and keeps half and full", () => {
@@ -25,5 +25,30 @@ describe("sheetGrows", () => {
     expect(sheetGrows(offsetFor(2, 800), offsetFor(0, 800))).toBe(false);
     expect(sheetGrows(300, 300)).toBe(false);
     expect(sheetGrows(null, 300)).toBe(false);
+  });
+});
+
+describe("short and zoomed screens (WCAG 1.4.10)", () => {
+  it("clamps peek and half to three quarters of the sheet, so a map strip stays above it", () => {
+    for (const h of [154, 294, 349]) {
+      const cap = h * (1 - MAP_MIN_SHARE);
+      expect(h - offsetFor(0, h, 60, PEEK_OPTIONS_VISIBLE)).toBeLessThanOrEqual(Math.ceil(cap));
+      expect(h - offsetFor(1, h, 60, PEEK_OPTIONS_VISIBLE)).toBeLessThanOrEqual(Math.ceil(cap));
+      expect(offsetFor(1, h)).toBeLessThanOrEqual(offsetFor(0, h, 60, PEEK_OPTIONS_VISIBLE));
+      expect(offsetFor(2, h)).toBe(0);
+    }
+  });
+  it("on a tiny sheet (about 300 px of viewport) the peek is the grabber over the tab bar", () => {
+    expect(154 - offsetFor(0, 154, 60, PEEK_OPTIONS_VISIBLE)).toBe(44 + 60);
+    expect(154 - offsetFor(0, 154, 0, PEEK_OPTIONS_VISIBLE)).toBe(44);
+  });
+  it("keeps the upright phone detents (peek 214 / options 276 + tab bar, half 444) from 640 px up", () => {
+    expect(614 - offsetFor(0, 614, 90, PEEK_OPTIONS_VISIBLE)).toBe(PEEK_OPTIONS_VISIBLE + 90);
+    expect(614 - offsetFor(1, 614)).toBe(HALF_VISIBLE);
+  });
+  it("ends the map just under the clamped peek sheet's top (186 px upright)", () => {
+    expect(mapInsetFor(null)).toBe(PEEK_VISIBLE - 28);
+    expect(mapInsetFor(813)).toBe(PEEK_VISIBLE - 28);
+    expect(mapInsetFor(154)).toBe(Math.round(154 * (1 - MAP_MIN_SHARE) - 28));
   });
 });
