@@ -68,7 +68,7 @@ export function ArriveStep({ view, onSend, headingRef, card, onDone }: Omit<Step
       </div>
       {card ? <SaveTripRow card={card} /> : null}
       {/* "Done" is the view's `end` action: it also clears the trip (the screen's onDone). */}
-      <div className="pn-guide__actions">
+      <div className="pn-guide__actions pn-sheet-bar">
         {view.actions
           .filter((a) => a.event === "end")
           .map((a) => (

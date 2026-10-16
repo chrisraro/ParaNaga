@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type BrowserContext, type Page, type Route } from "@playwright/test";
 import { LOOP_A_PINS, PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
+import { chooseOption } from "./fixtures/options";
 
 // Guidance (Increment A, Task 10): Walk, Ride, Transfer and Arrive in the home sheet. POST
 // /api/v1/plan is intercepted with fixtures; tiles are aborted; every test checks for CSP
@@ -121,15 +122,14 @@ async function startGuidance(page: Page) {
   await drag(page, -120, 80);
   await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
   await page.getByRole("button", { name: "Set destination here" }).click();
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await page.getByTestId("trip-start").click();
   await expect(guide(page)).toBeVisible();
 }
 
 async function tap(page: Page, name: string) {
-  // dispatchEvent: at half the step buttons sit below the screen edge (the old page scroll hid that).
-  await guide(page).getByRole("button", { name, exact: true }).dispatchEvent("click");
+  await guide(page).getByRole("button", { name, exact: true }).click();
 }
 
 /**
@@ -329,7 +329,7 @@ test("Report it in MyNaga opens the handoff, and closing it returns to the runni
   const rideTitle = await heading(page).textContent();
   const stepLabel = await page.getByTestId("guidance-step-label").textContent();
 
-  await guide(page).getByTestId("guidance-report-driver").dispatchEvent("click");
+  await guide(page).getByTestId("guidance-report-driver").click();
   await expect(page).toHaveURL(/\/app\/mynaga$/);
   await expect(page.getByRole("heading", { level: 1, name: "Report in MyNaga" })).toBeFocused();
   await expect(page.getByTestId("app-home-layer")).toHaveAttribute("inert", "");
@@ -345,7 +345,7 @@ test("Report it in MyNaga opens the handoff, and closing it returns to the runni
   expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).not.toBeNull();
 
   // Escape closes it the same way.
-  await guide(page).getByTestId("guidance-report-driver").dispatchEvent("click");
+  await guide(page).getByTestId("guidance-report-driver").click();
   await expect(page.getByRole("heading", { level: 1, name: "Report in MyNaga" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/app$/);
@@ -364,10 +364,10 @@ test("Undo last step goes back one confirmation; after Arrive it never restarts 
   await tap(page, "I'm at the stop");
   await tap(page, "I boarded Loop A");
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 2 of 3 · Ride");
-  await page.getByTestId("guidance-undo").dispatchEvent("click");
+  await page.getByTestId("guidance-undo").click();
   await expect(heading(page)).toHaveText("Wait for Loop A at Plaza Rizal (A1)");
   await expect(heading(page)).toBeFocused();
-  await page.getByTestId("guidance-undo").dispatchEvent("click");
+  await page.getByTestId("guidance-undo").click();
   await expect(heading(page)).toHaveText("Walk to Plaza Rizal (A1)");
   await expect(page.getByTestId("guidance-undo")).toHaveCount(0);
 
@@ -376,7 +376,7 @@ test("Undo last step goes back one confirmation; after Arrive it never restarts 
   await tap(page, "I've arrived");
   expect((await geoStub(page)).watches).toBe(0);
   await expect(page.getByTestId("guidance-undo")).toHaveText("Undo last step");
-  await page.getByTestId("guidance-undo").dispatchEvent("click");
+  await page.getByTestId("guidance-undo").click();
   await expect(heading(page)).toHaveText("Walk to Pinned location");
   // Location stays off until tapped again.
   expect(await geoStub(page)).toEqual({ watches: 0, calls: 1 });
@@ -485,10 +485,60 @@ for (const colorScheme of ["light", "dark"] as const) {
       await tap(page, "I boarded Loop B");
       await tap(page, "I missed my stop");
       await expectAxeClean(page); // Missed
-      await page.getByTestId("guidance-undo").dispatchEvent("click");
+      await page.getByTestId("guidance-undo").click();
       await tap(page, "I got off");
       await tap(page, "I've arrived");
       await expectAxeClean(page); // Arrive
     });
+  });
+}
+
+// U2: the primary action sits in a sticky bar at the bottom of the visible sheet, so it is on screen
+// and inside the sheet at the half snap (no lift, no scroll) on small and large phones.
+for (const [width, height] of [
+  [360, 640],
+  [375, 812],
+  [390, 844],
+] as const) {
+  test(`the primary action is inside the viewport and the sheet at half on ${width}x${height}`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height });
+    await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
+    await grantLocation(context);
+    await stubGeolocation(page);
+    await openApp(page);
+
+    const inside = async (testId: string, button: ReturnType<Page["getByTestId"]>) => {
+      const sheet = page.getByTestId("trip-sheet");
+      await expect(sheet).toHaveAttribute("data-snap", "1");
+      const box = await button.boundingBox();
+      const sheetBox = await sheet.boundingBox();
+      expect(box, `${testId} has a box`).not.toBeNull();
+      expect(box!.y).toBeGreaterThanOrEqual(sheetBox!.y);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+    };
+
+    // Detail: pin both, choose the first option (half), "Start trip" is already on screen.
+    const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
+    await chooseOnMap.click();
+    await page.getByRole("button", { name: "Set start here" }).click();
+    await chooseOnMap.click();
+    const before = await mapEl(page).getAttribute("data-center-lng");
+    await drag(page, -120, 80);
+    await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
+    await page.getByRole("button", { name: "Set destination here" }).click();
+    await chooseOption(page);
+    await expect(page.getByTestId("trip-detail")).toBeVisible();
+    await inside("trip-start", page.getByTestId("trip-start"));
+
+    // Guidance: the step button is inside at half, a real click works without lifting the sheet.
+    await page.getByTestId("trip-start").click();
+    await expect(guide(page)).toBeVisible();
+    await inside("walk primary", guide(page).getByRole("button", { name: "I'm at the stop", exact: true }));
+    await tap(page, "I'm at the stop");
+    await inside("wait primary", guide(page).getByRole("button", { name: /^I boarded/ }));
+    await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
   });
 }

@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_SHORTER_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
+import { chooseOption, expandOptions } from "./fixtures/options";
 
 // Trip options and trip detail (Task 6). POST /api/v1/plan is intercepted with fixtures
 // (allowed in tests only), so nothing here needs a database. Tiles are aborted.
@@ -140,7 +141,7 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await openApp(page);
   await pinBoth(page);
 
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   const detail = page.getByTestId("trip-detail");
   await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
@@ -208,6 +209,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
       await openApp(page);
       await pinBoth(page);
+      await expandOptions(page);
       const want = TIMES[clock];
       const cards = page.getByTestId("trip-option");
       await expect(cards.nth(0).getByTestId("trip-option-time")).toContainText(want.first);
@@ -260,7 +262,7 @@ test("opening and closing a trip detail keeps exactly one stop-pin canvas", asyn
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
   await expect(canvases).toHaveCount(1);
   for (let i = 0; i < 2; i++) {
-    await page.getByTestId("trip-option").first().click();
+    await chooseOption(page);
     await expect(page.getByTestId("trip-detail")).toBeVisible();
     await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
     await page.getByRole("button", { name: "Back to trip options" }).click();
@@ -305,8 +307,9 @@ test("a server error offers a retry that recovers", async ({ page }) => {
   await error.getByRole("button", { name: "Try again" }).click();
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
   await expect(page.getByTestId("trip-error")).toHaveCount(0);
-  // Focus is not lost with the unmounted Retry button: it lands on the results heading.
-  await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
+  // Focus is not lost with the unmounted Retry button: the list rests at peek, so it lands on the
+  // "Show more options" toggle; once the list is open the toggle's target heading takes it.
+  await expect(page.getByTestId("options-toggle")).toBeFocused();
 });
 
 test("loading is announced through the persistent announcer", async ({ page }) => {
@@ -430,7 +433,7 @@ test.describe("GPS refinement while results are shown", () => {
       await fulfill(route, PROVISIONAL_PLAN);
     });
     await gpsStartAndPinDestination(page);
-    await page.getByTestId("trip-option").first().click();
+    await chooseOption(page);
     const detail = page.getByTestId("trip-detail");
     await expect(detail).toBeVisible();
     const before = calls.length;
@@ -478,7 +481,7 @@ test.describe("GPS refinement while results are shown", () => {
     let replanned = false;
     await interceptPlan(page, (route) => fulfill(route, replanned ? LEAST_WALKING_ONLY_PLAN : PROVISIONAL_PLAN));
     await gpsStartAndPinDestination(page);
-    await page.getByTestId("trip-option").first().click();
+    await chooseOption(page);
     await expect(page.getByTestId("trip-detail")).toBeVisible();
 
     replanned = true;
@@ -491,3 +494,74 @@ test.describe("GPS refinement while results are shown", () => {
     await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
   });
 });
+
+// U2: options rest at peek with the best option and a toggle; the toggle lifts the sheet to full.
+test("options peek: best-option summary and a labelled toggle; full lists every option; Back returns as left", async ({ page }) => {
+  await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  const toggle = page.getByTestId("options-toggle");
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(page.getByTestId("options-best")).toContainText(/Loop A.*Estimate \d+–\d+ min.*Estimate ₱14/);
+  await expect(toggle).toHaveText("Show more options");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(toggle).toHaveAttribute("aria-controls", "pn-trip-options-list");
+  // Both rows, the summary and the toggle are inside the visible sheet, targets >= 44 px.
+  const vh = page.viewportSize()!.height;
+  for (const el of [toggle, page.getByTestId("options-best"), page.getByTestId("endpoint-destination")]) {
+    const box = (await el.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(vh);
+    expect(box.height).toBeGreaterThanOrEqual(44 - 1);
+  }
+
+  await toggle.click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await expect(toggle).toHaveText("Show fewer options");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
+  await expect(page.getByRole("region", { name: "Trip options" })).toBeVisible();
+  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+
+  // Choosing an option opens its detail at half; Back returns to the list at full, focus on the card.
+  await page.getByTestId("trip-option").nth(1).click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await expect(sheet).toHaveAttribute("data-snap", "1");
+  await page.getByRole("button", { name: "Back to trip options" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await expect(page.getByTestId("trip-option").nth(1)).toBeFocused();
+
+  // Collapse: back to peek, focus stays on the toggle.
+  await toggle.click();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(toggle).toBeFocused();
+  await expect(toggle).toHaveText("Show more options");
+});
+
+for (const mode of ["light", "dark", "high contrast"] as const) {
+  test(`axe is clean on options peek, options full, detail and a guidance step (${mode})`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: mode === "dark" ? "dark" : "light" });
+    if (mode === "high contrast") {
+      await page.addInitScript(() => {
+        localStorage.setItem("paranaga.prefs", JSON.stringify({ theme: "system", highContrast: true, lowData: false, historyEnabled: false }));
+      });
+    }
+    await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+    await openApp(page);
+    await pinBoth(page);
+    if (mode === "high contrast") await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
+    await expect(page.getByTestId("options-toggle")).toBeVisible();
+    await expectAxeClean(page, '[data-testid="trip-sheet"]');
+    await expandOptions(page);
+    await expectAxeClean(page, '[data-testid="trip-sheet"]');
+    await chooseOption(page);
+    await expect(page.getByTestId("trip-detail")).toBeVisible();
+    await expectAxeClean(page, '[data-testid="trip-sheet"]');
+    await page.getByTestId("trip-start").click();
+    await expect(page.getByTestId("guidance")).toBeVisible();
+    await expectAxeClean(page, '[data-testid="trip-sheet"]');
+    // Focus stays visible on the sticky primary action.
+    await page.keyboard.press("Tab");
+    await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
+  });
+}

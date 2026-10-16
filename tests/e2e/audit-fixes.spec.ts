@@ -1,3 +1,4 @@
+import { expandOptions } from "./fixtures/options";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { routeNetwork } from "./fixtures/network";
@@ -164,6 +165,7 @@ test.describe("phone", () => {
       await planWith(page, WALK_FIRST_PLAN);
       await openApp(page);
       await pinBoth(page);
+      await expandOptions(page);
       const cards = page.getByTestId("trip-option");
       await expect(cards).toHaveCount(2);
       await expect(cards.nth(0)).toContainText("Walk");
@@ -187,6 +189,7 @@ test.describe("phone", () => {
     await planWith(page, AT_STOP_PLAN);
     await openApp(page);
     await pinBoth(page);
+    await expandOptions(page);
     const card = page.getByTestId("trip-option").first();
     await expect(card.locator(".pn-legstrip")).not.toContainText("≈ 0 m");
     await card.click();

@@ -14,6 +14,8 @@ import { SavePlaceButton } from "@/ui/saved/save-place-button";
 export type Snap = 0 | 1 | 2;
 
 export const PEEK_VISIBLE = 214;
+/** Peek while trip options are listed: rows + best-option summary + "Show more options" (two 44 px rows). */
+export const PEEK_OPTIONS_VISIBLE = 276;
 export const HALF_VISIBLE = 444;
 const DRAG_SLOP = 6;
 /** How far ahead (ms) a release's velocity carries the sheet before picking the nearest snap. */
@@ -30,9 +32,9 @@ const GRABBER_LABEL: Record<Snap, string> = {
  * the start and destination rows stay above the tab bar; half and full keep their height (their
  * content scrolls, with room at the end for the tab bar), so the map keeps its view.
  */
-export function offsetFor(snap: Snap, height: number, clearance = 0): number {
+export function offsetFor(snap: Snap, height: number, clearance = 0, peek = PEEK_VISIBLE): number {
   if (snap === 2) return 0;
-  return Math.max(0, height - (snap === 0 ? PEEK_VISIBLE + clearance : HALF_VISIBLE));
+  return Math.max(0, height - (snap === 0 ? peek + clearance : HALF_VISIBLE));
 }
 
 export type SheetControl = {
@@ -50,9 +52,11 @@ export type SheetControl = {
   attach: (el: HTMLElement | null) => (() => void) | undefined;
   /** Height the tab bar covers at the bottom of the sheet, in px (0 without a tab bar). */
   clearance: number;
+  /** Visible height at the peek snap, in px (taller while trip options are listed). */
+  peek: number;
 };
 
-export function useSheet(initial: Snap = 1, clearance = 0): SheetControl {
+export function useSheet(initial: Snap = 1, clearance = 0, peek = PEEK_VISIBLE): SheetControl {
   const [snap, setSnap] = useState<Snap>(initial);
   const [height, setHeight] = useState<number | null>(null);
   const [drag, setDrag] = useState<number | null>(null);
@@ -65,9 +69,9 @@ export function useSheet(initial: Snap = 1, clearance = 0): SheetControl {
     return () => observer.disconnect();
   }, []);
 
-  const offset = height === null ? null : (drag ?? offsetFor(snap, height, clearance));
+  const offset = height === null ? null : (drag ?? offsetFor(snap, height, clearance, peek));
   const visible = height === null || offset === null ? HALF_VISIBLE : height - offset;
-  return { snap, setSnap, height, setDrag, offset, visible, dragging: drag !== null, attach, clearance };
+  return { snap, setSnap, height, setDrag, offset, visible, dragging: drag !== null, attach, clearance, peek };
 }
 
 type Gesture = { id: number; startY: number; base: number; lastY: number; lastT: number; v: number; moved: boolean };
@@ -77,11 +81,11 @@ type Gesture = { id: number; startY: number; base: number; lastY: number; lastT:
  * to step. touch-action: none (CSS) so the browser never scrolls instead.
  */
 function SheetGrabber({ sheet }: { sheet: SheetControl }) {
-  const { snap, setSnap, height, setDrag, clearance } = sheet;
+  const { snap, setSnap, height, setDrag, clearance, peek } = sheet;
   const gesture = useRef<Gesture | null>(null);
   const suppressClick = useRef(false);
 
-  const clampOffset = (value: number, h: number) => Math.min(offsetFor(0, h, clearance), Math.max(0, value));
+  const clampOffset = (value: number, h: number) => Math.min(offsetFor(0, h, clearance, peek), Math.max(0, value));
 
   const onPointerDown = (e: PointerEvent<HTMLButtonElement>) => {
     suppressClick.current = false;
@@ -90,7 +94,7 @@ function SheetGrabber({ sheet }: { sheet: SheetControl }) {
     gesture.current = {
       id: e.pointerId,
       startY: e.clientY,
-      base: offsetFor(snap, height, clearance),
+      base: offsetFor(snap, height, clearance, peek),
       lastY: e.clientY,
       lastT: e.timeStamp,
       v: 0,
@@ -117,7 +121,7 @@ function SheetGrabber({ sheet }: { sheet: SheetControl }) {
     const projected = clampOffset(g.base + (e.clientY - g.startY), height) + g.v * FLING_MS;
     const snaps: Snap[] = [0, 1, 2];
     const nearest = snaps.reduce((best, s) =>
-      Math.abs(offsetFor(s, height, clearance) - projected) < Math.abs(offsetFor(best, height, clearance) - projected) ? s : best,
+      Math.abs(offsetFor(s, height, clearance, peek) - projected) < Math.abs(offsetFor(best, height, clearance, peek) - projected) ? s : best,
     );
     setSnap(nearest);
     setDrag(null);
@@ -272,6 +276,8 @@ type Props = {
   detailOpen?: boolean;
   /** Below the endpoint options (the "Nearby stops" list). Hidden while trip detail is open. */
   after?: ReactNode;
+  /** Always operable, even at the peek snap (outside the inert part): the best-option summary and its toggle. */
+  summary?: ReactNode;
 };
 
 export function EndpointSheet({
@@ -288,6 +294,7 @@ export function EndpointSheet({
   children,
   detailOpen = false,
   after,
+  summary,
 }: Props) {
   const { attach, snap, offset, dragging } = sheet;
   // Tapping a row at the peek snap lifts the sheet to half so its options aren't offscreen/inert.
@@ -301,6 +308,8 @@ export function EndpointSheet({
   const style = {
     ...(offset === null ? {} : { ["--pn-sheet-offset" as string]: `${offset}px` }),
     ["--pn-sheet-clearance" as string]: `${sheet.clearance}px`,
+    // The tab bar's height already includes the bottom safe area; without it the sticky bar adds its own.
+    ["--pn-sheet-safe" as string]: sheet.clearance > 0 ? "0px" : "env(safe-area-inset-bottom, 0px)",
   };
   return (
     <section
@@ -331,6 +340,7 @@ export function EndpointSheet({
           </button>
         </div>
         )}
+        {detailOpen ? null : summary}
 
         {/* Everything below the always-visible rows. At the peek snap it sits under the screen edge
             (and the tab bar), so it is inert (not focusable); at half, focusing something that is
@@ -343,7 +353,8 @@ export function EndpointSheet({
             // detail or guidance never lifts the sheet to full (that would cover the map, its lines
             // and the legend: full is the rider's choice), but keyboard focus does, so a focused
             // control is never left below the screen edge (the half sheet cannot scroll it into view).
-            if (snap !== 2 && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) {
+            // The sticky action bar is always inside the visible sheet: focus there never lifts it.
+            if (snap !== 2 && !e.target.closest(".pn-sheet-bar") && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) {
               if (snap === 0) sheet.setSnap(1);
               else if (!detailOpen || e.target.matches(":focus-visible")) sheet.setSnap(2);
             }

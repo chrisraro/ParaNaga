@@ -48,10 +48,10 @@ import { useAppFrame, useApplyOnce, useHideTabBar } from "@/ui/app-shell/app-fra
 import { Guidance } from "@/ui/guidance/guidance";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail, type TripEnds } from "@/ui/trip/trip-detail";
-import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
+import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
-import { EndpointSheet, endpointRowMainId, useSheet } from "./endpoint-sheet";
+import { EndpointSheet, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, endpointRowMainId, useSheet, type Snap } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
   LocationStatus,
@@ -197,7 +197,6 @@ export function HomeScreen() {
   // An end that was refused for being the same place as the other end (GPS start on the destination).
   const [samePlaceRefused, setSamePlaceRefused] = useState<EndpointWhich | null>(null);
   // The tab bar floats over the sheet's bottom edge (measured; 0 while it is hidden).
-  const sheet = useSheet(1, frame?.tabBarClearance ?? 0);
   const [pickHeight, pickRef] = useMeasuredHeight();
 
   const bumpRecenter = (target: LatLng | null = null, label = "the start pin") => {
@@ -230,6 +229,10 @@ export function HomeScreen() {
     onOpen: setOpenedId,
   });
   const stored = reopen.stored;
+  // Trip options are listed (none open): the sheet rests at peek with the best option's summary.
+  const optionsListed =
+    ready && !guiding && !picking && !stored && !openOption && planData !== null && planData.plan.coverage === "provisional" && planData.plan.options.length > 0;
+  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE : PEEK_VISIBLE);
   // Where focus goes once the results render: the results heading, or an option card.
   const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);
   // No trip, no pending focus move: a stale request must not pull focus once a trip is set again.
@@ -457,9 +460,36 @@ export function HomeScreen() {
     if (!planData) return;
     setFocusTarget(null);
     setOpenedId(id);
+    // Back returns to the list as the rider left it (peek, half or full).
+    setSnapBeforeDetail(sheet.snap);
     // Half, never full: tapping the option focused it, which lifts a sheet to full, and that
     // would cover the trip's lines and the legend. Full stays the rider's own drag or tap.
     if (sheet.snap !== 1) sheet.setSnap(1);
+  };
+
+  // The list's detent before an option opened, restored when the list returns (Back, End guidance);
+  // when the list first appears the sheet rests at peek. Adjusted during render, so the detent is
+  // settled in the same commit that shows the list.
+  const [snapBeforeDetail, setSnapBeforeDetail] = useState<Snap | null>(null);
+  const [wasListed, setWasListed] = useState(false);
+  if (optionsListed !== wasListed) {
+    setWasListed(optionsListed);
+    if (optionsListed) {
+      sheet.setSnap(snapBeforeDetail ?? 0);
+      setSnapBeforeDetail(null);
+    }
+  }
+  if (snapBeforeDetail !== null && (!ready || plan.status === "loading")) setSnapBeforeDetail(null);
+
+  // "Show more options" lifts the sheet to full and focuses the list heading; "Show fewer" returns
+  // to the peek with focus staying on the toggle.
+  const handleToggleOptions = () => {
+    if (sheet.snap === 2) {
+      sheet.setSnap(0);
+      return;
+    }
+    sheet.setSnap(2);
+    setFocusTarget({ kind: "results" });
   };
 
   const handleCloseOption = () => {
@@ -490,10 +520,12 @@ export function HomeScreen() {
   const focusDone = useRef<object | null>(null);
   useEffect(() => {
     if (!focusTarget || focusDone.current === focusTarget || plan.status === "loading" || openOption) return;
-    const el =
+    let el =
       focusTarget.kind === "option"
         ? document.getElementById(optionDomId(focusTarget.id))
         : document.querySelector<HTMLElement>("[data-results-heading]");
+    // The list rests below the screen edge at peek (inert): focus the toggle that opens it.
+    if (!el || el.closest("[inert]")) el = document.getElementById(OPTIONS_TOGGLE_ID) ?? el;
     if (!el) return;
     el.focus();
     focusDone.current = focusTarget;
@@ -727,10 +759,10 @@ export function HomeScreen() {
   // emphasized marker), even when the Terminals layer or the mode filter would hide it.
   const drawnTerminals = useMemo<MapTerminal[]>(() => {
     const t = trikeHint?.terminal;
-    if (!t || !showOverview || mapTerminals.some((m) => m.code === t.code)) return mapTerminals;
+    if (!t || !(showOverview || previewing) || mapTerminals.some((m) => m.code === t.code)) return mapTerminals;
     const modes = snapshotState.snapshot?.terminals.find((s) => s.code === t.code)?.modes ?? ["tricycle"];
     return [...mapTerminals, { code: t.code, name: t.name, modes, lat: t.lat, lng: t.lng }];
-  }, [trikeHint, showOverview, mapTerminals, snapshotState.snapshot]);
+  }, [trikeHint, showOverview, previewing, mapTerminals, snapshotState.snapshot]);
   const closeLayers = useCallback(() => {
     setLayersOpen(false);
     layersBtnRef.current?.focus();
@@ -949,6 +981,11 @@ export function HomeScreen() {
           onUseCurrentLocation={() => handleUseCurrentLocation()}
           onChooseOnMap={handleChooseOnMap}
           detailOpen={tripDetailOpen || guiding}
+          summary={
+            optionsListed && planData ? (
+              <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} onToggle={handleToggleOptions} />
+            ) : null
+          }
           after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
         >
           {guiding ? (

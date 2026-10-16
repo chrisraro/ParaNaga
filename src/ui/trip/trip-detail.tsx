@@ -396,11 +396,6 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           {note.text}
         </p>
       ) : null}
-      {onStart ? (
-        <button type="button" className="pn-btn pn-btn--primary pn-trip-start" onClick={() => onStart(walkLengths)} data-testid="trip-start">
-          {START_TRIP}
-        </button>
-      ) : null}
       {ends ? <TripActions data={data} option={option} ends={ends} etaModel={etaModel} walkLengths={walkLengths} /> : null}
 
       <p className="sr-only" role="status" aria-live="polite" data-testid="trip-paths-status">
@@ -459,6 +454,14 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
         )}
       </section>
       <p className="pn-trip-detail__soon">Corrections open soon.</p>
+      {onStart ? (
+        // Last in the scrolling sheet, pinned to the bottom of the visible sheet (.pn-sheet-bar).
+        <div className="pn-sheet-bar">
+          <button type="button" className="pn-btn pn-btn--primary pn-trip-start" onClick={() => onStart(walkLengths)} data-testid="trip-start">
+            {START_TRIP}
+          </button>
+        </div>
+      ) : null}
       <EtaBasisSheet
         open={basisOpen}
         onClose={() => setBasisOpen(false)}

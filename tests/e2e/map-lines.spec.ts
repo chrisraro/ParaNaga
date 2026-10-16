@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { LINES, routeNetwork } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
+import { chooseOption } from "./fixtures/options";
 
 test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate");
 
@@ -57,7 +58,7 @@ test("trip lines draw walk (dotted) and ride (solid) layers with chevrons and le
   await openApp(page);
   await pinBoth(page);
 
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
 
   // Verify trip lines rendered on the map
   const walkLines = page.locator("path.pn-line--walk");
@@ -289,7 +290,7 @@ test("a trip ride that uses a terminal access road says so in trip detail", asyn
   await openApp(page);
   await pinBoth(page);
   // "Least walking": Loop A 265.6 -> 5751.6 m passes the terminal access road at 5663.6 m.
-  await page.getByTestId("trip-option").nth(1).click();
+  await chooseOption(page, 1);
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.getByTestId("ride-terminal-access")).toHaveText("terminal access road");
   await expect(page.locator("path.pn-line--ride.pn-line--caution")).toHaveCount(0);
@@ -342,7 +343,7 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
   );
   await openApp(page);
   await pinBoth(page);
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await expectLegendAndLineAboveSheet(page); // trip detail too, sheet untouched
   await page.getByTestId("trip-start").click();
@@ -410,7 +411,7 @@ test("after choosing From and To the recommended option's lines are previewed ab
     }, { timeout: 10_000 })
     .toBe(true);
   // Opening an option swaps to its lines; Back returns to the preview.
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await page.getByTestId("trip-detail").getByRole("button", { name: /back/i }).first().click();
   await expect(page.getByTestId("trip-option").first()).toBeVisible();
@@ -484,7 +485,7 @@ test("scrolling a sheet element into view never shifts the map, so the legend st
   );
   await openApp(page);
   await pinBoth(page);
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
 
   const expectMapStill = async () => {
@@ -522,7 +523,7 @@ test("the legend and the walking line still show when the route lines are not lo
   await expectLegendListsWalkAndStops(page);
 
   await pinBoth(page);
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await peekSheet(page);
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached({ timeout: 15000 });
@@ -559,7 +560,7 @@ test("tabbing through trip detail and guidance at half keeps the focused control
   );
   await openApp(page);
   await pinBoth(page);
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1"); // a tap left it at half
   await expectTabbedControlsOnScreen(page, "trip-detail", [/Start trip/]);

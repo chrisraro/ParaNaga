@@ -14,7 +14,7 @@ import { Fragment, useMemo, type ReactNode } from "react";
 import type { PlanOptionDto, PlanResponse, RideLegDto } from "@/domain/api/plan";
 import type { EtaModel } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
-import { formatDistance, isNegligibleWalk, routeChipLabel, transfersText } from "@/domain/trip/present";
+import { fareChipText, formatDistance, isNegligibleWalk, routeChipLabel, transfersText } from "@/domain/trip/present";
 import { ModeChip } from "@/ui/modes/mode-chip";
 import { EtaPeakNote, EtaTotalText, extractWalkLengths, useOptionEta } from "./eta-text";
 import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, planLookups, type PlanLookups } from "./trip-parts";
@@ -22,6 +22,9 @@ import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, planLookups, ty
 export function optionDomId(optionId: string): string {
   return `pn-trip-option-${optionId.replace(/[^A-Za-z0-9_-]/g, "_")}`;
 }
+
+export const OPTIONS_LIST_ID = "pn-trip-options-list";
+export const OPTIONS_TOGGLE_ID = "pn-options-toggle";
 
 function headline(option: PlanOptionDto): string {
   if (option.rides === 0) return `Walk ${formatDistance(option.walkEstimateMeters)}`;
@@ -153,7 +156,7 @@ export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = n
         Trip options
       </h2>
       {refreshing ? <p className="pn-trip__refreshing">Updating for your new location…</p> : null}
-      <ul className="pn-trip-list">
+      <ul id={OPTIONS_LIST_ID} className="pn-trip-list">
         {data.plan.options.map((option, i) => (
           <OptionCard key={option.id} option={option} lookups={lookups} onOpen={onOpen} index={i} etaModel={etaModel} />
         ))}
@@ -173,5 +176,55 @@ export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = n
       {tricycleHint}
       <p className="pn-trip__revision">Transport data revision {data.revision.label}</p>
     </section>
+  );
+}
+
+/**
+ * Peek of the sheet once From and To are set: one line for the best option (route, time range,
+ * fare) and the toggle that lifts the sheet to full with every option (aria-expanded while full).
+ */
+export function OptionsPeek({
+  data,
+  etaModel,
+  expanded,
+  onToggle,
+}: {
+  data: PlanResponse;
+  etaModel?: EtaModel | null;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const best = data.plan.options[0];
+  const walkLengths = useMemo(() => extractWalkLengths(best?.legs ?? []), [best]);
+  const { estimate } = useOptionEta(best, walkLengths, etaModel);
+  if (!best) return null;
+  const routes = best.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode, l.routeName));
+  return (
+    <div className="pn-peek" data-testid="options-peek">
+      <p className="pn-peek__best" data-testid="options-best">
+        <span className="sr-only">Best option: </span>
+        <span>
+          {routes.length > 0 ? routes.join(" + ") : "Walk"}
+          <span aria-hidden="true"> · </span>
+          <EtaTotalText estimate={estimate} />
+          <span aria-hidden="true"> · </span>
+          {fareChipText(best.fare)}
+        </span>
+      </p>
+      <button
+        type="button"
+        id={OPTIONS_TOGGLE_ID}
+        className="pn-peek__toggle"
+        aria-expanded={expanded}
+        aria-controls={OPTIONS_LIST_ID}
+        onClick={onToggle}
+        data-testid="options-toggle"
+      >
+        {expanded ? "Show fewer options" : "Show more options"}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+          <path d="M6 15l6-6 6 6" />
+        </svg>
+      </button>
+    </div>
   );
 }

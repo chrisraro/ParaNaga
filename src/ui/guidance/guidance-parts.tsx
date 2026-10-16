@@ -26,7 +26,7 @@ export function GuidanceButtons({ actions, onSend }: { actions: readonly Guidanc
   const shown = actions.filter((a) => a.event !== "end");
   if (shown.length === 0) return null;
   return (
-    <div className="pn-guide__actions">
+    <div className="pn-guide__actions pn-sheet-bar">
       {shown.map((a) => (
         <button
           key={a.event}

@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
+import { chooseOption } from "./fixtures/options";
 
 // Saved trips, saved places, Share and history (Increment A, Task 8; decision D3: everything on
 // this phone, IndexedDB). POST /api/v1/plan is intercepted with fixtures; tiles are aborted;
@@ -60,7 +61,7 @@ async function planAndOpenTrip(page: Page) {
   await drag(page, -120, 80);
   await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
   await page.getByRole("button", { name: "Set destination here" }).click();
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
 }
 

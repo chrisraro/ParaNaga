@@ -209,6 +209,8 @@ test("a trip ending at T14 shows the tricycle hint: ₱15, no discount, confirm 
   await expect(homeMap(page).locator('[data-code="T14"]')).toHaveClass(/pn-terminal-marker--emphasized/);
   await expect(homeMap(page).locator("[data-codes]")).toHaveCount(1);
 
+  // The hint sits below the options (peek): lift the sheet to half to reach it.
+  await page.getByRole("button", { name: "Expand sheet to half" }).click();
   await hint.getByRole("button", { name: "Show on map: Balatas Tricycle Terminal" }).click();
   await expect
     .poll(async () => {

@@ -57,7 +57,7 @@ function MissedStep({ view, onSend, onReplan, headingRef }: { view: MissedView; 
         {view.title}
       </h2>
       <p className="pn-guide__body">{view.body}</p>
-      <div className="pn-guide__actions">
+      <div className="pn-guide__actions pn-sheet-bar">
         <button type="button" className="pn-btn pn-btn--primary" onClick={onReplan} data-testid="guidance-replan">
           {REPLAN}
         </button>
