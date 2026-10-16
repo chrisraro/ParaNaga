@@ -139,6 +139,7 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
       });
       return;
     }
+    if (leg.kind !== "ride") return; // tricycle and padyak steps: Task 10
     out.push(...rideSteps(leg, i, lookups, traceOf(leg), estimate));
   });
   if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive at your destination</strong> });

@@ -88,6 +88,8 @@ function makeOption(
         distanceMeters: accessM,
         estimateMeters: Math.round(accessM * 1.3),
         pathVerified: false,
+        path: null,
+        basis: "straight_x1_3",
       },
       rideLeg,
       {
@@ -97,6 +99,8 @@ function makeOption(
         distanceMeters: egressM,
         estimateMeters: Math.round(egressM * 1.3),
         pathVerified: false,
+        path: null,
+        basis: "straight_x1_3",
       },
     ],
   };

@@ -156,6 +156,7 @@ export function buildTripLinesData(
       announcedParts.push("walk");
       return;
     }
+    if (leg.kind !== "ride") return; // tricycle and padyak lines on the map: Task 10
 
     announcedParts.push(routeChipLabel(leg.routeCode, leg.routeName));
     if (leg.distanceBasis !== "approximate_path" || leg.boardMeasureM === null || leg.alightMeasureM === null) {

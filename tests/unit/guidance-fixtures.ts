@@ -29,6 +29,8 @@ export const walk = (from: ReturnType<typeof place>, to: ReturnType<typeof place
   distanceMeters,
   estimateMeters: Math.round(distanceMeters * 1.3),
   pathVerified: false as const,
+  path: null,
+  basis: "straight_x1_3" as const,
 });
 
 export const ride = (stops: Pin[], variant: number, routeCode: string, routeName: string) => ({
@@ -37,6 +39,9 @@ export const ride = (stops: Pin[], variant: number, routeCode: string, routeName
   routeCode,
   routeName,
   verification: "unverified" as const,
+  board: null,
+  alight: null,
+  notes: [] as string[],
   stops: stops.map((s) => ({ id: s.id, name: s.name, lat: s.lat, lng: s.lng })),
   distanceMeters: (stops.length - 1) * 200,
   approximate: true as const,
@@ -68,6 +73,7 @@ export const DEST = { lat: BASE.lat + 12 * STEP_LAT, lng: BASE.lng + 0.001 };
 function option(legs: PlanOptionDto["legs"], rides: number): PlanOptionDto {
   return {
     id: `opt-${rides}`,
+    mode: rides > 0 ? "jeepney" : "walk",
     labels: ["Recommended"],
     legs,
     rides,

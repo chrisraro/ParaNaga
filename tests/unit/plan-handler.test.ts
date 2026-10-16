@@ -4,12 +4,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { planResponseSchema } from "@/domain/api/plan";
 import { apiErrorSchema, type NetworkSnapshot } from "@/domain/api/schemas";
-import { realLoopsSnapshot } from "../fixtures/real-loops";
+import { encodeWalkGraph } from "@/domain/walk/walk-graph";
+import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
+import { realStreets } from "../fixtures/real-streets";
 
 const repo = vi.hoisted(() => ({
   snapshot: null as NetworkSnapshot | null,
+  lines: null as unknown,
+  streets: null as string | null,
+  linesStatus: "ok" as "ok" | "none" | "incomplete",
   fail: false,
   calls: 0,
+  loads: 0,
 }));
 
 vi.mock("@/server/db/context", () => ({
@@ -22,9 +28,17 @@ vi.mock("@/server/db/context", () => ({
 vi.mock("@/server/repos/network-repo", () => ({
   getPublishedRevision: async () => repo.snapshot?.revision ?? null,
   getSnapshot: async (_db: unknown, id: string) => (repo.snapshot?.revision.revisionId === id ? repo.snapshot : null),
+  getLines: async () => {
+    repo.loads += 1;
+    return repo.linesStatus === "ok" ? { status: "ok", body: repo.lines } : repo.linesStatus === "none" ? { status: "none" } : { status: "incomplete", missing: 1 };
+  },
+  getWalkGraphMeta: async () => (repo.streets === null ? { status: "none" } : { status: "ok", versionId: "v", sha256: "x", bytes: repo.streets.length }),
+  getWalkGraphPayload: async () => repo.streets,
 }));
 
 const { POST } = await import("@/app/api/v1/plan/route");
+const { resetPlanNetworkForTests } = await import("@/server/repos/network-cache");
+const STREETS = JSON.stringify(encodeWalkGraph(realStreets()));
 
 const PLAZA_RIZAL = { lat: 13.6233869, lng: 123.1846726 };
 const BISCAST = { lat: 13.6314651, lng: 123.1927517 };
@@ -45,26 +59,52 @@ async function expectError(response: Response, status: number, code: string) {
 describe("POST /api/v1/plan", () => {
   let errors: ReturnType<typeof vi.spyOn>;
   beforeEach(() => {
-    repo.snapshot = realLoopsSnapshot();
+    repo.snapshot = realLinesSnapshot();
+    repo.lines = realLines();
+    repo.streets = STREETS;
+    repo.linesStatus = "ok";
     repo.fail = false;
     repo.calls = 0;
+    repo.loads = 0;
+    resetPlanNetworkForTests();
     errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
   });
   afterEach(() => errors.mockRestore());
 
-  // Task 7 (plan E §D) re-enables this: the response schema does not yet carry the Task 6 planner's output.
-  it.skip("plans on the published snapshot: 200, no-store, schema-valid, unverified", async () => {
+  it("plans on the published snapshot: 200, no-store, schema-valid, unverified", async () => {
     const response = await post(json({ origin: PLAZA_RIZAL, destination: BISCAST }));
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
     const body = planResponseSchema.parse(await response.json());
     expect(body.plan.coverage).toBe("provisional");
     expect(body.plan.notes[0]).toBe("Unverified route — confirm with the driver");
+    expect(body.plan.options.map((o) => o.mode)).toContain("jeepney");
     for (const o of body.plan.options) {
       for (const leg of o.legs) {
         if (leg.kind === "ride") expect(leg).toMatchObject({ verification: "unverified", pathVerified: false, boardingVerified: false });
       }
     }
+  });
+
+  it("reads the Lines and street graph once per revision, not once per request", async () => {
+    for (let i = 0; i < 3; i++) expect((await post(json({ origin: PLAZA_RIZAL, destination: BISCAST }))).status).toBe(200);
+    expect(repo.loads).toBe(1);
+  });
+
+  it("a revision published without paths or a street graph still plans (tricycle without a street route)", async () => {
+    repo.linesStatus = "none";
+    repo.streets = null;
+    const response = await post(json({ origin: PLAZA_RIZAL, destination: BISCAST }));
+    expect(response.status).toBe(200);
+    const body = planResponseSchema.parse(await response.json());
+    expect(body.plan.options.map((o) => o.mode)).not.toContain("jeepney");
+  });
+
+  it("503 (never cached) when the published paths are incomplete, and the next request tries again", async () => {
+    repo.linesStatus = "incomplete";
+    await expectError(await post(json({ origin: PLAZA_RIZAL, destination: BISCAST })), 503, "unavailable");
+    repo.linesStatus = "ok";
+    expect((await post(json({ origin: PLAZA_RIZAL, destination: BISCAST }))).status).toBe(200);
   });
 
   it.each([
@@ -102,7 +142,7 @@ describe("POST /api/v1/plan", () => {
   it("404 when nothing is published; 503 when the snapshot has no stops", async () => {
     repo.snapshot = null;
     await expectError(await post(json({ origin: PLAZA_RIZAL, destination: BISCAST })), 404, "not_found");
-    repo.snapshot = { ...realLoopsSnapshot(), stops: [] };
+    repo.snapshot = { ...realLinesSnapshot(), stops: [] };
     await expectError(await post(json({ origin: PLAZA_RIZAL, destination: BISCAST })), 503, "unavailable");
   });
 

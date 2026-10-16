@@ -68,7 +68,7 @@ export const savedTripSchema = z.object({
   /** The variants the option rides, with their loop direction (as planned). */
   variants: planResponseSchema.shape.variants,
 });
-export type SavedTrip = z.infer<typeof savedTripSchema>;
+export type SavedTrip = Omit<z.infer<typeof savedTripSchema>, "option"> & { option: PlanOptionDto };
 
 export const savedPlaceSchema = z.object({
   id: recordId,
@@ -138,7 +138,7 @@ function optionStopIds(option: PlanOptionDto): string[] {
     if (leg.kind === "walk") {
       if (leg.from.stopId) ids.push(leg.from.stopId);
       if (leg.to.stopId) ids.push(leg.to.stopId);
-    } else {
+    } else if (leg.kind === "ride") {
       for (const s of leg.stops) ids.push(s.id);
     }
   }
@@ -181,7 +181,7 @@ export function buildSavedTrip(input: {
 export function savedTripResponse(card: SavedTrip): PlanResponse {
   return {
     revision: { revisionId: card.revisionId, label: card.revisionLabel, kind: card.revisionKind, publishedAt: card.publishedAt },
-    plan: { revisionId: card.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: null, options: [card.option], notes: [] },
+    plan: { revisionId: card.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: null, jeepneyReason: null, options: [card.option], notes: [] },
     stops: card.stops,
     variants: card.variants,
   };
@@ -339,6 +339,7 @@ export function shareText(
       steps.push(`Walk ${formatDistance(leg.estimateMeters)} to ${to} (estimate, path not verified)`);
       continue;
     }
+    if (leg.kind !== "ride") continue; // tricycle and padyak share text: Task 9
     const board = leg.stops[0]!;
     const alight = leg.stops[leg.stops.length - 1]!;
     const dir = directionText(direction(leg.variantId), "long");

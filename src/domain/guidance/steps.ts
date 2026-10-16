@@ -103,6 +103,7 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
       pendingWalk = { leg, index: legIndex };
       continue;
     }
+    if (leg.kind !== "ride") continue; // tricycle and padyak steps: Task 9
     const stops = leg.stops.map(stopRef);
     const board = stops[0]!;
     const alight = stops.at(-1)!;

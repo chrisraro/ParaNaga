@@ -25,6 +25,8 @@ export type EtaOptionInput = {
   legs: ReadonlyArray<
     | { kind: "walk"; estimateMeters: number }
     | { kind: "ride"; mode: RouteMode; distanceMeters: number; distanceBasis: DistanceBasis }
+    // Tricycle and padyak legs (plan E section D) have no speed on file: never estimated (Task 9 refines the copy).
+    | { kind: "tricycle" | "padyak"; distanceMeters: number | null }
   >;
 };
 
@@ -148,6 +150,10 @@ export function estimateOption(
         const low = minutesAt(meters, s.walkKmh) * s.slowLow;
         const high = minutesAt(meters, s.walkKmh) * s.slowHigh;
         out.push({ kind: "walk", mode: "walk", meters, basis: onGraph ? "graph_path" : "straight_x1_3", band: null, estimated: true, ...roundRange(low, high), rawLowMin: low, rawHighMin: high });
+        continue;
+      }
+      if (leg.kind !== "ride") {
+        out.push({ kind: "ride", mode: "tricycle", meters: leg.distanceMeters ?? 0, basis: "approximate_path", band: null, estimated: false, lowMin: null, highMin: null, rawLowMin: null, rawHighMin: null });
         continue;
       }
       if (!validMeters(leg.distanceMeters)) return null;

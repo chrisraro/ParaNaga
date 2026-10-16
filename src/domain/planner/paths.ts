@@ -57,6 +57,12 @@ export type TransferPoint = { fromM: number; toM: number; from: LatLng; to: LatL
 
 const straightEstimate: WalkLength = (a) => Math.round(a.distM * WALK_ESTIMATE_FACTOR);
 
+const isCircuitPoints = (direction: string, points: readonly LatLng[]) =>
+  CIRCUIT_DIRECTIONS.has(direction) && haversineMeters(points[0]!, points.at(-1)!) <= CIRCUIT_CLOSE_M;
+
+/** A circuit (plan E §A): a circular direction and path ends within 60 m of each other. */
+export const isCircuitLine = (line: PlanningLine) => isCircuitPoints(line.direction, decodePolyline(line.encoded));
+
 export function pathVariant(line: PlanningLine): PathVariant {
   const { encoded, ...rest } = line;
   const points = decodePolyline(encoded);
@@ -75,7 +81,7 @@ export function pathVariant(line: PlanningLine): PathVariant {
     }
   }
   samples.push({ ...points.at(-1)!, m: lengthM, seg: points.length - 2 });
-  const isCircuit = CIRCUIT_DIRECTIONS.has(line.direction) && haversineMeters(points[0]!, points.at(-1)!) <= CIRCUIT_CLOSE_M;
+  const isCircuit = isCircuitPoints(line.direction, points);
   return { ...rest, isCircuit, points, cumM, lengthM, samples };
 }
 

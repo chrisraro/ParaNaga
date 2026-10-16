@@ -47,6 +47,8 @@ export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: 
               <span className="sr-only">Walk </span>
               {formatDistance(leg.estimateMeters)}
             </span>
+          ) : leg.kind !== "ride" ? (
+            <span className="pn-legstrip__ride">{leg.kind === "tricycle" ? "Tricycle" : "Padyak"}{leg.distanceMeters === null ? "" : ` ${formatDistance(leg.distanceMeters)}`}</span>
           ) : (
             <>
               <span className="sr-only">Ride </span>
@@ -74,7 +76,7 @@ function OptionCard({
   etaModel?: EtaModel | null;
 }) {
   const primary = index === 0;
-  const routes = option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode, l.routeName));
+  const routes = option.legs.filter((l): l is RideLegDto => l.kind === "ride").map((l) => routeChipLabel(l.routeCode, l.routeName));
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
   const rideLegs = option.legs.filter((l): l is RideLegDto => l.kind === "ride");

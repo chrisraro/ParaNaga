@@ -15,7 +15,7 @@
 //
 // Imported by client code (`use-trip-plan.ts`), so it imports `PLAN_LABELS` from `../planner/labels`
 // and never pulls in `src/domain/planner/plan.ts`.
-import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "../api/plan";
+import type { PadyakLegDto, PlanLegDto, PlanOptionDto, PlanResponse, RideLegDto, TricycleLegDto, WalkLegDto } from "../api/plan";
 import type { NetworkSnapshot } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
 import { WALK_PATHS_OFFLINE_NOTE } from "../pwa/offline-copy";
@@ -51,8 +51,8 @@ export type WalkLegPath =
       label: typeof WALK_STRAIGHT_LABEL | typeof WALK_LOADING_LABEL | typeof WALK_OFFLINE_LABEL;
     };
 
-export type EnrichedWalkLeg = WalkLegDto & { path: WalkLegPath };
-export type EnrichedLeg = EnrichedWalkLeg | RideLegDto;
+export type EnrichedWalkLeg = Omit<WalkLegDto, "path"> & { path: WalkLegPath };
+export type EnrichedLeg = EnrichedWalkLeg | RideLegDto | TricycleLegDto | PadyakLegDto;
 export type EnrichedPlanOption = Omit<PlanOptionDto, "legs"> & { legs: EnrichedLeg[] };
 export type EnrichedTripPlan = Omit<PlanResponse["plan"], "options"> & {
   options: EnrichedPlanOption[];
@@ -136,9 +136,12 @@ function inferEnds(options: readonly PlanOptionDto[], opts: EnrichOptions): { or
   if (!first || first.legs.length === 0) return null;
   const firstLeg = first.legs[0]!;
   const lastLeg = first.legs[first.legs.length - 1]!;
-  const origin = opts.origin ?? (firstLeg.kind === "walk" ? { lat: firstLeg.from.lat, lng: firstLeg.from.lng } : { lat: firstLeg.stops[0]!.lat, lng: firstLeg.stops[0]!.lng });
-  const destination = opts.destination ?? (lastLeg.kind === "walk" ? { lat: lastLeg.to.lat, lng: lastLeg.to.lng } : { lat: lastLeg.stops[lastLeg.stops.length - 1]!.lat, lng: lastLeg.stops[lastLeg.stops.length - 1]!.lng });
-  return { origin, destination };
+  const startOf = (l: PlanLegDto): LatLng | undefined => (l.kind === "ride" ? (l.board ?? l.stops[0]) : l.from);
+  const endOf = (l: PlanLegDto): LatLng | undefined => (l.kind === "ride" ? (l.alight ?? l.stops.at(-1)) : l.to);
+  const origin = opts.origin ?? startOf(firstLeg);
+  const destination = opts.destination ?? endOf(lastLeg);
+  if (!origin || !destination) return null;
+  return { origin: { lat: origin.lat, lng: origin.lng }, destination: { lat: destination.lat, lng: destination.lng } };
 }
 
 function compareOption(a: EnrichedPlanOption, b: EnrichedPlanOption): number {
