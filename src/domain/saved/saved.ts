@@ -17,7 +17,7 @@ import type { LatLng } from "../geo/types";
 import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { rideEnds } from "../trip/ride-ends";
-import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel, stopLabel } from "../trip/present";
+import { directionText, fareChipText, formatDistance, freeAlightText, isNegligibleWalk, legFareText, routeChipLabel, stopLabel, streetRideText } from "../trip/present";
 import type { EtaModel } from "../api/schemas";
 import { estimateOption } from "../eta/eta";
 import { TIME_NOT_AVAILABLE, formatTotal } from "../eta/format";
@@ -339,21 +339,27 @@ export function shareText(
   const lines: string[] = [`ParaNaga trip: ${input.start.label} to ${input.destination.label}`];
   if (option.rides > 0) lines.push(`${UNVERIFIED_ROUTE_BADGE}.`);
   const steps: string[] = [];
-  for (const leg of option.legs) {
+  const lastRide = option.legs.reduce((last, l, i) => (l.kind === "ride" ? i : last), -1);
+  for (const [i, leg] of option.legs.entries()) {
     if (leg.kind === "walk") {
       if (option.rides > 0 && isNegligibleWalk(leg)) continue;
       const to = leg.to.kind === "destination" ? input.destination.label : name(leg.to.stopId, leg.to.name);
       steps.push(`Walk ${formatDistance(leg.estimateMeters)} to ${to} (estimate, path not verified)`);
       continue;
     }
-    if (leg.kind !== "ride") continue; // tricycle and padyak share text: Task 9
-    const ends = rideEnds(leg);
+    if (leg.kind === "tricycle" || leg.kind === "padyak") {
+      steps.push(streetRideText(leg, input.destination.label));
+      continue;
+    }
+    const ends = rideEnds(leg, i === lastRide ? input.destination.label : undefined);
     if (!ends) continue;
     const { board, alight } = ends;
     const dir = directionText(direction(leg.variantId), "long");
     const count = ends.stops.length - 1;
-    steps.push(`Board ${routeChipLabel(leg.routeCode, leg.routeName)} at ${name(board.id, board.name)}${dir ? `, direction ${dir}` : ""}`);
-    steps.push(`${ends.pinned ? `Ride ${count} ${count === 1 ? "stop" : "stops"}, get off` : "Ride along the approximate path, get off"} at ${name(alight.id, alight.name)}. Say "Para!" to the driver.`);
+    steps.push(`Board ${routeChipLabel(leg.routeCode, leg.routeName)} ${ends.pinned ? "at" : "near"} ${name(board.id, board.name)}${dir ? `, direction ${dir}` : ""}`);
+    steps.push(ends.pinned
+      ? `Ride ${count} ${count === 1 ? "stop" : "stops"}, get off at ${name(alight.id, alight.name)}. Say "Para!" to the driver.`
+      : `Ride along the approximate path. ${freeAlightText(name(alight.id, alight.name))}`);
   }
   lines.push(...steps.map((s, i) => `${i + 1}. ${s}`));
   lines.push(`Fare: ${option.rides > 0 ? legFareText(option.fare) : fareChipText(option.fare)}`);

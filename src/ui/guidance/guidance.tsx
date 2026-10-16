@@ -176,9 +176,9 @@ export function Guidance({ guidance, covered, onEnd, onDone, onReplan }: Props) 
         <RideStep view={shown} {...stepProps} alertKey={covered ? "covered" : "shown"} />
       ) : shown.screen === "arrive" ? (
         <ArriveStep view={shown} onSend={send} headingRef={headingRef} card={card} onDone={onDone} />
-      ) : (
+      ) : shown.screen === "missed" ? (
         <MissedStep view={shown} onSend={send} onReplan={onReplan} headingRef={headingRef} />
-      )}
+      ) : null /* street_ride (tricycle / padyak) screen: Task 10 */}
       <p className="sr-only" aria-live="polite" data-testid="guidance-announcer">
         {liveText}
       </p>

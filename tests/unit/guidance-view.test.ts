@@ -11,7 +11,8 @@ import type { PlanOptionDto } from "@/domain/api/plan";
 import type { GuidanceTrip } from "@/domain/guidance/steps";
 import { manila } from "./eta-fixtures";
 import { currentStep } from "@/domain/guidance/session";
-import { BASE, DEST, LOOP_A, LOOP_B, STEP_LAT, fixAt, oneRide, tripOf, twoRides, walkOnly } from "./guidance-fixtures";
+import { BASE, DEST, LOOP_A, LOOP_B, PATH_LINE, PATH_VARIANT_ID, STEP_LAT, fixAt, oneRide, pathRide, streetOnly, tripOf, twoRides, walkOnly } from "./guidance-fixtures";
+import { encodePolyline } from "@/domain/geo/polyline";
 
 const NOW = 1_000_000;
 const tap = (type: Exclude<GuidanceEvent["type"], "fix">): GuidanceEvent => ({ type }) as GuidanceEvent;
@@ -455,6 +456,106 @@ describe("view properties (fixed seeds)", () => {
         return live?.politeness !== "assertive" || live.text === GUIDANCE_COPY.paraTitle;
       }),
       { seed: 17, numRuns: 300 },
+    );
+  });
+});
+
+// ---------------------------------------------------------------- Increment E (Task 9): street rides, free points
+
+describe("street ride (tricycle / padyak)", () => {
+  it("a tricycle-only trip: one step, the honest copy, no minutes, arrive ends it", () => {
+    const s = startSession(tripOf(streetOnly("tricycle", 1500)), NOW);
+    const v = guidanceView(s, null, NOW);
+    if (v.screen !== "street_ride") throw new Error(v.screen);
+    expect(v).toMatchObject({
+      stepLabel: "Step 1 of 1 · Tricycle",
+      title: "Take a tricycle to SM City Naga",
+      instruction: "Take a tricycle to SM City Naga · about 1.5 km along streets · minimum fare ₱15 · confirm with the driver",
+      remainingTime: "Tricycle time not estimated",
+      usesLocation: false,
+    });
+    expect(v.notes).toContain("Tricycle time not estimated");
+    expect(labels(v)).toEqual(["primary:arrived:I've arrived", "secondary:end:End guidance"]);
+    const done = guidanceView(run(s, "arrived"), null, NOW);
+    expect(done.screen).toBe("arrive");
+    if (done.screen === "arrive") expect(done.summary).toEqual({ walkText: "≈ 0 m walk · estimate", rides: [{ chip: "Tricycle", stopsText: "along streets" }], fareText: "Minimum fare ₱15" });
+    expect(guidanceView(run(s, "arrived", "back"), null, NOW).screen).toBe("street_ride");
+  });
+
+  it("a padyak trip names padyak, never tricycle", () => {
+    const v = guidanceView(startSession(tripOf(streetOnly("padyak", 900)), NOW), null, NOW);
+    if (v.screen !== "street_ride") throw new Error(v.screen);
+    expect(v.stepLabel).toBe("Step 1 of 1 · Padyak");
+    expect(v.remainingTime).toBe("Padyak time not estimated");
+    expect(strings(v).join(" ")).not.toMatch(/tricycle/i);
+  });
+});
+
+describe("pinless ride: free points and progress along the path", () => {
+  const at = (m: number) => ({ lat: BASE.lat + m / 111_195, lng: BASE.lng });
+  const leg = { ...pathRide(200, 2000, at), variantId: PATH_VARIANT_ID };
+  const option: PlanOptionDto = { ...oneRide(), legs: [oneRide().legs[0]!, leg, oneRide().legs[2]!] };
+  const trip: GuidanceTrip = { ...tripOf(option), ridePaths: { [PATH_VARIANT_ID]: { encoded: encodePolyline(PATH_LINE), isCircuit: false } } };
+  const riding = run(startSession(trip, NOW), "boarded");
+
+  it("the alighting copy says 'para' and that the stop is not marked", () => {
+    const v = guidanceView(riding, null, NOW);
+    if (v.screen !== "ride") throw new Error(v.screen);
+    expect(v.alightText).toBe("Get off near SM City Naga · tell the driver 'para' · stop not marked");
+    expect(v.countText).toBe("Ride along the approximate path to SM City Naga");
+  });
+
+  it("a usable fix on the path: metres of riding left (approximate); get ready within 300 m", () => {
+    const mid = guidanceView(riding, fixAt(at(1000)), NOW);
+    if (mid.screen !== "ride") throw new Error(mid.screen);
+    expect(mid.countText).toBe("About 1000 m of riding left (approximate)");
+    expect(mid.title).toBe("Ride to SM City Naga");
+    const near = guidanceView(riding, fixAt(at(1800)), NOW);
+    if (near.screen !== "ride") throw new Error(near.screen);
+    expect(near.countText).toBe("About 200 m of riding left (approximate)");
+    expect(near.title).toBe("Get ready to get off near SM City Naga");
+    expect(near.live).toEqual({ politeness: "polite", text: "Get ready to get off near SM City Naga" });
+  });
+
+  it("GPS 120 m off the path: an off-path note, not progress", () => {
+    const v = guidanceView(riding, fixAt({ lat: at(1000).lat, lng: BASE.lng + 120 / (111_195 * Math.cos((BASE.lat * Math.PI) / 180)) }), NOW);
+    if (v.screen !== "ride") throw new Error(v.screen);
+    expect(v.countText).toBe(GUIDANCE_COPY.offPath);
+    expect(v.title).toBe("Ride to SM City Naga");
+  });
+
+  it("without the path on this phone it falls back to the plain copy", () => {
+    const noPath = run(startSession({ ...trip, ridePaths: undefined }, NOW), "boarded");
+    const v = guidanceView(noPath, fixAt(at(1000)), NOW);
+    if (v.screen !== "ride") throw new Error(v.screen);
+    expect(v.countText).toBe("Ride along the approximate path to SM City Naga");
+  });
+
+  it("the jeepney time left is an estimate along the path, with waiting not folded in", () => {
+    const v = guidanceView(riding, null, manila("09:30").getTime());
+    if (v.screen !== "ride") throw new Error(v.screen);
+    expect(v.remainingTime).toMatch(/^About \d+–\d+ min of riding left \(estimate\)$/);
+  });
+});
+
+describe("view properties: new options (fixed seeds)", () => {
+  const at = (m: number) => ({ lat: BASE.lat + m / 111_195, lng: BASE.lng });
+  const pathOpt: PlanOptionDto = { ...oneRide(), legs: [oneRide().legs[0]!, { ...pathRide(200, 2000, at), variantId: PATH_VARIANT_ID }, oneRide().legs[2]!] };
+  const newOptions = fc.constantFrom(streetOnly("tricycle"), streetOnly("padyak", 800), streetOnly("tricycle", null, "unavailable"), streetOnly("padyak", 700, "straight_line"), pathOpt);
+  const paths = { [PATH_VARIANT_ID]: { encoded: encodePolyline(PATH_LINE), isCircuit: false } };
+  const pathFix = fc.option(fc.record({ m: fc.integer({ min: -200, max: 2600 }), east: fc.integer({ min: 0, max: 200 }), accuracy: fc.integer({ min: 0, max: 80 }) })
+    .map(({ m, east, accuracy }): LocationFix => ({ lat: at(m).lat, lng: BASE.lng + east / 108_000, accuracy, timestamp: NOW })), { nil: null });
+
+  it("FORBIDDEN honesty property holds for every new string; tricycle and padyak never show minutes", () => {
+    fc.assert(
+      fc.property(newOptions, fc.array(eventArb, { maxLength: 20 }), pathFix, (option, events, fix) => {
+        const s = events.reduce(reduceSession, startSession({ ...tripOf(option), ridePaths: paths }, NOW));
+        // "Ord 93-049 Sec 132" is an ordinance section, not a duration ("9 Sec").
+        const text = strings(guidanceView(s, fix, NOW)).map((t) => t.replace(/\bSec \d+/g, "§"));
+        const street = option.mode === "tricycle" || option.mode === "padyak";
+        return text.every((t) => FORBIDDEN.every((re) => !re.test(t)) && durationLabelled(t) && !(street && DURATION.test(t)));
+      }),
+      { seed: 2026, numRuns: 400 },
     );
   });
 });

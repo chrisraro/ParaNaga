@@ -25,9 +25,14 @@
 //    (passed index ≥ alighting index − 2); `nearStopBefore` when such a fix matches, in order, a
 //    stop with index ≥ max(1, alighting index − 1). Both latch once set (pin order cannot go back).
 //    `paraSuggested` is the one rule the view and the session both use.
-// There is no off-route detection (no shape exists) and no time estimate anywhere.
+// The stop count has no off-route detection (pins are not a shape) and no time estimate anywhere.
+//  - A ride with a Lines path (pinless rides boarding/alighting at free points, plan E): `pathRideProgress`
+//    projects the fix onto the ride's slice of the path, [board, alight] in path order (wrapping across
+//    the start on a circuit): remaining = alight − current. More than PATH_OFF_M from the slice reads
+//    "off path" (the jeepney may use another street), never progress. Stateless per fix.
 import { compass8, initialBearingDegrees, type Compass8 } from "../geo/bearing";
 import { haversineMeters } from "../geo/geometry";
+import { projectOnLine } from "../geo/measure";
 import { PRECISE_M, isStale, type LocationFix } from "../geo/location-fix";
 import type { LatLng } from "../geo/types";
 
@@ -167,4 +172,51 @@ export function rideProgress(stops: readonly LatLng[], memory: RideMemory, fix: 
     if (matched >= Math.max(1, alightIndex - 1)) nearStopBefore = true;
   }
   return summarize(stops, { passedIndex, countLost, pendingIndex, alightNear, nearStopBefore }, true);
+}
+
+// ---------------------------------------------------------------- along the Lines path (plan E)
+
+/** A fix further than this from the ride's slice of the path is "off path" (GPS ≤ 50 m + an approximate path). */
+export const PATH_OFF_M = 100;
+/** "Get ready" once this little riding is left. */
+export const GET_READY_M = 300;
+
+export type PathRideProgress = { offPath: true; distM: number } | { offPath: false; remainingM: number; getReady: boolean };
+
+/**
+ * Progress of a ride along `path` from measure `boardM` to `alightM` (path order; on a circuit the ride may
+ * cross the path's start, and an alight measure past the length is read modulo it). Null without a usable fix.
+ */
+export function pathRideProgress(
+  path: readonly LatLng[],
+  isCircuit: boolean,
+  boardM: number,
+  alightM: number,
+  fix: LocationFix | null,
+  now: number,
+): PathRideProgress | null {
+  if (!fix || !usableFix(fix, now) || path.length < 2) return null;
+  const cum = [0];
+  for (let i = 1; i < path.length; i++) cum.push(cum[i - 1]! + haversineMeters(path[i - 1]!, path[i]!));
+  const length = cum.at(-1)!;
+  const end = isCircuit && length > 0 ? boardM + ((((alightM - boardM) % length) + length) % length) : alightM;
+  let best: { distM: number; m: number } | null = null;
+  for (const offset of isCircuit ? [0, length] : [0]) {
+    for (let i = 1; i < path.length; i++) {
+      const m0 = cum[i - 1]! + offset;
+      const m1 = cum[i]! + offset;
+      const lo = Math.max(m0, boardM);
+      const hi = Math.min(m1, end);
+      if (hi < lo || m1 === m0) continue;
+      const a = path[i - 1]!;
+      const b = path[i]!;
+      const at = (m: number) => ({ lat: a.lat + ((m - m0) / (m1 - m0)) * (b.lat - a.lat), lng: a.lng + ((m - m0) / (m1 - m0)) * (b.lng - a.lng) });
+      const pr = projectOnLine([at(lo), at(hi)], fix);
+      if (!best || pr.distM < best.distM) best = { distM: pr.distM, m: lo + pr.measureM };
+    }
+  }
+  if (!best) return null;
+  if (best.distM > PATH_OFF_M) return { offPath: true, distM: Math.round(best.distM) };
+  const remainingM = Math.max(0, Math.round(end - best.m));
+  return { offPath: false, remainingM, getReady: remainingM <= GET_READY_M };
 }

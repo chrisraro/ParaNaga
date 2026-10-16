@@ -1,8 +1,7 @@
 // Copy for time estimates (D12). Durations only, always labelled as an estimate: never a clock
 // time, never "arriving" or "ETA". The peak note names the peak windows (clock times of the
 // windows, not of the trip). Pure.
-import type { RouteMode } from "../modes/fleet";
-import { type EtaEstimate, type EtaLeg, type EtaTotal } from "./eta";
+import { type EtaEstimate, type EtaLeg, type EtaMode, type EtaTotal } from "./eta";
 
 /** The one definition of the copy shown when no time estimate can be made (no model on file). */
 export const TIME_NOT_AVAILABLE = "Time not available";
@@ -39,15 +38,16 @@ export function formatRangeLabel(lowMin: number, highMin: number): string {
 }
 
 /** Mode names in "… time not estimated" copy (lower case mid-sentence). */
-const MODE_NAME: Readonly<Record<RouteMode, string>> = {
+const MODE_NAME: Readonly<Record<EtaMode, string>> = {
   jeepney: "jeepney",
   tricycle: "tricycle",
+  padyak: "padyak",
   uv_express: "UV Express",
   bus: "bus",
   rail: "train",
 };
 const capitalise = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
-const notEstimated = (modes: readonly RouteMode[]) => `${modes.map((m) => MODE_NAME[m]).join(" and ")} time not estimated`;
+const notEstimated = (modes: readonly EtaMode[]) => `${modes.map((m) => MODE_NAME[m]).join(" and ")} time not estimated`;
 
 export const TRICYCLE_NOT_ESTIMATED = capitalise(notEstimated(["tricycle"]));
 

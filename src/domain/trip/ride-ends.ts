@@ -22,13 +22,16 @@ const freeEnd = (leg: EndLeg, p: NonNullable<RideLegDto["board"]>): RideEnd => (
   lng: p.lng,
 });
 
-/** The ride's ends, or null for a malformed leg that has neither pins nor free points. */
-export function rideEnds(leg: EndLeg): RideEnds | null {
+/**
+ * The ride's ends, or null for a malformed leg that has neither pins nor free points. `alightName` names an
+ * unnamed free alighting point (plan E §A: the last ride's "Get off near {destination}").
+ */
+export function rideEnds(leg: EndLeg, alightName?: string): RideEnds | null {
   if (leg.stops.length >= 2) {
     return { board: leg.stops[0]!, alight: leg.stops[leg.stops.length - 1]!, stops: leg.stops, pinned: true };
   }
   if (!leg.board || !leg.alight) return null;
   const board = freeEnd(leg, leg.board);
-  const alight = freeEnd(leg, leg.alight);
+  const alight = freeEnd(leg, { ...leg.alight, name: leg.alight.name ?? alightName ?? null });
   return { board, alight, stops: [board, alight], pinned: false };
 }

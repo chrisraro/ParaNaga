@@ -66,7 +66,7 @@ export type GuidanceEvent =
 
 const NEW_RIDE: RideState = { ...NEW_RIDE_MEMORY, gpsSeen: false, stopIsNext: false, paraAcknowledged: false };
 
-/** The first step is always walk_to_board or walk_to_destination (guidanceSteps), never a ride. */
+/** The first step is walk_to_board, walk_to_destination or a street_ride (guidanceSteps), never a ride. */
 export function startSession(trip: GuidanceTrip, now: number): GuidanceSession {
   return { v: GUIDANCE_SESSION_FORMAT, trip, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null };
 }
@@ -109,6 +109,9 @@ function back(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSession 
   return { ...session, stepIndex: session.stepIndex - 1, atStop: false, ride: session.lastRide ?? NEW_RIDE, lastRide: null };
 }
 
+/** The steps that end at the destination: "I've arrived" applies there. */
+const endsTrip = (step: GuidanceStep) => step.kind === "walk_to_destination" || step.kind === "street_ride";
+
 export function reduceSession(session: GuidanceSession, event: GuidanceEvent): GuidanceSession {
   if (event.type === "end") return session.status === "ended" ? session : { ...session, status: "ended", ride: null, lastRide: null };
   if (event.type === "back") return back(session, sessionSteps(session));
@@ -133,7 +136,7 @@ export function reduceSession(session: GuidanceSession, event: GuidanceEvent): G
     case "missedStop":
       return ride ? { ...session, status: "missed_stop", ride: null, lastRide: ride } : session;
     case "arrived":
-      return step.kind === "walk_to_destination" ? { ...session, status: "arrived" } : session;
+      return endsTrip(step) ? { ...session, status: "arrived" } : session;
     case "fix": {
       if (!ride || step.kind !== "ride" || !usableFix(event.fix, event.now)) return session;
       const p = rideProgress(step.stops, ride, event.fix, event.now);
@@ -160,6 +163,7 @@ const tripSchema = z.strictObject({
   destinationLabel: z.string().max(200).nullable(),
   etaModel: etaModelSchema.nullable().optional(),
   walkLengths: z.array(z.number().min(0).nullable()).max(50).optional(),
+  ridePaths: z.record(z.string().max(64), z.strictObject({ encoded: z.string().max(200_000), isCircuit: z.boolean() })).optional(),
 });
 
 const rideSchema = z.strictObject({
@@ -208,7 +212,7 @@ function consistent(s: GuidanceSession): boolean {
     if (!fits(s.lastRide, s.status === "missed_stop" ? step : steps[s.stepIndex - 1])) return false;
   }
   if (s.atStop && step.kind !== "walk_to_board" && step.kind !== "transfer") return false;
-  if (s.status === "arrived" && step.kind !== "walk_to_destination") return false;
+  if (s.status === "arrived" && !endsTrip(step)) return false;
   if (s.status === "missed_stop" && step.kind !== "ride") return false;
   return true;
 }
