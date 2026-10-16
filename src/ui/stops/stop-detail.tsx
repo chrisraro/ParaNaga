@@ -7,6 +7,9 @@
 import "@/ui/kit/styles";
 
 import Link from "next/link";
+import { photoForStopSource } from "@/domain/media/photos";
+import { ReferencePhoto } from "@/ui/places/reference-photo";
+import { StopStreetView } from "@/ui/street-view/stop-street-view";
 import { useId, useState } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { stopDetailSchema, type StopDetail } from "@/domain/api/schemas";
@@ -106,6 +109,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
   const uid = useId(); // per instance: a hidden previous stop panel may still be mounted
   const layers = sharedLayers(sharedCoordinate);
   const onRoute = servingRoutes.length > 0;
+  const referencePhoto = sourceRecords.map(photoForStopSource).find((photo) => photo !== null);
 
   return (
     <DetailPanel title="Stop" action={<ShowOnMap lat={stop.lat} lng={stop.lng} />} testId="stop-detail">
@@ -235,9 +239,11 @@ export function StopDetailView({ data }: { data: StopDetail }) {
           </div>
           <div className="pn-kv">
             <dt className="pn-kv__key">Photo · sign text</dt>
-            <dd className="pn-kv__value" style={{ margin: 0 }}>Photo pending</dd>
+            <dd className="pn-kv__value" style={{ margin: 0 }}>Stop sign photo pending · sign text not verified</dd>
           </div>
         </dl>
+        {referencePhoto ? <ReferencePhoto photo={referencePhoto} stop /> : null}
+        <StopStreetView key={stop.id} lat={stop.lat} lng={stop.lng} name={stopDisplayName(stop.name, stop.source.code)} />
 
         <p className="pn-soon">Verification opens soon.</p>
 

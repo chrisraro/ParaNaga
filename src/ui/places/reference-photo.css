@@ -1,0 +1,5 @@
+.pn-reference-photo { margin: 0; min-width: 0; }
+.pn-reference-photo img { display: block; width: 100%; height: auto; max-height: 360px; object-fit: contain; border-radius: 16px; }
+.pn-reference-photo figcaption { padding: 10px 4px; font-size: 13px; line-height: 1.5; color: var(--pn-label2); overflow-wrap: anywhere; }
+.pn-reference-photo figcaption a { color: var(--pn-accent); text-decoration: underline; text-underline-offset: 3px; }
+.pn-reference-photo a:focus-visible { outline: 2px solid var(--pn-accent); outline-offset: 3px; }

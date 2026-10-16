@@ -23,8 +23,21 @@ const clean = (value: string | undefined): string | undefined => {
 
 export function tileConfig(env: TileEnv): TileConfig {
   const url = clean(env.NEXT_PUBLIC_TILE_URL);
-  const attribution = clean(env.NEXT_PUBLIC_TILE_ATTRIBUTION) ?? OSM_ATTRIBUTION;
-  if (url) return { url, attribution };
+  let attribution = clean(env.NEXT_PUBLIC_TILE_ATTRIBUTION);
+  if (url) {
+    let host = "";
+    try { host = new URL(url).hostname; } catch { return { url: null, attribution: OSM_ATTRIBUTION }; }
+    if (host === "api.maptiler.com") {
+      attribution ??= "© MapTiler © OpenStreetMap contributors";
+      if (!attribution.includes("© MapTiler")) attribution += " © MapTiler";
+    } else if (!attribution && host !== "tile.openstreetmap.org" && env.NODE_ENV === "production") {
+      // Unknown providers have their own terms: missing credits must not silently become OSM-only.
+      return { url: null, attribution: OSM_ATTRIBUTION };
+    }
+    attribution ??= OSM_ATTRIBUTION;
+    if (!attribution.includes(OSM_ATTRIBUTION)) attribution += ` ${OSM_ATTRIBUTION}`;
+    return { url, attribution };
+  }
   // The public OSM tile server is for development and tests only (OSM tile usage policy).
   if (env.NODE_ENV === "production") return { url: null, attribution: OSM_ATTRIBUTION };
   return { url: OSM_TILE_URL, attribution: OSM_ATTRIBUTION };

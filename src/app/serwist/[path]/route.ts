@@ -27,14 +27,18 @@ const serwist = createSerwistRoute({
   // the widest browser support, no source map served.
   useNativeEsbuild: true,
   esbuildOptions: { format: "iife", sourcemap: false },
-  globIgnores: ["**/*.map"],
+  // Research downloads and photos are fetched on demand, never a multi-megabyte install payload.
+  globIgnores: ["**/*.map", "**/media/places/**", "**/data/attribution/**", "**/licenses/THIRD-PARTY-NOTICES.txt"],
   // Build assets and public files (/theme-init.js, /icons/*) come from the build output; the
   // manifest and the icons as the HTML links them are added here. The static page shells are
   // cached by the worker itself at install (see sw.ts).
   additionalPrecacheEntries: [{ url: "/manifest.webmanifest", revision: manifestRevision() }],
   manifestTransforms: [
     async (entries) => ({
-      manifest: [...entries, ...linkedIconUrls(entries.map((e) => e.url)).map((url) => ({ url, revision: null, size: 0 }))],
+      manifest: [
+        ...entries.filter((e) => !e.url.startsWith("/media/places/") && !e.url.startsWith("/data/attribution/") && e.url !== "/licenses/THIRD-PARTY-NOTICES.txt"),
+        ...linkedIconUrls(entries.map((e) => e.url)).map((url) => ({ url, revision: null, size: 0 })),
+      ],
       warnings: [],
     }),
   ],
