@@ -4,6 +4,9 @@
 import type { RouteMode } from "../modes/fleet";
 import { type EtaEstimate, type EtaLeg, type EtaTotal } from "./eta";
 
+/** The one definition of the copy shown when no time estimate can be made (no model on file). */
+export const TIME_NOT_AVAILABLE = "Time not available";
+
 /** 5 → "5 min"; 60 → "1 h"; 65 → "1 h 5 min". */
 export function formatDuration(min: number): string {
   if (min < 60) return `${min} min`;
@@ -52,6 +55,7 @@ export const TRICYCLE_NOT_ESTIMATED = capitalise(notEstimated(["tricycle"]));
 export function formatTotal(t: EtaTotal): string {
   const waiting = t.rides === 0 ? "" : t.rides === 1 ? " + waiting (unknown)" : ` + waiting (unknown, ${t.rides} rides)`;
   if (t.lowMin === null || t.highMin === null) return `${capitalise(notEstimated(t.unestimatedModes))}${waiting}`;
+  if (t.highMin === 0) return "No walking"; // only 0 m walks: nothing to estimate
   const walk = t.walkOnly ? " walk" : "";
   const partial = t.partial ? ` · ${notEstimated(t.unestimatedModes)}` : "";
   return `Estimate ${formatRange(t.lowMin, t.highMin)}${walk}${waiting}${partial}`;
@@ -66,6 +70,7 @@ export function formatPeakNote(t: EtaTotal): string | null {
 /** "≈ 14–18 min walk", "≈ 12–18 min ride", or "Tricycle time not estimated" (the leg's mode). */
 export function formatLeg(l: EtaLeg): string {
   if (!l.estimated || l.lowMin === null || l.highMin === null) return capitalise(notEstimated([l.mode === "walk" ? "tricycle" : l.mode]));
+  if (l.kind === "walk" && l.lowMin === 0 && l.highMin === 0) return "No walking";
   return `≈ ${formatRange(l.lowMin, l.highMin)} ${l.kind === "walk" ? "walk" : "ride"}`;
 }
 

@@ -184,6 +184,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     test.use({ colorScheme });
 
     test(`Place and Terminal detail have no serious or critical violations (${colorScheme})`, async ({ page }) => {
+      test.slow(); // five pages with an axe scan each: ~26 s alone, over the 30 s default in a full parallel run
       for (const path of [SM_PATH, `/app/places/pin/${PLAZA.key}`, "/app/places/barangay/abella", `/app/places/study/${STUDY.code}`]) {
         await page.goto(path);
         await expect(place(page).getByRole("heading", { level: 1 })).toBeFocused();

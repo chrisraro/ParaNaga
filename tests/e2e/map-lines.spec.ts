@@ -62,7 +62,12 @@ test("trip lines draw walk (dotted) and ride (solid) layers with chevrons and le
   await expect(chevrons.first()).toBeAttached();
 
   // Map legend lists Walk and vehicle class
-  await page.getByRole("button", { name: "Collapse sheet" }).click();
+  // Tapping an option scrolls it into reach: the sheet goes to full only when the card was cut off,
+  // which depends on its height at that moment. Whatever the snap, tap the grabber until it peeks.
+  const grabber = page.getByRole("button", { name: /^(Expand sheet to (half|full)|Collapse sheet)$/ });
+  const sheetSnap = () => page.locator("[data-snap]").first().getAttribute("data-snap");
+  for (let taps = 0; taps < 3 && (await sheetSnap()) !== "0"; taps++) await grabber.click();
+  expect(await sheetSnap()).toBe("0");
   const legend = page.getByTestId("map-legend");
   await expect(legend).toBeVisible();
   await page.getByTestId("map-legend-button").click();

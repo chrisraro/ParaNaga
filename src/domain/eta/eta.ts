@@ -140,6 +140,11 @@ export function estimateOption(
         const onGraph = graph !== null && graph !== undefined;
         const meters = onGraph ? graph : leg.estimateMeters;
         if (!validMeters(meters)) return null;
+        // A 0 m walk (a same-stop transfer) takes no time: no "1–2 min" from the outward rounding.
+        if (meters === 0) {
+          out.push({ kind: "walk", mode: "walk", meters, basis: onGraph ? "graph_path" : "straight_x1_3", band: null, estimated: true, lowMin: 0, highMin: 0, rawLowMin: 0, rawHighMin: 0 });
+          continue;
+        }
         const low = minutesAt(meters, s.walkKmh) * s.slowLow;
         const high = minutesAt(meters, s.walkKmh) * s.slowHigh;
         out.push({ kind: "walk", mode: "walk", meters, basis: onGraph ? "graph_path" : "straight_x1_3", band: null, estimated: true, ...roundRange(low, high), rawLowMin: low, rawHighMin: high });

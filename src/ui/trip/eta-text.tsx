@@ -13,7 +13,7 @@ import {
   type EtaResult,
   type EtaUnavailableReason,
 } from "@/domain/eta/eta";
-import { formatPeakNote, formatRange, formatRangeLabel, formatTotal } from "@/domain/eta/format";
+import { TIME_NOT_AVAILABLE, formatPeakNote, formatRange, formatRangeLabel, formatTotal } from "@/domain/eta/format";
 import type { EnrichedLeg } from "@/domain/trip/enrich";
 
 /**
@@ -78,11 +78,11 @@ export function useOptionEta(
   }, [option, walkLengths, model, departure]);
 }
 
-export const TIME_NOT_AVAILABLE = "Time not available";
 
 /**
- * A time text with its range spoken in words: the visible copy ("Estimate 8–15 min …") is hidden
- * from screen readers and a sr-only twin reads "Estimate 8 to 15 minutes …" (formatRangeLabel).
+ * A time text with its range spoken in words. The visible copy ("Estimate 8–15 min …") appears
+ * once in the DOM; role="img" plus an aria-label carries "Estimate 8 to 15 minutes …" (formatRangeLabel)
+ * as the accessible name, and a button or card containing it takes that name from the label.
  */
 export function SpokenRange({ text, range, className, testId }: { text: string; range: { lowMin: number | null; highMin: number | null } | null; className?: string; testId?: string }) {
   if (!range || range.lowMin === null || range.highMin === null) {
@@ -90,9 +90,8 @@ export function SpokenRange({ text, range, className, testId }: { text: string; 
   }
   const spoken = text.replace(formatRange(range.lowMin, range.highMin), formatRangeLabel(range.lowMin, range.highMin));
   return (
-    <span className={className} data-testid={testId}>
-      <span aria-hidden="true">{text}</span>
-      <span className="sr-only">{spoken}</span>
+    <span className={className} data-testid={testId} role="img" aria-label={spoken}>
+      {text}
     </span>
   );
 }

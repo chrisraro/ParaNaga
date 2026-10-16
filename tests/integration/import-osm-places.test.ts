@@ -113,7 +113,8 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
         order by seq desc limit 1`,
     );
     startRevisionId = realOsm.rows[0]?.id ?? (await revisionIdOf(transitPlan.revisionLabel))!;
-    await publish(startRevisionId);
+    const current = await owner.query("select revision_id from transit.published_pointer");
+    if (current.rows[0]?.revision_id !== startRevisionId) await publish(startRevisionId);
   }, 120_000);
 
   afterAll(async () => {

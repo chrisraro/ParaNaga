@@ -135,25 +135,36 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
   });
 
   it("the synthetic seed is written flagged and refused by publish_revision; nothing remains", async () => {
-    const fixture: ModesFile = {
-      fileName: "naga-modes-seed-2026-10-16.json", bytes: readFileSync("tests/fixtures/modes/modes-seed-synthetic.json"),
-    };
+    // Dated 2099 so it never collides with the real seed already on a branch of main (a same-dated
+    // synthetic seed would fail on the unique batch/source rows, proving nothing about the refusal).
+    const json = JSON.parse(readFileSync("tests/fixtures/modes/modes-seed-synthetic.json", "utf8"));
+    json.header.preparedOn = "2099-01-01";
+    const fixture: ModesFile = { fileName: "naga-modes-seed-2099-01-01.json", bytes: Buffer.from(JSON.stringify(json, null, 1)) };
     const plan = buildImportPlan(files, null, fixture);
     expect(plan.problems).toEqual([]);
     expect(plan.modes?.synthetic).toBe(true);
     const before = await tableCounts();
+    // A branch of main already holds the real modes revision: the refusal must not touch it.
+    const existing = await revisionIdOf(LABEL);
     const refused = await failure(commitImport(ownerUrl!, plan));
     expect(refused.code).toBe("23514");
     expect(refused.message).toMatch(/synthetic/);
     expect(await tableCounts()).toEqual(before);
-    expect(await revisionIdOf(LABEL)).toBeUndefined();
+    expect(await revisionIdOf(LABEL)).toBe(existing);
   });
 
   it("publishes modes-2026-10-16 with every R1–R8 stop and variant membership of the previous revision", async () => {
     const previous = await members(startRevisionId);
     const result = await commitImport(ownerUrl!, buildImportPlan(files, null, realSeed));
-    expect(result.modes).toMatchObject({ outcome: "committed", revisionLabel: LABEL });
+    // A branch of fresh data commits it; a branch of main (the import is in production) already
+    // holds it, reports "unchanged", and the rollback done in beforeAll is undone by publishing it.
+    expect(["committed", "unchanged"]).toContain(result.modes?.outcome);
+    expect(result.modes).toMatchObject({ revisionLabel: LABEL });
     const revisionId = (await revisionIdOf(LABEL))!;
+    if (result.modes?.outcome === "unchanged") {
+      expect(result.modes).toMatchObject({ publishedIncludesBatch: false });
+      await publish(revisionId);
+    }
     expect(await appRows(sql`select label, kind from transit.v_published_revision`)).toEqual([{ label: LABEL, kind: "provisional" }]);
 
     expect(await lptrpMembers(revisionId)).toEqual(await lptrpMembers(startRevisionId));
@@ -171,7 +182,9 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
     expect(kinds(after, "route_fare_observation")).toHaveLength(2);
     expect(kinds(after, "regional_service")).toHaveLength(7);
     expect(kinds(after, "fare_rule")).toHaveLength(kinds(previous, "fare_rule").length + 7);
-    expect(result.modes?.counts).toMatchObject({ carried_members: previous.length - 3 - 6, seed_members: after.length - previous.length + 9 });
+    if (result.modes?.outcome === "committed") {
+      expect(result.modes.counts).toMatchObject({ carried_members: previous.length - 3 - 6, seed_members: after.length - previous.length + 9 });
+    }
 
     const revision = await asImport(async (c) => (await c.query(
       "select status, parent_revision_id, content_hash from transit.revision where id = $1", [revisionId])).rows[0]);

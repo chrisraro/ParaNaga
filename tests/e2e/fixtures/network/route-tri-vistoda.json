@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "revisionId": "20ca7d87-d4b2-46bc-93e4-10fced9935c6",
   "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-16T01:49:26.840Z"
+  "publishedAt": "2026-10-16T08:27:21.544Z"
  },
  "route": {
   "code": "TRI-VISTODA",
@@ -65,7 +65,7 @@
  },
  "variants": [
   {
-   "variantId": "54d8f4d6-0b84-4655-99bf-fa9431f4a798",
+   "variantId": "a00a5b4b-9340-45a8-8712-e10688bb3c17",
    "name": "Langon – Ateneo de Naga via Vistansa Subd",
    "direction": "branch",
    "kind": "permanent",
@@ -100,7 +100,7 @@
    }
   },
   {
-   "variantId": "0805c2e1-3b94-41d2-85a5-c04c9767c2d8",
+   "variantId": "48285e10-cc89-4366-ae53-cb3314b40c6a",
    "name": "Langon – Centro Cararayan (San Miguel St / Tecla San Andres-Ziga Rd corner) via Sitio Salunguigui",
    "direction": "branch",
    "kind": "permanent",
