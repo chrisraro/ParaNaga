@@ -222,7 +222,9 @@
 .pn-map .pn-attribution {
   position: absolute;
   right: 0;
-  bottom: var(--naga-map-attribution-bottom, 0px);
+  bottom: 0;
+  transform: translateY(calc(-1 * var(--naga-map-attribution-bottom, 0px)));
+  transition: transform var(--pn-map-chrome-dur, var(--pn-dur-slow)) var(--pn-ease-snap);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -252,7 +254,9 @@
   position: absolute;
   left: 8px;
   /* Above the attribution strip (24 px links) with a gap, never under it. */
-  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 32px);
+  bottom: 32px;
+  transform: translateY(calc(-1 * var(--naga-map-attribution-bottom, 0px)));
+  transition: transform var(--pn-map-chrome-dur, var(--pn-dur-slow)) var(--pn-ease-snap);
   z-index: 1000;
   margin: 0;
   padding: 4px 10px;

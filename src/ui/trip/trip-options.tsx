@@ -72,12 +72,11 @@ function OptionCard({
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
 
   return (
-    <li className="pn-trip-li">
+    <li className="pn-trip-li" style={{ ["--i" as string]: Math.min(index, 5) }}>
       <button
         type="button"
         id={optionDomId(option.id)}
         className={primary ? "pn-trip-card pn-trip-card--primary pn-trip-in" : "pn-trip-card pn-trip-in"}
-        style={{ ["--i" as string]: Math.min(index, 5) }}
         data-testid="trip-option"
         onClick={() => onOpen(option.id)}
       >

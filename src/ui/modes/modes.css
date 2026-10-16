@@ -146,14 +146,16 @@
 .pn-map-legend {
   position: absolute;
   left: 12px;
-  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 32px);
+  bottom: 32px;
+  transform: translateY(calc(-1 * var(--naga-map-attribution-bottom, 0px)));
+  transition: transform var(--pn-map-chrome-dur, var(--pn-dur-slow)) var(--pn-ease-snap);
   z-index: 1000;
   max-width: min(320px, calc(100vw - 88px));
   pointer-events: auto;
 }
 
 .pn-map:has(.pn-map-notice) .pn-map-legend {
-  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 84px);
+  bottom: 84px;
 }
 
 .pn-map-legend__toggle {
@@ -642,7 +644,9 @@
   position: absolute;
   left: 12px;
   right: 12px;
-  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 84px);
+  bottom: 84px;
+  transform: translateY(calc(-1 * var(--naga-map-attribution-bottom, 0px)));
+  transition: transform var(--pn-map-chrome-dur, var(--pn-dur-slow)) var(--pn-ease-snap);
   z-index: 1050;
   padding: 12px 14px;
   border-radius: 16px;

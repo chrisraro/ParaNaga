@@ -104,6 +104,16 @@
 .pn-update {
   animation: pn-fade-in var(--pn-dur) var(--pn-ease) both;
 }
+/* Their exit (usePresence): quicker than the entrance, ease-in, then removed on animationend. */
+@keyframes pn-exit {
+  to { opacity: 0; translate: 0 var(--pn-rise-sm); }
+}
+.pn-map-notice[data-exiting="true"],
+.pn-offline-banner[data-exiting="true"],
+.pn-update[data-exiting="true"] {
+  animation: pn-exit var(--pn-dur-fast) var(--pn-ease-exit) both;
+  pointer-events: none;
+}
 
 html {
   scroll-behavior: smooth;

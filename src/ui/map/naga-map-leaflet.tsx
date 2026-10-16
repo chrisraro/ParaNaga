@@ -11,6 +11,7 @@ import L from "leaflet";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polygon, TileLayer, useMap } from "react-leaflet";
 import { OSM_ATTRIBUTION, attributionParts, currentTileConfig } from "@/client/map/tile-config";
+import { usePresence } from "@/ui/app-shell/presence";
 import { prefersReducedMotion, useReducedMotion } from "@/client/map/use-reduced-motion";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import type { LocationFix } from "@/domain/geo/location-fix";
@@ -355,6 +356,7 @@ export default function NagaMapLeaflet({
   const { lowData, theme, highContrast } = usePrefs();
   const [backgroundOnce, setBackgroundOnce] = useState(false);
   const tileUrl = lowData && !backgroundOnce ? null : tiles.url;
+  const { shown: notice, props: noticePresence } = usePresence(tiles.url === null ? "unavailable" : tileUrl === null ? "lowData" : null);
   const effectiveTheme = useEffectiveTheme(theme);
   const surface = explicitMapSurface ?? computeMapSurface(effectiveTheme, tileUrl !== null);
   const legendItems = useMemo(
@@ -572,10 +574,10 @@ export default function NagaMapLeaflet({
         notice={legendNotice}
       />
 
-      {tiles.url === null ? (
-        <p className="pn-map-notice">Map background unavailable</p>
-      ) : tileUrl === null ? (
-        <p className="pn-map-notice pn-map-notice--action" data-testid="map-low-data-notice">
+      {notice === "unavailable" ? (
+        <p className="pn-map-notice" {...noticePresence}>Map background unavailable</p>
+      ) : notice === "lowData" ? (
+        <p className="pn-map-notice pn-map-notice--action" data-testid="map-low-data-notice" {...noticePresence}>
           <span>Map background off (low-data mode)</span>
           <button type="button" className="pn-map-notice__btn" onClick={() => setBackgroundOnce(true)}>
             Show background once

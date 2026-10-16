@@ -290,6 +290,10 @@
 .pn-sheet-footer:empty {
   display: none;
 }
+/* The map's bottom chrome follows the sheet by transform; while dragging it follows at once. */
+.pn-home:has(.pn-sheet--dragging) {
+  --pn-map-chrome-dur: 0s;
+}
 .pn-sheet.pn-sheet--dragging,
 .pn-sheet.pn-sheet--dragging .pn-sheet-footer {
   transition: none;

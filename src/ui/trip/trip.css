@@ -58,6 +58,21 @@
   font-weight: 700;
   letter-spacing: -0.015em;
 }
+/* Lifting the sheet to full reveals the cards (rise + fade, staggered); collapsing it to the peek
+   fades them out quickly, opacity only, and puts the rise back once they are gone. */
+.pn-trip-li {
+  transition:
+    opacity var(--pn-dur-slow) var(--pn-ease),
+    transform var(--pn-dur-slow) var(--pn-ease);
+  transition-delay: calc(var(--i, 0) * var(--pn-stagger));
+}
+.pn-sheet[data-snap="0"] .pn-trip-li {
+  opacity: 0;
+  transform: translateY(var(--pn-rise));
+  transition:
+    opacity var(--pn-dur-fast) var(--pn-ease-exit),
+    transform 0s linear var(--pn-dur-fast);
+}
 .pn-trip-list {
   display: flex;
   flex-direction: column;
@@ -614,7 +629,7 @@ abbr.pn-est {
 
 /* Entrance (artboard .pn-in); reduced motion fades instead. */
 .pn-trip-in {
-  animation: pn-trip-in var(--pn-dur-slow) var(--pn-ease) both;
+  animation: pn-trip-in var(--pn-dur-slow) var(--pn-ease) backwards;
   animation-delay: calc(var(--i, 0) * var(--pn-stagger));
 }
 @keyframes pn-trip-in {

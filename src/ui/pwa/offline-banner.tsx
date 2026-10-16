@@ -13,6 +13,7 @@ import { useSnapshot } from "@/client/network/use-snapshot";
 import { readSnapshotMeta } from "@/client/storage/db";
 import { offlineBannerText } from "@/domain/pwa/offline-copy";
 import type { SnapshotMeta } from "@/domain/saved/saved";
+import { usePresence } from "@/ui/app-shell/presence";
 
 export function OfflineBanner() {
   const offline = useIsOffline();
@@ -34,7 +35,8 @@ export function OfflineBanner() {
 
   const known = snapshot !== null || meta !== undefined;
   const banner = useRef<HTMLParagraphElement>(null);
-  const text = offline && known ? offlineBannerText(snapshot?.revision.publishedAt ?? meta?.publishedAt, snapshot !== null || Boolean(meta)) : null;
+  const live = offline && known ? offlineBannerText(snapshot?.revision.publishedAt ?? meta?.publishedAt, snapshot !== null || Boolean(meta)) : null;
+  const { shown: text, props: presence } = usePresence(live);
   // While it shows, every screen's top chrome (panel headers, map controls, search bar) moves down
   // by its height (--pn-offline-inset), so the banner never covers a Back button or a title.
   useLayoutEffect(() => {
@@ -57,7 +59,7 @@ export function OfflineBanner() {
   return (
     <div className="pn-pwa" role="status" data-testid="offline-status">
       {text ? (
-        <p ref={banner} className="pn-offline-banner" data-testid="offline-banner">
+        <p ref={banner} className="pn-offline-banner" data-testid="offline-banner" {...presence}>
           {text}
         </p>
       ) : null}
