@@ -1,7 +1,6 @@
 "use client";
 
-// Arrive (artboard Arrive): "You've arrived", "{destination}. Guidance has ended and ParaNaga has
-// stopped using your location." (the watch and the wake lock stop before this renders), the trip
+// Arrive (artboard Arrive): "You've arrived", "{destination}. Location use stopped." (the watch and the wake lock stop before this renders), the trip
 // summary (walk estimate, route chips with their stop counts, the fare estimate), a real "Save
 // this trip" toggle (the device's saved trips, as in Trip detail) and "Done". No rating (D7), no
 // entrance (none is mapped).
@@ -36,11 +35,11 @@ function SaveTripRow({ card }: { card: SavedTrip }) {
           <path d="M6 3h12v18l-6-4.5L6 21z" />
         </svg>
         <span className="pn-guide__save-text">
-          <strong>{saved ? "Trip saved" : "Save this trip"}</strong>
-          <span>{saved ? "Available offline in Saved" : "Keep it for next time, works offline"}</span>
+          <strong>{saved ? "Saved" : "Save this trip"}</strong>
+          {saved ? <span>Works offline</span> : null}
         </span>
       </button>
-      {unavailable ? <p className="pn-guide__note">Saving needs storage on this phone, which is not available.</p> : null}
+      {unavailable ? <p className="pn-guide__note">Saving isn’t available on this phone.</p> : null}
       <p className="pn-guide__note" aria-live="polite" data-testid="arrive-save-status">
         {status}
       </p>

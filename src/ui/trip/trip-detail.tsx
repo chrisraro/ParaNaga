@@ -2,20 +2,21 @@
 
 // Trip detail (artboard TripDetail) inside the home sheet. Ordered legs:
 //   Walk ≈ m to <stop> (code) · path not verified
-//   Board Loop A at <stop> · direction (from pin order) · "Signboard not yet verified" · ride N stops
+//   Board Loop A at <stop> · direction · "Signboard unverified" · N stops
 //   Get off at <stop> + "Para!" tip (no buzz promise: there is no live tracking)
 //   Walk ≈ m to destination · path not verified
-// then the fare per ride leg as estimates, and a plain "Corrections open soon." note (no
-// correction flow yet, so no link and nothing that looks like a control). The map highlights the boarding/alighting stops only.
+// then the fare per ride leg as estimates. Sources and credits are one small link in the top bar
+// (U3); the steps carry no source text. The map highlights the boarding/alighting stops only.
 //
 // Actions (Task 8): Save ("Save" / "Saved", a saved trip on this phone) and Share (the Web Share
 // API with a text-only summary, else copy to the clipboard: "Copied"). The summary names places
 // and stops only; exact points are added only when "Include exact points" is ticked. "Start
 // trip" (Task 10) starts guidance in this sheet. An optional note above the steps says how the trip was
-// reopened ("Re-planned on the current data", or that it is shown as saved, offline).
+// reopened ("Updated", or that it is shown as saved, offline).
 
 import "./trip.css";
 
+import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLines } from "@/client/network/use-lines";
 import { WALK_GRAPH_DOWNLOAD_LABEL, useWalkGraphDownload } from "@/client/network/use-walk-graph";
@@ -29,7 +30,8 @@ import { WALK_LOADING_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { LineNotesView } from "@/ui/map/line-notes-view";
 import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
-import { directionText, distanceBasisText, fareChipText, formatDistance, isNegligibleWalk, legFareText, rideFleetText, routeChipLabel } from "@/domain/trip/present";
+import { directionText, fareChipText, formatDistance, isNegligibleWalk, optionTitle, routeChipLabel } from "@/domain/trip/present";
+import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { SheetBar } from "@/ui/app-shell/sheet-bar";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { EtaBasisSheet } from "./eta-basis-sheet";
@@ -51,8 +53,6 @@ type Props = {
   onStart?: ((walkLengths: (number | null)[]) => void) | null;
   etaModel?: EtaModel | null;
 };
-
-const CANDIDATE = "Mapped candidate · not yet verified";
 
 function walkTitle(leg: WalkLegDto, lookups: PlanLookups): string {
   const d = formatDistance(leg.estimateMeters);
@@ -110,12 +110,11 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
           body: (
             <>
               <strong className="pn-tl__title">Start at {name}</strong>
-              <p className="pn-tl__sub">Board here</p>
             </>
           ),
         });
       } else if (i === last) {
-        out.push({ key: `w${i}`, marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive: your destination is at this stop</strong> });
+        out.push({ key: `w${i}`, marker: "destination", rail: null, body: <strong className="pn-tl__title">You’re there</strong> });
       }
       return;
     }
@@ -123,8 +122,6 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
       // The final walk carries the destination marker (artboard); a walk-only trip keeps the
       // origin marker and ends with an "Arrive" step.
       const final = i === last && i > 0;
-      const walkPath = (leg as { path?: { kind?: string; label?: string } }).path;
-      const pathLabel = walkPath?.label ?? "Estimate · path not verified";
       const etaLeg = estimate?.legs[i];
       out.push({
         key: `w${i}`,
@@ -133,8 +130,7 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
         body: (
           <>
             <strong className="pn-tl__title">{walkTitle(leg, lookups)}</strong>
-            {etaLeg ? <LegTime leg={etaLeg} basis={etaLeg.basis === "graph_path" ? "along streets (approximate)" : "straight line"} /> : null}
-            <p className="pn-tl__sub">{pathLabel.includes("path not verified") ? pathLabel : `${pathLabel} · path not verified`}</p>
+            <WalkTime leg={etaLeg} />
           </>
         ),
       });
@@ -142,7 +138,7 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
     }
     out.push(...rideSteps(leg, i, lookups, traceOf(leg), estimate));
   });
-  if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive at your destination</strong> });
+  if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive</strong> });
   return out;
 }
 
@@ -152,7 +148,7 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
   const boardName = lookups.stopName(board.id, board.name);
   const alightName = lookups.stopName(alight.id, alight.name);
   const route = routeChipLabel(leg.routeCode, leg.routeName);
-  const dir = directionText(lookups.direction(leg.variantId), "long");
+  const dir = directionText(lookups.direction(leg.variantId), "short");
   const count = leg.stops.length - 1;
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
   const etaLeg = estimate?.legs[i];
@@ -169,9 +165,7 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
             <strong className="pn-tl__title">
               Board {route} at {boardName}
             </strong>
-            <p className="pn-tl__sub pn-tl__sub--gold">{CANDIDATE}</p>
-            {dir ? <p className="pn-tl__sub">Direction: {dir}</p> : null}
-            <p className="pn-tl__sub" data-testid="ride-fleet">{rideFleetText(leg.mode, fleet)}</p>
+            {dir ? <p className="pn-tl__sub pn-tl__sub--dir">{dir.charAt(0).toUpperCase() + dir.slice(1)}</p> : null}
             {fleet.classes.length > 0 ? (
               // Each vehicle class with its evidence label and date (not a nested list: the steps are the list).
               fleet.classes.map((c) => (
@@ -184,14 +178,13 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
             )}
           </div>
           <div className="pn-sign">
-            <span className="pn-sign__kicker">Signboard</span>
-            <span className="pn-sign__text">Signboard not yet verified</span>
+            <span className="pn-sign__text">Signboard unverified</span>
             <LoopChip leg={leg} />
           </div>
           <p className="pn-tl__sub">
-            Ride {count} {count === 1 ? "stop" : "stops"} · {distanceBasisText(leg.distanceMeters, leg.distanceBasis)}
+            {count} {count === 1 ? "stop" : "stops"} · {formatDistance(leg.distanceMeters)}
           </p>
-          {etaLeg ? <LegTime leg={etaLeg} basis={leg.distanceBasis === "approximate_path" ? "along the approximate path" : "stop to stop (straight line)"} /> : null}
+          {etaLeg ? <LegTime leg={etaLeg} /> : null}
           <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">
             {pathLabel}
           </p>
@@ -207,11 +200,9 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
         <div className="pn-tl__stack">
           <div>
             <strong className="pn-tl__title">Get off at {alightName}</strong>
-            <p className="pn-tl__sub pn-tl__sub--gold">{CANDIDATE}</p>
           </div>
           <div className="pn-para">
-            <span className="pn-para__word">Para!</span>
-            <span>Say it to the driver as you near this stop.</span>
+            <span>Say “Para!” near here</span>
           </div>
         </div>
       ),
@@ -219,14 +210,21 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
   ];
 }
 
-/** "≈ 5–7 min walk · along streets (approximate)", the range spoken in words; "Tricycle time not estimated". */
-function LegTime({ leg, basis }: { leg: EtaLeg; basis: string }) {
-  const text = leg.estimated ? `${formatLeg(leg)} · ${basis}` : formatLeg(leg);
+/** "≈ 5–7 min walk" (+ " · path not verified" on a walk), the range spoken in words; "Tricycle time not estimated". */
+function LegTime({ leg, note }: { leg: EtaLeg; note?: string }) {
+  const text = leg.estimated && note ? `${formatLeg(leg)} · ${note}` : formatLeg(leg);
   return (
     <p className="pn-tl__sub pn-tl__sub--time" data-testid="leg-time">
       <SpokenRange text={text} range={leg} />
     </p>
   );
+}
+
+const WALK_NOTE = "path not verified";
+
+/** A walk’s one line: the time with "path not verified", or just that note without an estimate. */
+function WalkTime({ leg }: { leg?: EtaLeg }) {
+  return leg ? <LegTime leg={leg} note={WALK_NOTE} /> : <p className="pn-tl__sub">Path not verified</p>;
 }
 
 type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";
@@ -256,9 +254,7 @@ const SHARE_STATUS: Record<ShareOutcome, string> = {
   failed: "Could not share or copy on this phone.",
 };
 
-function TripActions({ data, option, ends, etaModel, walkLengths }: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds; etaModel: EtaModel | null; walkLengths: (number | null)[] }) {
-  const id = useId();
-  const [exactPoints, setExactPoints] = useState(false);
+function TripActions({ data, option, ends, exactPoints, etaModel, walkLengths }: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds; exactPoints: boolean; etaModel: EtaModel | null; walkLengths: (number | null)[] }) {
   const [status, setStatus] = useState("");
   const newCard = () => buildSavedTrip({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), data, option, start: ends.start, destination: ends.destination });
   // Saved on this plan's revision, saved on an older one (offer to update the copy), or not saved.
@@ -310,14 +306,10 @@ function TripActions({ data, option, ends, etaModel, walkLengths }: { data: Plan
       </div>
       {match?.kind === "older" ? (
         <p className="pn-trip-actions__status" data-testid="trip-save-older">
-          Your saved copy uses data from {manilaDate(match.trip.publishedAt) ?? `revision ${match.trip.revisionLabel}`}.
+          Saved copy: {manilaDate(match.trip.publishedAt) ?? `revision ${match.trip.revisionLabel}`}
         </p>
       ) : null}
-      {unavailable ? <p className="pn-trip-actions__status">Saving needs storage on this phone, which is not available.</p> : null}
-      <div className="pn-trip-actions__check">
-        <input id={`${id}-exact`} type="checkbox" checked={exactPoints} onChange={(e) => setExactPoints(e.target.checked)} data-testid="trip-share-exact" />
-        <label htmlFor={`${id}-exact`}>Include exact points when sharing</label>
-      </div>
+      {unavailable ? <p className="pn-trip-actions__status">Saving isn’t available on this phone.</p> : null}
       <p className="pn-trip-actions__status" aria-live="polite" data-testid="trip-action-status">
         {status}
       </p>
@@ -329,6 +321,8 @@ export const START_TRIP = "Start trip";
 
 export function TripDetail({ data, option, onBack, ends = null, note = null, onStart = null, etaModel = null }: Props) {
   const [basisOpen, setBasisOpen] = useState(false);
+  const [exactPoints, setExactPoints] = useState(false);
+  const shareId = useId();
   const lookups = planLookups(data);
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Focus the heading when an option opens, and again once the map shows (a trip reopened from
@@ -367,44 +361,41 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
             <path d="M10 2L2 10l8 8" />
           </svg>
         </button>
+        <Link href={SOURCES_HREF} className="pn-trip-detail__sources">Sources</Link>
       </div>
-      <h2 id="pn-trip-detail-title" ref={headingRef} tabIndex={-1} className="pn-trip-detail__title">
-        To your destination
-      </h2>
-      <p className="pn-trip-detail__labels">{option.labels.join(" · ")}</p>
-      <div className="pn-trip-detail__meta">
-        <EtaTotalText estimate={estimate} className={estimate ? "pn-trip-detail__time" : undefined} testId="trip-detail-time" />
-        <FareChip fare={option.fare} />
+      <div className="pn-trip-detail__header" data-testid="trip-detail-header">
+        <h2 id="pn-trip-detail-title" ref={headingRef} tabIndex={-1} className="pn-trip-detail__title">
+          {optionTitle(option)}
+        </h2>
+        <div className="pn-trip-detail__meta">
+          <EtaTotalText estimate={estimate} className={estimate ? "pn-trip-detail__time" : undefined} testId="trip-detail-time" />
+          <FareChip fare={option.fare} />
+        </div>
+        {estimate?.total.peak ? (
+          <p className="pn-trip-detail__peak">
+            <EtaPeakNote estimate={estimate} testId="trip-peak-note" />
+          </p>
+        ) : null}
+        {estimate ? (
+          <button type="button" className="pn-trip-detail__basis-btn" onClick={() => setBasisOpen(true)} data-testid="how-times-estimated-btn">
+            How times are estimated
+          </button>
+        ) : null}
+        {ends ? <TripActions data={data} option={option} ends={ends} exactPoints={exactPoints} etaModel={etaModel} walkLengths={walkLengths} /> : null}
       </div>
-      {estimate?.total.peak ? (
-        <p className="pn-trip-detail__peak">
-          <EtaPeakNote estimate={estimate} testId="trip-peak-note" />
-        </p>
-      ) : null}
-      {estimate ? (
-        <button
-          type="button"
-          className="pn-trip-detail__basis-btn"
-          onClick={() => setBasisOpen(true)}
-          data-testid="how-times-estimated-btn"
-        >
-          How times are estimated
-        </button>
-      ) : null}
       {rides.length > 0 ? <UnverifiedBadge /> : null}
       {note ? (
         <p className={note.tone === "warning" ? "pn-trip-reopen pn-trip-reopen--warn" : "pn-trip-reopen"} data-testid="trip-reopen-note">
           {note.text}
         </p>
       ) : null}
-      {ends ? <TripActions data={data} option={option} ends={ends} etaModel={etaModel} walkLengths={walkLengths} /> : null}
 
       <p className="sr-only" role="status" aria-live="polite" data-testid="trip-paths-status">
         {pathsStatus}
       </p>
       {pathsDownload.offer || pathsDownload.failed ? (
         <div className="pn-trip-paths-offer" data-testid="walk-graph-offer">
-          <p className="pn-trip-paths-offer__text">Low-data mode: walks are shown as straight lines. Street paths download only if you ask.</p>
+          <p className="pn-trip-paths-offer__text">Walks shown as straight lines.</p>
           <button
             type="button"
             className="pn-btn pn-btn--secondary pn-trip-paths-offer__btn"
@@ -414,7 +405,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           >
             {pathsDownload.busy ? "Downloading street paths…" : WALK_GRAPH_DOWNLOAD_LABEL}
           </button>
-          {pathsDownload.failed ? <p className="pn-trip-paths-offer__text" role="alert">Street paths could not be downloaded. Try again.</p> : null}
+          {pathsDownload.failed ? <p className="pn-trip-paths-offer__text" role="alert">Download failed. Try again.</p> : null}
         </div>
       ) : null}
       <ol className="pn-tl" aria-label="Trip steps">
@@ -441,7 +432,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
             {rides.map((leg, i) => (
               <p key={i} className="pn-fares__row" data-testid="leg-fare">
                 <span>{routeChipLabel(leg.routeCode, leg.routeName)}</span>
-                <span>{legFareText(leg.fare)}</span>
+                <span>{fareChipText(leg.fare)}</span>
               </p>
             ))}
             {rides.length > 1 ? (
@@ -450,11 +441,19 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
                 <span>{fareChipText(option.fare)}</span>
               </p>
             ) : null}
-            <p className="pn-fares__note">Fares are estimates from reported rules. Where a route runs both traditional and modern jeepneys, the range spans both. Discounts not applied.</p>
+            <p className="pn-fares__note">
+              {rides.some((leg) => leg.fare.span === "traditional_to_modern") ? "Range spans traditional and modern. " : ""}No discounts.{" "}
+              <Link href={`${SOURCES_HREF}#fare-basis`}>How fares are estimated</Link>
+            </p>
           </>
         )}
       </section>
-      <p className="pn-trip-detail__soon">Corrections open soon.</p>
+      {ends ? (
+        <div className="pn-trip-actions__check">
+          <input id={`${shareId}-exact`} type="checkbox" checked={exactPoints} onChange={(e) => setExactPoints(e.target.checked)} data-testid="trip-share-exact" />
+          <label htmlFor={`${shareId}-exact`}>Include exact points when sharing</label>
+        </div>
+      ) : null}
       {onStart ? (
         // In the sheet's footer: pinned to the bottom of the visible sheet at every snap.
         <SheetBar>

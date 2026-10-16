@@ -75,7 +75,7 @@ describe("TripDetail time estimates (Task 14 fixes: basis, fleet evidence, spoke
     vi.setSystemTime(manila(hhmm));
   };
 
-  it("total and leg ranges are spoken in words; each ride names its distance basis", () => {
+  it("total and leg ranges are spoken in words; the legs say only what is needed", () => {
     at("09:30");
     const data = enrichPlan(two, null, { walkGraphStatus: "skipped" });
     render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
@@ -89,12 +89,10 @@ describe("TripDetail time estimates (Task 14 fixes: basis, fleet evidence, spoke
     expect(screen.queryByTestId("trip-peak-note")).toBeNull();
 
     const legs = screen.getAllByTestId("leg-time").map((el) => el.textContent);
-    const rides = legs.filter((t) => t!.includes(" ride · "));
-    // TWO_RIDE_PLAN: the Loop A leg has path measures, the Loop B leg is straight-line between pins.
-    expect(rides).toEqual([expect.stringMatching(/^≈ \d+–\d+ min ride · along the approximate path$/), expect.stringMatching(/^≈ \d+–\d+ min ride · stop to stop \(straight line\)$/)]);
-    expect(legs.filter((t) => t!.includes(" walk · ")).every((t) => /^≈ \d+–\d+ min walk · straight line$/.test(t!))).toBe(true);
+    const rides = legs.filter((t) => t!.includes(" ride"));
+    expect(rides).toEqual([expect.stringMatching(/^≈ \d+–\d+ min ride$/), expect.stringMatching(/^≈ \d+–\d+ min ride$/)]);
+    expect(legs.filter((t) => t!.includes(" walk")).every((t) => /^≈ \d+–\d+ min walk · path not verified$/.test(t!))).toBe(true);
     for (const el of screen.getAllByTestId("leg-time")) expect(el.querySelector("[role='img']")!.getAttribute("aria-label")).toMatch(/^\d+ to \d+ minutes$/);
-    expect(screen.getAllByText(/stop to stop \(straight line\)$/).length).toBeGreaterThan(0);
   });
 
   it("each ride shows its vehicle classes with their evidence label and date", () => {
@@ -103,7 +101,6 @@ describe("TripDetail time estimates (Task 14 fixes: basis, fleet evidence, spoke
     render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
     const ride = data.plan.options[0]!.legs.find((l) => l.kind === "ride")!;
     if (ride.kind !== "ride") throw new Error("ride");
-    expect(screen.getByTestId("ride-fleet").textContent).toBe("Jeepney · traditional");
     expect(screen.getAllByTestId("ride-fleet-class").map((el) => el.textContent)).toEqual(ride.fleet.classes.map((c) => c.label));
     expect(ride.fleet.classes[0]!.label).toMatch(/^Traditional jeepney · operating \(owner-confirmed \w+ \d{4}\)$/);
   });
@@ -112,7 +109,7 @@ describe("TripDetail time estimates (Task 14 fixes: basis, fleet evidence, spoke
     at("07:10");
     const data = enrichPlan(plan, null, { walkGraphStatus: "skipped" });
     const view = render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
-    expect(screen.getByTestId("trip-peak-note").textContent).toBe("Peak hours · slower estimate (06:00–08:00)");
+    expect(screen.getByTestId("trip-peak-note").textContent).toBe("Peak hours: slower (06:00–08:00)");
     view.rerender(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={null} />);
     expect(screen.getByTestId("trip-detail-time").textContent).toBe("Time not available");
     expect(screen.queryByTestId("how-times-estimated-btn")).toBeNull();

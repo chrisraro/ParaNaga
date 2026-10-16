@@ -12,8 +12,7 @@ import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { UnverifiedBadge } from "@/ui/trip/trip-parts";
 import { GuidanceButtons, KeepOpen, LocationOffer, UndoButton, type StepProps } from "./guidance-parts";
 
-export const STOP_ALERT_NOTE = "Stop alerts work only while ParaNaga is open on your screen.";
-export const REPORT_DRIVER = "Problem with a driver? Report it in MyNaga";
+export const REPORT_DRIVER = "Report a driver";
 const MYNAGA_PATH = "/app/mynaga";
 
 function Rail({ stops }: { stops: RideView["stops"] }) {
@@ -71,7 +70,6 @@ export function RideStep({ view, onSend, location, headingRef, alertKey }: StepP
 
       <LocationOffer location={location} manual={view.actions.find((a) => a.event === "nextStopIsMine")?.label ?? "I got off"} />
       <KeepOpen text={view.keepOpen} />
-      <p className="pn-guide__note">{STOP_ALERT_NOTE}</p>
       <GuidanceButtons actions={view.actions} onSend={onSend} />
       <UndoButton undo={view.undo} onSend={onSend} />
       {/* Marked as opened from the home screen (like a stop pin), so closing MyNaga goes back in

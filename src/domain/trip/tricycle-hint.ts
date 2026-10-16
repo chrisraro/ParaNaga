@@ -22,7 +22,7 @@ export const TRICYCLE_FEEDER_MAX_M = 300;
 export const TRICYCLE_HINT_TITLE = "Tricycle may serve this" as const;
 export const TRICYCLE_ZONES_NOTE = "Routes and zones are not documented" as const;
 export const TRICYCLE_FARE_NOTE =
-  "Minimum fare ₱15 (Ordinance 2024-002) · discounts not applied · confirm with the driver" as const;
+  "Minimum fare ₱15 · discounts not applied · confirm with the driver" as const;
 export const TRICYCLE_TIME_NOTE = "Tricycle time not estimated" as const;
 
 export type TricycleTerminalMatch = {
@@ -222,24 +222,3 @@ export function tricycleHint(
 /** The tricycle fare rule (Ordinance 2024-002, ₱15 minimum). */
 export const TRICYCLE_FARE_RULE_CODE = "F03";
 
-type SourcesSnapshot = {
-  fareRules: readonly { code: string; sourceCodes: readonly string[] }[];
-  routes?: readonly { routeCode: string; fleet: { classes: readonly { sourceCodes: readonly string[] }[] } }[];
-};
-
-/**
- * The sources a hint card cites: the tricycle fare rule's (F03, Ordinance 2024-002) and, when a
- * feeder matched, that feeder route's fleet sources (its authorizing ordinance).
- */
-export function tricycleHintSources(
-  hint: Pick<TricycleHint, "feeder">,
-  snapshot: SourcesSnapshot | null | undefined,
-): { fare: string[]; feeder: string[] } {
-  const unique = (codes: readonly string[]) => [...new Set(codes)];
-  const fareRule = snapshot?.fareRules.find((r) => r.code === TRICYCLE_FARE_RULE_CODE);
-  const route = hint.feeder ? snapshot?.routes?.find((r) => r.routeCode === hint.feeder!.routeCode) : undefined;
-  return {
-    fare: unique(fareRule?.sourceCodes ?? []),
-    feeder: unique(route ? route.fleet.classes.flatMap((c) => c.sourceCodes) : []),
-  };
-}

@@ -32,7 +32,7 @@ import { WalkStep } from "./walk-step";
 
 export const END_CONFIRM_TITLE = "End guidance?";
 export const END_CONFIRM_BODY = "Your trip stays in the options.";
-export const REPLAN = "Plan again from where you are";
+export const REPLAN = "Re-plan from here";
 
 type Props = {
   guidance: UseGuidanceSession;

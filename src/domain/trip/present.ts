@@ -50,6 +50,12 @@ function pesoRange(minCentavos: number, maxCentavos: number): string {
 
 const FARE_UNAVAILABLE = "Fare estimate unavailable";
 
+/** The peso range ("₱14–₱17") of a fare estimate, or null when there is none. */
+export function fareRangeText(fare: FareLike): string | null {
+  if (fare.status !== "estimate" || fare.minCentavos === null || fare.maxCentavos === null) return null;
+  return pesoRange(fare.minCentavos, fare.maxCentavos);
+}
+
 /** Trip-level chip: "Estimate ₱X–₱Y", "Fare estimate unavailable" or "No fare (walk)". */
 export function fareChipText(fare: FareLike): string {
   if (fare.status === "no_ride") return "No fare (walk)";
@@ -104,6 +110,12 @@ export function transfersText(rides: number): string {
   return transfers === 1 ? "1 transfer" : `${transfers} transfers`;
 }
 
+/** What an option is called on its card and detail: "Loop A" ("Loop A + R4" with a transfer), or "Walk ≈ 230 m". */
+export function optionTitle(option: { rides: number; walkEstimateMeters: number; legs: readonly { kind: string; routeCode?: string; routeName?: string }[] }): string {
+  if (option.rides === 0) return `Walk ${formatDistance(option.walkEstimateMeters)}`;
+  return option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode ?? "", l.routeName ?? "")).join(" + ");
+}
+
 /** "Loop A" from a name like "Centro–Magsaysay Loop A"; otherwise the public route code. */
 export function routeChipLabel(routeCode: string, routeName: string): string {
   const loop = /\bLoop\s+([A-Z])\b/.exec(routeName);
@@ -126,7 +138,7 @@ export function stopLabel(name: string, code: string | null): string {
   return `${display} (${code})`;
 }
 
-const ONLY_LOOPS = "Loops A and B are the only routes we can suggest for now.";
+const ONLY_LOOPS = "Only Loops A and B for now.";
 
 /** The one wording for ends within SAME_PLACE_M of each other (planner reason, reducer, pick UI). */
 export const SAME_PLACE_TITLE = "Start and destination are the same place";
@@ -142,7 +154,7 @@ export function isNegligibleWalk(leg: { kind: string; estimateMeters?: number })
 export function noCoverageCopy(reason: NoCoverageReason | null, directWalkEstimateMeters: number | null): { title: string; detail: string } {
   const walk = directWalkEstimateMeters === null
     ? ONLY_LOOPS
-    : `Walking the whole way: ${formatDistance(directWalkEstimateMeters)} (straight-line estimate; path not verified). ${ONLY_LOOPS}`;
+    : `Walk ${formatDistance(directWalkEstimateMeters)} (estimate, path not verified). ${ONLY_LOOPS}`;
   switch (reason) {
     case "same_place":
       return { title: SAME_PLACE_TITLE, detail: "Move the destination pin away from your start to plan a trip." };
@@ -158,7 +170,7 @@ export function noCoverageCopy(reason: NoCoverageReason | null, directWalkEstima
       if (directWalkEstimateMeters !== null) {
         return {
           title: `Walking (${formatDistance(directWalkEstimateMeters)}) is shorter than any ride we can suggest.`,
-          detail: `Straight-line estimate; path not verified. ${ONLY_LOOPS}`,
+          detail: `Estimate, path not verified. ${ONLY_LOOPS}`,
         };
       }
       return { title: "No provisional route nearby yet", detail: ONLY_LOOPS };

@@ -99,21 +99,21 @@ describe("labels", () => {
 });
 
 describe("noCoverageCopy", () => {
-  const ONLY = "Loops A and B are the only routes we can suggest for now.";
+  const ONLY = "Only Loops A and B for now.";
   it("says which end has no stop within the 600 m walk, with the direct walk estimate", () => {
     expect(noCoverageCopy("no_stop_near_origin", 1200)).toEqual({
       title: "No mapped stop within 600 m of your start",
-      detail: `Walking the whole way: ≈ 1.2 km (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walk ≈ 1.2 km (estimate, path not verified). ${ONLY}`,
     });
     expect(noCoverageCopy("no_stop_near_destination", 845)).toEqual({
       title: "No mapped stop within 600 m of your destination",
-      detail: `Walking the whole way: ≈ 850 m (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walk ≈ 850 m (estimate, path not verified). ${ONLY}`,
     });
   });
   it("no_route: stops at both ends, but no provisional ride joins them", () => {
     expect(noCoverageCopy("no_route", 1460)).toEqual({
       title: "No provisional route connects these points yet",
-      detail: `Walking the whole way: ≈ 1.5 km (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walk ≈ 1.5 km (estimate, path not verified). ${ONLY}`,
     });
   });
   it("same_place asks to move a pin", () => {
@@ -131,7 +131,7 @@ describe("noCoverageCopy", () => {
   it("walk_shorter names the direct walk estimate", () => {
     expect(noCoverageCopy("walk_shorter", 845)).toEqual({
       title: "Walking (≈ 850 m) is shorter than any ride we can suggest.",
-      detail: `Straight-line estimate; path not verified. ${ONLY}`,
+      detail: `Estimate, path not verified. ${ONLY}`,
     });
   });
   it("without an estimate it never invents one", () => {

@@ -61,10 +61,10 @@ export function formatTotal(t: EtaTotal): string {
   return `Estimate ${formatRange(t.lowMin, t.highMin)}${walk}${waiting}${partial}`;
 }
 
-/** "Peak hours · slower estimate (06:00–08:00)", or null off-peak. */
+/** "Peak hours: slower (06:00–08:00)", or null off-peak. */
 export function formatPeakNote(t: EtaTotal): string | null {
   if (!t.peak) return null;
-  return `Peak hours · slower estimate (${t.peakWindows.map((w) => `${w.start}–${w.end}`).join(", ")})`;
+  return `Peak hours: slower (${t.peakWindows.map((w) => `${w.start}–${w.end}`).join(", ")})`;
 }
 
 /** "≈ 14–18 min walk", "≈ 12–18 min ride", or "Tricycle time not estimated" (the leg's mode). */
@@ -88,5 +88,5 @@ export function remainingRange(e: EtaEstimate, fromLeg: number, kind: RemainingK
 
 /** "About 10–16 min left (estimate)" / "About 10–16 min of riding left (estimate)". */
 export function formatRemaining(r: { lowMin: number; highMin: number }, kind: RemainingKind): string {
-  return `About ${formatRange(r.lowMin, r.highMin)} ${kind === "riding" ? "of riding " : ""}left (estimate)`;
+  return kind === "riding" ? `≈ ${formatRange(r.lowMin, r.highMin)} left (estimate)` : `≈ ${formatRange(r.lowMin, r.highMin)} (estimate)`;
 }

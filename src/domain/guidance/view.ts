@@ -1,8 +1,8 @@
 // What the Walk / Ride / Transfer / Arrive screens show for a session and the latest fix. Pure.
 //
 // Honest by construction (global constraints, copy rules §6.5): distances are straight-line
-// estimates ("path not verified"), stops are counted by provisional pin order, a time is only ever
-// a range labelled "About … (estimate)" from the snapshot's model (never a clock time or
+// estimates ("≈"), stops are counted by provisional pin order, a time is only ever
+// a range labelled "(estimate)" from the snapshot's model (never a clock time or
 // "arriving"), nothing says "live", and there is no curb, crossing, boarding side, signboard
 // text or entrance, because none of them exists in the data; the artboards' versions of those lines
 // are replaced by a plain "not mapped / not on file" note with a next step. "Para! Next stop is
@@ -11,14 +11,14 @@
 // in pin order, at the stop before the alighting pin or within 300 m of it; it is the only
 // assertive announcement. The ride screen reads the session only: every usable fix must be
 // dispatched to the session as a `fix` event (so progress survives a reload); the `fix` argument
-// here feeds the walk screens. GPS proposes ("You look close to …"), the person
+// here feeds the walk screens. GPS proposes ("Close to …"), the person
 // confirms with the buttons, whose events the session reducer applies.
 import { STALE_MS, type LocationFix } from "../geo/location-fix";
 import { COMPASS_WORDS } from "../geo/bearing";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance } from "../trip/present";
 import { estimateOption, type EtaLeg, type EtaOptionInput } from "../eta/eta";
-import { TIME_NOT_AVAILABLE, formatLeg, formatRange, formatRemaining } from "../eta/format";
+import { TIME_NOT_AVAILABLE, formatLeg, formatRemaining } from "../eta/format";
 import { paraSuggested, usableFix, walkProgress, type WalkProgress } from "./progress";
 import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
 import {
@@ -34,7 +34,7 @@ import {
 } from "./steps";
 
 export const GUIDANCE_COPY = {
-  keepOpen: "Keep ParaNaga open for guidance.",
+  keepOpen: "Keep this screen open.",
   endGuidance: "End guidance",
   atStop: "I'm at the stop",
   boarded: (chip: string) => `I boarded ${chip}`,
@@ -44,23 +44,21 @@ export const GUIDANCE_COPY = {
   gotOff: "I got off",
   missedStop: "I missed my stop",
   done: "Done",
-  pathEstimate: "straight-line estimate, path not verified",
-  boardingSideUnknown: (chip: string) => `Boarding side isn't mapped. Ask the driver or people waiting where ${chip} stops.`,
-  signboardUnknown: (chip: string) => `Signboard text isn't on file. Before you get on, ask the driver: “${chip}?”`,
-  entranceUnknown: "Entrances aren't mapped. Look for the way in when you get there.",
-  locationApproximate: (accuracy: number) => `Your location is approximate (± ${Math.round(accuracy)} m), so distance and direction are hidden.`,
-  locationStale: "Your location hasn't updated recently, so distance and direction are hidden.",
-  locationImprecise: "Your location isn't precise enough, so distance and direction are hidden.",
-  stopsByPinOrder: "Stops are counted by pin order on a provisional route, and jeepneys may stop elsewhere. Watch for your stop too.",
+  boardingSideUnknown: (chip: string) => `Ask where ${chip} stops.`,
+  signboardUnknown: (chip: string) => `Signboard unverified. Ask the driver: “${chip}?”`,
+  entranceUnknown: "Entrance not mapped.",
+  locationApproximate: (accuracy: number) => `Location too rough (± ${Math.round(accuracy)} m): distance hidden.`,
+  locationStale: "Location is stale: distance hidden.",
+  locationImprecise: "Location too rough: distance hidden.",
+  stopsByPinOrder: "Stop count is approximate. Watch for your stop.",
   paraTitle: "Para! Next stop is yours",
   paraBody: (stop: string) => `Get off at ${stop}. Say “Para” to the driver when you see it.`,
   paraAckTitle: "Getting off at the next stop",
   paraAckBody: (stop: string) => `Step off when the jeepney stops at ${stop}, then tap “I got off”.`,
   stopIsNext: "Your stop is next",
   arrivedTitle: "You've arrived",
-  arrivedBody: (destination: string | null) =>
-    `${destination ? `${destination}.` : "You're at your destination."} Guidance has ended and ParaNaga has stopped using your location.`,
-  undo: "Undo last step",
+  arrivedBody: (destination: string | null) => `${destination ? `${destination}.` : "You're at your destination."} Location use stopped.`,
+  undo: "Undo",
   missedTitle: "Missed your stop?",
   missedBody: "Get off when the jeepney next stops, then plan again from where you are.",
 } as const;
@@ -159,11 +157,11 @@ function locationNote(fix: LocationFix | null, now: number): string | null {
   return GUIDANCE_COPY.locationApproximate(fix.accuracy);
 }
 
-function distanceLine(progress: WalkProgress | null, name: string, estimateMeters: number, negligible: boolean): string | null {
+function distanceLine(progress: WalkProgress | null, estimateMeters: number, negligible: boolean): string | null {
   if (progress) {
-    return progress.distanceMeters < 10 ? `Under 10 m to ${name} in a straight line` : `≈ ${progress.distanceMeters} m to ${name} in a straight line`;
+    return progress.distanceMeters < 10 ? "Under 10 m" : `≈ ${progress.distanceMeters} m`;
   }
-  return negligible ? null : `${formatDistance(estimateMeters)} walk · ${GUIDANCE_COPY.pathEstimate}`;
+  return negligible ? null : formatDistance(estimateMeters);
 }
 
 // ---- time left (Task 14): the snapshot's model through the eta domain, never a hand-set speed.
@@ -185,7 +183,7 @@ function currentLegEstimate(trip: GuidanceTrip, legIndex: number, current: Curre
   return res.ok ? res.estimate.legs[0]! : null;
 }
 
-function walkRemainingTime(trip: GuidanceTrip, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, progress: WalkProgress | null, targetName: string, now: number): string | null {
+function walkRemainingTime(trip: GuidanceTrip, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, progress: WalkProgress | null, now: number): string | null {
   if (step.negligible || step.legIndex === null) return null;
   if (progress && progress.distanceMeters < 15) return null;
   if (!trip.etaModel || !(now > 0)) return TIME_NOT_AVAILABLE;
@@ -193,7 +191,7 @@ function walkRemainingTime(trip: GuidanceTrip, step: WalkToBoardStep | TransferS
   const length = progress ? null : (trip.walkLengths?.[step.legIndex] ?? null);
   const leg = currentLegEstimate(trip, step.legIndex, current, length, now);
   if (!leg || leg.lowMin === null || leg.highMin === null) return TIME_NOT_AVAILABLE;
-  return `About ${formatRange(leg.lowMin, leg.highMin)} to ${targetName} (estimate)`;
+  return formatRemaining({ lowMin: leg.lowMin, highMin: leg.highMin }, "trip");
 }
 
 /** The ride still ahead: measure(alight) − measure(last passed stop), else split by stop count. */
@@ -219,16 +217,16 @@ function rideRemainingTime(trip: GuidanceTrip, step: RideStep, ride: RideState, 
 }
 
 function nextRideInfo(ride: RideRef) {
-  return { chip: ride.routeChip, routeName: ride.routeName, direction: directionText(ride.loopDirection, "long"), badge: UNVERIFIED_ROUTE_BADGE };
+  return { chip: ride.routeChip, routeName: ride.routeName, direction: directionText(ride.loopDirection, "short"), badge: UNVERIFIED_ROUTE_BADGE };
 }
 
 function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, total: number, fix: LocationFix | null, now: number): WalkView {
   const toDestination = step.kind === "walk_to_destination";
   const targetName = toDestination ? step.target.name : step.target.label;
   const progress = walkProgress(step.target, fix, now);
-  const distanceText = distanceLine(progress, targetName, step.estimateMeters, step.negligible);
-  const remainingTime = walkRemainingTime(session.trip, step, progress, targetName, now);
-  const directionTextValue = progress?.bearing ? `In a straight line, ${targetName} is to the ${COMPASS_WORDS[progress.bearing]}.` : null;
+  const distanceText = distanceLine(progress, step.estimateMeters, step.negligible);
+  const remainingTime = walkRemainingTime(session.trip, step, progress, now);
+  const directionTextValue = progress?.bearing ? COMPASS_WORDS[progress.bearing] : null;
 
   let title: string;
   let subtitle: string | null = null;
@@ -246,7 +244,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
       : `Walk to ${targetName}`;
     notes = [GUIDANCE_COPY.entranceUnknown];
     actions = [{ event: "arrived", label: GUIDANCE_COPY.arrived, kind: "primary" }, END];
-    if (progress?.nearTarget) proposal = `You look close to ${targetName}. Tap “${GUIDANCE_COPY.arrived}” when you're there.`;
+    if (progress?.nearTarget) proposal = `Close to ${targetName}. Tap “${GUIDANCE_COPY.arrived}”.`;
   } else {
     const chip = step.nextRide.routeChip;
     const at = session.atStop;
@@ -271,7 +269,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     nextRide = nextRideInfo(step.nextRide);
     const board: GuidanceAction = { event: "boarded", label: GUIDANCE_COPY.boarded(chip), kind: at ? "primary" : "secondary" };
     actions = at ? [board, END] : [{ event: "atStop", label: GUIDANCE_COPY.atStop, kind: "primary" }, board, END];
-    if (!at && progress?.nearTarget) proposal = `You look close to ${step.target.label}. Tap “${GUIDANCE_COPY.atStop}” when you're there.`;
+    if (!at && progress?.nearTarget) proposal = `Close to ${step.target.label}. Tap “${GUIDANCE_COPY.atStop}”.`;
   }
 
   return {
@@ -290,7 +288,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     keepOpen: GUIDANCE_COPY.keepOpen,
     actions,
     undo: undoAction(session),
-    live: { politeness: "polite", text: proposal ?? (progress ? distanceText! : title) },
+    live: { politeness: "polite", text: proposal ?? (progress ? `${distanceText!} to ${targetName}` : title) },
     usesLocation: true,
   };
 }
@@ -303,7 +301,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
   const stopsRemaining = Math.max(0, alightIndex - ride.passedIndex);
   const alight = step.alight.label;
   const chip = step.ride.routeChip;
-  const direction = directionText(step.ride.loopDirection, "long");
+  const direction = directionText(step.ride.loopDirection, "short");
   const remainingTime = rideRemainingTime(session.trip, step, ride, now);
 
   let title: string;
@@ -335,8 +333,8 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
     boardedText: `${step.board.label} · boarded`,
     alightText: `Get off · ${alight}`,
     countText: gps
-      ? `${ride.passedIndex} of ${stopsCount(step.stopsToRide)} passed, by pin order`
-      : `${stopsCount(step.stopsToRide)} after ${step.board.label}, by pin order`,
+      ? `${ride.passedIndex} of ${stopsCount(step.stopsToRide)}`
+      : `${stopsCount(step.stopsToRide)} after ${step.board.label}`,
     countNote: GUIDANCE_COPY.stopsByPinOrder,
     remainingTime,
     stops: step.stops.map((s: StopRef, i) => ({
@@ -360,11 +358,11 @@ function arriveView(session: GuidanceSession, steps: GuidanceStep[]): ArriveView
   const title = GUIDANCE_COPY.arrivedTitle;
   return {
     screen: "arrive",
-    stepLabel: `Trip complete · Step ${steps.length} of ${steps.length}`,
+    stepLabel: `Step ${steps.length} of ${steps.length}`,
     title,
     body: GUIDANCE_COPY.arrivedBody(named),
     summary: {
-      walkText: `${formatDistance(option.walkEstimateMeters)} walk · estimate`,
+      walkText: `${formatDistance(option.walkEstimateMeters)} walk`,
       rides: steps.flatMap((s) => (s.kind === "ride" ? [{ chip: s.ride.routeChip, stopsText: stopsCount(s.stopsToRide) }] : [])),
       fareText: fareChipText(option.fare),
     },

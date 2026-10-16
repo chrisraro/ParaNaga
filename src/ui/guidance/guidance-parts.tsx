@@ -20,7 +20,7 @@ export type StepProps<V> = {
   headingRef: RefObject<HTMLHeadingElement | null>;
 };
 
-export const USE_LOCATION = "Use my location for progress";
+export const USE_LOCATION = "Use my location";
 
 /** The step's own buttons (End lives in the header, so it is left out here). */
 export function GuidanceButtons({ actions, onSend }: { actions: readonly GuidanceAction[]; onSend: (event: GuidanceTap) => void }) {
@@ -103,14 +103,14 @@ export function LocationOffer({ location, manual }: { location: LocationUi; manu
   if (state === "denied" || state === "unsupported" || state === "insecure") {
     return (
       <p className="pn-guide__loc pn-guide__loc--off" data-testid="guidance-location-off">
-        Location is off. Follow the steps and tap “{manual}” when you get there.
+        Location off. Tap “{manual}” when there.
       </p>
     );
   }
   if (state === "unavailable" || state === "timeout") {
     return (
       <p className="pn-guide__loc pn-guide__loc--off" data-testid="guidance-location-off">
-        Your location isn&apos;t available right now. Follow the steps and tap “{manual}” when you get there.
+        No location now. Tap “{manual}” when there.
       </p>
     );
   }

@@ -82,7 +82,7 @@ describe("format (exact copy)", () => {
   });
 
   it("peak note names the window(s) used; none off-peak", () => {
-    expect(formatPeakNote(est(opt(jeep(3000)), manila("07:00")).total)).toBe("Peak hours · slower estimate (06:00–08:00)");
+    expect(formatPeakNote(est(opt(jeep(3000)), manila("07:00")).total)).toBe("Peak hours: slower (06:00–08:00)");
     expect(formatPeakNote(est(opt(jeep(3000)), manila("09:30")).total)).toBeNull();
   });
 
@@ -103,8 +103,8 @@ describe("format (exact copy)", () => {
   });
 
   it("guidance remaining", () => {
-    expect(formatRemaining({ lowMin: 10, highMin: 16 }, "trip")).toBe("About 10–16 min left (estimate)");
-    expect(formatRemaining({ lowMin: 10, highMin: 16 }, "riding")).toBe("About 10–16 min of riding left (estimate)");
+    expect(formatRemaining({ lowMin: 10, highMin: 16 }, "trip")).toBe("≈ 10–16 min (estimate)");
+    expect(formatRemaining({ lowMin: 10, highMin: 16 }, "riding")).toBe("≈ 10–16 min left (estimate)");
   });
 
   it("remainingRange sums the displayed leg ranges from an index (rides only for riding)", () => {

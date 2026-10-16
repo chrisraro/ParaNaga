@@ -15,15 +15,15 @@ export function TripLoading() {
       <svg className="pn-trip-state__spinner" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="42 60" strokeLinecap="round" />
       </svg>
-      <p>Looking for provisional routes…</p>
+      <p>Finding routes…</p>
     </section>
   );
 }
 
 const ERROR_COPY: Record<PlanErrorKind, { title: string; detail: string }> = {
-  offline: { title: "You're offline", detail: "Connect to the internet to see provisional routes." },
-  server: { title: "Couldn't load trip options", detail: "Something went wrong on our side or with the connection. Try again." },
-  invalid: { title: "Couldn't plan this trip", detail: "Check that both points are inside Naga City." },
+  offline: { title: "You're offline", detail: "Connect to plan a trip." },
+  server: { title: "Couldn't load options", detail: "Try again." },
+  invalid: { title: "Couldn't plan this trip", detail: "Both points must be in Naga City." },
 };
 
 type ErrorProps = { kind: PlanErrorKind; onRetry: () => void; onChangeEndpoints: () => void };
@@ -63,7 +63,6 @@ export function TripNoCoverage({ data }: { data: PlanResponse }) {
           {copy.title}
         </h2>
         <p>{copy.detail}</p>
-        <p className="pn-trip__revision pn-trip__revision--left">Transport data revision {data.revision.label}</p>
       </div>
     </section>
   );
