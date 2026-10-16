@@ -1,8 +1,9 @@
 "use client";
 
 // Search (artboard Search, /app/search?for=start|destination|save): one box over everything on
-// file for Naga, searched in the browser over the published search index (decision D1): the
-// query never leaves this phone and is never stored. A full-screen panel over the mounted home
+// file for Naga, searched in the browser over the published search index (decision D1). The query
+// leaves this phone only for Google suggestions (Task 15: fewer than 3 results here, or "Search
+// more places"), as a POST body to our server, which never stores or logs it. A full-screen panel over the mounted home
 // map (tab bar hidden, Escape or Cancel goes back).
 //
 // Picking: with for=start|destination an OpenStreetMap or mapped-pin place sets that trip end
@@ -34,6 +35,7 @@ import { Note } from "@/ui/kit/note";
 import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Switch } from "@/ui/kit/switch";
 import { SavePlaceDialog } from "@/ui/saved/save-place-dialog";
+import { GoogleSuggestions } from "./google-suggestions";
 
 export const SEARCH_DEBOUNCE_MS = 150;
 const FAILED_COPY = "Search data couldn't load. Try again.";
@@ -566,6 +568,17 @@ function SearchBody({
             onSelect={onSelect}
           />
         ))}
+        {/* Task 15: Google suggestions below the on-device rows, only as the cost guard allows. */}
+        {index && hasQuery ? (
+          <GoogleSuggestions
+            query={debounced}
+            localCount={total}
+            ready={morePlaces !== "loading"}
+            purpose={purpose}
+            onEndpoint={setEnd}
+            onSave={(place) => setSaving(place)}
+          />
+        ) : null}
       </main>
 
       <p className="sr-only" aria-live="polite" data-testid="search-announcer">

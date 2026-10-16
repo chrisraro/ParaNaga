@@ -8,7 +8,7 @@ const STATIC_DIR = path.resolve(".next/static");
 const PATTERNS: Array<[string, RegExp]> = [
   ["OpenRouter key", /sk-or-[A-Za-z0-9_-]{16,}/],
   ["Postgres URL", /postgres(?:ql)?:\/\/[^\s"'`]+@/],
-  ["secret env name", /\b(OPENROUTER_API_KEY|DATABASE_URL(?:_UNPOOLED)?|NEON_AUTH_COOKIE_SECRET|STORAGE_SECRET_ACCESS_KEY|STORAGE_ACCESS_KEY_ID|CRON_SECRET)\b/],
+  ["secret env name", /\b(OPENROUTER_API_KEY|DATABASE_URL(?:_UNPOOLED)?|NEON_AUTH_COOKIE_SECRET|STORAGE_SECRET_ACCESS_KEY|STORAGE_ACCESS_KEY_ID|CRON_SECRET|GOOGLE_PLACES_API_KEY)\b/],
 ];
 
 async function walk(dir: string): Promise<string[]> {

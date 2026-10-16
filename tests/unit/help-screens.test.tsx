@@ -174,6 +174,16 @@ describe("Sources register", () => {
     expect(link.getAttribute("rel")).toBe("noopener noreferrer");
     expect(screen.getByTestId("sources-owner-note").textContent).toBe(MAP_OWNER_NOTE);
   });
+
+  it("credits Google Places as third-party, unverified suggestions with an unresolved rights note", () => {
+    render(<SourcesScreen />);
+    const google = screen.getByTestId("google-places-credits").textContent ?? "";
+    expect(google).toContain("Suggestions from Google Maps");
+    expect(google).toContain("third-party");
+    expect(google).toContain("not verified");
+    expect(google).toContain("unresolved");
+    expect(google).toContain("300");
+  });
 });
 
 describe("MyNaga handoff", () => {

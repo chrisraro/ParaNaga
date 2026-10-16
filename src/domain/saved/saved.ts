@@ -45,7 +45,8 @@ export function takeCodePoints(text: string, max: number): string {
   return [...text].slice(0, max).join("");
 }
 
-export const SAVED_PLACE_SOURCES = ["osm", "pin", "pinned"] as const;
+/** "google": a picked Google suggestion (Task 15): third-party, never verified. */
+export const SAVED_PLACE_SOURCES = ["osm", "pin", "pinned", "google"] as const;
 export type SavedPlaceSource = (typeof SAVED_PLACE_SOURCES)[number];
 
 /** A trip end as saved: its label, point and, when known, what kind of place it is. */
@@ -358,7 +359,7 @@ export function shareText(
 
 // ---------------------------------------------------------------- saved places
 
-const PLACE_SOURCE_TEXT: Record<SavedPlaceSource, string> = { osm: "OpenStreetMap", pin: "Mapped pin", pinned: "Pinned location" };
+const PLACE_SOURCE_TEXT: Record<SavedPlaceSource, string> = { osm: "OpenStreetMap", pin: "Mapped pin", pinned: "Pinned location", google: "Google suggestion, not verified" };
 
 export function placeSubText(source: SavedPlaceSource): string {
   return `Saved place · ${PLACE_SOURCE_TEXT[source]}`;
