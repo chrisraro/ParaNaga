@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "revisionId": "20ca7d87-d4b2-46bc-93e4-10fced9935c6",
   "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-16T01:49:26.840Z"
+  "publishedAt": "2026-10-16T08:27:21.544Z"
  },
  "stops": [
   {
@@ -2158,7 +2158,8 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
    "routeId": "1e8705ca-bb01-4c96-a0da-68a71173bbd4",
@@ -2192,7 +2193,8 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
    "routeId": "71f7bd85-988d-4e30-989a-3fcc6ec1d23d",
@@ -2226,7 +2228,8 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
    "routeId": "430e9763-1fbe-4cc0-8e74-13b5401e0850",
@@ -2289,7 +2292,20 @@
       "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": [
+    {
+     "code": "FO-R4-MOD",
+     "vehicleClass": "modern_puj",
+     "deltaQualifier": "range",
+     "deltaCentavosLow": 300,
+     "deltaCentavosHigh": 500,
+     "observedOn": "2026-10-16",
+     "sourceCodes": [
+      "U01"
+     ]
+    }
+   ]
   },
   {
    "routeId": "1f2ed35a-822a-4bf7-b4ec-ea42cae764a3",
@@ -2323,7 +2339,8 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
    "routeId": "6a6cbd8b-8339-4352-87fe-20df16081fa0",
@@ -2357,7 +2374,8 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
    "routeId": "87de88e9-9d2a-47fb-924b-b13769b5396b",
@@ -2419,7 +2437,20 @@
       "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": [
+    {
+     "code": "FO-R7-MOD",
+     "vehicleClass": "modern_puj",
+     "deltaQualifier": "at_least",
+     "deltaCentavosLow": 500,
+     "deltaCentavosHigh": null,
+     "observedOn": "2026-10-16",
+     "sourceCodes": [
+      "U01"
+     ]
+    }
+   ]
   },
   {
    "routeId": "085d19f3-30a2-4e96-8596-f1f10ba781d9",
@@ -2453,7 +2484,8 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
    "routeId": "0abd7209-cc57-416e-a43b-bcb00227dce1",
@@ -2487,7 +2519,8 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
    "routeId": "cfe03151-f02a-4e44-b7ff-e185b4a0ebbe",
@@ -2521,7 +2554,8 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
    "routeId": "f26492f5-bdea-47bf-a324-5f5e67032f7c",
@@ -2555,10 +2589,11 @@
       "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
-   "routeId": "0b813055-ddb0-4648-96e2-ae40870e7df5",
+   "routeId": "d59409d2-207b-4eb5-b48c-81f777d13d1c",
    "routeCode": "TRI-VISTODA",
    "routeName": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
    "mode": "tricycle",
@@ -2587,10 +2622,11 @@
       "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
      }
     ]
-   }
+   },
+   "fareReports": []
   },
   {
-   "routeId": "6204a9ea-5c5d-47e3-9b52-2871b089597c",
+   "routeId": "f0c456f2-7007-4908-a1aa-a0bc962bdeaf",
    "routeCode": "TRI-DECALANGON",
    "routeName": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
    "mode": "tricycle",
@@ -2619,7 +2655,8 @@
       "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
      }
     ]
-   }
+   },
+   "fareReports": []
   }
  ],
  "etaModel": {
