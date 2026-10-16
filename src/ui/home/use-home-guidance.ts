@@ -12,7 +12,7 @@
 import { useMemo, useState, type Dispatch } from "react";
 import { useGuidanceSession, type UseGuidanceSession } from "@/client/guidance/use-guidance-session";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
-import type { EtaModel } from "@/domain/api/schemas";
+import type { EtaModel, StopPin } from "@/domain/api/schemas";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import type { LatLng } from "@/domain/geo/types";
 import { currentStep, type GuidanceSession } from "@/domain/guidance/session";
@@ -42,6 +42,34 @@ export function guidanceHighlights(session: GuidanceSession): HighlightStop[] {
     ];
   }
   return [];
+}
+
+/** The option leg the current step is on (a walk's or the ride's leg), or null when the plan has none. */
+export function guidanceActiveLegIndex(session: GuidanceSession): number | null {
+  if (session.status !== "active") return null;
+  return currentStep(session).legIndex;
+}
+
+/**
+ * The stops of the ride the person is on, or is walking to next (boarding, those passed, getting
+ * off), as map pins: they stay visible while the planner's pins are hidden. Provisional order.
+ */
+export function guidanceStopPins(session: GuidanceSession): StopPin[] {
+  if (session.status !== "active") return [];
+  const steps = guidanceSteps(session.trip);
+  const step = currentStep(session);
+  const ride = step.kind === "ride" ? step : step.kind === "walk_to_destination" ? null : steps[step.index + 1];
+  if (!ride || ride.kind !== "ride") return [];
+  return ride.stops.map((s) => ({
+    id: s.stopId,
+    name: s.name,
+    lat: s.lat,
+    lng: s.lng,
+    status: "candidate",
+    navigationApproved: false,
+    source: { layer: null, code: null, label: null },
+    routeCodes: [ride.ride.routeCode],
+  }));
 }
 
 /** What guidance estimates the time left from: the snapshot's model and the plan's walk-graph lengths. */
@@ -79,24 +107,32 @@ export type HomeGuidance = {
   guiding: boolean;
   /** Markers for the current leg (undefined when not guiding). */
   highlights: HighlightStop[] | undefined;
+  /** The current ride's stops as pins (empty off a ride). */
+  stopPins: readonly StopPin[];
+  /** The option leg being walked or ridden (emphasised on the map). */
+  activeLegIndex: number | null;
   /** The trip's own destination (the planner's endpoints are gone after a reload). */
   destination: LatLng | null;
   pickPrompt: string | null;
   setPickPrompt: (prompt: string | null) => void;
 };
 
+const NO_STOP_PINS: readonly StopPin[] = [];
+
 export function useHomeGuidance(): HomeGuidance {
   const guidance = useGuidanceSession();
   const session = guidance.session;
   const [pickPrompt, setPickPrompt] = useState<string | null>(null);
   const highlights = useMemo(() => (session ? guidanceHighlights(session) : undefined), [session]);
+  const stopPins = useMemo(() => (session ? guidanceStopPins(session) : NO_STOP_PINS), [session]);
+  const activeLegIndex = session ? guidanceActiveLegIndex(session) : null;
   const trip = session?.trip ?? null;
   const destination = useMemo(() => {
     if (!trip) return null;
     const last = guidanceSteps(trip).at(-1);
     return last?.kind === "walk_to_destination" ? { lat: last.target.lat, lng: last.target.lng } : null;
   }, [trip]);
-  return { guidance, guiding: session !== null, highlights, destination, pickPrompt, setPickPrompt };
+  return { guidance, guiding: session !== null, highlights, stopPins, activeLegIndex, destination, pickPrompt, setPickPrompt };
 }
 
 /** What the guidance actions need from the home screen (its own setters). */

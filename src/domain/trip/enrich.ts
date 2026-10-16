@@ -285,3 +285,17 @@ export function enrichPlan(
   }
   return enrichTripPlan(input, walkGraph, options);
 }
+
+/**
+ * One option's walk legs routed on the walk graph already on the phone (the guidance session keeps
+ * the plain option). Without a graph every walk keeps the straight fallback; nothing is invented.
+ */
+export function enrichOptionWalks(option: PlanOptionDto, walkGraph: WalkGraph | null): EnrichedPlanOption {
+  const status: WalkGraphStatus = walkGraph ? "ready" : "idle";
+  return {
+    ...option,
+    legs: option.legs.map((leg): EnrichedLeg =>
+      leg.kind !== "walk" ? leg : { ...leg, path: routeOneWalk(walkGraph, leg.from, leg.to, leg.distanceMeters, leg.estimateMeters, status) },
+    ),
+  };
+}

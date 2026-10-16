@@ -4,6 +4,7 @@ import {
   WALK_LOADING_LABEL,
   WALK_PATH_LABEL,
   WALK_STRAIGHT_LABEL,
+  enrichOptionWalks,
   enrichPlan,
   walkPathLengths,
 } from "@/domain/trip/enrich";
@@ -335,5 +336,25 @@ describe("walkPathLengths (saved cards use the cached graph)", () => {
     expect(lengths.some((m) => typeof m === "number")).toBe(true);
     expect(option.legs.every((leg, i) => (leg.kind === "walk") === (lengths[i] !== null))).toBe(true);
     expect(walkPathLengths(option, null)).toEqual(option.legs.map(() => null));
+  });
+});
+
+describe("enrichOptionWalks (guided walks)", () => {
+  const option = () => basePlan().plan.options[0]!;
+
+  it("without a walk graph every walk keeps the straight fallback and rides are untouched", () => {
+    const out = enrichOptionWalks(option(), null);
+    const walks = out.legs.filter((l) => l.kind === "walk");
+    expect(walks.length).toBeGreaterThan(0);
+    for (const w of walks) expect(w.kind === "walk" && w.path.kind).toBe("straight");
+    expect(out.legs.filter((l) => l.kind === "ride")).toEqual(option().legs.filter((l) => l.kind === "ride"));
+  });
+
+  it("with the walk graph on the phone walks get the same routing as the plan's", () => {
+    const out = enrichOptionWalks(option(), centroGraph);
+    const viaPlan = enrichPlan(basePlan(), centroGraph).plan.options.find((o) => o.id === option().id);
+    const paths = (o: typeof out) => o.legs.flatMap((l) => (l.kind === "walk" ? [l.path.kind] : []));
+    if (viaPlan) expect(paths(out)).toEqual(paths(viaPlan as typeof out));
+    expect(paths(out).length).toBeGreaterThan(0);
   });
 });

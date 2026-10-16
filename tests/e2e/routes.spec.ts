@@ -24,6 +24,14 @@ test("R4 route detail shows fleet label and no chair names", async ({ page }) =>
   const chevrons = page.locator(".pn-chevron-icon");
   await expect(chevrons.first()).toBeAttached();
 
+  // The legend is on the route map: this route's class, walking, and mapped stops.
+  await page.getByTestId("route-map").getByTestId("map-legend-button").click();
+  const legendPanel = page.getByTestId("route-map").getByTestId("map-legend-panel");
+  await expect(legendPanel).toContainText("Traditional and modern jeepneys");
+  await expect(legendPanel).toContainText("Walk");
+  await expect(legendPanel).toContainText("Mapped stop, not verified");
+  await page.keyboard.press("Escape");
+
   // Trace label and status
   await expect(page.getByTestId("route-map-status")).toContainText("Approximate path, not a verified route shape");
   await expect(page.getByTestId("route-trace-badge")).toHaveText("Trace: ok");
@@ -106,6 +114,8 @@ test("an untraced direction shows no line and \"Path could not be traced\", neve
   await expect(page.getByTestId("route-path-status")).toHaveText("Path could not be traced from the street list");
   await expect(lines).toHaveCount(0);
   await expect(page.getByTestId("route-trace-badge")).toHaveCount(0);
+  // No line drawn, yet the legend is still there (walking and mapped stops).
+  await expect(page.getByTestId("route-map").getByTestId("map-legend-button")).toBeVisible();
 });
 
 test("route detail never shows e-jeepney or historical-route copy", async ({ page }) => {

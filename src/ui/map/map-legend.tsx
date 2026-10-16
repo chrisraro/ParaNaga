@@ -27,6 +27,7 @@ import { ONEWAY_CAUTION } from "./line-rules";
 
 export const LEGEND_FOOTNOTE = "Lines are approximate paths, not verified route shapes." as const;
 export const LEGEND_WALK_NOTE = "Dotted: approximate walking path · crossings not checked" as const;
+export const LEGEND_STOP_LABEL = "Mapped stop, not verified" as const;
 export const LEGEND_MIXED_NOTE = "Alternating colours: traditional and modern jeepneys both operate (owner-confirmed)" as const;
 
 export type LegendEntry =
@@ -45,6 +46,8 @@ export type MapLegendProps = {
   announcement?: string | null;
   /** Some drawn line has a dashed one-way-conflict section: explain the dashes. */
   caution?: boolean;
+  /** The "Mapped stop, not verified" entry (the amber ring); on by default: the pins are always on the map. */
+  showStops?: boolean;
 };
 
 function normalizeItems(items: readonly LegendEntry[]): { key: VisualKey; label: string }[] {
@@ -126,6 +129,15 @@ function LegendSwatch({ visualKey, surface }: { visualKey: VisualKey; surface: M
   );
 }
 
+/** The mapped-stop pin: the hollow amber ring the stops layer draws. */
+function StopSwatch() {
+  return (
+    <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+      <circle cx="18" cy="8" r="5.5" fill="#FFFFFF" stroke="#E8A317" strokeWidth="3" />
+    </svg>
+  );
+}
+
 /** A dashed caution section, drawn like the map's (`8 6` dashes on the casing). */
 function CautionSwatch({ surface }: { surface: MapSurface }) {
   const token = (surface === "dark" ? PALETTE_D : PALETTE_L).unconfirmed;
@@ -137,7 +149,7 @@ function CautionSwatch({ surface }: { surface: MapSurface }) {
   );
 }
 
-export function MapLegend({ items, defaultOpen = false, surface = "light", announcement, caution = false }: MapLegendProps) {
+export function MapLegend({ items, defaultOpen = false, surface = "light", announcement, caution = false, showStops = true }: MapLegendProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -151,7 +163,7 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
     L.DomEvent.disableScrollPropagation(el);
   }, []);
 
-  if (entries.length === 0) return null;
+  if (entries.length === 0 && !showStops) return null;
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape" && open) {
@@ -190,6 +202,14 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
                 {key === "mixed_trad_modern" ? <p className="pn-map-legend__note">{LEGEND_MIXED_NOTE}</p> : null}
               </li>
             ))}
+            {showStops ? (
+              <li className="pn-map-legend__item" data-legend-item="stop">
+                <div className="pn-map-legend__row">
+                  <StopSwatch />
+                  <span>{LEGEND_STOP_LABEL}</span>
+                </div>
+              </li>
+            ) : null}
             {caution ? (
               <li className="pn-map-legend__item" data-legend-item="caution" data-testid="map-legend-caution">
                 <div className="pn-map-legend__row">

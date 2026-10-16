@@ -8,6 +8,16 @@ test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate
 test.beforeEach(async ({ page }) => {
   await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
   await routeNetwork(page);
+  await page.addInitScript(() => {
+    const w = window as unknown as { __csp: string[] };
+    w.__csp = [];
+    document.addEventListener("securitypolicyviolation", (e) => w.__csp.push(`${e.violatedDirective} ${e.blockedURI}`));
+  });
+});
+
+test.afterEach(async ({ page }) => {
+  const violations = await page.evaluate(() => (window as unknown as { __csp?: string[] }).__csp ?? []).catch(() => []);
+  expect(violations, "CSP (report-only) violations").toEqual([]);
 });
 
 const mapEl = (page: Page) => page.getByTestId("naga-map");
@@ -62,12 +72,7 @@ test("trip lines draw walk (dotted) and ride (solid) layers with chevrons and le
   await expect(chevrons.first()).toBeAttached();
 
   // Map legend lists Walk and vehicle class
-  // Tapping an option scrolls it into reach: the sheet goes to full only when the card was cut off,
-  // which depends on its height at that moment. Whatever the snap, tap the grabber until it peeks.
-  const grabber = page.getByRole("button", { name: /^(Expand sheet to (half|full)|Collapse sheet)$/ });
-  const sheetSnap = () => page.locator("[data-snap]").first().getAttribute("data-snap");
-  for (let taps = 0; taps < 3 && (await sheetSnap()) !== "0"; taps++) await grabber.click();
-  expect(await sheetSnap()).toBe("0");
+  // No sheet change needed: trip detail opens at half, so the map and legend are in view.
   const legend = page.getByTestId("map-legend");
   await expect(legend).toBeVisible();
   await page.getByTestId("map-legend-button").click();
@@ -288,4 +293,106 @@ test("a trip ride that uses a terminal access road says so in trip detail", asyn
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.getByTestId("ride-terminal-access")).toHaveText("terminal access road");
   await expect(page.locator("path.pn-line--ride.pn-line--caution")).toHaveCount(0);
+});
+
+// Lines and legend never vanish: guidance, picking a point, and lines that fail to load.
+
+/** Lowers the trip sheet to its peek, whichever snap it opened at, so the map and its legend show. */
+async function peekSheet(page: Page) {
+  const toHalf = page.getByRole("button", { name: "Expand sheet to half" });
+  const lower = page.getByRole("button", { name: /^(Expand sheet to full|Collapse sheet)$/ });
+  for (let i = 0; i < 3 && !(await toHalf.isVisible()); i++) await lower.click();
+  await expect(toHalf).toBeVisible();
+}
+
+/** The legend button and part of a ride line are inside the viewport and above the sheet's top edge. */
+async function expectLegendAndLineAboveSheet(page: Page) {
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached({ timeout: 15000 });
+  await page.waitForTimeout(800); // the map fits the trip
+  const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+  const legend = (await page.getByTestId("map-legend-button").boundingBox())!;
+  expect(legend.y).toBeGreaterThanOrEqual(0);
+  expect(legend.y + legend.height).toBeLessThanOrEqual(sheetTop + 1);
+  const line = (await page.locator("path.pn-line--ride").first().boundingBox())!;
+  expect(line.y).toBeLessThan(sheetTop);
+  expect(line.y + line.height).toBeGreaterThan(0);
+}
+
+async function expectLegendListsWalkAndStops(page: Page) {
+  const button = page.getByTestId("map-legend-button");
+  await expect(button).toBeVisible();
+  await button.click();
+  const panel = page.getByTestId("map-legend-panel");
+  await expect(panel).toContainText("Walk");
+  await expect(panel).toContainText("Dotted: approximate walking path");
+  await expect(panel).toContainText("Mapped stop, not verified");
+  await expect(panel).toContainText("Lines are approximate paths, not verified route shapes.");
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+}
+
+test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop pins and the legend", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await expectLegendAndLineAboveSheet(page); // trip detail too, sheet untouched
+  await page.getByTestId("trip-start").click();
+  const guide = page.getByTestId("guidance");
+  await expect(guide).toBeVisible();
+  // Without touching the sheet: the legend and a trip line are on the map above the sheet's top edge.
+  await expectLegendAndLineAboveSheet(page);
+
+  const walk = page.locator("path.pn-line--walk");
+  await expect(walk.first()).toBeAttached({ timeout: 15000 });
+  await expect(walk.first()).toHaveAttribute("stroke-dasharray", /.+/);
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
+  await expect(page.getByTestId("home-screen").getByTestId("naga-map")).not.toHaveAttribute("data-stop-pins", "0");
+  await expectLegendListsWalkAndStops(page);
+  await page.getByTestId("map-legend-button").click();
+  const a11y = await new AxeBuilder({ page })
+    .include('[data-testid="naga-map"]')
+    .include('[data-testid="map-legend"]')
+    .withTags(["wcag2a", "wcag2aa", "wcag22aa"])
+    .analyze();
+  const serious = a11y.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(serious, serious.map((v) => v.id).join(", ")).toEqual([]);
+  await page.keyboard.press("Escape");
+
+  // Still there on the next steps (the ride).
+  await page.getByRole("button", { name: /^Expand sheet/ }).first().click();
+  await guide.getByRole("button", { name: "I'm at the stop", exact: true }).click();
+  await guide.getByRole("button", { name: /^I boarded/ }).click();
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
+  await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
+  await expect(page.getByTestId("map-legend-button")).toBeVisible();
+});
+
+test("the overview lines and the legend stay while a point is being chosen on the map", async ({ page }) => {
+  await openApp(page);
+  await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
+  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Set start here" })).toBeVisible();
+  await expect(page.locator("path.pn-line--route").first()).toBeAttached();
+  await expectLegendListsWalkAndStops(page);
+});
+
+test("the legend and the walking line still show when the route lines are not loaded (404)", async ({ page }) => {
+  await page.route(/\/api\/v1\/network\/lines\/[^/?]+$/, (route) => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await expectLegendListsWalkAndStops(page);
+
+  await pinBoth(page);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await peekSheet(page);
+  await expect(page.locator("path.pn-line--walk").first()).toBeAttached({ timeout: 15000 });
+  await expect(page.locator("path.pn-line--ride")).toHaveCount(0); // never an invented path
+  await expectLegendListsWalkAndStops(page);
 });
