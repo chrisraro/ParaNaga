@@ -137,5 +137,7 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
 const REGRESSION_BASELINE = {
   options: 525,
   byMode: { jeepney: 307, tricycle: 200, padyak: 8, walk: 10 },
-  digest: "d0930a3e53b2b36b2a2fde0d3808428ea2317917a51410fcd43511288c990afa",
+  // Re-recorded after 3d2ea38: the fixture snapshot gained the reviewed route notes, so 254 of 417
+  // ride legs (160 trips) now carry notes; with notes stripped the digest is still d0930a3e….
+  digest: "28368f6d4414c7f5beed538bfd3cbf0a866e12b130830b942488fc57ebeeba85",
 };
