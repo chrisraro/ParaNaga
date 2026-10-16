@@ -339,12 +339,13 @@ export function EndpointSheet({
           className="pn-sheet__rest"
           inert={snap === 0 && !detailOpen}
           onFocusCapture={(e) => {
-            // Trip detail stays operable at the peek snap (its header is visible there). Detail and
-            // guidance never jump to full on their own (that would cover the map, its lines and the
-            // legend): the sheet scrolls, and full is the rider's choice.
+            // Trip detail stays operable at the peek snap (its header is visible there). A tap in
+            // detail or guidance never lifts the sheet to full (that would cover the map, its lines
+            // and the legend: full is the rider's choice), but keyboard focus does, so a focused
+            // control is never left below the screen edge (the half sheet cannot scroll it into view).
             if (snap !== 2 && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) {
               if (snap === 0) sheet.setSnap(1);
-              else if (!detailOpen && !(e.target as Element).closest("[data-testid=trip-detail], [data-testid=guidance]")) sheet.setSnap(2);
+              else if (!detailOpen || e.target.matches(":focus-visible")) sheet.setSnap(2);
             }
           }}
         >

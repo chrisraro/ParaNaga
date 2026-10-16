@@ -264,6 +264,8 @@ export default function NagaMapLeaflet({
   layersButtonRef,
   tripLines = null,
   activeLegIndex = null,
+  legendNotice = null,
+  routeLinesDimmed = false,
   fitTripLines = true,
   routeLines = null,
   selectedRouteCode = null,
@@ -391,6 +393,7 @@ export default function NagaMapLeaflet({
             selectedRouteCode={selectedRouteCode}
             onSelectRoute={onSelectRoute}
             showChevrons={showRouteChevrons}
+            dimmed={routeLinesDimmed}
           />
         ) : null}
         {tripLines ? (
@@ -480,6 +483,9 @@ export default function NagaMapLeaflet({
         // even in dark theme); the legend panel itself keeps the theme's colours.
         surface={surface}
         caution={legendCaution}
+        // The stop entry only while stop pins (or a trip's stop markers) are on the map.
+        showStops={(stopPins?.length ?? 0) > 0 || (highlightStops?.length ?? 0) > 0}
+        notice={legendNotice}
       />
 
       {tiles.url === null ? (
