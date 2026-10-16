@@ -7,8 +7,10 @@
 //   transfer             alighting stop → next boarding stop (a straight-line walk estimate)
 //   walk_to_destination  last stop (or the origin) → destination
 // A walk under NEGLIGIBLE_WALK_M (estimate) is flagged `negligible`, so the copy says
-// "Start at {stop}" instead of "Walk ≈ 0 m" (audit F-20). No time or duration exists anywhere.
+// "Start at {stop}" instead of "Walk ≈ 0 m" (audit F-20). Each step keeps the index of its planner
+// leg (`legIndex`), so view.ts can estimate the time left from the snapshot's model (Task 14).
 import type { PlanOptionDto, RideLegDto, WalkLegDto } from "../api/plan";
+import type { EtaModel } from "../api/schemas";
 import { isNegligibleWalk, routeChipLabel, stopLabel, type LoopDirection } from "../trip/present";
 
 /** What a guidance session is built from: the option plus the plan's stop codes and loop directions. */
@@ -20,11 +22,16 @@ export type GuidanceTrip = {
   variants: readonly { variantId: string; loopDirection: LoopDirection | null }[];
   /** How the person named the destination ("SM City Naga"); null → "your destination". */
   destinationLabel: string | null;
+  /** The snapshot's time-estimate model at Start (null/absent: an older snapshot, no estimate). */
+  etaModel?: EtaModel | null;
+  /** Walk-graph path length per option leg (null: no graph path, the ×1.3 estimate is used). */
+  walkLengths?: readonly (number | null)[];
 };
 
 export type StopRef = { stopId: string; name: string; label: string; lat: number; lng: number };
 export type RideRef = { variantId: string; routeCode: string; routeName: string; routeChip: string; loopDirection: LoopDirection | null };
-type WalkFields = { estimateMeters: number; distanceMeters: number; negligible: boolean };
+/** legIndex: the walk's leg in option.legs, or null when the plan has no walk before this step. */
+type WalkFields = { estimateMeters: number; distanceMeters: number; negligible: boolean; legIndex: number | null };
 
 export type WalkToBoardStep = { kind: "walk_to_board"; index: number; target: StopRef; nextRide: RideRef } & WalkFields;
 export type RideStep = {
@@ -38,8 +45,12 @@ export type RideStep = {
   /** Stops after boarding up to and including the alighting stop, by pin order. */
   stopsToRide: number;
   distanceMeters: number;
-  boardMeasureM?: number | null;
-  alightMeasureM?: number | null;
+  /** The ride's leg in option.legs. */
+  legIndex: number;
+  mode: RideLegDto["mode"];
+  distanceBasis: RideLegDto["distanceBasis"];
+  /** Path measure at each of `stops` (unwrapped), or null: the time left is split by stop count. */
+  stopMeasuresM: number[] | null;
 };
 export type TransferStep = { kind: "transfer"; index: number; from: StopRef; target: StopRef; nextRide: RideRef } & WalkFields;
 export type WalkToDestinationStep = {
@@ -55,11 +66,12 @@ export type GuidanceStepKind = GuidanceStep["kind"];
 
 export const UNNAMED_DESTINATION = "your destination";
 
-const NO_WALK: WalkFields = { estimateMeters: 0, distanceMeters: 0, negligible: true };
+const NO_WALK: WalkFields = { estimateMeters: 0, distanceMeters: 0, negligible: true, legIndex: null };
 
-function walkFields(leg: WalkLegDto | null): WalkFields {
-  if (!leg) return NO_WALK;
-  return { estimateMeters: leg.estimateMeters, distanceMeters: leg.distanceMeters, negligible: isNegligibleWalk(leg) };
+function walkFields(walk: { leg: WalkLegDto; index: number } | null): WalkFields {
+  if (!walk) return NO_WALK;
+  const { leg, index } = walk;
+  return { estimateMeters: leg.estimateMeters, distanceMeters: leg.distanceMeters, negligible: isNegligibleWalk(leg), legIndex: index };
 }
 
 export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
@@ -83,12 +95,12 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
   const legs = trip.option.legs;
   const steps: GuidanceStep[] = [];
   const destinationName = trip.destinationLabel?.trim() || UNNAMED_DESTINATION;
-  let pendingWalk: WalkLegDto | null = null;
+  let pendingWalk: { leg: WalkLegDto; index: number } | null = null;
   let lastAlight: StopRef | null = null;
 
-  for (const leg of legs) {
+  for (const [legIndex, leg] of legs.entries()) {
     if (leg.kind === "walk") {
-      pendingWalk = leg;
+      pendingWalk = { leg, index: legIndex };
       continue;
     }
     const stops = leg.stops.map(stopRef);
@@ -109,14 +121,16 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
       alight,
       stopsToRide: stops.length - 1,
       distanceMeters: leg.distanceMeters,
-      boardMeasureM: leg.boardMeasureM ?? null,
-      alightMeasureM: leg.alightMeasureM ?? null,
+      legIndex,
+      mode: leg.mode ?? "jeepney",
+      distanceBasis: leg.distanceBasis ?? "stop_to_stop_straight_line",
+      stopMeasuresM: leg.stopMeasuresM?.length === stops.length ? leg.stopMeasuresM : null,
     });
     pendingWalk = null;
     lastAlight = alight;
   }
 
-  const end = pendingWalk ? pendingWalk.to : lastAlight;
+  const end = pendingWalk ? pendingWalk.leg.to : lastAlight;
   steps.push({
     kind: "walk_to_destination",
     index: steps.length,

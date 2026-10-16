@@ -9,9 +9,11 @@ import "./help.css";
 
 import { useEffect, useState } from "react";
 import { rememberHead } from "@/client/network/remember-head";
+import { useSnapshot } from "@/client/network/use-snapshot";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { readSnapshotMeta } from "@/client/storage/db";
 import { networkHeadSchema } from "@/domain/api/schemas";
+import { basisRows } from "@/domain/eta/basis";
 import { publishedDateText } from "@/domain/network/present";
 import { DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
 import { findArticle, type Article, type ArticleSlug } from "./articles";
@@ -63,6 +65,20 @@ function DatedParagraphs({ article }: { article: Article }) {
   return <Paragraphs paragraphs={date === null || !article.dated ? article.body : [...article.body, article.dated(date)]} />;
 }
 
+export const NO_TIME_MODEL = "The time-estimate model is not on this phone yet. Open ParaNaga with a connection once to load it.";
+
+/**
+ * "How times are estimated": the lead, then one paragraph per basis row (with its A1–A3 notes)
+ * from the time model of the snapshot on this phone (the service worker answers offline).
+ */
+function BasisParagraphs({ article }: { article: Article }) {
+  const { status, snapshot } = useSnapshot(true);
+  const model = snapshot?.etaModel ?? null;
+  const rows = model ? basisRows(model).flatMap((r) => [r.text, ...r.assumptions.map((a) => `Assumption ${a}`)]) : [];
+  const tail = model ? rows : status === "ready" || status === "error" ? [NO_TIME_MODEL] : [];
+  return <Paragraphs paragraphs={[...article.body, ...tail]} />;
+}
+
 export function HelpArticleScreen({ slug }: { slug: ArticleSlug }) {
   const article = findArticle(slug);
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
@@ -85,7 +101,7 @@ export function HelpArticleScreen({ slug }: { slug: ArticleSlug }) {
         <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
           {article.title}
         </h1>
-        {article.dated ? <DatedParagraphs article={article} /> : <Paragraphs paragraphs={article.body} />}
+        {article.dated ? <DatedParagraphs article={article} /> : article.basis ? <BasisParagraphs article={article} /> : <Paragraphs paragraphs={article.body} />}
       </main>
     </DetailPanel>
   );

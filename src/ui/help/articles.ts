@@ -1,8 +1,12 @@
 // Help articles (Task 11 brief and Task 14 time estimates). Each article is a list of paragraphs; the offline
 // article ends with a paragraph naming the published date of the data on this phone (filled in
-// by the screen once known).
+// by the screen once known), and "How times are estimated" adds the basis rows of the time model
+// on this phone (basisRows), so its speeds and sources never drift from the estimates.
 
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
+
+/** The lead of "How times are estimated" (the trip-detail sheet and the Help article). */
+export const ETA_WAITING_NOTE = "Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.";
 
 export type ArticleSlug =
   | "how-trips-are-planned"
@@ -17,6 +21,8 @@ export type Article = {
   body: readonly string[];
   /** A last paragraph naming the published date of the data on this phone (offline article). */
   dated?: (publishedDate: string) => string;
+  /** After the body: the "How times are estimated" rows, built from the time model on this phone. */
+  basis?: true;
 };
 
 export const ARTICLES: readonly Article[] = [
@@ -49,23 +55,16 @@ export const ARTICLES: readonly Article[] = [
   {
     slug: "how-times-are-estimated",
     title: "How times are estimated",
-    body: [
-      "Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.",
-      "Walking: 4.24 km/h baseline (Tolentino & Sigua 2022, N28); up to 25% slower for crossings and traffic (ParaNaga assumption A1).",
-      "Jeepney off-peak: 10–15 km/h (SafeTravelPH 2025, N16; Puerto Princesa study 2025, N29).",
-      "Jeepney peak: 7–13 km/h (upper from N29; lower is a ParaNaga assumption A2).",
-      "Peak windows: 06:00–08:00, 11:00–13:00, 16:00–19:00 (Ordinance 2025-110, N04), applied every day (ParaNaga assumption A3).",
-      "Waiting: unknown — no published schedules or headways for Naga.",
-      "Based on typical speeds. ParaNaga uses no live traffic service.",
-    ],
+    // The basis paragraphs come from the time model on this phone (basisRows), after this lead.
+    body: [ETA_WAITING_NOTE],
+    basis: true,
   },
   {
     slug: "vehicle-types-in-naga",
     title: "Vehicle types in Naga",
     body: [
-      "Traditional jeepney: ₱14 first 4 km + ₱2.00/km, national rate 28 Sep 2026. The backbone of Naga intra-city transit.",
-      "Modern jeepney: ₱17 + ₱2.40/km; reported on R4 and R7 (2023–2024). Air-conditioned or Euro-4 units operated by transport cooperatives.",
-      "Electric jeepney (e-jeepney): one 2017 route, status unknown; no current route confirmed electric.",
+      "Traditional jeepney: ₱14 first 4 km + ₱2.00/km, national rate 28 Sep 2026. Traditional jeepneys run on every route group (R1–R8), confirmed by the project owner on 16 October 2026.",
+      "Modern jeepney: ₱17 + ₱2.40/km. Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason) alongside traditional jeepneys, confirmed by the project owner on 16 October 2026. No other route is shown with modern units.",
       "Tricycle and e-tricycle: ₱15 minimum (Ordinance 2024-002); discounts exist for students, seniors, PWD and solo parents but eligibility is not verified, so ParaNaga does not apply them; e-trikes need a franchise.",
       "UV Express and bus: regional; per-km rates; see terminals.",
     ],

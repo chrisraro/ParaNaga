@@ -10,6 +10,7 @@ import { TERMINAL_ACCESS_NOTE, UNTRACED_RIDE_LABEL } from "@/ui/map/line-rules";
 import { TripDetail } from "@/ui/trip/trip-detail";
 import linesFixture from "../e2e/fixtures/network/lines.json";
 import { PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "../e2e/fixtures/plan-responses";
+import { ETA_MODEL, manila } from "./eta-fixtures";
 
 const REV_ID = PROVISIONAL_PLAN.revision.revisionId;
 const LINES = linesSchema.parse(linesFixture);
@@ -64,5 +65,54 @@ describe("TripDetail street-path status (Minor: polite announcement)", () => {
     const ready = enrichPlan(plan, null, { walkGraphStatus: "error" });
     view.rerender(<TripDetail data={ready} option={ready.plan.options[0]!} onBack={() => undefined} />);
     expect(screen.getByTestId("trip-paths-status").textContent).toBe("Street paths updated");
+  });
+});
+
+describe("TripDetail time estimates (Task 14 fixes: basis, fleet evidence, spoken ranges)", () => {
+  afterEach(() => vi.useRealTimers());
+  const at = (hhmm: string) => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(manila(hhmm));
+  };
+
+  it("total and leg ranges are spoken in words; each ride names its distance basis", () => {
+    at("09:30");
+    const data = enrichPlan(two, null, { walkGraphStatus: "skipped" });
+    render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
+    const total = screen.getByTestId("trip-detail-time");
+    const shown = total.querySelector("[aria-hidden='true']")!.textContent!;
+    expect(shown).toMatch(/^Estimate (\d+)–(\d+) min \+ waiting \(unknown, 2 rides\)$/);
+    const [, lo, hi] = /(\d+)–(\d+)/.exec(shown)!;
+    expect(total.querySelector(".sr-only")!.textContent).toBe(`Estimate ${lo} to ${hi} minutes + waiting (unknown, 2 rides)`);
+    expect(screen.queryByTestId("trip-peak-note")).toBeNull();
+
+    const legs = screen.getAllByTestId("leg-time").map((el) => el.querySelector("[aria-hidden='true']")?.textContent ?? el.textContent);
+    const rides = legs.filter((t) => t!.includes(" ride · "));
+    // TWO_RIDE_PLAN: the Loop A leg has path measures, the Loop B leg is straight-line between pins.
+    expect(rides).toEqual([expect.stringMatching(/^≈ \d+–\d+ min ride · along the approximate path$/), expect.stringMatching(/^≈ \d+–\d+ min ride · stop to stop \(straight line\)$/)]);
+    expect(legs.filter((t) => t!.includes(" walk · ")).every((t) => /^≈ \d+–\d+ min walk · straight line$/.test(t!))).toBe(true);
+    for (const el of screen.getAllByTestId("leg-time")) expect(el.querySelector(".sr-only")!.textContent).toMatch(/^≈ \d+ to \d+ minutes (walk|ride) · /);
+    expect(screen.getAllByText(/stop to stop \(straight line\)$/).length).toBeGreaterThan(0);
+  });
+
+  it("each ride shows its vehicle classes with their evidence label and date", () => {
+    at("09:30");
+    const data = enrichPlan(plan, null, { walkGraphStatus: "skipped" });
+    render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
+    const ride = data.plan.options[0]!.legs.find((l) => l.kind === "ride")!;
+    if (ride.kind !== "ride") throw new Error("ride");
+    expect(screen.getByTestId("ride-fleet").textContent).toBe("Jeepney · traditional");
+    expect(screen.getAllByTestId("ride-fleet-class").map((el) => el.textContent)).toEqual(ride.fleet.classes.map((c) => c.label));
+    expect(ride.fleet.classes[0]!.label).toMatch(/^Traditional jeepney · operating \(owner-confirmed \w+ \d{4}\)$/);
+  });
+
+  it("at 07:10 Manila the peak band is used and the peak note shows; no model → Time not available, no sheet link", () => {
+    at("07:10");
+    const data = enrichPlan(plan, null, { walkGraphStatus: "skipped" });
+    const view = render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
+    expect(screen.getByTestId("trip-peak-note").textContent).toBe("Peak hours · slower estimate (06:00–08:00)");
+    view.rerender(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={null} />);
+    expect(screen.getByTestId("trip-detail-time").textContent).toBe("Time not available");
+    expect(screen.queryByTestId("how-times-estimated-btn")).toBeNull();
   });
 });

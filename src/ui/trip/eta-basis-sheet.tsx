@@ -8,13 +8,13 @@
 
 import "./trip.css";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useEffectEvent, useId, useRef } from "react";
 import type { EtaModel } from "@/domain/api/schemas";
 import { basisRows } from "@/domain/eta/basis";
+import { ETA_WAITING_NOTE } from "@/ui/help/articles";
 
 export const ETA_BASIS_TITLE = "How times are estimated" as const;
-export const ETA_WAITING_NOTE =
-  "Times are ranges. They do not include waiting, because Naga has no published jeepney schedules." as const;
+export { ETA_WAITING_NOTE };
 
 type Props = {
   open: boolean;
@@ -27,18 +27,42 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const rows = model ? basisRows(model) : [];
 
+  const sheetRef = useRef<HTMLElement>(null);
+  // A new onClose each render (the trip detail re-renders every minute) must not re-run the effect.
+  const close = useEffectEvent(() => onClose());
+
+  // Modal: focus moves to Close, Tab stays inside the sheet, Escape closes, and focus returns to
+  // the control that opened it ("How times are estimated").
   useEffect(() => {
     if (!open) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeBtnRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.stopPropagation();
-        onClose();
+        close();
+        return;
+      }
+      if (event.key !== "Tab" || !sheetRef.current) return;
+      const focusable = [...sheetRef.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')];
+      if (focusable.length === 0) return;
+      const first = focusable[0]!;
+      const last = focusable.at(-1)!;
+      const inside = sheetRef.current.contains(document.activeElement);
+      if (event.shiftKey && (document.activeElement === first || !inside)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !inside)) {
+        event.preventDefault();
+        first.focus();
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      if (opener?.isConnected) opener.focus();
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -48,6 +72,7 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        ref={sheetRef}
         className="pn-layers-sheet pn-eta-sheet"
         data-testid="eta-basis-sheet"
         onClick={(e) => e.stopPropagation()}
@@ -67,7 +92,8 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
           </button>
         </header>
 
-        <div className="pn-layers-sheet__body">
+        {/* Scrollable on small phones: focusable so it scrolls by keyboard (axe scrollable-region-focusable). */}
+        <div className="pn-layers-sheet__body" tabIndex={0} role="region" aria-labelledby={titleId} data-testid="eta-basis-body">
           <p className="pn-eta-sheet__lead" data-testid="eta-basis-lead">
             {ETA_WAITING_NOTE}
           </p>

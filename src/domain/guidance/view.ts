@@ -1,8 +1,9 @@
 // What the Walk / Ride / Transfer / Arrive screens show for a session and the latest fix. Pure.
 //
 // Honest by construction (global constraints, copy rules §6.5): distances are straight-line
-// estimates ("path not verified"), stops are counted by provisional pin order, no time or duration
-// appears anywhere, nothing says "live", and there is no curb, crossing, boarding side, signboard
+// estimates ("path not verified"), stops are counted by provisional pin order, a time is only ever
+// a range labelled "About … (estimate)" from the snapshot's model (never a clock time or
+// "arriving"), nothing says "live", and there is no curb, crossing, boarding side, signboard
 // text or entrance, because none of them exists in the data; the artboards' versions of those lines
 // are replaced by a plain "not mapped / not on file" note with a next step. "Para! Next stop is
 // yours" is a suggestion shown only on a ride the person confirmed boarding, by the single rule
@@ -16,14 +17,14 @@ import { STALE_MS, type LocationFix } from "../geo/location-fix";
 import { COMPASS_WORDS } from "../geo/bearing";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance } from "../trip/present";
-import { roundRange } from "../eta/eta";
-import { formatRange, formatRemaining } from "../eta/format";
-import { inPeakWindow } from "../eta/manila-time";
+import { estimateOption, type EtaLeg, type EtaOptionInput } from "../eta/eta";
+import { formatLeg, formatRange, formatRemaining } from "../eta/format";
 import { paraSuggested, usableFix, walkProgress, type WalkProgress } from "./progress";
 import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
 import {
   UNNAMED_DESTINATION,
   type GuidanceStep,
+  type GuidanceTrip,
   type RideRef,
   type RideStep,
   type StopRef,
@@ -165,41 +166,57 @@ function distanceLine(progress: WalkProgress | null, name: string, estimateMeter
   return negligible ? null : `${formatDistance(estimateMeters)} walk · ${GUIDANCE_COPY.pathEstimate}`;
 }
 
-function walkRemainingTime(progress: WalkProgress | null, targetName: string, estimateMeters: number, negligible: boolean): string | null {
-  if (negligible) return null;
-  const meters = progress ? progress.distanceMeters : estimateMeters;
-  if (!Number.isFinite(meters) || meters < 15) return null;
-  const rawLow = (meters / 1000 / 4.238) * 60;
-  const rawHigh = rawLow * 1.25;
-  const { lowMin, highMin } = roundRange(rawLow, rawHigh);
-  return `About ${formatRange(lowMin, highMin)} to ${targetName} (estimate)`;
+// ---- time left (Task 14): the snapshot's model through the eta domain, never a hand-set speed.
+// The estimate covers the rest of the trip from now (the current leg's remainder + the later legs),
+// so the peak test spans [now, now + the remaining trip]; the current leg's range is shown.
+// Walks: a GPS remainder is a straight line, so it is ×1.3 like the plan's estimates; without GPS
+// the plan's walk (its graph path length when one was on file, else its ×1.3 estimate).
+
+export const TIME_NOT_AVAILABLE = "Time not available";
+/** Shown after a ride's time left when no path measures exist and the ride is split by stop count. */
+export const BY_STOP_COUNT = "split by stop count";
+
+type CurrentLeg = EtaOptionInput["legs"][number];
+
+/** The current leg's estimated range, with the rest of the trip after it (peak test over both). */
+function currentLegEstimate(trip: GuidanceTrip, legIndex: number, current: CurrentLeg, currentWalkLength: number | null, now: number): EtaLeg | null {
+  const later = trip.option.legs.slice(legIndex + 1);
+  const lengths = [currentWalkLength, ...later.map((_, i) => trip.walkLengths?.[legIndex + 1 + i] ?? null)];
+  const res = estimateOption({ legs: [current, ...later] }, lengths, trip.etaModel, new Date(now));
+  return res.ok ? res.estimate.legs[0]! : null;
 }
 
-const PEAK_WINDOWS = [
-  { start: "06:00", end: "08:00" },
-  { start: "11:30", end: "13:30" },
-  { start: "17:00", end: "19:00" },
-];
+function walkRemainingTime(trip: GuidanceTrip, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, progress: WalkProgress | null, targetName: string, now: number): string | null {
+  if (step.negligible || step.legIndex === null) return null;
+  if (progress && progress.distanceMeters < 15) return null;
+  if (!trip.etaModel || !(now > 0)) return TIME_NOT_AVAILABLE;
+  const current: CurrentLeg = { kind: "walk", estimateMeters: progress ? Math.round(progress.distanceMeters * 1.3) : step.estimateMeters };
+  const length = progress ? null : (trip.walkLengths?.[step.legIndex] ?? null);
+  const leg = currentLegEstimate(trip, step.legIndex, current, length, now);
+  if (!leg || leg.lowMin === null || leg.highMin === null) return TIME_NOT_AVAILABLE;
+  return `About ${formatRange(leg.lowMin, leg.highMin)} to ${targetName} (estimate)`;
+}
 
-function rideRemainingTime(step: RideStep, ride: RideState, now: number): string | null {
+/** The ride still ahead: measure(alight) − measure(last passed stop), else split by stop count. */
+function rideMetersLeft(step: RideStep, passedIndex: number): { meters: number; byStopCount: boolean } {
   const alightIndex = step.stops.length - 1;
-  if (alightIndex <= 0) return null;
-  const stopsRemaining = Math.max(0, alightIndex - ride.passedIndex);
-  if (stopsRemaining === 0) return null;
+  const m = step.stopMeasuresM;
+  if (m) return { meters: Math.max(0, m[alightIndex]! - m[passedIndex]!), byStopCount: false };
+  if (passedIndex === 0 || step.stopsToRide === 0) return { meters: step.distanceMeters, byStopCount: false };
+  return { meters: (step.distanceMeters * (alightIndex - passedIndex)) / step.stopsToRide, byStopCount: true };
+}
 
-  let meters = step.distanceMeters;
-  if (ride.passedIndex > 0 && step.stopsToRide > 0) {
-    meters = Math.round((step.distanceMeters * stopsRemaining) / step.stopsToRide);
-  }
-  if (!Number.isFinite(meters) || meters <= 0) return null;
-
-  const date = new Date(now);
-  const isPeak = Number.isFinite(date.getTime()) && inPeakWindow(date, 0, PEAK_WINDOWS);
-  const [slowKmh, fastKmh] = isPeak ? [9.0, 12.0] : [11.53, 15.0];
-  const rawLow = (meters / 1000 / fastKmh) * 60;
-  const rawHigh = (meters / 1000 / slowKmh) * 60;
-  const { lowMin, highMin } = roundRange(rawLow, rawHigh);
-  return formatRemaining({ lowMin, highMin }, "riding");
+function rideRemainingTime(trip: GuidanceTrip, step: RideStep, ride: RideState, now: number): string | null {
+  const alightIndex = step.stops.length - 1;
+  if (alightIndex - ride.passedIndex <= 0) return null;
+  if (!trip.etaModel || !(now > 0)) return TIME_NOT_AVAILABLE;
+  const { meters, byStopCount } = rideMetersLeft(step, ride.passedIndex);
+  const current: CurrentLeg = { kind: "ride", mode: step.mode, distanceMeters: meters, distanceBasis: step.distanceBasis };
+  const leg = currentLegEstimate(trip, step.legIndex, current, null, now);
+  if (!leg) return TIME_NOT_AVAILABLE;
+  if (leg.lowMin === null || leg.highMin === null) return formatLeg(leg);
+  const text = formatRemaining({ lowMin: leg.lowMin, highMin: leg.highMin }, "riding");
+  return byStopCount ? `${text} · ${BY_STOP_COUNT}` : text;
 }
 
 function nextRideInfo(ride: RideRef) {
@@ -211,7 +228,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
   const targetName = toDestination ? step.target.name : step.target.label;
   const progress = walkProgress(step.target, fix, now);
   const distanceText = distanceLine(progress, targetName, step.estimateMeters, step.negligible);
-  const remainingTime = walkRemainingTime(progress, targetName, step.estimateMeters, step.negligible);
+  const remainingTime = walkRemainingTime(session.trip, step, progress, targetName, now);
   const directionTextValue = progress?.bearing ? `In a straight line, ${targetName} is to the ${COMPASS_WORDS[progress.bearing]}.` : null;
 
   let title: string;
@@ -288,7 +305,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
   const alight = step.alight.label;
   const chip = step.ride.routeChip;
   const direction = directionText(step.ride.loopDirection, "long");
-  const remainingTime = rideRemainingTime(step, ride, now);
+  const remainingTime = rideRemainingTime(session.trip, step, ride, now);
 
   let title: string;
   if (ride.paraAcknowledged) title = GUIDANCE_COPY.paraAckTitle;

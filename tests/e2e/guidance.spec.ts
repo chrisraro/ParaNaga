@@ -17,6 +17,9 @@ const tabBar = (page: Page) => page.getByRole("navigation", { name: "Main" });
 const guide = (page: Page) => page.getByTestId("guidance");
 const heading = (page: Page) => guide(page).getByRole("heading", { level: 2 });
 const SESSION_KEY = "paranaga.guidance";
+/** 1,240 m at 10–15 km/h (off-peak) and 7–13 km/h (peak), rounded outward. */
+const RIDE_LEFT_OFFPEAK = "About 4–8 min of riding left (estimate)";
+const RIDE_LEFT_PEAK = "About 5–11 min of riding left (estimate)";
 
 type GeoStub = { watches: Map<number, unknown>; calls: number; mode: "allow" | "deny"; emit: (lat: number, lng: number, accuracy?: number) => void };
 
@@ -128,11 +131,25 @@ async function tap(page: Page, name: string) {
   await guide(page).getByRole("button", { name, exact: true }).click();
 }
 
-/** Honesty: no "live", no arrival promises, no ETA, no fare without "Estimate" anywhere in the guidance. */
+/**
+ * Honesty: no "live", no arrival promises, no ETA, no fare without "Estimate" anywhere in the
+ * guidance, and a duration only in an element whose text starts with "Estimate", "≈" or "About"
+ * (the anchored rule of the guidance view's unit property, applied to every element's own text).
+ */
 async function expectHonest(page: Page) {
   const text = (await guide(page).innerText()).replace(/\s+/g, " ");
   expect(text).not.toMatch(/\blive\b|arriving|\barrives in\b|\bETA\b|guaranteed|official/i);
   for (const m of text.matchAll(/₱/g)) expect(text.slice(Math.max(0, m.index! - 20), m.index)).toContain("Estimate");
+  const unlabelled = await guide(page).evaluate((root) => {
+    const duration = /\d\s*(h|min|mins|minutes?|secs?|seconds?|hrs?|hours?)\b/i;
+    const bad: string[] = [];
+    for (const el of [root, ...root.querySelectorAll("*")]) {
+      const own = [...el.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE).map((n) => n.textContent).join("").replace(/\s+/g, " ").trim();
+      if (duration.test(own) && !/^(Estimate|≈|About)/.test(own)) bad.push(own);
+    }
+    return bad;
+  });
+  expect(unlabelled, "durations outside a labelled estimate").toEqual([]);
 }
 
 async function expectAxeClean(page: Page) {
@@ -177,6 +194,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
 
   // Ride: the rail follows the fixes in pin order.
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 2 of 3 · Ride");
+  await expect(page.getByTestId("guidance-ride-time")).toHaveText(/^About \d+–\d+ min of riding left \(estimate\)$/);
   await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop A · clockwise (from pin order)");
   await expect(page.getByTestId("ride-progress")).toContainText("Plaza Rizal (A1) · boarded");
   await expect(page.getByTestId("ride-progress")).toContainText("Get off · Avenue Square (A5)");
@@ -232,6 +250,23 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
   await expect(page.getByTestId("saved-trip")).toHaveCount(1);
 });
+
+// Time left from the snapshot's model (Task 14 fix): the band follows the clock, over the rest of
+// the trip. PROVISIONAL_PLAN's Loop A ride is 1,240 m along the approximate path.
+for (const [clock, ride] of [["09:30", RIDE_LEFT_OFFPEAK], ["07:10", RIDE_LEFT_PEAK]] as const) {
+  test(`after "I boarded", the time left uses the model's ${clock === "07:10" ? "peak" : "off-peak"} band (${clock} Manila)`, async ({ page }) => {
+    await page.clock.setFixedTime(new Date(`2026-10-16T${clock}:00+08:00`));
+    await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
+    await stubGeolocation(page, "deny");
+    await openApp(page);
+    await startGuidance(page);
+    await expect(page.getByTestId("guidance-time")).toHaveText(/^About \d+–\d+ min to Plaza Rizal \(A1\) \(estimate\)$/);
+    await tap(page, "I'm at the stop");
+    await tap(page, "I boarded Loop A");
+    await expect(page.getByTestId("guidance-ride-time")).toHaveText(ride);
+    await expectHonest(page);
+  });
+}
 
 test("two rides, location denied: every step completes by buttons (Transfer included)", async ({ page }) => {
   await page.route("**/api/v1/plan", (route) => fulfill(route, TWO_RIDE_PLAN));

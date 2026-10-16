@@ -22,16 +22,16 @@ import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
 import type { EtaModel } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
-import type { EtaEstimate } from "@/domain/eta/eta";
-import { formatLeg, formatPeakNote, formatRange, formatTotal } from "@/domain/eta/format";
+import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
+import { formatLeg } from "@/domain/eta/format";
 import { WALK_LOADING_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { LineNotesView } from "@/ui/map/line-notes-view";
 import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
-import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel } from "@/domain/trip/present";
+import { directionText, distanceBasisText, fareChipText, formatDistance, isNegligibleWalk, legFareText, rideFleetText, routeChipLabel } from "@/domain/trip/present";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { EtaBasisSheet } from "./eta-basis-sheet";
-import { extractWalkLengths, useOptionEta } from "./eta-text";
+import { EtaPeakNote, EtaTotalText, SpokenRange, extractWalkLengths, useOptionEta } from "./eta-text";
 import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
 
 export type TripEnds = { start: SavedEnd; destination: SavedEnd };
@@ -45,8 +45,8 @@ type Props = {
   ends?: TripEnds | null;
   /** How this trip was reopened from Saved; shown above the steps. */
   note?: TripNote | null;
-  /** "Start trip": starts guidance (Task 10). Without it there is no Start button. */
-  onStart?: (() => void) | null;
+  /** "Start trip": starts guidance (Task 10) with the walk-graph lengths the estimate used. Without it there is no Start button. */
+  onStart?: ((walkLengths: (number | null)[]) => void) | null;
   etaModel?: EtaModel | null;
 };
 
@@ -124,20 +124,14 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
       const walkPath = (leg as { path?: { kind?: string; label?: string } }).path;
       const pathLabel = walkPath?.label ?? "Estimate · path not verified";
       const etaLeg = estimate?.legs[i];
-      const timeSuffix =
-        etaLeg && etaLeg.estimated && etaLeg.lowMin !== null && etaLeg.highMin !== null
-          ? ` · ${formatRange(etaLeg.lowMin, etaLeg.highMin)} walk · ${walkPath?.kind === "path" ? "along streets (approximate)" : "straight line"}`
-          : "";
       out.push({
         key: `w${i}`,
         marker: i === 0 ? "origin" : final ? "destination" : "walk",
         rail: final ? null : "walk",
         body: (
           <>
-            <strong className="pn-tl__title">
-              {walkTitle(leg, lookups)}
-              {timeSuffix}
-            </strong>
+            <strong className="pn-tl__title">{walkTitle(leg, lookups)}</strong>
+            {etaLeg ? <LegTime leg={etaLeg} basis={etaLeg.basis === "graph_path" ? "along streets (approximate)" : "straight line"} /> : null}
             <p className="pn-tl__sub">{pathLabel.includes("path not verified") ? pathLabel : `${pathLabel} · path not verified`}</p>
           </>
         ),
@@ -158,16 +152,9 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
   const route = routeChipLabel(leg.routeCode, leg.routeName);
   const dir = directionText(lookups.direction(leg.variantId), "long");
   const count = leg.stops.length - 1;
-  const distanceBasis =
-    leg.distanceBasis === "approximate_path" ? "along approximate path" : "straight-line between pins";
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
   const etaLeg = estimate?.legs[i];
-  const etaText =
-    etaLeg && etaLeg.estimated && etaLeg.lowMin !== null && etaLeg.highMin !== null
-      ? ` · ${formatRange(etaLeg.lowMin, etaLeg.highMin)} ride · along the approximate path`
-      : etaLeg && !etaLeg.estimated
-        ? ` · ${formatLeg(etaLeg)} · along the approximate path`
-        : "";
+  const fleet = leg.fleet;
 
   return [
     {
@@ -182,7 +169,17 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
             </strong>
             <p className="pn-tl__sub pn-tl__sub--gold">{CANDIDATE}</p>
             {dir ? <p className="pn-tl__sub">Direction: {dir}</p> : null}
-            {leg.fleet?.label ? <p className="pn-tl__sub">{leg.fleet.label}</p> : null}
+            <p className="pn-tl__sub" data-testid="ride-fleet">{rideFleetText(leg.mode, fleet)}</p>
+            {fleet.classes.length > 0 ? (
+              // Each vehicle class with its evidence label and date (not a nested list: the steps are the list).
+              fleet.classes.map((c) => (
+                <p key={`${c.vehicleClass}-${c.status}`} className="pn-tl__sub" data-testid="ride-fleet-class">
+                  {c.label}
+                </p>
+              ))
+            ) : (
+              <p className="pn-tl__sub" data-testid="ride-fleet-class">Vehicle type not confirmed</p>
+            )}
           </div>
           <div className="pn-sign">
             <span className="pn-sign__kicker">Signboard</span>
@@ -190,9 +187,9 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
             <LoopChip leg={leg} />
           </div>
           <p className="pn-tl__sub">
-            Ride {count} {count === 1 ? "stop" : "stops"} · {formatDistance(leg.distanceMeters)} ({distanceBasis})
-            {etaText}
+            Ride {count} {count === 1 ? "stop" : "stops"} · {distanceBasisText(leg.distanceMeters, leg.distanceBasis)}
           </p>
+          {etaLeg ? <LegTime leg={etaLeg} basis={leg.distanceBasis === "approximate_path" ? "along the approximate path" : "stop to stop (straight line)"} /> : null}
           <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">
             {pathLabel}
           </p>
@@ -218,6 +215,16 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
       ),
     },
   ];
+}
+
+/** "≈ 5–7 min walk · along streets (approximate)", the range spoken in words; "Tricycle time not estimated". */
+function LegTime({ leg, basis }: { leg: EtaLeg; basis: string }) {
+  const text = leg.estimated ? `${formatLeg(leg)} · ${basis}` : formatLeg(leg);
+  return (
+    <p className="pn-tl__sub pn-tl__sub--time" data-testid="leg-time">
+      <SpokenRange text={text} range={leg} />
+    </p>
+  );
 }
 
 type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";
@@ -247,7 +254,7 @@ const SHARE_STATUS: Record<ShareOutcome, string> = {
   failed: "Could not share or copy on this phone.",
 };
 
-function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds }) {
+function TripActions({ data, option, ends, etaModel, walkLengths }: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds; etaModel: EtaModel | null; walkLengths: (number | null)[] }) {
   const id = useId();
   const [exactPoints, setExactPoints] = useState(false);
   const [status, setStatus] = useState("");
@@ -263,7 +270,7 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
     setStatus("");
     const text = shareText(
       { start: ends.start, destination: ends.destination, option, stops: data.stops, variants: data.variants, revisionLabel: data.revision.label },
-      { exactPoints },
+      { exactPoints, etaModel, walkLengths },
     );
     setStatus(SHARE_STATUS[await shareOrCopy(text)]);
   };
@@ -336,7 +343,6 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const traceOf = (leg: RideLegDto) => rideTrace(leg, lines, circular.get(leg.variantId) ?? false);
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
-  const peakNote = estimate ? formatPeakNote(estimate.total) : null;
 
   // Walk legs show "Straight line · loading street paths…" until the walk graph arrives: say so politely.
   const loadingPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "straight" && (l as EnrichedWalkLeg).path.label === WALK_LOADING_LABEL);
@@ -358,16 +364,12 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       </h2>
       <p className="pn-trip-detail__labels">{option.labels.join(" · ")}</p>
       <div className="pn-trip-detail__meta">
-        {estimate ? (
-          <span className="pn-trip-detail__time">{formatTotal(estimate.total)}</span>
-        ) : (
-          <span>Time not available</span>
-        )}
+        <EtaTotalText estimate={estimate} className={estimate ? "pn-trip-detail__time" : undefined} testId="trip-detail-time" />
         <FareChip fare={option.fare} />
       </div>
-      {peakNote ? (
-        <p className="pn-trip-detail__peak" data-testid="trip-peak-note">
-          {peakNote}
+      {estimate?.total.peak ? (
+        <p className="pn-trip-detail__peak">
+          <EtaPeakNote estimate={estimate} testId="trip-peak-note" />
         </p>
       ) : null}
       {estimate ? (
@@ -387,11 +389,11 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
         </p>
       ) : null}
       {onStart ? (
-        <button type="button" className="pn-btn pn-btn--primary pn-trip-start" onClick={onStart} data-testid="trip-start">
+        <button type="button" className="pn-btn pn-btn--primary pn-trip-start" onClick={() => onStart(walkLengths)} data-testid="trip-start">
           {START_TRIP}
         </button>
       ) : null}
-      {ends ? <TripActions data={data} option={option} ends={ends} /> : null}
+      {ends ? <TripActions data={data} option={option} ends={ends} etaModel={etaModel} walkLengths={walkLengths} /> : null}
 
       <p className="sr-only" role="status" aria-live="polite" data-testid="trip-paths-status">
         {pathsStatus}

@@ -100,6 +100,8 @@ async function expectAxeClean(page: Page) {
 }
 
 test("plan → Save → the card on Saved; offline the card still opens and shows the steps", async ({ page, context }) => {
+  // 09:30 Manila: off-peak. The card's estimate uses the cached snapshot's model with ×1.3 walks.
+  await page.clock.setFixedTime(new Date("2026-10-16T09:30:00+08:00"));
   await openApp(page);
   await planAndOpenTrip(page);
   const save = page.getByTestId("trip-save");
@@ -118,7 +120,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(card).toContainText("Available offline");
   await expect(card).toContainText("From Pinned location");
   await expect(card.getByRole("heading", { level: 2 })).toHaveText("Pinned location");
-  await expect(card).toContainText(/Estimate (?:7–14|8–17) min \+ waiting \(unknown\) · Estimate ₱14 · data from 16 Oct 2026/);
+  await expect(card).toContainText("Estimate 8–16 min + waiting (unknown) · Estimate ₱14 · data from 16 Oct 2026");
   await expect(card).toContainText("Loop A");
   await expect(card).not.toContainText("Changed since saved");
 

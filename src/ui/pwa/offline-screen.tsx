@@ -9,6 +9,7 @@ import "@/ui/home/home-screen.css";
 import "./pwa.css";
 
 import { useEffect, useState } from "react";
+import { useSnapshot } from "@/client/network/use-snapshot";
 import { useSavedTrips } from "@/client/saved/use-saved";
 import { readSnapshotMeta } from "@/client/storage/db";
 import { offlineDataLine } from "@/domain/pwa/offline-copy";
@@ -33,6 +34,8 @@ function DataLine() {
 
 function SavedTrips() {
   const trips = useSavedTrips();
+  // The cached snapshot's time model (the service worker answers offline); none: "Time not available".
+  const snapshot = useSnapshot(true).snapshot;
   if (trips.status === "loading") return <p>Reading saved trips…</p>;
   if (trips.status === "error") return <p>{trips.unavailable ? "Saved trips are not available: storage on this phone is blocked." : "Saved trips could not be read."}</p>;
   if (trips.records.length === 0) return <p>No saved trips on this phone.</p>;
@@ -52,7 +55,7 @@ function SavedTrips() {
                 <li key={i}>{step}</li>
               ))}
             </ol>
-            <p className="pn-offline__meta">{tripCardMeta(trip)}</p>
+            <p className="pn-offline__meta">{tripCardMeta(trip, snapshot?.etaModel ?? null)}</p>
           </details>
         </li>
       ))}

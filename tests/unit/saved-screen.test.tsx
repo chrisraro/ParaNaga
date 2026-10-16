@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { planResponseSchema } from "@/domain/api/plan";
 import { RECORD_FORMAT, buildSavedTrip } from "@/domain/saved/saved";
 import { PROVISIONAL_PLAN, REVISION } from "../e2e/fixtures/plan-responses";
+import { ETA_MODEL } from "./eta-fixtures";
 
 const nav = vi.hoisted(() => ({ params: new URLSearchParams(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({
@@ -101,12 +102,14 @@ describe("Saved → Trips", () => {
 
   it("a saved trip card works as text; Open trip asks the map to restore it", async () => {
     await db.putSavedTrip(card);
+    snapshot = { revision: REVISION, stops: [], variants: [], fareRules: [], terminals: [], routes: [], etaModel: ETA_MODEL };
     renderSaved();
     const tripCard = await screen.findByTestId("saved-trip");
     expect(tripCard.textContent).toContain("Available offline");
     expect(tripCard.textContent).toContain("From Plaza Rizal");
     expect(screen.getByRole("heading", { level: 2, name: "Avenue Square" })).toBeTruthy();
-    expect(tripCard.textContent).toContain(" · Estimate ₱14 · data from 16 Oct 2026");
+    // The estimate comes from the cached snapshot's model, departing now.
+    await waitFor(() => expect(tripCard.textContent).toMatch(/Estimate \d+–\d+ min \+ waiting \(unknown\) · Estimate ₱14 · data from 16 Oct 2026/));
     expect(tripCard.textContent).not.toContain("Time not available");
     expect(tripCard.textContent).toContain("Saved 16 Oct 2026");
     expect(tripCard.textContent).toContain("Loop A");
@@ -117,6 +120,15 @@ describe("Saved → Trips", () => {
     fireEvent.click(screen.getByRole("button", { name: "Open trip" }));
     expect(frame.requestTrip).toHaveBeenCalledWith("t1");
     expect(nav.push).toHaveBeenCalledWith("/app");
+  });
+
+  it("an older snapshot without a time model: Time not available, never a guess", async () => {
+    await db.putSavedTrip(card);
+    snapshot = { revision: REVISION, stops: [], variants: [], fareRules: [], terminals: [], routes: [] };
+    renderSaved();
+    const tripCard = await screen.findByTestId("saved-trip");
+    await waitFor(() => expect(urls).toContain(`/api/v1/network/snapshot/${REVISION.revisionId}`));
+    expect(tripCard.textContent).toContain("Time not available · Estimate ₱14 · data from 16 Oct 2026");
   });
 
   it("badges a trip whose route changed in a newer revision and offers Review changes", async () => {

@@ -134,6 +134,19 @@ export function useGuidanceSession(): UseGuidanceSession {
     };
   }, [active, geoActive]);
 
+  // ---- minute tick while active: the time left is estimated from the clock (peak windows), also
+  // with no location watch and right after a reload (the clock starts at 0 until something moves it).
+  useEffect(() => {
+    if (!active) return undefined;
+    const tick = () => setNow(Date.now());
+    const first = setTimeout(tick, 0);
+    const id = setInterval(tick, 60_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+    };
+  }, [active]);
+
   // Backstop: no watch outside an active session (restored ended state, cleared data, a session
   // ended in another way). The taps below already stop it before the next screen renders.
   useEffect(() => {

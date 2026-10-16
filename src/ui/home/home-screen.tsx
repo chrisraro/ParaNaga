@@ -873,7 +873,7 @@ export function HomeScreen() {
               onBack={handleCloseStored}
               ends={stored.ends}
               note={stored.note}
-              onStart={() => guidanceActions.start(stored.data, stored.option, stored.ends)}
+              onStart={(walkLengths) => guidanceActions.start(stored.data, stored.option, stored.ends, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths })}
               etaModel={snapshotState.snapshot?.etaModel}
             />
           ) : ready && openOption && planData && endpoints.start && endpoints.destination ? (
@@ -883,7 +883,9 @@ export function HomeScreen() {
               onBack={handleCloseOption}
               ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
               note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline), tone: "warning" } : null)}
-              onStart={() => guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) })}
+              onStart={(walkLengths) =>
+                guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths })
+              }
               etaModel={snapshotState.snapshot?.etaModel}
             />
           ) : ready ? (

@@ -18,7 +18,6 @@ import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel, stopLabel } from "../trip/present";
 import type { EtaModel } from "../api/schemas";
-import { DEFAULT_ETA_MODEL } from "../eta/default-model";
 import { estimateOption } from "../eta/eta";
 import { formatTotal } from "../eta/format";
 
@@ -217,23 +216,35 @@ export function manilaDate(iso: string | null): string | null {
   return formatIsoDate(new Date(ms + 8 * 3_600_000).toISOString().slice(0, 10));
 }
 
+export const TIME_NOT_AVAILABLE = "Time not available";
+
 /**
- * "{estimate text} · {fare chip} · data from {date}".
- * Uses the revision's time-estimate model (or the cached/default model) to estimate the option duration.
+ * The option's time estimate from the (cached) snapshot's model, departing now: "Estimate 8–15 min
+ * + waiting (unknown)", or "Time not available" without a model (an older snapshot; never a
+ * guess). `walkLengths` are walk-graph lengths when the graph is cached; null/absent: each walk
+ * is its ×1.3 straight-line estimate, as in trip options without the graph.
  */
+export function savedEstimateText(
+  option: PlanOptionDto,
+  model: EtaModel | null | undefined,
+  departure: Date = new Date(),
+  walkLengths: ReadonlyArray<number | null | undefined> = [],
+): string {
+  const res = estimateOption(option, walkLengths, model, departure);
+  return res.ok ? formatTotal(res.estimate.total) : TIME_NOT_AVAILABLE;
+}
+
+/** "{estimate text} · {fare chip} · data from {date}" (the estimate from the cached snapshot's model). */
 export function tripCardMeta(
   card: Pick<SavedTrip, "option" | "publishedAt" | "revisionLabel">,
-  model?: EtaModel | null,
+  model: EtaModel | null | undefined,
   departure: Date = new Date(),
+  walkLengths: ReadonlyArray<number | null | undefined> = [],
 ): string {
   const date = manilaDate(card.publishedAt);
   const dataFrom = `data from ${date ?? `revision ${card.revisionLabel}`}`;
   const fare = fareChipText(card.option.fare);
-  const activeModel = model ?? DEFAULT_ETA_MODEL;
-  const walkLengths = card.option.legs.map((l) => (l.kind === "walk" ? l.distanceMeters : null));
-  const res = estimateOption(card.option, walkLengths, activeModel, departure);
-  const estimateText = res.ok ? formatTotal(res.estimate.total) : "Estimate unavailable";
-  return `${estimateText} · ${fare} · ${dataFrom}`;
+  return `${savedEstimateText(card.option, model, departure, walkLengths)} · ${fare} · ${dataFrom}`;
 }
 
 /** Is `run` a consecutive stretch of `ring` (wrapping around a circular variant)? */
@@ -309,7 +320,10 @@ const fixed = (p: LatLng) => `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
  * Text-only summary for the share sheet or the clipboard: the steps by stop name and code, the
  * unverified badge, the fare estimate. No coordinates and no links unless `exactPoints`.
  */
-export function shareText(input: ShareInput, opts: { exactPoints?: boolean } = {}): string {
+export function shareText(
+  input: ShareInput,
+  opts: { exactPoints?: boolean; etaModel?: EtaModel | null; walkLengths?: ReadonlyArray<number | null | undefined>; departure?: Date } = {},
+): string {
   const stops = new Map(input.stops.map((s) => [s.id, s]));
   const name = (id: string | null, fallback: string | null) => {
     const s = id ? stops.get(id) : undefined;
@@ -336,14 +350,7 @@ export function shareText(input: ShareInput, opts: { exactPoints?: boolean } = {
   }
   lines.push(...steps.map((s, i) => `${i + 1}. ${s}`));
   lines.push(`Fare: ${option.rides > 0 ? legFareText(option.fare) : fareChipText(option.fare)}`);
-  const walkLengths = option.legs.map((l) => (l.kind === "walk" ? l.distanceMeters : null));
-  const res = estimateOption(option, walkLengths, DEFAULT_ETA_MODEL, new Date());
-  const estimateText = res.ok ? formatTotal(res.estimate.total) : null;
-  if (estimateText) {
-    lines.push(`${estimateText}. Data revision ${input.revisionLabel}.`);
-  } else {
-    lines.push(`Data revision ${input.revisionLabel}.`);
-  }
+  lines.push(`${savedEstimateText(option, opts.etaModel, opts.departure, opts.walkLengths)}. Data revision ${input.revisionLabel}.`);
   if (opts.exactPoints) {
     lines.push(`Start point: ${fixed(input.start.point)}`);
     lines.push(`Destination point: ${fixed(input.destination.point)}`);

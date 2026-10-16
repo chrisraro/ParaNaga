@@ -13,7 +13,7 @@ import {
   type EtaResult,
   type EtaUnavailableReason,
 } from "@/domain/eta/eta";
-import { formatPeakNote, formatTotal } from "@/domain/eta/format";
+import { formatPeakNote, formatRange, formatRangeLabel, formatTotal } from "@/domain/eta/format";
 import type { EnrichedLeg } from "@/domain/trip/enrich";
 
 /**
@@ -78,29 +78,34 @@ export function useOptionEta(
   }, [option, walkLengths, model, departure]);
 }
 
-export function EtaTotalText({
-  estimate,
-  fallback = "Time not available",
-  className,
-}: {
-  estimate: EtaEstimate | null | undefined;
-  fallback?: string;
-  className?: string;
-}) {
-  if (!estimate) {
-    return <span className={className}>{fallback}</span>;
+export const TIME_NOT_AVAILABLE = "Time not available";
+
+/**
+ * A time text with its range spoken in words: the visible copy ("Estimate 8–15 min …") is hidden
+ * from screen readers and a sr-only twin reads "Estimate 8 to 15 minutes …" (formatRangeLabel).
+ */
+export function SpokenRange({ text, range, className, testId }: { text: string; range: { lowMin: number | null; highMin: number | null } | null; className?: string; testId?: string }) {
+  if (!range || range.lowMin === null || range.highMin === null) {
+    return <span className={className} data-testid={testId}>{text}</span>;
   }
-  return <span className={className}>{formatTotal(estimate.total)}</span>;
+  const spoken = text.replace(formatRange(range.lowMin, range.highMin), formatRangeLabel(range.lowMin, range.highMin));
+  return (
+    <span className={className} data-testid={testId}>
+      <span aria-hidden="true">{text}</span>
+      <span className="sr-only">{spoken}</span>
+    </span>
+  );
 }
 
-export function EtaPeakNote({
-  estimate,
-  className,
-}: {
-  estimate: EtaEstimate | null | undefined;
-  className?: string;
-}) {
+/** The option total ("Estimate 18–27 min + waiting (unknown)"), or "Time not available". */
+export function EtaTotalText({ estimate, className, testId }: { estimate: EtaEstimate | null | undefined; className?: string; testId?: string }) {
+  if (!estimate) return <span className={className} data-testid={testId}>{TIME_NOT_AVAILABLE}</span>;
+  return <SpokenRange text={formatTotal(estimate.total)} range={estimate.total} className={className} testId={testId} />;
+}
+
+/** "Peak hours · slower estimate (06:00–08:00)" when the trip uses the peak band (a span: it may sit in a button). */
+export function EtaPeakNote({ estimate, className, testId }: { estimate: EtaEstimate | null | undefined; className?: string; testId?: string }) {
   const note = estimate ? formatPeakNote(estimate.total) : null;
   if (!note) return null;
-  return <p className={className}>{note}</p>;
+  return <span className={className} data-testid={testId}>{note}</span>;
 }

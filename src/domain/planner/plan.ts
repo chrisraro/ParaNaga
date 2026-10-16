@@ -66,7 +66,7 @@ import { isInsideNaga } from "../geo/naga";
 import type { LatLng } from "../geo/types";
 import { fleetSummary, type FleetSummary, type RouteMode } from "../modes/fleet";
 import { fareClasses, legFareEstimate, sumFares, type LegFare, type TripFare } from "./fares";
-import { buildGraph, forwardRides, type DistanceBasis, type GraphStop, type PlannerGraph } from "./graph";
+import { buildGraph, forwardRides, type DistanceBasis, type GraphStop, type GraphVariant, type PlannerGraph } from "./graph";
 
 import { MAX_ACCESS_WALK_M, PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
 
@@ -127,6 +127,12 @@ export type RideLeg = {
   /** Metres along the approximate path at the board and alight pins; null without a path. */
   boardMeasureM: number | null;
   alightMeasureM: number | null;
+  /**
+   * Metres along the approximate path at each of `stops` (board first), counted on from the board
+   * measure so they never wrap (a circuit ride past the path's start continues above its length):
+   * the remaining ride is the alight entry minus the last passed stop's. Null without a path.
+   */
+  stopMeasuresM: number[] | null;
 };
 
 export type PlanLeg = WalkLeg | RideLeg;
@@ -301,6 +307,17 @@ function walkLeg(from: Place, to: Place, meters: number): WalkLeg {
 
 type RouteInfo = NetworkSnapshot["routes"][number];
 
+/** Per-stop path measures for a ride (see RideLeg.stopMeasuresM), ending exactly at board + distance. */
+function stopMeasures(v: GraphVariant, ride: RideStep, steps: number): number[] | null {
+  if (ride.basis !== "approximate_path" || ride.boardMeasureM === null || !v.pathSegmentMeters) return null;
+  const n = v.stops.length;
+  const end = ride.boardMeasureM + ride.meters;
+  const out = [ride.boardMeasureM];
+  for (let i = 1; i < steps; i++) out.push(Math.min(end, out[i - 1]! + v.pathSegmentMeters[(ride.board + i - 1) % n]!));
+  out.push(end);
+  return out.map((m) => Math.round(m * 10) / 10);
+}
+
 function toOption(
   c: Candidate, labels: PlanLabel[], graph: PlannerGraph, snapshot: Pick<NetworkSnapshot, "fareRules">,
   routes: ReadonlyMap<string, RouteInfo>, origin: LatLng, destination: LatLng,
@@ -328,6 +345,7 @@ function toOption(
         classes: fareClasses(fleet.colourKey), reports: route?.fareReports ?? [],
       }),
       mode: v.mode, fleet, distanceBasis: ride.basis, boardMeasureM: ride.boardMeasureM, alightMeasureM: ride.alightMeasureM,
+      stopMeasuresM: stopMeasures(v, ride, steps),
     };
     legs.push(leg);
     rideLegs.push(leg);

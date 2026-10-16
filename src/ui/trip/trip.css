@@ -400,6 +400,7 @@
   outline-offset: 2px;
 }
 .pn-trip-card__peak {
+  display: block;
   margin: 0;
   color: var(--pn-gold-text);
   font-size: 13px;

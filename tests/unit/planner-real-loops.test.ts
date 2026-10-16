@@ -144,7 +144,7 @@ describe("planTrip on real Loop A / Loop B", () => {
 // ---------------------------------------------------------------- D13 regression (Task 8)
 
 /** Fields added in Increment D Task 8 (ride leg and leg fare); stripped so the baseline compares like with like. */
-const D13_LEG_KEYS = ["mode", "fleet", "distanceBasis", "boardMeasureM", "alightMeasureM"];
+const D13_LEG_KEYS = ["mode", "fleet", "distanceBasis", "boardMeasureM", "alightMeasureM", "stopMeasuresM"];
 const D13_FARE_KEYS = ["span", "basis", "reportCodes"];
 
 function withoutD13Fields(plan: TripPlan): unknown {

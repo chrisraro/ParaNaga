@@ -1,21 +1,22 @@
 "use client";
 
 // Trip options (artboard TripOptions), shown in the home sheet once both endpoints are set.
-// Per card: labels, the warning "Unverified route" badge, the ride distance (no minutes or
-// arrival time: "Time not available"), the leg strip (walk ≈ m → Loop chip + direction → walk
-// ≈ m), the gold-outline fare estimate chip, and the transfer count. Each card is one button
-// whose accessible name is its whole text (labels, legs, fare estimate, transfers).
+// Per card: labels, the warning "Unverified route" badge, the ride distance, the time estimate
+// ("Estimate 18–27 min + waiting (unknown)", from the snapshot's model on the device; "Time not
+// available" without one) with the peak note when the peak band is used, a vehicle-class chip per
+// ride (C7), the leg strip (walk ≈ m → Loop chip + direction → walk ≈ m), the gold-outline fare
+// estimate chip, and the transfer count. Each card is one button whose accessible name is its
+// whole text (the range read as "18 to 27 minutes").
 
 import "./trip.css";
 
 import { Fragment, useMemo, type ReactNode } from "react";
 import type { PlanOptionDto, PlanResponse, RideLegDto } from "@/domain/api/plan";
 import type { EtaModel } from "@/domain/api/schemas";
-import { formatPeakNote, formatTotal } from "@/domain/eta/format";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { formatDistance, isNegligibleWalk, routeChipLabel, transfersText } from "@/domain/trip/present";
 import { ModeChip } from "@/ui/modes/mode-chip";
-import { extractWalkLengths, useOptionEta } from "./eta-text";
+import { EtaPeakNote, EtaTotalText, extractWalkLengths, useOptionEta } from "./eta-text";
 import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, planLookups, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
@@ -76,7 +77,6 @@ function OptionCard({
   const routes = option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode, l.routeName));
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
-  const peakNote = estimate ? formatPeakNote(estimate.total) : null;
   const rideLegs = option.legs.filter((l): l is RideLegDto => l.kind === "ride");
 
   return (
@@ -105,15 +105,10 @@ function OptionCard({
           <strong>{headline(option)}</strong>
           {routes.length > 0 ? <span className="sr-only"> on {routes.join(" and ")}</span> : null}
           <span className="sr-only">. </span>
-          <span className="pn-trip-card__time">
-            {estimate ? formatTotal(estimate.total) : "Time not available"}
-          </span>
+          <EtaTotalText estimate={estimate} className="pn-trip-card__time" testId="trip-option-time" />
         </span>
-        {peakNote ? (
-          <p className="pn-trip-card__peak" data-testid="trip-peak-note">
-            {peakNote}
-          </p>
-        ) : null}
+        {estimate?.total.peak ? <span className="sr-only">. </span> : null}
+        <EtaPeakNote estimate={estimate} className="pn-trip-card__peak" testId="trip-peak-note" />
         {rideLegs.length > 0 ? (
           <span className="pn-trip-card__chips">
             {rideLegs.map((leg, idx) => (

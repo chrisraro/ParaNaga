@@ -98,13 +98,13 @@ describe("plan response: D13 distance basis, mode and fleet on ride legs", () =>
 
   it("reads a ride leg cached or saved before Task 8 as straight-line, unconfirmed fleet, rule span", () => {
     const old = JSON.parse(JSON.stringify(rides[0])) as Record<string, unknown> & { fare: Record<string, unknown> };
-    for (const k of ["mode", "fleet", "distanceBasis", "boardMeasureM", "alightMeasureM"]) delete old[k];
+    for (const k of ["mode", "fleet", "distanceBasis", "boardMeasureM", "alightMeasureM", "stopMeasuresM"]) delete old[k];
     for (const k of ["span", "basis", "reportCodes"]) delete old.fare[k];
     old.fare.ruleCodes = ["F01", "F02"]; // every leg before Task 8 cited both rules
     const option = { ...body.plan.options[0]!, legs: [body.plan.options[0]!.legs[0]!, old, body.plan.options[0]!.legs.at(-1)!] };
     const parsed = planOptionSchema.parse(option).legs[1] as Ride;
     expect(parsed).toMatchObject({
-      distanceBasis: "stop_to_stop_straight_line", boardMeasureM: null, alightMeasureM: null, mode: "jeepney",
+      distanceBasis: "stop_to_stop_straight_line", boardMeasureM: null, alightMeasureM: null, stopMeasuresM: null, mode: "jeepney",
       fleet: { label: "Vehicle type not confirmed", classes: [] },
       fare: { span: "rule_span", basis: "fare_rules", reportCodes: [] },
     });

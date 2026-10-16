@@ -79,8 +79,8 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   for (const [title, phrase] of [
     ["How trips are planned", "every suggestion carries the badge “Unverified route — confirm with the driver”."],
     ["Why stops are not verified yet", "Every stop on the map comes from a public My Maps snapshot (retrieved 15 October 2026)."],
-    ["How times are estimated", "Times are ranges"],
-    ["Vehicle types in Naga", "Traditional jeepney"],
+    ["How times are estimated", "Jeepney peak: 7–13 km/h (upper from N29; lower is a ParaNaga assumption)"],
+    ["Vehicle types in Naga", "Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7"],
     ["Using ParaNaga offline", "Planning offline uses the data from Oct 16, 2026; fares may have changed."],
   ] as const) {
     await page.getByTestId("help-links").getByRole("link", { name: title }).click();
@@ -91,6 +91,18 @@ test("each article opens with its copy, and Back returns to the Help tab", async
     await page.getByTestId("help-article").filter({ visible: true }).getByTestId("detail-back").click();
     await expect(h1(page, "Help")).toBeVisible();
   }
+  // The two Task 14 articles: the times basis comes from the snapshot's model; no e-jeepney, no "live".
+  await page.goto("/app/help/how-times-are-estimated");
+  const times = page.getByTestId("help-article-body");
+  await expect(times).toContainText("Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.");
+  for (const code of ["N28", "N16", "N29", "N04"]) await expect(times).toContainText(code);
+  for (const a of ["Assumption A1:", "Assumption A2:", "Assumption A3:"]) await expect(times).toContainText(a);
+  await expect(times).toContainText("Based on typical speeds. ParaNaga uses no traffic service.");
+  await expect(times).not.toContainText(/live/i);
+  await page.goto("/app/help/vehicle-types-in-naga");
+  await expect(page.getByTestId("help-article-body")).toContainText("Traditional jeepneys run on every route group (R1–R8)");
+  await expect(page.getByTestId("help-article-body")).not.toContainText(/e-?jeep|electric jeep|2023|Euro-?4|live/i);
+
   await page.goto("/app/help/not-an-article");
   await expect(h1(page, "Not found")).toBeVisible();
 });
@@ -190,6 +202,12 @@ async function axeAll(page: Page) {
   }
   await page.goto("/app/help/using-paranaga-offline");
   await expect(page.getByTestId("help-article-body")).toContainText("Oct 16, 2026");
+  await expectAxeClean(page, "help-article");
+  await page.goto("/app/help/how-times-are-estimated");
+  await expect(page.getByTestId("help-article-body")).toContainText("Assumption A3:");
+  await expectAxeClean(page, "help-article");
+  await page.goto("/app/help/vehicle-types-in-naga");
+  await expect(page.getByTestId("help-article-body")).toContainText("UV Express and bus");
   await expectAxeClean(page, "help-article");
   await page.goto("/app/help/sources");
   await expect(page.getByTestId("source-row").first()).toBeVisible();

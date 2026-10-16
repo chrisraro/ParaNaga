@@ -98,10 +98,16 @@ const rideLegSchema = z.object({
   distanceBasis: z.enum(["approximate_path", "stop_to_stop_straight_line"]).default("stop_to_stop_straight_line"),
   boardMeasureM: measure,
   alightMeasureM: measure,
+  /** Path measure at each stop, unwrapped within the ride (guidance's remaining ride); null without a path or on older bodies. */
+  stopMeasuresM: z.array(z.number().min(0)).nullable().default(null),
 }).refine(
   (l) => (l.distanceBasis === "approximate_path") === (l.boardMeasureM !== null && l.alightMeasureM !== null)
     && (l.boardMeasureM === null) === (l.alightMeasureM === null),
   { message: "a path distance comes with both stop measures, a straight-line one with neither" },
+).refine(
+  (l) => l.stopMeasuresM === null || (l.distanceBasis === "approximate_path" && l.stopMeasuresM.length === l.stops.length
+    && l.stopMeasuresM.every((m, i) => i === 0 || m >= l.stopMeasuresM![i - 1]!)),
+  { message: "per-stop measures come with a path distance, one per stop, never decreasing" },
 );
 
 export const planOptionSchema = z.object({

@@ -3,6 +3,7 @@
 import type { PlanOptionDto } from "@/domain/api/plan";
 import type { GuidanceTrip } from "@/domain/guidance/steps";
 import { fleetSummary } from "@/domain/modes/fleet";
+import { ETA_MODEL } from "./eta-fixtures";
 
 export const BASE = { lat: 13.6233869, lng: 123.1846726 };
 /** ≈ 200 m of latitude. */
@@ -56,8 +57,9 @@ export const ride = (stops: Pin[], variant: number, routeCode: string, routeName
   mode: "jeepney" as const,
   fleet: fleetSummary([], "jeepney"),
   distanceBasis: "stop_to_stop_straight_line" as const,
-  boardMeasureM: null,
-  alightMeasureM: null,
+  boardMeasureM: null as number | null,
+  alightMeasureM: null as number | null,
+  stopMeasuresM: null as number[] | null,
 });
 
 export const ORIGIN = { lat: BASE.lat - 0.001, lng: BASE.lng };
@@ -110,6 +112,7 @@ export const tripOf = (opt: PlanOptionDto, destinationLabel: string | null = "SM
   stops: [{ id: LOOP_A[0]!.id, name: "Plaza Rizal", code: "A1" }],
   variants: [{ variantId: uuid(901), loopDirection: "clockwise" }],
   destinationLabel,
+  etaModel: ETA_MODEL,
 });
 
 /** A location fix at a point, precise and fresh by default. */

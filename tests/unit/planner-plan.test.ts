@@ -182,7 +182,7 @@ describe("ride legs: D13 distance basis, mode and fleet (Task 8)", () => {
 
   it("without measures: straight-line distance, labelled so, no measures", () => {
     const ride = rideLegs(planTrip(snap, at(0, -100), at(2000, -100)).options[0]!)[0]!;
-    expect(ride).toMatchObject({ distanceBasis: "stop_to_stop_straight_line", boardMeasureM: null, alightMeasureM: null });
+    expect(ride).toMatchObject({ distanceBasis: "stop_to_stop_straight_line", boardMeasureM: null, alightMeasureM: null, stopMeasuresM: null });
     expect(ride.distanceMeters).toBeLessThan(2010);
   });
 
@@ -195,6 +195,7 @@ describe("ride legs: D13 distance basis, mode and fleet (Task 8)", () => {
     });
     expect(ride.fare).toMatchObject({ minCentavos: 1400, maxCentavos: 2000, status: "estimate" }); // 4.6 km, not ~2.0 km
     expect(o.rideMeters).toBe(4600);
+    expect(ride.stopMeasuresM).toEqual([0, 2300, 4600]);
   });
 
   it("wraps a circuit ride that passes the start of the path", () => {
@@ -203,6 +204,8 @@ describe("ride legs: D13 distance basis, mode and fleet (Task 8)", () => {
     const ride = rideLegs(plan.options[0]!).find((l) => l.variantId === LOOP_VARIANT_ID)!;
     expect(ride.stops.map((s) => s.id)).toEqual(["P5", "P6", "P1", "P2"].map((c) => STOP_ID[c]));
     expect(ride).toMatchObject({ distanceMeters: 6900, boardMeasureM: 9200, alightMeasureM: 2300 });
+    // Per-stop measures (guidance's time left) continue past the path length instead of wrapping.
+    expect(ride.stopMeasuresM).toEqual([9200, 11500, 13800, 16100]);
   });
 
   it("copies the mode and the route's fleet (by routeId) onto the ride leg", () => {
