@@ -1,0 +1,2981 @@
+{
+  "checkedOn": "2026-10-16",
+  "method": "Metadata-only candidate ranking; visual and identity review required. Not stop signage verification.",
+  "records": [
+    {
+      "key": "osm:way/23672204",
+      "name": "Ago Foundation College",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Ago foundation hospital naga city.JPG",
+          "description": "Ago foundation Hospital one of the three four tertiary hospitals in the city of Naga",
+          "license": "CC BY-SA 3.0",
+          "capturedAt": "2008-09-20",
+          "width": 3072,
+          "height": 2304
+        }
+      ]
+    },
+    {
+      "key": "osm:way/222268858",
+      "name": "Ateneo de Naga University",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Christ the King Church facade (ADNU) - 1.png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Christ the King Church facade (ADNU) - 2.png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Ateneo de Naga University, Dec 2025.jpg",
+          "description": "Ateneo de Naga University, Dec 2025",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 14 December 2025, 08:58:26 (according to Exif data)",
+          "width": 3039,
+          "height": 2288
+        },
+        {
+          "title": "File:City of Naga commemorative plaque for Ateneo de Manila University.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 15:35:55 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Ateneo De Naga University (Pedro Santos Avenue, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Ateneo De Naga University, Pedro Santos Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:node/6982064017",
+      "name": "Avenue Plaza",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City proper, Gen. Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Gen. Luna-Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City proper, Genenral Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Genenral Luna-Plaza Rizal buildings, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City proper, General Luna, Oragon Plaza (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "General Luna, Oragon Plaza, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Magsaysay Avenue, Avenue Plaza (Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Magsaysay Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:way/255186864",
+      "name": "Bicol Access Health Centrum",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:An Bicol Science Centrum kan Siyudad nin Naga, Camarines Sur.jpg",
+          "description": "The Bicol Science Centrum of the City of Naga, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-08-13",
+          "width": 1984,
+          "height": 1442
+        }
+      ]
+    },
+    {
+      "key": "osm:way/838928069",
+      "name": "Bicol Medical Center",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:An Bicol Science Centrum kan Siyudad nin Naga, Camarines Sur.jpg",
+          "description": "The Bicol Science Centrum of the City of Naga, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-08-13",
+          "width": 1984,
+          "height": 1442
+        },
+        {
+          "title": "File:Newspaper advertising of the Bicol Hotel Grocery in Naga, Camarines Sur.jpg",
+          "description": "A newspaper advertising in English of the Bicol Hotel Grocery in Naga, Camarines Sur from 1939.",
+          "license": "Public domain",
+          "capturedAt": "1939",
+          "width": 673,
+          "height": 453
+        },
+        {
+          "title": "File:Parish Of San Francisco - Naga, Camarines Sur, Philippines.jpg",
+          "description": "Built in 1578, the Parish Of San Francisco is the first Catholic church in Naga City, Camarines Sur, Philippines and is one of the oldest in the Bicol Region.",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2018-03-10 18:56:00",
+          "width": 1600,
+          "height": 801
+        },
+        {
+          "title": "File:San Francisco Church In Naga City.jpg",
+          "description": "The first church in the Bicol region built by the Franciscan Friars in 1578",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2018-09-14 20:39:47",
+          "width": 5616,
+          "height": 3744
+        },
+        {
+          "title": "File:Naga City Mayor Leni Robredo, Baguio City Mayor Benjamin Magalong and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Cam",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        }
+      ]
+    },
+    {
+      "key": "osm:node/5502632621",
+      "name": "Catholic Church",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Parish Of San Francisco - Naga, Camarines Sur, Philippines.jpg",
+          "description": "Built in 1578, the Parish Of San Francisco is the first Catholic church in Naga City, Camarines Sur, Philippines and is one of the oldest in the Bicol Region.",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2018-03-10 18:56:00",
+          "width": 1600,
+          "height": 801
+        },
+        {
+          "title": "File:Naga Metropolitan Cathedral of Naga City (Naga Church).jpg",
+          "description": "The Naga Metropolitan Cathedral (formally St. John the Evangelist Metropolitan Cathedral) is an historical capstone for the city and the Diocese. The cathedral ",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-01 12:58:38",
+          "width": 800,
+          "height": 533
+        },
+        {
+          "title": "File:San Francisco Parish Naga City.jpg",
+          "description": "A historical 17th century church that became a key structure during the Philippine Revolution and a Roman Catholic religious site located at Naga City, Philippi",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2012-12-27 17:49:28",
+          "width": 1920,
+          "height": 1082
+        },
+        {
+          "title": "File:Christ the King Church interior (ADNU).png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        }
+      ]
+    },
+    {
+      "key": "osm:way/221696624",
+      "name": "Christ the King Church",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Christ the King Church facade (ADNU) - 1.png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Christ the King Church facade (ADNU) - 2.png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Christ the King Church interior (ADNU).png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        }
+      ]
+    },
+    {
+      "key": "osm:node/4885031837",
+      "name": "Church in Naga City",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga Cathedral rotunda with Porta Mariae at the back.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 19:04:00 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Base of the left-most pilaster of Peñafrancia Shrine.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Base of the old bell tower of San Francisco de Asis Church in Naga.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Christ the King Church facade (ADNU) - 1.png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Christ the King Church facade (ADNU) - 2.png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        }
+      ]
+    },
+    {
+      "key": "osm:node/12062869399",
+      "name": "Concepcion Grande Barangay Hall",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:St. Jude Thaddeus Parish Church (Naga).jpg",
+          "description": "The Archdiocesan Shrine and Parish of St. Jude Thaddeus in Concepcion Grande, Naga City, Philippines, is known for its elegant yet simple interior and eye-sooth",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2013-11-10 19:20:48",
+          "width": 1000,
+          "height": 667
+        }
+      ]
+    },
+    {
+      "key": "osm:way/881073797",
+      "name": "Concepcion Grande Elementary School",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:St. Jude Thaddeus Parish Church (Naga).jpg",
+          "description": "The Archdiocesan Shrine and Parish of St. Jude Thaddeus in Concepcion Grande, Naga City, Philippines, is known for its elegant yet simple interior and eye-sooth",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2013-11-10 19:20:48",
+          "width": 1000,
+          "height": 667
+        }
+      ]
+    },
+    {
+      "key": "osm:node/14131293561",
+      "name": "Dinaga Barangay Hall",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City Dinaga-Sabang top view (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Dinaga-Sabang top view, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:way/23671946",
+      "name": "Gabaldon Building",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Camarines Sur National High School Gabaldon.jpg",
+          "description": "Camarines Sur National High School Gabaldon at Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2022-10-08 16:48:53",
+          "width": 6000,
+          "height": 4000
+        }
+      ]
+    },
+    {
+      "key": "osm:way/23670386",
+      "name": "LCC Naga Transport Station",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:PNR Naga Station tracks (Tabuco, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "PNR Naga Station, Tabuco, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:way/23671204",
+      "name": "Mabolo Barangay Hall",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Banwaan nin Naga, Camarines Sur, Filipinas 1935.png",
+          "description": "Skyview of Naga (Camarines Sur) P. I.,  plane coming in from Bgy Mabolo and Milaor, 1935",
+          "license": "Public domain",
+          "capturedAt": "1935",
+          "width": 3814,
+          "height": 2852
+        }
+      ]
+    },
+    {
+      "key": "osm:way/660166143",
+      "name": "Mabolo Elementary School",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Banwaan nin Naga, Camarines Sur, Filipinas 1935.png",
+          "description": "Skyview of Naga (Camarines Sur) P. I.,  plane coming in from Bgy Mabolo and Milaor, 1935",
+          "license": "Public domain",
+          "capturedAt": "1935",
+          "width": 3814,
+          "height": 2852
+        }
+      ]
+    },
+    {
+      "key": "osm:node/5947351904",
+      "name": "Mabolo Public Market",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City Public Market Watercolor painting.jpg",
+          "description": "Watercolor painting of Naga City Public Market in Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2022-06-04",
+          "width": 1000,
+          "height": 750
+        }
+      ]
+    },
+    {
+      "key": "osm:way/23666715",
+      "name": "Metropolitan Cathedral of St. John the Evangelist",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga Metropolitan Cathedral of Naga City (Naga Church).jpg",
+          "description": "The Naga Metropolitan Cathedral (formally St. John the Evangelist Metropolitan Cathedral) is an historical capstone for the city and the Diocese. The cathedral ",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-01 12:58:38",
+          "width": 800,
+          "height": 533
+        }
+      ]
+    },
+    {
+      "key": "osm:way/795855560",
+      "name": "Naga Central School Ⅰ",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Paintings on the Wall of Cave 1, Ajanta Caves, Maharashtra, India 19.jpg",
+          "description": "Painting of Sanghapal Jataka on the walls of Cave no 1, Ajanta Caves, Maharashtra, India.\nIn the upper left, the Naga king Sankhapala is sitting on his throne a",
+          "license": "CC BY 4.0",
+          "capturedAt": "2025-01-08 16:56:37",
+          "width": 5136,
+          "height": 3017
+        },
+        {
+          "title": "File:Banwaan nin Naga, Camarines Sur, Filipinas 1935.png",
+          "description": "Skyview of Naga (Camarines Sur) P. I.,  plane coming in from Bgy Mabolo and Milaor, 1935",
+          "license": "Public domain",
+          "capturedAt": "1935",
+          "width": 3814,
+          "height": 2852
+        }
+      ]
+    },
+    {
+      "key": "osm:way/795855561",
+      "name": "Naga Central School Ⅱ",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:San Francisco Church, Naga City, Camarines Sur.jpg",
+          "description": "established in 1578, it is the first church in the region built by the Franciscan Friars. The surrender of the Spanish forces to the Bikol revolutionaries Elias",
+          "license": "CC BY-SA 3.0",
+          "capturedAt": "2010-06-04 09:07:57",
+          "width": 3600,
+          "height": 2400
+        }
+      ]
+    },
+    {
+      "key": "osm:way/1302796349",
+      "name": "Naga City General Hospital",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City General Hospital.jpg",
+          "description": "Naga City General Hospital",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2024-10-01",
+          "width": 1024,
+          "height": 683
+        },
+        {
+          "title": "File:Jeepney outside Naga City People's Mall (Gen. Luna, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "A jeepney outside Naga City People's Mall along Gen. Luna Street, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-15-2023",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City, Camarines Sur 1845.jpg",
+          "description": "Vicente Laureano, escuela Filipina med.S.XIX\n\"Entrada del Excmo. Sr. Gobernador y Capitán General de estas Yslas Filipinas Don Narciso Claveria en la ciudad de ",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "1927-04-06",
+          "width": 1280,
+          "height": 970
+        },
+        {
+          "title": "File:Naga City proper, Gen. Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Gen. Luna-Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City proper, Gen. Luna (Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Gen. Luna Street in, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-15-2023",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:way/23674855",
+      "name": "Naga City People's Mall",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City People's Mall.jpg",
+          "description": "Junk Food Section",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2020-06-27 13:28:54",
+          "width": 4000,
+          "height": 3000
+        },
+        {
+          "title": "File:Jeepney outside Naga City People's Mall (Gen. Luna, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "A jeepney outside Naga City People's Mall along Gen. Luna Street, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-15-2023",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:The Mythology of all races (1918) (14740241476).jpg",
+          "description": "\nIdentifier: mythologyofall12gray (find matches)\nTitle: The Mythology of all races ..\nYear: 1918 (1910s)\nAuthors:  Gray, Louis Herbert, 1875- ed Moore, George F",
+          "license": "No restrictions",
+          "capturedAt": "1918",
+          "width": 1606,
+          "height": 2796
+        }
+      ]
+    },
+    {
+      "key": "osm:node/12103901107",
+      "name": "Naga City Police Station 1",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 12.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 13.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 14.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 15.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 3456,
+          "height": 4608
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 16.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        }
+      ]
+    },
+    {
+      "key": "osm:node/4545731094",
+      "name": "Naga City Police Station 2",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 12.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 13.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 14.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 15.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 3456,
+          "height": 4608
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 16.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        }
+      ]
+    },
+    {
+      "key": "osm:way/1306713767",
+      "name": "Naga City Police Station 2",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 12.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 13.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 14.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 15.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 3456,
+          "height": 4608
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 16.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        }
+      ]
+    },
+    {
+      "key": "osm:node/12103901104",
+      "name": "Naga City Police Station 5",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 12.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 13.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 14.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 15.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 3456,
+          "height": 4608
+        },
+        {
+          "title": "File:7730Saint Therese School Pulang Lupa Dos, Las Piñas City 16.jpg",
+          "description": "Saint Therese School (Pulang Lupa Dos, Las Piñas City) Naga Road  14°28'1\"N   120°58'57\"E and Circumferential Road 5 and Tramo Road in Barangays Barangays  Pula",
+          "license": "CC0",
+          "capturedAt": "2017-09-27 14:51:03",
+          "width": 4608,
+          "height": 3456
+        }
+      ]
+    },
+    {
+      "key": "osm:way/222976551",
+      "name": "Naga City Science High School",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:An Bicol Science Centrum kan Siyudad nin Naga, Camarines Sur.jpg",
+          "description": "The Bicol Science Centrum of the City of Naga, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-08-13",
+          "width": 1984,
+          "height": 1442
+        },
+        {
+          "title": "File:Lumang ladawan kan Naga City Science High School.jpg",
+          "description": "Lumang ladawan kan Naga City Science High School",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "14 December 2023 (upload date)",
+          "width": 2048,
+          "height": 1544
+        },
+        {
+          "title": "File:Naga City Science High School Main Building tejero-den-errol.png",
+          "description": "Naga City Science High School Main Building",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-08-21",
+          "width": 1920,
+          "height": 1080
+        }
+      ]
+    },
+    {
+      "key": "osm:way/1315514528",
+      "name": "Naga Parochial School",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga Parochial School Historical Marker, Camarines Sur.jpg",
+          "description": "Naga Parochial School Historical Marker, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2025-12-14 00:55:35",
+          "width": 2334,
+          "height": 3100
+        },
+        {
+          "title": "File:Naga Parochial School, Dec 2025 (1).jpg",
+          "description": "Naga Parochial School, Dec 2025 (1)",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2025-12-14 16:55:28",
+          "width": 4080,
+          "height": 3072
+        },
+        {
+          "title": "File:Naga Parochial School, Dec 2025 (2).jpg",
+          "description": "Naga Parochial School, Dec 2025 (2)",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2025-12-14 16:55:15",
+          "width": 4080,
+          "height": 3072
+        },
+        {
+          "title": "File:Naga Parochial School, Apr 2024.jpg",
+          "description": "Naga Parochial School, Apr 2024",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2024-04-30 11:15:36",
+          "width": 4080,
+          "height": 3072
+        },
+        {
+          "title": "File:WTNaga STAR A12.jpg",
+          "description": "Naga Parochial School",
+          "license": "CC BY-SA 3.0",
+          "capturedAt": "2012-11-24 05:03:38",
+          "width": 1232,
+          "height": 816
+        }
+      ]
+    },
+    {
+      "key": "osm:way/23677258",
+      "name": "Parish of Our Lady of Fatima",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Our Lady of Fatima Church, Tabuco, Naga City, May 2025.jpg",
+          "description": "Our Lady of Fatima Church, Tabuco, Naga City, May 2025",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2025-05-10 14:29:22",
+          "width": 4080,
+          "height": 3072
+        }
+      ]
+    },
+    {
+      "key": "osm:way/23663797",
+      "name": "Peñafrancia Barangay Hall",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Base of the left-most pilaster of Peñafrancia Shrine.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Facade of Peñafrancia Shrine, Apr 2025 - 2.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Facade of Peñafrancia Shrine, Apr 2025 - 3.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Camarines Sur National HS (Peñafrancia Avenue, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Camarines Sur National HS, Peñafrancia Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Entrance of Peñafrancia Shrine in Naga, Camarines Sur.jpg",
+          "description": "The entrance of the Peñafrancia Church, Naga Camarines Sur.",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 22 September 2018",
+          "width": 3223,
+          "height": 2416
+        }
+      ]
+    },
+    {
+      "key": "osm:way/201276957",
+      "name": "Plaza Quince Martires",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:San Francisco Church and Plaza Quince Martires, Naga City.jpg",
+          "description": "San Francisco Church and Plaza Quince Martires, Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 3 January 2023, 03:07:50 (according to Exif data)",
+          "width": 928,
+          "height": 696
+        },
+        {
+          "title": "File:Quince Martires Plaza night view (Pe�afrancia Avenue, Naga, Camarines Sur; 04-14-2023).jpg",
+          "description": "Quince Martires Plaza at Pe�afrancia Avenue, Naga City, Camarines Sur at night",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on�14 April 2023�(according to Exif data)",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:San Francisco Church, Quince Martires Plaza (Pe�afrancia Avenue, Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "San Francisco Church and Quince Martires Plaza, Pe�afrancia Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2024-04-13",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:San Francisco Church, Quince Martires Plaza (Pe�afrancia Avenue, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "San Francisco Church & Quince Martires Plaza, Pe�afrancia Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:way/201276956",
+      "name": "Plaza Rizal",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City proper, Gen. Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Gen. Luna-Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City proper, Genenral Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Genenral Luna-Plaza Rizal buildings, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Naga Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal monument (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:way/682340233",
+      "name": "Plaza de Nueva Caceres",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City, Camarines Sur 1845.jpg",
+          "description": "Vicente Laureano, escuela Filipina med.S.XIX\n\"Entrada del Excmo. Sr. Gobernador y Capitán General de estas Yslas Filipinas Don Narciso Claveria en la ciudad de ",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "1927-04-06",
+          "width": 1280,
+          "height": 970
+        }
+      ]
+    },
+    {
+      "key": "osm:node/5947570079",
+      "name": "Sabang Barangay Hall",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City Dinaga-Sabang top view (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Dinaga-Sabang top view, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:relation/11525332",
+      "name": "Sabang Elementary School",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City Dinaga-Sabang top view (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Dinaga-Sabang top view, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:relation/11525331",
+      "name": "Sabang National High School",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City Dinaga-Sabang top view (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Dinaga-Sabang top view, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:way/606888524",
+      "name": "Shrine and Parish of Our Lady of Peñafrancia",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Base of the left-most pilaster of Peñafrancia Shrine.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Facade of Peñafrancia Shrine, Apr 2025 - 2.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Facade of Peñafrancia Shrine, Apr 2025 - 3.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Camarines Sur National HS (Peñafrancia Avenue, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Camarines Sur National HS, Peñafrancia Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Entrance of Peñafrancia Shrine in Naga, Camarines Sur.jpg",
+          "description": "The entrance of the Peñafrancia Church, Naga Camarines Sur.",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 22 September 2018",
+          "width": 3223,
+          "height": 2416
+        }
+      ]
+    },
+    {
+      "key": "osm:way/263299576",
+      "name": "St. Jude Thaddeus Parish and Archdiocesan Shrine",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:St. Jude Thaddeus Parish Church (Naga).jpg",
+          "description": "The Archdiocesan Shrine and Parish of St. Jude Thaddeus in Concepcion Grande, Naga City, Philippines, is known for its elegant yet simple interior and eye-sooth",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2013-11-10 19:20:48",
+          "width": 1000,
+          "height": 667
+        }
+      ]
+    },
+    {
+      "key": "osm:way/839261779",
+      "name": "Tabuco Central School",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Our Lady of Fatima Church, Tabuco, Naga City, May 2025.jpg",
+          "description": "Our Lady of Fatima Church, Tabuco, Naga City, May 2025",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2025-05-10 14:29:22",
+          "width": 4080,
+          "height": 3072
+        },
+        {
+          "title": "File:Tabuco Church, Naga City, May 2025.jpg",
+          "description": "Tabuco Church, Naga City, May 2025",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2025-05-10 14:30:47",
+          "width": 4080,
+          "height": 3072
+        },
+        {
+          "title": "File:PNR Naga-Tabuco rail track (Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "PNR Naga-Tabuco rail track in Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:PNR Naga Station tracks (Tabuco, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "PNR Naga Station, Tabuco, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:PNR Naga rail tracks, Tabuco (Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "PNR rail tracks in Tabuco, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:way/336326118",
+      "name": "Triangulo Elementary School",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City Triangulo skyline (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Naga Triangulo skyline, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "osm:node/11986501465",
+      "name": "United Church of Christ in the Philippines",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Christ the King Church facade (ADNU) - 1.png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Christ the King Church facade (ADNU) - 2.png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Christ the King Church interior (ADNU).png",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 28 April 2025, 13:43:17 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        }
+      ]
+    },
+    {
+      "key": "osm:way/276457427",
+      "name": "Universidad de Santa Isabel",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Historical marker for Colegio de Santa Isabel - 1.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 08:51:32 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Historical marker for Colegio de Santa Isabel - 2.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 08:51:33 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Colegio de Santa Isabel Historical Marker, Naga City.jpg",
+          "description": "Colegio de Santa Isabel Historical Marker, Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 30 April 2024, 11:14:50 (according to Exif data)",
+          "width": 2802,
+          "height": 2455
+        }
+      ]
+    },
+    {
+      "key": "osm:way/383244706",
+      "name": "University of Nueva Caceres",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Naga City, Camarines Sur 1845.jpg",
+          "description": "Vicente Laureano, escuela Filipina med.S.XIX\n\"Entrada del Excmo. Sr. Gobernador y Capitán General de estas Yslas Filipinas Don Narciso Claveria en la ciudad de ",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "1927-04-06",
+          "width": 1280,
+          "height": 970
+        }
+      ]
+    },
+    {
+      "key": "osm:way/1203045054",
+      "name": "Vincentian Heritage Park",
+      "kind": "place",
+      "candidates": [
+        {
+          "title": "File:Vincentian Heritage Park, Naga City.jpg",
+          "description": "Vincentian Heritage Park, Syudad nin Naga",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2019-03-16 18:04:42",
+          "width": 4928,
+          "height": 3264
+        }
+      ]
+    },
+    {
+      "key": "MYM-A-001",
+      "name": "Plaza Rizal",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga City proper, Gen. Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Gen. Luna-Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City proper, Genenral Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Genenral Luna-Plaza Rizal buildings, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Naga Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal monument (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-A-002",
+      "name": "Plaza Quince Martires",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:San Francisco Church and Plaza Quince Martires, Naga City.jpg",
+          "description": "San Francisco Church and Plaza Quince Martires, Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 3 January 2023, 03:07:50 (according to Exif data)",
+          "width": 928,
+          "height": 696
+        },
+        {
+          "title": "File:Quince Martires Plaza night view (Pe�afrancia Avenue, Naga, Camarines Sur; 04-14-2023).jpg",
+          "description": "Quince Martires Plaza at Pe�afrancia Avenue, Naga City, Camarines Sur at night",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on�14 April 2023�(according to Exif data)",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:San Francisco Church, Quince Martires Plaza (Pe�afrancia Avenue, Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "San Francisco Church and Quince Martires Plaza, Pe�afrancia Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2024-04-13",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:San Francisco Church, Quince Martires Plaza (Pe�afrancia Avenue, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "San Francisco Church & Quince Martires Plaza, Pe�afrancia Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-A-017",
+      "name": "Naga City Market",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga City Mayor Leni Robredo, Baguio City Mayor Benjamin Magalong and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Cam",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "title": "File:Naga City Mayor Leni Robredo and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Camarines Sur.jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\n\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, a",
+          "license": "Public domain",
+          "capturedAt": "Taken on 19 June 2026",
+          "width": 2048,
+          "height": 1364
+        },
+        {
+          "title": "File:Naga City Public Market Watercolor painting.jpg",
+          "description": "Watercolor painting of Naga City Public Market in Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2022-06-04",
+          "width": 1000,
+          "height": 750
+        },
+        {
+          "title": "File:People at the 10th ClickConEx 2026 in Naga City, Camarines Sur (01).jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "title": "File:Senator Kiko Pangilinan and Naga City Mayor Leni Robredo at the 10th ClickConEx 2026 in Naga City, Camarines Sur.jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\n\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, a",
+          "license": "Public domain",
+          "capturedAt": "Taken on 19 June 2026",
+          "width": 2048,
+          "height": 1366
+        }
+      ]
+    },
+    {
+      "key": "MYM-A-022",
+      "name": "Rotonda",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Pilgrim City of Naga rotonda, National Road-Panganiban Drive (Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Pilgrim City of Naga rotonda at National Road corner Panganiban Drive, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Pilgrim City of Naga rotonda, Panganiban Drive sunset (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Pilgrim City of Naga rotonda, Panganiban Drive, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-C-001",
+      "name": "San Fransisco Parish/Plaza Quince Martires",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:San Francisco Church and Plaza Quince Martires, Naga City.jpg",
+          "description": "San Francisco Church and Plaza Quince Martires, Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 3 January 2023, 03:07:50 (according to Exif data)",
+          "width": 928,
+          "height": 696
+        },
+        {
+          "title": "File:Quince Martires Plaza night view (Pe�afrancia Avenue, Naga, Camarines Sur; 04-14-2023).jpg",
+          "description": "Quince Martires Plaza at Pe�afrancia Avenue, Naga City, Camarines Sur at night",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on�14 April 2023�(according to Exif data)",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:San Francisco Church, Quince Martires Plaza (Pe�afrancia Avenue, Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "San Francisco Church and Quince Martires Plaza, Pe�afrancia Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2024-04-13",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:San Francisco Church, Quince Martires Plaza (Pe�afrancia Avenue, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "San Francisco Church & Quince Martires Plaza, Pe�afrancia Avenue, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-C-011",
+      "name": "Rotonda",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Pilgrim City of Naga rotonda, National Road-Panganiban Drive (Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Pilgrim City of Naga rotonda at National Road corner Panganiban Drive, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Pilgrim City of Naga rotonda, Panganiban Drive sunset (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Pilgrim City of Naga rotonda, Panganiban Drive, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-C-016",
+      "name": "Naga City Market",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga City Mayor Leni Robredo, Baguio City Mayor Benjamin Magalong and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Cam",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "title": "File:Naga City Mayor Leni Robredo and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Camarines Sur.jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\n\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, a",
+          "license": "Public domain",
+          "capturedAt": "Taken on 19 June 2026",
+          "width": 2048,
+          "height": 1364
+        },
+        {
+          "title": "File:Naga City Public Market Watercolor painting.jpg",
+          "description": "Watercolor painting of Naga City Public Market in Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2022-06-04",
+          "width": 1000,
+          "height": 750
+        },
+        {
+          "title": "File:People at the 10th ClickConEx 2026 in Naga City, Camarines Sur (01).jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "title": "File:Senator Kiko Pangilinan and Naga City Mayor Leni Robredo at the 10th ClickConEx 2026 in Naga City, Camarines Sur.jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\n\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, a",
+          "license": "Public domain",
+          "capturedAt": "Taken on 19 June 2026",
+          "width": 2048,
+          "height": 1366
+        }
+      ]
+    },
+    {
+      "key": "MYM-C-017",
+      "name": "Plaza Rizal",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga City proper, Gen. Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Gen. Luna-Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City proper, Genenral Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Genenral Luna-Plaza Rizal buildings, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Naga Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal monument (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-C-031",
+      "name": "Naga Cathedral",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga Cathedral rotunda with Porta Mariae at the back.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 19:04:00 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Cathedral of Naga Historical Marker, Camarines Sur.jpg",
+          "description": "Cathedral of Naga Historical Marker, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 14 December 2025, 09:07:20 (according to Exif data)",
+          "width": 893,
+          "height": 1186
+        },
+        {
+          "title": "File:Eastern facade of Naga Metropolitan Cathedral, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 07:40:19 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Facade of Naga Cathedral, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 08:42:09 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Facade of Naga Cathedral at night, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 19:03:07 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        }
+      ]
+    },
+    {
+      "key": "MYM-B-001",
+      "name": "Plaza Rizal",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga City proper, Gen. Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Gen. Luna-Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City proper, Genenral Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Genenral Luna-Plaza Rizal buildings, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Naga Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal monument (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-B-002",
+      "name": "Naga City Market",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga City Mayor Leni Robredo, Baguio City Mayor Benjamin Magalong and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Cam",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "title": "File:Naga City Mayor Leni Robredo and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Camarines Sur.jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\n\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, a",
+          "license": "Public domain",
+          "capturedAt": "Taken on 19 June 2026",
+          "width": 2048,
+          "height": 1364
+        },
+        {
+          "title": "File:Naga City Public Market Watercolor painting.jpg",
+          "description": "Watercolor painting of Naga City Public Market in Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2022-06-04",
+          "width": 1000,
+          "height": 750
+        },
+        {
+          "title": "File:People at the 10th ClickConEx 2026 in Naga City, Camarines Sur (01).jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "title": "File:Senator Kiko Pangilinan and Naga City Mayor Leni Robredo at the 10th ClickConEx 2026 in Naga City, Camarines Sur.jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\n\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, a",
+          "license": "Public domain",
+          "capturedAt": "Taken on 19 June 2026",
+          "width": 2048,
+          "height": 1366
+        }
+      ]
+    },
+    {
+      "key": "MYM-B-007",
+      "name": "Rotonda",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Pilgrim City of Naga rotonda, National Road-Panganiban Drive (Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Pilgrim City of Naga rotonda at National Road corner Panganiban Drive, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Pilgrim City of Naga rotonda, Panganiban Drive sunset (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Pilgrim City of Naga rotonda, Panganiban Drive, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-B-027",
+      "name": "Naga Cathedral",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga Cathedral rotunda with Porta Mariae at the back.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 19:04:00 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Cathedral of Naga Historical Marker, Camarines Sur.jpg",
+          "description": "Cathedral of Naga Historical Marker, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 14 December 2025, 09:07:20 (according to Exif data)",
+          "width": 893,
+          "height": 1186
+        },
+        {
+          "title": "File:Eastern facade of Naga Metropolitan Cathedral, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 07:40:19 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Facade of Naga Cathedral, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 08:42:09 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Facade of Naga Cathedral at night, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 19:03:07 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        }
+      ]
+    },
+    {
+      "key": "MYM-D-004",
+      "name": "Plaza Rizal",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga City proper, Gen. Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Gen. Luna-Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga City proper, Genenral Luna-Plaza Rizal buildings (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Genenral Luna-Plaza Rizal buildings, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal (Elias Angeles, Naga, Camarines Sur; 04-16-2023).jpg",
+          "description": "Naga Plaza Rizal, Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-16",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Naga Plaza Rizal monument (Elias Angeles, Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Naga Plaza Rizal at Elias Angeles, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-D-010",
+      "name": "Rotonda",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Pilgrim City of Naga rotonda, National Road-Panganiban Drive (Naga, Camarines Sur; 04-15-2023).jpg",
+          "description": "Pilgrim City of Naga rotonda at National Road corner Panganiban Drive, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2023-04-15",
+          "width": 3552,
+          "height": 2664
+        },
+        {
+          "title": "File:Pilgrim City of Naga rotonda, Panganiban Drive sunset (Naga, Camarines Sur; 04-13-2024).jpg",
+          "description": "Pilgrim City of Naga rotonda, Panganiban Drive, Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "04-13-2024",
+          "width": 3552,
+          "height": 2664
+        }
+      ]
+    },
+    {
+      "key": "MYM-D-023",
+      "name": "Naga Cathedral",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga Cathedral rotunda with Porta Mariae at the back.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 19:04:00 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Cathedral of Naga Historical Marker, Camarines Sur.jpg",
+          "description": "Cathedral of Naga Historical Marker, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 14 December 2025, 09:07:20 (according to Exif data)",
+          "width": 893,
+          "height": 1186
+        },
+        {
+          "title": "File:Eastern facade of Naga Metropolitan Cathedral, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 07:40:19 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        },
+        {
+          "title": "File:Facade of Naga Cathedral, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 08:42:09 (according to Exif data)",
+          "width": 3024,
+          "height": 4032
+        },
+        {
+          "title": "File:Facade of Naga Cathedral at night, Apr 2025.jpg",
+          "description": "Naga City",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "Taken on 27 April 2025, 19:03:07 (according to Exif data)",
+          "width": 4032,
+          "height": 3024
+        }
+      ]
+    },
+    {
+      "key": "MYM-D-028",
+      "name": "Naga City Market",
+      "kind": "stop",
+      "candidates": [
+        {
+          "title": "File:Naga City Mayor Leni Robredo, Baguio City Mayor Benjamin Magalong and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Cam",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "title": "File:Naga City Mayor Leni Robredo and Senators Bam Aquino and Kiko Pangilinan at the 10th ClickConEx 2026 in Naga City, Camarines Sur.jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\n\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, a",
+          "license": "Public domain",
+          "capturedAt": "Taken on 19 June 2026",
+          "width": 2048,
+          "height": 1364
+        },
+        {
+          "title": "File:Naga City Public Market Watercolor painting.jpg",
+          "description": "Watercolor painting of Naga City Public Market in Naga City, Camarines Sur",
+          "license": "CC BY-SA 4.0",
+          "capturedAt": "2022-06-04",
+          "width": 1000,
+          "height": 750
+        },
+        {
+          "title": "File:People at the 10th ClickConEx 2026 in Naga City, Camarines Sur (01).jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, ac",
+          "license": "Public domain",
+          "capturedAt": "2026-06-19",
+          "width": 2048,
+          "height": 1366
+        },
+        {
+          "title": "File:Senator Kiko Pangilinan and Naga City Mayor Leni Robredo at the 10th ClickConEx 2026 in Naga City, Camarines Sur.jpg",
+          "description": "𝗕𝗨𝗜𝗟𝗗𝗜𝗡𝗚 𝗦𝗠𝗔𝗥𝗧, 𝗖𝗟𝗜𝗠𝗔𝗧𝗘-𝗥𝗘𝗔𝗗𝗬 𝗖𝗜𝗧𝗜𝗘𝗦 𝗧𝗛𝗥𝗢𝗨𝗚𝗛 𝗜𝗡𝗡𝗢𝗩𝗔𝗧𝗜𝗢𝗡 𝗔𝗡𝗗 𝗚𝗢𝗢𝗗 𝗚𝗢𝗩𝗘𝗥𝗡𝗔𝗡𝗖𝗘 🌐\n\nMasaya tayong makasama ang mga ICT leaders, innovators, local chief executives, a",
+          "license": "Public domain",
+          "capturedAt": "Taken on 19 June 2026",
+          "width": 2048,
+          "height": 1366
+        }
+      ]
+    }
+  ],
+  "batches": [
+    {
+      "start": 0,
+      "answers": {
+        "p0": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.84,
+            "c0": 0.16
+          },
+          "confidence": 0.68,
+          "certainty": 0.68,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p1": {
+          "type": "choice",
+          "choice": "c2",
+          "probabilities": {
+            "none": 0.02,
+            "c0": 0.01,
+            "c1": 0,
+            "c2": 0.82,
+            "c3": 0,
+            "c4": 0.15
+          },
+          "confidence": 0.78,
+          "certainty": 0.78,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p2": {
+          "type": "choice",
+          "choice": "c3",
+          "probabilities": {
+            "none": 0.13,
+            "c0": 0.03,
+            "c1": 0.2,
+            "c2": 0.01,
+            "c3": 0.62,
+            "c4": 0.01
+          },
+          "confidence": 0.54,
+          "certainty": 0.54,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p3": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.5,
+            "c0": 0.5
+          },
+          "confidence": 0,
+          "certainty": 0,
+          "decision": "abstain",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p4": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.7,
+            "c0": 0.28,
+            "c1": 0,
+            "c2": 0,
+            "c3": 0,
+            "c4": 0.02
+          },
+          "confidence": 0.64,
+          "certainty": 0.64,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p5": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.09,
+            "c0": 0.12,
+            "c1": 0.75,
+            "c2": 0.04,
+            "c3": 0
+          },
+          "confidence": 0.69,
+          "certainty": 0.69,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p6": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.19,
+            "c0": 0.69,
+            "c1": 0.12,
+            "c2": 0
+          },
+          "confidence": 0.59,
+          "certainty": 0.59,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p7": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.39,
+            "c0": 0.32,
+            "c1": 0.01,
+            "c2": 0.01,
+            "c3": 0.23,
+            "c4": 0.04
+          },
+          "confidence": 0.27,
+          "certainty": 0.27,
+          "decision": "abstain",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p8": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.93,
+            "c0": 0.07
+          },
+          "confidence": 0.86,
+          "certainty": 0.86,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p9": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.96,
+            "c0": 0.04
+          },
+          "confidence": 0.92,
+          "certainty": 0.92,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p10": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.79,
+            "c0": 0.21
+          },
+          "confidence": 0.58,
+          "certainty": 0.58,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p11": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.19,
+            "c0": 0.81
+          },
+          "confidence": 0.62,
+          "certainty": 0.62,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p12": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.52,
+            "c0": 0.48
+          },
+          "confidence": 0.04,
+          "certainty": 0.04,
+          "decision": "abstain",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p13": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.91,
+            "c0": 0.09
+          },
+          "confidence": 0.82,
+          "certainty": 0.82,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p14": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.95,
+            "c0": 0.05
+          },
+          "confidence": 0.9,
+          "certainty": 0.9,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p15": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.85,
+            "c0": 0.15
+          },
+          "confidence": 0.7,
+          "certainty": 0.7,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p16": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.08,
+            "c0": 0.92
+          },
+          "confidence": 0.84,
+          "certainty": 0.84,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p17": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.93,
+            "c0": 0,
+            "c1": 0.07
+          },
+          "confidence": 0.89,
+          "certainty": 0.89,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p18": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.47,
+            "c0": 0.53
+          },
+          "confidence": 0.06,
+          "certainty": 0.06,
+          "decision": "abstain",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p19": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.04,
+            "c0": 0.96,
+            "c1": 0,
+            "c2": 0,
+            "c3": 0,
+            "c4": 0
+          },
+          "confidence": 0.95,
+          "certainty": 0.95,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        }
+      },
+      "model": "typesafe/jev-1.14-20261014",
+      "usage": {
+        "input_tokens": 10140,
+        "output_tokens": 830
+      }
+    },
+    {
+      "start": 20,
+      "answers": {
+        "p20": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.25,
+            "c0": 0.01,
+            "c1": 0.74,
+            "c2": 0
+          },
+          "confidence": 0.65,
+          "certainty": 0.65,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p21": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 1,
+            "c0": 0,
+            "c1": 0,
+            "c2": 0,
+            "c3": 0,
+            "c4": 0
+          },
+          "confidence": 1,
+          "certainty": 1,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p22": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 1,
+            "c0": 0,
+            "c1": 0,
+            "c2": 0,
+            "c3": 0,
+            "c4": 0
+          },
+          "confidence": 1,
+          "certainty": 1,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p23": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 1,
+            "c0": 0,
+            "c1": 0,
+            "c2": 0,
+            "c3": 0,
+            "c4": 0
+          },
+          "confidence": 1,
+          "certainty": 1,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p24": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 1,
+            "c0": 0,
+            "c1": 0,
+            "c2": 0,
+            "c3": 0,
+            "c4": 0
+          },
+          "confidence": 1,
+          "certainty": 1,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p25": {
+          "type": "choice",
+          "choice": "c2",
+          "probabilities": {
+            "none": 0.05,
+            "c0": 0.26,
+            "c1": 0.04,
+            "c2": 0.65
+          },
+          "confidence": 0.53,
+          "certainty": 0.53,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p26": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.02,
+            "c0": 0,
+            "c1": 0.82,
+            "c2": 0.09,
+            "c3": 0.07,
+            "c4": 0
+          },
+          "confidence": 0.78,
+          "certainty": 0.78,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p27": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.05,
+            "c0": 0.95
+          },
+          "confidence": 0.9,
+          "certainty": 0.9,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p28": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.93,
+            "c0": 0,
+            "c1": 0.04,
+            "c2": 0.01,
+            "c3": 0.02,
+            "c4": 0
+          },
+          "confidence": 0.92,
+          "certainty": 0.92,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p29": {
+          "type": "choice",
+          "choice": "c2",
+          "probabilities": {
+            "none": 0.01,
+            "c0": 0.02,
+            "c1": 0.03,
+            "c2": 0.92,
+            "c3": 0.02
+          },
+          "confidence": 0.9,
+          "certainty": 0.9,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p30": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.02,
+            "c0": 0.07,
+            "c1": 0.86,
+            "c2": 0.01,
+            "c3": 0.03,
+            "c4": 0.01
+          },
+          "confidence": 0.83,
+          "certainty": 0.83,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p31": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.86,
+            "c0": 0.14
+          },
+          "confidence": 0.72,
+          "certainty": 0.72,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p32": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.86,
+            "c0": 0.14
+          },
+          "confidence": 0.72,
+          "certainty": 0.72,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p33": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.83,
+            "c0": 0.17
+          },
+          "confidence": 0.66,
+          "certainty": 0.66,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p34": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.83,
+            "c0": 0.17
+          },
+          "confidence": 0.66,
+          "certainty": 0.66,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p35": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.07,
+            "c0": 0,
+            "c1": 0.76,
+            "c2": 0.15,
+            "c3": 0,
+            "c4": 0.02
+          },
+          "confidence": 0.71,
+          "certainty": 0.71,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p36": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.49,
+            "c0": 0.51
+          },
+          "confidence": 0.02,
+          "certainty": 0.02,
+          "decision": "abstain",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p37": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.76,
+            "c0": 0.06,
+            "c1": 0.18,
+            "c2": 0,
+            "c3": 0,
+            "c4": 0
+          },
+          "confidence": 0.71,
+          "certainty": 0.71,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p38": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.85,
+            "c0": 0.15
+          },
+          "confidence": 0.7,
+          "certainty": 0.7,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p39": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.69,
+            "c0": 0.23,
+            "c1": 0.08,
+            "c2": 0
+          },
+          "confidence": 0.59,
+          "certainty": 0.59,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        }
+      },
+      "model": "typesafe/jev-1.14-20261014",
+      "usage": {
+        "input_tokens": 14493,
+        "output_tokens": 991
+      }
+    },
+    {
+      "start": 40,
+      "answers": {
+        "p40": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.91,
+            "c0": 0.04,
+            "c1": 0.01,
+            "c2": 0.04
+          },
+          "confidence": 0.88,
+          "certainty": 0.88,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p41": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.98,
+            "c0": 0.02
+          },
+          "confidence": 0.96,
+          "certainty": 0.96,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p42": {
+          "type": "choice",
+          "choice": "c0",
+          "probabilities": {
+            "none": 0.05,
+            "c0": 0.95
+          },
+          "confidence": 0.9,
+          "certainty": 0.9,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p43": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.01,
+            "c0": 0.12,
+            "c1": 0.84,
+            "c2": 0.01,
+            "c3": 0.02,
+            "c4": 0
+          },
+          "confidence": 0.81,
+          "certainty": 0.81,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p44": {
+          "type": "choice",
+          "choice": "c2",
+          "probabilities": {
+            "none": 0.01,
+            "c0": 0.01,
+            "c1": 0.03,
+            "c2": 0.94,
+            "c3": 0.01
+          },
+          "confidence": 0.92,
+          "certainty": 0.92,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p45": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.9,
+            "c0": 0.02,
+            "c1": 0.01,
+            "c2": 0.07,
+            "c3": 0,
+            "c4": 0
+          },
+          "confidence": 0.88,
+          "certainty": 0.88,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p46": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.03,
+            "c0": 0.14,
+            "c1": 0.83
+          },
+          "confidence": 0.74,
+          "certainty": 0.74,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p47": {
+          "type": "choice",
+          "choice": "c2",
+          "probabilities": {
+            "none": 0.01,
+            "c0": 0.02,
+            "c1": 0.01,
+            "c2": 0.93,
+            "c3": 0.03
+          },
+          "confidence": 0.91,
+          "certainty": 0.91,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p48": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.03,
+            "c0": 0.14,
+            "c1": 0.83
+          },
+          "confidence": 0.74,
+          "certainty": 0.74,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p49": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.88,
+            "c0": 0.02,
+            "c1": 0.01,
+            "c2": 0.08,
+            "c3": 0,
+            "c4": 0.01
+          },
+          "confidence": 0.86,
+          "certainty": 0.86,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p50": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.02,
+            "c0": 0.12,
+            "c1": 0.83,
+            "c2": 0.01,
+            "c3": 0.02,
+            "c4": 0
+          },
+          "confidence": 0.8,
+          "certainty": 0.8,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p51": {
+          "type": "choice",
+          "choice": "c2",
+          "probabilities": {
+            "none": 0.02,
+            "c0": 0.1,
+            "c1": 0.01,
+            "c2": 0.6,
+            "c3": 0.04,
+            "c4": 0.23
+          },
+          "confidence": 0.52,
+          "certainty": 0.52,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p52": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.01,
+            "c0": 0.1,
+            "c1": 0.86,
+            "c2": 0.01,
+            "c3": 0.02,
+            "c4": 0
+          },
+          "confidence": 0.83,
+          "certainty": 0.83,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p53": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.9,
+            "c0": 0.02,
+            "c1": 0.01,
+            "c2": 0.06999999999999999,
+            "c3": 0,
+            "c4": 0
+          },
+          "confidence": 0.88,
+          "certainty": 0.88,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p54": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.03,
+            "c0": 0.16,
+            "c1": 0.81
+          },
+          "confidence": 0.72,
+          "certainty": 0.72,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p55": {
+          "type": "choice",
+          "choice": "c2",
+          "probabilities": {
+            "none": 0.02,
+            "c0": 0.09,
+            "c1": 0,
+            "c2": 0.66,
+            "c3": 0.04,
+            "c4": 0.19
+          },
+          "confidence": 0.59,
+          "certainty": 0.59,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p56": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.01,
+            "c0": 0.11,
+            "c1": 0.85,
+            "c2": 0.01,
+            "c3": 0.02,
+            "c4": 0
+          },
+          "confidence": 0.82,
+          "certainty": 0.82,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p57": {
+          "type": "choice",
+          "choice": "c1",
+          "probabilities": {
+            "none": 0.03,
+            "c0": 0.15,
+            "c1": 0.8200000000000001
+          },
+          "confidence": 0.73,
+          "certainty": 0.73,
+          "decision": "review",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p58": {
+          "type": "choice",
+          "choice": "c2",
+          "probabilities": {
+            "none": 0.02,
+            "c0": 0.11,
+            "c1": 0.01,
+            "c2": 0.52,
+            "c3": 0.05,
+            "c4": 0.29
+          },
+          "confidence": 0.42,
+          "certainty": 0.42,
+          "decision": "abstain",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        },
+        "p59": {
+          "type": "choice",
+          "choice": "none",
+          "probabilities": {
+            "none": 0.88,
+            "c0": 0.03,
+            "c1": 0.01,
+            "c2": 0.07,
+            "c3": 0,
+            "c4": 0.01
+          },
+          "confidence": 0.86,
+          "certainty": 0.86,
+          "decision": "act",
+          "thresholds": {
+            "act_above": 0.8,
+            "review_above": 0.5
+          }
+        }
+      },
+      "model": "typesafe/jev-1.14-20261014",
+      "usage": {
+        "input_tokens": 18188,
+        "output_tokens": 1085
+      }
+    }
+  ]
+}

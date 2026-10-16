@@ -114,7 +114,8 @@ describe("OpenStreetMap place", () => {
     expect(osmLink.getAttribute("href")).toBe(`https://www.openstreetmap.org/${smRef().type}/${smRef().id}`);
     expect(osmLink.getAttribute("rel")).toBe("noopener noreferrer");
     expect(osmLink.getAttribute("target")).toBe("_blank");
-    expect(screen.getByTestId("place-photo").textContent).toBe("Photo pendingPhotos open with community corrections.");
+    expect(screen.getByTestId("reference-photo").textContent).toContain("Ralff Nestor Nacor");
+    expect(screen.getByRole("img", { name: "SM City Naga, Dec 2025" })).toBeTruthy();
     // Save place (Task 8): a real button, not pressed while the place is not saved.
     expect(screen.getByTestId("place-save").getAttribute("data-state")).toBe("none");
     // Map centred on the place with one named marker.

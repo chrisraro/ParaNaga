@@ -70,7 +70,7 @@ test("header, intro, search action, the note and the OpenStreetMap attribution",
   await openExplore(page);
   const explore = page.getByTestId("explore-page");
   await expect(explore.getByText("Places in Naga, and how to get there.")).toBeVisible();
-  await expect(explore.getByTestId("explore-places-note")).toHaveText("Places come from OpenStreetMap. Entrances, hours and photos are not mapped yet.");
+  await expect(explore.getByTestId("explore-places-note")).toContainText("Sourced photos show landmarks; entrances and hours remain unverified.");
   const attribution = explore.getByTestId("explore-osm-attribution").getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" });
   await expect(attribution).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
   await expect(attribution).toHaveAttribute("rel", "noopener noreferrer");

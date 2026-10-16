@@ -1,0 +1,129 @@
+key,name,lat,lng,status,selectedAsset,signageStatus,researchUrl
+MYM-A-001,Plaza Rizal,13.6233869,123.1846726,landmark_reference,photo-8cf1dbd5e5f1,unverified,https://www.google.com/maps/search/?api=1&query=13.6233869%2C123.1846726
+MYM-A-002,Plaza Quince Martires,13.6244338,123.1861778,landmark_reference,photo-c13f8f9306a2,unverified,https://www.google.com/maps/search/?api=1&query=13.6244338%2C123.1861778
+MYM-A-003,Cam High/Naga Central School,13.6298321,123.190976,landmark_reference,photo-ebf0d287fc24,unverified,https://www.google.com/maps/search/?api=1&query=13.6298321%2C123.190976
+MYM-A-004,BISCAST,13.6314651,123.1927517,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6314651%2C123.1927517
+MYM-A-005,Cor. Peñafrancia Ave & Magsaysay Ave.,13.6328896,123.1942656,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6328896%2C123.1942656
+MYM-A-006,Cor. Magsaysay Ave. & Dayangdang St,13.6309839,123.1970077,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6309839%2C123.1970077
+MYM-A-007,Westpark/Philhealth,13.6292228,123.1985007,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6292228%2C123.1985007
+MYM-A-008,City Hall,13.6265116,123.1990963,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6265116%2C123.1990963
+MYM-A-009,Cor. Magsaysay Ave. & Leon Aureus St.,13.6261192,123.200876,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6261192%2C123.200876
+MYM-A-010,Villla Caceres,13.6277598,123.1997995,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6277598%2C123.1997995
+MYM-A-011,Bennett's Plaza,13.6185759,123.1985904,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6185759%2C123.1985904
+MYM-A-012,Mother Seton Hospital,13.6176694,123.1970291,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6176694%2C123.1970291
+MYM-A-013,Robinsons Mall/Banko Central ng Pilipinas,13.6157173,123.1925205,landmark_reference,photo-356559228771,unverified,https://www.google.com/maps/search/?api=1&query=13.6157173%2C123.1925205
+MYM-A-014,S&R,13.6162097,123.1890293,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6162097%2C123.1890293
+MYM-A-015,BIcol River Esplanade,13.6165957,123.1864136,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6165957%2C123.1864136
+MYM-A-016,101 Shopping Centre,13.6185569,123.183673,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6185569%2C123.183673
+MYM-A-017,Naga City Market,13.621666,123.1842716,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.621666%2C123.1842716
+MYM-A-018,Bus Terminal,13.6189216,123.1890866,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6189216%2C123.1890866
+MYM-A-019,Civic Centre,13.628149,123.1978132,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.628149%2C123.1978132
+MYM-A-020,BFP/BIR,13.6249841,123.1995469,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6249841%2C123.1995469
+MYM-A-021,Cor. Magsaysay Ave. & Mayflower St.,13.623996,123.2008868,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.623996%2C123.2008868
+MYM-A-022,Rotonda,13.6204547,123.2006852,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6204547%2C123.2006852
+MYM-A-023,Yashano Mall/M Plaza,13.6166307,123.1951644,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6166307%2C123.1951644
+MYM-A-024,ALDP Mall/Pag-Ibig,13.6160052,123.1907468,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6160052%2C123.1907468
+MYM-A-025,Fraternidad St.,13.6166855,123.1838985,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6166855%2C123.1838985
+MYM-A-026,STI College/Landers,13.6179234,123.1908514,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6179234%2C123.1908514
+MYM-A-027,USI/Centro Square,13.6276709,123.1887035,landmark_reference,photo-255d93d213c4,unverified,https://www.google.com/maps/search/?api=1&query=13.6276709%2C123.1887035
+MYM-A-028,PNR Road,13.6173035,123.1880936,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6173035%2C123.1880936
+MYM-A-029,Avenue Hotel/UMA Residence,13.632102,123.1958976,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.632102%2C123.1958976
+MYM-A-030,NCF Magsaysay,13.6299067,123.1979773,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6299067%2C123.1979773
+MYM-C-001,San Fransisco Parish/Plaza Quince Martires,13.6244247,123.1861684,landmark_reference,photo-c13f8f9306a2,unverified,https://www.google.com/maps/search/?api=1&query=13.6244247%2C123.1861684
+MYM-C-002,USI/Ateneo Ave.,13.6290106,123.1878649,landmark_reference,photo-255d93d213c4,unverified,https://www.google.com/maps/search/?api=1&query=13.6290106%2C123.1878649
+MYM-C-003,Cor. Magsaysay Extension & Bagumbayan Sur,13.634123,123.1876057,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.634123%2C123.1876057
+MYM-C-004,Jacob,13.6340388,123.1899757,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6340388%2C123.1899757
+MYM-C-005,Cam High/NCF,13.633623,123.192217,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.633623%2C123.192217
+MYM-C-006,Cor. Magsaysay Ave. & Dayangdang St,13.6309852,123.1970077,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6309852%2C123.1970077
+MYM-C-007,Westpark/Philhealth,13.6292228,123.1985007,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6292228%2C123.1985007
+MYM-C-008,Civic Centre,13.6281558,123.1978198,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6281558%2C123.1978198
+MYM-C-009,City Hall,13.626509,123.199099,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.626509%2C123.199099
+MYM-C-010,Cor. Magsaysay Ave. & Leon Aureus St.,13.6261127,123.200876,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6261127%2C123.200876
+MYM-C-011,Rotonda,13.6204549,123.200684,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6204549%2C123.200684
+MYM-C-012,Bennett's Plaza,13.6185759,123.1985917,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6185759%2C123.1985917
+MYM-C-013,Robinsons Mall/Banko Central ng Pilipinas,13.6157199,123.1925178,landmark_reference,photo-356559228771,unverified,https://www.google.com/maps/search/?api=1&query=13.6157199%2C123.1925178
+MYM-C-014,ALDP Mall/Pag-Ibig,13.6160011,123.1907486,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6160011%2C123.1907486
+MYM-C-015,101 Shopping Centre,13.6185686,123.1836676,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6185686%2C123.1836676
+MYM-C-016,Naga City Market,13.6216739,123.1842703,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6216739%2C123.1842703
+MYM-C-017,Plaza Rizal,13.6233869,123.1846726,landmark_reference,photo-8cf1dbd5e5f1,unverified,https://www.google.com/maps/search/?api=1&query=13.6233869%2C123.1846726
+MYM-C-018,Ocampo St.,13.6321529,123.1877839,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6321529%2C123.1877839
+MYM-C-019,Villla Caceres,13.6277598,123.1997995,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6277598%2C123.1997995
+MYM-C-020,BFP/BIR,13.624988,123.1995509,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.624988%2C123.1995509
+MYM-C-021,Cor. Magsaysay Ave. & Mayflower St.,13.6239699,123.2008761,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6239699%2C123.2008761
+MYM-C-022,Mother Seton Hospital,13.6176655,123.1970278,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6176655%2C123.1970278
+MYM-C-023,Yashano Mall/M Plaza,13.6166163,123.1951631,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6166163%2C123.1951631
+MYM-C-024,STI College/Landers,13.6179234,123.1908514,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6179234%2C123.1908514
+MYM-C-025,Bus Terminal,13.6189216,123.1890866,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6189216%2C123.1890866
+MYM-C-026,S&R,13.6162097,123.1890293,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6162097%2C123.1890293
+MYM-C-027,BIcol River Esplanade,13.6165935,123.1864133,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6165935%2C123.1864133
+MYM-C-028,PNR Road,13.6173041,123.1880962,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6173041%2C123.1880962
+MYM-C-029,Fraternidad St.,13.6166855,123.1838985,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6166855%2C123.1838985
+MYM-C-030,Cor. Magsaysay & Peñafrancia Ave.,13.6333978,123.1940142,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6333978%2C123.1940142
+MYM-C-031,Naga Cathedral,13.6271576,123.1872994,landmark_reference,photo-08002c435a52,unverified,https://www.google.com/maps/search/?api=1&query=13.6271576%2C123.1872994
+MYM-C-032,Avenue Hotel/UMA Residence,13.632102,123.1958976,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.632102%2C123.1958976
+MYM-C-033,NCF Magsaysay,13.6299067,123.1979773,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6299067%2C123.1979773
+MYM-C-034,Downtown District Hotel,13.6257968,123.1864866,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6257968%2C123.1864866
+MYM-B-001,Plaza Rizal,13.6232548,123.185086,landmark_reference,photo-8cf1dbd5e5f1,unverified,https://www.google.com/maps/search/?api=1&query=13.6232548%2C123.185086
+MYM-B-002,Naga City Market,13.6210147,123.1840106,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6210147%2C123.1840106
+MYM-B-003,101 Shopping Centre,13.6183652,123.183465,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6183652%2C123.183465
+MYM-B-004,Robinsons Mall/Banko Central ng Pilipinas,13.6155551,123.1927602,landmark_reference,photo-356559228771,unverified,https://www.google.com/maps/search/?api=1&query=13.6155551%2C123.1927602
+MYM-B-005,Yashano Mall/M Plaza,13.6164729,123.1952572,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6164729%2C123.1952572
+MYM-B-006,Bennett's Plaza,13.6182747,123.198405,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6182747%2C123.198405
+MYM-B-007,Rotonda,13.6214426,123.2011051,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6214426%2C123.2011051
+MYM-B-008,Cor. Magsaysay Ave. & Mayflower St.,13.6239018,123.2011408,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6239018%2C123.2011408
+MYM-B-009,Cor. Magsaysay Ave. & Leon Aureus St.,13.6264882,123.2008883,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6264882%2C123.2008883
+MYM-B-010,Villla Caceres,13.6278605,123.1998742,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6278605%2C123.1998742
+MYM-B-011,Westpark/Philhealth,13.6292459,123.198745,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6292459%2C123.198745
+MYM-B-012,BISCAST,13.6315759,123.192658,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6315759%2C123.192658
+MYM-B-013,Cam High/Naga Central School,13.6299509,123.1908639,landmark_reference,photo-ebf0d287fc24,unverified,https://www.google.com/maps/search/?api=1&query=13.6299509%2C123.1908639
+MYM-B-014,E-Mall,13.6251079,123.1859734,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6251079%2C123.1859734
+MYM-B-015,Cor. Peñafrancia Ave & Magsaysay Ave,13.6329889,123.1941831,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6329889%2C123.1941831
+MYM-B-016,,13.6279812,123.1981041,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6279812%2C123.1981041
+MYM-B-017,,13.6266719,123.1992224,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6266719%2C123.1992224
+MYM-B-018,Bus Terminal,13.6186967,123.1891074,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6186967%2C123.1891074
+MYM-B-019,STI College/Landers,13.6178597,123.1906439,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6178597%2C123.1906439
+MYM-B-020,Cor. Magsaysay Ave. & Dayangdang St,13.6316088,123.1966893,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6316088%2C123.1966893
+MYM-B-021,S&R,13.6160537,123.1890343,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6160537%2C123.1890343
+MYM-B-022,ALDP Mall/Pag-Ibig,13.615822,123.1907239,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.615822%2C123.1907239
+MYM-B-023,Mother Seton Hospital,13.6175984,123.1972154,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6175984%2C123.1972154
+MYM-B-024,BFP/BIR,13.6249848,123.1997631,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6249848%2C123.1997631
+MYM-B-025,USI,13.6278131,123.1881629,landmark_reference,photo-255d93d213c4,unverified,https://www.google.com/maps/search/?api=1&query=13.6278131%2C123.1881629
+MYM-B-026,BIcol River Esplanade,13.6164679,123.1862188,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6164679%2C123.1862188
+MYM-B-027,Naga Cathedral,13.6272763,123.1870736,landmark_reference,photo-08002c435a52,unverified,https://www.google.com/maps/search/?api=1&query=13.6272763%2C123.1870736
+MYM-B-028,Avenue Hotel/UMA Residence,13.6321528,123.1960653,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6321528%2C123.1960653
+MYM-B-029,NCF Magsaysay,13.6299849,123.1980793,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6299849%2C123.1980793
+MYM-B-030,PNR Road,13.6173902,123.1883366,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6173902%2C123.1883366
+MYM-B-031,Cor. Diversion Rd. & Fraternidad St.,13.616439,123.1847296,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.616439%2C123.1847296
+MYM-D-001,Cam High/NCF,13.633776,123.1922303,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.633776%2C123.1922303
+MYM-D-002,Cor. Magsaysay Extension & Bagumbayan Sur,13.6343011,123.1875888,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6343011%2C123.1875888
+MYM-D-003,USI/Ateneo Ave.,13.6294487,123.1877824,landmark_reference,photo-255d93d213c4,unverified,https://www.google.com/maps/search/?api=1&query=13.6294487%2C123.1877824
+MYM-D-004,Plaza Rizal,13.6232548,123.185086,landmark_reference,photo-8cf1dbd5e5f1,unverified,https://www.google.com/maps/search/?api=1&query=13.6232548%2C123.185086
+MYM-D-005,101 Shopping Centre,13.6183651,123.1834704,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6183651%2C123.1834704
+MYM-D-006,Cor. Diversion Rd. & Fraternidad St.,13.6164834,123.1847391,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6164834%2C123.1847391
+MYM-D-007,ALDP Mall/Pag-Ibig,13.6158211,123.1907315,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6158211%2C123.1907315
+MYM-D-008,Robinsons Mall/Banko Central ng Pilipinas,13.6155537,123.1927589,landmark_reference,photo-356559228771,unverified,https://www.google.com/maps/search/?api=1&query=13.6155537%2C123.1927589
+MYM-D-009,Bennett's Plaza,13.618276,123.198405,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.618276%2C123.198405
+MYM-D-010,Rotonda,13.621453,123.2011078,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.621453%2C123.2011078
+MYM-D-011,Cor. Magsaysay Ave. & Mayflower St.,13.623894,123.2011381,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.623894%2C123.2011381
+MYM-D-012,Cor. Magsaysay Ave. & Leon Aureus St.,13.6264895,123.2008897,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6264895%2C123.2008897
+MYM-D-013,Villla Caceres,13.6278631,123.1998729,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6278631%2C123.1998729
+MYM-D-014,Westpark/Philhealth,13.6292511,123.1987369,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6292511%2C123.1987369
+MYM-D-015,Cor. Magsaysay Ave. & Dayangdang St,13.6316034,123.196698,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6316034%2C123.196698
+MYM-D-016,Bus Terminal,13.6187201,123.1891288,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.6187201%2C123.1891288
+MYM-D-017,STI College/Landers,13.6178532,123.1906412,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6178532%2C123.1906412
+MYM-D-018,City Hall,13.6266745,123.1992197,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6266745%2C123.1992197
+MYM-D-019,Civic Centre,13.6279759,123.1980961,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6279759%2C123.1980961
+MYM-D-020,Cor. Magsaysay & Peñafrancia Ave.,13.6335483,123.1940304,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6335483%2C123.1940304
+MYM-D-021,Jacob,13.6341934,123.1900064,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6341934%2C123.1900064
+MYM-D-022,Ocampo St.,13.6320061,123.1876901,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6320061%2C123.1876901
+MYM-D-023,Naga Cathedral,13.6272763,123.1870736,landmark_reference,photo-08002c435a52,unverified,https://www.google.com/maps/search/?api=1&query=13.6272763%2C123.1870736
+MYM-D-024,BFP/BIR,13.6249874,123.1997671,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6249874%2C123.1997671
+MYM-D-025,Mother Seton Hospital,13.6175984,123.1972154,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6175984%2C123.1972154
+MYM-D-026,Yashano Mall/M Plaza,13.6164742,123.1952572,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6164742%2C123.1952572
+MYM-D-027,S&R,13.6160539,123.1890394,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6160539%2C123.1890394
+MYM-D-028,Naga City Market,13.621021,123.1840057,candidate_review,,unverified,https://www.google.com/maps/search/?api=1&query=13.621021%2C123.1840057
+MYM-D-029,E-Mall/Plaza Quince Martires,13.625107,123.185969,landmark_reference,photo-c13f8f9306a2,unverified,https://www.google.com/maps/search/?api=1&query=13.625107%2C123.185969
+MYM-D-030,BIcol River Esplanade,13.6164679,123.1862228,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6164679%2C123.1862228
+MYM-D-031,PNR Road,13.6174012,123.1883294,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6174012%2C123.1883294
+MYM-D-032,Avenue Hotel/UMA Residence,13.6321528,123.1960653,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6321528%2C123.1960653
+MYM-D-033,NCF Magsaysay,13.6299849,123.1980793,needs_research,,unverified,https://www.google.com/maps/search/?api=1&query=13.6299849%2C123.1980793

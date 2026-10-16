@@ -1,0 +1,182 @@
+[
+  {
+    "key": "MYM-A-001",
+    "layer": "Loop Service A",
+    "code": "A1",
+    "label": "Plaza Rizal",
+    "lat": 13.6233869,
+    "lng": 123.1846726,
+    "photoId": "photo-8cf1dbd5e5f1"
+  },
+  {
+    "key": "MYM-A-002",
+    "layer": "Loop Service A",
+    "code": "A2",
+    "label": "Plaza Quince Martires",
+    "lat": 13.6244338,
+    "lng": 123.1861778,
+    "photoId": "photo-c13f8f9306a2"
+  },
+  {
+    "key": "MYM-A-003",
+    "layer": "Loop Service A",
+    "code": "A4",
+    "label": "Cam High/Naga Central School",
+    "lat": 13.6298321,
+    "lng": 123.190976,
+    "photoId": "photo-ebf0d287fc24"
+  },
+  {
+    "key": "MYM-A-013",
+    "layer": "Loop Service A",
+    "code": "A21",
+    "label": "Robinsons Mall/Banko Central ng Pilipinas",
+    "lat": 13.6157173,
+    "lng": 123.1925205,
+    "photoId": "photo-356559228771"
+  },
+  {
+    "key": "MYM-A-027",
+    "layer": "Loop Service A",
+    "code": "A3",
+    "label": "USI/Centro Square",
+    "lat": 13.6276709,
+    "lng": 123.1887035,
+    "photoId": "photo-255d93d213c4"
+  },
+  {
+    "key": "MYM-C-001",
+    "layer": "Loop Service C",
+    "code": "A2",
+    "label": "San Fransisco Parish/Plaza Quince Martires",
+    "lat": 13.6244247,
+    "lng": 123.1861684,
+    "photoId": "photo-c13f8f9306a2"
+  },
+  {
+    "key": "MYM-C-002",
+    "layer": "Loop Service C",
+    "code": "C3",
+    "label": "USI/Ateneo Ave.",
+    "lat": 13.6290106,
+    "lng": 123.1878649,
+    "photoId": "photo-255d93d213c4"
+  },
+  {
+    "key": "MYM-C-013",
+    "layer": "Loop Service C",
+    "code": "A21",
+    "label": "Robinsons Mall/Banko Central ng Pilipinas",
+    "lat": 13.6157199,
+    "lng": 123.1925178,
+    "photoId": "photo-356559228771"
+  },
+  {
+    "key": "MYM-C-017",
+    "layer": "Loop Service C",
+    "code": "A1",
+    "label": "Plaza Rizal",
+    "lat": 13.6233869,
+    "lng": 123.1846726,
+    "photoId": "photo-8cf1dbd5e5f1"
+  },
+  {
+    "key": "MYM-C-031",
+    "layer": "Loop Service C",
+    "code": "C2",
+    "label": "Naga Cathedral",
+    "lat": 13.6271576,
+    "lng": 123.1872994,
+    "photoId": "photo-08002c435a52"
+  },
+  {
+    "key": "MYM-B-001",
+    "layer": "Loop Service B",
+    "code": "B1",
+    "label": "Plaza Rizal",
+    "lat": 13.6232548,
+    "lng": 123.185086,
+    "photoId": "photo-8cf1dbd5e5f1"
+  },
+  {
+    "key": "MYM-B-004",
+    "layer": "Loop Service B",
+    "code": "B11",
+    "label": "Robinsons Mall/Banko Central ng Pilipinas",
+    "lat": 13.6155551,
+    "lng": 123.1927602,
+    "photoId": "photo-356559228771"
+  },
+  {
+    "key": "MYM-B-013",
+    "layer": "Loop Service B",
+    "code": "B28",
+    "label": "Cam High/Naga Central School",
+    "lat": 13.6299509,
+    "lng": 123.1908639,
+    "photoId": "photo-ebf0d287fc24"
+  },
+  {
+    "key": "MYM-B-025",
+    "layer": "Loop Service B",
+    "code": "B29",
+    "label": "USI",
+    "lat": 13.6278131,
+    "lng": 123.1881629,
+    "photoId": "photo-255d93d213c4"
+  },
+  {
+    "key": "MYM-B-027",
+    "layer": "Loop Service B",
+    "code": "B30",
+    "label": "Naga Cathedral",
+    "lat": 13.6272763,
+    "lng": 123.1870736,
+    "photoId": "photo-08002c435a52"
+  },
+  {
+    "key": "MYM-D-003",
+    "layer": "Loop Service D",
+    "code": "D6",
+    "label": "USI/Ateneo Ave.",
+    "lat": 13.6294487,
+    "lng": 123.1877824,
+    "photoId": "photo-255d93d213c4"
+  },
+  {
+    "key": "MYM-D-004",
+    "layer": "Loop Service D",
+    "code": "B1",
+    "label": "Plaza Rizal",
+    "lat": 13.6232548,
+    "lng": 123.185086,
+    "photoId": "photo-8cf1dbd5e5f1"
+  },
+  {
+    "key": "MYM-D-008",
+    "layer": "Loop Service D",
+    "code": "B11",
+    "label": "Robinsons Mall/Banko Central ng Pilipinas",
+    "lat": 13.6155537,
+    "lng": 123.1927589,
+    "photoId": "photo-356559228771"
+  },
+  {
+    "key": "MYM-D-023",
+    "layer": "Loop Service D",
+    "code": "B30",
+    "label": "Naga Cathedral",
+    "lat": 13.6272763,
+    "lng": 123.1870736,
+    "photoId": "photo-08002c435a52"
+  },
+  {
+    "key": "MYM-D-029",
+    "layer": "Loop Service D",
+    "code": "B31",
+    "label": "E-Mall/Plaza Quince Martires",
+    "lat": 13.625107,
+    "lng": 123.185969,
+    "photoId": "photo-c13f8f9306a2"
+  }
+]

@@ -117,6 +117,7 @@
   contain-intrinsic-size: auto 260px;
 }
 .pn-explore__tile {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -125,6 +126,7 @@
   box-sizing: border-box;
   color: var(--pn-explore-ink);
 }
+.pn-explore__credit { display: block; color: var(--pn-accent); font-size: 12px; line-height: 1.5; margin-top: 4px; overflow-wrap: anywhere; }
 .pn-explore__tile--faith {
   background: var(--pn-explore-faith);
 }

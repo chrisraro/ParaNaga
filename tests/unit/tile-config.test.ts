@@ -35,12 +35,18 @@ describe("tileConfig", () => {
     }
   });
 
-  it("falls back to OSM attribution when a custom URL has none", () => {
+  it("disables an unknown production provider when its credits are missing", () => {
     const url = "https://tiles.example.com/{z}/{x}/{y}.png";
     expect(tileConfig({ NODE_ENV: "production", NEXT_PUBLIC_TILE_URL: url })).toEqual({
-      url,
+      url: null,
       attribution: OSM_ATTRIBUTION,
     });
+  });
+
+  it("preserves mandatory MapTiler and OSM credits when configured text omits them", () => {
+    const url = "https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png";
+    expect(tileConfig({ NODE_ENV: "production", NEXT_PUBLIC_TILE_URL: url }).attribution).toBe("© MapTiler © OpenStreetMap contributors");
+    expect(tileConfig({ NODE_ENV: "production", NEXT_PUBLIC_TILE_URL: url, NEXT_PUBLIC_TILE_ATTRIBUTION: "Custom" }).attribution).toBe("Custom © MapTiler © OpenStreetMap contributors");
   });
 });
 

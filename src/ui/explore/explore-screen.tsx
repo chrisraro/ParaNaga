@@ -14,6 +14,8 @@ import "@/ui/kit/styles";
 import "./explore.css";
 
 import Link from "next/link";
+import Image from "next/image";
+import { photoForPlace } from "@/domain/media/photos";
 import {
   memo,
   useCallback,
@@ -255,16 +257,22 @@ function CommuteIcon() {
 }
 
 const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchOsmPlace; onCommute: (place: SearchOsmPlace) => void }) {
+  const photo = photoForPlace(place.key);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const chip = chipOfOsmCategory(place.category);
   const href = osmPlaceHref(place.key);
   const kind = `${OSM_CATEGORY_LABEL[place.category]} · from OpenStreetMap`;
   return (
     <li className="pn-explore__card" data-testid="explore-card" data-category={place.category}>
       <div className={`pn-explore__tile pn-explore__tile--${chip}`}>
+        {photo && !photoFailed ? (
+          <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 600px) 50vw, 280px" style={{ objectFit: "cover" }} onError={() => setPhotoFailed(true)} />
+        ) : <>
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d={ICON_PATH[chip]} />
         </svg>
         <span className="pn-explore__photo">Photo pending</span>
+        </>}
       </div>
       <div className="pn-explore__body">
         <div>
@@ -279,6 +287,7 @@ const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchO
             )}
           </h2>
           <p className="pn-explore__kind">{kind}</p>
+          {photo ? <Link className="pn-explore__credit" href={`/app/help/sources#${photo.id}`}>{photo.creator} · {photo.license} · Photo credits</Link> : null}
         </div>
         <button
           type="button"

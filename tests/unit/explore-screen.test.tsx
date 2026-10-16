@@ -83,11 +83,12 @@ describe("Explore: places by category", () => {
     // Focus moves to the first newly revealed card.
     expect(document.activeElement).toBe(within(cards()[CARD_LIMIT]!).getByRole("link"));
     const sm = cards().find((c) => within(c).queryByRole("heading", { name: "SM City Naga" }))!;
-    expect(within(sm).getByText("Photo pending")).toBeTruthy();
+    expect(within(sm).getByRole("img", { name: "SM City Naga, Dec 2025" })).toBeTruthy();
+    expect(within(sm).getByRole("link", { name: /Photo credits/ }).getAttribute("href")).toMatch(/^\/app\/help\/sources#photo-/);
     expect(within(sm).getByText("Mall · from OpenStreetMap")).toBeTruthy();
     const smPlace = index.osmPlaces.find((p) => p.name === "SM City Naga")!;
     expect(within(sm).getByRole("link", { name: "SM City Naga" }).getAttribute("href")).toBe(`/app/places/osm/${smPlace.key.slice(4)}`);
-    expect(screen.getByTestId("explore-places-note").textContent).toBe("Places come from OpenStreetMap. Entrances, hours and photos are not mapped yet.");
+    expect(screen.getByTestId("explore-places-note").textContent).toContain("Sourced photos show landmarks; entrances and hours remain unverified.");
     expect(screen.getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" })).toBeTruthy();
     expect(screen.getByRole("tabpanel", { name: "All" })).toBeTruthy();
   }, 30_000); // renders every OSM place and runs role queries over them: 8–9 s on slower machines

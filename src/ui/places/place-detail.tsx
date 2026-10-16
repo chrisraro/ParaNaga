@@ -12,6 +12,8 @@ import "@/ui/kit/styles";
 import "./places.css";
 
 import Link from "next/link";
+import { photoForPlace, photoForPinPlace } from "@/domain/media/photos";
+import { ReferencePhoto } from "./reference-photo";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
@@ -256,7 +258,7 @@ function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: S
           </ul>
           {nearby.length > 0 ? <Note>Straight-line distance to unverified mapped pins.</Note> : null}
         </section>
-        <PhotoPending />
+        {photoForPlace(place.key) ? <ReferencePhoto photo={photoForPlace(place.key)!} /> : <PhotoPending />}
         <OsmAttribution testId="place-osm-attribution" />
       </main>
     </DetailPanel>
@@ -337,7 +339,7 @@ function PinPlaceView({ place }: { place: SearchPinPlace }) {
           </ul>
         </section>
         <FactRows rows={rows} label="About this place" />
-        <PhotoPending />
+        {photoForPinPlace(place.label, place.pins) ? <ReferencePhoto photo={photoForPinPlace(place.label, place.pins)!} stop /> : <PhotoPending />}
       </main>
     </DetailPanel>
   );
