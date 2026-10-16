@@ -592,6 +592,7 @@ for (const [width, height] of [
     await sheetSettled(page);
 
     // Tab through the whole detail: every focused control is fully above the footer.
+    let checked = 0;
     await page.getByRole("button", { name: "Back to trip options" }).focus();
     for (let i = 0; i < 40; i++) {
       await page.keyboard.press("Tab");
@@ -603,7 +604,9 @@ for (const [width, height] of [
       });
       if (!state) continue;
       expect(state.bottom, `${state.name} is not under the footer`).toBeLessThanOrEqual(state.barTop + 1);
+      checked += 1;
     }
+    expect(checked, "controls checked while tabbing").toBeGreaterThanOrEqual(5);
     await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
   });
 }

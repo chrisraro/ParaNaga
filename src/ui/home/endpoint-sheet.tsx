@@ -409,7 +409,7 @@ export function EndpointSheet({
         </div>
       </div>
       </SheetFooterContext.Provider>
-      <div ref={setFooter} className="pn-sheet-footer" />
+      <div ref={setFooter} className="pn-sheet-footer" role="group" aria-label="Actions" />
     </section>
   );
 }

@@ -555,9 +555,26 @@ test("a re-plan of the same ends keeps the detent the rider chose; new ends retu
   await page.getByTestId("trip-error").getByRole("button", { name: "Try again" }).click();
   await expect(page.getByTestId("options-toggle")).toBeVisible();
   await expect(sheet).toHaveAttribute("data-snap", "0");
-  // Same ends, expand, then a retry-free re-render keeps full.
   await page.getByTestId("options-toggle").click();
   await expect(sheet).toHaveAttribute("data-snap", "2");
+});
+
+test("the list leaving and returning for the same ends (a cancelled pick) keeps full and stays interactive", async ({ page }) => {
+  await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  await page.getByTestId("options-toggle").click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await page.getByTestId("endpoint-start").locator(".pn-endpoint__main").click();
+  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("options-toggle")).toBeVisible();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await expect(page.getByTestId("options-toggle")).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator(".pn-sheet__rest")).not.toHaveAttribute("inert", /.*/);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
 });
 
 for (const mode of ["light", "dark", "high contrast"] as const) {
