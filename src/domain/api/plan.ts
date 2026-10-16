@@ -81,13 +81,18 @@ const rideLegSchema = z.object({
     completeness: z.literal("estimate"),
     approximate: z.literal(true),
     discountsApplied: z.literal(false),
-    ruleCodes: z.tuple([z.literal("F01"), z.literal("F02")]).readonly(),
-    span: z.enum(["rule_span", "traditional_to_modern"]).default("rule_span"),
+    ruleCodes: z.union([z.tuple([z.literal("F01"), z.literal("F02")]), z.tuple([z.literal("F01")]), z.tuple([z.literal("F02")])]).readonly(),
+    span: z.enum(["rule_span", "traditional_rule", "modern_rule", "traditional_to_modern"]).default("rule_span"),
     basis: z.enum(["fare_rules", "fare_rules_and_reports"]).default("fare_rules"),
     reportCodes: z.array(z.string()).default(() => []),
   }).refine((f) => (f.basis === "fare_rules_and_reports") === (f.reportCodes.length > 0), {
     message: "rider reports are cited exactly when they set the maximum",
-  }),
+  }).refine((f) => f.basis === "fare_rules" || f.span === "traditional_to_modern", {
+    message: "rider reports apply only to a mixed fleet",
+  }).refine(
+    (f) => f.ruleCodes.join() === (f.span === "traditional_rule" ? "F01" : f.span === "modern_rule" ? "F02" : "F01,F02"),
+    { message: "the rules match the span: F01 alone, F02 alone, or both" },
+  ),
   mode: routeModeSchema.default("jeepney"),
   fleet: fleetSummarySchema.default(() => fleetSummary([], "jeepney")),
   distanceBasis: z.enum(["approximate_path", "stop_to_stop_straight_line"]).default("stop_to_stop_straight_line"),

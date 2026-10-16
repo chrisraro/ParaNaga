@@ -17,9 +17,10 @@ const A3 = { id: id(13), name: "Magsaysay Junction", lat: 13.6268, lng: 123.1889
 const A4 = { id: id(14), name: "Bichara Mall", lat: 13.6284, lng: 123.1899 };
 const A5 = { id: id(15), name: "Avenue Square", lat: 13.6299, lng: 123.1905 };
 
+/** The Loops run traditional jeepneys only, so a leg prices from F01 alone (ruling 2026-10-16). */
 const legFare = (min: number, max: number) => ({
   minCentavos: min, maxCentavos: max, status: "estimate", completeness: "estimate", approximate: true, discountsApplied: false,
-  ruleCodes: ["F01", "F02"], span: "rule_span", basis: "fare_rules", reportCodes: [],
+  ruleCodes: ["F01"], span: "traditional_rule", basis: "fare_rules", reportCodes: [],
 });
 
 /** The Loops' fleet as published (snapshot routes[]): traditional jeepneys, owner-confirmed. */
@@ -51,11 +52,11 @@ const recommended = {
     {
       kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
       stops: [A1, A2, A3, A4, A5], distanceMeters: 1240, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1700), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(0, 1240),
+      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(0, 1240),
     },
     { kind: "walk", from: asStop(A5), to: DESTINATION, distanceMeters: 92, estimateMeters: 120, pathVerified: false },
   ],
-  rides: 1, walkMeters: 269, walkEstimateMeters: 350, rideMeters: 1240, score: 660, fare: { minCentavos: 1400, maxCentavos: 1700, status: "estimate", completeness: "estimate" },
+  rides: 1, walkMeters: 269, walkEstimateMeters: 350, rideMeters: 1240, score: 660, fare: { minCentavos: 1400, maxCentavos: 1400, status: "estimate", completeness: "estimate" },
   evidence: "provisional",
 };
 
@@ -67,11 +68,11 @@ const leastWalking = {
     {
       kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
       stops: [A2, A3, A4], distanceMeters: 5486, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 2000), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(265.6, 5751.6),
+      fare: legFare(1600, 1800), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(265.6, 5751.6),
     },
     { kind: "walk", from: asStop(A4), to: DESTINATION, distanceMeters: 30, estimateMeters: 39, pathVerified: false },
   ],
-  rides: 1, walkMeters: 90, walkEstimateMeters: 117, rideMeters: 5486, score: 1488, fare: { minCentavos: 1400, maxCentavos: 2000, status: "estimate", completeness: "estimate" },
+  rides: 1, walkMeters: 90, walkEstimateMeters: 117, rideMeters: 5486, score: 1488, fare: { minCentavos: 1600, maxCentavos: 1800, status: "estimate", completeness: "estimate" },
   evidence: "provisional",
 };
 
@@ -166,17 +167,17 @@ const twoRides = {
     {
       kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
       stops: [A1, A2, A3], distanceMeters: 560, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1700), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(0, 560),
+      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(0, 560),
     },
     { kind: "walk", from: asStop(A3), to: asStop(B1), distanceMeters: 60, estimateMeters: 78, pathVerified: false },
     {
       kind: "ride", variantId: LOOP_B, routeCode: "R8-B", routeName: "Centro–Panganiban Loop B", verification: "unverified",
       stops: [B1, B2, B3], distanceMeters: 380, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1700), mode: "jeepney", fleet: traditionalFleet("R8-B"), ...straightLine,
+      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-B"), ...straightLine,
     },
     { kind: "walk", from: asStop(B3), to: DESTINATION, distanceMeters: 50, estimateMeters: 65, pathVerified: false },
   ],
-  rides: 2, walkMeters: 287, walkEstimateMeters: 373, rideMeters: 940, score: 900, fare: { minCentavos: 2800, maxCentavos: 3400, status: "estimate", completeness: "estimate" },
+  rides: 2, walkMeters: 287, walkEstimateMeters: 373, rideMeters: 940, score: 900, fare: { minCentavos: 2800, maxCentavos: 2800, status: "estimate", completeness: "estimate" },
   evidence: "provisional",
 };
 

@@ -227,6 +227,16 @@ describe("ride legs: D13 distance basis, mode and fleet (Task 8)", () => {
     expect(o.fare).toMatchObject({ minCentavos: 1400, maxCentavos: 1900, status: "estimate" });
   });
 
+  it("prices a traditional-only route from F01 alone (ruling 2026-10-16), even with a report on file", () => {
+    const TRAD = fleetSummary([MIXED.classes[0]!], "jeepney");
+    const s = { ...measured(), routes: [route(0, TRAD, [REPORT]), route(1, TRAD)] };
+    const o = planTrip(s, at(0, -100), at(2000, -100)).options[0]!; // 4.6 km along the path
+    expect(rideLegs(o)[0]!.fare).toMatchObject({
+      minCentavos: 1400, maxCentavos: 1600, span: "traditional_rule", ruleCodes: ["F01"], basis: "fare_rules", reportCodes: [],
+    });
+    expect(o.fare).toMatchObject({ minCentavos: 1400, maxCentavos: 1600 });
+  });
+
   it("keeps the option id (saved trips stay valid): variant:board:alight, whatever the new fields", () => {
     const a = planTrip(snap, at(0, -100), at(2000, -100)).options[0]!;
     const b = planTrip({ ...measured(), routes: [route(0, MIXED, [REPORT])] }, at(0, -100), at(2000, -100)).options[0]!;

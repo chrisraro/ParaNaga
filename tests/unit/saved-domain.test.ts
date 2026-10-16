@@ -88,8 +88,8 @@ describe("saved trip card", () => {
   });
 
   it("meta line: no time, the fare chip text and the data date", () => {
-    expect(tripCardMeta(card())).toBe("Time not available · Estimate ₱14–₱17 · data from 16 Oct 2026");
-    expect(tripCardMeta(card({ publishedAt: null }))).toBe("Time not available · Estimate ₱14–₱17 · data from revision modes-lines-2026-10-16");
+    expect(tripCardMeta(card())).toBe("Time not available · Estimate ₱14 · data from 16 Oct 2026");
+    expect(tripCardMeta(card({ publishedAt: null }))).toBe("Time not available · Estimate ₱14 · data from revision modes-lines-2026-10-16");
   });
 });
 
@@ -179,7 +179,7 @@ describe("shareText", () => {
     expect(text).toContain("Unverified route — confirm with the driver");
     expect(text).toContain("Plaza Rizal (A1)");
     expect(text).toContain("Avenue Square (A5)");
-    expect(text).toContain("Estimate ₱14–₱17");
+    expect(text).toContain("Fare: Estimate ₱14 · from reported fare rules");
     expect(text).toContain("Time not available");
     // No coordinate-like numbers (digits with a decimal point and many decimals), no URLs.
     expect(text).not.toMatch(/\d+\.\d{3,}/);

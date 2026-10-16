@@ -53,8 +53,9 @@
 // sum; the leg records `distanceBasis` and the two measures, and the fare, the score and the
 // Pareto set all use that one distance. The option id is variant:board:alight only, so saved
 // trips stay valid. Each ride leg carries the route's mode and fleet (snapshot routes[] joined
-// by routeId; no record → "Vehicle type not confirmed"), and a mixed traditional + modern fleet
-// prices from the traditional minimum to the modern maximum, with the route's rider reports.
+// by routeId; no record → "Vehicle type not confirmed"), and the fare follows that fleet
+// (fares.ts): traditional only → F01 alone; traditional + modern → traditional minimum to the
+// modern maximum, with the route's rider reports; not confirmed → the C6 F01–F02 span.
 //
 // Complexity: with V variants of ≤ n stops, A access positions and ≤ T transfer edges per
 // position, the search is O(A·n·(1 + T·n)) for 2 rides (each extra ride multiplies by T·n).
@@ -64,7 +65,7 @@ import { haversineMeters } from "../geo/geometry";
 import { isInsideNaga } from "../geo/naga";
 import type { LatLng } from "../geo/types";
 import { fleetSummary, type FleetSummary, type RouteMode } from "../modes/fleet";
-import { legFareEstimate, sumFares, type LegFare, type TripFare } from "./fares";
+import { fareClasses, legFareEstimate, sumFares, type LegFare, type TripFare } from "./fares";
 import { buildGraph, forwardRides, type DistanceBasis, type GraphStop, type PlannerGraph } from "./graph";
 
 import { MAX_ACCESS_WALK_M, PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
@@ -324,7 +325,7 @@ function toOption(
       kind: "ride", variantId: v.variantId, routeCode: v.routeCode, routeName: v.routeName, verification: v.verification,
       stops, distanceMeters: ride.meters, approximate: true, boardingVerified: false, pathVerified: false,
       fare: legFareEstimate(ride.meters, snapshot.fareRules, {
-        mixedFleet: fleet.colourKey === "mixed_trad_modern", reports: route?.fareReports ?? [],
+        classes: fareClasses(fleet.colourKey), reports: route?.fareReports ?? [],
       }),
       mode: v.mode, fleet, distanceBasis: ride.basis, boardMeasureM: ride.boardMeasureM, alightMeasureM: ride.alightMeasureM,
     };

@@ -210,7 +210,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   expect((await geoStub(page)).watches).toBe(0);
   await expect(page.getByTestId("guidance-accuracy")).toHaveCount(0);
   await expect(page.getByTestId("arrive-summary")).toContainText("≈ 350 m walk · estimate");
-  await expect(page.getByTestId("arrive-summary")).toContainText("Estimate ₱14–₱17");
+  await expect(page.getByTestId("arrive-summary")).toContainText(/Estimate ₱14(?!–)/);
   await expect(guide(page)).not.toContainText(/rate|rating|helpful/i);
   await expectHonest(page);
   await expectAxeClean(page);

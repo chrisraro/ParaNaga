@@ -106,7 +106,7 @@ describe("Saved → Trips", () => {
     expect(tripCard.textContent).toContain("Available offline");
     expect(tripCard.textContent).toContain("From Plaza Rizal");
     expect(screen.getByRole("heading", { level: 2, name: "Avenue Square" })).toBeTruthy();
-    expect(tripCard.textContent).toContain("Time not available · Estimate ₱14–₱17 · data from 16 Oct 2026");
+    expect(tripCard.textContent).toContain("Time not available · Estimate ₱14 · data from 16 Oct 2026");
     expect(tripCard.textContent).toContain("Saved 16 Oct 2026");
     expect(tripCard.textContent).toContain("Loop A");
     await waitFor(() => expect(urls).toContain("/api/v1/network/head"));

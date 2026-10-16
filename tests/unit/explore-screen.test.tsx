@@ -90,7 +90,7 @@ describe("Explore: places by category", () => {
     expect(screen.getByTestId("explore-places-note").textContent).toBe("Places come from OpenStreetMap. Entrances, hours and photos are not mapped yet.");
     expect(screen.getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" })).toBeTruthy();
     expect(screen.getByRole("tabpanel", { name: "All" })).toBeTruthy();
-  });
+  }, 30_000); // renders every OSM place and runs role queries over them: 8–9 s on slower machines
 
   it("Jump to directory moves focus to the Directory heading", () => {
     renderExplore();

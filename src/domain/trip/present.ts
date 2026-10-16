@@ -58,13 +58,16 @@ export function fareChipText(fare: FareLike): string {
 }
 
 /**
- * Per ride leg, with the caveat on where the numbers come from. A mixed traditional + modern
- * fleet says "traditional to modern rate", and names the riders' reports when they set the
- * maximum; a single-class or unconfirmed fleet keeps the plain rule wording.
+ * Per ride leg, with the caveat on where the numbers come from. A traditional-only (or
+ * modern-only) route names its one rate; a mixed traditional + modern fleet says "traditional
+ * to modern rate", and names the riders' reports when they set the maximum; an unconfirmed
+ * fleet keeps the plain rule wording.
  */
 export function legFareText(fare: FareLike): string {
   const chip = fareChipText(fare);
   if (chip === FARE_UNAVAILABLE) return chip;
+  if (fare.span === "traditional_rule") return `${chip} · traditional jeepney rate · from reported fare rules · matrix not verified`;
+  if (fare.span === "modern_rule") return `${chip} · modern jeepney rate · from reported fare rules · matrix not verified`;
   if (fare.span === "traditional_to_modern") {
     const reports = fare.basis === "fare_rules_and_reports" ? " · from the national fare rule and riders' reports" : "";
     return `${chip} · traditional to modern rate${reports} · matrix not verified`;

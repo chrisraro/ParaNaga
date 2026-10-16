@@ -199,7 +199,8 @@ describe("planTrip on real Loop A / Loop B with the captured path measures (D13)
             expect(leg.distanceBasis).toBe("approximate_path");
             const lap = variant.pathLengthM!;
             expect(leg.distanceMeters).toBe(Math.round(((leg.alightMeasureM! - leg.boardMeasureM! + lap) % lap)));
-            expect(leg.fare).toEqual(legFareEstimate(leg.distanceMeters, measured.fareRules, { mixedFleet: false, reports: [] }));
+            expect(leg.fare).toEqual(legFareEstimate(leg.distanceMeters, measured.fareRules, { classes: "traditional", reports: [] }));
+            expect(leg.fare).toMatchObject({ span: "traditional_rule", ruleCodes: ["F01"] });
             expect(leg.fleet).toEqual(route.fleet);
             expect(leg.fleet.label).toBe("Traditional jeepneys");
             expect(leg.mode).toBe("jeepney");
@@ -220,4 +221,30 @@ describe("planTrip on real Loop A / Loop B with the captured path measures (D13)
   });
 });
 
+describe("ruling 2026-10-16 on the regression trips: the Loops' traditional-only fleet prices from F01 alone", () => {
+  it("changes only fares (same options, legs and distances) and pins how many option fares change", () => {
+    const withFleets = { ...snap, routes: realLoopsSnapshotWithMeasures().routes };
+    const withoutFares = (p: unknown) => JSON.parse(JSON.stringify(p, (k, v: unknown) => (k === "fare" ? null : v))) as unknown;
+    let changed = 0;
+    let options = 0;
+    for (const [o, d] of regressionTrips()) {
+      const before = planTrip(snap, o, d);
+      const after = planTrip(withFleets, o, d);
+      expect(withoutFares(withoutD13Fields(after))).toEqual(withoutFares(withoutD13Fields(before)));
+      after.options.forEach((x, i) => {
+        options++;
+        const b = before.options[i]!.fare;
+        if (x.fare.minCentavos !== b.minCentavos || x.fare.maxCentavos !== b.maxCentavos) changed++;
+        if (x.rides > 0) {
+          expect(x.fare.minCentavos).toBe(b.minCentavos); // the minimum was always F01's
+          expect(x.fare.maxCentavos!).toBeLessThan(b.maxCentavos!); // F01 max < F02 max at every distance
+        }
+      });
+    }
+    expect({ options, changed }).toEqual(FLEET_RULING_CHANGES);
+  }, 60_000);
+});
+
 const REGRESSION_BASELINE = { options: 308, digest: "9f976467c40ab082caf3fa57837bfdf9f375e7cbe4a14e00a2ef890d7da87c1d" };
+/** Ride options among the 200 regression trips whose fare changes under the traditional-only ruling. */
+const FLEET_RULING_CHANGES = { options: 308, changed: 273 }; // every ride option; the other 35 are walk-only

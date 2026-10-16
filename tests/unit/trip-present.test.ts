@@ -170,7 +170,16 @@ describe("ride leg copy (Task 8: D13 distance basis, mixed fleets)", () => {
     );
   });
 
-  it("a single-class or unconfirmed fleet keeps the existing wording", () => {
+  it("a traditional-only route names its one rate (ruling 2026-10-16)", () => {
+    expect(legFareText({ status: "estimate", minCentavos: 1400, maxCentavos: 1400, span: "traditional_rule", basis: "fare_rules" })).toBe(
+      "Estimate ₱14 · traditional jeepney rate · from reported fare rules · matrix not verified",
+    );
+    expect(legFareText({ status: "estimate", minCentavos: 1700, maxCentavos: 2000, span: "modern_rule", basis: "fare_rules" })).toBe(
+      "Estimate ₱17–₱20 · modern jeepney rate · from reported fare rules · matrix not verified",
+    );
+  });
+
+  it("an unconfirmed fleet keeps the existing wording", () => {
     expect(legFareText({ status: "estimate", minCentavos: 1400, maxCentavos: 1700, span: "rule_span", basis: "fare_rules" })).toBe(
       "Estimate ₱14–₱17 · from reported fare rules · matrix not verified",
     );

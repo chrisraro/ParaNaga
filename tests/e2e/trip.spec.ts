@@ -77,7 +77,7 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
     await expect(card).toContainText("Loop A");
     await expect(card).toContainText("clockwise");
   }
-  await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Estimate ₱14–₱17");
+  await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Estimate ₱14");
   await expect(cards.nth(0)).toContainText("No transfers");
   await expect(cards.nth(0)).toContainText("≈ 230 m");
   // Ride distance on the ride leg of the strip too (decision B).
@@ -85,10 +85,10 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   // Least walking: the long loop ride is obvious.
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1)).toContainText("Ride ≈ 5.5 km");
-  await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Estimate ₱14–₱20");
+  await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Estimate ₱16–₱18");
 
   // Accessible names carry the label and the fare estimate.
-  await expect(page.getByRole("button", { name: /Recommended · Fewest transfers.*Estimate ₱14–₱17/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Recommended · Fewest transfers.*Estimate ₱14(?!–)/ })).toBeVisible();
 
   await expect(options).toContainText("Walking distances are estimates; paths not verified.");
   await expect(options).toContainText("Transport data revision modes-lines-2026-10-16");
@@ -113,7 +113,7 @@ test("trip detail lists the legs, highlights stops as markers and draws no line"
   const detail = page.getByTestId("trip-detail");
   await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
-  await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14–₱17");
+  await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
   await expect(detail).toContainText("Time not available");
 
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
@@ -128,7 +128,7 @@ test("trip detail lists the legs, highlights stops as markers and draws no line"
   await expect(steps.nth(2)).toContainText("Para!");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
-  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14–₱17 · from reported fare rules · matrix not verified/);
+  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14 · traditional jeepney rate · from reported fare rules · matrix not verified/);
   await expect(detail).toContainText("Corrections open soon");
   await expect(detail.getByRole("link")).toHaveCount(0);
 

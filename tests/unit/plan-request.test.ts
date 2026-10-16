@@ -92,7 +92,7 @@ describe("plan response: D13 distance basis, mode and fleet on ride legs", () =>
     for (const r of rides) {
       expect(r).toMatchObject({ distanceBasis: "approximate_path", mode: "jeepney", fleet: { label: "Traditional jeepneys" } });
       expect(r.boardMeasureM).not.toBeNull();
-      expect(r.fare).toMatchObject({ span: "rule_span", basis: "fare_rules", reportCodes: [] });
+      expect(r.fare).toMatchObject({ span: "traditional_rule", ruleCodes: ["F01"], basis: "fare_rules", reportCodes: [] });
     }
   });
 
@@ -100,6 +100,7 @@ describe("plan response: D13 distance basis, mode and fleet on ride legs", () =>
     const old = JSON.parse(JSON.stringify(rides[0])) as Record<string, unknown> & { fare: Record<string, unknown> };
     for (const k of ["mode", "fleet", "distanceBasis", "boardMeasureM", "alightMeasureM"]) delete old[k];
     for (const k of ["span", "basis", "reportCodes"]) delete old.fare[k];
+    old.fare.ruleCodes = ["F01", "F02"]; // every leg before Task 8 cited both rules
     const option = { ...body.plan.options[0]!, legs: [body.plan.options[0]!.legs[0]!, old, body.plan.options[0]!.legs.at(-1)!] };
     const parsed = planOptionSchema.parse(option).legs[1] as Ride;
     expect(parsed).toMatchObject({
@@ -115,6 +116,9 @@ describe("plan response: D13 distance basis, mode and fleet on ride legs", () =>
     expect(planOptionSchema.safeParse(option({ ...leg, boardMeasureM: null })).success).toBe(false);
     expect(planOptionSchema.safeParse(option({ ...leg, distanceBasis: "stop_to_stop_straight_line" })).success).toBe(false);
     expect(planOptionSchema.safeParse(option({ ...leg, fare: { ...leg.fare, basis: "fare_rules_and_reports", reportCodes: [] } })).success).toBe(false);
+    // the rules must match the span; reports only on a mixed fleet
+    expect(planOptionSchema.safeParse(option({ ...leg, fare: { ...leg.fare, ruleCodes: ["F01", "F02"] } })).success).toBe(false);
+    expect(planOptionSchema.safeParse(option({ ...leg, fare: { ...leg.fare, basis: "fare_rules_and_reports", reportCodes: ["FO-X"] } })).success).toBe(false);
   });
 });
 

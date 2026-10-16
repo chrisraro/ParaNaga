@@ -1,7 +1,15 @@
 // Fare ESTIMATES for provisional trips. Pure. Never an exact fare.
 //
 // Rule values come only from the snapshot's fare rules F01 (traditional jeepney) and F02
-// (modern jeepney); the vehicle class of a ride is unknown, so a leg's estimate spans both:
+// (modern jeepney). Which rules apply follows the route's fleet (fareClasses):
+//
+//  - traditional only (ruling 2026-10-16; R1–R3, R5, R6, R8): F01 alone, min and max below
+//    both from F01 (max = F01.base + ceil(extraM / 1000) × F01.perKm, rounded UP) — no modern
+//    maximum. 3.2 km → ₱14; 5.5 km → ₱16–₱18.
+//  - modern only (C6, no such route today): F02 alone, the same way.
+//  - traditional and modern (R4, R7): mixed fleet, below.
+//  - unconfirmed (no fleet record, e.g. an older cached snapshot without routes[]): the class
+//    of the vehicle is unknown, so the estimate spans both rules (C6, span "rule_span"):
 //
 //   distance  = the ride's D13 distance, as given by the planner: metres along the variant's
 //               approximate path when it has one, else the straight-line stop-to-stop sum (the
@@ -21,11 +29,10 @@
 //
 // the delta is a rider REPORT (an observation, never a rule): a range uses its upper bound and
 // "at least" its stated minimum. When a report sets the maximum, its code is listed and the
-// basis is "fare_rules_and_reports". The minimum is F01 either way, so a single-class or
-// unconfirmed fleet keeps exactly the C6 F01–F02 span (span "rule_span").
+// basis is "fare_rules_and_reports".
 //
-// Discounts are never applied (eligibility unverified). If F01 or F02 is missing or lacks a
-// base, base distance or per-km increment, the leg is "unavailable" with null amounts — there
+// Discounts are never applied (eligibility unverified). If a rule the leg needs (ruleCodes) is
+// missing or lacks a base, base distance or per-km increment, the leg is "unavailable" with null amounts — there
 // is no hard-coded fallback. A trip total is the sum of its legs' ranges.
 //
 // The distance is rounded to whole metres first (the planner already passes whole metres), so
@@ -37,9 +44,28 @@
 // is null (unknown), which is why the range is widened above instead. Revisit both when a
 // verified fare matrix is published.
 import type { FareRuleEstimate } from "../api/schemas";
-import type { VehicleClass } from "../modes/fleet";
+import type { ColourKey, VehicleClass } from "../modes/fleet";
 
 export const FARE_RULE_CODES = ["F01", "F02"] as const;
+export type FareRuleCode = (typeof FARE_RULE_CODES)[number];
+export type FareRuleCodes = readonly ["F01", "F02"] | readonly ["F01"] | readonly ["F02"];
+
+/** The jeepney classes a route runs, as far as fares go. */
+export type FareClasses = "traditional" | "modern" | "traditional_and_modern" | "unconfirmed";
+
+/** From the route's fleet colour key (D3 counting: "reported, not confirmed" classes never count). */
+export function fareClasses(key: ColourKey): FareClasses {
+  switch (key) {
+    case "traditional_puj":
+      return "traditional";
+    case "modern_puj":
+      return "modern";
+    case "mixed_trad_modern":
+      return "traditional_and_modern";
+    default:
+      return "unconfirmed";
+  }
+}
 
 /** A rider report of what one vehicle class charges over the traditional fare (snapshot routes[].fareReports). */
 export type FareReport = {
@@ -50,8 +76,8 @@ export type FareReport = {
   deltaCentavosHigh: number | null;
 };
 
-/** The ride's fleet as far as fares go: mixed traditional + modern, and the route's rider reports. */
-export type FareFleet = { mixedFleet: boolean; reports: readonly FareReport[] };
+/** The ride's fleet as far as fares go: its classes, and the route's rider reports. */
+export type FareFleet = { classes: FareClasses; reports: readonly FareReport[] };
 
 export type LegFare = {
   minCentavos: number | null;
@@ -62,13 +88,13 @@ export type LegFare = {
   approximate: true;
   discountsApplied: false;
   /**
-   * Always both: the class of the vehicle that comes is unknown. On a mixed-fleet route (R4, R7)
-   * that is literal — traditional and modern units run the same route — so the range runs from
-   * the traditional rate to the modern one.
+   * The rules the estimate uses: F01 alone on a traditional-only route, F02 alone on a
+   * modern-only one, and both when the route runs both classes (mixed fleet, R4/R7: whichever
+   * unit comes, so traditional to modern rate) or its class is not confirmed (unknown, C6 span).
    */
-  ruleCodes: readonly ["F01", "F02"];
-  /** "traditional_to_modern" on a mixed-fleet route; otherwise the C6 rule span. */
-  span: "rule_span" | "traditional_to_modern";
+  ruleCodes: FareRuleCodes;
+  /** traditional_rule / modern_rule (one class), traditional_to_modern (mixed fleet), rule_span (unconfirmed). */
+  span: FareSpan;
   /** "fare_rules_and_reports" when a rider report set the maximum. */
   basis: "fare_rules" | "fare_rules_and_reports";
   /** The rider reports that set the maximum (empty otherwise). */
@@ -81,6 +107,15 @@ export type TripFare = {
   /** "no_ride" for a walk-only option (0–0). */
   status: "estimate" | "unavailable" | "no_ride";
   completeness: "estimate";
+};
+
+export type FareSpan = "rule_span" | "traditional_rule" | "modern_rule" | "traditional_to_modern";
+
+const SPAN: Record<FareClasses, { span: FareSpan; ruleCodes: FareRuleCodes }> = {
+  traditional: { span: "traditional_rule", ruleCodes: ["F01"] },
+  modern: { span: "modern_rule", ruleCodes: ["F02"] },
+  traditional_and_modern: { span: "traditional_to_modern", ruleCodes: FARE_RULE_CODES },
+  unconfirmed: { span: "rule_span", ruleCodes: FARE_RULE_CODES },
 };
 
 type UsableRule = { base: number; baseKm: number; perKm: number };
@@ -100,19 +135,30 @@ function extraMeters(rule: UsableRule, rideMeters: number): number {
 
 const reportedDelta = (r: FareReport) => (r.deltaQualifier === "range" && r.deltaCentavosHigh !== null ? r.deltaCentavosHigh : r.deltaCentavosLow);
 
+const ruleMin = (r: UsableRule, meters: number) => floorPeso(r.base + Math.floor(extraMeters(r, meters) / 1000) * r.perKm);
+const ruleMax = (r: UsableRule, meters: number) => ceilPeso(r.base + Math.ceil(extraMeters(r, meters) / 1000) * r.perKm);
+
+/** No fleet given (a caller without routes[]): the class is unknown, C6 span. */
 export function legFareEstimate(rideMeters: number, rules: readonly FareRuleEstimate[], fleet?: FareFleet): LegFare {
-  const span = fleet?.mixedFleet ? "traditional_to_modern" : "rule_span";
-  const common = { completeness: "estimate", approximate: true, discountsApplied: false, ruleCodes: FARE_RULE_CODES, span } as const;
+  const classes = fleet?.classes ?? "unconfirmed";
+  const { span, ruleCodes } = SPAN[classes];
+  const common = { completeness: "estimate", approximate: true, discountsApplied: false, ruleCodes, span } as const;
+  const unavailable: LegFare = { minCentavos: null, maxCentavos: null, status: "unavailable", ...common, basis: "fare_rules", reportCodes: [] };
+  const meters = Math.round(rideMeters);
+  const one = classes === "traditional" ? usable(rules, "F01") : classes === "modern" ? usable(rules, "F02") : undefined;
+  if (one !== undefined) {
+    if (!one) return unavailable;
+    return { minCentavos: ruleMin(one, meters), maxCentavos: ruleMax(one, meters), status: "estimate", ...common, basis: "fare_rules", reportCodes: [] };
+  }
   const low = usable(rules, "F01");
   const high = usable(rules, "F02");
-  if (!low || !high) return { minCentavos: null, maxCentavos: null, status: "unavailable", ...common, basis: "fare_rules", reportCodes: [] };
-  const meters = Math.round(rideMeters);
-  const min = floorPeso(low.base + Math.floor(extraMeters(low, meters) / 1000) * low.perKm);
-  let max = ceilPeso(high.base + Math.ceil(extraMeters(high, meters) / 1000) * high.perKm);
+  if (!low || !high) return unavailable;
+  const min = ruleMin(low, meters);
+  let max = ruleMax(high, meters);
   let reportCodes: string[] = [];
-  if (fleet?.mixedFleet) {
-    const traditionalMax = ceilPeso(low.base + Math.ceil(extraMeters(low, meters) / 1000) * low.perKm);
-    for (const r of fleet.reports.filter((x) => x.vehicleClass === "modern_puj")) {
+  if (classes === "traditional_and_modern") {
+    const traditionalMax = ruleMax(low, meters);
+    for (const r of (fleet?.reports ?? []).filter((x) => x.vehicleClass === "modern_puj")) {
       const reported = ceilPeso(traditionalMax + reportedDelta(r));
       if (reported > max) {
         max = reported;
