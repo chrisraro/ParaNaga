@@ -4,12 +4,13 @@
 // Regenerate with UPDATE_WALK_GRAPH_FIXTURE=1.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { buildRoadGraph } from "@/domain/geo/road-graph";
+import { parseModesSeed } from "@/domain/import/modes-seed";
 import { walkGraphPayloadSchema } from "@/domain/walk/format";
-import { parseWalkGraph, routeWalk } from "@/domain/walk/walk-graph";
-import { buildWalkGraph } from "@/domain/walk/walk-graph-build";
+import { parseWalkGraph, routeStreet, routeWalk } from "@/domain/walk/walk-graph";
+import { buildStreetGraph } from "@/domain/walk/walk-graph-build";
 import { readPinnedRoadsSnapshot, ROADS_FILE_RE } from "../../scripts/lib/roads-snapshot";
 
+const SEED = "data/source/research/naga-modes-seed-2026-10-16.json";
 const FIXTURE = "tests/e2e/fixtures/network/walk-graph.json";
 /** Around Plaza Rizal / Centro (about 1.3 km × 1.5 km). */
 const BOX = { south: 13.618, north: 13.63, west: 123.178, east: 123.192 };
@@ -24,7 +25,18 @@ function buildFixture() {
   };
   const ways = roads.ways.filter((w) => w.nodeIds.every(inside));
   const roadSource = `OSMR-${ROADS_FILE_RE.exec(snapshot.fileName)![1]}`;
-  const { payload } = buildWalkGraph(buildRoadGraph({ ways, nodes: roads.nodes }, { profile: "walk" }), { roadSource });
+  // Street graph v2 (plan E §C): the reviewed rules whose ways all lie inside the box (a clip across
+  // the edge would name a way the extract does not have) and the padyak areas anchored by a place
+  // node inside it.
+  const seed = parseModesSeed(JSON.parse(readFileSync(SEED, "utf8")));
+  const wayIds = new Set(ways.map((w) => w.id));
+  const rules = seed.roadRules.filter((r) => r.wayIds.every((id) => wayIds.has(id)));
+  const places = roads.places.filter((p) => (p.lat >= BOX.south && p.lat <= BOX.north && p.lng >= BOX.west && p.lng <= BOX.east));
+  const placeIds = new Set(places.map((p) => p.id));
+  const areas = seed.padyakAreas
+    .map((a) => ({ ...a, placeNodeIds: a.placeNodeIds.filter((id) => placeIds.has(id)) }))
+    .filter((a) => a.review.decision === "import" && a.placeNodeIds.length > 0);
+  const { payload } = buildStreetGraph({ ways, nodes: roads.nodes, places }, rules, areas, { roadSource });
   return {
     fixture: {
       synthetic: true,
@@ -48,7 +60,7 @@ describe("e2e walk-graph fixture", () => {
     expect(readFileSync(FIXTURE, "utf8").replace(/\r\n/g, "\n")).toBe(text);
   });
 
-  it("is flagged synthetic, parses as format v1 and routes a walk across Centro", () => {
+  it("is flagged synthetic, parses as format v2 and routes walks and street rides across Centro", () => {
     const json = JSON.parse(readFileSync(FIXTURE, "utf8"));
     expect(json.fixture).toMatchObject({ synthetic: true, licence: "ODbL 1.0" });
     expect(walkGraphPayloadSchema.safeParse(json).success).toBe(true);
@@ -58,6 +70,10 @@ describe("e2e walk-graph fixture", () => {
     // Plaza Rizal to Naga Metropolitan Cathedral grounds (both inside the box).
     const walk = routeWalk(parsed.graph, { lat: 13.6233869, lng: 123.1846726 }, { lat: 13.6274, lng: 123.1883 });
     expect(walk.kind).toBe("path");
-    expect(Buffer.byteLength(text)).toBeLessThan(120 * 1024);
+    expect(json.v).toBe(2);
+    expect(json.places.length / 4).toBeGreaterThan(0);
+    const street = routeStreet(parsed.graph, { lat: 13.6233869, lng: 123.1846726 }, { lat: 13.6274, lng: 123.1883 }, { mode: "tricycle", now: new Date("2026-10-17T04:00:00Z") });
+    expect(street.kind).toBe("path");
+    expect(Buffer.byteLength(text)).toBeLessThan(200 * 1024);
   });
 });

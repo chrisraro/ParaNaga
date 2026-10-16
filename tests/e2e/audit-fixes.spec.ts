@@ -116,7 +116,7 @@ test.describe("phone", () => {
       await planWith(page, PROVISIONAL_PLAN);
       await openApp(page);
       await pinBoth(page);
-      await expect(page.getByTestId("trip-option")).toHaveCount(2);
+      await expect(page.getByTestId("trip-option")).toHaveCount(3);
 
       await page.setViewportSize({ width: 863, height: 412 });
       await expect(page.getByText("Large screen detected")).toHaveCount(0);
@@ -126,7 +126,7 @@ test.describe("phone", () => {
       await page.setViewportSize({ width: 412, height: 839 });
       await expect(rowMain(page, "start")).toContainText("Pinned location");
       await expect(rowMain(page, "destination")).toContainText("Pinned location");
-      await expect(page.getByTestId("trip-option")).toHaveCount(2);
+      await expect(page.getByTestId("trip-option")).toHaveCount(3);
     });
   });
 
@@ -165,7 +165,7 @@ test.describe("phone", () => {
       await openApp(page);
       await pinBoth(page);
       const cards = page.getByTestId("trip-option");
-      await expect(cards).toHaveCount(2);
+      await expect(cards).toHaveCount(3);
       await expect(cards.nth(0)).toContainText("Walk");
       await expect(cards.nth(0).getByTestId("unverified-badge")).toHaveCount(0);
       await expect(cards.nth(1).getByTestId("unverified-badge")).toHaveText(BADGE);

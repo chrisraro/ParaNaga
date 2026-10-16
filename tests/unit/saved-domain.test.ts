@@ -285,9 +285,15 @@ describe("record format and decoding", () => {
     expect(decodeStored(null, savedTripSchema)).toEqual({ ok: false, reason: "invalid" });
   });
 
-  // The raw format-1 record: the legacy plan body of the e2e fixture (no mode, no board/alight, no
-  // path or basis) saved before Increment E, stored with v: 1 (or no v at all).
-  const legacyOption = PROVISIONAL_PLAN.plan.options[0] as unknown as Record<string, unknown>;
+  // The raw format-1 record: the e2e fixture's first option as it was saved before Increment E (no mode,
+  // no board/alight, no notes, no path or basis), stored with v: 1 (or no v at all).
+  const legacyOption = (() => {
+    const NEW_LEG_FIELDS = ["board", "alight", "notes", "stopMeasuresM", "path", "basis"];
+    const option = JSON.parse(JSON.stringify(PROVISIONAL_PLAN.plan.options[0])) as Record<string, unknown> & { legs: Record<string, unknown>[] };
+    delete option.mode;
+    for (const leg of option.legs) for (const key of NEW_LEG_FIELDS) delete leg[key];
+    return option as Record<string, unknown>;
+  })();
   const formatOne = () => ({ ...JSON.parse(JSON.stringify(card())), option: JSON.parse(JSON.stringify(legacyOption)), v: 1 });
 
   it("a format-1 saved record (legacy plan body) migrates to the current schema and reopens", () => {

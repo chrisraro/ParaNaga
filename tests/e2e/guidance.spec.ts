@@ -413,7 +413,7 @@ test("a reload resumes the step with location off; End guidance puts the trip ba
   await expect(dialog).toContainText("Your trip stays in the options.");
   await dialog.getByRole("button", { name: "End guidance" }).click();
   await expect(guide(page)).toHaveCount(0);
-  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
   await expect(page.getByTestId("endpoint-destination")).toContainText("Pinned location");
   await expect(tabBar(page)).toBeVisible();
   expect(await page.evaluate((k) => window.sessionStorage.getItem(k), SESSION_KEY)).toBeNull();
