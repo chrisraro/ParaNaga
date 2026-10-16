@@ -176,8 +176,8 @@ describe("padyak areas", () => {
 describe("route notes", () => {
   it("has the four section E notes on the right routes", () => {
     expect(real.routeNotes.map((n) => [n.code, n.routeCodes, n.evidence])).toEqual([
-      ["RN01", ["R8-C", "R8-D"], "official"],
-      ["RN02", ["R8-A", "R8-B"], "official"],
+      ["RN01", ["R8-C", "R8-D"], "community"],
+      ["RN02", ["R8-A", "R8-B"], "community"],
       ["RN03", ["R8-A", "R8-B", "R8-C", "R8-D"], "owner_report_unverified"],
       ["RN04", ["R2"], "owner_report_unverified"],
     ]);

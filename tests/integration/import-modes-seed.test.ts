@@ -264,7 +264,7 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
     ]);
     expect(await appRows(sql`select 1 from ingest.source where code = 'N09'`)).toEqual([]);
     const conflicts = await appRows(sql`select count(*)::int as n from ingest.conflict where kind = 'research_conflict'`);
-    expect(conflicts).toEqual([{ n: 9 }]);
+    expect(conflicts).toEqual([{ n: 10 }]);
     // No cooperative chair name is stored: the conflict text only says the names are swapped.
     const cx01 = await appRows(sql`select detail->>'description' as d from ingest.conflict where refs = '{CX01}'`);
     expect(String(cx01[0]?.d)).toMatch(/Names are not stored/);

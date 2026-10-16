@@ -19,7 +19,7 @@
     "jevModel": "typesafe/jev-1.13-20260917",
     "assumptions": {
       "A4": {
-        "statement": "A point is in a padyak area when its nearest place node in the whole road snapshot is one of the area's place nodes and lies within maxDistanceM of it; both trip ends must be in the same area. Approximate; plan decision E-J5, not from any source.",
+        "statement": "A padyak area is tested independently per area: a point belongs to an area when it is within the area's effective radius of ANY of the area's anchor nodes (its named OSM place node(s)); the effective radius defaults to 1,000 m and is shrunk where areas overlap (the graph builder applies the rule); a point may belong to several areas; a padyak option needs both ends in the same area. Generic 'Zone N' place nodes are never anchors.",
         "maxDistanceM": 1000
       }
     }
@@ -6680,13 +6680,12 @@
         "R8-D"
       ],
       "text": "City Hall, BFP and BIR are on J. Miranda Ave. This loop's listed streets skip it (Ord 2025-070); ask the driver.",
-      "evidence": "official",
+      "evidence": "community",
       "sourceCodes": [
         "RL01",
         "RL03",
         "RL12",
-        "RL14",
-        "U02"
+        "RL14"
       ],
       "near": {
         "lat": 13.6256,
@@ -6695,7 +6694,7 @@
       },
       "review": {
         "decision": "import",
-        "reason": "Ord 2025-070 omits J. Miranda for C/D; Res 2025-172 had added it (conflict CX10). near = between City Hall and BFP (RL12)",
+        "reason": "Ord 2025-070 omits J. Miranda for C/D; Res 2025-172 had added it (conflict CX10). near = between City Hall and BFP (RL12); route path per Ord 2025-070; landmark positions from OSM",
         "reviewedOn": "2026-10-17"
       }
     },
@@ -6706,7 +6705,7 @@
         "R8-B"
       ],
       "text": "Passes J. Miranda Ave (City Hall, BFP, BIR) on its listed streets.",
-      "evidence": "official",
+      "evidence": "community",
       "sourceCodes": [
         "RL01",
         "RL12",
@@ -6719,7 +6718,7 @@
       },
       "review": {
         "decision": "import",
-        "reason": "Ord 2025-070 lists J. Miranda Ave for A/B; landmarks per RL12/RL14",
+        "reason": "Ord 2025-070 lists J. Miranda Ave for A/B; landmarks per RL12/RL14; route path per Ord 2025-070; landmark positions from OSM",
         "reviewedOn": "2026-10-17"
       }
     },

@@ -20,19 +20,16 @@ because `Data_Sets/` is the original research package and is read as a whole.
 | Jeepney hours | RH01–RH21 | 21 | `jeepney-hours-candidates-2026-10.json` (sources in `jeepney-hours-2026-10.md`) | 19 | 2 (RH16, RH17: no service content) |
 | Owner report | U02 | 1 | Project owner report, 2026-10-17 (plan section E) | 1 | 0 |
 
-The R-prefixed codes never clash with terminal codes `T01…`. Their pattern is `^R[TLPH][0-9]{2}# Reviewed research seeds
+The R-prefixed codes never clash with terminal codes `T01…`. Their pattern is `^R[TLPH][0-9]{2}$`.
 
-`naga-modes-seed-YYYY-MM-DD.json` holds the reviewed records for all transport modes: sources
-N01–N41, U01 and U02 (owner report), research sources RT01–RT24, RL01–RL19, RP01–RP22 and RH01–RH21, terminals T01–T16, the tricycle feeder routes, per-route vehicle classes (fleet),
-cooperative names, regional services, fare-rule source additions, new fare rules F06–F12, fare
-observations, time-estimate parameters, street aliases and a conflicts register.
+Record sections added with these families:
 
-The importer reads only this file (newest date wins). It is validated by
-`src/domain/import/modes-seed.ts` (`parseModesSeed` for the strict shape, `validateModesSeed` for
-the rules, `importableRecords` for what may be imported). The file lives here, not in `Data_Sets/`,
-because `Data_Sets/` is the original research package and is read as a whole.
-
-.
+- `roadRules`: tricycle and padyak road restrictions (evidence level, enactment, sources RT/RP).
+- `padyakAreas`: padyak service areas with named OSM place-node anchors, associations and documented year.
+- `routeNotes`: short rider-facing notes on loop routes (R8-A..D, R2), each with an evidence level
+  (`official`, `news`, `community`, `owner_report_unverified`) and optional `near` point.
+- Sources RT/RL/RP/RH are the research families above; U02 is the owner report (2026-10-17) and
+  supports only owner-reported notes and barangays.
 
 ## Provenance
 
