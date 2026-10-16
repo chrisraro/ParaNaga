@@ -65,7 +65,7 @@ test("Help opens from More with its three tabs, and Back returns to More", async
 
   await tabs(page).getByRole("tab", { name: "About data" }).click();
   await expect(page.getByTestId("help-badges").getByRole("listitem")).toHaveCount(4);
-  await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionmodes-2026-10-16 · Oct 16, 2026");
+  await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionmodes-lines-2026-10-16 · Oct 16, 2026");
   await expect(page.getByTestId("help-data-footer")).toHaveText("No live arrival times. Stop alerts work only while ParaNaga is open on your screen.");
 
   await page.getByTestId("help-page").getByTestId("detail-back").click();
@@ -181,7 +181,7 @@ async function axeAll(page: Page) {
   for (const name of ["Safety", "About data"]) {
     await tabs(page).getByRole("tab", { name }).click();
     await expect(tabs(page).getByRole("tab", { name })).toHaveAttribute("aria-selected", "true");
-    if (name === "About data") await expect(page.getByTestId("help-data-revision")).toContainText("modes-2026-10-16");
+    if (name === "About data") await expect(page.getByTestId("help-data-revision")).toContainText("modes-lines-2026-10-16");
     await expectAxeClean(page, "help-page");
   }
   await page.goto("/app/help/using-paranaga-offline");

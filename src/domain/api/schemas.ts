@@ -9,6 +9,7 @@
 //  - NULL from the database stays null (unknown), never 0 or false.
 import { z } from "zod";
 import { NAGA_MAX_BOUNDS } from "../geo/naga";
+import { decodePolyline } from "../geo/polyline";
 import { OSM_ELEMENT_TYPES, OSM_PLACE_CATEGORIES } from "../places/osm-categories";
 import {
   COLOUR_KEYS,
@@ -187,7 +188,67 @@ export const snapshotVariantSchema = z.object({
   stopIds: z.array(z.uuid()).min(1),
   mode: legacyRouteMode(),
   // No `fleet`: the route's fleet is in `routes[]` (join by routeId), sent once per route.
+  /**
+   * D13: metres along the variant's approximate path at each stop (same order as stopIds; a
+   * circuit's measures wrap at pathLengthM), or null when the variant has no published path.
+   */
+  measuresM: z.array(z.number().min(0)).nullable().default(null),
+  /** Length of the variant's approximate path in metres, or null when it has none. */
+  pathLengthM: z.number().positive().nullable().default(null),
+}).superRefine((v, ctx) => {
+  if (v.measuresM === null) return;
+  if (v.pathLengthM === null) ctx.addIssue({ code: "custom", message: "stop measures need the path length" });
+  if (v.measuresM.length !== v.stopIds.length) ctx.addIssue({ code: "custom", message: "one measure per stop" });
+  if (v.pathLengthM !== null && v.measuresM.some((m) => m > v.pathLengthM!)) {
+    ctx.addIssue({ code: "custom", message: "a stop measure lies beyond the path length" });
+  }
 });
+
+/** The five time-estimate parameters (D8/D9). */
+export const ETA_PARAM_KEYS = [
+  "walk_speed_kmh", "walk_slowdown_factor", "jeepney_speed_offpeak_kmh", "jeepney_speed_peak_kmh", "peak_windows",
+] as const;
+const clockTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+/**
+ * One time-estimate parameter with its basis: sourced (sourceCodes) or an assumption with its
+ * note (A1–A3); a mixed band is an assumption that also lists its sources.
+ */
+export const etaParamSchema = z
+  .object({
+    key: z.enum(ETA_PARAM_KEYS),
+    low: z.number().positive().nullable(),
+    high: z.number().positive().nullable(),
+    unit: z.enum(["km_per_h", "factor", "windows"]),
+    /** Asia/Manila clock times (fixed UTC+8). */
+    windows: z.array(z.object({ start: clockTime, end: clockTime })).min(1).nullable(),
+    days: z.enum(["every_day"]).nullable(),
+    appliesTo: z.array(z.enum(["walk", "jeepney"])).min(1),
+    isAssumption: z.boolean(),
+    assumptionNote: z.string().nullable(),
+    basis: z.string().min(1),
+    sourceCodes: z.array(z.string()),
+  })
+  .refine((p) => p.isAssumption || p.sourceCodes.length > 0, { message: "a value that is not an assumption needs sources" })
+  .refine((p) => !p.isAssumption || p.assumptionNote !== null, { message: "an assumption needs its note" })
+  .refine((p) => (p.unit === "windows") === (p.windows !== null) && (p.unit === "windows") === (p.low === null && p.high === null), {
+    message: "windows, or a low–high value",
+  })
+  .refine((p) => p.low === null || p.high === null || p.low <= p.high, { message: "low is above high" });
+export type EtaParam = z.infer<typeof etaParamSchema>;
+
+/** Every time-estimate parameter of the revision (all five, each once); times are computed on the device. */
+export const etaModelSchema = z
+  .object({
+    timeZone: z.literal("Asia/Manila"),
+    /** Fixed UTC+8, no daylight saving (D9). */
+    utcOffsetMinutes: z.literal(480),
+    params: z.array(etaParamSchema),
+  })
+  .refine((m) => m.params.length === ETA_PARAM_KEYS.length && ETA_PARAM_KEYS.every((k) => m.params.some((p) => p.key === k)), {
+    message: "the time-estimate model needs each of the five parameters once",
+  });
+export type EtaModel = z.infer<typeof etaModelSchema>;
 
 /** A published terminal or loading point; lat/lng null when no coordinate is on file. */
 export const snapshotTerminalSchema = z
@@ -230,6 +291,8 @@ export const networkSnapshotSchema = z.object({
       fleet: fleetSummarySchema.default(unconfirmedFleet),
     }),
   ).default(() => []),
+  /** The time-estimate parameters (D8/D9), or null for a revision published without them. */
+  etaModel: etaModelSchema.nullable().default(null),
 });
 export type NetworkSnapshot = z.infer<typeof networkSnapshotSchema>;
 
@@ -380,7 +443,26 @@ const routeVariantSchema = z.object({
   sourceCodes: z.array(z.string()),
   /** Published ordered stops; empty when the variant has no stop order. */
   stops: z.array(stopSummarySchema.extend({ seq: z.number().int().min(1) })),
+  /** Its approximate path (Task 7); "not_traced" for revisions published without paths. */
+  pathStatus: z.lazy(() => pathStatusSchema).default(() => ({ ...NOT_TRACED })),
 });
+
+/**
+ * Whether a variant has an approximate path: traced (ok) or flagged (drawn, see the lines
+ * resource), untraced ("Path could not be traced from the street list", with the reason), or
+ * not_traced (no road outputs in this revision). Copy (Task 12): "Traced along {matched} of
+ * {listed} listed streets".
+ */
+export const pathStatusSchema = z.object({
+  status: z.enum(["traced", "flagged", "untraced", "not_traced"]),
+  /** The flag reason (flagged) or the failure reason (untraced); null otherwise. */
+  reason: z.string().nullable(),
+  listedStreets: z.number().int().min(0).nullable(),
+  matchedStreets: z.number().int().min(0).nullable(),
+  unmatchedStreets: z.array(z.string()),
+});
+export type PathStatus = z.infer<typeof pathStatusSchema>;
+export const NOT_TRACED: PathStatus = { status: "not_traced", reason: null, listedStreets: null, matchedStreets: null, unmatchedStreets: [] };
 
 export const fareObservationSchema = z.object({
   code: z.string().nullable(),
@@ -608,6 +690,111 @@ export type SearchIndex = z.infer<typeof searchIndexSchema>;
 export function isCompleteSearchIndex(index: Pick<SearchIndex, "pinPlaces" | "routes">): boolean {
   return index.pinPlaces.length > 0 && index.routes.length > 0;
 }
+
+// ---------------------------------------------------------------- GET /api/v1/network/lines/:revisionId
+
+/** J1: shown with every ride path. */
+export const PATH_LABEL = "Approximate path, not a verified route shape";
+export const UNTRACED_MESSAGE = "Path could not be traced from the street list";
+export const LINES_ATTRIBUTION = "Map data © OpenStreetMap contributors (ODbL)";
+export const OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright";
+export const OFF_LIST_REASONS = ["off_list_detour", "oneway_conflict", "terminal_access"] as const;
+export const TRACE_FAILURES = ["anchor_unresolved", "pin_unsnapped", "unmatched_streets", "not_continuous", "empty"] as const;
+const roadSource = z.string().regex(/^OSMR-\d{4}-\d{2}-\d{2}$/);
+
+/**
+ * A stretch of a path on streets that are not on the legal list, by metres along the path, with
+ * its reason. Rendering (Task 12): off_list_detour dashed only on a flagged path; oneway_conflict
+ * dashed with the one-way caution on a flagged path, and on an ok path when ≥ 100 m;
+ * terminal_access always drawn normally, with the note "terminal access road".
+ */
+export const lineSegmentSchema = z.object({
+  fromM: z.number().min(0),
+  toM: z.number().min(0),
+  lengthM: z.number().min(0),
+  reason: z.enum(OFF_LIST_REASONS),
+  /** Normalized OSM street names with metres, longest first ("(unnamed)" for unnamed roads). */
+  streets: z.array(z.object({ name: z.string(), m: z.number().min(0) })),
+  /** oneway_conflict only: the listed streets mapped one-way against the travel order. */
+  against: z.array(z.string()).nullable(),
+});
+
+/** Every point of an encoded path (precision 5) lies inside the Naga map bounds. */
+function encodedInsideNaga(encoded: string): boolean {
+  const points = decodePolyline(encoded);
+  const b = NAGA_MAX_BOUNDS;
+  return points.length >= 2 && points.every((p) => p.lat >= b.south && p.lat <= b.north && p.lng >= b.west && p.lng <= b.east);
+}
+
+const lineVariantFields = {
+  variantId: z.uuid(),
+  routeId: z.uuid(),
+  routeCode: z.string(),
+  routeName: z.string(),
+  /** Feeder branch name; null for LPTRP variants. */
+  variantName: z.string().nullable(),
+  mode: routeModeSchema,
+  direction: z.enum(DIRECTIONS),
+  kind: z.enum(VARIANT_KINDS),
+};
+
+/** One drawn approximate path (trace status ok or flagged). */
+export const lineSchema = z
+  .object({
+    ...lineVariantFields,
+    serviceStatus: z.enum(SERVICE_STATUSES).nullable(),
+    planning: z.enum(PLANNING_FLAGS),
+    fleet: fleetSummarySchema,
+    /** D3 line colour key (same as fleet.colourKey). */
+    colourKey: z.enum(COLOUR_KEYS),
+    status: z.enum(["ok", "flagged"]),
+    /** Why a flagged path is over the D6 off-list threshold; null when ok. */
+    flagReason: z.enum(["oneway_conflict", "off_list_detour"]).nullable(),
+    /** Encoded polyline, precision 5. */
+    encoded: z.string().refine(encodedInsideNaga, { message: "the path must decode inside the Naga map bounds" }),
+    lengthM: z.number().positive(),
+    label: z.literal(PATH_LABEL),
+    roadSource,
+    attribution: z.literal(LINES_ATTRIBUTION),
+    segments: z.array(lineSegmentSchema),
+    quality: z.object({
+      listedStreets: z.number().int().min(0),
+      matchedStreets: z.number().int().min(0),
+      unmatchedStreets: z.array(z.string()),
+      offListShare: z.number().min(0).max(1).nullable(),
+      gateOffListShare: z.number().min(0).max(1).nullable(),
+      terminalAccessM: z.number().min(0),
+    }),
+  })
+  .refine((l) => (l.status === "flagged") === (l.flagReason !== null), { message: "a flagged path has its reason" })
+  .refine((l) => l.colourKey === l.fleet.colourKey, { message: "colourKey is the fleet's" });
+
+/** A variant with no path: "Path could not be traced from the street list" and the reason. */
+export const untracedLineSchema = z.object({
+  ...lineVariantFields,
+  reason: z.enum(TRACE_FAILURES),
+  message: z.literal(UNTRACED_MESSAGE),
+  quality: z.object({
+    listedStreets: z.number().int().min(0),
+    matchedStreets: z.number().int().min(0),
+    unmatchedStreets: z.array(z.string()),
+    anchorsUnresolved: z.array(z.string()),
+  }),
+});
+
+export const linesSchema = z.object({
+  revision: revisionMetaSchema,
+  label: z.literal(PATH_LABEL),
+  attribution: z.literal(LINES_ATTRIBUTION),
+  attributionUrl: z.literal(OSM_COPYRIGHT_URL),
+  licence: z.literal("ODbL 1.0"),
+  /** The road snapshots the paths were traced on (OSMR-YYYY-MM-DD). */
+  roadSources: z.array(roadSource),
+  lines: z.array(lineSchema),
+  untraced: z.array(untracedLineSchema),
+});
+export type Lines = z.infer<typeof linesSchema>;
+export type Line = z.infer<typeof lineSchema>;
 
 // ---------------------------------------------------------------- GET /api/v1/terminals/:code
 

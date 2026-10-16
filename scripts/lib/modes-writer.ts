@@ -514,7 +514,8 @@ async function checkModesUnchanged(
     revisionLabel: typeof last.counts.revision_label === "string" ? last.counts.revision_label : null,
     publishedRevisionLabel: pointer.rows[0]?.label ?? null,
     publishedIncludesBatch: batchRevision !== null &&
-      (await publishedIncludes(c, batchRevision, [...MODES_OWNED_KINDS, "terminal"])),
+      // The road stage (lines-writer) publishes a distance version of each regional service.
+      (await publishedIncludes(c, batchRevision, [...MODES_OWNED_KINDS, "terminal"], ["regional_service"])),
     counts: modes.counts,
   };
 }

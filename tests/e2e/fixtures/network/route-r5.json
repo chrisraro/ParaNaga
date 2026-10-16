@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
-  "label": "modes-2026-10-16",
+  "revisionId": "bb68c0db-c46b-48fc-b94a-93fa2dda49fe",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T22:29:16.023Z"
+  "publishedAt": "2026-10-16T01:28:32.603Z"
  },
  "route": {
   "code": "R5",
@@ -117,7 +117,14 @@
     "S01",
     "S02"
    ],
-   "stops": []
+   "stops": [],
+   "pathStatus": {
+    "status": "traced",
+    "reason": null,
+    "listedStreets": 6,
+    "matchedStreets": 6,
+    "unmatchedStreets": []
+   }
   },
   {
    "variantId": "c2900148-03fd-4524-8cfb-6ef6b5201ddf",
@@ -149,7 +156,14 @@
     "S01",
     "S02"
    ],
-   "stops": []
+   "stops": [],
+   "pathStatus": {
+    "status": "traced",
+    "reason": null,
+    "listedStreets": 4,
+    "matchedStreets": 4,
+    "unmatchedStreets": []
+   }
   }
  ],
  "trials": [],

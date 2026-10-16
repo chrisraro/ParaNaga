@@ -28,6 +28,8 @@ const variant = {
   routeCode: "R8-A", routeName: "Loop A", direction: "clockwise" as const, kind: "permanent" as const,
   evidenceLevel: "provisional" as const, verification: "unverified" as const, isCircular: true, stopIds: [stop.id],
   mode: "jeepney" as const,
+  measuresM: null,
+  pathLengthM: null,
 };
 const request = () => GET(new Request(`http://localhost/api/v1/network/snapshot/${revisionId}`), { params: Promise.resolve({ revisionId }) } as never);
 
@@ -43,13 +45,13 @@ describe("network/snapshot completeness guard", () => {
   });
 
   it("serves a snapshot with stops but no variants (nothing routable yet)", async () => {
-    snapshot = { revision, stops: [stop], variants: [], fareRules: [], terminals: [], routes: [] };
+    snapshot = { revision, stops: [stop], variants: [], fareRules: [], terminals: [], routes: [], etaModel: null };
     const response = await request();
     expect(response.status).toBe(200);
   });
 
   it("serves a complete snapshot as immutable, read in a read-only transaction", async () => {
-    snapshot = { revision, stops: [stop], variants: [variant], fareRules: [], terminals: [], routes: [] };
+    snapshot = { revision, stops: [stop], variants: [variant], fareRules: [], terminals: [], routes: [], etaModel: null };
     const response = await request();
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("public, s-maxage=31536000, immutable");
@@ -60,7 +62,7 @@ describe("network/snapshot completeness guard", () => {
     ["no stops", { stops: [], variants: [variant] }],
     ["nothing", { stops: [], variants: [] }],
   ])("returns 503 no-store for %s", async (_name, part) => {
-    snapshot = { revision, fareRules: [], terminals: [], routes: [], ...part } as NetworkSnapshot;
+    snapshot = { revision, fareRules: [], terminals: [], routes: [], etaModel: null, ...part } as NetworkSnapshot;
     const response = await request();
     expect(response.status).toBe(503);
     expect(response.headers.get("cache-control")).toBe("no-store");

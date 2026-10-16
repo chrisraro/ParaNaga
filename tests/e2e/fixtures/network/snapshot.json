@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
-  "label": "modes-2026-10-16",
+  "revisionId": "bb68c0db-c46b-48fc-b94a-93fa2dda49fe",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T22:29:16.023Z"
+  "publishedAt": "2026-10-16T01:28:32.603Z"
  },
  "stops": [
   {
@@ -1714,7 +1714,40 @@
     "cbfda920-cb97-4c39-abf3-196679f6a7e7",
     "e3bc0522-9d04-4a9c-8f29-d4eee79d63d0"
    ],
-   "mode": "jeepney"
+   "mode": "jeepney",
+   "measuresM": [
+    0,
+    265.6,
+    720.7,
+    1066.4,
+    1353.3,
+    1588.5,
+    1854.5,
+    2028.6,
+    2187.7,
+    2324.9,
+    2637.3,
+    2881.7,
+    3080.5,
+    3521.3,
+    3743.3,
+    3981.3,
+    4386.1,
+    4708.1,
+    4904.7,
+    5136.9,
+    5450.6,
+    5645.9,
+    5889.4,
+    6133.1,
+    6362.3,
+    6647.1,
+    6933,
+    7219.8,
+    7490.1,
+    7841.5
+   ],
+   "pathLengthM": 8039.1
   },
   {
    "variantId": "9ddd04ca-ab7d-413e-8fd3-7d7f1a3ed7eb",
@@ -1759,7 +1792,41 @@
     "a58df5fc-5a67-4e98-8973-97b6e45444e4",
     "f0c10e2e-7d72-4257-acf6-2ea20bbfb410"
    ],
-   "mode": "jeepney"
+   "mode": "jeepney",
+   "measuresM": [
+    0,
+    370.3,
+    671.9,
+    1018.3,
+    1189.8,
+    1492.1,
+    1704.3,
+    1938.8,
+    2313.6,
+    2497.9,
+    2718.5,
+    3020.7,
+    3273.9,
+    3423,
+    3912,
+    4185.6,
+    4406.2,
+    4602,
+    4792,
+    5237.5,
+    5424.3,
+    5620.9,
+    5729.9,
+    5963.7,
+    6054.3,
+    6321,
+    6548.8,
+    6813.7,
+    7232.4,
+    7372.4,
+    7640.8
+   ],
+   "pathLengthM": 7867.6
   }
  ],
  "fareRules": [
@@ -2491,7 +2558,7 @@
    }
   },
   {
-   "routeId": "fda070f1-d493-4239-98d8-3eda94a72d7e",
+   "routeId": "77e29836-468c-49bd-868c-1f7a0f0c5f91",
    "routeCode": "TRI-VISTODA",
    "routeName": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
    "mode": "tricycle",
@@ -2523,7 +2590,7 @@
    }
   },
   {
-   "routeId": "bd08016f-27a6-4b33-9223-f5cb6ede0163",
+   "routeId": "443a4611-88c8-4814-85a5-8be77aebc2ff",
    "routeCode": "TRI-DECALANGON",
    "routeName": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
    "mode": "tricycle",
@@ -2554,5 +2621,108 @@
     ]
    }
   }
- ]
+ ],
+ "etaModel": {
+  "timeZone": "Asia/Manila",
+  "utcOffsetMinutes": 480,
+  "params": [
+   {
+    "key": "jeepney_speed_offpeak_kmh",
+    "low": 10,
+    "high": 15,
+    "unit": "km_per_h",
+    "windows": null,
+    "days": null,
+    "appliesTo": [
+     "jeepney"
+    ],
+    "isAssumption": false,
+    "assumptionNote": null,
+    "basis": "Naga baseline about 10 km/h (SafeTravelPH SimEx); comparable-city observed upper about 15 km/h (Puerto Princesa)",
+    "sourceCodes": [
+     "N16",
+     "N29"
+    ]
+   },
+   {
+    "key": "jeepney_speed_peak_kmh",
+    "low": 7,
+    "high": 13,
+    "unit": "km_per_h",
+    "windows": null,
+    "days": null,
+    "appliesTo": [
+     "jeepney"
+    ],
+    "isAssumption": true,
+    "assumptionNote": "A2: the low end (7 km/h) is 30% below the Naga ~10 km/h baseline, an assumption; the high end (13) is N29's 13.3 rounded down",
+    "basis": "High end from N29 (observed peak 13.3 km/h); low end assumption A2",
+    "sourceCodes": [
+     "N29"
+    ]
+   },
+   {
+    "key": "peak_windows",
+    "low": null,
+    "high": null,
+    "unit": "windows",
+    "windows": [
+     {
+      "start": "06:00",
+      "end": "08:00"
+     },
+     {
+      "start": "11:00",
+      "end": "13:00"
+     },
+     {
+      "start": "16:00",
+      "end": "19:00"
+     }
+    ],
+    "days": "every_day",
+    "appliesTo": [
+     "jeepney"
+    ],
+    "isAssumption": true,
+    "assumptionNote": "A3: applied every day; no day-of-week source",
+    "basis": "Ordinance 2025-110 peak-hour truck ban on Roxas Ave (Asia/Manila)",
+    "sourceCodes": [
+     "N04"
+    ]
+   },
+   {
+    "key": "walk_slowdown_factor",
+    "low": 1,
+    "high": 1.25,
+    "unit": "factor",
+    "windows": null,
+    "days": null,
+    "appliesTo": [
+     "walk"
+    ],
+    "isAssumption": true,
+    "assumptionNote": "A1: crossings, waiting at roads, slower walkers (high end = low end × 1.25); no source",
+    "basis": "ParaNaga assumption A1",
+    "sourceCodes": []
+   },
+   {
+    "key": "walk_speed_kmh",
+    "low": 4.238,
+    "high": 4.238,
+    "unit": "km_per_h",
+    "windows": null,
+    "days": null,
+    "appliesTo": [
+     "walk"
+    ],
+    "isAssumption": false,
+    "assumptionNote": null,
+    "basis": "Walking speed 4.238 km/h, Metro Manila study (Tolentino & Sigua 2022)",
+    "sourceCodes": [
+     "N28"
+    ]
+   }
+  ]
+ }
 }

@@ -5,7 +5,7 @@
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
 // The published revision every captured network fixture names (fixtures/network/*.json).
-export const REVISION = { revisionId: "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74", label: "modes-2026-10-16", kind: "provisional", publishedAt: "2026-10-15T22:29:16.023Z" };
+export const REVISION = { revisionId: "bb68c0db-c46b-48fc-b94a-93fa2dda49fe", label: "modes-lines-2026-10-16", kind: "provisional", publishedAt: "2026-10-16T01:28:32.603Z" };
 const LOOP_A = id(100);
 
 const ORIGIN = { kind: "origin", lat: 13.6224, lng: 123.1838, stopId: null, name: null };

@@ -29,9 +29,13 @@ import {
 } from "../../src/domain/import/seed";
 import { parseSurveyTemplate } from "../../src/domain/import/survey-template";
 import type { OsmPlaceCategory } from "../../src/domain/places/osm-categories";
+import { buildLinesPlan, type LinesPlan } from "./lines-plan";
 import { buildModesPlan, type ModesFile, type ModesPlan } from "./modes-plan";
+import type { RoadsSnapshot } from "./roads-snapshot";
 
 export { MODES_DIR, readNewestModesSeed, type ModesFile, type ModesPlan } from "./modes-plan";
+export { readPinnedRoadsSnapshot, ROADS_DIR, type RoadsSnapshot } from "./roads-snapshot";
+export type { LinesPlan } from "./lines-plan";
 
 export const DATA_FILES = [
   "naga_mapped_stops_source.kml",
@@ -112,6 +116,11 @@ export type ImportPlan = {
   osm: OsmPlan | null;
   /** The newest reviewed modes seed (data/source/research), or null when none is given. */
   modes: ModesPlan | null;
+  /**
+   * The road outputs (approximate paths, walk graph, time-estimate parameters, regional distances)
+   * from the pinned road snapshot, or null when no snapshot is given (Task 7).
+   */
+  lines: LinesPlan | null;
   problems: string[];
 };
 
@@ -229,6 +238,7 @@ export function buildImportPlan(
   files: DataFiles,
   osmFile: OsmFile | null = null,
   modesFile: ModesFile | null = null,
+  roads: RoadsSnapshot | null = null,
 ): ImportPlan {
   const text = (f: DataFileName) => files[f].toString("utf8");
   const problems: string[] = [];
@@ -299,6 +309,18 @@ export function buildImportPlan(
   });
   const documentsHash = sha256Hex(documents.map((d) => `${d.fileName}:${d.sha256}`).sort().join("\n"));
 
+  // Road outputs need the reviewed modes seed (aliases, terminals, parameters, feeder anchors).
+  let lines: LinesPlan | null = null;
+  if (roads && !modes) problems.push(`${roads.fileName}: the road outputs need the reviewed modes seed (${MODES_SEED_FILES})`);
+  else if (roads && modes) {
+    lines = buildLinesPlan({
+      roads, modes, variants, identified, documentsHash,
+      osmPlaces: (osm?.places ?? []).map((p) => ({ key: p.key, lat: p.lat, lng: p.lng })),
+      osmPlacesSha256: osm?.sha256 ?? null,
+    });
+    problems.push(...lines.problems);
+  }
+
   const layerCounts = Object.fromEntries(
     Object.keys(EXPECTED_LAYER_COUNTS).map((l) => [`raw_features_${l}`, identified.filter((r) => r.layer === l).length]),
   );
@@ -349,9 +371,12 @@ export function buildImportPlan(
     deferred: { route_aliases: "deferred (no structured source)" },
     osm,
     modes,
+    lines,
     problems,
   };
 }
+
+const MODES_SEED_FILES = "data/source/research/naga-modes-seed-*.json";
 
 /** Raw feature rows; a record without verbatim coordinate text is a problem, not a row. */
 export function planRawFeatures(identified: IdentifiedStop[], problems: string[]): PlannedRawFeature[] {

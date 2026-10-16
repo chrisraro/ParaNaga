@@ -55,7 +55,7 @@ function snapshot(edit: (s: Pick<NetworkSnapshot, "revision" | "stops" | "varian
       {
         variantId: rideLeg.variantId, routeId: NEW_REVISION, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A",
         direction: "circuit", kind: "trial", evidenceLevel: "provisional", verification: "unverified", isCircular: true,
-        stopIds: plan.stops.map((x) => x.id), mode: "jeepney",
+        stopIds: plan.stops.map((x) => x.id), mode: "jeepney", measuresM: null, pathLengthM: null,
       },
     ],
   };
@@ -89,7 +89,7 @@ describe("saved trip card", () => {
 
   it("meta line: no time, the fare chip text and the data date", () => {
     expect(tripCardMeta(card())).toBe("Time not available · Estimate ₱14–₱17 · data from 16 Oct 2026");
-    expect(tripCardMeta(card({ publishedAt: null }))).toBe("Time not available · Estimate ₱14–₱17 · data from revision modes-2026-10-16");
+    expect(tripCardMeta(card({ publishedAt: null }))).toBe("Time not available · Estimate ₱14–₱17 · data from revision modes-lines-2026-10-16");
   });
 });
 

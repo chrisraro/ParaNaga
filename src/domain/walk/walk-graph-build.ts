@@ -19,6 +19,8 @@ import type { LatLng } from "../geo/types";
 import { WALK_GRAPH_FORMAT_VERSION, type WalkGraphPayload } from "./format";
 
 export const DEFAULT_MIN_COMPONENT_NODES = 50;
+/** Recorded with every stored walk graph (transit.walk_graph_version.builder_version). */
+export const WALK_GRAPH_BUILDER_VERSION = "walk-graph-build/1";
 
 export type WalkGraphBuildStats = {
   /** Nodes and undirected edges in the payload (after contraction). */

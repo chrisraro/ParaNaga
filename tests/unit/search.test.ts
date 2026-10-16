@@ -1,5 +1,5 @@
 // Client-side search over the published search index (src/domain/search/search.ts), on the REAL
-// index captured for the e2e fixtures (revision modes-2026-10-16: 233 OpenStreetMap places,
+// index captured for the e2e fixtures (revision modes-lines-2026-10-16: 233 OpenStreetMap places,
 // 47 mapped-pin places, 11 routes, 6 terminals, 27 barangays, 32 study labels).
 import { describe, expect, it } from "vitest";
 import { searchIndexSchema } from "@/domain/api/schemas";

@@ -49,17 +49,24 @@ export class ImportRefusedError extends Error {}
 /**
  * True when the published revision holds every member (same entity and version) of `revisionId`
  * of the given kinds: the batch's data is published, by that revision or by one that carried it forward.
+ * For `entityOnlyKinds` the same entity in any version counts (a later stage published a newer
+ * version of it, e.g. the road stage's regional service distance versions).
  */
-export async function publishedIncludes(c: pg.ClientBase, revisionId: string, kinds: string[]): Promise<boolean> {
+export async function publishedIncludes(
+  c: pg.ClientBase,
+  revisionId: string,
+  kinds: string[],
+  entityOnlyKinds: string[] = [],
+): Promise<boolean> {
   const { rows } = await c.query<{ missing: number; published: boolean }>(
     `select (select count(*)::int from transit.revision_member m
               where m.revision_id = $1 and m.entity_kind = any($2::text[])
                 and not exists (select 1 from transit.revision_member pm join transit.published_pointer p
                                     on p.revision_id = pm.revision_id
                                  where pm.entity_kind = m.entity_kind and pm.entity_id = m.entity_id
-                                   and pm.version_id = m.version_id)) as missing,
+                                   and (pm.version_id = m.version_id or m.entity_kind = any($3::text[])))) as missing,
             exists (select 1 from transit.published_pointer) as published`,
-    [revisionId, kinds],
+    [revisionId, kinds, entityOnlyKinds],
   );
   return rows[0]!.published && rows[0]!.missing === 0;
 }

@@ -169,6 +169,31 @@ export type PlannedModesFareRule = FareRuleRow & {
   contentHash: string;
 };
 
+/** A time-estimate parameter (D8/D9), written with the road outputs (scripts/lib/lines-writer.ts). */
+export type PlannedEtaParam = {
+  key: string;
+  valueLow: number | null;
+  valueHigh: number | null;
+  unit: "km_per_h" | "factor" | "windows";
+  windows: { start: string; end: string }[] | null;
+  days: "every_day" | null;
+  appliesTo: string[];
+  isAssumption: boolean;
+  assumptionNote: string | null;
+  basis: string;
+  sourceCodes: string[];
+  contentHash: string;
+};
+
+/** A reviewed legal-name → OSM-name street alias for the path tracer (Task 5). */
+export type PlannedStreetAlias = {
+  legalName: string;
+  osmName: string;
+  osmWayIds: number[];
+  evidenceSnapshot: string;
+  reason: string;
+};
+
 export type PlannedResearchConflict = {
   code: string;
   topic: string;
@@ -185,7 +210,7 @@ export type ModesPlan = {
   seedDate: string;
   /** ingest.batch.snapshot_version, e.g. modes-seed:2026-10-16. */
   snapshotVersion: string;
-  /** `modes-{date}`: Task 7's road outputs (which would make it `modes-lines-{date}`) are not built yet. */
+  /** `modes-{date}`; the road outputs then publish `modes-lines-{roads date}` on top (lines-writer). */
   revisionLabel: string;
   synthetic: boolean;
   sources: PlannedSource[];
@@ -198,6 +223,8 @@ export type ModesPlan = {
   regionalServices: PlannedRegionalService[];
   fareRules: PlannedModesFareRule[];
   conflicts: PlannedResearchConflict[];
+  etaParams: PlannedEtaParam[];
+  streetAliases: PlannedStreetAlias[];
   /** `kind code: reason` for every record the review excluded. */
   excluded: string[];
   /** Imported records that this task does not write yet, with the reason. */
@@ -356,9 +383,22 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
     code: c.code, topic: c.topic, description: c.description, refs: c.refs, sourceCodes: c.source_codes,
   }));
 
+  const etaParams = imp.etaParams.map((p): PlannedEtaParam => {
+    const row = {
+      key: p.key, valueLow: p.value_low, valueHigh: p.value_high, unit: p.unit, windows: p.windows, days: p.days,
+      appliesTo: p.applies_to, isAssumption: p.is_assumption, assumptionNote: p.assumption_note, basis: p.basis,
+      sourceCodes: p.source_codes,
+    };
+    return { ...row, contentHash: hash("eta_param_version", row) };
+  });
+  const streetAliases = imp.streetAliases.map((a): PlannedStreetAlias => ({
+    legalName: a.legal_name, osmName: a.osm_name, osmWayIds: a.osm_way_ids, evidenceSnapshot: a.evidence_snapshot, reason: a.reason,
+  }));
+
+  // Written by the road stage (scripts/lib/lines-writer.ts), which needs the road snapshot.
   const deferred: Record<string, string> = {
-    eta_params: `${imp.etaParams.length} imported records wait for migration 0007 (Task 7)`,
-    street_aliases: `${imp.streetAliases.length} records; used by the path tracer (Task 5)`,
+    eta_params: `${etaParams.length} records; written with the road outputs (modes-lines revision, lines-writer)`,
+    street_aliases: `${streetAliases.length} records; used by the path tracer (lines plan)`,
   };
 
   const counts: Record<string, number> = {
@@ -391,6 +431,8 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
     regionalServices,
     fareRules: [...updatedRules, ...newRules],
     conflicts,
+    etaParams,
+    streetAliases,
     excluded: excludedRecords(seed),
     deferred,
     counts,
@@ -401,6 +443,7 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
 function emptyPlan() {
   return {
     synthetic: false, sources: [], terminals: [], routes: [], operatingStatuses: [], vehicleClasses: [], cooperatives: [],
-    routeFareObservations: [], regionalServices: [], fareRules: [], conflicts: [], excluded: [], deferred: {}, counts: {},
+    routeFareObservations: [], regionalServices: [], fareRules: [], conflicts: [], etaParams: [], streetAliases: [], excluded: [],
+    deferred: {}, counts: {},
   };
 }

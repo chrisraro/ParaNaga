@@ -91,7 +91,7 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   await expect(page.getByRole("button", { name: /Recommended · Fewest transfers.*Estimate ₱14–₱17/ })).toBeVisible();
 
   await expect(options).toContainText("Walking distances are estimates; paths not verified.");
-  await expect(options).toContainText("Transport data revision modes-2026-10-16");
+  await expect(options).toContainText("Transport data revision modes-lines-2026-10-16");
   await expect(page.getByText("Verified route", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Exact|arrive/i)).toHaveCount(0);
   await expect(page.getByTestId("no-verified-commute")).toHaveCount(0);

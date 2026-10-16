@@ -365,3 +365,77 @@ export const regionalServiceVersion = transit.table("regional_service_version", 
   contentHash: text("content_hash").notNull(),
   isSynthetic: boolean("is_synthetic").notNull(),
 });
+
+// ---------------------------------------------------------------- paths, walk graph, time-estimate parameters (0007)
+
+export const shape = transit.table("shape", {
+  id: uuid("id").primaryKey(),
+  variantId: uuid("variant_id").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const shapeVersion = transit.table("shape_version", {
+  id: uuid("id").primaryKey(),
+  shapeId: uuid("shape_id").notNull(),
+  variantVersionId: uuid("variant_version_id").notNull(),
+  traceStatus: text("trace_status").$type<"ok" | "flagged" | "untraced">().notNull(),
+  flagReason: text("flag_reason").$type<"oneway_conflict" | "off_list_detour">(),
+  untracedReason: text("untraced_reason"),
+  geog: geography("geog"),
+  lengthM: numeric("length_m"),
+  evidenceKind: text("evidence_kind").$type<"approximate_street_trace">().notNull(),
+  approximate: boolean("approximate").notNull(),
+  label: text("label").notNull(),
+  stopMeasures: jsonb("stop_measures").$type<{ seq: number; stopPointVersionId: string; measureM: number; snapM: number }[]>(),
+  offListSegments: jsonb("off_list_segments").notNull(),
+  traceQuality: jsonb("trace_quality").notNull(),
+  inputsHash: text("inputs_hash").notNull(),
+  roadSourceCode: text("road_source_code").notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const walkGraph = transit.table("walk_graph", {
+  id: uuid("id").primaryKey(),
+  key: text("key").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const walkGraphVersion = transit.table("walk_graph_version", {
+  id: uuid("id").primaryKey(),
+  walkGraphId: uuid("walk_graph_id").notNull(),
+  formatVersion: integer("format_version").notNull(),
+  payload: text("payload").notNull(),
+  bytes: integer("bytes").notNull(),
+  gzipBytes: integer("gzip_bytes").notNull(),
+  sha256: text("sha256").notNull(),
+  nodeCount: integer("node_count").notNull(),
+  edgeCount: integer("edge_count").notNull(),
+  roadSourceCode: text("road_source_code").notNull(),
+  builderVersion: text("builder_version").notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const etaParam = transit.table("eta_param", {
+  id: uuid("id").primaryKey(),
+  key: text("key").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});
+
+export const etaParamVersion = transit.table("eta_param_version", {
+  id: uuid("id").primaryKey(),
+  etaParamId: uuid("eta_param_id").notNull(),
+  valueLow: numeric("value_low"),
+  valueHigh: numeric("value_high"),
+  unit: text("unit").$type<"km_per_h" | "factor" | "windows">().notNull(),
+  windows: jsonb("windows").$type<{ start: string; end: string }[]>(),
+  days: text("days").$type<"every_day">(),
+  appliesTo: text("applies_to").array().notNull(),
+  isAssumption: boolean("is_assumption").notNull(),
+  assumptionNote: text("assumption_note"),
+  basis: text("basis").notNull(),
+  sourceCodes: text("source_codes").array().notNull(),
+  contentHash: text("content_hash").notNull(),
+  isSynthetic: boolean("is_synthetic").notNull(),
+});

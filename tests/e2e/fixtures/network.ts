@@ -5,6 +5,9 @@
 // all naming main's published revision osm-places-2026-10-15; network/head answers with that same
 // revision, and /api/v1/network/snapshot/:revisionId with the captured snapshot (Task 12: the home
 // pins and offline plans come from it). The client validates them with the shared schemas, so a schema drift fails the run.
+// /api/v1/network/lines/:revisionId answers with the captured lines (Task 7), and
+// /api/v1/network/walk-graph/:revisionId with walk-graph.json: a SYNTHETIC small extract around Centro
+// (flagged in its `fixture` header; tests/unit/walk-graph-e2e-fixture.test.ts rebuilds it).
 // No e2e test reaches a database.
 import type { BrowserContext, Page, Route } from "@playwright/test";
 import routeR1 from "./network/route-r1.json" with { type: "json" };
@@ -21,6 +24,8 @@ import routeR8D from "./network/route-r8-d.json" with { type: "json" };
 import routesList from "./network/routes.json" with { type: "json" };
 import searchIndex from "./network/search-index.json" with { type: "json" };
 import snapshot from "./network/snapshot.json" with { type: "json" };
+import lines from "./network/lines.json" with { type: "json" };
+import walkGraph from "./network/walk-graph.json" with { type: "json" };
 import stopA1 from "./network/stop-a1.json" with { type: "json" };
 import stopB18 from "./network/stop-b18.json" with { type: "json" };
 import stopCFirst from "./network/stop-c-first.json" with { type: "json" };
@@ -72,6 +77,10 @@ const TERMINALS = new Map([terminalT01, terminalT06].map((t) => [t.terminal.code
 
 /** The captured snapshot of the published revision (128 pins, Loops A and B, fare rules F01–F04). */
 export const SNAPSHOT = snapshot;
+/** The captured approximate paths of the published revision (18 drawn, 3 untraced feeders). */
+export const LINES = lines;
+/** A synthetic walk graph extract around Centro, served for the published revision. */
+export const WALK_GRAPH = walkGraph;
 
 export type NetworkCalls = {
   bboxes: string[];
@@ -82,6 +91,8 @@ export type NetworkCalls = {
   snapshots: string[];
   heads: number;
   terminals: string[];
+  lines: string[];
+  walkGraphs: string[];
 };
 
 /**
@@ -99,7 +110,8 @@ export async function routeNetwork(target: Page | BrowserContext, opts: { realCa
   // Passed to every handler through this closure: each call keeps its own setting.
   const json = reply(opts.realCacheHeaders ?? false);
   const page = target;
-  const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [], snapshots: [], heads: 0, terminals: [] };
+  const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [], snapshots: [], heads: 0, terminals: [],
+    lines: [], walkGraphs: [] };
   await page.route(/\/api\/v1\/stops(\?|\/|$)/, async (route) => {
     const url = new URL(route.request().url());
     const id = /\/api\/v1\/stops\/([^/?]+)/.exec(url.pathname)?.[1];
@@ -128,6 +140,16 @@ export async function routeNetwork(target: Page | BrowserContext, opts: { realCa
     const id = decodeURIComponent(/search-index\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);
     calls.searchIndexes.push(id);
     return id === searchIndex.revision.revisionId ? json(route, searchIndex, 200, "immutable") : notFound(route);
+  });
+  await page.route(/\/api\/v1\/network\/lines\/[^/?]+$/, (route) => {
+    const id = decodeURIComponent(/lines\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);
+    calls.lines.push(id);
+    return id === lines.revision.revisionId ? json(route, lines, 200, "immutable") : notFound(route);
+  });
+  await page.route(/\/api\/v1\/network\/walk-graph\/[^/?]+$/, (route) => {
+    const id = decodeURIComponent(/walk-graph\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);
+    calls.walkGraphs.push(id);
+    return id === snapshot.revision.revisionId ? json(route, walkGraph, 200, "immutable") : notFound(route);
   });
   await page.route(/\/api\/v1\/routes(\?.*)?$/, async (route) => {
     calls.routeLists += 1;

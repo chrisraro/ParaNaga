@@ -22,11 +22,15 @@
 //
 // The reviewed modes seed (plan.modes, Increment D Task 2) runs last, in the same transaction:
 // scripts/lib/modes-writer.ts (new revision `modes-<date>` carrying the published one forward).
+// The road outputs (plan.lines, Task 7: approximate paths, walk graph, time-estimate parameters,
+// regional distances) run after it, in the same transaction: scripts/lib/lines-writer.ts (new
+// revision `modes-lines-<roads date>` carrying the published one forward).
 // Ids are generated here so related rows can be inserted in bulk without RETURNING lookups.
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { sha256Hex } from "../../src/domain/import/hash";
 import type { ImportPlan, OsmPlan } from "./import-plan";
+import { writeLines, type LinesOutcome } from "./lines-writer";
 import { writeModes, type ModesOutcome } from "./modes-writer";
 import {
   IMPORT_ACTOR,
@@ -41,6 +45,7 @@ import {
 
 export { IMPORT_ACTOR, ImportRefusedError } from "./sql-rows";
 export type { ModesOutcome } from "./modes-writer";
+export type { LinesOutcome } from "./lines-writer";
 
 export type PlacesOutcome =
   | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
@@ -60,10 +65,10 @@ type TransitOutcome =
   | { outcome: "unchanged"; batchId: string; publishedRevisionLabel: string | null; counts: Record<string, number> };
 
 /**
- * The transit outcome (top level, as before) plus the OSM places outcome and the modes seed
- * outcome (null: no such file).
+ * The transit outcome (top level, as before) plus the OSM places outcome, the modes seed outcome
+ * and the road outputs outcome (null: no such file).
  */
-export type ImportOutcome = TransitOutcome & { places: PlacesOutcome | null; modes: ModesOutcome | null };
+export type ImportOutcome = TransitOutcome & { places: PlacesOutcome | null; modes: ModesOutcome | null; lines: LinesOutcome | null };
 
 export async function commitImport(connectionString: string, plan: ImportPlan): Promise<ImportOutcome> {
   if (plan.problems.length > 0) throw new ImportRefusedError(`plan has ${plan.problems.length} problem(s); nothing written`);
@@ -81,9 +86,11 @@ export async function commitImport(connectionString: string, plan: ImportPlan): 
       const transit = await writeInTransaction(client, plan);
       const places = plan.osm ? await writePlaces(client, plan.osm) : null;
       const modes = plan.modes ? await writeModes(client, plan.modes) : null;
-      const wrote = transit.outcome === "committed" || places?.outcome === "committed" || modes?.outcome === "committed";
+      const lines = plan.lines ? await writeLines(client, plan.lines) : null;
+      const wrote = transit.outcome === "committed" || places?.outcome === "committed" || modes?.outcome === "committed" ||
+        lines?.outcome === "committed";
       await client.query(wrote ? "commit" : "rollback");
-      return { ...transit, places, modes };
+      return { ...transit, places, modes, lines };
     } catch (error) {
       await client.query("rollback").catch(() => undefined);
       throw error;

@@ -44,7 +44,7 @@ export function realLoopsSnapshot(): NetworkSnapshot {
       direction: l.routeCode === "R8-A" ? ("clockwise" as const) : ("counterclockwise" as const),
       kind: "permanent" as const, evidenceLevel: "provisional" as const, verification: "unverified" as const,
       isCircular: true, stopIds: l.recs.map((r) => idFor(r.sourceIdentity)),
-      mode: "jeepney" as const, fleet: fleetSummary([], "jeepney"),
+      mode: "jeepney" as const, fleet: fleetSummary([], "jeepney"), measuresM: null, pathLengthM: null,
     })),
     fareRules: seed.fareRules
       .filter((f) => f.code === "F01" || f.code === "F02")
@@ -57,5 +57,6 @@ export function realLoopsSnapshot(): NetworkSnapshot {
       })),
     terminals: [],
     routes: [],
+    etaModel: null,
   };
 }

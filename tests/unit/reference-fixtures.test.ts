@@ -14,14 +14,15 @@ describe("reference fixtures", () => {
   const t01 = terminalDetailSchema.parse(read("terminal-t01.json"));
   const sources = sourceListSchema.parse(read("sources.json"));
 
-  it("name one revision (the published modes revision)", () => {
-    expect(index.revision.label).toBe("modes-2026-10-16");
+  it("name one revision (the published modes-lines revision)", () => {
+    expect(index.revision.label).toBe("modes-lines-2026-10-16");
     expect(t01.revision).toEqual(index.revision);
     expect(sources.revision).toEqual(index.revision);
   });
 
   it("every captured network fixture and the plan fixture name that same revision (network/head answers with it)", () => {
-    const files = readdirSync(path.resolve("tests/e2e/fixtures/network")).filter((f) => f.endsWith(".json"));
+    // walk-graph.json is a synthetic extract (format v1 payload, no revision): see walk-graph-e2e-fixture.test.ts.
+    const files = readdirSync(path.resolve("tests/e2e/fixtures/network")).filter((f) => f.endsWith(".json") && f !== "walk-graph.json");
     expect(files.length).toBeGreaterThanOrEqual(19);
     for (const f of files) expect(revisionMetaSchema.parse(read(f).revision), f).toEqual(index.revision);
     expect(PLAN_REVISION).toEqual(index.revision);

@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
-  "label": "modes-2026-10-16",
+  "revisionId": "bb68c0db-c46b-48fc-b94a-93fa2dda49fe",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T22:29:16.023Z"
+  "publishedAt": "2026-10-16T01:28:32.603Z"
  },
  "sources": [
   {
@@ -20,6 +20,14 @@
    "url": "https://overpass-api.de/api/interpreter",
    "evidenceType": "community_open_data",
    "publishedOrEnacted": "osm_base 2026-10-15T20:42Z",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N04",
+   "title": "Ordinance 2025-110 Amending Truck Ban",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-110/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-12-09 (enacted)",
    "checkedOn": "2026-10-16"
   },
   {
@@ -63,6 +71,14 @@
    "checkedOn": "2026-10-16"
   },
   {
+   "code": "N16",
+   "title": "SafeTravelPH: Naga SimEx support (2025-08-18, upd 2025-09-09) and tricycle research with BISCAST (2025-11-20)",
+   "url": "https://www.safetravelph.org/post/naga-city-gets-support-from-safetravelph-for-ptmp-route-simulation-exercise",
+   "evidenceType": "project_participant",
+   "publishedOrEnacted": "2025-08-18 / 2025-11-20",
+   "checkedOn": "2026-10-16"
+  },
+  {
    "code": "N17",
    "title": "Philstar: Jeepney fares up to P14 starting Sept 28",
    "url": "https://www.philstar.com/headlines/2026/09/27/2559277/jeepney-fares-p14-starting-sept-28-buses-taxis-tnvs-also-hike-rates",
@@ -84,6 +100,22 @@
    "url": "https://www.bicoltraininfo.com/",
    "evidenceType": "community_unconfirmed",
    "publishedOrEnacted": "2026-10-15 / 2026-08-23",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N28",
+   "title": "Tolentino & Sigua, Characteristics of Walking and Cycling in Metro Manila, Philippine Transportation Journal 5(1)",
+   "url": "https://ncts.upd.edu.ph/tssp/wp-content/uploads/2022/12/TSSP2022_Vol5-No1_02-Tolentino-and-Sigua.pdf",
+   "evidenceType": "academic",
+   "publishedOrEnacted": "2022",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N29",
+   "title": "Fajardo, Tiglao et al., Optimizing Route-based Fleet Size ... Puerto Princesa City (TSSP 2025)",
+   "url": "https://ncts.upd.edu.ph/tssp/wp-content/uploads/2026/02/TSSP2025-02-Revised-Paper.pdf",
+   "evidenceType": "academic_comparable_city",
+   "publishedOrEnacted": "2025 conf. (uploaded 2026-02)",
    "checkedOn": "2026-10-16"
   },
   {
@@ -157,6 +189,14 @@
    "evidenceType": "open_data",
    "publishedOrEnacted": "OSM data as of 2026-10-15T12:56:10Z",
    "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "OSMR-2026-10-16",
+   "title": "OpenStreetMap road network snapshot for Naga City (highways, OSM relation 3084673 + 300 m)",
+   "url": "https://www.openstreetmap.org/copyright",
+   "evidenceType": "open_data",
+   "publishedOrEnacted": "OSM data as of 2026-10-16T00:01:51Z",
+   "checkedOn": "2026-10-16"
   },
   {
    "code": "S01",

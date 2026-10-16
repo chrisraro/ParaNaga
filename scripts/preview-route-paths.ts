@@ -17,18 +17,16 @@ import type { LatLng } from "../src/domain/geo/types";
 import { buildSnapshot, withIdentities } from "../src/domain/import/mapped-stops";
 import { importableRecords, parseModesSeed } from "../src/domain/import/modes-seed";
 import { parseOsmPlaces } from "../src/domain/import/osm-places";
-import { resolvePlaceName, verifyStreetAliases } from "../src/domain/import/osm-roads";
+import { verifyStreetAliases } from "../src/domain/import/osm-roads";
 import { provisionalLoopSequence } from "../src/domain/import/provisional-loops";
-import { resolveRouteLandmarks, ROUTE_LANDMARKS, ROUTE_TERMINI } from "../src/domain/import/route-landmarks";
 import { normalizeSeed } from "../src/domain/import/seed";
-import { traceVariant, type TraceAnchor, type TraceInput, type TraceResult } from "../src/domain/import/trace-route";
+import { buildTraceContext } from "../src/domain/import/trace-context";
+import { traceVariant, type TraceInput, type TraceResult } from "../src/domain/import/trace-route";
 import { readNewestOsmSnapshot } from "./lib/import-plan";
 import { readNewestModesSeed } from "./lib/modes-plan";
 import { readPinnedRoadsSnapshot } from "./lib/roads-snapshot";
 
 const OUT = "tmp/route-paths-preview.geojson";
-/** Feeder place names with a reviewed waiting-area terminal (C: sourced terminal coordinate fallback). */
-const PLACE_TERMINAL_FALLBACK: Readonly<Record<string, string>> = { "Deca Vistansa": "T15" };
 
 type Job = { id: string; input: TraceInput; note: string };
 
@@ -63,54 +61,32 @@ function main(): number {
   const placesFile = readNewestOsmSnapshot();
   const places = placesFile ? parseOsmPlaces(JSON.parse(placesFile.bytes.toString("utf8")), NAGA_BOUNDARY).places : [];
 
-  const resolved = resolveRouteLandmarks(ROUTE_LANDMARKS, { terminals, graph, boundary: NAGA_BOUNDARY, aliases, places: roads.places });
-  const landmarks = Object.fromEntries(Object.entries(resolved).map(([k, v]) => [k, v.point]));
-  /** Points of the listed terminals of a street list (landmark rules of kind "terminal" that resolved). */
-  const terminalsOf = (streets: readonly string[]): LatLng[] =>
-    [...new Set(streets)].flatMap((n) => (ROUTE_LANDMARKS[n]?.kind === "terminal" && landmarks[n] ? [landmarks[n]!] : []));
+  const ctx = buildTraceContext({
+    graph, boundary: NAGA_BOUNDARY, aliases, terminals, roadPlaces: roads.places,
+    osmPlaces: places.map((p) => ({ key: p.key, lat: p.lat, lng: p.lng })),
+  });
+  const resolved = ctx.resolutions;
 
   const jobs: Job[] = [];
-  const terminusOf = (code: string): LatLng | null => {
-    const rule = ROUTE_TERMINI[code];
-    if (!rule) return null;
-    const r = resolvePlaceName(roads.places, rule.place);
-    return r.status === "resolved" ? { lat: r.place.lat, lng: r.place.lng } : null;
-  };
   for (const r of seed.routes) {
     const s = r.legalStreets;
-    const terminus = terminusOf(r.publicCode);
-    if (s.inbound) jobs.push({ id: `${r.publicCode} inbound`, input: { streets: s.inbound, landmarks, terminals: terminalsOf(s.inbound), termini: { start: terminus }, isCircular: false }, note: "street list" });
-    if (s.outbound) jobs.push({ id: `${r.publicCode} outbound`, input: { streets: s.outbound, landmarks, terminals: terminalsOf(s.outbound), termini: { end: terminus }, isCircular: false }, note: "street list" });
+    if (s.inbound) jobs.push({ id: `${r.publicCode} inbound`, input: ctx.streetListInput(r.publicCode, "inbound", s.inbound), note: "street list" });
+    if (s.outbound) jobs.push({ id: `${r.publicCode} outbound`, input: ctx.streetListInput(r.publicCode, "outbound", s.outbound), note: "street list" });
     if (s.circuit) {
       const seq = r.publicCode === "R8-A" || r.publicCode === "R8-B" ? provisionalLoopSequence(records, r.publicCode) : null;
       if (seq) {
         const byId = new Map(records.map((x) => [x.sourceIdentity, x]));
         const pins: LatLng[] = seq.map((q) => ({ lat: byId.get(q.recordIdentity)!.lat, lng: byId.get(q.recordIdentity)!.lng }));
-        jobs.push({ id: `${r.publicCode} circuit (pins)`, input: { streets: s.circuit, landmarks, terminals: terminalsOf(s.circuit), pins, isCircular: true }, note: `${pins.length} provisional pins` });
+        jobs.push({ id: `${r.publicCode} circuit (pins)`, input: ctx.streetListInput(r.publicCode, "circuit", s.circuit, { pins }), note: `${pins.length} provisional pins` });
       }
-      jobs.push({ id: `${r.publicCode} circuit`, input: { streets: s.circuit, landmarks, terminals: terminalsOf(s.circuit), isCircular: true }, note: "street list" });
+      jobs.push({ id: `${r.publicCode} circuit`, input: ctx.streetListInput(r.publicCode, "circuit", s.circuit), note: "street list" });
     }
   }
   for (const t of seed.trialChanges) {
-    jobs.push({ id: `${t.routeCode} trial ${t.adopted ?? ""}`, input: { streets: t.simplifiedCircuit, landmarks, terminals: terminalsOf(t.simplifiedCircuit), isCircular: true }, note: "trial circuit" });
+    jobs.push({ id: `${t.routeCode} trial ${t.adopted ?? ""}`, input: ctx.streetListInput(t.routeCode, "circuit", t.simplifiedCircuit), note: "trial circuit" });
   }
   for (const route of modes.routes) {
-    route.variants.forEach((v, i) => {
-      const anchors: TraceAnchor[] = v.anchors.map((a): TraceAnchor => {
-        if (a.kind === "junction") return { kind: "junction", streets: a.streets };
-        if (a.kind === "osm_places_snapshot") {
-          const p = places.find((x) => x.key === a.key);
-          return p ? { kind: "point", label: a.key, at: { lat: p.lat, lng: p.lng } } : { kind: "unresolved", label: a.key };
-        }
-        if (a.kind === "osm_place") return { kind: "unresolved", label: `osm:${a.osmType}/${a.osmId}` };
-        const r = resolvePlaceName(roads.places, a.name);
-        if (r.status === "resolved") return { kind: "point", label: a.name, at: { lat: r.place.lat, lng: r.place.lng } };
-        const t = terminals.find((x) => x.code === PLACE_TERMINAL_FALLBACK[a.name]);
-        if (t && t.lat !== null && t.lng !== null) return { kind: "point", label: `${a.name} (${t.code})`, at: { lat: t.lat, lng: t.lng } };
-        return { kind: "unresolved", label: a.name };
-      });
-      jobs.push({ id: `${route.code} variant ${i + 1}`, input: { streets: [], anchors, isCircular: false }, note: v.name });
-    });
+    route.variants.forEach((v, i) => jobs.push({ id: `${route.code} variant ${i + 1}`, input: ctx.anchorInput(v.anchors), note: v.name }));
   }
 
   const features: unknown[] = [];

@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "be20f4b0-0b4c-4541-bfa9-f03b06a5bc74",
-  "label": "modes-2026-10-16",
+  "revisionId": "bb68c0db-c46b-48fc-b94a-93fa2dda49fe",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T22:29:16.023Z"
+  "publishedAt": "2026-10-16T01:28:32.603Z"
  },
  "terminal": {
   "code": "T01",
@@ -91,8 +91,8 @@
     "Florencia Transport Services Inc."
    ],
    "destination": "Goa",
-   "distanceKm": null,
-   "distanceBasis": null,
+   "distanceKm": 52.024,
+   "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11495322 v17 52.202 km; relation 11495323 v15 52.024 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
    "status": "community_mapped",
    "terminalNote": "terminal from OSM tags/name; confirm",
    "notes": null,
@@ -105,10 +105,10 @@
    ],
    "fareEstimate": {
     "isEstimate": true,
-    "distanceKm": null,
-    "lowCentavos": null,
-    "highCentavos": null,
-    "text": "Ordinary bus: ₱12 first 5 km + ₱2.20/km (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · distance not on file · operator prices may differ",
+    "distanceKm": 52.024,
+    "lowCentavos": 11760,
+    "highCentavos": 11760,
+    "text": "Ordinary bus: Estimate ₱117.60 (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · operator prices may differ",
     "ruleCodes": [
      "F08",
      "F09",
@@ -118,7 +118,8 @@
     ]
    },
    "sourceCodes": [
-    "N01"
+    "N01",
+    "OSMR-2026-10-16"
    ]
   },
   {
@@ -130,8 +131,8 @@
     "JC Liner Corporation"
    ],
    "destination": "Lagonoy",
-   "distanceKm": null,
-   "distanceBasis": null,
+   "distanceKm": 59,
+   "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11495326 v16 59.092 km; relation 11495327 v16 59.000 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
    "status": "community_mapped",
    "terminalNote": "terminal from OSM tags/name; confirm",
    "notes": null,
@@ -144,10 +145,10 @@
    ],
    "fareEstimate": {
     "isEstimate": true,
-    "distanceKm": null,
-    "lowCentavos": null,
-    "highCentavos": null,
-    "text": "Ordinary bus: ₱12 first 5 km + ₱2.20/km (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · distance not on file · operator prices may differ",
+    "distanceKm": 59,
+    "lowCentavos": 13080,
+    "highCentavos": 13080,
+    "text": "Ordinary bus: Estimate ₱130.80 (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · operator prices may differ",
     "ruleCodes": [
      "F08",
      "F09",
@@ -157,7 +158,8 @@
     ]
    },
    "sourceCodes": [
-    "N01"
+    "N01",
+    "OSMR-2026-10-16"
    ]
   },
   {
@@ -166,8 +168,8 @@
    "mode": "uv_express",
    "operators": [],
    "destination": "Tabaco",
-   "distanceKm": null,
-   "distanceBasis": null,
+   "distanceKm": 94.278,
+   "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11498948 v13 94.278 km; relation 11498949 v14 94.349 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
    "status": "community_mapped",
    "terminalNote": "terminal from OSM tags/name; confirm",
    "notes": null,
@@ -177,17 +179,18 @@
    ],
    "fareEstimate": {
     "isEstimate": true,
-    "distanceKm": null,
-    "lowCentavos": null,
-    "highCentavos": null,
-    "text": "₱2.60–₱3.00/km (provisional per-km rate, 28 Sep 2026) · distance not on file · operator prices may differ",
+    "distanceKm": 94.278,
+    "lowCentavos": 24500,
+    "highCentavos": 28300,
+    "text": "Estimate ₱245–₱283 (provisional per-km rate, 28 Sep 2026) · operator prices may differ",
     "ruleCodes": [
      "F06",
      "F07"
     ]
    },
    "sourceCodes": [
-    "N01"
+    "N01",
+    "OSMR-2026-10-16"
    ]
   },
   {
@@ -199,8 +202,8 @@
     "Bicol Isarog"
    ],
    "destination": "PITX (Parañaque)",
-   "distanceKm": null,
-   "distanceBasis": null,
+   "distanceKm": 383.668,
+   "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 3 directions is used): relation 9732639 v224 386.606 km; relation 10594406 v173 383.668 km; relation 10939369 v155 385.447 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
    "status": "community_mapped",
    "terminalNote": "terminal from OSM tags/name; confirm",
    "notes": null,
@@ -213,10 +216,10 @@
    ],
    "fareEstimate": {
     "isEstimate": true,
-    "distanceKm": null,
-    "lowCentavos": null,
-    "highCentavos": null,
-    "text": "Ordinary bus: ₱12 first 5 km + ₱2.20/km (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · distance not on file · operator prices may differ",
+    "distanceKm": 383.668,
+    "lowCentavos": 84580,
+    "highCentavos": 84580,
+    "text": "Ordinary bus: Estimate ₱845.80 (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · operator prices may differ",
     "ruleCodes": [
      "F08",
      "F09",
@@ -226,7 +229,8 @@
     ]
    },
    "sourceCodes": [
-    "N01"
+    "N01",
+    "OSMR-2026-10-16"
    ]
   },
   {
@@ -237,8 +241,8 @@
     "Raymond Transportation"
    ],
    "destination": "Santa Rosa ITT",
-   "distanceKm": null,
-   "distanceBasis": null,
+   "distanceKm": 355.546,
+   "distanceBasis": "Length of the OpenStreetMap route relation (one direction): relation 11488879 v118 355.546 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
    "status": "community_mapped",
    "terminalNote": "terminal from OSM tags/name; confirm",
    "notes": null,
@@ -251,10 +255,10 @@
    ],
    "fareEstimate": {
     "isEstimate": true,
-    "distanceKm": null,
-    "lowCentavos": null,
-    "highCentavos": null,
-    "text": "Ordinary bus: ₱12 first 5 km + ₱2.20/km (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · distance not on file · operator prices may differ",
+    "distanceKm": 355.546,
+    "lowCentavos": 78420,
+    "highCentavos": 78420,
+    "text": "Ordinary bus: Estimate ₱784.20 (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · operator prices may differ",
     "ruleCodes": [
      "F08",
      "F09",
@@ -264,7 +268,8 @@
     ]
    },
    "sourceCodes": [
-    "N01"
+    "N01",
+    "OSMR-2026-10-16"
    ]
   }
  ],
@@ -292,6 +297,14 @@
    "url": "https://www.philstar.com/headlines/2026/09/27/2559277/jeepney-fares-p14-starting-sept-28-buses-taxis-tnvs-also-hike-rates",
    "evidenceType": "news",
    "publishedOrEnacted": "2026-09-27",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "OSMR-2026-10-16",
+   "title": "OpenStreetMap road network snapshot for Naga City (highways, OSM relation 3084673 + 300 m)",
+   "url": "https://www.openstreetmap.org/copyright",
+   "evidenceType": "open_data",
+   "publishedOrEnacted": "OSM data as of 2026-10-16T00:01:51Z",
    "checkedOn": "2026-10-16"
   },
   {

@@ -3,8 +3,18 @@ import { sql, type SQL } from "drizzle-orm";
 import {
   fareModesForRouteMode,
   INTRA_CITY_FARE_MODES,
+  LINES_ATTRIBUTION,
+  NOT_TRACED,
+  OSM_COPYRIGHT_URL,
+  PATH_LABEL,
+  UNTRACED_MESSAGE,
   variantVerification,
   type Bbox,
+  type EtaModel,
+  type EtaParam,
+  type Line,
+  type Lines,
+  type PathStatus,
   type FareRuleEstimate,
   type LegalStreets,
   type NetworkSnapshot,
@@ -24,6 +34,8 @@ import {
   type FleetRecord,
   type RouteMode,
 } from "@/domain/modes/fleet";
+import { encodePolyline } from "@/domain/geo/polyline";
+import type { LatLng } from "@/domain/geo/types";
 import type { Db } from "@/server/db/context";
 
 // Reads the published network ONLY through the published views, v_published_* (security_invoker,
@@ -302,6 +314,23 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
   const routes = await rows(db, sql`
     select id, public_code, name, mode, service_status from transit.v_published_routes
      where revision_id = ${revisionId}::uuid order by official_group_number nulls last, length(public_code), public_code`);
+  // D13: the traced path of each variant (length and stop measures by seq); untraced → none.
+  const shapes = await rows(db, sql`
+    select variant_id, length_m::float8 as length_m, stop_measures from transit.v_published_shapes
+     where revision_id = ${revisionId}::uuid and trace_status <> 'untraced'`);
+  const pathOf = new Map(shapes.map((s) => [str(s.variant_id), s]));
+  const measuresOf = (variantId: string, stopCount: number): { measuresM: number[] | null; pathLengthM: number | null } => {
+    const s = pathOf.get(variantId);
+    if (!s) return { measuresM: null, pathLengthM: null };
+    const list = Array.isArray(s.stop_measures) ? (s.stop_measures as Row[]) : [];
+    const bySeq = new Map(list.map((m) => [Number(m.seq), Number(m.measureM)]));
+    const measures = Array.from({ length: stopCount }, (_, i) => bySeq.get(i + 1));
+    return {
+      measuresM: stopCount > 0 && measures.every((m) => m !== undefined && Number.isFinite(m)) ? (measures as number[]) : null,
+      pathLengthM: Number(s.length_m),
+    };
+  };
+  const etaModel = await getEtaModel(db, revisionId);
 
   return {
     revision,
@@ -318,6 +347,7 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
       isCircular: Boolean(r.is_circular),
       stopIds: strArray(r.stop_ids),
       mode: r.mode as RouteMode,
+      ...measuresOf(str(r.variant_id), strArray(r.stop_ids).length),
     })),
     fareRules: fares.map(toFareRule),
     terminals: terminals.map((t) => {
@@ -341,7 +371,177 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
       serviceStatus: strOrNull(r.service_status) as NetworkSnapshot["routes"][number]["serviceStatus"],
       fleet: fleetSummary(fleet.get(str(r.id)) ?? [], r.mode as RouteMode),
     })),
+    etaModel,
   };
+}
+
+// ---------------------------------------------------------------- time-estimate parameters
+
+const numOrNullFinite = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
+
+/** The published time-estimate parameters (all five), or null when the revision has none. */
+export async function getEtaModel(db: Db, revisionId: string): Promise<EtaModel | null> {
+  const found = await rows(db, sql`
+    select key, value_low::float8 as value_low, value_high::float8 as value_high, unit, windows, days,
+           applies_to::text[] as applies_to, is_assumption, assumption_note, basis, source_codes::text[] as source_codes
+      from transit.v_published_eta_params where revision_id = ${revisionId}::uuid order by key`);
+  if (found.length === 0) return null;
+  return {
+    timeZone: "Asia/Manila",
+    utcOffsetMinutes: 480,
+    params: found.map((p) => ({
+      key: p.key as EtaParam["key"],
+      low: numOrNullFinite(p.value_low),
+      high: numOrNullFinite(p.value_high),
+      unit: p.unit as EtaParam["unit"],
+      windows: Array.isArray(p.windows) ? (p.windows as { start: string; end: string }[]).map((w) => ({ start: String(w.start), end: String(w.end) })) : null,
+      days: strOrNull(p.days) as EtaParam["days"],
+      appliesTo: strArray(p.applies_to) as EtaParam["appliesTo"],
+      isAssumption: Boolean(p.is_assumption),
+      assumptionNote: strOrNull(p.assumption_note),
+      basis: str(p.basis),
+      sourceCodes: strArray(p.source_codes),
+    })),
+  };
+}
+
+// ---------------------------------------------------------------- approximate paths (lines)
+
+export type LinesRead =
+  | { status: "not_published" }
+  /** The published revision has no paths (published before the road outputs). */
+  | { status: "none" }
+  /** Some member variants have no shape row: never served (503). */
+  | { status: "incomplete"; missing: number }
+  | { status: "ok"; body: Lines };
+
+type LineCoordinate = [number, number];
+
+function lineFromGeoJson(raw: unknown): LatLng[] {
+  const g = JSON.parse(String(raw)) as { type?: string; coordinates?: LineCoordinate[] };
+  if (g.type !== "LineString" || !Array.isArray(g.coordinates)) throw new Error("v_published_shapes: geojson is not a LineString");
+  return g.coordinates.map(([lng, lat]) => ({ lat, lng }));
+}
+
+const numberOr0 = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+
+/**
+ * The approximate paths of the published revision (D18, J1), built from v_published_shapes, the
+ * routes and variants views and the fleet colour key. Untraced variants are listed with their reason.
+ */
+export async function getLines(db: Db, revisionId: string): Promise<LinesRead> {
+  const revision = await getPublishedRevision(db);
+  if (!revision || revision.revisionId !== revisionId) return { status: "not_published" };
+
+  const shapes = await rows(db, sql`
+    select s.variant_id, s.route_id, s.trace_status, s.flag_reason, s.untraced_reason, s.geojson, s.length_m::float8 as length_m,
+           s.off_list_segments, s.trace_quality, s.label, s.road_source_code
+      from transit.v_published_shapes s where s.revision_id = ${revisionId}::uuid`);
+  if (shapes.length === 0) return { status: "none" };
+  const variants = await rows(db, sql`
+    select v.variant_id, v.route_id, v.name, v.direction, v.kind, r.public_code, r.name as route_name, r.mode,
+           r.service_status, r.planning
+      from transit.v_published_variants v
+      join transit.v_published_routes r on r.revision_id = v.revision_id and r.id = v.route_id
+     where v.revision_id = ${revisionId}::uuid
+     order by r.official_group_number nulls last, length(r.public_code), r.public_code, v.kind, v.direction, v.name nulls first, v.variant_id`);
+  const shapeOf = new Map(shapes.map((s) => [str(s.variant_id), s]));
+  const missing = variants.filter((v) => !shapeOf.has(str(v.variant_id))).length;
+  if (missing > 0 || shapes.length !== variants.length) return { status: "incomplete", missing };
+  const fleet = await fleetByRoute(db, revisionId);
+
+  const lines: Lines["lines"] = [];
+  const untraced: Lines["untraced"] = [];
+  for (const v of variants) {
+    const s = shapeOf.get(str(v.variant_id))!;
+    const q = (s.trace_quality && typeof s.trace_quality === "object" ? s.trace_quality : {}) as Row;
+    const base = {
+      variantId: str(v.variant_id),
+      routeId: str(v.route_id),
+      routeCode: str(v.public_code),
+      routeName: str(v.route_name),
+      variantName: strOrNull(v.name),
+      mode: v.mode as RouteMode,
+      direction: v.direction as Line["direction"],
+      kind: v.kind as Line["kind"],
+    };
+    if (s.trace_status === "untraced") {
+      untraced.push({
+        ...base,
+        reason: s.untraced_reason as Lines["untraced"][number]["reason"],
+        message: UNTRACED_MESSAGE,
+        quality: {
+          listedStreets: numberOr0(q.listedStreets),
+          matchedStreets: numberOr0(q.matchedStreets),
+          unmatchedStreets: strArray(q.unmatchedStreets),
+          anchorsUnresolved: strArray(q.anchorsUnresolved),
+        },
+      });
+      continue;
+    }
+    const summary = fleetSummary(fleet.get(str(v.route_id)) ?? [], v.mode as RouteMode);
+    const segments = Array.isArray(s.off_list_segments) ? (s.off_list_segments as Row[]) : [];
+    lines.push({
+      ...base,
+      serviceStatus: strOrNull(v.service_status) as Line["serviceStatus"],
+      planning: v.planning as Line["planning"],
+      fleet: summary,
+      colourKey: summary.colourKey,
+      status: s.trace_status as Line["status"],
+      flagReason: strOrNull(s.flag_reason) as Line["flagReason"],
+      encoded: encodePolyline(lineFromGeoJson(s.geojson)),
+      lengthM: Number(s.length_m),
+      label: PATH_LABEL,
+      roadSource: str(s.road_source_code),
+      attribution: LINES_ATTRIBUTION,
+      segments: segments.map((g) => ({
+        fromM: Number(g.fromM),
+        toM: Number(g.toM),
+        lengthM: Number(g.lengthM),
+        reason: g.reason as Line["segments"][number]["reason"],
+        streets: Array.isArray(g.streets) ? (g.streets as Row[]).map((x) => ({ name: str(x.name), m: Number(x.m) })) : [],
+        against: Array.isArray(g.against) ? strArray(g.against) : null,
+      })),
+      quality: {
+        listedStreets: numberOr0(q.listedStreets),
+        matchedStreets: numberOr0(q.matchedStreets),
+        unmatchedStreets: strArray(q.unmatchedStreets),
+        offListShare: typeof q.offListShare === "number" ? q.offListShare : null,
+        gateOffListShare: typeof q.gateOffListShare === "number" ? q.gateOffListShare : null,
+        terminalAccessM: numberOr0(q.terminalAccessM),
+      },
+    });
+  }
+  return {
+    status: "ok",
+    body: {
+      revision,
+      label: PATH_LABEL,
+      attribution: LINES_ATTRIBUTION,
+      attributionUrl: OSM_COPYRIGHT_URL,
+      licence: "ODbL 1.0",
+      roadSources: [...new Set(shapes.map((s) => str(s.road_source_code)))].sort(),
+      lines,
+      untraced,
+    },
+  };
+}
+
+// ---------------------------------------------------------------- walk graph
+
+export type WalkGraphRead =
+  | { status: "not_published" }
+  | { status: "none" }
+  | { status: "ok"; payload: string; sha256: string; bytes: number };
+
+/** The published walk graph payload (Task 6 format v1), verbatim, with its stored sha256 and size. */
+export async function getWalkGraph(db: Db, revisionId: string): Promise<WalkGraphRead> {
+  const revision = await getPublishedRevision(db);
+  if (!revision || revision.revisionId !== revisionId) return { status: "not_published" };
+  const [g] = await rows(db, sql`
+    select payload, sha256, bytes from transit.v_published_walk_graph where revision_id = ${revisionId}::uuid`);
+  if (!g) return { status: "none" };
+  return { status: "ok", payload: str(g.payload), sha256: str(g.sha256), bytes: Number(g.bytes) };
 }
 
 // ---------------------------------------------------------------- routes
@@ -462,6 +662,23 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
      where rs.revision_id = ${revisionId}::uuid and v.route_id = ${routeId}::uuid
      order by rs.variant_version_id, rs.seq`);
   const aliases = (await aliasRows(db, revisionId)).filter((a) => a.route_id === routeId);
+  const shapeRows = await rows(db, sql`
+    select variant_id, trace_status, flag_reason, untraced_reason, trace_quality from transit.v_published_shapes
+     where revision_id = ${revisionId}::uuid and route_id = ${routeId}::uuid`);
+  const pathStatusOf = (variantId: string): PathStatus => {
+    const s = shapeRows.find((x) => str(x.variant_id) === variantId);
+    if (!s) return { ...NOT_TRACED };
+    const q = (s.trace_quality && typeof s.trace_quality === "object" ? s.trace_quality : {}) as Row;
+    const listed = typeof q.listedStreets === "number" ? q.listedStreets : null;
+    const status = s.trace_status === "ok" ? "traced" : (s.trace_status as "flagged" | "untraced");
+    return {
+      status,
+      reason: strOrNull(s.trace_status === "flagged" ? s.flag_reason : s.untraced_reason),
+      listedStreets: listed !== null && listed > 0 ? listed : null,
+      matchedStreets: listed !== null && listed > 0 && typeof q.matchedStreets === "number" ? q.matchedStreets : null,
+      unmatchedStreets: strArray(q.unmatchedStreets),
+    };
+  };
 
   const variants = variantRows.map((v) => ({
     variantId: str(v.variant_id),
@@ -483,6 +700,7 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
     stops: stopRows
       .filter((s) => s.variant_version_id === v.variant_version_id)
       .map((s) => ({ ...toStop(s), seq: Number(s.seq) })),
+    pathStatus: pathStatusOf(str(v.variant_id)),
   }));
   const permanent = variants.filter((v) => v.kind !== "trial");
   const trials = variants.filter((v) => v.kind === "trial");

@@ -64,16 +64,17 @@ export function syntheticSnapshot(): NetworkSnapshot {
       {
         variantId: LOOP_VARIANT_ID, routeId: uuid(201), routeCode: "SYN-S", routeName: "Synthetic loop S",
         direction: "clockwise", kind: "permanent", evidenceLevel: "provisional", verification: "unverified",
-        isCircular: true, stopIds: LOOP.map((s) => STOP_ID[s.code]!), mode: "jeepney",
+        isCircular: true, stopIds: LOOP.map((s) => STOP_ID[s.code]!), mode: "jeepney", measuresM: null, pathLengthM: null,
       },
       {
         variantId: LINE_VARIANT_ID, routeId: uuid(202), routeCode: "SYN-Q", routeName: "Synthetic line Q",
         direction: "outbound", kind: "permanent", evidenceLevel: "provisional", verification: "unverified",
-        isCircular: false, stopIds: LINE.map((s) => STOP_ID[s.code]!), mode: "jeepney",
+        isCircular: false, stopIds: LINE.map((s) => STOP_ID[s.code]!), mode: "jeepney", measuresM: null, pathLengthM: null,
       },
     ],
     fareRules: SYNTHETIC_FARE_RULES,
     terminals: [],
     routes: [],
+    etaModel: null,
   };
 }

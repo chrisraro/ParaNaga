@@ -142,6 +142,7 @@ const terminal = { code: "T01", name: "Bicol Central Station", kind: "terminal",
 const snapshot = {
   revision: { revisionId: "6f9619ff-8b86-4d11-b42d-00c04fc964ff", label: "modes-2026-10-16", kind: "provisional", publishedAt: null },
   stops: [], variants: [], fareRules: [fare("F01", "traditional_jeepney"), fare("F03", "trimobile_e_trike_taxicle")], terminals: [terminal], routes: [],
+  etaModel: null,
 };
 
 describe("modes schemas", () => {
@@ -207,5 +208,53 @@ describe("modes schemas", () => {
       confirmsServiceOnly: true, sourceCodes: ["U01"] };
     expect(operatingStatusSchema.parse(status)).toEqual(status);
     expect(operatingStatusSchema.safeParse({ ...status, confirmsServiceOnly: false }).success).toBe(false);
+  });
+});
+
+describe("snapshot path measures and the time-estimate model (Task 7)", () => {
+  const variant = {
+    variantId: "22222222-2222-4222-8222-222222222222", routeId: "33333333-3333-4333-8333-333333333333", routeCode: "R8-A",
+    routeName: "Loop A", direction: "clockwise", kind: "permanent", evidenceLevel: "provisional", verification: "unverified",
+    isCircular: true, stopIds: ["11111111-1111-4111-8111-111111111111", "44444444-4444-4444-8444-444444444444"], mode: "jeepney",
+  };
+  const param = (key: string, extra: Record<string, unknown> = {}) => ({
+    key, low: 10, high: 15, unit: "km_per_h", windows: null, days: null, appliesTo: ["jeepney"], isAssumption: false,
+    assumptionNote: null, basis: "b", sourceCodes: ["N16"], ...extra,
+  });
+  const model = {
+    timeZone: "Asia/Manila", utcOffsetMinutes: 480,
+    params: [
+      param("walk_speed_kmh", { low: 4.238, high: 4.238, appliesTo: ["walk"], sourceCodes: ["N28"] }),
+      param("walk_slowdown_factor", { low: 1, high: 1.25, unit: "factor", appliesTo: ["walk"], isAssumption: true, assumptionNote: "A1", sourceCodes: [] }),
+      param("jeepney_speed_offpeak_kmh"),
+      param("jeepney_speed_peak_kmh", { low: 7, high: 13, isAssumption: true, assumptionNote: "A2", sourceCodes: ["N29"] }),
+      param("peak_windows", { low: null, high: null, unit: "windows", windows: [{ start: "06:00", end: "08:00" }], days: "every_day", isAssumption: true, assumptionNote: "A3", sourceCodes: ["N04"] }),
+    ],
+  };
+  const snapshot = (v: Record<string, unknown>, etaModel: unknown = null) => ({
+    revision: { revisionId: "6f9619ff-8b86-4d11-b42d-00c04fc964ff", label: "r", kind: "provisional", publishedAt: null },
+    stops: [], variants: [v], fareRules: [], etaModel,
+  });
+
+  it("older snapshots read with null measures, path length and model", () => {
+    const parsed = networkSnapshotSchema.parse({ ...snapshot(variant), etaModel: undefined });
+    expect(parsed.variants[0]).toMatchObject({ measuresM: null, pathLengthM: null });
+    expect(parsed.etaModel).toBeNull();
+  });
+
+  it("accepts one measure per stop within the path length, and refuses anything else", () => {
+    expect(networkSnapshotSchema.safeParse(snapshot({ ...variant, measuresM: [0, 812.5], pathLengthM: 8039.1 })).success).toBe(true);
+    expect(networkSnapshotSchema.safeParse(snapshot({ ...variant, measuresM: [0], pathLengthM: 8039.1 })).success).toBe(false);
+    expect(networkSnapshotSchema.safeParse(snapshot({ ...variant, measuresM: [0, 9000], pathLengthM: 8039.1 })).success).toBe(false);
+    expect(networkSnapshotSchema.safeParse(snapshot({ ...variant, measuresM: [0, 10], pathLengthM: null })).success).toBe(false);
+  });
+
+  it("accepts the full time-estimate model; refuses a missing key, a bare assumption or an unsourced value", () => {
+    expect(networkSnapshotSchema.safeParse(snapshot(variant, model)).success).toBe(true);
+    expect(networkSnapshotSchema.safeParse(snapshot(variant, { ...model, params: model.params.slice(1) })).success).toBe(false);
+    const bare = model.params.map((p) => (p.key === "walk_slowdown_factor" ? { ...p, assumptionNote: null } : p));
+    expect(networkSnapshotSchema.safeParse(snapshot(variant, { ...model, params: bare })).success).toBe(false);
+    const unsourced = model.params.map((p) => (p.key === "walk_speed_kmh" ? { ...p, sourceCodes: [] } : p));
+    expect(networkSnapshotSchema.safeParse(snapshot(variant, { ...model, params: unsourced })).success).toBe(false);
   });
 });

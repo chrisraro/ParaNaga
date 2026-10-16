@@ -16,6 +16,7 @@ import { runInRequestContext } from "@/server/db/run-in-context";
 import { getPool } from "@/server/db/client";
 import { GET as searchIndexGET } from "@/app/api/v1/network/search-index/[revisionId]/route";
 import { GET as snapshotGET } from "@/app/api/v1/network/snapshot/[revisionId]/route";
+import { GET as linesGET } from "@/app/api/v1/network/lines/[revisionId]/route";
 import { GET as terminalGET } from "@/app/api/v1/terminals/[code]/route";
 import { GET as sourcesGET } from "@/app/api/v1/sources/route";
 import { GET as stopsGET } from "@/app/api/v1/stops/route";
@@ -23,7 +24,13 @@ import { GET as stopGET } from "@/app/api/v1/stops/[id]/route";
 import { GET as routesGET } from "@/app/api/v1/routes/route";
 import { GET as routeGET } from "@/app/api/v1/routes/[code]/route";
 import { NAGA_MAX_BOUNDS } from "@/domain/geo/naga";
-import { buildImportPlan, readDataFiles, readNewestModesSeed, readNewestOsmSnapshot } from "../../scripts/lib/import-plan";
+import {
+  buildImportPlan,
+  readDataFiles,
+  readNewestModesSeed,
+  readNewestOsmSnapshot,
+  readPinnedRoadsSnapshot,
+} from "../../scripts/lib/import-plan";
 import { commitImport } from "../../scripts/lib/import-writer";
 import { writeFixture } from "./fixture-capture";
 
@@ -91,17 +98,17 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     await importer.connect();
     app = new pg.Pool({ connectionString: appUrl, max: 1 });
 
-    // Transit files, the committed OSM snapshot and the reviewed modes seed (as
-    // `pnpm db:import --commit` does). On a branch where they are present already ("unchanged"),
-    // publish the modes revision (which carries the transit and OSM data) if another test file
-    // published something else.
+    // Transit files, the committed OSM snapshot, the reviewed modes seed and the pinned road
+    // snapshot (as `pnpm db:import --commit` does). On a branch where they are present already
+    // ("unchanged"), publish the modes-lines revision (which carries the transit, OSM and modes
+    // data) if another test file published something else.
     previous = await pointer();
-    const plan = buildImportPlan(readDataFiles("Data_Sets"), readNewestOsmSnapshot(), readNewestModesSeed());
+    const plan = buildImportPlan(readDataFiles("Data_Sets"), readNewestOsmSnapshot(), readNewestModesSeed(), readPinnedRoadsSnapshot());
     expect(plan.problems).toEqual([]);
     await commitImport(ownerUrl!, plan);
     const ids = await owner.query<{ id: string; label: string }>(
-      "select id, label from transit.revision where label = any($1)", [[plan.modes!.revisionLabel, plan.revisionLabel]]);
-    revisionId = ids.rows.find((r) => r.label === plan.modes!.revisionLabel)!.id;
+      "select id, label from transit.revision where label = any($1)", [[plan.lines!.revisionLabel, plan.revisionLabel]]);
+    revisionId = ids.rows.find((r) => r.label === plan.lines!.revisionLabel)!.id;
     transitRevisionId = ids.rows.find((r) => r.label === plan.revisionLabel)!.id;
     if ((await pointer()) !== revisionId) await publish(revisionId);
   }, 180_000);
@@ -135,6 +142,9 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       await snapshotGET(get(`/network/snapshot/${revisionId}`), ctx({ revisionId })), "public, s-maxage=31536000, immutable");
     expect(JSON.parse(snapshot).stops).toHaveLength(128);
     saveFixture("snapshot.json", snapshot);
+    // The approximate paths (Task 7), a separate immutable resource (D18).
+    const lines = await okText(await linesGET(get(`/network/lines/${revisionId}`), ctx({ revisionId })), "public, s-maxage=31536000, immutable");
+    saveFixture("lines.json", lines);
     const list = await okText(await routesGET(get("/routes")), "public, s-maxage=300");
     saveFixture("routes.json", list);
     for (const code of ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8-A", "R8-B", "R8-C", "R8-D", "TRI-VISTODA"]) {
@@ -170,7 +180,7 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       "public, s-maxage=31536000, immutable",
     );
     const index = searchIndexSchema.parse(JSON.parse(raw));
-    expect(index.revision).toMatchObject({ revisionId, label: "modes-2026-10-16", kind: "provisional" });
+    expect(index.revision).toMatchObject({ revisionId, label: "modes-lines-2026-10-16", kind: "provisional" });
     expect(index.barangays).toHaveLength(27);
     expect(index.studyLabels).toHaveLength(32);
     expect(index.terminals).toHaveLength(16);
@@ -243,13 +253,14 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       expect(s.sourceCodes.length, s.code).toBeGreaterThan(0);
       expect(s.fareEstimate.isEstimate).toBe(true);
       expect(s.fareEstimate.text, s.code).toMatch(/operator prices may differ$/);
-      // No distance is on file yet (Task 7 measures the relations): rates only, never a total.
-      expect(s.distanceKm).toBeNull();
-      expect(s.fareEstimate.lowCentavos).toBeNull();
+      // Task 7 (D5): the OSM relation length (shorter direction), labelled as an approximate path length.
+      expect(s.distanceKm, s.code).toBeGreaterThan(0);
+      expect(s.distanceBasis, s.code).toMatch(/OpenStreetMap route relation.*not a measured trip distance/);
+      expect(s.sourceCodes, s.code).toContain("OSMR-2026-10-16");
     }
     const uv = body.regionalServices.find((s) => s.code === "RS05")!;
-    expect(uv).toMatchObject({ mode: "uv_express", fareRuleCodes: ["F06", "F07"] });
-    expect(uv.fareEstimate.text).toBe("₱2.60–₱3.00/km (provisional per-km rate, 28 Sep 2026) · distance not on file · operator prices may differ");
+    expect(uv).toMatchObject({ mode: "uv_express", fareRuleCodes: ["F06", "F07"], distanceKm: 94.278 });
+    expect(uv.fareEstimate).toMatchObject({ lowCentavos: 24500, highCentavos: 28300 });
     const codes = body.sources.map((s) => s.code);
     expect(codes).toEqual(expect.arrayContaining(["S09", "S03", "N01", "N02", "N17"]));
     for (const s of body.regionalServices) for (const c of s.sourceCodes) expect(codes, c).toContain(c);

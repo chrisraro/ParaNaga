@@ -46,7 +46,7 @@ async function openSettings(page: Page) {
   await page.goto("/app/more");
   await expect(settingsHeading(page)).toBeVisible();
   // Hydrated: the controls respond once React owns them.
-  await expect(page.getByTestId("settings-data-revision")).toContainText("modes-2026-10-16");
+  await expect(page.getByTestId("settings-data-revision")).toContainText("modes-lines-2026-10-16");
 }
 
 async function openHome(page: Page) {
@@ -122,7 +122,7 @@ test.describe("phone", () => {
     await expect(page.getByTestId("settings-display")).toContainText("Reduce motionFollows your device setting");
     await expect(page.getByTestId("settings-location")).toContainText("Location access");
     await expect(page.getByText("Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.")).toBeVisible();
-    await expect(page.getByTestId("settings-data-revision")).toHaveText("Data revisionmodes-2026-10-16 · Oct 16, 2026");
+    await expect(page.getByTestId("settings-data-revision")).toHaveText("Data revisionmodes-lines-2026-10-16 · Oct 16, 2026");
     // Help (Task 11) opens from the About group.
     await expect(page.getByTestId("settings-help")).toHaveAttribute("href", "/app/help");
     await expect(tabBar(page).getByRole("link", { name: "More", exact: true })).toHaveAttribute("aria-current", "page");
