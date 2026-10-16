@@ -37,7 +37,7 @@ describe.skipIf(!ownerUrl || !appUrl)("Google Places guard (Neon branch)", () =>
     app = new pg.Pool({ connectionString: appUrl, max: 1 });
   });
   afterAll(async () => {
-    if (owner) await asDefiner(`delete from ops.places_daily_usage where day = ${manilaToday}`).catch(() => undefined);
+    if (owner) await asDefiner(`update ops.places_daily_usage set calls = 0 where day = ${manilaToday}`).catch(() => undefined);
     await owner?.query("delete from ops.places_cache where key_hash like $1", [`${run.slice(0, 16)}%`]).catch(() => undefined);
     await owner?.query("delete from ops.rate_limit_bucket where key_hash like $1", [`places:${run}%`]).catch(() => undefined);
     await owner?.end();
@@ -56,8 +56,10 @@ describe.skipIf(!ownerUrl || !appUrl)("Google Places guard (Neon branch)", () =>
 
   it("takes calls up to the hard-coded cap of 300, then refuses, for today's Manila date", async () => {
     // Seeded near the cap through the definer role (RLS is forced, even for the owner).
-    await asDefiner(`delete from ops.places_daily_usage where day = ${manilaToday}`);
-    await asDefiner(`insert into ops.places_daily_usage (day, calls) values (${manilaToday}, 298)`);
+    // (the definer has select/insert/update only, no delete, so reset by upsert)
+    await asDefiner(
+      `insert into ops.places_daily_usage as u (day, calls) values (${manilaToday}, 298) on conflict (day) do update set calls = 298`,
+    );
     expect(await as((db) => takeGoogleCall(db))).toBe(true);
     expect(await as((db) => takeGoogleCall(db))).toBe(true);
     expect(await as((db) => takeGoogleCall(db))).toBe(false);
