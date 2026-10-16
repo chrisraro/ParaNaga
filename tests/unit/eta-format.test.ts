@@ -182,3 +182,13 @@ describe("TIME_NOT_AVAILABLE has a single definition", () => {
     }
   });
 });
+
+describe("a 0 m walk next to a ride", () => {
+  it("only an all-0 m walk-only trip reads No walking; with a not-estimated ride the ride note and waiting stay", () => {
+    expect(formatTotal(est(opt(walk(0)), manila("09:30"), [0]).total)).toBe("No walking");
+    const text = formatTotal(est(opt(walk(0), trike(1500)), manila("09:30"), [0, null]).total);
+    expect(text).not.toBe("No walking");
+    expect(text).toContain("waiting (unknown)");
+    expect(text).toMatch(/tricycle time not estimated/i);
+  });
+});
