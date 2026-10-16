@@ -376,6 +376,32 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
   await expect(page.getByTestId("map-legend-button")).toBeVisible();
 });
 
+test("scrolling a sheet element into view never shifts the map, so the legend stays on screen", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+
+  const expectMapStill = async () => {
+    await page.evaluate(() => {
+      document.querySelector(".pn-sheet__content")?.lastElementChild?.scrollIntoView({ block: "center" });
+    });
+    expect(await page.locator(".pn-home").evaluate((el) => el.scrollTop)).toBe(0);
+    const legend = (await page.getByTestId("map-legend-button").boundingBox())!;
+    const vh = page.viewportSize()!.height;
+    expect(legend.y).toBeGreaterThanOrEqual(0);
+    expect(legend.y + legend.height).toBeLessThanOrEqual(vh);
+  };
+  await expectMapStill();
+
+  await page.getByTestId("trip-start").click();
+  await expect(page.getByTestId("guidance")).toBeVisible();
+  await expectMapStill();
+});
+
 test("the overview lines and the legend stay while a point is being chosen on the map", async ({ page }) => {
   await openApp(page);
   await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
