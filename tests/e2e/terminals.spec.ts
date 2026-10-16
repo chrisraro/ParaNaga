@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { SNAPSHOT, routeNetwork } from "./fixtures/network";
+import { SNAPSHOT, STOP_A1, routeNetwork } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 
 // Terminals layer, terminal detail and the tricycle hint card (Increment D, Task 13) over the
@@ -106,6 +106,50 @@ test("the terminals layer draws every terminal with a coordinate, named, and the
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/app\/terminals\/T14$/);
   await expect(terminal(page).getByRole("heading", { level: 1, name: "Balatas Tricycle Terminal" })).toBeFocused();
+});
+
+/** Screen position of a lat/lng from the home map's reported centre and zoom (Web Mercator). */
+async function screenPoint(page: Page, lat: number, lng: number) {
+  const el = homeMap(page);
+  const box = (await el.boundingBox())!;
+  const zoom = Number(await el.getAttribute("data-zoom"));
+  const cLat = Number(await el.getAttribute("data-center-lat"));
+  const cLng = Number(await el.getAttribute("data-center-lng"));
+  const scale = 256 * 2 ** zoom;
+  const project = (la: number, ln: number) => {
+    const s = Math.sin((la * Math.PI) / 180);
+    return { x: ((ln + 180) / 360) * scale, y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * scale };
+  };
+  const p = project(lat, lng);
+  const c = project(cLat, cLng);
+  return { x: box.x + box.width / 2 + (p.x - c.x), y: box.y + box.height / 2 + (p.y - c.y) };
+}
+
+test("with the Terminals layer on, a stop pin under a terminal marker wins the tap (A1 under Plaza Rizal's platform)", async ({ page }) => {
+  await openApp(page);
+  await expect.poll(() => drawnCodes(page)).toEqual(MAPPED_CODES);
+  await expect.poll(() => homeMap(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
+  const a1 = await screenPoint(page, STOP_A1.stop.lat, STOP_A1.stop.lng);
+  // A terminal marker really is on top at A1's position.
+  const top = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest(".pn-terminal-marker")?.getAttribute("data-codes") ?? null, a1);
+  expect(top).toContain("T13");
+  await page.mouse.click(a1.x, a1.y);
+  await expect(page).toHaveURL(new RegExp(`/app/stops/${STOP_A1.stop.id}$`));
+  await expect(page.getByRole("heading", { level: 1, name: "Plaza Rizal" })).toBeVisible();
+});
+
+test("a terminal away from stops still opens on a tap (T04, Integrated Northbound Terminal)", async ({ page }) => {
+  await openApp(page);
+  const marker = homeMap(page).locator('[data-testid="terminal-marker"][data-code="T04"]');
+  await expect(marker).toHaveCount(1);
+  // The marker is the topmost element at its centre (not under the sheet or a control).
+  const box = (await marker.boundingBox())!;
+  const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const top = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest(".pn-terminal-marker")?.getAttribute("data-code") ?? null, at);
+  expect(top).toBe("T04");
+  await page.mouse.click(at.x, at.y);
+  await expect(page).toHaveURL(/\/app\/terminals\/T04$/);
+  // (No T04 detail fixture is captured: the URL is the assertion.)
 });
 
 test("T01 detail: the coordinate badge, OSM provenance and attribution, RS05 with a UV fare estimate", async ({ page }) => {

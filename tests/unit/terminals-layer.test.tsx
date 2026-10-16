@@ -108,8 +108,9 @@ describe("which terminals are drawn and listed", () => {
     expect(listTerminals(SNAPSHOT.terminals, layers({ modes: ["tricycle"] })).map((t) => t.code)).toEqual(["T14", "T15", "T16"]);
   });
 
-  it("the Terminals switch off draws none", () => {
+  it("the Terminals switch off draws none and lists none", () => {
     expect(filterMapTerminals(SNAPSHOT.terminals, layers({ terminals: false }))).toEqual([]);
+    expect(listTerminals(SNAPSHOT.terminals, layers({ terminals: false }))).toEqual([]);
   });
 });
 
@@ -159,6 +160,28 @@ describe("TerminalsLayer on a Leaflet map", () => {
     expect(onSelect).toHaveBeenCalledTimes(2);
   });
 
+  it("a tap a stop pin takes (tap-through) never opens the terminal; keyboard activation is unchanged", async () => {
+    const onSelect = vi.fn();
+    const onTapThrough = vi.fn(() => true);
+    const t14 = toMap(filterMapTerminals(SNAPSHOT.terminals, layers({ modes: ["tricycle"] })));
+    const { container } = render(
+      <MapContainer center={[13.632, 123.197]} zoom={16} style={{ width: 400, height: 400 }}>
+        <TerminalsLayer terminals={t14} surface="light" onSelect={onSelect} onTapThrough={onTapThrough} />
+      </MapContainer>,
+    );
+    await waitFor(() => expect(container.querySelector('[data-code="T14"]')).not.toBeNull());
+    const marker = container.querySelector<HTMLElement>('[data-code="T14"]')!;
+    fireEvent.click(marker);
+    expect(onTapThrough).toHaveBeenCalledTimes(1);
+    expect(onSelect).not.toHaveBeenCalled();
+    onTapThrough.mockReturnValue(false);
+    fireEvent.click(marker);
+    expect(onSelect).toHaveBeenCalledWith("T14");
+    fireEvent.keyDown(marker, { key: "Enter" });
+    expect(onTapThrough).toHaveBeenCalledTimes(2);
+    expect(onSelect).toHaveBeenCalledTimes(2);
+  });
+
   it("non-interactive (terminal detail): a named image, not a button", async () => {
     const t01 = toMap(filterMapTerminals(SNAPSHOT.terminals, layers())).filter((t) => t.code === "T01");
     const { container } = render(
@@ -196,6 +219,11 @@ describe("TricycleHintCard (D15)", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "Show on map: Balatas Tricycle Terminal" }));
     expect(onShow).toHaveBeenCalledWith(expect.objectContaining({ code: "T14", lat: T14.lat, lng: T14.lng }));
+  });
+
+  it("hint sources: F03 by code; none when the rule is missing", () => {
+    expect(tricycleHintSources({}, SNAPSHOT).fare).toEqual(["S04", "N33"]);
+    expect(tricycleHintSources({}, { ...SNAPSHOT, fareRules: SNAPSHOT.fareRules.filter((r) => r.code !== "F03") }).fare).toEqual([]);
   });
 
   it("a feeder-only hint has no Show on map button and cites the feeder's sources", () => {

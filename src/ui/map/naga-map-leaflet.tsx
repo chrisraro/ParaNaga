@@ -8,7 +8,7 @@ import "./naga-map.css";
 import "../modes/modes.css";
 
 import L from "leaflet";
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polygon, TileLayer, useMap } from "react-leaflet";
 import { OSM_ATTRIBUTION, attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { prefersReducedMotion, useReducedMotion } from "@/client/map/use-reduced-motion";
@@ -29,7 +29,7 @@ import { mapSurface as computeMapSurface } from "@/domain/modes/palette";
 import { MapControls } from "./map-controls";
 import { MapLegend } from "./map-legend";
 import { RouteLinesLayer, linesHaveOnewayCaution } from "./route-lines-layer";
-import { StopsLayer } from "./stops-layer";
+import { STOP_HIT_RADIUS_PX, StopsLayer } from "./stops-layer";
 import { TerminalsLayer } from "./terminals-layer";
 import { TripLinesLayer, type TripLinesData } from "./trip-lines-layer";
 import type { HighlightStop, NagaMapPins, NagaMapProps } from "./types";
@@ -320,6 +320,23 @@ export default function NagaMapLeaflet({
 
   const zoom = view?.zoom ?? NAGA_DEFAULT_ZOOM;
 
+  // Stop pins win over terminal markers where they overlap (the pins are on a canvas under the
+  // DOM markers): a marker tap within a pin's hit radius selects the nearest pin instead.
+  const stopTapThrough = useCallback(
+    (point: L.Point): boolean => {
+      if (!map || !stopPins || !stopPinsInteractive || !onStopSelect) return false;
+      let best: { id: string; d: number } | null = null;
+      for (const stop of stopPins) {
+        const d = map.latLngToContainerPoint([stop.lat, stop.lng]).distanceTo(point);
+        if (d <= STOP_HIT_RADIUS_PX && (!best || d < best.d)) best = { id: stop.id, d };
+      }
+      if (!best) return false;
+      onStopSelect(best.id);
+      return true;
+    },
+    [map, stopPins, stopPinsInteractive, onStopSelect],
+  );
+
   return (
     <div
       data-testid="naga-map"
@@ -383,6 +400,7 @@ export default function NagaMapLeaflet({
             interactive={terminalsInteractive && onTerminalSelect !== null}
             emphasizedCode={emphasizedTerminalCode}
             onSelect={onTerminalSelect ?? undefined}
+            onTapThrough={stopTapThrough}
           />
         ) : null}
         {stopPins ? <StopsLayer stops={stopPins} interactive={stopPinsInteractive} onSelect={onStopSelect} /> : null}

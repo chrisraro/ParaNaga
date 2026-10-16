@@ -219,8 +219,11 @@ export function tricycleHint(
   };
 }
 
+/** The tricycle fare rule (Ordinance 2024-002, ₱15 minimum). */
+export const TRICYCLE_FARE_RULE_CODE = "F03";
+
 type SourcesSnapshot = {
-  fareRules: readonly { modeCode: string; sourceCodes: readonly string[] }[];
+  fareRules: readonly { code: string; sourceCodes: readonly string[] }[];
   routes?: readonly { routeCode: string; fleet: { classes: readonly { sourceCodes: readonly string[] }[] } }[];
 };
 
@@ -233,7 +236,7 @@ export function tricycleHintSources(
   snapshot: SourcesSnapshot | null | undefined,
 ): { fare: string[]; feeder: string[] } {
   const unique = (codes: readonly string[]) => [...new Set(codes)];
-  const fareRule = snapshot?.fareRules.find((r) => r.modeCode.startsWith("trimobile"));
+  const fareRule = snapshot?.fareRules.find((r) => r.code === TRICYCLE_FARE_RULE_CODE);
   const route = hint.feeder ? snapshot?.routes?.find((r) => r.routeCode === hint.feeder!.routeCode) : undefined;
   return {
     fare: unique(fareRule?.sourceCodes ?? []),

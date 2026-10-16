@@ -19,20 +19,6 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-/**
- * Terminal markers (Task 13) are DOM markers above the pin canvas: A1 (Plaza Rizal) sits under the
- * Gen. Luna St platform (T13). The pin-tap tests turn the Terminals layer off, as a rider can in
- * the Layers sheet, so the tap reaches the pin.
- */
-async function hideTerminals(page: Page) {
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "paranaga.prefs",
-      JSON.stringify({ theme: "system", highContrast: false, lowData: false, historyEnabled: false, layers: { routes: true, terminals: false, modes: [] } }),
-    );
-  });
-}
-
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
@@ -64,7 +50,7 @@ async function expectAxeClean(page: Page) {
   expect(serious, JSON.stringify(serious.map((v) => [v.id, v.nodes.map((n) => n.target)]), null, 1)).toEqual([]);
 }
 
-test("pins come from the snapshot as one canvas layer, with no lines and no extra DOM markers", async ({ page }) => {
+test("pins come from the snapshot as one canvas layer: no stop is a DOM marker or an SVG path", async ({ page }) => {
   const calls = await routeNetwork(page);
   await openApp(page);
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
@@ -81,7 +67,6 @@ test("pins come from the snapshot as one canvas layer, with no lines and no extr
 });
 
 test("tapping a pin opens the stop with exactly the source pin's layer, coordinates and description (A1)", async ({ page }) => {
-  await hideTerminals(page);
   await routeNetwork(page);
   await openApp(page);
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
@@ -331,8 +316,7 @@ test.describe("Show on map history", () => {
   const showOnMap = (page: Page) => page.getByTestId("stop-detail").filter({ visible: true }).getByRole("button", { name: "Show on map" });
 
   test("from a pin tap it goes back in history (Back does not reopen the stop)", async ({ page }) => {
-    await hideTerminals(page);
-    await routeNetwork(page);
+      await routeNetwork(page);
     await openApp(page);
     await tapA1(page);
     await showOnMap(page).click();
@@ -353,8 +337,7 @@ test.describe("Show on map history", () => {
   });
 
   test("after panel → panel links (stop → route → stop) it opens the map as a new entry", async ({ page }) => {
-    await hideTerminals(page);
-    await routeNetwork(page);
+      await routeNetwork(page);
     await openApp(page);
     await tapA1(page);
     await page.getByTestId("serving-routes").getByRole("link").click();

@@ -230,20 +230,27 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
 }
 
 test("tapping an overview line opens SelectedRouteCard with route details link", async ({ page }) => {
-  // A forced tap at a line's centre can land on a terminal marker (Task 13, DOM markers above the
-  // lines): the Terminals layer is off here, as a rider can set it in the Layers sheet.
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "paranaga.prefs",
-      JSON.stringify({ theme: "system", highContrast: false, lowData: false, historyEnabled: false, layers: { routes: true, terminals: false, modes: [] } }),
-    );
-  });
   await openApp(page);
 
-  // Tap an overview line to select it
+  // Tap an overview line where nothing (a terminal marker, a pin, the sheet) is drawn over it: a
+  // point along the path whose topmost element is a route line.
   const overviewLine = page.locator("path.pn-line--route").first();
   await expect(overviewLine).toBeAttached({ timeout: 15000 });
-  await overviewLine.click({ force: true });
+  const tap = await page.evaluate(() => {
+    for (const path of document.querySelectorAll<SVGPathElement>("path.pn-line--route")) {
+      const ctm = path.getScreenCTM();
+      if (!ctm) continue;
+      const total = path.getTotalLength();
+      for (let i = 1; i < 40; i++) {
+        const p = path.getPointAtLength((total * i) / 40).matrixTransform(ctm);
+        const top = document.elementFromPoint(p.x, p.y);
+        if (top instanceof SVGPathElement && top.classList.contains("pn-line--route")) return { x: p.x, y: p.y };
+      }
+    }
+    return null;
+  });
+  expect(tap, "a visible point on an overview line").not.toBeNull();
+  await page.mouse.click(tap!.x, tap!.y);
 
   const card = page.getByTestId("selected-route-card");
   await expect(card).toBeVisible();

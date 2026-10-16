@@ -17,6 +17,9 @@ const AMBER = "#E8A317";
 const RING_RADIUS = 7;
 const RING_WEIGHT = 3.5;
 const CENTRE_RADIUS = 2.75;
+const TAP_TOLERANCE = 6;
+/** How far from a pin's centre a tap still selects it (ring + half its stroke + canvas tolerance). */
+export const STOP_HIT_RADIUS_PX = RING_RADIUS + RING_WEIGHT / 2 + TAP_TOLERANCE;
 
 type Props = {
   stops: readonly StopPin[];
@@ -29,7 +32,7 @@ export function StopsLayer({ stops, interactive, onSelect }: Props) {
   const map = useMap();
   const dark = useColorScheme() === "dark";
   // Tolerance widens the tap target around each ring (≈ 26 px across).
-  const renderer = useMemo(() => L.canvas({ padding: 0.25, tolerance: 6 }), []);
+  const renderer = useMemo(() => L.canvas({ padding: 0.25, tolerance: TAP_TOLERANCE }), []);
   const group = useMemo(() => L.layerGroup(), []);
   // Rings overlap (pins tens of metres apart, or the same point in two layers): a tap selects the
   // pin whose centre is nearest the tap, preferring one on a route order at the same spot.

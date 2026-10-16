@@ -777,6 +777,7 @@
 }
 
 .pn-terminal-marker__stack {
+  position: relative;
   display: flex;
   align-items: center;
 }
@@ -802,10 +803,6 @@
   width: 34px;
   height: 34px;
   box-shadow: 0 0 0 3px var(--pn-tile), 0 1px 4px rgb(0 0 0 / 0.45);
-}
-
-.pn-terminal-marker__stack {
-  position: relative;
 }
 
 /* A group marker's count (its accessible name lists the terminals). */

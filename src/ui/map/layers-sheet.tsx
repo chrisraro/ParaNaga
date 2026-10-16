@@ -40,13 +40,15 @@ export const REGIONAL_ROUTES_NOTE =
   "Regional UV Express and bus routes leave the city; see their terminals." as const;
 
 /**
- * The Layers sheet's list equivalent of the terminals layer: every terminal matching the mode
- * filter, including those without a coordinate (listed as "Location not mapped", never drawn).
+ * The Layers sheet's list equivalent of the terminals layer: with the Terminals switch on, every
+ * terminal matching the mode filter, including those without a coordinate (listed as "Location
+ * not mapped", never drawn); with it off, none (the heading count matches what is shown).
  */
 export function listTerminals(
   terminals: readonly SnapshotTerminal[] | null | undefined,
   layers: LayersPref,
 ): SnapshotTerminal[] {
+  if (!layers.terminals) return [];
   return (terminals ?? []).filter((t) => terminalMatchesModes(t, layers.modes));
 }
 
@@ -300,7 +302,7 @@ export function LayersSheet({
               Terminals ({terminalList.length})
             </h3>
             {terminalList.length === 0 ? (
-              <p className="pn-layers-empty">No terminals match the current filter.</p>
+              <p className="pn-layers-empty">{layers.terminals ? "No terminals match the current filter." : "Terminals are switched off."}</p>
             ) : (
               <ul className="pn-layers-list" data-testid="layers-terminals-list">
                 {terminalList.map((terminal) => (

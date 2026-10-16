@@ -115,6 +115,7 @@ type MarkerProps = {
   interactive: boolean;
   emphasized: boolean;
   onSelect?: ((code: string) => void) | undefined;
+  onTapThrough?: TapThrough | undefined;
   /** A group was activated: remember it so focus can follow its first terminal after the zoom. */
   onGroupZoom: (fromKey: string, code: string) => void;
   /** Take keyboard focus once mounted (the marker that now holds the activated group's terminal). */
@@ -122,7 +123,7 @@ type MarkerProps = {
   onFocused: () => void;
 };
 
-function TerminalDomMarker({ members, at, interactive, emphasized, onSelect, onGroupZoom, autoFocus, onFocused }: MarkerProps) {
+function TerminalDomMarker({ members, at, interactive, emphasized, onSelect, onTapThrough, onGroupZoom, autoFocus, onFocused }: MarkerProps) {
   const map = useMap();
   const markerRef = useRef<L.Marker>(null);
   const [el, setEl] = useState<HTMLElement | null>(null);
@@ -160,15 +161,22 @@ function TerminalDomMarker({ members, at, interactive, emphasized, onSelect, onG
     focused();
   }, [el, autoFocus]);
 
+  const position = useMemo((): L.LatLngTuple => [at.lat, at.lng], [at.lat, at.lng]);
   const handlers = useMemo(
-    () => ({ click: () => activateMarker(map, members, onSelect, () => onGroupZoom(key, members[0]!.code)) }),
-    [map, members, onSelect, onGroupZoom, key],
+    () => ({
+      click: (e: L.LeafletMouseEvent) => {
+        // Stop pins win where they overlap a terminal: a tap within a pin's hit radius opens the stop.
+        if (e.originalEvent && onTapThrough?.(map.mouseEventToContainerPoint(e.originalEvent))) return;
+        activateMarker(map, members, onSelect, () => onGroupZoom(key, members[0]!.code));
+      },
+    }),
+    [map, members, onSelect, onTapThrough, onGroupZoom, key],
   );
   return (
     <>
       <Marker
         ref={markerRef}
-        position={[at.lat, at.lng]}
+        position={position}
         icon={icon}
         interactive={interactive}
         keyboard={interactive}
@@ -195,7 +203,7 @@ function useScreenGroups(terminals: readonly MapTerminal[]): { at: MapTerminal; 
   }, [map, terminals, zoom]);
 }
 
-function TerminalDomMarkers({ terminals, interactive, emphasizedCode, onSelect }: Omit<Props, "surface"> & { interactive: boolean }) {
+function TerminalDomMarkers({ terminals, interactive, emphasizedCode, onSelect, onTapThrough }: Omit<Props, "surface"> & { interactive: boolean }) {
   const groups = useScreenGroups(terminals);
   const [focusAfter, setFocusAfter] = useState<{ fromKey: string; code: string } | null>(null);
   const onGroupZoom = useCallback((fromKey: string, code: string) => {
@@ -219,6 +227,7 @@ function TerminalDomMarkers({ terminals, interactive, emphasizedCode, onSelect }
           interactive={interactive}
           emphasized={emphasizedCode !== null && emphasizedCode !== undefined && g.members.some((m) => m.code === emphasizedCode)}
           onSelect={onSelect}
+          onTapThrough={onTapThrough}
         />
         );
       })}
@@ -270,11 +279,18 @@ type Props = {
   /** The terminal a tricycle hint names (D15): drawn larger, with a ring. */
   emphasizedCode?: string | null;
   onSelect?: ((code: string) => void) | undefined;
+  /**
+   * Called with a marker tap's container point before the marker acts: returns true when something
+   * under it (a stop pin) took the tap. Keyboard activation never goes through it.
+   */
+  onTapThrough?: TapThrough | undefined;
 };
 
-export function TerminalsLayer({ terminals, surface, interactive = true, emphasizedCode = null, onSelect }: Props) {
+export type TapThrough = (point: L.Point) => boolean;
+
+export function TerminalsLayer({ terminals, surface, interactive = true, emphasizedCode = null, onSelect, onTapThrough }: Props) {
   if (terminalMarkerRender(terminals.length) === "canvas") {
     return <TerminalsCanvas terminals={terminals} surface={surface} interactive={interactive} emphasizedCode={emphasizedCode} onSelect={onSelect} />;
   }
-  return <TerminalDomMarkers terminals={terminals} interactive={interactive} emphasizedCode={emphasizedCode} onSelect={onSelect} />;
+  return <TerminalDomMarkers terminals={terminals} interactive={interactive} emphasizedCode={emphasizedCode} onSelect={onSelect} onTapThrough={onTapThrough} />;
 }
