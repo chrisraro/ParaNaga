@@ -115,6 +115,49 @@ Run in this order. The app code needs migration 0002 and a published revision, s
 
 **Rollback:** the publish is irreversible in place. Restore or reset `main` from the backup branch (Neon console: restore or reset from the backup branch), then redeploy the previous app version.
 
+### Increment D release runbook
+
+The Increment D release adds migrations 0006-0009 (modes, fleet, terminals, shapes, walk graph, time-estimate parameters, published views) and imports the reviewed modes seed plus the pinned road snapshot, which publishes `modes-2026-10-16` and then `modes-lines-2026-10-16`. Production is on `osm-places-2026-10-15` (Increment C) before this release. Do the steps in this order; every `pnpm` command runs with the owner URL in `.env.local` pointed at **Neon `main`** (the production branch), so double-check the target before each one.
+
+1. **Back up Neon `main`.** Branch it first, and note the id of the currently published revision (the rollback target):
+   ```bash
+   neonctl branches create --project-id <project-id> --parent main --name pre-increment-d-YYYY-MM-DD
+   ```
+   Then on `main`: `select id, label from transit.v_published_revision;` (expect `osm-places-2026-10-15`). Keep that id.
+2. **Migrate.** `pnpm db:migrate` (applies 0006-0009; additive, no data rewritten), then `pnpm db:check-rls`.
+3. **Dry run.** `pnpm db:import --dry-run`. It must print no problems: a missing time-estimate parameter, an unpinned or altered road snapshot, or a seed record that fails review aborts with the list.
+4. **Import.** `pnpm db:import --commit`, then once more: the second run must report `unchanged` for every stage.
+5. **Deploy** the app (merge to `master`). Set or confirm the Vercel env vars first; `NEXT_PUBLIC_*` values are embedded at build time, so a change needs a redeploy. The new code needs migration 0009 and the published `modes-lines-*` revision, so deploy only after steps 2-4.
+6. **Verify the endpoints** on the production URL:
+   - `GET /api/v1/network/head` names `modes-lines-2026-10-16` as the published revision.
+   - `GET /api/v1/network/snapshot/<id>` (its `routes[].fareReports` is present), `/network/search-index/<id>`, `/network/lines/<id>` (cache headers `immutable`), `/network/walk-graph/<id>`, `/routes/R4`, `/terminals/T01`.
+   - `POST /api/v1/plan` for a pair across two routes returns options with ranges, not exact fares.
+   - Open `/app`, plan a trip, open Layers (route lines and terminals) and the trip detail (street paths, time estimate).
+7. **Post-import fixture recapture** (so the e2e fixtures name the production revision). The capture runs on a throwaway Neon branch, never on `main`:
+   ```bash
+   CAPTURE_E2E_FIXTURES=1 bash scripts/with-neon-branch.sh npx vitest run --project integration tests/integration/reference-api.test.ts
+   ```
+   It writes `tests/e2e/fixtures/network/*.json` from `main`'s published revision. Fixtures that already name that revision keep their committed `publishedAt`; a new revision id brings its real production date. Then update `REVISION` in `tests/e2e/fixtures/plan-responses.ts` (id, label, `publishedAt`) and any spec that asserts the revision label or date, and run the e2e suite. `reference-api.test.ts` publishes the modes seed in its `beforeAll`: never point it at `main`.
+
+**Rollback.** A published revision is never edited; the pointer moves. To return to the previous data, publish the superseded revision again as `paranaga_import` (the only role that may call it), against the production owner URL:
+
+```sql
+select transit.publish_revision('<previous revision id>');
+```
+
+- The previous revision is `osm-places-2026-10-15` (the id you noted in step 1; it is `superseded` now, which `publish_revision` accepts and audits as `revision.rollback`). Do not restore `modes-2026-10-16`: it is an intermediate revision without paths or the walk graph.
+- Re-publishing the previous revision does not remove the new rows or revisions; running `pnpm db:import --commit` later warns "(rolled back?)" and offers to re-publish. If the data itself is damaged, reset `main` from the `pre-increment-d-YYYY-MM-DD` backup branch in the Neon console instead.
+- The migrations stay applied (they are additive, and the previous app version does not read the new tables). Redeploy the previous app version afterwards: the Increment D app reads modes, lines and walk-graph endpoints that the old revision does not serve. Phones refetch by revision id, so they follow the pointer.
+- To go forward again: `select transit.publish_revision('<modes-lines revision id>');`.
+
+**`NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY`** (optional interactive Street View, Maps Embed API only):
+
+- Without it the stop and place pages show only the "Open in Google Maps" link; nothing breaks.
+- Set it in Vercel for Production and Preview, then redeploy (it is embedded in the client bundle at build time).
+- It is a browser-visible key: restrict it in Google Cloud to the Maps Embed API and to the exact website referrers (the production domain, authorized preview hosts, `localhost` for development). Never put a server credential here.
+- The Playwright builds use a harmless test key and intercept the embed; no test loads Google imagery.
+- Check once after deploying that the embed loads on the production domain (referrer authorization can only be verified there).
+
 ## Health endpoint
 
 `GET /api/health` returns only `{ "ok": true }` publicly. With `Authorization: Bearer $CRON_SECRET` it also probes the database and reports which providers are configured (never their values).
