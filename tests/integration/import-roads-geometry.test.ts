@@ -157,9 +157,11 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     const plan = buildImportPlan(files, osm, syntheticSeed, syntheticRoads);
     expect(plan.problems.join("\n")).toMatch(/synthetic snapshot is never imported/);
     const before = await tableCounts();
+    // A branch of main already holds the real lines revision: the refusal must not touch it.
+    const existing = await revisionIdOf(LABEL);
     await expect(commitImport(ownerUrl!, plan)).rejects.toBeInstanceOf(ImportRefusedError);
     expect(await tableCounts()).toEqual(before);
-    expect(await revisionIdOf(LABEL)).toBeUndefined();
+    expect(await revisionIdOf(LABEL)).toBe(existing);
   });
 
   it("the real import publishes modes-lines-2026-10-16: one shape per member variant, the walk graph, five parameters", async () => {
@@ -168,8 +170,15 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     const previous = await members(startRevisionId);
     const result = await commitImport(ownerUrl!, plan);
     expect(result.modes).toMatchObject({ outcome: "unchanged" });
-    expect(result.lines).toMatchObject({ outcome: "committed", revisionLabel: LABEL });
+    // Fresh data commits it; a branch of main (the import is in production) already holds it and
+    // reports "unchanged", and publishing it undoes the rollback done in beforeAll.
+    expect(["committed", "unchanged"]).toContain(result.lines?.outcome);
+    expect(result.lines).toMatchObject({ revisionLabel: LABEL });
     linesRevisionId = (await revisionIdOf(LABEL))!;
+    if (result.lines?.outcome === "unchanged") {
+      expect(result.lines).toMatchObject({ publishedIncludesBatch: false });
+      await publish(linesRevisionId);
+    }
     expect(await appRows(sql`select label from transit.v_published_revision`)).toEqual([{ label: LABEL }]);
 
     // Everything but the road kinds is carried by id, unchanged (stop, route and variant ids).
