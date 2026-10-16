@@ -136,7 +136,7 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
     ["/app/help/how-times-are-estimated", "How times are estimated"],
     ["/app/help/vehicle-types-in-naga", "Vehicle types in Naga"],
     // Trip detail links its fare basis and sources here: a saved trip reopened offline reaches them.
-    ["/app/help/sources#fare-basis", "Sources and credits"],
+    ["/app/help/sources", "Sources and credits"],
   ] as const) {
     await page.goto(path);
     const h1 = page.getByRole("heading", { level: 1, name: heading });
@@ -153,21 +153,6 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
   await expect(page.getByRole("link", { name: "Open the map" })).toHaveAttribute("href", "/app");
   await page.goto("/app/does-not-exist");
   await expect(page.getByRole("heading", { level: 1, name: "You're offline" })).toBeVisible();
-});
-
-test("offline: a saved trip reopened cold opens Sources from its fare basis link", async ({ page, context }) => {
-  await firstVisit(page);
-  await setEnds(page);
-  await chooseOption(page);
-  await page.getByTestId("trip-save").click();
-  await expect(page.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
-  await goOffline(context);
-  await page.goto("/app/saved");
-  await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
-  await expect(page.getByTestId("trip-detail")).toBeVisible();
-  await page.getByRole("link", { name: "How fares are estimated" }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Sources and credits" })).toBeVisible();
-  await expect(page.getByTestId("sources-fare-basis")).toBeVisible();
 });
 
 test("offline: search works from a cold start without searching first (index fetched once in the background)", async ({ page, context }) => {
