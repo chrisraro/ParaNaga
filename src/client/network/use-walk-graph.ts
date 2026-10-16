@@ -14,8 +14,11 @@
 //    dropped from the caches and fetched once more (fetchRevisionJson), never trusted.
 //  - Offline with no stored copy: "offline" (walks say street paths need a connection the first
 //    time), and it loads by itself when the connection comes back.
+//  - Low-data opt-in (Task 15 follow-up): while saving data with no stored copy ("skipped"), trip
+//    detail offers "Download street paths (≈ 80 KB)". Only that tap fetches it
+//    (`downloadWalkGraph`); the worker then keeps it, so later low-data trips use the stored copy.
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import { decodeJson, fetchRevisionJson, readStoredCopy } from "@/client/pwa/data-handoff";
 import { savingData } from "@/client/pwa/prefetch-index";
@@ -72,7 +75,7 @@ const isOffline = () => typeof navigator !== "undefined" && navigator.onLine ===
  * Loads and decodes the walk graph for `revisionId` (when saving data: only a stored copy).
  * Resolves with the decoded graph or null on error / skip / offline.
  */
-export function loadWalkGraph(revisionId: string): Promise<WalkGraph | null> {
+export function loadWalkGraph(revisionId: string, opts: { force?: boolean } = {}): Promise<WalkGraph | null> {
   const parsedRev = parseUuidParam(revisionId, "revisionId");
   if (!parsedRev.ok) {
     setState({ status: "error", graph: null, revisionId });
@@ -88,7 +91,8 @@ export function loadWalkGraph(revisionId: string): Promise<WalkGraph | null> {
   if (existing) return existing;
 
   const url = `/api/v1/network/walk-graph/${encodeURIComponent(rev)}`;
-  const saving = savingData();
+  // force: the person tapped "Download street paths" (fetch although saving data).
+  const saving = !opts.force && savingData();
   if (!saving) setState({ status: "loading", graph: null, revisionId: rev });
   const promise = (async () => {
     if (saving) {
@@ -117,6 +121,36 @@ export function loadWalkGraph(revisionId: string): Promise<WalkGraph | null> {
 
   inflightByRevision.set(rev, promise);
   return promise;
+}
+
+/** Low-data opt-in: fetches the walk graph once over the network (a tap), and the worker keeps it. */
+export function downloadWalkGraph(revisionId: string): Promise<WalkGraph | null> {
+  return loadWalkGraph(revisionId, { force: true });
+}
+
+/** Approximate download size of a walk graph, for the opt-in button. */
+export const WALK_GRAPH_DOWNLOAD_LABEL = "Download street paths (≈ 80 KB)";
+
+/**
+ * The low-data opt-in for `revisionId`: offered while the graph was skipped to save data (no
+ * stored copy, not offline). `download` runs only on a tap; `failed` after a download that did not
+ * arrive (the button stays, to try again).
+ */
+export function useWalkGraphDownload(revisionId: string | null | undefined): { offer: boolean; busy: boolean; failed: boolean; download: () => Promise<boolean> } {
+  const current = useSyncExternalStore(subscribe, () => state, () => IDLE);
+  const [attempt, setAttempt] = useState<"idle" | "busy" | "failed">("idle");
+  const parsedRev = revisionId ? parseUuidParam(revisionId, "revisionId") : null;
+  const rev = parsedRev?.ok ? parsedRev.value : null;
+  const held = rev !== null && byRevision.has(rev);
+  const skipped = rev !== null && current.revisionId === rev && (current.status === "skipped" || (attempt !== "idle" && current.status === "error"));
+  const download = async () => {
+    if (!rev || attempt === "busy") return false;
+    setAttempt("busy");
+    const graph = await downloadWalkGraph(rev);
+    setAttempt(graph ? "idle" : "failed");
+    return graph !== null;
+  };
+  return { offer: !held && (skipped || attempt === "busy"), busy: attempt === "busy", failed: attempt === "failed", download };
 }
 
 /** "Clear data on this device": drops any walk graphs held in memory. */

@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page, type Route } from "@playwright/test";
 import { SNAPSHOT, STOP_A1, routeNetwork, type NetworkCalls } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 
@@ -18,6 +18,12 @@ const DATA_DATE = "Oct 16, 2026";
 
 let calls: NetworkCalls;
 let planRequests = 0;
+/**
+ * API requests that tried the network after a test cut it (the abort routes record them). The
+ * counting handlers of routeNetwork never see those requests (the last route registered wins), so
+ * "nothing was fetched" is checked here: a request served from Cache Storage never shows up.
+ */
+let attempted: string[] = [];
 
 test.beforeEach(async ({ context, page }) => {
   // Every test installs a worker (and the update tests a second one): more than the default 30 s
@@ -25,6 +31,7 @@ test.beforeEach(async ({ context, page }) => {
   test.slow();
   await context.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
   planRequests = 0;
+  attempted = [];
   await context.route("**/api/v1/plan", (route) => {
     planRequests += 1;
     return route.fulfill({ status: 200, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(PROVISIONAL_PLAN) });
@@ -72,8 +79,15 @@ async function firstVisit(page: Page, { backgroundIndex = true }: { backgroundIn
  */
 async function goOffline(context: BrowserContext) {
   await context.setOffline(true);
-  await context.route(/\/api\//, (route) => route.abort("internetdisconnected"));
+  await context.route(/\/api\//, (route) => abortRecorded(route));
 }
+
+/** Fails a request like a dropped connection, and records that it tried the network. */
+function abortRecorded(route: Route) {
+  attempted.push(new URL(route.request().url()).pathname);
+  return route.abort("internetdisconnected");
+}
+const attemptsTo = (re: RegExp) => attempted.filter((p) => re.test(p));
 
 async function cacheEntries(page: Page): Promise<{ cache: string; url: string; cacheControl: string | null }[]> {
   return page.evaluate(async () => {
@@ -118,6 +132,8 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
     ["/app/explore", "Explore"],
     ["/app/help", "Help"],
     ["/app/more", "Settings"],
+    ["/app/help/how-times-are-estimated", "How times are estimated"],
+    ["/app/help/vehicle-types-in-naga", "Vehicle types in Naga"],
   ] as const) {
     await page.goto(path);
     const h1 = page.getByRole("heading", { level: 1, name: heading });
@@ -156,6 +172,40 @@ test("Low-data mode: the search index is not fetched in the background", async (
   expect(calls.searchIndexes).toEqual([]);
 });
 
+test("Low-data mode: street paths download only on the tap, then stay stored (Task 15 follow-up)", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("paranaga.prefs", JSON.stringify({ theme: "system", highContrast: false, lowData: true, historyEnabled: false }));
+  });
+  await firstVisit(page, { backgroundIndex: false });
+  await setEnds(page);
+  await page.getByTestId("trip-option").first().click();
+  const detail = page.getByTestId("trip-detail");
+  const download = detail.getByTestId("walk-graph-download");
+  await expect(download).toHaveText("Download street paths (≈ 80 KB)");
+  await expect(detail).not.toContainText("Approximate walking path");
+  expect(calls.walkGraphs).toEqual([]);
+  const a11y = await new AxeBuilder({ page }).include('[data-testid="trip-sheet"]').withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(a11y.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => v.id)).toEqual([]);
+
+  await download.click();
+  await expect(detail).toContainText("Approximate walking path");
+  await expect(detail.getByTestId("walk-graph-offer")).toHaveCount(0);
+  await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+  expect(calls.walkGraphs).toEqual([SNAPSHOT.revision.revisionId]);
+  await expect
+    .poll(async () => (await cacheEntries(page)).some((e) => e.url.endsWith(`/api/v1/network/walk-graph/${SNAPSHOT.revision.revisionId}`)))
+    .toBe(true);
+
+  // A later low-data visit uses the stored copy: no offer, no new download.
+  await page.reload();
+  await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
+  await setEnds(page);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect(page.getByTestId("walk-graph-offer")).toHaveCount(0);
+  expect(calls.walkGraphs).toEqual([SNAPSHOT.revision.revisionId]);
+});
+
 test("offline: the tab bar opens the cached shells by document navigation", async ({ page, context }) => {
   await firstVisit(page);
   await goOffline(context);
@@ -190,9 +240,6 @@ test("offline after one online trip: overview, ride lines and street walk paths 
   await expect
     .poll(async () => (await page.evaluate(() => caches.keys())).filter((n) => /^pn-(lines-f\d+|walk-graph)-/.test(n)).length)
     .toBe(2);
-  const linesBefore = calls.lines.length;
-  const walkGraphsBefore = calls.walkGraphs.length;
-
   // Guidance keeps the trip across a reload (sessionStorage): a cold start offline with a trip,
   // where nothing is held in memory any more.
   await page.getByTestId("trip-start").click();
@@ -210,8 +257,10 @@ test("offline after one online trip: overview, ride lines and street walk paths 
   // Street paths, not straight lines: the walk graph came from the cache.
   await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
   await expect(page.getByTestId("trip-detail")).not.toContainText("Street paths need a connection");
-  expect(calls.lines.length).toBe(linesBefore);
-  expect(calls.walkGraphs.length).toBe(walkGraphsBefore);
+  // Neither the lines nor the walk graph tried the network: both came from Cache Storage.
+  expect(attemptsTo(/\/api\/v1\/network\/(lines|walk-graph)\//)).toEqual([]);
+  // The time estimate is computed on the phone from the cached snapshot's model.
+  await expect(page.getByTestId("trip-detail-time")).toContainText(/^Estimate \d+–\d+ min \+ waiting \(unknown\)/);
 
   const entries = await cacheEntries(page);
   expect(entries.some((e) => new URL(e.url).pathname.startsWith("/api/v1/plan"))).toBe(false);
@@ -245,11 +294,10 @@ async function endGuidance(page: Page) {
 test("route detail draws its path from the stored lines when the lines endpoint is unreachable (Task 15)", async ({ page, context }) => {
   await firstVisit(page);
   await expect.poll(async () => (await page.evaluate(() => caches.keys())).some((n) => /^pn-lines-f\d+-/.test(n))).toBe(true);
-  await context.route(/\/api\/v1\/network\/lines\//, (route) => route.abort("internetdisconnected"));
-  const linesBefore = calls.lines.length;
+  await context.route(/\/api\/v1\/network\/lines\//, (route) => abortRecorded(route));
   await page.goto("/app/routes/R1");
   await expect(page.locator('[data-testid="route-map"] path.pn-line--route').first()).toBeAttached({ timeout: 15_000 });
-  expect(calls.lines.length).toBe(linesBefore);
+  expect(attemptsTo(/\/api\/v1\/network\/lines\//)).toEqual([]);
 });
 
 test("tap a stop offline: the panel says it opens when back online, the trip stays in the sheet (F-03)", async ({ page, context }) => {
@@ -288,6 +336,10 @@ test("Cache Storage holds no plan, auth, RSC, admin or private response", async 
   expect(entries.some((e) => e.url.endsWith(`/api/v1/stops/${A1_ID}`))).toBe(true);
   // The pre-paint theme script is precached (a cold start offline never flashes the wrong theme).
   expect(entries.some((e) => new URL(e.url).pathname === "/theme-init.js")).toBe(true);
+  // The two Task 14 Help articles are install-time shells.
+  for (const path of ["/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga"]) {
+    expect(entries.some((e) => e.cache.startsWith("pn-shell-") && new URL(e.url).pathname === path), path).toBe(true);
+  }
 });
 
 test("Clear data on this device removes the data caches; the app still opens offline", async ({ page, context }) => {

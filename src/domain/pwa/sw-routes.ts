@@ -23,8 +23,13 @@ import { LINES_FORMAT_VERSION } from "../api/lines-format";
 /**
  * The static shells, cached at install and served offline (cold start of /app, /app/saved, …).
  * Search is one too: its index is cached per revision, so it works offline from a cold start.
+ * The two Task 14 Help articles (time estimates, vehicle types) are prerendered and read the
+ * cached snapshot, so they open offline too.
  */
-export const SHELL_PATHS = ["/app", "/app/saved", "/app/more", "/app/help", "/app/explore", "/app/mynaga", "/app/search", "/offline"] as const;
+export const SHELL_PATHS = [
+  "/app", "/app/saved", "/app/more", "/app/help", "/app/explore", "/app/mynaga", "/app/search", "/offline",
+  "/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga",
+] as const;
 export type ShellPath = (typeof SHELL_PATHS)[number];
 export const OFFLINE_PATH = "/offline";
 

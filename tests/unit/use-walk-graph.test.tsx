@@ -2,7 +2,7 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetLinesForTests, useLines } from "@/client/network/use-lines";
-import { resetWalkGraphForTests, useWalkGraph } from "@/client/network/use-walk-graph";
+import { resetWalkGraphForTests, useWalkGraph, useWalkGraphDownload } from "@/client/network/use-walk-graph";
 import { resetPrefs, updatePrefs } from "@/client/prefs/use-prefs";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
 import { WALK_LOADING_LABEL, WALK_OFFLINE_LABEL, WALK_PATH_LABEL } from "@/domain/trip/enrich";
@@ -244,5 +244,41 @@ describe("walk graph offline and cache safety (Task 15)", () => {
     const none = renderHook(() => useWalkGraph(REV_ID));
     await waitFor(() => expect(none.result.current.status).toBe("skipped"));
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("low-data opt-in: offered while skipped, downloads only on the tap, then the paths are used", async () => {
+    updatePrefs({ lowData: true });
+    stubCaches(new Map());
+    const both = renderHook(() => ({ graph: useWalkGraph(REV_ID), offer: useWalkGraphDownload(REV_ID) }));
+    await waitFor(() => expect(both.result.current.graph.status).toBe("skipped"));
+    expect(both.result.current.offer).toMatchObject({ offer: true, busy: false, failed: false });
+    expect(fetchMock).not.toHaveBeenCalled(); // nothing downloads by itself
+    let ok = false;
+    await act(async () => {
+      ok = await both.result.current.offer.download();
+    });
+    expect(ok).toBe(true);
+    expect(fetchMock.mock.calls.filter(([u]) => u === WG_URL)).toHaveLength(1);
+    await waitFor(() => expect(both.result.current.graph.status).toBe("ready"));
+    expect(both.result.current.offer.offer).toBe(false);
+  });
+
+  it("low-data opt-in: a failed download keeps the offer with a failure note", async () => {
+    updatePrefs({ lowData: true });
+    stubCaches(new Map());
+    fetchMock.mockImplementation(async (url: string) => (url === WG_URL ? json({}, 503) : defaultFetch(url)));
+    const both = renderHook(() => ({ graph: useWalkGraph(REV_ID), offer: useWalkGraphDownload(REV_ID) }));
+    await waitFor(() => expect(both.result.current.graph.status).toBe("skipped"));
+    await act(async () => {
+      await both.result.current.offer.download();
+    });
+    expect(both.result.current.offer).toMatchObject({ offer: true, busy: false, failed: true });
+  });
+
+  it("no offer when not saving data (the graph loads by itself)", async () => {
+    stubCaches(new Map());
+    const online = renderHook(() => ({ graph: useWalkGraph(REV_ID), offer: useWalkGraphDownload(REV_ID) }));
+    await waitFor(() => expect(online.result.current.graph.status).toBe("ready"));
+    expect(online.result.current.offer.offer).toBe(false);
   });
 });

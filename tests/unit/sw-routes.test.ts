@@ -29,6 +29,8 @@ describe("classifyRequest: navigations", () => {
     for (const path of SHELL_PATHS) expect(classifyRequest(nav(path))).toEqual({ kind: "shell", path });
     expect(classifyRequest(nav("/app/saved?tab=places"))).toEqual({ kind: "shell", path: "/app/saved" });
     expect(classifyRequest(nav("/app/help/?tab=safety"))).toEqual({ kind: "shell", path: "/app/help" });
+    // The Task 14 Help articles (time estimates, vehicle types) open offline from a cold start.
+    expect(SHELL_PATHS).toEqual(expect.arrayContaining(["/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga"]));
   });
 
   it("sends any other navigation to the network, with /offline as the fallback", () => {

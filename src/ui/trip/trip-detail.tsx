@@ -18,6 +18,7 @@ import "./trip.css";
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLines } from "@/client/network/use-lines";
+import { WALK_GRAPH_DOWNLOAD_LABEL, useWalkGraphDownload } from "@/client/network/use-walk-graph";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
 import type { EtaModel } from "@/domain/api/schemas";
@@ -349,6 +350,13 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const [sawLoadingPaths, setSawLoadingPaths] = useState(false);
   if (loadingPaths && !sawLoadingPaths) setSawLoadingPaths(true);
   const pathsStatus = loadingPaths ? "Loading street paths…" : sawLoadingPaths ? "Street paths updated" : "";
+  // Low-data opt-in (Task 15 follow-up): the walk graph downloads only on this tap, then stays stored.
+  const pathsDownload = useWalkGraphDownload(data.revision.revisionId);
+  const downloadPaths = async () => {
+    if (pathsDownload.busy) return;
+    // The button goes away once the paths arrive: keep focus in the sheet, on the heading.
+    if (await pathsDownload.download()) headingRef.current?.focus();
+  };
 
   return (
     <section className="pn-trip pn-trip-detail" aria-labelledby="pn-trip-detail-title" data-testid="trip-detail">
@@ -398,6 +406,21 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       <p className="sr-only" role="status" aria-live="polite" data-testid="trip-paths-status">
         {pathsStatus}
       </p>
+      {pathsDownload.offer || pathsDownload.failed ? (
+        <div className="pn-trip-paths-offer" data-testid="walk-graph-offer">
+          <p className="pn-trip-paths-offer__text">Low-data mode: walks are shown as straight lines. Street paths download only if you ask.</p>
+          <button
+            type="button"
+            className="pn-btn pn-btn--secondary pn-trip-paths-offer__btn"
+            aria-disabled={pathsDownload.busy || undefined}
+            onClick={() => void downloadPaths()}
+            data-testid="walk-graph-download"
+          >
+            {pathsDownload.busy ? "Downloading street paths…" : WALK_GRAPH_DOWNLOAD_LABEL}
+          </button>
+          {pathsDownload.failed ? <p className="pn-trip-paths-offer__text" role="alert">Street paths could not be downloaded. Try again.</p> : null}
+        </div>
+      ) : null}
       <ol className="pn-tl" aria-label="Trip steps">
         {steps(option, lookups, traceOf, estimate).map((step) => (
           <li key={step.key} className="pn-tl__step">

@@ -761,3 +761,18 @@
   min-height: 44px;
   margin-top: 4px;
 }
+
+/* Low-data opt-in: download the walk graph (Task 15 follow-up). */
+.pn-trip-paths-offer {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--pn-sep);
+  border-radius: 12px;
+}
+.pn-trip-paths-offer__text {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.pn-trip-paths-offer__btn {
+  min-height: 44px;
+}

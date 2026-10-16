@@ -10,10 +10,11 @@ import { HelpArticleScreen } from "@/ui/help/help-article";
 // itself once it renders (src/ui/help/help-article.tsx).
 export const metadata: Metadata = {
   title: "Help",
-  description: "ParaNaga help: how trips are planned, why stops are not verified yet, using ParaNaga offline.",
+  description: "ParaNaga help: how trips are planned, why stops are not verified yet, using ParaNaga offline, how times are estimated, vehicle types in Naga.",
 };
 
-// The three Help articles are fixed copy and are prerendered. With Partial Prefetching the slug is
+// The Help articles are prerendered (the offline and time-estimate ones fill in data from this
+// phone once they render); the two Task 14 articles are also service-worker shells. With Partial Prefetching the slug is
 // read inside Suspense (see src/app/app/stops/[id]/page.tsx), so an unlisted slug gets the static
 // shell and then the not-found panel.
 export function generateStaticParams() {
