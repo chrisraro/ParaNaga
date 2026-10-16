@@ -9,13 +9,17 @@
 
 import "./trip.css";
 
-import { Fragment, useMemo, type ReactNode } from "react";
-import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
-import type { EtaModel } from "@/domain/api/schemas";
+import { Fragment, useMemo } from "react";
+import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
+import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
+import { cardRouteNotes, jeepneyReasonText, recommendedIndex, streetCardView } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
-import { EtaTotalText, extractWalkLengths, useOptionEta } from "./eta-text";
-import { Chevron, FareChip, FareShort, LoopChip, UNVERIFIED_CHIP, WalkIcon, type PlanLookups } from "./trip-parts";
+import { optionNotesView } from "@/domain/trip/option-notes";
+import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
+import { RouteNote } from "./route-note";
+import { ServiceWindowNote } from "./service-window-note";
+import { Chevron, FareChip, FareShort, LoopChip, StreetModeIcon, UNVERIFIED_CHIP, WalkIcon, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
   return `pn-trip-option-${optionId.replace(/[^A-Za-z0-9_-]/g, "_")}`;
@@ -43,6 +47,14 @@ export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: 
               <span className="sr-only">Walk </span>
               {formatDistance(leg.estimateMeters)}
             </span>
+          ) : leg.kind !== "ride" ? (
+            <span className="pn-legstrip__walk">
+              <StreetModeIcon mode={leg.kind} />
+              <span>
+                {leg.kind === "tricycle" ? "Tricycle" : "Padyak"}
+                {leg.distanceMeters === null ? "" : ` ${formatDistance(leg.distanceMeters)}`}
+              </span>
+            </span>
           ) : (
             <>
               <span className="sr-only">Ride </span>
@@ -56,28 +68,73 @@ export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: 
   );
 }
 
+function StreetLines({ leg }: { leg: TricycleLegDto | PadyakLegDto }) {
+  const v = streetCardView(leg);
+  return (
+    <>
+      {v.headline ? (
+        <span className="pn-trip-card__street pn-trip-card__street--state" data-testid="street-state">
+          {v.headline}
+        </span>
+      ) : null}
+      {v.distanceText ? (
+        <span className="pn-trip-card__street" data-testid="street-distance">
+          {v.distanceText}
+        </span>
+      ) : null}
+      {v.restrictionNote ? (
+        <span className="pn-trip-card__street" data-testid="street-restriction">
+          {v.restrictionNote}
+        </span>
+      ) : null}
+      {v.areaNote ? (
+        <span className="pn-trip-card__street" data-testid="street-area">
+          {v.areaNote}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 function OptionCard({
   option,
   onOpen,
   index,
+  primary,
   etaModel,
+  reason,
+  now,
+  routes,
 }: {
   option: PlanOptionDto;
   onOpen: (id: string) => void;
   index: number;
+  primary: boolean;
   etaModel?: EtaModel | null;
+  /** The one line above a tricycle card when the plan has no jeepney option. */
+  reason?: string | null;
+  now: Date;
+  routes?: NetworkSnapshot["routes"] | null;
 }) {
-  const primary = index === 0;
+  const street = option.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
+  const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
+  const routeNotes = cardRouteNotes(notes);
 
   return (
     <li className="pn-trip-li" style={{ ["--i" as string]: Math.min(index, 5) }}>
+      {option.mode === "tricycle" && reason ? (
+        <p className="pn-trip-reason" data-testid="jeepney-reason">
+          {reason}
+        </p>
+      ) : null}
       <button
         type="button"
         id={optionDomId(option.id)}
         className={primary ? "pn-trip-card pn-trip-card--primary pn-trip-in" : "pn-trip-card pn-trip-in"}
         data-testid="trip-option"
+        data-mode={option.mode}
         onClick={() => onOpen(option.id)}
       >
         <span className="pn-trip-card__top">
@@ -96,10 +153,30 @@ function OptionCard({
         </span>
         <span className="pn-trip-card__head">
           <strong>{optionTitle(option)}</strong>
-          {option.rides === 0 ? <span className="pn-trip-card__time">paths not verified</span> : null}
+          {option.rides === 0 && !street ? <span className="pn-trip-card__time">paths not verified</span> : null}
           <span className="sr-only">. </span>
-          <EtaTotalText estimate={estimate} className="pn-trip-card__time" testId="trip-option-time" short />
+          {street ? (
+            <span className="pn-trip-card__time" data-testid="trip-option-time">
+              {streetCardView(street).timeText}
+            </span>
+          ) : (
+            <EtaTotalText estimate={estimate} className="pn-trip-card__time" testId="trip-option-time" short />
+          )}
         </span>
+        {street ? (
+          <>
+            <span className="sr-only">. </span>
+            <StreetLines leg={street} />
+          </>
+        ) : null}
+        {notes.serviceWindow || routeNotes.length > 0 ? (
+          <span className="pn-trip-card__notes">
+            {notes.serviceWindow ? <ServiceWindowNote note={notes.serviceWindow} compact /> : null}
+            {routeNotes.map((n) => (
+              <RouteNote key={n.text} note={n} />
+            ))}
+          </span>
+        ) : null}
         <span className="sr-only">. </span>
         <span className="pn-trip-card__foot">
           <FareChip fare={option.fare} short />
@@ -116,12 +193,15 @@ type Props = {
   /** A newer plan (refined GPS point) is on its way; these options stay until it arrives. */
   refreshing?: boolean;
   onOpen: (optionId: string) => void;
-  /** The "Tricycle may serve this" card (D15), shown below the options; never an option itself. */
-  tricycleHint?: ReactNode;
   etaModel?: EtaModel | null;
+  /** The snapshot's routes: the evidence behind each ride's notes. */
+  routes?: NetworkSnapshot["routes"] | null;
 };
 
-export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = null, etaModel }: Props) {
+export function TripOptions({ data, refreshing = false, onOpen, etaModel, routes = null }: Props) {
+  const now = useMinuteTicker();
+  const primary = recommendedIndex(data.plan.options);
+  const reason = jeepneyReasonText(data.plan.jeepneyReason);
   const extraNotes = data.plan.notes.filter((n) => n !== UNVERIFIED_ROUTE_BADGE);
   return (
     <section className="pn-trip" aria-labelledby="pn-trip-options-title" aria-busy={refreshing || undefined} data-testid="trip-options">
@@ -131,7 +211,7 @@ export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = n
       {refreshing ? <p className="pn-trip__refreshing">Updating…</p> : null}
       <ul id={OPTIONS_LIST_ID} className="pn-trip-list">
         {data.plan.options.map((option, i) => (
-          <OptionCard key={option.id} option={option} onOpen={onOpen} index={i} etaModel={etaModel} />
+          <OptionCard key={option.id} option={option} onOpen={onOpen} index={i} primary={i === primary} etaModel={etaModel} reason={reason} now={now} routes={routes} />
         ))}
       </ul>
       {extraNotes.length > 0 ? (
@@ -147,7 +227,6 @@ export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = n
           </div>
         </div>
       ) : null}
-      {tricycleHint}
     </section>
   );
 }
@@ -175,7 +254,9 @@ export function OptionsPeek({
   notes?: readonly string[];
   onToggle: () => void;
 }) {
-  const best = data.plan.options[0];
+  // The Recommended option (the tricycle at 500 m or more), not the first card: what is read out must match the list.
+  const best = data.plan.options[Math.max(0, recommendedIndex(data.plan.options))];
+  const bestStreet = best?.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
   const walkLengths = useMemo(() => extractWalkLengths(best?.legs ?? []), [best]);
   const { estimate } = useOptionEta(best, walkLengths, etaModel);
   if (!best) return null;
@@ -187,7 +268,7 @@ export function OptionsPeek({
         <span>
           {optionTitle(best)}
           <span aria-hidden="true"> · </span>
-          <EtaTotalText estimate={estimate} short />
+          {bestStreet ? streetCardView(bestStreet).timeText : <EtaTotalText estimate={estimate} short />}
           <span aria-hidden="true"> · </span>
           <FareShort fare={best.fare} />
         </span>

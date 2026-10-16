@@ -50,6 +50,8 @@ describe("classifyRequest: runtime data caches", () => {
   it("caches the immutable snapshot and search index of a revision CacheFirst", () => {
     expect(classifyRequest(req(`/api/v1/network/snapshot/${REV}`))).toEqual({ kind: "cache-first", cache: "snapshot" });
     expect(classifyRequest(req(`/api/v1/network/search-index/${REV}`))).toEqual({ kind: "cache-first", cache: "search-index" });
+    // Task 14: the lazy named-places chunk has its own cache, so it never evicts the index.
+    expect(classifyRequest(req(`/api/v1/network/search-places/${REV}`))).toEqual({ kind: "cache-first", cache: "search-places" });
     expect(classifyRequest(req("/api/v1/network/snapshot/not-a-uuid"))).toEqual({ kind: "network-only" });
   });
 
@@ -73,6 +75,7 @@ describe("classifyRequest: runtime data caches", () => {
     expect(revisionsKept("lines")).toBe(3);
     expect(revisionsKept("snapshot")).toBe(3);
     expect(revisionsKept("search-index")).toBe(3);
+    expect(revisionsKept("search-places")).toBe(3);
   });
 
   it("serves the published head NetworkFirst with a cached fallback", () => {
@@ -207,6 +210,7 @@ describe("acceptHandoff", () => {
     const ok = (url: string, cacheControl = "public, s-maxage=31536000, immutable") => acceptHandoff({ url, body: "{}", cacheControl }, ORIGIN);
     expect(ok(`/api/v1/network/snapshot/${REV}`)?.cache).toBe("snapshot");
     expect(ok(`/api/v1/network/search-index/${REV}`)?.cache).toBe("search-index");
+    expect(ok(`/api/v1/network/search-places/${REV}`)?.cache).toBe("search-places");
     expect(ok(`/api/v1/network/lines/${REV}`)?.cache).toBe("lines");
     expect(ok(`/api/v1/network/walk-graph/${REV}`)?.cache).toBe("walk-graph");
     expect(ok("/api/v1/network/head", "public, s-maxage=30")).toEqual({ url: `${ORIGIN}/api/v1/network/head`, body: "{}", cacheControl: "public, s-maxage=30", cache: "head" });

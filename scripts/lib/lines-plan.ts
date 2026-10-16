@@ -3,7 +3,9 @@
 //   - one approximate path per member variant (J1, the Task 5 tracer): ok / flagged with the line,
 //     its length, stop measures (pins) and every off-list segment with its reason; or untraced
 //     ("Path could not be traced from the street list") with the reason — reported, never an abort;
-//   - the walk graph payload (Task 6, D7): ABORTS (problem) when over budget;
+//   - the street graph v2 payload (plan E §C: walk + tricycle + padyak, reviewed road rules and padyak
+//     areas): ABORTS (problem) when over budget or when a rule's way id is not in the snapshot;
+//   - the reviewed route notes (written by the lines writer) and a street-graph report for the dry run;
 //   - the five time-estimate parameters (D8/D9): ABORTS when a key is missing;
 //   - the regional services' distances from the snapshot's relation summaries (D5): the shorter
 //     direction, recorded in distance_basis.
@@ -14,6 +16,7 @@ import { gzipSync } from "node:zlib";
 import { NAGA_BOUNDARY } from "../../src/domain/geo/naga";
 import { haversineMeters } from "../../src/domain/geo/geometry";
 import { buildRoadGraph } from "../../src/domain/geo/road-graph";
+import type { ModesSeedRoadRule } from "../../src/domain/import/modes-seed";
 import type { StreetAlias } from "../../src/domain/geo/street-names";
 import type { LatLng } from "../../src/domain/geo/types";
 import { sha256Hex } from "../../src/domain/import/hash";
@@ -31,14 +34,15 @@ import {
   type TraceQuality,
 } from "../../src/domain/import/trace-route";
 import { walkGraphPayloadSchema } from "../../src/domain/walk/format";
-import { buildWalkGraph, WALK_GRAPH_BUILDER_VERSION, type WalkGraphBuildStats } from "../../src/domain/walk/walk-graph-build";
+import { buildStreetGraph, STREET_GRAPH_BUILDER_VERSION, type WalkGraphBuildStats } from "../../src/domain/walk/walk-graph-build";
+import { decodeWalkGraph, padyakAreaCoverage, type PadyakAreaCoverage } from "../../src/domain/walk/walk-graph";
 import type { PlannedVariant } from "./import-plan";
-import type { ModesPlan, PlannedEtaParam, PlannedRegionalService } from "./modes-plan";
+import type { ModesPlan, PlannedEtaParam, PlannedRegionalService, PlannedRouteNote } from "./modes-plan";
 import { ROADS_FILE_RE, type RoadsSnapshot } from "./roads-snapshot";
 
-/** D7: at most 600 KB of JSON and 220 KB gzip. */
-export const WALK_GRAPH_MAX_BYTES = 600 * 1024;
-export const WALK_GRAPH_MAX_GZIP_BYTES = 220 * 1024;
+/** Plan E §C (street graph v2): at most 800 KB of JSON and 260 KB gzip (migration 0010 checks the same). */
+export const WALK_GRAPH_MAX_BYTES = 800 * 1024;
+export const WALK_GRAPH_MAX_GZIP_BYTES = 260 * 1024;
 export const WALK_GRAPH_KEY = "naga-walk";
 export const PATH_LABEL = "Approximate path, not a verified route shape";
 
@@ -65,7 +69,7 @@ export type PlannedTrace = TraceKey & {
 
 export type PlannedWalkGraph = {
   key: string;
-  formatVersion: 1;
+  formatVersion: 2;
   payload: string;
   bytes: number;
   gzipBytes: number;
@@ -75,6 +79,16 @@ export type PlannedWalkGraph = {
   builderVersion: string;
   stats: WalkGraphBuildStats;
   contentHash: string;
+};
+
+/** What the dry run prints about the street graph (rules, padyak areas, notes); no effect on the stored rows. */
+export type StreetReport = {
+  /** Metres of the snapshot ways each imported road rule covers (clipped where it clips); 0 for junction / not_mapped. */
+  rules: { code: string; kind: string; appliesTo: string; geometry: string; lengthM: number }[];
+  padyakBannedM: number;
+  /** Per padyak area: its place nodes and the recall / false positives on a ~90 m grid over the graph bbox. */
+  areas: (PadyakAreaCoverage & { placeNodeIds: number[] })[];
+  notesPerRoute: Record<string, number>;
 };
 
 /** A regional service version with its distance (the seed row plus D5 fields). */
@@ -100,12 +114,14 @@ export type LinesPlan = {
    * Any input change (places snapshot, Data_Sets, seed, builders) is a new key, so a new revision.
    */
   snapshotVersion: string;
-  /** modes-lines-<roads date>; the writer appends .2, .3 … when that label exists (same roads date, other inputs). */
+  /** anywhere-alight-<roads date>; the writer appends .2, .3 … when that label exists (same roads date, other inputs). */
   revisionLabel: string;
   /** sha256 over every input (road snapshot, modes seed, Data_Sets, places snapshot, builders). */
   inputsHash: string;
   traces: PlannedTrace[];
   walkGraph: PlannedWalkGraph | null;
+  streetReport: StreetReport | null;
+  routeNotes: PlannedRouteNote[];
   etaParams: PlannedEtaParam[];
   regionalDistances: PlannedRegionalDistance[];
   /** Regional services left without a distance ("distance not on file"), with the reason. */
@@ -144,6 +160,22 @@ function lineCoords(line: readonly LatLng[]): LatLng[] {
   return out;
 }
 
+/** Metres of the snapshot ways a drawn road rule covers, clipped between its clip nodes. */
+function ruleLengthM(r: ModesSeedRoadRule, snapshot: NonNullable<RoadsSnapshot["roads"]>): number {
+  const ways = new Map(snapshot.ways.map((w) => [w.id, w]));
+  let total = 0;
+  for (const id of r.wayIds) {
+    let ids = ways.get(id)!.nodeIds;
+    const clip = r.clips.find((c) => c.wayId === id);
+    if (clip) {
+      const [a, b] = [ids.indexOf(clip.fromNodeId), ids.indexOf(clip.toNodeId)];
+      ids = ids.slice(Math.min(a, b), Math.max(a, b) + 1);
+    }
+    for (let i = 1; i < ids.length; i++) total += haversineMeters(snapshot.nodes.get(ids[i - 1]!)!, snapshot.nodes.get(ids[i]!)!);
+  }
+  return total;
+}
+
 /** The point at `m` metres along the line (clamped). */
 function pointAt(line: readonly LatLng[], m: number): LatLng {
   let walked = 0;
@@ -168,16 +200,16 @@ export function buildLinesPlan(input: LinesPlanInput): LinesPlan {
   const aliasesHash = hashOf("street_aliases", modes.streetAliases);
   const inputsHash = hashOf("modes-lines-inputs", {
     roads: roads.sha256, modesSeed: modes.sha256, documents: input.documentsHash, osmPlaces: input.osmPlacesSha256,
-    trace: TRACE_BUILDER_VERSION, walk: WALK_GRAPH_BUILDER_VERSION,
+    trace: TRACE_BUILDER_VERSION, graph: STREET_GRAPH_BUILDER_VERSION,
   });
   const base = {
     roadsFileName: roads.fileName, roadsSha256: roads.sha256, roadsBytes: roads.bytes, roadsDate,
     osmBaseTimestamp: roads.roads?.header.osmBaseTimestamp ?? null, sourceCode,
-    snapshotVersion: `modes-lines:${roadsDate}:${modes.seedDate}:${inputsHash.slice(0, 12)}`, revisionLabel: `modes-lines-${roadsDate}`,
+    snapshotVersion: `modes-lines:${roadsDate}:${modes.seedDate}:${inputsHash.slice(0, 12)}`, revisionLabel: `anywhere-alight-${roadsDate}`,
     inputsHash, aliasesHash,
   };
   const empty = {
-    traces: [], walkGraph: null, etaParams: [], regionalDistances: [], regionalWithoutDistance: [],
+    traces: [], walkGraph: null, streetReport: null, routeNotes: [], etaParams: [], regionalDistances: [], regionalWithoutDistance: [],
     traceRules: { landmarks: [], termini: [], placeTerminalFallback: {} }, counts: {},
   };
   if (modes.synthetic) problems.push(`${modes.fileName}: the road outputs are built only with a reviewed (non-synthetic) modes seed`);
@@ -264,21 +296,41 @@ export function buildLinesPlan(input: LinesPlanInput): LinesPlan {
     return { ...row, contentHash: hashOf("shape_version", { ...row, roadSource: sourceCode }) };
   });
 
-  // ---------------------------------------------------------------- walk graph (D7)
-  const built = buildWalkGraph(buildRoadGraph(snapshot, { profile: "walk" }), { roadSource: sourceCode });
-  const payload = JSON.stringify(built.payload);
-  const bytes = Buffer.byteLength(payload, "utf8");
-  const gzipBytes = gzipSync(payload).length;
-  const budget = input.walkGraphBudget ?? { bytes: WALK_GRAPH_MAX_BYTES, gzipBytes: WALK_GRAPH_MAX_GZIP_BYTES };
-  if (bytes > budget.bytes) problems.push(`walk graph is ${bytes} B of JSON, over the ${budget.bytes} B budget (D7)`);
-  if (gzipBytes > budget.gzipBytes) problems.push(`walk graph is ${gzipBytes} B gzip, over the ${budget.gzipBytes} B budget (D7)`);
-  if (!walkGraphPayloadSchema.safeParse(built.payload).success) problems.push("walk graph payload fails its format v1 schema");
-  const sha256 = sha256Hex(payload);
-  const walkGraph: PlannedWalkGraph = {
-    key: WALK_GRAPH_KEY, formatVersion: 1, payload, bytes, gzipBytes, sha256, nodeCount: built.stats.nodes,
-    edgeCount: built.stats.edges, builderVersion: WALK_GRAPH_BUILDER_VERSION, stats: built.stats,
-    contentHash: hashOf("walk_graph_version", { sha256, roadSource: sourceCode, builder: WALK_GRAPH_BUILDER_VERSION }),
-  };
+  // ---------------------------------------------------------------- street graph v2 (plan E §C)
+  let walkGraph: PlannedWalkGraph | null = null;
+  let streetReport: StreetReport | null = null;
+  try {
+    const built = buildStreetGraph(snapshot, modes.roadRules, modes.padyakAreas, { roadSource: sourceCode });
+    const payload = JSON.stringify(built.payload);
+    const bytes = Buffer.byteLength(payload, "utf8");
+    const gzipBytes = gzipSync(payload).length;
+    const budget = input.walkGraphBudget ?? { bytes: WALK_GRAPH_MAX_BYTES, gzipBytes: WALK_GRAPH_MAX_GZIP_BYTES };
+    if (bytes > budget.bytes) problems.push(`street graph is ${bytes} B of JSON, over the ${budget.bytes} B budget`);
+    if (gzipBytes > budget.gzipBytes) problems.push(`street graph is ${gzipBytes} B gzip, over the ${budget.gzipBytes} B budget`);
+    if (!walkGraphPayloadSchema.safeParse(built.payload).success) problems.push("street graph payload fails its format v2 schema");
+    const sha256 = sha256Hex(payload);
+    walkGraph = {
+      key: WALK_GRAPH_KEY, formatVersion: 2, payload, bytes, gzipBytes, sha256, nodeCount: built.stats.nodes,
+      edgeCount: built.stats.edges, builderVersion: STREET_GRAPH_BUILDER_VERSION, stats: built.stats,
+      contentHash: hashOf("walk_graph_version", { sha256, roadSource: sourceCode, builder: STREET_GRAPH_BUILDER_VERSION }),
+    };
+    const g = decodeWalkGraph(built.payload);
+    const grid = [];
+    for (let lat = g.bbox[0]; lat <= g.bbox[2]; lat += 90) for (let lng = g.bbox[1]; lng <= g.bbox[3]; lng += 92) grid.push({ lat: lat / 1e5, lng: lng / 1e5 });
+    const coverage = padyakAreaCoverage(g, grid);
+    const rules = modes.roadRules.map((r) => ({
+      code: r.code, kind: r.kind, appliesTo: r.appliesTo[0], geometry: r.geometry, lengthM: r.geometry === "ways" ? ruleLengthM(r, snapshot) : 0,
+    }));
+    const notesPerRoute: Record<string, number> = {};
+    for (const n of modes.routeNotes) notesPerRoute[n.routeCode] = (notesPerRoute[n.routeCode] ?? 0) + 1;
+    streetReport = {
+      rules, notesPerRoute,
+      padyakBannedM: rules.filter((r) => r.appliesTo === "padyak" && r.kind === "exclude").reduce((s, r) => s + r.lengthM, 0),
+      areas: coverage.map((c) => ({ ...c, placeNodeIds: modes.padyakAreas.find((a) => a.code === c.code)?.placeNodeIds ?? [] })),
+    };
+  } catch (error) {
+    problems.push(`street graph: ${(error as Error).message}`);
+  }
 
   // ---------------------------------------------------------------- regional distances (D5)
   const regionalDistances: PlannedRegionalDistance[] = [];
@@ -308,17 +360,18 @@ export function buildLinesPlan(input: LinesPlanInput): LinesPlan {
     variants_traced_ok: count("ok"),
     variants_flagged: count("flagged"),
     variants_untraced: count("untraced"),
-    walk_graph_nodes: walkGraph.nodeCount,
-    walk_graph_edges: walkGraph.edgeCount,
-    walk_graph_bytes: walkGraph.bytes,
-    walk_graph_gzip_bytes: walkGraph.gzipBytes,
+    walk_graph_nodes: walkGraph?.nodeCount ?? 0,
+    walk_graph_edges: walkGraph?.edgeCount ?? 0,
+    walk_graph_bytes: walkGraph?.bytes ?? 0,
+    walk_graph_gzip_bytes: walkGraph?.gzipBytes ?? 0,
+    route_notes: modes.routeNotes.length,
     eta_params: etaParams.length,
     regional_distances: regionalDistances.length,
     street_aliases: modes.streetAliases.length,
   };
 
   return {
-    ...base, traces, walkGraph, etaParams, regionalDistances, regionalWithoutDistance, traceRules: ctx.provenance(), counts, problems,
+    ...base, traces, walkGraph, streetReport, routeNotes: modes.routeNotes, etaParams, regionalDistances, regionalWithoutDistance, traceRules: ctx.provenance(), counts, problems,
   };
 }
 

@@ -16,6 +16,8 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import L from "leaflet";
 import { MODE_DISPLAY_NAMES, resolveVisualKey, type RouteMode, type VisualKey } from "@/domain/modes/modes";
 import {
+  APPROX_STREET_DASH_ARRAY,
+  PADYAK_DASH_ARRAY,
   PALETTE_D,
   PALETTE_L,
   TWO_TONE_DASH_ARRAY,
@@ -29,6 +31,14 @@ export const LEGEND_FOOTNOTE = "Lines are approximate paths, not verified route 
 export const LEGEND_WALK_NOTE = "Dotted: approximate walking path · crossings not checked" as const;
 export const LEGEND_STOP_LABEL = "Mapped stop, not verified" as const;
 export const LEGEND_MIXED_NOTE = "Alternating colours: traditional and modern jeepneys" as const;
+
+/** Extra entries a trip can need: padyak (dashed), a straight line that is not a route, a free board or get-off point. */
+export type LegendExtra = "padyak" | "approx_street" | "free_point";
+export const LEGEND_EXTRA_LABEL: Record<LegendExtra, string> = {
+  padyak: "Padyak",
+  approx_street: "Approximate, not a route",
+  free_point: "Board or get off here (stop not marked)",
+};
 
 export type LegendEntry =
   | VisualKey
@@ -50,6 +60,7 @@ export type MapLegendProps = {
   showStops?: boolean;
   /** One honest line above the footnote (e.g. the trip's own lines did not load). */
   notice?: string | null;
+  extras?: readonly LegendExtra[];
 };
 
 function normalizeItems(items: readonly LegendEntry[]): { key: VisualKey; label: string }[] {
@@ -131,6 +142,26 @@ function LegendSwatch({ visualKey, surface }: { visualKey: VisualKey; surface: M
   );
 }
 
+/** Padyak (tricycle colour, dashed), an approximate street line (thin, sparse) or a free point (a diamond, not a stop ring). */
+function ExtraSwatch({ extra, surface }: { extra: LegendExtra; surface: MapSurface }) {
+  const token = (surface === "dark" ? PALETTE_D : PALETTE_L).tricycle;
+  if (extra === "free_point") {
+    return (
+      <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+        <rect x="12" y="2" width="12" height="12" transform="rotate(45 18 8)" fill="#3E4C6B" stroke="#FFFFFF" strokeWidth="2" />
+      </svg>
+    );
+  }
+  const dash = extra === "padyak" ? PADYAK_DASH_ARRAY : APPROX_STREET_DASH_ARRAY;
+  const core = extra === "padyak" ? 5 : 2.5;
+  return (
+    <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+      <line x1="2" y1="8" x2="34" y2="8" stroke={token.casing} strokeWidth={core + 4} />
+      <line x1="2" y1="8" x2="34" y2="8" stroke={token.core} strokeWidth={core} strokeDasharray={dash} />
+    </svg>
+  );
+}
+
 /** The mapped-stop pin: the hollow amber ring the stops layer draws. */
 function StopSwatch() {
   return (
@@ -151,7 +182,7 @@ function CautionSwatch({ surface }: { surface: MapSurface }) {
   );
 }
 
-export function MapLegend({ items, defaultOpen = false, surface = "light", announcement, caution = false, showStops = true, notice = null }: MapLegendProps) {
+export function MapLegend({ items, defaultOpen = false, surface = "light", announcement, caution = false, showStops = true, notice = null, extras = [] }: MapLegendProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -165,7 +196,7 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
     L.DomEvent.disableScrollPropagation(el);
   }, []);
 
-  if (entries.length === 0 && !showStops) return null;
+  if (entries.length === 0 && !showStops && extras.length === 0) return null;
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape" && open) {
@@ -202,6 +233,14 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
                 </div>
                 {key === "walk" ? <p className="pn-map-legend__note">{LEGEND_WALK_NOTE}</p> : null}
                 {key === "mixed_trad_modern" ? <p className="pn-map-legend__note">{LEGEND_MIXED_NOTE}</p> : null}
+              </li>
+            ))}
+            {extras.map((extra) => (
+              <li key={extra} className="pn-map-legend__item" data-legend-item={extra}>
+                <div className="pn-map-legend__row">
+                  <ExtraSwatch extra={extra} surface={surface} />
+                  <span>{LEGEND_EXTRA_LABEL[extra]}</span>
+                </div>
               </li>
             ))}
             {showStops ? (

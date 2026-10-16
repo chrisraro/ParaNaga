@@ -44,10 +44,10 @@ export const REFERENCE_MAX_AGE_S = 30 * 24 * 60 * 60;
 
 /** Every cache ParaNaga's worker creates starts with this; the build id is appended. */
 export const CACHE_PREFIX = "pn-";
-export const CACHE_KINDS = ["shell", "head", "snapshot", "search-index", "lines", "walk-graph", "reference"] as const;
+export const CACHE_KINDS = ["shell", "head", "snapshot", "search-index", "search-places", "lines", "walk-graph", "reference"] as const;
 export type CacheKind = (typeof CACHE_KINDS)[number];
 /** The per-revision data caches (CacheFirst; the revision is in the URL). */
-export type RevisionCache = "snapshot" | "search-index" | "lines" | "walk-graph";
+export type RevisionCache = "snapshot" | "search-index" | "search-places" | "lines" | "walk-graph";
 
 /** How many revisions a CacheFirst data cache keeps. */
 export function revisionsKept(cache: RevisionCache): number {
@@ -77,6 +77,7 @@ const NETWORK_ONLY: SwRoute = { kind: "network-only" };
 const UUID = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
 const SNAPSHOT = new RegExp(`^/api/v1/network/snapshot/${UUID}$`);
 const SEARCH_INDEX = new RegExp(`^/api/v1/network/search-index/${UUID}$`);
+const SEARCH_PLACES = new RegExp(`^/api/v1/network/search-places/${UUID}$`);
 const LINES = new RegExp(`^/api/v1/network/lines/${UUID}$`);
 const WALK_GRAPH = new RegExp(`^/api/v1/network/walk-graph/${UUID}$`);
 const REFERENCE = [/^\/api\/v1\/stops\/[^/]+$/, /^\/api\/v1\/routes$/, /^\/api\/v1\/routes\/[^/]+$/, /^\/api\/v1\/terminals\/[^/]+$/, /^\/api\/v1\/sources$/];
@@ -111,6 +112,7 @@ export function classifyRequest(info: SwRequestInfo): SwRoute {
   if (info.url.search !== "") return NETWORK_ONLY;
   if (SNAPSHOT.test(path)) return { kind: "cache-first", cache: "snapshot" };
   if (SEARCH_INDEX.test(path)) return { kind: "cache-first", cache: "search-index" };
+  if (SEARCH_PLACES.test(path)) return { kind: "cache-first", cache: "search-places" };
   if (LINES.test(path)) return { kind: "cache-first", cache: "lines" };
   if (WALK_GRAPH.test(path)) return { kind: "cache-first", cache: "walk-graph" };
   if (path === "/api/v1/network/head") return { kind: "network-first", cache: "head" };

@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
-import { SEARCH_INDEX, STOP_A1, routeNetwork } from "./fixtures/network";
+import { SEARCH_INDEX, SEARCH_PLACES, STOP_A1, routeNetwork } from "./fixtures/network";
 
 // Search (Increment A, Task 5): the search screen over the captured search index, setting trip
 // ends from it through the endpoint channel, and the HomeScreen side of that channel (row label,
@@ -197,6 +197,30 @@ test('"Show all" moves focus to the first row it revealed', async ({ page }) => 
   await routes.getByRole("button", { name: "Show all 12" }).click();
   await expect(routes.locator("li")).toHaveCount(12);
   await expect(routes.locator("li").nth(5).locator("a")).toBeFocused();
+});
+
+test("every named place: a restaurant, cafe, pharmacy, bank and hotel come from the lazy chunk, from OpenStreetMap, never verified; Show all reveals the rest", async ({ page }) => {
+  await page.goto("/app/search?for=destination");
+  // First paint is the core index; the named places follow as a second GET.
+  const places = page.getByTestId("search-group-places");
+  await searchBox(page).fill("synthetic");
+  await expect(places.locator("li")).toHaveCount(5);
+  await places.getByRole("button", { name: `Show all ${SEARCH_PLACES.places.length}` }).click();
+  await expect(places.locator("li")).toHaveCount(SEARCH_PLACES.places.length);
+  for (const [query, name, label] of [
+    ["synthetic grill", "Synthetic Grill Restaurant", "Restaurant"],
+    ["synthetic coffee", "Synthetic Brew Cafe", "Cafe"],
+    ["rx pharmacy", "Synthetic Rx Pharmacy", "Pharmacy"],
+    ["savings bank", "Synthetic Savings Bank", "Bank"],
+    ["grand hotel", "Synthetic Grand Hotel", "Hotel"],
+  ] as const) {
+    await searchBox(page).fill(query);
+    const row = places.getByRole("button", { name: new RegExp(`^${name}`) });
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(`${label} · from OpenStreetMap`);
+    await expect(row).not.toContainText(/verified/i);
+  }
+  await expectAxeClean(page);
 });
 
 test("reopening Search starts fresh: query and regional switch reset", async ({ page }) => {

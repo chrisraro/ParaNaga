@@ -2159,7 +2159,8 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": []
   },
   {
    "routeId": "1e8705ca-bb01-4c96-a0da-68a71173bbd4",
@@ -2194,7 +2195,18 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": [
+    {
+     "text": "A local reports a 'Francia' signboard may be this route; unconfirmed.",
+     "evidence": "owner_report_unverified",
+     "sourceCodes": [
+      "U02",
+      "RL15"
+     ],
+     "near": null
+    }
+   ]
   },
   {
    "routeId": "71f7bd85-988d-4e30-989a-3fcc6ec1d23d",
@@ -2229,7 +2241,8 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": []
   },
   {
    "routeId": "430e9763-1fbe-4cc0-8e74-13b5401e0850",
@@ -2305,7 +2318,8 @@
       "U01"
      ]
     }
-   ]
+   ],
+   "notes": []
   },
   {
    "routeId": "1f2ed35a-822a-4bf7-b4ec-ea42cae764a3",
@@ -2340,7 +2354,8 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": []
   },
   {
    "routeId": "6a6cbd8b-8339-4352-87fe-20df16081fa0",
@@ -2375,7 +2390,8 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": []
   },
   {
    "routeId": "87de88e9-9d2a-47fb-924b-b13769b5396b",
@@ -2450,7 +2466,8 @@
       "U01"
      ]
     }
-   ]
+   ],
+   "notes": []
   },
   {
    "routeId": "085d19f3-30a2-4e96-8596-f1f10ba781d9",
@@ -2485,7 +2502,31 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": [
+    {
+     "text": "Passes J. Miranda Ave (City Hall, BFP, BIR) on its listed streets.",
+     "evidence": "community",
+     "sourceCodes": [
+      "RL01",
+      "RL12",
+      "RL14"
+     ],
+     "near": {
+      "lat": 13.6256,
+      "lng": 123.199,
+      "radiusM": 450
+     }
+    },
+    {
+     "text": "A local reports drivers may turn into side streets on request (e.g. Magsaysay Ave). Ask the driver.",
+     "evidence": "owner_report_unverified",
+     "sourceCodes": [
+      "U02"
+     ],
+     "near": null
+    }
+   ]
   },
   {
    "routeId": "0abd7209-cc57-416e-a43b-bcb00227dce1",
@@ -2520,7 +2561,31 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": [
+    {
+     "text": "Passes J. Miranda Ave (City Hall, BFP, BIR) on its listed streets.",
+     "evidence": "community",
+     "sourceCodes": [
+      "RL01",
+      "RL12",
+      "RL14"
+     ],
+     "near": {
+      "lat": 13.6256,
+      "lng": 123.199,
+      "radiusM": 450
+     }
+    },
+    {
+     "text": "A local reports drivers may turn into side streets on request (e.g. Magsaysay Ave). Ask the driver.",
+     "evidence": "owner_report_unverified",
+     "sourceCodes": [
+      "U02"
+     ],
+     "near": null
+    }
+   ]
   },
   {
    "routeId": "cfe03151-f02a-4e44-b7ff-e185b4a0ebbe",
@@ -2555,7 +2620,32 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": [
+    {
+     "text": "City Hall, BFP and BIR are on J. Miranda Ave. This loop's listed streets skip it (Ord 2025-070); ask the driver.",
+     "evidence": "community",
+     "sourceCodes": [
+      "RL01",
+      "RL03",
+      "RL12",
+      "RL14"
+     ],
+     "near": {
+      "lat": 13.6256,
+      "lng": 123.199,
+      "radiusM": 450
+     }
+    },
+    {
+     "text": "A local reports drivers may turn into side streets on request (e.g. Magsaysay Ave). Ask the driver.",
+     "evidence": "owner_report_unverified",
+     "sourceCodes": [
+      "U02"
+     ],
+     "near": null
+    }
+   ]
   },
   {
    "routeId": "f26492f5-bdea-47bf-a324-5f5e67032f7c",
@@ -2590,7 +2680,32 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": [
+    {
+     "text": "City Hall, BFP and BIR are on J. Miranda Ave. This loop's listed streets skip it (Ord 2025-070); ask the driver.",
+     "evidence": "community",
+     "sourceCodes": [
+      "RL01",
+      "RL03",
+      "RL12",
+      "RL14"
+     ],
+     "near": {
+      "lat": 13.6256,
+      "lng": 123.199,
+      "radiusM": 450
+     }
+    },
+    {
+     "text": "A local reports drivers may turn into side streets on request (e.g. Magsaysay Ave). Ask the driver.",
+     "evidence": "owner_report_unverified",
+     "sourceCodes": [
+      "U02"
+     ],
+     "near": null
+    }
+   ]
   },
   {
    "routeId": "d59409d2-207b-4eb5-b48c-81f777d13d1c",
@@ -2623,7 +2738,8 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": []
   },
   {
    "routeId": "f0c456f2-7007-4908-a1aa-a0bc962bdeaf",
@@ -2656,7 +2772,8 @@
      }
     ]
    },
-   "fareReports": []
+   "fareReports": [],
+   "notes": []
   }
  ],
  "etaModel": {

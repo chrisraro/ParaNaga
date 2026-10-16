@@ -42,6 +42,7 @@ import { Segmented } from "@/ui/kit/segmented";
 import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { SavePlaceButton } from "@/ui/saved/save-place-button";
 import { NagaMap } from "@/ui/map/naga-map";
+import { StopStreetView } from "@/ui/street-view/stop-street-view";
 
 const TITLE = "Place";
 
@@ -57,6 +58,11 @@ export function PlaceDetailScreen({ placeRef }: { placeRef: PlaceRef }) {
   const state = useSearchIndex();
   if (state.status === "loading") return <DetailLoading title={TITLE} />;
   if (state.status === "error") return <DetailError title={TITLE} offline={state.problem === "offline"} onRetry={state.retry} />;
+  // Task 14: a restaurant or shop lives in the lazy places chunk; until it arrives (or when it
+  // failed) a missing place is not "not found".
+  if (state.morePlaces !== "ready" && placeRef.kind === "osm" && !findPlace(state.index, placeRef)) {
+    return state.morePlaces === "loading" ? <DetailLoading title={TITLE} /> : <DetailError title={TITLE} offline={state.problem === "offline"} onRetry={state.retry} />;
+  }
   return <PlaceDetailView index={state.index} placeRef={placeRef} />;
 }
 
@@ -222,6 +228,7 @@ function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: S
         <PlanTrip name={place.name} point={point} label={place.name} />
         <SavePlaceButton label={place.name} point={point} source="osm" testId="place-save" />
         <FactRows rows={rows} label="About this place" />
+        <StopStreetView what="place" lat={place.lat} lng={place.lng} name={place.name} />
         <section className="pn-section" aria-labelledby={`${uid}-near`}>
           <h2 id={`${uid}-near`} className="pn-section__title">
             Nearest mapped stops
@@ -312,6 +319,7 @@ function PinPlaceView({ place }: { place: SearchPinPlace }) {
           </ul>
         </section>
         <FactRows rows={rows} label="About this place" />
+        <StopStreetView what="place" lat={point.lat} lng={point.lng} name={place.label} />
         {photoForPinPlace(place.label, place.pins) ? <ReferencePhoto photo={photoForPinPlace(place.label, place.pins)!} stop /> : <PhotoPending />}
       </main>
     </DetailPanel>

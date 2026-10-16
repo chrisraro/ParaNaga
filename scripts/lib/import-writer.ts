@@ -22,9 +22,9 @@
 //
 // The reviewed modes seed (plan.modes, Increment D Task 2) runs last, in the same transaction:
 // scripts/lib/modes-writer.ts (new revision `modes-<date>` carrying the published one forward).
-// The road outputs (plan.lines, Task 7: approximate paths, walk graph, time-estimate parameters,
+// The road outputs (plan.lines, Task 7 + Increment E: approximate paths, street graph v2, route notes, time-estimate parameters,
 // regional distances) run after it, in the same transaction: scripts/lib/lines-writer.ts (new
-// revision `modes-lines-<roads date>` carrying the published one forward).
+// revision `anywhere-alight-<roads date>` carrying the published one forward).
 // Ids are generated here so related rows can be inserted in bulk without RETURNING lookups.
 import { randomUUID } from "node:crypto";
 import pg from "pg";

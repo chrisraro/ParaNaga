@@ -11,12 +11,13 @@
 //    for the exact points;
 //  - history keeps labels and a date only, never coordinates.
 import { z } from "zod";
-import { planOptionSchema, planResponseSchema, type PlanOptionDto, type PlanResponse, type RideLegDto } from "../api/plan";
+import { planOptionSchema, planResponseSchema, toWireOption, type PlanOptionDto, type PlanResponse, type RideLegDto } from "../api/plan";
 import type { NetworkSnapshot } from "../api/schemas";
 import type { LatLng } from "../geo/types";
 import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
-import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel, stopLabel } from "../trip/present";
+import { rideEnds } from "../trip/ride-ends";
+import { directionText, fareChipText, formatDistance, freeAlightText, isNegligibleWalk, legFareText, routeChipLabel, stopLabel, streetRideText } from "../trip/present";
 import type { EtaModel } from "../api/schemas";
 import { estimateOption } from "../eta/eta";
 import { TIME_NOT_AVAILABLE, formatTotal } from "../eta/format";
@@ -45,7 +46,8 @@ export function takeCodePoints(text: string, max: number): string {
   return [...text].slice(0, max).join("");
 }
 
-export const SAVED_PLACE_SOURCES = ["osm", "pin", "pinned"] as const;
+/** "google": a picked Google suggestion (Task 15): third-party, never verified. */
+export const SAVED_PLACE_SOURCES = ["osm", "pin", "pinned", "google"] as const;
 export type SavedPlaceSource = (typeof SAVED_PLACE_SOURCES)[number];
 
 /** A trip end as saved: its label, point and, when known, what kind of place it is. */
@@ -68,7 +70,7 @@ export const savedTripSchema = z.object({
   /** The variants the option rides, with their loop direction (as planned). */
   variants: planResponseSchema.shape.variants,
 });
-export type SavedTrip = z.infer<typeof savedTripSchema>;
+export type SavedTrip = Omit<z.infer<typeof savedTripSchema>, "option"> & { option: PlanOptionDto };
 
 export const savedPlaceSchema = z.object({
   id: recordId,
@@ -94,12 +96,18 @@ type Schema<T> = { safeParse: (v: unknown) => { success: true; data: T } | { suc
  * format (another tab running a newer build) is skipped and kept, never rewritten or deleted;
  * an older one is migrated on read before validation.
  */
-export const RECORD_FORMAT = 1;
+export const RECORD_FORMAT = 2;
 
 export type Decoded<T> = { ok: true; record: T } | { ok: false; reason: "newer_format" | "invalid" };
 
-/** Migrations of older record formats, by the format they upgrade from (none yet). */
-const MIGRATE_FROM: Record<number, (value: Record<string, unknown>) => Record<string, unknown>> = {};
+/**
+ * Migrations of older record formats, by the format they upgrade from. 1 → 2 (Increment E): the
+ * new plan fields (leg path/basis, ride board/alight, notes, option mode) all have schema
+ * defaults, so a format-1 record is already valid and only its version changes.
+ */
+const MIGRATE_FROM: Record<number, (value: Record<string, unknown>) => Record<string, unknown>> = {
+  1: (value) => value,
+};
 
 /** A stored value → a validated record; records without `v` are format 1 (Increment A). */
 export function decodeStored<T>(value: unknown, schema: Schema<T>): Decoded<T> {
@@ -138,7 +146,7 @@ function optionStopIds(option: PlanOptionDto): string[] {
     if (leg.kind === "walk") {
       if (leg.from.stopId) ids.push(leg.from.stopId);
       if (leg.to.stopId) ids.push(leg.to.stopId);
-    } else {
+    } else if (leg.kind === "ride") {
       for (const s of leg.stops) ids.push(s.id);
     }
   }
@@ -159,7 +167,8 @@ export function buildSavedTrip(input: {
   start: SavedEnd;
   destination: SavedEnd;
 }): SavedTrip {
-  const { data, option } = input;
+  const { data } = input;
+  const option = toWireOption(input.option);
   const stopIds = new Set(optionStopIds(option));
   const variantIds = new Set(rideLegs(option).map((l) => l.variantId));
   return {
@@ -181,7 +190,7 @@ export function buildSavedTrip(input: {
 export function savedTripResponse(card: SavedTrip): PlanResponse {
   return {
     revision: { revisionId: card.revisionId, label: card.revisionLabel, kind: card.revisionKind, publishedAt: card.publishedAt },
-    plan: { revisionId: card.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: null, options: [card.option], notes: [] },
+    plan: { revisionId: card.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: null, jeepneyReason: null, options: [card.option], notes: [] },
     stops: card.stops,
     variants: card.variants,
   };
@@ -276,6 +285,7 @@ export function revalidateSavedTrip(card: SavedTrip, snapshot: Pick<NetworkSnaps
   if (!optionStopIds(card.option).every((id) => stopIds.has(id))) return "changed";
   const variants = new Map(snapshot.variants.map((v) => [v.variantId, v]));
   for (const leg of rideLegs(card.option)) {
+    if (leg.stops.length === 0) continue; // a route without pins: the re-plan compares variant and board/alight (sameRides)
     const variant = variants.get(leg.variantId);
     if (!variant) return "changed";
     if (!isConsecutiveRun(variant.stopIds, leg.stops.map((s) => s.id), variant.isCircular)) return "changed";
@@ -289,7 +299,12 @@ function sameRides(a: PlanOptionDto, b: PlanOptionDto): boolean {
   if (ra.length !== rb.length) return false;
   return ra.every((leg, i) => {
     const other = rb[i]!;
-    return leg.variantId === other.variantId && leg.stops.length === other.stops.length && leg.stops.every((s, k) => s.id === other.stops[k]!.id);
+    // Same variant and the same board/alight (50 m); a format-1 leg (no measures) compares stops, as before.
+    if (leg.variantId !== other.variantId) return false;
+    if (leg.boardMeasureM !== null && other.boardMeasureM !== null && leg.alightMeasureM !== null && other.alightMeasureM !== null) {
+      return Math.abs(leg.boardMeasureM - other.boardMeasureM) <= 50 && Math.abs(leg.alightMeasureM - other.alightMeasureM) <= 50;
+    }
+    return leg.stops.length === other.stops.length && leg.stops.every((s, k) => s.id === other.stops[k]!.id);
   });
 }
 
@@ -332,19 +347,27 @@ export function shareText(
   const lines: string[] = [`ParaNaga trip: ${input.start.label} to ${input.destination.label}`];
   if (option.rides > 0) lines.push(`${UNVERIFIED_ROUTE_BADGE}.`);
   const steps: string[] = [];
-  for (const leg of option.legs) {
+  const lastRide = option.legs.reduce((last, l, i) => (l.kind === "ride" ? i : last), -1);
+  for (const [i, leg] of option.legs.entries()) {
     if (leg.kind === "walk") {
       if (option.rides > 0 && isNegligibleWalk(leg)) continue;
       const to = leg.to.kind === "destination" ? input.destination.label : name(leg.to.stopId, leg.to.name);
       steps.push(`Walk ${formatDistance(leg.estimateMeters)} to ${to} (estimate, path not verified)`);
       continue;
     }
-    const board = leg.stops[0]!;
-    const alight = leg.stops[leg.stops.length - 1]!;
+    if (leg.kind === "tricycle" || leg.kind === "padyak") {
+      steps.push(streetRideText(leg, input.destination.label));
+      continue;
+    }
+    const ends = rideEnds(leg, i === lastRide ? input.destination.label : undefined);
+    if (!ends) continue;
+    const { board, alight } = ends;
     const dir = directionText(direction(leg.variantId), "long");
-    const count = leg.stops.length - 1;
-    steps.push(`Board ${routeChipLabel(leg.routeCode, leg.routeName)} at ${name(board.id, board.name)}${dir ? `, direction ${dir}` : ""}`);
-    steps.push(`Ride ${count} ${count === 1 ? "stop" : "stops"}, get off at ${name(alight.id, alight.name)}. Say "Para!" to the driver.`);
+    const count = ends.stops.length - 1;
+    steps.push(`Board ${routeChipLabel(leg.routeCode, leg.routeName)} ${ends.pinned ? "at" : "near"} ${name(board.id, board.name)}${dir ? `, direction ${dir}` : ""}`);
+    steps.push(ends.pinned
+      ? `Ride ${count} ${count === 1 ? "stop" : "stops"}, get off at ${name(alight.id, alight.name)}. Say "Para!" to the driver.`
+      : `Ride along the approximate path. ${freeAlightText(name(alight.id, alight.name))}`);
   }
   lines.push(...steps.map((s, i) => `${i + 1}. ${s}`));
   lines.push(`Fare: ${option.rides > 0 ? legFareText(option.fare) : fareChipText(option.fare)}`);
@@ -358,7 +381,7 @@ export function shareText(
 
 // ---------------------------------------------------------------- saved places
 
-const PLACE_SOURCE_TEXT: Record<SavedPlaceSource, string> = { osm: "OpenStreetMap", pin: "Mapped pin", pinned: "Pinned location" };
+const PLACE_SOURCE_TEXT: Record<SavedPlaceSource, string> = { osm: "OpenStreetMap", pin: "Mapped pin", pinned: "Pinned location", google: "Google suggestion, not verified" };
 
 export function placeSubText(source: SavedPlaceSource): string {
   return `Saved place · ${PLACE_SOURCE_TEXT[source]}`;

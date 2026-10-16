@@ -24,6 +24,7 @@ vi.mock("@/client/saved/use-saved-trip-toggle", () => ({
   useSavedTripToggle: () => ({ match: null, kind: "none", waiting: false, unavailable: false, toggle: async () => undefined }),
 }));
 
+export const CARD_WORDS_STREET = 32; // a tricycle or padyak card with its street rule
 export const CARD_WORDS_ONE_RIDE = 16; // a two-word plan label is shown
 export const CARD_WORDS_TWO_RIDES = 20; // the route is "Loop A + Loop B"
 export const DETAIL_HEADER_WORDS = 16;
@@ -61,7 +62,13 @@ describe("copy budgets", () => {
     render(<TripOptions data={data} onOpen={() => undefined} etaModel={ETA_MODEL} />);
     const cards = screen.getAllByTestId("trip-option");
     expect(cards.length).toBeGreaterThan(0);
-    for (const card of cards) expect(visibleWords(card)).toBeLessThanOrEqual(CARD_WORDS_ONE_RIDE);
+    // A jeepney card is the budgeted one; a tricycle or padyak card also carries its street rule (distance,
+    // restricted roads or area), so it has a larger, still bounded, budget of its own.
+    for (const card of cards) {
+      const mode = card.getAttribute("data-mode");
+      const budget = mode === "tricycle" || mode === "padyak" ? CARD_WORDS_STREET : CARD_WORDS_ONE_RIDE;
+      expect(visibleWords(card)).toBeLessThanOrEqual(budget);
+    }
     const first = cards[0]!;
     // Estimates stay ranges, the wait stays unknown, the caution stays; no leg-by-leg text, source or revision.
     expect(first.textContent).toMatch(/Est\.Estimate \d+–\d+ min \+ waiting \(unknown\)/);

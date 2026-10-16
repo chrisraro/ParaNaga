@@ -2,7 +2,7 @@
 // Terminals layer, the Layers sheet terminal list and the tricycle hint card (Increment D, Task 13)
 // over the captured snapshot: which terminals are drawn, their accessible names, never colour
 // alone, and the D15 card copy.
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { MapContainer } from "react-leaflet";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { networkSnapshotSchema } from "@/domain/api/schemas";
@@ -19,10 +19,8 @@ import {
   terminalOsmLocationText,
 } from "@/domain/places/terminals";
 import { DEFAULT_LAYERS_PREF, type LayersPref } from "@/domain/prefs/prefs";
-import { tricycleHint } from "@/domain/trip/tricycle-hint";
 import { filterMapTerminals, listTerminals } from "@/ui/map/layers-sheet";
 import { TerminalMarkerTiles, TerminalsLayer, type MapTerminal } from "@/ui/map/terminals-layer";
-import { TricycleHintCard } from "@/ui/trip/tricycle-hint";
 import rawSnapshot from "../e2e/fixtures/network/snapshot.json" with { type: "json" };
 
 const SNAPSHOT = networkSnapshotSchema.parse(rawSnapshot);
@@ -194,37 +192,5 @@ describe("TerminalsLayer on a Leaflet map", () => {
     expect(marker.getAttribute("role")).toBe("img");
     expect(marker.hasAttribute("tabindex")).toBe(false);
     expect(marker.getAttribute("aria-label")).toBe("Bicol Central Station, Bus and UV Express terminal, community-mapped location");
-  });
-});
-
-describe("TricycleHintCard (D15)", () => {
-  const T14 = SNAPSHOT.terminals.find((t) => t.code === "T14")!;
-  const near = { lat: T14.lat! + 0.002, lng: T14.lng! };
-  const far = { lat: 13.6236, lng: 123.1847 };
-
-  it("states the minimum fare, no discount, confirm with the driver, no minutes, and and no source line", () => {
-    const hint = tricycleHint(far, near, SNAPSHOT, [])!;
-    const onShow = vi.fn();
-    render(<TricycleHintCard hint={hint} onShowOnMap={onShow} />);
-    const card = screen.getByTestId("tricycle-hint");
-    expect(within(card).getByRole("heading", { name: "Tricycle may serve this" })).toBeTruthy();
-    expect(screen.getByTestId("tricycle-hint-terminal").textContent).toMatch(/^Balatas Tricycle Terminal \(T14\) · ≈ \d+ m from your destination$/);
-    expect(screen.getByTestId("tricycle-hint-fare").textContent).toBe(
-      "Minimum fare ₱15 · discounts not applied · confirm with the driver",
-    );
-    expect(screen.getByTestId("tricycle-hint-time").textContent).toBe("Tricycle time not estimated");
-    expect(card.textContent).not.toMatch(/\bmin\b/);
-    expect(screen.queryByTestId("tricycle-hint-sources")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Show on map: Balatas Tricycle Terminal" }));
-    expect(onShow).toHaveBeenCalledWith(expect.objectContaining({ code: "T14", lat: T14.lat, lng: T14.lng }));
-  });
-
-  it("a feeder-only hint has no Show on map button", () => {
-    const hint = {
-      feeder: { routeCode: "TRI-VISTODA", name: "Langon – Ateneo de Naga via Vistansa Subd", distanceM: 120, near: "origin" as const },
-      copy: { ...tricycleHint(far, near, SNAPSHOT, [])!.copy, terminalText: null, feederText: "Langon – Ateneo de Naga via Vistansa Subd (TRI-VISTODA) · 120 m from your start" },
-    };
-    render(<TricycleHintCard hint={hint} onShowOnMap={vi.fn()} />);
-    expect(screen.queryByTestId("tricycle-hint-show")).toBeNull();
   });
 });

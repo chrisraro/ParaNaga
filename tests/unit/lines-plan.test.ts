@@ -31,7 +31,7 @@ describe("buildLinesPlan on the committed snapshot", () => {
     expect(plan.problems).toEqual([]);
     expect(lines).toMatchObject({
       roadsFileName: "naga-roads-2026-10-16.osm.json", sourceCode: "OSMR-2026-10-16",
-      revisionLabel: "modes-lines-2026-10-16",
+      revisionLabel: "anywhere-alight-2026-10-16",
     });
     // Keyed by every input: another places snapshot, Data_Sets or seed is a new batch, not a refusal.
     expect(lines.snapshotVersion).toBe(`modes-lines:2026-10-16:2026-10-16:${lines.inputsHash.slice(0, 12)}`);
@@ -78,13 +78,27 @@ describe("buildLinesPlan on the committed snapshot", () => {
     expect(loopA.offListSegments.some((s) => s.reason === "terminal_access")).toBe(true);
   });
 
-  it("builds the walk graph within the D7 budget, valid format v1, named after the road source", () => {
+  it("builds the street graph v2 within the budget (800 KB, 260 KB gzip), named after the road source", () => {
     const wg = lines.walkGraph!;
-    expect(wg.bytes).toBeLessThanOrEqual(600 * 1024);
-    expect(wg.gzipBytes).toBeLessThanOrEqual(220 * 1024);
+    expect(wg.formatVersion).toBe(2);
+    expect(wg.bytes).toBeLessThanOrEqual(800 * 1024);
+    expect(wg.gzipBytes).toBeLessThanOrEqual(260 * 1024);
     expect(wg.sha256).toBe(createHash("sha256").update(wg.payload, "utf8").digest("hex"));
     const parsed = walkGraphPayloadSchema.parse(JSON.parse(wg.payload));
-    expect(parsed.roadSource).toBe("OSMR-2026-10-16");
+    expect(parsed).toMatchObject({ v: 2, roadSource: "OSMR-2026-10-16" });
+    expect(parsed.v === 2 && parsed.rules.map((r) => r.code)).toEqual(["TRI-2006"]);
+  });
+
+  it("reports the road rules, padyak areas and notes per route for the dry run", () => {
+    const sr = lines.streetReport!;
+    expect(sr.rules).toHaveLength(plan.modes!.roadRules.length);
+    expect(sr.rules.find((r) => r.code === "TRI-2006-P2")!.lengthM).toBeGreaterThan(1000);
+    expect(sr.rules.find((r) => r.code === "TRI-2006-X2")).toMatchObject({ geometry: "junction", lengthM: 0 });
+    expect(sr.padyakBannedM).toBeGreaterThan(0);
+    expect(sr.areas.map((a) => a.code)).toEqual(plan.modes!.padyakAreas.map((a) => a.code).sort());
+    expect(sr.areas.every((a) => a.placeNodeIds.length > 0)).toBe(true);
+    expect(sr.notesPerRoute).toMatchObject({ "R8-C": 2, "R8-A": 2, R2: 1 });
+    expect(lines.routeNotes).toEqual(plan.modes!.routeNotes);
   });
 
   it("carries the five time-estimate parameters with sources or assumption notes (A1–A3)", () => {
@@ -144,9 +158,16 @@ describe("buildLinesPlan refuses", () => {
     ]);
   });
 
-  it("a walk graph over budget (abort)", () => {
+  it("a street graph over budget (abort)", () => {
     const over = buildLinesPlan({ ...inputOf(plan), walkGraphBudget: { bytes: 1000, gzipBytes: 100 } });
     expect(over.problems.join("\n")).toMatch(/over the 1000 B budget[\s\S]*over the 100 B budget/);
+  });
+
+  it("a road rule whose way id is not in the snapshot (abort)", () => {
+    const rules = plan.modes!.roadRules.map((r) => (r.code === "TRI-2006-P2" ? { ...r, wayIds: [1, ...r.wayIds.slice(1)] } : r));
+    const refused = buildLinesPlan({ ...inputOf(plan), modes: { ...plan.modes!, roadRules: rules } });
+    expect(refused.problems.join()).toMatch(/street graph: buildStreetGraph: rule TRI-2006-P2: way.1 is not in the road snapshot/);
+    expect(refused.walkGraph).toBeNull();
   });
 
   it("a synthetic modes seed", () => {

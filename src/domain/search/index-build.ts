@@ -9,8 +9,9 @@
 //  - a mapped-pin place is a group of candidate pins sharing one normalized raw label within 60 m
 //    of the group's first pin; blank labels are never places;
 //  - legacy (1993) names are historical hints with mappedRouteCode null.
-import type { OsmPlace, RevisionMeta, SearchIndex, SearchPinPlace } from "../api/schemas";
+import type { OsmPlace, RevisionMeta, SearchIndex, SearchPinPlace, SearchPlaces } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
+import { isCorePlaceCategory } from "../places/osm-categories";
 import { sha256Hex } from "../import/hash";
 import { compareCodeUnits } from "../text/compare";
 import { LEGACY_ROUTE_NAMES } from "./legacy-route-names";
@@ -137,20 +138,28 @@ export function barangayKeys(names: readonly string[]): string[] {
   });
 }
 
+const searchPlace = (p: OsmPlace): SearchPlaces["places"][number] => ({
+  key: p.key,
+  name: p.name,
+  aliases: p.aliases,
+  category: p.category,
+  lat: p.lat,
+  lng: p.lng,
+  osmVersion: p.osmVersion,
+  sourceCode: p.sourceCode,
+});
+
+/** The lazy chunk (Task 14): every published OSM place outside the D10 categories the index carries. */
+export function buildSearchPlaces(source: Pick<SearchIndexSource, "revision" | "places">): SearchPlaces {
+  return { revision: source.revision, places: source.places.filter((p) => !isCorePlaceCategory(p.category)).map(searchPlace) };
+}
+
 export function buildSearchIndex(source: SearchIndexSource): SearchIndex {
   const barangayKeyList = barangayKeys(source.barangays.map((b) => b.name));
   return {
     revision: source.revision,
-    osmPlaces: source.places.map((p) => ({
-      key: p.key,
-      name: p.name,
-      aliases: p.aliases,
-      category: p.category,
-      lat: p.lat,
-      lng: p.lng,
-      osmVersion: p.osmVersion,
-      sourceCode: p.sourceCode,
-    })),
+    // Only the D10 categories: the first paint does not grow with the named-place snapshot.
+    osmPlaces: source.places.filter((p) => isCorePlaceCategory(p.category)).map(searchPlace),
     pinPlaces: groupPinPlaces(source.stops),
     routes: source.routes.map((r) => ({
       code: r.code,

@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { haversineMeters } from "@/domain/geo/geometry";
+import { lineLengthM } from "@/domain/geo/measure";
 import { PRECISE_M, STALE_MS, type LocationFix } from "@/domain/geo/location-fix";
 import {
   ALIGHT_NEAR_M,
+  GET_READY_M,
+  PATH_OFF_M,
+  pathRideProgress,
   BEARING_MIN_DISTANCE_M,
   CLOCK_SKEW_MS,
   GUIDANCE_MAX_ACCURACY_M,
@@ -379,5 +383,102 @@ describe("ride progress properties", () => {
       ),
       { seed: 3, numRuns: 400 },
     );
+  });
+});
+
+// ---------------------------------------------------------------- ride progress along the Lines path (Increment E)
+
+describe("pathRideProgress", () => {
+  const NOW_P = 1_000_000;
+  const fixP = (p: { lat: number; lng: number }, accuracy = 10): LocationFix => ({ ...p, accuracy, timestamp: NOW_P });
+  const M_PER_DEG = 111_195;
+  const centre = { lat: 13.62, lng: 123.19 };
+  const cos = Math.cos((centre.lat * Math.PI) / 180);
+  const off = (east: number, north: number) => ({ lat: centre.lat + north / M_PER_DEG, lng: centre.lng + east / (M_PER_DEG * cos) });
+  // A closed 500 m square, counter-clockwise from its south-west corner: a circuit of ≈ 2,000 m.
+  const SQUARE = [off(0, 0), off(500, 0), off(500, 500), off(0, 500), off(0, 0)];
+  const L = lineLengthM(SQUARE);
+  const along = (m: number) => pointAt(SQUARE, ((m % L) + L) % L);
+
+  it("on a circuit the ride across the path start counts the metres left correctly", () => {
+    // Board 300 m before the start, alight 500 m after it: an 800 m ride across the seam.
+    const board = L - 300;
+    const alight = 500;
+    const at = (m: number) => pathRideProgress(SQUARE, true, board, alight, fixP(along(m)), NOW_P);
+    expect(at(L - 300)).toMatchObject({ offPath: false });
+    expect((at(L - 300) as { remainingM: number }).remainingM).toBeCloseTo(800, -1);
+    expect((at(0) as { remainingM: number }).remainingM).toBeCloseTo(500, -1);
+    expect((at(250) as { remainingM: number }).remainingM).toBeCloseTo(250, -1);
+    expect(at(250)).toMatchObject({ getReady: true });
+    expect(at(0)).toMatchObject({ getReady: false });
+  });
+
+  it("a line ride: remaining = alight − current, get ready at 300 m", () => {
+    const line = [off(0, 0), off(0, 3000)];
+    const p = pathRideProgress(line, false, 200, 2500, fixP(off(0, 2300)), NOW_P);
+    expect(p).toMatchObject({ offPath: false, getReady: true });
+    expect((p as { remainingM: number }).remainingM).toBeCloseTo(200, -1);
+    expect(pathRideProgress(line, false, 200, 2500, fixP(off(0, 1000)), NOW_P)).toMatchObject({ offPath: false, getReady: false });
+  });
+
+  it("GPS 120 m off the path is 'off path', not progress", () => {
+    const line = [off(0, 0), off(0, 3000)];
+    expect(pathRideProgress(line, false, 200, 2500, fixP(off(120, 1000)), NOW_P)).toEqual({ offPath: true, distM: 120 });
+    expect(PATH_OFF_M).toBeLessThan(120);
+  });
+
+  it("an unusable fix gives nothing (no guess)", () => {
+    const line = [off(0, 0), off(0, 3000)];
+    expect(pathRideProgress(line, false, 200, 2500, null, NOW_P)).toBeNull();
+    expect(pathRideProgress(line, false, 200, 2500, fixP(off(0, 1000), 80), NOW_P)).toBeNull();
+    expect(pathRideProgress(line, false, 200, 2500, { ...fixP(off(0, 1000)), timestamp: NOW_P - 2 * STALE_MS }, NOW_P)).toBeNull();
+  });
+
+  it("property: remaining stays within [0, ride length] and get-ready matches the 300 m rule", () => {
+    fc.assert(
+      fc.property(fc.double({ min: 0, max: L, noNaN: true }), fc.double({ min: 200, max: L - 1, noNaN: true }), fc.double({ min: 0, max: L, noNaN: true }), (board, ride, at) => {
+        const p = pathRideProgress(SQUARE, true, board, board + ride, fixP(along(at)), NOW_P);
+        if (!p || p.offPath) return true;
+        return p.remainingM >= 0 && p.remainingM <= Math.round(ride) && p.getReady === (p.remainingM <= GET_READY_M);
+      }),
+      { seed: 9, numRuns: 300 },
+    );
+  });
+});
+
+/** The point `m` metres along `line`. */
+function pointAt(line: readonly { lat: number; lng: number }[], m: number) {
+  let left = m;
+  for (let i = 1; i < line.length; i++) {
+    const a = line[i - 1]!;
+    const b = line[i]!;
+    const d = haversineMeters(a, b);
+    if (left <= d || i === line.length - 1) {
+      const t = d === 0 ? 0 : Math.min(1, left / d);
+      return { lat: a.lat + t * (b.lat - a.lat), lng: a.lng + t * (b.lng - a.lng) };
+    }
+    left -= d;
+  }
+  return line.at(-1)!;
+}
+
+describe("pathRideProgress: out-and-back (review I1)", () => {
+  const M = 111_195;
+  const c = { lat: 13.62, lng: 123.19 };
+  const k = Math.cos((c.lat * Math.PI) / 180);
+  const o = (east: number, north: number) => ({ lat: c.lat + north / M, lng: c.lng + east / (M * k) });
+  // North 1,000 m, 60 m east, back south on a parallel street: the two passes run 60 m apart.
+  const OUT_BACK = [o(0, 0), o(0, 1000), o(60, 1000), o(60, 0)];
+
+  it("a fix slightly nearer the return pass still reads the earlier (outbound) pass", () => {
+    const fix: LocationFix = { ...o(35, 500), accuracy: 10, timestamp: 1_000_000 };
+    const p = pathRideProgress(OUT_BACK, false, 100, 2000, fix, 1_000_000);
+    expect(p).toMatchObject({ offPath: false, getReady: false });
+    expect((p as { remainingM: number }).remainingM).toBeCloseTo(1500, -1);
+  });
+
+  it("a fix clearly on the return pass reads the return pass", () => {
+    const fix: LocationFix = { ...o(60, 300), accuracy: 10, timestamp: 1_000_000 };
+    expect((pathRideProgress(OUT_BACK, false, 100, 2000, fix, 1_000_000) as { remainingM: number }).remainingM).toBeCloseTo(240, -1);
   });
 });

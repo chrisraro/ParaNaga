@@ -1,13 +1,16 @@
 import { z } from "zod";
 import { ETA_PARAM_KEYS } from "../eta/params";
 import { isInsideNaga } from "../geo/naga";
+import { normalizeStreetName } from "../geo/street-names";
+import type { OsmRoads } from "./osm-roads";
 import { zodMessage } from "./zod-message";
 
 /**
  * The reviewed modes seed (data/source/research/naga-modes-seed-*.json): sources N01–N41 + U01,
  * terminals T01–T16, tricycle feeder routes, per-route vehicle classes (fleet), cooperatives
  * (names only), regional services, fare-rule source additions and new fare rules, time-estimate
- * parameters, street aliases and a conflicts register.
+ * parameters, street aliases, a conflicts register, and (Increment E) tricycle/padyak road rules,
+ * padyak areas and route notes.
  *
  * Pure. The research JSON is never read here: scripts/draft-modes-seed.ts drafts the file once and
  * every record is then reviewed (`review.decision`). Zod objects are strict, so a field the schema
@@ -55,10 +58,15 @@ const Header = z.strictObject({
   reviewer: text,
   jevModel: text,
   synthetic: z.literal(true).optional(),
+  /** A4 (plan E-J5): a point is in a padyak area when its nearest place node is one of the area's and within maxDistanceM. */
+  assumptions: z.strictObject({
+    A4: z.strictObject({ statement: text, maxDistanceM: z.number().int().positive() }),
+  }).optional(),
 });
 
 const Source = z.strictObject({
-  code: z.string().regex(/^(N|U|X)[0-9]{2}$/),
+  /** N/U/X codes; R-prefixed research codes (RT/RL/RP/RH) from the 2026-10 research, kept apart from terminal codes T01… */
+  code: z.string().regex(/^(N|U|X)[0-9]{2}$|^R[TLPH][0-9]{2}$/),
   title: text,
   url: text.nullable(),
   extra_urls: z.array(text),
@@ -283,6 +291,108 @@ const Conflict = z.strictObject({
   review: Review,
 });
 
+// ---------------------------------------------------------------- road rules, padyak areas, route notes (Increment E)
+// Field names in these three sections are camelCase, as the Increment E plan names them.
+
+/** Evidence level of a road rule, padyak area or route note. */
+export const RULE_EVIDENCE = ["official", "news", "community", "owner_report_unverified"] as const;
+
+/**
+ * The street names each rule may name, verbatim from the research (tricycle-restrictions-2026-10.md §1,
+ * padyak-2026-10.md §3). A rule naming any other street is refused: nothing beyond the research.
+ */
+export const ROAD_RULE_STREETS = {
+  "TRI-2006": {
+    appliesTo: "tricycle",
+    streets: [
+      "National Road (San Felipe portion)",
+      "National Road (Concepcion Pequeña to Del Rosario portion)",
+      "Roxas Avenue (Diversion Road)",
+      "National Road (Magsaysay Avenue Portion)",
+      "Roxas Avenue",
+      "Dayangdang St.",
+      "Basilica Drive",
+      "Kayanga Road",
+      "Taal Avenue",
+      "Leon SA. Aureus",
+      "Mayflower Street",
+    ],
+  },
+  "PADYAK-SEC132": {
+    appliesTo: "padyak",
+    streets: [
+      "Central Business District",
+      "Mabolo Drive",
+      "Roxas Avenue (formerly Diversion Road)",
+      "Panganiban Avenue",
+      "Concepcion Road",
+      "Magsaysay Avenue",
+      "Penafrancia Avenue",
+      "Elias Angeles Street",
+      "Bagumbayan Road",
+    ],
+  },
+} as const satisfies Record<string, { appliesTo: "tricycle" | "padyak"; streets: readonly string[] }>;
+
+const osmId = z.number().int().positive();
+const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+const evidence = z.enum(RULE_EVIDENCE);
+
+const RoadRule = z.strictObject({
+  code: z.string().regex(/^(TRI-2006-(P[1-4]|X[1-6])|PADYAK-SEC132-[1-8])$/),
+  ruleCode: z.enum(Object.keys(ROAD_RULE_STREETS) as ["TRI-2006", "PADYAK-SEC132"]),
+  kind: z.enum(["exclude", "exempt"]),
+  appliesTo: z.union([z.tuple([z.literal("tricycle")]), z.tuple([z.literal("padyak")])]),
+  /** Street names as the research writes them (checked against ROAD_RULE_STREETS). */
+  streets: z.array(text).min(1),
+  /** The rule's wording as the research quotes it. */
+  ruleText: text,
+  /** Enactment as the research gives it: a year or YYYY-MM-DD. null only for owner reports. */
+  enacted: z.string().regex(/^\d{4}(-\d{2}-\d{2})?$/).nullable(),
+  /** Hours the rule does not apply (Manila time; may wrap midnight). null = all day. */
+  exceptWindow: z.strictObject({ from: hhmm, to: hhmm }).nullable(),
+  /** ways: wayIds (optionally clipped); junction: a crossing at one node; not_mapped: no geometry, reason in clipNote. */
+  geometry: z.enum(["ways", "junction", "not_mapped"]),
+  wayIds: z.array(osmId),
+  clips: z.array(z.strictObject({ wayId: osmId, fromNodeId: osmId, toNodeId: osmId })),
+  junctionNodeId: osmId.nullable(),
+  clipNote: text,
+  evidence,
+  sourceCodes: codes.min(1),
+  review: Review,
+});
+
+const PadyakArea = z.strictObject({
+  code: z.string().regex(/^PA[0-9]{2}$/),
+  /** The research's area label, verbatim. */
+  area: text,
+  associations: z.array(text),
+  /** Place-node names the area matched (OSM `place` node names in the road snapshot). */
+  barangays: z.array(text),
+  placeNodeIds: z.array(osmId),
+  /** Optional cap on the area's anchor radius in metres (the graph builder caps it further; default 1,000). */
+  radiusM: z.number().positive().max(1000).optional(),
+  /** Year of the latest ordinance naming the area or its association. */
+  documentedYear: z.number().int().min(1989).max(2100).nullable(),
+  evidence,
+  sourceCodes: codes,
+  review: Review,
+});
+
+const RouteNote = z.strictObject({
+  code: z.string().regex(/^RN[0-9]{2}$/),
+  routeCodes: z.array(text).min(1),
+  text: z.string().min(1).max(120),
+  evidence,
+  sourceCodes: codes.min(1),
+  near: z.strictObject({
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180),
+    radiusM: z.number().int().min(50).max(2000),
+  }).nullable(),
+  review: Review,
+});
+
 const ModesSeedSchema = z.strictObject({
   header: Header,
   sources: z.array(Source),
@@ -298,6 +408,9 @@ const ModesSeedSchema = z.strictObject({
   etaParams: z.array(EtaParam),
   streetAliases: z.array(StreetAlias),
   conflicts: z.array(Conflict),
+  roadRules: z.array(RoadRule),
+  padyakAreas: z.array(PadyakArea),
+  routeNotes: z.array(RouteNote),
 });
 
 export type ModesSeed = z.infer<typeof ModesSeedSchema>;
@@ -305,12 +418,15 @@ export type ModesSeedTerminal = ModesSeed["terminals"][number];
 export type ModesSeedFleet = ModesSeed["fleet"][number];
 export type ModesSeedFareObservation = ModesSeed["fareObservations"][number];
 export type ModesSeedEtaParam = ModesSeed["etaParams"][number];
+export type ModesSeedRoadRule = ModesSeed["roadRules"][number];
+export type ModesSeedPadyakArea = ModesSeed["padyakAreas"][number];
 type Reviewed = { review: { decision: "import" | "exclude" } };
 
 /** The arrays of records that carry a review. */
 const RECORD_KEYS = [
   "sources", "terminals", "routes", "routeStatusUpdates", "fleet", "cooperatives", "regionalServices",
   "fareRules", "fareObservations", "fareRuleSourceAdditions", "etaParams", "streetAliases", "conflicts",
+  "roadRules", "padyakAreas", "routeNotes",
 ] as const satisfies readonly (keyof ModesSeed)[];
 
 // ---------------------------------------------------------------- parse
@@ -433,6 +549,64 @@ export function validateModesSeed(seed: ModesSeed, ctx: ModesSeedContext): strin
   imp.fareRuleSourceAdditions.forEach((a) => refs(`fare source addition ${a.rule_code}`, a.add_source_codes));
   imp.etaParams.forEach((p) => refs(`eta param ${p.key}`, p.source_codes));
   imp.conflicts.forEach((c) => refs(`conflict ${c.code}`, c.source_codes));
+  imp.roadRules.forEach((r) => refs(`road rule ${r.code}`, r.sourceCodes));
+  imp.padyakAreas.forEach((a) => refs(`padyak area ${a.code}`, a.sourceCodes));
+  imp.routeNotes.forEach((n) => refs(`route note ${n.code}`, n.sourceCodes));
+
+  // evidence: owner-only records say so, and owner evidence cites the owner report
+  const evidenceProblem = (ev: string, sources: string[]): string | null => {
+    const owner = sources.filter((c) => /^U[0-9]{2}$/.test(c));
+    if (ev === "owner_report_unverified" && owner.length === 0) return "owner_report_unverified evidence needs a U source";
+    if (sources.length > 0 && owner.length === sources.length && ev !== "owner_report_unverified") return "cites only owner reports, so evidence must be owner_report_unverified";
+    return null;
+  };
+
+  // road rules (plan C; research tricycle §1/§4, padyak §3)
+  dupes("road rule code", seed.roadRules.map((r) => r.code));
+  for (const r of imp.roadRules) {
+    const allowed = ROAD_RULE_STREETS[r.ruleCode];
+    if (r.appliesTo[0] !== allowed.appliesTo) issues.push(`road rule ${r.code}: ${r.ruleCode} applies to ${allowed.appliesTo}, not ${r.appliesTo[0]}`);
+    for (const s of r.streets) {
+      if (!(allowed.streets as readonly string[]).includes(s)) issues.push(`road rule ${r.code}: names "${s}", a street absent from the research list for ${r.ruleCode}`);
+    }
+    if (r.enacted === null && r.evidence !== "owner_report_unverified") issues.push(`road rule ${r.code}: needs an enactment date unless it is an owner report`);
+    const ep = evidenceProblem(r.evidence, r.sourceCodes);
+    if (ep) issues.push(`road rule ${r.code}: ${ep}`);
+    if (r.geometry === "ways") {
+      if (r.wayIds.length === 0) issues.push(`road rule ${r.code}: geometry ways needs wayIds`);
+      if (r.junctionNodeId !== null) issues.push(`road rule ${r.code}: geometry ways has no junction node`);
+    } else {
+      if (r.wayIds.length > 0 || r.clips.length > 0) issues.push(`road rule ${r.code}: geometry ${r.geometry} lists no ways or clips`);
+      if ((r.geometry === "junction") !== (r.junctionNodeId !== null)) issues.push(`road rule ${r.code}: a junction node is given exactly when geometry is junction`);
+    }
+    if (r.geometry === "junction" && r.kind !== "exempt") issues.push(`road rule ${r.code}: only an exempt crossing may be a junction`);
+    for (const c of r.clips) if (!r.wayIds.includes(c.wayId)) issues.push(`road rule ${r.code}: clip on way ${c.wayId}, which is not in wayIds`);
+  }
+
+  // padyak areas (plan C, E-J5)
+  dupes("padyak area code", seed.padyakAreas.map((a) => a.code));
+  const areaNodes = new Set<number>();
+  for (const a of imp.padyakAreas) {
+    if (a.placeNodeIds.length === 0) issues.push(`padyak area ${a.code}: an imported area needs a place node`);
+    if (a.associations.length === 0) issues.push(`padyak area ${a.code}: an imported area needs a documented association`);
+    if (a.sourceCodes.length === 0) issues.push(`padyak area ${a.code}: an imported area needs sources`);
+    if (a.documentedYear === null && a.evidence !== "owner_report_unverified") issues.push(`padyak area ${a.code}: needs documentedYear unless it is an owner report`);
+    const ep = evidenceProblem(a.evidence, a.sourceCodes);
+    if (ep) issues.push(`padyak area ${a.code}: ${ep}`);
+    for (const n of a.placeNodeIds) {
+      if (areaNodes.has(n)) issues.push(`padyak area ${a.code}: place node ${n} is already in another area`);
+      areaNodes.add(n);
+    }
+  }
+
+  // route notes (plan E)
+  dupes("route note code", seed.routeNotes.map((n) => n.code));
+  const noteRoutes = new Set<string>([...ctx.existingRouteCodes, ...imp.routes.map((r) => r.code)]);
+  for (const n of imp.routeNotes) {
+    for (const rc of n.routeCodes) if (!noteRoutes.has(rc)) issues.push(`route note ${n.code}: unknown route ${rc}`);
+    const ep = evidenceProblem(n.evidence, n.sourceCodes);
+    if (ep) issues.push(`route note ${n.code}: ${ep}`);
+  }
 
   // terminals
   const terminalCodes = new Set(imp.terminals.map((t) => t.code));
@@ -550,4 +724,39 @@ export function validateModesSeed(seed: ModesSeed, ctx: ModesSeedContext): strin
   }
 
   return issues;
+}
+
+/**
+ * Checks the reviewed road rules and padyak areas against the pinned road snapshot: every way id
+ * exists, every clip node lies on its way, a junction node lies on a way the same rule code
+ * excludes, and every area node is a `place` node whose name is one of the area's barangays.
+ * Imported records only. Returns the problems (empty = ok).
+ */
+export function verifyRulesAgainstRoads(seed: ModesSeed, roads: Pick<OsmRoads, "ways" | "places">): string[] {
+  const problems: string[] = [];
+  const ways = new Map(roads.ways.map((w) => [w.id, w]));
+  const imp = importableRecords(seed);
+  for (const r of imp.roadRules) {
+    for (const id of r.wayIds) if (!ways.has(id)) problems.push(`road rule ${r.code}: way/${id} is not in the snapshot`);
+    for (const c of r.clips) {
+      const nodes = ways.get(c.wayId)?.nodeIds ?? [];
+      for (const n of [c.fromNodeId, c.toNodeId]) if (!nodes.includes(n)) problems.push(`road rule ${r.code}: clip node ${n} is not on way/${c.wayId}`);
+    }
+    if (r.junctionNodeId !== null) {
+      const excluded = imp.roadRules.filter((x) => x.ruleCode === r.ruleCode && x.kind === "exclude").flatMap((x) => x.wayIds);
+      if (!excluded.some((id) => ways.get(id)?.nodeIds.includes(r.junctionNodeId!))) {
+        problems.push(`road rule ${r.code}: junction node ${r.junctionNodeId} is not on a way that ${r.ruleCode} excludes`);
+      }
+    }
+  }
+  const places = new Map(roads.places.map((p) => [p.id, p]));
+  for (const a of imp.padyakAreas) {
+    const names = a.barangays.map(normalizeStreetName);
+    for (const id of a.placeNodeIds) {
+      const p = places.get(id);
+      if (!p) problems.push(`padyak area ${a.code}: node/${id} is not a place node in the snapshot`);
+      else if (!names.includes(normalizeStreetName(p.name))) problems.push(`padyak area ${a.code}: place node ${id} "${p.name}" is not one of its barangays`);
+    }
+  }
+  return problems;
 }

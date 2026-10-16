@@ -13,13 +13,15 @@
 // Zod on the way back in, and dropped after GUIDANCE_SESSION_MAX_AGE_MS. It has no time estimate:
 // `startedAt` is only for that expiry.
 import { z } from "zod";
-import { planOptionSchema } from "../api/plan";
+import { planOptionSchema, toWireOption } from "../api/plan";
 import { etaModelSchema } from "../api/schemas";
 import type { LocationFix } from "../geo/location-fix";
 import { CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, rideProgress, usableFix, type RideMemory } from "./progress";
 import { guidanceSteps, type GuidanceStep, type GuidanceTrip } from "./steps";
 
-export const GUIDANCE_SESSION_FORMAT = 1;
+/** 2: street rides and `trip.ridePaths` (Increment E). Format-1 sessions still read (migrated to 2 on parse);
+ *  format-1 code (rollback) discards a format-2 session, as it does any unreadable one. */
+export const GUIDANCE_SESSION_FORMAT = 2;
 /** A restored session older than this (a forgotten tab) is not resumed. */
 export const GUIDANCE_SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 /** sessionStorage key (same "paranaga." prefix as the other device keys). */
@@ -66,9 +68,9 @@ export type GuidanceEvent =
 
 const NEW_RIDE: RideState = { ...NEW_RIDE_MEMORY, gpsSeen: false, stopIsNext: false, paraAcknowledged: false };
 
-/** The first step is always walk_to_board or walk_to_destination (guidanceSteps), never a ride. */
+/** The first step is walk_to_board, walk_to_destination or a street_ride (guidanceSteps), never a ride. */
 export function startSession(trip: GuidanceTrip, now: number): GuidanceSession {
-  return { v: GUIDANCE_SESSION_FORMAT, trip, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null };
+  return { v: GUIDANCE_SESSION_FORMAT, trip: { ...trip, option: toWireOption(trip.option) }, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null };
 }
 
 export function sessionSteps(session: GuidanceSession): GuidanceStep[] {
@@ -109,6 +111,9 @@ function back(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSession 
   return { ...session, stepIndex: session.stepIndex - 1, atStop: false, ride: session.lastRide ?? NEW_RIDE, lastRide: null };
 }
 
+/** The steps that end at the destination: "I've arrived" applies there. */
+const endsTrip = (step: GuidanceStep) => step.kind === "walk_to_destination" || step.kind === "street_ride";
+
 export function reduceSession(session: GuidanceSession, event: GuidanceEvent): GuidanceSession {
   if (event.type === "end") return session.status === "ended" ? session : { ...session, status: "ended", ride: null, lastRide: null };
   if (event.type === "back") return back(session, sessionSteps(session));
@@ -133,7 +138,7 @@ export function reduceSession(session: GuidanceSession, event: GuidanceEvent): G
     case "missedStop":
       return ride ? { ...session, status: "missed_stop", ride: null, lastRide: ride } : session;
     case "arrived":
-      return step.kind === "walk_to_destination" ? { ...session, status: "arrived" } : session;
+      return endsTrip(step) ? { ...session, status: "arrived" } : session;
     case "fix": {
       if (!ride || step.kind !== "ride" || !usableFix(event.fix, event.now)) return session;
       const p = rideProgress(step.stops, ride, event.fix, event.now);
@@ -160,6 +165,7 @@ const tripSchema = z.strictObject({
   destinationLabel: z.string().max(200).nullable(),
   etaModel: etaModelSchema.nullable().optional(),
   walkLengths: z.array(z.number().min(0).nullable()).max(50).optional(),
+  ridePaths: z.record(z.string().max(64), z.strictObject({ encoded: z.string().max(200_000), isCircuit: z.boolean() })).optional(),
 });
 
 const rideSchema = z.strictObject({
@@ -174,7 +180,7 @@ const rideSchema = z.strictObject({
 });
 
 const sessionSchema = z.strictObject({
-  v: z.literal(GUIDANCE_SESSION_FORMAT),
+  v: z.union([z.literal(1), z.literal(GUIDANCE_SESSION_FORMAT)]),
   trip: tripSchema,
   startedAt: z.number().int().nonnegative(),
   status: z.enum(["active", "missed_stop", "arrived", "ended"]),
@@ -208,7 +214,7 @@ function consistent(s: GuidanceSession): boolean {
     if (!fits(s.lastRide, s.status === "missed_stop" ? step : steps[s.stepIndex - 1])) return false;
   }
   if (s.atStop && step.kind !== "walk_to_board" && step.kind !== "transfer") return false;
-  if (s.status === "arrived" && step.kind !== "walk_to_destination") return false;
+  if (s.status === "arrived" && !endsTrip(step)) return false;
   if (s.status === "missed_stop" && step.kind !== "ride") return false;
   return true;
 }
@@ -228,7 +234,7 @@ export function parseSession(raw: string | null, now: number): GuidanceSession |
   }
   const parsed = sessionSchema.safeParse(json);
   if (!parsed.success) return null;
-  const session = parsed.data as GuidanceSession;
+  const session = { ...parsed.data, v: GUIDANCE_SESSION_FORMAT } as GuidanceSession;
   if (session.startedAt > now + CLOCK_SKEW_MS || now - session.startedAt > GUIDANCE_SESSION_MAX_AGE_MS) return null;
   return consistent(session) ? session : null;
 }

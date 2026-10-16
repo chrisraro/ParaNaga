@@ -148,6 +148,21 @@
 .pn-explore__tile--terminals {
   background: var(--pn-explore-terminals);
 }
+/* Task 14 chips share the existing tile tints. */
+.pn-explore__tile--food,
+.pn-explore__tile--shops {
+  background: var(--pn-explore-markets);
+}
+.pn-explore__tile--services,
+.pn-explore__tile--other {
+  background: var(--pn-explore-government);
+}
+.pn-explore__tile--stay {
+  background: var(--pn-explore-schools);
+}
+.pn-explore__tile--sights {
+  background: var(--pn-explore-parks);
+}
 .pn-explore__photo {
   display: flex;
   align-items: center;

@@ -8,8 +8,8 @@
 //                 [departure, departure + displayed total high end] touches a peak window, every ride leg
 //                 uses the peak band. A leg that crosses a window boundary is therefore never
 //                 split: the whole trip takes the slower band (conservative).
-//   Other modes (tricycle, …): no speed is on file (D11): the leg is not estimated and the total
-//                 is partial.
+//   Other modes (tricycle and padyak street legs, a tricycle route, …): no speed is on file (D11):
+//                 the leg is not estimated (never a minute) and the total is partial.
 //   Waiting (D10): unknown, never added: the total says so once there is a ride.
 //
 // No model (an older snapshot) or an invalid one gives no estimate, with the reason.
@@ -25,15 +25,21 @@ export type EtaOptionInput = {
   legs: ReadonlyArray<
     | { kind: "walk"; estimateMeters: number }
     | { kind: "ride"; mode: RouteMode; distanceMeters: number; distanceBasis: DistanceBasis }
+    // Tricycle and padyak street legs (plan E §D): no speed on file, never estimated.
+    | { kind: "tricycle" | "padyak"; distanceMeters: number | null }
   >;
 };
+
+/** A leg's mode: the route modes plus padyak (a street leg, never a route). */
+export type EtaMode = RouteMode | "padyak";
 
 export type EtaLegBasis = "graph_path" | "straight_x1_3" | "approximate_path" | "stop_to_stop";
 export type EtaBand = "offpeak" | "peak";
 
 export type EtaLeg = {
+  /** "ride" for every vehicle leg (jeepney, tricycle, padyak, …); the mode says which. */
   kind: "walk" | "ride";
-  mode: "walk" | RouteMode;
+  mode: "walk" | EtaMode;
   /** The distance the time is computed on, in metres. */
   meters: number;
   basis: EtaLegBasis;
@@ -66,7 +72,7 @@ export type EtaTotal = {
   /** The peak windows the trip touches in the peak band (empty off-peak). */
   peakWindows: ClockWindow[];
   /** Modes of the legs that are not estimated, each once, in trip order (partial ⇔ non-empty). */
-  unestimatedModes: RouteMode[];
+  unestimatedModes: EtaMode[];
 };
 
 export type EtaEstimate = { legs: EtaLeg[]; total: EtaTotal; basis: BasisRow[] };
@@ -150,6 +156,10 @@ export function estimateOption(
         out.push({ kind: "walk", mode: "walk", meters, basis: onGraph ? "graph_path" : "straight_x1_3", band: null, estimated: true, ...roundRange(low, high), rawLowMin: low, rawHighMin: high });
         continue;
       }
+      if (leg.kind !== "ride") {
+        out.push({ kind: "ride", mode: leg.kind, meters: leg.distanceMeters ?? 0, basis: "approximate_path", band: null, estimated: false, lowMin: null, highMin: null, rawLowMin: null, rawHighMin: null });
+        continue;
+      }
       if (!validMeters(leg.distanceMeters)) return null;
       const basis: EtaLegBasis = leg.distanceBasis === "approximate_path" ? "approximate_path" : "stop_to_stop";
       if (leg.mode !== "jeepney") {
@@ -201,7 +211,7 @@ export function estimateOption(
         peak,
         band: hasJeepney ? (peak ? "peak" : "offpeak") : null,
         peakWindows,
-        unestimatedModes: [...new Set(legs.filter((l) => !l.estimated).map((l) => l.mode as RouteMode))],
+        unestimatedModes: [...new Set(legs.filter((l) => !l.estimated).map((l) => l.mode as EtaMode))],
       },
       basis: basisRows(model),
     },

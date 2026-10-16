@@ -3,14 +3,13 @@ import { expect, test, type Page } from "@playwright/test";
 import { SNAPSHOT, STOP_A1, routeNetwork } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 
-// Terminals layer, terminal detail and the tricycle hint card (Increment D, Task 13) over the
+// Terminals layer, terminal detail (Increment D, Task 13; the tricycle hint card was removed in Increment E) over the
 // captured snapshot and terminal responses. Tiles are aborted; every test checks for CSP
 // (report-only) violations.
 
 test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
 
 const MAPPED = SNAPSHOT.terminals.filter((t) => t.lat !== null);
-const T14 = SNAPSHOT.terminals.find((t) => t.code === "T14")!;
 
 const homeMap = (page: Page) => page.getByTestId("home-screen").getByTestId("naga-map");
 const markers = (page: Page) => homeMap(page).locator('[data-testid="terminal-marker"]');
@@ -51,18 +50,6 @@ async function expectAxeClean(page: Page, selectors: string[]) {
   const results = await builder.analyze();
   const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(serious, serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`).join("\n")).toEqual([]);
-}
-
-async function drag(page: Page, dx: number, dy: number) {
-  const box = await homeMap(page).boundingBox();
-  if (!box) throw new Error("map has no box");
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 3;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x + dx / 2, y + dy / 2, { steps: 4 });
-  await page.mouse.move(x + dx, y + dy, { steps: 4 });
-  await page.mouse.up();
 }
 
 test("the terminals layer draws every terminal with a coordinate, named, and the Tricycle filter leaves only T14", async ({ page }) => {
@@ -177,50 +164,6 @@ test("T01 detail: the coordinate badge, one Sources link, RS05 with a UV fare es
   await expect(page.getByTestId("endpoint-destination").locator(".pn-endpoint__main")).toContainText(
     "Bicol Central Station (map point, entrance not mapped)",
   );
-});
-
-test("a trip ending at T14 shows the tricycle hint: ₱15, no discount, confirm with the driver, no minutes", async ({ page }) => {
-  // The Terminals layer is off: the hinted terminal is still drawn (emphasized) for "Show on map".
-  await page.addInitScript(() => {
-    localStorage.setItem(
-      "paranaga.prefs",
-      JSON.stringify({ theme: "system", highContrast: false, lowData: false, historyEnabled: false, layers: { routes: true, terminals: false, modes: [] } }),
-    );
-  });
-  await page.goto("/app/terminals/T14");
-  await terminal(page).getByRole("button", { name: "Directions to here" }).click();
-  await expect(page).toHaveURL(/\/app$/);
-  await expect(page.getByTestId("endpoint-destination").locator(".pn-endpoint__main")).toContainText("Balatas Tricycle Terminal");
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
-  await drag(page, 220, 220);
-  await page.getByRole("button", { name: "Set start here" }).click();
-
-  const hint = page.getByTestId("tricycle-hint");
-  await expect(hint).toBeVisible();
-  await expect(hint.getByRole("heading", { name: "Tricycle may serve this" })).toBeVisible();
-  await expect(hint.getByTestId("tricycle-hint-terminal")).toContainText("Balatas Tricycle Terminal (T14)");
-  await expect(hint).toContainText("₱15");
-  await expect(hint).toContainText("discounts not applied");
-  await expect(hint).toContainText("confirm with the driver");
-  await expect(hint.getByTestId("tricycle-hint-time")).toHaveText("Tricycle time not estimated");
-  await expect(hint).not.toContainText(/\d+\s*min/);
-  await expect(hint.getByTestId("tricycle-hint-sources")).toHaveCount(0);
-  // Below the options, never one of them.
-  await expect(page.getByTestId("trip-option").filter({ hasText: /tricycle/i })).toHaveCount(0);
-  await expect(homeMap(page).locator('[data-code="T14"]')).toHaveClass(/pn-terminal-marker--emphasized/);
-  await expect(homeMap(page).locator("[data-codes]")).toHaveCount(1);
-
-  // The hint sits below the options (peek): lift the sheet to half to reach it.
-  await page.getByRole("button", { name: "Expand sheet to half" }).click();
-  await hint.getByRole("button", { name: "Show on map: Balatas Tricycle Terminal" }).click();
-  await expect
-    .poll(async () => {
-      const lat = Number(await homeMap(page).getAttribute("data-center-lat"));
-      const lng = Number(await homeMap(page).getAttribute("data-center-lng"));
-      return Math.abs(lat - T14.lat!) < 0.0005 && Math.abs(lng - T14.lng!) < 0.0005;
-    })
-    .toBe(true);
-  await expectAxeClean(page, ['[data-testid="tricycle-hint"]']);
 });
 
 for (const mode of ["light", "dark", "high contrast"] as const) {

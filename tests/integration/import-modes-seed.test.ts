@@ -18,7 +18,9 @@ import { commitImport } from "../../scripts/lib/import-writer";
 const ownerUrl = process.env.TEST_OWNER_DATABASE_URL;
 const appUrl = process.env.TEST_APP_DATABASE_URL;
 
-const LABEL = "modes-2026-10-16";
+// The label the real seed publishes under: modes-2026-10-16 on fresh data; a database that holds the
+// earlier seed of this date (the file was edited in place, Increment E) gets modes-2026-10-16.2.
+let LABEL = "modes-2026-10-16";
 const TABLES = [
   "ingest.source", "ingest.source_document", "ingest.batch", "ingest.conflict", "transit.revision",
   "transit.revision_member", "transit.route", "transit.variant", "transit.variant_version", "transit.terminal",
@@ -155,12 +157,13 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
 
   it("publishes modes-2026-10-16 with every R1–R8 stop and variant membership of the previous revision", async () => {
     const previous = await members(startRevisionId);
-    const existedBefore = (await revisionIdOf(LABEL)) !== undefined;
     const result = await commitImport(ownerUrl!, buildImportPlan(files, null, realSeed));
-    // A branch of fresh data commits it; a branch of main (the import is in production) already
-    // holds it, reports "unchanged", and the rollback done in beforeAll is undone by publishing it.
-    expect(result.modes?.outcome).toBe(existedBefore ? "unchanged" : "committed");
-    expect(result.modes).toMatchObject({ revisionLabel: LABEL });
+    // A branch of fresh data (or of main, which holds an earlier seed of this date) commits it; a
+    // database that already holds this exact file reports "unchanged", and the rollback done in
+    // beforeAll is undone by publishing it.
+    expect(["committed", "unchanged"]).toContain(result.modes?.outcome);
+    expect(result.modes?.revisionLabel).toMatch(/^modes-2026-10-16(\.\d+)?$/);
+    LABEL = result.modes!.revisionLabel!;
     const revisionId = (await revisionIdOf(LABEL))!;
     if (result.modes?.outcome === "unchanged") {
       expect(result.modes).toMatchObject({ publishedIncludesBatch: false });
@@ -263,8 +266,9 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
       { code: "U01", publisher: "ParaNaga project owner", licence: null },
     ]);
     expect(await appRows(sql`select 1 from ingest.source where code = 'N09'`)).toEqual([]);
-    const conflicts = await appRows(sql`select count(*)::int as n from ingest.conflict where kind = 'research_conflict'`);
-    expect(conflicts).toEqual([{ n: 9 }]);
+    // One register per batch: a revised seed of the same date records its conflicts again.
+    const conflicts = await appRows(sql`select count(distinct refs)::int as n from ingest.conflict where kind = 'research_conflict'`);
+    expect(conflicts).toEqual([{ n: 10 }]);
     // No cooperative chair name is stored: the conflict text only says the names are swapped.
     const cx01 = await appRows(sql`select detail->>'description' as d from ingest.conflict where refs = '{CX01}'`);
     expect(String(cx01[0]?.d)).toMatch(/Names are not stored/);

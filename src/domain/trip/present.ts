@@ -51,15 +51,19 @@ function pesoRange(minCentavos: number, maxCentavos: number): string {
 
 const FARE_UNAVAILABLE = "Fare estimate unavailable";
 
+const peso = (centavos: number) => `₱${Math.round(centavos / 100)}`;
+
 /** The peso range ("₱14–₱17") of a fare estimate, or null when there is none. */
 export function fareRangeText(fare: FareLike): string | null {
   if (fare.status !== "estimate" || fare.minCentavos === null || fare.maxCentavos === null) return null;
   return pesoRange(fare.minCentavos, fare.maxCentavos);
 }
 
-/** Trip-level chip: "Estimate ₱X–₱Y", "Fare estimate unavailable" or "No fare (walk)". */
+/** Trip-level chip: "Estimate ₱X–₱Y", "Minimum fare ₱15" (tricycle), "₱10 per passenger" (padyak), "Fare estimate unavailable" or "No fare (walk)". */
 export function fareChipText(fare: FareLike): string {
   if (fare.status === "no_ride") return "No fare (walk)";
+  if (fare.status === "minimum" && fare.minCentavos !== null) return `Minimum fare ${peso(fare.minCentavos)}`;
+  if (fare.status === "flat_per_passenger" && fare.minCentavos !== null) return `${peso(fare.minCentavos)} per passenger`;
   if (fare.status !== "estimate" || fare.minCentavos === null || fare.maxCentavos === null) return FARE_UNAVAILABLE;
   return `Estimate ${pesoRange(fare.minCentavos, fare.maxCentavos)}`;
 }
@@ -98,6 +102,25 @@ export function rideFleetText(mode: RouteMode, fleet: FleetSummary): string {
   return `${modeName(mode)} · traditional and modern${aircon ? " (air-conditioned)" : ""}`;
 }
 
+type StreetLegLike = { kind: "tricycle" | "padyak"; distanceMeters: number | null; basis: "street_graph" | "straight_line" | "unavailable"; fare: FareLike };
+
+/**
+ * One tricycle or padyak leg as a step: "Take a tricycle to {destination} · about 1.5 km along streets ·
+ * minimum fare ₱15 · confirm with the driver" (padyak: "₱10 per passenger"). Never a time.
+ */
+export function streetRideText(leg: StreetLegLike, destination: string): string {
+  const km = leg.distanceMeters === null ? "" : `about ${(leg.distanceMeters / 1000).toFixed(1)} km`;
+  const route = leg.basis === "street_graph" ? `${km} along streets`
+    : leg.basis === "straight_line" ? `${km} in a straight line, route not confirmed`
+    : "street route not available";
+  const fare = leg.fare.minCentavos === null ? "fare not available"
+    : leg.kind === "tricycle" ? `minimum fare ${peso(leg.fare.minCentavos)}` : `${peso(leg.fare.minCentavos)} per passenger`;
+  return `Take a ${leg.kind} to ${destination} · ${route} · ${fare} · confirm with the driver`;
+}
+
+/** Free-point alighting (plan E): the stop is not marked, the rider says "para". */
+export const freeAlightText = (place: string) => `Get off near ${place} · tell the driver 'para' · stop not marked`;
+
 /** "≈ 230 m" (nearest 10 m) below 1 km, else "≈ 5.5 km". */
 export function formatDistance(meters: number): string {
   const tens = Math.round(meters / 10) * 10;
@@ -113,7 +136,12 @@ export function transfersText(rides: number): string {
 
 /** What an option is called on its card and detail: "Loop A" ("Loop A + R4" with a transfer), or "Walk ≈ 230 m". */
 export function optionTitle(option: { rides: number; walkEstimateMeters: number; legs: readonly { kind: string; routeCode?: string; routeName?: string }[] }): string {
-  if (option.rides === 0) return `Walk ${formatDistance(option.walkEstimateMeters)}`;
+  if (option.rides === 0) {
+    // A tricycle or padyak option has no ride leg: it is named for its mode, not as a walk.
+    const street = option.legs.find((l) => l.kind === "tricycle" || l.kind === "padyak");
+    if (street) return street.kind === "tricycle" ? "Tricycle" : "Padyak";
+    return `Walk ${formatDistance(option.walkEstimateMeters)}`;
+  }
   return option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode ?? "", l.routeName ?? "")).join(" + ");
 }
 

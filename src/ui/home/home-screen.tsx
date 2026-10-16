@@ -48,6 +48,7 @@ import { useAppFrame, useApplyOnce, useHideTabBar } from "@/ui/app-shell/app-fra
 import { Guidance } from "@/ui/guidance/guidance";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail, type TripEnds } from "@/ui/trip/trip-detail";
+import { recommendedIndex } from "@/domain/trip/option-card";
 import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
@@ -64,14 +65,13 @@ import { NearbyStops } from "./nearby-stops";
 import { homeGuidanceActions, useHomeGuidance } from "./use-home-guidance";
 import { useSavedTripReopen } from "./use-saved-trip-reopen";
 import { useWalkGraph } from "@/client/network/use-walk-graph";
+import { rideEnds } from "@/domain/trip/ride-ends";
 import { enrichOptionWalks } from "@/domain/trip/enrich";
 import { useLines } from "@/client/network/use-lines";
 import { useSnapshot } from "@/client/network/use-snapshot";
 import { updateLayers, usePrefs } from "@/client/prefs/use-prefs";
 import { LayersSheet, SelectedRouteCard, distinctRoutesFromLines, filterMapTerminals } from "@/ui/map/layers-sheet";
 import type { MapTerminal } from "@/ui/map/terminals-layer";
-import { tricycleHint as computeTricycleHint } from "@/domain/trip/tricycle-hint";
-import { TricycleHintCard } from "@/ui/trip/tricycle-hint";
 import { collectRouteLegendItems, filterOverviewLines } from "@/ui/map/route-lines-layer";
 import {
   TRIP_LINES_MISSING_NOTE,
@@ -80,6 +80,7 @@ import {
   mapLayerPolicy,
   overviewLinesForTrip,
 } from "@/ui/map/map-layer-policy";
+import { ridePathsFor } from "@/domain/guidance/ride-paths";
 import { routeFitPoints } from "@/ui/map/route-fit";
 import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
 
@@ -97,14 +98,15 @@ function nextFocus(state: EndpointsState, which: EndpointWhich): EndpointWhich |
 }
 
 /** Boarding and getting-off stops of an option's ride legs, for the map (markers only). */
-function highlightsFor(data: PlanResponse, optionId: string): HighlightStop[] {
+export function highlightsFor(data: PlanResponse, optionId: string): HighlightStop[] {
   const option = data.plan.options.find((o) => o.id === optionId);
   if (!option) return [];
   const lookups = planLookups(data);
   return option.legs.flatMap((leg) => {
     if (leg.kind !== "ride") return [];
-    const board = leg.stops[0]!;
-    const alight = leg.stops[leg.stops.length - 1]!;
+    const ends = rideEnds(leg);
+    if (!ends) return [];
+    const { board, alight } = ends;
     return [
       { id: board.id, lat: board.lat, lng: board.lng, role: "board" as const, label: lookups.stopName(board.id, board.name) },
       { id: alight.id, lat: alight.lat, lng: alight.lng, role: "alight" as const, label: lookups.stopName(alight.id, alight.name) },
@@ -655,7 +657,7 @@ export function HomeScreen() {
   );
   // Options listed, none open: the recommended option is drawn as a preview (not tappable).
   const previewOption =
-    ready && !guiding && !picking && !stored && !openOption && planData ? (planData.plan.options[0] ?? null) : null;
+    ready && !guiding && !picking && !stored && !openOption && planData ? (planData.plan.options[Math.max(0, recommendedIndex(planData.plan.options))] ?? null) : null;
   const previewing = previewOption !== null;
   const shownOption = openOption ?? previewOption;
   const tripRevisionId = guidedTrip
@@ -748,27 +750,6 @@ export function HomeScreen() {
     },
     [router, markHomeNavigation],
   );
-  // D15: computed on the phone from the two trip ends; nothing is sent anywhere.
-  const startPoint = endpoints.start?.point ?? null;
-  const destinationPoint = endpoints.destination?.point ?? null;
-  const trikeHint = useMemo(
-    () => (planData && startPoint && destinationPoint ? computeTricycleHint(startPoint, destinationPoint, snapshotState.snapshot, lines) : null),
-    [planData, startPoint, destinationPoint, snapshotState.snapshot, lines],
-  );
-  const trikeHintCard = trikeHint ? (
-    <TricycleHintCard
-      hint={trikeHint}
-      onShowOnMap={(terminal) => bumpRecenter({ lat: terminal.lat, lng: terminal.lng }, terminal.name)}
-    />
-  ) : null;
-  // The terminal a hint names is always drawn while the hint shows (its "Show on map" and the
-  // emphasized marker), even when the Terminals layer or the mode filter would hide it.
-  const drawnTerminals = useMemo<MapTerminal[]>(() => {
-    const t = trikeHint?.terminal;
-    if (!t || !(showOverview || previewing) || mapTerminals.some((m) => m.code === t.code)) return mapTerminals;
-    const modes = snapshotState.snapshot?.terminals.find((s) => s.code === t.code)?.modes ?? ["tricycle"];
-    return [...mapTerminals, { code: t.code, name: t.name, modes, lat: t.lat, lng: t.lng }];
-  }, [trikeHint, showOverview, previewing, mapTerminals, snapshotState.snapshot]);
   const closeLayers = useCallback(() => {
     setLayersOpen(false);
     layersBtnRef.current?.focus();
@@ -908,9 +889,8 @@ export function HomeScreen() {
           legendNotice={legendNotice}
           selectedRouteCode={selectedRouteCode}
           onSelectRoute={showOverview ? setSelectedRouteCode : null}
-          terminals={drawnTerminals}
+          terminals={mapTerminals}
           onTerminalSelect={picking === null ? handleTerminalSelect : null}
-          emphasizedTerminalCode={trikeHint?.terminal?.code ?? null}
           legend={mapLegend}
           onOpenLayers={showOverview ? () => setLayersOpen(true) : undefined}
           layersButtonRef={layersBtnRef}
@@ -1005,8 +985,10 @@ export function HomeScreen() {
               onBack={handleCloseStored}
               ends={stored.ends}
               note={stored.note}
-              onStart={(walkLengths) => guidanceActions.start(stored.data, stored.option, stored.ends, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths })}
+              onStart={(walkLengths) => guidanceActions.start(stored.data, stored.option, stored.ends, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths, ridePaths: ridePathsFor(stored.option, tripRevisionLines) })}
               etaModel={snapshotState.snapshot?.etaModel}
+              routes={snapshotState.snapshot?.routes}
+              terminals={snapshotState.snapshot?.terminals}
             />
           ) : ready && openOption && planData && endpoints.start && endpoints.destination ? (
             <TripDetail
@@ -1016,9 +998,11 @@ export function HomeScreen() {
               ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
               note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline), tone: "warning" } : null)}
               onStart={(walkLengths) =>
-                guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths })
+                guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths, ridePaths: ridePathsFor(openOption, tripRevisionLines) })
               }
               etaModel={snapshotState.snapshot?.etaModel}
+              routes={snapshotState.snapshot?.routes}
+              terminals={snapshotState.snapshot?.terminals}
             />
           ) : ready ? (
             <>
@@ -1035,18 +1019,15 @@ export function HomeScreen() {
               {plan.status === "loading" ? <TripLoading /> : null}
               {plan.status === "error" ? <TripError kind={plan.kind} onRetry={handleRetry} onChangeEndpoints={handleChangeEndpoints} /> : null}
               {planData && planData.plan.coverage === "none" ? (
-                <>
-                  <TripNoCoverage data={planData} />
-                  {trikeHintCard}
-                </>
+                <TripNoCoverage data={planData} />
               ) : null}
               {planData && planData.plan.coverage === "provisional" ? (
                 <TripOptions
                   data={planData}
                   refreshing={plan.status === "ready" && plan.refreshing}
                   onOpen={handleOpenOption}
-                  tricycleHint={trikeHintCard}
                   etaModel={snapshotState.snapshot?.etaModel}
+                  routes={snapshotState.snapshot?.routes}
                 />
               ) : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>

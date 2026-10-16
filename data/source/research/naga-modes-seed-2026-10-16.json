@@ -5,10 +5,24 @@
     "preparedFrom": [
       "naga-transport-candidates-2026-10.json@sha256:38b5bab9cc1f925133035a13034db8c53a8f6e30eb6a0acd9a468a6cd1e16f0a",
       "Data_Sets/naga_transport_seed.json@sha256:ae68c5ddf410a55688fcfaf4bf09680db0699cc1a080b4b9d36381393e5aed79",
-      "data/source/osm/naga-places-2026-10-15.osm.json@sha256:38bf7571f20fb57b95f5af7bd48fdcc081b2a878a2ec07cbf41ea656dec15a9e"
+      "data/source/osm/naga-places-2026-10-15.osm.json@sha256:38bf7571f20fb57b95f5af7bd48fdcc081b2a878a2ec07cbf41ea656dec15a9e",
+      "tricycle-restrictions-candidates-2026-10.json@sha256:3b7ea92096ce2268095deb7da395e507872599d847a5ec48caaac8d560a20b0b",
+      "loops-and-routes-candidates-2026-10.json@sha256:7ea0a8eceaf4729eb2e7738f37dd09e0453deaa1ac0ebd53f51d0495569ec32f",
+      "padyak-candidates-2026-10.json@sha256:be572e366c5d0c25f34dde5be373b89db7d4c5ef45ff5e3740ba8b22c715e744",
+      "jeepney-hours-candidates-2026-10.json@sha256:6f6e6c3043cbd233fa37b07eba2310da6558780a75155130b0d64a023d761067",
+      "tricycle-restrictions-2026-10.md@sha256:29d18a5fae1b4191b04c57dc749010ce1360a70cacbf644cc268d5b23a2ee66a",
+      "loops-and-routes-2026-10.md@sha256:752e4eae1511ec4092354646004d0f088fbde49d7584df957385ba914837020b",
+      "padyak-2026-10.md@sha256:c761ed4d7d15bd2cc5df29feaaa560221a401108375e727e898261c11f551dec",
+      "data/source/osm/naga-roads-2026-10-16.osm.json@sha256:4c270b87dc1b9b91d81a4b1bb314918cc76b42c98f64e4b7fcf606effd30a469"
     ],
     "reviewer": "controller",
-    "jevModel": "typesafe/jev-1.13-20260917"
+    "jevModel": "typesafe/jev-1.13-20260917",
+    "assumptions": {
+      "A4": {
+        "statement": "A padyak area is tested independently per area: a point belongs to an area when it is within the area's effective radius of ANY of the area's anchor nodes (its named OSM place node(s)); the effective radius defaults to 1,000 m and is shrunk where areas overlap (the graph builder applies the rule); a point may belong to several areas; a padyak option needs both ends in the same area. Generic 'Zone N' place nodes are never anchors.",
+        "maxDistanceM": 1000
+      }
+    }
   },
   "sources": [
     {
@@ -1065,6 +1079,1888 @@
         "decision": "import",
         "reason": "User decision 2026-10-16 (D2 as amended)",
         "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "RT01",
+      "title": "Ordinance No. 2006-005 Regulating the operation of trimobile units for hire along national roads",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2006-005/",
+      "extra_urls": [
+        "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord2006-005.pdf"
+      ],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2006-01-30 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.94,
+          "p_current_2026_10": 0.64,
+          "p_claim_supported": 0.94
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT02",
+      "title": "Ordinance No. 2006-015 (same title as 2006-005)",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2006-015/",
+      "extra_urls": [
+        "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord2006-015.pdf"
+      ],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2006-03-27 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.94,
+          "p_current_2026_10": 0.52,
+          "p_claim_supported": 0.89
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT03",
+      "title": "Ordinance 93-026 (page title 1993-026) trimobile zoning, free zones",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1993-026/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1994-04-12 (enacted); Phase I effective 1994-05-16",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.89,
+          "p_current_2026_10": 0.14,
+          "p_claim_supported": 0.14
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT04",
+      "title": "Ordinance 93-049 Transport and Traffic Code of Naga City",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1993-049/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1993 (enacted); page read in full on 2026-10-16",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.94,
+          "p_current_2026_10": 0.21,
+          "p_claim_supported": 0.06
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT05",
+      "title": "Ordinance No. 1995-013 amending national highway definition",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1995-013/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1995-02-08 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT06",
+      "title": "Ordinance No. 2019-099 road classification and speed limits",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2019-099/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2019-12-05 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT07",
+      "title": "Ordinance No. 2025-056 Unified route for VISTODA and LAVISTODA (repeals 2025-023)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-056/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-08-05 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.87,
+          "p_current_2026_10": 0.34,
+          "p_claim_supported": 0.97
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT08",
+      "title": "Ordinance No. 2025-067 VISTODA/LAVISTODA (= N06)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-067/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-09-09 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT09",
+      "title": "Ordinance No. 2025-023 Deca Vistansa-Langon special trimobile route (= N05)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-023/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-03-18 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT10",
+      "title": "Ordinance No. 2026-023 Slow-Moving Vehicle Lane Regulation (= N03)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2026-023/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2026-02-24 (enacted); effective 15 days after publication, publication date not shown",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.93,
+          "p_current_2026_10": 0.91,
+          "p_claim_supported": 0.05
+        },
+        "jev_claim": "ordinance prohibits tricycles from national highways (over-strong, expected false)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT11",
+      "title": "Proposed Slow-Moving Vehicle Lane Regulation Ordinance (pending page; draft PDF NB3_2025-1501)",
+      "url": "https://www2.naga.gov.ph/proposed-ordinance/proposed-slow-moving-vehicle-lane-regulation-ordinance/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "first filed 2025-11-04; latest version 2026-02-23",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT12",
+      "title": "Ordinance No. 2025-128 e-bike and e-trike ordinance (= N08)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-128/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-12-19 (enacted); effective upon approval",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.92,
+          "p_current_2026_10": 0.84,
+          "p_claim_supported": 0.07
+        },
+        "jev_claim": "fuel tricycles restricted on named roads by this ordinance (over-strong, expected false)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT13",
+      "title": "Bicol Mail: Naga braces for LTO's ban on e-trikes, e-bikes on highways",
+      "url": "https://www.bicolmail.net/single-post/naga-braces-for-lto-s-banon-e-trikes-e-bikes-on-highways",
+      "extra_urls": [],
+      "publisher": "Bicol Mail",
+      "date": "2025-12-20 (published)",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.05,
+          "p_current_2026_10": 0.49,
+          "p_claim_supported": 0.05
+        },
+        "jev_claim": "conventional tricycles banned by the LTO e-trike ban (over-strong, expected false)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT14",
+      "title": "Philstar: LTO clarifies e-bike, e-trike ban",
+      "url": "https://www.philstar.com/nation/2026/05/02/2525008/lto-clarifies-e-bike-e-trike-ban",
+      "extra_urls": [],
+      "publisher": "The Philippine Star",
+      "date": "2026-05-02 (published)",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.12,
+          "p_current_2026_10": 0.58,
+          "p_claim_supported": 0.06
+        },
+        "jev_claim": "conventional tricycles covered by the e-trike ban (over-strong, expected false)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT15",
+      "title": "DILG bans tricycles from national highways, urges LGUs to create trike task force (MC 2020-036)",
+      "url": "https://dilg.gov.ph/news/DILG-bans-tricycles-from-national-highways-urges-LGUs-to-create-trike-task-force/NC-2020-1038",
+      "extra_urls": [],
+      "publisher": "Department of the Interior and Local Government",
+      "date": "2020-02-19 (published)",
+      "type": "official_news_release",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.76,
+          "p_current_2026_10": 0.72,
+          "p_claim_supported": 0.92
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT16",
+      "title": "Catanduanes Tribune: DILG to LGUs, enforce ban on tricycles, pedicabs on national highways (MC 2023-195)",
+      "url": "https://catanduanestribune.net/2023/12/23/dilg-to-lgus-enforce-ban-on-tricycles-pedicabs-operating-on-national-highways/",
+      "extra_urls": [],
+      "publisher": "Catanduanes Tribune",
+      "date": "2023-12-23 (published); circular dated 2023-12-06",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.08,
+          "p_current_2026_10": 0.58,
+          "p_claim_supported": 0.94
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT17",
+      "title": "LTO Portal: Can Tricycles Use National Highways?",
+      "url": "https://ltoportal.ph/can-tricycles-use-national-highways/",
+      "extra_urls": [],
+      "publisher": "ltoportal.ph (private information site)",
+      "date": "2025-11-23 (page metadata)",
+      "type": "community",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.07,
+          "p_current_2026_10": 0.53,
+          "p_claim_supported": 0.82
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT18",
+      "title": "TopGear PH: DILG calls for mayors to ban tricycles and pedicabs from highways",
+      "url": "https://www.topgear.com.ph/news/motoring-news/dilg-tricycles-pedicabs-highways-a962-20181003",
+      "extra_urls": [],
+      "publisher": "TopGear Philippines",
+      "date": "2018-10-03 (published)",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.1,
+          "p_current_2026_10": 0.24,
+          "p_claim_supported": 0.97
+        }
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT19",
+      "title": "City of Naga Transport and Traffic ordinance index",
+      "url": "https://www2.naga.gov.ph/transport-and-traffic/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "undated index",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT20",
+      "title": "SafeTravelPH: Elevating Tricycle Mobility ... SafeTravelPH x BISCAST x Naga City",
+      "url": "https://www.safetravelph.org/post/elevating-tricycle-mobility-through-data-research-local-innovation-safetravelph-biscast-naga-city",
+      "extra_urls": [],
+      "publisher": "SafeTravelPH (project participant)",
+      "date": "2025-11-20 (published)",
+      "type": "community",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.07,
+          "p_current_2026_10": 0.6,
+          "p_claim_supported": 0.08
+        },
+        "jev_claim": "source publishes tricycle zone boundaries or prohibited roads (over-strong, expected false)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT21",
+      "title": "Proposed TODA and PODA Accreditation Ordinance (NB11_2026-0772)",
+      "url": "https://www2.naga.gov.ph/proposed-ordinance/proposed-toda-and-poda-accreditation-ordinance-of-naga-city/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2026-04-30 (filed); status Proposed",
+      "type": "official_proposal",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT22",
+      "title": "Ordinance No. 2020-113 trimobile / e-trike / taxicle rules during GCQ",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2020-113/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2020-12-01 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.93,
+          "p_current_2026_10": 0.58,
+          "p_claim_supported": 0.05
+        },
+        "jev_claim": "names specific streets tricycles may not use (over-strong, expected false)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT23",
+      "title": "Ordinance No. 2025-110 truck ban",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-110/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-12-09 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RT24",
+      "title": "Ordinance No. 2025-093 IP cameras program (Annex A lists Roxas Ave, Magsaysay Ave, Panganiban Dr as arterial roads and AH26/Maharlika as arterial highway)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-093/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2025-11-11 (enacted)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-16",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL01",
+      "title": "Ordinance 2025-070 institutionalizing the LPTRP (signed PDF)",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/10/Ordno-2025-070-Institutionalizing-the-Approved-LPTRP.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City Government of Naga",
+      "date": "2025-09-23",
+      "type": "primary_legal",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.91,
+          "p_current_2026_10": 0.63,
+          "p_claim_supported": 0.06
+        },
+        "jev_claim": "contains request-detour provision (answer: no)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL02",
+      "title": "Resolution 2025-128, 90-day dry run of LPTRP routes (Loops C and D) plus M.T. Villanueva bike-lane experiment",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/04/Resno-2025-128-LPTRP-Dry-Run-and-Protected-Bicycle-Lane.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City Government of Naga",
+      "date": "2025-03-18 (PDF); SP listing pages show other dates",
+      "type": "primary_legal",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "note": "adoption date conflict: PDF says 18 Mar 2025; a search summary of SP pages says 29 Oct 2024 / 15 Apr 2025; unverified"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL03",
+      "title": "Resolution 2025-172 amending Loop C and D to include J. Miranda Avenue",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/05/Resno-2025-172-Amending-Route-C-and-D-under-the-LPTRP.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City Government of Naga",
+      "date": "2025-04-22",
+      "type": "primary_legal",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.87,
+          "p_current_2026_10": 0.41,
+          "p_claim_supported": 0.98
+        },
+        "jev_claim": "J. Miranda Ave in Loop C/D dry-run structure"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL04",
+      "title": "Resolution 2025-735, 30-day dry run of Loops A and B including the Eastbound Terminal (scanned PDF, read visually)",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/12/Resno-2025-735-30-Day-Dry-Run-PUJ-Loop-A-and-B.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City Government of Naga",
+      "date": "2025-11-11",
+      "type": "primary_legal",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.85,
+          "p_current_2026_10": 0.2,
+          "p_claim_supported": 0.98
+        },
+        "jev_claim": "Eastbound Terminal added to A/B for 30-day dry run"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL05",
+      "title": "Ordinance 93-049 Transport and Traffic Code of Naga City, as amended (Sec. 57 intra-city PUJ routes, incl. Ord. 94-016 Loops A/B)",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1993-049/",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1993 (amendments 1994-1999)",
+      "type": "primary_legal_historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.92,
+          "p_current_2026_10": 0.39,
+          "p_claim_supported": 0.95
+        },
+        "jev_claim": "optional detour via Mayflower-J. Miranda-Taal was legally permitted (historical)",
+        "note": "partly repealed by Ord. 2025-070 Sec. 9 where inconsistent"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL06",
+      "title": "Ordinance 2001-040 Eastbound Jeepney Terminal re-routing scheme (Loops A, B, G, H, I and Del Rosario/Concepcion variants)",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord2001-040.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "2001-06-27",
+      "type": "primary_legal_historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL07",
+      "title": "Ordinance 99-031 adding Del Rosario-Magsaysay Avenue via Penafrancia Avenue-Centro",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord1999-031.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1999-04-14",
+      "type": "primary_legal_historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.96,
+          "p_current_2026_10": 0.27,
+          "p_claim_supported": 0.97
+        },
+        "jev_claim": "route legally added in 1999"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL08",
+      "title": "Ordinance 99-093 Pacol-Centro jeepney route",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord1999-093.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1999-12-08",
+      "type": "primary_legal_historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.95,
+          "p_current_2026_10": 0.28,
+          "p_claim_supported": 0.96
+        },
+        "jev_claim": "1999 Pacol-Centro street list"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL09",
+      "title": "Ordinances 98-013 and 99-065 (historic Loop C and Loop D, Bagumbayan-Calauag circuits)",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord1999-065.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1998-02-04; 1999-09-08",
+      "type": "primary_legal_historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL10",
+      "title": "Ordinances 99-064 (multicab Loop I) and 2014-053 (multicab Loop J)",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord2014-053.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1999-09-08; 2014-08-26",
+      "type": "primary_legal_historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL11",
+      "title": "Ordinances 98-020 and 98-034 (COPAJODA / CONDELROS Concepcion-Del Rosario jeepneys extended to Felix Plazo)",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord1998-034.pdf",
+      "extra_urls": [],
+      "publisher": "Sangguniang Panlungsod, City of Naga",
+      "date": "1998-02-16; 1998-03-11",
+      "type": "primary_legal_historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL12",
+      "title": "OpenStreetMap objects via Overpass API (City Hall, BFP, streets, jeepney stations, LTFRB-tagged bus stops)",
+      "url": "https://overpass-api.de/api/interpreter",
+      "extra_urls": [],
+      "publisher": "OpenStreetMap contributors (ODbL 1.0)",
+      "date": "osm_base 2026-10-16T15:54Z to 16:02Z",
+      "type": "community_open_data",
+      "licence": "ODbL 1.0",
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.05,
+          "p_current_2026_10": 0.77,
+          "p_claim_supported": 0.94
+        },
+        "jev_claim": "BFP station and City Hall on/beside J. Miranda Ave"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL13",
+      "title": "Public Google My Maps 'Naga City Designated Stops' (owner display name withheld; authority unverified); snapshot already in Data_Sets (S39/S40)",
+      "url": "https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4",
+      "extra_urls": [],
+      "publisher": "unverified map owner",
+      "date": "snapshot retrieved 2026-10-15",
+      "type": "community_unverified",
+      "licence": null,
+      "retrieved": "2026-10-15",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.03,
+          "p_current_2026_10": 0.38,
+          "p_claim_supported": 0.94
+        },
+        "jev_claim": "BFP/BIR and City Hall pins on all four loop layers",
+        "analysed": "2026-10-17"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL14",
+      "title": "BIR RDO 65 Naga address (FilipiKnow RDO page, undated; Foursquare and directory listings 2011-2014)",
+      "url": "https://filipiknow.net/rdo-code-naga-city/",
+      "extra_urls": [],
+      "publisher": "FilipiKnow; third-party directories",
+      "date": "undated / 2011-2014",
+      "type": "secondary_directory",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.17,
+          "p_current_2026_10": 0.45,
+          "p_claim_supported": 0.98
+        },
+        "jev_claim": "BIR RDO 65 Naga on J. Miranda Avenue"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL15",
+      "title": "Getting Around Naga City commuter guide",
+      "url": "https://www.nagacityguide.com/getting-around-naga-city-your-commuters-guide-to-tricycles-jeepneys-e-jeep-vans-ride-hailing-apps/",
+      "extra_urls": [],
+      "publisher": "NagaCityGuide (private site)",
+      "date": "2025-10-13",
+      "type": "secondary_private",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.04,
+          "p_current_2026_10": 0.26,
+          "p_claim_supported": 0.99
+        },
+        "jev_claim": "route 'Diversion Road to Magsaysay, Francia and Centro' listed"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL16",
+      "title": "Ilang jeepney cooperative sa Naga City, nakapag-consolidate na (BNFM Naga)",
+      "url": "https://www.brigadanews.ph/ilang-jeepney-cooperative-sa-naga-city-nakapag-consolidate-na-para-sa-jeepney-modernization/",
+      "extra_urls": [],
+      "publisher": "Brigada News",
+      "date": "2024-01-08",
+      "type": "news_single_driver_quote",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.04,
+          "p_current_2026_10": 0.23,
+          "p_claim_supported": 0.96
+        },
+        "jev_claim": "Naga City Transport Cooperative runs Cararayan-San Isidro"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL17",
+      "title": "Project owner local knowledge (loop reroutes on request; missing routes)",
+      "url": null,
+      "extra_urls": [],
+      "publisher": "ParaNaga project owner",
+      "date": "2026-10",
+      "type": "owner_unverified",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.02,
+          "p_current_2026_10": 0.68,
+          "p_claim_supported": 0.62
+        },
+        "jev_claim": "any other source independently documents request-based loop detours (Jev 0.62, certainty 0.24, abstain; analyst reading: no direct source)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL18",
+      "title": "Transport and Traffic ordinance index (route, terminal, trimobile, padyak entries)",
+      "url": "https://www2.naga.gov.ph/transport-and-traffic/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "page undated; entries 1998-2025",
+      "type": "primary_index",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RL19",
+      "title": "Jeepney Modernization Needs Better Formulas and Frameworks: Initial Lessons from Naga City (caption only mentions LGU formal stops for loop routes)",
+      "url": "https://www.safetravelph.org/post/jeepney-modernization-needs-more-than-formulas-initial-lessons-from-naga-city",
+      "extra_urls": [],
+      "publisher": "SafeTravelPH (project participant blog)",
+      "date": "2025-09-10, updated 2025-09-23",
+      "type": "secondary_participant",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP01",
+      "title": "Ord 93-049 Transport and Traffic Code, Art XXVIII Secs 132-136, 141, 121(a)",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1993-049/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "1993; page notes amended by 2019-099",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.9,
+          "p_current_2026_10": 0.79,
+          "p_claim_supported": 0.94
+        },
+        "jev_claim": "Penafrancia Ave ban"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP02",
+      "title": "Ord 2001-086 (replaces Sec 134: association/area table)",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2001-086/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "enacted 21 Nov 2001",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.9,
+          "p_current_2026_10": 0.36,
+          "p_claim_supported": 0.31
+        },
+        "jev_claim": "Abella, Sabang, Igualdad operation"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP03",
+      "title": "Ord 2022-071 signed PDF",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2022/09/ord2022-071.pdf",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "enacted 6 Sep 2022, mayor signed 8 Sep 2022",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.9,
+          "p_current_2026_10": 0.41,
+          "p_claim_supported": 0.97
+        },
+        "jev_claim": "padyak fare P10"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP04",
+      "title": "\"Riding public hails Naga City's reduction of transport fare\"",
+      "url": "https://www2.naga.gov.ph/riding-public-hails-naga-citys-reduction-of-transport-fare/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "posted 11 Oct 2022",
+      "type": "official notice",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.33,
+          "p_current_2026_10": 0.64,
+          "p_claim_supported": 0.97
+        },
+        "jev_claim": "P10 and two passengers"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP05",
+      "title": "Riding public hails Naga's reduction of transport fare (news version of P04)",
+      "url": "https://www.bicolmail.net/single-post/riding-public-hails-naga-s-reduction-of-transport-fare",
+      "extra_urls": [],
+      "publisher": "Bicol Mail",
+      "date": "15 Oct 2022",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.33,
+          "p_current_2026_10": 0.64,
+          "p_claim_supported": 0.97
+        },
+        "jev_claim": "P10 and two passengers"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP06",
+      "title": "Ord 2026-024, one more unit each to NACISUPODA, TAPODA, COPPODA, CALIPODA, St. James PODA",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2026-024/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "enacted 24 Feb 2026 (listing shows 15 Mar 2026, likely posting)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.93,
+          "p_current_2026_10": 0.85,
+          "p_claim_supported": 0.95
+        },
+        "jev_claim": "padyak service expanded in 2026"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP07",
+      "title": "Ord 2020-051 Balatas franchises",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2020-051/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "enacted 9 Jun 2020, mayor 15 Jun 2020",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.46,
+          "p_current_2026_10": 0.25,
+          "p_claim_supported": 0.96
+        },
+        "jev_claim": "Balatas P10"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP08",
+      "title": "Ord 2019-022 LiPODA",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2019-022/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "5 Mar 2019",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP09",
+      "title": "Ord 2018-071 STC-PODA (Sta. Cruz)",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2018-071/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "11 Sep 2018",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP10",
+      "title": "Ord 2004-069 DELPODA",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2004-069/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "16 Jun 2004",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP11",
+      "title": "Ord 2022-009 St. James-St. Andrew route",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2022-009/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "25 Jan 2022",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP12",
+      "title": "Ord 2002-019 MATAPODA",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2002-019/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "6 Mar 2002",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP13",
+      "title": "Ord 2002-027 APODA (Abella)",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2002-027/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "3 Apr 2002",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP14",
+      "title": "Ord 2002-012 VILVIPODA",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-2002-012/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "20 Feb 2002",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP15",
+      "title": "Ord 89-065 padyak regulation",
+      "url": "https://www2.naga.gov.ph/prev-ordinance/ordinance-no-1989-065/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "enacted 11 Oct 1989",
+      "type": "official, historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.57,
+          "p_current_2026_10": 0.26,
+          "p_claim_supported": 0.09
+        },
+        "jev_claim": "padyaks may use main streets today"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP16",
+      "title": "Transport and Traffic ordinance index (titles, dates, fare history)",
+      "url": "https://www2.naga.gov.ph/transport-and-traffic/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "posted 29 Jun 2021",
+      "type": "official index",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP17",
+      "title": "Ord 2020-113 (revises 2020-040, GCQ rules for padyaks, tricycles, etc.)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2020-113/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "1 Dec 2020",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP18",
+      "title": "Ord 2024-002 (P15 trimobile fare; does not mention padyak)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2024-002/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "16 Jan 2024",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP19",
+      "title": "Ord 2026-023 slow-moving vehicle lane (does not name padyak)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2026-023/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "24 Feb 2026",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP20",
+      "title": "Ord 2020-072 PWD Code, Sec 54 (padyak franchises free of charge to barangay PWD associations)",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2020-072/",
+      "extra_urls": [],
+      "publisher": "SP Naga",
+      "date": "4 Aug 2020",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP21",
+      "title": "\"LGU Naga resumes Driver-as-First-Aider training\" (Abella, Calauag padyak drivers named)",
+      "url": "https://www2.naga.gov.ph/lgu-naga-resumes-driver-as-first-aider-training-program/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "15 Apr 2021",
+      "type": "official news post",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RP22",
+      "title": "Naga City Guide commuter guide (checked: no padyak mention)",
+      "url": "https://www.nagacityguide.com/getting-around-naga-city-your-commuters-guide-to-tricycles-jeepneys-e-jeep-vans-ride-hailing-apps/",
+      "extra_urls": [],
+      "publisher": "NagaCityGuide (private site)",
+      "date": "13 Oct 2025",
+      "type": "community/blog, no padyak content",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "exclude",
+        "reason": "research 2026-10-17: source checked, no padyak content (not used)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH01",
+      "title": "Naga (Wikivoyage travel guide; listings Oct 2023, Bicol Central Terminal Oct 2019)",
+      "url": "https://en.wikivoyage.org/wiki/Naga",
+      "extra_urls": [],
+      "publisher": "Wikivoyage",
+      "date": "listings Oct 2023 (BCS Oct 2019)",
+      "type": "community_wiki",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.08,
+          "p_current_2026_10": 0.22,
+          "p_claim_supported": 0.06
+        },
+        "jev_claim": "jeeps first 5 AM / last 6 PM (stress claim)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH02",
+      "title": "Ordinance 2025-070 Institutionalizing the Approved LPTRP",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+      "extra_urls": [
+        "https://www2.naga.gov.ph/wp-content/uploads/2025/10/Ordno-2025-070-Institutionalizing-the-Approved-LPTRP.pdf"
+      ],
+      "publisher": "City Government of Naga",
+      "date": "2025-09-23",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.93,
+          "p_current_2026_10": 0.68,
+          "p_claim_supported": 0.03
+        },
+        "jev_claim": "sets hours/headway: no"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH03",
+      "title": "Resolution 2025-735 (30-day dry run of Loops A and B)",
+      "url": "https://www2.naga.gov.ph/sp_resolutions/2025-735/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "2025-11-11",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.72,
+          "p_current_2026_10": 0.25,
+          "p_claim_supported": 0.03
+        },
+        "jev_claim": "sets hours: no"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH04",
+      "title": "Ordinance 93-049 Transport and Traffic Code (Sec. 49(m), 55, 121(a))",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord1993-049.pdf",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "1993, amended",
+      "type": "official_historical",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.7,
+          "p_current_2026_10": 0.28,
+          "p_claim_supported": 0.58
+        },
+        "jev_claim": "night operation recognised; no first/last"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH05",
+      "title": "Biyahe ng ilang traditional jeepney sa Naga City, nilimitahan",
+      "url": "https://www.brigadanews.ph/biyahe-ng-ilang-traditional-jeepney-sa-naga-city-nilimitahan/",
+      "extra_urls": [],
+      "publisher": "Brigada News",
+      "date": "2024-06-24",
+      "type": "news",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.36,
+          "p_current_2026_10": 0.48,
+          "p_claim_supported": 0.69
+        },
+        "jev_claim": "coop rationed trips"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH06",
+      "title": "Jeepney Modernization Needs Better Formulas and Frameworks: Initial Lessons from Naga City",
+      "url": "https://www.safetravelph.org/post/jeepney-modernization-needs-more-than-formulas-initial-lessons-from-naga-city",
+      "extra_urls": [],
+      "publisher": "SafeTravelPH",
+      "date": "2025-09-10, updated 2025-09-23",
+      "type": "community_participant_blog",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.06,
+          "p_current_2026_10": 0.25,
+          "p_claim_supported": 0.14
+        },
+        "jev_claim": "Naga 15-30 min off-peak: not supported"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH07",
+      "title": "Naga City PTMP route simulation exercise",
+      "url": "https://www.safetravelph.org/post/naga-city-gets-support-from-safetravelph-for-ptmp-route-simulation-exercise",
+      "extra_urls": [],
+      "publisher": "SafeTravelPH",
+      "date": "2025-08-18, updated 2025-09-09",
+      "type": "community_participant_blog",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.36,
+          "p_current_2026_10": 0.2,
+          "p_claim_supported": 0.06
+        },
+        "jev_claim": "headway value published: no"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH08",
+      "title": "Visit Naga City (travel guide)",
+      "url": "https://www.takeyourbackpack.com/backpacking-in-philippines/visit-naga-city/",
+      "extra_urls": [],
+      "publisher": "TakeYourBackpack",
+      "date": "2026-10-15",
+      "type": "blog",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.05,
+          "p_current_2026_10": 0.54,
+          "p_claim_supported": 0.85
+        },
+        "jev_claim": "jeeps ~5 AM-9 PM (text says so; weak source)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH09",
+      "title": "OpenStreetMap node 4850021524, jeepney station (opening_hours Mo-Su 05:00-23:30); Mapcarta mirror",
+      "url": "https://mapcarta.com/N4850021524",
+      "extra_urls": [],
+      "publisher": "OpenStreetMap contributors (ODbL 1.0)",
+      "date": "OSM base 2026-10-16",
+      "type": "community_open_data",
+      "licence": "ODbL 1.0",
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.1,
+          "p_current_2026_10": 0.57,
+          "p_claim_supported": 0.84
+        },
+        "jev_claim": "05:00-23:30 daily"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH10",
+      "title": "UV Express Terminal Naga-Sipocot and van terminal listings (Waze, PuertoParrot)",
+      "url": "https://www.waze.com/live-map/directions/ph/bicol/naga-city/uv-express-terminal-naga-sipocot?to=place.ChIJnU2WHKWMoTMR0m39FyvhnJ4",
+      "extra_urls": [
+        "https://www.puertoparrot.com/service/category/terminal/naga-city"
+      ],
+      "publisher": "Waze; PuertoParrot",
+      "date": "undated",
+      "type": "user_listing",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.1,
+          "p_current_2026_10": 0.64,
+          "p_claim_supported": 0.79
+        },
+        "jev_claim": "vans ~05:00-18:00"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH11",
+      "title": "Getting Around Naga City commuter guide",
+      "url": "https://www.nagacityguide.com/getting-around-naga-city-your-commuters-guide-to-tricycles-jeepneys-e-jeep-vans-ride-hailing-apps/",
+      "extra_urls": [],
+      "publisher": "NagaCityGuide (private site)",
+      "date": "2025-10-13",
+      "type": "blog",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.12,
+          "p_current_2026_10": 0.27,
+          "p_claim_supported": 0.04
+        },
+        "jev_claim": "states first/last jeep trips: no"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH12",
+      "title": "Naga Bicol Central Terminal (Commutetour listing)",
+      "url": "https://ph.commutetour.com/ph/terminal/naga-bicol-central-terminal/",
+      "extra_urls": [],
+      "publisher": "Commutetour",
+      "date": "2026-01-17",
+      "type": "aggregator",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.09,
+          "p_current_2026_10": 0.04,
+          "p_claim_supported": 0.03
+        },
+        "jev_claim": "verified van/jeep trips: no (bus only)"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH13",
+      "title": "Ordinance 2026-038 (fuel vouchers for registered jeepney cooperatives) and PIA news item",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-2026-038/",
+      "extra_urls": [
+        "https://pia.gov.ph/news/naga-city-jeepney-drivers-to-receive-p500-daily-fuel-subsidy/"
+      ],
+      "publisher": "City Government of Naga; PIA",
+      "date": "2026-04-08; 2026-04-17",
+      "type": "official_and_news",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.44,
+          "p_current_2026_10": 0.18,
+          "p_claim_supported": 0.04
+        },
+        "jev_claim": "ordinance fixes hours: no"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH14",
+      "title": "LTFRB Memorandum Circular 2018-009 and LBSCP terms (search snippets, unverified)",
+      "url": "https://elibrary.judiciary.gov.ph/thebookshelf/showdocs/10/90499",
+      "extra_urls": [
+        "https://ltfrb-scp.ph/terms"
+      ],
+      "publisher": "Supreme Court E-Library; LTFRB",
+      "date": "2018; 2026",
+      "type": "official_snippet_unverified",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "jev": {
+          "model": "typesafe/jev-1.14-20261014",
+          "p_primary_official": 0.32,
+          "p_current_2026_10": 0.31,
+          "p_claim_supported": 0.16
+        },
+        "jev_claim": "national minimum hours rule: not shown"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH15",
+      "title": "Getting Here and Around",
+      "url": "https://tourism.naga.gov.ph/getting-here-and-around/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga (Naga City Tourism)",
+      "date": "undated",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH16",
+      "title": "Transport options between Naga and Legazpi",
+      "url": "https://d0ctrine.com/2025/06/29/transport-options-between-naga-and-legazpi/",
+      "extra_urls": [],
+      "publisher": "d0ctrine (blog)",
+      "date": "2025-06-29",
+      "type": "blog",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "exclude",
+        "reason": "research 2026-10-17: source has no jeepney or van times (checked, not used)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH17",
+      "title": "UP NCTS team presents transport and traffic management plan findings and recommendations to Naga City officials",
+      "url": "https://ncts.upd.edu.ph/up-ncts-team-presents-transport-and-traffic-management-plan-findings-and-recommendations-to-naga-city-officials/",
+      "extra_urls": [],
+      "publisher": "UP NCTS",
+      "date": "2025-11-14",
+      "type": "report_news",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "exclude",
+        "reason": "research 2026-10-17: source says nothing on jeepney service (checked, not used)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH18",
+      "title": "Ordinance 2006-044 (terminal guidelines); Ord. 2010-044 and Ord. 2016-033/034 noted, not read",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2021/06/ord2006-044.pdf",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "2006 / 2010 / 2016",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH19",
+      "title": "Transport and Traffic ordinance index",
+      "url": "https://www2.naga.gov.ph/transport-and-traffic/",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "various",
+      "type": "official_index",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH20",
+      "title": "Resolution 2025-128, 90-day dry run of LPTRP routes and protected bicycle lane",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2025/04/Resno-2025-128-LPTRP-Dry-Run-and-Protected-Bicycle-Lane.pdf",
+      "extra_urls": [],
+      "publisher": "City Government of Naga",
+      "date": "2025-03-18",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RH21",
+      "title": "Peñafrancia 2026 traffic advisories; City bus schedule page (not fetched)",
+      "url": "https://tourism.naga.gov.ph/traffic-advisory-penafrancia-festival-parade-routes/",
+      "extra_urls": [
+        "https://www2.naga.gov.ph/bus-trip-schedule-fare-naga-to-manila/"
+      ],
+      "publisher": "City Government of Naga (Naga City Tourism)",
+      "date": "2026-09",
+      "type": "official_advisory",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {},
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "U02",
+      "title": "Project owner report to ParaNaga, 2026-10-17: request reroutes on loops; 'Francia' signboard; padyak in Abella, Sabang, Sta. Cruz, Igualdad; some jeepneys start about 5 am or before",
+      "url": null,
+      "extra_urls": [],
+      "publisher": "ParaNaga project owner",
+      "date": "2026-10-17",
+      "type": "user_report_unverified",
+      "licence": null,
+      "retrieved": "2026-10-17",
+      "properties": {
+        "scope": "Unverified local report; never shown as a fact or as route geometry"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-17",
+        "reviewedOn": "2026-10-17"
       }
     }
   ],
@@ -3637,6 +5533,1231 @@
         "decision": "import",
         "reason": "Research conflict 6",
         "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX10",
+      "topic": "Loops C/D and J. Miranda Ave",
+      "description": "Resolution 2025-172 (22 Apr 2025) adds J. Miranda Ave to Loops C and D; Ordinance 2025-070 (23 Sep 2025) omits it. The seed follows the ordinance; route note RN01 tells riders to ask the driver.",
+      "refs": [
+        "R8-C",
+        "R8-D",
+        "RN01"
+      ],
+      "source_codes": [
+        "RL01",
+        "RL03"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research conflict 1 (loops-and-routes-2026-10.md)",
+        "reviewedOn": "2026-10-17"
+      }
+    }
+  ],
+  "roadRules": [
+    {
+      "code": "TRI-2006-P1",
+      "ruleCode": "TRI-2006",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "National Road (San Felipe portion)"
+      ],
+      "ruleText": "National Road (San Felipe portion), from Peñafrancia Cemetery towards Barangay San Felipe and the upper Barangays.",
+      "enacted": "2006-01-30",
+      "exceptWindow": {
+        "from": "21:00",
+        "to": "05:00"
+      },
+      "geometry": "not_mapped",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Recorded without geometry: the start point, Peñafrancia Cemetery, is not in the road or places snapshot and the research gives no location for it. Not applied until located.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-P2",
+      "ruleCode": "TRI-2006",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "National Road (Concepcion Pequeña to Del Rosario portion)"
+      ],
+      "ruleText": "National Road (Concepcion Pequeña to Del Rosario portion), from the junction of Magsaysay Avenue, Roxas and Panganiban Drive towards Barangay Del Rosario.",
+      "enacted": "2006-01-30",
+      "exceptWindow": {
+        "from": "21:00",
+        "to": "05:00"
+      },
+      "geometry": "ways",
+      "wayIds": [
+        252223487,
+        721779677,
+        760083147,
+        760083145,
+        760083146,
+        760083149,
+        760083148,
+        760083143,
+        760083142,
+        241595632,
+        760083154,
+        760083153,
+        252222954,
+        252222953,
+        760083138,
+        769916315,
+        238038899,
+        793410140,
+        793410139,
+        760083141,
+        760083139,
+        760083140
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "From the Naga Rotonda (where Magsaysay Ave, Roxas Ave and Panganiban Drive meet; the rotonda ways and the 6 m connector way/721779676 are the junction and are not listed) east along OSM Maharlika Highway (the Concepcion Road / Maharlika Highway way, research §4) toward Del Rosario, to way/760083140, which crosses the city boundary. The ordinance names no end point.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-P3",
+      "ruleCode": "TRI-2006",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Roxas Avenue (Diversion Road)"
+      ],
+      "ruleText": "Along Roxas Avenue (Diversion Road). No segment limits are given.",
+      "enacted": "2006-01-30",
+      "exceptWindow": {
+        "from": "21:00",
+        "to": "05:00"
+      },
+      "geometry": "ways",
+      "wayIds": [
+        238039993,
+        252221727,
+        252222638,
+        252222640,
+        252222643,
+        252223488,
+        700454449,
+        721779678,
+        760083151,
+        760083152,
+        767876206,
+        798633361,
+        959623251,
+        1465244988,
+        1465244990,
+        1465244991
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Whole length: every OSM way named Roxas Avenue, from the Mabolo Road junction to the Naga Rotonda.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-P4",
+      "ruleCode": "TRI-2006",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "National Road (Magsaysay Avenue Portion)"
+      ],
+      "ruleText": "National Road (Magsaysay Avenue Portion), from the corner of Basilica Road and Dayangdang Street and Magsaysay Avenue towards Roxas Avenue.",
+      "enacted": "2006-01-30",
+      "exceptWindow": {
+        "from": "21:00",
+        "to": "05:00"
+      },
+      "geometry": "ways",
+      "wayIds": [
+        252223483,
+        252223486,
+        721779873
+      ],
+      "clips": [
+        {
+          "wayId": 252223483,
+          "fromNodeId": 254713607,
+          "toNodeId": 254716465
+        }
+      ],
+      "junctionNodeId": null,
+      "clipNote": "From node 254713607, where Dayangdang Street meets Magsaysay Avenue (OSM names the road on the other side Balatas-Cararayan Road; it leads to the Basilica Loop; OSM has no Basilica Road at this corner), south to the Naga Rotonda, with the two one-way links into the rotonda.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X1",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Roxas Avenue"
+      ],
+      "ruleText": "Crossing through, both ways: Roxas Avenue from CBD II Primo Outpost to ALDP Compound (2006-015 spells it ADLP).",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "not_mapped",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Recorded without geometry: CBD II Primo Outpost and ALDP Compound are not in the road or places snapshot.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X2",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Dayangdang St.",
+        "Basilica Drive"
+      ],
+      "ruleText": "Crossing through, both ways: the Dayangdang St. and Basilica Drive junction going to Basilica.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "junction",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": 254713607,
+      "clipNote": "Junction node 254713607 (Dayangdang Street / Balatas-Cararayan Road / Magsaysay Avenue). It is also where TRI-2006-P4 starts, so crossing uses no restricted edge.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X3",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Kayanga Road"
+      ],
+      "ruleText": "Crossing through, both ways: the Kayanga Road junction going to Mariano Subdivision via the Kayanga entrance.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "junction",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": 254710061,
+      "clipNote": "Junction node 254710061, where Kayanga Road (west) and Kayangga Street (east) meet Magsaysay Avenue. Mariano Subdivision is not in the snapshot.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X4",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Taal Avenue"
+      ],
+      "ruleText": "Crossing through, both ways: Taal Avenue to Mariano Subdivision via the Kayanga entrance.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        252223483
+      ],
+      "clips": [
+        {
+          "wayId": 252223483,
+          "fromNodeId": 254710065,
+          "toNodeId": 254710061
+        }
+      ],
+      "junctionNodeId": null,
+      "clipNote": "The Magsaysay Avenue segment between the Taal Avenue junction (node 254710065) and the Kayanga Road junction (node 254710061), about 85 m.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X5",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Leon SA. Aureus"
+      ],
+      "ruleText": "Crossing through, both ways: the Leon SA. Aureus junction going to Naga City Science High School.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "junction",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": 254714878,
+      "clipNote": "Junction node 254714878, where Leon Sa Aureus Street crosses Magsaysay Avenue and continues east to Naga City Science HS Road.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X6",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Mayflower Street"
+      ],
+      "ruleText": "Crossing through, both ways: the Mayflower Street junction going to Gimenez Park Subdivision.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "junction",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": 254715589,
+      "clipNote": "Junction node 254715589, where Mayflower Street crosses Magsaysay Avenue. Gimenez Park Subdivision is not in the snapshot.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-1",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Central Business District"
+      ],
+      "ruleText": "Within the Central Business District, except from 8:00 P.M. to 6:00 A.M.",
+      "enacted": "1993",
+      "exceptWindow": {
+        "from": "20:00",
+        "to": "06:00"
+      },
+      "geometry": "not_mapped",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Recorded without geometry: CBD boundary not defined in the ordinance text",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-2",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Mabolo Drive"
+      ],
+      "ruleText": "Along Mabolo Drive",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "not_mapped",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Recorded without geometry: no OSM way is named Mabolo Drive and the research does not say which OSM road it is (Mabolo Road is not equated without a source).",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-3",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Roxas Avenue (formerly Diversion Road)"
+      ],
+      "ruleText": "Along Roxas Avenue (formerly Diversion Road)",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        238039993,
+        252221727,
+        252222638,
+        252222640,
+        252222643,
+        252223488,
+        700454449,
+        721779678,
+        760083151,
+        760083152,
+        767876206,
+        798633361,
+        959623251,
+        1465244988,
+        1465244990,
+        1465244991
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Whole length: every OSM way named Roxas Avenue (same ways as TRI-2006-P3).",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-4",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Panganiban Avenue"
+      ],
+      "ruleText": "Along Panganiban Avenue",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        23518904,
+        23519164,
+        23519483,
+        23540253,
+        23540254,
+        252223485,
+        272595409,
+        721779874,
+        836685800,
+        836685805,
+        1553212752
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "No OSM way is named Panganiban Avenue. Mapped to OSM Panganiban Drive (rotonda to Peñafrancia Avenue), the only Panganiban road at the junction 'of Panganiban and Concepcion Road' named in item 6. J. Panganiban Street is a different street. Judgement for owner review.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-5",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Concepcion Road"
+      ],
+      "ruleText": "Along Concepcion Road from the junction of Diversion (Roxas Avenue) and Magsaysay Avenue up to the City Boundary at Del Rosario",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        252223487,
+        721779677,
+        760083147,
+        760083145,
+        760083146,
+        760083149,
+        760083148,
+        760083143,
+        760083142,
+        241595632,
+        760083154,
+        760083153,
+        252222954,
+        252222953,
+        760083138,
+        769916315,
+        238038899,
+        793410140,
+        793410139,
+        760083141,
+        760083139,
+        760083140
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "From the Naga Rotonda (where Magsaysay Ave, Roxas Ave and Panganiban Drive meet; the rotonda ways and the 6 m connector way/721779676 are the junction and are not listed) east along OSM Maharlika Highway (the Concepcion Road / Maharlika Highway way, research §4) to way/760083140, which crosses the city boundary at Del Rosario.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-6",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Magsaysay Avenue"
+      ],
+      "ruleText": "Along Magsaysay Avenue from the junction of Panganiban and Concepcion Road up to Penafrancia Avenue junction",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        30518281,
+        30518283,
+        252223483,
+        252223486,
+        721779873,
+        1060925382
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Whole length: every OSM way named Magsaysay Avenue, from the Naga Rotonda to the Peñafrancia Avenue junction (node 254709879).",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-7",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Penafrancia Avenue"
+      ],
+      "ruleText": "Along Penafrancia Avenue",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        23519386,
+        23521401,
+        23521917,
+        838916319,
+        1529540511,
+        1529540512
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Whole length: every OSM way named Peñafrancia Avenue.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-8",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Elias Angeles Street",
+        "Bagumbayan Road"
+      ],
+      "ruleText": "Along Elias Angeles Street and Bagumbayan Road up to the City Boundary at Bagumbayan Norte",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        23520905,
+        596568239,
+        596568243,
+        724187422,
+        936923544,
+        1529540510,
+        1553212755,
+        1553212756,
+        1553218895,
+        1553218896,
+        1560123986,
+        23520886
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Every OSM way named Elias Angeles Street, and OSM Bagumbayan Street (way/23520886, the reviewed alias of Bagumbayan Rd) from Elias Angeles Street to its end at the city boundary (node 254711601).",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    }
+  ],
+  "padyakAreas": [
+    {
+      "code": "PA01",
+      "area": "Abella",
+      "associations": [
+        "APODA"
+      ],
+      "barangays": [
+        "Abella"
+      ],
+      "placeNodeIds": [
+        12717296953
+      ],
+      "documentedYear": 2002,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP13",
+        "U02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; also owner-reported (U02)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA02",
+      "area": "Sabang",
+      "associations": [
+        "SAPADOA"
+      ],
+      "barangays": [
+        "Sabang"
+      ],
+      "placeNodeIds": [
+        12717296939
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "U02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; also owner-reported (U02)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA03",
+      "area": "Igualdad",
+      "associations": [
+        "IPODA"
+      ],
+      "barangays": [
+        "Igualdad Interior"
+      ],
+      "placeNodeIds": [
+        12717296945
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "U02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; also owner-reported (U02)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA04",
+      "area": "Santa Cruz",
+      "associations": [
+        "STC-PODA"
+      ],
+      "barangays": [
+        "Santa Cruz"
+      ],
+      "placeNodeIds": [
+        12717296936
+      ],
+      "documentedYear": 2018,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP09",
+        "U02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; also owner-reported (U02)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA05",
+      "area": "Balatas",
+      "associations": [
+        "BAPODA",
+        "MAVIPODA",
+        "BALUPODA"
+      ],
+      "barangays": [
+        "Balatas"
+      ],
+      "placeNodeIds": [
+        1875494497
+      ],
+      "documentedYear": 2020,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP07"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA06",
+      "area": "Cararayan (Liberty Compound)",
+      "associations": [
+        "LiPODA"
+      ],
+      "barangays": [
+        "Cararayan"
+      ],
+      "placeNodeIds": [
+        12717296950
+      ],
+      "documentedYear": 2019,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP08"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; Liberty Compound itself has no place node",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA07",
+      "area": "Bagumbayan Sur",
+      "associations": [
+        "BASPODA"
+      ],
+      "barangays": [
+        "Bagumbayan Sur"
+      ],
+      "placeNodeIds": [
+        10577982322
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA08",
+      "area": "Calauag",
+      "associations": [
+        "CALIPODA"
+      ],
+      "barangays": [
+        "Calauag"
+      ],
+      "placeNodeIds": [
+        12717296951
+      ],
+      "documentedYear": 2026,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; CALIPODA named again in Ord 2026-024",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA09",
+      "area": "Liboton",
+      "associations": [
+        "CALIPODA"
+      ],
+      "barangays": [
+        "Liboton"
+      ],
+      "placeNodeIds": [
+        12717296942
+      ],
+      "documentedYear": 2026,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; CALIPODA named again in Ord 2026-024",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA10",
+      "area": "Tinago (City Heights Subd, Dayangdang, Taal Ave)",
+      "associations": [
+        "CHESTA"
+      ],
+      "barangays": [
+        "Tinago"
+      ],
+      "placeNodeIds": [
+        4811249487
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; Ord 2002-013 seen only as an index title, not read, so 2001",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA11",
+      "area": "Concepcion Pequeña",
+      "associations": [
+        "COPODA",
+        "GIMOPODA",
+        "IDPODA",
+        "MOPODA",
+        "VILVIPODA"
+      ],
+      "barangays": [
+        "Concepcion Pequeña"
+      ],
+      "placeNodeIds": [
+        12717296948
+      ],
+      "documentedYear": 2002,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP14"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; COPPODA in Ord 2026-024 = COPODA is an inference, not used",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA12",
+      "area": "Concepcion Grande",
+      "associations": [
+        "SOLPODA",
+        "VIGPODA",
+        "VISOPODA",
+        "RAVIPODA",
+        "St. James-St. Andrew"
+      ],
+      "barangays": [
+        "Concepcion Grande"
+      ],
+      "placeNodeIds": [
+        12717296949
+      ],
+      "documentedYear": 2026,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP11",
+        "RP06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; St. James PODA named again in Ord 2026-024",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA13",
+      "area": "Del Rosario",
+      "associations": [
+        "DELPODA"
+      ],
+      "barangays": [
+        "Del Rosario",
+        "Villa Corazon Subdivision"
+      ],
+      "placeNodeIds": [
+        12717296946,
+        11111873776
+      ],
+      "documentedYear": 2004,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; Villa Corazon Subd is a DELPODA area in Ord 2004-069",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA14",
+      "area": "Triangulo (Naga City Subd)",
+      "associations": [
+        "NACISUPODA"
+      ],
+      "barangays": [
+        "Naga City Subdivision"
+      ],
+      "placeNodeIds": [
+        5507289431
+      ],
+      "documentedYear": 2026,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; the area is Naga City Subd only, so its own place node, not the Triangulo node",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA15",
+      "area": "San Felipe",
+      "associations": [
+        "SAFODA",
+        "WILPODA"
+      ],
+      "barangays": [
+        "San Felipe"
+      ],
+      "placeNodeIds": [
+        12717296938
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA16",
+      "area": "Mabolo",
+      "associations": [
+        "MATAPODA"
+      ],
+      "barangays": [
+        "Mabolo"
+      ],
+      "placeNodeIds": [
+        12717296943
+      ],
+      "documentedYear": 2002,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP12"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; route runs to Tarosanan, Camaligan (outside the city)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA17",
+      "area": "Tabuco",
+      "associations": [],
+      "barangays": [],
+      "placeNodeIds": [],
+      "documentedYear": null,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "Tabuco is named only as a limit of the SAPADOA (Sabang) area, not as an area of its own",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA18",
+      "area": "Bagumbayan Norte",
+      "associations": [],
+      "barangays": [],
+      "placeNodeIds": [],
+      "documentedYear": null,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "No padyak association is named here; only the 1993 plate-colour table (colours repealed) and the Sec 132 boundary",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA19",
+      "area": "Pacol / Lerma / Panicuason / Carolina / Penafrancia / Dayangdang (outside CHESTA)",
+      "associations": [],
+      "barangays": [],
+      "placeNodeIds": [],
+      "documentedYear": null,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "No ordinance names a padyak association here (research: Unknown)",
+        "reviewedOn": "2026-10-17"
+      }
+    }
+  ],
+  "routeNotes": [
+    {
+      "code": "RN01",
+      "routeCodes": [
+        "R8-C",
+        "R8-D"
+      ],
+      "text": "City Hall, BFP and BIR are on J. Miranda Ave. This loop's listed streets skip it (Ord 2025-070); ask the driver.",
+      "evidence": "community",
+      "sourceCodes": [
+        "RL01",
+        "RL03",
+        "RL12",
+        "RL14"
+      ],
+      "near": {
+        "lat": 13.6256,
+        "lng": 123.199,
+        "radiusM": 450
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Ord 2025-070 omits J. Miranda for C/D; Res 2025-172 had added it (conflict CX10). near = between City Hall and BFP (RL12); route path per Ord 2025-070; landmark positions from OSM",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RN02",
+      "routeCodes": [
+        "R8-A",
+        "R8-B"
+      ],
+      "text": "Passes J. Miranda Ave (City Hall, BFP, BIR) on its listed streets.",
+      "evidence": "community",
+      "sourceCodes": [
+        "RL01",
+        "RL12",
+        "RL14"
+      ],
+      "near": {
+        "lat": 13.6256,
+        "lng": 123.199,
+        "radiusM": 450
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Ord 2025-070 lists J. Miranda Ave for A/B; landmarks per RL12/RL14; route path per Ord 2025-070; landmark positions from OSM",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RN03",
+      "routeCodes": [
+        "R8-A",
+        "R8-B",
+        "R8-C",
+        "R8-D"
+      ],
+      "text": "A local reports drivers may turn into side streets on request (e.g. Magsaysay Ave). Ask the driver.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U02"
+      ],
+      "near": null,
+      "review": {
+        "decision": "import",
+        "reason": "Owner report only; no document records request reroutes",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RN04",
+      "routeCodes": [
+        "R2"
+      ],
+      "text": "A local reports a 'Francia' signboard may be this route; unconfirmed.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U02",
+        "RL15"
+      ],
+      "near": null,
+      "review": {
+        "decision": "import",
+        "reason": "'Francia' is in no instrument; owner report plus a private guide listing",
+        "reviewedOn": "2026-10-17"
       }
     }
   ]

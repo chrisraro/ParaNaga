@@ -55,7 +55,7 @@ describe("TripDetail ride path labels (T12-5) and notes (T12-2)", () => {
 });
 
 describe("TripDetail street-path status (Minor: polite announcement)", () => {
-  it("announces loading street paths politely, then that they were updated", () => {
+  it("announces loading street paths politely, then says nothing when they failed to load (no false \"updated\")", () => {
     const loading = enrichPlan(plan, null, { walkGraphStatus: "loading" });
     const view = render(<TripDetail data={loading} option={loading.plan.options[0]!} onBack={() => undefined} />);
     const status = screen.getByTestId("trip-paths-status");
@@ -64,7 +64,7 @@ describe("TripDetail street-path status (Minor: polite announcement)", () => {
 
     const ready = enrichPlan(plan, null, { walkGraphStatus: "error" });
     view.rerender(<TripDetail data={ready} option={ready.plan.options[0]!} onBack={() => undefined} />);
-    expect(screen.getByTestId("trip-paths-status").textContent).toBe("Street paths updated");
+    expect(screen.getByTestId("trip-paths-status").textContent).toBe("");
   });
 });
 

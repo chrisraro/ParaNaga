@@ -59,6 +59,7 @@ const revisionCache = (cache: RevisionCache) =>
 const strategies = {
   snapshot: revisionCache("snapshot"),
   "search-index": revisionCache("search-index"),
+  "search-places": revisionCache("search-places"),
   lines: revisionCache("lines"),
   "walk-graph": revisionCache("walk-graph"),
   head: new NetworkFirst({

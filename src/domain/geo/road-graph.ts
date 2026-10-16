@@ -10,6 +10,11 @@
 //   walk    — D7: every highway class except motorway, motorway_link, construction, proposed (and
 //             the lifecycle values abandoned, disused, razed, which are not roads); foot=no is
 //             excluded, and access=private|no unless foot=yes|designated. Undirected.
+//   tricycle — plan E §C: the drivable classes minus motorway, motorway_link and busway; one-way
+//             respected from oneway and junction=roundabout|circular only (oneway:psv does not apply);
+//             motor_vehicle|vehicle|access=no|private block, and psv/bus allowances do not unlock.
+//   street  — the union of walk and tricycle ways, undirected (the street graph v2 builder reads
+//             each way's own walk/tricycle access back with wayIncluded / wayDirections).
 //
 // Ways are split at junctions (a way's end nodes and nodes shared by two or more kept ways), so
 // degree-2 nodes are contracted into edge polylines. Every edge is directed; a two-way piece gives
@@ -22,13 +27,14 @@ import { wayStreetNames } from "./street-names";
 import type { LatLng } from "./types";
 import type { OsmRoads, RoadWay } from "../import/osm-roads";
 
-export type RoadProfile = "vehicle" | "walk";
+export type RoadProfile = "vehicle" | "walk" | "tricycle" | "street";
 
 const DRIVABLE = new Set([
   "motorway", "trunk", "primary", "secondary", "tertiary", "unclassified", "residential", "service", "living_street",
   "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link", "busway",
 ]);
 const NOT_WALKABLE = new Set(["motorway", "motorway_link", "construction", "proposed", "abandoned", "disused", "razed"]);
+const NOT_TRICYCLE = new Set(["motorway", "motorway_link", "busway"]);
 
 export const GRID_CELL_M = 100;
 
@@ -72,15 +78,21 @@ export type RoadGraph = {
   grid: SpatialGrid;
 };
 
-function included(way: RoadWay, profile: RoadProfile): boolean {
+/** Whether `way` belongs to the profile's graph. */
+export function wayIncluded(way: Pick<RoadWay, "tags">, profile: RoadProfile): boolean {
   const t = way.tags;
+  if (profile === "street") return wayIncluded(way, "walk") || wayIncluded(way, "tricycle");
+  const blocked = (v: string | undefined) => v === "no" || v === "private";
+  if (profile === "tricycle") {
+    if (!DRIVABLE.has(t.highway) || NOT_TRICYCLE.has(t.highway)) return false;
+    return !blocked(t.motor_vehicle) && !blocked(t.vehicle) && !blocked(t.access);
+  }
   if (profile === "vehicle") {
     if (!DRIVABLE.has(t.highway)) return false;
     if (t.area === "yes") return false;
     if (t.service === "parking_aisle" || t.service === "drive-through") return false;
     const allowed = (v: string | undefined) => v === "yes" || v === "designated";
     if (allowed(t.psv) || allowed(t.bus)) return true;
-    const blocked = (v: string | undefined) => v === "no" || v === "private";
     return !blocked(t.motor_vehicle) && !blocked(t.vehicle) && !blocked(t.access);
   }
   if (NOT_WALKABLE.has(t.highway)) return false;
@@ -90,9 +102,9 @@ function included(way: RoadWay, profile: RoadProfile): boolean {
 }
 
 /** Which directions a vehicle may use: forward (way order), backward, or both. Walking: both. */
-function directions(way: RoadWay, profile: RoadProfile): { forward: boolean; backward: boolean } {
-  if (profile === "walk") return { forward: true, backward: true };
-  const oneway = way.tags["oneway:psv"] ?? way.tags.oneway;
+export function wayDirections(way: Pick<RoadWay, "tags">, profile: RoadProfile): { forward: boolean; backward: boolean } {
+  if (profile === "walk" || profile === "street") return { forward: true, backward: true };
+  const oneway = profile === "tricycle" ? way.tags.oneway : (way.tags["oneway:psv"] ?? way.tags.oneway);
   if (oneway === "-1" || oneway === "reverse") return { forward: false, backward: true };
   if (oneway === "yes" || oneway === "1" || oneway === "true") return { forward: true, backward: false };
   if (oneway === "no" || oneway === "false" || oneway === "0") return { forward: true, backward: true };
@@ -107,9 +119,10 @@ function polylineLength(coords: readonly LatLng[]): number {
   return m;
 }
 
-export function buildRoadGraph(roads: Pick<OsmRoads, "ways" | "nodes">, options: { profile: RoadProfile }): RoadGraph {
+/** `splitAt`: extra OSM node ids that end an edge (e.g. a rule's clip nodes). */
+export function buildRoadGraph(roads: Pick<OsmRoads, "ways" | "nodes">, options: { profile: RoadProfile; splitAt?: ReadonlySet<number> }): RoadGraph {
   const { profile } = options;
-  const ways = roads.ways.filter((w) => included(w, profile)).sort((a, b) => a.id - b.id);
+  const ways = roads.ways.filter((w) => wayIncluded(w, profile)).sort((a, b) => a.id - b.id);
 
   // Junctions: way ends, and nodes used more than once (by two ways, or twice by one way).
   const uses = new Map<number, number>();
@@ -119,7 +132,7 @@ export function buildRoadGraph(roads: Pick<OsmRoads, "ways" | "nodes">, options:
     junction.add(w.nodeIds[w.nodeIds.length - 1]!);
     for (const n of w.nodeIds) uses.set(n, (uses.get(n) ?? 0) + 1);
   }
-  for (const [n, count] of uses) if (count > 1) junction.add(n);
+  for (const [n, count] of uses) if (count > 1 || options.splitAt?.has(n)) junction.add(n);
 
   const nodeIds = [...junction].sort((a, b) => a - b);
   const nodeIndex = new Map(nodeIds.map((id, i) => [id, i]));
@@ -132,7 +145,7 @@ export function buildRoadGraph(roads: Pick<OsmRoads, "ways" | "nodes">, options:
   const canonical: number[] = [];
   for (const w of ways) {
     const names = wayStreetNames(w.tags);
-    const dir = directions(w, profile);
+    const dir = wayDirections(w, profile);
     let start = 0;
     for (let i = 1; i < w.nodeIds.length; i++) {
       if (!junction.has(w.nodeIds[i]!)) continue;

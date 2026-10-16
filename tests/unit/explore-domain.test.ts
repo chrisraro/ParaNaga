@@ -3,6 +3,7 @@ import { routeListSchema, searchIndexSchema } from "@/domain/api/schemas";
 import { OSM_PLACE_CATEGORIES } from "@/domain/places/osm-categories";
 import {
   EXPLORE_CATEGORIES,
+  showMoreCards,
   barangaysAZ,
   chipOfOsmCategory,
   emptyCategoryText,
@@ -34,6 +35,12 @@ describe("Explore categories", () => {
       "Government",
       "Parks & plazas",
       "Terminals",
+      "Food & drink",
+      "Shops",
+      "Services",
+      "Stay",
+      "Sights & sports",
+      "Other places",
     ]);
     for (const category of OSM_PLACE_CATEGORIES) {
       expect(EXPLORE_CATEGORIES.filter((c) => c.osm?.includes(category)), category).toHaveLength(1);
@@ -41,6 +48,20 @@ describe("Explore categories", () => {
     expect(chipOfOsmCategory("college_university")).toBe("schools");
     expect(chipOfOsmCategory("square")).toBe("parks");
     expect(chipOfOsmCategory("bus_terminal")).toBe("terminals");
+    // Task 14: every named-place category has a chip too.
+    expect(chipOfOsmCategory("restaurant")).toBe("food");
+    expect(chipOfOsmCategory("pharmacy")).toBe("health");
+    expect(chipOfOsmCategory("supermarket")).toBe("shops");
+    expect(chipOfOsmCategory("hotel")).toBe("stay");
+    expect(chipOfOsmCategory("other_place")).toBe("other");
+  });
+
+  it("showMoreCards: Show all up to CARD_ALL_MAX places, then CARD_STEP at a time", () => {
+    expect(showMoreCards(12, 12)).toBeNull();
+    expect(showMoreCards(233, 12)).toEqual({ label: "Show all 233 places", next: 233 });
+    expect(showMoreCards(1000, 12)).toEqual({ label: "Show 100 more places", next: 112 });
+    expect(showMoreCards(1000, 912)).toEqual({ label: "Show 88 more places", next: 1012 });
+    expect(showMoreCards(1000, 1012)).toBeNull();
   });
 
   it("All lists every place A–Z; a chip lists only its categories", () => {

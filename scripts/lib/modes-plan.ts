@@ -14,6 +14,8 @@ import {
   parseModesSeed,
   validateModesSeed,
   type ModesSeed,
+  type ModesSeedPadyakArea,
+  type ModesSeedRoadRule,
 } from "../../src/domain/import/modes-seed";
 import type { FareRuleRow, NormalizedSeed } from "../../src/domain/import/seed";
 
@@ -202,6 +204,19 @@ export type PlannedResearchConflict = {
   sourceCodes: string[];
 };
 
+/** A reviewed route note (E-J7): one per seed note and route; the writer resolves the route id. */
+export type PlannedRouteNote = {
+  routeCode: string;
+  noteCode: string;
+  text: string;
+  evidence: string;
+  nearLat: number | null;
+  nearLng: number | null;
+  nearRadiusM: number | null;
+  sourceCodes: string[];
+  contentHash: string;
+};
+
 export type ModesPlan = {
   fileName: string;
   sha256: string;
@@ -210,7 +225,7 @@ export type ModesPlan = {
   seedDate: string;
   /** ingest.batch.snapshot_version, e.g. modes-seed:2026-10-16. */
   snapshotVersion: string;
-  /** `modes-{date}`; the road outputs then publish `modes-lines-{roads date}` on top (lines-writer). */
+  /** `modes-{date}`; the road outputs then publish `anywhere-alight-{roads date}` on top (lines-writer). */
   revisionLabel: string;
   synthetic: boolean;
   sources: PlannedSource[];
@@ -225,6 +240,10 @@ export type ModesPlan = {
   conflicts: PlannedResearchConflict[];
   etaParams: PlannedEtaParam[];
   streetAliases: PlannedStreetAlias[];
+  /** Imported road rules and padyak areas (street graph v2, lines plan) and route notes (lines writer). */
+  roadRules: ModesSeedRoadRule[];
+  padyakAreas: ModesSeedPadyakArea[];
+  routeNotes: PlannedRouteNote[];
   /** `kind code: reason` for every record the review excluded. */
   excluded: string[];
   /** Imported records that this task does not write yet, with the reason. */
@@ -395,10 +414,20 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
     legalName: a.legal_name, osmName: a.osm_name, osmWayIds: a.osm_way_ids, evidenceSnapshot: a.evidence_snapshot, reason: a.reason,
   }));
 
+  const routeNotes = imp.routeNotes.flatMap((n) => n.routeCodes.map((routeCode): PlannedRouteNote => {
+    const row = {
+      routeCode, noteCode: n.code, text: n.text, evidence: n.evidence, nearLat: n.near?.lat ?? null, nearLng: n.near?.lng ?? null,
+      nearRadiusM: n.near?.radiusM ?? null, sourceCodes: n.sourceCodes,
+    };
+    return { ...row, contentHash: hash("route_note", row) };
+  }));
+
   // Written by the road stage (scripts/lib/lines-writer.ts), which needs the road snapshot.
   const deferred: Record<string, string> = {
     eta_params: `${etaParams.length} records; written with the road outputs (modes-lines revision, lines-writer)`,
     street_aliases: `${streetAliases.length} records; used by the path tracer (lines plan)`,
+    road_rules_padyak_areas: `${imp.roadRules.length} rules, ${imp.padyakAreas.length} areas; used by the street graph (lines plan)`,
+    route_notes: `${routeNotes.length} records; written with the road outputs (lines-writer)`,
   };
 
   const counts: Record<string, number> = {
@@ -433,6 +462,9 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
     conflicts,
     etaParams,
     streetAliases,
+    roadRules: imp.roadRules,
+    padyakAreas: imp.padyakAreas,
+    routeNotes,
     excluded: excludedRecords(seed),
     deferred,
     counts,
@@ -443,7 +475,7 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
 function emptyPlan() {
   return {
     synthetic: false, sources: [], terminals: [], routes: [], operatingStatuses: [], vehicleClasses: [], cooperatives: [],
-    routeFareObservations: [], regionalServices: [], fareRules: [], conflicts: [], etaParams: [], streetAliases: [], excluded: [],
+    routeFareObservations: [], regionalServices: [], fareRules: [], conflicts: [], etaParams: [], streetAliases: [], roadRules: [], padyakAreas: [], routeNotes: [], excluded: [],
     deferred: {}, counts: {},
   };
 }

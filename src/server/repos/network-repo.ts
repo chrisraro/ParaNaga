@@ -22,6 +22,7 @@ import {
   type RevisionMeta,
   type RouteDetail,
   type RouteList,
+  type RouteNote,
   type RouteSummary,
   type StopDetail,
   type StopPin,
@@ -106,6 +107,26 @@ async function operatingByRoute(db: Db, revisionId: string): Promise<Map<string,
     confirmsServiceOnly: true as const,
     sourceCodes: strArray(r.source_codes),
   }]));
+}
+
+/** The published reviewed notes per route id (v_published_route_notes), in note-code order. */
+async function notesByRoute(db: Db, revisionId: string): Promise<Map<string, RouteNote[]>> {
+  const found = await rows(db, sql`
+    select route_id, text, evidence, near_lat, near_lng, near_radius_m, source_codes::text[] as source_codes
+      from transit.v_published_route_notes where revision_id = ${revisionId}::uuid order by route_id, note_code, text`);
+  const out = new Map<string, RouteNote[]>();
+  for (const r of found) {
+    const list = out.get(str(r.route_id)) ?? [];
+    list.push({
+      text: str(r.text),
+      evidence: r.evidence as RouteNote["evidence"],
+      sourceCodes: strArray(r.source_codes),
+      near: r.near_lat === null || r.near_lat === undefined ? null
+        : { lat: Number(r.near_lat), lng: Number(r.near_lng), radiusM: Number(r.near_radius_m) },
+    });
+    out.set(str(r.route_id), list);
+  }
+  return out;
 }
 
 type RouteExtras = { fleet: Map<string, FleetRecord[]>; operating: Map<string, OperatingStatus> };
@@ -312,6 +333,7 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
     select code, name, kind, modes::text[] as modes, lat, lon, coord_source, evidence_status
       from transit.v_published_terminals where revision_id = ${revisionId}::uuid order by code`);
   const fleet = await fleetByRoute(db, revisionId);
+  const notes = await notesByRoute(db, revisionId);
   const routes = await rows(db, sql`
     select id, public_code, name, mode, service_status from transit.v_published_routes
      where revision_id = ${revisionId}::uuid order by official_group_number nulls last, length(public_code), public_code`);
@@ -389,6 +411,7 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
       serviceStatus: strOrNull(r.service_status) as NetworkSnapshot["routes"][number]["serviceStatus"],
       fleet: fleetSummary(fleet.get(str(r.id)) ?? [], r.mode as RouteMode),
       fareReports: reportsOf(str(r.id)),
+      notes: notes.get(str(r.id)) ?? [],
     })),
     etaModel,
   };
@@ -781,6 +804,7 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
      where revision_id = ${revisionId}::uuid and route_id = ${routeId}::uuid
      order by code`);
   const extras = await routeExtras(db, revisionId);
+  const notes = (await notesByRoute(db, revisionId)).get(routeId) ?? [];
   const fleetRecords = extras.fleet.get(routeId) ?? [];
   const operating = extras.operating.get(routeId);
 
@@ -789,6 +813,7 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
     ...fleetRecords.flatMap((f) => [...f.sourceCodes, ...f.airconSourceCodes]),
     ...(operating?.sourceCodes ?? []),
     ...cooperatives.flatMap((c) => strArray(c.source_codes)),
+    ...notes.flatMap((n) => n.sourceCodes),
     ...practice.flatMap((o) => strArray(o.source_codes))])];
   const sources = codes.length === 0 ? [] : await rows(db, sql`
     select code, title, url, evidence_type, published_or_enacted, checked_on::text as checked_on
@@ -817,6 +842,7 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
     },
     variants: permanent,
     trials,
+    notes,
     aliases: aliases.map(toAlias),
     cooperatives: cooperatives.map((c) => ({
       name: str(c.name),

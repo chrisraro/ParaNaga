@@ -12,6 +12,9 @@ test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate
 
 const CARD_WORDS_ONE_RIDE = 16;
 const CARD_WORDS_TWO_RIDES = 20;
+/** A tricycle or padyak card also carries its street rule (distance, restricted roads or area). */
+const CARD_WORDS_STREET = 32;
+const cardBudget = async (card: Locator, jeepney: number) => ((await card.getAttribute("data-mode")) === "tricycle" || (await card.getAttribute("data-mode")) === "padyak" ? CARD_WORDS_STREET : jeepney);
 const DETAIL_HEADER_WORDS = 16;
 const GUIDANCE_WALK_WORDS = 22;
 const SM = SEARCH_INDEX.osmPlaces.find((p) => p.name === "SM City Naga")!;
@@ -75,10 +78,12 @@ async function openApp(page: Page) {
 }
 
 test("word budgets: an option card, the trip detail header and the first guidance step stay short", async ({ page }) => {
+  // Off-peak Manila: the header carries no peak-hours line (that line is real copy, but not part of this budget).
+  await page.clock.setFixedTime(new Date("2026-10-16T09:30:00+08:00"));
   await openApp(page);
   await pinBoth(page);
   await expandOptions(page);
-  for (const card of await page.getByTestId("trip-option").all()) expect(await words(card)).toBeLessThanOrEqual(CARD_WORDS_ONE_RIDE);
+  for (const card of await page.getByTestId("trip-option").all()) expect(await words(card)).toBeLessThanOrEqual(await cardBudget(card, CARD_WORDS_ONE_RIDE));
 
   await chooseOption(page);
   const detail = page.getByTestId("trip-detail");
@@ -220,13 +225,15 @@ test("a two-ride option card stays within 20 words and keeps the caution", async
   const cards = page.getByTestId("trip-option");
   await expect(cards.first()).toBeVisible();
   for (const card of await cards.all()) {
-    expect(await words(card)).toBeLessThanOrEqual(CARD_WORDS_TWO_RIDES);
+    expect(await words(card)).toBeLessThanOrEqual(await cardBudget(card, CARD_WORDS_TWO_RIDES));
+    if ((await card.getAttribute("data-mode")) === "tricycle") continue;
     await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
   }
 });
 
 test("hash links land on their target: a photo credit and the fare basis", async ({ page }) => {
   await page.goto("/app/help/sources");
+  await expect(page.getByTestId("photo-credit").first()).toBeAttached();
   const ids = await page.getByTestId("photo-credit").evaluateAll((els) => els.map((e) => e.id));
   const last = ids.at(-1)!;
   await page.goto("/app/more"); // a new page load, as a link from another screen is

@@ -29,6 +29,8 @@ export const walk = (from: ReturnType<typeof place>, to: ReturnType<typeof place
   distanceMeters,
   estimateMeters: Math.round(distanceMeters * 1.3),
   pathVerified: false as const,
+  path: null,
+  basis: "straight_x1_3" as const,
 });
 
 export const ride = (stops: Pin[], variant: number, routeCode: string, routeName: string) => ({
@@ -37,6 +39,9 @@ export const ride = (stops: Pin[], variant: number, routeCode: string, routeName
   routeCode,
   routeName,
   verification: "unverified" as const,
+  board: null,
+  alight: null,
+  notes: [] as string[],
   stops: stops.map((s) => ({ id: s.id, name: s.name, lat: s.lat, lng: s.lng })),
   distanceMeters: (stops.length - 1) * 200,
   approximate: true as const,
@@ -68,6 +73,7 @@ export const DEST = { lat: BASE.lat + 12 * STEP_LAT, lng: BASE.lng + 0.001 };
 function option(legs: PlanOptionDto["legs"], rides: number): PlanOptionDto {
   return {
     id: `opt-${rides}`,
+    mode: rides > 0 ? "jeepney" : "walk",
     labels: ["Recommended"],
     legs,
     rides,
@@ -136,3 +142,41 @@ export const FULL_CIRCLE = [0, 40, 80, 120, 160, 200, 240, 280, 320, 352].map((d
     lng: centre.lng + (300 / (111_320 * Math.cos((centre.lat * Math.PI) / 180))) * Math.sin(rad),
   };
 });
+
+// ---------------------------------------------------------------- Increment E (Task 9)
+
+/** A tricycle or padyak option: one street leg origin → destination, no walks (as the planner builds it). */
+export function streetOnly(kind: "tricycle" | "padyak", distanceMeters: number | null = 1500, basis: "street_graph" | "straight_line" | "unavailable" = "street_graph"): PlanOptionDto {
+  const ends = { from: place("origin", ORIGIN), to: place("destination", DEST) };
+  const street = { ...ends, distanceMeters, path: basis === "street_graph" ? "_p~iF~ps|U_ulLnnqC" : null, basis, ruleCodes: [] as string[] };
+  const leg = kind === "tricycle"
+    ? { kind, ...street, notes: ["Minimum fare ₱15 (Ordinance 2024-002) · discounts not applied · confirm with the driver", "Tricycle time not estimated"],
+      fare: { minCentavos: 1500, maxCentavos: null, status: "minimum" as const, ruleCodes: ["F03"] as ["F03"], discountsApplied: false as const } }
+    : { kind, ...street, notes: ["Not allowed in the city centre 6 am–8 pm (Ord 93-049 Sec 132)", "Padyak time not estimated"],
+      fare: { minCentavos: 1000, maxCentavos: 1000, status: "flat_per_passenger" as const, discountedCentavos: 800, ruleCodes: ["F04"] as ["F04"] } };
+  return {
+    id: kind === "tricycle" ? "tricycle" : "padyak:PA01", mode: kind, labels: [], legs: [leg], rides: 0, walkMeters: 0, walkEstimateMeters: 0, rideMeters: 0, score: 0,
+    fare: { minCentavos: leg.fare.minCentavos, maxCentavos: leg.fare.maxCentavos, status: leg.fare.status, completeness: "estimate" },
+    evidence: "provisional",
+  };
+}
+
+/** A straight northward path (13 vertices, ≈ 2.4 km) a pinless ride boards and alights on at free points. */
+export const PATH_LINE = Array.from({ length: 13 }, (_, i) => ({ lat: BASE.lat + i * STEP_LAT, lng: BASE.lng }));
+
+/** A pinless ride on PATH_LINE from measure boardM to alightM (free points, approximate_path). */
+export function pathRide(boardM: number, alightM: number, at: (m: number) => { lat: number; lng: number }, alightName: string | null = null) {
+  const base = ride([], 3, "R1", "Centro–San Isidro via Cararayan");
+  return {
+    ...base,
+    stops: [],
+    board: { ...at(boardM), measureM: boardM, stopId: null, name: null },
+    alight: { ...at(alightM), measureM: alightM, stopId: null, name: alightName },
+    distanceMeters: Math.round(alightM - boardM),
+    distanceBasis: "approximate_path" as const,
+    boardMeasureM: boardM as number | null,
+    alightMeasureM: alightM as number | null,
+  };
+}
+
+export const PATH_VARIANT_ID = uuid(903);

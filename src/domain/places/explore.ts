@@ -9,7 +9,10 @@ import type { OsmPlaceCategory } from "./osm-categories";
 
 // ------------------------------------------------------------------ categories
 
-export const EXPLORE_CATEGORY_IDS = ["all", "faith", "schools", "markets", "health", "government", "parks", "terminals"] as const;
+export const EXPLORE_CATEGORY_IDS = [
+  "all", "faith", "schools", "markets", "health", "government", "parks", "terminals",
+  "food", "shops", "services", "stay", "sights", "other",
+] as const;
 export type ExploreCategoryId = (typeof EXPLORE_CATEGORY_IDS)[number];
 
 export type ExploreCategory = {
@@ -21,16 +24,22 @@ export type ExploreCategory = {
   noun: string;
 };
 
-/** The chips, in artboard order, mapped from the D10 categories. Every D10 category has a chip. */
+/** The chips, in artboard order, mapped from the OSM categories (D10 first, then Task 14's named places). Every category has exactly one chip. */
 export const EXPLORE_CATEGORIES: readonly ExploreCategory[] = [
   { id: "all", label: "All", osm: null, noun: "places" },
   { id: "faith", label: "Faith", osm: ["place_of_worship"], noun: "places of worship" },
   { id: "schools", label: "Schools", osm: ["school", "college_university"], noun: "schools" },
   { id: "markets", label: "Markets & malls", osm: ["market", "mall"], noun: "markets or malls" },
-  { id: "health", label: "Health", osm: ["hospital_clinic"], noun: "health places" },
+  { id: "health", label: "Health", osm: ["hospital_clinic", "health_service", "pharmacy"], noun: "health places" },
   { id: "government", label: "Government", osm: ["government"], noun: "government offices" },
   { id: "parks", label: "Parks & plazas", osm: ["park", "square"], noun: "parks or plazas" },
   { id: "terminals", label: "Terminals", osm: ["bus_terminal"], noun: "bus stations" },
+  { id: "food", label: "Food & drink", osm: ["restaurant", "fast_food", "cafe", "bar", "bakery"], noun: "places to eat or drink" },
+  { id: "shops", label: "Shops", osm: ["supermarket", "convenience_store", "department_store", "shop"], noun: "shops" },
+  { id: "services", label: "Services", osm: ["bank", "atm", "fuel", "office", "craft", "library"], noun: "services" },
+  { id: "stay", label: "Stay", osm: ["hotel", "lodging"], noun: "places to stay" },
+  { id: "sights", label: "Sights & sports", osm: ["museum", "attraction", "historic", "sports", "leisure"], noun: "sights or sports places" },
+  { id: "other", label: "Other places", osm: ["building", "other_place"], noun: "other places" },
 ];
 
 export function exploreCategory(id: ExploreCategoryId): ExploreCategory {
@@ -60,6 +69,15 @@ export function emptyCategoryText(id: ExploreCategoryId): string {
 
 /** Cards shown per chip before "Show all {n} places", so the directory below stays reachable. */
 export const CARD_LIMIT = 12;
+/** Task 14: up to this many places "Show all" reveals at once; more than that, CARD_STEP at a time. */
+export const CARD_ALL_MAX = 300;
+export const CARD_STEP = 100;
+
+/** The button below the cards when `shown` of `total` are visible (null = none), and the count after one tap. */
+export function showMoreCards(total: number, shown: number): { label: string; next: number } | null {
+  if (shown >= total) return null;
+  return total <= CARD_ALL_MAX ? { label: `Show all ${total} places`, next: total } : { label: `Show ${Math.min(CARD_STEP, total - shown)} more places`, next: shown + CARD_STEP };
+}
 
 // ------------------------------------------------------------------ directory
 

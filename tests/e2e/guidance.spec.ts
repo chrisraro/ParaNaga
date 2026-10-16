@@ -173,7 +173,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(heading(page)).toHaveText("Walk to Plaza Rizal (A1)");
   await expect(heading(page)).toBeFocused();
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 1 of 3 · Walk");
-  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 230 m");
+  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 220 m");
   await expect(guide(page)).toContainText("Ask where it stops.");
   // Walk steps carry the one full caution and no keep-open line (that is on ride steps).
   await expect(guide(page).getByTestId("unverified-badge")).toHaveText("Unverified route — confirm with the driver");
@@ -302,7 +302,7 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expect(checklist).toHaveCount(3);
   await expect(checklist.nth(0)).toContainText("Got off at Magsaysay Junction (A3)");
   await expect(checklist.nth(1)).toHaveAttribute("aria-current", "step");
-  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 80 m");
+  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 200 m");
   await expectHonest(page);
   await expectAxeClean(page);
   await tap(page, "I'm at the stop");
@@ -414,7 +414,7 @@ test("a reload resumes the step with location off; End guidance puts the trip ba
   await expect(dialog).toContainText("Your trip stays in the options.");
   await dialog.getByRole("button", { name: "End guidance" }).click();
   await expect(guide(page)).toHaveCount(0);
-  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
   await expect(page.getByTestId("endpoint-destination")).toContainText("Pinned location");
   await expect(tabBar(page)).toBeVisible();
   expect(await page.evaluate((k) => window.sessionStorage.getItem(k), SESSION_KEY)).toBeNull();

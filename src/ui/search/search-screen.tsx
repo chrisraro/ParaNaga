@@ -1,8 +1,10 @@
 "use client";
 
 // Search (artboard Search, /app/search?for=start|destination|save): one box over everything on
-// file for Naga, searched in the browser over the published search index (decision D1): the
-// query never leaves this phone and is never stored. A full-screen panel over the mounted home
+// file for Naga, searched in the browser over the published search index (decision D1). The query
+// leaves this phone only for Google suggestions (Task 15: fewer than 3 results here, or "Search
+// more places"), as a POST body through our server to Google; the server logs no query and keeps Google's
+// answer up to 24 hours under a one-way hash only. A full-screen panel over the mounted home
 // map (tab bar hidden, Escape or Cancel goes back).
 //
 // Picking: with for=start|destination an OpenStreetMap or mapped-pin place sets that trip end
@@ -23,7 +25,7 @@ import { useSavedPlaces } from "@/client/saved/use-saved";
 import { useSearchIndex } from "@/client/search/use-search-index";
 import { putSavedPlace } from "@/client/storage/db";
 import { findSavedPlace, type SavedPlaceSource } from "@/domain/saved/saved";
-import { GROUP_LIMIT, countResults, resultSubtitle, searchIndex, type SearchGroup, type SearchGroupId, type SearchResult } from "@/domain/search/search";
+import { countResults, groupView, resultSubtitle, searchIndex, type SearchGroup, type SearchGroupId, type SearchResult } from "@/domain/search/search";
 import { queryFromHash } from "@/domain/places/place-detail";
 import { actionFor, noticeFor, parseSearchPurpose, type SearchAction, type SearchPurpose } from "@/domain/search/select";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
@@ -33,6 +35,7 @@ import { ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { Switch } from "@/ui/kit/switch";
 import { SavePlaceDialog } from "@/ui/saved/save-place-dialog";
+import { GoogleSuggestions } from "./google-suggestions";
 
 export const SEARCH_DEBOUNCE_MS = 150;
 const FAILED_COPY = "Search data couldn't load. Try again.";
@@ -171,20 +174,22 @@ function ResultRow({ result, purpose, onSelect }: { result: SearchResult; purpos
 
 function ResultGroup({
   group,
-  expanded,
+  shownRows,
   onExpand,
   purpose,
   onSelect,
 }: {
   group: SearchGroup;
-  expanded: boolean;
-  onExpand: () => void;
+  /** Rows revealed so far (undefined = the first GROUP_LIMIT). */
+  shownRows: number | undefined;
+  /** Reveals more; `firstNew` is the first row it adds, `next` the revealed count afterwards. */
+  onExpand: (firstNew: SearchResult, next: number) => void;
   purpose: SearchPurpose | null;
   onSelect: (r: SearchResult) => void;
 }) {
   const id = useId();
-  const shown = expanded ? group.results : group.results.slice(0, GROUP_LIMIT);
-  const hidden = group.results.length - shown.length;
+  const view = groupView(group, shownRows);
+  const shown = view.rows;
   return (
     <section className="pn-section" aria-labelledby={id} data-testid={`search-group-${group.id}`}>
       <h2 id={id} className="pn-section__title">
@@ -195,9 +200,9 @@ function ResultGroup({
           <ResultRow key={resultKey(r)} result={r} purpose={purpose} onSelect={onSelect} />
         ))}
       </ul>
-      {hidden > 0 ? (
-        <button type="button" className="pn-text-btn pn-search__more" onClick={onExpand}>
-          Show all {group.results.length}
+      {view.label ? (
+        <button type="button" className="pn-text-btn pn-search__more" onClick={() => onExpand(group.results[shown.length]!, view.next)}>
+          {view.label}
         </button>
       ) : null}
       {group.id === "legacy" ? <Note testId="search-legacy-note">Old route names are historical hints, not current routes.</Note> : null}
@@ -323,7 +328,7 @@ function SearchBody({
   const [regional, setRegional] = useState(false);
   // "Show all" and the open notice belong to one (debounced) query. The notice remembers the
   // row that opened it, so Close puts focus back there.
-  const [expanded, setExpanded] = useState<{ query: string; ids: SearchGroupId[] }>({ query: "", ids: [] });
+  const [expanded, setExpanded] = useState<{ query: string; rows: Partial<Record<SearchGroupId, number>> }>({ query: "", rows: {} });
   const [notice, setNotice] = useState<{ query: string; result: SearchResult } | null>(null);
   // A row to focus once it has rendered (after Close, or the first row "Show all" revealed).
   // One attempt only: if the row is gone (the query changed meanwhile), the request is dropped,
@@ -346,6 +351,7 @@ function SearchBody({
   const debounced = query.trim() === "" ? "" : typed;
 
   const index = indexState.status === "ready" ? indexState.index : null;
+  const morePlaces = indexState.status === "ready" ? indexState.morePlaces : "ready";
   const savedPlaces = useSavedPlaces();
   const saved = useMemo(
     () => (savedPlaces.status === "ready" ? savedPlaces.records.map((p) => ({ id: p.id, label: p.label, point: p.point, source: p.source })) : []),
@@ -358,7 +364,7 @@ function SearchBody({
   const total = countResults(groups);
   const hasQuery = debounced.trim() !== "";
   const openNotice = notice && notice.query === debounced ? notice.result : null;
-  const expandedIds = expanded.query === debounced ? expanded.ids : [];
+  const expandedRows = expanded.query === debounced ? expanded.rows : {};
 
   const goBack = () => {
     if (cameFromInsideApp()) router.back();
@@ -527,25 +533,50 @@ function SearchBody({
           />
         ) : null}
 
-        {index && hasQuery && total === 0 ? (
+        {/* Task 14: shops, restaurants and the rest arrive as a lazy chunk after the index. */}
+        {index && hasQuery && total === 0 && morePlaces === "loading" ? (
+          <p className="pn-search__empty" role="status" data-testid="search-more-loading">
+            Loading more places…
+          </p>
+        ) : null}
+        {index && hasQuery && total === 0 && morePlaces !== "loading" ? (
           <p className="pn-search__empty" data-testid="search-empty">
             {EMPTY_COPY}
           </p>
+        ) : null}
+        {index && hasQuery && morePlaces === "failed" ? (
+          <div className="pn-search__error" data-testid="search-more-failed">
+            <p>Shops, restaurants and other places could not load, so they are missing from these results.</p>
+            <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
+              Try again
+            </button>
+          </div>
         ) : null}
         {groups.map((g) => (
           <ResultGroup
             key={g.id}
             group={g}
-            expanded={expandedIds.includes(g.id)}
-            onExpand={() => {
-              // The button goes away: focus moves to the first row it revealed.
-              pendingFocus.current = resultKey(g.results[GROUP_LIMIT]!);
-              setExpanded({ query: debounced, ids: [...expandedIds, g.id] });
+            shownRows={expandedRows[g.id]}
+            onExpand={(firstNew, next) => {
+              // Focus moves to the first row it revealed (the button may have gone away).
+              pendingFocus.current = resultKey(firstNew);
+              setExpanded({ query: debounced, rows: { ...expandedRows, [g.id]: next } });
             }}
             purpose={purpose}
             onSelect={onSelect}
           />
         ))}
+        {/* Task 15: Google suggestions below the on-device rows, only as the cost guard allows. */}
+        {index && hasQuery ? (
+          <GoogleSuggestions
+            query={debounced}
+            localCount={total}
+            ready={morePlaces !== "loading"}
+            purpose={purpose}
+            onEndpoint={setEnd}
+            onSave={(place) => setSaving(place)}
+          />
+        ) : null}
       </main>
 
       <p className="sr-only" aria-live="polite" data-testid="search-announcer">

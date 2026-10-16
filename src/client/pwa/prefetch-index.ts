@@ -5,7 +5,7 @@
 // revision is fetched once, while the browser is idle, after the service worker controls the page.
 // The worker stores it (CacheFirst; already cached → no network). Skipped when the person asked to
 // save data: the Low-data mode preference, or the browser's Data Saver (navigator.connection.saveData).
-// Nothing is sent but the two GETs the app makes anyway (head, index); no query text.
+// Nothing is sent but the GETs the app makes anyway (head, index, the named-places chunk); no query text.
 
 import { readPrefs } from "@/client/prefs/use-prefs";
 import { networkHeadSchema } from "@/domain/api/schemas";
@@ -30,7 +30,12 @@ export async function prefetchSearchIndexNow(): Promise<"fetched" | "skipped" | 
     const head = networkHeadSchema.parse(await headResponse.json());
     const index = await fetch(`/api/v1/network/search-index/${encodeURIComponent(head.revisionId)}`, { headers: { accept: "application/json" }, signal });
     await index.arrayBuffer(); // read to the end so the worker's copy is complete
-    return index.ok ? "fetched" : "failed";
+    if (!index.ok) return "failed";
+    // Task 14: the named-places chunk (restaurants, shops …), so those are searchable offline too.
+    // Best effort: the core index above is what makes the prefetch a success.
+    const places = await fetch(`/api/v1/network/search-places/${encodeURIComponent(head.revisionId)}`, { headers: { accept: "application/json" }, signal }).catch(() => null);
+    await places?.arrayBuffer().catch(() => null);
+    return "fetched";
   } catch {
     return "failed";
   }

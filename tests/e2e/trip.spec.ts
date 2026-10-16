@@ -76,8 +76,10 @@ test("trip options show the unverified badge, estimate chips and honest time est
   const options = page.getByTestId("trip-options");
   await expect(options.getByRole("heading", { name: "Trip options" })).toBeVisible();
   const cards = options.getByTestId("trip-option");
-  await expect(cards).toHaveCount(2);
-  for (const card of await cards.all()) {
+  await expect(cards).toHaveCount(3);
+  // Two jeepney cards, then the Recommended tricycle (a trip of 500 m or more has no walk card).
+  await expect(cards.evaluateAll((els) => els.map((el) => el.getAttribute("data-mode")))).resolves.toEqual(["jeepney", "jeepney", "tricycle"]);
+  for (const card of await options.locator('[data-mode="jeepney"]').all()) {
     // A card is minimal: the caution chip (the full badge is in the detail), the route, an estimated range.
     await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
     await expect(card.getByTestId("unverified-badge")).toHaveCount(0);
@@ -86,14 +88,21 @@ test("trip options show the unverified badge, estimate chips and honest time est
     await expect(card.locator('abbr[title="Estimate"]').first()).toHaveText("Est.Estimate");
   }
   await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱14");
+  await expect(cards.nth(0)).toContainText("Fewest transfers");
   await expect(cards.nth(0)).toContainText("No transfers");
   // Leg-by-leg text, distances, the vehicle chip and the footers are not on the card.
   await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|clockwise|Walk ≈|Jeepney/);
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱16–₱18");
+  // The tricycle card: Recommended, the minimum fare, no minutes, no driver badge (it is not a jeepney ride).
+  await expect(cards.nth(2)).toContainText("Recommended");
+  await expect(cards.nth(2).getByTestId("fare-chip")).toHaveText("Minimum fare ₱15");
+  await expect(cards.nth(2).getByTestId("trip-option-time")).toHaveText("Time not estimated");
+  await expect(cards.nth(2).getByTestId("card-unverified")).toHaveCount(0);
+  await expect(page.locator(".pn-trip-card--primary")).toHaveCount(1);
 
   // Accessible names carry the label, the caution and the fare estimate, with the full word.
-  await expect(page.getByRole("button", { name: /Recommended.*Unverified route.*Loop A.*Estimate ₱14(?!–)/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Fewest transfers.*Unverified route.*Loop A.*Estimate ₱14(?!–)/ })).toBeVisible();
 
   await expect(options).not.toContainText(/Walking distances|revision|Source/);
   await expect(page.getByText("Verified route", { exact: true })).toHaveCount(0);
@@ -306,7 +315,7 @@ test("a server error offers a retry that recovers", async ({ page }) => {
   const error = page.getByTestId("trip-error");
   await expect(error).toContainText("Couldn't load options");
   await error.getByRole("button", { name: "Try again" }).click();
-  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
   await expect(page.getByTestId("trip-error")).toHaveCount(0);
   // Focus is not lost with the unmounted Retry button: the list rests at peek, so it lands on the
   // "All options" toggle; once the list is open the toggle's target heading takes it.
@@ -325,7 +334,7 @@ test("loading is announced through the persistent announcer", async ({ page }) =
   await expect(page.getByTestId("trip-loading")).toBeVisible();
   await expect(page.getByTestId("home-announcer")).toHaveText("Looking for routes…");
   release();
-  await expect(page.getByTestId("home-announcer")).toContainText("2 options found");
+  await expect(page.getByTestId("home-announcer")).toContainText("3 options found");
 });
 
 test("a rejected request offers to change the points instead of a retry", async ({ page }) => {
@@ -351,7 +360,7 @@ test("offline shows the offline state; retry works once back online", async ({ p
   await context.setOffline(false);
   offline = false;
   await error.getByRole("button", { name: "Try again" }).click();
-  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
 });
 
 test("moving a pin by hand never shows the previous trip's options while the new plan loads", async ({ page }) => {
@@ -364,7 +373,7 @@ test("moving a pin by hand never shows the previous trip's options while the new
   });
   await openApp(page);
   await pinBoth(page);
-  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
 
   gated = true;
   await page.getByTestId("endpoint-destination").locator(".pn-endpoint__main").click();
@@ -378,7 +387,7 @@ test("moving a pin by hand never shows the previous trip's options while the new
   await expect(page.getByTestId("trip-option")).toHaveCount(0);
   await expect(page.getByText("Updating…")).toHaveCount(0);
   release();
-  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
 });
 
 test("a pending focus move is dropped when an endpoint is cleared", async ({ page }) => {
@@ -397,7 +406,7 @@ test("a pending focus move is dropped when an endpoint is cleared", async ({ pag
   await page.getByRole("button", { name: "Choose on map", exact: true }).click();
   await page.getByRole("button", { name: "Set destination here" }).click();
 
-  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
   // Focus stays where the pin flow put it (the destination row), not on the results heading.
   await expect(page.getByTestId("endpoint-destination").locator(".pn-endpoint__main")).toBeFocused();
   await expect(page.getByRole("heading", { name: "Trip options" })).not.toBeFocused();
@@ -461,20 +470,20 @@ test.describe("GPS refinement while results are shown", () => {
   test("a refinement under 25 m does not replan", async ({ page, context }) => {
     const calls = await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
     await gpsStartAndPinDestination(page);
-    await expect(page.getByTestId("trip-option")).toHaveCount(2);
+    await expect(page.getByTestId("trip-option")).toHaveCount(3);
     const before = calls.length;
 
     // ~11 m: refined start, same plan.
     await context.setGeolocation({ latitude: BISCAST.latitude + 0.0001, longitude: BISCAST.longitude, accuracy: 10 });
     await nextFixWithAccuracy(page, 10);
-    await expect(page.getByTestId("trip-option")).toHaveCount(2);
+    await expect(page.getByTestId("trip-option")).toHaveCount(3);
 
     // A later refinement that does cross 25 m (from the planned point) replans exactly once, so
     // the 11 m one above sent no request.
     await context.setGeolocation({ latitude: BISCAST.latitude + 0.0004, longitude: BISCAST.longitude, accuracy: 5 });
     await nextFixWithAccuracy(page, 5);
     await expect.poll(() => calls.length).toBeGreaterThan(before);
-    await expect(page.getByTestId("trip-option")).toHaveCount(2);
+    await expect(page.getByTestId("trip-option")).toHaveCount(3);
     expect(calls.length).toBe(before + 1);
   });
 
@@ -490,7 +499,7 @@ test.describe("GPS refinement while results are shown", () => {
     await nextFixWithAccuracy(page, 10);
 
     await expect(page.getByTestId("trip-detail")).toHaveCount(0);
-    await expect(page.getByTestId("trip-option")).toHaveCount(1);
+    await expect(page.getByTestId("trip-option")).toHaveCount(2);
     await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
     await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
   });
@@ -504,11 +513,13 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   const sheet = page.getByTestId("trip-sheet");
   const toggle = page.getByTestId("options-toggle");
   await expect(sheet).toHaveAttribute("data-snap", "0");
-  await expect(page.getByTestId("options-best")).toContainText(/Loop A.*Estimate \d+–\d+ min.*Estimate ₱14/);
+  // The Recommended option is the tricycle here (500 m or more), so that is what the peek reads, with no minutes and no wait.
+  await expect(page.getByTestId("options-best")).toContainText(/Tricycle.*Time not estimated.*Minimum fare ₱15/);
+  await expect(page.getByTestId("options-best")).not.toContainText(/waiting|Loop A/);
   await expect(toggle).toHaveText("All options");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
-  // The best option is labelled unverified right at the peek (the cards are out of sight there).
-  await expect(page.getByTestId("options-best-unverified")).toHaveText("Unverified route");
+  // A tricycle is not a jeepney ride: no unverified-route chip at the peek.
+  await expect(page.getByTestId("options-best-unverified")).toHaveCount(0);
   await expect(toggle).toHaveAttribute("aria-controls", "pn-trip-options-list");
   // Both rows, the summary and the toggle are inside the visible sheet, targets >= 44 px.
   const vh = page.viewportSize()!.height;
@@ -525,7 +536,7 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   await expect(page.getByTestId("options-best")).toHaveCount(0); // the list is open: no duplicate summary
   await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
   await expect(page.getByRole("region", { name: "Trip options" })).toBeVisible();
-  await expect(page.getByTestId("trip-option")).toHaveCount(2);
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
 
   // Choosing an option opens its detail at half; Back returns to the list at full, focus on the card.
   await page.getByTestId("trip-option").nth(1).click();

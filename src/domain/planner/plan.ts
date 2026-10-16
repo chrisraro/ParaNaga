@@ -1,108 +1,84 @@
-// Provisional trip planner over the published snapshot (Loops A and B today). Pure: no I/O.
+// Trip planner (plan E §A–§D). Pure: the network and `now` are arguments; no I/O.
 //
-// Search (round-based, ≤ maxRides rides): access walks from the origin to every variant stop
-// within maxAccessWalkM; each round rides a variant FORWARD (never a full circuit, see graph.ts),
-// then either walks to the destination (≤ maxAccessWalkM) or, if rides remain, walks to a stop of
-// a variant not yet used (≤ maxTransferWalkM) and starts the next round. Caps apply to the
-// STRAIGHT-LINE distance; the shown walk estimate is round(straight-line × 1.3), path not verified.
+// Inputs: the snapshot (stops, pins, fares, routes with fleets and notes), the revision's Lines
+// (traced approximate paths; permanent jeepney variants, ok or flagged) and the street graph
+// (walk, tricycle and padyak edges). Either may be null (offline before they are cached).
 //
-// Distances are rounded to whole metres once (each walk leg, each ride leg) before they are
-// summed, output or priced; caps are checked on the unrounded straight-line distance.
+// Jeepney options (≤ 2 rides): a ride boards at any approach of a path to the origin and gets off
+// at any approach to the destination (paths.ts: 500 m straight-line runs, ≥ 200 m of riding, a
+// circuit never a full lap). Access and egress walks are street-graph metres ≤ 750; a transfer is
+// one of the network's transfer points (paths within 300 m) with a graph walk ≤ 450. Without a
+// graph a walk is round(straight × 1.3), labelled so. Must-save-walking (D14) is applied inside
+// the pair selection: a combination is a candidate only when its walk metres are strictly less
+// than the direct walk (graph length, or the ×1.3 estimate). The best candidate per variant
+// sequence is kept; then the Pareto set on (rides, walk metres, ride metres); at most three:
+// the lowest score, "Fewest transfers" and "Least walking" (one option may hold several labels).
+// Score: walk + 0.25 × ride + 600 × (rides − 1); ties: rides, walk, ride, id.
 //
-// Filtering, in order:
-//  1. "Must save walking" (user decision): keep a ride option only if `savesWalking` holds — its
-//     walk ESTIMATE (sum of per-leg round(m × 1.3)) is strictly less than the direct walk
-//     ESTIMATE round(straight-line origin → destination × 1.3). Estimate is compared with
-//     estimate. There is no ride-length or detour limit: a ride may go round most of a loop
-//     (never more than one full circuit, graph.ts); its distance and fare range are shown.
-//  2. de-duplicate by variant sequence, keeping the best by the comparator below;
-//  3. keep the Pareto set on (rides, walkMeters, rideMeters) — walkMeters is straight-line;
-//  4. label: "Recommended" = lowest score, "Fewest transfers" = fewest rides, "Least walking" =
-//     least walkMeters (ties → score → tie-break). Each option carries `labels: string[]`, so one
-//     option may hold several labels; only labelled options are returned (≤ 3), in label order.
+// Options, in order (at most 6): walk (when the direct walk is < 500 m) → jeepney options by score
+// → tricycle (always) → padyak. Exactly one option is "Recommended" (ruling d, review I1):
+// ≥ 500 m → the tricycle; < 500 m → the walk, unless the best-score jeepney passes the destination
+// (its drop-off within PASSES_DESTINATION_M straight-line), which is then Recommended instead.
+// Padyak (both ends in one documented area and a padyak street path
+// ≤ 2,000 m; "Short local ride"). Tricycle and padyak are routed with routeStreet on the planner's
+// clock (Asia/Manila from the epoch, rules.ts): the 2006 tricycle restrictions are lifted 21:00–05:00.
+// A tricycle with no street route (a daytime pocket) gets the straight-line distance, flagged
+// "Route not confirmed", never a drawn path. Neither has minutes (D11).
 //
-// Score (lower is better, documented weighting): walkEstimateMeters + 0.25 × rideMeters
-// + 600 × (rides − 1). Riding a metre is taken as a quarter of the effort of walking one, and a
-// transfer as roughly a 600 m walk (waiting, uncertainty). Tie-break: rides, walkMeters,
-// rideMeters, then the option id (variant ids and stop ids) — output order is deterministic.
-//
-// Walk-only: when the straight-line distance origin → destination is within maxAccessWalkM,
-// a single walk option comes first, labelled "Recommended" and "Fewest transfers" (0 rides),
-// with a note; ride options (all of which walk less, by rule 1) compete only for "Least walking".
-//
-// Same place: ends SAME_PLACE_M (25 m) or less apart have nothing to plan → coverage "none",
-// reason same_place (checked before anything else inside the city; no walk-only option).
-//
-// No coverage: `reason` says why — outside_city, same_place, no_stop_near_origin, no_stop_near_destination,
-// walk_shorter (stops are in reach but no ride option saves walking: some trip reached the
-// destination without saving walking, or a branch was pruned because its walking alone could
-// not), or no_route (stops in reach at both ends but no ride connects them).
-// `directWalkEstimateMeters` is always given (null only for outside_city) so the UI can say
-// honestly that walking may be simplest.
-//
-// Pruning: walk estimates are non-negative and rule 1 depends only on walking, so a branch whose
-// access (+ transfer) walk estimate already reaches the direct estimate is not explored. Ride
-// metres cannot be used to prune: there is no ride-length rule.
-//
-// Honesty: every option is evidence "provisional"; ride legs carry boardingVerified: false
-// (boarding permission unknown) and pathVerified: false, and only the ordered stops passed —
-// no street geometry, times, curbs or signboards. Fares are estimate ranges (fares.ts).
-//
-// Ride distance (D13, graph.ts): metres along the variant's approximate path between the board
-// and alight pins when the snapshot carries stop measures, else the straight-line stop-to-stop
-// sum; the leg records `distanceBasis` and the two measures, and the fare, the score and the
-// Pareto set all use that one distance. The option id is variant:board:alight only, so saved
-// trips stay valid. Each ride leg carries the route's mode and fleet (snapshot routes[] joined
-// by routeId; no record → "Vehicle type not confirmed"), and the fare follows that fleet
-// (fares.ts): traditional only → F01 alone; traditional + modern → traditional minimum to the
-// modern maximum, with the route's rider reports; not confirmed → the C6 F01–F02 span.
-//
-// Complexity: with V variants of ≤ n stops, A access positions and ≤ T transfer edges per
-// position, the search is O(A·n·(1 + T·n)) for 2 rides (each extra ride multiplies by T·n).
-// For Loops A/B (61 positions) that is well under a million steps.
+// Ids: walk "walk", tricycle "tricycle", padyak "padyak:{area}", a ride
+// "{variantId}@{round10(board)}-{round10(alight)}", rides joined by ">".
+// Coverage is "none" only outside the city or for the same place; `jeepneyReason` says why there
+// is no jeepney option. Honesty: every ride is approximate, boarding and the path unverified.
 import type { NetworkSnapshot, Verification } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
 import { isInsideNaga } from "../geo/naga";
+import { encodePolyline } from "../geo/polyline";
 import type { LatLng } from "../geo/types";
 import { fleetSummary, type FleetSummary, type RouteMode } from "../modes/fleet";
-import { fareClasses, legFareEstimate, sumFares, type LegFare, type TripFare } from "./fares";
-import { buildGraph, forwardRides, type DistanceBasis, type GraphStop, type GraphVariant, type PlannerGraph } from "./graph";
+import { ruleLifted, type StreetRule } from "../walk/rules";
+import { boundedDistances, padyakAreas, routeStreet, snapWalk, type StreetRoute, type WalkGraph } from "../walk/walk-graph";
+import {
+  fareClasses, legFareEstimate, padyakFare, sumFares, tricycleFare, type LegFare, type PadyakFare, type TricycleFare, type TripFare,
+} from "./fares";
+import { buildPlanningNetwork, type PlanningNetwork } from "./graph";
+import { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
+import { rideNotes } from "./notes";
+import { approaches, MAX_ACCESS_WALK_GRAPH_M, nameFreePoint, rideMeters, type Approach, type NamedStop, type PathVariant, type PlanningLine } from "./paths";
 
-import { MAX_ACCESS_WALK_M, PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
+export { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel };
 
-export { MAX_ACCESS_WALK_M, PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel };
-
-export const WALK_ESTIMATE_FACTOR = 1.3;
+export const WALK_CARD_MAX_M = 500;
+/** A jeepney "passes the destination" when its drop-off point is this close to it (straight-line metres). */
+export const PASSES_DESTINATION_M = 100;
+export const MAX_TRANSFER_WALK_GRAPH_M = 450;
+export const PADYAK_MAX_M = 2000;
+export const MAX_OPTIONS = 6;
+/** Fallback only (no street graph, or an end off the street map). */
+export const STRAIGHT_WALK_FACTOR = 1.3;
 export const RIDE_WEIGHT = 0.25;
 export const TRANSFER_PENALTY_M = 600;
-/** Global caps (straight-line metres; MAX_ACCESS_WALK_M lives in labels.ts); callers may only tighten them. */
-export const MAX_TRANSFER_WALK_M = 400;
+const WALK_RADIUS_M = 1500;
 
-export type PlannerOptions = { maxAccessWalkM: number; maxTransferWalkM: number; maxRides: number };
-export const DEFAULT_PLANNER_OPTIONS: PlannerOptions = {
-  maxAccessWalkM: MAX_ACCESS_WALK_M, maxTransferWalkM: MAX_TRANSFER_WALK_M, maxRides: 2,
-};
+export type Place = { kind: "origin" | "destination" | "stop" | "point"; lat: number; lng: number; stopId: string | null; name: string | null };
 
-/**
- * "Must save walking": a ride option is kept only when its total walk estimate is strictly less
- * than the estimate for walking the whole way directly (both round(straight-line × 1.3)).
- */
-export function savesWalking(optionWalkEstimateMeters: number, directWalkEstimateMeters: number): boolean {
-  return optionWalkEstimateMeters < directWalkEstimateMeters;
-}
-
-export type Place = { kind: "origin" | "destination" | "stop"; lat: number; lng: number; stopId: string | null; name: string | null };
+export type WalkBasis = "street_graph" | "straight_x1_3";
 
 export type WalkLeg = {
   kind: "walk";
   from: Place;
   to: Place;
-  /** Straight-line metres (the caps apply to this). */
+  /** Straight-line metres. */
   distanceMeters: number;
-  /** round(distanceMeters × 1.3): an estimate, the path is not verified. */
+  /** The walk: street-graph metres, or round(straight × 1.3) (basis). */
   estimateMeters: number;
   pathVerified: false;
+  /** Encoded polyline (precision 5) of the street path; null for an estimate. */
+  path: string | null;
+  basis: WalkBasis;
 };
+
+/** A board or alight point anywhere along the path, named by a nearby pin or stop when there is one. */
+export type FreePoint = { lat: number; lng: number; measureM: number; stopId: string | null; name: string | null };
 
 export type RideLeg = {
   kind: "ride";
@@ -110,39 +86,42 @@ export type RideLeg = {
   routeCode: string;
   routeName: string;
   verification: Verification;
-  /** Stops passed, board → alight inclusive, in ride order. The only geometry given. */
-  stops: GraphStop[];
-  /** D13: whole metres along the approximate path, or the straight-line stop-to-stop sum (distanceBasis). */
+  board: FreePoint;
+  alight: FreePoint;
+  /** Named pins passed, board → alight (Loops A/B); [] for routes without pins. */
+  stops: NamedStop[];
+  /** Whole metres along the approximate path. */
   distanceMeters: number;
   approximate: true;
-  /** Boarding permission is unknown in the data: allowed, but not verified. */
   boardingVerified: false;
   pathVerified: false;
-  /** Priced on distanceMeters. */
   fare: LegFare;
   mode: RouteMode;
-  /** The route's vehicle classes with their evidence (snapshot routes[] by routeId). */
   fleet: FleetSummary;
-  distanceBasis: DistanceBasis;
-  /** Metres along the approximate path at the board and alight pins; null without a path. */
-  boardMeasureM: number | null;
-  alightMeasureM: number | null;
-  /**
-   * Metres along the approximate path at each of `stops` (board first), counted on from the board
-   * measure so they never wrap (a circuit ride past the path's start continues above its length):
-   * the remaining ride is the alight entry minus the last passed stop's. Null without a path.
-   */
-  stopMeasuresM: number[] | null;
+  distanceBasis: "approximate_path";
+  boardMeasureM: number;
+  alightMeasureM: number;
+  /** Route notes (near ones first) and the flagged-path note. */
+  notes: string[];
 };
 
-export type PlanLeg = WalkLeg | RideLeg;
+/** street_graph: routed; straight_line: no street route found ("Route not confirmed"); unavailable: no graph. */
+export type StreetLegBasis = "street_graph" | "straight_line" | "unavailable";
+
+type StreetLeg = { from: Place; to: Place; distanceMeters: number | null; path: string | null; basis: StreetLegBasis; notes: string[]; ruleCodes: string[] };
+export type TricycleLeg = StreetLeg & { kind: "tricycle"; fare: TricycleFare };
+export type PadyakLeg = StreetLeg & { kind: "padyak"; fare: PadyakFare };
+
+export type PlanLeg = WalkLeg | RideLeg | TricycleLeg | PadyakLeg;
+export type OptionMode = "walk" | "jeepney" | "tricycle" | "padyak";
 
 export type PlanOption = {
   id: string;
+  mode: OptionMode;
   labels: PlanLabel[];
   legs: PlanLeg[];
   rides: number;
-  /** Straight-line walking metres, summed. */
+  /** Walk metres (graph or ×1.3 estimate), summed; 0 for tricycle and padyak. */
   walkMeters: number;
   walkEstimateMeters: number;
   rideMeters: number;
@@ -151,272 +130,343 @@ export type PlanOption = {
   evidence: "provisional";
 };
 
+/** The planner emits only outside_city and same_place; the others remain for older saved bodies. */
 export type NoCoverageReason =
   | "outside_city" | "same_place" | "no_stop_near_origin" | "no_stop_near_destination" | "walk_shorter" | "no_route";
+export type JeepneyReason = "no_path_near_origin" | "no_path_near_destination" | "walk_shorter" | "no_route";
+
+export type PlannerNetwork = { lines: { lines: readonly PlanningLine[] } | null; streets: WalkGraph | null };
 
 export type TripPlan = {
   revisionId: string;
   coverage: "provisional" | "none";
   reason: NoCoverageReason | null;
-  /**
-   * The direct walk's estimate, round(D × 1.3) with D the straight-line metres rounded to whole
-   * metres (same rule as every walk leg); null only when a point is outside the city.
-   */
+  /** The direct walk: street-graph metres, or round(straight × 1.3); null only outside the city. */
   directWalkEstimateMeters: number | null;
+  /** Why there is no jeepney option; null when there is one (or nothing was planned). */
+  jeepneyReason: JeepneyReason | null;
   options: PlanOption[];
   notes: string[];
 };
 
-// ---------------------------------------------------------------- search state
+type PlannerSnapshot = Pick<NetworkSnapshot, "revision" | "stops" | "variants" | "fareRules"> & Partial<Pick<NetworkSnapshot, "routes">>;
 
-type RideStep = {
-  v: number; board: number; alight: number; meters: number;
-  basis: DistanceBasis; boardMeasureM: number | null; alightMeasureM: number | null;
-};
-/** Immutable chain of (transfer walk metres, ride) pairs, newest first. */
-type Chain = { ride: RideStep; walkBefore: number; prev: Chain | null };
+// ---------------------------------------------------------------- planning network memo
 
-type Candidate = {
-  chain: Chain;
-  accessM: number;
-  egressM: number;
-  rides: number;
-  walkMeters: number;
-  walkEstimateMeters: number;
-  rideMeters: number;
-  score: number;
-  id: string;
-};
+const networks = new WeakMap<object, { snapshot: object; net: PlanningNetwork }>();
 
-const estimate = (m: number) => Math.round(m * WALK_ESTIMATE_FACTOR);
-
-function validateOptions(o: PlannerOptions): void {
-  const okDist = (x: number) => Number.isFinite(x) && x >= 0;
-  if (!okDist(o.maxAccessWalkM) || !okDist(o.maxTransferWalkM)) throw new RangeError("walk caps must be finite and ≥ 0");
-  if (o.maxAccessWalkM > MAX_ACCESS_WALK_M) throw new RangeError(`maxAccessWalkM must be ≤ ${MAX_ACCESS_WALK_M} m`);
-  if (o.maxTransferWalkM > MAX_TRANSFER_WALK_M) throw new RangeError(`maxTransferWalkM must be ≤ ${MAX_TRANSFER_WALK_M} m`);
-  if (!Number.isInteger(o.maxRides) || o.maxRides < 1 || o.maxRides > 3) throw new RangeError("maxRides must be 1, 2 or 3");
+/** The planning network for these Lines and snapshot, built once per Lines object (immutable per revision). */
+export function planningNetwork(snapshot: Pick<NetworkSnapshot, "stops" | "variants">, lines: PlannerNetwork["lines"]): PlanningNetwork {
+  if (!lines) return buildPlanningNetwork(snapshot, null);
+  const hit = networks.get(lines);
+  if (hit?.snapshot === snapshot) return hit.net;
+  const net = buildPlanningNetwork(snapshot, lines);
+  networks.set(lines, { snapshot, net });
+  return net;
 }
 
-const validPoint = (p: LatLng) => Number.isFinite(p.lat) && Number.isFinite(p.lng) && isInsideNaga(p);
+// ---------------------------------------------------------------- walks
 
-function chainRides(c: Chain): { ride: RideStep; walkBefore: number }[] {
-  const out: { ride: RideStep; walkBefore: number }[] = [];
-  for (let x: Chain | null = c; x; x = x.prev) out.push({ ride: x.ride, walkBefore: x.walkBefore });
-  return out.reverse();
+type Walk = { m: number; basis: WalkBasis };
+type Walker = (to: LatLng) => Walk | null;
+
+const estimate = (a: LatLng, b: LatLng) => Math.round(haversineMeters(a, b) * STRAIGHT_WALK_FACTOR);
+
+/** Walk lengths from `from` (graph when it snaps, else ×1.3), capped at `capM`. */
+function walker(g: WalkGraph | null, from: LatLng, radiusM: number, capM: number): Walker {
+  const keep = (w: Walk) => (w.m <= capM ? w : null);
+  if (g && snapWalk(g, from)) {
+    const d = boundedDistances(g, from, radiusM, "walk");
+    return (to) => {
+      const m = d(to);
+      return m === null ? null : keep({ m: Math.round(m), basis: "street_graph" });
+    };
+  }
+  return (to) => keep({ m: estimate(from, to), basis: "straight_x1_3" });
 }
 
-function compare(a: Candidate, b: Candidate): number {
-  return a.score - b.score || a.rides - b.rides || a.walkMeters - b.walkMeters || a.rideMeters - b.rideMeters || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+function walkLeg(g: WalkGraph | null, from: Place, to: Place, w: Walk, route?: StreetRoute): WalkLeg {
+  const r = w.basis === "street_graph" && g ? (route ?? routeStreet(g, from, to, { mode: "walk", now: new Date(0) })) : null;
+  return {
+    kind: "walk", from, to, distanceMeters: Math.round(haversineMeters(from, to)), estimateMeters: w.m, pathVerified: false,
+    path: r?.kind === "path" ? encodePolyline(r.coords) : null, basis: w.basis,
+  };
 }
 
-function dominates(a: Candidate, b: Candidate): boolean {
-  const le = a.rides <= b.rides && a.walkMeters <= b.walkMeters && a.rideMeters <= b.rideMeters;
-  const lt = a.rides < b.rides || a.walkMeters < b.walkMeters || a.rideMeters < b.rideMeters;
-  return le && lt;
+// ---------------------------------------------------------------- jeepney search
+
+type Hop = { v: number; board: Approach; alight: Approach; rideM: number };
+type Cand = { hops: Hop[]; walks: Walk[]; walkM: number; rideM: number; score: number; id: string };
+
+const round1 = (m: number) => Math.round(m * 10) / 10;
+const round10 = (m: number) => Math.round(m / 10) * 10;
+
+function compare(a: Cand, b: Cand): number {
+  return a.score - b.score || a.hops.length - b.hops.length || a.walkM - b.walkM || a.rideM - b.rideM || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 }
 
-function search(graph: PlannerGraph, origin: LatLng, destination: LatLng, opts: PlannerOptions, directEstimate: number) {
-  const access = graph.variants.map((v) => v.stops.map((s) => haversineMeters(origin, s)));
-  const egress = graph.variants.map((v) => v.stops.map((s) => haversineMeters(s, destination)));
-  const best = new Map<string, Candidate>();
+function dominates(a: Cand, b: Cand): boolean {
+  const le = a.hops.length <= b.hops.length && a.walkM <= b.walkM && a.rideM <= b.rideM;
+  return le && (a.hops.length < b.hops.length || a.walkM < b.walkM || a.rideM < b.rideM);
+}
+
+function search(net: PlanningNetwork, g: WalkGraph | null, origin: LatLng, destination: LatLng, directM: number) {
+  const access = walker(g, origin, WALK_RADIUS_M, MAX_ACCESS_WALK_GRAPH_M);
+  const egress = walker(g, destination, WALK_RADIUS_M, MAX_ACCESS_WALK_GRAPH_M);
+  const ends = (p: LatLng, w: Walker) =>
+    net.variants.map((v) => approaches(v, p).flatMap((a) => {
+      const walk = w(a.point);
+      return walk ? [{ a: { ...a, measureM: round1(a.measureM) }, walk }] : [];
+    }));
+  const boards = ends(origin, access);
+  const alights = ends(destination, egress);
+  const transferWalks = new Map<string, Walk | null>();
+  const transferWalk = (i: number, k: number): Walk | null => {
+    const key = `${i}:${k}`;
+    if (!transferWalks.has(key)) {
+      const t = net.transfers[i]![k]!;
+      const w = t.straightM === 0 ? { m: 0, basis: g ? "street_graph" as const : "straight_x1_3" as const }
+        : walker(g, t.from, MAX_TRANSFER_WALK_GRAPH_M, MAX_TRANSFER_WALK_GRAPH_M)(t.to);
+      transferWalks.set(key, w);
+    }
+    return transferWalks.get(key)!;
+  };
+
+  const best = new Map<string, Cand>();
   let walkShorter = false;
-
-  const complete = (chain: Chain, accessM: number, egressM: number) => {
-    const parts = chainRides(chain);
-    const transfers = parts.map((p) => p.walkBefore).slice(1);
-    const walks = [accessM, ...transfers, egressM];
-    const walkEstimateMeters = walks.reduce((s, m) => s + estimate(m), 0);
-    if (!savesWalking(walkEstimateMeters, directEstimate)) {
+  const consider = (hops: Hop[], walks: Walk[]) => {
+    const walkM = walks.reduce((s, w) => s + w.m, 0);
+    if (walkM >= directM) {
       walkShorter = true;
       return;
     }
-    const rideMeters = parts.reduce((s, p) => s + p.ride.meters, 0);
-    const walkMeters = walks.reduce((s, m) => s + m, 0);
-    const rides = parts.length;
-    const score = walkEstimateMeters + RIDE_WEIGHT * rideMeters + TRANSFER_PENALTY_M * (rides - 1);
-    const seq = parts.map((p) => graph.variants[p.ride.v]!.variantId).join(">");
-    const id = parts
-      .map((p) => {
-        const v = graph.variants[p.ride.v]!;
-        return `${v.variantId}:${v.stops[p.ride.board]!.id}:${v.stops[p.ride.alight]!.id}`;
-      })
-      .join(">");
-    const cand: Candidate = { chain, accessM, egressM, rides, walkMeters, walkEstimateMeters, rideMeters, score, id };
+    const rideM = hops.reduce((s, h) => s + h.rideM, 0);
+    const score = walkM + RIDE_WEIGHT * rideM + TRANSFER_PENALTY_M * (hops.length - 1);
+    const id = hops.map((h) => `${net.variants[h.v]!.variantId}@${round10(h.board.measureM)}-${round10(h.alight.measureM)}`).join(">");
+    const seq = hops.map((h) => net.variants[h.v]!.variantId).join(">");
+    const c: Cand = { hops, walks, walkM, rideM, score, id };
     const prior = best.get(seq);
-    if (!prior || compare(cand, prior) < 0) best.set(seq, cand);
+    if (!prior || compare(c, prior) < 0) best.set(seq, c);
+  };
+  const ride = (v: PathVariant, from: number, to: number) => {
+    const d = rideMeters(v, from, to);
+    return d === null ? null : Math.round(d);
   };
 
-  /** walkEstSoFar: walk estimate of the access walk and transfers before this ride (pruning). */
-  const ride = (
-    v: number, board: number, prev: Chain | null, walkBefore: number, used: readonly number[], accessM: number, walkEstSoFar: number,
-  ) => {
-    const variant = graph.variants[v]!;
-    for (const r of forwardRides(variant, board)) {
-      const chain: Chain = {
-        ride: { v, board, alight: r.position, meters: Math.round(r.meters), basis: r.basis, boardMeasureM: r.boardMeasureM, alightMeasureM: r.alightMeasureM },
-        walkBefore, prev,
-      };
-      const eg = egress[v]![r.position]!;
-      if (eg <= opts.maxAccessWalkM) complete(chain, accessM, Math.round(eg));
-      if (used.length < opts.maxRides) {
-        for (const t of graph.transfers[v]![r.position]!) {
-          if (used.includes(t.variant)) continue;
-          const tm = Math.round(t.meters);
-          const est = walkEstSoFar + estimate(tm);
-          if (!savesWalking(est, directEstimate)) {
-            walkShorter = true; // walking so far already reaches the direct estimate
-            continue;
-          }
-          ride(t.variant, t.position, chain, tm, [...used, t.variant], accessM, est);
-        }
+  net.variants.forEach((v, i) => {
+    for (const b of boards[i]!) {
+      for (const a of alights[i]!) {
+        const r = ride(v, b.a.measureM, a.a.measureM);
+        if (r !== null) consider([{ v: i, board: b.a, alight: a.a, rideM: r }], [b.walk, a.walk]);
       }
     }
-  };
-
-  let anyAccess = false;
-  let anyEgress = false;
-  graph.variants.forEach((variant, v) => {
-    variant.stops.forEach((_, p) => {
-      if (egress[v]![p]! <= opts.maxAccessWalkM) anyEgress = true;
-      const a = access[v]![p]!;
-      if (a > opts.maxAccessWalkM) return;
-      anyAccess = true;
-      const am = Math.round(a);
-      if (!savesWalking(estimate(am), directEstimate)) {
-        walkShorter = true;
-        return;
+    if (boards[i]!.length === 0) return;
+    net.transfers[i]!.forEach((t, k) => {
+      const j = t.toVariant;
+      if (alights[j]!.length === 0) return;
+      const tw = transferWalk(i, k);
+      if (!tw) return;
+      const off: Approach = { measureM: round1(t.fromM), point: t.from, distM: 0 };
+      const on: Approach = { measureM: round1(t.toM), point: t.to, distM: t.straightM };
+      for (const b of boards[i]!) {
+        const r1 = ride(v, b.a.measureM, off.measureM);
+        if (r1 === null) continue;
+        for (const a of alights[j]!) {
+          const r2 = ride(net.variants[j]!, on.measureM, a.a.measureM);
+          if (r2 !== null) consider([{ v: i, board: b.a, alight: off, rideM: r1 }, { v: j, board: on, alight: a.a, rideM: r2 }], [b.walk, tw, a.walk]);
+        }
       }
-      ride(v, p, null, 0, [v], am, estimate(am));
     });
   });
-  return { candidates: [...best.values()], anyAccess, anyEgress, walkShorter };
+
+  const cands = [...best.values()];
+  const pareto = cands.filter((a) => !cands.some((b) => b !== a && dominates(b, a))).sort(compare);
+  const fewest = [...pareto].sort((a, b) => a.hops.length - b.hops.length || compare(a, b))[0];
+  const least = [...pareto].sort((a, b) => a.walkM - b.walkM || compare(a, b))[0];
+  const picked = [...new Set([pareto[0], fewest, least])].filter((c): c is Cand => c !== undefined).sort(compare);
+  const options = picked.map((c) => ({
+    c, labels: [...(c === fewest ? ["Fewest transfers"] : []), ...(c === least ? ["Least walking"] : [])] as PlanLabel[],
+  }));
+  const reason: JeepneyReason | null = options.length > 0 ? null
+    : !boards.some((b) => b.length > 0) ? "no_path_near_origin"
+      : !alights.some((a) => a.length > 0) ? "no_path_near_destination"
+        : walkShorter ? "walk_shorter" : "no_route";
+  return { options, reason };
 }
 
-// ---------------------------------------------------------------- output
-
-function place(kind: Place["kind"], p: LatLng, stop?: GraphStop): Place {
-  return stop
-    ? { kind, lat: stop.lat, lng: stop.lng, stopId: stop.id, name: stop.name }
-    : { kind, lat: p.lat, lng: p.lng, stopId: null, name: null };
+function freePoint(net: PlanningNetwork, v: PathVariant, a: Approach): FreePoint {
+  const named = nameFreePoint(net, v, a.measureM, a.point);
+  return { lat: a.point.lat, lng: a.point.lng, measureM: a.measureM, stopId: named?.stopId ?? null, name: named?.name ?? null };
 }
 
-function walkLeg(from: Place, to: Place, meters: number): WalkLeg {
-  return { kind: "walk", from, to, distanceMeters: meters, estimateMeters: estimate(meters), pathVerified: false };
-}
+const pointPlace = (p: FreePoint): Place => ({ kind: "point", lat: p.lat, lng: p.lng, stopId: p.stopId, name: p.name });
 
-type RouteInfo = NetworkSnapshot["routes"][number];
-
-/** Per-stop path measures for a ride (see RideLeg.stopMeasuresM), ending exactly at board + distance. */
-function stopMeasures(v: GraphVariant, ride: RideStep, steps: number): number[] | null {
-  if (ride.basis !== "approximate_path" || ride.boardMeasureM === null || !v.pathSegmentMeters) return null;
-  const n = v.stops.length;
-  const end = ride.boardMeasureM + ride.meters;
-  const out = [ride.boardMeasureM];
-  for (let i = 1; i < steps; i++) out.push(Math.min(end, out[i - 1]! + v.pathSegmentMeters[(ride.board + i - 1) % n]!));
-  out.push(end);
-  return out.map((m) => Math.round(m * 10) / 10);
-}
-
-function toOption(
-  c: Candidate, labels: PlanLabel[], graph: PlannerGraph, snapshot: Pick<NetworkSnapshot, "fareRules">,
-  routes: ReadonlyMap<string, RouteInfo>, origin: LatLng, destination: LatLng,
+function jeepneyOption(
+  c: Cand, labels: PlanLabel[], net: PlanningNetwork, g: WalkGraph | null, snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng,
 ): PlanOption {
+  const routes = new Map((snapshot.routes ?? []).map((r) => [r.routeId, r]));
+  const stopsById = new Map(net.stops.map((s) => [s.id, s]));
   const legs: PlanLeg[] = [];
-  const rideLegs: RideLeg[] = [];
-  let prevStop: GraphStop | null = null;
-  for (const { ride, walkBefore } of chainRides(c.chain)) {
-    const v = graph.variants[ride.v]!;
-    const n = v.stops.length;
-    const steps = (ride.alight - ride.board + n) % n;
-    const stops = Array.from({ length: steps + 1 }, (_, i) => v.stops[(ride.board + i) % n]!);
-    const board = stops[0]!;
-    legs.push(
-      prevStop === null
-        ? walkLeg(place("origin", origin), place("stop", board, board), c.accessM)
-        : walkLeg(place("stop", prevStop, prevStop), place("stop", board, board), walkBefore),
-    );
+  const rides: RideLeg[] = [];
+  let from: Place = { kind: "origin", lat: origin.lat, lng: origin.lng, stopId: null, name: null };
+  c.hops.forEach((h, k) => {
+    const v = net.variants[h.v]!;
+    const board = freePoint(net, v, h.board);
+    const alight = freePoint(net, v, h.alight);
+    legs.push(walkLeg(g, from, pointPlace(board), c.walks[k]!));
     const route = routes.get(v.routeId);
     const fleet = route ? route.fleet : fleetSummary([], v.mode);
+    const passed = (m: number) => (v.isCircuit ? (((m - board.measureM) % v.lengthM) + v.lengthM) % v.lengthM : m - board.measureM);
+    const stops = (net.pins.get(v.variantId) ?? [])
+      .map((p) => ({ p, d: passed(p.measureM) }))
+      .filter((x) => x.d >= 0 && x.d <= h.rideM)
+      .sort((x, y) => x.d - y.d)
+      .flatMap((x) => stopsById.get(x.p.stopId) ?? []);
     const leg: RideLeg = {
-      kind: "ride", variantId: v.variantId, routeCode: v.routeCode, routeName: v.routeName, verification: v.verification,
-      stops, distanceMeters: ride.meters, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFareEstimate(ride.meters, snapshot.fareRules, {
-        classes: fareClasses(fleet.colourKey), reports: route?.fareReports ?? [],
-      }),
-      mode: v.mode, fleet, distanceBasis: ride.basis, boardMeasureM: ride.boardMeasureM, alightMeasureM: ride.alightMeasureM,
-      stopMeasuresM: stopMeasures(v, ride, steps),
+      kind: "ride", variantId: v.variantId, routeCode: v.routeCode, routeName: v.routeName,
+      verification: snapshot.variants.find((x) => x.variantId === v.variantId)?.verification ?? "unverified",
+      board, alight, stops, distanceMeters: h.rideM, approximate: true, boardingVerified: false, pathVerified: false,
+      fare: legFareEstimate(h.rideM, snapshot.fareRules, { classes: fareClasses(fleet.colourKey), reports: route?.fareReports ?? [] }),
+      mode: v.mode, fleet, distanceBasis: "approximate_path", boardMeasureM: board.measureM, alightMeasureM: alight.measureM,
+      notes: rideNotes(route?.notes ?? [], [board, alight, destination], v.status === "flagged"),
     };
     legs.push(leg);
-    rideLegs.push(leg);
-    prevStop = stops.at(-1)!;
-  }
-  legs.push(walkLeg(place("stop", prevStop!, prevStop!), place("destination", destination), c.egressM));
+    rides.push(leg);
+    from = pointPlace(alight);
+  });
+  legs.push(walkLeg(g, from, { kind: "destination", lat: destination.lat, lng: destination.lng, stopId: null, name: null }, c.walks.at(-1)!));
   return {
-    id: c.id, labels, legs, rides: c.rides, walkMeters: c.walkMeters, walkEstimateMeters: c.walkEstimateMeters,
-    rideMeters: c.rideMeters, score: c.score, fare: sumFares(rideLegs.map((l) => l.fare)), evidence: "provisional",
+    id: c.id, mode: "jeepney", labels, legs, rides: c.hops.length, walkMeters: c.walkM, walkEstimateMeters: c.walkM, rideMeters: c.rideM,
+    score: c.score, fare: sumFares(rides.map((l) => l.fare)), evidence: "provisional",
   };
 }
 
-function pickLabelled(cands: Candidate[], labels: readonly PlanLabel[]): { cand: Candidate; labels: PlanLabel[] }[] {
-  const pareto = cands.filter((a) => !cands.some((b) => b !== a && dominates(b, a))).sort(compare);
-  if (pareto.length === 0) return [];
-  const winner: Record<PlanLabel, Candidate> = {
-    Recommended: pareto[0]!,
-    "Fewest transfers": [...pareto].sort((a, b) => a.rides - b.rides || compare(a, b))[0]!,
-    "Least walking": [...pareto].sort((a, b) => a.walkMeters - b.walkMeters || compare(a, b))[0]!,
-  };
-  const out: { cand: Candidate; labels: PlanLabel[] }[] = [];
-  for (const label of labels) {
-    const c = winner[label];
-    const existing = out.find((o) => o.cand === c);
-    if (existing) existing.labels.push(label);
-    else out.push({ cand: c, labels: [label] });
-  }
-  return out;
+// ---------------------------------------------------------------- tricycle and padyak
+
+/** "21:00" → "9 pm", "05:30" → "5:30 am". */
+function clock(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number) as [number, number];
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""} ${h < 12 ? "am" : "pm"}`;
 }
+
+function ruleNote(r: StreetRule, used: boolean, now: Date): string | null {
+  const window = r.liftedFrom && r.liftedTo ? `${clock(r.liftedFrom)}–${clock(r.liftedTo)}` : null;
+  if (!ruleLifted(r, now)) return `Avoids the restricted roads we could locate (${r.label}${window ? `; allowed ${window}` : ""})`;
+  return used ? `Uses roads tricycles may use only ${window} (${r.label})` : null;
+}
+
+const peso = (c: number) => `₱${c / 100}`;
+
+function streetLeg(g: WalkGraph | null, origin: LatLng, destination: LatLng, route: StreetRoute | null): StreetLeg {
+  const from: Place = { kind: "origin", lat: origin.lat, lng: origin.lng, stopId: null, name: null };
+  const to: Place = { kind: "destination", lat: destination.lat, lng: destination.lng, stopId: null, name: null };
+  if (!g || !route || (route.kind === "straight" && route.reason === "no_mode_data")) {
+    return { from, to, distanceMeters: null, path: null, basis: "unavailable", notes: ["Street route not available"], ruleCodes: [] };
+  }
+  if (route.kind === "straight") {
+    return {
+      from, to, distanceMeters: Math.round(route.straightM), path: null, basis: "straight_line", ruleCodes: [],
+      notes: ["Route not confirmed: no street route found on the map; straight-line distance shown"],
+    };
+  }
+  return { from, to, distanceMeters: Math.round(route.lengthM), path: encodePolyline(route.coords), basis: "street_graph", notes: [], ruleCodes: route.usedRules };
+}
+
+function tricycleOption(g: WalkGraph | null, snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng, now: Date, recommended: boolean): PlanOption {
+  const route = g ? routeStreet(g, origin, destination, { mode: "tricycle", now }) : null;
+  const base = streetLeg(g, origin, destination, route);
+  const fare = tricycleFare(snapshot.fareRules);
+  const notes = [
+    ...base.notes,
+    ...(base.basis !== "street_graph" ? [] : g!.rules.flatMap((r) => ruleNote(r, base.ruleCodes.includes(r.code), now) ?? [])),
+    ...(route?.kind === "path" && route.usesNationalRoad ? ["National rules may limit tricycles on national roads; Naga has not published a tricycle route plan."] : []),
+    fare.minCentavos === null ? "Fare not available · confirm with the driver"
+      : `Minimum fare ${peso(fare.minCentavos)} (Ordinance 2024-002) · discounts not applied · confirm with the driver`,
+    "Tricycle time not estimated",
+    "Tricycles serve their franchise zone; a long trip may need a change (Ord 2020-113)",
+  ];
+  const leg: TricycleLeg = { ...base, kind: "tricycle", fare, notes };
+  return {
+    id: "tricycle", mode: "tricycle", labels: recommended ? ["Recommended"] : [], legs: [leg], rides: 0, walkMeters: 0, walkEstimateMeters: 0,
+    rideMeters: 0, score: 0, fare: { minCentavos: fare.minCentavos, maxCentavos: null, status: fare.status, completeness: "estimate" }, evidence: "provisional",
+  };
+}
+
+function padyakOption(g: WalkGraph | null, snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng, now: Date): PlanOption | null {
+  if (!g) return null;
+  const atOrigin = padyakAreas(g, origin);
+  const area = padyakAreas(g, destination).find((a) => atOrigin.includes(a));
+  if (area === undefined) return null;
+  const route = routeStreet(g, origin, destination, { mode: "padyak", now });
+  if (route.kind !== "path" || Math.round(route.lengthM) > PADYAK_MAX_M) return null;
+  const fare = padyakFare(snapshot.fareRules);
+  const notes = [
+    fare.minCentavos === null ? "Fare not available · confirm with the driver · up to 2 passengers"
+      : `${peso(fare.minCentavos)} per passenger${fare.discountedCentavos === null ? "" : ` (${peso(fare.discountedCentavos)} with ID discount)`} · city fare set Sep 2022 · confirm with the driver · up to 2 passengers`,
+    "Area per city ordinance · approximate boundary · service not confirmed today",
+    "Not allowed in the city centre 6 am–8 pm (Ord 93-049 Sec 132)",
+    "Padyak time not estimated",
+  ];
+  const leg: PadyakLeg = { ...streetLeg(g, origin, destination, route), kind: "padyak", fare, notes, ruleCodes: [] };
+  return {
+    id: `padyak:${g.areas[area]!.code}`, mode: "padyak", labels: ["Short local ride"], legs: [leg], rides: 0, walkMeters: 0, walkEstimateMeters: 0,
+    rideMeters: 0, score: 0, fare: { minCentavos: fare.minCentavos, maxCentavos: fare.maxCentavos, status: fare.status, completeness: "estimate" },
+    evidence: "provisional",
+  };
+}
+
+// ---------------------------------------------------------------- planTrip
+
+const validPoint = (p: LatLng) => Number.isFinite(p.lat) && Number.isFinite(p.lng) && isInsideNaga(p);
 
 export function planTrip(
-  snapshot: Pick<NetworkSnapshot, "revision" | "stops" | "variants" | "fareRules"> & Partial<Pick<NetworkSnapshot, "routes">>,
+  snapshot: PlannerSnapshot,
+  network: PlannerNetwork,
   origin: LatLng,
   destination: LatLng,
-  options: Partial<PlannerOptions> = {},
+  { now }: { now: Date },
 ): TripPlan {
-  const opts: PlannerOptions = { ...DEFAULT_PLANNER_OPTIONS, ...options };
-  validateOptions(opts);
   const revisionId = snapshot.revision.revisionId;
-  const none = (reason: NoCoverageReason, directWalkEstimateMeters: number | null): TripPlan => ({
-    revisionId, coverage: "none", reason, directWalkEstimateMeters, options: [], notes: [],
+  const none = (reason: NoCoverageReason, direct: number | null): TripPlan => ({
+    revisionId, coverage: "none", reason, directWalkEstimateMeters: direct, jeepneyReason: null, options: [], notes: [],
   });
   if (!validPoint(origin) || !validPoint(destination)) return none("outside_city", null);
+  if (haversineMeters(origin, destination) <= SAME_PLACE_M) return none("same_place", estimate(origin, destination));
 
-  const rawDirect = haversineMeters(origin, destination);
-  const direct = Math.round(rawDirect);
-  const directEstimate = estimate(direct);
-  if (rawDirect <= SAME_PLACE_M) return none("same_place", directEstimate);
+  const g = network.streets;
+  const directRoute = g ? routeStreet(g, origin, destination, { mode: "walk", now }) : null;
+  const direct: Walk = directRoute?.kind === "path"
+    ? { m: Math.round(directRoute.lengthM), basis: "street_graph" }
+    : { m: estimate(origin, destination), basis: "straight_x1_3" };
 
-  const graph = buildGraph(snapshot, opts.maxTransferWalkM);
-  const { candidates, anyAccess, anyEgress, walkShorter } = search(graph, origin, destination, opts, directEstimate);
-
-  const walkOnly = rawDirect <= opts.maxAccessWalkM;
-  const rideLabels: readonly PlanLabel[] = walkOnly ? ["Least walking"] : PLAN_LABELS;
-  const picked = pickLabelled(candidates, rideLabels);
-  const routes = new Map((snapshot.routes ?? []).map((r) => [r.routeId, r]));
-  const result: PlanOption[] = picked.map((p) => toOption(p.cand, p.labels, graph, snapshot, routes, origin, destination));
-  const notes: string[] = [UNVERIFIED_ROUTE_BADGE];
-
-  if (walkOnly) {
-    const leg = walkLeg(place("origin", origin), place("destination", destination), direct);
-    result.unshift({
-      id: "walk", labels: ["Recommended", "Fewest transfers"], legs: [leg], rides: 0, walkMeters: direct, walkEstimateMeters: leg.estimateMeters,
-      rideMeters: 0, score: leg.estimateMeters, fare: sumFares([]), evidence: "provisional",
+  const net = planningNetwork(snapshot, network.lines);
+  const jeep = search(net, g, origin, destination, direct.m);
+  const options: PlanOption[] = [];
+  const notes: string[] = [];
+  const o: Place = { kind: "origin", lat: origin.lat, lng: origin.lng, stopId: null, name: null };
+  const d: Place = { kind: "destination", lat: destination.lat, lng: destination.lng, stopId: null, name: null };
+  const short = direct.m < WALK_CARD_MAX_M;
+  const best = jeep.options[0];
+  const jeepRecommended = short && best !== undefined && best.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M;
+  if (jeepRecommended) best.labels.unshift("Recommended");
+  if (short) {
+    options.push({
+      id: "walk", mode: "walk", labels: jeepRecommended ? [] : ["Recommended"], legs: [walkLeg(g, o, d, direct, directRoute ?? undefined)], rides: 0,
+      walkMeters: direct.m, walkEstimateMeters: direct.m, rideMeters: 0, score: direct.m, fare: sumFares([]), evidence: "provisional",
     });
-    notes.push(`The destination is about ${leg.estimateMeters} m away on foot (straight-line estimate, path not verified); walking may be simplest.`);
+  } else {
+    notes.push(direct.basis === "street_graph"
+      ? `Walking the whole way is about ${direct.m} m along streets`
+      : `Walking the whole way is about ${direct.m} m (straight-line estimate)`);
   }
+  for (const { c, labels } of jeep.options) options.push(jeepneyOption(c, labels, net, g, snapshot, origin, destination));
+  if (jeep.options.length > 0) notes.unshift(UNVERIFIED_ROUTE_BADGE);
+  options.push(tricycleOption(g, snapshot, origin, destination, now, !short));
+  const padyak = padyakOption(g, snapshot, origin, destination, now);
+  if (padyak) options.push(padyak);
 
-  if (result.length === 0) {
-    const reason = !anyAccess ? "no_stop_near_origin" : !anyEgress ? "no_stop_near_destination" : walkShorter ? "walk_shorter" : "no_route";
-    return none(reason, directEstimate);
-  }
-  return { revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: directEstimate, options: result.slice(0, 3), notes };
+  return {
+    revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: direct.m, jeepneyReason: jeep.reason,
+    options: options.slice(0, MAX_OPTIONS), notes,
+  };
 }

@@ -7,6 +7,8 @@ import {
   networkHeadSchema,
   networkSnapshotSchema,
   operatingStatusSchema,
+  routeDetailSchema,
+  routeNoteSchema,
   snapshotTerminalSchema,
   parseBbox,
   parseRouteCodeParam,
@@ -182,6 +184,19 @@ describe("modes schemas", () => {
     expect(parsed.variants[0]!.mode).toBe("jeepney");
     const withRoute = networkSnapshotSchema.parse({ ...old, routes: [{ routeId, routeCode: "R8-A", routeName: "Loop A", mode: "jeepney", serviceStatus: null }] });
     expect(withRoute.routes[0]!.fleet).toMatchObject({ label: "Vehicle type not confirmed", colourKey: "unconfirmed", classes: [] });
+  });
+
+  it("a snapshot route without notes parses to [] (older revisions); a note keeps its evidence and near circle", () => {
+    const routeId = "33333333-3333-4333-8333-333333333333";
+    const route = { routeId, routeCode: "R8-C", routeName: "Loop C", mode: "jeepney", serviceStatus: null };
+    expect(networkSnapshotSchema.parse({ ...snapshot, routes: [route] }).routes[0]!.notes).toEqual([]);
+    const note = { text: "Ask the driver.", evidence: "community", sourceCodes: ["RL01"], near: { lat: 13.6256, lng: 123.199, radiusM: 450 } };
+    expect(networkSnapshotSchema.parse({ ...snapshot, routes: [{ ...route, notes: [note] }] }).routes[0]!.notes).toEqual([note]);
+    expect(routeNoteSchema.safeParse({ ...note, text: "x".repeat(121) }).success).toBe(false);
+    expect(routeNoteSchema.safeParse({ ...note, evidence: "verified" }).success).toBe(false);
+    expect(routeNoteSchema.safeParse({ ...note, sourceCodes: [] }).success).toBe(false);
+    expect(routeNoteSchema.safeParse({ ...note, near: { lat: 13.6, lng: 123.2, radiusM: 10 } }).success).toBe(false);
+    expect(routeDetailSchema.shape.notes.parse(undefined)).toEqual([]);
   });
 
   it("snapshot variants carry no fleet (clients join routes[] by routeId)", () => {

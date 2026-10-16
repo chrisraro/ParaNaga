@@ -164,6 +164,19 @@ commit;
 - The Playwright builds use a harmless test key and intercept the embed; no test loads Google imagery.
 - Check once after deploying that the embed loads on the production domain (referrer authorization can only be verified there).
 
+### Increment E release runbook (anywhere-alight)
+
+Adds migrations 0010 (route notes, street graph v2, research source codes), 0011 (the OSM place categories) and 0012 (the Google Places guard), and an import that publishes `anywhere-alight-<roads date>`. Same safety rules as the Increment D runbook: every command targets Neon `main` only where stated. **Migrate before you deploy**: the new snapshot query reads `transit.v_published_route_notes` (0010), so the new code fails every snapshot, plan and route request until 0010 is applied. 0010-0012 are additive and the previous build ignores them.
+
+1. Back up Neon `main` (branch it) and note the published revision id; that is the rollback target.
+2. `pnpm db:migrate` (applies 0010, 0011, 0012), then `pnpm db:check-rls`. 0011 must be in place before the places import (the new place categories fail the check constraint without it). 0012 must be in place before `PLACES_GOOGLE_ENABLED=true`; keep that flag `false` until 0012 is applied on `main` and `db:check-rls` passes.
+3. Merge the PR (CI e2e gates the merge); Vercel deploys on merge. Deploying before the import is safe: the new code reads the old revision's v1 graph until v2 is published.
+4. `pnpm db:import --dry-run`. It prints metres per road rule, padyak-banned metres, padyak areas with their place nodes and coverage, graph size against the 800 KB / 260 KB budget, and notes per route. Read it before committing.
+5. `pnpm db:import --commit`, then again: the second run must report `unchanged`. The reviewed seed keeps the name `naga-modes-seed-2026-10-16.json`; because its hash changed, the importer records it as a revised-seed batch (ADR 010).
+6. Smoke test: `GET /api/v1/network/head` names the new revision; the snapshot has `routes[].notes`; `/network/walk-graph/<id>` returns v2; plan a trip in `/app` (jeepney, tricycle and padyak options, a 400 m walk). Between the deploy and the import the tricycle option is still offered at 500 m or more (Recommended) but reads "Street route not available" (the v1 graph has no mode data), and there is no padyak option.
+
+**Rollback.** Publish the noted revision again first, with the `begin; set local role paranaga_import; select transit.publish_revision('<id>'); commit;` block above, and only then redeploy the previous app build: the new code reads both v1 and v2 graphs, the old code rejects a v2 graph, so redeploying first drops walks to straight lines until the old revision is published. Migrations 0010-0012 stay (additive, unused by old code). Saved trips written by the new code show as made by a newer version in old code; old guidance sessions are kept as format 1.
+
 ## Health endpoint
 
 `GET /api/health` returns only `{ "ok": true }` publicly. With `Authorization: Bearer $CRON_SECRET` it also probes the database and reports which providers are configured (never their values).

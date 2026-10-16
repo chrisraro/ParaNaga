@@ -40,6 +40,10 @@ export const serverEnvSchema = z
     AUTO_PUBLISH_ENABLED: flag,
     JEV_COMPLAINTS_ENABLED: flag,
     CRON_SECRET: z.preprocess(emptyToUndefined, z.string().min(32).optional()),
+    // Google Places (New) suggestions, server only. On only when the key is set AND the switch is
+    // exactly "true"; any other switch value means off (never an env error: a typo turns Places off).
+    GOOGLE_PLACES_API_KEY: optionalString,
+    PLACES_GOOGLE_ENABLED: optionalString,
   })
   .superRefine((env, ctx) => {
     if (env.VERCEL_ENV !== "production" && env.APP_ENV !== "production") return;

@@ -2,9 +2,9 @@
 // the Task 3 synthetic OpenStreetMap fixture (tests/fixtures/search-source.ts).
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { isCompleteSearchIndex, searchIndexSchema } from "@/domain/api/schemas";
+import { isCompleteSearchIndex, searchIndexSchema, searchPlacesSchema } from "@/domain/api/schemas";
 import { haversineMeters } from "@/domain/geo/geometry";
-import { barangayKey, barangayKeys, buildSearchIndex, groupPinPlaces, type SearchSourceStop } from "@/domain/search/index-build";
+import { barangayKey, barangayKeys, buildSearchIndex, buildSearchPlaces, groupPinPlaces, type SearchSourceStop } from "@/domain/search/index-build";
 import { LEGACY_ROUTE_NAMES } from "@/domain/search/legacy-route-names";
 import { foldText } from "@/domain/search/normalize";
 import { realSearchSource } from "../fixtures/search-source";
@@ -93,8 +93,14 @@ describe("buildSearchIndex on the real data", () => {
     expect(new Set(index.pinPlaces.map((p) => p.key)).size).toBe(index.pinPlaces.length);
   });
 
-  it("includes the OpenStreetMap places with their osm: keys and categories", () => {
-    expect(index.osmPlaces.map((p) => p.key).sort()).toEqual(source.places.map((p) => p.key).sort());
+  it("includes the core OpenStreetMap places with their osm: keys and categories; the rest is the lazy chunk", () => {
+    const more = buildSearchPlaces(source);
+    expect(() => searchPlacesSchema.parse(more)).not.toThrow();
+    const core = index.osmPlaces.map((p) => p.key);
+    expect([...core, ...more.places.map((p) => p.key)].sort()).toEqual(source.places.map((p) => p.key).sort());
+    expect(more.places.map((p) => p.key)).toEqual(["osm:node/999000000008"]);
+    expect(more.places[0]).toMatchObject({ category: "restaurant" });
+    expect(more.revision).toEqual(source.revision);
     const school = index.osmPlaces.find((p) => p.key === "osm:node/999000000001")!;
     expect(school).toMatchObject({ name: "Synthetic Test Elementary School", category: "school", sourceCode: "OSM-2026-10-15" });
     expect(school.aliases).toContain("STES");

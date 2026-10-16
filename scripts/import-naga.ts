@@ -20,10 +20,11 @@
 // Road snapshot (Task 7): the newest sha256-pinned data/source/osm/naga-roads-YYYY-MM-DD.osm.json
 // (refused unless it matches its pin, parses, and confirms the reviewed street aliases). The dry
 // run prints one row per variant (pass/flagged/untraced, coverage, off-list share, length, snap),
-// the walk graph size against the D7 budget, the time-estimate parameters and the regional
-// relation lengths. Untraced variants are reported, never an abort; an over-budget walk graph or
-// a missing time-estimate parameter aborts. --commit publishes modes-lines-<roads date>
-// (scripts/lib/lines-writer.ts).
+// the street graph v2 (nodes, edges, bytes against the budget), the metres each road rule covers,
+// the padyak areas with their place nodes and coverage, the notes per route, the time-estimate
+// parameters and the regional relation lengths. Untraced variants are reported, never an abort; an
+// over-budget graph, a road-rule way missing from the snapshot or a missing time-estimate parameter
+// aborts. --commit publishes anywhere-alight-<roads date> (scripts/lib/lines-writer.ts).
 // Connection strings are never printed.
 import {
   buildImportPlan,
@@ -37,6 +38,7 @@ import {
   type ImportPlan,
 } from "./lib/import-plan";
 import { commitImport } from "./lib/import-writer";
+import { WALK_GRAPH_MAX_BYTES, WALK_GRAPH_MAX_GZIP_BYTES } from "./lib/lines-plan";
 
 const redact = (text: string) => text.replace(/postgres(ql)?:\/\/\S+/g, "<redacted-url>");
 
@@ -114,8 +116,17 @@ function printLines(plan: ImportPlan) {
   }
   const wg = lines.walkGraph;
   if (wg) {
-    console.log(`  walk graph ${wg.key}: ${wg.nodeCount} nodes, ${wg.edgeCount} edges, ${wg.bytes} B JSON (budget 614400), ` +
-      `${wg.gzipBytes} B gzip (budget 225280), sha256 ${wg.sha256}`);
+    console.log(`  street graph ${wg.key} v${wg.formatVersion}: ${wg.nodeCount} nodes, ${wg.edgeCount} edges, ${wg.bytes} B JSON (budget ${WALK_GRAPH_MAX_BYTES}), ` +
+      `${wg.gzipBytes} B gzip (budget ${WALK_GRAPH_MAX_GZIP_BYTES}), sha256 ${wg.sha256}`);
+  }
+  const sr = lines.streetReport;
+  if (sr) {
+    console.log("  road rules (metres of snapshot ways covered; restricted = exclude, exempt = exemption):");
+    for (const r of sr.rules) console.log(`    ${r.code.padEnd(18)} ${r.kind.padEnd(8)} ${r.geometry.padEnd(10)} ${Math.round(r.lengthM)} m`);
+    console.log(`    padyak-banned total ${Math.round(sr.padyakBannedM)} m`);
+    console.log("  padyak areas (place nodes; sample points inside the area resolved to it / inside; false positives):");
+    for (const a of sr.areas) console.log(`    ${a.code} r${a.radiusM} m  nodes ${a.placeNodeIds.join(",") || "none"}  ${a.resolved}/${a.inside}  fp ${a.falsePositives}`);
+    console.log(`  route notes (${lines.routeNotes.length}): ${Object.entries(sr.notesPerRoute).map(([k, v]) => `${k} ${v}`).join(", ") || "none"}`);
   }
   console.log(`  time-estimate parameters (${lines.etaParams.length}):`);
   for (const p of lines.etaParams) {

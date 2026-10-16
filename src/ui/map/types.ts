@@ -78,8 +78,6 @@ export type NagaMapProps = {
   /** False on terminal detail: markers show where the terminal is and open nothing. */
   terminalsInteractive?: boolean;
   onTerminalSelect?: ((code: string) => void) | null;
-  /** The terminal a tricycle hint names (D15): its marker is emphasized. */
-  emphasizedTerminalCode?: string | null;
   /** Optional polyline coordinates to fit into view when they change (e.g. route detail variant). */
   fitBoundsCoords?: readonly LatLng[] | null;
   /** Visual keys to show in the collapsible `MapLegend` above the attribution (Task 11/12). */

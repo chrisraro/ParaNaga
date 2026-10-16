@@ -1,6 +1,15 @@
 // Request-interception fixtures for POST /api/v1/plan (tests only). Shapes follow
-// planResponseSchema (src/domain/api/plan.ts); the client validates them, so a drift fails the
-// e2e run. Values are illustrative (Loop A pins near Plaza Rizal), not planner output.
+// planResponseSchema (src/domain/api/plan.ts) as Increment E planned them: a `mode` on every option,
+// free board/alight points on rides, tricycle and padyak legs, the route-not-confirmed state, and
+// plan-level `jeepneyReason` and `notes`. The client validates them, so a drift fails the e2e run.
+// Values are illustrative (Loop A pins near Plaza Rizal, R2 and Loop C away from any pin), not
+// planner output, but the recommendation rules follow planTrip (src/domain/planner/plan.ts):
+//   at least 500 m   no walk card; jeepneys, then the tricycle (Recommended), then padyak;
+//   under 500 m      the walk card is Recommended, or the best jeepney when it passes within 100 m.
+import { encodePolyline } from "../../../src/domain/geo/polyline";
+import { parseWalkGraph, routeWalk } from "../../../src/domain/walk/walk-graph";
+import snapshot from "./network/snapshot.json" with { type: "json" };
+import walkGraphJson from "./network/walk-graph.json" with { type: "json" };
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
@@ -8,6 +17,12 @@ const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")
 export const REVISION = { revisionId: "20ca7d87-d4b2-46bc-93e4-10fced9935c6", label: "modes-lines-2026-10-16", kind: "provisional", publishedAt: "2026-10-16T08:27:21.544Z" };
 // The published Loop A (R8-A clockwise) variant, so trip lines match its drawn line by variant id.
 const LOOP_A = "9ca597b8-615b-4fdd-8d5d-136a2a663c90";
+// Path-only routes (no pins): R2 outbound and Loop C clockwise, as drawn in fixtures/network/lines.json.
+const R2_OUT = "ebc3ac41-09bc-4845-959d-19cf82c5ab1b";
+const LOOP_C = "7a669c39-638e-402f-abb8-c7449c012d6a";
+
+/** A published route's fleet summary and reviewed notes, exactly as the snapshot carries them. */
+const routeOf = (code: string) => snapshot.routes.find((r) => r.routeCode === code)!;
 
 const ORIGIN = { kind: "origin", lat: 13.6224, lng: 123.1838, stopId: null, name: null };
 const DESTINATION = { kind: "destination", lat: 13.6305, lng: 123.1912, stopId: null, name: null };
@@ -39,44 +54,157 @@ const traditionalFleet = (route: "R8-A" | "R8-B") => ({
   ],
 });
 
-/** D13 ride fields: along the approximate path (Loop A here) or the straight-line sum (Loop B here). */
+/** D13 ride fields: the distance runs along the approximate path, between the board and alight measures. */
 const alongPath = (board: number, alight: number) => ({ distanceBasis: "approximate_path", boardMeasureM: board, alightMeasureM: alight });
-const straightLine = { distanceBasis: "stop_to_stop_straight_line", boardMeasureM: null, alightMeasureM: null };
+
+/** A pre-Increment-E ride: stop-to-stop straight line, no path measures, no free points (Loop B here, untraced). */
+const straightLine = { distanceBasis: "stop_to_stop_straight_line", boardMeasureM: null, alightMeasureM: null, board: null, alight: null };
 
 const asStop = (s: typeof A1) => ({ kind: "stop", lat: s.lat, lng: s.lng, stopId: s.id, name: s.name });
+/** A free point along a path (Increment E): named by a pin within 100 m, else unnamed. */
+const freePoint = (lat: number, lng: number, measureM: number, pin: typeof A1 | null = null) => ({
+  lat: pin?.lat ?? lat, lng: pin?.lng ?? lng, measureM, stopId: pin?.id ?? null, name: pin?.name ?? null,
+});
+const place = (kind: "origin" | "destination" | "point", lat: number, lng: number) => ({ kind, lat, lng, stopId: null, name: null });
 
-const recommended = {
-  id: `${LOOP_A}:${A1.id}:${A5.id}`,
-  labels: ["Recommended", "Fewest transfers"],
-  legs: [
-    { kind: "walk", from: ORIGIN, to: asStop(A1), distanceMeters: 177, estimateMeters: 230, pathVerified: false },
-    {
-      kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
-      stops: [A1, A2, A3, A4, A5], distanceMeters: 1240, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(0, 1240),
-    },
-    { kind: "walk", from: asStop(A5), to: DESTINATION, distanceMeters: 92, estimateMeters: 120, pathVerified: false },
-  ],
-  rides: 1, walkMeters: 269, walkEstimateMeters: 350, rideMeters: 1240, score: 660, fare: { minCentavos: 1400, maxCentavos: 1400, status: "estimate", completeness: "estimate" },
-  evidence: "provisional",
+const parsedStreets = parseWalkGraph(walkGraphJson);
+if (!parsedStreets.ok) throw new Error(`walk-graph.json: ${parsedStreets.error}`);
+const STREETS = parsedStreets.graph;
+
+type At = { lat: number; lng: number };
+/**
+ * A walk leg as the planner builds it (plan.ts walkLeg): `distanceMeters` is the straight line,
+ * `estimateMeters` the street length. With `routed` the leg carries the encoded street path routed on the
+ * (synthetic Centro) street graph, as a plan made with the graph does. Without it (the plans the older
+ * specs and unit tests share), or where the graph does not reach, it is the straight line x1.3 with no
+ * path, as a plan made without the graph is; the phone then routes it itself. The lengths are illustrative.
+ */
+const walkLeg = (from: At, to: At, distanceMeters: number, estimateMeters: number, routed = false) => {
+  const route = routed ? routeWalk(STREETS, from, to) : null;
+  const onStreets = route?.kind === "path";
+  return {
+    kind: "walk", from, to, distanceMeters, estimateMeters, pathVerified: false,
+    path: onStreets ? encodePolyline(route.coords) : null, basis: onStreets ? "street_graph" : "straight_x1_3",
+  };
 };
 
-const leastWalking = {
+type Leg = { kind: string; estimateMeters?: number; distanceMeters?: number | null };
+/** The option's walk, ride and score totals as the planner sums them (score: walk + 0.25 x ride + 600 per transfer). */
+function withTotals<T extends { legs: Leg[] }>(option: T) {
+  const walk = option.legs.filter((l) => l.kind === "walk").reduce((m, l) => m + (l.estimateMeters ?? 0), 0);
+  const ride = option.legs.filter((l) => l.kind === "ride").reduce((m, l) => m + (l.distanceMeters ?? 0), 0);
+  const rides = option.legs.filter((l) => l.kind === "ride").length;
+  return { ...option, rides, walkMeters: walk, walkEstimateMeters: walk, rideMeters: ride, score: Math.round(walk + 0.25 * ride + 600 * Math.max(0, rides - 1)) };
+}
+
+type RideInit = {
+  variantId: string;
+  routeCode: string;
+  routeName: string;
+  stops: (typeof A1)[];
+  distanceMeters: number;
+  board: ReturnType<typeof freePoint>;
+  alight: ReturnType<typeof freePoint>;
+  fare: ReturnType<typeof legFare>;
+  fleet: unknown;
+  notes?: string[];
+  /** True: a legacy straight-line ride (see `straightLine`). */
+  untraced?: boolean;
+};
+const rideLeg = (r: RideInit) => ({
+  kind: "ride", variantId: r.variantId, routeCode: r.routeCode, routeName: r.routeName, verification: "unverified",
+  board: r.board, alight: r.alight, stops: r.stops, distanceMeters: r.distanceMeters, approximate: true,
+  boardingVerified: false, pathVerified: false, fare: r.fare, mode: "jeepney", fleet: r.fleet,
+  ...(r.untraced ? straightLine : alongPath(r.board.measureM, r.alight.measureM)), stopMeasuresM: null, notes: r.notes ?? [],
+});
+
+/** The planner's tricycle notes (plan.ts tricycleOption): the rule line, the fare line and the honest copy. */
+const TRICYCLE_NOTES = [
+  "Avoids the restricted roads we could locate (Ordinance 2006-005/015 · check for updates; allowed 9 pm–5 am)",
+  "Minimum fare ₱15 (Ordinance 2024-002) · discounts not applied · confirm with the driver",
+  "Tricycle time not estimated",
+  "Tricycles serve their franchise zone; a long trip may need a change (Ord 2020-113)",
+];
+const NOT_CONFIRMED = "Route not confirmed: no street route found on the map; straight-line distance shown";
+const tricycleFare = { minCentavos: 1500, maxCentavos: null, status: "minimum", ruleCodes: ["F03"], discountsApplied: false };
+
+type StreetInit = {
+  from: unknown;
+  to: unknown;
+  /** A routed leg's points; absent for "Route not confirmed" and "Street route not available". */
+  coords?: { lat: number; lng: number }[];
+  distanceMeters: number | null;
+  notes: string[];
+};
+const streetBasis = (s: StreetInit) => {
+  if (s.coords) return { path: encodePolyline(s.coords), basis: "street_graph" };
+  return { path: null, basis: s.distanceMeters === null ? "unavailable" : "straight_line" };
+};
+
+/** The always-present tricycle option (labelled Recommended at 500 m and above). */
+const tricycleOption = (s: StreetInit, recommended: boolean) => ({
+  id: "tricycle",
+  mode: "tricycle",
+  labels: recommended ? ["Recommended"] : [],
+  legs: [{ kind: "tricycle", from: s.from, to: s.to, distanceMeters: s.distanceMeters, ...streetBasis(s), notes: s.notes, ruleCodes: [], fare: tricycleFare }],
+  rides: 0, walkMeters: 0, walkEstimateMeters: 0, rideMeters: 0, score: 0,
+  fare: { minCentavos: 1500, maxCentavos: null, status: "minimum", completeness: "estimate" },
+  evidence: "provisional",
+});
+
+const padyakOption = (s: StreetInit) => ({
+  id: "padyak:PA01",
+  mode: "padyak",
+  labels: ["Short local ride"],
+  legs: [
+    {
+      kind: "padyak", from: s.from, to: s.to, distanceMeters: s.distanceMeters, ...streetBasis(s), notes: s.notes, ruleCodes: [],
+      fare: { minCentavos: 1000, maxCentavos: 1000, status: "flat_per_passenger", discountedCentavos: 800, ruleCodes: ["F04"] },
+    },
+  ],
+  rides: 0, walkMeters: 0, walkEstimateMeters: 0, rideMeters: 0, score: 0,
+  fare: { minCentavos: 1000, maxCentavos: 1000, status: "flat_per_passenger", completeness: "estimate" },
+  evidence: "provisional",
+});
+
+const TRICYCLE_ROUTED: StreetInit = {
+  from: ORIGIN, to: DESTINATION, distanceMeters: 1710, notes: TRICYCLE_NOTES,
+  coords: [{ lat: 13.6224, lng: 123.1838 }, { lat: 13.6262, lng: 123.1851 }, { lat: 13.6288, lng: 123.1894 }, { lat: 13.6305, lng: 123.1912 }],
+};
+
+const recommended = withTotals({
+  id: `${LOOP_A}:${A1.id}:${A5.id}`,
+  mode: "jeepney",
+  labels: ["Fewest transfers"],
+  legs: [
+    walkLeg(ORIGIN, asStop(A1), 177, 230),
+    rideLeg({
+      variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", stops: [A1, A2, A3, A4, A5], distanceMeters: 1240,
+      board: freePoint(A1.lat, A1.lng, 0, A1), alight: freePoint(A5.lat, A5.lng, 1240, A5), fare: legFare(1400, 1400), fleet: traditionalFleet("R8-A"),
+    }),
+    walkLeg(asStop(A5), DESTINATION, 92, 120),
+  ],
+  fare: { minCentavos: 1400, maxCentavos: 1400, status: "estimate", completeness: "estimate" },
+  evidence: "provisional",
+});
+
+const leastWalking = withTotals({
   id: `${LOOP_A}:${A2.id}:${A4.id}`,
+  mode: "jeepney",
   labels: ["Least walking"],
   legs: [
-    { kind: "walk", from: ORIGIN, to: asStop(A2), distanceMeters: 60, estimateMeters: 78, pathVerified: false },
-    {
-      kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
-      stops: [A2, A3, A4], distanceMeters: 5486, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1600, 1800), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(265.6, 5751.6),
-    },
-    { kind: "walk", from: asStop(A4), to: DESTINATION, distanceMeters: 30, estimateMeters: 39, pathVerified: false },
+    walkLeg(ORIGIN, asStop(A2), 60, 78),
+    rideLeg({
+      variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", stops: [A2, A3, A4], distanceMeters: 5486,
+      board: freePoint(A2.lat, A2.lng, 265.6, A2), alight: freePoint(A4.lat, A4.lng, 5751.6, A4), fare: legFare(1600, 1800), fleet: traditionalFleet("R8-A"),
+    }),
+    walkLeg(asStop(A4), DESTINATION, 30, 39),
   ],
-  rides: 1, walkMeters: 90, walkEstimateMeters: 117, rideMeters: 5486, score: 1488, fare: { minCentavos: 1600, maxCentavos: 1800, status: "estimate", completeness: "estimate" },
+  fare: { minCentavos: 1600, maxCentavos: 1800, status: "estimate", completeness: "estimate" },
   evidence: "provisional",
-};
+});
 
+/** The Loop A pins and the tricycle: a 1.45 km trip, so no walk card and the tricycle is Recommended. */
 export const PROVISIONAL_PLAN = {
   revision: REVISION,
   plan: {
@@ -84,8 +212,9 @@ export const PROVISIONAL_PLAN = {
     coverage: "provisional",
     reason: null,
     directWalkEstimateMeters: 1450,
-    options: [recommended, leastWalking],
-    notes: ["Unverified route — confirm with the driver"],
+    jeepneyReason: null,
+    options: [recommended, leastWalking, tricycleOption(TRICYCLE_ROUTED, true)],
+    notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1450 m (straight-line estimate)"],
   },
   stops: [
     { id: A1.id, name: A1.name, code: "A1" },
@@ -99,7 +228,7 @@ export const PROVISIONAL_PLAN = {
 
 export const NO_ROUTE_PLAN = {
   revision: REVISION,
-  plan: { revisionId: REVISION.revisionId, coverage: "none", reason: "no_route", directWalkEstimateMeters: 1450, options: [], notes: [] },
+  plan: { revisionId: REVISION.revisionId, coverage: "none", reason: "no_route", directWalkEstimateMeters: 1450, jeepneyReason: null, options: [], notes: [] },
   stops: [],
   variants: [],
 };
@@ -109,10 +238,10 @@ export const WALK_SHORTER_PLAN = {
   plan: { ...NO_ROUTE_PLAN.plan, reason: "walk_shorter", directWalkEstimateMeters: 845 },
 };
 
-/** The same trip after a replan in which the "Recommended" option is gone. */
+/** The same trip after a replan in which the first jeepney option is gone (the tricycle stays Recommended). */
 export const LEAST_WALKING_ONLY_PLAN = {
   ...PROVISIONAL_PLAN,
-  plan: { ...PROVISIONAL_PLAN.plan, options: [{ ...leastWalking, labels: ["Recommended", "Fewest transfers", "Least walking"] }] },
+  plan: { ...PROVISIONAL_PLAN.plan, options: [leastWalking, tricycleOption(TRICYCLE_ROUTED, true)] },
 };
 
 /** The origin is the boarding stop itself: the first walk is 0 m (F-20). */
@@ -121,35 +250,56 @@ export const AT_STOP_PLAN = {
   plan: {
     ...PROVISIONAL_PLAN.plan,
     options: [
-      {
-        ...recommended,
-        legs: [
-          { kind: "walk", from: { ...ORIGIN, lat: A1.lat, lng: A1.lng }, to: asStop(A1), distanceMeters: 0, estimateMeters: 0, pathVerified: false },
-          ...recommended.legs.slice(1),
-        ],
-        walkMeters: 92, walkEstimateMeters: 120,
-      },
+      withTotals({ ...recommended, legs: [walkLeg({ ...ORIGIN, lat: A1.lat, lng: A1.lng }, asStop(A1), 0, 0), ...recommended.legs.slice(1)] }),
+      tricycleOption(TRICYCLE_ROUTED, true),
     ],
   },
 };
 
-/** A short trip: walking first (no ride, so no driver badge), one ride option for least walking (F-05). */
+const WALK_ONLY = withTotals({
+  mode: "walk",
+  legs: [walkLeg(ORIGIN, DESTINATION, 300, 390)],
+  fare: { minCentavos: 0, maxCentavos: 0, status: "no_ride", completeness: "estimate" },
+  evidence: "provisional",
+});
+const SHORT_TRICYCLE: StreetInit = {
+  from: ORIGIN, to: DESTINATION, distanceMeters: 330, notes: TRICYCLE_NOTES,
+  coords: [{ lat: 13.6224, lng: 123.1838 }, { lat: 13.6268, lng: 123.1889 }, { lat: 13.6305, lng: 123.1912 }],
+};
+
+/**
+ * A trip under 500 m where no jeepney passes the destination (its drop-off is 210 m away): the walk
+ * card is first and the one Recommended; the jeepney keeps its own label; the tricycle is unlabelled (F-05).
+ */
 export const WALK_FIRST_PLAN = {
   ...PROVISIONAL_PLAN,
   plan: {
     ...PROVISIONAL_PLAN.plan,
     directWalkEstimateMeters: 390,
     options: [
-      {
-        id: "walk",
-        labels: ["Recommended", "Fewest transfers"],
-        legs: [{ kind: "walk", from: ORIGIN, to: DESTINATION, distanceMeters: 300, estimateMeters: 390, pathVerified: false }],
-        rides: 0, walkMeters: 300, walkEstimateMeters: 390, rideMeters: 0, score: 390,
-        fare: { minCentavos: 0, maxCentavos: 0, status: "no_ride", completeness: "estimate" },
-        evidence: "provisional",
-      },
+      { id: "walk", labels: ["Recommended"], ...WALK_ONLY },
       { ...leastWalking, labels: ["Least walking"] },
+      tricycleOption(SHORT_TRICYCLE, false),
     ],
+    notes: ["Unverified route — confirm with the driver"],
+  },
+};
+
+/**
+ * The same short trip when the best jeepney passes within 100 m of the destination: that jeepney is
+ * Recommended (and Least walking), the walk card is still first but unlabelled, the tricycle unlabelled.
+ */
+export const SHORT_JEEP_PASSES_PLAN = {
+  ...PROVISIONAL_PLAN,
+  plan: {
+    ...PROVISIONAL_PLAN.plan,
+    directWalkEstimateMeters: 390,
+    options: [
+      { id: "walk", labels: [], ...WALK_ONLY },
+      { ...leastWalking, labels: ["Recommended", "Least walking"] },
+      tricycleOption(SHORT_TRICYCLE, false),
+    ],
+    notes: ["Unverified route — confirm with the driver"],
   },
 };
 
@@ -161,31 +311,30 @@ const B1 = { id: id(21), name: "Del Rosario", lat: 13.6272, lng: 123.1893 };
 const B2 = { id: id(22), name: "Mother Seton Hospital", lat: 13.6287, lng: 123.1902 };
 const B3 = { id: id(23), name: "Avenue Plaza", lat: 13.6301, lng: 123.1909 };
 
-const twoRides = {
+const twoRides = withTotals({
   id: `${LOOP_A}:${A1.id}:${A3.id}|${LOOP_B}:${B1.id}:${B3.id}`,
-  labels: ["Recommended"],
+  mode: "jeepney",
+  labels: ["Fewest transfers"],
   legs: [
-    { kind: "walk", from: ORIGIN, to: asStop(A1), distanceMeters: 177, estimateMeters: 230, pathVerified: false },
-    {
-      kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
-      stops: [A1, A2, A3], distanceMeters: 560, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(0, 560),
-    },
-    { kind: "walk", from: asStop(A3), to: asStop(B1), distanceMeters: 60, estimateMeters: 78, pathVerified: false },
-    {
-      kind: "ride", variantId: LOOP_B, routeCode: "R8-B", routeName: "Centro–Panganiban Loop B", verification: "unverified",
-      stops: [B1, B2, B3], distanceMeters: 380, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-B"), ...straightLine,
-    },
-    { kind: "walk", from: asStop(B3), to: DESTINATION, distanceMeters: 50, estimateMeters: 65, pathVerified: false },
+    walkLeg(ORIGIN, asStop(A1), 177, 230),
+    rideLeg({
+      variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", stops: [A1, A2, A3], distanceMeters: 560,
+      board: freePoint(A1.lat, A1.lng, 0, A1), alight: freePoint(A3.lat, A3.lng, 560, A3), fare: legFare(1400, 1400), fleet: traditionalFleet("R8-A"),
+    }),
+    walkLeg(asStop(A3), asStop(B1), 60, 78),
+    rideLeg({
+      variantId: LOOP_B, routeCode: "R8-B", routeName: "Centro–Panganiban Loop B", stops: [B1, B2, B3], distanceMeters: 380,
+      board: freePoint(B1.lat, B1.lng, 0, B1), alight: freePoint(B3.lat, B3.lng, 380, B3), fare: legFare(1400, 1400), fleet: traditionalFleet("R8-B"), untraced: true,
+    }),
+    walkLeg(asStop(B3), DESTINATION, 50, 65),
   ],
-  rides: 2, walkMeters: 287, walkEstimateMeters: 373, rideMeters: 940, score: 900, fare: { minCentavos: 2800, maxCentavos: 2800, status: "estimate", completeness: "estimate" },
+  fare: { minCentavos: 2800, maxCentavos: 2800, status: "estimate", completeness: "estimate" },
   evidence: "provisional",
-};
+});
 
 export const TWO_RIDE_PLAN = {
   ...PROVISIONAL_PLAN,
-  plan: { ...PROVISIONAL_PLAN.plan, options: [twoRides] },
+  plan: { ...PROVISIONAL_PLAN.plan, options: [twoRides, tricycleOption(TRICYCLE_ROUTED, true)] },
   stops: [
     ...PROVISIONAL_PLAN.stops,
     { id: B1.id, name: B1.name, code: "B1" },
@@ -196,6 +345,133 @@ export const TWO_RIDE_PLAN = {
     ...PROVISIONAL_PLAN.variants,
     { variantId: LOOP_B, routeCode: "R8-B", routeName: "Centro–Panganiban Loop B", isCircular: true, loopDirection: "counterclockwise" },
   ],
+};
+
+// ---------------------------------------------------------------- Increment E flows
+
+/**
+ * A path-only route (R2 has no pins): the rider boards and gets off anywhere along the approximate path.
+ * The board point is unnamed ("Get on near your start"), the drop-off unnamed ("Get off near your destination").
+ */
+const r2Ride = (notes: string[] = []): RideInit => ({
+  variantId: R2_OUT, routeCode: "R2", routeName: "Centro–Del Rosario via Magsaysay Avenue", stops: [], distanceMeters: 3120,
+  board: freePoint(13.6231, 123.1842, 410), alight: freePoint(13.6294, 123.1904, 3530), fare: legFare(1400, 1400), fleet: routeOf("R2").fleet, notes,
+});
+const r2Option = (notes: string[] = [], labels: string[] = ["Fewest transfers"]) => withTotals({
+  id: `${R2_OUT}:pt:410:pt:3530`,
+  mode: "jeepney",
+  labels,
+  legs: [
+    walkLeg(ORIGIN, place("point", 13.6231, 123.1842), 90, 117, true),
+    rideLeg(r2Ride(notes)),
+    walkLeg(place("point", 13.6294, 123.1904), DESTINATION, 140, 182, true),
+  ],
+  fare: { minCentavos: 1400, maxCentavos: 1400, status: "estimate", completeness: "estimate" },
+  evidence: "provisional",
+});
+const R2_VARIANT = { variantId: R2_OUT, routeCode: "R2", routeName: "Centro–Del Rosario via Magsaysay Avenue", isCircular: false, loopDirection: null };
+
+/** (a) A jeepney that boards and drops off at free points, plus the Recommended tricycle after it. */
+export const ANYWHERE_DROP_OFF_PLAN = {
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 1450, jeepneyReason: null,
+    options: [r2Option(), tricycleOption(TRICYCLE_ROUTED, true)],
+    notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1450 m (straight-line estimate)"],
+  },
+  stops: [],
+  variants: [R2_VARIANT],
+};
+
+// T14 Balatas Tricycle Terminal is at 13.63187, 123.19733 (the snapshot's tricycle terminal with a coordinate).
+const NEAR_T14 = place("destination", 13.6322, 123.1968);
+const T14_TRICYCLE: StreetInit = {
+  from: place("origin", 13.6262, 123.1912), to: NEAR_T14, distanceMeters: 1180, notes: TRICYCLE_NOTES,
+  coords: [{ lat: 13.6262, lng: 123.1912 }, { lat: 13.6291, lng: 123.1941 }, { lat: 13.6322, lng: 123.1968 }],
+};
+
+/** (c) A trip of 500 m or more that ends near the Balatas tricycle terminal: tricycle Recommended after the jeepneys. */
+export const TRICYCLE_RECOMMENDED_PLAN = {
+  ...ANYWHERE_DROP_OFF_PLAN,
+  plan: {
+    ...ANYWHERE_DROP_OFF_PLAN.plan,
+    directWalkEstimateMeters: 1260,
+    options: [r2Option(), tricycleOption(T14_TRICYCLE, true)],
+    notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1260 m along streets"],
+  },
+};
+
+/** (d) No jeepney passes near the start: the tricycle is still offered, and its route is not confirmed. */
+export const NO_JEEPNEY_PLAN = {
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 2300, jeepneyReason: "no_path_near_origin",
+    options: [tricycleOption({ from: ORIGIN, to: DESTINATION, distanceMeters: 1800, notes: [NOT_CONFIRMED, ...TRICYCLE_NOTES.slice(1)] }, true)],
+    notes: ["Walking the whole way is about 2300 m (straight-line estimate)"],
+  },
+  stops: [],
+  variants: [],
+};
+
+/** (d) The same, with no street graph on the device at all: "Street route not available", never a distance. */
+export const NO_JEEPNEY_NO_STREETS_PLAN = {
+  ...NO_JEEPNEY_PLAN,
+  plan: {
+    ...NO_JEEPNEY_PLAN.plan,
+    options: [tricycleOption({ from: ORIGIN, to: DESTINATION, distanceMeters: null, notes: ["Street route not available", ...TRICYCLE_NOTES.slice(1)] }, true)],
+  },
+};
+
+/** (e) Both ends in one padyak area: the padyak card comes after the Recommended tricycle, PHP 10 per passenger. */
+export const PADYAK_PLAN = {
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 1150, jeepneyReason: "no_path_near_origin",
+    options: [
+      tricycleOption({ from: ORIGIN, to: DESTINATION, distanceMeters: 1190, notes: TRICYCLE_NOTES, coords: TRICYCLE_ROUTED.coords }, true),
+      padyakOption({
+        from: ORIGIN, to: DESTINATION, distanceMeters: 1240, coords: TRICYCLE_ROUTED.coords,
+        notes: [
+          "₱10 per passenger (₱8 with ID discount) · city fare set Sep 2022 · confirm with the driver · up to 2 passengers",
+          "Area per city ordinance · approximate boundary · service not confirmed today",
+          "Not allowed in the city centre 6 am–8 pm (Ord 93-049 Sec 132)",
+          "Padyak time not estimated",
+        ],
+      }),
+    ],
+    notes: ["Walking the whole way is about 1150 m along streets"],
+  },
+  stops: [],
+  variants: [],
+};
+
+/** (f) Two jeepney options whose routes carry reviewed notes (owner report on R2, community on Loop C). */
+const loopCOption = (notes: string[]) => withTotals({
+  id: `${LOOP_C}:pt:900:pt:3700`,
+  mode: "jeepney",
+  labels: ["Least walking"],
+  legs: [
+    walkLeg(ORIGIN, place("point", 13.6228, 123.1845), 60, 78, true),
+    rideLeg({
+      variantId: LOOP_C, routeCode: "R8-C", routeName: "Centro–Magsaysay Loop C", stops: [], distanceMeters: 2800,
+      board: freePoint(13.6228, 123.1845, 900), alight: freePoint(13.6299, 123.1909, 3700), fare: legFare(1400, 1400), fleet: routeOf("R8-C").fleet, notes,
+    }),
+    walkLeg(place("point", 13.6299, 123.1909), DESTINATION, 70, 91, true),
+  ],
+  fare: { minCentavos: 1400, maxCentavos: 1400, status: "estimate", completeness: "estimate" },
+  evidence: "provisional",
+});
+export const OWNER_REPORT_NOTE = routeOf("R2").notes[0]!.text;
+export const COMMUNITY_NOTE = routeOf("R8-C").notes[0]!.text;
+export const ROUTE_NOTES_PLAN = {
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 1450, jeepneyReason: null,
+    options: [r2Option([OWNER_REPORT_NOTE]), loopCOption([COMMUNITY_NOTE]), tricycleOption(TRICYCLE_ROUTED, true)],
+    notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1450 m (straight-line estimate)"],
+  },
+  stops: [],
+  variants: [R2_VARIANT, { variantId: LOOP_C, routeCode: "R8-C", routeName: "Centro–Magsaysay Loop C", isCircular: true, loopDirection: null }],
 };
 
 /** Loop A pins, for fake location fixes along the ride. */

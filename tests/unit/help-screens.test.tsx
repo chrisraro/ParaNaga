@@ -104,12 +104,19 @@ describe("Help articles", () => {
   it("How trips are planned: exact copy, no network request", () => {
     render(<HelpArticleScreen slug="how-trips-are-planned" />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("How trips are planned");
-    expect(screen.getByTestId("help-article-body").textContent).toBe(
-      "ParaNaga suggests trips on Loops A and B only. Their stop order comes from the order of pins on a public map, not from a field survey, so every suggestion carries the badge “Unverified route — confirm with the driver”." +
-        "Walks are capped at 600 m to a stop and 400 m between rides, and a ride is suggested only if it saves walking." +
-        "Times are ranges from typical speeds and do not include waiting, because jeepneys have no published schedules." +
-        "Fares are estimates; discounts are not applied.",
-    );
+    const body = screen.getByTestId("help-article-body").textContent ?? "";
+    for (const phrase of [
+      "Unverified route — confirm with the driver",
+      "get on and off anywhere along a route",
+      "Tell the driver ‘para’ · stop not marked",
+      "up to 500 m straight-line and 750 m along streets",
+      "recommended only under 500 m",
+      "a tricycle follows the jeepney options, marked Recommended",
+      "avoid the restricted roads we could locate",
+      "Tricycle and padyak show no minutes",
+    ])
+      expect(body).toContain(phrase);
+    expect(body).not.toMatch(/capped at 600 m|exact|guaranteed|official fare/i);
     expect(fetched).toEqual([]);
     expect(document.title).toBe("How trips are planned · ParaNaga");
   });
@@ -151,6 +158,19 @@ describe("Help articles", () => {
     expect(body).toContain("Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason)");
     expect(body).toContain("Tricycle and e-tricycle");
     expect(body).toContain("UV Express and bus");
+    for (const phrase of [
+      "sources T01 and T02; check for updates",
+      "roads we could not locate are not applied",
+      "E-trike national-road rules reported in news (Dec 2025) are not applied; unverified",
+      "Special VISTODA units may not enter Tecla San Andres–Ziga Rd (Ord 2025-067)",
+      "Padyak (pedicab): ₱10 per passenger, ₱8 with an ID discount",
+      "up to 2 passengers",
+      "same documented padyak area",
+      "padyaks do not use banned streets",
+      "unconfirmed",
+      "Sunday and holiday service not confirmed",
+    ])
+      expect(body).toContain(phrase);
     // User decisions 2026-10-16: no e-jeepney anywhere; modern units operating now (no 2023–2024 caveat); nothing unsourced.
     expect(body).not.toMatch(/e-?jeep|electric jeep/i);
     expect(body).not.toMatch(/2023|last reported|Euro-?4/i);
@@ -186,6 +206,20 @@ describe("Sources register", () => {
     } finally {
       window.history.replaceState(null, "", "/");
     }
+  });
+
+  it("credits Google Places as third-party, unverified suggestions with an unresolved rights note", () => {
+    render(<SourcesScreen />);
+    const google = screen.getByTestId("google-places-credits").textContent ?? "";
+    expect(google).toContain("Suggestions from Google Maps");
+    expect(google).toContain("third-party");
+    expect(google).toContain("not verified");
+    expect(google).toContain("unresolved");
+    expect(google).toContain("300");
+    expect(google).toContain("Google receives what you typed");
+    expect(google).toContain("up to 24 hours under a one-way hash");
+    expect(google).toContain("no typed text and no IP address");
+    expect(google).not.toMatch(/does not store|never stores/);
   });
 });
 

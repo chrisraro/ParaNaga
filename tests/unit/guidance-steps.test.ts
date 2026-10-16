@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import fc from "fast-check";
 import { guidanceSteps } from "@/domain/guidance/steps";
-import { DEST, LOOP_A, LOOP_B, oneRide, tripOf, twoRides, walkOnly } from "./guidance-fixtures";
+import { BASE, DEST, LOOP_A, LOOP_B, oneRide, pathRide, streetOnly, tripOf, twoRides, walkOnly } from "./guidance-fixtures";
 
 describe("guidanceSteps", () => {
   it("a walk-only option is one walk_to_destination step", () => {
@@ -80,5 +81,46 @@ describe("guidanceSteps", () => {
     expect(steps.map((s) => s.kind)).toEqual(["walk_to_board", "ride", "walk_to_destination"]);
     expect(steps[0]).toMatchObject({ negligible: true, estimateMeters: 0 });
     expect(steps[2]).toMatchObject({ negligible: true, estimateMeters: 0 });
+  });
+});
+
+describe("guidanceSteps: tricycle, padyak and free points (Increment E)", () => {
+  it("a tricycle-only option is one street_ride step with the honest copy, and never throws", () => {
+    const steps = guidanceSteps(tripOf(streetOnly("tricycle", 1500)));
+    expect(steps).toHaveLength(1);
+    expect(steps[0]).toMatchObject({
+      kind: "street_ride", index: 0, legIndex: 0, mode: "tricycle", distanceMeters: 1500,
+      text: "Take a tricycle to SM City Naga · about 1.5 km along streets · minimum fare ₱15 · confirm with the driver",
+      target: { name: "SM City Naga", lat: DEST.lat, lng: DEST.lng },
+    });
+  });
+
+  it("a padyak option says ₱10 per passenger; an unrouted leg says so instead of a distance", () => {
+    const [p] = guidanceSteps(tripOf(streetOnly("padyak", 900)));
+    expect(p).toMatchObject({ kind: "street_ride", mode: "padyak", text: "Take a padyak to SM City Naga · about 0.9 km along streets · ₱10 per passenger · confirm with the driver" });
+    const [u] = guidanceSteps(tripOf(streetOnly("tricycle", null, "unavailable"), null));
+    expect(u).toMatchObject({ text: "Take a tricycle to your destination · street route not available · minimum fare ₱15 · confirm with the driver" });
+    const [s] = guidanceSteps(tripOf(streetOnly("tricycle", 1234, "straight_line")));
+    expect(s).toMatchObject({ text: "Take a tricycle to SM City Naga · about 1.2 km in a straight line, route not confirmed · minimum fare ₱15 · confirm with the driver" });
+  });
+
+  it("property: any street option builds exactly one step, never throws", () => {
+    fc.assert(
+      fc.property(fc.constantFrom("tricycle" as const, "padyak" as const), fc.option(fc.integer({ min: 0, max: 20_000 }), { nil: null }), (kind, m) => {
+        const steps = guidanceSteps(tripOf(streetOnly(kind, m, m === null ? "unavailable" : "street_graph")));
+        return steps.length === 1 && steps[0]!.kind === "street_ride" && !/undefined|NaN/.test(steps[0]!.text);
+      }),
+      { seed: 9, numRuns: 200 },
+    );
+  });
+
+  it("an unnamed free alighting point on the last ride takes the destination's name", () => {
+    const at = (m: number) => ({ lat: BASE.lat + m / 111_195, lng: BASE.lng });
+    const opt = { ...oneRide(), legs: [pathRide(200, 2000, at)] };
+    const ride = guidanceSteps(tripOf(opt)).find((s) => s.kind === "ride")!;
+    expect(ride.kind === "ride" && [ride.pinned, ride.board.label, ride.alight.label]).toEqual([false, "your stop along R1", "SM City Naga"]);
+    const named = { ...oneRide(), legs: [pathRide(200, 2000, at, "Naga Cathedral")] };
+    const r2 = guidanceSteps(tripOf(named)).find((s) => s.kind === "ride")!;
+    expect(r2.kind === "ride" && r2.alight.label).toBe("Naga Cathedral");
   });
 });

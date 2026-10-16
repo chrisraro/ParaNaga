@@ -4,7 +4,7 @@
 //   pnpm exec tsx scripts/fetch-osm-places.ts --dry-run  # prints the query, sends nothing
 //
 // Sends ONE Overpass query for the area of OSM relation 3084673 (the same relation as
-// data/geo/naga-city-boundary.json) with the D10 tag filters, `nwr` + `out center meta` (ways and
+// data/geo/naga-city-boundary.json) with the Task 14 tag filters (every named place), `nwr` + `out center meta` (ways and
 // relations get a centre; every element has version and timestamp).
 //
 // Contributor data is removed BEFORE anything is written: each element keeps only type, id, lat,
@@ -40,20 +40,24 @@ const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
 /** Overpass area id of a relation = 3 600 000 000 + relation id. */
 const AREA_ID = 3_600_000_000 + OSM_BOUNDARY_RELATION;
 
+// Task 14: every NAMED element with a place key (shop, amenity, tourism, leisure, office, craft,
+// healthcare, historic, building), plus the two D10 rules that are not a plain key (bus stations
+// tagged public_transport, squares). Unnamed elements are never downloaded (the importer drops
+// them anyway). `building` is the largest set; the snapshot keeps only the tags the importer reads.
 const OVERPASS_QUERY = `[out:json][timeout:180];
 area(id:${AREA_ID})->.naga;
 (
-  nwr["shop"="mall"](area.naga);
-  nwr["amenity"="marketplace"](area.naga);
-  nwr["amenity"~"^(school|college|university)$"](area.naga);
-  nwr["amenity"~"^(hospital|clinic)$"](area.naga);
-  nwr["amenity"="place_of_worship"](area.naga);
-  nwr["amenity"~"^(townhall|police|fire_station|post_office)$"](area.naga);
-  nwr["office"="government"](area.naga);
-  nwr["amenity"="bus_station"](area.naga);
-  nwr["public_transport"="station"]["bus"="yes"](area.naga);
-  nwr["leisure"="park"](area.naga);
-  nwr["place"="square"](area.naga);
+  nwr["name"]["shop"](area.naga);
+  nwr["name"]["amenity"](area.naga);
+  nwr["name"]["tourism"](area.naga);
+  nwr["name"]["leisure"](area.naga);
+  nwr["name"]["office"](area.naga);
+  nwr["name"]["craft"](area.naga);
+  nwr["name"]["healthcare"](area.naga);
+  nwr["name"]["historic"](area.naga);
+  nwr["name"]["building"](area.naga);
+  nwr["name"]["public_transport"="station"]["bus"="yes"](area.naga);
+  nwr["name"]["place"="square"](area.naga);
 );
 out center meta;`;
 

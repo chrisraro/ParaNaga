@@ -9,9 +9,13 @@
 // A walk under NEGLIGIBLE_WALK_M (estimate) is flagged `negligible`, so the copy says
 // "Start at {stop}" instead of "Walk ≈ 0 m" (audit F-20). Each step keeps the index of its planner
 // leg (`legIndex`), so view.ts can estimate the time left from the snapshot's model (Task 14).
-import type { PlanOptionDto, RideLegDto, WalkLegDto } from "../api/plan";
+// Increment E: a ride may board and alight at free points along its path (`pinned: false`; the last
+// ride's unnamed alighting point takes the destination's name), and a tricycle or padyak leg is one
+// `street_ride` step to the destination (those options have no ride and no walk): never a crash.
+import type { PadyakLegDto, PlanOptionDto, RideLegDto, TricycleLegDto, WalkLegDto } from "../api/plan";
 import type { EtaModel } from "../api/schemas";
-import { isNegligibleWalk, routeChipLabel, stopLabel, type LoopDirection } from "../trip/present";
+import { rideEnds } from "../trip/ride-ends";
+import { isNegligibleWalk, routeChipLabel, stopLabel, streetRideText, type LoopDirection } from "../trip/present";
 
 /** What a guidance session is built from: the option plus the plan's stop codes and loop directions. */
 export type GuidanceTrip = {
@@ -26,6 +30,8 @@ export type GuidanceTrip = {
   etaModel?: EtaModel | null;
   /** Walk-graph path length per option leg (null: no graph path, the ×1.3 estimate is used). */
   walkLengths?: readonly (number | null)[];
+  /** The Lines path per ridden variant id (encoded p5), when on this phone: pinless ride progress (progress.ts). */
+  ridePaths?: Readonly<Record<string, { encoded: string; isCircuit: boolean }>>;
 };
 
 export type StopRef = { stopId: string; name: string; label: string; lat: number; lng: number };
@@ -42,6 +48,8 @@ export type RideStep = {
   stops: StopRef[];
   board: StopRef;
   alight: StopRef;
+  /** False when the route has no marked stops: `stops` is just the free board and alight points. */
+  pinned: boolean;
   /** Stops after boarding up to and including the alighting stop, by pin order. */
   stopsToRide: number;
   distanceMeters: number;
@@ -61,7 +69,22 @@ export type WalkToDestinationStep = {
   target: { name: string; lat: number; lng: number };
 } & WalkFields;
 
-export type GuidanceStep = WalkToBoardStep | RideStep | TransferStep | WalkToDestinationStep;
+/** A tricycle or padyak ride to the destination (the whole option). Never timed. */
+export type StreetRideStep = {
+  kind: "street_ride";
+  index: number;
+  legIndex: number;
+  mode: "tricycle" | "padyak";
+  target: { name: string; lat: number; lng: number };
+  distanceMeters: number | null;
+  basis: TricycleLegDto["basis"];
+  /** "Take a tricycle to … · about 1.5 km along streets · minimum fare ₱15 · confirm with the driver". */
+  text: string;
+  /** The planner's notes for the leg (rules applied, fare, "… time not estimated"). */
+  notes: string[];
+};
+
+export type GuidanceStep = WalkToBoardStep | RideStep | TransferStep | WalkToDestinationStep | StreetRideStep;
 export type GuidanceStepKind = GuidanceStep["kind"];
 
 export const UNNAMED_DESTINATION = "your destination";
@@ -97,13 +120,23 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
   const destinationName = trip.destinationLabel?.trim() || UNNAMED_DESTINATION;
   let pendingWalk: { leg: WalkLegDto; index: number } | null = null;
   let lastAlight: StopRef | null = null;
+  let street: StreetRideStep | null = null;
+  const lastRide = legs.reduce((last, l, i) => (l.kind === "ride" ? i : last), -1);
 
   for (const [legIndex, leg] of legs.entries()) {
     if (leg.kind === "walk") {
       pendingWalk = { leg, index: legIndex };
       continue;
     }
-    const stops = leg.stops.map(stopRef);
+    if (leg.kind === "tricycle" || leg.kind === "padyak") {
+      street = streetStep(leg, legIndex, steps.length, destinationName);
+      steps.push(street);
+      pendingWalk = null;
+      continue;
+    }
+    const ends = rideEnds(leg, legIndex === lastRide ? destinationName : undefined);
+    if (!ends) continue;
+    const stops = ends.stops.map(stopRef);
     const board = stops[0]!;
     const alight = stops.at(-1)!;
     const ride = rideRef(leg);
@@ -120,23 +153,43 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
       board,
       alight,
       stopsToRide: stops.length - 1,
+      pinned: ends.pinned,
       distanceMeters: leg.distanceMeters,
       legIndex,
       mode: leg.mode ?? "jeepney",
       distanceBasis: leg.distanceBasis ?? "stop_to_stop_straight_line",
-      stopMeasuresM: leg.stopMeasuresM?.length === stops.length ? leg.stopMeasuresM : null,
+      stopMeasuresM: ends.pinned
+        ? (leg.stopMeasuresM?.length === stops.length ? leg.stopMeasuresM : null)
+        : leg.boardMeasureM === null ? null : [leg.boardMeasureM, leg.boardMeasureM + leg.distanceMeters],
     });
     pendingWalk = null;
     lastAlight = alight;
   }
 
+  // A street ride already ends at the destination.
+  if (street && steps.at(-1) === street) return steps;
   const end = pendingWalk ? pendingWalk.leg.to : lastAlight;
+  if (!end) return steps; // malformed: no ride, street leg or walk to end on
   steps.push({
     kind: "walk_to_destination",
     index: steps.length,
     from: lastAlight,
-    target: { name: destinationName, lat: end!.lat, lng: end!.lng },
+    target: { name: destinationName, lat: end.lat, lng: end.lng },
     ...walkFields(pendingWalk),
   });
   return steps;
+}
+
+function streetStep(leg: TricycleLegDto | PadyakLegDto, legIndex: number, index: number, destinationName: string): StreetRideStep {
+  return {
+    kind: "street_ride",
+    index,
+    legIndex,
+    mode: leg.kind,
+    target: { name: destinationName, lat: leg.to.lat, lng: leg.to.lng },
+    distanceMeters: leg.distanceMeters,
+    basis: leg.basis,
+    text: streetRideText(leg, destinationName),
+    notes: [...leg.notes],
+  };
 }

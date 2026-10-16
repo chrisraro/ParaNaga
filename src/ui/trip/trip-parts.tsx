@@ -5,6 +5,7 @@
 import type { PlanResponse, RideLegDto } from "@/domain/api/plan";
 import { directionText, fareChipText, fareRangeText, routeChipLabel, stopLabel, type LoopDirection } from "@/domain/trip/present";
 import { StatusBadge } from "@/ui/kit/badge";
+import { ModeIcon } from "@/ui/modes/mode-icon";
 import { EstAbbr } from "./eta-text";
 
 export function WalkIcon() {
@@ -14,6 +15,22 @@ export function WalkIcon() {
       <path d="M9 21l2-7 3 3v4M7 12l3-4 4 1 3 3" />
     </svg>
   );
+}
+
+/** Pedal-cab glyph for padyak (the tricycle uses the shared ModeIcon). */
+export function PadyakIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <circle cx="6" cy="17" r="3.5" />
+      <circle cx="18" cy="17" r="3.5" />
+      <path d="M6 17l4-8h5l3 8M10 9l-1-3h-2" />
+    </svg>
+  );
+}
+
+/** Tricycle or padyak glyph with its name for assistive technology (the visible text names it too). */
+export function StreetModeIcon({ mode }: { mode: "tricycle" | "padyak" }) {
+  return mode === "tricycle" ? <ModeIcon mode="tricycle" size={16} /> : <PadyakIcon />;
 }
 
 export function Chevron() {
@@ -48,6 +65,7 @@ export function FareShort({ fare }: { fare: FareLike }) {
   const range = fareRangeText(fare);
   // A range is spoken like the time range: "₱14 to ₱17", not a dash.
   if (range) return <><EstAbbr /> {range.includes("–") ? <span role="img" aria-label={range.replace("–", " to ")}>{range}</span> : range}</>;
+  if (fare.status === "minimum" || fare.status === "flat_per_passenger") return <>{fareChipText(fare)}</>;
   return <>{fare.status === "no_ride" ? "No fare" : "Fare n/a"}</>;
 }
 

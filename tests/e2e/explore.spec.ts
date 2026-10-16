@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
-import { SEARCH_INDEX, routeNetwork } from "./fixtures/network";
+import { SEARCH_INDEX, SEARCH_PLACES, routeNetwork } from "./fixtures/network";
 
 // Explore (Increment A, Task 7): OpenStreetMap places by category from the captured search index,
 // and the directory of everything else on file. Tiles are aborted; every test checks for CSP
@@ -14,15 +14,24 @@ const CHIPS = [
   ["Faith", ["place_of_worship"]],
   ["Schools", ["school", "college_university"]],
   ["Markets & malls", ["market", "mall"]],
-  ["Health", ["hospital_clinic"]],
+  ["Health", ["hospital_clinic", "health_service", "pharmacy"]],
   ["Government", ["government"]],
   ["Parks & plazas", ["park", "square"]],
   ["Terminals", ["bus_terminal"]],
+  ["Food & drink", ["restaurant", "fast_food", "cafe", "bar", "bakery"]],
+  ["Shops", ["supermarket", "convenience_store", "department_store", "shop"]],
+  ["Services", ["bank", "atm", "fuel", "office", "craft", "library"]],
+  ["Stay", ["hotel", "lodging"]],
+  ["Sights & sports", ["museum", "attraction", "historic", "sports", "leisure"]],
+  ["Other places", ["building", "other_place"]],
 ] as const;
+
+/** The core index places plus the lazy chunk (Task 14), as Explore merges them. */
+const ALL_PLACES = [...SEARCH_INDEX.osmPlaces, ...SEARCH_PLACES.places];
 
 const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
 const namesOf = (categories: readonly string[] | null) =>
-  SEARCH_INDEX.osmPlaces
+  ALL_PLACES
     .filter((p) => categories === null || categories.includes(p.category))
     .map((p) => p.name)
     .sort(collator.compare);
@@ -104,9 +113,9 @@ test("on All only 12 cards render until Show all, and Jump to directory reaches 
   await expect(heading).toBeFocused();
   await expect(heading).toBeInViewport();
   await expect(page.getByTestId("explore-card")).toHaveCount(12);
-  const showAll = page.getByRole("button", { name: `Show all ${SEARCH_INDEX.osmPlaces.length} places` });
+  const showAll = page.getByRole("button", { name: `Show all ${ALL_PLACES.length} places` });
   await showAll.click();
-  await expect(page.getByTestId("explore-card")).toHaveCount(SEARCH_INDEX.osmPlaces.length);
+  await expect(page.getByTestId("explore-card")).toHaveCount(ALL_PLACES.length);
   await expect(page.getByTestId("explore-card").nth(12).getByRole("link")).toBeFocused();
 });
 

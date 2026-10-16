@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { estimateOption, roundRange, type EtaEstimate, type EtaOptionInput } from "@/domain/eta/eta";
 import type { PlanOption } from "@/domain/planner/plan";
-import { formatLeg } from "@/domain/eta/format";
+import { formatLeg, formatTotal } from "@/domain/eta/format";
 import { ETA_MODEL, jeep, manila, opt, trike, walk } from "./eta-fixtures";
 
 const OFFPEAK = manila("09:30");
@@ -236,5 +236,35 @@ describe("types", () => {
   it("a planner option is an estimate input", () => {
     const check = (o: PlanOption): EtaOptionInput => o;
     expect(typeof check).toBe("function");
+  });
+});
+
+describe("Increment E legs (Task 9)", () => {
+  const street = (kind: "tricycle" | "padyak", distanceMeters: number | null) => ({ kind, distanceMeters });
+
+  it("a padyak leg is named padyak (never tricycle), not estimated, no minutes", () => {
+    const e = ok(opt(street("padyak", 800)), OFFPEAK);
+    expect(e.legs[0]).toMatchObject({ mode: "padyak", estimated: false, lowMin: null, highMin: null });
+    expect(e.total).toMatchObject({ lowMin: null, highMin: null, partial: true, unestimatedModes: ["padyak"], waitUnknown: true });
+    expect(formatLeg(e.legs[0]!)).toBe("Padyak time not estimated");
+    expect(formatTotal(e.total)).toBe("Padyak time not estimated + waiting (unknown)");
+  });
+
+  it("a tricycle street leg (with or without a distance) is never estimated", () => {
+    for (const m of [1500, null]) {
+      const e = ok(opt(street("tricycle", m)), PEAK);
+      expect(e.legs[0]).toMatchObject({ mode: "tricycle", estimated: false });
+      expect(formatTotal(e.total)).toBe("Tricycle time not estimated + waiting (unknown)");
+      expect(formatTotal(e.total)).not.toMatch(/\d\s*min/);
+    }
+  });
+
+  it("a jeepney ride along a path is estimated from its board→alight measures with the peak band in 06–08, 11–13, 16–19 Manila", () => {
+    const along = { kind: "ride" as const, mode: "jeepney" as const, distanceMeters: 3000, distanceBasis: "approximate_path" as const };
+    for (const [t, band] of [["07:00", "peak"], ["12:00", "peak"], ["17:30", "peak"], ["09:30", "offpeak"], ["14:00", "offpeak"], ["20:00", "offpeak"]] as const) {
+      const e = ok(opt(along), manila(t));
+      expect(e.legs[0]).toMatchObject({ basis: "approximate_path", band, estimated: true });
+    }
+    expect(ok(opt(along), manila("07:00")).total.peakWindows).toEqual([{ start: "06:00", end: "08:00" }]);
   });
 });

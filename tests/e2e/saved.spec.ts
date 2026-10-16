@@ -209,7 +209,7 @@ test("reopening after the network changed: the same rides are re-planned and say
   await page.goto("/app/saved");
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
   await expect(page.getByTestId("trip-changed-note")).toHaveText("Changed since saved");
-  await expect(page.getByTestId("trip-option")).toHaveCount(1);
+  await expect(page.getByTestId("trip-option")).toHaveCount(2);
   await expect(page.getByTestId("trip-detail")).toHaveCount(0);
 });
 

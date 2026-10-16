@@ -1,7 +1,7 @@
 # Reviewed research seeds
 
 `naga-modes-seed-YYYY-MM-DD.json` holds the reviewed records for all transport modes: sources
-N01–N41 and U01, terminals T01–T16, the tricycle feeder routes, per-route vehicle classes (fleet),
+N01–N41, U01 and U02 (owner report), research sources RT01–RT24, RL01–RL19, RP01–RP22 and RH01–RH21, terminals T01–T16, the tricycle feeder routes, per-route vehicle classes (fleet),
 cooperative names, regional services, fare-rule source additions, new fare rules F06–F12, fare
 observations, time-estimate parameters, street aliases and a conflicts register.
 
@@ -9,6 +9,27 @@ The importer reads only this file (newest date wins). It is validated by
 `src/domain/import/modes-seed.ts` (`parseModesSeed` for the strict shape, `validateModesSeed` for
 the rules, `importableRecords` for what may be imported). The file lives here, not in `Data_Sets/`,
 because `Data_Sets/` is the original research package and is read as a whole.
+
+## Research families (2026-10-17)
+
+| Family | Codes | Records | Input (sha256 in `header.preparedFrom`; not committed) | Imported | Excluded |
+|---|---|---|---|---|---|
+| Tricycle restrictions | RT01–RT24 | 24 | `tricycle-restrictions-candidates-2026-10.json` | 24 | 0 |
+| Loops and routes | RL01–RL19 | 19 | `loops-and-routes-candidates-2026-10.json` | 19 | 0 |
+| Padyak | RP01–RP22 | 22 | `padyak-candidates-2026-10.json` (sources in `padyak-2026-10.md`) | 21 | 1 (RP22: no padyak content) |
+| Jeepney hours | RH01–RH21 | 21 | `jeepney-hours-candidates-2026-10.json` (sources in `jeepney-hours-2026-10.md`) | 19 | 2 (RH16, RH17: no service content) |
+| Owner report | U02 | 1 | Project owner report, 2026-10-17 (plan section E) | 1 | 0 |
+
+The R-prefixed codes never clash with terminal codes `T01…`. Their pattern is `^R[TLPH][0-9]{2}$`.
+
+Record sections added with these families:
+
+- `roadRules`: tricycle and padyak road restrictions (evidence level, enactment, sources RT/RP).
+- `padyakAreas`: padyak service areas with named OSM place-node anchors, associations and documented year.
+- `routeNotes`: short rider-facing notes on loop routes (R8-A..D, R2), each with an evidence level
+  (`official`, `news`, `community`, `owner_report_unverified`) and optional `near` point.
+- Sources RT/RL/RP/RH are the research families above; U02 is the owner report (2026-10-17) and
+  supports only owner-reported notes and barangays.
 
 ## Provenance
 
@@ -38,7 +59,7 @@ because `Data_Sets/` is the original research package and is read as a whole.
 `pnpm db:import --dry-run` parses this file, checks it against the pinned road snapshot (it aborts
 on any problem, for example a missing time-estimate parameter) and prints the counts of what would
 be written; `--commit` writes everything in one transaction and publishes the revision
-`modes-lines-<road snapshot date>`, carrying the earlier transit data forward. Excluded records are
+`anywhere-alight-<road snapshot date>`, carrying the earlier transit data forward. Excluded records are
 reported with their reason and never written. The records land in the tables of migrations 0006 to
 0009 (`docs/spec/04-data-model.md`, "Modes, approximate paths and estimate records").
 
@@ -75,10 +96,14 @@ named street. A unit test checks every alias against the pinned snapshot.
 
 ## Personal data
 
-No cooperative chairperson names and no addresses are kept. The schema has no field for them and
+No cooperative chairperson names and no addresses are kept. Private individuals named in the research (blog authors, a journalist, a map owner) are not kept either: the site or publication name is used instead. The schema has no field for them and
 refuses unknown keys; the chairperson conflict is recorded in `conflicts` without the names.
 
 ## Synthetic data
 
 `tests/fixtures/modes/modes-seed-synthetic.json` has the same shape with obviously fake names and
 `header.synthetic: true`; it must never be published.
+
+## Revised seed policy (Increment E)
+
+The seed was edited in place after its first import (same file name, new hash). The importer now treats the same date with a different hash as a revised-seed batch (key `modes-seed:<date>:<sha12>`, revision `modes-<date>.<n>`) instead of refusing it; an older date is still refused. A revised batch records its own research-conflict register. See ADR 010 in `docs/spec/03-architecture.md`.

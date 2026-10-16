@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { haversineMeters } from "@/domain/geo/geometry";
+import { encodePolyline } from "@/domain/geo/polyline";
 import type { LatLng } from "@/domain/geo/types";
 import { sampleChevrons } from "@/ui/map/direction-chevrons";
 import { linesSchema, type Line, type Lines } from "@/domain/api/schemas";
@@ -11,6 +12,7 @@ import { shouldDashSegment, splitLineIntoRuns } from "@/ui/map/route-lines-layer
 import { buildTripLinesData, midpointOnPolyline, rideStrokeLayers, slicePolylineByMeasure } from "@/ui/map/trip-lines-layer";
 import linesFixture from "../e2e/fixtures/network/lines.json";
 import { PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "../e2e/fixtures/plan-responses";
+import { streetOnly } from "./guidance-fixtures";
 
 const SQUARE_CIRCUIT: LatLng[] = [
   { lat: 13.62, lng: 123.18 },
@@ -247,5 +249,54 @@ describe("rideTrace (T12-5: untraced from the leg's distance basis, not from loa
     const leg = ride(plan.plan.options[1]!);
     if (leg.kind !== "ride") throw new Error("ride");
     expect(rideTrace(leg, LINES, true)).toEqual({ untraced: false, notes: { onewayCaution: false, terminalAccess: true } });
+  });
+});
+
+describe("buildTripLinesData: tricycle and padyak legs (Increment E Task 10)", () => {
+  const A = { lat: 13.6233869, lng: 123.1846726 };
+  const B = { lat: 13.6323904, lng: 123.1946726 };
+  const mid = { lat: 13.6283, lng: 123.1846726 };
+  const streetOption = (kind: "tricycle" | "padyak", basis: "street_graph" | "straight_line" | "unavailable") => {
+    const o = streetOnly(kind, basis === "unavailable" ? null : 1500, basis);
+    const leg = {
+      ...o.legs[0]!,
+      from: { kind: "origin" as const, ...A, stopId: null, name: null },
+      to: { kind: "destination" as const, ...B, stopId: null, name: null },
+      path: basis === "street_graph" ? encodePolyline([A, mid, B]) : null,
+    };
+    return { ...o, legs: [leg] } as PlanResponse["plan"]["options"][number];
+  };
+
+  it("draws a routed tricycle as a solid street segment in the tricycle key, with a legend entry", () => {
+    const data = buildTripLinesData(streetOption("tricycle", "street_graph"), [], LINES);
+    expect(data.streetSegments).toHaveLength(1);
+    expect(data.streetSegments[0]).toMatchObject({ mode: "tricycle", approximate: false, chipText: "Trike" });
+    expect(data.streetSegments[0]!.coords).toHaveLength(3);
+    expect(data.legendItems).toContain("tricycle");
+    expect(data.legendExtras).toEqual([]);
+    expect(data.allCoords).toHaveLength(3);
+    expect(data.announcement).toContain("Tricycle");
+  });
+
+  it("draws a padyak routed path dashed (legend extra padyak), not under the tricycle entry", () => {
+    const data = buildTripLinesData(streetOption("padyak", "street_graph"), [], LINES);
+    expect(data.streetSegments[0]).toMatchObject({ mode: "padyak", approximate: false, chipText: "Padyak" });
+    expect(data.legendExtras).toEqual(["padyak"]);
+    expect(data.legendItems).not.toContain("tricycle");
+  });
+
+  it("draws a straight-line tricycle only as approximate, not a route", () => {
+    const data = buildTripLinesData(streetOption("tricycle", "straight_line"), [], LINES);
+    expect(data.streetSegments[0]).toMatchObject({ mode: "tricycle", approximate: true });
+    expect(data.streetSegments[0]!.coords).toEqual([A, B]);
+    expect(data.streetSegments[0]!.label).toBe("Approximate, not a route");
+    expect(data.streetSegments[0]!.chipText).toBe("Approximate");
+    expect(data.legendExtras).toEqual(["approx_street"]);
+  });
+
+  it("draws nothing for an unavailable street route", () => {
+    const data = buildTripLinesData(streetOption("tricycle", "unavailable"), [], LINES);
+    expect(data.streetSegments).toEqual([]);
+    expect(data.allCoords).toEqual([]);
   });
 });

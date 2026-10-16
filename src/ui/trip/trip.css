@@ -743,46 +743,6 @@ abbr.pn-est {
   min-height: 52px;
 }
 
-/* "Tricycle may serve this" (D15): an information card below the options, not an option. */
-.pn-trike-hint {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--pn-surface);
-  box-shadow: 0 0 0 1px var(--pn-ring);
-  color: var(--pn-label);
-  font-size: 14px;
-  line-height: 1.45;
-}
-.pn-trike-hint p {
-  margin: 0;
-}
-.pn-trike-hint__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-}
-.pn-trike-hint__icon {
-  display: inline-flex;
-}
-.pn-trike-hint__match {
-  font-weight: 600;
-}
-.pn-trike-hint__sources {
-  color: var(--pn-label2);
-  font-size: 13px;
-}
-.pn-trike-hint__btn {
-  align-self: flex-start;
-  min-height: 44px;
-  margin-top: 4px;
-}
-
 /* Low-data opt-in: download the walk graph (Task 15 follow-up). */
 .pn-trip-paths-offer {
   margin: 12px 0;
@@ -796,4 +756,110 @@ abbr.pn-est {
 }
 .pn-trip-paths-offer__btn {
   min-height: 44px;
+}
+
+/* Increment E: route notes with an evidence chip, the soft service-window warning, the tricycle /
+   padyak card lines and the "no jeepney" reason. Text always carries the meaning; the chip, icon and
+   dash are extra cues, never the only one. */
+.pn-route-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.pn-evidence-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
+  color: var(--pn-label2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pn-evidence-chip--unverified {
+  background: var(--pn-warn-bg);
+  box-shadow: none;
+  color: var(--pn-warn-text);
+}
+.pn-svc-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pn-svc-note svg {
+  flex: none;
+  margin-top: 2px;
+}
+.pn-svc-note p {
+  margin: 0;
+}
+.pn-svc-note p + p {
+  margin-top: 4px;
+}
+.pn-svc-note__hint {
+  font-size: 13px;
+  font-weight: 600;
+}
+.pn-svc-note--compact {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pn-svc-note--compact svg {
+  margin-top: 0;
+}
+.pn-trip-li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-trip-reason {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pn-trip-card__street {
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pn-trip-card__street--state {
+  color: var(--pn-warn-text);
+  font-weight: 600;
+}
+.pn-trip-card__notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pn-tl__notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pn-tl__notes > .pn-tl__sub {
+  margin: 0;
+}
+.pn-route-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }

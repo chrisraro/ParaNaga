@@ -1,0 +1,93 @@
+{
+ "fixture": "SYNTHETIC: fake names and ids (999000000100+), built for the e2e suite; the real chunk is GET /api/v1/network/search-places/:revisionId",
+ "revision": {
+  "revisionId": "20ca7d87-d4b2-46bc-93e4-10fced9935c6",
+  "label": "modes-lines-2026-10-16",
+  "kind": "provisional",
+  "publishedAt": "2026-10-16T08:27:21.544Z"
+ },
+ "places": [
+  {
+   "key": "osm:node/999000000101",
+   "name": "Synthetic Grill Restaurant",
+   "aliases": [],
+   "category": "restaurant",
+   "lat": 13.624,
+   "lng": 123.185,
+   "osmVersion": 1,
+   "sourceCode": "OSM-2026-10-16"
+  },
+  {
+   "key": "osm:node/999000000102",
+   "name": "Synthetic Brew Cafe",
+   "aliases": [
+    "Synthetic Coffee"
+   ],
+   "category": "cafe",
+   "lat": 13.6244,
+   "lng": 123.1856,
+   "osmVersion": 1,
+   "sourceCode": "OSM-2026-10-16"
+  },
+  {
+   "key": "osm:node/999000000103",
+   "name": "Synthetic Rx Pharmacy",
+   "aliases": [],
+   "category": "pharmacy",
+   "lat": 13.6252,
+   "lng": 123.1862,
+   "osmVersion": 1,
+   "sourceCode": "OSM-2026-10-16"
+  },
+  {
+   "key": "osm:node/999000000104",
+   "name": "Synthetic Savings Bank",
+   "aliases": [],
+   "category": "bank",
+   "lat": 13.6256,
+   "lng": 123.1868,
+   "osmVersion": 1,
+   "sourceCode": "OSM-2026-10-16"
+  },
+  {
+   "key": "osm:node/999000000105",
+   "name": "Synthetic Grand Hotel",
+   "aliases": [],
+   "category": "hotel",
+   "lat": 13.6262,
+   "lng": 123.1874,
+   "osmVersion": 1,
+   "sourceCode": "OSM-2026-10-16"
+  },
+  {
+   "key": "osm:node/999000000106",
+   "name": "Synthetic Corner Store",
+   "aliases": [],
+   "category": "convenience_store",
+   "lat": 13.6266,
+   "lng": 123.188,
+   "osmVersion": 1,
+   "sourceCode": "OSM-2026-10-16"
+  },
+  {
+   "key": "osm:node/999000000107",
+   "name": "Synthetic Annex Building",
+   "aliases": [],
+   "category": "building",
+   "lat": 13.627,
+   "lng": 123.1886,
+   "osmVersion": 1,
+   "sourceCode": "OSM-2026-10-16"
+  },
+  {
+   "key": "osm:node/999000000108",
+   "name": "Synthetic Notice Board",
+   "aliases": [],
+   "category": "other_place",
+   "lat": 13.6274,
+   "lng": 123.1892,
+   "osmVersion": 1,
+   "sourceCode": "OSM-2026-10-16"
+  }
+ ]
+}

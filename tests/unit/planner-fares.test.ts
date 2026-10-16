@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fareClasses, legFareEstimate, sumFares } from "@/domain/planner/fares";
+import { fareClasses, legFareEstimate, padyakFare, sumFares, tricycleFare } from "@/domain/planner/fares";
 import { SYNTHETIC_FARE_RULES, fareRule } from "../fixtures/synthetic/planner-network";
 
 const rules = SYNTHETIC_FARE_RULES;
@@ -138,5 +138,25 @@ describe("legFareEstimate: distance basis and mixed fleets (D13, C6, user decisi
     expect(legFareEstimate(3200, [rules[0]!], { classes: "traditional_and_modern", reports: [R4_MOD] })).toMatchObject({
       minCentavos: null, maxCentavos: null, status: "unavailable", reportCodes: [],
     });
+  });
+});
+
+describe("tricycle and padyak fares (plan E §D: F03 minimum, F04 flat)", () => {
+  const f03 = { ...fareRule("F03", 1500, 0), modeCode: "trimobile_e_trike_taxicle", baseKm: null, incrementCentavosPerKm: null, discountPercent: 20 };
+  const f04 = { ...fareRule("F04", 1000, 0), modeCode: "padyak", baseKm: null, incrementCentavosPerKm: null, discountedBaseCentavos: 800 };
+
+  it("tricycle: F03 minimum only, no maximum, discounts not applied", () => {
+    expect(tricycleFare([...rules, f03])).toEqual({ minCentavos: 1500, maxCentavos: null, status: "minimum", ruleCodes: ["F03"], discountsApplied: false });
+  });
+
+  it("padyak: F04 flat per passenger with the ID discount amount", () => {
+    expect(padyakFare([...rules, f04])).toEqual({
+      minCentavos: 1000, maxCentavos: 1000, status: "flat_per_passenger", discountedCentavos: 800, ruleCodes: ["F04"],
+    });
+  });
+
+  it("is unavailable without the rule or its base (never hard-coded)", () => {
+    expect(tricycleFare(rules)).toMatchObject({ minCentavos: null, status: "unavailable" });
+    expect(padyakFare([...rules, { ...f04, baseCentavos: null }])).toMatchObject({ minCentavos: null, maxCentavos: null, status: "unavailable" });
   });
 });

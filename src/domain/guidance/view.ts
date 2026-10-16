@@ -13,13 +13,19 @@
 // dispatched to the session as a `fix` event (so progress survives a reload); the `fix` argument
 // here feeds the walk screens. GPS proposes ("Close to …"), the person
 // confirms with the buttons, whose events the session reducer applies.
+// Increment E: a pinless ride (free board/alight points) whose Lines path is on the phone shows
+// "About {m} m of riding left (approximate)" from the fix projected on the path (stateless, so it
+// reads the `fix` argument), "Get ready…" within 300 m, and an off-path note instead of progress more
+// than 100 m away. A tricycle or padyak trip is one `street_ride` screen: the step, the planner's
+// notes, "… time not estimated", and "I've arrived"; it never uses the location.
 import { STALE_MS, type LocationFix } from "../geo/location-fix";
 import { COMPASS_WORDS } from "../geo/bearing";
+import { decodePolyline } from "../geo/polyline";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
-import { directionText, fareChipText, formatDistance } from "../trip/present";
+import { directionText, fareChipText, formatDistance, freeAlightText } from "../trip/present";
 import { estimateOption, type EtaLeg, type EtaOptionInput } from "../eta/eta";
 import { TIME_NOT_AVAILABLE, formatLeg, formatRemaining } from "../eta/format";
-import { paraSuggested, usableFix, walkProgress, type WalkProgress } from "./progress";
+import { paraSuggested, pathRideProgress, usableFix, walkProgress, type PathRideProgress, type WalkProgress } from "./progress";
 import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
 import {
   UNNAMED_DESTINATION,
@@ -28,6 +34,7 @@ import {
   type RideRef,
   type RideStep,
   type StopRef,
+  type StreetRideStep,
   type TransferStep,
   type WalkToBoardStep,
   type WalkToDestinationStep,
@@ -50,6 +57,10 @@ export const GUIDANCE_COPY = {
   locationApproximate: (accuracy: number) => `Location too rough (± ${Math.round(accuracy)} m): distance hidden.`,
   locationStale: "Location is stale: distance hidden.",
   locationImprecise: "Location too rough: distance hidden.",
+  noMarkedStops: "This route has no marked stops. Watch for your stop, and tell the driver “para” when you are near.",
+  offPath: "Your location is away from the approximate path. The jeepney may use another street; watch for your stop.",
+  metresLeft: (m: number) => `About ${Math.round(m / 10) * 10} m of riding left (approximate)`,
+  getReady: (place: string) => `Get ready to get off near ${place}`,
   stopsByPinOrder: "Approximate; watch for your stop.",
   paraTitle: "Para! Next stop is yours",
   paraBody: (stop: string) => `Get off at ${stop}. Say “Para” to the driver when you see it.`,
@@ -136,7 +147,26 @@ export type MissedView = {
 };
 export type EndedView = { screen: "ended"; usesLocation: false };
 
-export type GuidanceView = WalkView | RideView | ArriveView | MissedView | EndedView;
+/** A tricycle or padyak ride to the destination. */
+export type StreetRideView = {
+  screen: "street_ride";
+  mode: "tricycle" | "padyak";
+  stepLabel: string;
+  title: string;
+  /** The step: "Take a tricycle to … · about 1.5 km along streets · minimum fare ₱15 · confirm with the driver". */
+  instruction: string;
+  /** The planner's notes (rules applied, fare, franchise zone / area, "… time not estimated"). */
+  notes: string[];
+  /** "Tricycle time not estimated" / "Padyak time not estimated": never minutes. */
+  remainingTime: string;
+  keepOpen: string;
+  actions: GuidanceAction[];
+  undo: GuidanceAction | null;
+  live: LiveMessage;
+  usesLocation: false;
+};
+
+export type GuidanceView = WalkView | RideView | ArriveView | MissedView | EndedView | StreetRideView;
 
 const END: GuidanceAction = { event: "end", label: GUIDANCE_COPY.endGuidance, kind: "secondary" };
 const stopsCount = (n: number) => (n === 1 ? "1 stop" : `${n} stops`);
@@ -298,7 +328,15 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
   };
 }
 
-function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number, now: number): RideView {
+/** Progress along the Lines path for a pinless ride whose path is on the phone; null otherwise. */
+function pathProgress(trip: GuidanceTrip, step: RideStep, fix: LocationFix | null, now: number): PathRideProgress | null {
+  const path = step.pinned ? undefined : trip.ridePaths?.[step.ride.variantId];
+  const m = step.stopMeasuresM;
+  if (!path || !m) return null;
+  return pathRideProgress(decodePolyline(path.encoded), path.isCircuit, m[0]!, m[m.length - 1]!, fix, now);
+}
+
+function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number, fix: LocationFix | null, now: number): RideView {
   const alightIndex = step.stops.length - 1;
   // A GPS-backed count only while GPS still supports it (countLost: the jeepney is past the window).
   const gps = ride.gpsSeen && !ride.countLost;
@@ -307,11 +345,13 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
   const alight = step.alight.label;
   const chip = step.ride.routeChip;
   const remainingTime = rideRemainingTime(session.trip, step, ride, now);
+  const onPath = pathProgress(session.trip, step, fix, now);
 
   let title: string;
   if (ride.paraAcknowledged) title = GUIDANCE_COPY.paraAckTitle;
   else if (suggested) title = GUIDANCE_COPY.stopIsNext;
-  else if (gps) title = `${stopsCount(stopsRemaining)} to go`;
+  else if (gps && step.pinned) title = `${stopsCount(stopsRemaining)} to go`;
+  else if (onPath && !onPath.offPath && onPath.getReady) title = GUIDANCE_COPY.getReady(alight);
   else title = `Ride to ${alight}`;
 
   const para = ride.paraAcknowledged
@@ -334,11 +374,17 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
     title,
     subtitle: chip,
     badge: UNVERIFIED_ROUTE_BADGE,
-    alightText: title.startsWith("Ride to") ? null : `Get off · ${alight}`,
-    countText: gps
+    alightText: step.pinned ? (title.startsWith("Ride to") ? null : `Get off · ${alight}`) : freeAlightText(alight),
+    countText: !step.pinned
+      ? onPath?.offPath
+        ? GUIDANCE_COPY.offPath
+        : onPath
+          ? GUIDANCE_COPY.metresLeft(onPath.remainingM)
+          : `Ride along the approximate path to ${alight}`
+      : gps
       ? `${ride.passedIndex} of ${stopsCount(step.stopsToRide)}`
       : `${stopsCount(step.stopsToRide)} after ${step.board.label}`,
-    countNote: GUIDANCE_COPY.stopsByPinOrder,
+    countNote: step.pinned ? GUIDANCE_COPY.stopsByPinOrder : GUIDANCE_COPY.noMarkedStops,
     remainingTime,
     stops: step.stops.map((s: StopRef, i) => ({
       label: s.label,
@@ -357,7 +403,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
 function arriveView(session: GuidanceSession, steps: GuidanceStep[]): ArriveView {
   const option = session.trip.option;
   const last = steps.at(-1);
-  const named = last?.kind === "walk_to_destination" && last.target.name !== UNNAMED_DESTINATION ? last.target.name : null;
+  const named = (last?.kind === "walk_to_destination" || last?.kind === "street_ride") && last.target.name !== UNNAMED_DESTINATION ? last.target.name : null;
   const title = GUIDANCE_COPY.arrivedTitle;
   return {
     screen: "arrive",
@@ -366,7 +412,10 @@ function arriveView(session: GuidanceSession, steps: GuidanceStep[]): ArriveView
     body: GUIDANCE_COPY.arrivedBody(named),
     summary: {
       walkText: `${formatDistance(option.walkEstimateMeters)} walk`,
-      rides: steps.flatMap((s) => (s.kind === "ride" ? [{ chip: s.ride.routeChip, stopsText: stopsCount(s.stopsToRide) }] : [])),
+      rides: steps.flatMap((s) =>
+        s.kind === "ride" ? [{ chip: s.ride.routeChip, stopsText: s.pinned ? stopsCount(s.stopsToRide) : "along the path" }]
+        : s.kind === "street_ride" ? [{ chip: modeTitle(s.mode), stopsText: "along streets" }]
+        : []),
       fareText: fareChipText(option.fare),
     },
     actions: [{ event: "end", label: GUIDANCE_COPY.done, kind: "primary" }],
@@ -392,7 +441,30 @@ export function guidanceView(session: GuidanceSession, fix: LocationFix | null, 
   }
   const steps = sessionSteps(session);
   if (session.status === "arrived") return arriveView(session, steps);
-  const step = steps[session.stepIndex]!;
-  if (step.kind === "ride") return rideView(session, session.ride!, step, steps.length, now);
+  const step = steps[session.stepIndex];
+  if (!step) return { screen: "ended", usesLocation: false }; // a malformed option with no steps
+  if (step.kind === "ride") return rideView(session, session.ride!, step, steps.length, fix, now);
+  if (step.kind === "street_ride") return streetView(session, step, steps.length);
   return walkView(session, step, steps.length, fix, now);
+}
+
+const modeTitle = (mode: StreetRideStep["mode"]) => (mode === "tricycle" ? "Tricycle" : "Padyak");
+
+function streetView(session: GuidanceSession, step: StreetRideStep, total: number): StreetRideView {
+  const title = `Take a ${step.mode} to ${step.target.name}`;
+  return {
+    screen: "street_ride",
+    mode: step.mode,
+    stepLabel: `Step ${step.index + 1} of ${total} · ${modeTitle(step.mode)}`,
+    title,
+    // The title already says "Take a … to …": the instruction is the rest (distance, route state, fare).
+    instruction: step.text.startsWith(`${title} · `) ? step.text.slice(title.length + 3) : step.text,
+    notes: step.notes,
+    remainingTime: `${modeTitle(step.mode)} time not estimated`,
+    keepOpen: GUIDANCE_COPY.keepOpen,
+    actions: [{ event: "arrived", label: GUIDANCE_COPY.arrived, kind: "primary" }, END],
+    undo: undoAction(session),
+    live: { politeness: "polite", text: title },
+    usesLocation: false,
+  };
 }

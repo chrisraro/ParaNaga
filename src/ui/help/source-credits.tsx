@@ -5,6 +5,7 @@ import { SOURCE_RIGHTS } from "@/domain/sources/rights";
 import { externalHref } from "@/domain/sources/present";
 import { attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { ReferencePhoto } from "@/ui/places/reference-photo";
+import { GOOGLE_ATTRIBUTION, GOOGLE_DAILY_CAP } from "@/domain/places/google";
 
 export function SourceCredits({ revisionId }: { revisionId?: string }) {
   const tile = currentTileConfig();
@@ -15,7 +16,7 @@ export function SourceCredits({ revisionId }: { revisionId?: string }) {
         <p className="pn-footnote">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>. OSM source data and ParaNaga databases derived from it are available under the <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Open Database License 1.0</a>.</p>
         <p className="pn-footnote">{tile.url ? "Configured basemap credits: " : "No production basemap provider configured. "}{attributionParts(tile.attribution).map((part, i) => part.href ? <a key={i} href={part.href} target="_blank" rel="noopener noreferrer">{part.text}</a> : <span key={i}>{part.text}</span>)}</p>
         <ul className="pn-group">
-          <li className="pn-source"><a href="/data/attribution/naga-places-2026-10-15.osm.json" download>Download OSM places source extract (15 Oct 2026)</a></li>
+          <li className="pn-source"><a href="/data/attribution/naga-places-2026-10-16.osm.json" download>Download OSM places source extract (16 Oct 2026)</a></li>
           <li className="pn-source"><a href="/data/attribution/naga-roads-2026-10-16.osm.json" download>Download OSM roads source extract (16 Oct 2026)</a></li>
           <li className="pn-source"><a href="/data/attribution/naga-city-boundary.json" download>Download OSM Naga boundary (relation 3084673)</a></li>
           <li className="pn-source"><a href="/data/attribution/NOTICE.txt">Read data license and transformation notice</a></li>
@@ -36,6 +37,12 @@ export function SourceCredits({ revisionId }: { revisionId?: string }) {
         <h2 id="street-view-credits" className="pn-section__title">Google Street View</h2>
         <p className="pn-footnote">Interactive panoramas are provided directly by Google Maps through Maps Embed API, only after you open the viewer. Google and imagery-provider attribution remains inside the viewer. Coverage, image dates, signs and boarding curbs are not verified by ParaNaga. No Street View imagery is downloaded or cached by ParaNaga.</p>
         <p><a href="https://www.google.com/intl/en-US_US/help/terms_maps/" target="_blank" rel="noopener noreferrer">Google Maps terms</a> · <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google privacy policy</a></p>
+      </section>
+      <section aria-labelledby="google-places-credits" data-testid="google-places-credits">
+        <h2 id="google-places-credits" className="pn-section__title">Google Places suggestions</h2>
+        <p className="pn-footnote">{GOOGLE_ATTRIBUTION}. When search on this phone finds fewer than 3 matches, or you tap “Search more places”, Google receives what you typed, through ParaNaga’s server, to suggest places. ParaNaga keeps Google’s answer up to 24 hours under a one-way hash, with no typed text and no IP address. Google results are third-party and not verified; a pick only places a pin on this map. At most {GOOGLE_DAILY_CAP} Google requests are made a day, then only OpenStreetMap results are shown.</p>
+        <p className="pn-footnote">Rights note: whether Google’s terms allow these suggestions beside a non-Google map is unresolved.</p>
+        <p><a href="https://cloud.google.com/maps-platform/terms" target="_blank" rel="noopener noreferrer">Google Maps Platform terms</a> · <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google privacy policy</a></p>
       </section>
       <section aria-labelledby="photo-credits">
         <h2 id="photo-credits" className="pn-section__title">Photo credits and capture dates</h2>
