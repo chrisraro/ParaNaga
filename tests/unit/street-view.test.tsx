@@ -17,6 +17,13 @@ describe("Street View reference viewer", () => {
     expect(streetViewEmbed({ lat: NaN, lng: 123 }, "test")).toBeNull();
     expect(streetViewLink({ lat: 91, lng: 123 })).toBeNull();
   });
+  it("uses place wording and a responsive iframe for a place", () => {
+    vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY", "test-embed-key");
+    render(<StopStreetView {...point} name="SM City Naga" what="place" />);
+    expect(screen.getByText(/entrance and signage unverified/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "View surroundings" }));
+    expect(screen.getByTestId("street-view-iframe").hasAttribute("width")).toBe(false);
+  });
   it("makes no iframe request until opened, and removes the viewer on close", () => {
     vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY", "test-embed-key");
     render(<StopStreetView {...point} name="Plaza Rizal" />);
@@ -32,6 +39,7 @@ describe("Street View reference viewer", () => {
     vi.stubEnv("NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY", "");
     render(<StopStreetView {...point} name="Plaza Rizal" />);
     expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.getByText(/not available in this version of the app/)).toBeTruthy();
     const url = new URL(screen.getByRole("link", { name: "Open Street View in Google Maps" }).getAttribute("href")!);
     expect(url.searchParams.get("viewpoint")).toBe("13.6233869,123.1846726");
     expect(url.searchParams.has("key")).toBe(false);

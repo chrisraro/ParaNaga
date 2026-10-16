@@ -46,6 +46,7 @@ import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Segmented } from "@/ui/kit/segmented";
 import { SavePlaceButton } from "@/ui/saved/save-place-button";
 import { NagaMap } from "@/ui/map/naga-map";
+import { StopStreetView } from "@/ui/street-view/stop-street-view";
 
 const TITLE = "Place";
 /** Street level: a mapped-pin group spans at most 60 m, so its pins all show. */
@@ -237,6 +238,7 @@ function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: S
         <Note testId="place-location-note">Location from OpenStreetMap — entrance not mapped.</Note>
         <SavePlaceButton label={place.name} point={point} source="osm" testId="place-save" />
         <FactRows rows={rows} label="About this place" />
+        <StopStreetView what="place" lat={place.lat} lng={place.lng} name={place.name} />
         <section className="pn-section" aria-labelledby={`${uid}-near`}>
           <h2 id={`${uid}-near`} className="pn-section__title">
             Nearest mapped stops
@@ -339,6 +341,7 @@ function PinPlaceView({ place }: { place: SearchPinPlace }) {
           </ul>
         </section>
         <FactRows rows={rows} label="About this place" />
+        <StopStreetView what="place" lat={point.lat} lng={point.lng} name={place.label} />
         {photoForPinPlace(place.label, place.pins) ? <ReferencePhoto photo={photoForPinPlace(place.label, place.pins)!} stop /> : <PhotoPending />}
       </main>
     </DetailPanel>
