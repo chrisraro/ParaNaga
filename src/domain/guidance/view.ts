@@ -456,7 +456,8 @@ function streetView(session: GuidanceSession, step: StreetRideStep, total: numbe
     mode: step.mode,
     stepLabel: `Step ${step.index + 1} of ${total} · ${modeTitle(step.mode)}`,
     title,
-    instruction: step.text,
+    // The title already says "Take a … to …": the instruction is the rest (distance, route state, fare).
+    instruction: step.text.startsWith(`${title} · `) ? step.text.slice(title.length + 3) : step.text,
     notes: step.notes,
     remainingTime: `${modeTitle(step.mode)} time not estimated`,
     keepOpen: GUIDANCE_COPY.keepOpen,

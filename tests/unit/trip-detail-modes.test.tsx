@@ -126,8 +126,15 @@ describe("tricycle and padyak steps", () => {
   it("a route not confirmed says so and shows the straight line as approximate, not a route", () => {
     show(tricycle({ basis: "straight_line", path: null, distanceMeters: 900, notes: ["Route not confirmed: no street route found on the map; straight-line distance shown", "Tricycle time not estimated"] }));
     expect(screen.getByTestId("street-distance").textContent).toBe("≈ 900 m straight line · approximate, not a route");
-    expect(screen.getByTestId("street-notes").textContent).toContain("Route not confirmed");
+    expect(screen.getByTestId("street-state").textContent).toBe("Route not confirmed");
     expect(screen.queryByText(/Avoids the restricted roads/)).toBeNull();
+  });
+
+  it("an unavailable street route shows its state once, with no distance", () => {
+    show(tricycle({ basis: "unavailable", path: null, distanceMeters: null, notes: ["Street route not available", "Tricycle time not estimated"] }));
+    expect(screen.getByTestId("street-state").textContent).toBe("Street route not available");
+    expect(screen.queryByTestId("street-distance")).toBeNull();
+    expect(screen.getAllByText("Street route not available")).toHaveLength(1);
   });
 
   it("the padyak step shows ₱10 per passenger and the area note", () => {

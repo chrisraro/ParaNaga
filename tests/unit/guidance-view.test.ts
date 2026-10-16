@@ -470,16 +470,26 @@ describe("street ride (tricycle / padyak)", () => {
     expect(v).toMatchObject({
       stepLabel: "Step 1 of 1 · Tricycle",
       title: "Take a tricycle to SM City Naga",
-      instruction: "Take a tricycle to SM City Naga · about 1.5 km along streets · minimum fare ₱15 · confirm with the driver",
+      instruction: "about 1.5 km along streets · minimum fare ₱15 · confirm with the driver",
       remainingTime: "Tricycle time not estimated",
       usesLocation: false,
     });
     expect(v.notes).toContain("Tricycle time not estimated");
+    expect(v.instruction).not.toContain(v.title);
     expect(labels(v)).toEqual(["primary:arrived:I've arrived", "secondary:end:End guidance"]);
     const done = guidanceView(run(s, "arrived"), null, NOW);
     expect(done.screen).toBe("arrive");
     if (done.screen === "arrive") expect(done.summary).toEqual({ walkText: "≈ 0 m walk · estimate", rides: [{ chip: "Tricycle", stopsText: "along streets" }], fareText: "Minimum fare ₱15" });
     expect(guidanceView(run(s, "arrived", "back"), null, NOW).screen).toBe("street_ride");
+  });
+
+  it("a route that is not confirmed or not available keeps its state in the instruction, without repeating the title", () => {
+    for (const [basis, distance, state] of [["straight_line", 900, /route not confirmed/], ["unavailable", null, /street route not available/]] as const) {
+      const v = guidanceView(startSession(tripOf(streetOnly("tricycle", distance, basis)), NOW), null, NOW);
+      if (v.screen !== "street_ride") throw new Error(v.screen);
+      expect(v.instruction).toMatch(state);
+      expect(v.instruction).not.toContain(v.title);
+    }
   });
 
   it("a padyak trip names padyak, never tricycle", () => {

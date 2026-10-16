@@ -202,7 +202,7 @@ export function buildTripLinesData(
         coords,
         approximate,
         midpoint: midpointOnPolyline(coords),
-        chipText: leg.kind === "tricycle" ? MAP_CHIP_TEXT.tricycle : "Padyak",
+        chipText: approximate ? "Approximate" : leg.kind === "tricycle" ? MAP_CHIP_TEXT.tricycle : "Padyak",
         label: approximate ? APPROX_STREET_LABEL : leg.kind === "tricycle" ? "Street route" : "Street route (padyak)",
       });
       allCoords.push(...coords);
@@ -388,7 +388,7 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
             pathOptions={{ className: `pn-line pn-line--ride ${kind}`, color: swatch.core, weight: core, opacity, lineCap: cap, lineJoin: "round", dashArray }}
             interactive={false}
           />
-          {seg.midpoint && !seg.approximate ? (
+          {seg.midpoint ? (
             <Marker position={[seg.midpoint.lat, seg.midpoint.lng]} icon={midChipIcon(seg.chipText, swatch.core, swatch.casing)} interactive={false} keyboard={false} zIndexOffset={-200} />
           ) : null}
         </Fragment>

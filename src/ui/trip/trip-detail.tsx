@@ -281,6 +281,11 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
             <strong className="pn-tl__title">
               Take a {leg.kind} to {ctx.destination}
             </strong>
+            {v.headline ? (
+              <p className="pn-tl__sub pn-tl__sub--gold" data-testid="street-state">
+                {v.headline}
+              </p>
+            ) : null}
             {v.distanceText ? (
               <p className="pn-tl__sub" data-testid="street-distance">
                 {v.distanceText}
@@ -288,7 +293,7 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
             ) : null}
           </div>
           <div className="pn-tl__notes" data-testid="street-notes">
-            {leg.notes.map((n) => (
+            {leg.notes.filter((n) => n !== v.headline).map((n) => (
               <p key={n} className="pn-tl__sub">
                 {n}
               </p>

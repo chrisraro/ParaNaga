@@ -290,6 +290,7 @@ describe("buildTripLinesData: tricycle and padyak legs (Increment E Task 10)", (
     expect(data.streetSegments[0]).toMatchObject({ mode: "tricycle", approximate: true });
     expect(data.streetSegments[0]!.coords).toEqual([A, B]);
     expect(data.streetSegments[0]!.label).toBe("Approximate, not a route");
+    expect(data.streetSegments[0]!.chipText).toBe("Approximate");
     expect(data.legendExtras).toEqual(["approx_street"]);
   });
 
