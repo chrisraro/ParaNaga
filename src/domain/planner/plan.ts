@@ -48,6 +48,14 @@
 // (boarding permission unknown) and pathVerified: false, and only the ordered stops passed —
 // no street geometry, times, curbs or signboards. Fares are estimate ranges (fares.ts).
 //
+// Ride distance (D13, graph.ts): metres along the variant's approximate path between the board
+// and alight pins when the snapshot carries stop measures, else the straight-line stop-to-stop
+// sum; the leg records `distanceBasis` and the two measures, and the fare, the score and the
+// Pareto set all use that one distance. The option id is variant:board:alight only, so saved
+// trips stay valid. Each ride leg carries the route's mode and fleet (snapshot routes[] joined
+// by routeId; no record → "Vehicle type not confirmed"), and a mixed traditional + modern fleet
+// prices from the traditional minimum to the modern maximum, with the route's rider reports.
+//
 // Complexity: with V variants of ≤ n stops, A access positions and ≤ T transfer edges per
 // position, the search is O(A·n·(1 + T·n)) for 2 rides (each extra ride multiplies by T·n).
 // For Loops A/B (61 positions) that is well under a million steps.
@@ -55,8 +63,9 @@ import type { NetworkSnapshot, Verification } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
 import { isInsideNaga } from "../geo/naga";
 import type { LatLng } from "../geo/types";
+import { fleetSummary, type FleetSummary, type RouteMode } from "../modes/fleet";
 import { legFareEstimate, sumFares, type LegFare, type TripFare } from "./fares";
-import { buildGraph, forwardRides, type GraphStop, type PlannerGraph } from "./graph";
+import { buildGraph, forwardRides, type DistanceBasis, type GraphStop, type PlannerGraph } from "./graph";
 
 import { MAX_ACCESS_WALK_M, PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
 
@@ -102,13 +111,21 @@ export type RideLeg = {
   verification: Verification;
   /** Stops passed, board → alight inclusive, in ride order. The only geometry given. */
   stops: GraphStop[];
-  /** Sum of straight-line segments between the stops passed. */
+  /** D13: whole metres along the approximate path, or the straight-line stop-to-stop sum (distanceBasis). */
   distanceMeters: number;
   approximate: true;
   /** Boarding permission is unknown in the data: allowed, but not verified. */
   boardingVerified: false;
   pathVerified: false;
+  /** Priced on distanceMeters. */
   fare: LegFare;
+  mode: RouteMode;
+  /** The route's vehicle classes with their evidence (snapshot routes[] by routeId). */
+  fleet: FleetSummary;
+  distanceBasis: DistanceBasis;
+  /** Metres along the approximate path at the board and alight pins; null without a path. */
+  boardMeasureM: number | null;
+  alightMeasureM: number | null;
 };
 
 export type PlanLeg = WalkLeg | RideLeg;
@@ -145,7 +162,10 @@ export type TripPlan = {
 
 // ---------------------------------------------------------------- search state
 
-type RideStep = { v: number; board: number; alight: number; meters: number };
+type RideStep = {
+  v: number; board: number; alight: number; meters: number;
+  basis: DistanceBasis; boardMeasureM: number | null; alightMeasureM: number | null;
+};
 /** Immutable chain of (transfer walk metres, ride) pairs, newest first. */
 type Chain = { ride: RideStep; walkBefore: number; prev: Chain | null };
 
@@ -226,7 +246,10 @@ function search(graph: PlannerGraph, origin: LatLng, destination: LatLng, opts: 
   ) => {
     const variant = graph.variants[v]!;
     for (const r of forwardRides(variant, board)) {
-      const chain: Chain = { ride: { v, board, alight: r.position, meters: Math.round(r.meters) }, walkBefore, prev };
+      const chain: Chain = {
+        ride: { v, board, alight: r.position, meters: Math.round(r.meters), basis: r.basis, boardMeasureM: r.boardMeasureM, alightMeasureM: r.alightMeasureM },
+        walkBefore, prev,
+      };
       const eg = egress[v]![r.position]!;
       if (eg <= opts.maxAccessWalkM) complete(chain, accessM, Math.round(eg));
       if (used.length < opts.maxRides) {
@@ -275,7 +298,12 @@ function walkLeg(from: Place, to: Place, meters: number): WalkLeg {
   return { kind: "walk", from, to, distanceMeters: meters, estimateMeters: estimate(meters), pathVerified: false };
 }
 
-function toOption(c: Candidate, labels: PlanLabel[], graph: PlannerGraph, snapshot: Pick<NetworkSnapshot, "fareRules">, origin: LatLng, destination: LatLng): PlanOption {
+type RouteInfo = NetworkSnapshot["routes"][number];
+
+function toOption(
+  c: Candidate, labels: PlanLabel[], graph: PlannerGraph, snapshot: Pick<NetworkSnapshot, "fareRules">,
+  routes: ReadonlyMap<string, RouteInfo>, origin: LatLng, destination: LatLng,
+): PlanOption {
   const legs: PlanLeg[] = [];
   const rideLegs: RideLeg[] = [];
   let prevStop: GraphStop | null = null;
@@ -290,10 +318,15 @@ function toOption(c: Candidate, labels: PlanLabel[], graph: PlannerGraph, snapsh
         ? walkLeg(place("origin", origin), place("stop", board, board), c.accessM)
         : walkLeg(place("stop", prevStop, prevStop), place("stop", board, board), walkBefore),
     );
+    const route = routes.get(v.routeId);
+    const fleet = route ? route.fleet : fleetSummary([], v.mode);
     const leg: RideLeg = {
       kind: "ride", variantId: v.variantId, routeCode: v.routeCode, routeName: v.routeName, verification: v.verification,
       stops, distanceMeters: ride.meters, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFareEstimate(ride.meters, snapshot.fareRules),
+      fare: legFareEstimate(ride.meters, snapshot.fareRules, {
+        mixedFleet: fleet.colourKey === "mixed_trad_modern", reports: route?.fareReports ?? [],
+      }),
+      mode: v.mode, fleet, distanceBasis: ride.basis, boardMeasureM: ride.boardMeasureM, alightMeasureM: ride.alightMeasureM,
     };
     legs.push(leg);
     rideLegs.push(leg);
@@ -325,7 +358,7 @@ function pickLabelled(cands: Candidate[], labels: readonly PlanLabel[]): { cand:
 }
 
 export function planTrip(
-  snapshot: Pick<NetworkSnapshot, "revision" | "stops" | "variants" | "fareRules">,
+  snapshot: Pick<NetworkSnapshot, "revision" | "stops" | "variants" | "fareRules"> & Partial<Pick<NetworkSnapshot, "routes">>,
   origin: LatLng,
   destination: LatLng,
   options: Partial<PlannerOptions> = {},
@@ -349,7 +382,8 @@ export function planTrip(
   const walkOnly = rawDirect <= opts.maxAccessWalkM;
   const rideLabels: readonly PlanLabel[] = walkOnly ? ["Least walking"] : PLAN_LABELS;
   const picked = pickLabelled(candidates, rideLabels);
-  const result: PlanOption[] = picked.map((p) => toOption(p.cand, p.labels, graph, snapshot, origin, destination));
+  const routes = new Map((snapshot.routes ?? []).map((r) => [r.routeId, r]));
+  const result: PlanOption[] = picked.map((p) => toOption(p.cand, p.labels, graph, snapshot, routes, origin, destination));
   const notes: string[] = [UNVERIFIED_ROUTE_BADGE];
 
   if (walkOnly) {

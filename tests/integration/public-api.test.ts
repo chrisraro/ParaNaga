@@ -407,6 +407,14 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
       expect(body.variants.map((v) => [v.routeCode, v.mode, fleetOf(v.routeId).colourKey])).toEqual([
         ["R8-A", "jeepney", "traditional_puj"], ["R8-B", "jeepney", "traditional_puj"],
       ]);
+      // Rider fare reports (observations, never rules) reach the planner for the mixed-fleet maximum.
+      expect(route("R4").fareReports).toEqual([expect.objectContaining({
+        code: "FO-R4-MOD", vehicleClass: "modern_puj", deltaQualifier: "range", deltaCentavosLow: 300, deltaCentavosHigh: 500,
+      })]);
+      expect(route("R7").fareReports).toEqual([expect.objectContaining({
+        code: "FO-R7-MOD", vehicleClass: "modern_puj", deltaQualifier: "at_least", deltaCentavosLow: 500, deltaCentavosHigh: null,
+      })]);
+      for (const r of body.routes.filter((x) => x.routeCode !== "R4" && x.routeCode !== "R7")) expect(r.fareReports, r.routeCode).toEqual([]);
       // Bus and UV rules (F06–F12) never reach the planner.
       expect(body.fareRules.map((f) => f.code)).toEqual(["F01", "F02", "F03", "F04"]);
       expect(raw).not.toMatch(/e[-_ ]?jeep/i);

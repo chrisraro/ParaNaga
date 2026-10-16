@@ -166,6 +166,25 @@ export const terminalCoordinateSchema = z.object({
 });
 export const TERMINAL_KINDS = ["terminal", "loading_point", "waiting_area", "station"] as const;
 
+/**
+ * What riders report paying for one vehicle class on a route, as a delta over the traditional
+ * fare (transit.route_fare_observation). An observation, never a rule: "range" has both bounds,
+ * "at_least" only the low one.
+ */
+export const routeFareReportSchema = z
+  .object({
+    code: z.string(),
+    vehicleClass: z.enum(VEHICLE_CLASSES),
+    deltaQualifier: z.enum(["range", "at_least"]),
+    deltaCentavosLow: z.number().int().min(0),
+    deltaCentavosHigh: z.number().int().min(0).nullable(),
+    observedOn: isoDate,
+    sourceCodes: z.array(z.string()).min(1),
+  })
+  .refine((r) => (r.deltaQualifier === "at_least") === (r.deltaCentavosHigh === null), { message: "a range has an upper bound; at_least has none" })
+  .refine((r) => r.deltaCentavosHigh === null || r.deltaCentavosLow <= r.deltaCentavosHigh, { message: "low is above high" });
+export type RouteFareReport = z.infer<typeof routeFareReportSchema>;
+
 /** Fare modes the intra-city planner may use: never the regional bus/UV rules (F06–F12). */
 export const INTRA_CITY_FARE_MODES = ["traditional_jeepney", "modern_jeepney", "trimobile_e_trike_taxicle", "padyak"] as const;
 
@@ -288,6 +307,8 @@ export const networkSnapshotSchema = z.object({
       mode: legacyRouteMode(),
       serviceStatus: z.enum(SERVICE_STATUSES).nullable().default(null),
       fleet: fleetSummarySchema.default(unconfirmedFleet),
+      /** Rider fare reports for this route (mixed-fleet fare maximum, fares.ts); [] for older snapshots. */
+      fareReports: z.array(routeFareReportSchema).default(() => []),
     }),
   ).default(() => []),
   /** The time-estimate parameters (D8/D9), or null for a revision published without them. */

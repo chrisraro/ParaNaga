@@ -2,6 +2,7 @@
 // straight line of pins near Plaza Rizal (≈ 200 m apart, northward).
 import type { PlanOptionDto } from "@/domain/api/plan";
 import type { GuidanceTrip } from "@/domain/guidance/steps";
+import { fleetSummary } from "@/domain/modes/fleet";
 
 export const BASE = { lat: 13.6233869, lng: 123.1846726 };
 /** ≈ 200 m of latitude. */
@@ -48,7 +49,15 @@ export const ride = (stops: Pin[], variant: number, routeCode: string, routeName
     approximate: true as const,
     discountsApplied: false as const,
     ruleCodes: ["F01", "F02"] as const,
+    span: "rule_span" as const,
+    basis: "fare_rules" as const,
+    reportCodes: [],
   },
+  mode: "jeepney" as const,
+  fleet: fleetSummary([], "jeepney"),
+  distanceBasis: "stop_to_stop_straight_line" as const,
+  boardMeasureM: null,
+  alightMeasureM: null,
 });
 
 export const ORIGIN = { lat: BASE.lat - 0.001, lng: BASE.lng };

@@ -60,3 +60,29 @@ export function realLoopsSnapshot(): NetworkSnapshot {
     etaModel: null,
   };
 }
+
+/**
+ * The real-loops fixture with the published D13 stop measures, path lengths and route fleets of
+ * the captured revision (tests/e2e/fixtures/network/snapshot.json, from the real road import).
+ * Matched by route code and stop source code; throws if the captured stop order differs.
+ */
+export function realLoopsSnapshotWithMeasures(): NetworkSnapshot {
+  const base = realLoopsSnapshot();
+  const captured = JSON.parse(readFileSync(new URL("../e2e/fixtures/network/snapshot.json", import.meta.url), "utf8")) as NetworkSnapshot;
+  const capturedCode = new Map(captured.stops.map((s) => [s.id, s.source.code]));
+  const baseCode = new Map(base.stops.map((s) => [s.id, s.source.code]));
+  return {
+    ...base,
+    variants: base.variants.map((v) => {
+      const c = captured.variants.find((x) => x.routeCode === v.routeCode);
+      if (!c) throw new Error(`no captured variant for ${v.routeCode}`);
+      const order = (ids: string[], codes: Map<string, string | null>) => ids.map((id) => codes.get(id)).join(",");
+      if (order(c.stopIds, capturedCode) !== order(v.stopIds, baseCode)) throw new Error(`stop order differs for ${v.routeCode}`);
+      return { ...v, measuresM: c.measuresM, pathLengthM: c.pathLengthM };
+    }),
+    routes: base.variants.map((v) => {
+      const r = captured.routes.find((x) => x.routeCode === v.routeCode)!;
+      return { ...r, routeId: v.routeId };
+    }),
+  };
+}

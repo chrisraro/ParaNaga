@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { fleetSummary, type FleetRecord } from "@/domain/modes/fleet";
 import {
   directionText,
+  distanceBasisText,
+  rideFleetText,
   fareChipText,
   formatDistance,
   legFareText,
@@ -145,5 +148,50 @@ describe("isNegligibleWalk", () => {
     expect(isNegligibleWalk({ kind: "walk", estimateMeters: 15 })).toBe(false);
     expect(isNegligibleWalk({ kind: "ride" })).toBe(false);
     expect(isNegligibleWalk({ kind: "walk" })).toBe(false);
+  });
+});
+
+describe("ride leg copy (Task 8: D13 distance basis, mixed fleets)", () => {
+  it("names the distance basis and never presents the path as exact", () => {
+    expect(distanceBasisText(3420, "approximate_path")).toBe("≈ 3.4 km along the approximate path");
+    expect(distanceBasisText(3080, "stop_to_stop_straight_line")).toBe("≈ 3.1 km stop to stop (straight line)");
+    expect(distanceBasisText(640, "approximate_path")).toBe("≈ 640 m along the approximate path");
+  });
+
+  it("mixed fleet: traditional to modern rate, citing riders' reports only when they set the maximum", () => {
+    expect(legFareText({ status: "estimate", minCentavos: 1400, maxCentavos: 1700, span: "traditional_to_modern", basis: "fare_rules" })).toBe(
+      "Estimate ₱14–₱17 · traditional to modern rate · matrix not verified",
+    );
+    expect(legFareText({ status: "estimate", minCentavos: 1400, maxCentavos: 1900, span: "traditional_to_modern", basis: "fare_rules_and_reports" })).toBe(
+      "Estimate ₱14–₱19 · traditional to modern rate · from the national fare rule and riders' reports · matrix not verified",
+    );
+    expect(legFareText({ status: "unavailable", minCentavos: null, maxCentavos: null, span: "traditional_to_modern", basis: "fare_rules" })).toBe(
+      "Fare estimate unavailable",
+    );
+  });
+
+  it("a single-class or unconfirmed fleet keeps the existing wording", () => {
+    expect(legFareText({ status: "estimate", minCentavos: 1400, maxCentavos: 1700, span: "rule_span", basis: "fare_rules" })).toBe(
+      "Estimate ₱14–₱17 · from reported fare rules · matrix not verified",
+    );
+  });
+
+  const rec = (vehicleClass: FleetRecord["vehicleClass"], aircon: boolean | null, status: FleetRecord["status"] = "operating"): FleetRecord => ({
+    code: `FL-${vehicleClass}`, vehicleClass, evidenceLevels: ["owner_confirmation"], status, firstReportedOn: null, lastReportedOn: "2026-10-16",
+    unitsNote: null, aircon, airconSourceCodes: aircon === null ? [] : ["U01"], cooperatives: [], sourceCodes: ["U01"],
+  });
+
+  it("names the vehicle classes of a ride, aircon only when a source states it, never e-jeep", () => {
+    expect(rideFleetText("jeepney", fleetSummary([rec("traditional_puj", null), rec("modern_puj", true)], "jeepney"))).toBe(
+      "Jeepney · traditional and modern (air-conditioned)",
+    );
+    expect(rideFleetText("jeepney", fleetSummary([rec("traditional_puj", null), rec("modern_puj", null)], "jeepney"))).toBe(
+      "Jeepney · traditional and modern",
+    );
+    expect(rideFleetText("jeepney", fleetSummary([rec("traditional_puj", null)], "jeepney"))).toBe("Jeepney · traditional");
+    expect(rideFleetText("jeepney", fleetSummary([], "jeepney"))).toBe("Jeepney · type not confirmed");
+    for (const t of [rideFleetText("jeepney", fleetSummary([rec("traditional_puj", null), rec("modern_puj", true)], "jeepney"))]) {
+      expect(t).not.toMatch(/e-jeep/i);
+    }
   });
 });

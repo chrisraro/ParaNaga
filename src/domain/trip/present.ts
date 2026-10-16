@@ -4,6 +4,7 @@
 // "≈" estimates, a loop's direction is derived from the order of its mapped pins and labelled so,
 // and no-coverage copy never implies a verified route exists.
 import type { LatLng } from "../geo/types";
+import { modeName, type FleetSummary, type RouteMode } from "../modes/fleet";
 import { MAX_ACCESS_WALK_M } from "../planner/labels";
 import type { NoCoverageReason } from "../planner/plan";
 
@@ -31,7 +32,15 @@ export function directionText(direction: LoopDirection | null, form: "short" | "
   return form === "long" ? `${direction} (from pin order)` : direction;
 }
 
-type FareLike = { status: string; minCentavos: number | null; maxCentavos: number | null };
+type FareLike = {
+  status: string;
+  minCentavos: number | null;
+  maxCentavos: number | null;
+  /** Ride legs: "traditional_to_modern" on a mixed-fleet route (fares.ts). */
+  span?: string;
+  /** Ride legs: "fare_rules_and_reports" when riders' reports set the maximum. */
+  basis?: string;
+};
 
 function pesoRange(minCentavos: number, maxCentavos: number): string {
   const lo = Math.floor(minCentavos / 100);
@@ -48,10 +57,35 @@ export function fareChipText(fare: FareLike): string {
   return `Estimate ${pesoRange(fare.minCentavos, fare.maxCentavos)}`;
 }
 
-/** Per ride leg, with the global caveat on where the numbers come from. */
+/**
+ * Per ride leg, with the caveat on where the numbers come from. A mixed traditional + modern
+ * fleet says "traditional to modern rate", and names the riders' reports when they set the
+ * maximum; a single-class or unconfirmed fleet keeps the plain rule wording.
+ */
 export function legFareText(fare: FareLike): string {
   const chip = fareChipText(fare);
-  return chip === FARE_UNAVAILABLE ? chip : `${chip} · from reported fare rules · matrix not verified`;
+  if (chip === FARE_UNAVAILABLE) return chip;
+  if (fare.span === "traditional_to_modern") {
+    const reports = fare.basis === "fare_rules_and_reports" ? " · from the national fare rule and riders' reports" : "";
+    return `${chip} · traditional to modern rate${reports} · matrix not verified`;
+  }
+  return `${chip} · from reported fare rules · matrix not verified`;
+}
+
+/** D13: "≈ 3.4 km along the approximate path" or "≈ 3.1 km stop to stop (straight line)"; never exact. */
+export function distanceBasisText(meters: number, basis: "approximate_path" | "stop_to_stop_straight_line"): string {
+  return `${formatDistance(meters)} ${basis === "approximate_path" ? "along the approximate path" : "stop to stop (straight line)"}`;
+}
+
+/**
+ * The vehicle classes of a ride: "Jeepney · traditional and modern (air-conditioned)" on a mixed
+ * fleet (aircon only when a source states it), else the route's C7 chip ("Jeepney · traditional",
+ * "Jeepney · type not confirmed"). The evidence and dates stay on fleet.classes[].label.
+ */
+export function rideFleetText(mode: RouteMode, fleet: FleetSummary): string {
+  if (fleet.colourKey !== "mixed_trad_modern") return fleet.chip;
+  const aircon = fleet.classes.some((c) => c.vehicleClass === "modern_puj" && c.aircon === true);
+  return `${modeName(mode)} · traditional and modern${aircon ? " (air-conditioned)" : ""}`;
 }
 
 /** "≈ 230 m" (nearest 10 m) below 1 km, else "≈ 5.5 km". */

@@ -4,12 +4,19 @@
 // The response wraps the planner's TripPlan with the revision it was planned on, the source code
 // of every stop it names (e.g. "A1"), and each ridden variant's loop direction derived from the
 // order of its mapped pins (never presented as verified).
+//
+// Ride legs (Increment D, D13): `distanceBasis` says whether `distanceMeters` runs along the
+// approximate path (with the board/alight measures) or is the straight-line stop-to-stop sum;
+// `mode` and `fleet` are the route's (no record → "Vehicle type not confirmed"); the fare says
+// its span and basis. Bodies cached or saved before these fields existed read as straight-line,
+// unconfirmed fleet and the plain rule span (defaults), never as a guessed class or path.
 import { z } from "zod";
 import { isInsideNaga } from "../geo/naga";
+import { fleetSummary } from "../modes/fleet";
 import { PLAN_LABELS } from "../planner/labels";
 import type { TripPlan } from "../planner/plan";
 import { ringDirection } from "../trip/present";
-import { revisionMetaSchema, verificationSchema, type NetworkSnapshot, type Parsed } from "./schemas";
+import { fleetSummarySchema, revisionMetaSchema, routeModeSchema, verificationSchema, type NetworkSnapshot, type Parsed } from "./schemas";
 
 /** Two points as JSON is well under 200 bytes; anything past this is refused unread. */
 export const PLAN_BODY_MAX_BYTES = 1024;
@@ -54,6 +61,8 @@ const walkLegSchema = z.object({
   pathVerified: z.literal(false),
 });
 
+const measure = z.number().min(0).nullable().default(null);
+
 const rideLegSchema = z.object({
   kind: z.literal("ride"),
   variantId: z.uuid(),
@@ -73,8 +82,22 @@ const rideLegSchema = z.object({
     approximate: z.literal(true),
     discountsApplied: z.literal(false),
     ruleCodes: z.tuple([z.literal("F01"), z.literal("F02")]).readonly(),
+    span: z.enum(["rule_span", "traditional_to_modern"]).default("rule_span"),
+    basis: z.enum(["fare_rules", "fare_rules_and_reports"]).default("fare_rules"),
+    reportCodes: z.array(z.string()).default(() => []),
+  }).refine((f) => (f.basis === "fare_rules_and_reports") === (f.reportCodes.length > 0), {
+    message: "rider reports are cited exactly when they set the maximum",
   }),
-});
+  mode: routeModeSchema.default("jeepney"),
+  fleet: fleetSummarySchema.default(() => fleetSummary([], "jeepney")),
+  distanceBasis: z.enum(["approximate_path", "stop_to_stop_straight_line"]).default("stop_to_stop_straight_line"),
+  boardMeasureM: measure,
+  alightMeasureM: measure,
+}).refine(
+  (l) => (l.distanceBasis === "approximate_path") === (l.boardMeasureM !== null && l.alightMeasureM !== null)
+    && (l.boardMeasureM === null) === (l.alightMeasureM === null),
+  { message: "a path distance comes with both stop measures, a straight-line one with neither" },
+);
 
 export const planOptionSchema = z.object({
   id: z.string(),

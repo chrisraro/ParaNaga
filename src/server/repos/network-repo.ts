@@ -315,6 +315,23 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
   const routes = await rows(db, sql`
     select id, public_code, name, mode, service_status from transit.v_published_routes
      where revision_id = ${revisionId}::uuid order by official_group_number nulls last, length(public_code), public_code`);
+  // Rider fare reports per route (an observation, never a rule): the mixed-fleet fare maximum.
+  const reports = await rows(db, sql`
+    select route_id, code, vehicle_class, delta_qualifier, delta_centavos_low, delta_centavos_high,
+           observed_on::text as observed_on, source_codes::text[] as source_codes
+      from transit.v_published_route_fare_observations
+     where revision_id = ${revisionId}::uuid and relative_to = 'traditional_fare'
+     order by code`);
+  const reportsOf = (routeId: string): NetworkSnapshot["routes"][number]["fareReports"] =>
+    reports.filter((o) => str(o.route_id) === routeId).map((o) => ({
+      code: str(o.code),
+      vehicleClass: o.vehicle_class as NetworkSnapshot["routes"][number]["fareReports"][number]["vehicleClass"],
+      deltaQualifier: o.delta_qualifier as "range" | "at_least",
+      deltaCentavosLow: Number(o.delta_centavos_low),
+      deltaCentavosHigh: numOrNull(o.delta_centavos_high),
+      observedOn: str(o.observed_on),
+      sourceCodes: strArray(o.source_codes),
+    }));
   // D13: the traced path of each variant (length and stop measures by seq); untraced → none.
   const shapes = await rows(db, sql`
     select variant_id, length_m::float8 as length_m, stop_measures from transit.v_published_shapes
@@ -371,6 +388,7 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
       mode: r.mode as RouteMode,
       serviceStatus: strOrNull(r.service_status) as NetworkSnapshot["routes"][number]["serviceStatus"],
       fleet: fleetSummary(fleet.get(str(r.id)) ?? [], r.mode as RouteMode),
+      fareReports: reportsOf(str(r.id)),
     })),
     etaModel,
   };

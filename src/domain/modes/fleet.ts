@@ -161,6 +161,11 @@ const MODE_NAME: Record<RouteMode, string> = {
   jeepney: "Jeepney", tricycle: "Tricycle", uv_express: "UV Express", bus: "Bus", rail: "Train",
 };
 
+/** "Jeepney", "Tricycle", … */
+export function modeName(mode: RouteMode): string {
+  return MODE_NAME[mode];
+}
+
 /** The short vehicle-class chip of a ride option (C7). */
 export function fleetChip(records: readonly FleetRecord[], mode: RouteMode): string {
   const name = MODE_NAME[mode];
