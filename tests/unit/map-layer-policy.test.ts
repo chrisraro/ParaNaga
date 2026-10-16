@@ -25,6 +25,21 @@ describe("mapLayerPolicy", () => {
     expect(p).toMatchObject({ scene: "detail", tripLines: true, overviewLines: false, legend: true });
   });
 
+  it("preview (options listed, none open): the option's lines, overview hidden, nothing tappable", () => {
+    const p = mapLayerPolicy({ ...base, previewing: true });
+    expect(p).toMatchObject({ scene: "preview", tripLines: true, overviewLines: false, overviewInteractive: false, tripLinesMissing: false, legend: true });
+  });
+
+  it("preview falls back to the dimmed overview like a trip when its lines did not load", () => {
+    const p = mapLayerPolicy({ ...base, previewing: true, tripLinesStatus: "failed" });
+    expect(p).toMatchObject({ scene: "preview", overviewLines: true, overviewStandIn: true, tripLinesMissing: true });
+  });
+
+  it("an open trip and picking win over the preview", () => {
+    expect(mapScene({ guiding: false, tripOpen: true, picking: false, previewing: true })).toBe("detail");
+    expect(mapScene({ guiding: false, tripOpen: false, picking: true, previewing: true })).toBe("picking");
+  });
+
   it("guiding keeps the trip lines and the legend", () => {
     const p = mapLayerPolicy({ ...base, guiding: true, tripOpen: true });
     expect(p).toMatchObject({ scene: "guiding", tripLines: true, overviewLines: false, overviewInteractive: false, legend: true });

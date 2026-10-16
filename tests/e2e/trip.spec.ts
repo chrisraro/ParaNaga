@@ -123,7 +123,7 @@ test("setting both ends fits the whole route above the sheet instead of zooming 
       const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
       for (const pin of await pins.all()) {
         const b = await pin.boundingBox();
-        if (!b || b.x < box.x || b.x + b.width > box.x + box.width || b.y < box.y || b.y + b.height > sheetTop) return false;
+        if (!b || b.x < box.x || b.x + b.width > box.x + box.width || b.y < box.y || b.y + b.height > sheetTop - 24) return false;
       }
       return true;
     }, { timeout: 10_000 })

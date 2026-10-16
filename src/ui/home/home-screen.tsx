@@ -585,15 +585,6 @@ export function HomeScreen() {
   const router = useRouter();
   const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
   const tripDetailOpen = ready && (openOption !== null || stored !== null);
-  // Both ends set and options ready, none open: fit the whole route (ends + the recommended
-  // option's stops) above the sheet. An open option fits through its own highlights instead.
-  const routeFitCoords = useMemo(() => {
-    if (!planData || planData.plan.coverage !== "provisional" || tripDetailOpen || guiding || picking) return null;
-    if (!endpoints.start || !endpoints.destination) return null;
-    const best = planData.plan.options[0];
-    const stops = best ? best.legs.flatMap((l) => (l.kind === "ride" ? l.stops.map((st) => ({ lat: st.lat, lng: st.lng })) : [])) : [];
-    return routeFitPoints(endpoints.start.point, endpoints.destination.point, stops);
-  }, [planData, tripDetailOpen, guiding, picking, endpoints.start, endpoints.destination]);
   const stopsInView = useStopsInView(viewBounds, !tripDetailOpen && !guiding);
   const markHomeNavigation = frame?.markHomeNavigation;
   const handleStopSelect = useCallback(
@@ -623,9 +614,15 @@ export function HomeScreen() {
     () => (guidedSession && guidedCard ? { option: guidedSession.trip.option, variants: guidedCard.variants, revisionId: guidedCard.revisionId } : null),
     [guidedSession, guidedCard],
   );
+  // Options listed, none open: the recommended option is drawn as a preview (not tappable).
+  const previewOption =
+    ready && !guiding && !picking && !stored && !openOption && planData && planData.plan.coverage === "provisional"
+      ? (planData.plan.options[0] ?? null)
+      : null;
+  const previewing = previewOption !== null;
   const tripRevisionId = guidedTrip
     ? guidedTrip.revisionId
-    : (stored?.data.revision.revisionId ?? (planData && openOption ? planData.revision.revisionId : null));
+    : (stored?.data.revision.revisionId ?? (planData && (openOption ?? previewOption) ? planData.revision.revisionId : null));
   // The guided walks draw the street path like trip detail, from the walk graph on the phone
   // (a stored copy only when saving data); without it they stay straight dotted lines.
   const guidedWalkGraph = useWalkGraph(guidedTrip?.revisionId ?? null, guidedTrip !== null);
@@ -635,13 +632,21 @@ export function HomeScreen() {
   );
   const tripLinesState = useLines(tripRevisionId, tripRevisionId !== null);
   const tripRevisionLines = tripLinesState.lines;
-  const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : openOption;
+  const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : (openOption ?? previewOption);
   const tripLines = useMemo(() => {
     if (guidedTrip && guidedOption) return buildTripLinesData(guidedOption, guidedTrip.variants, tripRevisionLines);
     if (stored) return buildTripLinesData(stored.option, stored.data.variants, tripRevisionLines);
-    if (planData && openOption) return buildTripLinesData(openOption, planData.variants, tripRevisionLines);
+    if (planData && (openOption ?? previewOption)) return buildTripLinesData((openOption ?? previewOption)!, planData.variants, tripRevisionLines);
     return null;
-  }, [guidedTrip, guidedOption, stored, planData, openOption, tripRevisionLines]);
+  }, [guidedTrip, guidedOption, stored, planData, openOption, previewOption, tripRevisionLines]);
+  // Both ends set, options listed, none open: fit the whole route (ends + the previewed path, or
+  // the option's stops while its lines load) above the sheet. An open option fits via its highlights.
+  const routeFitCoords = useMemo(() => {
+    if (!previewOption || !endpoints.start || !endpoints.destination) return null;
+    const path = tripLines && tripLines.allCoords.length > 0 ? tripLines.allCoords : null;
+    const stops = path ?? previewOption.legs.flatMap((l) => (l.kind === "ride" ? l.stops.map((st) => ({ lat: st.lat, lng: st.lng })) : []));
+    return routeFitPoints(endpoints.start.point, endpoints.destination.point, stops);
+  }, [previewOption, tripLines, endpoints.start, endpoints.destination]);
   // Lines never vanish: the overview stays while picking a point. When the trip's own lines ended
   // without loading (error, or saving data; never while loading) and the trip is on the snapshot's
   // revision, the overview of exactly the trip's ridden variants stands in for the rides, dimmed
@@ -649,7 +654,8 @@ export function HomeScreen() {
   const tripLinesStatus = tripLinesState.status === "ready" ? "ready" : tripLinesState.status === "error" || tripLinesState.status === "skipped" ? "failed" : "loading";
   const layerPolicy = mapLayerPolicy({
     guiding,
-    tripOpen: tripLines !== null,
+    tripOpen: tripLines !== null && !previewing,
+    previewing,
     picking: picking !== null,
     tripHasRides: tripOption ? tripOption.legs.some((l) => l.kind === "ride") : guiding,
     tripLinesStatus,
@@ -680,7 +686,7 @@ export function HomeScreen() {
   if (selectedRouteCode !== null && !showOverview) setSelectedRouteCode(null);
   const mapLegend = legendVisualKeys(tripLines?.legendItems ?? null, collectRouteLegendItems(overviewLines));
   // Guidance has its own announcements: the drawn trip is not read out again then.
-  const tripAnnouncement = guiding ? "" : (tripLines?.announcement ?? "");
+  const tripAnnouncement = guiding || previewing ? "" : (tripLines?.announcement ?? "");
   const [seenTripAnnouncement, setSeenTripAnnouncement] = useState("");
   if (tripAnnouncement !== seenTripAnnouncement) {
     setSeenTripAnnouncement(tripAnnouncement);
@@ -837,7 +843,7 @@ export function HomeScreen() {
           userStale={guiding ? false : (assessment?.stale ?? false)}
           pins={pins}
           highlightStops={highlightStops}
-          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET + 40)}
+          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET + 64)}
           refitSignal={sheet.snap}
           fitBoundsCoords={routeFitCoords}
           fitAnnouncement="Route shown"

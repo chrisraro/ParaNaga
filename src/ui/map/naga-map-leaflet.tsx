@@ -135,6 +135,8 @@ function FitHighlights({
   const stopsKey = stops && stops.length > 0 ? stops.map((s) => s.id).join("|") : "";
   const linesKey = stopsKey && tripLines ? `${tripLines.walkSegments.length}:${tripLines.rideSegments.map((r) => r.key).join(",")}` : "";
   const coordsKey = fitBoundsCoords ? routeFitKey(fitBoundsCoords) : "";
+  // Announce per pair of ends: the path loading in later refits silently.
+  const endsKey = fitBoundsCoords ? routeFitKey(fitBoundsCoords.slice(0, 2)) : "";
   const fitKey = [stopsKey, linesKey, coordsKey].filter(Boolean).join("#");
   // A snap change re-fits; a pan, zoom or GPS fix never does (the rider's view wins until the route changes).
   const key = fitKey ? `${fitKey}@${refitSignal ?? ""}` : "";
@@ -164,8 +166,8 @@ function FitHighlights({
     });
     // One short announcement per new route fit (not for a snap re-fit, not for a trip detail
     // fit, which has its own announcement).
-    if (fitAnnouncement && !(stops && stops.length > 0) && coordsKey && announcedKey.current !== coordsKey) {
-      announcedKey.current = coordsKey;
+    if (fitAnnouncement && !(stops && stops.length > 0) && endsKey && announcedKey.current !== endsKey) {
+      announcedKey.current = endsKey;
       onAnnounce(fitAnnouncement);
     }
   });

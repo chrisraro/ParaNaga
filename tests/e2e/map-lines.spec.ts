@@ -376,6 +376,47 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
   await expect(page.getByTestId("map-legend-button")).toBeVisible();
 });
 
+test("after choosing From and To the recommended option's lines are previewed above the sheet", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect(page.getByTestId("trip-detail")).toHaveCount(0);
+  // Walk dotted, ride solid; overview routes are hidden under the preview.
+  const walk = page.locator("path.pn-line--walk");
+  await expect(walk.first()).toBeAttached({ timeout: 15000 });
+  await expect(walk.first()).toHaveAttribute("stroke-dasharray", /.+/);
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
+  await expect(page.locator("path.pn-line--route")).toHaveCount(0);
+  await expectLegendListsWalkAndStops(page);
+  await page.getByTestId("map-legend-button").click();
+  await expect(page.getByTestId("map-legend-panel")).toContainText(/jeepney/i);
+  await page.keyboard.press("Escape");
+  // The whole path settles inside the map, at least 24 px above the sheet.
+  const mapBox = (await page.getByTestId("naga-map").boundingBox())!;
+  await expect
+    .poll(async () => {
+      const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+      for (const sel of ["path.pn-line--ride", "path.pn-line--walk"]) {
+        for (const el of await page.locator(sel).all()) {
+          const b = await el.boundingBox();
+          if (!b) continue;
+          if (b.x < mapBox.x || b.x + b.width > mapBox.x + mapBox.width || b.y < mapBox.y || b.y + b.height > sheetTop - 24) return false;
+        }
+      }
+      return true;
+    }, { timeout: 10_000 })
+    .toBe(true);
+  // Opening an option swaps to its lines; Back returns to the preview.
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await page.getByTestId("trip-detail").getByRole("button", { name: /back/i }).first().click();
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
+});
+
 test("the overview lines and the legend stay while a point is being chosen on the map", async ({ page }) => {
   await openApp(page);
   await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
