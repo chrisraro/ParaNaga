@@ -161,7 +161,8 @@ function dominatesOption(a: EnrichedPlanOption, b: EnrichedPlanOption): boolean 
 function relabelOptions(cands: EnrichedPlanOption[], labels: readonly PlanLabel[]): EnrichedPlanOption[] {
   const pareto = cands.filter((a) => !cands.some((b) => b !== a && dominatesOption(b, a))).sort(compareOption);
   if (pareto.length === 0) return [];
-  const winner: Record<PlanLabel, EnrichedPlanOption> = {
+  // Task 8 deletes this relabelling; "Short local ride" (padyak) is never a ride option's label.
+  const winner: Partial<Record<PlanLabel, EnrichedPlanOption>> = {
     Recommended: pareto[0]!,
     "Fewest transfers": [...pareto].sort((a, b) => a.rides - b.rides || compareOption(a, b))[0]!,
     "Least walking": [...pareto].sort((a, b) => a.walkMeters - b.walkMeters || compareOption(a, b))[0]!,
@@ -169,6 +170,7 @@ function relabelOptions(cands: EnrichedPlanOption[], labels: readonly PlanLabel[
   const out: { cand: EnrichedPlanOption; labels: PlanLabel[] }[] = [];
   for (const label of labels) {
     const c = winner[label];
+    if (!c) continue;
     const existing = out.find((o) => o.cand.id === c.id);
     if (existing) existing.labels.push(label);
     else out.push({ cand: c, labels: [label] });

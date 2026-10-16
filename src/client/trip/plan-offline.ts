@@ -18,7 +18,8 @@ export async function planOffline(origin: LatLng, destination: LatLng): Promise<
   if (!snapshot || !isCompleteSnapshot(snapshot)) return { status: "unavailable" };
   const parsed = parsePlanRequest({ origin: { lat: origin.lat, lng: origin.lng }, destination: { lat: destination.lat, lng: destination.lng } });
   if (!parsed.ok) return { status: "invalid" };
-  const plan = planTrip(snapshot, parsed.value.origin, parsed.value.destination);
+  // Task 7 passes the Lines and street graph this phone holds.
+  const plan = planTrip(snapshot, { lines: null, streets: null }, parsed.value.origin, parsed.value.destination, { now: new Date() });
   const data = planResponseSchema.safeParse(buildPlanResponse(snapshot, plan));
   return data.success ? { status: "ready", data: data.data } : { status: "unavailable" };
 }

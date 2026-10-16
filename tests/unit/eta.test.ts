@@ -234,6 +234,7 @@ describe("properties (fixed seeds)", () => {
 
 describe("types", () => {
   it("a planner option is an estimate input", () => {
+    // @ts-expect-error Task 9: tricycle and padyak legs (plan E §D) are not estimate inputs yet.
     const check = (o: PlanOption): EtaOptionInput => o;
     expect(typeof check).toBe("function");
   });

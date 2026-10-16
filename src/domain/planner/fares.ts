@@ -104,8 +104,8 @@ export type LegFare = {
 export type TripFare = {
   minCentavos: number | null;
   maxCentavos: number | null;
-  /** "no_ride" for a walk-only option (0–0). */
-  status: "estimate" | "unavailable" | "no_ride";
+  /** "no_ride" for a walk-only option (0–0); "minimum" (tricycle) and "flat_per_passenger" (padyak) copy their leg. */
+  status: "estimate" | "unavailable" | "no_ride" | "minimum" | "flat_per_passenger";
   completeness: "estimate";
 };
 
@@ -184,4 +184,40 @@ export function sumFares(legs: readonly LegFare[]): TripFare {
     max += l.maxCentavos;
   }
   return { minCentavos: min, maxCentavos: max, status: "estimate", completeness: "estimate" };
+}
+
+// Tricycle and padyak (plan E §D). F03 gives only a minimum (no distance matrix; the 20 % discount's
+// eligibility is unverified, not applied). F04 is a flat fare per passenger with an ID discount.
+// No rule or no base → unavailable, never a hard-coded amount.
+
+export type TricycleFare = {
+  minCentavos: number | null;
+  maxCentavos: null;
+  status: "minimum" | "unavailable";
+  ruleCodes: ["F03"];
+  discountsApplied: false;
+};
+
+export type PadyakFare = {
+  minCentavos: number | null;
+  maxCentavos: number | null;
+  status: "flat_per_passenger" | "unavailable";
+  discountedCentavos: number | null;
+  ruleCodes: ["F04"];
+};
+
+const ruleOf = (rules: readonly FareRuleEstimate[], code: string) => rules.find((r) => r.code === code) ?? null;
+
+export function tricycleFare(rules: readonly FareRuleEstimate[]): TricycleFare {
+  const min = ruleOf(rules, "F03")?.baseCentavos ?? null;
+  return { minCentavos: min, maxCentavos: null, status: min === null ? "unavailable" : "minimum", ruleCodes: ["F03"], discountsApplied: false };
+}
+
+export function padyakFare(rules: readonly FareRuleEstimate[]): PadyakFare {
+  const r = ruleOf(rules, "F04");
+  const flat = r?.baseCentavos ?? null;
+  return {
+    minCentavos: flat, maxCentavos: flat, status: flat === null ? "unavailable" : "flat_per_passenger",
+    discountedCentavos: flat === null ? null : (r?.discountedBaseCentavos ?? null), ruleCodes: ["F04"],
+  };
 }

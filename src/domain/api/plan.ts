@@ -164,7 +164,7 @@ export function buildPlanResponse(snapshot: Pick<NetworkSnapshot, "revision" | "
       if (leg.kind === "walk") {
         if (leg.from.stopId) stopIds.add(leg.from.stopId);
         if (leg.to.stopId) stopIds.add(leg.to.stopId);
-      } else {
+      } else if (leg.kind === "ride") {
         variantIds.add(leg.variantId);
         for (const s of leg.stops) stopIds.add(s.id);
       }
@@ -173,7 +173,9 @@ export function buildPlanResponse(snapshot: Pick<NetworkSnapshot, "revision" | "
   const byId = new Map(snapshot.stops.map((s) => [s.id, s]));
   return {
     revision: snapshot.revision,
-    plan,
+    // Task 7 (plan E §D) replaces this cast: the response schema does not yet carry the Task 6 planner's
+    // free board/alight points, tricycle and padyak legs, option modes or jeepneyReason.
+    plan: plan as unknown as z.input<typeof planResponseSchema>["plan"],
     stops: snapshot.stops.filter((s) => stopIds.has(s.id)).map((s) => ({ id: s.id, name: s.name, code: s.source.code })),
     variants: snapshot.variants
       .filter((v) => variantIds.has(v.variantId))

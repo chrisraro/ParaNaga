@@ -20,7 +20,8 @@ export function POST(request: Request) {
     if (!snapshot) throw notFound("No network revision is published.");
     if (!isCompleteSnapshot(snapshot)) throw unavailable("The published network could not be read completely. Try again.");
 
-    const plan = planTrip(snapshot, parsed.value.origin, parsed.value.destination);
+    // Task 7 wires the cached Lines, street graph and planning network (network-cache.ts).
+    const plan = planTrip(snapshot, { lines: null, streets: null }, parsed.value.origin, parsed.value.destination, { now: new Date() });
     return { body: buildPlanResponse(snapshot, plan), cacheControl: CACHE.none };
   });
 }
