@@ -1,0 +1,207 @@
+/* Mode visual system tokens & component styles (Task 11).
+ *
+ * Palette L is the default and applies when `[data-map-surface="light"]`.
+ * Palette D applies on `[data-map-surface="dark"]` (dark theme with tiles off) and inside dark UI sheets.
+ */
+
+:root,
+.pn-map[data-map-surface="light"] {
+  --pn-mode-traditional_puj: #B45309;
+  --pn-mode-traditional_puj-casing: #FFFFFF;
+  --pn-mode-modern_puj: #1D4ED8;
+  --pn-mode-modern_puj-casing: #FFFFFF;
+  --pn-mode-mixed_trad_modern: #B45309;
+  --pn-mode-mixed_trad_modern-secondary: #1D4ED8;
+  --pn-mode-mixed_trad_modern-casing: #FFFFFF;
+  --pn-mode-tricycle: #A21CAF;
+  --pn-mode-tricycle-casing: #FFFFFF;
+  --pn-mode-e_tricycle: #0E7490;
+  --pn-mode-e_tricycle-casing: #FFFFFF;
+  --pn-mode-uv_express: #BE123C;
+  --pn-mode-uv_express-casing: #FFFFFF;
+  --pn-mode-bus: #6D28D9;
+  --pn-mode-bus-casing: #FFFFFF;
+  --pn-mode-unconfirmed: #57534E;
+  --pn-mode-unconfirmed-casing: #FFFFFF;
+  --pn-mode-walk: #0F1E3D;
+  --pn-mode-walk-casing: #FFFFFF;
+  --pn-mode-rail: #0F1E3D;
+  --pn-mode-rail-casing: #FFFFFF;
+}
+
+[data-theme="dark"],
+.pn-map[data-map-surface="dark"] {
+  --pn-mode-traditional_puj: #F59E0B;
+  --pn-mode-traditional_puj-casing: #0B1220;
+  --pn-mode-modern_puj: #60A5FA;
+  --pn-mode-modern_puj-casing: #0B1220;
+  --pn-mode-mixed_trad_modern: #F59E0B;
+  --pn-mode-mixed_trad_modern-secondary: #60A5FA;
+  --pn-mode-mixed_trad_modern-casing: #0B1220;
+  --pn-mode-tricycle: #E879F9;
+  --pn-mode-tricycle-casing: #0B1220;
+  --pn-mode-e_tricycle: #22D3EE;
+  --pn-mode-e_tricycle-casing: #0B1220;
+  --pn-mode-uv_express: #FB7185;
+  --pn-mode-uv_express-casing: #0B1220;
+  --pn-mode-bus: #A78BFA;
+  --pn-mode-bus-casing: #0B1220;
+  --pn-mode-unconfirmed: #D6D3D1;
+  --pn-mode-unconfirmed-casing: #0B1220;
+  --pn-mode-walk: #E2E8F0;
+  --pn-mode-walk-casing: #0B1220;
+  --pn-mode-rail: #E2E8F0;
+  --pn-mode-rail-casing: #0B1220;
+}
+
+/* ModeChip: icon + text label + 4 px colour stripe (never colour-only). */
+.pn-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--pn-border, rgba(15, 30, 61, 0.16));
+  border-left-width: 4px;
+  border-left-color: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
+  background: var(--pn-surface-elevated, #FFFFFF);
+  color: var(--pn-ink, #0F1E3D);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+[data-theme="dark"] .pn-mode-chip {
+  background: #111A2E;
+  color: #F8FAFC;
+  border-color: rgba(226, 232, 240, 0.22);
+  border-left-color: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
+}
+
+.pn-mode-chip--compact {
+  min-height: 24px;
+  padding: 2px 8px 2px 6px;
+  font-size: 0.75rem;
+}
+
+.pn-mode-chip__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.pn-mode-chip__label {
+  white-space: normal;
+}
+
+/* FleetChips: list of vehicle-class chips with evidence text. */
+.pn-fleet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* MapLegend: collapsible button and panel placed above attribution and clear of zoom controls. */
+.pn-map-legend {
+  position: absolute;
+  left: 12px;
+  bottom: 36px;
+  z-index: 500;
+  max-width: min(320px, calc(100vw - 88px));
+  pointer-events: auto;
+}
+
+.pn-map-legend__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--pn-border, rgba(15, 30, 61, 0.2));
+  background: var(--pn-surface-elevated, #FFFFFF);
+  color: var(--pn-ink, #0F1E3D);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(11, 18, 32, 0.16);
+  cursor: pointer;
+}
+
+[data-theme="dark"] .pn-map-legend__toggle {
+  background: #111A2E;
+  color: #F8FAFC;
+  border-color: rgba(226, 232, 240, 0.28);
+}
+
+.pn-map-legend__panel {
+  margin-bottom: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--pn-border, rgba(15, 30, 61, 0.2));
+  background: var(--pn-surface-elevated, #FFFFFF);
+  color: var(--pn-ink, #0F1E3D);
+  box-shadow: 0 6px 20px rgba(11, 18, 32, 0.22);
+  font-size: 0.8125rem;
+}
+
+[data-theme="dark"] .pn-map-legend__panel {
+  background: #111A2E;
+  color: #F8FAFC;
+  border-color: rgba(226, 232, 240, 0.28);
+}
+
+.pn-map-legend__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pn-map-legend__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pn-map-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pn-map-legend__swatch {
+  flex-shrink: 0;
+}
+
+.pn-map-legend__note {
+  margin: 0;
+  padding-left: 44px;
+  font-size: 0.75rem;
+  color: var(--pn-ink-muted, #475569);
+}
+
+[data-theme="dark"] .pn-map-legend__note {
+  color: #CBD5E1;
+}
+
+.pn-map-legend__footnote {
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--pn-border, rgba(15, 30, 61, 0.14));
+  font-size: 0.75rem;
+  color: var(--pn-ink-muted, #475569);
+}
+
+[data-theme="dark"] .pn-map-legend__footnote {
+  border-top-color: rgba(226, 232, 240, 0.2);
+  color: #CBD5E1;
+}
