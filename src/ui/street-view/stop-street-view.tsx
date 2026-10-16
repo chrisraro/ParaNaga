@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { streetViewEmbed, streetViewLink } from "@/domain/media/street-view";
 import "./street-view.css";
 
-export function StopStreetView({ lat, lng, name }: { lat: number; lng: number; name: string }) {
+export function StopStreetView({ lat, lng, name, what = "stop" }: { lat: number; lng: number; name: string; what?: "stop" | "place" }) {
   const [open, setOpen] = useState(false);
   const [offline, setOffline] = useState(false);
   const uid = useId();
@@ -21,19 +21,17 @@ export function StopStreetView({ lat, lng, name }: { lat: number; lng: number; n
   return (
     <section className="pn-street-view" aria-labelledby={`${uid}-heading`} data-testid="stop-street-view">
       <h2 id={`${uid}-heading`} className="pn-section__title">See the surroundings</h2>
-      <p className="pn-footnote">Street View near this stop—signage and boarding location unverified. Imagery may be older or taken from a nearby road.</p>
+      <p className="pn-footnote">{what === "stop" ? "Street View near this stop—signage and boarding location unverified." : "Street View near this place—entrance and signage unverified."} Imagery may be older or taken from a nearby road.</p>
       {embed ? (
         <button className="pn-text-btn" type="button" aria-expanded={open} aria-controls={`${uid}-viewer`} onClick={open ? () => setOpen(false) : show}>
           {open ? "Close Street View" : "View surroundings"}
         </button>
-      ) : <p className="pn-footnote">The embedded viewer is not configured. You can open Street View in Google Maps.</p>}
+      ) : <p className="pn-footnote">The in-app viewer is not available in this version of the app. Street View opens in Google Maps instead.</p>}
       <div id={`${uid}-viewer`}>
         {open && embed ? (
           <iframe
             title={`Google Street View near ${name}`}
             src={embed}
-            width="600"
-            height="340"
             loading="lazy"
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
