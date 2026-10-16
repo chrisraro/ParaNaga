@@ -16,6 +16,9 @@ import { STALE_MS, type LocationFix } from "../geo/location-fix";
 import { COMPASS_WORDS } from "../geo/bearing";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance } from "../trip/present";
+import { roundRange } from "../eta/eta";
+import { formatRange, formatRemaining } from "../eta/format";
+import { inPeakWindow } from "../eta/manila-time";
 import { paraSuggested, usableFix, walkProgress, type WalkProgress } from "./progress";
 import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
 import {
@@ -72,6 +75,7 @@ export type WalkView = {
   subtitle: string | null;
   distanceText: string | null;
   directionText: string | null;
+  remainingTime: string | null;
   /** Why distance and direction are hidden (an imprecise or stale fix); null with no fix. */
   locationNote: string | null;
   notes: string[];
@@ -96,6 +100,7 @@ export type RideView = {
   alightText: string;
   countText: string;
   countNote: string;
+  remainingTime: string | null;
   stops: { label: string; state: "boarded" | "passed" | "ahead" | "alight" }[];
   para: { title: string; body: string; acknowledged: boolean } | null;
   /** Show the Report-a-driver entry (MyNaga, decision D9). */
@@ -160,6 +165,43 @@ function distanceLine(progress: WalkProgress | null, name: string, estimateMeter
   return negligible ? null : `${formatDistance(estimateMeters)} walk · ${GUIDANCE_COPY.pathEstimate}`;
 }
 
+function walkRemainingTime(progress: WalkProgress | null, targetName: string, estimateMeters: number, negligible: boolean): string | null {
+  if (negligible) return null;
+  const meters = progress ? progress.distanceMeters : estimateMeters;
+  if (!Number.isFinite(meters) || meters < 15) return null;
+  const rawLow = (meters / 1000 / 4.238) * 60;
+  const rawHigh = rawLow * 1.25;
+  const { lowMin, highMin } = roundRange(rawLow, rawHigh);
+  return `About ${formatRange(lowMin, highMin)} to ${targetName} (estimate)`;
+}
+
+const PEAK_WINDOWS = [
+  { start: "06:00", end: "08:00" },
+  { start: "11:30", end: "13:30" },
+  { start: "17:00", end: "19:00" },
+];
+
+function rideRemainingTime(step: RideStep, ride: RideState, now: number): string | null {
+  const alightIndex = step.stops.length - 1;
+  if (alightIndex <= 0) return null;
+  const stopsRemaining = Math.max(0, alightIndex - ride.passedIndex);
+  if (stopsRemaining === 0) return null;
+
+  let meters = step.distanceMeters;
+  if (ride.passedIndex > 0 && step.stopsToRide > 0) {
+    meters = Math.round((step.distanceMeters * stopsRemaining) / step.stopsToRide);
+  }
+  if (!Number.isFinite(meters) || meters <= 0) return null;
+
+  const date = new Date(now);
+  const isPeak = Number.isFinite(date.getTime()) && inPeakWindow(date, 0, PEAK_WINDOWS);
+  const [slowKmh, fastKmh] = isPeak ? [9.0, 12.0] : [11.53, 15.0];
+  const rawLow = (meters / 1000 / fastKmh) * 60;
+  const rawHigh = (meters / 1000 / slowKmh) * 60;
+  const { lowMin, highMin } = roundRange(rawLow, rawHigh);
+  return formatRemaining({ lowMin, highMin }, "riding");
+}
+
 function nextRideInfo(ride: RideRef) {
   return { chip: ride.routeChip, routeName: ride.routeName, direction: directionText(ride.loopDirection, "long"), badge: UNVERIFIED_ROUTE_BADGE };
 }
@@ -169,6 +211,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
   const targetName = toDestination ? step.target.name : step.target.label;
   const progress = walkProgress(step.target, fix, now);
   const distanceText = distanceLine(progress, targetName, step.estimateMeters, step.negligible);
+  const remainingTime = walkRemainingTime(progress, targetName, step.estimateMeters, step.negligible);
   const directionTextValue = progress?.bearing ? `In a straight line, ${targetName} is to the ${COMPASS_WORDS[progress.bearing]}.` : null;
 
   let title: string;
@@ -223,6 +266,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     subtitle,
     distanceText,
     directionText: directionTextValue,
+    remainingTime,
     locationNote: locationNote(fix, now),
     notes,
     checklist,
@@ -235,7 +279,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
   };
 }
 
-function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number): RideView {
+function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number, now: number): RideView {
   const alightIndex = step.stops.length - 1;
   // A GPS-backed count only while GPS still supports it (countLost: the jeepney is past the window).
   const gps = ride.gpsSeen && !ride.countLost;
@@ -244,6 +288,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
   const alight = step.alight.label;
   const chip = step.ride.routeChip;
   const direction = directionText(step.ride.loopDirection, "long");
+  const remainingTime = rideRemainingTime(step, ride, now);
 
   let title: string;
   if (ride.paraAcknowledged) title = GUIDANCE_COPY.paraAckTitle;
@@ -277,6 +322,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
       ? `${ride.passedIndex} of ${stopsCount(step.stopsToRide)} passed, by pin order`
       : `${stopsCount(step.stopsToRide)} after ${step.board.label}, by pin order`,
     countNote: GUIDANCE_COPY.stopsByPinOrder,
+    remainingTime,
     stops: step.stops.map((s: StopRef, i) => ({
       label: s.label,
       state: i === 0 ? "boarded" : i === alightIndex ? "alight" : gps && i <= ride.passedIndex ? "passed" : "ahead",
@@ -330,6 +376,6 @@ export function guidanceView(session: GuidanceSession, fix: LocationFix | null, 
   const steps = sessionSteps(session);
   if (session.status === "arrived") return arriveView(session, steps);
   const step = steps[session.stepIndex]!;
-  if (step.kind === "ride") return rideView(session, session.ride!, step, steps.length);
+  if (step.kind === "ride") return rideView(session, session.ride!, step, steps.length, now);
   return walkView(session, step, steps.length, fix, now);
 }

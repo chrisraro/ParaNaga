@@ -56,6 +56,8 @@ describe("Help", () => {
       ["How trips are planned", "/app/help/how-trips-are-planned"],
       ["Why stops are not verified yet", "/app/help/why-stops-are-not-verified"],
       ["Using ParaNaga offline", "/app/help/using-paranaga-offline"],
+      ["How times are estimated", "/app/help/how-times-are-estimated"],
+      ["Vehicle types in Naga", "/app/help/vehicle-types-in-naga"],
       ["Report a problem with a driver", "/app/mynaga"],
     ]);
     expect(screen.getByTestId("help-independent").textContent).toBe(INDEPENDENT_NOTE);
@@ -83,6 +85,7 @@ describe("Help", () => {
       `Mapped candidate${BADGE_MEANINGS[1]!.text}`,
       `Documented only${BADGE_MEANINGS[2]!.text}`,
       `Unverified route — confirm with the driver${BADGE_MEANINGS[3]!.text}`,
+      `Approximate path${BADGE_MEANINGS[4]!.text}`,
     ]);
     expect(screen.getByTestId("help-sources-link").getAttribute("href")).toBe("/app/help/sources");
     expect(screen.getByTestId("help-data-footer").textContent).toBe(DATA_FOOTER);
@@ -96,8 +99,11 @@ describe("Help articles", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("How trips are planned");
     expect(screen.getByTestId("help-article-body").textContent).toBe(
       "ParaNaga suggests trips on Loops A and B only. Their stop order comes from the order of pins on a public map, not from a field survey, so every suggestion carries the badge “Unverified route — confirm with the driver”." +
-        "Walks to and from a stop are capped at 600 m, and 400 m between rides. Walking distances are straight-line estimates (× 1.3); paths and crossings are not checked." +
-        "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied. There are no times: ParaNaga does not know when jeepneys run.",
+        "Ride distances follow approximate paths traced along OpenStreetMap roads between candidate pins, or straight-line distances where roads are unmapped." +
+        "Walks to and from a stop are capped at 600 m, and 400 m between rides. Walk paths are routed along walkable streets where mapped, or straight-line estimates (× 1.3)." +
+        "A ride is only suggested if it saves walking: taking a jeepney must replace meaningful walking distance compared to walking all the way." +
+        "Times are estimated as ranges based on typical travel speeds in Naga (slower during peak hours). Times do not include waiting, because jeepneys have no published schedules." +
+        "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied.",
     );
     expect(fetched).toEqual([]);
     expect(document.title).toBe("How trips are planned · ParaNaga");
@@ -109,6 +115,26 @@ describe("Help articles", () => {
     expect(screen.getByTestId("help-article-body").textContent).not.toContain("Planning offline");
     expect(screen.getByTestId("help-article-body").textContent).not.toContain("…");
     await waitFor(() => expect(screen.getByTestId("help-article-body").textContent).toContain("Planning offline uses the data from Oct 15, 2026; fares may have changed."));
+  });
+
+  it("How times are estimated: copy and sources, no network request", () => {
+    render(<HelpArticleScreen slug="how-times-are-estimated" />);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("How times are estimated");
+    expect(screen.getByTestId("help-article-body").textContent).toContain("Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.");
+    expect(screen.getByTestId("help-article-body").textContent).toContain("Tolentino & Sigua 2022, N28");
+    expect(screen.getByTestId("help-article-body").textContent).toContain("SafeTravelPH 2025, N16");
+    expect(document.title).toBe("How times are estimated · ParaNaga");
+  });
+
+  it("Vehicle types in Naga: copy for all 5 modes, no network request", () => {
+    render(<HelpArticleScreen slug="vehicle-types-in-naga" />);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Vehicle types in Naga");
+    expect(screen.getByTestId("help-article-body").textContent).toContain("Traditional jeepney");
+    expect(screen.getByTestId("help-article-body").textContent).toContain("Modern jeepney");
+    expect(screen.getByTestId("help-article-body").textContent).toContain("Electric jeepney");
+    expect(screen.getByTestId("help-article-body").textContent).toContain("Tricycle and e-tricycle");
+    expect(screen.getByTestId("help-article-body").textContent).toContain("UV Express and bus");
+    expect(document.title).toBe("Vehicle types in Naga · ParaNaga");
   });
 });
 

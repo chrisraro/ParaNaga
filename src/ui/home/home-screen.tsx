@@ -830,6 +830,7 @@ export function HomeScreen() {
               ends={stored.ends}
               note={stored.note}
               onStart={() => guidanceActions.start(stored.data, stored.option, stored.ends)}
+              etaModel={snapshotState.snapshot?.etaModel}
             />
           ) : ready && openOption && planData && endpoints.start && endpoints.destination ? (
             <TripDetail
@@ -839,6 +840,7 @@ export function HomeScreen() {
               ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
               note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline), tone: "warning" } : null)}
               onStart={() => guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) })}
+              etaModel={snapshotState.snapshot?.etaModel}
             />
           ) : ready ? (
             <>
@@ -856,7 +858,12 @@ export function HomeScreen() {
               {plan.status === "error" ? <TripError kind={plan.kind} onRetry={handleRetry} onChangeEndpoints={handleChangeEndpoints} /> : null}
               {planData && planData.plan.coverage === "none" ? <TripNoCoverage data={planData} /> : null}
               {planData && planData.plan.coverage === "provisional" ? (
-                <TripOptions data={planData} refreshing={plan.status === "ready" && plan.refreshing} onOpen={handleOpenOption} />
+                <TripOptions
+                  data={planData}
+                  refreshing={plan.status === "ready" && plan.refreshing}
+                  onOpen={handleOpenOption}
+                  etaModel={snapshotState.snapshot?.etaModel}
+                />
               ) : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>
                 Clear start and destination

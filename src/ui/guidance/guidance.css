@@ -111,6 +111,13 @@
   display: none;
 }
 
+.pn-guide__time {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pn-label-secondary);
+  font-variant-numeric: tabular-nums;
+}
 /* Walk: the distance line (artboard's big number) and direction. */
 .pn-guide__distance {
   margin: 0;

@@ -25,6 +25,7 @@ describe("Walk (walk_to_board)", () => {
     expect(v.title).toBe("Walk to Plaza Rizal (A1)");
     expect(v.distanceText).toBe("≈ 140 m walk · straight-line estimate, path not verified");
     expect(v.directionText).toBeNull();
+    expect(v.remainingTime).toBe("About 2–3 min to Plaza Rizal (A1) (estimate)");
     expect(v.locationNote).toBeNull();
     expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown("Loop A")]);
     expect(v.nextRide).toEqual({ chip: "Loop A", routeName: "Centro–Magsaysay Loop A", direction: "clockwise (from pin order)", badge: UNVERIFIED_ROUTE_BADGE });
@@ -39,6 +40,7 @@ describe("Walk (walk_to_board)", () => {
     if (v.screen !== "walk") throw new Error(v.screen);
     expect(v.distanceText).toBe("≈ 200 m to Plaza Rizal (A1) in a straight line");
     expect(v.directionText).toBe("In a straight line, Plaza Rizal (A1) is to the north.");
+    expect(v.remainingTime).toBe("About 2–4 min to Plaza Rizal (A1) (estimate)");
     expect(v.live).toEqual({ politeness: "polite", text: "≈ 200 m to Plaza Rizal (A1) in a straight line" });
   });
 
@@ -92,6 +94,7 @@ describe("Ride", () => {
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "ahead", "ahead", "ahead", "ahead", "alight"]);
     expect(v.para).toBeNull();
     expect(labels(v)).toEqual(["secondary:nextStopIsMine:My stop is next", "secondary:gotOff:I got off", "secondary:missedStop:I missed my stop", "secondary:end:End guidance"]);
+    expect(v.remainingTime).toBe("About 4–6 min of riding left (estimate)");
     expect(v.reportDriver).toBe(true);
   });
 
@@ -101,6 +104,7 @@ describe("Ride", () => {
     if (v.screen !== "ride") throw new Error(v.screen);
     expect(v.title).toBe("3 stops to go");
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "passed", "passed", "ahead", "ahead", "alight"]);
+    expect(v.remainingTime).toBe("About 2–4 min of riding left (estimate)");
     expect(v.para).toBeNull();
   });
 

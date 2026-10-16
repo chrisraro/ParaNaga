@@ -17,6 +17,10 @@ import type { LatLng } from "../geo/types";
 import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel, stopLabel } from "../trip/present";
+import type { EtaModel } from "../api/schemas";
+import { DEFAULT_ETA_MODEL } from "../eta/default-model";
+import { estimateOption } from "../eta/eta";
+import { formatTotal } from "../eta/format";
 
 /** Saved-place names: at most 40 characters, counted in code points (an emoji is one). */
 export const PLACE_LABEL_MAX = 40;
@@ -213,10 +217,23 @@ export function manilaDate(iso: string | null): string | null {
   return formatIsoDate(new Date(ms + 8 * 3_600_000).toISOString().slice(0, 10));
 }
 
-/** "Time not available · Estimate ₱14–₱17 · data from 15 Oct 2026". */
-export function tripCardMeta(card: Pick<SavedTrip, "option" | "publishedAt" | "revisionLabel">): string {
+/**
+ * "{estimate text} · {fare chip} · data from {date}".
+ * Uses the revision's time-estimate model (or the cached/default model) to estimate the option duration.
+ */
+export function tripCardMeta(
+  card: Pick<SavedTrip, "option" | "publishedAt" | "revisionLabel">,
+  model?: EtaModel | null,
+  departure: Date = new Date(),
+): string {
   const date = manilaDate(card.publishedAt);
-  return `Time not available · ${fareChipText(card.option.fare)} · data from ${date ?? `revision ${card.revisionLabel}`}`;
+  const dataFrom = `data from ${date ?? `revision ${card.revisionLabel}`}`;
+  const fare = fareChipText(card.option.fare);
+  const activeModel = model ?? DEFAULT_ETA_MODEL;
+  const walkLengths = card.option.legs.map((l) => (l.kind === "walk" ? l.distanceMeters : null));
+  const res = estimateOption(card.option, walkLengths, activeModel, departure);
+  const estimateText = res.ok ? formatTotal(res.estimate.total) : "Estimate unavailable";
+  return `${estimateText} · ${fare} · ${dataFrom}`;
 }
 
 /** Is `run` a consecutive stretch of `ring` (wrapping around a circular variant)? */
@@ -319,7 +336,14 @@ export function shareText(input: ShareInput, opts: { exactPoints?: boolean } = {
   }
   lines.push(...steps.map((s, i) => `${i + 1}. ${s}`));
   lines.push(`Fare: ${option.rides > 0 ? legFareText(option.fare) : fareChipText(option.fare)}`);
-  lines.push(`Time not available. Data revision ${input.revisionLabel}.`);
+  const walkLengths = option.legs.map((l) => (l.kind === "walk" ? l.distanceMeters : null));
+  const res = estimateOption(option, walkLengths, DEFAULT_ETA_MODEL, new Date());
+  const estimateText = res.ok ? formatTotal(res.estimate.total) : null;
+  if (estimateText) {
+    lines.push(`${estimateText}. Data revision ${input.revisionLabel}.`);
+  } else {
+    lines.push(`Data revision ${input.revisionLabel}.`);
+  }
   if (opts.exactPoints) {
     lines.push(`Start point: ${fixed(input.start.point)}`);
     lines.push(`Destination point: ${fixed(input.destination.point)}`);

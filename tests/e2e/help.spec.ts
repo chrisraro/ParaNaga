@@ -53,6 +53,8 @@ test("Help opens from More with its three tabs, and Back returns to More", async
     "How trips are planned",
     "Why stops are not verified yet",
     "Using ParaNaga offline",
+    "How times are estimated",
+    "Vehicle types in Naga",
     "Report a problem with a driver",
   ]);
   await expect(page.getByTestId("help-independent")).toHaveText("ParaNaga is an independent commuter guide. It is not an official City Government app.");
@@ -64,7 +66,7 @@ test("Help opens from More with its three tabs, and Back returns to More", async
   await expect(page.getByTestId("help-report-driver")).toHaveAttribute("href", "/app/mynaga");
 
   await tabs(page).getByRole("tab", { name: "About data" }).click();
-  await expect(page.getByTestId("help-badges").getByRole("listitem")).toHaveCount(4);
+  await expect(page.getByTestId("help-badges").getByRole("listitem")).toHaveCount(5);
   await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionmodes-lines-2026-10-16 · Oct 16, 2026");
   await expect(page.getByTestId("help-data-footer")).toHaveText("No live arrival times. Stop alerts work only while ParaNaga is open on your screen.");
 
@@ -77,6 +79,8 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   for (const [title, phrase] of [
     ["How trips are planned", "every suggestion carries the badge “Unverified route — confirm with the driver”."],
     ["Why stops are not verified yet", "Every stop on the map comes from a public My Maps snapshot (retrieved 15 October 2026)."],
+    ["How times are estimated", "Times are ranges"],
+    ["Vehicle types in Naga", "Traditional jeepney"],
     ["Using ParaNaga offline", "Planning offline uses the data from Oct 16, 2026; fares may have changed."],
   ] as const) {
     await page.getByTestId("help-links").getByRole("link", { name: title }).click();

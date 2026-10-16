@@ -374,6 +374,83 @@
   color: var(--pn-label2);
   font-size: 15px;
 }
+.pn-trip-detail__time {
+  font-weight: 600;
+  color: var(--pn-label);
+}
+.pn-trip-detail__peak {
+  margin: 0;
+  color: var(--pn-gold-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pn-trip-detail__basis-btn {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pn-accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.pn-trip-detail__basis-btn:focus-visible {
+  outline: 2px solid var(--pn-accent);
+  outline-offset: 2px;
+}
+.pn-trip-card__peak {
+  margin: 0;
+  color: var(--pn-gold-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pn-trip-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.pn-eta-sheet__lead {
+  margin: 0 0 16px;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.pn-eta-sheet__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-eta-sheet__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--pn-sep);
+}
+.pn-eta-sheet__item:last-child {
+  border-bottom: none;
+}
+.pn-eta-sheet__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--pn-label);
+}
+.pn-eta-sheet__assumptions {
+  margin: 2px 0 0 16px;
+  padding: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+.pn-eta-sheet__empty {
+  color: var(--pn-label2);
+  font-size: 15px;
+}
 
 /* Timeline: 36px rail + body, like the artboard's grid. */
 .pn-tl {

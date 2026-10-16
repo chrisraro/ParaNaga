@@ -38,6 +38,8 @@ export type RideStep = {
   /** Stops after boarding up to and including the alighting stop, by pin order. */
   stopsToRide: number;
   distanceMeters: number;
+  boardMeasureM?: number | null;
+  alightMeasureM?: number | null;
 };
 export type TransferStep = { kind: "transfer"; index: number; from: StopRef; target: StopRef; nextRide: RideRef } & WalkFields;
 export type WalkToDestinationStep = {
@@ -98,7 +100,18 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
         ? { kind: "walk_to_board", index: steps.length, target: board, nextRide: ride, ...walkFields(pendingWalk) }
         : { kind: "transfer", index: steps.length, from: lastAlight, target: board, nextRide: ride, ...walkFields(pendingWalk) },
     );
-    steps.push({ kind: "ride", index: steps.length, ride, stops, board, alight, stopsToRide: stops.length - 1, distanceMeters: leg.distanceMeters });
+    steps.push({
+      kind: "ride",
+      index: steps.length,
+      ride,
+      stops,
+      board,
+      alight,
+      stopsToRide: stops.length - 1,
+      distanceMeters: leg.distanceMeters,
+      boardMeasureM: leg.boardMeasureM ?? null,
+      alightMeasureM: leg.alightMeasureM ?? null,
+    });
     pendingWalk = null;
     lastAlight = alight;
   }

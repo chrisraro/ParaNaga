@@ -8,10 +8,14 @@
 
 import "./trip.css";
 
-import { Fragment } from "react";
-import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
+import { Fragment, useMemo } from "react";
+import type { PlanOptionDto, PlanResponse, RideLegDto } from "@/domain/api/plan";
+import type { EtaModel } from "@/domain/api/schemas";
+import { formatPeakNote, formatTotal } from "@/domain/eta/format";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { formatDistance, isNegligibleWalk, routeChipLabel, transfersText } from "@/domain/trip/present";
+import { ModeChip } from "@/ui/modes/mode-chip";
+import { extractWalkLengths, useOptionEta } from "./eta-text";
 import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, planLookups, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
@@ -55,9 +59,26 @@ export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: 
   );
 }
 
-function OptionCard({ option, lookups, onOpen, index }: { option: PlanOptionDto; lookups: PlanLookups; onOpen: (id: string) => void; index: number }) {
+function OptionCard({
+  option,
+  lookups,
+  onOpen,
+  index,
+  etaModel,
+}: {
+  option: PlanOptionDto;
+  lookups: PlanLookups;
+  onOpen: (id: string) => void;
+  index: number;
+  etaModel?: EtaModel | null;
+}) {
   const primary = index === 0;
   const routes = option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode, l.routeName));
+  const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
+  const { estimate } = useOptionEta(option, walkLengths, etaModel);
+  const peakNote = estimate ? formatPeakNote(estimate.total) : null;
+  const rideLegs = option.legs.filter((l): l is RideLegDto => l.kind === "ride");
+
   return (
     <li className="pn-trip-li">
       <button
@@ -84,8 +105,27 @@ function OptionCard({ option, lookups, onOpen, index }: { option: PlanOptionDto;
           <strong>{headline(option)}</strong>
           {routes.length > 0 ? <span className="sr-only"> on {routes.join(" and ")}</span> : null}
           <span className="sr-only">. </span>
-          <span className="pn-trip-card__time">Time not available</span>
+          <span className="pn-trip-card__time">
+            {estimate ? formatTotal(estimate.total) : "Time not available"}
+          </span>
         </span>
+        {peakNote ? (
+          <p className="pn-trip-card__peak" data-testid="trip-peak-note">
+            {peakNote}
+          </p>
+        ) : null}
+        {rideLegs.length > 0 ? (
+          <span className="pn-trip-card__chips">
+            {rideLegs.map((leg, idx) => (
+              <ModeChip
+                key={idx}
+                mode={leg.fleet?.colourKey ?? leg.mode}
+                label={leg.fleet?.chip ?? "Vehicle type not confirmed"}
+                compact
+              />
+            ))}
+          </span>
+        ) : null}
         <span className="sr-only">. </span>
         <LegStrip option={option} lookups={lookups} />
         <span className="sr-only">. </span>
@@ -104,9 +144,10 @@ type Props = {
   /** A newer plan (refined GPS point) is on its way; these options stay until it arrives. */
   refreshing?: boolean;
   onOpen: (optionId: string) => void;
+  etaModel?: EtaModel | null;
 };
 
-export function TripOptions({ data, refreshing = false, onOpen }: Props) {
+export function TripOptions({ data, refreshing = false, onOpen, etaModel }: Props) {
   const lookups = planLookups(data);
   const extraNotes = data.plan.notes.filter((n) => n !== UNVERIFIED_ROUTE_BADGE);
   return (
@@ -117,7 +158,7 @@ export function TripOptions({ data, refreshing = false, onOpen }: Props) {
       {refreshing ? <p className="pn-trip__refreshing">Updating for your new location…</p> : null}
       <ul className="pn-trip-list">
         {data.plan.options.map((option, i) => (
-          <OptionCard key={option.id} option={option} lookups={lookups} onOpen={onOpen} index={i} />
+          <OptionCard key={option.id} option={option} lookups={lookups} onOpen={onOpen} index={i} etaModel={etaModel} />
         ))}
       </ul>
       <div className="pn-trip-warn">

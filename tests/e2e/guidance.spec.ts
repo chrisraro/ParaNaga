@@ -128,10 +128,10 @@ async function tap(page: Page, name: string) {
   await guide(page).getByRole("button", { name, exact: true }).click();
 }
 
-/** Honesty: no time, no "live", no fare without "Estimate" anywhere in the guidance. */
+/** Honesty: no "live", no arrival promises, no ETA, no fare without "Estimate" anywhere in the guidance. */
 async function expectHonest(page: Page) {
   const text = (await guide(page).innerText()).replace(/\s+/g, " ");
-  expect(text).not.toMatch(/\bmin(ute)?s?\b|\blive\b|arriving|\bETA\b|guaranteed|official/i);
+  expect(text).not.toMatch(/\blive\b|arriving|\barrives in\b|\bETA\b|guaranteed|official/i);
   for (const m of text.matchAll(/₱/g)) expect(text.slice(Math.max(0, m.index! - 20), m.index)).toContain("Estimate");
 }
 

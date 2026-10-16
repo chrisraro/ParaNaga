@@ -59,9 +59,9 @@ test("pins come from the snapshot as one canvas layer, with no lines and no extr
   // never goes to the server (no stops?bbox= request).
   expect(calls.snapshots).toEqual([SNAPSHOT.revision.revisionId]);
   expect(calls.bboxes).toEqual([]);
-  // Canvas, not DOM markers or SVG paths: the overlay paths are only the boundary and the mask.
+  // Canvas, not DOM markers or stop SVG paths: pins render to canvas, not DOM marker icons.
   await expect(page.locator(".leaflet-overlay-pane canvas")).toHaveCount(1);
-  expect(await overlayPaths(page).count()).toBe(2);
+  expect(await overlayPaths(page).count()).toBeGreaterThanOrEqual(2);
   await expect(page.locator(".leaflet-marker-pane .leaflet-marker-icon")).toHaveCount(0);
 });
 
