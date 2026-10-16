@@ -247,11 +247,11 @@ export function terminalNoteSentences(code: string, hasDestinationCategories: bo
   const out: string[] = [];
   if (code === "T01") out.push("Not the PNR railway station.");
   if (code === "T06") out.push("Not Bicol Central Station (the bus terminal).");
-  if (hasDestinationCategories) out.push("Category labels such as northbound and eastbound are administrative, not compass directions.");
+  if (hasDestinationCategories) out.push("Northbound/eastbound are administrative labels.");
   return out;
 }
 
 /** The second line of a route that names the terminal. */
 export function terminalRouteSub(basis: "legal_plan" | "trial"): string {
-  return basis === "trial" ? "Named in the Nov 2025 trial · permanence unconfirmed" : "Named in the legal route plan · bay not mapped";
+  return basis === "trial" ? "Trial · permanence unconfirmed" : "Legal route plan";
 }

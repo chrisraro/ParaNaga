@@ -31,14 +31,13 @@ import { useEscapeToClose } from "@/ui/app-shell/panel";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
-import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Switch } from "@/ui/kit/switch";
 import { SavePlaceDialog } from "@/ui/saved/save-place-dialog";
 
 export const SEARCH_DEBOUNCE_MS = 150;
 const FAILED_COPY = "Search data couldn't load. Try again.";
-const EMPTY_COPY = "No match in Naga — try a place, stop name, street, route or barangay.";
-const REGIONAL_NOTE = "Regional connections on: terminal destination categories are included. Individual services are not verified.";
+const EMPTY_COPY = "No match. Try a place, stop, street or route.";
+const REGIONAL_NOTE = "Includes regional terminals. Services not verified.";
 
 // ------------------------------------------------------------------ icons
 
@@ -201,7 +200,6 @@ function ResultGroup({
           Show all {group.results.length}
         </button>
       ) : null}
-      {group.id === "places" && shown.some((r) => r.kind === "osm") ? <OsmAttribution testId="search-osm-attribution" /> : null}
       {group.id === "legacy" ? <Note testId="search-legacy-note">Old route names are historical hints, not current routes.</Note> : null}
     </section>
   );
@@ -240,7 +238,6 @@ function NoticeCard({
           </button>
         </div>
       ) : null}
-      {notice.osm ? <OsmAttribution /> : null}
       <button type="button" className="pn-text-btn" onClick={onClose}>
         Close
       </button>
@@ -414,7 +411,7 @@ function SearchBody({
             id="pn-search-q"
             type="search"
             className="pn-search__input"
-            placeholder="Place, stop, street, route or barangay"
+            placeholder="Place, stop or route"
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
@@ -487,7 +484,7 @@ function SearchBody({
         </ul>
         {regional ? <Note testId="search-regional-note">{REGIONAL_NOTE}</Note> : null}
         {purpose === "save" ? (
-          <Note testId="search-save-note">Pick a place to save on this phone. OpenStreetMap places and mapped pins can be saved.</Note>
+          <Note testId="search-save-note">Pick a place to save.</Note>
         ) : null}
 
         {indexState.status === "loading" ? <SkeletonRows /> : null}
@@ -501,7 +498,7 @@ function SearchBody({
         ) : null}
         {indexState.status === "ready" && indexState.problem === "offline" ? (
           <Note icon testId="search-offline">
-            Offline · searching data from {date ?? `revision ${indexState.index.revision.label}`}
+            Offline · data from {date ?? `revision ${indexState.index.revision.label}`}
           </Note>
         ) : null}
         {indexState.status === "ready" && indexState.problem === "failed" ? (
@@ -515,7 +512,7 @@ function SearchBody({
 
         {alreadySaved && alreadySaved.query === debounced ? (
           <p className="pn-search__already" role="status" data-testid="search-already-saved">
-            Already saved on this phone as “{alreadySaved.label}”.
+            Already saved as “{alreadySaved.label}”.
           </p>
         ) : null}
         {openNotice ? (

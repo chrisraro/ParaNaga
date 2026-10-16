@@ -8,7 +8,7 @@
 // A saved trip reopened from Saved (requestTrip) restores both ends and re-plans on the current
 // data. While that plan loads (or fails, offline) the saved option shows as saved, labelled with
 // its data date; once the plan is in, the same option opens ("Re-planned on the current data" when
-// the revision changed), or the options show under "Route changed since you saved this".
+// the revision changed), or the options show under "Changed since saved".
 //
 // Guidance (Task 10): "Start trip" in Trip detail starts a session; while it runs the sheet shows
 // the Walk / Ride / Transfer / Arrive step instead of the planner, the tab bar is hidden, the map
@@ -70,7 +70,7 @@ import { useSnapshot } from "@/client/network/use-snapshot";
 import { updateLayers, usePrefs } from "@/client/prefs/use-prefs";
 import { LayersSheet, SelectedRouteCard, distinctRoutesFromLines, filterMapTerminals } from "@/ui/map/layers-sheet";
 import type { MapTerminal } from "@/ui/map/terminals-layer";
-import { tricycleHint as computeTricycleHint, tricycleHintSources } from "@/domain/trip/tricycle-hint";
+import { tricycleHint as computeTricycleHint } from "@/domain/trip/tricycle-hint";
 import { TricycleHintCard } from "@/ui/trip/tricycle-hint";
 import { collectRouteLegendItems, filterOverviewLines } from "@/ui/map/route-lines-layer";
 import {
@@ -91,8 +91,7 @@ const NO_PINS: readonly StopPin[] = [];
 
 const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Destination" };
 
-const samePlaceHint = (which: EndpointWhich) =>
-  which === "start" ? "Move the pin away from your destination." : "Move the pin away from your start.";
+const SAME_PLACE_HINT = "Move the pin.";
 
 /** Which row to offer next after `which` was just set. */
 function nextFocus(state: EndpointsState, which: EndpointWhich): EndpointWhich | null {
@@ -161,7 +160,7 @@ function SamePlaceNotice({ which, onChooseOnMap }: { which: EndpointWhich; onCho
       </svg>
       <div className="pn-status__body">
         <p className="pn-status__title">
-          {SAME_PLACE_TITLE}. {samePlaceHint(which)}
+          {SAME_PLACE_TITLE}. {SAME_PLACE_HINT}
         </p>
         <button type="button" className="pn-status__action" onClick={onChooseOnMap}>
           {which === "start" ? "Choose start on map" : "Choose destination on map"}
@@ -276,9 +275,9 @@ export function HomeScreen() {
     if (!accepted) {
       if (next.error === "same_place") {
         setSamePlaceRefused(which);
-        announce(`${SAME_PLACE_TITLE}. ${samePlaceHint(which)}`);
+        announce(`${SAME_PLACE_TITLE}. ${SAME_PLACE_HINT}`);
       } else {
-        announce("That spot is outside Naga City. Choose a point inside Naga City.");
+        announce("Outside Naga City. Choose a point inside.");
       }
       return false;
     }
@@ -306,7 +305,7 @@ export function HomeScreen() {
   const [seenPlanStatus, setSeenPlanStatus] = useState(plan.status);
   if (plan.status !== seenPlanStatus) {
     setSeenPlanStatus(plan.status);
-    if (plan.status === "loading") setAnnouncement("Looking for provisional routes…");
+    if (plan.status === "loading") setAnnouncement("Looking for routes…");
   }
   const planSignature = planData ? `${planData.plan.coverage}|${planData.plan.options.map((o) => o.id).join(",")}` : null;
   const [seenSignature, setSeenSignature] = useState<string | null>(null);
@@ -318,7 +317,7 @@ export function HomeScreen() {
       setAnnouncement(
         planData.plan.coverage === "none"
           ? noCoverageCopy(planData.plan.reason, planData.plan.directWalkEstimateMeters).title
-          : `${n} provisional trip ${n === 1 ? "option" : "options"} found.${anyRide ? " Unverified route — confirm with the driver." : ""}`,
+          : `${n} ${n === 1 ? "option" : "options"} found.${anyRide ? " Unverified." : ""}`,
       );
     }
   }
@@ -416,7 +415,7 @@ export function HomeScreen() {
     if (which === "start") setGpsIntent(false);
     setRecenterOnFix(false);
     dispatch({ type: "pick", which });
-    announce(`Move the map to place the ${which === "start" ? "start" : "destination"} pin.`);
+    announce("Move the map to place the pin.");
   };
 
   // When the pick panel closes, focus returns to the endpoint row that was set (or cancelled).
@@ -426,7 +425,7 @@ export function HomeScreen() {
     const which = endpoints.picking;
     if (!which || !center.inside) return;
     if (pickSamePlace) {
-      setAnnouncement(`${SAME_PLACE_TITLE}. ${samePlaceHint(which)}`);
+      setAnnouncement(`${SAME_PLACE_TITLE}. ${SAME_PLACE_HINT}`);
       return;
     }
     const wasGps = gpsEndpointKey(endpoints) === which;
@@ -757,7 +756,6 @@ export function HomeScreen() {
   const trikeHintCard = trikeHint ? (
     <TricycleHintCard
       hint={trikeHint}
-      sources={tricycleHintSources(trikeHint, snapshotState.snapshot)}
       onShowOnMap={(terminal) => bumpRecenter({ lat: terminal.lat, lng: terminal.lng }, terminal.name)}
     />
   ) : null;
@@ -946,15 +944,15 @@ export function HomeScreen() {
           aria-label={picking === "start" ? "Choose start on map" : "Choose destination on map"}
         >
           <p className="pn-pick__title">
-            {picking === "start" ? (pickPrompt ?? "Move the map to your starting point") : "Move the map to your destination"}
+            {picking === "start" ? (pickPrompt ?? "Move the map to your start") : "Move the map to your destination"}
           </p>
           {!center.inside ? (
             <p id="pn-pick-blocked" className="pn-pick__hint pn-pick__hint--warn" data-testid="pick-outside-hint">
-              Move the pin inside Naga City
+              Pin must be in Naga City
             </p>
           ) : pickSamePlace ? (
             <p id="pn-pick-blocked" className="pn-pick__hint pn-pick__hint--warn" data-testid="pick-same-place-hint">
-              {SAME_PLACE_TITLE}. {samePlaceHint(picking)}
+              {SAME_PLACE_TITLE}. {SAME_PLACE_HINT}
             </p>
           ) : (
             <p className="pn-pick__hint">The pin marks the centre of the map.</p>
@@ -1048,7 +1046,7 @@ export function HomeScreen() {
                 />
               ) : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>
-                Clear start and destination
+                Clear trip
               </button>
             </>
           ) : null}

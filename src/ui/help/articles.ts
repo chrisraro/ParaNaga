@@ -31,18 +31,16 @@ export const ARTICLES: readonly Article[] = [
     title: "How trips are planned",
     body: [
       `ParaNaga suggests trips on Loops A and B only. Their stop order comes from the order of pins on a public map, not from a field survey, so every suggestion carries the badge “${UNVERIFIED_ROUTE_BADGE}”.`,
-      "Ride distances follow approximate paths traced along OpenStreetMap roads between candidate pins, or straight-line distances where roads are unmapped.",
-      "Walks to and from a stop are capped at 600 m, and 400 m between rides. Walk paths are routed along walkable streets where mapped, or straight-line estimates (× 1.3).",
-      "A ride is only suggested if it saves walking: taking a jeepney must replace meaningful walking distance compared to walking all the way.",
-      "Times are estimated as ranges based on typical travel speeds in Naga (slower during peak hours). Times do not include waiting, because jeepneys have no published schedules.",
-      "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied.",
+      "Walks are capped at 600 m to a stop and 400 m between rides, and a ride is suggested only if it saves walking.",
+      "Times are ranges from typical speeds and do not include waiting, because jeepneys have no published schedules.",
+      "Fares are estimates; discounts are not applied.",
     ],
   },
   {
     slug: "why-stops-are-not-verified",
     title: "Why stops are not verified yet",
     body: [
-      "Every stop on the map comes from a public My Maps snapshot (retrieved 15 October 2026). Nobody has checked yet which side of the street a jeepney stops on, whether there is a sign, or whether boarding is allowed there.",
+      "Stops come from a public map. Nobody has checked boarding sides, signs or whether boarding is allowed.",
       "Until a reviewer attaches field evidence, stops stay “Mapped candidate”. Loops C and D are shown as pins only, because their stop order is unknown.",
     ],
   },
@@ -63,8 +61,8 @@ export const ARTICLES: readonly Article[] = [
     slug: "vehicle-types-in-naga",
     title: "Vehicle types in Naga",
     body: [
-      "Traditional jeepney: ₱14 first 4 km + ₱2.00/km, national rate 28 Sep 2026. Traditional jeepneys run on every route group (R1–R8), confirmed by the project owner on 16 October 2026.",
-      "Modern jeepney: ₱17 + ₱2.40/km. Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason) alongside traditional jeepneys, confirmed by the project owner on 16 October 2026. No other route is shown with modern units.",
+      "Traditional jeepney: ₱14 first 4 km + ₱2.00/km. Traditional jeepneys run on every route group (R1–R8).",
+      "Modern jeepney: ₱17 + ₱2.40/km. Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason) alongside traditional jeepneys. No other route is shown with modern units.",
       "Tricycle and e-tricycle: ₱15 minimum (Ordinance 2024-002); discounts exist for students, seniors, PWD and solo parents but eligibility is not verified, so ParaNaga does not apply them; e-trikes need a franchise.",
       "UV Express and bus: regional; per-km rates; see terminals.",
     ],

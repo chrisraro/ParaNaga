@@ -84,12 +84,13 @@ describe("Explore: places by category", () => {
     expect(document.activeElement).toBe(within(cards()[CARD_LIMIT]!).getByRole("link"));
     const sm = cards().find((c) => within(c).queryByRole("heading", { name: "SM City Naga" }))!;
     expect(within(sm).getByRole("img", { name: "SM City Naga, Dec 2025" })).toBeTruthy();
-    expect(within(sm).getByRole("link", { name: /Photo credits/ }).getAttribute("href")).toMatch(/^\/app\/help\/sources#photo-/);
-    expect(within(sm).getByText("Mall · from OpenStreetMap")).toBeTruthy();
+    expect(within(sm).getByRole("link", { name: "Photo credit" }).getAttribute("href")).toMatch(/^\/app\/help\/sources#photo-/);
+    expect(within(sm).getByText("Mall")).toBeTruthy();
     const smPlace = index.osmPlaces.find((p) => p.name === "SM City Naga")!;
     expect(within(sm).getByRole("link", { name: "SM City Naga" }).getAttribute("href")).toBe(`/app/places/osm/${smPlace.key.slice(4)}`);
-    expect(screen.getByTestId("explore-places-note").textContent).toContain("Sourced photos show landmarks; entrances and hours remain unverified.");
-    expect(screen.getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" })).toBeTruthy();
+    // The places note and the OpenStreetMap credit live on Sources and credits.
+    expect(screen.queryByTestId("explore-places-note")).toBeNull();
+    expect(screen.queryByRole("link", { name: "© OpenStreetMap contributors (ODbL)" })).toBeNull();
     expect(screen.getByRole("tabpanel", { name: "All" })).toBeTruthy();
   }, 30_000); // Show all renders every OSM place and the whole-document role queries (getByRole by name over
   // hundreds of links/images) dominate: 7-9 s standalone, more under parallel load. Not cheap to cut
@@ -113,7 +114,7 @@ describe("Explore: places by category", () => {
     expect(cards().every((c) => c.dataset.category === "hospital_clinic")).toBe(true);
     fireEvent.keyDown(document.activeElement!, { key: "End" });
     expect(cards().every((c) => c.dataset.category === "bus_terminal")).toBe(true);
-    expect(cards()[0]!.textContent).toContain("Bus station · from OpenStreetMap");
+    expect(cards()[0]!.textContent).toContain("Bus station");
   });
 
   it("an empty category says so", () => {
@@ -206,7 +207,7 @@ describe("Explore: directory", () => {
     expect(rows.every((r) => r.textContent!.includes("Not surveyed"))).toBe(true);
   });
 
-  it("Leads: 5 static rows, and the rail status with its sources", async () => {
+  it("Leads: 5 static rows, and the rail status without source codes", async () => {
     renderExplore();
     segment("Leads");
     const list = screen.getByTestId("explore-leads");
@@ -215,10 +216,9 @@ describe("Explore: directory", () => {
     expect(within(list).queryAllByRole("button")).toHaveLength(0);
     expect(within(list).getAllByText("Documented, not verified")).toHaveLength(5);
     expect(screen.getByTestId("explore-rail").textContent).toBe(
-      "PNR Naga–Lupi Viejo: community reports say operational; Naga–Legazpi: community reports say suspended. Verify with PNR. Sources S19, S20, S21",
+      "PNR Naga–Lupi Viejo: reported operating. Naga–Legazpi: reported suspended. Verify with PNR.",
     );
-    // Once the sources register loads, S20 (not in it) is marked.
-    await waitFor(() => expect(screen.getByTestId("explore-rail-sources").textContent).toBe("Sources S19, S20 (not in register), S21"));
+    expect(screen.queryByTestId("explore-rail-sources")).toBeNull();
   });
 });
 

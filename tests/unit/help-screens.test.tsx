@@ -82,7 +82,7 @@ describe("Help", () => {
     expect(report.getAttribute("href")).toBe("/app/mynaga");
   });
 
-  it("About data: badge meanings, the data revision, sources link and footer", async () => {
+  it("About data: badge meanings, sources link and footer", async () => {
     nav.params = new URLSearchParams("tab=data");
     render(<HelpScreen />);
     const rows = within(screen.getByTestId("help-badges")).getAllByRole("listitem");
@@ -95,7 +95,8 @@ describe("Help", () => {
     ]);
     expect(screen.getByTestId("help-sources-link").getAttribute("href")).toBe("/app/help/sources");
     expect(screen.getByTestId("help-data-footer").textContent).toBe(DATA_FOOTER);
-    await waitFor(() => expect(screen.getByTestId("help-data-revision").textContent).toBe("Data revisionosm-places-2026-10-15 · Oct 15, 2026"));
+    // The revision label moved to Sources and credits: no revision row here.
+    expect(screen.queryByTestId("help-data-revision")).toBeNull();
   });
 });
 
@@ -105,11 +106,9 @@ describe("Help articles", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("How trips are planned");
     expect(screen.getByTestId("help-article-body").textContent).toBe(
       "ParaNaga suggests trips on Loops A and B only. Their stop order comes from the order of pins on a public map, not from a field survey, so every suggestion carries the badge “Unverified route — confirm with the driver”." +
-        "Ride distances follow approximate paths traced along OpenStreetMap roads between candidate pins, or straight-line distances where roads are unmapped." +
-        "Walks to and from a stop are capped at 600 m, and 400 m between rides. Walk paths are routed along walkable streets where mapped, or straight-line estimates (× 1.3)." +
-        "A ride is only suggested if it saves walking: taking a jeepney must replace meaningful walking distance compared to walking all the way." +
-        "Times are estimated as ranges based on typical travel speeds in Naga (slower during peak hours). Times do not include waiting, because jeepneys have no published schedules." +
-        "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied.",
+        "Walks are capped at 600 m to a stop and 400 m between rides, and a ride is suggested only if it saves walking." +
+        "Times are ranges from typical speeds and do not include waiting, because jeepneys have no published schedules." +
+        "Fares are estimates; discounts are not applied.",
     );
     expect(fetched).toEqual([]);
     expect(document.title).toBe("How trips are planned · ParaNaga");

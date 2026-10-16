@@ -29,17 +29,17 @@ export function NearbyStops({ stops, center, status, truncated, onOpen }: Props)
   if (nearest.length === 0) {
     empty =
       status === "error"
-        ? "Mapped stops could not be loaded. Move the map to try again."
+        ? "Couldn't load stops. Move the map."
         : status === "ready"
-          ? "No mapped stops in this part of the map."
-          : "Loading mapped stops…";
+          ? "No stops here."
+          : "Loading stops…";
   }
   return (
     <section className="pn-nearby" aria-labelledby="pn-nearby-title" data-testid="nearby-stops">
       <h2 id="pn-nearby-title" className="pn-section-title">
         Nearby stops
       </h2>
-      <p className="pn-nearby__hint">Mapped candidates near the map centre. Not yet verified; tap a pin or a row for its source.</p>
+      <p className="pn-nearby__hint">Mapped, not verified.</p>
       {empty ? (
         <p className="pn-nearby__empty">{empty}</p>
       ) : (
@@ -47,9 +47,6 @@ export function NearbyStops({ stops, center, status, truncated, onOpen }: Props)
           {nearest.map((group) => {
             const s = group[0]!;
             const routeCodes = [...new Set(group.flatMap((p) => p.routeCodes))];
-            const layers = group
-              .map((p) => (p.source.layer ? `${p.source.layer}${group.length > 1 && p.source.code ? ` (${p.source.code})` : ""}` : null))
-              .filter((l): l is string => l !== null);
             return (
               <li key={s.id}>
                 <Link href={`/app/stops/${s.id}`} className="pn-nearby__cell" onClick={() => onOpen?.(`/app/stops/${s.id}`)}>
@@ -57,12 +54,8 @@ export function NearbyStops({ stops, center, status, truncated, onOpen }: Props)
                   <span className="pn-nearby__text">
                     <strong>{stopLabel(s.name, s.source.code)}</strong>
                     <span className="pn-nearby__sub">
-                      Mapped candidate · not yet verified
-                      {routeCodes.length > 0 ? ` · on provisional ${routeCodes.join(", ")}` : ""}
+                      Mapped candidate{routeCodes.length > 0 ? ` · ${routeCodes.join(", ")}` : ""}
                     </span>
-                    {layers.length > 0 ? (
-                      <span className="pn-nearby__layer">{group.length > 1 ? `Same point in ${layers.join(" · ")}` : layers[0]}</span>
-                    ) : null}
                   </span>
                   <ChevronRight />
                 </Link>

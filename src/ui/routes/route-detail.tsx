@@ -17,9 +17,7 @@ import {
   directionLabels,
   routeFareTile,
   routeGroupText,
-  sourcesLine,
   streetNote,
-  trialNoticeText,
   vehicleTile,
 } from "@/domain/network/present";
 import { directionText, routeChipLabel, stopLabel } from "@/domain/trip/present";
@@ -36,7 +34,10 @@ import {
 import { LineNotesView } from "@/ui/map/layers-sheet";
 import { lineNotes, routeDirectionPath } from "@/ui/map/line-rules";
 import { NagaMap } from "@/ui/map/naga-map";
+import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { LoopChip } from "@/ui/trip/trip-parts";
+
+const capitalised = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 export function RouteDetailScreen({ code }: { code: string }) {
   const resource = useNetworkResource(`/api/v1/routes/${encodeURIComponent(code)}`, routeDetailSchema);
@@ -84,14 +85,14 @@ function PinsIcon() {
 type Direction = "inbound" | "outbound";
 
 export function RouteDetailView({ data }: { data: RouteDetail }) {
-  const { route, variants, trials, fareEvidence, sources, revision } = data;
+  const { route, variants, trials, fareEvidence } = data;
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const [direction, setDirection] = useState<Direction>("inbound");
   // Ids are per instance: Next keeps a left page mounted (hidden), so two route panels can coexist.
   const uid = useId();
   const dirButtons = useRef<Record<Direction, HTMLButtonElement | null>>({ inbound: null, outbound: null });
 
-  const linesState = useLines(revision.revisionId);
+  const linesState = useLines(data.revision.revisionId);
   const { lines } = linesState;
 
   const group = routeGroupText(route.groupNumber, route.modeCode);
@@ -115,12 +116,12 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const pathStatus = activeLine
     ? activeLine.label
     : linesState.status === "loading"
-      ? "Loading the route path…"
+      ? "Loading path…"
       : linesState.status === "skipped"
-        ? "Route path not loaded in low-data mode"
+        ? "Path off in low-data mode"
         : linesState.status === "ready"
-          ? (untraced?.message ?? "Path could not be traced")
-          : "Route path unavailable";
+          ? (untraced?.message ?? "Path not traced")
+          : "Path unavailable";
 
   const activeCoords = useMemo(() => {
     if (!activeLine) return null;
@@ -137,7 +138,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   };
 
   return (
-    <DetailPanel title="Route" testId="route-detail">
+    <DetailPanel title="Route" sources={`${SOURCES_HREF}?route=${encodeURIComponent(route.code)}`} testId="route-detail">
       <main className="pn-detail__main pn-detail-in" style={{ gap: 12 }}>
         <div className="pn-detail__stack">
           <div className="pn-detail__row">
@@ -161,8 +162,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           <p>
             <strong>Partial data.</strong>{" "}
             {provisional
-              ? "Shape not yet surveyed. Stops are mapped candidates in pin order, not reviewed."
-              : "Shape not yet surveyed and stops not reviewed. Showing the legal plan's street order."}
+              ? "Shape and stops unverified."
+              : "Shape and stops unverified. Street order from the plan."}
           </p>
         </div>
 
@@ -258,23 +259,17 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         {structures.map((streets, i) => (
           <section key={i} className="pn-section" aria-labelledby={`${uid}-structure-${i}`} data-testid="extra-structure">
             <h2 id={`${uid}-structure-${i}`} className="pn-section__title">
-              Street order · structure {i + 2} (also in the source)
+              Street order · structure {i + 2}
             </h2>
             <StreetList streets={streets} circuit={false} label={`Street order, structure ${i + 2}`} />
           </section>
         ))}
-        {structures.length > 0 ? (
-          <p className="pn-footnote">
-            The source lists {structures.length + 1} structures for this route; they are shown separately and not merged.
-            {route.normalizationNote ? ` ${route.normalizationNote}` : ""}
-          </p>
-        ) : null}
 
         {trials.map((trial) => (
           <section key={trial.variantId} className="pn-section" aria-labelledby={`${uid}-trial-${trial.variantId}`} data-testid="trial-notice">
             <div role="note" className="pn-note pn-note--small">
               <WarnIcon size={18} />
-              <p id={`${uid}-trial-${trial.variantId}`}>{trialNoticeText(trial, sources)}</p>
+              <p id={`${uid}-trial-${trial.variantId}`}>Trial · permanence unconfirmed</p>
             </div>
             {trial.legalStreets.circuit ? (
               <StreetList streets={trial.legalStreets.circuit} circuit label="Trial street order" />
@@ -292,34 +287,12 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           <div className="pn-group" data-testid="fleet-rows">
             {route.fleet.classes.map((r, i) => {
               const label = r.label;
-              const isUnconfirmed = r.status === "reported_not_confirmed";
-              const sourcesText = r.sourceCodes
-                .map((code: string) => {
-                  const s = sources.find((src) => src.code === code);
-                  if (!s) return code;
-                  const date = s.publishedOrEnacted ?? s.checkedOn;
-                  return date ? `${s.title}, ${date}` : s.title;
-                })
-                .join(" · ");
 
               return (
                 <div key={i} className="pn-cell" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4, padding: "10px 14px" }} data-testid="fleet-row">
                   <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "space-between" }}>
                     <strong className="pn-cell__title">{label}</strong>
-                    <div style={{ display: "flex", gap: 4 }}>
-                      {r.sourceCodes.map((c) => (
-                        <span key={c} className="pn-mono" style={{ fontSize: 11, background: "rgba(0,0,0,0.06)", padding: "2px 4px", borderRadius: 4 }}>
-                          {c}
-                        </span>
-                      ))}
-                    </div>
                   </div>
-                  {sourcesText ? <p className="pn-footnote" style={{ margin: 0 }}>{sourcesText}</p> : null}
-                  {isUnconfirmed ? (
-                    <p className="pn-footnote" style={{ margin: 0 }}>
-                      Private guide, Oct 2025 · user report, unverified
-                    </p>
-                  ) : null}
                 </div>
               );
             })}
@@ -336,18 +309,11 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             <ul className="pn-group" style={{ listStyle: "none", padding: 0, margin: 0 }} data-testid="cooperatives-list">
               {data.cooperatives.map((c) => {
                 const label = cooperativeLabel(c.basis, c.reportedOn);
-                const sourcesText = c.sourceCodes
-                  .map((code) => {
-                    const s = sources.find((src) => src.code === code);
-                    return s ? s.title : code;
-                  })
-                  .join(" · ");
                 return (
                   <li key={c.name} className="pn-cell" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4, padding: "10px 14px" }} data-testid="cooperative-row">
                     <strong className="pn-cell__title">{c.name}</strong>
                     <p className="pn-footnote" style={{ margin: 0 }}>
                       {label}
-                      {sourcesText ? ` · ${sourcesText}` : ""}
                     </p>
                   </li>
                 );
@@ -355,17 +321,17 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             </ul>
           )}
           <p className="pn-footnote" style={{ marginTop: 6 }} data-testid="cooperatives-footnote">
-            Cooperative leaders&apos; names are not shown; sources disagree.
+            Leaders&apos; names not shown.
           </p>
         </section>
 
         {ordered.map((variant) => (
           <section key={variant.variantId} className="pn-section" aria-labelledby={`${uid}-stops-${variant.variantId}`}>
             <h2 id={`${uid}-stops-${variant.variantId}`} className="pn-section__title">
-              {variant.evidenceLevel === "provisional" ? "Provisional stops" : "Stops"} · {variant.stops.length} in pin order
+              Stops · {variant.stops.length}
             </h2>
             {variant.direction === "clockwise" || variant.direction === "counterclockwise" ? (
-              <p className="pn-footnote">Direction: {directionText(variant.direction, "long")}. Mapped candidates, not verified.</p>
+              <p className="pn-footnote">{capitalised(directionText(variant.direction, "short")!)} · mapped, unverified</p>
             ) : null}
             <ol className="pn-group" data-testid="route-stops">
               {variant.stops.map((s) => (
@@ -374,7 +340,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
                     <CandidateRing size={26} onRoute />
                     <span className="pn-cell__text">
                       <span className="pn-cell__title">{stopLabel(s.name, s.source.code)}</span>
-                      <span className="pn-cell__sub pn-cell__sub--gold">Stop {s.seq} · Mapped candidate</span>
+                      <span className="pn-cell__sub pn-cell__sub--gold">Stop {s.seq}</span>
                     </span>
                     <ChevronRight />
                   </Link>
@@ -385,19 +351,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         ))}
 
         <p className="pn-footnote" data-testid="route-allocation">
-          {allocationText(route)} {sourcesLine(route.sourceCodes, revision.label)}
+          {allocationText(route)}
         </p>
-        {sources.length > 0 ? (
-          <ul className="pn-footnote" style={{ paddingLeft: 18 }}>
-            {sources.map((s) => (
-              <li key={s.code}>
-                {s.code}: {s.title}
-                {s.checkedOn ? ` (checked ${s.checkedOn})` : ""}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <p className="pn-soon">Corrections open soon.</p>
       </main>
     </DetailPanel>
   );

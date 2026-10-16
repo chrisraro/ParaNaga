@@ -24,13 +24,12 @@ import {
   terminalNoteSentences,
   terminalRouteSub,
 } from "@/domain/places/place-detail";
-import { terminalLocationText } from "@/domain/places/explore";
+import { TERMINAL_ROW_SUB } from "@/domain/places/explore";
 import {
   isRouteMode,
   regionalServiceRow,
   terminalDirectionsLabel,
   terminalKindLabel,
-  terminalOsmLocationText,
 } from "@/domain/places/terminals";
 import { regionalCategoryLabel } from "@/domain/search/search";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
@@ -38,10 +37,10 @@ import { DetailError, DetailLoading, DetailNotFound, DetailPanel, useFocusOnMoun
 import { StatusBadge } from "@/ui/kit/badge";
 import { ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
-import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Segmented } from "@/ui/kit/segmented";
 import { NagaMap } from "@/ui/map/naga-map";
 import { ModeChip } from "@/ui/modes/mode-chip";
+import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
 const TITLE = "Terminal";
@@ -68,19 +67,6 @@ function InfoIcon() {
   );
 }
 
-function SourceCodes({ codes }: { codes: readonly string[] }) {
-  return (
-    <>
-      {codes.map((c) => (
-        <span key={c}>
-          {" "}
-          <span className="pn-mono">{c}</span>
-        </span>
-      ))}
-    </>
-  );
-}
-
 /** Regional services (UV Express, buses) with their fare estimates; never drawn, never planned. */
 function RegionalServices({ data }: { data: TerminalDetail }) {
   const uid = useId();
@@ -101,18 +87,12 @@ function RegionalServices({ data }: { data: TerminalDetail }) {
                   <span className="pn-cell__title">{row.title}</span>
                 </span>
                 <span className="pn-cell__sub">{row.detail}</span>
-                <span className="pn-cell__sub">
-                  Sources
-                  <SourceCodes codes={s.sourceCodes} />
-                </span>
               </span>
             </li>
           );
         })}
       </ul>
-      <p className="pn-footnote">
-        Regional services from community-mapped OpenStreetMap routes. Fares are estimates from the 28 Sep 2026 national per-km rates.
-      </p>
+      <p className="pn-footnote">Fares are estimates.</p>
     </section>
   );
 }
@@ -143,7 +123,7 @@ function RoutesPanel({ data }: { data: TerminalDetail }) {
               </li>
             ))}
           </ul>
-          <p className="pn-footnote">From the legal route plan. Bays are not mapped yet.</p>
+          <p className="pn-footnote">Bays not mapped.</p>
         </>
       )}
       <RegionalServices data={data} />
@@ -211,8 +191,7 @@ function TerminalFacts({ terminal }: { terminal: TerminalInfo }) {
     <dl className="pn-place__facts" aria-label="About this terminal">
       <div className="pn-place__fact" data-testid="terminal-location">
         <dt className="pn-place__fact-label">Location</dt>
-        <dd className="pn-place__fact-value">{terminal.coordinate ? terminalOsmLocationText(terminal.coordinate) : "Location not mapped"}</dd>
-        {terminal.coordinate ? <dd className="pn-place__fact-sub">Community-mapped location (OpenStreetMap)</dd> : null}
+        <dd className="pn-place__fact-value">{terminal.coordinate ? "Mapped point" : "Location not mapped"}</dd>
       </div>
       {modes.length > 0 ? (
         <div className="pn-place__fact" data-testid="terminal-modes">
@@ -221,9 +200,6 @@ function TerminalFacts({ terminal }: { terminal: TerminalInfo }) {
             {modes.map((m) => (
               <span key={m} className="pn-terminal__mode" data-testid={`terminal-mode-${m}`}>
                 <ModeChip mode={m} label={modeName(m)} />
-                <span className="pn-terminal__mode-sources">
-                  <SourceCodes codes={terminal.modeSources[m] ?? []} />
-                </span>
               </span>
             ))}
           </dd>
@@ -245,9 +221,6 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
     () => (terminal.lat !== null && terminal.lng !== null ? { lat: terminal.lat, lng: terminal.lng } : null),
     [terminal.lat, terminal.lng],
   );
-  // Only the terminal's own sources back its address; the route and trial sources say nothing
-  // about it, so none → no chips (the evidence label then says "no evidence on file").
-  const sourceChips = terminal.sourceCodes;
   const tabs = [
     { value: "routes", label: "Routes", controls: panelId, id: `${uid}-tab-routes` },
     { value: "entrances", label: "Entrances", controls: panelId, id: `${uid}-tab-entrances` },
@@ -256,7 +229,7 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
   const activeTabId = tabs.find((t) => t.value === tab)!.id;
 
   return (
-    <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">{terminalLocationText(terminal.coordinate !== null)}</span>} testId="terminal-detail">
+    <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">{terminal.coordinate !== null ? "Community-mapped" : TERMINAL_ROW_SUB}</span>} sources={terminal.coordinate ? `${SOURCES_HREF}?osm=${terminal.coordinate.osmType}/${terminal.coordinate.osmId}${terminal.coordinate.osmVersion !== null ? `&v=${terminal.coordinate.osmVersion}` : ""}` : SOURCES_HREF} testId="terminal-detail">
       {point ? <TerminalMap terminal={terminal} point={point} /> : null}
       <main className="pn-detail__main pn-detail-in">
         <div className="pn-place__head">
@@ -272,7 +245,6 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
             <StatusBadge variant="documented" />
             <span className="pn-terminal__address" data-testid="terminal-address">
               Address: {terminalEvidenceLabel(terminal.evidenceStatus)}
-              <SourceCodes codes={sourceChips} />
             </span>
           </div>
         </div>
@@ -300,33 +272,25 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
           {tab === "routes" ? <RoutesPanel data={data} /> : null}
           {tab === "entrances" ? (
             <div className="pn-terminal__empty">
-              <p className="pn-terminal__empty-title">No entrances surveyed yet</p>
+              <p className="pn-terminal__empty-title">Entrances not surveyed</p>
               <p className="pn-terminal__empty-text">
                 {point
-                  ? "Trips end at the terminal's map point until an entrance is surveyed."
-                  : "ParaNaga has no location for this terminal yet, so trips can't start or end here."}
+                  ? "Trips end at the map point."
+                  : "No location: trips can't end here."}
               </p>
             </div>
           ) : null}
           {tab === "hours" ? (
             <dl className="pn-group pn-terminal__hours" data-testid="terminal-hours">
               <div className="pn-kv">
-                <dt className="pn-kv__key">Opening hours</dt>
+                <dt className="pn-kv__key">Hours</dt>
                 <dd className="pn-kv__value">Not on file</dd>
-              </div>
-              <div className="pn-kv">
-                <dt className="pn-kv__key">Evidence</dt>
-                <dd className="pn-kv__value">None on file</dd>
               </div>
             </dl>
           ) : null}
         </div>
 
-        {point ? (
-          <OsmAttribution testId="terminal-osm-attribution" />
-        ) : (
-          <Note testId="terminal-directions-note">Directions unavailable until the terminal&apos;s location is mapped.</Note>
-        )}
+        {point ? null : <Note testId="terminal-directions-note">No directions: location not mapped.</Note>}
       </main>
     </DetailPanel>
   );

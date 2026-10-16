@@ -47,7 +47,7 @@ describe("MapLegend (Task 11)", () => {
   });
 
   it("mixed-fleet note says both fleets operate (owner-confirmed), not 'reported'", () => {
-    expect(LEGEND_MIXED_NOTE).toBe("Alternating colours: traditional and modern jeepneys both operate (owner-confirmed)");
+    expect(LEGEND_MIXED_NOTE).toBe("Alternating colours: traditional and modern jeepneys");
     expect(LEGEND_MIXED_NOTE).not.toMatch(/reported/);
   });
 

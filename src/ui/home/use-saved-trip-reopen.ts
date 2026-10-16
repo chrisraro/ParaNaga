@@ -30,12 +30,12 @@ type Restored = { card: SavedTrip; phase: "waiting" | "changed" | "done"; dismis
 /** The note on a saved option shown as saved: checking, or why the current data is not in. */
 export function storedNote(card: SavedTrip, error: "offline" | "server" | "invalid" | null): TripNote {
   const date = manilaDate(card.publishedAt) ?? `revision ${card.revisionLabel}`;
-  if (error === "offline") return { text: `Offline: shown as saved, with data from ${date}. It may have changed since.`, tone: "warning" };
-  if (error) return { text: `Could not check the current data: shown as saved, with data from ${date}.`, tone: "warning" };
-  return { text: `Saved trip, data from ${date}. Checking the current data…`, tone: "info" };
+  if (error === "offline") return { text: `Offline: saved ${date}. May have changed.`, tone: "warning" };
+  if (error) return { text: `Couldn't check updates: saved ${date}.`, tone: "warning" };
+  return { text: `Saved ${date}. Checking…`, tone: "info" };
 }
 
-export const REPLANNED_NOTE: TripNote = { text: "Re-planned on the current data", tone: "info" };
+export const REPLANNED_NOTE: TripNote = { text: "Updated", tone: "info" };
 
 type Args = {
   tripRequest: TripRequest | null;

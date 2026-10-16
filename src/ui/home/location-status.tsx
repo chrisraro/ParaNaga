@@ -30,7 +30,7 @@ export type LocationStatusCopy = {
   actionLabel?: string;
 };
 
-const PIN_LATER = "You can still pin your start on the map.";
+const PIN_LATER = "Pin your start on the map.";
 
 /** "± 25 m": accuracy rounded to whole metres. */
 export function formatAccuracy(metres: number): string {
@@ -65,8 +65,8 @@ export function locationStatusCopy(
       return {
         kind: "denied",
         tone: "error",
-        title: `Location is off. ${PIN_LATER}`,
-        detail: "To turn it on, allow location for this site in your browser settings.",
+        title: `Location off. ${PIN_LATER}`,
+        detail: "Allow location in browser settings.",
         action: "pick_start",
       };
     case "unavailable":
@@ -74,21 +74,21 @@ export function locationStatusCopy(
       return {
         kind: state,
         tone: "warn",
-        title: `Can't get your location right now. ${PIN_LATER}`,
+        title: `No location now. Pin your start.`,
         action: "pick_start",
       };
     case "unsupported":
       return {
         kind: "unsupported",
         tone: "warn",
-        title: `This browser can't share your location. ${PIN_LATER}`,
+        title: "This browser can't share location. Pin your start.",
         action: "pick_start",
       };
     case "insecure":
       return {
         kind: "insecure",
         tone: "warn",
-        title: `Location needs a secure (https) connection. ${PIN_LATER}`,
+        title: "Location needs https. Pin your start.",
         action: "pick_start",
       };
     case "requesting":
@@ -104,7 +104,7 @@ export function locationStatusCopy(
     return {
       kind: "outside_city",
       tone: "info",
-      title: "You're outside Naga City. Pin your starting point in Naga, or choose a point on the map.",
+      title: "You're outside Naga City. Pin a start in Naga.",
       action: "pick_start",
     };
   }
@@ -117,7 +117,7 @@ export function locationStatusCopy(
     return {
       kind: "approximate",
       tone: "warn",
-      title: "Your location is approximate. Check the pin or move it.",
+      title: "Location approximate. Check the pin.",
       ...detail,
       action: "pick_start",
       actionLabel: "Move start pin",

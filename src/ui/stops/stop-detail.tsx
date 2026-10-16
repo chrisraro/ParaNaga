@@ -1,8 +1,9 @@
 "use client";
 
 // Stop detail (artboard StopDetail) for one mapped stop pin, from GET /api/v1/stops/:id.
-// Shows the source pin verbatim (layer, code, coordinates, raw description), the provisional
-// routes whose pin order lists it, and honest unknowns where the artboard has survey data.
+// Shows the provisional routes whose pin order lists it and honest unknowns where the artboard has
+// survey data. The pin's source record (layer, code, coordinates, raw description) is on Sources and
+// credits, one "Sources" link away.
 
 import "@/ui/kit/styles";
 
@@ -13,13 +14,7 @@ import { StopStreetView } from "@/ui/street-view/stop-street-view";
 import { useId, useState } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { stopDetailSchema, type StopDetail } from "@/domain/api/schemas";
-import {
-  latestRetrievedOn,
-  sharedLayers,
-  snapshotSourceText,
-  sourceCoordinatesText,
-  stopStatusBadge,
-} from "@/domain/network/present";
+import { stopStatusBadge } from "@/domain/network/present";
 import { directionText, stopDisplayName, stopLabel } from "@/domain/trip/present";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import {
@@ -34,6 +29,7 @@ import {
   useFocusOnMount,
   useReturnToMap,
 } from "@/ui/detail/detail-frame";
+import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
 export function StopDetailScreen({ id }: { id: string }) {
@@ -91,28 +87,21 @@ function UseAsEndpoint({ stop }: { stop: StopDetail["stop"] }) {
   );
 }
 
-/** A source value in quotes, verbatim; "empty" and "none" keep an empty string and a missing value apart. */
-function quoted(value: string | null): string {
-  if (value === null) return "none";
-  return value === "" ? "empty" : `“${value}”`;
-}
-
 function servingDirection(direction: StopDetail["servingRoutes"][number]["direction"]): string {
   if (direction === "clockwise" || direction === "counterclockwise") return directionText(direction, "long")!;
   return direction;
 }
 
 export function StopDetailView({ data }: { data: StopDetail }) {
-  const { stop, sourceRecords, sharedCoordinate, servingRoutes, passingNearby, sourceMap, revision } = data;
+  const { stop, sourceRecords, servingRoutes, passingNearby } = data;
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const [nearbyOpen, setNearbyOpen] = useState(false);
   const uid = useId(); // per instance: a hidden previous stop panel may still be mounted
-  const layers = sharedLayers(sharedCoordinate);
   const onRoute = servingRoutes.length > 0;
   const referencePhoto = sourceRecords.map(photoForStopSource).find((photo) => photo !== null);
 
   return (
-    <DetailPanel title="Stop" action={<ShowOnMap lat={stop.lat} lng={stop.lng} />} testId="stop-detail">
+    <DetailPanel title="Stop" action={<ShowOnMap lat={stop.lat} lng={stop.lng} />} sources={`${SOURCES_HREF}?stop=${stop.id}`} testId="stop-detail">
       <main className="pn-detail__main pn-detail-in">
         <div className="pn-detail__head">
           <CandidateRing size={40} onRoute={onRoute} />
@@ -132,43 +121,11 @@ export function StopDetailView({ data }: { data: StopDetail }) {
         <div role="note" className="pn-note" data-testid="stop-warning">
           <WarnIcon />
           <p>
-            <strong>Not verified for navigation.</strong> {snapshotSourceText(latestRetrievedOn(sourceRecords))}
+            <strong>Not verified for navigation.</strong>
           </p>
         </div>
 
         <UseAsEndpoint stop={stop} />
-
-        {sourceRecords.map((record, i) => (
-          <section key={`${record.layer}:${record.code}:${i}`} className="pn-card" aria-label={sourceRecords.length > 1 ? `Source record ${i + 1}` : "Source record"} data-testid="source-record">
-            <span className="pn-card__label">{sourceRecords.length > 1 ? `Source record ${i + 1} of ${sourceRecords.length}` : "Source record"}</span>
-            <p className="pn-card__text">
-              {record.layer} · {record.code ? <>code <span className="pn-mono" data-testid="source-code">{record.code}</span></> : "no code"}
-            </p>
-            <p className="pn-card__mono pn-mono" data-testid="source-coordinates">
-              {sourceCoordinatesText(record)}
-            </p>
-            {record.label !== stop.name ? (
-              <p className="pn-card__sub">Raw label: {quoted(record.label)}</p>
-            ) : null}
-            <p className="pn-card__sub" data-testid="source-description">
-              Raw description: {quoted(record.description)}
-              {i === 0 && layers.length > 0 ? (
-                <>
-                  {" · same point also listed in "}
-                  {sharedCoordinate.map((s, j) => (
-                    <span key={s.stopId}>
-                      {j > 0 ? ", " : null}
-                      <Link className="pn-inline-link" href={`/app/stops/${s.stopId}`}>
-                        {s.source.layer ?? "another layer"}
-                        {s.source.code ? ` (${s.source.code})` : ""}
-                      </Link>
-                    </span>
-                  ))}
-                </>
-              ) : null}
-            </p>
-          </section>
-        ))}
 
         <section className="pn-section" aria-labelledby={`${uid}-serving`}>
           <h2 id={`${uid}-serving`} className="pn-section__title">
@@ -185,10 +142,10 @@ export function StopDetailView({ data }: { data: StopDetail }) {
                     <span className="pn-cell__text">
                       <span className="pn-cell__title">{r.routeName}</span>
                       <span className="pn-cell__sub">
-                        {r.evidenceLevel === "provisional" ? "Provisional stop" : "Stop"} {r.seq} · {servingDirection(r.direction)}
+                        Stop {r.seq} · {servingDirection(r.direction)}
                       </span>
                       <span className="pn-cell__sub pn-cell__sub--gold">
-                        {r.verification === "verified" ? "Verified route" : "Unverified route"} · boarding and alighting not yet surveyed
+                        {r.verification === "verified" ? "Verified" : "Unverified"}
                       </span>
                     </span>
                     <ChevronRight />
@@ -234,25 +191,17 @@ export function StopDetailView({ data }: { data: StopDetail }) {
 
         <dl className="pn-group" style={{ margin: 0 }}>
           <div className="pn-kv" style={{ borderBottom: "1px solid var(--pn-sep)" }}>
-            <dt className="pn-kv__key">Curb side · toward</dt>
-            <dd className="pn-kv__value" style={{ margin: 0 }}>{stop.curbSide ?? "Not yet surveyed"}</dd>
+            <dt className="pn-kv__key">Curb side</dt>
+            <dd className="pn-kv__value" style={{ margin: 0 }}>{stop.curbSide ?? "Not surveyed"}</dd>
           </div>
           <div className="pn-kv">
-            <dt className="pn-kv__key">Photo · sign text</dt>
-            <dd className="pn-kv__value" style={{ margin: 0 }}>Stop sign photo pending · sign text not verified</dd>
+            <dt className="pn-kv__key">Sign</dt>
+            <dd className="pn-kv__value" style={{ margin: 0 }}>Not verified</dd>
           </div>
         </dl>
         {referencePhoto ? <ReferencePhoto photo={referencePhoto} stop /> : null}
         <StopStreetView key={stop.id} lat={stop.lat} lng={stop.lng} name={stopDisplayName(stop.name, stop.source.code)} />
 
-        <p className="pn-soon">Verification opens soon.</p>
-
-        <p className="pn-footnote">
-          {sourceMap?.ownerDisplayName
-            ? `Pins from a public My Maps map whose owner is shown as “${sourceMap.ownerDisplayName}”${sourceMap.ownerIdentityVerified ? "" : " (identity not verified)"}. `
-            : "Pins from a public My Maps map. "}
-          Transport data revision {revision.label}.
-        </p>
       </main>
     </DetailPanel>
   );

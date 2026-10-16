@@ -79,6 +79,20 @@
 .pn-detail__spacer {
   width: 44px;
 }
+.pn-detail__header-end {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pn-detail__sources {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--pn-accent);
+  font-size: 14px;
+  font-weight: 600;
+}
 
 .pn-detail__main {
   display: flex;

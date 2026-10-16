@@ -141,7 +141,7 @@ export function terminalLocationText(hasCoordinate: boolean): string {
  * with the seed.
  */
 export const RAIL_STATUS_TEXT =
-  "PNR Naga–Lupi Viejo: community reports say operational; Naga–Legazpi: community reports say suspended. Verify with PNR.";
+  "PNR Naga–Lupi Viejo: reported operating. Naga–Legazpi: reported suspended. Verify with PNR.";
 export const RAIL_SOURCE_CODES = ["S19", "S20", "S21"] as const;
 
 /** "S19, S20 (not in register), S21": codes the published sources register does not list are marked. */

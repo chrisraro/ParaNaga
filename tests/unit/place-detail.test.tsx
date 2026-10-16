@@ -99,22 +99,23 @@ const smRef = () => {
 };
 
 describe("OpenStreetMap place", () => {
-  it("names the source, never an entrance, and always shows the location note and the attribution", () => {
+  it("names no source or attribution (one Sources link), never an entrance", () => {
     renderPlace(smRef());
     expect(screen.getByRole("heading", { level: 1, name: "SM City Naga" })).toBe(document.activeElement);
-    expect(screen.getByTestId("place-kind").textContent).toBe("Mall · from OpenStreetMap");
+    expect(screen.getByTestId("place-kind").textContent).toBe("Mall");
     expect(screen.getByTestId("place-badge-osm").textContent).toBe("OpenStreetMap");
     expect(screen.queryByText("Mapped candidate")).toBeNull();
-    expect(screen.getByTestId("place-location-note").textContent).toBe("Location from OpenStreetMap — entrance not mapped.");
-    const attribution = screen.getByTestId("place-osm-attribution").querySelector("a")!;
-    expect(attribution.textContent).toBe("© OpenStreetMap contributors (ODbL)");
-    expect(screen.getByTestId("place-entrance").textContent).toContain("Not yet mapped");
-    expect(screen.getByTestId("place-source").textContent).toContain(`OpenStreetMap, snapshot of 15 Oct 2026 · object ${smRef().type}/${smRef().id} v${SM.osmVersion}`);
-    const osmLink = screen.getByTestId("place-osm-link");
-    expect(osmLink.getAttribute("href")).toBe(`https://www.openstreetmap.org/${smRef().type}/${smRef().id}`);
-    expect(osmLink.getAttribute("rel")).toBe("noopener noreferrer");
-    expect(osmLink.getAttribute("target")).toBe("_blank");
-    expect(screen.getByTestId("reference-photo").textContent).toContain("Ralff Nestor Nacor");
+    expect(screen.queryByTestId("place-location-note")).toBeNull();
+    expect(screen.queryByTestId("place-osm-attribution")).toBeNull();
+    expect(screen.getByTestId("place-entrance").textContent).toBe("EntranceNot mapped. Trips end at the map point.");
+    expect(screen.queryByTestId("place-source")).toBeNull();
+    // The object, its version and the snapshot live on Sources and credits, one link away.
+    const sources = screen.getByTestId("detail-sources");
+    expect(sources.textContent).toBe("Sources");
+    expect(sources.getAttribute("href")).toBe("/app/help/sources?osm=" + smRef().type + "/" + smRef().id + "&v=" + SM.osmVersion);
+    expect(screen.queryByTestId("place-osm-link")).toBeNull();
+    // The photo shows its image and one "Photo credit" link; the creator and licence are on Sources.
+    expect(screen.getByTestId("reference-photo").textContent).toBe("Photo credit");
     expect(screen.getByRole("img", { name: "SM City Naga, Dec 2025" })).toBeTruthy();
     // Save place (Task 8): a real button, not pressed while the place is not saved.
     expect(screen.getByTestId("place-save").getAttribute("data-state")).toBe("none");
@@ -177,7 +178,7 @@ describe("OpenStreetMap place", () => {
 });
 
 describe("mapped-pin place", () => {
-  it("shows its pins (map rings and links), the candidate badge and the dated source", async () => {
+  it("shows its pins (map rings and links), the candidate badge and one Sources link", async () => {
     renderPlace({ kind: "pin", key: PLAZA.key });
     expect(screen.getByRole("heading", { level: 1, name: "Plaza Rizal" })).toBeTruthy();
     expect(screen.getByTestId("place-kind").textContent).toBe(`Mapped stop · ${PLAZA.pins.length} pins`);
@@ -185,9 +186,10 @@ describe("mapped-pin place", () => {
     expect(screen.getByTestId("naga-map-stub").getAttribute("data-pins")).toBe(String(PLAZA.pins.length));
     const pins = screen.getByTestId("place-pins").querySelectorAll("a");
     expect([...pins].map((a) => a.querySelector(".pn-cell__title")!.textContent)).toEqual(PLAZA.pins.map((p) => `${p.code} · ${p.layer}`));
-    expect(screen.getByTestId("place-location-note").textContent).toBe("Trips use unverified mapped pins.");
+    expect(screen.getByTestId("place-location-note").textContent).toBe("Mapped pin, not verified.");
     expect(screen.queryByTestId("place-aka")).toBeNull();
-    await waitFor(() => expect(screen.getByTestId("place-source").textContent).toContain("Public My Maps snapshot · retrieved 15 Oct 2026"));
+    expect(screen.queryByTestId("place-source")).toBeNull();
+    expect(screen.getByTestId("detail-sources").getAttribute("href")).toContain("/app/help/sources?stop=");
     expect(screen.queryByRole("link", { name: /report/i })).toBeNull();
   });
 
@@ -200,15 +202,15 @@ describe("mapped-pin place", () => {
 });
 
 describe("barangay", () => {
-  it("no location: no map, the not-surveyed badge, and the S22 source with its check date", async () => {
+  it("no location: no map, the not-surveyed badge, no source row", () => {
     renderPlace({ kind: "barangay", key: "abella" });
     expect(screen.getByRole("heading", { level: 1, name: "Abella" })).toBeTruthy();
     expect(screen.getByTestId("place-kind").textContent).toBe("Barangay");
     expect(screen.getByTestId("place-badge-not-surveyed").textContent).toBe("Not surveyed");
     expect(screen.queryByTestId("naga-map-stub")).toBeNull();
-    expect(screen.getByTestId("place-boundary").textContent).toBe("BoundaryNot on file");
-    expect(screen.getByTestId("place-stops").textContent).toBe("Stops in this barangayUnknown until a boundary is mapped");
-    await waitFor(() => expect(screen.getByTestId("place-source").textContent).toBe("SourcePSA Naga barangays · checked 15 Oct 2026"));
+    expect(screen.getByTestId("place-boundary").textContent).toBe("BoundaryNot mapped");
+    expect(screen.queryByTestId("place-stops")).toBeNull();
+    expect(screen.queryByTestId("place-source")).toBeNull();
   });
 
   it("the CTA asks the map for a pick (destination by default, start when “from here”)", () => {
@@ -236,9 +238,9 @@ describe("2025 study label", () => {
     expect(link.textContent).toBe("Search mapped stops for “UMA Residences”");
     expect(link.getAttribute("href")).toBe("/app/search#q=UMA%20Residences");
     expect(screen.getByTestId("place-route").textContent).toBe(`Route${STUDY.routeCode} ${STUDY.direction}`);
-    expect(screen.getByTestId("place-location").textContent).toBe("LocationNot mapped. This is a schematic label, not a curb.");
-    expect(screen.getByTestId("place-status").textContent).toBe("StatusHistorical pilot label; current status unverified");
-    expect(screen.getByTestId("place-source").textContent).toBe("SourcesS33, S34");
+    expect(screen.getByTestId("place-location").textContent).toBe("LocationNot mapped (schematic label)");
+    expect(screen.getByTestId("place-status").textContent).toBe("StatusHistorical label, unverified");
+    expect(screen.queryByTestId("place-source")).toBeNull();
   });
 });
 
@@ -260,46 +262,45 @@ describe("Terminal detail", () => {
       </AppFrameContext.Provider>,
     );
 
-  it("T01: the map at its coordinate, the community-mapped badge, the note, Loop A and Loop B with the trial line", () => {
+  it("T01: the map at its coordinate, the community-mapped pill, the note, Loop A and Loop B with the trial line", () => {
     renderTerminal(rawT01);
     expect(screen.getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBe(document.activeElement);
     const map = screen.getByTestId("naga-map-stub");
     expect(map.getAttribute("aria-label")).toBe("Map of Bicol Central Station");
     expect(map.getAttribute("data-lat")).toBe(String(rawT01.terminal.lat));
-    expect(screen.getByTestId("terminal-pill").textContent).toBe("Community-mapped location (OpenStreetMap)");
+    expect(screen.getByTestId("terminal-pill").textContent).toBe("Community-mapped");
     expect(screen.getByTestId("terminal-sub").textContent).toBe("Terminal · Bus, UV Express · Ninoy & Cory Avenue, Triangulo");
     expect(screen.getByText("Documented only")).toBeTruthy();
-    expect(screen.getByTestId("terminal-address").textContent).toBe("Address: city source · location community-mapped S09 N02 N01");
+    expect(screen.getByTestId("terminal-address").textContent).toBe("Address: city source · location community-mapped");
     const note = screen.getByRole("note");
     expect(note.textContent).toBe("Not the PNR railway station.");
     const legal = screen.getAllByTestId("terminal-route-legal_plan");
     const trial = screen.getAllByTestId("terminal-route-trial");
     expect(legal.map((a) => a.querySelector(".pn-loop-chip")!.textContent)).toEqual(["Loop A", "Loop B"]);
-    expect(legal[0]!.textContent).toContain("Named in the legal route plan · bay not mapped");
-    expect(trial[0]!.textContent).toContain("Named in the Nov 2025 trial · permanence unconfirmed");
+    expect(legal[0]!.textContent).toContain("Legal route plan");
+    expect(trial[0]!.textContent).toContain("Trial · permanence unconfirmed");
     expect(trial[0]!.textContent).toContain("Trial — permanence unconfirmed");
     expect(legal[0]!.getAttribute("href")).toBe("/app/routes/R8-A");
-    expect(screen.getByText("From the legal route plan. Bays are not mapped yet.")).toBeTruthy();
+    expect(screen.getByText("Bays not mapped.")).toBeTruthy();
     // A coordinate is on file: no "unmapped" copy anywhere, the provenance row and the attribution.
     expect(screen.queryByTestId("terminal-directions-note")).toBeNull();
     expect(document.body.textContent).not.toMatch(/regional services are not mapped|until the terminal's location is mapped/);
-    expect(screen.getByTestId("terminal-location").textContent).toBe(
-      "LocationOSM way/293702439 v6 · centroid, not an entranceCommunity-mapped location (OpenStreetMap)",
-    );
-    expect(screen.getByTestId("terminal-osm-attribution").textContent).toBe("© OpenStreetMap contributors (ODbL)");
+    expect(screen.getByTestId("terminal-location").textContent).toBe("LocationMapped point");
+    expect(screen.queryByTestId("terminal-osm-attribution")).toBeNull();
+    expect(screen.getByTestId("detail-sources").getAttribute("href")).toBe("/app/help/sources?osm=way/293702439&v=6");
     expect(screen.getByTestId("terminal-status-note").textContent).toBe(rawT01.terminal.statusNote);
-    expect(screen.getByTestId("terminal-mode-bus").textContent).toBe("Bus S09 N02");
-    expect(screen.getByTestId("terminal-mode-uv_express").textContent).toBe("UV Express N01");
+    expect(screen.getByTestId("terminal-mode-bus").textContent).toBe("Bus");
+    expect(screen.getByTestId("terminal-mode-uv_express").textContent).toBe("UV Express");
   });
 
-  it("T01: regional services with distance, fare estimate, operator caveat and sources", () => {
+  it("T01: regional services with distance, fare estimate and operator caveat; no source codes", () => {
     renderTerminal(rawT01);
     const rs05 = screen.getByTestId("terminal-regional-RS05");
     expect(rs05.querySelector('[data-testid="mode-chip"]')!.textContent).toBe("UV");
     expect(rs05.textContent).toContain("Tabaco · operator not on file");
     expect(rs05.textContent).toContain("≈ 94 km by the community-mapped route · Estimate ₱245–₱283");
     expect(rs05.textContent).toContain("operator prices may differ");
-    expect(rs05.textContent).toContain("Sources N01 OSMR-2026-10-16");
+    expect(rs05.textContent).not.toMatch(/Sources|N01|OSMR/);
     expect(screen.getByRole("region", { name: "Regional destinations" })).toBeTruthy();
   });
 
@@ -318,11 +319,11 @@ describe("Terminal detail", () => {
     expect(screen.queryByTestId("naga-map-stub")).toBeNull();
     expect(screen.queryByRole("button", { name: /directions/i })).toBeNull();
     expect(screen.queryByTestId("terminal-osm-attribution")).toBeNull();
-    expect(screen.getByTestId("terminal-directions-note").textContent).toBe("Directions unavailable until the terminal's location is mapped.");
+    expect(screen.getByTestId("terminal-directions-note").textContent).toBe("No directions: location not mapped.");
     expect(screen.getByTestId("terminal-location").textContent).toBe("LocationLocation not mapped");
     fireEvent.click(screen.getByRole("tab", { name: "Entrances" }));
     expect(screen.getByRole("tabpanel").textContent).toBe(
-      "No entrances surveyed yetParaNaga has no location for this terminal yet, so trips can't start or end here.",
+      "Entrances not surveyedNo location: trips can't end here.",
     );
   });
 
@@ -330,10 +331,10 @@ describe("Terminal detail", () => {
     renderTerminal(rawT01);
     fireEvent.click(screen.getByRole("tab", { name: "Entrances" }));
     expect(screen.getByRole("tabpanel").textContent).toBe(
-      "No entrances surveyed yetTrips end at the terminal's map point until an entrance is surveyed.",
+      "Entrances not surveyedTrips end at the map point.",
     );
     fireEvent.click(screen.getByRole("tab", { name: "Hours" }));
-    expect(screen.getByRole("tabpanel").textContent).toBe("Opening hoursNot on fileEvidenceNone on file");
+    expect(screen.getByRole("tabpanel").textContent).toBe("HoursNot on file");
   });
 
   it("the tab panel is labelled by the active tab; Regional destinations by its heading", () => {
@@ -382,7 +383,7 @@ describe("Terminal detail", () => {
       destinationCategories: [{ category: "eastbound", destinations: ["Pili", "Iriga"], evidenceStatus: null, sourceCodes: ["S12"] }],
     };
     renderTerminal(t02);
-    expect(screen.getByRole("note").textContent).toBe("Category labels such as northbound and eastbound are administrative, not compass directions.");
+    expect(screen.getByRole("note").textContent).toBe("Northbound/eastbound are administrative labels.");
     expect(screen.getByTestId("terminal-destinations").textContent).toBe("Eastbound: Pili, Iriga · services not verified");
     expect(screen.getByTestId("terminal-no-routes")).toBeTruthy();
   });
