@@ -60,6 +60,12 @@ describe("estimateOption", () => {
     expect(two.legs.map((l) => l.band)).toEqual(["peak", "peak"]);
   });
 
+  it("the peak note's windows follow the peak-band trip: a slower trip can reach a further window", () => {
+    // 30 km from 07:30: off-peak high 180 min ends 10:30 (06:00 window only); peak high 258 min ends 11:48.
+    const e = ok(opt(jeep(30_000)), manila("07:30"));
+    expect(e.total.peakWindows).toEqual([{ start: "06:00", end: "08:00" }, { start: "11:00", end: "13:00" }]);
+  });
+
   it("09:30 with a 20 min high end stays off-peak (the trip ends before 11:00)", () => {
     const e = ok(opt(walk(100), jeep(3000)), OFFPEAK);
     expect(e.total.highMin).toBe(20);
@@ -76,7 +82,7 @@ describe("estimateOption", () => {
   it("a tricycle leg is not estimated and marks the total partial", () => {
     const e = ok(opt(walk(300), trike(1500), jeep(3000)), OFFPEAK);
     expect(e.legs[1]).toMatchObject({ kind: "ride", mode: "tricycle", estimated: false, lowMin: null, highMin: null, band: null });
-    expect(e.total).toMatchObject({ partial: true, rides: 2, waitUnknown: true });
+    expect(e.total).toMatchObject({ partial: true, rides: 2, waitUnknown: true, unestimatedModes: ["tricycle"] });
     // The total covers the estimated legs only.
     const known = ok(opt(walk(300), jeep(3000)), OFFPEAK);
     expect([e.total.lowMin, e.total.highMin]).toEqual([known.total.lowMin, known.total.highMin]);

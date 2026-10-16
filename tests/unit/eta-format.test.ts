@@ -7,6 +7,7 @@ import {
   formatLeg,
   formatPeakNote,
   formatRange,
+  formatRangeLabel,
   formatRemaining,
   formatTotal,
   remainingRange,
@@ -29,8 +30,19 @@ describe("durations", () => {
   });
   it("ranges", () => {
     expect(formatRange(12, 18)).toBe("12–18 min");
-    expect(formatRange(50, 65)).toBe("50 min–1 h 5 min");
-    expect(formatRange(60, 80)).toBe("1 h–1 h 20 min");
+    expect(formatRange(50, 65)).toBe("50–65 min");
+    expect(formatRange(32, 61)).toBe("32–61 min");
+    expect(formatRange(60, 80)).toBe("1 h – 1 h 20 min");
+    expect(formatRange(65, 90)).toBe("1 h 5 min – 1 h 30 min");
+  });
+});
+
+describe("accessible range labels", () => {
+  it("spells the range out", () => {
+    expect(formatRangeLabel(32, 61)).toBe("32 to 61 minutes");
+    expect(formatRangeLabel(1, 2)).toBe("1 to 2 minutes");
+    expect(formatRangeLabel(65, 90)).toBe("1 hour 5 minutes to 1 hour 30 minutes");
+    expect(formatRangeLabel(60, 121)).toBe("1 hour to 2 hours 1 minute");
   });
 });
 
@@ -50,7 +62,7 @@ describe("format (exact copy)", () => {
     const e = est(opt(walk(200), jeep(2500), walk(150), jeep(3000), walk(300)), manila("14:00"));
     expect(formatTotal(e.total)).toBe("Estimate 30–46 min + waiting (unknown, 2 rides)");
     expect(formatTotal(est(opt(walk(200), jeep(2500), walk(150), jeep(3000), walk(300)), manila("17:00")).total)).toBe(
-      "Estimate 32 min–1 h 1 min + waiting (unknown, 2 rides)",
+      "Estimate 32–61 min + waiting (unknown, 2 rides)",
     );
   });
 
@@ -66,12 +78,21 @@ describe("format (exact copy)", () => {
 
   it("hours from 60 min", () => {
     const e = est(opt(jeep(15_000)), manila("20:00"));
-    expect(formatTotal(e.total)).toBe("Estimate 1 h–1 h 30 min + waiting (unknown)");
+    expect(formatTotal(e.total)).toBe("Estimate 1 h – 1 h 30 min + waiting (unknown)");
   });
 
   it("peak note names the window(s) used; none off-peak", () => {
     expect(formatPeakNote(est(opt(jeep(3000)), manila("07:00")).total)).toBe("Peak hours · slower estimate (06:00–08:00)");
     expect(formatPeakNote(est(opt(jeep(3000)), manila("09:30")).total)).toBeNull();
+  });
+
+  it("an unestimated leg is named by its mode", () => {
+    const bus = { kind: "ride" as const, mode: "bus" as const, distanceMeters: 5000, distanceBasis: "stop_to_stop_straight_line" as const };
+    const e = est(opt(walk(300), bus, trike(800)), manila("09:30"));
+    expect(formatLeg(e.legs[1]!)).toBe("Bus time not estimated");
+    expect(formatLeg(e.legs[2]!)).toBe("Tricycle time not estimated");
+    expect(formatTotal(e.total)).toMatch(/ · bus and tricycle time not estimated$/);
+    expect(formatTotal(est(opt(bus), manila("09:30")).total)).toBe("Bus time not estimated + waiting (unknown)");
   });
 
   it("per leg", () => {
@@ -142,7 +163,7 @@ describe("honesty (property)", () => {
         return (
           all.every((t) => !/arriv/i.test(t) && !/\bETA\b/.test(t) && !/\blive\b/i.test(t)) &&
           timed.every((t) => !/\d{1,2}:\d{2}/.test(t)) &&
-          timed.every((t) => /^(Estimate|≈|About|Tricycle time not estimated)/.test(t) || !/\d\s*(h|min)\b/.test(t)) &&
+          timed.every((t) => /^(Estimate|≈|About)/.test(t) || !/\d\s*(h|min)\b/.test(t)) &&
           timed.every((t) => !/NaN|undefined|null/.test(t))
         );
       }),

@@ -280,7 +280,7 @@ describe("Missed stop and ended", () => {
 
 // A duration token may appear only in a string labelled as an estimate (Task 9, D12).
 const DURATION = /\d\s*(h|min|mins|minutes?|secs?|seconds?|hrs?|hours?)\b/i;
-const durationLabelled = (t: string) => !DURATION.test(t) || /estimate/i.test(t) || /^(≈|About)/.test(t);
+const durationLabelled = (t: string) => !DURATION.test(t) || /^(Estimate|≈|About)/.test(t);
 const FORBIDDEN = [
   /\blive\b/i,
   /arriving/i,
@@ -326,7 +326,7 @@ const optionArb = fc.constantFrom(walkOnly(), oneRide(), oneRide(5), twoRides(),
 describe("view properties (fixed seeds)", () => {
   it("the duration rule: minutes only inside a labelled estimate", () => {
     expect(["Estimate 12–18 min + waiting (unknown)", "≈ 3–5 min walk", "About 10–16 min left (estimate)", "≈ 140 m walk"].every(durationLabelled)).toBe(true);
-    expect(["5 min to Plaza Rizal", "Ride 1 h 5 min", "Next stop in 2 mins"].some(durationLabelled)).toBe(false);
+    expect(["5 min to Plaza Rizal", "Ride 1 h 5 min", "Next stop in 2 mins", "5 min to Plaza Rizal (estimates vary)"].some(durationLabelled)).toBe(false);
   });
 
   it("no copy ever claims times, live tracking, curb sides or certainty", () => {

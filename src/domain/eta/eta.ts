@@ -63,8 +63,10 @@ export type EtaTotal = {
   peak: boolean;
   /** The ride band used; null when no jeepney leg is estimated. */
   band: EtaBand | null;
-  /** The peak windows the trip touches (empty off-peak). */
+  /** The peak windows the trip touches in the peak band (empty off-peak). */
   peakWindows: ClockWindow[];
+  /** Modes of the legs that are not estimated, each once, in trip order (partial ⇔ non-empty). */
+  unestimatedModes: RouteMode[];
 };
 
 export type EtaEstimate = { legs: EtaLeg[]; total: EtaTotal; basis: BasisRow[] };
@@ -167,6 +169,8 @@ export function estimateOption(
   const hit = hasJeepney ? peakWindowsHit(departure, sum(offLegs, (l) => l.highMin), s.windows) : [];
   const peak = hit.length > 0;
   const legs = peak ? legsAt("peak")! : offLegs;
+  // The peak band can stretch the trip into a further window: name every window the slower trip touches.
+  const peakWindows = peak ? peakWindowsHit(departure, sum(legs, (l) => l.highMin), s.windows) : [];
 
   const estimated = legs.filter((l) => l.estimated);
   const rawLow = estimated.length > 0 ? sum(estimated, (l) => l.rawLowMin) : null;
@@ -191,7 +195,8 @@ export function estimateOption(
         partial: estimated.length < legs.length,
         peak,
         band: hasJeepney ? (peak ? "peak" : "offpeak") : null,
-        peakWindows: hit,
+        peakWindows,
+        unestimatedModes: [...new Set(legs.filter((l) => !l.estimated).map((l) => l.mode as RouteMode))],
       },
       basis: basisRows(model),
     },
