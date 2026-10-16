@@ -155,10 +155,11 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
 
   it("publishes modes-2026-10-16 with every R1–R8 stop and variant membership of the previous revision", async () => {
     const previous = await members(startRevisionId);
+    const existedBefore = (await revisionIdOf(LABEL)) !== undefined;
     const result = await commitImport(ownerUrl!, buildImportPlan(files, null, realSeed));
     // A branch of fresh data commits it; a branch of main (the import is in production) already
     // holds it, reports "unchanged", and the rollback done in beforeAll is undone by publishing it.
-    expect(["committed", "unchanged"]).toContain(result.modes?.outcome);
+    expect(result.modes?.outcome).toBe(existedBefore ? "unchanged" : "committed");
     expect(result.modes).toMatchObject({ revisionLabel: LABEL });
     const revisionId = (await revisionIdOf(LABEL))!;
     if (result.modes?.outcome === "unchanged") {

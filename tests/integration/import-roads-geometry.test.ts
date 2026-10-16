@@ -168,11 +168,12 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     const plan = realPlan();
     expect(plan.problems).toEqual([]);
     const previous = await members(startRevisionId);
+    const existedBefore = (await revisionIdOf(LABEL)) !== undefined;
     const result = await commitImport(ownerUrl!, plan);
     expect(result.modes).toMatchObject({ outcome: "unchanged" });
     // Fresh data commits it; a branch of main (the import is in production) already holds it and
     // reports "unchanged", and publishing it undoes the rollback done in beforeAll.
-    expect(["committed", "unchanged"]).toContain(result.lines?.outcome);
+    expect(result.lines?.outcome).toBe(existedBefore ? "unchanged" : "committed");
     expect(result.lines).toMatchObject({ revisionLabel: LABEL });
     linesRevisionId = (await revisionIdOf(LABEL))!;
     if (result.lines?.outcome === "unchanged") {

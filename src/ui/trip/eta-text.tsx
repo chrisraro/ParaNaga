@@ -78,20 +78,23 @@ export function useOptionEta(
   }, [option, walkLengths, model, departure]);
 }
 
-
 /**
- * A time text with its range spoken in words. The visible copy ("Estimate 8–15 min …") appears
- * once in the DOM; role="img" plus an aria-label carries "Estimate 8 to 15 minutes …" (formatRangeLabel)
- * as the accessible name, and a button or card containing it takes that name from the label.
+ * A time text with its range spoken in words. Only the formatted range fragment ("8–15 min") is
+ * an image with a spoken label ("8 to 15 minutes"), because the en dash is what reads badly; the
+ * rest ("Estimate …", "+ waiting (unknown)") stays native, selectable, translatable text, and the
+ * text appears once in the DOM.
  */
 export function SpokenRange({ text, range, className, testId }: { text: string; range: { lowMin: number | null; highMin: number | null } | null; className?: string; testId?: string }) {
-  if (!range || range.lowMin === null || range.highMin === null) {
+  const shown = range && range.lowMin !== null && range.highMin !== null ? formatRange(range.lowMin, range.highMin) : null;
+  const at = shown === null ? -1 : text.indexOf(shown);
+  if (range === null || shown === null || at < 0) {
     return <span className={className} data-testid={testId}>{text}</span>;
   }
-  const spoken = text.replace(formatRange(range.lowMin, range.highMin), formatRangeLabel(range.lowMin, range.highMin));
   return (
-    <span className={className} data-testid={testId} role="img" aria-label={spoken}>
-      {text}
+    <span className={className} data-testid={testId}>
+      {text.slice(0, at)}
+      <span role="img" aria-label={formatRangeLabel(range.lowMin!, range.highMin!)}>{shown}</span>
+      {text.slice(at + shown.length)}
     </span>
   );
 }
