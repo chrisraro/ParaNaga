@@ -118,7 +118,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(card).toContainText("Available offline");
   await expect(card).toContainText("From Pinned location");
   await expect(card.getByRole("heading", { level: 2 })).toHaveText("Pinned location");
-  await expect(card).toContainText("Time not available · Estimate ₱14 · data from 16 Oct 2026");
+  await expect(card).toContainText(/Estimate (?:7–14|8–17) min \+ waiting \(unknown\) · Estimate ₱14 · data from 16 Oct 2026/);
   await expect(card).toContainText("Loop A");
   await expect(card).not.toContainText("Changed since saved");
 

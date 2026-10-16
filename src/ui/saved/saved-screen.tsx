@@ -22,9 +22,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { clearHistory } from "@/client/history/trip-history";
+import { useSnapshot } from "@/client/network/use-snapshot";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import { useHistoryList, useSavedPlaces, useSavedTrips, useTripRevalidation } from "@/client/saved/use-saved";
 import { deleteSavedPlace, deleteSavedTrip, putSavedPlace, putSavedTrip, removeUnreadable } from "@/client/storage/db";
+import type { EtaModel } from "@/domain/api/schemas";
 import {
   historyLine,
   manilaDate,
@@ -217,7 +219,19 @@ function Loading({ label }: { label: string }) {
 
 // ------------------------------------------------------------------ trips
 
-function TripCard({ trip, status, onOpen, onRemove }: { trip: SavedTrip; status: SavedTripStatus | undefined; onOpen: () => void; onRemove: () => void }) {
+function TripCard({
+  trip,
+  status,
+  onOpen,
+  onRemove,
+  model,
+}: {
+  trip: SavedTrip;
+  status: SavedTripStatus | undefined;
+  onOpen: () => void;
+  onRemove: () => void;
+  model?: EtaModel | null;
+}) {
   const changed = status === "changed";
   const lookups = useMemo(() => planLookups(savedTripResponse(trip)), [trip]);
   const id = useId();
@@ -243,7 +257,7 @@ function TripCard({ trip, status, onOpen, onRemove }: { trip: SavedTrip; status:
           </h2>
         </div>
         <LegStrip option={trip.option} lookups={lookups} />
-        <p className="pn-saved-card__meta">{tripCardMeta(trip)}</p>
+        <p className="pn-saved-card__meta">{tripCardMeta(trip, model)}</p>
         <p className="pn-saved-card__date">Saved {manilaDate(trip.savedAt) ?? "on this phone"}</p>
         <div className="pn-saved-card__actions">
           <button type="button" className={changed ? "pn-saved-cta pn-saved-cta--primary" : "pn-saved-cta"} onClick={onOpen} data-testid="saved-trip-open">
@@ -262,6 +276,7 @@ function TripsPanel() {
   const trips = useSavedTrips();
   const frame = useAppFrame();
   const router = useRouter();
+  const snapshotState = useSnapshot(true);
   const statuses = useTripRevalidation(trips.status === "ready" ? trips.records : null);
   const removal = useRemoval();
 
@@ -287,7 +302,14 @@ function TripsPanel() {
       ) : (
         <ul className="pn-saved__cards" aria-label="Saved trips">
           {trips.records.map((t) => (
-            <TripCard key={t.id} trip={t} status={statuses.get(t.id)} onOpen={() => open(t)} onRemove={() => remove(t)} />
+            <TripCard
+              key={t.id}
+              trip={t}
+              status={statuses.get(t.id)}
+              onOpen={() => open(t)}
+              onRemove={() => remove(t)}
+              model={snapshotState.snapshot?.etaModel}
+            />
           ))}
         </ul>
       )}

@@ -23,6 +23,7 @@ describe("StatusBadge", () => {
     historical: "Historical name — not mapped",
     osm: "OpenStreetMap",
     "provisional-stops": "Provisional stops",
+    "approximate-path": "Approximate path",
   };
 
   it.each(Object.entries(expected))("%s renders its text with an icon (never colour alone)", (variant, text) => {

@@ -20,13 +20,18 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "rea
 import { useLines } from "@/client/network/use-lines";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
+import type { EtaModel } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
+import type { EtaEstimate } from "@/domain/eta/eta";
+import { formatLeg, formatPeakNote, formatRange, formatTotal } from "@/domain/eta/format";
 import { WALK_LOADING_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { LineNotesView } from "@/ui/map/line-notes-view";
 import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel } from "@/domain/trip/present";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
+import { EtaBasisSheet } from "./eta-basis-sheet";
+import { extractWalkLengths, useOptionEta } from "./eta-text";
 import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
 
 export type TripEnds = { start: SavedEnd; destination: SavedEnd };
@@ -42,6 +47,7 @@ type Props = {
   note?: TripNote | null;
   /** "Start trip": starts guidance (Task 10). Without it there is no Start button. */
   onStart?: (() => void) | null;
+  etaModel?: EtaModel | null;
 };
 
 const CANDIDATE = "Mapped candidate · not yet verified";
@@ -85,7 +91,7 @@ function Marker({ kind }: { kind: "origin" | "board" | "alight" | "destination" 
 
 type Step = { key: string; marker: Parameters<typeof Marker>[0]["kind"]; rail: "walk" | "ride" | null; body: ReactNode };
 
-function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideLegDto) => RideTrace): Step[] {
+function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideLegDto) => RideTrace, estimate?: EtaEstimate | null): Step[] {
   const out: Step[] = [];
   const last = option.legs.length - 1;
   option.legs.forEach((leg, i) => {
@@ -115,28 +121,36 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
       // The final walk carries the destination marker (artboard); a walk-only trip keeps the
       // origin marker and ends with an "Arrive" step.
       const final = i === last && i > 0;
-      const walkPath = (leg as { path?: { label?: string } }).path;
+      const walkPath = (leg as { path?: { kind?: string; label?: string } }).path;
       const pathLabel = walkPath?.label ?? "Estimate · path not verified";
+      const etaLeg = estimate?.legs[i];
+      const timeSuffix =
+        etaLeg && etaLeg.estimated && etaLeg.lowMin !== null && etaLeg.highMin !== null
+          ? ` · ${formatRange(etaLeg.lowMin, etaLeg.highMin)} walk · ${walkPath?.kind === "path" ? "along streets (approximate)" : "straight line"}`
+          : "";
       out.push({
         key: `w${i}`,
         marker: i === 0 ? "origin" : final ? "destination" : "walk",
         rail: final ? null : "walk",
         body: (
           <>
-            <strong className="pn-tl__title">{walkTitle(leg, lookups)}</strong>
+            <strong className="pn-tl__title">
+              {walkTitle(leg, lookups)}
+              {timeSuffix}
+            </strong>
             <p className="pn-tl__sub">{pathLabel.includes("path not verified") ? pathLabel : `${pathLabel} · path not verified`}</p>
           </>
         ),
       });
       return;
     }
-    out.push(...rideSteps(leg, i, lookups, traceOf(leg)));
+    out.push(...rideSteps(leg, i, lookups, traceOf(leg), estimate));
   });
   if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive at your destination</strong> });
   return out;
 }
 
-function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: RideTrace): Step[] {
+function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: RideTrace, estimate?: EtaEstimate | null): Step[] {
   const board = leg.stops[0]!;
   const alight = leg.stops[leg.stops.length - 1]!;
   const boardName = lookups.stopName(board.id, board.name);
@@ -147,6 +161,13 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
   const distanceBasis =
     leg.distanceBasis === "approximate_path" ? "along approximate path" : "straight-line between pins";
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
+  const etaLeg = estimate?.legs[i];
+  const etaText =
+    etaLeg && etaLeg.estimated && etaLeg.lowMin !== null && etaLeg.highMin !== null
+      ? ` · ${formatRange(etaLeg.lowMin, etaLeg.highMin)} ride · along the approximate path`
+      : etaLeg && !etaLeg.estimated
+        ? ` · ${formatLeg(etaLeg)} · along the approximate path`
+        : "";
 
   return [
     {
@@ -170,6 +191,7 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
           </div>
           <p className="pn-tl__sub">
             Ride {count} {count === 1 ? "stop" : "stops"} · {formatDistance(leg.distanceMeters)} ({distanceBasis})
+            {etaText}
           </p>
           <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">
             {pathLabel}
@@ -296,7 +318,8 @@ function TripActions({ data, option, ends }: { data: PlanResponse; option: PlanO
 
 export const START_TRIP = "Start trip";
 
-export function TripDetail({ data, option, onBack, ends = null, note = null, onStart = null }: Props) {
+export function TripDetail({ data, option, onBack, ends = null, note = null, onStart = null, etaModel = null }: Props) {
+  const [basisOpen, setBasisOpen] = useState(false);
   const lookups = planLookups(data);
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Focus the heading when an option opens, and again once the map shows (a trip reopened from
@@ -311,6 +334,10 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const { lines } = useLines(data.revision.revisionId);
   const circular = useMemo(() => new Map(data.variants.map((v) => [v.variantId, v.isCircular])), [data.variants]);
   const traceOf = (leg: RideLegDto) => rideTrace(leg, lines, circular.get(leg.variantId) ?? false);
+  const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
+  const { estimate } = useOptionEta(option, walkLengths, etaModel);
+  const peakNote = estimate ? formatPeakNote(estimate.total) : null;
+
   // Walk legs show "Straight line · loading street paths…" until the walk graph arrives: say so politely.
   const loadingPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "straight" && (l as EnrichedWalkLeg).path.label === WALK_LOADING_LABEL);
   const [sawLoadingPaths, setSawLoadingPaths] = useState(false);
@@ -331,9 +358,28 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       </h2>
       <p className="pn-trip-detail__labels">{option.labels.join(" · ")}</p>
       <div className="pn-trip-detail__meta">
-        <span>Time not available</span>
+        {estimate ? (
+          <span className="pn-trip-detail__time">{formatTotal(estimate.total)}</span>
+        ) : (
+          <span>Time not available</span>
+        )}
         <FareChip fare={option.fare} />
       </div>
+      {peakNote ? (
+        <p className="pn-trip-detail__peak" data-testid="trip-peak-note">
+          {peakNote}
+        </p>
+      ) : null}
+      {estimate ? (
+        <button
+          type="button"
+          className="pn-trip-detail__basis-btn"
+          onClick={() => setBasisOpen(true)}
+          data-testid="how-times-estimated-btn"
+        >
+          How times are estimated
+        </button>
+      ) : null}
       {rides.length > 0 ? <UnverifiedBadge /> : null}
       {note ? (
         <p className={note.tone === "warning" ? "pn-trip-reopen pn-trip-reopen--warn" : "pn-trip-reopen"} data-testid="trip-reopen-note">
@@ -351,7 +397,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
         {pathsStatus}
       </p>
       <ol className="pn-tl" aria-label="Trip steps">
-        {steps(option, lookups, traceOf).map((step) => (
+        {steps(option, lookups, traceOf, estimate).map((step) => (
           <li key={step.key} className="pn-tl__step">
             <div className="pn-tl__rail">
               <Marker kind={step.marker} />
@@ -388,6 +434,11 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
         )}
       </section>
       <p className="pn-trip-detail__soon">Corrections open soon.</p>
+      <EtaBasisSheet
+        open={basisOpen}
+        onClose={() => setBasisOpen(false)}
+        model={etaModel}
+      />
     </section>
   );
 }

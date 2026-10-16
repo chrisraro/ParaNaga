@@ -62,7 +62,7 @@ async function pinBoth(page: Page) {
   await page.getByRole("button", { name: "Set destination here" }).click();
 }
 
-test("trip options show the unverified badge, estimate chips and no times", async ({ page }) => {
+test("trip options show the unverified badge, estimate chips and honest time estimates", async ({ page }) => {
   const calls = await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
   await pinBoth(page);
@@ -73,10 +73,11 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   await expect(cards).toHaveCount(2);
   for (const card of await cards.all()) {
     await expect(card.getByTestId("unverified-badge")).toHaveText(BADGE);
-    await expect(card).toContainText("Time not available");
+    await expect(card).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
     await expect(card).toContainText("Loop A");
     await expect(card).toContainText("clockwise");
   }
+  await expect(cards.nth(0)).toContainText(/Estimate (?:8–15|9–18) min \+ waiting \(unknown\)/);
   await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Estimate ₱14");
   await expect(cards.nth(0)).toContainText("No transfers");
   await expect(cards.nth(0)).toContainText("≈ 230 m");
@@ -85,6 +86,7 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   // Least walking: the long loop ride is obvious.
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1)).toContainText("Ride ≈ 5.5 km");
+  await expect(cards.nth(1)).toContainText(/Estimate (?:30–47|34–62) min \+ waiting \(unknown\)/);
   await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Estimate ₱16–₱18");
 
   // Accessible names carry the label and the fare estimate.
@@ -113,7 +115,7 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
-  await expect(detail).toContainText("Time not available");
+  await expect(detail).toContainText(/Estimate (?:8–15|9–18) min \+ waiting \(unknown\)/);
 
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps).toHaveCount(4);

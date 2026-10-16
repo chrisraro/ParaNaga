@@ -38,6 +38,11 @@ export function RideStep({ view, onSend, location, headingRef, alertKey }: StepP
         {view.subtitle}
       </p>
       <UnverifiedBadge />
+      {view.remainingTime ? (
+        <p className="pn-guide__time" data-testid="guidance-ride-time">
+          {view.remainingTime}
+        </p>
+      ) : null}
 
       <div className="pn-guide__progress" data-testid="ride-progress">
         <p className="pn-guide__count" data-testid="ride-count">
