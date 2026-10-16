@@ -35,3 +35,9 @@ export function offlinePlanNote(publishedAt: string | null | undefined, reason: 
 
 /** A detail panel waiting for the network (useOffline). */
 export const OFFLINE_PANEL_TEXT = "You're offline · This opens when you're back online.";
+
+/**
+ * A walk drawn as a straight dotted line because the phone is offline and has never stored the
+ * walk graph (Task 15): it is fetched once, the first time a trip is shown online.
+ */
+export const WALK_PATHS_OFFLINE_NOTE = "Street paths need a connection the first time.";

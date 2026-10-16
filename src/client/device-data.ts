@@ -4,7 +4,8 @@
 // extend as they add stores. It removes the preferences and any other ParaNaga keys in
 // localStorage, ParaNaga's sessionStorage keys (guidance state), every IndexedDB store (saved
 // trips, saved places, trip history and the last-seen revision, Task 8), and the service worker's
-// data caches (Task 12: head, snapshots, search indexes, reference reads) with their expiry
+// data caches (Task 12: head, snapshots, search indexes, reference reads; Task 15: the route
+// lines and the walk graph) with their expiry
 // records. The app code itself (precached build assets and static shells) stays, so ParaNaga
 // still opens offline afterwards.
 

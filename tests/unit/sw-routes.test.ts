@@ -9,6 +9,7 @@ import {
   classifyRequest,
   isCacheableResponse,
   outdatedCaches,
+  revisionsKept,
   shellFor,
   SHELL_PATHS,
   type SwRequestInfo,
@@ -57,6 +58,21 @@ describe("classifyRequest: runtime data caches", () => {
     expect(outdatedCaches([cacheName("lines", "b1"), "pn-lines-f0-b1", "pn-lines-b1"], "b1")).toEqual(["pn-lines-f0-b1", "pn-lines-b1"]);
   });
 
+  it("caches a revision's walk graph CacheFirst in its own cache (Task 15)", () => {
+    expect(classifyRequest(req(`/api/v1/network/walk-graph/${REV}`))).toEqual({ kind: "cache-first", cache: "walk-graph" });
+    expect(classifyRequest(req("/api/v1/network/walk-graph/not-a-uuid"))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req(`/api/v1/network/walk-graph/${REV}/x`))).toEqual({ kind: "network-only" });
+    expect(cacheName("walk-graph", "b1")).toBe("pn-walk-graph-b1");
+    expect(outdatedCaches([cacheName("walk-graph", "b1"), "pn-walk-graph-b0"], "b1")).toEqual(["pn-walk-graph-b0"]);
+  });
+
+  it("keeps fewer walk graph revisions than the other data caches (its size)", () => {
+    expect(revisionsKept("walk-graph")).toBe(2);
+    expect(revisionsKept("lines")).toBe(3);
+    expect(revisionsKept("snapshot")).toBe(3);
+    expect(revisionsKept("search-index")).toBe(3);
+  });
+
   it("serves the published head NetworkFirst with a cached fallback", () => {
     expect(classifyRequest(req("/api/v1/network/head"))).toEqual({ kind: "network-first", cache: "head" });
   });
@@ -74,6 +90,8 @@ describe("classifyRequest: never cached", () => {
     expect(classifyRequest(req("/api/v1/plan"))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req("/app", { method: "POST", mode: "navigate" }))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req("/api/v1/sources", { method: "HEAD" }))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req(`/api/v1/network/lines/${REV}`, { method: "POST" }))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req(`/api/v1/network/walk-graph/${REV}`, { method: "POST" }))).toEqual({ kind: "network-only" });
   });
 
   it("/api/v1/stops?bbox= and any data URL with a query string", () => {
@@ -81,6 +99,8 @@ describe("classifyRequest: never cached", () => {
     expect(classifyRequest(req("/api/v1/stops"))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req("/api/v1/routes?x=1"))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req(`/api/v1/network/snapshot/${REV}?v=2`))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req(`/api/v1/network/lines/${REV}?v=2`))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req(`/api/v1/network/walk-graph/${REV}?lat=13.62&lng=123.18`))).toEqual({ kind: "network-only" });
   });
 
   it("/api/auth/**, /api/csp-report, /api/health, /admin/**, /account/**", () => {
@@ -140,6 +160,10 @@ describe("cache names", () => {
     expect(cachesToClear(["serwist-precache-v2-https://x/", "pn-shell-b1", "pn-head-b1", "pn-snapshot-b1", "pn-search-index-b1", "pn-reference-b1", "pn-snapshot-b0", "legacy"])).toEqual([
       "pn-head-b1", "pn-snapshot-b1", "pn-search-index-b1", "pn-reference-b1", "pn-snapshot-b0", "legacy",
     ]);
+    // Task 15: the approximate paths and the walk graph go too.
+    const lines = cacheName("lines", "b1");
+    const walk = cacheName("walk-graph", "b1");
+    expect(cachesToClear(["pn-shell-b1", lines, walk, "serwist-precache-v2-https://x/"])).toEqual([lines, walk]);
   });
 
   it("reads the build id from the precache manifest, with a stable hash fallback", () => {
@@ -181,6 +205,8 @@ describe("acceptHandoff", () => {
     const ok = (url: string, cacheControl = "public, s-maxage=31536000, immutable") => acceptHandoff({ url, body: "{}", cacheControl }, ORIGIN);
     expect(ok(`/api/v1/network/snapshot/${REV}`)?.cache).toBe("snapshot");
     expect(ok(`/api/v1/network/search-index/${REV}`)?.cache).toBe("search-index");
+    expect(ok(`/api/v1/network/lines/${REV}`)?.cache).toBe("lines");
+    expect(ok(`/api/v1/network/walk-graph/${REV}`)?.cache).toBe("walk-graph");
     expect(ok("/api/v1/network/head", "public, s-maxage=30")).toEqual({ url: `${ORIGIN}/api/v1/network/head`, body: "{}", cacheControl: "public, s-maxage=30", cache: "head" });
   });
 
@@ -194,6 +220,9 @@ describe("acceptHandoff", () => {
     expect(try_({ url: `/api/v1/network/snapshot/${REV}`, body: "{}", cacheControl: "no-store" })).toBeNull();
     expect(try_({ url: `/api/v1/network/snapshot/${REV}`, body: "<html>", cacheControl: "public" })).toBeNull();
     expect(try_({ url: `/api/v1/network/snapshot/${REV}`, body: "x".repeat(2_000_001), cacheControl: "public" })).toBeNull();
+    // A walk graph larger than the handoff bound (3 MB) is refused; the worker fetches it itself.
+    expect(try_({ url: `/api/v1/network/walk-graph/${REV}`, body: `"${"x".repeat(3_000_000)}"`, cacheControl: "public" })).toBeNull();
+    expect(try_({ url: `/api/v1/network/walk-graph/${REV}?x=1`, body: "{}", cacheControl: "public" })).toBeNull();
     expect(try_(null)).toBeNull();
     expect(try_({ url: 1 })).toBeNull();
   });

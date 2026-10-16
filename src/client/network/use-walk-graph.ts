@@ -4,15 +4,20 @@
 //
 // Rules:
 //  - Loaded only after a trip plan exists (`revisionId` non-null and `enabled` true).
-//  - Skipped when the person asked to save data (`savingData()`: Low-data mode preference or
-//    `navigator.connection.saveData === true`), unless that revision is already decoded in memory.
+//  - Not downloaded when the person asked to save data (`savingData()`: Low-data mode preference or
+//    `navigator.connection.saveData === true`); a copy the service worker already stored is still
+//    used (no network). Otherwise "skipped".
 //  - URL carries only the validated UUID revisionId — never coordinates or query strings.
 //  - Validated and decoded once per revision with `parseWalkGraph`, kept in memory, and offered to
-//    the service worker on the first visit via `offerToWorker`.
+//    the service worker on the first visit via `offerToWorker`. The worker keeps it (CacheFirst,
+//    Task 15), so later visits draw street paths offline. A payload the validator rejects is
+//    dropped from the caches and fetched once more (fetchRevisionJson), never trusted.
+//  - Offline with no stored copy: "offline" (walks say street paths need a connection the first
+//    time), and it loads by itself when the connection comes back.
 
 import { useEffect, useSyncExternalStore } from "react";
 import { usePrefs } from "@/client/prefs/use-prefs";
-import { offerToWorker, workerSeesRequests } from "@/client/pwa/data-handoff";
+import { decodeJson, fetchRevisionJson, readStoredCopy } from "@/client/pwa/data-handoff";
 import { savingData } from "@/client/pwa/prefetch-index";
 import { parseUuidParam } from "@/domain/api/schemas";
 import { parseWalkGraph, type WalkGraph } from "@/domain/walk/walk-graph";
@@ -22,7 +27,8 @@ export type WalkGraphState =
   | { status: "loading"; graph: null; revisionId: string }
   | { status: "ready"; graph: WalkGraph; revisionId: string }
   | { status: "skipped"; graph: null; revisionId: string }
-  | { status: "error"; graph: null; revisionId: string };
+  | { status: "error"; graph: null; revisionId: string }
+  | { status: "offline"; graph: null; revisionId: string };
 
 const IDLE: WalkGraphState = { status: "idle", graph: null, revisionId: null };
 
@@ -55,9 +61,16 @@ export function heldWalkGraph(revisionId?: string | null): WalkGraph | null {
   return state.graph;
 }
 
+const decodeGraph = (raw: unknown): WalkGraph | null => {
+  const decoded = parseWalkGraph(raw);
+  return decoded.ok ? decoded.graph : null;
+};
+
+const isOffline = () => typeof navigator !== "undefined" && navigator.onLine === false;
+
 /**
- * Loads and decodes the walk graph for `revisionId` (unless saving data). Resolves with the
- * decoded graph or null on error / skip.
+ * Loads and decodes the walk graph for `revisionId` (when saving data: only a stored copy).
+ * Resolves with the decoded graph or null on error / skip / offline.
  */
 export function loadWalkGraph(revisionId: string): Promise<WalkGraph | null> {
   const parsedRev = parseUuidParam(revisionId, "revisionId");
@@ -71,30 +84,31 @@ export function loadWalkGraph(revisionId: string): Promise<WalkGraph | null> {
     setState({ status: "ready", graph: cached, revisionId: rev });
     return Promise.resolve(cached);
   }
-  if (savingData()) {
-    setState({ status: "skipped", graph: null, revisionId: rev });
-    return Promise.resolve(null);
-  }
   const existing = inflightByRevision.get(rev);
   if (existing) return existing;
 
-  setState({ status: "loading", graph: null, revisionId: rev });
   const url = `/api/v1/network/walk-graph/${encodeURIComponent(rev)}`;
-  const sawRequest = workerSeesRequests();
+  const saving = savingData();
+  if (!saving) setState({ status: "loading", graph: null, revisionId: rev });
   const promise = (async () => {
-    const response = await fetch(url, { headers: { accept: "application/json" } });
-    if (!response.ok) throw new Error(`GET ${url} failed with ${response.status}`);
-    const text = await response.text();
-    const raw: unknown = JSON.parse(text);
-    const decoded = parseWalkGraph(raw);
-    if (!decoded.ok) throw new Error(decoded.error);
-    offerToWorker(url, text, response.headers.get("Cache-Control"), sawRequest);
-    byRevision.set(rev, decoded.graph);
-    setState({ status: "ready", graph: decoded.graph, revisionId: rev });
-    return decoded.graph;
+    if (saving) {
+      const stored = await readStoredCopy(url);
+      const graph = stored === null ? null : decodeJson(stored, decodeGraph);
+      if (!graph) {
+        setState({ status: isOffline() ? "offline" : "skipped", graph: null, revisionId: rev });
+        return null;
+      }
+      byRevision.set(rev, graph);
+      setState({ status: "ready", graph, revisionId: rev });
+      return graph;
+    }
+    const graph = await fetchRevisionJson(url, decodeGraph);
+    byRevision.set(rev, graph);
+    setState({ status: "ready", graph, revisionId: rev });
+    return graph;
   })()
     .catch(() => {
-      setState({ status: "error", graph: null, revisionId: rev });
+      setState({ status: isOffline() ? "offline" : "error", graph: null, revisionId: rev });
       return null;
     })
     .finally(() => {
@@ -126,16 +140,14 @@ export function useWalkGraph(revisionId: string | null | undefined, enabled = tr
   const saveData = savingData();
 
   useEffect(() => {
-    if (!enabled || !rev) return;
-    if (byRevision.has(rev)) {
-      setState({ status: "ready", graph: byRevision.get(rev)!, revisionId: rev });
-      return;
-    }
-    if (saveData) {
-      setState({ status: "skipped", graph: null, revisionId: rev });
-      return;
-    }
+    if (!enabled || !rev) return undefined;
     void loadWalkGraph(rev);
+    // Offline without a stored copy: try again as soon as the connection comes back.
+    const onOnline = () => {
+      if (!byRevision.has(rev)) void loadWalkGraph(rev);
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
   }, [enabled, rev, saveData, prefs.lowData]);
 
   const retry = () => {
@@ -145,7 +157,6 @@ export function useWalkGraph(revisionId: string | null | undefined, enabled = tr
   if (!enabled || !rev) return { ...IDLE, retry };
   const inMemory = byRevision.get(rev);
   if (inMemory) return { status: "ready", graph: inMemory, revisionId: rev, retry };
-  if (saveData) return { status: "skipped", graph: null, revisionId: rev, retry };
-  if (current.revisionId === rev) return { ...current, retry };
-  return { status: "loading", graph: null, revisionId: rev, retry };
+  if (current.revisionId === rev && current.status !== "ready") return { ...current, retry };
+  return saveData ? { status: "skipped", graph: null, revisionId: rev, retry } : { status: "loading", graph: null, revisionId: rev, retry };
 }

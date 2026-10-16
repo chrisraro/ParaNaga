@@ -5,10 +5,11 @@
 // Fetched alongside the snapshot when map lines are shown, skipped automatically when saving data
 // (`savingData()`), validated with `linesSchema`, cached in memory per revision, and offered to
 // the service worker on first visit via `offerToWorker`. URL carries the UUID revisionId only.
+// The worker keeps it CacheFirst (Task 15), so the overview, route and trip lines draw offline.
 
 import { useEffect, useSyncExternalStore } from "react";
 import { usePrefs } from "@/client/prefs/use-prefs";
-import { offerToWorker, workerSeesRequests } from "@/client/pwa/data-handoff";
+import { fetchRevisionJson } from "@/client/pwa/data-handoff";
 import { savingData } from "@/client/pwa/prefetch-index";
 import { linesSchema, parseUuidParam, type Lines } from "@/domain/api/schemas";
 
@@ -74,18 +75,15 @@ export function loadLines(revisionId: string, opts?: { force?: boolean }): Promi
 
   setState({ status: "loading", lines: null, revisionId: rev });
   const url = `/api/v1/network/lines/${encodeURIComponent(rev)}`;
-  const sawRequest = workerSeesRequests();
   const promise = (async () => {
-    const response = await fetch(url, { headers: { accept: "application/json" } });
-    if (!response.ok) throw new Error(`GET ${url} failed with ${response.status}`);
-    const text = await response.text();
-    const raw: unknown = JSON.parse(text);
-    const parsed = linesSchema.safeParse(raw);
-    if (!parsed.success) throw new Error(parsed.error.message);
-    offerToWorker(url, text, response.headers.get("Cache-Control"), sawRequest);
-    byRevision.set(rev, parsed.data);
-    setState({ status: "ready", lines: parsed.data, revisionId: rev });
-    return parsed.data;
+    // An invalid payload (e.g. a damaged stored copy) is dropped and fetched once more (Task 15).
+    const lines = await fetchRevisionJson(url, (raw) => {
+      const parsed = linesSchema.safeParse(raw);
+      return parsed.success ? parsed.data : null;
+    });
+    byRevision.set(rev, lines);
+    setState({ status: "ready", lines, revisionId: rev });
+    return lines;
   })()
     .catch(() => {
       setState({ status: "error", lines: null, revisionId: rev });

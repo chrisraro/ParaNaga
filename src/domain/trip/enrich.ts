@@ -18,6 +18,7 @@
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "../api/plan";
 import type { NetworkSnapshot } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
+import { WALK_PATHS_OFFLINE_NOTE } from "../pwa/offline-copy";
 import type { LatLng } from "../geo/types";
 import { PLAN_LABELS, type PlanLabel } from "../planner/labels";
 import { routeWalk, type WalkGraph, type WalkStraightReason } from "../walk/walk-graph";
@@ -25,8 +26,10 @@ import { routeWalk, type WalkGraph, type WalkStraightReason } from "../walk/walk
 export const WALK_PATH_LABEL = "Approximate walking path · crossings not checked" as const;
 export const WALK_STRAIGHT_LABEL = "Straight line · no street path found" as const;
 export const WALK_LOADING_LABEL = "Straight line · loading street paths…" as const;
+/** Offline, and the walk graph was never stored on this phone (Task 15). */
+export const WALK_OFFLINE_LABEL = `Straight line · ${WALK_PATHS_OFFLINE_NOTE}` as const;
 
-export type WalkGraphStatus = "idle" | "loading" | "ready" | "error" | "skipped";
+export type WalkGraphStatus = "idle" | "loading" | "ready" | "error" | "skipped" | "offline";
 
 export type WalkLegPath =
   | {
@@ -40,12 +43,12 @@ export type WalkLegPath =
     }
   | {
       kind: "straight";
-      reason: WalkStraightReason | "no_graph" | "loading";
+      reason: WalkStraightReason | "no_graph" | "loading" | "offline";
       coords: LatLng[];
       /** Fallback estimate in whole metres (`round(straightM × 1.3)`). */
       lengthM: number;
       straightM: number;
-      label: typeof WALK_STRAIGHT_LABEL | typeof WALK_LOADING_LABEL;
+      label: typeof WALK_STRAIGHT_LABEL | typeof WALK_LOADING_LABEL | typeof WALK_OFFLINE_LABEL;
     };
 
 export type EnrichedWalkLeg = WalkLegDto & { path: WalkLegPath };
@@ -85,13 +88,14 @@ function routeOneWalk(
   const start = { lat: from.lat, lng: from.lng };
   const end = { lat: to.lat, lng: to.lng };
   if (walkGraph === null) {
+    const reason = status === "loading" ? "loading" : status === "offline" ? "offline" : "no_graph";
     return {
       kind: "straight",
-      reason: status === "loading" ? "loading" : "no_graph",
+      reason,
       coords: [start, end],
       lengthM: estimateMeters,
       straightM: distanceMeters,
-      label: status === "loading" ? WALK_LOADING_LABEL : WALK_STRAIGHT_LABEL,
+      label: reason === "loading" ? WALK_LOADING_LABEL : reason === "offline" ? WALK_OFFLINE_LABEL : WALK_STRAIGHT_LABEL,
     };
   }
   // A 0 m walk (origin at the stop, or same-stop transfer) does not walk out to the road centreline and back.

@@ -27,8 +27,9 @@ import {
   outdatedCaches,
   REFERENCE_MAX_AGE_S,
   REFERENCE_MAX_ENTRIES,
-  REVISIONS_KEPT,
+  revisionsKept,
   SHELL_PATHS,
+  type RevisionCache,
   type SwRoute,
 } from "@/domain/pwa/sw-routes";
 
@@ -48,19 +49,18 @@ const onlyCacheable: SerwistPlugin = {
   cacheWillUpdate: async ({ response }) => (isCacheableResponse(response) ? response : null),
 };
 
+/** An immutable per-revision file: CacheFirst, keeping the last few revisions. */
+const revisionCache = (cache: RevisionCache) =>
+  new CacheFirst({
+    cacheName: cacheName(cache, BUILD_ID),
+    plugins: [onlyCacheable, new ExpirationPlugin({ maxEntries: revisionsKept(cache) })],
+  });
+
 const strategies = {
-  snapshot: new CacheFirst({
-    cacheName: cacheName("snapshot", BUILD_ID),
-    plugins: [onlyCacheable, new ExpirationPlugin({ maxEntries: REVISIONS_KEPT })],
-  }),
-  "search-index": new CacheFirst({
-    cacheName: cacheName("search-index", BUILD_ID),
-    plugins: [onlyCacheable, new ExpirationPlugin({ maxEntries: REVISIONS_KEPT })],
-  }),
-  lines: new CacheFirst({
-    cacheName: cacheName("lines", BUILD_ID),
-    plugins: [onlyCacheable, new ExpirationPlugin({ maxEntries: REVISIONS_KEPT })],
-  }),
+  snapshot: revisionCache("snapshot"),
+  "search-index": revisionCache("search-index"),
+  lines: revisionCache("lines"),
+  "walk-graph": revisionCache("walk-graph"),
   head: new NetworkFirst({
     cacheName: cacheName("head", BUILD_ID),
     networkTimeoutSeconds: HEAD_TIMEOUT_S,
@@ -166,7 +166,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(cacheShells());
 });
 
-/** Stores the page's copies of the head / snapshot / search index unless one is cached already. */
+/** Stores the page's copies of the head / snapshot / search index / lines / walk graph unless one is cached already. */
 async function storeHandoff(entries: unknown): Promise<void> {
   if (!Array.isArray(entries)) return;
   for (const entry of entries) {
