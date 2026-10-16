@@ -370,8 +370,8 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
 
   // Still there on the next steps (the ride).
   await page.getByRole("button", { name: /^Expand sheet/ }).first().click();
-  await guide.getByRole("button", { name: "I'm at the stop", exact: true }).click();
-  await guide.getByRole("button", { name: /^I boarded/ }).click();
+  await page.getByTestId("trip-sheet").getByRole("button", { name: "I'm at the stop", exact: true }).click();
+  await page.getByTestId("trip-sheet").getByRole("button", { name: /^I boarded/ }).click();
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
   await expect(page.getByTestId("map-legend-button")).toBeVisible();
@@ -531,8 +531,8 @@ test("the legend and the walking line still show when the route lines are not lo
   await expectLegendListsWalkAndStops(page, "Route lines for this trip didn't load.");
 });
 
-// Keyboard focus is never left below the screen edge: the half sheet cannot scroll it into view, so
-// a keyboard Tab to a cut-off control lifts the sheet (a tap does not).
+// Keyboard focus is never left below the screen edge (the content scrolls inside the visible sheet;
+// the primary action lives in the sheet's footer, outside the guidance/detail element).
 
 async function expectTabbedControlsOnScreen(page: Page, scope: string, wanted: RegExp[]) {
   const seen = new Set<RegExp>();
@@ -541,7 +541,7 @@ async function expectTabbedControlsOnScreen(page: Page, scope: string, wanted: R
     await page.keyboard.press("Tab");
     const state = await page.evaluate((testId) => {
       const el = document.activeElement as HTMLElement | null;
-      if (!el || !el.closest(`[data-testid="${testId}"]`)) return null;
+      if (!el || !(el.closest(`[data-testid="${testId}"]`) || el.closest(".pn-sheet-footer"))) return null;
       const r = el.getBoundingClientRect();
       return { bottom: r.bottom, top: r.top, name: (el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 60) };
     }, scope);

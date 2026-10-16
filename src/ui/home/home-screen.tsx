@@ -467,22 +467,28 @@ export function HomeScreen() {
     if (sheet.snap !== 1) sheet.setSnap(1);
   };
 
-  // The list's detent before an option opened, restored when the list returns (Back, End guidance);
-  // when the list first appears the sheet rests at peek. Adjusted during render, so the detent is
-  // settled in the same commit that shows the list.
+  // The list's detent before an option opened is restored when the list returns (Back, End guidance).
+  // The sheet is forced to peek only when the list appears for new ends; a re-plan of the same ends
+  // (retry, GPS refinement, picking a point and cancelling) keeps the rider's detent. Adjusted during
+  // render, so the detent is settled in the same commit that shows the list.
   const [snapBeforeDetail, setSnapBeforeDetail] = useState<Snap | null>(null);
   const [wasListed, setWasListed] = useState(false);
+  const [peekedFor, setPeekedFor] = useState<string | null>(null);
+  const endsSignature = endpoints.start && endpoints.destination ? [endpoints.start.point, endpoints.destination.point].map((p) => `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`).join("|") : null;
   if (optionsListed !== wasListed) {
     setWasListed(optionsListed);
     if (optionsListed) {
-      sheet.setSnap(snapBeforeDetail ?? 0);
+      if (snapBeforeDetail !== null) sheet.setSnap(snapBeforeDetail);
+      else if (peekedFor !== endsSignature) sheet.setSnap(0);
+      setPeekedFor(endsSignature);
       setSnapBeforeDetail(null);
     }
   }
+  if (!ready && peekedFor !== null) setPeekedFor(null);
   if (snapBeforeDetail !== null && (!ready || plan.status === "loading")) setSnapBeforeDetail(null);
 
-  // "Show more options" lifts the sheet to full and focuses the list heading; "Show fewer" returns
-  // to the peek with focus staying on the toggle.
+  // "All options" lifts the sheet to full and focuses the list heading; pressed again it returns to
+  // the peek with focus staying on the toggle.
   const handleToggleOptions = () => {
     if (sheet.snap === 2) {
       sheet.setSnap(0);

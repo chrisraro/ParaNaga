@@ -2,7 +2,7 @@ import { expect, type Page } from "@playwright/test";
 
 /**
  * Once From and To are set the sheet rests at peek with the best option's summary; the options
- * list opens with "Show more options" (full). No-op when the list is already open.
+ * list opens with "All options" (full). No-op when the list is already open.
  */
 export async function expandOptions(page: Page) {
   const toggle = page.getByTestId("options-toggle");

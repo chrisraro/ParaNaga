@@ -308,7 +308,7 @@ test("a server error offers a retry that recovers", async ({ page }) => {
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
   await expect(page.getByTestId("trip-error")).toHaveCount(0);
   // Focus is not lost with the unmounted Retry button: the list rests at peek, so it lands on the
-  // "Show more options" toggle; once the list is open the toggle's target heading takes it.
+  // "All options" toggle; once the list is open the toggle's target heading takes it.
   await expect(page.getByTestId("options-toggle")).toBeFocused();
 });
 
@@ -504,8 +504,10 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   const toggle = page.getByTestId("options-toggle");
   await expect(sheet).toHaveAttribute("data-snap", "0");
   await expect(page.getByTestId("options-best")).toContainText(/Loop A.*Estimate \d+–\d+ min.*Estimate ₱14/);
-  await expect(toggle).toHaveText("Show more options");
+  await expect(toggle).toHaveText("All options");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  // The best option is labelled unverified right at the peek (the cards are out of sight there).
+  await expect(page.getByTestId("options-best-unverified")).toHaveText("Unverified route");
   await expect(toggle).toHaveAttribute("aria-controls", "pn-trip-options-list");
   // Both rows, the summary and the toggle are inside the visible sheet, targets >= 44 px.
   const vh = page.viewportSize()!.height;
@@ -517,8 +519,9 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
 
   await toggle.click();
   await expect(sheet).toHaveAttribute("data-snap", "2");
-  await expect(toggle).toHaveText("Show fewer options");
+  await expect(toggle).toHaveText("All options");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByTestId("options-best")).toHaveCount(0); // the list is open: no duplicate summary
   await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
   await expect(page.getByRole("region", { name: "Trip options" })).toBeVisible();
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
@@ -535,7 +538,26 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   await toggle.click();
   await expect(sheet).toHaveAttribute("data-snap", "0");
   await expect(toggle).toBeFocused();
-  await expect(toggle).toHaveText("Show more options");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByTestId("options-best")).toBeVisible();
+});
+
+test("a re-plan of the same ends keeps the detent the rider chose; new ends return to peek", async ({ page }) => {
+  await interceptPlan(page, (route, n) => (n === 2 ? fulfill(route, { error: { code: "unavailable", message: "Try again.", requestId: "r1" } }, 503) : fulfill(route, PROVISIONAL_PLAN)));
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  await page.getByTestId("options-toggle").click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  // Swap -> new ends -> peek again.
+  await page.getByRole("button", { name: "Swap start and destination" }).click();
+  await expect(page.getByTestId("trip-error")).toBeVisible();
+  await page.getByTestId("trip-error").getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByTestId("options-toggle")).toBeVisible();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  // Same ends, expand, then a retry-free re-render keeps full.
+  await page.getByTestId("options-toggle").click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
 });
 
 for (const mode of ["light", "dark", "high contrast"] as const) {
@@ -560,8 +582,12 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
     await page.getByTestId("trip-start").click();
     await expect(page.getByTestId("guidance")).toBeVisible();
     await expectAxeClean(page, '[data-testid="trip-sheet"]');
-    // Focus stays visible on the sticky primary action.
-    await page.keyboard.press("Tab");
+    // Keyboard focus on the primary action: it is the focused element, visible and inside the viewport.
+    const primary = page.getByTestId("guidance-atStop");
+    await primary.focus();
+    await expect(primary).toBeFocused();
+    const box = (await primary.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
     await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
   });
 }

@@ -181,7 +181,8 @@ export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = n
 
 /**
  * Peek of the sheet once From and To are set: one line for the best option (route, time range,
- * fare) and the toggle that lifts the sheet to full with every option (aria-expanded while full).
+ * fare, a caution chip for a ride) and the toggle "All options" that lifts the sheet to full with
+ * every option (aria-expanded while full, the chevron turns). The summary hides at full: the list is there.
  */
 export function OptionsPeek({
   data,
@@ -201,6 +202,7 @@ export function OptionsPeek({
   const routes = best.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode, l.routeName));
   return (
     <div className="pn-peek" data-testid="options-peek">
+      {expanded ? null : (
       <p className="pn-peek__best" data-testid="options-best">
         <span className="sr-only">Best option: </span>
         <span>
@@ -210,7 +212,13 @@ export function OptionsPeek({
           <span aria-hidden="true"> · </span>
           {fareChipText(best.fare)}
         </span>
+        {best.rides > 0 ? (
+          <span className="pn-peek__chip" data-testid="options-best-unverified">
+            Unverified route
+          </span>
+        ) : null}
       </p>
+      )}
       <button
         type="button"
         id={OPTIONS_TOGGLE_ID}
@@ -220,7 +228,7 @@ export function OptionsPeek({
         onClick={onToggle}
         data-testid="options-toggle"
       >
-        {expanded ? "Show fewer options" : "Show more options"}
+        All options
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M6 15l6-6 6 6" />
         </svg>

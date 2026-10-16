@@ -30,6 +30,7 @@ import { LineNotesView } from "@/ui/map/line-notes-view";
 import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, distanceBasisText, fareChipText, formatDistance, isNegligibleWalk, legFareText, rideFleetText, routeChipLabel } from "@/domain/trip/present";
+import { SheetBar } from "@/ui/app-shell/sheet-bar";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { EtaBasisSheet } from "./eta-basis-sheet";
 import { EtaPeakNote, EtaTotalText, SpokenRange, extractWalkLengths, useOptionEta } from "./eta-text";
@@ -455,12 +456,12 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       </section>
       <p className="pn-trip-detail__soon">Corrections open soon.</p>
       {onStart ? (
-        // Last in the scrolling sheet, pinned to the bottom of the visible sheet (.pn-sheet-bar).
-        <div className="pn-sheet-bar">
+        // In the sheet's footer: pinned to the bottom of the visible sheet at every snap.
+        <SheetBar>
           <button type="button" className="pn-btn pn-btn--primary pn-trip-start" onClick={() => onStart(walkLengths)} data-testid="trip-start">
             {START_TRIP}
           </button>
-        </div>
+        </SheetBar>
       ) : null}
       <EtaBasisSheet
         open={basisOpen}

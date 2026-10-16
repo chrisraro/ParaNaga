@@ -8,6 +8,7 @@ import type { RefObject } from "react";
 import type { GeolocationState } from "@/client/geo/use-geolocation";
 import type { GuidanceTap } from "@/client/guidance/use-guidance-session";
 import type { GuidanceAction } from "@/domain/guidance/view";
+import { SheetBar } from "@/ui/app-shell/sheet-bar";
 
 export type LocationUi = { state: GeolocationState; watching: boolean; onEnable: () => void };
 
@@ -26,7 +27,7 @@ export function GuidanceButtons({ actions, onSend }: { actions: readonly Guidanc
   const shown = actions.filter((a) => a.event !== "end");
   if (shown.length === 0) return null;
   return (
-    <div className="pn-guide__actions pn-sheet-bar">
+    <SheetBar className="pn-guide__actions">
       {shown.map((a) => (
         <button
           key={a.event}
@@ -38,7 +39,7 @@ export function GuidanceButtons({ actions, onSend }: { actions: readonly Guidanc
           {a.label}
         </button>
       ))}
-    </div>
+    </SheetBar>
   );
 }
 

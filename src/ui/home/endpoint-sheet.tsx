@@ -6,15 +6,16 @@
 // §1 (visible 214 / 444 / full); drag with the grabber, or tap / arrow-key it.
 
 import Link from "next/link";
-import { useCallback, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 import { savePlacePrefill } from "@/domain/saved/saved";
 import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
+import { SheetFooterContext } from "@/ui/app-shell/sheet-bar";
 import { SavePlaceButton } from "@/ui/saved/save-place-button";
 
 export type Snap = 0 | 1 | 2;
 
 export const PEEK_VISIBLE = 214;
-/** Peek while trip options are listed: rows + best-option summary + "Show more options" (two 44 px rows). */
+/** Peek while trip options are listed: rows + best-option summary + "All options" (two 44 px rows). */
 export const PEEK_OPTIONS_VISIBLE = 276;
 export const HALF_VISIBLE = 444;
 const DRAG_SLOP = 6;
@@ -297,6 +298,17 @@ export function EndpointSheet({
   summary,
 }: Props) {
   const { attach, snap, offset, dragging } = sheet;
+  const [footer, setFooter] = useState<HTMLDivElement | null>(null);
+  const [footerHeight, setFooterHeight] = useState(0);
+  // The scrolling content keeps its last rows and focused controls clear of the footer.
+  useEffect(() => {
+    if (!footer) return undefined;
+    const measure = () => setFooterHeight(footer.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [footer]);
   // Tapping a row at the peek snap lifts the sheet to half so its options aren't offscreen/inert.
   const onRowTap = (which: EndpointWhich) => {
     if (snap === 0) {
@@ -310,6 +322,7 @@ export function EndpointSheet({
     ["--pn-sheet-clearance" as string]: `${sheet.clearance}px`,
     // The tab bar's height already includes the bottom safe area; without it the sticky bar adds its own.
     ["--pn-sheet-safe" as string]: sheet.clearance > 0 ? "0px" : "env(safe-area-inset-bottom, 0px)",
+    ["--pn-bar-h" as string]: `${footerHeight}px`,
   };
   return (
     <section
@@ -321,6 +334,7 @@ export function EndpointSheet({
       style={style}
     >
       <SheetGrabber sheet={sheet} />
+      <SheetFooterContext.Provider value={footer}>
       <div className="pn-sheet__content">
         {detailOpen ? null : (
         <div className="pn-endpoints">
@@ -351,10 +365,11 @@ export function EndpointSheet({
           onFocusCapture={(e) => {
             // Trip detail stays operable at the peek snap (its header is visible there). A tap in
             // detail or guidance never lifts the sheet to full (that would cover the map, its lines
-            // and the legend: full is the rider's choice), but keyboard focus does, so a focused
-            // control is never left below the screen edge (the half sheet cannot scroll it into view).
-            // The sticky action bar is always inside the visible sheet: focus there never lifts it.
-            if (snap !== 2 && !e.target.closest(".pn-sheet-bar") && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) {
+            // and the legend: full is the rider's choice). The content scrolls inside the visible
+            // sheet, so this only catches a control left under the tab bar (or, at peek, below the
+            // edge), and keyboard focus then lifts the sheet. The footer is always inside the
+            // visible sheet: focus there never lifts it.
+            if (snap !== 2 && !e.target.closest(".pn-sheet-footer") && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) {
               if (snap === 0) sheet.setSnap(1);
               else if (!detailOpen || e.target.matches(":focus-visible")) sheet.setSnap(2);
             }
@@ -393,6 +408,8 @@ export function EndpointSheet({
         {detailOpen ? null : after}
         </div>
       </div>
+      </SheetFooterContext.Provider>
+      <div ref={setFooter} className="pn-sheet-footer" />
     </section>
   );
 }

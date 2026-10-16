@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type BrowserContext, type Page, type Route } from "@playwright/test";
 import { LOOP_A_PINS, PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { chooseOption } from "./fixtures/options";
+import { chooseOption, sheetSettled } from "./fixtures/options";
 
 // Guidance (Increment A, Task 10): Walk, Ride, Transfer and Arrive in the home sheet. POST
 // /api/v1/plan is intercepted with fixtures; tiles are aborted; every test checks for CSP
@@ -129,7 +129,7 @@ async function startGuidance(page: Page) {
 }
 
 async function tap(page: Page, name: string) {
-  await guide(page).getByRole("button", { name, exact: true }).click();
+  await page.getByTestId("trip-sheet").getByRole("button", { name, exact: true }).click();
 }
 
 /**
@@ -242,7 +242,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(save).toContainText("Trip saved");
   await expect(save).toContainText("Available offline in Saved");
 
-  await guide(page).getByRole("button", { name: "Done" }).click();
+  await page.getByTestId("trip-sheet").getByRole("button", { name: "Done" }).click();
   await expect(guide(page)).toHaveCount(0);
   await expect(page.getByTestId("endpoint-start")).toContainText("Choose start");
   await expect(tabBar(page)).toBeVisible();
@@ -314,7 +314,7 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expect(heading(page)).toHaveText("You've arrived");
   await expect(page.getByTestId("arrive-summary")).toContainText("Loop A");
   await expect(page.getByTestId("arrive-summary")).toContainText("Loop B");
-  await guide(page).getByRole("button", { name: "Done" }).click();
+  await page.getByTestId("trip-sheet").getByRole("button", { name: "Done" }).click();
   await expect(guide(page)).toHaveCount(0);
   expect((await geoStub(page)).calls).toBe(1);
 });
@@ -536,9 +536,74 @@ for (const [width, height] of [
     // Guidance: the step button is inside at half, a real click works without lifting the sheet.
     await page.getByTestId("trip-start").click();
     await expect(guide(page)).toBeVisible();
-    await inside("walk primary", guide(page).getByRole("button", { name: "I'm at the stop", exact: true }));
+    await inside("walk primary", page.getByTestId("trip-sheet").getByRole("button", { name: "I'm at the stop", exact: true }));
     await tap(page, "I'm at the stop");
-    await inside("wait primary", guide(page).getByRole("button", { name: /^I boarded/ }));
+    await inside("wait primary", page.getByTestId("trip-sheet").getByRole("button", { name: /^I boarded/ }));
+    await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
+  });
+}
+
+// U2 review: the footer action at peek, half and full, clear of the tab bar in detail, hit-testable,
+// and keyboard focus never sits under it (WCAG 2.4.11).
+for (const [width, height] of [
+  [360, 640],
+  [390, 844],
+] as const) {
+  test(`Start trip stays on screen, above the tab bar and unobscured at peek, half and full on ${width}x${height}`, async ({ page, context }) => {
+    await page.setViewportSize({ width, height });
+    await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
+    await grantLocation(context);
+    await stubGeolocation(page);
+    await openApp(page);
+    const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
+    await chooseOnMap.click();
+    await page.getByRole("button", { name: "Set start here" }).click();
+    await chooseOnMap.click();
+    const before = await mapEl(page).getAttribute("data-center-lng");
+    await drag(page, -120, 80);
+    await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
+    await page.getByRole("button", { name: "Set destination here" }).click();
+    await chooseOption(page);
+    await expect(page.getByTestId("trip-detail")).toBeVisible();
+
+    const start = page.getByTestId("trip-start");
+    const sheet = page.getByTestId("trip-sheet");
+    const check = async () => {
+      await sheetSettled(page);
+      const box = (await start.boundingBox())!;
+      const tabTop = (await tabBar(page).boundingBox())!.y;
+      expect(box.y + box.height, "above the tab bar").toBeLessThanOrEqual(tabTop + 1);
+      expect(box.y, "inside the sheet").toBeGreaterThanOrEqual((await sheet.boundingBox())!.y);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      // Hit test: a real tap at its centre lands on the button, not on the tab bar or the map.
+      const hit = await page.evaluate(([x, y]) => document.elementFromPoint(x!, y!)?.closest('[data-testid="trip-start"]') !== null, [box.x + box.width / 2, box.y + box.height / 2]);
+      expect(hit).toBe(true);
+    };
+    await expect(sheet).toHaveAttribute("data-snap", "1");
+    await check();
+    await page.getByRole("button", { name: "Expand sheet to full" }).click();
+    await expect(sheet).toHaveAttribute("data-snap", "2");
+    await check();
+    await page.getByRole("button", { name: "Collapse sheet" }).click();
+    await expect(sheet).toHaveAttribute("data-snap", "0");
+    await check();
+    await page.getByRole("button", { name: "Expand sheet to half" }).click();
+    await expect(sheet).toHaveAttribute("data-snap", "1");
+    await sheetSettled(page);
+
+    // Tab through the whole detail: every focused control is fully above the footer.
+    await page.getByRole("button", { name: "Back to trip options" }).focus();
+    for (let i = 0; i < 40; i++) {
+      await page.keyboard.press("Tab");
+      const state = await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement | null;
+        const footer = document.querySelector(".pn-sheet-footer");
+        if (!el || !footer || footer.contains(el) || !el.closest('[data-testid="trip-detail"]')) return null;
+        return { bottom: el.getBoundingClientRect().bottom, barTop: footer.getBoundingClientRect().top, name: (el.getAttribute("aria-label") ?? el.textContent ?? "").slice(0, 40) };
+      });
+      if (!state) continue;
+      expect(state.bottom, `${state.name} is not under the footer`).toBeLessThanOrEqual(state.barTop + 1);
+    }
     await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
   });
 }

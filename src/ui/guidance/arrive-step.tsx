@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { ArriveView } from "@/domain/guidance/view";
 import type { SavedTrip } from "@/domain/saved/saved";
+import { SheetBar } from "@/ui/app-shell/sheet-bar";
 import { RouteChip, UndoButton, type StepProps } from "./guidance-parts";
 
 function SaveTripRow({ card }: { card: SavedTrip }) {
@@ -68,7 +69,7 @@ export function ArriveStep({ view, onSend, headingRef, card, onDone }: Omit<Step
       </div>
       {card ? <SaveTripRow card={card} /> : null}
       {/* "Done" is the view's `end` action: it also clears the trip (the screen's onDone). */}
-      <div className="pn-guide__actions pn-sheet-bar">
+      <SheetBar className="pn-guide__actions">
         {view.actions
           .filter((a) => a.event === "end")
           .map((a) => (
@@ -76,7 +77,7 @@ export function ArriveStep({ view, onSend, headingRef, card, onDone }: Omit<Step
             {a.label}
           </button>
         ))}
-      </div>
+      </SheetBar>
       <UndoButton undo={view.undo} onSend={onSend} />
     </section>
   );
