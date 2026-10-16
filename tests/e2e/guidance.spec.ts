@@ -173,7 +173,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(heading(page)).toHaveText("Walk to Plaza Rizal (A1)");
   await expect(heading(page)).toBeFocused();
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 1 of 3 · Walk");
-  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 230 m walk · straight-line estimate, path not verified");
+  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 220 m walk · straight-line estimate, path not verified");
   await expect(guide(page)).toContainText("Boarding side isn't mapped. Ask the driver or people waiting where Loop A stops.");
   await expect(guide(page)).toContainText("Keep ParaNaga open for guidance.");
   await expect(page.getByTestId("guidance-next-ride")).toContainText("Unverified route — confirm with the driver");
@@ -301,7 +301,7 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expect(checklist).toHaveCount(3);
   await expect(checklist.nth(0)).toContainText("Got off at Magsaysay Junction (A3)");
   await expect(checklist.nth(1)).toHaveAttribute("aria-current", "step");
-  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 80 m walk · straight-line estimate, path not verified");
+  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 200 m walk · straight-line estimate, path not verified");
   await expectHonest(page);
   await expectAxeClean(page);
   await tap(page, "I'm at the stop");

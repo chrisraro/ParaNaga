@@ -15,6 +15,7 @@ import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { getSavedTrip } from "@/client/storage/db";
 import type { TripPlanState } from "@/client/trip/use-trip-plan";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
+import { enrichOptionWalks } from "@/domain/trip/enrich";
 import { manilaDate, resolveReopen, samePoint, savedTripResponse, type SavedTrip } from "@/domain/saved/saved";
 import type { EndpointsState } from "@/domain/trip/endpoints";
 import { useApplyOnce, type TripRequest } from "@/ui/app-shell/app-frame-context";
@@ -124,10 +125,12 @@ export function useSavedTripReopen({ tripRequest, endpoints, plan, ready, onRest
   const showStored = ready && restored !== null && active && restored.phase === "waiting" && !restored.dismissed;
   const card = restored?.card ?? null;
   const storedData = useMemo(() => (card ? savedTripResponse(card) : null), [card]);
+  // Stored in wire form (encoded walk paths); the screens read the decoded ones.
+  const storedOption = useMemo(() => (card ? enrichOptionWalks(card.option, null) : null), [card]);
   const error = plan.status === "error" ? plan.kind : null;
   const stored =
-    showStored && card && storedData
-      ? { data: storedData, option: card.option, ends: { start: card.start, destination: card.destination }, note: storedNote(card, error) }
+    showStored && card && storedData && storedOption
+      ? { data: storedData, option: storedOption, ends: { start: card.start, destination: card.destination }, note: storedNote(card, error) }
       : null;
 
   return {

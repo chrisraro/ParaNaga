@@ -162,7 +162,7 @@ test("(c) a trip of 500 m or more: the tricycle is Recommended after the jeepney
   await expect(detail.getByTestId("street-notes")).toContainText("discounts not applied");
   await expect(detail).not.toContainText(/\d\s*min\b/i);
   // The terminal closest to the trip's end (T14, about 60 m away).
-  await expect(detail.getByTestId("tricycle-terminal")).toHaveText(/^Nearest tricycle terminal: Balatas Tricycle Terminal, about \d+ m$/);
+  await expect(detail.getByTestId("tricycle-terminal")).toHaveText(/^Nearest tricycle terminal: Balatas Tricycle Terminal, about \d+ m/);
   await expectAxeBothSchemes(page);
 });
 

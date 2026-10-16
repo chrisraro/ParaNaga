@@ -27,6 +27,7 @@ import {
   tripCardMeta,
   type SavedTrip,
 } from "@/domain/saved/saved";
+import { enrichOptionWalks } from "@/domain/trip/enrich";
 import { estimateOption } from "@/domain/eta/eta";
 import { formatTotal } from "@/domain/eta/format";
 import { LEAST_WALKING_ONLY_PLAN, PROVISIONAL_PLAN, REVISION } from "../e2e/fixtures/plan-responses";
@@ -347,6 +348,12 @@ describe("matchSavedTrip", () => {
     ) as typeof option.legs;
     const c = buildSavedTrip({ id: "t", savedAt: "2026-10-16T02:00:00.000Z", data: plan, option: { ...option, legs }, start: START, destination: DEST });
     expect(savedTripSchema.safeParse(c).success).toBe(true);
+    // Round trip: the reopened walk is the same routed path and the routed length (estimate included).
+    const walkLeg = enrichOptionWalks(c.option, null).legs.find((l) => l.kind === "walk") as { path: { kind: string; coords: unknown[]; lengthM: number }; estimateMeters: number };
+    expect(walkLeg.path.kind).toBe("path");
+    expect(walkLeg.path.coords).toHaveLength(2);
+    expect(walkLeg.estimateMeters).toBe(40);
+    expect(walkLeg.path.lengthM).toBe(40);
   });
 
   it("keeps where a trip end came from", () => {

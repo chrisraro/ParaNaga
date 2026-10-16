@@ -34,6 +34,7 @@ import { LineNotesView } from "@/ui/map/line-notes-view";
 import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, distanceBasisText, fareChipText, formatDistance, isNegligibleWalk, legFareText, rideFleetText, routeChipLabel } from "@/domain/trip/present";
+import type { LatLng } from "@/domain/geo/types";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { EtaBasisSheet } from "./eta-basis-sheet";
 import { EtaPeakNote, EtaTotalText, SpokenRange, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
@@ -102,7 +103,7 @@ function Marker({ kind }: { kind: "origin" | "board" | "alight" | "destination" 
 type Step = { key: string; marker: Parameters<typeof Marker>[0]["kind"]; rail: "walk" | "ride" | null; body: ReactNode };
 
 /** What the steps need besides the plan: how the person named the ends, the notes and the terminals. */
-type StepContext = { start: string; destination: string; notes: OptionNotesView; terminals: NetworkSnapshot["terminals"] | null };
+type StepContext = { start: string; destination: string; notes: OptionNotesView; terminals: NetworkSnapshot["terminals"] | null; showOnMap: ((point: LatLng) => void) | null };
 
 function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideLegDto) => RideTrace, ctx: StepContext, estimate?: EtaEstimate | null): Step[] {
   const out: Step[] = [];
@@ -301,6 +302,20 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
             {terminal ? (
               <p className="pn-tl__sub" data-testid="tricycle-terminal">
                 Nearest tricycle terminal: {terminal.name}, about {Math.round(terminal.distanceM / 10) * 10} m
+                {ctx.showOnMap ? (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      className="pn-btn pn-btn--secondary"
+                      aria-label={`Show on map: ${terminal.name}`}
+                      data-testid="tricycle-terminal-show"
+                      onClick={() => ctx.showOnMap?.({ lat: terminal.lat, lng: terminal.lng })}
+                    >
+                      Show on map
+                    </button>
+                  </>
+                ) : null}
               </p>
             ) : null}
           </div>
@@ -424,7 +439,8 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Focus the heading when an option opens, and again once the map shows (a trip reopened from
   // Saved mounts while the Saved page still covers the home screen, which is inert then).
-  const covered = useAppFrame()?.panelOpen ?? false;
+  const frame = useAppFrame();
+  const covered = frame?.panelOpen ?? false;
   useEffect(() => {
     if (!covered) headingRef.current?.focus();
   }, [option.id, covered]);
@@ -438,7 +454,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
   const now = useMinuteTicker();
   const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
-  const stepContext: StepContext = { start: ends?.start.label || "your start", destination: ends?.destination.label || "your destination", notes, terminals };
+  const stepContext: StepContext = { start: ends?.start.label || "your start", destination: ends?.destination.label || "your destination", notes, terminals, showOnMap: frame ? frame.showOnMap : null };
   const streets = option.legs.filter((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
 
   // Walk legs show "Straight line · loading street paths…" until the walk graph arrives: say so politely.

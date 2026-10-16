@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 // Trip detail for the Increment E modes: free board and alight points, a tricycle and a padyak step,
 // route notes with their evidence, and the soft service-window warning (Task 10).
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { NetworkSnapshot } from "@/domain/api/schemas";
 import type { PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
+import { AppFrameContext, type AppFrameValue } from "@/ui/app-shell/app-frame-context";
 import { TripDetail } from "@/ui/trip/trip-detail";
 import { PROVISIONAL_PLAN } from "../e2e/fixtures/plan-responses";
 import { BASE, DEST, PATH_LINE, ORIGIN, pathRide, streetOnly, walk } from "./guidance-fixtures";
@@ -120,7 +121,22 @@ describe("tricycle and padyak steps", () => {
   it("names the nearest tricycle terminal when one is within reach", () => {
     const terminals = [{ code: "T01", name: "Centro tricycle terminal", modes: ["tricycle"], lat: ORIGIN.lat + 0.001, lng: ORIGIN.lng }] as unknown as NetworkSnapshot["terminals"];
     show(tricycle(), { terminals });
-    expect(screen.getByTestId("tricycle-terminal").textContent).toMatch(/^Nearest tricycle terminal: Centro tricycle terminal, about \d+ m$/);
+    expect(screen.getByTestId("tricycle-terminal").textContent).toMatch(/^Nearest tricycle terminal: Centro tricycle terminal, about \d+ m/);
+    expect(screen.queryByTestId("tricycle-terminal-show")).toBeNull(); // no app frame: nothing to focus
+  });
+
+  it("Show on map focuses the map on the terminal", () => {
+    const terminals = [{ code: "T01", name: "Centro tricycle terminal", modes: ["tricycle"], lat: ORIGIN.lat + 0.001, lng: ORIGIN.lng }] as unknown as NetworkSnapshot["terminals"];
+    const showOnMap = vi.fn();
+    const frame = { panelOpen: false, showOnMap } as unknown as AppFrameValue;
+    const option = tricycle();
+    render(
+      <AppFrameContext.Provider value={frame}>
+        <TripDetail data={data(option)} option={option} onBack={() => undefined} terminals={terminals} />
+      </AppFrameContext.Provider>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Show on map: Centro tricycle terminal" }));
+    expect(showOnMap).toHaveBeenCalledWith({ lat: ORIGIN.lat + 0.001, lng: ORIGIN.lng });
   });
 
   it("a route not confirmed says so and shows the straight line as approximate, not a route", () => {

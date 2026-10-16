@@ -444,7 +444,10 @@ async function expectTabbedControlsOnScreen(page: Page, scope: string, wanted: R
     }, scope);
     if (!state) continue;
     expect(state.top, state.name).toBeGreaterThanOrEqual(0);
-    expect(state.bottom, state.name).toBeLessThanOrEqual(viewportHeight);
+    // The sheet lifts with a short animation after the Tab: wait for it to settle on screen.
+    await expect
+      .poll(() => page.evaluate(() => document.activeElement?.getBoundingClientRect().bottom ?? 0), { message: state.name })
+      .toBeLessThanOrEqual(viewportHeight + 1); // 1 px: sub-pixel rounding
     for (const w of wanted) if (w.test(state.name)) seen.add(w);
     if (seen.size === wanted.length) return;
   }
