@@ -12,7 +12,9 @@ import { resetPrefs } from "@/client/prefs/use-prefs";
 import { clearAllStores } from "@/client/storage/db";
 import { forgetGuidance } from "@/client/guidance/guidance-store";
 import { cachesToClear } from "@/domain/pwa/sw-routes";
+import { forgetLines } from "@/client/network/use-lines";
 import { forgetSnapshot } from "@/client/network/use-snapshot";
+import { forgetWalkGraph } from "@/client/network/use-walk-graph";
 import { forgetHandoff } from "@/client/pwa/data-handoff";
 import { resetSearchIndexCache } from "@/client/search/use-search-index";
 
@@ -65,6 +67,8 @@ export async function clearDeviceData(): Promise<void> {
     // The copies held in memory go too, once the caches are empty: screens still showing data
     // load it afresh (as on a new visit) instead of keeping the old copy on screen.
     forgetSnapshot();
+    forgetLines();
+    forgetWalkGraph();
     resetSearchIndexCache();
     // Even if a store failed (the caller reports it): re-read the (now empty) preferences,
     // re-apply the default theme and tell every screen.
