@@ -104,13 +104,21 @@ Each screen lists purpose, key content, primary actions, and its required states
 ### S11 Terminal detail
 - Entrances on map, bays list with routes/destinations, hours with evidence, "category labels are administrative, not compass directions" note.
 - Implemented (Increment D): terminals are a map layer (a switch in the Layers sheet; stop pins stay tappable above them) and have a detail page `/app/terminals/{code}`. It shows the kind (terminal, loading point, waiting area, station), the vehicle modes serving it with their mode chips, the OpenStreetMap coordinate with its provenance and "Map data © OpenStreetMap contributors" (a way coordinate is a centroid, not an entrance), "No location on file" for a terminal without a coordinate, the routes whose street list names it, and the regional services leaving from it with per-km fare **estimates** ("operator prices may differ"; rates only when the distance is not on file). Regional routes are listed, not drawn.
-- The tricycle hint card ("Tricycle may serve this") names the nearby tricycle terminals or feeder routes it matched; it never appears as a ranked trip option.
+- Increment E replaced the tricycle hint card with ranked options (see S4 Trip options). Tricycle terminals are named inside the tricycle step ("Nearest tricycle terminal").
 
 ### S12 Routes list / route variant detail
 - List grouped by group number with chips; filters by mode/barangay.
 - Variant: headsign, direction, vehicle class, legal plan text (street list), shape (if reviewed) or "Shape not yet surveyed", ordered stops (if reviewed), fares, service window ("Observed 5:30–20:00 weekdays, departs when full"), disruptions, trial revisions, legacy aliases.
 - Implemented (Increment D): each route shows a mode chip and its vehicle classes ("Jeepney · traditional", "Jeepney · traditional and modern" on R4 and R7, "Jeepney · type not confirmed"), the route's approximate path drawn on the map with notes where the path leaves the legal street list ("street order conflicts with one-way mapping — confirm on the ground", "terminal access road"), or "Path could not be traced from the street list" when no path was traced. The path is never called a route shape.
 - Map legend and Layers sheet: a collapsible Legend (mode icon, line swatch and text label for every mode drawn; the note "Dotted: approximate walking path · crossings not checked"; the mixed-fleet note; the fixed footnote "Lines are approximate paths, not verified route shapes."). The Layers sheet is a modal dialog (Tab trapped, focus returns to the Layers button) with switches for Routes and Terminals, mode chips (All, Jeepney, Tricycle, UV Express, Bus, Train) and the accessible list equivalents "Routes on the map (n)" and "Terminals (n)", plus a note that regional UV Express and bus routes leave the city. Colour is never the only cue: each class has an icon, a text label and a line pattern, in two palettes (light for drawn tiles, dark only when no tiles are drawn) that pass 3:1 against their casing.
+
+
+### Trip option copy (Increment E)
+- Free points: "Get on near {place}" / "Get off near {place}", "Get on near your start" / "Get off near {destination}" when no name is within 100 m, always with "Tell the driver 'para' · stop not marked". "About {m} m of riding left (approximate)" in guidance.
+- Walk card only under 500 m; at 500 m and above, "Walking the whole way is about {m} m along streets" stays a note. Exactly one card says Recommended.
+- Tricycle: "Take a tricycle to {destination} · about {km} km along streets · minimum fare ₱15 · confirm with the driver", "Avoids the restricted roads we could locate (Ordinance 2006-005/015; allowed 9 pm-5 am)"; without a street route "Route not confirmed" or "Street route not available" and no claim of avoidance. No minutes: "Time not estimated".
+- Padyak: "₱10 per passenger (₱8 with ID discount) · city fare set Sep 2022 · confirm with the driver · up to 2 passengers"; drawn dashed on the map. No minutes.
+- Route notes show one line per ride on the card, all in detail, each with its evidence label (for example "Ask the driver"). Service window chip: "Usually runs about 5:00-21:00 · unconfirmed"; detail adds "Some jeepneys reportedly start before 5 am." and the Help article says "Sunday and holiday service not confirmed". Never hides an option.
 
 ### S13 Explore
 - Curated cards (Basilica Minore, Naga Metropolitan Cathedral, Plaza Rizal, BCS, ADNU, UNC, BISCAST, Bicol Medical Center…) — only fields with sources; "How to commute here".

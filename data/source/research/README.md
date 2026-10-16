@@ -103,3 +103,7 @@ refuses unknown keys; the chairperson conflict is recorded in `conflicts` withou
 
 `tests/fixtures/modes/modes-seed-synthetic.json` has the same shape with obviously fake names and
 `header.synthetic: true`; it must never be published.
+
+## Revised seed policy (Increment E)
+
+The seed was edited in place after its first import (same file name, new hash). The importer now treats the same date with a different hash as a revised-seed batch (key `modes-seed:<date>:<sha12>`, revision `modes-<date>.<n>`) instead of refusing it; an older date is still refused. A revised batch records its own research-conflict register. See ADR 010 in `docs/spec/03-architecture.md`.

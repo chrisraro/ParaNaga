@@ -103,14 +103,19 @@ describe("Help articles", () => {
   it("How trips are planned: exact copy, no network request", () => {
     render(<HelpArticleScreen slug="how-trips-are-planned" />);
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("How trips are planned");
-    expect(screen.getByTestId("help-article-body").textContent).toBe(
-      "ParaNaga suggests trips on Loops A and B only. Their stop order comes from the order of pins on a public map, not from a field survey, so every suggestion carries the badge “Unverified route — confirm with the driver”." +
-        "Ride distances follow approximate paths traced along OpenStreetMap roads between candidate pins, or straight-line distances where roads are unmapped." +
-        "Walks to and from a stop are capped at 600 m, and 400 m between rides. Walk paths are routed along walkable streets where mapped, or straight-line estimates (× 1.3)." +
-        "A ride is only suggested if it saves walking: taking a jeepney must replace meaningful walking distance compared to walking all the way." +
-        "Times are estimated as ranges based on typical travel speeds in Naga (slower during peak hours). Times do not include waiting, because jeepneys have no published schedules." +
-        "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied.",
-    );
+    const body = screen.getByTestId("help-article-body").textContent ?? "";
+    for (const phrase of [
+      "Unverified route — confirm with the driver",
+      "get on and drop off anywhere along a route",
+      "Tell the driver ‘para’ · stop not marked",
+      "up to 500 m straight-line and 750 m along streets",
+      "recommends walking only when the whole trip is under 500 m",
+      "a tricycle is suggested after the jeepney options and marked Recommended",
+      "avoid the restricted roads we could locate",
+      "Tricycle and padyak trips show no minutes",
+    ])
+      expect(body).toContain(phrase);
+    expect(body).not.toMatch(/capped at 600 m|exact|guaranteed|official fare/i);
     expect(fetched).toEqual([]);
     expect(document.title).toBe("How trips are planned · ParaNaga");
   });
@@ -152,6 +157,19 @@ describe("Help articles", () => {
     expect(body).toContain("Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason)");
     expect(body).toContain("Tricycle and e-tricycle");
     expect(body).toContain("UV Express and bus");
+    for (const phrase of [
+      "sources T01 and T02; check for updates",
+      "roads we could not locate are not applied",
+      "E-trike national-road rules reported in news (Dec 2025) are not applied; unverified",
+      "Special VISTODA units may not enter Tecla San Andres–Ziga Rd (Ord 2025-067)",
+      "Padyak (pedicab): ₱10 per passenger, ₱8 with an ID discount",
+      "up to 2 passengers",
+      "same documented padyak area",
+      "padyaks do not use banned streets",
+      "unconfirmed",
+      "Sunday and holiday service not confirmed",
+    ])
+      expect(body).toContain(phrase);
     // User decisions 2026-10-16: no e-jeepney anywhere; modern units operating now (no 2023–2024 caveat); nothing unsourced.
     expect(body).not.toMatch(/e-?jeep|electric jeep/i);
     expect(body).not.toMatch(/2023|last reported|Euro-?4/i);

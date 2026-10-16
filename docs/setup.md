@@ -164,6 +164,19 @@ commit;
 - The Playwright builds use a harmless test key and intercept the embed; no test loads Google imagery.
 - Check once after deploying that the embed loads on the production domain (referrer authorization can only be verified there).
 
+### Increment E release runbook (anywhere-alight)
+
+Adds migration 0010 (route notes, street graph v2, research source codes) and an import that publishes `anywhere-alight-<roads date>`. Same safety rules as the Increment D runbook: every command targets Neon `main` only where stated.
+
+1. Merge the PR (CI e2e gates the merge). Deploying before the import is safe: the new code reads the old revision's v1 graph, with walking only, until v2 is published.
+2. Back up Neon `main` (branch it) and note the published revision id; that is the rollback target.
+3. `pnpm db:migrate` (additive), then `pnpm db:check-rls`. Apply 0010 before the import.
+4. `pnpm db:import --dry-run`. It prints metres per road rule, padyak-banned metres, padyak areas with their place nodes and coverage, graph size against the 800 KB / 260 KB budget, and notes per route. Read it before committing.
+5. `pnpm db:import --commit`, then again: the second run must report `unchanged`. The reviewed seed keeps the name `naga-modes-seed-2026-10-16.json`; because its hash changed, the importer records it as a revised-seed batch (ADR 010).
+6. Verify: `GET /api/v1/network/head` names the new revision; the snapshot has `routes[].notes`; `/network/walk-graph/<id>` returns v2; plan a trip in `/app` (jeepney, tricycle and padyak options, a 400 m walk).
+
+**Rollback.** Redeploy the previous app build first, then publish the noted revision again with the `begin; set local role paranaga_import; select transit.publish_revision('<id>'); commit;` block above. Migration 0010 stays (additive, unused by old code). Saved trips written by the new code show as made by a newer version in old code; old guidance sessions are kept as format 1.
+
 ## Health endpoint
 
 `GET /api/health` returns only `{ "ok": true }` publicly. With `Authorization: Bearer $CRON_SECRET` it also probes the database and reports which providers are configured (never their values).
