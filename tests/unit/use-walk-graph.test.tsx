@@ -128,4 +128,18 @@ describe("useWalkGraph and useLines (Task 10, D18)", () => {
       expect(firstLeg.kind === "walk" && firstLeg.path.label).toBe(WALK_PATH_LABEL);
     }
   });
+  it("useTripPlan keeps the same enriched data object when rerendered with unchanged inputs (T10-1)", async () => {
+    const origin = { point: { lat: 13.6234, lng: 123.1847 }, source: "pick" } as unknown as PlanEnd;
+    const dest = { point: { lat: 13.6305, lng: 123.1912 }, source: "pick" } as unknown as PlanEnd;
+    const hook = renderHook(({ s, d }: { s: PlanEnd | null; d: PlanEnd | null }) => useTripPlan(s, d), {
+      initialProps: { s: origin, d: dest },
+    });
+    await waitFor(() => expect(hook.result.current.status === "ready" && hook.result.current.walkGraphStatus).toBe("ready"));
+    const first = hook.result.current.status === "ready" ? hook.result.current.data : null;
+    expect(first).not.toBeNull();
+    hook.rerender({ s: origin, d: dest });
+    hook.rerender({ s: { ...origin } as PlanEnd, d: { ...dest } as PlanEnd });
+    const second = hook.result.current.status === "ready" ? hook.result.current.data : null;
+    expect(second).toBe(first);
+  });
 });

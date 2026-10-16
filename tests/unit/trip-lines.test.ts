@@ -3,8 +3,14 @@ import { describe, expect, it } from "vitest";
 import { haversineMeters } from "@/domain/geo/geometry";
 import type { LatLng } from "@/domain/geo/types";
 import { sampleChevrons } from "@/ui/map/direction-chevrons";
+import { linesSchema, type Line, type Lines } from "@/domain/api/schemas";
+import type { PlanResponse } from "@/domain/api/plan";
+import { WALK_STRAIGHT_LABEL } from "@/domain/trip/enrich";
+import { ONEWAY_CAUTION, TERMINAL_ACCESS_NOTE, lineNotes, rideRuns, rideTrace } from "@/ui/map/line-rules";
 import { shouldDashSegment, splitLineIntoRuns } from "@/ui/map/route-lines-layer";
-import { midpointOnPolyline, rideStrokeLayers, slicePolylineByMeasure } from "@/ui/map/trip-lines-layer";
+import { buildTripLinesData, midpointOnPolyline, rideStrokeLayers, slicePolylineByMeasure } from "@/ui/map/trip-lines-layer";
+import linesFixture from "../e2e/fixtures/network/lines.json";
+import { PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "../e2e/fixtures/plan-responses";
 
 const SQUARE_CIRCUIT: LatLng[] = [
   { lat: 13.62, lng: 123.18 },
@@ -101,5 +107,145 @@ describe("shouldDashSegment and splitLineIntoRuns (Task 5 ruling)", () => {
       { dashed: true, reason: "oneway_conflict" },
       { dashed: false, reason: null },
     ]);
+  });
+});
+
+const LINES: Lines = linesSchema.parse(linesFixture);
+const plan = PROVISIONAL_PLAN as unknown as PlanResponse;
+const LOOP_A_ID = plan.variants[0]!.variantId;
+const LOOP_A_LINE = LINES.lines.find((l) => l.variantId === LOOP_A_ID)!;
+
+describe("rideRuns and lineNotes (T12-2: the same rules on trip ride slices)", () => {
+  const total = polylineLengthM(SQUARE_CIRCUIT);
+  const oneway = { fromM: 200, toM: 600, lengthM: 400, reason: "oneway_conflict" as const, streets: [], against: ["gen luna"] };
+  const shortOneway = { fromM: 700, toM: 780, lengthM: 80, reason: "oneway_conflict" as const, streets: [], against: ["x"] };
+  const terminal = { fromM: 1500, toM: 1700, lengthM: 200, reason: "terminal_access" as const, streets: [], against: null };
+  const offList = { fromM: 900, toM: 1000, lengthM: 100, reason: "off_list_detour" as const, streets: [], against: null };
+
+  it("restricts the runs to [board, alight], dashing only the >= 100 m one-way section on an ok trace", () => {
+    const runs = rideRuns(SQUARE_CIRCUIT, total, [oneway, shortOneway, offList, terminal], "ok", 100, 1200, false);
+    expect(runs.map((r) => [Math.round(r.fromM), Math.round(r.toM), r.dashed])).toEqual([
+      [100, 200, false],
+      [200, 600, true],
+      [600, 1200, false],
+    ]);
+    expect(polylineLengthM(runs.flatMap((r, i) => (i === 0 ? r.coords : r.coords.slice(1))))).toBeCloseTo(1100, 0);
+  });
+
+  it("dashes off-list sections only on a flagged trace", () => {
+    const flagged = rideRuns(SQUARE_CIRCUIT, total, [offList], "flagged", 0, 1200, false);
+    expect(flagged.some((r) => r.dashed && r.reason === "off_list_detour")).toBe(true);
+    const ok = rideRuns(SQUARE_CIRCUIT, total, [offList], "ok", 0, 1200, false);
+    expect(ok.every((r) => !r.dashed)).toBe(true);
+  });
+
+  it("wraps across a circuit's start and keeps a dashed section that lies after the start", () => {
+    const runs = rideRuns(SQUARE_CIRCUIT, total, [oneway], "ok", total - 300, 400, true);
+    expect(runs.map((r) => [Math.round(r.fromM), Math.round(r.toM), r.dashed])).toEqual([
+      [Math.round(total - 300), Math.round(total), false],
+      [0, 200, false],
+      [200, 400, true],
+    ]);
+  });
+
+  it("notes the one-way caution and the terminal access road only for what is in view", () => {
+    const line = { segments: [oneway, shortOneway, terminal], status: "ok" as const };
+    expect(lineNotes(line)).toEqual({ onewayCaution: true, terminalAccess: true });
+    expect(lineNotes(line, [[0, 150]])).toEqual({ onewayCaution: false, terminalAccess: false });
+    expect(lineNotes(line, [[650, 800]])).toEqual({ onewayCaution: false, terminalAccess: false });
+    expect(lineNotes(line, [[1600, 1650]])).toEqual({ onewayCaution: false, terminalAccess: true });
+    expect(ONEWAY_CAUTION).toBe("street order conflicts with one-way mapping — confirm on the ground");
+    expect(TERMINAL_ACCESS_NOTE).toBe("terminal access road");
+  });
+});
+
+describe("buildTripLinesData (T12-1: variant id only)", () => {
+  it("draws the ride on the plan variant's own line", () => {
+    const data = buildTripLinesData(plan.plan.options[0]!, plan.variants, LINES);
+    expect(data.rideSegments).toHaveLength(1);
+    expect(data.rideSegments[0]!.variantId).toBe(LOOP_A_ID);
+    expect(data.rideSegments[0]!.label).toBe(LOOP_A_LINE.label);
+  });
+
+  it("draws nothing for a ride whose variant has no line, even when another line has the same route code", () => {
+    const option = structuredClone(plan.plan.options[0]!);
+    const ride = option.legs.find((l) => l.kind === "ride")!;
+    if (ride.kind === "ride") ride.variantId = "11111111-1111-4111-8111-111111111111";
+    const data = buildTripLinesData(option, plan.variants, LINES);
+    expect(data.rideSegments).toEqual([]);
+    expect(data.walkSegments.length).toBeGreaterThan(0);
+  });
+
+  it("does not draw a straight-line (untraced) ride", () => {
+    const two = TWO_RIDE_PLAN as unknown as PlanResponse;
+    const data = buildTripLinesData(two.plan.options[0]!, two.variants, LINES);
+    expect(data.rideSegments.map((r) => r.routeCode)).toEqual(["R8-A"]);
+  });
+
+  it("splits the ride slice into runs and notes a terminal access road inside the ride", () => {
+    const least = plan.plan.options[1]!; // R8-A 265.6 -> 5751.6 m crosses the terminal access road at 5663.6 m
+    const data = buildTripLinesData(least, plan.variants, LINES);
+    const ride = data.rideSegments[0]!;
+    expect(ride.runs.length).toBeGreaterThanOrEqual(1);
+    expect(ride.runs.every((r) => !r.dashed)).toBe(true);
+    expect(ride.notes).toEqual({ onewayCaution: false, terminalAccess: true });
+    expect(data.caution).toBe(false);
+  });
+
+  it("dashes a >= 100 m one-way section of an ok trace on the trip ride and flags the caution", () => {
+    const loopB = LINES.lines.find((l) => l.variantId === "9ddd04ca-ab7d-413e-8fd3-7d7f1a3ed7eb")!;
+    const option = structuredClone(plan.plan.options[0]!);
+    const ride = option.legs.find((l) => l.kind === "ride")!;
+    if (ride.kind === "ride") {
+      ride.variantId = loopB.variantId;
+      ride.routeCode = loopB.routeCode;
+      ride.boardMeasureM = 0;
+      ride.alightMeasureM = 900;
+    }
+    const variants = [{ variantId: loopB.variantId, routeCode: loopB.routeCode, routeName: loopB.routeName, isCircular: true, loopDirection: "counterclockwise" as const }];
+    const data = buildTripLinesData(option, variants, LINES);
+    const seg = data.rideSegments[0]!;
+    expect(seg.runs[0]).toMatchObject({ dashed: true, reason: "oneway_conflict" });
+    expect(seg.runs.some((r) => !r.dashed)).toBe(true);
+    expect(seg.notes.onewayCaution).toBe(true);
+    expect(data.caution).toBe(true);
+  });
+
+  it("labels a walk with no street path as a straight line", () => {
+    const data = buildTripLinesData(plan.plan.options[0]!, plan.variants, LINES);
+    expect(data.walkSegments[0]!.label).toBe(WALK_STRAIGHT_LABEL);
+  });
+});
+
+export type { Line };
+
+describe("rideTrace (T12-5: untraced from the leg's distance basis, not from loaded lines)", () => {
+  const ride = (o: PlanResponse["plan"]["options"][number]) => o.legs.find((l) => l.kind === "ride")!;
+
+  it("a ride along a published path is traced even when the lines are not loaded (low-data mode)", () => {
+    const leg = ride(plan.plan.options[0]!);
+    if (leg.kind !== "ride") throw new Error("ride");
+    expect(rideTrace(leg, null, true)).toEqual({ untraced: false, notes: { onewayCaution: false, terminalAccess: false } });
+  });
+
+  it("a straight-line ride is untraced whether or not lines are loaded", () => {
+    const two = TWO_RIDE_PLAN as unknown as PlanResponse;
+    const loopB = two.plan.options[0]!.legs.filter((l) => l.kind === "ride")[1]!;
+    if (loopB.kind !== "ride") throw new Error("ride");
+    expect(rideTrace(loopB, null, true).untraced).toBe(true);
+    expect(rideTrace(loopB, LINES, true).untraced).toBe(true);
+  });
+
+  it("a ride whose variant has no line in the loaded lines is untraced", () => {
+    const leg = structuredClone(ride(plan.plan.options[0]!));
+    if (leg.kind !== "ride") throw new Error("ride");
+    leg.variantId = "11111111-1111-4111-8111-111111111111";
+    expect(rideTrace(leg, LINES, true).untraced).toBe(true);
+  });
+
+  it("notes the terminal access road the ride passes", () => {
+    const leg = ride(plan.plan.options[1]!);
+    if (leg.kind !== "ride") throw new Error("ride");
+    expect(rideTrace(leg, LINES, true)).toEqual({ untraced: false, notes: { onewayCaution: false, terminalAccess: true } });
   });
 });

@@ -120,26 +120,35 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const rawReady =
-    key === null
-      ? null
-      : !settled || settled.key !== key
-        ? planned?.gpsRefinement && lastReady
-          ? { data: lastReady.data, offline: lastReady.offline, refreshing: true }
-          : null
-        : settled.status === "ready"
-          ? { data: settled.data, offline: settled.offline, refreshing: false }
-          : null;
+  // Memoised on stable identities (the settled result, the last ready plan, the pair planned for)
+  // so the walk enrichment below, and the map's trip-lines memo that keys on its result, rerun only
+  // when the plan or the walk graph changes, not on every render (pans, bounds, GPS fixes).
+  const gpsRefinement = planned?.gpsRefinement ?? false;
+  const rawReady = useMemo(
+    () =>
+      key === null
+        ? null
+        : !settled || settled.key !== key
+          ? gpsRefinement && lastReady
+            ? { data: lastReady.data, offline: lastReady.offline, refreshing: true }
+            : null
+          : settled.status === "ready"
+            ? { data: settled.data, offline: settled.offline, refreshing: false }
+            : null,
+    [key, settled, lastReady, gpsRefinement],
+  );
 
   // Lazy walk-graph load (Task 10, D18): fetched only once a plan exists.
   const walkGraph = useWalkGraph(rawReady?.data.revision.revisionId ?? null, rawReady !== null);
+  const originPoint = planned?.origin.point ?? null;
+  const destinationPoint = planned?.destination.point ?? null;
   const enrichedData = useMemo(() => {
     if (!rawReady) return null;
     return enrichPlan(rawReady.data, walkGraph.graph, {
       walkGraphStatus: walkGraph.status,
-      ...(planned ? { origin: planned.origin.point, destination: planned.destination.point } : {}),
+      ...(originPoint && destinationPoint ? { origin: originPoint, destination: destinationPoint } : {}),
     });
-  }, [rawReady, walkGraph.graph, walkGraph.status, planned]);
+  }, [rawReady, walkGraph.graph, walkGraph.status, originPoint, destinationPoint]);
 
   const retry = () => setAttempt((n) => n + 1);
   if (key === null) return { status: "idle", retry };

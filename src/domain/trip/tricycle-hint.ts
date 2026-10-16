@@ -19,7 +19,7 @@ import { formatDistance } from "./present";
 export const TRICYCLE_TERMINAL_MAX_M = 600;
 export const TRICYCLE_FEEDER_MAX_M = 300;
 
-export const TRICYCLE_HINT_TITLE = "A tricycle may serve this" as const;
+export const TRICYCLE_HINT_TITLE = "Tricycle may serve this" as const;
 export const TRICYCLE_ZONES_NOTE = "Routes and zones are not documented" as const;
 export const TRICYCLE_FARE_NOTE =
   "Minimum fare ₱15 (Ordinance 2024-002) · discounts not applied · confirm with the driver" as const;

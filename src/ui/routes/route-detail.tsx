@@ -33,7 +33,8 @@ import {
   WarnIcon,
   useFocusOnMount,
 } from "@/ui/detail/detail-frame";
-import { StatusBadge } from "@/ui/kit/badge";
+import { LineNotesView } from "@/ui/map/layers-sheet";
+import { lineNotes, routeDirectionPath } from "@/ui/map/line-rules";
 import { NagaMap } from "@/ui/map/naga-map";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
@@ -90,9 +91,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const uid = useId();
   const dirButtons = useRef<Record<Direction, HTMLButtonElement | null>>({ inbound: null, outbound: null });
 
-  const { lines } = useLines(revision.revisionId);
-  const routeLines = useMemo(() => lines?.lines.filter((l) => l.routeCode === route.code) ?? [], [lines, route.code]);
-  const untracedList = useMemo(() => lines?.untraced.filter((u) => u.routeCode === route.code) ?? [], [lines, route.code]);
+  const linesState = useLines(revision.revisionId);
+  const { lines } = linesState;
 
   const group = routeGroupText(route.groupNumber, route.modeCode);
   const fare = routeFareTile(fareEvidence.rules);
@@ -105,21 +105,22 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const ordered = variants.filter((v) => v.stops.length > 0);
   const provisional = route.hasProvisionalStops;
   const structures = route.additionalSourceStructures;
-  const isHistorical = route.code === "EJ-2017" || route.serviceStatus === "historical_unknown";
 
-  const activeLine = useMemo(() => {
-    if (twoWay) {
-      return routeLines.find((l) => l.direction === direction) ?? routeLines[0];
-    }
-    return routeLines[0];
-  }, [routeLines, twoWay, direction]);
-
-  const untraced = useMemo(() => {
-    if (twoWay) {
-      return untracedList.find((u) => u.direction === direction) ?? untracedList[0];
-    }
-    return untracedList[0];
-  }, [untracedList, twoWay, direction]);
+  // The selected direction's own line only: an untraced direction never borrows the other one's.
+  const { line: activeLine, untraced } = useMemo(
+    () => routeDirectionPath(lines, route.code, twoWay, direction),
+    [lines, route.code, twoWay, direction],
+  );
+  const activeNotes = useMemo(() => (activeLine ? lineNotes(activeLine) : null), [activeLine]);
+  const pathStatus = activeLine
+    ? activeLine.label
+    : linesState.status === "loading"
+      ? "Loading the route path…"
+      : linesState.status === "skipped"
+        ? "Route path not loaded in low-data mode"
+        : linesState.status === "ready"
+          ? (untraced?.message ?? "Path could not be traced")
+          : "Route path unavailable";
 
   const activeCoords = useMemo(() => {
     if (!activeLine) return null;
@@ -147,7 +148,6 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             {route.name}
           </h1>
           <div className="pn-detail__row">
-            {isHistorical ? <StatusBadge variant="historical" testId="historical-badge" /> : null}
             <span className="pn-badge pn-badge--evidence" data-testid="route-evidence">
               {provisional ? <PinsIcon /> : <DocIcon />}
               {provisional ? "Provisional stops" : "Documented only"}
@@ -155,15 +155,6 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             <span className="pn-detail__caption">Signboard not yet verified</span>
           </div>
         </div>
-
-        {isHistorical ? (
-          <div role="note" className="pn-note pn-note--small" data-testid="historical-notice">
-            <WarnIcon size={18} />
-            <p>
-              <strong>Historical route.</strong> A documented 2017 route with status &quot;unknown, not confirmed running&quot;. Not used for planning.
-            </p>
-          </div>
-        ) : null}
 
         <div role="note" className="pn-note pn-note--small" data-testid="route-partial">
           <WarnIcon size={18} />
@@ -186,13 +177,18 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             />
           </div>
           <div className="pn-route-map-status" style={{ padding: "8px 12px", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pn-surface, #F8FAFC)" }} data-testid="route-map-status">
-            <span>{activeLine ? activeLine.label : untraced ? untraced.message : "Route path not yet traced"}</span>
+            <span data-testid="route-path-status">{pathStatus}</span>
             {activeLine ? (
               <span className="pn-route-map-badge" style={{ fontSize: 11, fontWeight: 600, opacity: 0.8 }} data-testid="route-trace-badge">
                 {activeLine.status === "ok" ? "Trace: ok" : `Trace: flagged (${activeLine.flagReason})`}
               </span>
             ) : null}
           </div>
+          {activeNotes ? (
+            <div className="pn-route-map-notes" data-testid="route-map-notes">
+              <LineNotesView notes={activeNotes} testIdPrefix="route-map" />
+            </div>
+          ) : null}
         </div>
 
         <dl className="pn-tiles">

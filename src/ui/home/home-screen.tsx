@@ -588,12 +588,17 @@ export function HomeScreen() {
   const snapshotState = useSnapshot(true);
   const linesState = useLines(snapshotState.snapshot?.revision.revisionId ?? null, true);
   const lines = linesState.lines;
+  // Trip lines come from the lines of the PLAN's revision (a stored trip's own revision), never the
+  // snapshot's: the legs' variant ids and measures belong to that revision.
+  const tripRevisionId = guiding ? null : (stored?.data.revision.revisionId ?? (planData && openOption ? planData.revision.revisionId : null));
+  const tripLinesState = useLines(tripRevisionId, tripRevisionId !== null);
+  const tripRevisionLines = tripLinesState.lines;
   const tripLines = useMemo(() => {
     if (guiding) return null;
-    if (stored) return buildTripLinesData(stored.option, stored.data.variants, lines);
-    if (planData && openOption) return buildTripLinesData(openOption, planData.variants, lines);
+    if (stored) return buildTripLinesData(stored.option, stored.data.variants, tripRevisionLines);
+    if (planData && openOption) return buildTripLinesData(openOption, planData.variants, tripRevisionLines);
     return null;
-  }, [guiding, stored, planData, openOption, lines]);
+  }, [guiding, stored, planData, openOption, tripRevisionLines]);
   const showOverview = !guiding && !tripLines && picking === null;
   const overviewLines = useMemo(() => (showOverview ? filterOverviewLines(lines, layers) : []), [showOverview, lines, layers]);
   const [layersOpen, setLayersOpen] = useState(false);

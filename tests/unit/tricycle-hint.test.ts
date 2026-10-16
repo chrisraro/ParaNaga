@@ -36,6 +36,7 @@ describe("tricycleHint (Task 10, D15)", () => {
     expect(hint?.terminal?.distanceM).toBeGreaterThan(200);
     expect(hint?.terminal?.distanceM).toBeLessThanOrEqual(600);
     expect(hint?.copy.title).toBe(TRICYCLE_HINT_TITLE);
+    expect(TRICYCLE_HINT_TITLE).toBe("Tricycle may serve this");
     expect(hint?.copy.zonesNote).toBe(TRICYCLE_ZONES_NOTE);
     expect(hint?.copy.fareNote).toBe(TRICYCLE_FARE_NOTE);
     expect(hint?.copy.timeNote).toBe(TRICYCLE_TIME_NOTE);

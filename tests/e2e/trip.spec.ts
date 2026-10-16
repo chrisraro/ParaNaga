@@ -103,10 +103,9 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   expect(last.body).toMatchObject({ origin: { lat: expect.any(Number), lng: expect.any(Number) }, destination: { lat: expect.any(Number), lng: expect.any(Number) } });
 });
 
-test("trip detail lists the legs, highlights stops as markers and draws no line", async ({ page }) => {
+test("trip detail lists the legs, highlights stops as markers above the trip lines", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
-  const pathsBefore = await overlayPaths(page).count();
   await pinBoth(page);
 
   await page.getByTestId("trip-option").first().click();
@@ -132,11 +131,13 @@ test("trip detail lists the legs, highlights stops as markers and draws no line"
   await expect(detail).toContainText("Corrections open soon");
   await expect(detail.getByRole("link")).toHaveCount(0);
 
-  // Boarding and getting-off stops are DOM markers; no path (line) is added to the map.
+  // Boarding and getting-off stops are DOM markers above the trip's own lines (Task 12); the
+  // routes overview is not drawn while a trip is shown.
   await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
   await expect(page.getByRole("img", { name: "Board at Plaza Rizal (A1)" })).toBeAttached();
   await expect(page.getByRole("img", { name: "Get off at Avenue Square (A5)" })).toBeAttached();
-  expect(await overlayPaths(page).count()).toBe(pathsBefore);
+  await expect(page.locator(".leaflet-overlay-pane path.pn-line--ride").first()).toBeAttached();
+  await expect(page.locator(".leaflet-overlay-pane path.pn-line--route")).toHaveCount(0);
   await expect(page.locator(".leaflet-overlay-pane polyline")).toHaveCount(0);
 
   const a11y = await new AxeBuilder({ page }).include('[data-testid="trip-sheet"]').withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
@@ -170,6 +171,7 @@ test("opening and closing a trip detail keeps exactly one stop-pin canvas", asyn
 test("no coverage keeps a clear message", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, NO_ROUTE_PLAN));
   await openApp(page);
+  await expect(page.locator(".leaflet-overlay-pane path.pn-line--route").first()).toBeAttached();
   const pathsBefore = await overlayPaths(page).count();
   await pinBoth(page);
 

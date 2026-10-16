@@ -11,7 +11,6 @@ describe("device preferences (Task 2 + Task 12 D16 layers)", () => {
       layers: {
         routes: true,
         terminals: true,
-        historical: false,
         modes: [],
       },
     });
@@ -40,7 +39,7 @@ describe("device preferences (Task 2 + Task 12 D16 layers)", () => {
     expect(parsePrefs(JSON.stringify({ theme: "light", units: "imperial", language: "fil" }))).toEqual({ ...DEFAULT_PREFS, theme: "light" });
   });
 
-  it("parses and validates layers preference (D16), dropping invalid modes", () => {
+  it("parses and validates layers preference (D16), dropping invalid modes and the removed historical switch", () => {
     const parsed = parsePrefs(
       JSON.stringify({
         layers: {
@@ -54,7 +53,6 @@ describe("device preferences (Task 2 + Task 12 D16 layers)", () => {
     expect(parsed.layers).toEqual({
       routes: false,
       terminals: true,
-      historical: true,
       modes: ["tricycle", "jeepney"],
     });
   });
@@ -65,7 +63,7 @@ describe("device preferences (Task 2 + Task 12 D16 layers)", () => {
       highContrast: true,
       lowData: false,
       historyEnabled: true,
-      layers: { routes: true, terminals: false, historical: true, modes: ["jeepney"] },
+      layers: { routes: true, terminals: false, modes: ["jeepney"] },
     };
     expect(parsePrefs(serializePrefs(prefs))).toEqual(prefs);
   });

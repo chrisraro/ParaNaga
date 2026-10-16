@@ -5,7 +5,10 @@
 // - Ride legs: sliced `[boardMeasureM, alightMeasureM]` along the variant's approximate path (wrapping across the
 //   start on circular routes), solid in the route's colourKey (or two-tone traditional base + modern dashed overlay
 //   for `mixed_trad_modern`), direction chevrons every 250 m, and a short mode chip at mid-leg.
-// - Untraced variants draw no ride line (stops stay above).
+// - The ride slice follows the same segment rules as the route lines (line-rules.ts): a flagged trace's
+//   off-list sections and >= 100 m one-way conflicts are dashed, terminal access roads drawn normally.
+// - A ride is drawn only on the line of its own variant (matched by variant id, from the plan's revision);
+//   an untraced variant draws no ride line (stops stay above).
 import L from "leaflet";
 import { Fragment, useMemo } from "react";
 import { Marker, Polyline } from "react-leaflet";
@@ -13,20 +16,25 @@ import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
 type PlanVariantInfo = PlanResponse["variants"][number];
 import type { Line, Lines } from "@/domain/api/schemas";
 type TracedLine = Line;
-import { haversineMeters } from "@/domain/geo/geometry";
 import { decodePolyline } from "@/domain/geo/polyline";
 import type { LatLng } from "@/domain/geo/types";
 import type { ColourKey } from "@/domain/modes/fleet";
 import { MAP_CHIP_TEXT, type VisualKey } from "@/domain/modes/modes";
 import { lineWidths, paletteForSurface, type MapSurface } from "@/domain/modes/palette";
-import { WALK_PATH_LABEL, type EnrichedPlanOption, type EnrichedWalkLeg } from "@/domain/trip/enrich";
+import { WALK_STRAIGHT_LABEL, type EnrichedPlanOption, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { isNegligibleWalk, routeChipLabel } from "@/domain/trip/present";
 import { chevronSvgHtml, sampleChevrons, type DirectionChevron } from "./direction-chevrons";
+import {
+  lineNotes,
+  midpointOnPolyline,
+  rideIntervals,
+  rideRuns,
+  slicePolylineByMeasure,
+  type LineNotes,
+  type PolylineRun,
+} from "./line-rules";
 
-export type SliceOptions = {
-  isCircular?: boolean;
-  totalLengthM?: number | null;
-};
+export { midpointOnPolyline, slicePolylineByMeasure, type SliceOptions } from "./line-rules";
 
 export type RideStrokeLayer = {
   role: "casing" | "base" | "secondary";
@@ -34,99 +42,6 @@ export type RideStrokeLayer = {
   dashArray: string | null;
   className: string;
 };
-
-/**
- * Linearly slices `coords` between `[fromM, toM]` (metres from the start of the polyline).
- * When `isCircular` is true and `fromM > toM`, wraps across the start (`[fromM, total] + [0, toM]`).
- */
-export function slicePolylineByMeasure(
-  coords: readonly LatLng[],
-  fromM: number,
-  toM: number,
-  options: SliceOptions = {},
-): LatLng[] {
-  if (coords.length < 2) return [...coords];
-
-  const segLengths: number[] = [];
-  let rawTotalM = 0;
-  for (let i = 1; i < coords.length; i++) {
-    const d = haversineMeters(coords[i - 1]!, coords[i]!);
-    segLengths.push(d);
-    rawTotalM += d;
-  }
-  if (rawTotalM <= 0) return [coords[0]!, coords[coords.length - 1]!];
-
-  const nominalTotalM = options.totalLengthM && options.totalLengthM > 0 ? options.totalLengthM : rawTotalM;
-  const scale = rawTotalM / nominalTotalM;
-
-  const clampRaw = (m: number) => Math.max(0, Math.min(rawTotalM, m * scale));
-
-  const sliceLinearRaw = (startRawM: number, endRawM: number): LatLng[] => {
-    const lo = Math.max(0, Math.min(rawTotalM, Math.min(startRawM, endRawM)));
-    const hi = Math.max(0, Math.min(rawTotalM, Math.max(startRawM, endRawM)));
-    if (hi - lo < 1e-3) {
-      const pt = pointAtRawMeasure(coords, segLengths, lo);
-      return [pt, pt];
-    }
-    const out: LatLng[] = [pointAtRawMeasure(coords, segLengths, lo)];
-    let acc = 0;
-    for (let i = 0; i < segLengths.length; i++) {
-      const nextAcc = acc + segLengths[i]!;
-      if (nextAcc > lo + 1e-3 && nextAcc < hi - 1e-3) {
-        out.push(coords[i + 1]!);
-      }
-      acc = nextAcc;
-    }
-    out.push(pointAtRawMeasure(coords, segLengths, hi));
-    return out;
-  };
-
-  if (options.isCircular && fromM > toM) {
-    const firstHalf = sliceLinearRaw(clampRaw(fromM), rawTotalM);
-    const secondHalf = sliceLinearRaw(0, clampRaw(toM));
-    if (firstHalf.length === 0) return secondHalf;
-    if (secondHalf.length === 0) return firstHalf;
-    const lastFirst = firstHalf[firstHalf.length - 1]!;
-    const firstSecond = secondHalf[0]!;
-    const dup = haversineMeters(lastFirst, firstSecond) < 0.5;
-    return dup ? [...firstHalf, ...secondHalf.slice(1)] : [...firstHalf, ...secondHalf];
-  }
-
-  return sliceLinearRaw(clampRaw(fromM), clampRaw(toM));
-}
-
-function pointAtRawMeasure(coords: readonly LatLng[], segLengths: readonly number[], targetRawM: number): LatLng {
-  let acc = 0;
-  for (let i = 0; i < segLengths.length; i++) {
-    const segLen = segLengths[i]!;
-    if (acc + segLen >= targetRawM || i === segLengths.length - 1) {
-      const a = coords[i]!;
-      const b = coords[i + 1]!;
-      const t = segLen > 0 ? Math.min(1, Math.max(0, (targetRawM - acc) / segLen)) : 0;
-      return {
-        lat: a.lat + (b.lat - a.lat) * t,
-        lng: a.lng + (b.lng - a.lng) * t,
-      };
-    }
-    acc += segLen;
-  }
-  return coords[coords.length - 1]!;
-}
-
-/** Returns the geographic midpoint at 50% of the polyline's cumulative length. */
-export function midpointOnPolyline(coords: readonly LatLng[]): LatLng | null {
-  if (coords.length === 0) return null;
-  if (coords.length === 1) return coords[0]!;
-  const segLengths: number[] = [];
-  let totalM = 0;
-  for (let i = 1; i < coords.length; i++) {
-    const d = haversineMeters(coords[i - 1]!, coords[i]!);
-    segLengths.push(d);
-    totalM += d;
-  }
-  if (totalM <= 0) return coords[0]!;
-  return pointAtRawMeasure(coords, segLengths, totalM / 2);
-}
 
 /**
  * Returns the ordered SVG stroke layers for a ride leg:
@@ -166,7 +81,11 @@ export type TripRideSegment = {
   routeCode: string;
   routeName: string;
   colourKey: ColourKey;
+  /** The whole slice (chevrons, fitting the map). */
   coords: LatLng[];
+  /** The slice cut into solid and dashed runs (line-rules.ts). */
+  runs: PolylineRun[];
+  notes: LineNotes;
   chevrons: DirectionChevron[];
   midpoint: LatLng | null;
   chipText: string;
@@ -179,21 +98,17 @@ export type TripLinesData = {
   allCoords: LatLng[];
   legendItems: VisualKey[];
   announcement: string;
+  /** A dashed one-way-conflict section is drawn on some ride (legend caution). */
+  caution: boolean;
 };
 
-function findTracedLine(
-  lines: Lines | null | undefined,
-  variantId: string,
-  routeCode: string,
-): TracedLine | null {
+/**
+ * The line of exactly this variant, or null. Never another variant of the same route: its measures
+ * would place the ride on the wrong direction or variant.
+ */
+export function findVariantLine(lines: Lines | null | undefined, variantId: string): TracedLine | null {
   if (!lines) return null;
-  if (lines.untraced.some((u) => u.variantId === variantId)) return null;
-  return (
-    lines.lines.find((l) => l.variantId === variantId) ??
-    lines.lines.find((l) => l.routeCode === routeCode && l.kind === "permanent") ??
-    lines.lines.find((l) => l.routeCode === routeCode) ??
-    null
-  );
+  return lines.lines.find((l) => l.variantId === variantId) ?? null;
 }
 
 /** Pure builder turning a selected trip option and the revision's `Lines` into renderable map segments + legend items. */
@@ -207,6 +122,7 @@ export function buildTripLinesData(
   const allCoords: LatLng[] = [];
   const legendSet = new Set<VisualKey>();
   const announcedParts: string[] = [];
+  let caution = false;
 
   const variantById = new Map(variants.map((v) => [v.variantId, v]));
 
@@ -223,7 +139,7 @@ export function buildTripLinesData(
             ];
       const lengthM = enriched.path ? enriched.path.lengthM : leg.estimateMeters;
       if (lengthM <= 0) return;
-      const label = enriched.path ? enriched.path.label : WALK_PATH_LABEL;
+      const label = enriched.path ? enriched.path.label : WALK_STRAIGHT_LABEL;
       walkSegments.push({
         key: `walk-${idx}`,
         coords,
@@ -241,7 +157,7 @@ export function buildTripLinesData(
     if (leg.distanceBasis !== "approximate_path" || leg.boardMeasureM === null || leg.alightMeasureM === null) {
       return;
     }
-    const traced = findTracedLine(lines, leg.variantId, leg.routeCode);
+    const traced = findVariantLine(lines, leg.variantId);
     if (!traced) return;
 
     let decoded: LatLng[];
@@ -260,6 +176,9 @@ export function buildTripLinesData(
       totalLengthM: traced.lengthM,
     });
     if (sliced.length < 2) return;
+    const runs = rideRuns(decoded, traced.lengthM, traced.segments, traced.status, leg.boardMeasureM, leg.alightMeasureM, isCircular);
+    const notes = lineNotes(traced, rideIntervals(leg.boardMeasureM, leg.alightMeasureM, traced.lengthM, isCircular));
+    if (notes.onewayCaution) caution = true;
 
     const colourKey = leg.fleet.colourKey;
     const chipText = MAP_CHIP_TEXT[colourKey];
@@ -270,6 +189,8 @@ export function buildTripLinesData(
       routeName: leg.routeName,
       colourKey,
       coords: sliced,
+      runs: runs.length > 0 ? runs : [{ coords: sliced, fromM: leg.boardMeasureM, toM: leg.alightMeasureM, dashed: false, reason: null }],
+      notes,
       chevrons: sampleChevrons(sliced, 250),
       midpoint: midpointOnPolyline(sliced),
       chipText,
@@ -290,6 +211,7 @@ export function buildTripLinesData(
     allCoords,
     legendItems: [...legendSet],
     announcement,
+    caution,
   };
 }
 
@@ -312,9 +234,12 @@ type Props = {
   highContrast: boolean;
 };
 
+/** The dash of a caution section (same as the route lines). */
+export const CAUTION_DASH_ARRAY = "8 6" as const;
+
 export function TripLinesLayer({ data, surface, highContrast }: Props) {
   const palette = paletteForSurface(surface);
-  const widths = lineWidths(highContrast);
+  const widths = useMemo(() => lineWidths(highContrast), [highContrast]);
 
   const elements = useMemo(() => {
     const walkEls = data.walkSegments.map((seg) => {
@@ -363,30 +288,44 @@ export function TripLinesLayer({ data, surface, highContrast }: Props) {
     });
 
     const rideEls = data.rideSegments.map((seg) => {
-      const positions = seg.coords.map((c) => [c.lat, c.lng] as [number, number]);
       const layers = rideStrokeLayers(seg.colourKey);
       const baseSwatch = palette[seg.colourKey === "mixed_trad_modern" ? "traditional_puj" : seg.colourKey];
       return (
         <Fragment key={seg.key}>
-          {layers.map((layer) => {
-            const swatch = palette[layer.visualKey];
-            const isCasing = layer.role === "casing";
-            return (
-              <Polyline
-                key={`${seg.key}-${layer.role}`}
-                positions={positions}
-                className={layer.className}
-                pathOptions={{
-                  className: layer.className,
-                  color: isCasing ? swatch.casing : swatch.core,
-                  weight: isCasing ? widths.tripRideCorePx + widths.casingSidePx * 2 : widths.tripRideCorePx,
-                  dashArray: layer.dashArray ?? undefined,
-                  lineCap: layer.dashArray ? "butt" : "round",
-                  lineJoin: "round",
-                }}
-                interactive={false}
-              />
-            );
+          {seg.runs.map((run, rIdx) => {
+            const positions = run.coords.map((c) => [c.lat, c.lng] as [number, number]);
+            const runClass = [
+              run.dashed ? "pn-line--caution" : "",
+              run.reason === "oneway_conflict" ? "pn-line--oneway-conflict" : "",
+              run.reason === "off_list_detour" ? "pn-line--off-list" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            // A dashed (caution) run draws casing + dashed base only: the two-tone overlay would hide the dashes.
+            return layers
+              .filter((layer) => !(run.dashed && layer.role === "secondary"))
+              .map((layer) => {
+                const swatch = palette[layer.visualKey];
+                const isCasing = layer.role === "casing";
+                const dashArray = run.dashed && layer.role === "base" ? CAUTION_DASH_ARRAY : layer.dashArray;
+                const className = !isCasing && runClass ? `${layer.className} ${runClass}` : layer.className;
+                return (
+                  <Polyline
+                    key={`${seg.key}-${rIdx}-${layer.role}`}
+                    positions={positions}
+                    className={className}
+                    pathOptions={{
+                      className,
+                      color: isCasing ? swatch.casing : swatch.core,
+                      weight: isCasing ? widths.tripRideCorePx + widths.casingSidePx * 2 : widths.tripRideCorePx,
+                      dashArray: dashArray ?? undefined,
+                      lineCap: dashArray ? "butt" : "round",
+                      lineJoin: "round",
+                    }}
+                    interactive={false}
+                  />
+                );
+              });
           })}
           {seg.chevrons.map((chev, idx) => (
             <Marker

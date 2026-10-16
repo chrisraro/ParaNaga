@@ -23,6 +23,7 @@ import {
   type MapSurface,
 } from "@/domain/modes/palette";
 import { ModeIcon } from "@/ui/modes/mode-icon";
+import { ONEWAY_CAUTION } from "./line-rules";
 
 export const LEGEND_FOOTNOTE = "Lines are approximate paths, not verified route shapes." as const;
 export const LEGEND_WALK_NOTE = "Dotted: approximate walking path · crossings not checked" as const;
@@ -42,6 +43,8 @@ export type MapLegendProps = {
   surface?: MapSurface;
   /** Polite live announcement when a trip is drawn on the map. */
   announcement?: string | null;
+  /** Some drawn line has a dashed one-way-conflict section: explain the dashes. */
+  caution?: boolean;
 };
 
 function normalizeItems(items: readonly LegendEntry[]): { key: VisualKey; label: string }[] {
@@ -123,7 +126,18 @@ function LegendSwatch({ visualKey, surface }: { visualKey: VisualKey; surface: M
   );
 }
 
-export function MapLegend({ items, defaultOpen = false, surface = "light", announcement }: MapLegendProps) {
+/** A dashed caution section, drawn like the map's (`8 6` dashes on the casing). */
+function CautionSwatch({ surface }: { surface: MapSurface }) {
+  const token = (surface === "dark" ? PALETTE_D : PALETTE_L).unconfirmed;
+  return (
+    <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+      <line x1="2" y1="8" x2="34" y2="8" stroke={token.casing} strokeWidth="9" strokeLinecap="round" />
+      <line x1="2" y1="8" x2="34" y2="8" stroke={token.core} strokeWidth="5" strokeDasharray="8 6" />
+    </svg>
+  );
+}
+
+export function MapLegend({ items, defaultOpen = false, surface = "light", announcement, caution = false }: MapLegendProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -152,6 +166,7 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
       ref={containerRef}
       className="pn-map-legend"
       data-testid="map-legend"
+      data-surface={surface}
       onKeyDown={onKeyDown}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
@@ -175,6 +190,15 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
                 {key === "mixed_trad_modern" ? <p className="pn-map-legend__note">{LEGEND_MIXED_NOTE}</p> : null}
               </li>
             ))}
+            {caution ? (
+              <li className="pn-map-legend__item" data-legend-item="caution" data-testid="map-legend-caution">
+                <div className="pn-map-legend__row">
+                  <CautionSwatch surface={surface} />
+                  <span>Dashed section</span>
+                </div>
+                <p className="pn-map-legend__note pn-line-note__text">{ONEWAY_CAUTION}</p>
+              </li>
+            ) : null}
           </ul>
           <p className="pn-map-legend__footnote">{LEGEND_FOOTNOTE}</p>
         </div>

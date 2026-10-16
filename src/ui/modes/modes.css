@@ -716,3 +716,45 @@
     color: #0B1220;
   }
 }
+
+/* Notes for drawn approximate lines (T12-2): one-way caution and terminal access road. */
+.pn-line-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: #475569;
+}
+
+.pn-line-note--caution {
+  color: #92400E;
+  font-weight: 600;
+}
+
+.pn-line-note__text::first-letter {
+  text-transform: uppercase;
+}
+
+.pn-route-map-notes {
+  padding: 0 12px 8px;
+}
+
+:root[data-theme="dark"] .pn-line-note {
+  color: #CBD5E1;
+}
+
+:root[data-theme="dark"] .pn-line-note--caution {
+  color: #FCD34D;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-line-note {
+    color: #CBD5E1;
+  }
+
+  :root:not([data-theme="light"]) .pn-line-note--caution {
+    color: #FCD34D;
+  }
+}

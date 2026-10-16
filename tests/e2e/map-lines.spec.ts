@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { routeNetwork } from "./fixtures/network";
+import { LINES, routeNetwork } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 
 test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate");
@@ -72,6 +72,9 @@ test("trip lines draw walk (dotted) and ride (solid) layers with chevrons and le
   // Trip detail shows approximate path label
   const detail = page.getByTestId("trip-detail");
   await expect(detail).toContainText("Approximate path, not a verified route shape");
+  // The recommended Loop A ride (0 -> 1240 m) uses no terminal access road or one-way conflict.
+  await expect(page.getByTestId("ride-terminal-access")).toHaveCount(0);
+  await expect(page.getByTestId("ride-oneway-caution")).toHaveCount(0);
 
   // Accessibility check on trip map with lines
   const a11y = await new AxeBuilder({ page })
@@ -83,56 +86,148 @@ test("trip lines draw walk (dotted) and ride (solid) layers with chevrons and le
   expect(serious, serious.map((v) => v.id).join(", ")).toEqual([]);
 });
 
-test("route overview lines draw on home map, filter by mode and historical toggle in Layers sheet", async ({ page }) => {
-  await openApp(page);
+// The published lines have no traced tricycle route (both feeders are untraced): this variation
+// adds one, drawn on R5's inbound path, so the Tricycle filter has a TRI-* line to keep.
+const TRACED_TRICYCLE = (() => {
+  const base = LINES.lines.find((l) => l.routeCode === "R5" && l.direction === "inbound")!;
+  return {
+    ...base,
+    variantId: "33333333-3333-4333-8333-333333333333",
+    routeId: "44444444-4444-4444-8444-444444444444",
+    routeCode: "TRI-TEST",
+    routeName: "Test tricycle feeder",
+    variantName: "Test branch",
+    mode: "tricycle",
+    direction: "branch",
+    colourKey: "tricycle",
+    fleet: { label: "Tricycles", chip: "Tricycle", colourKey: "tricycle", classes: [] },
+    segments: [],
+  };
+})();
 
-  // Overview lines are drawn when no trip is active
-  const overviewLines = page.locator("path.pn-line--route");
-  await expect(overviewLines.first()).toBeAttached({ timeout: 15000 });
+async function routeLinesWithTricycle(page: Page) {
+  const body = JSON.stringify({ ...LINES, lines: [...LINES.lines, TRACED_TRICYCLE] });
+  await page.route(/\/api\/v1\/network\/lines\/[^/?]+$/, (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body }),
+  );
+}
 
-  // Open the Layers sheet from the map controls button
+async function openLayers(page: Page) {
+  await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
   const layersBtn = page.getByRole("button", { name: "Layers" });
   await expect(layersBtn).toBeVisible();
   await layersBtn.click();
-
   const sheet = page.getByTestId("layers-sheet");
   await expect(sheet).toBeVisible();
+  return { layersBtn, sheet };
+}
+
+test("route overview lines draw on the home map and the Tricycle filter leaves only TRI-* lines", async ({ page }) => {
+  await routeLinesWithTricycle(page);
+  await openApp(page);
+  const { sheet } = await openLayers(page);
   await expect(sheet.getByRole("heading", { name: "Map layers" })).toBeVisible();
+  // D16's historical switch is gone (no historical route is published).
+  await expect(sheet.getByRole("switch")).toHaveCount(2);
+  await expect(sheet.getByText(/historical/i)).toHaveCount(0);
 
-  // Routes list visible in the sheet
   const routesList = page.getByTestId("layers-routes-list");
-  await expect(routesList).toBeVisible();
   await expect(routesList).toContainText("Centro–San Isidro");
 
-  // Multi-select mode filter: filter to Jeepney
-  const jeepneyFilter = page.getByTestId("mode-filter-jeepney");
-  await jeepneyFilter.click();
-  await expect(routesList).toContainText("Centro–San Isidro");
+  await page.getByTestId("mode-filter-tricycle").click();
+  await expect(routesList.getByRole("link")).toHaveCount(1);
+  await expect(routesList).toContainText("Test tricycle feeder");
+  await expect(page.getByTestId("layers-terminals-list")).toContainText("Balatas Tricycle Terminal");
 
-  // Filter to Tricycle - shows terminals for tricycle
-  const trikeFilter = page.getByTestId("mode-filter-tricycle");
-  await trikeFilter.click();
-  const terminalsList = page.getByTestId("layers-terminals-list");
-  await expect(terminalsList).toContainText("Balatas Tricycle Terminal");
+  const drawn = page.locator("path.pn-line--route");
+  await expect(drawn.first()).toBeAttached();
+  const classes = await drawn.evaluateAll((els) => els.map((el) => el.getAttribute("class") ?? ""));
+  expect(classes.length).toBeGreaterThan(0);
+  for (const c of classes) expect(c).toMatch(/\bpn-route--TRI-/);
 
-  // Toggle "Show historical routes"
-  const histSwitch = page.getByTestId("layer-switch-historical");
-  await expect(histSwitch).toHaveAttribute("aria-checked", "false");
-  await histSwitch.click();
-  await expect(histSwitch).toHaveAttribute("aria-checked", "true");
+  // "All" resets the filter: the jeepney lines come back.
+  await page.getByTestId("mode-filter-all").click();
+  await expect(page.locator("path.pn-line--route.pn-route--R1").first()).toBeAttached();
 
-  // Axe check on the layers sheet
-  const a11y = await new AxeBuilder({ page })
-    .include('[data-testid="layers-sheet"]')
-    .withTags(["wcag2a", "wcag2aa", "wcag22aa"])
-    .analyze();
-  const serious = a11y.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
-  expect(serious, serious.map((v) => v.id).join(", ")).toEqual([]);
-
-  // Close sheet
   await page.getByRole("button", { name: "Close map layers" }).click();
   await expect(sheet).toHaveCount(0);
 });
+
+test("the Layers sheet traps focus and returns it to the Layers button", async ({ page }) => {
+  await openApp(page);
+  const { layersBtn, sheet } = await openLayers(page);
+  await expect(page.getByRole("button", { name: "Close map layers" })).toBeFocused();
+
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press("Tab");
+    expect(await sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+  }
+  for (let i = 0; i < 5; i++) {
+    await page.keyboard.press("Shift+Tab");
+    expect(await sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+  }
+
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  await expect(layersBtn).toBeFocused();
+
+  await layersBtn.click();
+  await page.getByRole("button", { name: "Close map layers" }).click();
+  await expect(layersBtn).toBeFocused();
+});
+
+test("the legend draws its swatches on the same surface as the lines, and explains dashed sections", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await openApp(page);
+  await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
+  const legend = page.getByTestId("map-legend");
+  await expect(legend).toBeAttached();
+  const mapSurface = await mapEl(page).getAttribute("data-map-surface");
+  expect(mapSurface).toBeTruthy();
+  await expect(legend).toHaveAttribute("data-surface", mapSurface!);
+  // R4 (and Loops B, C) have >= 100 m one-way conflicts: dashed, and the legend says why.
+  await expect(page.locator("path.pn-line--route.pn-line--caution").first()).toBeAttached();
+  await page.getByTestId("map-legend-button").click();
+  await expect(page.getByTestId("map-legend-caution")).toContainText(
+    "street order conflicts with one-way mapping — confirm on the ground",
+  );
+});
+
+for (const mode of ["light", "dark", "high contrast"] as const) {
+  test(`home map with lines and legend, and the Layers sheet, have no serious axe violations (${mode})`, async ({ page }) => {
+    if (mode === "dark") await page.emulateMedia({ colorScheme: "dark" });
+    if (mode === "high contrast") {
+      await page.addInitScript(() => {
+        localStorage.setItem("paranaga.prefs", JSON.stringify({ theme: "system", highContrast: true, lowData: false, historyEnabled: false }));
+      });
+    }
+    await openApp(page);
+    if (mode === "high contrast") await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
+    await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
+    await page.getByTestId("map-legend-button").click();
+    await expect(page.getByTestId("map-legend-panel")).toBeVisible();
+
+    const describe = (vs: { id: string; nodes: { target: unknown[] }[] }[]) =>
+      vs.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`).join(", ");
+    const home = await new AxeBuilder({ page })
+      .include('[data-testid="naga-map"]')
+      .include('[data-testid="map-legend"]')
+      .withTags(["wcag2a", "wcag2aa", "wcag22aa"])
+      .analyze();
+    const homeSerious = home.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(homeSerious, describe(homeSerious)).toEqual([]);
+
+    await page.getByTestId("map-legend-button").click();
+    await page.getByRole("button", { name: "Layers" }).click();
+    await expect(page.getByTestId("layers-sheet")).toBeVisible();
+    const sheet = await new AxeBuilder({ page })
+      .include('[data-testid="layers-sheet"]')
+      .withTags(["wcag2a", "wcag2aa", "wcag22aa"])
+      .analyze();
+    const sheetSerious = sheet.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    expect(sheetSerious, describe(sheetSerious)).toEqual([]);
+  });
+}
 
 test("tapping an overview line opens SelectedRouteCard with route details link", async ({ page }) => {
   await openApp(page);
@@ -150,4 +245,17 @@ test("tapping an overview line opens SelectedRouteCard with route details link",
   await expect(routeDetailsLink).toBeVisible();
   await routeDetailsLink.click();
   await expect(page).toHaveURL(/\/app\/routes\/.+$/);
+});
+
+test("a trip ride that uses a terminal access road says so in trip detail", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  // "Least walking": Loop A 265.6 -> 5751.6 m passes the terminal access road at 5663.6 m.
+  await page.getByTestId("trip-option").nth(1).click();
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
+  await expect(page.getByTestId("ride-terminal-access")).toHaveText("terminal access road");
+  await expect(page.locator("path.pn-line--ride.pn-line--caution")).toHaveCount(0);
 });

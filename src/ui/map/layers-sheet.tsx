@@ -3,7 +3,10 @@
 // Map layers & mode filter sheet + accessible list equivalents (Task 12, D16, WCAG 2.2 AA).
 // Opened from the 48×48 px "Layers" button in the map control stack.
 // Provides:
-//   - Switches for "Routes", "Terminals", and "Show historical routes".
+//   - Switches for "Routes" and "Terminals" (D16's "Show historical routes" was removed with the
+//     e-jeepney route, ruling 2026-10-16: no historical route is published).
+//   - A modal dialog: Tab is trapped inside it, and closing returns focus to what opened it (the
+//     Layers button).
 //   - Multi-select mode chips ("All" resets; Jeepney, Tricycle, UV Express, Bus, Train).
 //   - Accessible list equivalents: "Routes on the map ({n})" → `/app/routes/{code}` and
 //     "Terminals ({n})" → `/app/terminals/{code}`.
@@ -11,13 +14,17 @@
 import "../modes/modes.css";
 
 import Link from "next/link";
-import { useEffect, useId, useMemo, useRef } from "react";
+import { useEffect, useId, useMemo, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { Line, SnapshotTerminal } from "@/domain/api/schemas";
 import { modeName, type RouteMode } from "@/domain/modes/fleet";
 import type { VisualKey } from "@/domain/modes/modes";
 import type { LayersPref } from "@/domain/prefs/prefs";
 import { ModeChip } from "@/ui/modes/mode-chip";
 import { ModeIcon } from "@/ui/modes/mode-icon";
+import { lineNotes, type LineNotes } from "./line-rules";
+import { LineNotesView } from "./line-notes-view";
+
+export { LineNotesView } from "./line-notes-view";
 
 const MODE_FILTER_ITEMS: readonly { mode: RouteMode; label: string; iconKey: VisualKey }[] = [
   { mode: "jeepney", label: modeName("jeepney"), iconKey: "traditional_puj" },
@@ -49,12 +56,22 @@ export type DistinctMapRoute = {
   colourKey: Line["colourKey"];
   chipText: string;
   fleetLabel: string;
+  /** Over all of the route's drawn lines: a dashed one-way section, a terminal access road. */
+  notes: LineNotes;
 };
 
 export function distinctRoutesFromLines(lines: readonly Line[]): DistinctMapRoute[] {
   const byCode = new Map<string, DistinctMapRoute>();
   for (const line of lines) {
-    if (byCode.has(line.routeCode)) continue;
+    const notes = lineNotes(line);
+    const seen = byCode.get(line.routeCode);
+    if (seen) {
+      seen.notes = {
+        onewayCaution: seen.notes.onewayCaution || notes.onewayCaution,
+        terminalAccess: seen.notes.terminalAccess || notes.terminalAccess,
+      };
+      continue;
+    }
     byCode.set(line.routeCode, {
       routeCode: line.routeCode,
       routeName: line.routeName,
@@ -62,10 +79,13 @@ export function distinctRoutesFromLines(lines: readonly Line[]): DistinctMapRout
       colourKey: line.colourKey,
       chipText: line.fleet.chip,
       fleetLabel: line.fleet.label,
+      notes,
     });
   }
   return [...byCode.values()];
 }
+
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 type Props = {
   open: boolean;
@@ -86,9 +106,12 @@ export function LayersSheet({
 }: Props) {
   const titleId = useId();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!open) return;
+    // Whatever opened the sheet (the Layers button) gets focus back when it closes.
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeBtnRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -97,8 +120,28 @@ export function LayersSheet({
       }
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      if (opener?.isConnected) opener.focus();
+    };
   }, [open, onClose]);
+
+  // Modal: Tab and Shift+Tab cycle within the sheet, never into the map behind it.
+  const trapTab = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Tab" || !dialogRef.current) return;
+    const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+    if (focusable.length === 0) return;
+    const first = focusable[0]!;
+    const last = focusable[focusable.length - 1]!;
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || !dialogRef.current.contains(active))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (active === last || !dialogRef.current.contains(active))) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   const mapRoutes = useMemo(() => distinctRoutesFromLines(tracedLines), [tracedLines]);
   const mapTerminals = useMemo(() => filterMapTerminals(terminals, layers), [terminals, layers]);
@@ -116,8 +159,10 @@ export function LayersSheet({
   return (
     <div className="pn-layers-backdrop" data-testid="layers-backdrop" onClick={onClose}>
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
+        onKeyDown={trapTab}
         aria-labelledby={titleId}
         className="pn-layers-sheet"
         data-testid="layers-sheet"
@@ -174,22 +219,6 @@ export function LayersSheet({
               </button>
             </div>
 
-            <div className="pn-layers-switch-row">
-              <span id={`${titleId}-historical`} className="pn-layers-switch-row__label">
-                Show historical routes
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={layers.historical}
-                aria-labelledby={`${titleId}-historical`}
-                className={layers.historical ? "pn-switch pn-switch--on" : "pn-switch"}
-                onClick={() => onUpdateLayers({ historical: !layers.historical })}
-                data-testid="layer-switch-historical"
-              >
-                <span className="pn-switch__thumb" aria-hidden="true" />
-              </button>
-            </div>
           </div>
 
           <div className="pn-layers-modes" role="group" aria-label="Filter by mode">
@@ -314,6 +343,7 @@ export function SelectedRouteCard({
       </div>
       <p className="pn-route-overview-card__fleet">{route.fleetLabel}</p>
       <p className="pn-route-overview-card__approx">Approximate path, not a verified route shape</p>
+      <LineNotesView notes={route.notes} testIdPrefix="route-card" />
       <Link
         href={`/app/routes/${encodeURIComponent(route.routeCode)}`}
         className="pn-route-overview-card__link"

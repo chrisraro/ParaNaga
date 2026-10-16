@@ -7,6 +7,8 @@ import {
   LEGEND_WALK_NOTE,
   MapLegend,
 } from "@/ui/map/map-legend";
+import { PALETTE_D, PALETTE_L } from "@/domain/modes/palette";
+import { ONEWAY_CAUTION } from "@/ui/map/line-rules";
 
 afterEach(() => {
   cleanup();
@@ -42,5 +44,23 @@ describe("MapLegend (Task 11)", () => {
     fireEvent.keyDown(btn, { key: "Escape" });
     expect(btn.getAttribute("aria-expanded")).toBe("false");
     expect(screen.queryByText(LEGEND_FOOTNOTE)).toBeNull();
+  });
+
+  it("draws the swatches in the palette of the surface it is given (the lines' surface, T11-1)", () => {
+    const { container, unmount } = render(<MapLegend items={["traditional_puj"]} surface="light" defaultOpen />);
+    expect(container.querySelector("[data-testid=map-legend]")?.getAttribute("data-surface")).toBe("light");
+    const strokes = () => [...container.querySelectorAll(".pn-map-legend__swatch line")].map((l) => l.getAttribute("stroke"));
+    expect(strokes()).toContain(PALETTE_L.traditional_puj.core);
+    expect(strokes()).not.toContain(PALETTE_D.traditional_puj.core);
+    unmount();
+    const dark = render(<MapLegend items={["traditional_puj"]} surface="dark" defaultOpen />);
+    expect([...dark.container.querySelectorAll(".pn-map-legend__swatch line")].map((l) => l.getAttribute("stroke"))).toContain(PALETTE_D.traditional_puj.core);
+  });
+
+  it("explains the dashed caution sections when some are drawn (T12-2)", () => {
+    const { rerender } = render(<MapLegend items={["traditional_puj"]} defaultOpen caution />);
+    expect(screen.getByTestId("map-legend-caution").textContent).toContain(ONEWAY_CAUTION);
+    rerender(<MapLegend items={["traditional_puj"]} defaultOpen />);
+    expect(screen.queryByTestId("map-legend-caution")).toBeNull();
   });
 });

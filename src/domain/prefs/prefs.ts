@@ -4,7 +4,9 @@
 //
 // No units setting (metric only, matching the data), no fare-category or language setting
 // (discounts are unverified and there is no reviewed translation, decision D8).
-// Increment D, Task 12 (decision D16): adds `layers` for the map overview and mode filter.
+// Increment D, Task 12 (decision D16): adds `layers` for the map overview and mode filter. D16's
+// "Show historical routes" switch was removed with the e-jeepney route (ruling 2026-10-16): no
+// historical route is published; a stored `historical` key is dropped on parse.
 import { z } from "zod";
 import { ROUTE_MODES, type RouteMode } from "../modes/fleet";
 
@@ -18,8 +20,6 @@ export type LayersPref = {
   routes: boolean;
   /** Terminals layer on the home map (D16: on by default). */
   terminals: boolean;
-  /** Historical routes (e.g. 2017 e-jeepney ordinance; off by default). */
-  historical: boolean;
   /** Selected mode filter chips; empty array means "All" modes are shown. */
   modes: RouteMode[];
 };
@@ -27,7 +27,6 @@ export type LayersPref = {
 export const DEFAULT_LAYERS_PREF: Readonly<LayersPref> = Object.freeze({
   routes: true,
   terminals: true,
-  historical: false,
   modes: [],
 });
 
@@ -58,7 +57,6 @@ const layersSchema = z
   .object({
     routes: z.boolean().catch(DEFAULT_LAYERS_PREF.routes),
     terminals: z.boolean().catch(DEFAULT_LAYERS_PREF.terminals),
-    historical: z.boolean().catch(DEFAULT_LAYERS_PREF.historical),
     modes: z
       .array(z.unknown())
       .transform((arr) => {
@@ -113,7 +111,6 @@ export function serializePrefs(prefs: Prefs): string {
     layers: {
       routes: layers.routes,
       terminals: layers.terminals,
-      historical: layers.historical,
       modes: [...layers.modes],
     },
   });

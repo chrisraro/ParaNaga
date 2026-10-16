@@ -6,7 +6,8 @@ const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")
 
 // The published revision every captured network fixture names (fixtures/network/*.json).
 export const REVISION = { revisionId: "de72168a-7f94-4c1b-8c0d-05a2c488ce6a", label: "modes-lines-2026-10-16", kind: "provisional", publishedAt: "2026-10-16T01:49:26.840Z" };
-const LOOP_A = id(100);
+// The published Loop A (R8-A clockwise) variant, so trip lines match its drawn line by variant id.
+const LOOP_A = "9ca597b8-615b-4fdd-8d5d-136a2a663c90";
 
 const ORIGIN = { kind: "origin", lat: 13.6224, lng: 123.1838, stopId: null, name: null };
 const DESTINATION = { kind: "destination", lat: 13.6305, lng: 123.1912, stopId: null, name: null };
@@ -154,7 +155,8 @@ export const WALK_FIRST_PLAN = {
 
 // Two rides with a transfer (guidance, Task 10): Loop A from Plaza Rizal to Magsaysay Junction,
 // walk to a Loop B pin, Loop B two stops on, walk to the destination.
-const LOOP_B = id(200);
+// The published Loop B (R8-B counterclockwise) variant.
+const LOOP_B = "9ddd04ca-ab7d-413e-8fd3-7d7f1a3ed7eb";
 const B1 = { id: id(21), name: "Del Rosario", lat: 13.6272, lng: 123.1893 };
 const B2 = { id: id(22), name: "Mother Seton Hospital", lat: 13.6287, lng: 123.1902 };
 const B3 = { id: id(23), name: "Avenue Plaza", lat: 13.6301, lng: 123.1909 };

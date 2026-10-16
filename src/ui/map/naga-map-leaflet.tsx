@@ -28,7 +28,7 @@ import type { Bounds, LatLng } from "@/domain/geo/types";
 import { mapSurface as computeMapSurface } from "@/domain/modes/palette";
 import { MapControls } from "./map-controls";
 import { MapLegend } from "./map-legend";
-import { RouteLinesLayer } from "./route-lines-layer";
+import { RouteLinesLayer, linesHaveOnewayCaution } from "./route-lines-layer";
 import { StopsLayer } from "./stops-layer";
 import { TripLinesLayer, type TripLinesData } from "./trip-lines-layer";
 import type { HighlightStop, NagaMapPins, NagaMapProps } from "./types";
@@ -282,6 +282,10 @@ export default function NagaMapLeaflet({
   const tileUrl = lowData && !backgroundOnce ? null : tiles.url;
   const effectiveTheme = useEffectiveTheme(theme);
   const surface = explicitMapSurface ?? computeMapSurface(effectiveTheme, tileUrl !== null);
+  const legendCaution = useMemo(
+    () => (tripLines ? tripLines.caution : linesHaveOnewayCaution(routeLines)),
+    [tripLines, routeLines],
+  );
 
   // No basemap: OSM derived data (boundary, route paths, walk graph) needs crediting ("Map data").
   const attribution = useMemo(
@@ -431,7 +435,10 @@ export default function NagaMapLeaflet({
       {legend && legend.length > 0 ? (
         <MapLegend
           items={legend}
-          surface={surface === "dark" || effectiveTheme === "dark" ? "dark" : "light"}
+          // The swatches use the same palette as the drawn lines (Palette L whenever tiles are drawn,
+          // even in dark theme); the legend panel itself keeps the theme's colours.
+          surface={surface}
+          caution={legendCaution}
         />
       ) : null}
 

@@ -21,6 +21,9 @@ import { useLines } from "@/client/network/use-lines";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
 import { PATH_LABEL } from "@/domain/api/schemas";
+import { WALK_LOADING_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
+import { LineNotesView } from "@/ui/map/line-notes-view";
+import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel } from "@/domain/trip/present";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
@@ -82,7 +85,7 @@ function Marker({ kind }: { kind: "origin" | "board" | "alight" | "destination" 
 
 type Step = { key: string; marker: Parameters<typeof Marker>[0]["kind"]; rail: "walk" | "ride" | null; body: ReactNode };
 
-function steps(option: PlanOptionDto, lookups: PlanLookups, untracedVariants: ReadonlySet<string>): Step[] {
+function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideLegDto) => RideTrace): Step[] {
   const out: Step[] = [];
   const last = option.legs.length - 1;
   option.legs.forEach((leg, i) => {
@@ -127,13 +130,13 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, untracedVariants: Re
       });
       return;
     }
-    out.push(...rideSteps(leg, i, lookups, untracedVariants.has(leg.variantId)));
+    out.push(...rideSteps(leg, i, lookups, traceOf(leg)));
   });
   if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive at your destination</strong> });
   return out;
 }
 
-function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, isUntraced: boolean): Step[] {
+function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: RideTrace): Step[] {
   const board = leg.stops[0]!;
   const alight = leg.stops[leg.stops.length - 1]!;
   const boardName = lookups.stopName(board.id, board.name);
@@ -143,9 +146,7 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, isUntraced:
   const count = leg.stops.length - 1;
   const distanceBasis =
     leg.distanceBasis === "approximate_path" ? "along approximate path" : "straight-line between pins";
-  const pathLabel = isUntraced
-    ? "Path could not be traced from the street list; stops shown only"
-    : PATH_LABEL;
+  const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
 
   return [
     {
@@ -173,6 +174,7 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, isUntraced:
           <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">
             {pathLabel}
           </p>
+          <LineNotesView notes={trace.notes} testIdPrefix="ride" />
         </div>
       ),
     },
@@ -304,10 +306,16 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
     if (!covered) headingRef.current?.focus();
   }, [option.id, covered]);
   const rides = option.legs.filter((l): l is RideLegDto => l.kind === "ride");
+  // Lines only add the one-way caution / terminal access notes; whether a ride is traced comes from
+  // the leg itself (rideTrace), so low-data mode (no lines loaded) still says it right.
   const { lines } = useLines(data.revision.revisionId);
-  const untracedVariants = useMemo(() => {
-    return new Set(lines?.untraced.map((u) => u.variantId) ?? []);
-  }, [lines]);
+  const circular = useMemo(() => new Map(data.variants.map((v) => [v.variantId, v.isCircular])), [data.variants]);
+  const traceOf = (leg: RideLegDto) => rideTrace(leg, lines, circular.get(leg.variantId) ?? false);
+  // Walk legs show "Straight line · loading street paths…" until the walk graph arrives: say so politely.
+  const loadingPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "straight" && (l as EnrichedWalkLeg).path.label === WALK_LOADING_LABEL);
+  const [sawLoadingPaths, setSawLoadingPaths] = useState(false);
+  if (loadingPaths && !sawLoadingPaths) setSawLoadingPaths(true);
+  const pathsStatus = loadingPaths ? "Loading street paths…" : sawLoadingPaths ? "Street paths updated" : "";
 
   return (
     <section className="pn-trip pn-trip-detail" aria-labelledby="pn-trip-detail-title" data-testid="trip-detail">
@@ -339,8 +347,11 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       ) : null}
       {ends ? <TripActions data={data} option={option} ends={ends} /> : null}
 
+      <p className="sr-only" role="status" aria-live="polite" data-testid="trip-paths-status">
+        {pathsStatus}
+      </p>
       <ol className="pn-tl" aria-label="Trip steps">
-        {steps(option, lookups, untracedVariants).map((step) => (
+        {steps(option, lookups, traceOf).map((step) => (
           <li key={step.key} className="pn-tl__step">
             <div className="pn-tl__rail">
               <Marker kind={step.marker} />
