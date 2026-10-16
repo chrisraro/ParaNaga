@@ -136,7 +136,8 @@ describe("UpdatePrompt", () => {
   it("Later hides the card; More → App keeps Update ready — Reload", () => {
     const worker = { postMessage: vi.fn() } as unknown as ServiceWorker;
     Object.defineProperty(navigator, "serviceWorker", { value: { addEventListener: vi.fn(), controller: null }, configurable: true });
-    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    // Reduced motion: the card leaves at once (otherwise it waits for its exit animation to end).
+    vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduced-motion") }));
     render(
       <>
         <UpdatePrompt />
