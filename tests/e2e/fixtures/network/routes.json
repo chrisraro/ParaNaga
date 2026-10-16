@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-16T01:49:26.840Z"
  },
  "groups": [
   {
@@ -22,7 +22,47 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R1-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     }
    ]
   },
@@ -42,7 +82,47 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R2-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     }
    ]
   },
@@ -62,7 +142,47 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R3-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     }
    ]
   },
@@ -82,7 +202,76 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional and modern jeepneys",
+      "chip": "Jeepney · traditional + modern",
+      "colourKey": "mixed_trad_modern",
+      "classes": [
+       {
+        "code": "FL-R4-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       },
+       {
+        "code": "FL-R4-MOD",
+        "vehicleClass": "modern_puj",
+        "evidenceLevels": [
+         "official_report",
+         "news_report",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": "2023-04-17",
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "about 10 air-conditioned units (2023–2024 reports); current count not confirmed",
+        "aircon": true,
+        "airconSourceCodes": [
+         "N14",
+         "U01"
+        ],
+        "cooperatives": [
+         "Naga City Allied Transport Cooperative (NACIATRASCO)"
+        ],
+        "sourceCodes": [
+         "N14",
+         "N38",
+         "N39",
+         "N41",
+         "U01"
+        ],
+        "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     }
    ]
   },
@@ -102,7 +291,47 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R5-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     }
    ]
   },
@@ -122,7 +351,47 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R6-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     }
    ]
   },
@@ -142,7 +411,75 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional and modern jeepneys",
+      "chip": "Jeepney · traditional + modern",
+      "colourKey": "mixed_trad_modern",
+      "classes": [
+       {
+        "code": "FL-R7-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       },
+       {
+        "code": "FL-R7-MOD",
+        "vehicleClass": "modern_puj",
+        "evidenceLevels": [
+         "official_report",
+         "news_report",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": "2024-01-16",
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "about 5 units (2024 reports); current count not confirmed",
+        "aircon": true,
+        "airconSourceCodes": [
+         "U01"
+        ],
+        "cooperatives": [
+         "Naga City Allied Transport Cooperative (NACIATRASCO)",
+         "Carolina Panicuason Transport Cooperative (CAPATRANSCO)"
+        ],
+        "sourceCodes": [
+         "N38",
+         "N15",
+         "N41",
+         "U01"
+        ],
+        "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     }
    ]
   },
@@ -162,7 +499,47 @@
      "evidenceLevel": "provisional",
      "verification": "unverified",
      "hasProvisionalStops": true,
-     "hasTrial": true
+     "hasTrial": true,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "provisional",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R8-A-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     },
     {
      "code": "R8-B",
@@ -177,7 +554,47 @@
      "evidenceLevel": "provisional",
      "verification": "unverified",
      "hasProvisionalStops": true,
-     "hasTrial": true
+     "hasTrial": true,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "provisional",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R8-B-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     },
     {
      "code": "R8-C",
@@ -192,7 +609,47 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R8-C-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
     },
     {
      "code": "R8-D",
@@ -207,7 +664,140 @@
      "evidenceLevel": "documentary",
      "verification": "unverified",
      "hasProvisionalStops": false,
-     "hasTrial": false
+     "hasTrial": false,
+     "mode": "jeepney",
+     "serviceStatus": "legal_plan",
+     "planning": "none",
+     "fleet": {
+      "label": "Traditional jeepneys",
+      "chip": "Jeepney · traditional",
+      "colourKey": "traditional_puj",
+      "classes": [
+       {
+        "code": "FL-R8-D-TRAD",
+        "vehicleClass": "traditional_puj",
+        "evidenceLevels": [
+         "legal_plan",
+         "owner_confirmation"
+        ],
+        "status": "operating",
+        "firstReportedOn": null,
+        "lastReportedOn": "2026-10-16",
+        "unitsNote": "PUJ Class 2 in the 2025 route plan",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N30",
+         "U01"
+        ],
+        "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+       }
+      ]
+     },
+     "operatingStatus": {
+      "status": "operating",
+      "label": "Operating (owner-confirmed 2026-10-16)",
+      "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+      "confirmedOn": "2026-10-16",
+      "confirmsServiceOnly": true,
+      "sourceCodes": [
+       "U01"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "groupNumber": null,
+   "routes": [
+    {
+     "code": "TRI-VISTODA",
+     "name": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
+     "groupNumber": null,
+     "modeCode": "tricycle",
+     "legalStatus": null,
+     "allocatedUnits": 33,
+     "allocationIsActiveFleetCount": null,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false,
+     "mode": "tricycle",
+     "serviceStatus": "authorized_feeder",
+     "planning": "none",
+     "fleet": {
+      "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified",
+      "chip": "Tricycle · special trimobile",
+      "colourKey": "tricycle",
+      "classes": [
+       {
+        "code": "FL-TRI-VISTODA",
+        "vehicleClass": "tricycle",
+        "evidenceLevels": [
+         "legal_plan"
+        ],
+        "status": "planned",
+        "firstReportedOn": "2025-09-09",
+        "lastReportedOn": "2025-09-09",
+        "unitsNote": "33 special trimobile units authorized",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N06"
+        ],
+        "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
+       }
+      ]
+     },
+     "operatingStatus": null
+    },
+    {
+     "code": "TRI-DECALANGON",
+     "name": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
+     "groupNumber": null,
+     "modeCode": "tricycle",
+     "legalStatus": null,
+     "allocatedUnits": 10,
+     "allocationIsActiveFleetCount": null,
+     "groupAllocatedUnits": null,
+     "aliases": [],
+     "evidenceLevel": "documentary",
+     "verification": "unverified",
+     "hasProvisionalStops": false,
+     "hasTrial": false,
+     "mode": "tricycle",
+     "serviceStatus": "authorized_feeder",
+     "planning": "none",
+     "fleet": {
+      "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified",
+      "chip": "Tricycle · special trimobile",
+      "colourKey": "tricycle",
+      "classes": [
+       {
+        "code": "FL-TRI-DECALANGON",
+        "vehicleClass": "tricycle",
+        "evidenceLevels": [
+         "legal_plan"
+        ],
+        "status": "planned",
+        "firstReportedOn": "2025-03-18",
+        "lastReportedOn": "2025-03-18",
+        "unitsNote": "10 special trimobile units authorized",
+        "aircon": null,
+        "airconSourceCodes": [],
+        "cooperatives": [],
+        "sourceCodes": [
+         "N05"
+        ],
+        "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
+       }
+      ]
+     },
+     "operatingStatus": null
     }
    ]
   }

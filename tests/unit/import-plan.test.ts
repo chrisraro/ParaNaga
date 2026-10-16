@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   buildImportPlan,
@@ -5,6 +6,7 @@ import {
   PUBLIC_STOP_MAP_KEYS,
   planRawFeatures,
   readDataFiles,
+  readNewestModesSeed,
   type DataFiles,
 } from "../../scripts/lib/import-plan";
 
@@ -177,5 +179,105 @@ describe("buildImportPlan refuses bad input", () => {
       return JSON.stringify(seed);
     }));
     expect(bad.problems.join("\n")).toMatch(/SF01.*geometry/);
+  });
+});
+
+describe("buildImportPlan with the reviewed modes seed", () => {
+  const modesFile = readNewestModesSeed()!;
+  const withModes = buildImportPlan(files, null, modesFile);
+  const modes = withModes.modes!;
+  const editSeed = (edit: (seed: Record<string, unknown[]> & { header: Record<string, unknown> }) => void, fileName = modesFile.fileName) => {
+    const seed = JSON.parse(modesFile.bytes.toString("utf8"));
+    edit(seed);
+    return { fileName, bytes: Buffer.from(JSON.stringify(seed)) };
+  };
+
+  it("reads the newest reviewed seed and merges it with Data_Sets without problems", () => {
+    expect(modesFile.fileName).toBe("naga-modes-seed-2026-10-16.json");
+    expect(withModes.problems).toEqual([]);
+    expect(buildImportPlan(files).modes).toBeNull();
+    expect(modes).toMatchObject({
+      seedDate: "2026-10-16", snapshotVersion: "modes-seed:2026-10-16", revisionLabel: "modes-2026-10-16", synthetic: false,
+    });
+    expect(modes.sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("counts every imported kind", () => {
+    expect(modes.counts).toEqual({
+      sources: 41, terminals: 16, terminals_with_coordinate: 12, routes: 2, variants: 3,
+      route_operating_statuses: 11, route_vehicle_classes: 15, route_cooperatives: 7, route_fare_observations: 2,
+      regional_services: 7, fare_rules_new: 7, fare_rule_versions_sources_added: 3, research_conflicts: 9,
+      excluded_records: modes.excluded.length,
+    });
+    expect(modes.deferred).toHaveProperty("eta_params");
+  });
+
+  it("reports the excluded records with their reason and never plans them", () => {
+    const text = modes.excluded.join("\n");
+    expect(text).toMatch(/^sources N09: /m);
+    expect(text).toMatch(/^terminals CT-UV-SOUTHBOUND-OSM: .+/m);
+    expect(text).toMatch(/^regionalServices C-OSM-SABANG-UV: .+/m);
+    expect(modes.sources.map((s) => s.code)).not.toContain("N09");
+    expect(modes.terminals.map((t) => t.code)).not.toContain("CT-UV-SOUTHBOUND-OSM");
+    expect(modes.cooperatives).toHaveLength(7);
+  });
+
+  it("adds sources to F01–F03 as new versions keeping the Data_Sets values (J7), and plans F06–F12", () => {
+    const f01 = modes.fareRules.find((f) => f.code === "F01")!;
+    const original = withModes.fareRules.find((f) => f.code === "F01")!;
+    expect(f01).toMatchObject({ isNewRule: false, baseCentavos: 1400, baseKm: 4, incrementCentavosPerKm: 200 });
+    expect(f01.sourceCodes).toEqual([...original.sourceCodes, "N17", "N32"]);
+    expect(f01.contentHash).not.toBe(original.contentHash);
+    expect(modes.fareRules.filter((f) => f.isNewRule).map((f) => f.code)).toEqual(["F06", "F07", "F08", "F09", "F10", "F11", "F12"]);
+    expect(modes.fareRules.find((f) => f.code === "F08")).toMatchObject({
+      modeCode: "bus_ordinary", baseCentavos: 1200, baseKm: 5, incrementCentavosPerKm: 220, publishExact: false,
+    });
+  });
+
+  it("plans mixed fleets on R4/R7 only, with aircon and evidence arrays, and no e-jeepney", () => {
+    const modern = modes.vehicleClasses.filter((v) => v.vehicleClass === "modern_puj");
+    expect(modern.map((v) => v.routeCode).sort()).toEqual(["R4", "R7"]);
+    for (const v of modern) expect(v).toMatchObject({ status: "operating", aircon: true });
+    expect(modes.vehicleClasses.filter((v) => v.vehicleClass === "traditional_puj")).toHaveLength(11);
+    expect(modes.vehicleClasses.some((v) => v.vehicleClass === "e_jeepney")).toBe(false);
+    expect(modes.routeFareObservations.map((o) => [o.code, o.deltaQualifier, o.deltaCentavosLow, o.deltaCentavosHigh]))
+      .toEqual([["FO-R4-MOD", "range", 300, 500], ["FO-R7-MOD", "at_least", 500, null]]);
+    expect(modes.operatingStatuses.every((s) => s.operatingStatus === "operating" && s.sourceCodes.includes("U01"))).toBe(true);
+  });
+
+  it("plans terminals with OSM coordinates only, and feeder variants with anchors", () => {
+    const t01 = modes.terminals.find((t) => t.code === "T01")!;
+    expect(t01).toMatchObject({ coordSource: "osm_way_centroid", osmType: "way", osmId: 293702439 });
+    for (const t of modes.terminals) expect(t.lat === null).toBe(t.osmId === null);
+    const vistoda = modes.routes.find((r) => r.publicCode === "TRI-VISTODA")!;
+    expect(vistoda).toMatchObject({ mode: "tricycle", serviceStatus: "authorized_feeder", allocatedUnits: 33 });
+    expect(vistoda.variants).toHaveLength(2);
+    expect(new Set(vistoda.variants.map((v) => v.contentHash)).size).toBe(2);
+    expect(vistoda.variants[0]!.anchors.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("hashes content deterministically and marks synthetic content apart", () => {
+    const again = buildImportPlan(files, null, modesFile).modes!;
+    expect(again.terminals.map((t) => t.contentHash)).toEqual(modes.terminals.map((t) => t.contentHash));
+    const synthetic = buildImportPlan(files, null, editSeed((s) => { s.header.synthetic = true; })).modes!;
+    expect(synthetic.synthetic).toBe(true);
+    expect(synthetic.terminals[0]!.contentHash).not.toBe(modes.terminals[0]!.contentHash);
+  });
+
+  it("accepts the synthetic fixture (flagged) against Data_Sets", () => {
+    const fixture = { fileName: "naga-modes-seed-2026-10-16.json", bytes: readFileSync("tests/fixtures/modes/modes-seed-synthetic.json") };
+    const plan = buildImportPlan(files, null, fixture);
+    expect(plan.problems).toEqual([]);
+    expect(plan.modes!.synthetic).toBe(true);
+  });
+
+  it("reports a file name, date or validation problem", () => {
+    expect(buildImportPlan(files, null, { ...modesFile, fileName: "seed.json" }).problems.join("\n")).toMatch(/not named/);
+    expect(buildImportPlan(files, null, editSeed((s) => { s.header.preparedOn = "2026-10-17"; })).problems.join("\n"))
+      .toMatch(/preparedOn/);
+    const ejeep = editSeed((s) => { (s.fleet![0] as Record<string, unknown>).vehicle_class = "e_jeepney"; });
+    expect(buildImportPlan(files, null, ejeep).problems.join("\n")).toMatch(/e_jeepney/);
+    const chair = editSeed((s) => { (s.cooperatives![0] as Record<string, unknown>).chairperson = "x"; });
+    expect(buildImportPlan(files, null, chair).problems.join("\n")).toMatch(/chairperson/);
   });
 });

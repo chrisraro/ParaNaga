@@ -195,8 +195,8 @@ test('"Show all" moves focus to the first row it revealed', async ({ page }) => 
   await searchBox(page).fill("Centro");
   const routes = page.getByTestId("search-group-routes");
   await expect(routes.locator("li")).toHaveCount(5);
-  await routes.getByRole("button", { name: "Show all 11" }).click();
-  await expect(routes.locator("li")).toHaveCount(11);
+  await routes.getByRole("button", { name: "Show all 12" }).click();
+  await expect(routes.locator("li")).toHaveCount(12);
   await expect(routes.locator("li").nth(5).locator("a")).toBeFocused();
 });
 

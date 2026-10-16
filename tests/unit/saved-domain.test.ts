@@ -27,7 +27,12 @@ import {
   tripCardMeta,
   type SavedTrip,
 } from "@/domain/saved/saved";
+import { estimateOption } from "@/domain/eta/eta";
+import { formatTotal } from "@/domain/eta/format";
 import { LEAST_WALKING_ONLY_PLAN, PROVISIONAL_PLAN, REVISION } from "../e2e/fixtures/plan-responses";
+import { ETA_MODEL, manila } from "./eta-fixtures";
+
+const AT = manila("09:30");
 
 const plan: PlanResponse = planResponseSchema.parse(PROVISIONAL_PLAN);
 const option = plan.plan.options[0]!;
@@ -55,7 +60,7 @@ function snapshot(edit: (s: Pick<NetworkSnapshot, "revision" | "stops" | "varian
       {
         variantId: rideLeg.variantId, routeId: NEW_REVISION, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A",
         direction: "circuit", kind: "trial", evidenceLevel: "provisional", verification: "unverified", isCircular: true,
-        stopIds: plan.stops.map((x) => x.id),
+        stopIds: plan.stops.map((x) => x.id), mode: "jeepney", measuresM: null, pathLengthM: null,
       },
     ],
   };
@@ -87,9 +92,27 @@ describe("saved trip card", () => {
     expect(savedTripKey(option.id, START.point, DEST.point)).not.toBe(savedTripKey(option.id, DEST.point, START.point));
   });
 
-  it("meta line: no time, the fare chip text and the data date", () => {
-    expect(tripCardMeta(card())).toBe("Time not available · Estimate ₱14–₱17 · data from 15 Oct 2026");
-    expect(tripCardMeta(card({ publishedAt: null }))).toBe("Time not available · Estimate ₱14–₱17 · data from revision osm-places-2026-10-15");
+  it("meta line: estimate text, the fare chip text and the data date", () => {
+    expect(tripCardMeta(card(), ETA_MODEL, AT)).toMatch(/^Estimate \d+–\d+ min \+ waiting \(unknown\) · Estimate ₱14 · data from 16 Oct 2026$/);
+    expect(tripCardMeta(card({ publishedAt: null }), ETA_MODEL, AT)).toContain(" · Estimate ₱14 · data from revision modes-lines-2026-10-16");
+  });
+
+  it("meta line: the saved card's estimate equals trip options' for the same option, model and time", () => {
+    for (const at of [manila("07:10"), manila("09:30")]) {
+      const res = estimateOption(option, [], ETA_MODEL, at); // options without the walk graph: ×1.3 walks
+      if (!res.ok) throw new Error(res.reason);
+      expect(tripCardMeta(card(), ETA_MODEL, at).startsWith(`${formatTotal(res.estimate.total)} · `)).toBe(true);
+    }
+    // Walk-graph lengths, when cached, are used the same way.
+    const lengths = option.legs.map((l) => (l.kind === "walk" ? 50 : null));
+    const res = estimateOption(option, lengths, ETA_MODEL, AT);
+    if (!res.ok) throw new Error(res.reason);
+    expect(tripCardMeta(card(), ETA_MODEL, AT, lengths).startsWith(`${formatTotal(res.estimate.total)} · `)).toBe(true);
+  });
+
+  it("meta line: no model on file (an older snapshot) → Time not available, never a guess", () => {
+    expect(tripCardMeta(card(), null, AT)).toBe("Time not available · Estimate ₱14 · data from 16 Oct 2026");
+    expect(tripCardMeta(card(), undefined, AT)).toMatch(/^Time not available · /);
   });
 });
 
@@ -174,17 +197,25 @@ describe("shareText", () => {
   const input = () => ({ ...card(), start: START, destination: DEST });
 
   it("lists steps by stop name and code, the badge and the fare, with no coordinates and no links", () => {
-    const text = shareText(input());
+    const text = shareText(input(), { etaModel: ETA_MODEL, departure: AT });
     expect(text).toContain("Plaza Rizal to Avenue Square");
     expect(text).toContain("Unverified route — confirm with the driver");
     expect(text).toContain("Plaza Rizal (A1)");
     expect(text).toContain("Avenue Square (A5)");
-    expect(text).toContain("Estimate ₱14–₱17");
-    expect(text).toContain("Time not available");
+    expect(text).toContain("Fare: Estimate ₱14 · from reported fare rules");
+    expect(text).toContain("Estimate");
+    expect(text).not.toContain("Time not available");
     // No coordinate-like numbers (digits with a decimal point and many decimals), no URLs.
     expect(text).not.toMatch(/\d+\.\d{3,}/);
     expect(text).not.toMatch(/13\.6|123\.1/);
     expect(text).not.toMatch(/https?:|www\.|\/app\//);
+  });
+
+  it("uses the snapshot's model: no model → Time not available", () => {
+    const res = estimateOption(option, [], ETA_MODEL, AT);
+    if (!res.ok) throw new Error(res.reason);
+    expect(shareText(input(), { etaModel: ETA_MODEL, departure: AT })).toContain(`${formatTotal(res.estimate.total)}. Data revision`);
+    expect(shareText(input(), { etaModel: null })).toContain("Time not available. Data revision");
   });
 
   it("adds the exact points only when asked", () => {

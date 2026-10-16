@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { expect, test, type BrowserContext, type Page, type Route } from "@playwright/test";
 import { SNAPSHOT, STOP_A1, routeNetwork, type NetworkCalls } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 
@@ -14,10 +14,16 @@ test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate
 
 const mapEl = (page: Page) => page.getByTestId("home-screen").getByTestId("naga-map");
 const A1_ID = STOP_A1.stop.id;
-const DATA_DATE = "Oct 15, 2026";
+const DATA_DATE = "Oct 16, 2026";
 
 let calls: NetworkCalls;
 let planRequests = 0;
+/**
+ * API requests that tried the network after a test cut it (the abort routes record them). The
+ * counting handlers of routeNetwork never see those requests (the last route registered wins), so
+ * "nothing was fetched" is checked here: a request served from Cache Storage never shows up.
+ */
+let attempted: string[] = [];
 
 test.beforeEach(async ({ context, page }) => {
   // Every test installs a worker (and the update tests a second one): more than the default 30 s
@@ -25,6 +31,7 @@ test.beforeEach(async ({ context, page }) => {
   test.slow();
   await context.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
   planRequests = 0;
+  attempted = [];
   await context.route("**/api/v1/plan", (route) => {
     planRequests += 1;
     return route.fulfill({ status: 200, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(PROVISIONAL_PLAN) });
@@ -72,8 +79,15 @@ async function firstVisit(page: Page, { backgroundIndex = true }: { backgroundIn
  */
 async function goOffline(context: BrowserContext) {
   await context.setOffline(true);
-  await context.route(/\/api\//, (route) => route.abort("internetdisconnected"));
+  await context.route(/\/api\//, (route) => abortRecorded(route));
 }
+
+/** Fails a request like a dropped connection, and records that it tried the network. */
+function abortRecorded(route: Route) {
+  attempted.push(new URL(route.request().url()).pathname);
+  return route.abort("internetdisconnected");
+}
+const attemptsTo = (re: RegExp) => attempted.filter((p) => re.test(p));
 
 async function cacheEntries(page: Page): Promise<{ cache: string; url: string; cacheControl: string | null }[]> {
   return page.evaluate(async () => {
@@ -118,6 +132,8 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
     ["/app/explore", "Explore"],
     ["/app/help", "Help"],
     ["/app/more", "Settings"],
+    ["/app/help/how-times-are-estimated", "How times are estimated"],
+    ["/app/help/vehicle-types-in-naga", "Vehicle types in Naga"],
   ] as const) {
     await page.goto(path);
     const h1 = page.getByRole("heading", { level: 1, name: heading });
@@ -156,6 +172,40 @@ test("Low-data mode: the search index is not fetched in the background", async (
   expect(calls.searchIndexes).toEqual([]);
 });
 
+test("Low-data mode: street paths download only on the tap, then stay stored (Task 15 follow-up)", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("paranaga.prefs", JSON.stringify({ theme: "system", highContrast: false, lowData: true, historyEnabled: false }));
+  });
+  await firstVisit(page, { backgroundIndex: false });
+  await setEnds(page);
+  await page.getByTestId("trip-option").first().click();
+  const detail = page.getByTestId("trip-detail");
+  const download = detail.getByTestId("walk-graph-download");
+  await expect(download).toHaveText("Download street paths (≈ 80 KB)");
+  await expect(detail).not.toContainText("Approximate walking path");
+  expect(calls.walkGraphs).toEqual([]);
+  const a11y = await new AxeBuilder({ page }).include('[data-testid="trip-sheet"]').withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(a11y.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => v.id)).toEqual([]);
+
+  await download.click();
+  await expect(detail).toContainText("Approximate walking path");
+  await expect(detail.getByTestId("walk-graph-offer")).toHaveCount(0);
+  await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+  expect(calls.walkGraphs).toEqual([SNAPSHOT.revision.revisionId]);
+  await expect
+    .poll(async () => (await cacheEntries(page)).some((e) => e.url.endsWith(`/api/v1/network/walk-graph/${SNAPSHOT.revision.revisionId}`)))
+    .toBe(true);
+
+  // A later low-data visit uses the stored copy: no offer, no new download.
+  await page.reload();
+  await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
+  await setEnds(page);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect(page.getByTestId("walk-graph-offer")).toHaveCount(0);
+  expect(calls.walkGraphs).toEqual([SNAPSHOT.revision.revisionId]);
+});
+
 test("offline: the tab bar opens the cached shells by document navigation", async ({ page, context }) => {
   await firstVisit(page);
   await goOffline(context);
@@ -179,6 +229,75 @@ test("offline: a trip is re-planned on the phone from the cached snapshot, with 
   await expect(page.getByTestId("trip-offline-note")).toHaveText(`Planned offline from data of ${DATA_DATE}. Fares may have changed.`);
   // The request never reached the server; the plan came from the cached snapshot.
   expect(planRequests).toBe(before);
+});
+
+test("offline after one online trip: overview, ride lines and street walk paths draw from the cache; no plan is stored (Task 15)", async ({ page, context }) => {
+  await firstVisit(page);
+  await setEnds(page);
+  await page.getByTestId("trip-option").first().click();
+  // Online: the walk graph is fetched the first time a trip is shown, and the worker keeps it.
+  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect
+    .poll(async () => (await page.evaluate(() => caches.keys())).filter((n) => /^pn-(lines-f\d+|walk-graph)-/.test(n)).length)
+    .toBe(2);
+  // Guidance keeps the trip across a reload (sessionStorage): a cold start offline with a trip,
+  // where nothing is held in memory any more.
+  await page.getByTestId("trip-start").click();
+  await expect(page.getByTestId("guidance")).toBeVisible();
+  await goOffline(context);
+  await page.reload();
+  await expect(page.getByTestId("guidance")).toBeVisible();
+  await endGuidance(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  // The route overview (on by default) draws from the stored lines.
+  await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15_000 });
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
+  await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
+  // Street paths, not straight lines: the walk graph came from the cache.
+  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect(page.getByTestId("trip-detail")).not.toContainText("Street paths need a connection");
+  // Neither the lines nor the walk graph tried the network: both came from Cache Storage.
+  expect(attemptsTo(/\/api\/v1\/network\/(lines|walk-graph)\//)).toEqual([]);
+  // The time estimate is computed on the phone from the cached snapshot's model.
+  await expect(page.getByTestId("trip-detail-time")).toContainText(/^Estimate \d+–\d+ min \+ waiting \(unknown\)/);
+
+  const entries = await cacheEntries(page);
+  expect(entries.some((e) => new URL(e.url).pathname.startsWith("/api/v1/plan"))).toBe(false);
+  expect(entries.some((e) => e.url.endsWith(`/api/v1/network/walk-graph/${SNAPSHOT.revision.revisionId}`))).toBe(true);
+});
+
+test("offline before the walk graph was ever stored: walks are straight dotted lines that say street paths need a connection (Task 15)", async ({ page, context }) => {
+  // The walk graph never arrives online (so it is never stored).
+  await context.route(/\/api\/v1\/network\/walk-graph\//, (route) => route.abort("connectionfailed"));
+  await firstVisit(page);
+  await setEnds(page);
+  await page.getByTestId("trip-option").first().click();
+  await page.getByTestId("trip-start").click();
+  await expect(page.getByTestId("guidance")).toBeVisible();
+  await goOffline(context);
+  await page.reload();
+  await expect(page.getByTestId("guidance")).toBeVisible();
+  await endGuidance(page);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
+  await expect(page.getByTestId("trip-detail")).toContainText("Street paths need a connection the first time.");
+  expect((await cacheEntries(page)).some((e) => e.url.includes("/api/v1/network/walk-graph/"))).toBe(false);
+});
+
+async function endGuidance(page: Page) {
+  await page.getByRole("button", { name: "End guidance" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "End guidance" }).click();
+  await expect(page.getByTestId("guidance")).toHaveCount(0);
+}
+
+test("route detail draws its path from the stored lines when the lines endpoint is unreachable (Task 15)", async ({ page, context }) => {
+  await firstVisit(page);
+  await expect.poll(async () => (await page.evaluate(() => caches.keys())).some((n) => /^pn-lines-f\d+-/.test(n))).toBe(true);
+  await context.route(/\/api\/v1\/network\/lines\//, (route) => abortRecorded(route));
+  await page.goto("/app/routes/R1");
+  await expect(page.locator('[data-testid="route-map"] path.pn-line--route').first()).toBeAttached({ timeout: 15_000 });
+  expect(attemptsTo(/\/api\/v1\/network\/lines\//)).toEqual([]);
 });
 
 test("tap a stop offline: the panel says it opens when back online, the trip stays in the sheet (F-03)", async ({ page, context }) => {
@@ -217,13 +336,27 @@ test("Cache Storage holds no plan, auth, RSC, admin or private response", async 
   expect(entries.some((e) => e.url.endsWith(`/api/v1/stops/${A1_ID}`))).toBe(true);
   // The pre-paint theme script is precached (a cold start offline never flashes the wrong theme).
   expect(entries.some((e) => new URL(e.url).pathname === "/theme-init.js")).toBe(true);
+  // The two Task 14 Help articles are install-time shells.
+  for (const path of ["/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga"]) {
+    expect(entries.some((e) => e.cache.startsWith("pn-shell-") && new URL(e.url).pathname === path), path).toBe(true);
+  }
 });
 
 test("Clear data on this device removes the data caches; the app still opens offline", async ({ page, context }) => {
   await firstVisit(page);
+  // A trip shown once stores the walk graph (and the overview stored the lines).
+  await setEnds(page);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toContainText("Approximate walking path");
+  await expect
+    .poll(async () => (await page.evaluate(() => caches.keys())).filter((n) => /^pn-(lines-f\d+|walk-graph)-/.test(n)).length)
+    .toBe(2);
   await page.goto(`/app/stops/${A1_ID}`);
   await expect(page.getByTestId("stop-detail")).toBeVisible();
   await page.goto("/app/more");
+  // The map under More may load the lines afresh after clearing, as a new visit would: keep them
+  // from coming back so the check below sees only what Clear data left.
+  await context.route(/\/api\/v1\/network\/(lines|walk-graph)\//, (route) => route.abort("internetdisconnected"));
   await page.getByRole("button", { name: "Clear data on this device" }).click();
   await page.getByTestId("settings-clear-dialog").getByRole("button", { name: "Remove" }).click();
   await expect(page.getByTestId("settings-status")).toHaveText("Data on this phone removed. Settings are back to their defaults.");
@@ -232,6 +365,7 @@ test("Clear data on this device removes the data caches; the app still opens off
   // the current head and snapshot afresh, as a new visit would, so those may be back.)
   expect(names.filter((n) => /^pn-(search-index|reference)-/.test(n))).toEqual([]);
   expect((await cacheEntries(page)).some((e) => e.url.endsWith(`/api/v1/stops/${A1_ID}`))).toBe(false);
+  expect((await cacheEntries(page)).filter((e) => /\/api\/v1\/network\/(lines|walk-graph)\//.test(e.url))).toEqual([]);
   expect(names.some((n) => n.startsWith("pn-shell-"))).toBe(true);
   expect(names.some((n) => n.includes("precache"))).toBe(true);
   // The app code stays: the map still opens offline.
@@ -266,12 +400,13 @@ test("update: Later hides the card; More still offers Update ready — Reload", 
   // Records what the page asks a worker to do (activation itself is covered by the Reload tests:
   // under heavy parallel load Chromium may hold a waiting version back while the active worker is
   // busy, which would only make this test slow, not tell us more).
+  // Recorded in sessionStorage, not on window: SKIP_WAITING activates the new version and the page
+  // may reload before the poll below reads it, which would reset a window variable.
   await page.addInitScript(() => {
     const post = ServiceWorker.prototype.postMessage;
-    const w = window as unknown as { __swMessages: unknown[] };
-    w.__swMessages = [];
     ServiceWorker.prototype.postMessage = function (this: ServiceWorker, message: unknown, ...rest: unknown[]) {
-      w.__swMessages.push(message);
+      const seen = JSON.parse(sessionStorage.getItem("__swMessages") ?? "[]") as unknown[];
+      sessionStorage.setItem("__swMessages", JSON.stringify([...seen, message]));
       return (post as (...args: unknown[]) => void).call(this, message, ...rest);
     } as typeof post;
   });
@@ -288,7 +423,7 @@ test("update: Later hides the card; More still offers Update ready — Reload", 
   await expect(page.getByTestId("update-prompt")).toHaveCount(0);
   await row.click();
   await expect
-    .poll(() => page.evaluate(() => (window as unknown as { __swMessages?: unknown[] }).__swMessages ?? []).catch(() => ["reloaded"]))
+    .poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("__swMessages") ?? "[]") as unknown[]).catch(() => []))
     .toEqual(expect.arrayContaining([expect.objectContaining({ type: "SKIP_WAITING" })]));
 });
 

@@ -100,6 +100,8 @@ async function expectAxeClean(page: Page) {
 }
 
 test("plan → Save → the card on Saved; offline the card still opens and shows the steps", async ({ page, context }) => {
+  // 09:30 Manila: off-peak. The card's estimate uses the cached snapshot's model with ×1.3 walks.
+  await page.clock.setFixedTime(new Date("2026-10-16T09:30:00+08:00"));
   await openApp(page);
   await planAndOpenTrip(page);
   const save = page.getByTestId("trip-save");
@@ -118,7 +120,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(card).toContainText("Available offline");
   await expect(card).toContainText("From Pinned location");
   await expect(card.getByRole("heading", { level: 2 })).toHaveText("Pinned location");
-  await expect(card).toContainText("Time not available · Estimate ₱14–₱17 · data from 15 Oct 2026");
+  await expect(card).toContainText("Estimate 8–16 min + waiting (unknown) · Estimate ₱14 · data from 16 Oct 2026");
   await expect(card).toContainText("Loop A");
   await expect(card).not.toContainText("Changed since saved");
 
@@ -148,7 +150,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(page).toHaveURL(/\/app$/);
   const detail = page.getByTestId("trip-detail");
   await expect(detail).toBeVisible();
-  await expect(detail.getByTestId("trip-reopen-note")).toContainText("shown as saved, with data from 15 Oct 2026");
+  await expect(detail.getByTestId("trip-reopen-note")).toContainText("shown as saved, with data from 16 Oct 2026");
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps).toHaveCount(4);
@@ -169,7 +171,7 @@ test("reopening online re-plans on the current data and opens the same option", 
   await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
   // Same revision: the live option, without the "shown as saved" note.
   await expect(detail.getByTestId("trip-reopen-note")).toHaveCount(0);
-  await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14–₱17");
+  await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
 });
 
 test("reopening after the network changed: the same rides are re-planned and say so; a gone option shows the options as changed", async ({ page }) => {
@@ -192,7 +194,7 @@ test("reopening after the network changed: the same rides are re-planned and say
   const save = page.getByTestId("trip-save");
   await expect(save).toHaveAttribute("data-state", "older");
   await expect(save).toHaveText("Update saved copy");
-  await expect(page.getByTestId("trip-save-older")).toHaveText("Your saved copy uses data from 15 Oct 2026.");
+  await expect(page.getByTestId("trip-save-older")).toHaveText("Your saved copy uses data from 16 Oct 2026.");
   await save.click();
   await expect(save).toHaveAttribute("data-state", "saved");
   await expect(page.getByTestId("trip-action-status")).toHaveText("Saved copy updated to the current data.");
@@ -221,7 +223,7 @@ test("Share copies a text-only summary (no coordinates, no links) when the share
   expect(text).toContain(BADGE);
   expect(text).toContain("Board Loop A at Plaza Rizal (A1)");
   expect(text).toContain("Avenue Square (A5)");
-  expect(text).toContain("Estimate ₱14–₱17");
+  expect(text).toContain("Fare: Estimate ₱14 · from reported fare rules");
   expect(text).not.toMatch(/\d+\.\d{3,}/);
   expect(text).not.toMatch(/https?:|www\./);
 

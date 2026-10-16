@@ -1,11 +1,13 @@
 // Planner over the real provisional Loop A / Loop B order, plus a seeded property test.
+import { createHash } from "node:crypto";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { haversineMeters } from "@/domain/geo/geometry";
 import { isInsideNaga } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
 import { planTrip, savesWalking, type PlanLeg, type TripPlan } from "@/domain/planner/plan";
-import { realLoopsSnapshot } from "../fixtures/real-loops";
+import { legFareEstimate } from "@/domain/planner/fares";
+import { realLoopsSnapshot, realLoopsSnapshotWithMeasures } from "../fixtures/real-loops";
 
 const snap = realLoopsSnapshot();
 const stop = (code: string) => snap.stops.find((s) => s.source.code === code)!;
@@ -136,5 +138,113 @@ describe("planTrip on real Loop A / Loop B", () => {
       { seed: 20261015, numRuns: 300 },
     );
     expect(withOptions / runs).toBeGreaterThan(0.6);
+  }, 60_000); // CPU-heavy: 300 real-network plans (timed out at 5 s under full-suite load)
+});
+
+// ---------------------------------------------------------------- D13 regression (Task 8)
+
+/** Fields added in Increment D Task 8 (ride leg and leg fare); stripped so the baseline compares like with like. */
+const D13_LEG_KEYS = ["mode", "fleet", "distanceBasis", "boardMeasureM", "alightMeasureM", "stopMeasuresM"];
+const D13_FARE_KEYS = ["span", "basis", "reportCodes"];
+
+function withoutD13Fields(plan: TripPlan): unknown {
+  return JSON.parse(JSON.stringify(plan, (key, value: unknown) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      const o = { ...(value as Record<string, unknown>) };
+      if (o.kind === "ride") for (const k of D13_LEG_KEYS) delete o[k];
+      if ("ruleCodes" in o) for (const k of D13_FARE_KEYS) delete o[k];
+      return o;
+    }
+    return value;
+  }));
+}
+
+/** 200 seeded trips near the real stops (same generator shape as the property above). */
+function regressionTrips(): [LatLng, LatLng][] {
+  const point = fc
+    .record({ i: fc.integer({ min: 0, max: snap.stops.length - 1 }), e: fc.integer({ min: -450, max: 450 }), n: fc.integer({ min: -450, max: 450 }) })
+    .map(({ i, e, n }) => near(snap.stops[i]!, e, n));
+  return fc.sample(fc.tuple(point, point), { seed: 20261016, numRuns: 200 });
+}
+
+describe("planTrip without stop measures (regression baseline, captured before D13)", () => {
+  it("is identical to the pre-D13 planner output on 200 seeded real-loop trips", () => {
+    const plans = regressionTrips().map(([o, d]) => withoutD13Fields(planTrip(snap, o, d)));
+    const digest = createHash("sha256").update(JSON.stringify(plans)).digest("hex");
+    const options = plans.reduce<number>((s, p) => s + (p as TripPlan).options.length, 0);
+    expect({ options, digest }).toEqual(REGRESSION_BASELINE);
+  }, 60_000);
+});
+
+/** Captured from the planner at 98233e8 (before D13), with the fixture's measures null. */
+describe("planTrip on real Loop A / Loop B with the captured path measures (D13)", () => {
+  const measured = realLoopsSnapshotWithMeasures();
+
+  it("property: every ride is measured along the approximate path, priced on that distance, with its route's fleet", () => {
+    const point = fc
+      .record({ i: fc.integer({ min: 0, max: measured.stops.length - 1 }), e: fc.integer({ min: -450, max: 450 }), n: fc.integer({ min: -450, max: 450 }) })
+      .map(({ i, e, n }) => near(measured.stops[i]!, e, n));
+    let rides = 0;
+    fc.assert(
+      fc.property(point, point, (o, d) => {
+        fc.pre(isInsideNaga(o) && isInsideNaga(d));
+        const plan = planTrip(measured, o, d);
+        assertWellFormed(plan, o, d);
+        for (const opt of plan.options) {
+          for (const leg of opt.legs) {
+            if (leg.kind !== "ride") continue;
+            rides++;
+            const variant = measured.variants.find((v) => v.variantId === leg.variantId)!;
+            const route = measured.routes.find((r) => r.routeId === variant.routeId)!;
+            expect(leg.distanceBasis).toBe("approximate_path");
+            const lap = variant.pathLengthM!;
+            expect(leg.distanceMeters).toBe(Math.round(((leg.alightMeasureM! - leg.boardMeasureM! + lap) % lap)));
+            expect(leg.fare).toEqual(legFareEstimate(leg.distanceMeters, measured.fareRules, { classes: "traditional", reports: [] }));
+            expect(leg.fare).toMatchObject({ span: "traditional_rule", ruleCodes: ["F01"] });
+            expect(leg.fleet).toEqual(route.fleet);
+            expect(leg.fleet.label).toBe("Traditional jeepneys");
+            expect(leg.mode).toBe("jeepney");
+          }
+          expect(opt.rideMeters).toBe(opt.legs.reduce((s, l) => s + (l.kind === "ride" ? l.distanceMeters : 0), 0));
+        }
+      }),
+      { seed: 20261016, numRuns: 150 },
+    );
+    expect(rides).toBeGreaterThan(50);
+  }, 60_000);
+
+  it("keeps the option ids of trips whose rides are the same with and without measures", () => {
+    const o = near(stop("B1"), 0, -50);
+    const d = near(stop("B3"), 60, 0);
+    const ids = (s: typeof snap) => planTrip(s, o, d).options.map((x) => x.id);
+    expect(ids(measured)).toEqual(ids(snap));
   });
 });
+
+describe("ruling 2026-10-16 on the regression trips: the Loops' traditional-only fleet prices from F01 alone", () => {
+  it("changes only fares (same options, legs and distances) and pins how many option fares change", () => {
+    const withFleets = { ...snap, routes: realLoopsSnapshotWithMeasures().routes };
+    const withoutFares = (p: unknown) => JSON.parse(JSON.stringify(p, (k, v: unknown) => (k === "fare" ? null : v))) as unknown;
+    let changed = 0;
+    let options = 0;
+    for (const [o, d] of regressionTrips()) {
+      const before = planTrip(snap, o, d);
+      const after = planTrip(withFleets, o, d);
+      expect(withoutFares(withoutD13Fields(after))).toEqual(withoutFares(withoutD13Fields(before)));
+      after.options.forEach((x, i) => {
+        options++;
+        const b = before.options[i]!.fare;
+        if (x.fare.minCentavos !== b.minCentavos || x.fare.maxCentavos !== b.maxCentavos) changed++;
+        if (x.rides > 0) {
+          expect(x.fare.minCentavos).toBe(b.minCentavos); // the minimum was always F01's
+          expect(x.fare.maxCentavos!).toBeLessThan(b.maxCentavos!); // F01 max < F02 max at every distance
+        }
+      });
+    }
+    expect({ options, changed }).toEqual(FLEET_RULING_CHANGES);
+  }, 60_000);
+});
+
+const REGRESSION_BASELINE = { options: 308, digest: "9f976467c40ab082caf3fa57837bfdf9f375e7cbe4a14e00a2ef890d7da87c1d" };
+/** Ride options among the 200 regression trips whose fare changes under the traditional-only ruling. */
+const FLEET_RULING_CHANGES = { options: 308, changed: 273 }; // every ride option; the other 35 are walk-only

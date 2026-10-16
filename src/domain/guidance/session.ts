@@ -14,6 +14,7 @@
 // `startedAt` is only for that expiry.
 import { z } from "zod";
 import { planOptionSchema } from "../api/plan";
+import { etaModelSchema } from "../api/schemas";
 import type { LocationFix } from "../geo/location-fix";
 import { CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, rideProgress, usableFix, type RideMemory } from "./progress";
 import { guidanceSteps, type GuidanceStep, type GuidanceTrip } from "./steps";
@@ -157,6 +158,8 @@ const tripSchema = z.strictObject({
   stops: z.array(z.strictObject({ id: z.string().max(64), name: z.string().max(200), code: z.string().max(32).nullable() })).max(500),
   variants: z.array(z.strictObject({ variantId: z.string().max(64), loopDirection: z.enum(["clockwise", "counterclockwise"]).nullable() })).max(20),
   destinationLabel: z.string().max(200).nullable(),
+  etaModel: etaModelSchema.nullable().optional(),
+  walkLengths: z.array(z.number().min(0).nullable()).max(50).optional(),
 });
 
 const rideSchema = z.strictObject({

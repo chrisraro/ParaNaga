@@ -35,7 +35,7 @@ export function parseHelpTab(raw: string | null): HelpTab {
 }
 
 export const INDEPENDENT_NOTE = "ParaNaga is an independent commuter guide. It is not an official City Government app.";
-export const DATA_FOOTER = "No live arrival times. Stop alerts work only while ParaNaga is open on your screen.";
+export const DATA_FOOTER = "ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.";
 export const SAFETY_TIPS = [
   "Wait off the road, where other passengers wait.",
   "Ask the driver where the jeepney goes before you board; signboards are not verified yet.",
@@ -48,6 +48,7 @@ export const BADGE_MEANINGS: readonly { variant: BadgeVariant; text: string }[] 
   { variant: "candidate", text: "From a public map, not yet checked. Loops A and B use these pins for unverified trip suggestions." },
   { variant: "documented", text: "Named in documents, with no mapped location yet. Treat it as a lead, not a route." },
   { variant: "unverified-route", text: "A trip built from mapped pins. Confirm with the driver before you ride." },
+  { variant: "approximate-path", text: "Traced along OpenStreetMap roads between candidate pins. Not a surveyed or official route shape." },
 ];
 
 const ICON = { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: false } as const;
@@ -56,6 +57,8 @@ const ARTICLE_ICONS: Record<ArticleSlug, string> = {
   "how-trips-are-planned": "M4 19c4 0 4-14 8-14s4 14 8 14",
   "why-stops-are-not-verified": "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01",
   "using-paranaga-offline": "M3 10a13 13 0 0 1 18 0M6.5 13.5a8 8 0 0 1 11 0M10 17a3 3 0 0 1 4 0M4 4l16 16",
+  "how-times-are-estimated": "M12 8v4l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z",
+  "vehicle-types-in-naga": "M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2M10 18H8M7 18a2 2 0 1 1-4 0M17 18a2 2 0 1 1-4 0",
 };
 
 function Tile({ d }: { d: string }) {

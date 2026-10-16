@@ -374,6 +374,84 @@
   color: var(--pn-label2);
   font-size: 15px;
 }
+.pn-trip-detail__time {
+  font-weight: 600;
+  color: var(--pn-label);
+}
+.pn-trip-detail__peak {
+  margin: 0;
+  color: var(--pn-gold-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pn-trip-detail__basis-btn {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pn-accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.pn-trip-detail__basis-btn:focus-visible {
+  outline: 2px solid var(--pn-accent);
+  outline-offset: 2px;
+}
+.pn-trip-card__peak {
+  display: block;
+  margin: 0;
+  color: var(--pn-gold-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pn-trip-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.pn-eta-sheet__lead {
+  margin: 0 0 16px;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.pn-eta-sheet__list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-eta-sheet__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--pn-sep);
+}
+.pn-eta-sheet__item:last-child {
+  border-bottom: none;
+}
+.pn-eta-sheet__text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--pn-label);
+}
+.pn-eta-sheet__assumptions {
+  margin: 2px 0 0 16px;
+  padding: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+.pn-eta-sheet__empty {
+  color: var(--pn-label2);
+  font-size: 15px;
+}
 
 /* Timeline: 36px rail + body, like the artboard's grid. */
 .pn-tl {
@@ -641,4 +719,60 @@
 /* "Start trip" (guidance, Task 10): the primary action of Trip detail (>= 48 px). */
 .pn-trip-start {
   min-height: 52px;
+}
+
+/* "Tricycle may serve this" (D15): an information card below the options, not an option. */
+.pn-trike-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring);
+  border-left: 4px solid var(--pn-mode-tricycle);
+  color: var(--pn-label);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.pn-trike-hint p {
+  margin: 0;
+}
+.pn-trike-hint__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+.pn-trike-hint__icon {
+  display: inline-flex;
+}
+.pn-trike-hint__match {
+  font-weight: 600;
+}
+.pn-trike-hint__sources {
+  color: var(--pn-label2);
+  font-size: 13px;
+}
+.pn-trike-hint__btn {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: 4px;
+}
+
+/* Low-data opt-in: download the walk graph (Task 15 follow-up). */
+.pn-trip-paths-offer {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--pn-sep);
+  border-radius: 12px;
+}
+.pn-trip-paths-offer__text {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.pn-trip-paths-offer__btn {
+  min-height: 44px;
 }

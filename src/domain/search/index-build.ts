@@ -3,8 +3,9 @@
 // Server-side only (it hashes with node:crypto); the client uses ./normalize.ts.
 //
 // Honesty rules:
-//  - only OpenStreetMap places and mapped-pin places carry coordinates; terminals, barangays and
-//    study labels get `location: null` (nothing is on file, nothing is inferred);
+//  - only OpenStreetMap places, mapped-pin places and terminals with an OpenStreetMap coordinate
+//    carry coordinates; barangays, study labels and terminals without one get `location: null`
+//    (nothing is on file, nothing is inferred);
 //  - a mapped-pin place is a group of candidate pins sharing one normalized raw label within 60 m
 //    of the group's first pin; blank labels are never places;
 //  - legacy (1993) names are historical hints with mappedRouteCode null.
@@ -34,8 +35,11 @@ export type SearchSourceRoute = {
   groupNumber: number | null;
   evidenceLevel: SearchIndex["routes"][number]["evidenceLevel"];
   hasTrial: boolean;
-  /** Legal street lists (inbound, outbound, circuit) and trial circuits, verbatim, in order. */
+  /** Legal street lists (inbound, outbound, circuit, feeder branch text) and trial circuits, verbatim, in order. */
   streetLists: string[][];
+  mode: SearchIndex["routes"][number]["mode"];
+  /** fleetLabel of the published vehicle-class records. */
+  fleetLabel: string;
 };
 
 export type SearchIndexSource = {
@@ -43,7 +47,7 @@ export type SearchIndexSource = {
   places: OsmPlace[];
   stops: SearchSourceStop[];
   routes: SearchSourceRoute[];
-  terminals: { code: string; name: string; locationText: string | null; modes: string[] }[];
+  terminals: SearchIndex["terminals"][number][];
   barangays: { name: string; surveyStatus: string; sourceCode: string | null }[];
   studyLabels: {
     code: string;
@@ -150,8 +154,10 @@ export function buildSearchIndex(source: SearchIndexSource): SearchIndex {
       evidenceLevel: r.evidenceLevel,
       hasTrial: r.hasTrial,
       streets: distinct(r.streetLists.flat()),
+      mode: r.mode,
+      fleetLabel: r.fleetLabel,
     })),
-    terminals: source.terminals.map((t) => ({ ...t, location: null })),
+    terminals: source.terminals.map((t) => ({ ...t, location: t.location ? { ...t.location } : null })),
     barangays: source.barangays.map((b, i) => ({
       key: barangayKeyList[i]!,
       name: b.name,

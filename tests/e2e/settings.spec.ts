@@ -46,7 +46,7 @@ async function openSettings(page: Page) {
   await page.goto("/app/more");
   await expect(settingsHeading(page)).toBeVisible();
   // Hydrated: the controls respond once React owns them.
-  await expect(page.getByTestId("settings-data-revision")).toContainText("osm-places-2026-10-15");
+  await expect(page.getByTestId("settings-data-revision")).toContainText("modes-lines-2026-10-16");
 }
 
 async function openHome(page: Page) {
@@ -122,7 +122,7 @@ test.describe("phone", () => {
     await expect(page.getByTestId("settings-display")).toContainText("Reduce motionFollows your device setting");
     await expect(page.getByTestId("settings-location")).toContainText("Location access");
     await expect(page.getByText("Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.")).toBeVisible();
-    await expect(page.getByTestId("settings-data-revision")).toHaveText("Data revisionosm-places-2026-10-15 · Oct 15, 2026");
+    await expect(page.getByTestId("settings-data-revision")).toHaveText("Data revisionmodes-lines-2026-10-16 · Oct 16, 2026");
     // Help (Task 11) opens from the About group.
     await expect(page.getByTestId("settings-help")).toHaveAttribute("href", "/app/help");
     await expect(tabBar(page).getByRole("link", { name: "More", exact: true })).toHaveAttribute("aria-current", "page");
@@ -195,7 +195,7 @@ test.describe("phone", () => {
     await openHome(page);
     await expect.poll(() => tileRequests.length).toBeGreaterThan(0);
     await expect(page.getByTestId("map-low-data-notice")).toHaveCount(0);
-    await expect(page.locator(".pn-attribution")).not.toContainText("Boundary");
+    await expect(page.locator(".pn-attribution")).not.toContainText("Map data");
 
     // Low-data mode on (stored before load): no tile layer, no tile request.
     await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ lowData: true })), PREFS_KEY);
@@ -207,7 +207,7 @@ test.describe("phone", () => {
     await expect(lowData).toHaveText("Map background off (low-data mode)Show background once");
     // Pins still show.
     await expect(page.getByTestId("naga-map")).not.toHaveAttribute("data-stop-pins", "0");
-    await expect(page.locator(".pn-attribution")).toContainText("Boundary © OpenStreetMap contributors");
+    await expect(page.locator(".pn-attribution")).toContainText("Map data © OpenStreetMap contributors");
     await expect(page.locator(".leaflet-tile-pane .leaflet-layer")).toHaveCount(0);
     // Pan and zoom: still nothing requested.
     await page.getByRole("button", { name: "Zoom in" }).click();

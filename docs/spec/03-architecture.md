@@ -91,6 +91,10 @@ Dependency rule: `domain` imports nothing from `server` or `client`; `client` im
 | `/[locale]` map shell | RSC shell + client map island | Static shell; data via API |
 | `GET /api/v1/network/snapshot/:revisionId` | Route handler | `public, s-maxage=31536000, immutable` |
 | `GET /api/v1/network/head` | Route handler | `s-maxage=30`; returns current published revision id |
+| `GET /api/v1/network/search-index/:revisionId` | Route handler | `public, s-maxage=31536000, immutable`; 404 unless the revision is the published one |
+| `GET /api/v1/network/lines/:revisionId` | Route handler | Immutable. The approximate ride path of every variant (traced variants with their off-list segments and stop measures, untraced variants with their reason), each labelled "Approximate path, not a verified route shape" with its road snapshot (`OSMR-…`) and the ODbL attribution. 404 when the revision is not the published one or was published without paths; 503 (never cached) on an incomplete read |
+| `GET /api/v1/network/walk-graph/:revisionId` | Route handler | Immutable. The stored walk-graph payload served verbatim as `application/json`, `ETag` = its sha256; a matching `If-None-Match` gets 304 without reading the payload. Size and hash are checked and the text re-parsed as format v1 before sending, else 503 (never cached). 404 as for lines |
+| `GET /api/v1/terminals/:code` | Route handler | `s-maxage=300, stale-while-revalidate=600`. Terminal fields with the OSM coordinate provenance, routes naming it, regional services leaving from it with fare **estimates** (the only place regional fare rules appear) |
 | `GET /api/v1/stops?bbox=&status=` | PostGIS `geog && ST_MakeEnvelope` | `s-maxage=300, stale-while-revalidate=600` |
 | `POST /api/v1/plan` | In-process planner | `no-store`; origin/destination never logged |
 | `GET /api/v1/search?q=` | Alias + trigram + optional geocoder | `s-maxage=60` |
@@ -128,6 +132,15 @@ Built per **published revision** from `transit.*` into an immutable structure, a
 - **Transfer edges:** curb→curb via the walk graph, bounded (default ≤ 400 m).
 
 At full-city coverage the graph stays small (< 5 000 nodes, < 20 000 edges, < 2 MB JSON, < 50 ms build). Each serverless instance caches it by revision id.
+
+### Increment D additions (all modes and lines)
+
+- **Path distances.** A ride leg's metres are measured along the variant's approximate path (`measure(alight) − measure(board)`, modulo the path length on a circuit) when every stop has a measure and the measures are in ride order (non-decreasing on a line, exactly one lap on a circuit). Otherwise the leg falls back to the straight-line stop-to-stop sum. Each ride leg says which (`distanceBasis`: `approximate_path` or `stop_to_stop_straight_line`) and the UI shows "≈ 3.4 km along the approximate path" or "≈ 3.1 km stop to stop (straight line)", never an exact distance. Walk caps stay straight-line.
+- **Vehicle classes on ride legs.** A ride leg carries its route's fleet summary (traditional, modern, mixed traditional and modern on R4 and R7, or "type not confirmed" when a cached snapshot has no fleet record). Planning is still jeepney only; tricycles, UV Express, buses and rail are shown but never planned.
+- **On-device walk routing.** The walk graph (`/api/v1/network/walk-graph/:revisionId`, roughly 80 KB gzipped, at most 220 KB) is fetched lazily by the phone, never sent with a plan. `routeWalk` (A-star over the decoded graph, snapping within 100 m) gives each walk leg and the direct origin to destination walk a street path with its length, or a straight line with the reason (no path, graph loading, offline and never stored, skipped in low-data mode). Paths are labelled "Approximate walking path · crossings not checked".
+- **D14 "must save walking" re-check.** After the walk paths exist, a ride option is kept only if its total walking is shorter than walking the whole way, compared like with like: graph path lengths when the direct walk and every walk leg have one, else the x 1.3 straight-line estimates. Dropped options are removed; if the recommended one is dropped the remaining options are relabelled in the fixed label order; if none remain the plan becomes `coverage = none` with reason `walk_shorter`. This runs in `src/domain/trip/enrich.ts` on the device, online and offline.
+- **Time estimates.** `src/domain/eta` computes a range from the snapshot's `eta_param` rows (walk speed times a slowdown factor; jeepney speed off-peak or peak; peak windows in Manila time). The peak band is decided per trip: if the trip, from departure to the high end of the estimate, touches a peak window, every ride uses the peak band. Waiting time is unknown and never added. Tricycle and other modes get no minutes (no speed on file). Texts read "Estimate 18–27 min + waiting (unknown)" and "≈ 14–18 min walk"; no clock time and no word "arrival" is ever shown. No model on file gives "Time not available".
+- **Tricycle hint.** A card "Tricycle may serve this" appears under the options (never as a ranked option) when a published tricycle terminal with a coordinate is within 600 m of the start or destination or a tricycle feeder path passes within 300 m. It states the ₱15 minimum (Ordinance 2024-002), that discounts are not applied and to confirm with the driver; no minutes and no drawn ride line.
 
 ### Access/egress candidates
 1. `ST_DWithin(geog, origin, maxWalk)` over published stop points (GiST index), top 12 per side.
@@ -176,6 +189,10 @@ Stored as `{ revisionId, legs: [{ variantRevisionId, fromStopPointId, toStopPoin
 - Trip total: sum of known legs + `completeness = exact | estimate | partial | unknown` (same enum as F-B1) → "₱28 + 1 unknown leg".
 - Exclusive tricycle quotes are never summed with shared fares as if comparable.
 - Seed rules F01–F05 import as `draft`, `publish_exact_trip_fares=false`. F05 (EASTTODA ₱13 student) imports as a **fare observation** linked to F03 with an open `fare_conflict`.
+
+**Implemented for the provisional planner (`src/domain/planner/fares.ts`):** the planner prices a ride from the fare rules of the route's fleet. Traditional-only routes (R1 to R3, R5, R6, R8) use F01 alone. A **mixed fleet** (R4 and R7: traditional and modern jeepneys) spans the traditional minimum to the modern maximum, where the modern maximum is the larger of F02's maximum and the traditional maximum plus the riders' reported modern delta (an observation, never a rule; when it sets the maximum its code is listed and the basis becomes `fare_rules_and_reports`). A route with no fleet record (an older cached snapshot) spans both rules. The distance is the ride's D13 distance (approximate path or straight line). The seed's rounding is unknown, so ranges are widened (minimum rounded down, maximum rounded up), discounts are never applied, and a missing rule gives "unavailable", never a hard-coded fallback.
+
+**Regional services** (`src/domain/fares/regional.ts`): UV Express, bus and regional jeepney fares are per-km **estimates** from the national rates effective 28 Sep 2026 (rules F06 to F12; F01 for a regional jeepney), computed from the service's recorded `distance_km` (the length of its OSM relations, recorded by the road fetch). They appear only on terminal and regional service detail, always as an estimate with "operator prices may differ", and never enter the planner. Without a distance only the rates are shown.
 
 Property tests: monotonic in distance; a discount never increases a fare; unknown never coerces to 0; no floating-point money.
 
@@ -289,6 +306,15 @@ Accepted types: JPEG, PNG, WebP. HEIC is converted to JPEG **on the client** (ca
   - Public stop/route JSON → StaleWhileRevalidate.
   - PMTiles ranges → CacheFirst **only** for areas the user chose to download.
 - Runtime caching is an **allow-list of public paths** only (`/api/v1/network/*`, `/api/v1/stops`, public route/stop JSON, tiles, static assets). Everything else is network-only, including navigations to the `(account)` and `admin` groups, Server Action POSTs, RSC requests (`?_rsc=` / `RSC` header), `/api/v1/me/*`, `/api/v1/reports/*`, and any `Cache-Control: private` response. An e2e test inspects Cache Storage after an authenticated session.
+- Increment D additions (allow-listed, query-free paths only; any query string, POST or other origin is network-only):
+  - `network/search-index/:revisionId` → CacheFirst, last 3 revisions kept.
+  - `network/lines/:revisionId` → CacheFirst (`pn-lines-f<format>-<build>`), last 3 revisions kept.
+  - `network/walk-graph/:revisionId` → CacheFirst (`pn-walk-graph-<build>`), last **2** revisions kept; the handoff accepts a body up to 2 MB and refuses 3 MB.
+  - `terminals/:code`, `routes`, `routes/:code`, `stops/:id`, `sources` → StaleWhileRevalidate reference cache (200 entries, 30 days).
+  - `POST /api/v1/plan` is never cached.
+  - A stored copy that no longer validates is dropped from the data caches and refetched once with `cache: "no-cache"`; if still invalid the screen shows its error state.
+  - Low-data mode or Data Saver never downloads the walk graph on its own (a visible opt-in offers it in trip detail); a copy already stored is used. Offline with no stored graph, walks are drawn as straight dotted lines with "Street paths need a connection the first time."
+  - Terminals, routes and modes come from the cached snapshot and search index; "Clear data" removes lines and the walk graph with the other data caches.
 - IndexedDB: `savedCards`, `snapshotMeta { revisionId, publishedAt }`, `prefs`, `reportDrafts`. On sign-out, account-linked IndexedDB stores **and** any non-public Cache Storage entries are cleared.
 - On reconnect, compare `snapshotMeta` with `/network/head`; if changed, refetch and flag saved cards whose legs changed.
 - Offline banner: "Offline — data from {date}. Fares may have changed."

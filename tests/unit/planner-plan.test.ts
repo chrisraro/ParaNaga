@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { haversineMeters } from "@/domain/geo/geometry";
 import { isInsideNaga } from "@/domain/geo/naga";
+import type { RouteFareReport } from "@/domain/api/schemas";
+import { fleetSummary } from "@/domain/modes/fleet";
 import { PLAN_LABELS, planTrip, savesWalking, type PlanOption, type RideLeg } from "@/domain/planner/plan";
 import { LINE_VARIANT_ID, LOOP_VARIANT_ID, STOP_ID, at, synthetic, syntheticSnapshot } from "../fixtures/synthetic/planner-network";
 
@@ -155,5 +157,93 @@ describe("planTrip on the synthetic network", () => {
     expect(() => planTrip(snap, at(0, 0), at(1, 1), { maxAccessWalkM: -1 })).toThrow();
     expect(() => planTrip(snap, at(0, 0), at(1, 1), { maxAccessWalkM: 601 })).toThrow(/600/);
     expect(() => planTrip(snap, at(0, 0), at(1, 1), { maxTransferWalkM: 401 })).toThrow(/400/);
+  });
+});
+
+describe("ride legs: D13 distance basis, mode and fleet (Task 8)", () => {
+  const MIXED = fleetSummary([
+    { code: "FL-SYN-TRAD", vehicleClass: "traditional_puj", evidenceLevels: ["legal_plan", "owner_confirmation"], status: "operating",
+      firstReportedOn: null, lastReportedOn: "2026-10-16", unitsNote: null, aircon: null, airconSourceCodes: [], cooperatives: [], sourceCodes: ["SYN"] },
+    { code: "FL-SYN-MOD", vehicleClass: "modern_puj", evidenceLevels: ["owner_confirmation"], status: "operating",
+      firstReportedOn: null, lastReportedOn: "2026-10-16", unitsNote: null, aircon: true, airconSourceCodes: ["SYN"], cooperatives: [], sourceCodes: ["SYN"] },
+  ], "jeepney");
+  const REPORT: RouteFareReport = { code: "FO-SYN-MOD", vehicleClass: "modern_puj", deltaQualifier: "range", deltaCentavosLow: 300,
+    deltaCentavosHigh: 500, observedOn: "2026-10-16", sourceCodes: ["SYN"] };
+  const route = (i: number, fleet = fleetSummary([], "jeepney"), fareReports: RouteFareReport[] = []) => {
+    const v = snap.variants[i]!;
+    return { routeId: v.routeId, routeCode: v.routeCode, routeName: v.routeName, mode: "jeepney" as const, serviceStatus: null, fleet, fareReports };
+  };
+  /** Loop S with path measures 2300 m apart (ring 13 800 m): P1 → P3 is 4600 m along the path, ~2000 m straight. */
+  const measured = () => {
+    const s = syntheticSnapshot();
+    s.variants[0] = { ...s.variants[0]!, measuresM: [0, 2300, 4600, 6900, 9200, 11500], pathLengthM: 13_800 };
+    return s;
+  };
+
+  it("without measures: straight-line distance, labelled so, no measures", () => {
+    const ride = rideLegs(planTrip(snap, at(0, -100), at(2000, -100)).options[0]!)[0]!;
+    expect(ride).toMatchObject({ distanceBasis: "stop_to_stop_straight_line", boardMeasureM: null, alightMeasureM: null, stopMeasuresM: null });
+    expect(ride.distanceMeters).toBeLessThan(2010);
+  });
+
+  it("with measures: distance along the approximate path, the measures, and a fare on that distance", () => {
+    const plan = planTrip(measured(), at(0, -100), at(2000, -100));
+    const o = plan.options[0]!;
+    const ride = rideLegs(o)[0]!;
+    expect(ride).toMatchObject({
+      distanceMeters: 4600, distanceBasis: "approximate_path", boardMeasureM: 0, alightMeasureM: 4600, approximate: true, pathVerified: false,
+    });
+    expect(ride.fare).toMatchObject({ minCentavos: 1400, maxCentavos: 2000, status: "estimate" }); // 4.6 km, not ~2.0 km
+    expect(o.rideMeters).toBe(4600);
+    expect(ride.stopMeasuresM).toEqual([0, 2300, 4600]);
+  });
+
+  it("wraps a circuit ride that passes the start of the path", () => {
+    // P5 → P6 → P1 → P2: (2300 − 9200) mod 13 800 = 6900 m
+    const plan = planTrip(measured(), at(1000, 1100), at(1000, -100));
+    const ride = rideLegs(plan.options[0]!).find((l) => l.variantId === LOOP_VARIANT_ID)!;
+    expect(ride.stops.map((s) => s.id)).toEqual(["P5", "P6", "P1", "P2"].map((c) => STOP_ID[c]));
+    expect(ride).toMatchObject({ distanceMeters: 6900, boardMeasureM: 9200, alightMeasureM: 2300 });
+    // Per-stop measures (guidance's time left) continue past the path length instead of wrapping.
+    expect(ride.stopMeasuresM).toEqual([9200, 11500, 13800, 16100]);
+  });
+
+  it("copies the mode and the route's fleet (by routeId) onto the ride leg", () => {
+    const s = { ...syntheticSnapshot(), routes: [route(0, MIXED), route(1)] };
+    const ride = rideLegs(planTrip(s, at(0, -100), at(2000, -100)).options[0]!)[0]!;
+    expect(ride.mode).toBe("jeepney");
+    expect(ride.fleet).toEqual(MIXED);
+    expect(ride.fleet.classes.find((c) => c.vehicleClass === "modern_puj")).toMatchObject({ aircon: true, evidenceLevels: ["owner_confirmation"] });
+  });
+
+  it("an older snapshot without routes[]: fleet 'Vehicle type not confirmed', never a guessed class", () => {
+    const ride = rideLegs(planTrip(snap, at(0, -100), at(2000, -100)).options[0]!)[0]!;
+    expect(ride.fleet).toMatchObject({ label: "Vehicle type not confirmed", classes: [] });
+  });
+
+  it("prices a mixed-fleet ride from the traditional minimum to the modern maximum, with the riders' report", () => {
+    const s = { ...syntheticSnapshot(), routes: [route(0, MIXED, [REPORT]), route(1)] };
+    const o = planTrip(s, at(0, -100), at(2000, -100)).options[0]!;
+    expect(rideLegs(o)[0]!.fare).toMatchObject({
+      minCentavos: 1400, maxCentavos: 1900, span: "traditional_to_modern", basis: "fare_rules_and_reports", reportCodes: ["FO-SYN-MOD"],
+    });
+    expect(o.fare).toMatchObject({ minCentavos: 1400, maxCentavos: 1900, status: "estimate" });
+  });
+
+  it("prices a traditional-only route from F01 alone (ruling 2026-10-16), even with a report on file", () => {
+    const TRAD = fleetSummary([MIXED.classes[0]!], "jeepney");
+    const s = { ...measured(), routes: [route(0, TRAD, [REPORT]), route(1, TRAD)] };
+    const o = planTrip(s, at(0, -100), at(2000, -100)).options[0]!; // 4.6 km along the path
+    expect(rideLegs(o)[0]!.fare).toMatchObject({
+      minCentavos: 1400, maxCentavos: 1600, span: "traditional_rule", ruleCodes: ["F01"], basis: "fare_rules", reportCodes: [],
+    });
+    expect(o.fare).toMatchObject({ minCentavos: 1400, maxCentavos: 1600 });
+  });
+
+  it("keeps the option id (saved trips stay valid): variant:board:alight, whatever the new fields", () => {
+    const a = planTrip(snap, at(0, -100), at(2000, -100)).options[0]!;
+    const b = planTrip({ ...measured(), routes: [route(0, MIXED, [REPORT])] }, at(0, -100), at(2000, -100)).options[0]!;
+    expect(a.id).toBe(`${LOOP_VARIANT_ID}:${STOP_ID.P1}:${STOP_ID.P3}`);
+    expect(b.id).toBe(a.id);
   });
 });

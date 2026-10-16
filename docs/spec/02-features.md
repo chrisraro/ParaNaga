@@ -37,6 +37,8 @@ Terminal detail: compound, pedestrian entrances, bays with route assignment, kno
 ### F-A6 Routes — P0 (catalogue) / P1 (shapes)
 Route list grouped by group number; variant detail with direction, signboard/headsign, vehicle class, legal plan text, reviewed shape (if any), ordered stops (if reviewed), fare evidence, service windows, disruptions, legacy aliases/colours marked historical.
 - AC: R3 shows its circuit and the Almeda–Mabolo–Southbound structure separately, never merged; R8-A/B show the Eastbound trial as a separate trial revision with "permanence unconfirmed".
+- **Approximate paths vs reviewed shapes (Increment D).** Two different things are never merged. An *approximate path* is traced by software along OpenStreetMap roads from the route's legal street list (or its pins or anchors), is always labelled "Approximate path, not a verified route shape", may be flagged (dashed where it leaves the street list or runs against one-way mapping) or absent ("Path could not be traced from the street list"), and is what the map, trip guide and route detail draw today. A *reviewed shape* (evidence: GPS ride log or survey, with a named reviewer) is what P1 "shapes" means; no variant has one yet, and an approximate path never becomes one by itself. Distances, fares and time estimates computed on an approximate path say so.
+- Modes: the catalogue lists jeepney routes (R1 to R8, with traditional and, on R4 and R7, modern jeepneys), tricycle feeder routes, regional UV Express and bus services (listed, not drawn) and terminals. Only jeepney routes are planned; the rest are shown with their vehicle class and evidence.
 
 ## B. Trip planning
 

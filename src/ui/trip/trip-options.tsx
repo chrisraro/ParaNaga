@@ -1,17 +1,22 @@
 "use client";
 
 // Trip options (artboard TripOptions), shown in the home sheet once both endpoints are set.
-// Per card: labels, the warning "Unverified route" badge, the ride distance (no minutes or
-// arrival time: "Time not available"), the leg strip (walk ≈ m → Loop chip + direction → walk
-// ≈ m), the gold-outline fare estimate chip, and the transfer count. Each card is one button
-// whose accessible name is its whole text (labels, legs, fare estimate, transfers).
+// Per card: labels, the warning "Unverified route" badge, the ride distance, the time estimate
+// ("Estimate 18–27 min + waiting (unknown)", from the snapshot's model on the device; "Time not
+// available" without one) with the peak note when the peak band is used, a vehicle-class chip per
+// ride (C7), the leg strip (walk ≈ m → Loop chip + direction → walk ≈ m), the gold-outline fare
+// estimate chip, and the transfer count. Each card is one button whose accessible name is its
+// whole text (the range read as "18 to 27 minutes").
 
 import "./trip.css";
 
-import { Fragment } from "react";
-import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
+import { Fragment, useMemo, type ReactNode } from "react";
+import type { PlanOptionDto, PlanResponse, RideLegDto } from "@/domain/api/plan";
+import type { EtaModel } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { formatDistance, isNegligibleWalk, routeChipLabel, transfersText } from "@/domain/trip/present";
+import { ModeChip } from "@/ui/modes/mode-chip";
+import { EtaPeakNote, EtaTotalText, extractWalkLengths, useOptionEta } from "./eta-text";
 import { Chevron, FareChip, LoopChip, UnverifiedBadge, WalkIcon, planLookups, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
@@ -55,9 +60,25 @@ export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: 
   );
 }
 
-function OptionCard({ option, lookups, onOpen, index }: { option: PlanOptionDto; lookups: PlanLookups; onOpen: (id: string) => void; index: number }) {
+function OptionCard({
+  option,
+  lookups,
+  onOpen,
+  index,
+  etaModel,
+}: {
+  option: PlanOptionDto;
+  lookups: PlanLookups;
+  onOpen: (id: string) => void;
+  index: number;
+  etaModel?: EtaModel | null;
+}) {
   const primary = index === 0;
   const routes = option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode, l.routeName));
+  const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
+  const { estimate } = useOptionEta(option, walkLengths, etaModel);
+  const rideLegs = option.legs.filter((l): l is RideLegDto => l.kind === "ride");
+
   return (
     <li className="pn-trip-li">
       <button
@@ -84,8 +105,22 @@ function OptionCard({ option, lookups, onOpen, index }: { option: PlanOptionDto;
           <strong>{headline(option)}</strong>
           {routes.length > 0 ? <span className="sr-only"> on {routes.join(" and ")}</span> : null}
           <span className="sr-only">. </span>
-          <span className="pn-trip-card__time">Time not available</span>
+          <EtaTotalText estimate={estimate} className="pn-trip-card__time" testId="trip-option-time" />
         </span>
+        {estimate?.total.peak ? <span className="sr-only">. </span> : null}
+        <EtaPeakNote estimate={estimate} className="pn-trip-card__peak" testId="trip-peak-note" />
+        {rideLegs.length > 0 ? (
+          <span className="pn-trip-card__chips">
+            {rideLegs.map((leg, idx) => (
+              <ModeChip
+                key={idx}
+                mode={leg.fleet?.colourKey ?? leg.mode}
+                label={leg.fleet?.chip ?? "Vehicle type not confirmed"}
+                compact
+              />
+            ))}
+          </span>
+        ) : null}
         <span className="sr-only">. </span>
         <LegStrip option={option} lookups={lookups} />
         <span className="sr-only">. </span>
@@ -104,9 +139,12 @@ type Props = {
   /** A newer plan (refined GPS point) is on its way; these options stay until it arrives. */
   refreshing?: boolean;
   onOpen: (optionId: string) => void;
+  /** The "Tricycle may serve this" card (D15), shown below the options; never an option itself. */
+  tricycleHint?: ReactNode;
+  etaModel?: EtaModel | null;
 };
 
-export function TripOptions({ data, refreshing = false, onOpen }: Props) {
+export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = null, etaModel }: Props) {
   const lookups = planLookups(data);
   const extraNotes = data.plan.notes.filter((n) => n !== UNVERIFIED_ROUTE_BADGE);
   return (
@@ -117,7 +155,7 @@ export function TripOptions({ data, refreshing = false, onOpen }: Props) {
       {refreshing ? <p className="pn-trip__refreshing">Updating for your new location…</p> : null}
       <ul className="pn-trip-list">
         {data.plan.options.map((option, i) => (
-          <OptionCard key={option.id} option={option} lookups={lookups} onOpen={onOpen} index={i} />
+          <OptionCard key={option.id} option={option} lookups={lookups} onOpen={onOpen} index={i} etaModel={etaModel} />
         ))}
       </ul>
       <div className="pn-trip-warn">
@@ -132,6 +170,7 @@ export function TripOptions({ data, refreshing = false, onOpen }: Props) {
           ))}
         </div>
       </div>
+      {tricycleHint}
       <p className="pn-trip__revision">Transport data revision {data.revision.label}</p>
     </section>
   );

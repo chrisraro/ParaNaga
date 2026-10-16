@@ -4,8 +4,9 @@ import type { SourceList, TerminalDetail } from "@/domain/api/schemas";
 import { routesNamingTerminal, type TerminalRouteVariant } from "@/domain/network/terminal-routes";
 import { compareCodeUnits } from "@/domain/text/compare";
 import type { SearchIndexSource } from "@/domain/search/index-build";
+import { regionalFareEstimate, type RegionalMode } from "@/domain/fares/regional";
 import type { Db } from "@/server/db/context";
-import { getPublishedRevision, listRoutes } from "./network-repo";
+import { fareRulesByCode as publishedFareRules, getPublishedRevision, listRoutes } from "./network-repo";
 import { listPlaces } from "./places-repo";
 
 // Reference data (search index source, terminals, sources register), read ONLY through the
@@ -32,7 +33,7 @@ function legalStreetsOf(v: unknown): TerminalRouteVariant["legalStreets"] {
 const ROUTE_ORDER = sql`r.official_group_number nulls last, length(r.public_code), r.public_code`;
 
 /** Published variants with their route, in route-list order (permanent before trial). */
-async function variantStreets(db: Db, revisionId: string): Promise<TerminalRouteVariant[]> {
+async function variantStreets(db: Db, revisionId: string): Promise<(TerminalRouteVariant & { branch: string[] | null })[]> {
   const found = await rows(db, sql`
     select r.public_code, r.name, v.kind, v.legal_streets, v.source_codes::text[] as source_codes
       from transit.v_published_variants v
@@ -44,6 +45,8 @@ async function variantStreets(db: Db, revisionId: string): Promise<TerminalRoute
     routeName: str(v.name),
     kind: str(v.kind),
     legalStreets: legalStreetsOf(v.legal_streets),
+    // Feeder branch street text (tricycle ordinances); never matched against terminal names.
+    branch: listOrNull((v.legal_streets && typeof v.legal_streets === "object" ? (v.legal_streets as Row) : {}).branch),
     sourceCodes: strArray(v.source_codes),
   }));
 }
@@ -87,7 +90,7 @@ export async function getSearchIndexSource(db: Db, revisionId: string): Promise<
   const groups = await listRoutes(db, revisionId);
   const variants = await variantStreets(db, revisionId);
   const terminals = await rows(db, sql`
-    select code, name, location_text, modes::text[] as modes
+    select code, name, location_text, modes::text[] as modes, kind, lat, lon, coord_source
       from transit.v_published_terminals where revision_id = ${revisionId}::uuid order by code`);
   const barangays = await rows(db, sql`
     select name, survey_status, source_code
@@ -123,8 +126,10 @@ export async function getSearchIndexSource(db: Db, revisionId: string): Promise<
         hasTrial: r.hasTrial,
         streetLists: variants
           .filter((v) => v.routeCode === r.code)
-          .flatMap((v) => [v.legalStreets.inbound, v.legalStreets.outbound, v.legalStreets.circuit])
+          .flatMap((v) => [v.legalStreets.inbound, v.legalStreets.outbound, v.legalStreets.circuit, v.branch])
           .filter((l): l is string[] => l !== null),
+        mode: r.mode,
+        fleetLabel: r.fleet.label,
       })),
     ),
     terminals: terminals.map((t) => ({
@@ -132,6 +137,11 @@ export async function getSearchIndexSource(db: Db, revisionId: string): Promise<
       name: str(t.name),
       locationText: strOrNull(t.location_text),
       modes: strArray(t.modes),
+      kind: strOrNull(t.kind) as SearchIndexSource["terminals"][number]["kind"],
+      // Only an OpenStreetMap coordinate with its provenance (the legacy rows have none).
+      location: t.lat !== null && t.lat !== undefined && t.coord_source !== null && t.coord_source !== undefined
+        ? { lat: Number(t.lat), lng: Number(t.lon), source: "osm" as const }
+        : null,
     })),
     barangays: barangays.map((b) => ({ name: str(b.name), surveyStatus: str(b.survey_status), sourceCode: strOrNull(b.source_code) })),
     studyLabels: study.map((d) => ({
@@ -154,10 +164,17 @@ export async function getSearchIndexSource(db: Db, revisionId: string): Promise<
 
 // ---------------------------------------------------------------- terminals
 
+/** { mode: [codes] } from the version's mode_sources (legacy rows have none). */
+function modeSourcesOf(v: unknown): Record<string, string[]> {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+  return Object.fromEntries(Object.entries(v as Row).filter(([, codes]) => Array.isArray(codes)).map(([m, codes]) => [m, strArray(codes)]));
+}
+
 export async function getTerminalDetail(db: Db, revisionId: string, code: string): Promise<Omit<TerminalDetail, "revision"> | null> {
   const [t] = await rows(db, sql`
     select code, name, location_text, modes::text[] as modes, evidence_status, notes, lat, lon,
-           source_codes::text[] as source_codes
+           source_codes::text[] as source_codes, kind, verification, status_note, mode_sources, coord_source, osm_type,
+           osm_id::text as osm_id, osm_version, osm_timestamp, coord_note
       from transit.v_published_terminals where revision_id = ${revisionId}::uuid and code = ${code}`);
   if (!t) return null;
 
@@ -167,14 +184,28 @@ export async function getTerminalDetail(db: Db, revisionId: string, code: string
       from transit.v_published_destination_categories
      where revision_id = ${revisionId}::uuid and candidate_terminal_code = ${code}
      order by category`);
+  const regional = await rows(db, sql`
+    select code, mode, name, operators::text[] as operators, terminal_note, destination, distance_km::float8 as distance_km,
+           distance_basis, status, fare_rule_codes::text[] as fare_rule_codes, notes, source_codes::text[] as source_codes
+      from transit.v_published_regional_services
+     where revision_id = ${revisionId}::uuid and terminal_code = ${code}
+     order by code`);
+  // Regional fare rules (F06–F12, F01 for regional jeepneys) appear ONLY here, as estimates.
+  const ruleCodes = [...new Set(regional.flatMap((s) => strArray(s.fare_rule_codes)))];
+  const fareRules = await publishedFareRules(db, revisionId, ruleCodes);
 
   const terminalCodes = strArray(t.source_codes);
+  const modeSources = modeSourcesOf(t.mode_sources);
   const codes = [...new Set([
     ...terminalCodes,
+    ...Object.values(modeSources).flat(),
     ...routes.flatMap((r) => r.sourceCodes),
     ...categories.flatMap((c) => strArray(c.source_codes)),
+    ...regional.flatMap((s) => strArray(s.source_codes)),
+    ...fareRules.flatMap((r) => r.sourceCodes),
   ])];
 
+  const hasCoordinate = t.lat !== null && t.lat !== undefined && t.coord_source !== null && t.coord_source !== undefined;
   return {
     terminal: {
       code: str(t.code),
@@ -184,10 +215,49 @@ export async function getTerminalDetail(db: Db, revisionId: string, code: string
       evidenceStatus: strOrNull(t.evidence_status),
       notes: strOrNull(t.notes),
       sourceCodes: terminalCodes,
-      lat: numOrNull(t.lat),
-      lng: numOrNull(t.lon),
+      lat: hasCoordinate ? numOrNull(t.lat) : null,
+      lng: hasCoordinate ? numOrNull(t.lon) : null,
+      kind: strOrNull(t.kind) as TerminalDetail["terminal"]["kind"],
+      verification: strOrNull(t.verification),
+      statusNote: strOrNull(t.status_note),
+      modeSources,
+      coordinate: hasCoordinate
+        ? {
+            source: str(t.coord_source) as "osm_node" | "osm_way_centroid",
+            osmType: str(t.osm_type) as "node" | "way",
+            osmId: Number(t.osm_id),
+            osmVersion: numOrNull(t.osm_version),
+            osmTimestamp: t.osm_timestamp === null || t.osm_timestamp === undefined
+              ? null
+              : new Date(String(t.osm_timestamp instanceof Date ? t.osm_timestamp.toISOString() : t.osm_timestamp)).toISOString(),
+            note: strOrNull(t.coord_note),
+            licence: "ODbL 1.0" as const,
+            attribution: "Map data © OpenStreetMap contributors" as const,
+            attributionUrl: "https://www.openstreetmap.org/copyright" as const,
+          }
+        : null,
     },
     routes,
+    regionalServices: regional.map((s) => {
+      const mode = s.mode as RegionalMode;
+      const distanceKm = numOrNull(s.distance_km);
+      const fareRuleCodes = strArray(s.fare_rule_codes);
+      return {
+        code: str(s.code),
+        name: str(s.name),
+        mode,
+        operators: strArray(s.operators),
+        destination: str(s.destination),
+        distanceKm,
+        distanceBasis: strOrNull(s.distance_basis),
+        status: "community_mapped" as const,
+        terminalNote: strOrNull(s.terminal_note),
+        notes: strOrNull(s.notes),
+        fareRuleCodes,
+        fareEstimate: regionalFareEstimate(distanceKm, mode, fareRuleCodes, fareRules),
+        sourceCodes: strArray(s.source_codes),
+      };
+    }),
     destinationCategories: categories.map((c) => ({
       category: str(c.category),
       destinations: strArray(c.destinations),

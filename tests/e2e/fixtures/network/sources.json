@@ -1,11 +1,187 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-16T01:49:26.840Z"
  },
  "sources": [
+  {
+   "code": "N01",
+   "title": "OpenStreetMap route relations in Naga bbox (Overpass API)",
+   "url": "https://overpass-api.de/api/interpreter",
+   "evidenceType": "community_open_data",
+   "publishedOrEnacted": "osm_base 2026-10-15T20:40Z",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N02",
+   "title": "OpenStreetMap transport POIs in Naga (terminals, stops, stations)",
+   "url": "https://overpass-api.de/api/interpreter",
+   "evidenceType": "community_open_data",
+   "publishedOrEnacted": "osm_base 2026-10-15T20:42Z",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N04",
+   "title": "Ordinance 2025-110 Amending Truck Ban",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-110/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-12-09 (enacted)",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N05",
+   "title": "Ordinance 2025-023 Deca Vistansa–Langon special trimobile route",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-023/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-03-18 (enacted)",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N06",
+   "title": "Ordinance 2025-067 VISTODA/LAVISTODA (same as S37)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-067/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-09 (enacted)",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N12",
+   "title": "Ordinance 2022-013 temporary Eastbound PUJ/van terminal (Ruby Shelter, CBD II)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2022-013/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2022-02-15 (enacted)",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N14",
+   "title": "CDA Region 5: Modern PUV Launch in Naga City",
+   "url": "https://cda.gov.ph/region-5/modern-puv-launch-in-naga-city/",
+   "evidenceType": "government_news",
+   "publishedOrEnacted": "2023-04-18",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N15",
+   "title": "Brigada News Naga: coop consolidation (2024-01-08) and Carolina Panicuason coop trip limits (2024-06-24)",
+   "url": "https://www.brigadanews.ph/biyahe-ng-ilang-traditional-jeepney-sa-naga-city-nilimitahan/",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2024-01-08; 2024-06-24",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N16",
+   "title": "SafeTravelPH: Naga SimEx support (2025-08-18, upd 2025-09-09) and tricycle research with BISCAST (2025-11-20)",
+   "url": "https://www.safetravelph.org/post/naga-city-gets-support-from-safetravelph-for-ptmp-route-simulation-exercise",
+   "evidenceType": "project_participant",
+   "publishedOrEnacted": "2025-08-18 / 2025-11-20",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N17",
+   "title": "Philstar: Jeepney fares up to P14 starting Sept 28",
+   "url": "https://www.philstar.com/headlines/2026/09/27/2559277/jeepney-fares-p14-starting-sept-28-buses-taxis-tnvs-also-hike-rates",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2026-09-27",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N19",
+   "title": "Wikivoyage: Naga",
+   "url": "https://en.wikivoyage.org/wiki/Naga",
+   "evidenceType": "community_wiki",
+   "publishedOrEnacted": "listings 'updated Oct 2023'",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N21",
+   "title": "PNR Bicol status: bicoltraininfo.com fan page (as of 2026-10-15) + Wikipedia Naga/Ligao station",
+   "url": "https://www.bicoltraininfo.com/",
+   "evidenceType": "community_unconfirmed",
+   "publishedOrEnacted": "2026-10-15 / 2026-08-23",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N28",
+   "title": "Tolentino & Sigua, Characteristics of Walking and Cycling in Metro Manila, Philippine Transportation Journal 5(1)",
+   "url": "https://ncts.upd.edu.ph/tssp/wp-content/uploads/2022/12/TSSP2022_Vol5-No1_02-Tolentino-and-Sigua.pdf",
+   "evidenceType": "academic",
+   "publishedOrEnacted": "2022",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N29",
+   "title": "Fajardo, Tiglao et al., Optimizing Route-based Fleet Size ... Puerto Princesa City (TSSP 2025)",
+   "url": "https://ncts.upd.edu.ph/tssp/wp-content/uploads/2026/02/TSSP2025-02-Revised-Paper.pdf",
+   "evidenceType": "academic_comparable_city",
+   "publishedOrEnacted": "2025 conf. (uploaded 2026-02)",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N30",
+   "title": "Ordinance 2025-070 LPTRP + Resolution 2025-735 Eastbound trial (= S01/S02/S03)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23 / 2025-11-11",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N31",
+   "title": "Terminal ordinances 2021-087 (LCC southbound), 2016-034 (Queborac northbound), 2006-044 (terminal categories) (= S10/S11/S12)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2021-087/",
+   "evidenceType": "official_historical",
+   "publishedOrEnacted": "2021-11-09 / 2016-06-24 / 2006-09-11",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N32",
+   "title": "PIA: LTFRB reminds PUV operators to display updated fare matrix (= S05)",
+   "url": "https://pia.gov.ph/news/luzon/ncr/ltfrb-reminds-puv-operators-drivers-to-display-updated-fare-matrix",
+   "evidenceType": "government_news",
+   "publishedOrEnacted": "2026-09-28",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N33",
+   "title": "Ordinance 2024-002 trimobile/e-trike/taxicle fare P15 (= S04)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2024-002/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2024-01-16 (enacted)",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N38",
+   "title": "Brigada News: NACIATRASCO, ibinahagi ang kagandahan ng modernized jeepney",
+   "url": "https://www.brigadanews.ph/naciatrasco-ibinahagi-ang-kagandahan-ng-modernized-jeepney/",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2024-01-16",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N39",
+   "title": "Brigada News: Pagbusisi ng jeepney modernization ... – NACIATRASCO",
+   "url": "https://www.brigadanews.ph/pagbusisi-ng-jeepney-modernization-dapat-isagawa-sa-kabila-ng-magandang-epekto-nito-naciatrasco/",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2024-05-07",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N40",
+   "title": "Transport Cooperative Masterlist as of July 2023 (OTC data)",
+   "url": "https://ltoportal.ph/wp-content/uploads/2023/12/TC-Masterlist-as-of-July-2023-PDF-1.pdf",
+   "evidenceType": "official_registry_via_third_party_host",
+   "publishedOrEnacted": "2023-07",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N41",
+   "title": "CDA Region V: CamSur MPC signs Koop Kapatid MOA with NACIATRASCO and CAPATRANSCO",
+   "url": "https://cda.gov.ph/region-5/inspiring-change-and-cooperative-growth-camsur-multi-purpose-cooperative-signs-memorandum-of-agreement-on-koop-kapatid-program-with-two-2-transport-cooperatives-in-naga-city/",
+   "evidenceType": "government_news",
+   "publishedOrEnacted": "2023-10-09 (MOA 2023-10-05)",
+   "checkedOn": "2026-10-16"
+  },
   {
    "code": "OSM-2026-10-15",
    "title": "OpenStreetMap places snapshot",
@@ -13,6 +189,14 @@
    "evidenceType": "open_data",
    "publishedOrEnacted": "OSM data as of 2026-10-15T12:56:10Z",
    "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "OSMR-2026-10-16",
+   "title": "OpenStreetMap road network snapshot for Naga City (highways, OSM relation 3084673 + 300 m)",
+   "url": "https://www.openstreetmap.org/copyright",
+   "evidenceType": "open_data",
+   "publishedOrEnacted": "OSM data as of 2026-10-16T00:01:51Z",
+   "checkedOn": "2026-10-16"
   },
   {
    "code": "S01",
@@ -221,6 +405,14 @@
    "evidenceType": "public_export;retrieved_and_parsed",
    "publishedOrEnacted": null,
    "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "U01",
+   "title": "Project owner confirmation to ParaNaga (2026-10-16): traditional jeepneys operate on every LPTRP route (R1–R8); air-conditioned modern jeepneys operate on R4 and R7; riders pay about P3–P5 more on R4 modern and at least P5 more on R7 modern than the traditional fare",
+   "url": null,
+   "evidenceType": "owner_confirmation",
+   "publishedOrEnacted": "2026-10-16",
+   "checkedOn": "2026-10-16"
   }
  ]
 }

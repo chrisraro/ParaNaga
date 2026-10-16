@@ -46,13 +46,44 @@ type Run<S extends z.ZodType> = (ctx: RunContext) => Promise<{ body: z.input<S>;
  * request bodies or coordinates.
  */
 async function publicHandler<S extends z.ZodType>(request: Request, route: string, schema: S, run: Run<S>): Promise<Response> {
+  return handle(request, route, async (ctx) => {
+    const result = await run(ctx);
+    const body = schema.parse(result.body);
+    return Response.json(body, { headers: { "Cache-Control": result.cacheControl, "X-Request-Id": ctx.requestId } });
+  });
+}
+
+/**
+ * Stored text served verbatim. `load` is called only when the client's copy is stale: a matching
+ * If-None-Match gets 304 from the stored etag alone, without reading or checking the body.
+ */
+export type TextResult = { etag: string; contentType: string; cacheControl: string; load: () => Promise<string> };
+
+/**
+ * A public, read-only GET that serves stored text verbatim (e.g. the walk graph payload): `load`
+ * reads and validates it. A strong ETag is sent; a matching If-None-Match gets 304 first.
+ * Same request id, read-only transaction(s) and error envelope as publicGet.
+ */
+export function publicText(request: Request, route: string, run: (ctx: RunContext) => Promise<TextResult>): Promise<Response> {
+  return handle(request, route, async (ctx) => {
+    const result = await run(ctx);
+    const etag = `"${result.etag}"`;
+    const headers = { "Cache-Control": result.cacheControl, ETag: etag, "X-Request-Id": ctx.requestId };
+    const match = request.headers.get("if-none-match");
+    if (match !== null && match.split(",").some((t) => t.trim().replace(/^W\//, "") === etag)) {
+      return new Response(null, { status: 304, headers });
+    }
+    const text = await result.load();
+    return new Response(text, { headers: { ...headers, "Content-Type": result.contentType } });
+  });
+}
+
+async function handle(request: Request, route: string, respond: (ctx: RunContext) => Promise<Response>): Promise<Response> {
   const requestId = safeRequestId(request.headers.get("x-vercel-id") ?? request.headers.get("x-request-id"));
   try {
     // One read-only REPEATABLE READ transaction per call: all statements share one snapshot.
     const withDb = <T>(fn: (db: Db) => Promise<T>) => withRequestContext({ userId: null, requestId }, fn, { readOnly: true });
-    const result = await run({ requestId, withDb });
-    const body = schema.parse(result.body);
-    return Response.json(body, { headers: { "Cache-Control": result.cacheControl, "X-Request-Id": requestId } });
+    return await respond({ requestId, withDb });
   } catch (error) {
     if (error instanceof ApiProblem) return errorResponse(error.status, error.code, error.message, requestId);
     console.error(JSON.stringify({

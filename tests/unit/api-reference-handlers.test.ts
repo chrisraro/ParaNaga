@@ -101,8 +101,10 @@ describe("GET /api/v1/terminals/:code", () => {
     terminal: {
       code: "T01", name: "Bicol Central Station", locationText: "Ninoy & Cory Avenue, Triangulo", modes: ["bus"],
       evidenceStatus: "official_address", notes: null, sourceCodes: ["S09"], lat: null, lng: null,
+      kind: null, verification: null, statusNote: null, modeSources: {}, coordinate: null,
     },
     routes: [{ routeCode: "R8-A", routeName: "Loop A", basis: "legal_plan", sourceCodes: ["S01"] }],
+    regionalServices: [],
     destinationCategories: [],
     sources: [],
   };

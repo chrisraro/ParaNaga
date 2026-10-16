@@ -12,6 +12,7 @@
 
 import "@/ui/kit/styles";
 import "./explore.css";
+import "../modes/modes.css";
 
 import Link from "next/link";
 import {
@@ -36,7 +37,7 @@ import {
   EXPLORE_CATEGORIES,
   EXPLORE_PLACES_NOTE,
   RAIL_STATUS_TEXT,
-  TERMINAL_ROW_SUB,
+  terminalLocationText,
   barangaysAZ,
   chipOfOsmCategory,
   emptyCategoryText,
@@ -58,6 +59,10 @@ import { useReturnToMap } from "@/ui/detail/detail-frame";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ListCell, ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
+import { ModeChip } from "@/ui/modes/mode-chip";
+import { ModeIcon } from "@/ui/modes/mode-icon";
+import { modeName, type RouteMode } from "@/domain/modes/fleet";
+import { terminalKindLabel, terminalMatchesModes, terminalRouteModes } from "@/domain/places/terminals";
 import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Segmented } from "@/ui/kit/segmented";
 import { LoopChip } from "@/ui/trip/trip-parts";
@@ -415,13 +420,50 @@ function Routes() {
   );
 }
 
+const TERMINAL_FILTER_MODES: readonly RouteMode[] = ["jeepney", "tricycle", "uv_express", "bus", "rail"];
+
+/** Terminals directory (Task 13): mode filter, mode chips, kind, and whether a location is mapped. */
 function Terminals({ index }: { index: SearchIndex }) {
+  const [modes, setModes] = useState<RouteMode[]>([]);
+  const list = index.terminals.filter((t) => terminalMatchesModes(t, modes));
+  const toggle = (mode: RouteMode) => setModes((prev) => (prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]));
   return (
     <>
-      <Count>{`${index.terminals.length} terminals`}</Count>
+      <div className="pn-explore__mode-filter" role="group" aria-label="Filter terminals by mode" data-testid="explore-terminal-filter">
+        <button type="button" className={modes.length === 0 ? "pn-mode-filter-chip pn-mode-filter-chip--on" : "pn-mode-filter-chip"} aria-pressed={modes.length === 0} onClick={() => setModes([])}>
+          All
+        </button>
+        {TERMINAL_FILTER_MODES.map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            className={modes.includes(mode) ? "pn-mode-filter-chip pn-mode-filter-chip--on" : "pn-mode-filter-chip"}
+            aria-pressed={modes.includes(mode)}
+            onClick={() => toggle(mode)}
+            data-testid={`explore-terminal-filter-${mode}`}
+          >
+            <ModeIcon mode={mode} size={16} />
+            <span>{modeName(mode)}</span>
+          </button>
+        ))}
+      </div>
+      <Count>{`${list.length} terminals`}</Count>
       <ul className="pn-group" aria-label="Terminals" data-testid="explore-terminals">
-        {index.terminals.map((t) => (
-          <ListCell key={t.code} href={terminalHref(t.code)} title={t.name} sub={TERMINAL_ROW_SUB} />
+        {list.map((t) => (
+          <ListCell
+            key={t.code}
+            href={terminalHref(t.code)}
+            title={t.name}
+            sub={[terminalKindLabel(t.kind), terminalLocationText(t.location !== null)].filter(Boolean).join(" · ")}
+            badges={
+              <span className="pn-explore__terminal-modes">
+                {terminalRouteModes(t.modes).map((m) => (
+                  <ModeChip key={m} mode={m} label={modeName(m)} compact />
+                ))}
+              </span>
+            }
+            testId="explore-terminal"
+          />
         ))}
       </ul>
     </>

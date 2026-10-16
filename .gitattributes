@@ -5,3 +5,5 @@
 # OSM snapshots are sha256-pinned in ingest.source_document (a different hash for the same date is
 # refused); never convert their line endings.
 *.osm.json -text
+# Reviewed research seeds are sha256-pinned by later imports; never convert their line endings.
+data/source/research/*.json -text

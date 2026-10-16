@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-16T01:49:26.840Z"
  },
  "route": {
   "code": "R8-B",
@@ -18,6 +18,46 @@
   "verification": "unverified",
   "hasProvisionalStops": true,
   "hasTrial": true,
+  "mode": "jeepney",
+  "serviceStatus": "legal_plan",
+  "planning": "provisional",
+  "fleet": {
+   "label": "Traditional jeepneys",
+   "chip": "Jeepney · traditional",
+   "colourKey": "traditional_puj",
+   "classes": [
+    {
+     "code": "FL-R8-B-TRAD",
+     "vehicleClass": "traditional_puj",
+     "evidenceLevels": [
+      "legal_plan",
+      "owner_confirmation"
+     ],
+     "status": "operating",
+     "firstReportedOn": null,
+     "lastReportedOn": "2026-10-16",
+     "unitsNote": "PUJ Class 2 in the 2025 route plan",
+     "aircon": null,
+     "airconSourceCodes": [],
+     "cooperatives": [],
+     "sourceCodes": [
+      "N30",
+      "U01"
+     ],
+     "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+    }
+   ]
+  },
+  "operatingStatus": {
+   "status": "operating",
+   "label": "Operating (owner-confirmed 2026-10-16)",
+   "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+   "confirmedOn": "2026-10-16",
+   "confirmsServiceOnly": true,
+   "sourceCodes": [
+    "U01"
+   ]
+  },
   "notes": "71 units allocated to group 8 collectively; no per-loop unit count retrieved. Street order is document-derived, not a surveyed shape. Aureus/Mayflower slash requires clarification where present.",
   "sourceCodes": [
    "S01",
@@ -41,7 +81,8 @@
     "Peñafrancia Ave",
     "P. Burgos St",
     "Gen. Luna St"
-   ]
+   ],
+   "branch": null
   },
   "additionalSourceStructures": [],
   "normalizationNote": null
@@ -49,6 +90,7 @@
  "variants": [
   {
    "variantId": "9ddd04ca-ab7d-413e-8fd3-7d7f1a3ed7eb",
+   "name": null,
    "direction": "counterclockwise",
    "kind": "permanent",
    "evidenceLevel": "provisional",
@@ -78,7 +120,8 @@
      "Peñafrancia Ave",
      "P. Burgos St",
      "Gen. Luna St"
-    ]
+    ],
+    "branch": null
    },
    "notes": "Provisional stop order by pin code (A1… / B1…), not a surveyed sequence.",
    "sourceCodes": [
@@ -520,12 +563,20 @@
      },
      "seq": 31
     }
-   ]
+   ],
+   "pathStatus": {
+    "status": "traced",
+    "reason": null,
+    "listedStreets": 10,
+    "matchedStreets": 10,
+    "unmatchedStreets": []
+   }
   }
  ],
  "trials": [
   {
    "variantId": "ebc81dab-495f-423a-b8be-58f3355bf19d",
+   "name": null,
    "direction": "counterclockwise",
    "kind": "trial",
    "evidenceLevel": "documentary",
@@ -552,16 +603,25 @@
      "Peñafrancia Ave",
      "P. Burgos St",
      "Gen. Luna St"
-    ]
+    ],
+    "branch": null
    },
    "notes": null,
    "sourceCodes": [
     "S03"
    ],
-   "stops": []
+   "stops": [],
+   "pathStatus": {
+    "status": "traced",
+    "reason": null,
+    "listedStreets": 7,
+    "matchedStreets": 7,
+    "unmatchedStreets": []
+   }
   }
  ],
  "aliases": [],
+ "cooperatives": [],
  "fareEvidence": {
   "basis": "route_mode",
   "rules": [
@@ -584,7 +644,9 @@
     "isEstimate": true,
     "sourceCodes": [
      "S05",
-     "S06"
+     "S06",
+     "N17",
+     "N32"
     ]
    },
    {
@@ -606,14 +668,25 @@
     "isEstimate": true,
     "sourceCodes": [
      "S05",
-     "S06"
+     "S06",
+     "N17",
+     "N32"
     ]
    }
   ],
   "observations": [],
-  "conflicts": []
+  "conflicts": [],
+  "reportedPractice": []
  },
  "sources": [
+  {
+   "code": "N30",
+   "title": "Ordinance 2025-070 LPTRP + Resolution 2025-735 Eastbound trial (= S01/S02/S03)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23 / 2025-11-11",
+   "checkedOn": "2026-10-16"
+  },
   {
    "code": "S01",
    "title": "Naga approved LPTRP, Ordinance 2025-070",
@@ -637,6 +710,14 @@
    "evidenceType": "official",
    "publishedOrEnacted": "2025-11-11",
    "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "U01",
+   "title": "Project owner confirmation to ParaNaga (2026-10-16): traditional jeepneys operate on every LPTRP route (R1–R8); air-conditioned modern jeepneys operate on R4 and R7; riders pay about P3–P5 more on R4 modern and at least P5 more on R7 modern than the traditional fare",
+   "url": null,
+   "evidenceType": "owner_confirmation",
+   "publishedOrEnacted": "2026-10-16",
+   "checkedOn": "2026-10-16"
   }
  ]
 }

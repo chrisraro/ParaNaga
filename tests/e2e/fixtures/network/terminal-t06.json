@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-16T01:49:26.840Z"
  },
  "terminal": {
   "code": "T06",
@@ -12,18 +12,58 @@
   "modes": [
    "rail"
   ],
-  "evidenceStatus": "station_exists;entrance_unverified",
+  "evidenceStatus": "community_coordinate",
   "notes": "Current tickets, timetable, rail corridor status and exact entrance need PNR confirmation.",
   "sourceCodes": [
    "S19",
-   "S21"
+   "S21",
+   "N02",
+   "N21"
   ],
-  "lat": null,
-  "lng": null
+  "lat": 13.619618,
+  "lng": 123.185879,
+  "kind": "station",
+  "verification": "community_coordinate",
+  "statusNote": "Naga–Legazpi reported suspended; Naga–Lupi Viejo reported running (fan site, 15 Oct 2026) · confirm with PNR",
+  "modeSources": {
+   "rail": [
+    "S19",
+    "S21",
+    "N21"
+   ]
+  },
+  "coordinate": {
+   "source": "osm_way_centroid",
+   "osmType": "way",
+   "osmId": 23662289,
+   "osmVersion": 7,
+   "osmTimestamp": "2026-03-30T17:55:06.000Z",
+   "note": "building centroid, not an entrance",
+   "licence": "ODbL 1.0",
+   "attribution": "Map data © OpenStreetMap contributors",
+   "attributionUrl": "https://www.openstreetmap.org/copyright"
+  }
  },
  "routes": [],
+ "regionalServices": [],
  "destinationCategories": [],
  "sources": [
+  {
+   "code": "N02",
+   "title": "OpenStreetMap transport POIs in Naga (terminals, stops, stations)",
+   "url": "https://overpass-api.de/api/interpreter",
+   "evidenceType": "community_open_data",
+   "publishedOrEnacted": "osm_base 2026-10-15T20:42Z",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N21",
+   "title": "PNR Bicol status: bicoltraininfo.com fan page (as of 2026-10-15) + Wikipedia Naga/Ligao station",
+   "url": "https://www.bicoltraininfo.com/",
+   "evidenceType": "community_unconfirmed",
+   "publishedOrEnacted": "2026-10-15 / 2026-08-23",
+   "checkedOn": "2026-10-16"
+  },
   {
    "code": "S19",
    "title": "PNR operating documents and timetable index",

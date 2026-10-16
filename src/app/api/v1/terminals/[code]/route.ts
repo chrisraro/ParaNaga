@@ -3,8 +3,10 @@ import { badRequest, CACHE, notFound, publicGet } from "@/server/api/http";
 import { getPublishedRevision } from "@/server/repos/network-repo";
 import { getTerminalDetail } from "@/server/repos/reference-repo";
 
-// A terminal of the published revision: its fields (no coordinates are on file), the routes whose
-// legal street list or trial circuit names it, its destination categories and their sources.
+// A terminal of the published revision: its fields (an OpenStreetMap coordinate with its provenance
+// when one is on file), the routes whose legal street list or trial circuit names it, the regional
+// services leaving from it with fare ESTIMATES (the only place regional fare rules appear), its
+// destination categories and their sources.
 export function GET(request: Request, ctx: RouteContext<"/api/v1/terminals/[code]">) {
   return publicGet(request, "terminals/:code", terminalDetailSchema, async ({ withDb }) => {
     const code = parseTerminalCodeParam((await ctx.params).code);

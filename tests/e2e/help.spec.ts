@@ -53,6 +53,8 @@ test("Help opens from More with its three tabs, and Back returns to More", async
     "How trips are planned",
     "Why stops are not verified yet",
     "Using ParaNaga offline",
+    "How times are estimated",
+    "Vehicle types in Naga",
     "Report a problem with a driver",
   ]);
   await expect(page.getByTestId("help-independent")).toHaveText("ParaNaga is an independent commuter guide. It is not an official City Government app.");
@@ -64,9 +66,9 @@ test("Help opens from More with its three tabs, and Back returns to More", async
   await expect(page.getByTestId("help-report-driver")).toHaveAttribute("href", "/app/mynaga");
 
   await tabs(page).getByRole("tab", { name: "About data" }).click();
-  await expect(page.getByTestId("help-badges").getByRole("listitem")).toHaveCount(4);
-  await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionosm-places-2026-10-15 · Oct 15, 2026");
-  await expect(page.getByTestId("help-data-footer")).toHaveText("No live arrival times. Stop alerts work only while ParaNaga is open on your screen.");
+  await expect(page.getByTestId("help-badges").getByRole("listitem")).toHaveCount(5);
+  await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionmodes-lines-2026-10-16 · Oct 16, 2026");
+  await expect(page.getByTestId("help-data-footer")).toHaveText("ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.");
 
   await page.getByTestId("help-page").getByTestId("detail-back").click();
   await expect(h1(page, "Settings")).toBeVisible();
@@ -77,7 +79,9 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   for (const [title, phrase] of [
     ["How trips are planned", "every suggestion carries the badge “Unverified route — confirm with the driver”."],
     ["Why stops are not verified yet", "Every stop on the map comes from a public My Maps snapshot (retrieved 15 October 2026)."],
-    ["Using ParaNaga offline", "Planning offline uses the data from Oct 15, 2026; fares may have changed."],
+    ["How times are estimated", "Jeepney peak: 7–13 km/h (upper from N29; lower is a ParaNaga assumption)"],
+    ["Vehicle types in Naga", "Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7"],
+    ["Using ParaNaga offline", "Planning offline uses the data from Oct 16, 2026; fares may have changed."],
   ] as const) {
     await page.getByTestId("help-links").getByRole("link", { name: title }).click();
     await expect(h1(page, title)).toBeFocused();
@@ -87,6 +91,18 @@ test("each article opens with its copy, and Back returns to the Help tab", async
     await page.getByTestId("help-article").filter({ visible: true }).getByTestId("detail-back").click();
     await expect(h1(page, "Help")).toBeVisible();
   }
+  // The two Task 14 articles: the times basis comes from the snapshot's model; no e-jeepney, no "live".
+  await page.goto("/app/help/how-times-are-estimated");
+  const times = page.getByTestId("help-article-body");
+  await expect(times).toContainText("Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.");
+  for (const code of ["N28", "N16", "N29", "N04"]) await expect(times).toContainText(code);
+  for (const a of ["Assumption A1:", "Assumption A2:", "Assumption A3:"]) await expect(times).toContainText(a);
+  await expect(times).toContainText("Based on typical speeds. ParaNaga uses no traffic service.");
+  await expect(times).not.toContainText(/live/i);
+  await page.goto("/app/help/vehicle-types-in-naga");
+  await expect(page.getByTestId("help-article-body")).toContainText("Traditional jeepneys run on every route group (R1–R8)");
+  await expect(page.getByTestId("help-article-body")).not.toContainText(/e-?jeep|electric jeep|2023|Euro-?4|live/i);
+
   await page.goto("/app/help/not-an-article");
   await expect(h1(page, "Not found")).toBeVisible();
 });
@@ -104,11 +120,16 @@ test("the sources register lists the captured sources with checked dates and saf
   for (const s of SOURCES.sources) {
     const row = page.locator(`[data-testid="source-row"][data-code="${s.code}"]`);
     await expect(row).toContainText(`${s.code} · ${s.title}`);
-    await expect(row).toContainText("· checked 15 Oct 2026");
+    await expect(row).toContainText(`· checked ${Number(s.checkedOn!.slice(8))} Oct 2026`);
     if (s.code === "S40") {
       // The KML export downloads a file: listed, never offered as a link.
       await expect(row.getByTestId("source-link")).toHaveCount(0);
       await expect(row.getByTestId("source-unlinked")).toBeVisible();
+      continue;
+    }
+    if (s.url === null) {
+      // The owner confirmation (U01) has no public address: listed, with no link.
+      await expect(row.getByTestId("source-unlinked")).toHaveText("No public address on file");
       continue;
     }
     const link = row.getByTestId("source-link");
@@ -118,7 +139,7 @@ test("the sources register lists the captured sources with checked dates and saf
   }
   // Every register href has no query string, or one on the allow-list (the My Maps viewer's ?mid=).
   const hrefs = await page.getByTestId("source-link").evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
-  expect(hrefs).toHaveLength(SOURCES.sources.length - 1);
+  expect(hrefs).toHaveLength(SOURCES.sources.filter((s) => s.url !== null).length - 1);
   for (const href of hrefs) {
     const url = new URL(href);
     expect(url.search === "" || (url.hostname === "www.google.com" && url.pathname === "/maps/d/viewer" && [...url.searchParams.keys()].join() === "mid"), href).toBe(true);
@@ -176,11 +197,17 @@ async function axeAll(page: Page) {
   for (const name of ["Safety", "About data"]) {
     await tabs(page).getByRole("tab", { name }).click();
     await expect(tabs(page).getByRole("tab", { name })).toHaveAttribute("aria-selected", "true");
-    if (name === "About data") await expect(page.getByTestId("help-data-revision")).toContainText("osm-places");
+    if (name === "About data") await expect(page.getByTestId("help-data-revision")).toContainText("modes-lines-2026-10-16");
     await expectAxeClean(page, "help-page");
   }
   await page.goto("/app/help/using-paranaga-offline");
-  await expect(page.getByTestId("help-article-body")).toContainText("Oct 15, 2026");
+  await expect(page.getByTestId("help-article-body")).toContainText("Oct 16, 2026");
+  await expectAxeClean(page, "help-article");
+  await page.goto("/app/help/how-times-are-estimated");
+  await expect(page.getByTestId("help-article-body")).toContainText("Assumption A3:");
+  await expectAxeClean(page, "help-article");
+  await page.goto("/app/help/vehicle-types-in-naga");
+  await expect(page.getByTestId("help-article-body")).toContainText("UV Express and bus");
   await expectAxeClean(page, "help-article");
   await page.goto("/app/help/sources");
   await expect(page.getByTestId("source-row").first()).toBeVisible();

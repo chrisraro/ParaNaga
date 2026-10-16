@@ -1,6 +1,7 @@
 // The service worker's allow-list (spec §3.11, Task 12), as pure functions so every rule is
 // unit-tested (tests/unit/sw-routes.test.ts) and the worker (src/app/sw.ts) only wires them to
 // Serwist strategies. Nothing here touches the network or a cache.
+import { LINES_FORMAT_VERSION } from "../api/lines-format";
 //
 // Rules:
 //  - Build assets, icons, the manifest and public files (/theme-init.js) are precached by Serwist
@@ -10,7 +11,9 @@
 //    runtime (dynamic pages are `private, no-store`). Navigations to /api/**, /admin/** and
 //    /account/** are not touched at all (auth redirect flows bypass the worker).
 //  - Runtime data caches, GET and same-origin only: the immutable snapshot and search index of a
-//    revision (CacheFirst, 3 revisions each), the published head (NetworkFirst, 2 s), and the
+//    revision (CacheFirst, 3 revisions each; the approximate paths too, in a cache keyed by the
+//    lines format version as well as the build; the walk graph too, 2 revisions because of its
+//    size), the published head (NetworkFirst, 2 s), and the
 //    reference reads (StaleWhileRevalidate, 200 entries, 30 days).
 //  - Everything else is network-only and never touches a cache: POST /api/v1/plan (coordinates),
 //    /api/v1/stops?bbox=, /api/auth/**, /api/csp-report, RSC requests, /admin/**, /account/**,
@@ -20,26 +23,40 @@
 /**
  * The static shells, cached at install and served offline (cold start of /app, /app/saved, …).
  * Search is one too: its index is cached per revision, so it works offline from a cold start.
+ * The two Task 14 Help articles (time estimates, vehicle types) are prerendered and read the
+ * cached snapshot, so they open offline too.
  */
-export const SHELL_PATHS = ["/app", "/app/saved", "/app/more", "/app/help", "/app/explore", "/app/mynaga", "/app/search", "/offline"] as const;
+export const SHELL_PATHS = [
+  "/app", "/app/saved", "/app/more", "/app/help", "/app/explore", "/app/mynaga", "/app/search", "/offline",
+  "/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga",
+] as const;
 export type ShellPath = (typeof SHELL_PATHS)[number];
 export const OFFLINE_PATH = "/offline";
 
 export const NAVIGATION_TIMEOUT_S = 3;
 export const HEAD_TIMEOUT_S = 2;
 export const REVISIONS_KEPT = 3;
+/** The walk graph is the largest data file (up to 600 KB): one revision fewer is kept. */
+export const WALK_GRAPH_REVISIONS_KEPT = 2;
 export const REFERENCE_MAX_ENTRIES = 200;
 export const REFERENCE_MAX_AGE_S = 30 * 24 * 60 * 60;
 
 /** Every cache ParaNaga's worker creates starts with this; the build id is appended. */
 export const CACHE_PREFIX = "pn-";
-export const CACHE_KINDS = ["shell", "head", "snapshot", "search-index", "reference"] as const;
+export const CACHE_KINDS = ["shell", "head", "snapshot", "search-index", "lines", "walk-graph", "reference"] as const;
 export type CacheKind = (typeof CACHE_KINDS)[number];
+/** The per-revision data caches (CacheFirst; the revision is in the URL). */
+export type RevisionCache = "snapshot" | "search-index" | "lines" | "walk-graph";
+
+/** How many revisions a CacheFirst data cache keeps. */
+export function revisionsKept(cache: RevisionCache): number {
+  return cache === "walk-graph" ? WALK_GRAPH_REVISIONS_KEPT : REVISIONS_KEPT;
+}
 
 export type SwRoute =
   | { kind: "shell"; path: ShellPath }
   | { kind: "navigate" }
-  | { kind: "cache-first"; cache: "snapshot" | "search-index" }
+  | { kind: "cache-first"; cache: RevisionCache }
   | { kind: "network-first"; cache: "head" }
   | { kind: "stale-while-revalidate"; cache: "reference" }
   | { kind: "network-only" };
@@ -59,6 +76,8 @@ const NETWORK_ONLY: SwRoute = { kind: "network-only" };
 const UUID = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
 const SNAPSHOT = new RegExp(`^/api/v1/network/snapshot/${UUID}$`);
 const SEARCH_INDEX = new RegExp(`^/api/v1/network/search-index/${UUID}$`);
+const LINES = new RegExp(`^/api/v1/network/lines/${UUID}$`);
+const WALK_GRAPH = new RegExp(`^/api/v1/network/walk-graph/${UUID}$`);
 const REFERENCE = [/^\/api\/v1\/stops\/[^/]+$/, /^\/api\/v1\/routes$/, /^\/api\/v1\/routes\/[^/]+$/, /^\/api\/v1\/terminals\/[^/]+$/, /^\/api\/v1\/sources$/];
 const PRIVATE_SECTIONS = /^\/(admin|account)(\/|$)/;
 
@@ -91,6 +110,8 @@ export function classifyRequest(info: SwRequestInfo): SwRoute {
   if (info.url.search !== "") return NETWORK_ONLY;
   if (SNAPSHOT.test(path)) return { kind: "cache-first", cache: "snapshot" };
   if (SEARCH_INDEX.test(path)) return { kind: "cache-first", cache: "search-index" };
+  if (LINES.test(path)) return { kind: "cache-first", cache: "lines" };
+  if (WALK_GRAPH.test(path)) return { kind: "cache-first", cache: "walk-graph" };
   if (path === "/api/v1/network/head") return { kind: "network-first", cache: "head" };
   if (REFERENCE.some((re) => re.test(path))) return { kind: "stale-while-revalidate", cache: "reference" };
   return NETWORK_ONLY;
@@ -103,7 +124,9 @@ export function isCacheableResponse(response: { status: number; headers: { get(n
   return !/(^|[\s,])(private|no-store)([\s,=]|$)/.test(cacheControl);
 }
 
+/** The lines cache also names LINES_FORMAT_VERSION: a format bump starts an empty cache (a refetch). */
 export function cacheName(kind: CacheKind, buildId: string): string {
+  if (kind === "lines") return `${CACHE_PREFIX}lines-f${LINES_FORMAT_VERSION}-${buildId}`;
   return `${CACHE_PREFIX}${kind}-${buildId}`;
 }
 
@@ -162,11 +185,11 @@ export function linkedIconUrls(manifestUrls: readonly string[]): string[] {
 export const HANDOFF_MESSAGE = "STORE_FETCHED_DATA";
 export const HANDOFF_MAX_BYTES = 2_000_000;
 export type HandoffEntry = { url: string; body: string; cacheControl: string };
-export type AcceptedHandoff = HandoffEntry & { cache: "head" | "snapshot" | "search-index" };
+export type AcceptedHandoff = HandoffEntry & { cache: "head" | RevisionCache };
 
 /**
  * Checks one entry the page offers: a same-origin URL that the allow-list would store as the
- * head, a snapshot or a search index, a JSON body of bounded size, and a Cache-Control that may be
+ * head, a snapshot, a search index, the lines or the walk graph, a JSON body of bounded size, and a Cache-Control that may be
  * stored. Anything else is refused (null), so the handoff can never widen what is cached.
  */
 export function acceptHandoff(entry: unknown, origin: string): AcceptedHandoff | null {

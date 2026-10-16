@@ -11,6 +11,11 @@ test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate
 const mapEl = (page: Page) => page.getByTestId("naga-map");
 const overlayPaths = (page: Page) => page.locator(".leaflet-overlay-pane path");
 const BADGE = "Unverified route — confirm with the driver";
+// PROVISIONAL_PLAN with the snapshot's model (walks on the walk-graph fixture's paths where found).
+const EST_0930_FIRST = "Estimate 8–15 min + waiting (unknown)";
+const EST_0930_SECOND = "Estimate 30–47 min + waiting (unknown)";
+const EST_0710_FIRST = "Estimate 9–18 min + waiting (unknown)";
+const EST_0710_SECOND = "Estimate 34–62 min + waiting (unknown)";
 
 type PlanCall = { url: string; body: unknown };
 
@@ -62,7 +67,7 @@ async function pinBoth(page: Page) {
   await page.getByRole("button", { name: "Set destination here" }).click();
 }
 
-test("trip options show the unverified badge, estimate chips and no times", async ({ page }) => {
+test("trip options show the unverified badge, estimate chips and honest time estimates", async ({ page }) => {
   const calls = await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
   await pinBoth(page);
@@ -73,11 +78,11 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   await expect(cards).toHaveCount(2);
   for (const card of await cards.all()) {
     await expect(card.getByTestId("unverified-badge")).toHaveText(BADGE);
-    await expect(card).toContainText("Time not available");
+    await expect(card).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
     await expect(card).toContainText("Loop A");
     await expect(card).toContainText("clockwise");
   }
-  await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Estimate ₱14–₱17");
+  await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Estimate ₱14");
   await expect(cards.nth(0)).toContainText("No transfers");
   await expect(cards.nth(0)).toContainText("≈ 230 m");
   // Ride distance on the ride leg of the strip too (decision B).
@@ -85,13 +90,13 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   // Least walking: the long loop ride is obvious.
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1)).toContainText("Ride ≈ 5.5 km");
-  await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Estimate ₱14–₱20");
+  await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Estimate ₱16–₱18");
 
   // Accessible names carry the label and the fare estimate.
-  await expect(page.getByRole("button", { name: /Recommended · Fewest transfers.*Estimate ₱14–₱17/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Recommended · Fewest transfers.*Estimate ₱14(?!–)/ })).toBeVisible();
 
   await expect(options).toContainText("Walking distances are estimates; paths not verified.");
-  await expect(options).toContainText("Transport data revision osm-places-2026-10-15");
+  await expect(options).toContainText("Transport data revision modes-lines-2026-10-16");
   await expect(page.getByText("Verified route", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Exact|arrive/i)).toHaveCount(0);
   await expect(page.getByTestId("no-verified-commute")).toHaveCount(0);
@@ -103,18 +108,17 @@ test("trip options show the unverified badge, estimate chips and no times", asyn
   expect(last.body).toMatchObject({ origin: { lat: expect.any(Number), lng: expect.any(Number) }, destination: { lat: expect.any(Number), lng: expect.any(Number) } });
 });
 
-test("trip detail lists the legs, highlights stops as markers and draws no line", async ({ page }) => {
+test("trip detail lists the legs, highlights stops as markers above the trip lines", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
-  const pathsBefore = await overlayPaths(page).count();
   await pinBoth(page);
 
   await page.getByTestId("trip-option").first().click();
   const detail = page.getByTestId("trip-detail");
   await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
-  await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14–₱17");
-  await expect(detail).toContainText("Time not available");
+  await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
+  await expect(detail).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
 
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps).toHaveCount(4);
@@ -128,15 +132,17 @@ test("trip detail lists the legs, highlights stops as markers and draws no line"
   await expect(steps.nth(2)).toContainText("Para!");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
-  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14–₱17 · from reported fare rules · matrix not verified/);
+  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14 · traditional jeepney rate · from reported fare rules · matrix not verified/);
   await expect(detail).toContainText("Corrections open soon");
   await expect(detail.getByRole("link")).toHaveCount(0);
 
-  // Boarding and getting-off stops are DOM markers; no path (line) is added to the map.
+  // Boarding and getting-off stops are DOM markers above the trip's own lines (Task 12); the
+  // routes overview is not drawn while a trip is shown.
   await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
   await expect(page.getByRole("img", { name: "Board at Plaza Rizal (A1)" })).toBeAttached();
   await expect(page.getByRole("img", { name: "Get off at Avenue Square (A5)" })).toBeAttached();
-  expect(await overlayPaths(page).count()).toBe(pathsBefore);
+  await expect(page.locator(".leaflet-overlay-pane path.pn-line--ride").first()).toBeAttached();
+  await expect(page.locator(".leaflet-overlay-pane path.pn-line--route")).toHaveCount(0);
   await expect(page.locator(".leaflet-overlay-pane polyline")).toHaveCount(0);
 
   const a11y = await new AxeBuilder({ page }).include('[data-testid="trip-sheet"]').withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
@@ -148,6 +154,76 @@ test("trip detail lists the legs, highlights stops as markers and draws no line"
   await expect(page.getByTestId("trip-option").first()).toBeFocused();
   await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
 });
+
+// Time estimates with a pinned Manila clock (Task 14 fix): exact ranges from the snapshot's model,
+// the peak note only when the peak band is used, the "How times are estimated" sheet (sources,
+// assumptions, focus), and axe in light and dark on the options, the detail and the sheet.
+const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag22aa"];
+async function expectAxeClean(page: Page, selector: string) {
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),
+  );
+  const results = await new AxeBuilder({ page }).include(selector).withTags(AXE_TAGS).analyze();
+  const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+  expect(serious, serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`).join("\n")).toEqual([]);
+}
+
+const TIMES = {
+  "09:30": { peak: null, first: EST_0930_FIRST, second: EST_0930_SECOND },
+  "07:10": { peak: "Peak hours · slower estimate (06:00–08:00)", first: EST_0710_FIRST, second: EST_0710_SECOND },
+} as const;
+
+for (const colorScheme of ["light", "dark"] as const) {
+  for (const clock of ["09:30", "07:10"] as const) {
+    test(`time estimates at ${clock} Manila: exact ranges, peak note ${clock === "07:10" ? "shown" : "absent"}, the basis sheet, axe (${colorScheme})`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme });
+      await page.clock.setFixedTime(new Date(`2026-10-16T${clock}:00+08:00`));
+      await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+      await openApp(page);
+      await pinBoth(page);
+      const want = TIMES[clock];
+      const cards = page.getByTestId("trip-option");
+      await expect(cards.nth(0).getByTestId("trip-option-time")).toContainText(want.first);
+      await expect(cards.nth(1).getByTestId("trip-option-time")).toContainText(want.second);
+      if (want.peak) await expect(cards.nth(0).getByTestId("trip-peak-note")).toHaveText(want.peak);
+      else await expect(page.getByTestId("trip-peak-note")).toHaveCount(0);
+      // The range is spoken in words in the card's accessible name.
+      await expect(cards.nth(0)).toHaveAccessibleName(/Estimate \d+ to \d+ minutes \+ waiting \(unknown\)/);
+      await expectAxeClean(page, '[data-testid="trip-sheet"]');
+
+      await cards.nth(0).click();
+      const detail = page.getByTestId("trip-detail");
+      await expect(detail.getByTestId("trip-detail-time")).toContainText(want.first);
+      if (want.peak) await expect(detail.getByTestId("trip-peak-note")).toHaveText(want.peak);
+      else await expect(detail.getByTestId("trip-peak-note")).toHaveCount(0);
+      await expect(detail.getByTestId("leg-time").filter({ hasText: "ride" })).toContainText(/^≈ \d+–\d+ min ride · along the approximate path/);
+      await expect(detail.getByTestId("ride-fleet-class").first()).toContainText(/^Traditional jeepney · operating \(owner-confirmed/);
+      await expectAxeClean(page, '[data-testid="trip-sheet"]');
+
+      const opener = detail.getByTestId("how-times-estimated-btn");
+      await opener.click();
+      const sheet = page.getByTestId("eta-basis-sheet");
+      await expect(sheet).toBeVisible();
+      await expect(sheet.getByRole("button", { name: "Close how times are estimated" })).toBeFocused();
+      for (const code of ["N28", "N16", "N29", "N04"]) await expect(sheet).toContainText(code);
+      for (const a of ["A1:", "A2:", "A3:"]) await expect(sheet).toContainText(a);
+      await expect(sheet).toContainText("Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.");
+      await expect(sheet).not.toContainText(/\blive\b/i);
+      // Modal focus: Tab cycles inside the sheet (Close, the scrollable body); Escape closes and
+      // focus returns to the opener.
+      await page.keyboard.press("Tab");
+      await expect(sheet.getByTestId("eta-basis-body")).toBeFocused();
+      await page.keyboard.press("Tab");
+      await expect(sheet.getByRole("button", { name: "Close how times are estimated" })).toBeFocused();
+      await page.keyboard.press("Shift+Tab");
+      await expect(sheet.getByTestId("eta-basis-body")).toBeFocused();
+      await expectAxeClean(page, '[data-testid="eta-basis-sheet"]');
+      await page.keyboard.press("Escape");
+      await expect(sheet).toHaveCount(0);
+      await expect(opener).toBeFocused();
+    });
+  }
+}
 
 test("opening and closing a trip detail keeps exactly one stop-pin canvas", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
@@ -170,6 +246,7 @@ test("opening and closing a trip detail keeps exactly one stop-pin canvas", asyn
 test("no coverage keeps a clear message", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, NO_ROUTE_PLAN));
   await openApp(page);
+  await expect(page.locator(".leaflet-overlay-pane path.pn-line--route").first()).toBeAttached();
   const pathsBefore = await overlayPaths(page).count();
   await pinBoth(page);
 

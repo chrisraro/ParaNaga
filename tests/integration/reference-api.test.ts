@@ -1,5 +1,6 @@
-// Reference read model (migration 0004, search index, terminals, sources) against a throwaway
-// Neon branch with the Naga transit import AND the committed OpenStreetMap snapshot applied:
+// Reference read model (migrations 0004 and 0008, search index, terminals, sources) against a
+// throwaway Neon branch with the Naga transit import, the committed OpenStreetMap snapshot AND the
+// reviewed modes seed applied (the full `pnpm db:import --commit`); the modes revision is published:
 //   bash scripts/with-neon-branch.sh pnpm test:integration
 // The handlers run as in production (withRequestContext → pool on PARANAGA_DATABASE_URL as
 // paranaga_app). Restores the previously published revision afterwards.
@@ -15,6 +16,7 @@ import { runInRequestContext } from "@/server/db/run-in-context";
 import { getPool } from "@/server/db/client";
 import { GET as searchIndexGET } from "@/app/api/v1/network/search-index/[revisionId]/route";
 import { GET as snapshotGET } from "@/app/api/v1/network/snapshot/[revisionId]/route";
+import { GET as linesGET } from "@/app/api/v1/network/lines/[revisionId]/route";
 import { GET as terminalGET } from "@/app/api/v1/terminals/[code]/route";
 import { GET as sourcesGET } from "@/app/api/v1/sources/route";
 import { GET as stopsGET } from "@/app/api/v1/stops/route";
@@ -22,7 +24,13 @@ import { GET as stopGET } from "@/app/api/v1/stops/[id]/route";
 import { GET as routesGET } from "@/app/api/v1/routes/route";
 import { GET as routeGET } from "@/app/api/v1/routes/[code]/route";
 import { NAGA_MAX_BOUNDS } from "@/domain/geo/naga";
-import { buildImportPlan, readDataFiles, readNewestOsmSnapshot } from "../../scripts/lib/import-plan";
+import {
+  buildImportPlan,
+  readDataFiles,
+  readNewestModesSeed,
+  readNewestOsmSnapshot,
+  readPinnedRoadsSnapshot,
+} from "../../scripts/lib/import-plan";
 import { commitImport } from "../../scripts/lib/import-writer";
 import { writeFixture } from "./fixture-capture";
 
@@ -90,16 +98,17 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     await importer.connect();
     app = new pg.Pool({ connectionString: appUrl, max: 1 });
 
-    // Transit files plus the committed OSM snapshot (as `pnpm db:import --commit` does). On a
-    // branch of main both are usually present already ("unchanged"); then publish the OSM
-    // revision (which carries the transit data) if another test file published something else.
+    // Transit files, the committed OSM snapshot, the reviewed modes seed and the pinned road
+    // snapshot (as `pnpm db:import --commit` does). On a branch where they are present already
+    // ("unchanged"), publish the modes-lines revision (which carries the transit, OSM and modes
+    // data) if another test file published something else.
     previous = await pointer();
-    const plan = buildImportPlan(readDataFiles("Data_Sets"), readNewestOsmSnapshot());
+    const plan = buildImportPlan(readDataFiles("Data_Sets"), readNewestOsmSnapshot(), readNewestModesSeed(), readPinnedRoadsSnapshot());
     expect(plan.problems).toEqual([]);
     await commitImport(ownerUrl!, plan);
     const ids = await owner.query<{ id: string; label: string }>(
-      "select id, label from transit.revision where label = any($1)", [[plan.osm!.revisionLabel, plan.revisionLabel]]);
-    revisionId = ids.rows.find((r) => r.label === plan.osm!.revisionLabel)!.id;
+      "select id, label from transit.revision where label = any($1)", [[plan.lines!.revisionLabel, plan.revisionLabel]]);
+    revisionId = ids.rows.find((r) => r.label === plan.lines!.revisionLabel)!.id;
     transitRevisionId = ids.rows.find((r) => r.label === plan.revisionLabel)!.id;
     if ((await pointer()) !== revisionId) await publish(revisionId);
   }, 180_000);
@@ -133,9 +142,12 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       await snapshotGET(get(`/network/snapshot/${revisionId}`), ctx({ revisionId })), "public, s-maxage=31536000, immutable");
     expect(JSON.parse(snapshot).stops).toHaveLength(128);
     saveFixture("snapshot.json", snapshot);
+    // The approximate paths (Task 7), a separate immutable resource (D18).
+    const lines = await okText(await linesGET(get(`/network/lines/${revisionId}`), ctx({ revisionId })), "public, s-maxage=31536000, immutable");
+    saveFixture("lines.json", lines);
     const list = await okText(await routesGET(get("/routes")), "public, s-maxage=300");
     saveFixture("routes.json", list);
-    for (const code of ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8-A", "R8-B", "R8-C", "R8-D"]) {
+    for (const code of ["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8-A", "R8-B", "R8-C", "R8-D", "TRI-VISTODA"]) {
       saveFixture(`route-${code.toLowerCase()}.json`, await okText(await routeGET(get(`/routes/${code}`), ctx({ code })), "public, s-maxage=300"));
     }
   });
@@ -168,16 +180,29 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       "public, s-maxage=31536000, immutable",
     );
     const index = searchIndexSchema.parse(JSON.parse(raw));
-    expect(index.revision).toMatchObject({ revisionId, label: "osm-places-2026-10-15", kind: "provisional" });
+    expect(index.revision).toMatchObject({ revisionId, label: "modes-lines-2026-10-16", kind: "provisional" });
     expect(index.barangays).toHaveLength(27);
     expect(index.studyLabels).toHaveLength(32);
-    expect(index.terminals).toHaveLength(6);
-    expect(index.routes).toHaveLength(11);
+    expect(index.terminals).toHaveLength(16);
+    expect(index.routes).toHaveLength(13);
     expect(index.osmPlaces).toHaveLength(233);
     expect(index.destinationCategories).toHaveLength(5);
     expect(index.feederLeads).toHaveLength(5);
     expect(index.legacyNames).toHaveLength(6);
-    for (const x of [...index.terminals, ...index.barangays, ...index.studyLabels]) expect(x.location).toBeNull();
+    for (const x of [...index.barangays, ...index.studyLabels]) expect(x.location).toBeNull();
+    // Terminals carry only their OpenStreetMap coordinate; T02 (street conflict) and the two
+    // tricycle waiting areas have none.
+    const terminal = (code: string) => index.terminals.find((t) => t.code === code)!;
+    expect(terminal("T01").location).toEqual({ lat: 13.6192359, lng: 123.1897426, source: "osm" });
+    for (const code of ["T02", "T05", "T15", "T16"]) expect(terminal(code).location, code).toBeNull();
+    expect(terminal("T14")).toMatchObject({ name: "Balatas Tricycle Terminal", kind: "terminal", modes: ["tricycle"] });
+    // The feeders are searchable, with their mode, branch street text and fleet sentence.
+    const vistoda = index.routes.find((r) => r.code === "TRI-VISTODA")!;
+    expect(vistoda).toMatchObject({ mode: "tricycle", fleetLabel: "Tricycle (special trimobile) · authorized 2025 · operation not verified" });
+    expect(vistoda.streets).toEqual(expect.arrayContaining(["Langon – Vistansa Subd – Ateneo de Naga"]));
+    expect(index.routes.find((r) => r.code === "R4")!.fleetLabel).toBe("Traditional and modern jeepneys");
+    expect(index.routes.find((r) => r.code === "R1")!.fleetLabel).toBe("Traditional jeepneys");
+    expect(raw).not.toMatch(/e[-_ ]?jeep/i);
 
     // Every labelled published pin is in exactly one mapped-pin place; blank ones in none.
     const stops = await appRows(sql`select stop_point_id, label_raw from transit.v_published_stops`);
@@ -208,16 +233,50 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
 
   // ---------------------------------------------------------------- terminals
 
-  it("T01 lists R8-A and R8-B on the legal plan and on the trial, with sources and no coordinates", async () => {
+  it("T01: the BCS OpenStreetMap coordinate with provenance, R8-A/R8-B, and the regional services with fare estimates", async () => {
     const raw = await okText(await terminalGET(get("/terminals/T01"), ctx({ code: "T01" })), REFERENCE_CACHE);
     const body = terminalDetailSchema.parse(JSON.parse(raw));
-    expect(body.terminal).toMatchObject({ code: "T01", name: "Bicol Central Station", lat: null, lng: null, sourceCodes: ["S09"] });
+    expect(body.terminal).toMatchObject({
+      code: "T01", name: "Bicol Central Station", kind: "terminal", lat: 13.6192359, lng: 123.1897426,
+      modes: ["bus", "uv_express"], modeSources: { bus: ["S09", "N02"], uv_express: ["N01"] },
+      coordinate: {
+        source: "osm_way_centroid", osmType: "way", osmId: 293702439, osmVersion: 6, licence: "ODbL 1.0",
+        attribution: "Map data © OpenStreetMap contributors", attributionUrl: "https://www.openstreetmap.org/copyright",
+      },
+    });
     expect(body.routes.map((r) => [r.routeCode, r.basis])).toEqual([
       ["R8-A", "legal_plan"], ["R8-A", "trial"], ["R8-B", "legal_plan"], ["R8-B", "trial"],
     ]);
     expect(body.routes.find((r) => r.basis === "trial")!.sourceCodes).toContain("S03");
-    expect(body.sources.map((s) => s.code)).toEqual(expect.arrayContaining(["S09", "S03"]));
+    expect(body.regionalServices.map((s) => s.code)).toEqual(["RS02", "RS03", "RS05", "RS06", "RS07"]);
+    for (const s of body.regionalServices) {
+      expect(s.sourceCodes.length, s.code).toBeGreaterThan(0);
+      expect(s.fareEstimate.isEstimate).toBe(true);
+      expect(s.fareEstimate.text, s.code).toMatch(/operator prices may differ$/);
+      // Task 7 (D5): the OSM relation length (shorter direction), labelled as an approximate path length.
+      expect(s.distanceKm, s.code).toBeGreaterThan(0);
+      expect(s.distanceBasis, s.code).toMatch(/OpenStreetMap route relation.*not a measured trip distance/);
+      expect(s.sourceCodes, s.code).toContain("OSMR-2026-10-16");
+    }
+    const uv = body.regionalServices.find((s) => s.code === "RS05")!;
+    expect(uv).toMatchObject({ mode: "uv_express", fareRuleCodes: ["F06", "F07"], distanceKm: 94.278 });
+    expect(uv.fareEstimate).toMatchObject({ lowCentavos: 24500, highCentavos: 28300 });
+    const codes = body.sources.map((s) => s.code);
+    expect(codes).toEqual(expect.arrayContaining(["S09", "S03", "N01", "N02", "N17"]));
+    for (const s of body.regionalServices) for (const c of s.sourceCodes) expect(codes, c).toContain(c);
     saveFixture("terminal-t01.json", raw);
+  });
+
+  it("T14 (Balatas tricycle terminal) has its OSM node; T15/T16 have no coordinate", async () => {
+    const raw = await okText(await terminalGET(get("/terminals/T14"), ctx({ code: "T14" })), REFERENCE_CACHE);
+    const body = terminalDetailSchema.parse(JSON.parse(raw));
+    expect(body.terminal).toMatchObject({ code: "T14", kind: "terminal", modes: ["tricycle"], coordinate: { source: "osm_node", osmType: "node" } });
+    expect(body.regionalServices).toEqual([]);
+    saveFixture("terminal-t14.json", raw);
+    for (const code of ["T15", "T16"]) {
+      const t = terminalDetailSchema.parse(await (await terminalGET(get(`/terminals/${code}`), ctx({ code }))).json());
+      expect(t.terminal, code).toMatchObject({ kind: "waiting_area", lat: null, lng: null, coordinate: null });
+    }
   });
 
   it("T02 has the trial routes and the eastbound category; T06 lists no routes", async () => {
@@ -227,7 +286,7 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     const t06Raw = await okText(await terminalGET(get("/terminals/T06"), ctx({ code: "T06" })), REFERENCE_CACHE);
     const t06 = terminalDetailSchema.parse(JSON.parse(t06Raw));
     expect(t06.routes).toEqual([]);
-    expect(t06.terminal.lat).toBeNull();
+    expect(t06.terminal).toMatchObject({ kind: "station", coordinate: { source: "osm_way_centroid" } });
     saveFixture("terminal-t06.json", t06Raw);
   });
 

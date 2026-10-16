@@ -1,5 +1,5 @@
 // Client-side search over the published search index (src/domain/search/search.ts), on the REAL
-// index captured for the e2e fixtures (revision osm-places-2026-10-15: 233 OpenStreetMap places,
+// index captured for the e2e fixtures (revision modes-lines-2026-10-16: 233 OpenStreetMap places,
 // 47 mapped-pin places, 11 routes, 6 terminals, 27 barangays, 32 study labels).
 import { describe, expect, it } from "vitest";
 import { searchIndexSchema } from "@/domain/api/schemas";
@@ -113,7 +113,7 @@ describe("searchIndex: ranking", () => {
 
   it("orders groups in the fixed order of the brief; old route names never lead", () => {
     const groups = searchIndex(index, "magsaysay", off);
-    expect(groups.map((g) => g.id)).toEqual(["places", "routes", "study", "legacy"]);
+    expect(groups.map((g) => g.id)).toEqual(["places", "routes", "terminals", "study", "legacy"]);
     expect(groups[0]!.id).toBe("places");
     expect(GROUP_ORDER).toEqual(["saved", "places", "routes", "terminals", "barangays", "study", "legacy", "regional"]);
   });
@@ -128,7 +128,7 @@ describe("searchIndex: ranking", () => {
 
   it("keeps every match in its group; the screen shows the first GROUP_LIMIT", () => {
     expect(GROUP_LIMIT).toBe(5);
-    expect(group(searchIndex(index, "Centro", off), "routes")!.results.length).toBe(11);
+    expect(group(searchIndex(index, "Centro", off), "routes")!.results.length).toBe(12); // 11 LPTRP routes + the VISTODA feeder
   });
 
   it("searches saved places first among equals and lists them in the Saved group", () => {

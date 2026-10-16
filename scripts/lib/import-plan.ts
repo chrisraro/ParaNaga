@@ -29,6 +29,13 @@ import {
 } from "../../src/domain/import/seed";
 import { parseSurveyTemplate } from "../../src/domain/import/survey-template";
 import type { OsmPlaceCategory } from "../../src/domain/places/osm-categories";
+import { buildLinesPlan, type LinesPlan } from "./lines-plan";
+import { buildModesPlan, type ModesFile, type ModesPlan } from "./modes-plan";
+import type { RoadsSnapshot } from "./roads-snapshot";
+
+export { MODES_DIR, readNewestModesSeed, type ModesFile, type ModesPlan } from "./modes-plan";
+export { readPinnedRoadsSnapshot, ROADS_DIR, type RoadsSnapshot } from "./roads-snapshot";
+export type { LinesPlan } from "./lines-plan";
 
 export const DATA_FILES = [
   "naga_mapped_stops_source.kml",
@@ -107,6 +114,13 @@ export type ImportPlan = {
   deferred: Record<string, string>;
   /** The newest committed OpenStreetMap places snapshot, or null when none is committed yet. */
   osm: OsmPlan | null;
+  /** The newest reviewed modes seed (data/source/research), or null when none is given. */
+  modes: ModesPlan | null;
+  /**
+   * The road outputs (approximate paths, walk graph, time-estimate parameters, regional distances)
+   * from the pinned road snapshot, or null when no snapshot is given (Task 7).
+   */
+  lines: LinesPlan | null;
   problems: string[];
 };
 
@@ -220,7 +234,12 @@ function unmappedData(seed: NormalizedSeed): string[] {
   return issues;
 }
 
-export function buildImportPlan(files: DataFiles, osmFile: OsmFile | null = null): ImportPlan {
+export function buildImportPlan(
+  files: DataFiles,
+  osmFile: OsmFile | null = null,
+  modesFile: ModesFile | null = null,
+  roads: RoadsSnapshot | null = null,
+): ImportPlan {
   const text = (f: DataFileName) => files[f].toString("utf8");
   const problems: string[] = [];
   const osm = osmFile ? buildOsmPlan(osmFile) : null;
@@ -240,6 +259,8 @@ export function buildImportPlan(files: DataFiles, osmFile: OsmFile | null = null
   problems.push(...crossCheckDesignatedCsv(seed.designatedCandidates, text("designated_stop_candidates.csv")));
   problems.push(...crossCheckSeedMappedStops(seed.mappedStopRecords, identified, conflicts));
   problems.push(...unmappedData(seed));
+  const modes = modesFile ? buildModesPlan(modesFile, seed) : null;
+  if (modes) problems.push(...modes.problems);
 
   const rawFeatures = planRawFeatures(identified, problems);
   const fareRules = seed.fareRules.map((f): PlannedFareRule => ({
@@ -287,6 +308,18 @@ export function buildImportPlan(files: DataFiles, osmFile: OsmFile | null = null
     };
   });
   const documentsHash = sha256Hex(documents.map((d) => `${d.fileName}:${d.sha256}`).sort().join("\n"));
+
+  // Road outputs need the reviewed modes seed (aliases, terminals, parameters, feeder anchors).
+  let lines: LinesPlan | null = null;
+  if (roads && !modes) problems.push(`${roads.fileName}: the road outputs need the reviewed modes seed (${MODES_SEED_FILES})`);
+  else if (roads && modes) {
+    lines = buildLinesPlan({
+      roads, modes, variants, identified, documentsHash,
+      osmPlaces: (osm?.places ?? []).map((p) => ({ key: p.key, lat: p.lat, lng: p.lng })),
+      osmPlacesSha256: osm?.sha256 ?? null,
+    });
+    problems.push(...lines.problems);
+  }
 
   const layerCounts = Object.fromEntries(
     Object.keys(EXPECTED_LAYER_COUNTS).map((l) => [`raw_features_${l}`, identified.filter((r) => r.layer === l).length]),
@@ -337,9 +370,13 @@ export function buildImportPlan(files: DataFiles, osmFile: OsmFile | null = null
     counts,
     deferred: { route_aliases: "deferred (no structured source)" },
     osm,
+    modes,
+    lines,
     problems,
   };
 }
+
+const MODES_SEED_FILES = "data/source/research/naga-modes-seed-*.json";
 
 /** Raw feature rows; a record without verbatim coordinate text is a problem, not a row. */
 export function planRawFeatures(identified: IdentifiedStop[], problems: string[]): PlannedRawFeature[] {

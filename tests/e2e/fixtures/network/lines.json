@@ -1,0 +1,1831 @@
+{
+ "formatVersion": 1,
+ "revision": {
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "label": "modes-lines-2026-10-16",
+  "kind": "provisional",
+  "publishedAt": "2026-10-16T01:49:26.840Z"
+ },
+ "label": "Approximate path, not a verified route shape",
+ "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+ "attributionUrl": "https://www.openstreetmap.org/copyright",
+ "licence": "ODbL 1.0",
+ "roadSources": [
+  "OSMR-2026-10-16"
+ ],
+ "lines": [
+  {
+   "variantId": "34982ac9-df4a-44af-8a90-9ffae49c078e",
+   "routeId": "e24d021d-a23c-49a7-82d9-bc6c0f7a0abf",
+   "routeCode": "R1",
+   "routeName": "Centro–San Isidro via Cararayan",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "inbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R1-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "cperAk~joV`@h@x@lAvCtDr@fBDj@Ex@YvCUbDi@~FEj@QzBa@tEG|BHxA\\fCXfA`@nAd@`Bh@lBTt@l@vBn@tBr@rCl@nB|@jD\\~@^`Bj@pBVz@lArDt@rBR|@TbANfABd@@r@ArAEr@IfBGp@KfAOrCC^[zCQjCCZK~AEp@m@vHg@tFCXMzBQbCIv@Eb@Et@Gv@Ch@En@MbBCh@Ev@Gn@Gb@Gp@YdDo@fBmBzCmAlBU\\o@dAe@dAEz@DpDCxAKvAEt@SxBMnAEh@IlAMfAElAO`BGl@WpDO~BObAGl@WfCEt@KfAC`@IpAANSvBKhAW|DGf@Ct@Cr@?d@?d@Fp@Dr@Jj@Jd@Vl@Xh@h@t@r@bAv@jA~A`Cv@dAHJZ`@Vj@|AdFRl@h@pBPf@BLD~@@NDhA@\\@l@BlA@^?r@D`AGt@[jBG\\Ov@k@hESjAQdAIh@It@G|@G|@I^IPCFGHOJa@L_@DiA@W?{@Aa@A_@FQBOFOLSXCDIPGHYh@w@vAINy@zAi@~@i@dAOZU^Q\\UXUf@_@r@M\\G^Ad@@d@RhDHvABb@@NPvBXjCh@jDl@`D^|Ab@bBPh@Rd@`@t@t@bAhAtAPPrB`CNPSRg@h@MNGHMNML]`@[ZGJcAfA{@`A_A`AUT^d@p@t@h@l@j@n@hApAZ\\FFdAlA\\^VXt@|@|@dAl@n@^`@LPBBtAvADH^`@X\\p@r@DFVZPVr@x@|AdBv@p@\\XdAt@dBbA`B|@HF^PXN^Tj@^`@XbAx@mArB`DrAdCdAZNf@RHDTJ~@TXFJBbAPX?ZAVAxAc@bBa@`Bm@]c@}AaAcA]_A]w@W}AW?CDk@B]?ILoANiBBUBcABg@F}@@URaC@STkBXmEPeCPgCTsC]CsAIWEaAMsAUHoADq@P}A",
+   "lengthM": 11956.2,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 10665.4,
+     "toM": 11670.6,
+     "lengthM": 1005.2,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "panganiban drive",
+       "m": 748
+      },
+      {
+       "name": "riverside street",
+       "m": 257
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 7,
+    "matchedStreets": 7,
+    "unmatchedStreets": [],
+    "offListShare": 0.0841,
+    "gateOffListShare": 0.0841,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "40578b72-5444-429e-8ab7-ad0adc4bcf51",
+   "routeId": "e24d021d-a23c-49a7-82d9-bc6c0f7a0abf",
+   "routeCode": "R1",
+   "routeName": "Centro–San Isidro via Cararayan",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "outbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R1-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "uwdrAib{nVp@XjAh@VL~Ax@HBz@^rAf@rB|@`DrAdCdAZNf@RHDTJ~@TXFRsCR_D?CDk@B]?ILoAoBm@{B_AqE}BaDkBkBiAw@a@e@Y}AsAo@k@mAwAcB{BkAcBw@uAQwAMuAKmAM{AYqAg@}@[a@OS_@c@KOgEeFQSOQsBaCQQiAuAu@cAa@u@Se@Qi@c@cB_@}Am@aDi@kDYkCQwBAOCc@IwASiDAe@@e@F_@L]^s@Tg@TYP]T_@N[h@eAh@_Ax@{AHOv@wAXi@FIHQBERYNMNGPC^G`@@z@@V?hAA^E`@MNKFIBGHQH_@F}@F}@Hu@Hi@PeARkAj@iENw@F]ZkBFu@EaA?s@A_@CmAAm@A]EiAAOE_ACMQg@i@qBSm@}AeFWk@[a@IKw@eA_BaCw@kAs@cAi@u@Yi@Wm@Ke@Kk@Es@Gq@?e@?e@Bs@Bu@Fg@V}DJiARwB@OHqABa@JgADu@VgCFm@NcAN_CVqDFm@NaBDmALgAHmADi@LoARyBDu@JwAByAEqDD{@d@eAn@eAT]lAmBlB{Cn@gBXeDFq@Fc@Fo@Dw@Bi@LcBDo@Bi@Fw@Du@Dc@Hw@PcCL{BBYf@uFl@wHDq@J_BB[PkCZ{CB_@NsCJgAFq@HgBDs@@sAAs@Ce@OgAUcAS}@u@sBmAsDW{@k@qB_@aB]_A}@kDm@oBs@sCo@uBm@wBUu@i@mBe@aBa@oAYgA]gCIyAF}B`@uEP{BDk@h@_GTcDXwCDy@Ek@s@gBwCuDy@mAa@i@",
+   "lengthM": 10797.6,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 882.1,
+     "toM": 1377.1,
+     "lengthM": 495,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "blumentritt street",
+       "m": 495
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 5,
+    "matchedStreets": 5,
+    "unmatchedStreets": [],
+    "offListShare": 0.0458,
+    "gateOffListShare": 0.0458,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "9cb4d7a5-47b1-43aa-ac3b-d8f030fc6cf2",
+   "routeId": "1e8705ca-bb01-4c96-a0da-68a71173bbd4",
+   "routeCode": "R2",
+   "routeName": "Centro–Del Rosario via Magsaysay Avenue",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "inbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R2-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "qsbrAkydoVALOv@Ib@UlAYzAG^Id@CNCL[bBGZQfAEXETATAR@R?L@^@TBRFt@LrAH|@PlBHp@BVFb@BXF`@Fb@NlAPpABPFZF^Rt@Pp@d@|AHV@FVrABR@P@V?T?P?TAVCZEZW`ASn@Ql@w@fCkAxDQn@IRQl@i@~Ae@xASn@ADkAtCEJ]v@s@~AMV_@p@_ApAUXo@r@UXWVy@`AILg@t@Ud@Uj@Mb@Mn@G^E\\Cd@Cl@C|@C|@C|@ErBMlGALANC|@EhBAr@@j@B\\Db@F\\HZJ\\Vn@Td@NZJXPb@DPFZBJBN@PD\\Dl@Dd@@^@\\?X@Z?X?^Ch@AVA`@ANA^AJATQbCG|@E\\G`ACZAl@?`@?\\@^HhB?RDt@FtAHbAB`ABp@@R@p@@`@@j@B`@@\\DlBB`A?h@AXCh@CZOjAE\\GRETEBEFSDY@_@?g@@[Bg@?cLB}D@mB@i@@S@]Fi@JOFk@R[Ng@XsHfGa@ZsAfAwC|BC@QPu@l@a@Z_@ZWRe@^kA~@STSRg@h@MNGHMNML]`@[ZGJcAfA{@`A_A`AUT^d@p@t@h@l@j@n@hApAZ\\FFdAlA\\^VXt@|@|@dAl@n@^`@LPBBtAvADH^`@X\\p@r@DFVZPVr@x@|AdBv@p@\\XdAt@dBbA`B|@HF^PXN^Tj@^`@XbAx@mArB`DrAdCdAZNf@RHDTJ~@TXFJBbAPX?ZAVAxAc@bBa@h@~AFbAD~@@\\",
+   "lengthM": 7699.1,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 4125.1,
+     "toM": 4134.1,
+     "lengthM": 9,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 9
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 6,
+    "matchedStreets": 6,
+    "unmatchedStreets": [],
+    "offListShare": 0.0012,
+    "gateOffListShare": 0.0012,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "ebc3ac41-09bc-4845-959d-19cf82c5ab1b",
+   "routeId": "1e8705ca-bb01-4c96-a0da-68a71173bbd4",
+   "routeCode": "R2",
+   "routeName": "Centro–Del Rosario via Magsaysay Avenue",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "outbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R2-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "ibcrAijznVi@EiAI_AGs@GcAMiD_@_BQwAS}@QUGwA[c@KSE]GMENs@@KD]@MBYBWFq@}Au@MIGIW]yA{AcAy@a@Yk@_@_@UYO_@QIGaB}@eBcAeAu@]Yw@q@}AeBs@y@QWW[EGq@s@Y]_@a@EIuAwACCMQ_@a@m@o@}@eAu@}@WY]_@eAmAGG[]iAqAk@o@i@m@q@u@_@e@TU~@aAz@aAbAgAFKZ[\\a@LMLOFILOf@i@RSRUjA_Ad@_@VS^[`@[t@m@PQBAvC}BrAgA`@[rHgGf@YZOj@SNGh@K\\GRAh@AlBA|DAbLCf@?\\Fb@@\\?\\BTDBDFBFBF?FADADCBGBG?IAGCIEYAS?a@BkAB[Bi@@Y?i@CaAEmBA]Ca@Ak@Aa@Aq@ASCq@CaAIcAGuAEu@?SIiBA_@?]?a@@m@B[FaAD]F}@PcC@U@K@_@@O@a@@WBi@?_@?YA[?YA]A_@Ee@Em@E]AQCOCKG[EQQc@KYO[Ue@Wo@K]I[G]Ec@C]Ak@@s@DiBB}@@O@MLmGDsBB}@B}@B}@Bm@Be@D]F_@Lo@Lc@Tk@Te@f@u@HMx@aAVWTYn@s@TY~@qA^q@LWr@_B\\w@DKjAuC@ERo@d@yAh@_BPm@HSPo@jAyDv@gCPm@Ro@VaAD[B[@W?U?Q?UAWAQCSWsAAGIWe@}AQq@Su@G_@G[CQQqAOmAGc@Ga@CYGc@CWIq@QmBI}@MsAGu@CSAUA_@?MAS@S@UDUDYPgAF[ZcBBMBOHe@F_@X{ATmAHc@Nw@@M",
+   "lengthM": 7836.4,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 3653.1,
+     "toM": 3702.8,
+     "lengthM": 49.7,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 50
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 5,
+    "matchedStreets": 5,
+    "unmatchedStreets": [],
+    "offListShare": 0.0063,
+    "gateOffListShare": 0.0063,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "70cda719-c174-4cd1-8487-e89c7e1352cc",
+   "routeId": "71f7bd85-988d-4e30-989a-3fcc6ec1d23d",
+   "routeCode": "R3",
+   "routeName": "Centro–Del Rosario via Roxas Avenue",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "circuit",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R3-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "ykbrAsueoVW|AE^]bBI`@UrAGZUrAWrA]hB[dBCJKj@EVCHEVEVEPALOv@Ib@UlAYzAG^Id@CNCL[bBGZQfAEXETATAR@R?L@^@TBRFt@LrAH|@PlBHp@BVFb@BXF`@Fb@NlAPpABPFZF^Rt@Pp@d@|AHV@FVrABR@P@V?T?P?TAVCZEZW`ASn@Ql@w@fCkAxDQn@IRQl@i@~Ae@xASn@ADkAtCEJ]v@s@~AMV_@p@_ApAUXo@r@UXWVy@`AILg@t@Ud@Uj@Mb@Mn@G^E\\Cd@Cl@C|@C|@C|@ErBMlGALANC|@EhBAr@@j@B\\Db@F\\HZJ\\Vn@Td@NZJXPb@DPFZBJBN@PD\\Dl@Dd@@^@\\?X@Z?X?^Ch@AVA`@ANA^AJATQbCG|@E\\G`ACZAl@?`@?\\@^HhB?RDt@FtAHbAB`ABp@@R@p@@`@@j@B`@@\\DlBB`A?h@AXCh@CZOjAE\\GRETEBEFCF?F@HBFBDFBFBF?FADADCBGBG?IAGCIGEECIAG?GBEBEFCF?F@HBFBDFBFBF?FADADCLALBZF\\LND`@PNFt@XHDTNTPRPRRd@p@d@~@h@jAZp@r@vA`AtBx@`BZn@@BDJHN^v@z@fB`@v@jAbCN\\R`@d@`AXn@HRDJPj@Nh@FZFXHn@D^@R?H?F@N?T?PA`@?HCb@AXE`@Eh@E\\ANEb@ALEh@APIfAALCTKlAARANEh@CVKtAKlACVM~ACTC^Ed@c@xFGp@?FI|@GhA?^@ZD\\Ff@Fb@BNJb@JPMNMREJENGNCHITQf@_@v@eEm@iB_@yCm@sAQKAi@EiAI_AGs@GcAMiD_@_BQwAS}@QUGwA[c@KSE]GMEk@xAQj@nBZ\\FnDl@nARbBVRgC_BQW`CbBVdANpB\\?I@g@B{A?GbALr@F~@FhAHh@DJ@rAPxCl@hB^dEl@^w@Pg@HUFEHIHILa@DIFMDGCECGOm@CMQ]Gg@E]A[?_@FiAH}@?GFq@b@yFDe@B_@BUL_BBWJmAJuABWDi@@O@SJmABU@MHgA@QDi@@MDc@@OD]Di@Da@@YBc@?I@a@?Q?UAO?G?IASE_@Io@GYG[Oi@Qk@EKISYo@e@aASa@O]kAcCa@w@{@gB_@w@IOEKAC[o@y@aBaAuBs@wA[q@i@kAe@_Ae@q@SSSQUQUOIEu@YOGa@QOE]MQQOMOKCIEYAS?a@BkAB[Bi@@Y?i@CaAEmBA]Ca@Ak@Aa@Aq@ASCq@CaAIcAGuAEu@?SIiBA_@?]?a@@m@B[FaAD]F}@PcC@U@K@_@@O@a@@WBi@?_@?YA[?YA]A_@Ee@Em@E]AQCOCKG[EQQc@KYO[Ue@Wo@K]I[G]Ec@C]Ak@@s@DiBB}@@O@MLmGDsBB}@B}@B}@Bm@Be@D]F_@Lo@Lc@Tk@Te@f@u@HMx@aAVWTYn@s@TY~@qA^q@LWr@_B\\w@DKjAuC@ERo@d@yAh@_BPm@HSPo@jAyDv@gCPm@Ro@VaAD[B[@W?U?Q?UAWAQCSWsAAGIWe@}AQq@Su@G_@G[CQQqAOmAGc@Ga@CYGc@CWIq@QmBI}@MsAGu@CSAUA_@?MAS@S@UDUDYPgAF[ZcBBMBOHe@F_@X{ATmAHc@Nw@@MDQDWDWBIDWJk@BKZeB\\iBVsATsAF[TsAHa@\\cBD_@V}A",
+   "lengthM": 15918.9,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 4632.9,
+     "toM": 4711.8,
+     "lengthM": 79,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 79
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 4717.4,
+     "toM": 4801.7,
+     "lengthM": 84.3,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 84
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 6834.9,
+     "toM": 6892.2,
+     "lengthM": 57.3,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 57
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 8174.7,
+     "toM": 8249.5,
+     "lengthM": 74.8,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "prieto street",
+       "m": 75
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 8303.4,
+     "toM": 8375.2,
+     "lengthM": 71.7,
+     "reason": "oneway_conflict",
+     "streets": [
+      {
+       "name": "abella street",
+       "m": 72
+      }
+     ],
+     "against": [
+      "general luna street"
+     ]
+    },
+    {
+     "fromM": 8537.1,
+     "toM": 8618.3,
+     "lengthM": 81.2,
+     "reason": "oneway_conflict",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 81
+      }
+     ],
+     "against": [
+      "general luna street"
+     ]
+    },
+    {
+     "fromM": 9198.5,
+     "toM": 9239,
+     "lengthM": 40.5,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 40
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 7,
+    "matchedStreets": 7,
+    "unmatchedStreets": [],
+    "offListShare": 0.0307,
+    "gateOffListShare": 0.0307,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "07fe8536-6780-4361-bb05-29868c08d8d0",
+   "routeId": "430e9763-1fbe-4cc0-8e74-13b5401e0850",
+   "routeCode": "R4",
+   "routeName": "Centro–Del Rosario via Panganiban Drive",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "circuit",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional and modern jeepneys",
+    "chip": "Jeepney · traditional + modern",
+    "colourKey": "mixed_trad_modern",
+    "classes": [
+     {
+      "code": "FL-R4-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     },
+     {
+      "code": "FL-R4-MOD",
+      "vehicleClass": "modern_puj",
+      "evidenceLevels": [
+       "official_report",
+       "news_report",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": "2023-04-17",
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "about 10 air-conditioned units (2023–2024 reports); current count not confirmed",
+      "aircon": true,
+      "airconSourceCodes": [
+       "N14",
+       "U01"
+      ],
+      "cooperatives": [
+       "Naga City Allied Transport Cooperative (NACIATRASCO)"
+      ],
+      "sourceCodes": [
+       "N14",
+       "N38",
+       "N39",
+       "N41",
+       "U01"
+      ],
+      "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "mixed_trad_modern",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "ykbrAsueoVW|AE^]bBI`@UrAGZUrAWrA]hB[dBCJKj@EVCHEVEVEPALOv@Ib@UlAYzAG^Id@CNCL[bBGZQfAEXETATAR@R?L@^@TBRFt@LrAH|@PlBHp@BVFb@BXF`@Fb@NlAPpABPFZF^Rt@Pp@d@|AHV@FVrABR@P@V?T?P?TAVCZEZW`ASn@Ql@w@fCkAxDQn@IRQl@i@~Ae@xASn@ADkAtCEJ]v@s@~AMV_@p@_ApAUXo@r@UXWVy@`AILg@t@Ud@Uj@Mb@Mn@G^E\\Cd@Cl@C|@C|@C|@ErBMlGALANC|@EhBAr@@j@B\\Db@F\\HZJ\\Vn@Td@NZJXPb@DPFZBJBN@PD\\Dl@Dd@@^@\\?X@Z?X?^Ch@AVA`@ANA^AJATQbCG|@E\\G`ACZAl@?`@?\\@^HhB?RDt@FtAHbAB`ABp@@R@p@@`@@j@B`@@\\DlBB`A?h@AXCh@CZOjAE\\GRETEBEFCF?F@HBFBD@N@P?PAZE`@a@~EAPAVMjBAXCZGv@E`@WzC?BY~DALK~AUnCOzBOlBUrCQfCQdCYlEUjBARS`CATG|@Cf@CbACTOhBMnA?HC\\Ej@?BS~CqDESC}Au@MIe@bAsAjBe@p@kAbBd@N|Ct@j@HnBZ\\FnDl@nARbBVdANpB\\?I@g@B{A?GbALr@F?_@t@HN?H?I}@e@_Ac@aAa@w@i@w@aBl@Qo@Ue@Q[YIYAyE\\R_D?CDk@B]?ILoANiBBUBcABg@F}@@URaC@STkBXmEPeCPgCTsCNmBN{BToCJ_B@MX_E?CV{CDa@Fw@B[@YLkB@W@Q`@_FDa@FWDSFMFODADCBGBG?IAGCIEYAS?a@BkAB[Bi@@Y?i@CaAEmBA]Ca@Ak@Aa@Aq@ASCq@CaAIcAGuAEu@?SIiBA_@?]?a@@m@B[FaAD]F}@PcC@U@K@_@@O@a@@WBi@?_@?YA[?YA]A_@Ee@Em@E]AQCOCKG[EQQc@KYO[Ue@Wo@K]I[G]Ec@C]Ak@@s@DiBB}@@O@MLmGDsBB}@B}@B}@Bm@Be@D]F_@Lo@Lc@Tk@Te@f@u@HMx@aAVWTYn@s@TY~@qA^q@LWr@_B\\w@DKjAuC@ERo@d@yAh@_BPm@HSPo@jAyDv@gCPm@Ro@VaAD[B[@W?U?Q?UAWAQCSWsAAGIWe@}AQq@Su@G_@G[CQQqAOmAGc@Ga@CYGc@CWIq@QmBI}@MsAGu@CSAUA_@?MAS@S@UDUDYPgAF[ZcBBMBOHe@F_@X{ATmAHc@Nw@@MDQDWDWBIDWJk@BKZeB\\iBVsATsAF[TsAHa@\\cBD_@V}A",
+   "lengthM": 14222.7,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 4632.9,
+     "toM": 4666,
+     "lengthM": 33.2,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 33
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 7234.2,
+     "toM": 7694.6,
+     "lengthM": 460.4,
+     "reason": "oneway_conflict",
+     "streets": [
+      {
+       "name": "riverside street",
+       "m": 250
+      },
+      {
+       "name": "(unnamed)",
+       "m": 81
+      },
+      {
+       "name": "general luna street",
+       "m": 69
+      },
+      {
+       "name": "elias angeles street",
+       "m": 60
+      }
+     ],
+     "against": [
+      "caceres street"
+     ]
+    },
+    {
+     "fromM": 9554.7,
+     "toM": 9581.3,
+     "lengthM": 26.6,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 27
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 7,
+    "matchedStreets": 7,
+    "unmatchedStreets": [],
+    "offListShare": 0.0366,
+    "gateOffListShare": 0.0366,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "b98d9614-6c25-41c3-b6d2-c1da0e827941",
+   "routeId": "1f2ed35a-822a-4bf7-b4ec-ea42cae764a3",
+   "routeCode": "R5",
+   "routeName": "Centro–San Felipe",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "inbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R5-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "k_grAya~nV~@ZlBr@|Bv@TL`@Ln@TJHHHr@t@j@n@^`@TXTd@N`@Pz@DN^pB\\zAt@pBHTVp@Xx@JXf@tABJd@nAb@lANb@Nb@HTLPRNv@n@x@p@TZHN`AxA\\d@NR^d@p@t@h@l@j@n@hApAZ\\FFdAlA\\^VXt@|@|@dAl@n@^`@LPBBtAvADH^`@X\\p@r@DFVZPVr@x@|AdBv@p@\\XdAt@dBbA`B|@HF^PXN^Tj@^`@XbAx@mArB`DrAdCdAZNf@RHDTJ~@TXFJBbAPX?ZAVAxAc@bBa@h@~AFbAD~@@\\iD_@_BQwAS}@QUGwA[c@KSE]GME{D_ByA?",
+   "lengthM": 3678.9,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [],
+   "quality": {
+    "listedStreets": 6,
+    "matchedStreets": 6,
+    "unmatchedStreets": [],
+    "offListShare": 0,
+    "gateOffListShare": 0,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "c2900148-03fd-4524-8cfb-6ef6b5201ddf",
+   "routeId": "1f2ed35a-822a-4bf7-b4ec-ea42cae764a3",
+   "routeCode": "R5",
+   "routeName": "Centro–San Felipe",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "outbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R5-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "ibcrAijznVi@EiAI_AGs@GcAMiD_@_BQwAS}@QUGwA[c@KSE]GMENs@@KD]@MBYBWFq@}Au@MIGIW]yA{AcAy@a@Yk@_@_@UYO_@QIGaB}@eBcAeAu@]Yw@q@}AeBs@y@QWW[EGq@s@Y]_@a@EIuAwACCMQ_@a@m@o@}@eAu@}@WY]_@eAmAGG[]iAqAk@o@i@m@q@u@_@e@OS]e@aAyAIOU[y@q@w@o@SOMQIUOc@Oc@c@mAe@oACKg@uAKYYy@Wq@IUu@qB]{A_@qBEOQ{@Oa@Ue@UY_@a@k@o@s@u@IIKIo@Ua@MUM}Bw@mBs@_A[",
+   "lengthM": 3241,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [],
+   "quality": {
+    "listedStreets": 4,
+    "matchedStreets": 4,
+    "unmatchedStreets": [],
+    "offListShare": 0,
+    "gateOffListShare": 0,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "17566563-747e-4adc-a049-78878c1ca04e",
+   "routeId": "6a6cbd8b-8339-4352-87fe-20df16081fa0",
+   "routeCode": "R6",
+   "routeName": "Centro–Pacol",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "inbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R6-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "o{jrAwngoVBr@Bj@D~@Dp@HlAFr@HdA^|BNbATxAT~ALz@BLH`@PjAVvAFb@PlAb@vCHb@\\dBVjAXvAVfALb@Vn@Xl@x@bBn@zA\\|@`@z@Vf@\\`@ZXj@`@ZVv@r@`@XNH~@n@HJPRZZ`@~@f@hAb@dABJNV\\r@^f@zC~B^\\PRRZLXT|@Tr@d@nAz@lBHRDTHZ^dBNz@Hd@d@dC\\nAJb@Rz@RjADf@Fp@HrA@P?JCVIl@I`@ETSf@qA|BCZDXRr@\\lAHRd@bCNvA@VHbEJz@FjAFdABv@EhBIjBBn@?RDv@Jj@Jf@NXTf@R\\Zh@x@~A\\x@fC`HjAnCd@fBl@nBzBrGVp@Tn@Pj@d@vAVx@Nh@Nt@Pv@l@|Cr@|Cn@rCb@rBV`ATbALl@^xAj@hCNp@xAhH\\bBLh@DVFRBJL`@Pj@\\z@Vb@V`@^`@DDRJh@Nd@Hx@NtAVtB`@XHJDVLXPZXj@h@\\X`@R|@\\f@P\\N~@ZlBr@|Bv@TL`@Ln@TJHHHr@t@j@n@^`@TXTd@N`@Pz@DN^pB\\zAt@pBHTVp@Xx@JXf@tABJd@nAb@lANb@Nb@HTLPRNv@n@x@p@TZHN`AxA\\d@NR^d@p@t@h@l@j@n@hApAZ\\FFdAlA\\^VXt@|@|@dAl@n@^`@LPBBtAvADH^`@X\\p@r@DFVZPVr@x@|AdBv@p@\\XdAt@dBbA`B|@HF^PXN^Tj@^`@XbAx@mArB`DrAdCdAZNf@RHDTJ~@TXFJBbAPX?ZAVAxAc@bBa@`Bm@",
+   "lengthM": 9017.1,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [],
+   "quality": {
+    "listedStreets": 4,
+    "matchedStreets": 4,
+    "unmatchedStreets": [],
+    "offListShare": 0,
+    "gateOffListShare": 0,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "c0c3643a-e541-464a-b831-a9a1def04c20",
+   "routeId": "6a6cbd8b-8339-4352-87fe-20df16081fa0",
+   "routeCode": "R6",
+   "routeName": "Centro–Pacol",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "outbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R6-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "omcrAysznVQo@Ue@Q[YIYAyE\\qDESC}Au@MIGIW]yA{AcAy@a@Yk@_@_@UYO_@QIGaB}@eBcAeAu@]Yw@q@}AeBs@y@QWW[EGq@s@Y]_@a@EIuAwACCMQ_@a@m@o@}@eAu@}@WY]_@eAmAGG[]iAqAk@o@i@m@q@u@_@e@OS]e@aAyAIOU[y@q@w@o@SOMQIUOc@Oc@c@mAe@oACKg@uAKYYy@Wq@IUu@qB]{A_@qBEOQ{@Oa@Ue@UY_@a@k@o@s@u@IIKIo@Ua@MUM}Bw@mBs@_A[]Og@Q}@]a@S]Yk@i@[YYQWMKEYIuBa@uAWy@Oe@Ii@OSKEE_@a@Wa@Wc@]{@Qk@Ma@CKGSEWMi@]cByAiHOq@k@iC_@yAMm@UcAWaAc@sBo@sCs@}Cm@}CQw@Ou@Oi@Wy@e@wAQk@Uo@Wq@{BsGm@oBe@gBkAoCgCaH]y@y@_B[i@S]Ug@OYKg@Kk@Ew@?SCo@HkBDiBCw@GeAGkAK{@IcEAWOwAe@cCIS]mASs@EYB[pA}BRg@DUHa@Hm@BW?KAQIsAGq@Eg@SkAS{@Kc@]oAe@eCIe@O{@_@eBI[EUIS{@mBe@oAUs@U}@MYS[QS_@]{C_C_@g@]s@OWCKc@eAg@iAa@_A[[QSIK_Ao@OIa@Yw@s@[Wk@a@[Y]a@Wg@a@{@]}@o@{Ay@cBYm@Wo@Mc@WgAYwAWkA]eBIc@c@wCQmAGc@WwAQkAIa@CMM{@U_BUyAOcA_@}BIeAGs@ImAEq@E_ACk@Cs@",
+   "lengthM": 8878.8,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [],
+   "quality": {
+    "listedStreets": 4,
+    "matchedStreets": 4,
+    "unmatchedStreets": [],
+    "offListShare": 0,
+    "gateOffListShare": 0,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "38b3d3c0-1cb6-4e97-8cf6-a199f9dc3372",
+   "routeId": "87de88e9-9d2a-47fb-924b-b13769b5396b",
+   "routeCode": "R7",
+   "routeName": "Centro–Carolina–Panicuason",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "inbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional and modern jeepneys",
+    "chip": "Jeepney · traditional + modern",
+    "colourKey": "mixed_trad_modern",
+    "classes": [
+     {
+      "code": "FL-R7-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     },
+     {
+      "code": "FL-R7-MOD",
+      "vehicleClass": "modern_puj",
+      "evidenceLevels": [
+       "official_report",
+       "news_report",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": "2024-01-16",
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "about 5 units (2024 reports); current count not confirmed",
+      "aircon": true,
+      "airconSourceCodes": [
+       "U01"
+      ],
+      "cooperatives": [
+       "Naga City Allied Transport Cooperative (NACIATRASCO)",
+       "Carolina Panicuason Transport Cooperative (CAPATRANSCO)"
+      ],
+      "sourceCodes": [
+       "N38",
+       "N15",
+       "N41",
+       "U01"
+      ],
+      "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "mixed_trad_modern",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "qdlrAuptoVEpAAzA?bH?zDQvHK|BG~APjEFpBPnDFtATvDV|BLlBFr@h@vHL|BPvCFbALjF\\~FPtCl@lKf@bILjCLhCJzGD`CJfHDtD@nA?bA@nB?tA?|D@pBCrC?pAAZ?XAd@?r@@XB\\JzAL~BC|@JxLGzF?`A?j@@r@@vA?\\Bn@Hf@Hj@ZnBJn@FZ@HRrA`@hC^~Bf@lDZjBRhAd@bDRbBRxAb@lC`@fCp@zDbAvGTtA\\hCj@vJh@jMB\\Dj@Bn@N~B@h@Fh@Dx@Bj@@VDn@Dv@Bp@@`@Dr@Bf@Bb@BXDj@Dx@Dr@Dt@Dr@@VFfAFhAB`@?JBVDv@Dz@Dt@B|@F~@Dx@D~@Dz@Dv@@T?NFdAHhBJ`BD`ABd@Dd@HvAB^Br@Bj@D~@Dp@HlAFr@HdA^|BNbATxAT~ALz@BLH`@PjAVvAFb@PlAb@vCHb@\\dBVjAXvAVfALb@Vn@Xl@x@bBn@zA\\|@`@z@Vf@\\`@ZXj@`@ZVv@r@`@XNH~@n@HJPRZZ`@~@f@hAb@dABJNV\\r@^f@zC~B^\\PRRZLXT|@Tr@d@nAz@lBHRDTHZ^dBNz@Hd@d@dC\\nAJb@Rz@RjADf@Fp@HrA@P?JCVIl@I`@ETSf@qA|BCZDXRr@\\lAHRd@bCNvA@VHbEJz@FjAFdABv@EhBIjBBn@?RDv@Jj@Jf@NXTf@R\\Zh@x@~A\\x@fC`HjAnCd@fBl@nBzBrGVp@Tn@Pj@d@vAVx@Nh@Nt@Pv@l@|Cr@|Cn@rCb@rBV`ATbALl@^xAj@hCNp@xAhH\\bBLh@DVFRBJL`@Pj@\\z@Vb@V`@^`@DDRJh@Nd@Hx@NtAVtB`@XHJDVLXPZXj@h@\\X`@R|@\\f@P\\N~@ZlBr@|Bv@TL`@Ln@TJHHHr@t@j@n@^`@TXTd@N`@Pz@DN^pB\\zAt@pBHTVp@Xx@JXf@tABJd@nAb@lANb@Nb@HTLPRNv@n@x@p@TZHN`AxA\\d@NR^d@p@t@h@l@j@n@hApAZ\\FFdAlA\\^VXt@|@|@dAl@n@^`@LPBBtAvADH^`@X\\p@r@DFVZPVr@x@|AdBv@p@\\XdAt@dBbA`B|@HF^PXN^Tj@^`@XbAx@mArB`DrAdCdAZNf@RHDTJ~@TXFJBbAPX?ZAVAxAc@bBa@`Bm@",
+   "lengthM": 16307.9,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [],
+   "quality": {
+    "listedStreets": 6,
+    "matchedStreets": 6,
+    "unmatchedStreets": [],
+    "offListShare": 0,
+    "gateOffListShare": 0,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "a54b22a9-7a6b-44b8-b1d1-6566b488add5",
+   "routeId": "87de88e9-9d2a-47fb-924b-b13769b5396b",
+   "routeCode": "R7",
+   "routeName": "Centro–Carolina–Panicuason",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "outbound",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional and modern jeepneys",
+    "chip": "Jeepney · traditional + modern",
+    "colourKey": "mixed_trad_modern",
+    "classes": [
+     {
+      "code": "FL-R7-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     },
+     {
+      "code": "FL-R7-MOD",
+      "vehicleClass": "modern_puj",
+      "evidenceLevels": [
+       "official_report",
+       "news_report",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": "2024-01-16",
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "about 5 units (2024 reports); current count not confirmed",
+      "aircon": true,
+      "airconSourceCodes": [
+       "U01"
+      ],
+      "cooperatives": [
+       "Naga City Allied Transport Cooperative (NACIATRASCO)",
+       "Carolina Panicuason Transport Cooperative (CAPATRANSCO)"
+      ],
+      "sourceCodes": [
+       "N38",
+       "N15",
+       "N41",
+       "U01"
+      ],
+      "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "mixed_trad_modern",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "omcrAysznVQo@Ue@Q[YIYAyE\\qDESC}Au@MIGIW]yA{AcAy@a@Yk@_@_@UYO_@QIGaB}@eBcAeAu@]Yw@q@}AeBs@y@QWW[EGq@s@Y]_@a@EIuAwACCMQ_@a@m@o@}@eAu@}@WY]_@eAmAGG[]iAqAk@o@i@m@q@u@_@e@OS]e@aAyAIOU[y@q@w@o@SOMQIUOc@Oc@c@mAe@oACKg@uAKYYy@Wq@IUu@qB]{A_@qBEOQ{@Oa@Ue@UY_@a@k@o@s@u@IIKIo@Ua@MUM}Bw@mBs@_A[]Og@Q}@]a@S]Yk@i@[YYQWMKEYIuBa@uAWy@Oe@Ii@OSKEE_@a@Wa@Wc@]{@Qk@Ma@CKGSEWMi@]cByAiHOq@k@iC_@yAMm@UcAWaAc@sBo@sCs@}Cm@}CQw@Ou@Oi@Wy@e@wAQk@Uo@Wq@{BsGm@oBe@gBkAoCgCaH]y@y@_B[i@S]Ug@OYKg@Kk@Ew@?SCo@HkBDiBCw@GeAGkAK{@IcEAWOwAe@cCIS]mASs@EYB[pA}BRg@DUHa@Hm@BW?KAQIsAGq@Eg@SkAS{@Kc@]oAe@eCIe@O{@_@eBI[EUIS{@mBe@oAUs@U}@MYS[QS_@]{C_C_@g@]s@OWCKc@eAg@iAa@_A[[QSIK_Ao@OIa@Yw@s@[Wk@a@[Y]a@Wg@a@{@]}@o@{Ay@cBYm@Wo@Mc@WgAYwAWkA]eBIc@c@wCQmAGc@WwAQkAIa@CMM{@U_BUyAOcA_@}BIeAGs@ImAEq@E_ACk@Cs@C_@IwAEe@Ce@EaAKaBIiBGeA?OAUEw@E{@E_AEy@G_AC}@Eu@E{@Ew@CW?KCa@GiAGgAAWEs@Eu@Es@Ey@Ek@CYCc@Cg@Es@Aa@Cq@Ew@Eo@AWCk@Ey@Gi@Ai@O_CCo@Ek@C]i@kMk@wJ]iCUuAcAwGq@{Da@gCc@mCSyAScBe@cDSiA[kBg@mD_@_Ca@iCSsAAIG[Ko@[oBIk@Ig@Co@?]AwAAs@?k@?aAF{FKyLB}@M_CK{AC]AY?s@@e@?Y@[?qABsCAqB?}D?uAAoB?cAAoAEuDKgHEaCK{GMiCMkCg@cIm@mKQuC]_GMkFGcAQwCM}Bi@wHGs@MmBW}BUwDGuAQoDGqBQkEF_BJ}BPwH?{D?cH@{ADqA",
+   "lengthM": 16169.6,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [],
+   "quality": {
+    "listedStreets": 6,
+    "matchedStreets": 6,
+    "unmatchedStreets": [],
+    "offListShare": 0,
+    "gateOffListShare": 0,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "9ca597b8-615b-4fdd-8d5d-136a2a663c90",
+   "routeId": "085d19f3-30a2-4e96-8596-f1f10ba781d9",
+   "routeCode": "R8-A",
+   "routeName": "Centro–Magsaysay Loop A",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "clockwise",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "provisional",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-A-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "iycrAwnznVA?wA[c@KSE]GMENs@@KD]@MBYBWFq@_Ac@]QMIGIW]yA{AcAy@a@Yk@_@_@UYO_@QIGaB}@eBcAg@]]W]Yw@q@}AeBs@y@QWW[EGq@s@Y]_@a@EIKIiAmACCMQ_@a@m@o@}@eAu@}@WY]_@NMOLeAmAGG[]iAqAk@o@i@m@HIIHq@u@_@e@TU~@aAz@aAbAgAFKNOJK\\a@LMLOFILOf@i@RSRUp@i@XUd@_@VS^[`@[t@m@JKDEBAvC}BAf@@g@rAgA`@[C~C?lA?f@@@HTPKZQNIXSpAw@LIf@a@h@a@b@]DEJINMDERQ^YJNKOb@]PKNIPKl@Qd@Ex@CpABqACy@Be@DYkAWu@q@wBOFk@R[Ng@X}CdC|CeCf@YZOj@SNGh@KDAVERAh@AlBA|DAf@AzJAf@?\\Fb@@\\?\\BTDBDFBFBF?FADADCLALBZF\\LJDB?`@PNFt@XHDTNTPRPRRd@p@d@~@h@jAZp@^v@R^`AtBx@`BZn@@BDJHN^v@z@fB`@v@jAbC@DLVR`@d@`AXn@HRDJPj@Nh@FZFXHn@D^@R?H?F@N?T?P?RAL?HCb@AXE`@Eh@E\\ANEb@ALEh@APEf@C^uAIo@C_BK_BImAGo@E_@ACROr@[xAe@dCOp@AFId@nANt@Ff@Hl@\\h@XZT^VGLFM`BhAh@Pn@VDe@B_@BUL_BBWHeAIdACVM~ACTC^Ed@a@pFAFGp@?FI|@GhA?^@ZD\\Ff@Fb@BNJb@JPMNMREJENADEHCHITQf@_@v@eEm@iB_@SEeCg@sAQKAi@EiAI_AGs@GcAMyAQoAM_BQwAS}@QSG",
+   "lengthM": 8039.1,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 1341.9,
+     "toM": 1364.7,
+     "lengthM": 22.8,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "san jose street",
+       "m": 23
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 1581.2,
+     "toM": 1595.7,
+     "lengthM": 14.5,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "san ramon street",
+       "m": 14
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 2303,
+     "toM": 2346.8,
+     "lengthM": 43.8,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "kayanga road",
+       "m": 44
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 2870.4,
+     "toM": 2893.1,
+     "lengthM": 22.7,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "hall road",
+       "m": 23
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 4297.6,
+     "toM": 4327.9,
+     "lengthM": 30.4,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 30
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 5663.6,
+     "toM": 6493.5,
+     "lengthM": 830,
+     "reason": "terminal_access",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 339
+      },
+      {
+       "name": "sen raul s roco street",
+       "m": 270
+      },
+      {
+       "name": "boning sia sr street",
+       "m": 221
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 7175.3,
+     "toM": 7232.6,
+     "lengthM": 57.3,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 57
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 10,
+    "matchedStreets": 10,
+    "unmatchedStreets": [],
+    "offListShare": 0.1271,
+    "gateOffListShare": 0.0238,
+    "terminalAccessM": 830
+   }
+  },
+  {
+   "variantId": "f7d9d5d9-485c-45b3-bf1d-487a4c71f894",
+   "routeId": "085d19f3-30a2-4e96-8596-f1f10ba781d9",
+   "routeCode": "R8-A",
+   "routeName": "Centro–Magsaysay Loop A",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "clockwise",
+   "kind": "trial",
+   "serviceStatus": "legal_plan",
+   "planning": "provisional",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-A-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "ibcrAijznVi@EiAI_AGs@GcAMiD_@_BQwAS}@QUGwA[c@KSE]GMENs@@KD]@MBYBWFq@}Au@MIGIW]yA{AcAy@a@Yk@_@_@UYO_@QIGaB}@eBcAeAu@]Yw@q@}AeBs@y@QWW[EGq@s@Y]_@a@EIuAwACCMQ_@a@m@o@}@eAu@}@WY]_@eAmAGG[]iAqAk@o@i@m@q@u@_@e@TU~@aAz@aAbAgAFKZ[\\a@LMLOFILOf@i@RSRUjA_Ad@_@VS^[`@[t@m@PQBAvC}BrAgA`@[rHgGf@YZOj@SNGh@K\\GRAh@AlBA|DAbLCf@?\\Fb@@\\?\\BTDBDFBFBF?FADADCLALBZF\\LND`@PNFt@XHDTNTPRPRRd@p@d@~@h@jAZp@r@vA`AtBx@`BZn@@BDJHN^v@z@fB`@v@jAbCN\\R`@d@`AXn@HRDJPj@Nh@FZFXHn@D^@R?H?F@N?T?PA`@?HCb@AXE`@Eh@E\\ANEb@ALEh@APIfAuAIo@C_BK_BI}BM_@ACROr@[xAuBe@YxAMn@vB`@Op@Kl@nANt@Ff@Hl@\\h@XZT^V`BhAh@Pn@Vc@xFGp@?FI|@GhA?^@ZD\\Ff@Fb@BNJb@JPMNMREJENGNCHITQf@_@v@eEm@iB_@yCm@sAQKA",
+   "lengthM": 6790.9,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 3653.1,
+     "toM": 3683.5,
+     "lengthM": 30.4,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 30
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 5019.1,
+     "toM": 5969.6,
+     "lengthM": 950.5,
+     "reason": "terminal_access",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 535
+      },
+      {
+       "name": "sen raul s roco street",
+       "m": 270
+      },
+      {
+       "name": "boning sia sr street",
+       "m": 145
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 6344.1,
+     "toM": 6472.9,
+     "lengthM": 128.7,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "fraternidad street",
+       "m": 71
+      },
+      {
+       "name": "(unnamed)",
+       "m": 57
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 6,
+    "matchedStreets": 6,
+    "unmatchedStreets": [],
+    "offListShare": 0.1634,
+    "gateOffListShare": 0.0234,
+    "terminalAccessM": 950.5
+   }
+  },
+  {
+   "variantId": "9ddd04ca-ab7d-413e-8fd3-7d7f1a3ed7eb",
+   "routeId": "0abd7209-cc57-416e-a43b-bcb00227dce1",
+   "routeCode": "R8-B",
+   "routeName": "Centro–Magsaysay Loop B",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "counterclockwise",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "provisional",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-B-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "gxcrAcrznVF@bAPX?ZAVAxAc@bBa@h@~AFbAD~@@\\l@HTBr@F~@FhAHh@DJ@rAPxCl@XFnAVdEl@^w@Pg@HUFEHIHILa@DIFMDGCECGOm@CMGOIMGg@E]A[?_@FiAH}@?GBWBYb@yFo@Wi@QaBiA_@WDIEH[Ui@Ym@]g@Iu@GoAOJm@BIJg@d@eCZyANs@\\AdAF|@D|AJ`BFjBJV@CTKlAARANEh@CVKtA?@?AJuABWDi@@O@SJmABU@MB_@Dg@@QDi@@MDc@@OD]Di@Da@@YBc@?I@a@?Q?I?KAO?G?IASE_@Io@GYG[Oi@Qk@EKISYo@e@aASa@O]PGQFkAcCa@w@{@gB_@w@IOEKACACYk@y@aBu@_BKUs@wA[q@i@kAe@_Ae@q@SSSQUQUOIEu@YOGa@QOE]MQQOMOKCIGEECIAG?GBEBEFSDY@G?W?g@@[Bg@?gJ@{@@u@fC{@jCOA[AoACy@Be@Dm@PQJOHQJc@\\MJQLSPEDOLKHEDc@\\i@`@g@`@MH{@f@z@g@LIf@a@h@a@b@]DEJINMDERQ^Yb@]PKNIPKl@QYkAWu@q@wBOFA?i@R[Ng@XaDhCqC|Ba@ZsAfAGDoCvBC@EDKJu@l@a@Z_@ZWRe@^kA~@STSRGF_@`@MNGHMNML]`@??[ZGJcAfA{@`A_A`AUT^d@p@r@?@h@l@j@n@hApAZ\\FFdAlALLNPVXt@|@|@dAl@n@^`@LPBBhAjAJJDH^`@X\\p@r@DFVZPVr@x@|AdBv@p@\\XdAt@g@fAGJLLFHDNBJBL@L@RAHKTVLv@`@f@VHBz@^rAf@rB|@xB|@f@TdCdAZNf@RHDTJ~@TXFB@",
+   "lengthM": 7867.6,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 0,
+     "toM": 344.1,
+     "lengthM": 344.1,
+     "reason": "oneway_conflict",
+     "streets": [
+      {
+       "name": "elias angeles street",
+       "m": 199
+      },
+      {
+       "name": "caceres street",
+       "m": 145
+      }
+     ],
+     "against": [
+      "general luna street"
+     ]
+    },
+    {
+     "fromM": 924.4,
+     "toM": 964.8,
+     "lengthM": 40.5,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 40
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 1340.8,
+     "toM": 2155,
+     "lengthM": 814.2,
+     "reason": "terminal_access",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 333
+      },
+      {
+       "name": "sen raul s roco street",
+       "m": 271
+      },
+      {
+       "name": "boning sia sr street",
+       "m": 210
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 3009.6,
+     "toM": 3031.7,
+     "lengthM": 22.1,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 22
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 3841.4,
+     "toM": 3880.8,
+     "lengthM": 39.3,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 34
+      },
+      {
+       "name": "maharlika highway",
+       "m": 6
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 7188.3,
+     "toM": 7867.6,
+     "lengthM": 679.3,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "elias angeles street",
+       "m": 547
+      },
+      {
+       "name": "(unnamed)",
+       "m": 80
+      },
+      {
+       "name": "santonja street",
+       "m": 52
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 10,
+    "matchedStreets": 10,
+    "unmatchedStreets": [],
+    "offListShare": 0.2465,
+    "gateOffListShare": 0.143,
+    "terminalAccessM": 814.2
+   }
+  },
+  {
+   "variantId": "ebc81dab-495f-423a-b8be-58f3355bf19d",
+   "routeId": "0abd7209-cc57-416e-a43b-bcb00227dce1",
+   "routeCode": "R8-B",
+   "routeName": "Centro–Magsaysay Loop B",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "counterclockwise",
+   "kind": "trial",
+   "serviceStatus": "legal_plan",
+   "planning": "provisional",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-B-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "g_drAspznVNs@@KD]@MBYZNf@RHDTJ~@TXFJBbAPX?ZAVAxAc@bBa@h@~AFbAD~@@\\bALr@F~@FhAHh@DJ@rAPxCl@hB^dEl@^w@Pg@HUFEHIHILa@DIFMDGCECGOm@CMQ]Gg@E]A[?_@FiAH}@?GFq@b@yFDe@B_@BUL_BBWJmAJuABWDi@@O@SJmABU@MuAIo@C_BK_BI}BM_@ACROr@[xAuBe@YxAMn@vB`@d@eCZyANs@\\AbCL|AJ`BFjBJV@@MHgA@QDi@@MDc@@OD]Di@Da@@YBc@?I@a@?Q?UAO?G?IASE_@Io@GYG[Oi@Qk@EKISYo@e@aASa@O]kAcCa@w@{@gB_@w@IOEKAC[o@y@aBaAuBs@wA[q@i@kAe@_Ae@q@SSSQUQUOIEu@YOGa@QOE]MQQOMOKCIGEECIAG?GBEBEFSDY@_@?g@@[Bg@?cLB}D@mB@i@@S@]Fi@JOFk@R[Ng@XsHfGa@ZsAfAwC|BC@QPu@l@a@Z_@ZWRe@^kA~@STSRg@h@MNGHMNML]`@[ZGJcAfA{@`A_A`AUT^d@p@t@h@l@j@n@hApAZ\\FFdAlA\\^VXt@|@|@dAl@n@^`@LPBBtAvADH^`@X\\p@r@DFVZPVr@x@|AdBv@p@\\XdAt@dBbA`B|@HF^PXN^Tj@^`@XbAx@mArB`DrAdCdABWFq@}Au@MIe@bAdCdACXALE\\AJOr@",
+   "lengthM": 7659.5,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 75,
+     "toM": 537,
+     "lengthM": 461.9,
+     "reason": "oneway_conflict",
+     "streets": [
+      {
+       "name": "elias angeles street",
+       "m": 317
+      },
+      {
+       "name": "caceres street",
+       "m": 145
+      }
+     ],
+     "against": [
+      "general luna street"
+     ]
+    },
+    {
+     "fromM": 1024.2,
+     "toM": 1157.7,
+     "lengthM": 133.5,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "fraternidad street",
+       "m": 93
+      },
+      {
+       "name": "(unnamed)",
+       "m": 40
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 2126.7,
+     "toM": 2588.6,
+     "lengthM": 461.9,
+     "reason": "terminal_access",
+     "streets": [
+      {
+       "name": "boning sia sr street",
+       "m": 247
+      },
+      {
+       "name": "(unnamed)",
+       "m": 215
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 4206.9,
+     "toM": 4246.3,
+     "lengthM": 39.3,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 34
+      },
+      {
+       "name": "maharlika highway",
+       "m": 6
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 7088.1,
+     "toM": 7349.3,
+     "lengthM": 261.2,
+     "reason": "oneway_conflict",
+     "streets": [
+      {
+       "name": "elias angeles street",
+       "m": 184
+      },
+      {
+       "name": "p diaz street",
+       "m": 77
+      }
+     ],
+     "against": [
+      "penafrancia avenue"
+     ]
+    },
+    {
+     "fromM": 7458.2,
+     "toM": 7584.4,
+     "lengthM": 126.2,
+     "reason": "oneway_conflict",
+     "streets": [
+      {
+       "name": "elias angeles street",
+       "m": 84
+      },
+      {
+       "name": "arana street",
+       "m": 42
+      }
+     ],
+     "against": [
+      "p burgos street"
+     ]
+    }
+   ],
+   "quality": {
+    "listedStreets": 7,
+    "matchedStreets": 7,
+    "unmatchedStreets": [],
+    "offListShare": 0.1938,
+    "gateOffListShare": 0.1335,
+    "terminalAccessM": 461.9
+   }
+  },
+  {
+   "variantId": "7a669c39-638e-402f-abb8-c7449c012d6a",
+   "routeId": "cfe03151-f02a-4e44-b7ff-e185b4a0ebbe",
+   "routeCode": "R8-C",
+   "routeName": "Centro–Magsaysay Loop C",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "clockwise",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-C-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "ibcrAijznVi@EiAI_AGs@GcAMiD_@_BQwAS}@QUGwA[c@KSE]GMENs@@KD]@MBYBWFq@}Au@MIGIW]yA{AmArByAbCgBkAgAu@_Am@BGv@uA_By@WMkAi@q@Yc@CwCIe@CeFGyAAi@?w@@s@Jm@Je@Hk@FcAL}APeD\\]DAQCqACuA?q@Ag@@_AB{@D{@BSLmA@UJcADa@D_@BQDc@TeCDYPwBJuAJqBTwDBQNWTU~@aAz@aAbAgAFKZ[\\a@LMLOFILOf@i@RSRUjA_Ad@_@VS^[`@[t@m@PQBAvC}BrAgA`@[rHgGf@YZOj@SNGh@K\\GRAh@AlBA|DAbLCf@?\\Fb@@\\?\\BTDBDFBFBF?FADADCLALBZF\\LND`@PNFt@XHDTNTPRPRRd@p@d@~@h@jAZp@r@vA`AtBx@`BZn@@BDJHN^v@z@fB`@v@jAbCN\\R`@d@`AXn@HRDJPj@Nh@FZFXHn@D^@R?H?F@N?T?PA`@?HCb@AXE`@Eh@E\\ANEb@ALEh@APIfAALCTKlAARANEh@CVKtAKlACVM~ACTC^Ed@c@xFGp@?FI|@GhA?^@ZD\\Ff@Fb@BNJb@JPMNMREJENGNCHITQf@_@v@eEm@iB_@yCm@sAQKA",
+   "lengthM": 6945.1,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 973.7,
+     "toM": 1198.7,
+     "lengthM": 225,
+     "reason": "oneway_conflict",
+     "streets": [
+      {
+       "name": "barlin street",
+       "m": 164
+      },
+      {
+       "name": "paz street",
+       "m": 61
+      }
+     ],
+     "against": [
+      "elias angeles street"
+     ]
+    },
+    {
+     "fromM": 4434.7,
+     "toM": 4465.1,
+     "lengthM": 30.4,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 30
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 6498.3,
+     "toM": 6555.6,
+     "lengthM": 57.3,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 57
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 11,
+    "matchedStreets": 11,
+    "unmatchedStreets": [],
+    "offListShare": 0.045,
+    "gateOffListShare": 0.045,
+    "terminalAccessM": 0
+   }
+  },
+  {
+   "variantId": "8c340012-f971-49be-a81a-60a1c9dd69e6",
+   "routeId": "f26492f5-bdea-47bf-a324-5f5e67032f7c",
+   "routeCode": "R8-D",
+   "routeName": "Centro–Magsaysay Loop D",
+   "variantName": null,
+   "mode": "jeepney",
+   "direction": "counterclockwise",
+   "kind": "permanent",
+   "serviceStatus": "legal_plan",
+   "planning": "none",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-D-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   },
+   "colourKey": "traditional_puj",
+   "status": "ok",
+   "flagReason": null,
+   "encoded": "ukcrAwkznVbALr@F~@FhAHh@DJ@rAPxCl@hB^dEl@^w@Pg@HUFEHIHILa@DIFMDGCECGOm@CMQ]Gg@E]A[?_@FiAH}@?GFq@b@yFDe@B_@BUL_BBWJmAJuABWDi@@O@SJmABU@MHgA@QDi@@MDc@@OD]Di@Da@@YBc@?I@a@?Q?UAO?G?IASE_@Io@GYG[Oi@Qk@EKISYo@e@aASa@O]kAcCa@w@{@gB_@w@IOEKAC[o@y@aBaAuBs@wA[q@i@kAe@_Ae@q@SSSQUQUOIEu@YOGa@QOE]MQQOMOKCIGEECIAG?GBEBEFSDY@_@?g@@[Bg@?cLB}D@mB@i@@S@]Fi@JOFk@R[Ng@XsHfGa@ZsAfAwC|BC@QPu@l@a@Z_@ZWRe@^kA~@STSRg@h@MNGHMNML]`@[ZGJcAfA{@`A_A`AUTOVCPUvDKpBKtAQvBEXUdCEb@CPE^E`@KbAATMlACREz@Cz@A~@@f@?p@BtABpA@P\\EdD]|AQbAMj@Gd@Il@Kr@Kv@Ah@?xA@dFFd@BvCHb@Bp@XjAh@VL~Ax@HBz@^rAf@rB|@`DrAdCdAZNf@RHDTJ~@TXFJBbAPX?ZAVAxAc@bBa@h@~AFbAD~@@\\",
+   "lengthM": 6747.6,
+   "label": "Approximate path, not a verified route shape",
+   "roadSource": "OSMR-2026-10-16",
+   "attribution": "Map data © OpenStreetMap contributors (ODbL)",
+   "segments": [
+    {
+     "fromM": 580.3,
+     "toM": 620.7,
+     "lengthM": 40.5,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "(unnamed)",
+       "m": 40
+      }
+     ],
+     "against": null
+    },
+    {
+     "fromM": 2659.3,
+     "toM": 2698.6,
+     "lengthM": 39.3,
+     "reason": "off_list_detour",
+     "streets": [
+      {
+       "name": "naga rotonda",
+       "m": 34
+      },
+      {
+       "name": "maharlika highway",
+       "m": 6
+      }
+     ],
+     "against": null
+    }
+   ],
+   "quality": {
+    "listedStreets": 9,
+    "matchedStreets": 9,
+    "unmatchedStreets": [],
+    "offListShare": 0.0118,
+    "gateOffListShare": 0.0118,
+    "terminalAccessM": 0
+   }
+  }
+ ],
+ "untraced": [
+  {
+   "variantId": "54d8f4d6-0b84-4655-99bf-fa9431f4a798",
+   "routeId": "0b813055-ddb0-4648-96e2-ae40870e7df5",
+   "routeCode": "TRI-VISTODA",
+   "routeName": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
+   "variantName": "Langon – Ateneo de Naga via Vistansa Subd",
+   "mode": "tricycle",
+   "direction": "branch",
+   "kind": "permanent",
+   "reason": "anchor_unresolved",
+   "message": "Path could not be traced from the street list",
+   "quality": {
+    "listedStreets": 0,
+    "matchedStreets": 0,
+    "unmatchedStreets": [],
+    "anchorsUnresolved": [
+     "Langon",
+     "Vistansa"
+    ]
+   }
+  },
+  {
+   "variantId": "0805c2e1-3b94-41d2-85a5-c04c9767c2d8",
+   "routeId": "0b813055-ddb0-4648-96e2-ae40870e7df5",
+   "routeCode": "TRI-VISTODA",
+   "routeName": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
+   "variantName": "Langon – Centro Cararayan (San Miguel St / Tecla San Andres-Ziga Rd corner) via Sitio Salunguigui",
+   "mode": "tricycle",
+   "direction": "branch",
+   "kind": "permanent",
+   "reason": "anchor_unresolved",
+   "message": "Path could not be traced from the street list",
+   "quality": {
+    "listedStreets": 0,
+    "matchedStreets": 0,
+    "unmatchedStreets": [],
+    "anchorsUnresolved": [
+     "Langon",
+     "Salunguigui",
+     "San Miguel St / Tecla San Andres-Ziga Rd"
+    ]
+   }
+  },
+  {
+   "variantId": "6db61bb6-b0fc-4e1e-9ef8-e97bc4917414",
+   "routeId": "6204a9ea-5c5d-47e3-9b52-2871b089597c",
+   "routeCode": "TRI-DECALANGON",
+   "routeName": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
+   "variantName": "Langon (Cararayan Rd corner) – Deca Vistansa via Salunguigui",
+   "mode": "tricycle",
+   "direction": "branch",
+   "kind": "permanent",
+   "reason": "anchor_unresolved",
+   "message": "Path could not be traced from the street list",
+   "quality": {
+    "listedStreets": 0,
+    "matchedStreets": 0,
+    "unmatchedStreets": [],
+    "anchorsUnresolved": [
+     "Langon",
+     "Salunguigui",
+     "Deca Vistansa"
+    ]
+   }
+  }
+ ]
+}

@@ -13,8 +13,10 @@
 // the snapshot this phone holds (plan-offline.ts) and marked `offline` with that data's published
 // date; without a snapshot the error says "offline" (only when the browser knows it is).
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useWalkGraph } from "@/client/network/use-walk-graph";
 import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
+import { enrichPlan, type EnrichedPlanResponse, type WalkGraphStatus } from "@/domain/trip/enrich";
 import { isGpsRefinement, shouldReplan, type PlanEnd, type PlanPair } from "@/domain/trip/replan";
 
 export type PlanErrorKind = "offline" | "server" | "invalid";
@@ -28,7 +30,13 @@ export type TripPlanState =
    * data.revision) because the server could not be reached: "offline" when the browser says it has
    * no connection, "unreachable" otherwise; false for a server plan.
    */
-  | { status: "ready"; data: PlanResponse; refreshing: boolean; offline: PlannedOnPhone }
+  | {
+      status: "ready";
+      data: EnrichedPlanResponse;
+      refreshing: boolean;
+      offline: PlannedOnPhone;
+      walkGraphStatus: WalkGraphStatus;
+    }
   | { status: "error"; kind: PlanErrorKind };
 
 type Outcome = { status: "ready"; data: PlanResponse; offline: PlannedOnPhone } | { status: "error"; kind: PlanErrorKind };
@@ -112,14 +120,58 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
+  // Memoised on stable identities (the settled result, the last ready plan, the pair planned for)
+  // so the walk enrichment below, and the map's trip-lines memo that keys on its result, rerun only
+  // when the plan or the walk graph changes, not on every render (pans, bounds, GPS fixes).
+  const gpsRefinement = planned?.gpsRefinement ?? false;
+  const rawReady = useMemo(
+    () =>
+      key === null
+        ? null
+        : !settled || settled.key !== key
+          ? gpsRefinement && lastReady
+            ? { data: lastReady.data, offline: lastReady.offline, refreshing: true }
+            : null
+          : settled.status === "ready"
+            ? { data: settled.data, offline: settled.offline, refreshing: false }
+            : null,
+    [key, settled, lastReady, gpsRefinement],
+  );
+
+  // Lazy walk-graph load (Task 10, D18): fetched only once a plan exists.
+  const walkGraph = useWalkGraph(rawReady?.data.revision.revisionId ?? null, rawReady !== null);
+  const originPoint = planned?.origin.point ?? null;
+  const destinationPoint = planned?.destination.point ?? null;
+  const enrichedData = useMemo(() => {
+    if (!rawReady) return null;
+    return enrichPlan(rawReady.data, walkGraph.graph, {
+      walkGraphStatus: walkGraph.status,
+      ...(originPoint && destinationPoint ? { origin: originPoint, destination: destinationPoint } : {}),
+    });
+  }, [rawReady, walkGraph.graph, walkGraph.status, originPoint, destinationPoint]);
+
   const retry = () => setAttempt((n) => n + 1);
   if (key === null) return { status: "idle", retry };
   if (!settled || settled.key !== key) {
-    return planned?.gpsRefinement && lastReady
-      ? { status: "ready", data: lastReady.data, refreshing: true, offline: lastReady.offline, retry }
+    return rawReady && enrichedData
+      ? {
+          status: "ready",
+          data: enrichedData,
+          refreshing: true,
+          offline: rawReady.offline,
+          walkGraphStatus: walkGraph.status,
+          retry,
+        }
       : { status: "loading", retry };
   }
-  return settled.status === "ready"
-    ? { status: "ready", data: settled.data, refreshing: false, offline: settled.offline, retry }
-    : { status: "error", kind: settled.kind, retry };
+  return settled.status === "ready" && enrichedData
+    ? {
+        status: "ready",
+        data: enrichedData,
+        refreshing: false,
+        offline: settled.offline,
+        walkGraphStatus: walkGraph.status,
+        retry,
+      }
+    : { status: "error", kind: settled.status === "error" ? settled.kind : "server", retry };
 }

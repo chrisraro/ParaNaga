@@ -9,7 +9,6 @@ import { ALL_ROUTES, ROUTE_R8A, SNAPSHOT, STOP_A1, STOPS_ALL, routeNetwork } fro
 test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
 
 const mapEl = (page: Page) => page.getByTestId("naga-map");
-const overlayPaths = (page: Page) => page.locator(".leaflet-overlay-pane path");
 const A1_ID = STOP_A1.stop.id;
 const B18 = STOPS_ALL.stops.find((s) => s.source.layer === "Loop Service B" && s.source.code === "B18")!;
 
@@ -51,7 +50,7 @@ async function expectAxeClean(page: Page) {
   expect(serious, JSON.stringify(serious.map((v) => [v.id, v.nodes.map((n) => n.target)]), null, 1)).toEqual([]);
 }
 
-test("pins come from the snapshot as one canvas layer, with no lines and no extra DOM markers", async ({ page }) => {
+test("pins come from the snapshot as one canvas layer: no stop is a DOM marker or an SVG path", async ({ page }) => {
   const calls = await routeNetwork(page);
   await openApp(page);
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
@@ -59,10 +58,12 @@ test("pins come from the snapshot as one canvas layer, with no lines and no extr
   // never goes to the server (no stops?bbox= request).
   expect(calls.snapshots).toEqual([SNAPSHOT.revision.revisionId]);
   expect(calls.bboxes).toEqual([]);
-  // Canvas, not DOM markers or SVG paths: the overlay paths are only the boundary and the mask.
+  // Canvas, not DOM markers or SVG paths: apart from the routes overview lines (Task 12), the
+  // overlay paths are only the boundary and the mask.
   await expect(page.locator(".leaflet-overlay-pane canvas")).toHaveCount(1);
-  expect(await overlayPaths(page).count()).toBe(2);
-  await expect(page.locator(".leaflet-marker-pane .leaflet-marker-icon")).toHaveCount(0);
+  expect(await page.locator('.leaflet-overlay-pane path:not([class*="pn-line"])').count()).toBe(2);
+  // The only DOM markers are the terminals layer's (Task 13), never a stop.
+  await expect(page.locator(".leaflet-marker-pane .leaflet-marker-icon:not(.pn-terminal-marker)")).toHaveCount(0);
 });
 
 test("tapping a pin opens the stop with exactly the source pin's layer, coordinates and description (A1)", async ({ page }) => {
@@ -182,7 +183,7 @@ test("route R8-A: 30 provisional stops in pin order, the trial notice and an est
   await expect(trial).toContainText("adopted 11 Nov 2025 for 30 days; permanence unconfirmed");
   await expect(route.getByTestId("street-order").getByRole("listitem")).toHaveCount(ROUTE_R8A.route.legalStreets.circuit!.length);
   await expect(route.getByTestId("route-allocation")).toContainText(
-    "71 units allocated to group 8 in the plan, no per-route count (not a count of jeepneys running). Sources S01, S02 · revision osm-places-2026-10-15.",
+    "71 units allocated to group 8 in the plan, no per-route count (not a count of jeepneys running). Sources S01, S02 · revision modes-lines-2026-10-16.",
   );
   await expect(route).toContainText("Corrections open soon");
   await expectAxeClean(page);
@@ -315,7 +316,7 @@ test.describe("Show on map history", () => {
   const showOnMap = (page: Page) => page.getByTestId("stop-detail").filter({ visible: true }).getByRole("button", { name: "Show on map" });
 
   test("from a pin tap it goes back in history (Back does not reopen the stop)", async ({ page }) => {
-    await routeNetwork(page);
+      await routeNetwork(page);
     await openApp(page);
     await tapA1(page);
     await showOnMap(page).click();
@@ -336,7 +337,7 @@ test.describe("Show on map history", () => {
   });
 
   test("after panel → panel links (stop → route → stop) it opens the map as a new entry", async ({ page }) => {
-    await routeNetwork(page);
+      await routeNetwork(page);
     await openApp(page);
     await tapA1(page);
     await page.getByTestId("serving-routes").getByRole("link").click();

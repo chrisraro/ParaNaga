@@ -182,3 +182,32 @@
 .pn-terminal__hours .pn-kv + .pn-kv {
   border-top: 1px solid var(--pn-sep);
 }
+
+/* Terminal detail (Task 13): status note, regional service rows, mode chips with sources. */
+.pn-terminal__status {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pn-terminal__service-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.pn-terminal__modes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.pn-terminal__mode {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.pn-terminal__mode-sources {
+  font-size: 13px;
+}

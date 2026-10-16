@@ -14,14 +14,15 @@ describe("reference fixtures", () => {
   const t01 = terminalDetailSchema.parse(read("terminal-t01.json"));
   const sources = sourceListSchema.parse(read("sources.json"));
 
-  it("name one revision (the published OSM places revision)", () => {
-    expect(index.revision.label).toBe("osm-places-2026-10-15");
+  it("name one revision (the published modes-lines revision)", () => {
+    expect(index.revision.label).toBe("modes-lines-2026-10-16");
     expect(t01.revision).toEqual(index.revision);
     expect(sources.revision).toEqual(index.revision);
   });
 
   it("every captured network fixture and the plan fixture name that same revision (network/head answers with it)", () => {
-    const files = readdirSync(path.resolve("tests/e2e/fixtures/network")).filter((f) => f.endsWith(".json"));
+    // walk-graph.json is a synthetic extract (format v1 payload, no revision): see walk-graph-e2e-fixture.test.ts.
+    const files = readdirSync(path.resolve("tests/e2e/fixtures/network")).filter((f) => f.endsWith(".json") && f !== "walk-graph.json");
     expect(files.length).toBeGreaterThanOrEqual(19);
     for (const f of files) expect(revisionMetaSchema.parse(read(f).revision), f).toEqual(index.revision);
     expect(PLAN_REVISION).toEqual(index.revision);
@@ -29,15 +30,17 @@ describe("reference fixtures", () => {
 
   it("carry the real counts", () => {
     expect(index.osmPlaces).toHaveLength(233);
-    expect([index.routes.length, index.terminals.length, index.barangays.length, index.studyLabels.length]).toEqual([11, 6, 27, 32]);
+    expect([index.routes.length, index.terminals.length, index.barangays.length, index.studyLabels.length]).toEqual([13, 16, 27, 32]);
     expect(t01.routes.map((r) => r.basis)).toEqual(["legal_plan", "trial", "legal_plan", "trial"]);
-    expect(sources.sources.map((s) => s.code)).toEqual(expect.arrayContaining(["S22", "S33", "OSM-2026-10-15"]));
+    expect(t01.regionalServices.map((r) => r.code)).toEqual(["RS02", "RS03", "RS05", "RS06", "RS07"]);
+    expect(sources.sources.map((s) => s.code)).toEqual(expect.arrayContaining(["S22", "S33", "OSM-2026-10-15", "N01", "N17", "U01"]));
   });
 
-  it("terminal-t06.json (built from the seed until the next capture) agrees with the index and lists no routes", () => {
+  it("terminal-t06.json agrees with the index (same OpenStreetMap coordinate) and lists no routes", () => {
     const t06 = terminalDetailSchema.parse(read("terminal-t06.json"));
     const entry = index.terminals.find((t) => t.code === "T06")!;
-    expect(t06.terminal).toMatchObject({ code: "T06", name: entry.name, locationText: entry.locationText, modes: entry.modes, lat: null, lng: null });
+    expect(t06.terminal).toMatchObject({ code: "T06", name: entry.name, locationText: entry.locationText, modes: entry.modes });
+    expect(entry.location).toEqual({ lat: t06.terminal.lat, lng: t06.terminal.lng, source: "osm" });
     expect(t06.routes).toEqual([]);
     expect(t06.destinationCategories).toEqual([]);
     for (const s of t06.sources) expect(sources.sources).toContainEqual(s);

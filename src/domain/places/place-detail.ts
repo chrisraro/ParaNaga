@@ -208,6 +208,8 @@ const MODE_LABEL: Record<string, string> = {
   city_jeepney: "City jeepney",
   rail: "Rail",
   van: "Van",
+  uv_express: "UV Express",
+  tricycle: "Tricycle",
 };
 
 /** ["jeepney", "UV/van"] → "Jeepney, UV/van" (unknown modes verbatim, underscores spelled out). */
@@ -223,6 +225,15 @@ const EVIDENCE_LABEL: Record<string, string> = {
   official_historical_franchise: "historical franchise",
   official_street_structure: "legal street list",
   "station_exists;entrance_unverified": "station listed, entrance not verified",
+  // Terminal versions of the modes seed (2026-10-16): the location is community data (OpenStreetMap).
+  community_coordinate_official_address: "city source · location community-mapped",
+  community_coordinate_official_historical_franchise: "historical franchise · location community-mapped",
+  community_coordinate_matches_LPTRP_street: "community-mapped, on a legal route plan street",
+  community_coordinate: "community-mapped",
+  community_only: "community-mapped only",
+  community_only_old: "community-mapped only (older edit)",
+  official_location_text_conflicting_street: "city source, conflicting street",
+  official_text_no_coordinate: "ordinance text · no location on file",
 };
 
 /** The address evidence ("Address: city source"); unknown statuses are spelled out. */

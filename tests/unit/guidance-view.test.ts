@@ -5,7 +5,10 @@ import { STALE_MS, type LocationFix } from "@/domain/geo/location-fix";
 import { ALIGHT_NEAR_M, STOP_PASS_RADIUS_M, preciseFix } from "@/domain/guidance/progress";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { reduceSession, startSession, type GuidanceEvent, type GuidanceSession } from "@/domain/guidance/session";
-import { GUIDANCE_COPY, guidanceView, type GuidanceView } from "@/domain/guidance/view";
+import { BY_STOP_COUNT, GUIDANCE_COPY, TIME_NOT_AVAILABLE, guidanceView, type GuidanceView } from "@/domain/guidance/view";
+import type { PlanOptionDto } from "@/domain/api/plan";
+import type { GuidanceTrip } from "@/domain/guidance/steps";
+import { manila } from "./eta-fixtures";
 import { currentStep } from "@/domain/guidance/session";
 import { BASE, DEST, LOOP_A, LOOP_B, STEP_LAT, fixAt, oneRide, tripOf, twoRides, walkOnly } from "./guidance-fixtures";
 
@@ -25,6 +28,7 @@ describe("Walk (walk_to_board)", () => {
     expect(v.title).toBe("Walk to Plaza Rizal (A1)");
     expect(v.distanceText).toBe("≈ 140 m walk · straight-line estimate, path not verified");
     expect(v.directionText).toBeNull();
+    expect(v.remainingTime).toBe("About 2–3 min to Plaza Rizal (A1) (estimate)");
     expect(v.locationNote).toBeNull();
     expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown("Loop A")]);
     expect(v.nextRide).toEqual({ chip: "Loop A", routeName: "Centro–Magsaysay Loop A", direction: "clockwise (from pin order)", badge: UNVERIFIED_ROUTE_BADGE });
@@ -39,6 +43,7 @@ describe("Walk (walk_to_board)", () => {
     if (v.screen !== "walk") throw new Error(v.screen);
     expect(v.distanceText).toBe("≈ 200 m to Plaza Rizal (A1) in a straight line");
     expect(v.directionText).toBe("In a straight line, Plaza Rizal (A1) is to the north.");
+    expect(v.remainingTime).toBe("About 3–5 min to Plaza Rizal (A1) (estimate)"); // 200 m × 1.3
     expect(v.live).toEqual({ politeness: "polite", text: "≈ 200 m to Plaza Rizal (A1) in a straight line" });
   });
 
@@ -75,6 +80,70 @@ describe("Walk (walk_to_board)", () => {
   });
 });
 
+describe("Time left (snapshot model, Task 14)", () => {
+  const boardedAt = (opt: PlanOptionDto, at: number, trip: Partial<GuidanceTrip> = {}) =>
+    run(startSession({ ...tripOf(opt), ...trip }, at), "boarded");
+  /** Loop A with path measures: 250 m per segment along the approximate path (vs 200 m straight). */
+  const measured = (): PlanOptionDto => {
+    const o = oneRide();
+    const r = o.legs[1]!;
+    if (r.kind !== "ride") throw new Error("ride");
+    o.legs[1] = { ...r, distanceMeters: 1250, distanceBasis: "approximate_path", boardMeasureM: 100, alightMeasureM: 1350, stopMeasuresM: [100, 350, 600, 850, 1100, 1350] };
+    return o;
+  };
+
+  it("off-peak (09:30 Manila): the off-peak band 10–15 km/h", () => {
+    const v = guidanceView(boardedAt(oneRide(), manila("09:30").getTime()), null, manila("09:30").getTime());
+    expect(v.screen === "ride" && v.remainingTime).toBe("About 4–6 min of riding left (estimate)"); // 1 km: 4.0–6.0
+  });
+
+  it("peak (07:10 Manila): the peak band 7–13 km/h", () => {
+    const v = guidanceView(boardedAt(oneRide(), manila("07:10").getTime()), null, manila("07:10").getTime());
+    expect(v.screen === "ride" && v.remainingTime).toBe("About 4–9 min of riding left (estimate)"); // 1 km: 4.6–8.6
+  });
+
+  it("the peak test spans the rest of the trip: 10:50 + the remaining legs reaches the 11:00 window", () => {
+    const longRide = oneRide();
+    const r = longRide.legs[1]!;
+    if (r.kind !== "ride") throw new Error("ride");
+    longRide.legs[1] = { ...r, distanceMeters: 3000 };
+    const at = manila("10:50").getTime();
+    const v = guidanceView(boardedAt(longRide, at), null, at);
+    expect(v.screen === "ride" && v.remainingTime).toBe("About 13–26 min of riding left (estimate)"); // peak band
+  });
+
+  it("measures-based: the last passed stop's measure to the alighting measure", () => {
+    const s = reduceSession(boardedAt(measured(), NOW), fixEvent(fixAt(LOOP_A[2]!, 10, NOW)));
+    const v = guidanceView(s, fixAt(LOOP_A[2]!, 10, NOW), NOW);
+    // 1350 − 600 = 750 m at 10–15 km/h: 3.0–4.5 min.
+    expect(v.screen === "ride" && v.remainingTime).toBe("About 3–5 min of riding left (estimate)");
+  });
+
+  it("without measures, a passed stop splits the ride by stop count, and says so", () => {
+    const s = reduceSession(boardedAt(oneRide(), NOW), fixEvent(fixAt(LOOP_A[2]!, 10, NOW)));
+    const v = guidanceView(s, fixAt(LOOP_A[2]!, 10, NOW), NOW);
+    expect(v.screen === "ride" && v.remainingTime).toBe(`About 2–4 min of riding left (estimate) · ${BY_STOP_COUNT}`);
+  });
+
+  it("no model on file (an older snapshot): Time not available, never a guess", () => {
+    const ride = guidanceView(boardedAt(oneRide(), NOW, { etaModel: null }), null, NOW);
+    expect(ride.screen === "ride" && ride.remainingTime).toBe(TIME_NOT_AVAILABLE);
+    const walk = guidanceView(startSession({ ...tripOf(oneRide()), etaModel: undefined }, NOW), null, NOW);
+    expect(walk.screen === "walk" && walk.remainingTime).toBe(TIME_NOT_AVAILABLE);
+  });
+
+  it("a walk uses the plan's graph path length when one was on file", () => {
+    const v = guidanceView(startSession({ ...tripOf(oneRide()), walkLengths: [400, null, null] }, NOW), null, NOW);
+    expect(v.screen === "walk" && v.remainingTime).toBe("About 5–8 min to Plaza Rizal (A1) (estimate)"); // 400 m: 5.7–7.1
+  });
+
+  it("a GPS remainder is a straight line, so it is ×1.3 like the plan", () => {
+    const from = { lat: LOOP_A[0]!.lat - 0.0018, lng: LOOP_A[0]!.lng }; // ≈ 200 m
+    const v = guidanceView(startSession(tripOf(oneRide()), NOW), fixAt(from, 12, NOW), NOW);
+    expect(v.screen === "walk" && v.remainingTime).toBe("About 3–5 min to Plaza Rizal (A1) (estimate)"); // 260 m: 3.7–4.6
+  });
+});
+
 describe("Ride", () => {
   const boarded = run(startSession(tripOf(oneRide()), NOW), "boarded");
 
@@ -92,6 +161,7 @@ describe("Ride", () => {
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "ahead", "ahead", "ahead", "ahead", "alight"]);
     expect(v.para).toBeNull();
     expect(labels(v)).toEqual(["secondary:nextStopIsMine:My stop is next", "secondary:gotOff:I got off", "secondary:missedStop:I missed my stop", "secondary:end:End guidance"]);
+    expect(v.remainingTime).toBe("About 4–6 min of riding left (estimate)");
     expect(v.reportDriver).toBe(true);
   });
 
@@ -101,6 +171,7 @@ describe("Ride", () => {
     if (v.screen !== "ride") throw new Error(v.screen);
     expect(v.title).toBe("3 stops to go");
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "passed", "passed", "ahead", "ahead", "alight"]);
+    expect(v.remainingTime).toBe(`About 2–4 min of riding left (estimate) · ${BY_STOP_COUNT}`);
     expect(v.para).toBeNull();
   });
 
@@ -278,12 +349,14 @@ describe("Missed stop and ended", () => {
 
 // ---------------------------------------------------------------- honesty properties
 
+// A duration token may appear only in a string labelled as an estimate (Task 9, D12).
+const DURATION = /\d\s*(h|min|mins|minutes?|secs?|seconds?|hrs?|hours?)\b/i;
+const durationLabelled = (t: string) => !DURATION.test(t) || /^(Estimate|≈|About)/.test(t);
 const FORBIDDEN = [
   /\blive\b/i,
   /arriving/i,
   /arrives? in/i,
   /\bETA\b/,
-  /\d\s*(min|mins|minutes?|secs?|seconds?|hrs?|hours?)\b/i,
   /guarantee/i,
   /\bofficial\b/i,
   /on route/i,
@@ -322,12 +395,17 @@ const fixArb = fc.option(
 const optionArb = fc.constantFrom(walkOnly(), oneRide(), oneRide(5), twoRides(), twoRides(8));
 
 describe("view properties (fixed seeds)", () => {
+  it("the duration rule: minutes only inside a labelled estimate", () => {
+    expect(["Estimate 12–18 min + waiting (unknown)", "≈ 3–5 min walk", "About 10–16 min left (estimate)", "≈ 140 m walk"].every(durationLabelled)).toBe(true);
+    expect(["5 min to Plaza Rizal", "Ride 1 h 5 min", "Next stop in 2 mins", "5 min to Plaza Rizal (estimates vary)"].some(durationLabelled)).toBe(false);
+  });
+
   it("no copy ever claims times, live tracking, curb sides or certainty", () => {
     fc.assert(
       fc.property(optionArb, fc.array(eventArb, { maxLength: 30 }), fixArb, (option, events, fix) => {
         const s = events.reduce(reduceSession, startSession(tripOf(option), NOW));
         const text = strings(guidanceView(s, fix, NOW));
-        return text.every((t) => FORBIDDEN.every((re) => !re.test(t)));
+        return text.every((t) => FORBIDDEN.every((re) => !re.test(t)) && durationLabelled(t));
       }),
       { seed: 2026, numRuns: 500 },
     );

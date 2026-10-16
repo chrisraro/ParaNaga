@@ -1,0 +1,219 @@
+"use client";
+
+// Accessible collapsible MapLegend (Task 11).
+//
+// Shows a "Legend" button (`aria-expanded`) placed above map attribution and clear of zoom controls.
+// When expanded, renders only the items passed (each with an SVG line/marker swatch showing the
+// real casing + pattern, the ModeIcon, and the text label), plus:
+//   - Walk note: "Dotted: approximate walking path · crossings not checked"
+//   - Mixed-fleet note: "Alternating colours: traditional and modern jeepneys reported"
+//   - Fixed footnote: "Lines are approximate paths, not verified route shapes."
+// Keyboard operable; pressing Escape inside the legend closes it and returns focus to the button.
+
+import "@/ui/modes/modes.css";
+
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import L from "leaflet";
+import { MODE_DISPLAY_NAMES, resolveVisualKey, type RouteMode, type VisualKey } from "@/domain/modes/modes";
+import {
+  PALETTE_D,
+  PALETTE_L,
+  TWO_TONE_DASH_ARRAY,
+  WALK_DASH_ARRAY,
+  type MapSurface,
+} from "@/domain/modes/palette";
+import { ModeIcon } from "@/ui/modes/mode-icon";
+import { ONEWAY_CAUTION } from "./line-rules";
+
+export const LEGEND_FOOTNOTE = "Lines are approximate paths, not verified route shapes." as const;
+export const LEGEND_WALK_NOTE = "Dotted: approximate walking path · crossings not checked" as const;
+export const LEGEND_MIXED_NOTE = "Alternating colours: traditional and modern jeepneys reported" as const;
+
+export type LegendEntry =
+  | VisualKey
+  | RouteMode
+  | {
+      key: VisualKey | RouteMode;
+      label?: string;
+    };
+
+export type MapLegendProps = {
+  items: readonly LegendEntry[];
+  defaultOpen?: boolean;
+  surface?: MapSurface;
+  /** Polite live announcement when a trip is drawn on the map. */
+  announcement?: string | null;
+  /** Some drawn line has a dashed one-way-conflict section: explain the dashes. */
+  caution?: boolean;
+};
+
+function normalizeItems(items: readonly LegendEntry[]): { key: VisualKey; label: string }[] {
+  const seen = new Set<VisualKey>();
+  const out: { key: VisualKey; label: string }[] = [];
+  for (const item of items) {
+    const rawKey = typeof item === "string" ? item : item.key;
+    const key = resolveVisualKey(rawKey);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const label = (typeof item === "object" && item.label) ? item.label : MODE_DISPLAY_NAMES[key];
+    out.push({ key, label });
+  }
+  return out;
+}
+
+function LegendSwatch({ visualKey, surface }: { visualKey: VisualKey; surface: MapSurface }) {
+  const palette = surface === "dark" ? PALETTE_D : PALETTE_L;
+  const token = palette[visualKey];
+
+  if (token.pattern === "marker_only") {
+    return (
+      <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+        <rect x="11" y="1" width="14" height="14" rx="4" fill={token.core} stroke={token.casing} strokeWidth="1.5" />
+      </svg>
+    );
+  }
+
+  if (token.pattern === "dotted") {
+    return (
+      <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+        <line x1="3" y1="8" x2="33" y2="8" stroke={token.casing} strokeWidth="8" strokeLinecap="round" />
+        <line
+          x1="3"
+          y1="8"
+          x2="33"
+          y2="8"
+          stroke={token.core}
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray={WALK_DASH_ARRAY}
+        />
+      </svg>
+    );
+  }
+
+  if (token.pattern === "two_tone" && token.secondaryCore) {
+    return (
+      <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+        <line x1="2" y1="8" x2="34" y2="8" stroke={token.casing} strokeWidth="9" strokeLinecap="round" />
+        <line x1="2" y1="8" x2="34" y2="8" stroke={token.core} strokeWidth="5" strokeLinecap="round" />
+        <line
+          x1="2"
+          y1="8"
+          x2="34"
+          y2="8"
+          stroke={token.secondaryCore}
+          strokeWidth="5"
+          strokeDasharray="8 8"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+      <line x1="2" y1="8" x2="34" y2="8" stroke={token.casing} strokeWidth="9" strokeLinecap="round" />
+      <line
+        x1="2"
+        y1="8"
+        x2="34"
+        y2="8"
+        stroke={token.core}
+        strokeWidth="5"
+        strokeLinecap="round"
+        data-two-tone-dash={TWO_TONE_DASH_ARRAY}
+      />
+    </svg>
+  );
+}
+
+/** A dashed caution section, drawn like the map's (`8 6` dashes on the casing). */
+function CautionSwatch({ surface }: { surface: MapSurface }) {
+  const token = (surface === "dark" ? PALETTE_D : PALETTE_L).unconfirmed;
+  return (
+    <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
+      <line x1="2" y1="8" x2="34" y2="8" stroke={token.casing} strokeWidth="9" strokeLinecap="round" />
+      <line x1="2" y1="8" x2="34" y2="8" stroke={token.core} strokeWidth="5" strokeDasharray="8 6" />
+    </svg>
+  );
+}
+
+export function MapLegend({ items, defaultOpen = false, surface = "light", announcement, caution = false }: MapLegendProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  const panelId = useId();
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const entries = normalizeItems(items);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  }, []);
+
+  if (entries.length === 0) return null;
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape" && open) {
+      event.stopPropagation();
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="pn-map-legend"
+      data-testid="map-legend"
+      data-surface={surface}
+      onKeyDown={onKeyDown}
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+    >
+      {announcement ? (
+        <span className="sr-only" role="status" aria-live="polite">
+          {announcement}
+        </span>
+      ) : null}
+      {open ? (
+        <div id={panelId} className="pn-map-legend__panel" role="region" aria-label="Map legend" data-testid="map-legend-panel">
+          <ul className="pn-map-legend__list">
+            {entries.map(({ key, label }) => (
+              <li key={key} className="pn-map-legend__item" data-legend-item={key}>
+                <div className="pn-map-legend__row">
+                  <LegendSwatch visualKey={key} surface={surface} />
+                  <ModeIcon mode={key} size={18} />
+                  <span>{label}</span>
+                </div>
+                {key === "walk" ? <p className="pn-map-legend__note">{LEGEND_WALK_NOTE}</p> : null}
+                {key === "mixed_trad_modern" ? <p className="pn-map-legend__note">{LEGEND_MIXED_NOTE}</p> : null}
+              </li>
+            ))}
+            {caution ? (
+              <li className="pn-map-legend__item" data-legend-item="caution" data-testid="map-legend-caution">
+                <div className="pn-map-legend__row">
+                  <CautionSwatch surface={surface} />
+                  <span>Dashed section</span>
+                </div>
+                <p className="pn-map-legend__note pn-line-note__text">{ONEWAY_CAUTION}</p>
+              </li>
+            ) : null}
+          </ul>
+          <p className="pn-map-legend__footnote">{LEGEND_FOOTNOTE}</p>
+        </div>
+      ) : null}
+      <button
+        ref={buttonRef}
+        type="button"
+        className="pn-map-legend__toggle"
+        aria-expanded={open}
+        aria-controls={open ? panelId : undefined}
+        onClick={() => setOpen((prev) => !prev)}
+        data-testid="map-legend-button"
+      >
+        <span>Legend</span>
+      </button>
+    </div>
+  );
+}

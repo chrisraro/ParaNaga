@@ -126,6 +126,13 @@ export function leadStatusText(status: string | null): string {
   return `Documented · status: ${text}`;
 }
 export const TERMINAL_ROW_SUB = "Location not mapped";
+/** The coordinate badge of a terminal with an OpenStreetMap coordinate (community data, ODbL). */
+export const TERMINAL_OSM_SUB = "Community-mapped location (OpenStreetMap)";
+
+/** A terminal row or pill: the OSM badge when a coordinate is on file, else "Location not mapped". */
+export function terminalLocationText(hasCoordinate: boolean): string {
+  return hasCoordinate ? TERMINAL_OSM_SUB : TERMINAL_ROW_SUB;
+}
 
 /**
  * The rail status note, copied from `rail_status` in Data_Sets/naga_transport_seed.json

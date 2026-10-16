@@ -1,24 +1,50 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-16T01:49:26.840Z"
  },
  "terminal": {
   "code": "T01",
   "name": "Bicol Central Station",
   "locationText": "Ninoy & Cory Avenue, Triangulo",
   "modes": [
-   "bus"
+   "bus",
+   "uv_express"
   ],
-  "evidenceStatus": "official_address",
+  "evidenceStatus": "community_coordinate_official_address",
   "notes": "Map each passenger entrance and bus bay; do not confuse BCS with PNR railway station.",
   "sourceCodes": [
-   "S09"
+   "S09",
+   "N02",
+   "N01"
   ],
-  "lat": null,
-  "lng": null
+  "lat": 13.6192359,
+  "lng": 123.1897426,
+  "kind": "terminal",
+  "verification": "community_coordinate_official_address",
+  "statusNote": "UV Express mode from community-mapped OSM route tags (Tabaco UV); confirm",
+  "modeSources": {
+   "bus": [
+    "S09",
+    "N02"
+   ],
+   "uv_express": [
+    "N01"
+   ]
+  },
+  "coordinate": {
+   "source": "osm_way_centroid",
+   "osmType": "way",
+   "osmId": 293702439,
+   "osmVersion": 6,
+   "osmTimestamp": "2025-09-01T08:09:32.000Z",
+   "note": "centroid, not an entrance",
+   "licence": "ODbL 1.0",
+   "attribution": "Map data © OpenStreetMap contributors",
+   "attributionUrl": "https://www.openstreetmap.org/copyright"
+  }
  },
  "routes": [
   {
@@ -56,8 +82,231 @@
    ]
   }
  ],
+ "regionalServices": [
+  {
+   "code": "RS02",
+   "name": "Florencia Naga–Goa",
+   "mode": "bus",
+   "operators": [
+    "Florencia Transport Services Inc."
+   ],
+   "destination": "Goa",
+   "distanceKm": 52.024,
+   "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11495322 v17 52.202 km; relation 11495323 v15 52.024 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+   "status": "community_mapped",
+   "terminalNote": "terminal from OSM tags/name; confirm",
+   "notes": null,
+   "fareRuleCodes": [
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F12"
+   ],
+   "fareEstimate": {
+    "isEstimate": true,
+    "distanceKm": 52.024,
+    "lowCentavos": 11760,
+    "highCentavos": 11760,
+    "text": "Ordinary bus: Estimate ₱117.60 (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · operator prices may differ",
+    "ruleCodes": [
+     "F08",
+     "F09",
+     "F10",
+     "F11",
+     "F12"
+    ]
+   },
+   "sourceCodes": [
+    "N01",
+    "OSMR-2026-10-16"
+   ]
+  },
+  {
+   "code": "RS03",
+   "name": "Florencia/JC Liner Naga–Lagonoy",
+   "mode": "bus",
+   "operators": [
+    "Florencia Transport Services Inc.",
+    "JC Liner Corporation"
+   ],
+   "destination": "Lagonoy",
+   "distanceKm": 59,
+   "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11495326 v16 59.092 km; relation 11495327 v16 59.000 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+   "status": "community_mapped",
+   "terminalNote": "terminal from OSM tags/name; confirm",
+   "notes": null,
+   "fareRuleCodes": [
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F12"
+   ],
+   "fareEstimate": {
+    "isEstimate": true,
+    "distanceKm": 59,
+    "lowCentavos": 13080,
+    "highCentavos": 13080,
+    "text": "Ordinary bus: Estimate ₱130.80 (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · operator prices may differ",
+    "ruleCodes": [
+     "F08",
+     "F09",
+     "F10",
+     "F11",
+     "F12"
+    ]
+   },
+   "sourceCodes": [
+    "N01",
+    "OSMR-2026-10-16"
+   ]
+  },
+  {
+   "code": "RS05",
+   "name": "UV Express Naga–Tabaco via Sabluyon",
+   "mode": "uv_express",
+   "operators": [],
+   "destination": "Tabaco",
+   "distanceKm": 94.278,
+   "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11498948 v13 94.278 km; relation 11498949 v14 94.349 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+   "status": "community_mapped",
+   "terminalNote": "terminal from OSM tags/name; confirm",
+   "notes": null,
+   "fareRuleCodes": [
+    "F06",
+    "F07"
+   ],
+   "fareEstimate": {
+    "isEstimate": true,
+    "distanceKm": 94.278,
+    "lowCentavos": 24500,
+    "highCentavos": 28300,
+    "text": "Estimate ₱245–₱283 (provisional per-km rate, 28 Sep 2026) · operator prices may differ",
+    "ruleCodes": [
+     "F06",
+     "F07"
+    ]
+   },
+   "sourceCodes": [
+    "N01",
+    "OSMR-2026-10-16"
+   ]
+  },
+  {
+   "code": "RS06",
+   "name": "PITX–Naga (Philtranco; Bicol Isarog)",
+   "mode": "bus",
+   "operators": [
+    "Philtranco",
+    "Bicol Isarog"
+   ],
+   "destination": "PITX (Parañaque)",
+   "distanceKm": 383.668,
+   "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 3 directions is used): relation 9732639 v224 386.606 km; relation 10594406 v173 383.668 km; relation 10939369 v155 385.447 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+   "status": "community_mapped",
+   "terminalNote": "terminal from OSM tags/name; confirm",
+   "notes": null,
+   "fareRuleCodes": [
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F12"
+   ],
+   "fareEstimate": {
+    "isEstimate": true,
+    "distanceKm": 383.668,
+    "lowCentavos": 84580,
+    "highCentavos": 84580,
+    "text": "Ordinary bus: Estimate ₱845.80 (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · operator prices may differ",
+    "ruleCodes": [
+     "F08",
+     "F09",
+     "F10",
+     "F11",
+     "F12"
+    ]
+   },
+   "sourceCodes": [
+    "N01",
+    "OSMR-2026-10-16"
+   ]
+  },
+  {
+   "code": "RS07",
+   "name": "Santa Rosa ITT–Naga (Raymond)",
+   "mode": "bus",
+   "operators": [
+    "Raymond Transportation"
+   ],
+   "destination": "Santa Rosa ITT",
+   "distanceKm": 355.546,
+   "distanceBasis": "Length of the OpenStreetMap route relation (one direction): relation 11488879 v118 355.546 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+   "status": "community_mapped",
+   "terminalNote": "terminal from OSM tags/name; confirm",
+   "notes": null,
+   "fareRuleCodes": [
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F12"
+   ],
+   "fareEstimate": {
+    "isEstimate": true,
+    "distanceKm": 355.546,
+    "lowCentavos": 78420,
+    "highCentavos": 78420,
+    "text": "Ordinary bus: Estimate ₱784.20 (28 Sep 2026 rate) · ₱2.45–₱3.35/km for air-conditioned classes (no base fare published) · operator prices may differ",
+    "ruleCodes": [
+     "F08",
+     "F09",
+     "F10",
+     "F11",
+     "F12"
+    ]
+   },
+   "sourceCodes": [
+    "N01",
+    "OSMR-2026-10-16"
+   ]
+  }
+ ],
  "destinationCategories": [],
  "sources": [
+  {
+   "code": "N01",
+   "title": "OpenStreetMap route relations in Naga bbox (Overpass API)",
+   "url": "https://overpass-api.de/api/interpreter",
+   "evidenceType": "community_open_data",
+   "publishedOrEnacted": "osm_base 2026-10-15T20:40Z",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N02",
+   "title": "OpenStreetMap transport POIs in Naga (terminals, stops, stations)",
+   "url": "https://overpass-api.de/api/interpreter",
+   "evidenceType": "community_open_data",
+   "publishedOrEnacted": "osm_base 2026-10-15T20:42Z",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N17",
+   "title": "Philstar: Jeepney fares up to P14 starting Sept 28",
+   "url": "https://www.philstar.com/headlines/2026/09/27/2559277/jeepney-fares-p14-starting-sept-28-buses-taxis-tnvs-also-hike-rates",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2026-09-27",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "OSMR-2026-10-16",
+   "title": "OpenStreetMap road network snapshot for Naga City (highways, OSM relation 3084673 + 300 m)",
+   "url": "https://www.openstreetmap.org/copyright",
+   "evidenceType": "open_data",
+   "publishedOrEnacted": "OSM data as of 2026-10-16T00:01:51Z",
+   "checkedOn": "2026-10-16"
+  },
   {
    "code": "S01",
    "title": "Naga approved LPTRP, Ordinance 2025-070",

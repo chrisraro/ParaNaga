@@ -4,6 +4,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { NetworkSnapshot } from "@/domain/api/schemas";
+import { fleetSummary } from "@/domain/modes/fleet";
 import { buildSnapshot, parseGeojsonStops, withIdentities } from "@/domain/import/mapped-stops";
 import { provisionalLoopSequence } from "@/domain/import/provisional-loops";
 import { normalizeSeed } from "@/domain/import/seed";
@@ -43,6 +44,7 @@ export function realLoopsSnapshot(): NetworkSnapshot {
       direction: l.routeCode === "R8-A" ? ("clockwise" as const) : ("counterclockwise" as const),
       kind: "permanent" as const, evidenceLevel: "provisional" as const, verification: "unverified" as const,
       isCircular: true, stopIds: l.recs.map((r) => idFor(r.sourceIdentity)),
+      mode: "jeepney" as const, fleet: fleetSummary([], "jeepney"), measuresM: null, pathLengthM: null,
     })),
     fareRules: seed.fareRules
       .filter((f) => f.code === "F01" || f.code === "F02")
@@ -53,5 +55,34 @@ export function realLoopsSnapshot(): NetworkSnapshot {
         effectiveFrom: f.effectiveFrom, enactedOn: f.enactedOn, evidenceStatus: f.evidenceStatus, status: "reported",
         publishExact: false, isEstimate: true as const, sourceCodes: f.sourceCodes,
       })),
+    terminals: [],
+    routes: [],
+    etaModel: null,
+  };
+}
+
+/**
+ * The real-loops fixture with the published D13 stop measures, path lengths and route fleets of
+ * the captured revision (tests/e2e/fixtures/network/snapshot.json, from the real road import).
+ * Matched by route code and stop source code; throws if the captured stop order differs.
+ */
+export function realLoopsSnapshotWithMeasures(): NetworkSnapshot {
+  const base = realLoopsSnapshot();
+  const captured = JSON.parse(readFileSync(new URL("../e2e/fixtures/network/snapshot.json", import.meta.url), "utf8")) as NetworkSnapshot;
+  const capturedCode = new Map(captured.stops.map((s) => [s.id, s.source.code]));
+  const baseCode = new Map(base.stops.map((s) => [s.id, s.source.code]));
+  return {
+    ...base,
+    variants: base.variants.map((v) => {
+      const c = captured.variants.find((x) => x.routeCode === v.routeCode);
+      if (!c) throw new Error(`no captured variant for ${v.routeCode}`);
+      const order = (ids: string[], codes: Map<string, string | null>) => ids.map((id) => codes.get(id)).join(",");
+      if (order(c.stopIds, capturedCode) !== order(v.stopIds, baseCode)) throw new Error(`stop order differs for ${v.routeCode}`);
+      return { ...v, measuresM: c.measuresM, pathLengthM: c.pathLengthM };
+    }),
+    routes: base.variants.map((v) => {
+      const r = captured.routes.find((x) => x.routeCode === v.routeCode)!;
+      return { ...r, routeId: v.routeId };
+    }),
   };
 }

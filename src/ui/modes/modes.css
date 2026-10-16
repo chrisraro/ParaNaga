@@ -1,0 +1,824 @@
+/* Mode visual system tokens & component styles (Tasks 11 & 12).
+ *
+ * Palette L is the default and applies when `[data-map-surface="light"]`.
+ * Palette D applies on `[data-map-surface="dark"]` (dark theme with tiles off) and inside dark UI sheets.
+ */
+
+:root,
+.pn-map[data-map-surface="light"] {
+  --pn-mode-traditional_puj: #B45309;
+  --pn-mode-traditional_puj-casing: #FFFFFF;
+  --pn-mode-modern_puj: #1D4ED8;
+  --pn-mode-modern_puj-casing: #FFFFFF;
+  --pn-mode-mixed_trad_modern: #B45309;
+  --pn-mode-mixed_trad_modern-secondary: #1D4ED8;
+  --pn-mode-mixed_trad_modern-casing: #FFFFFF;
+  --pn-mode-tricycle: #A21CAF;
+  --pn-mode-tricycle-casing: #FFFFFF;
+  --pn-mode-e_tricycle: #0E7490;
+  --pn-mode-e_tricycle-casing: #FFFFFF;
+  --pn-mode-uv_express: #BE123C;
+  --pn-mode-uv_express-casing: #FFFFFF;
+  --pn-mode-bus: #6D28D9;
+  --pn-mode-bus-casing: #FFFFFF;
+  --pn-mode-unconfirmed: #57534E;
+  --pn-mode-unconfirmed-casing: #FFFFFF;
+  --pn-mode-walk: #0F1E3D;
+  --pn-mode-walk-casing: #FFFFFF;
+  --pn-mode-rail: #0F1E3D;
+  --pn-mode-rail-casing: #FFFFFF;
+}
+
+:root[data-theme="dark"],
+.pn-map[data-map-surface="dark"] {
+  --pn-mode-traditional_puj: #F59E0B;
+  --pn-mode-traditional_puj-casing: #0B1220;
+  --pn-mode-modern_puj: #60A5FA;
+  --pn-mode-modern_puj-casing: #0B1220;
+  --pn-mode-mixed_trad_modern: #F59E0B;
+  --pn-mode-mixed_trad_modern-secondary: #60A5FA;
+  --pn-mode-mixed_trad_modern-casing: #0B1220;
+  --pn-mode-tricycle: #E879F9;
+  --pn-mode-tricycle-casing: #0B1220;
+  --pn-mode-e_tricycle: #22D3EE;
+  --pn-mode-e_tricycle-casing: #0B1220;
+  --pn-mode-uv_express: #FB7185;
+  --pn-mode-uv_express-casing: #0B1220;
+  --pn-mode-bus: #A78BFA;
+  --pn-mode-bus-casing: #0B1220;
+  --pn-mode-unconfirmed: #D6D3D1;
+  --pn-mode-unconfirmed-casing: #0B1220;
+  --pn-mode-walk: #E2E8F0;
+  --pn-mode-walk-casing: #0B1220;
+  --pn-mode-rail: #E2E8F0;
+  --pn-mode-rail-casing: #0B1220;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pn-mode-traditional_puj: #F59E0B;
+    --pn-mode-traditional_puj-casing: #0B1220;
+    --pn-mode-modern_puj: #60A5FA;
+    --pn-mode-modern_puj-casing: #0B1220;
+    --pn-mode-mixed_trad_modern: #F59E0B;
+    --pn-mode-mixed_trad_modern-secondary: #60A5FA;
+    --pn-mode-mixed_trad_modern-casing: #0B1220;
+    --pn-mode-tricycle: #E879F9;
+    --pn-mode-tricycle-casing: #0B1220;
+    --pn-mode-e_tricycle: #22D3EE;
+    --pn-mode-e_tricycle-casing: #0B1220;
+    --pn-mode-uv_express: #FB7185;
+    --pn-mode-uv_express-casing: #0B1220;
+    --pn-mode-bus: #A78BFA;
+    --pn-mode-bus-casing: #0B1220;
+    --pn-mode-unconfirmed: #D6D3D1;
+    --pn-mode-unconfirmed-casing: #0B1220;
+    --pn-mode-walk: #E2E8F0;
+    --pn-mode-walk-casing: #0B1220;
+    --pn-mode-rail: #E2E8F0;
+    --pn-mode-rail-casing: #0B1220;
+  }
+}
+
+/* ModeChip: icon + text label + 4 px colour stripe (never colour-only). */
+.pn-mode-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 30, 61, 0.22);
+  border-left-width: 4px;
+  border-left-color: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
+  background: #FFFFFF;
+  color: #0F1E3D;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+:root[data-theme="dark"] .pn-mode-chip {
+  background: #111A2E;
+  color: #F8FAFC;
+  border-color: rgba(226, 232, 240, 0.28);
+  border-left-color: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-mode-chip {
+    background: #111A2E;
+    color: #F8FAFC;
+    border-color: rgba(226, 232, 240, 0.28);
+    border-left-color: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
+  }
+}
+
+.pn-mode-chip--compact {
+  min-height: 24px;
+  padding: 2px 8px 2px 6px;
+  font-size: 0.75rem;
+}
+
+.pn-mode-chip__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+}
+
+.pn-mode-chip__label {
+  white-space: normal;
+}
+
+/* FleetChips: list of vehicle-class chips with evidence text. */
+.pn-fleet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* MapLegend: collapsible button and panel placed above attribution and clear of zoom controls. */
+.pn-map-legend {
+  position: absolute;
+  left: 12px;
+  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 32px);
+  z-index: 1000;
+  max-width: min(320px, calc(100vw - 88px));
+  pointer-events: auto;
+}
+
+.pn-map:has(.pn-map-notice) .pn-map-legend {
+  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 84px);
+}
+
+.pn-map-legend__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 30, 61, 0.22);
+  background: #FFFFFF;
+  color: #0F1E3D;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(11, 18, 32, 0.16);
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .pn-map-legend__toggle {
+  background: #111A2E;
+  color: #F8FAFC;
+  border-color: rgba(226, 232, 240, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-map-legend__toggle {
+    background: #111A2E;
+    color: #F8FAFC;
+    border-color: rgba(226, 232, 240, 0.28);
+  }
+}
+
+.pn-map-legend__toggle:focus-visible {
+  outline: 3px solid #2BB5AE;
+  outline-offset: 2px;
+}
+
+.pn-map-legend__panel {
+  margin-bottom: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 30, 61, 0.22);
+  background: #FFFFFF;
+  color: #0F1E3D;
+  box-shadow: 0 6px 20px rgba(11, 18, 32, 0.22);
+  font-size: 0.8125rem;
+}
+
+:root[data-theme="dark"] .pn-map-legend__panel {
+  background: #111A2E;
+  color: #F8FAFC;
+  border-color: rgba(226, 232, 240, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-map-legend__panel {
+    background: #111A2E;
+    color: #F8FAFC;
+    border-color: rgba(226, 232, 240, 0.28);
+  }
+}
+
+.pn-map-legend__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pn-map-legend__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pn-map-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pn-map-legend__swatch {
+  flex-shrink: 0;
+}
+
+.pn-map-legend__note {
+  margin: 0;
+  padding-left: 44px;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+:root[data-theme="dark"] .pn-map-legend__note {
+  color: #CBD5E1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-map-legend__note {
+    color: #CBD5E1;
+  }
+}
+
+.pn-map-legend__footnote {
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(15, 30, 61, 0.14);
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+:root[data-theme="dark"] .pn-map-legend__footnote {
+  border-top-color: rgba(226, 232, 240, 0.2);
+  color: #CBD5E1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-map-legend__footnote {
+    border-top-color: rgba(226, 232, 240, 0.2);
+    color: #CBD5E1;
+  }
+}
+
+/* Direction chevrons & mid-leg chips on the map (Task 12). */
+.pn-chevron-icon,
+.pn-map-line-chip-wrap {
+  background: none;
+  border: 0;
+  pointer-events: none;
+}
+
+.pn-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.pn-map-line-chip {
+  display: inline-block;
+  transform: translate(-50%, -50%);
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1.5px solid #0F1E3D;
+  background: #FFFFFF;
+  color: #0F1E3D;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(11, 18, 32, 0.2);
+}
+
+/* LayersSheet modal & switches (Task 12). */
+.pn-layers-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(11, 18, 32, 0.48);
+}
+
+.pn-layers-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px 20px 0 0;
+  background: #FFFFFF;
+  color: #0F1E3D;
+  box-shadow: 0 -8px 28px rgba(11, 18, 32, 0.26);
+  overflow: hidden;
+}
+
+:root[data-theme="dark"] .pn-layers-sheet {
+  background: #111A2E;
+  color: #F8FAFC;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-layers-sheet {
+    background: #111A2E;
+    color: #F8FAFC;
+  }
+}
+
+.pn-layers-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(15, 30, 61, 0.12);
+}
+
+:root[data-theme="dark"] .pn-layers-sheet__head {
+  border-bottom-color: rgba(226, 232, 240, 0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-layers-sheet__head {
+    border-bottom-color: rgba(226, 232, 240, 0.16);
+  }
+}
+
+.pn-layers-sheet__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.pn-layers-sheet__close {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 30, 61, 0.2);
+  background: transparent;
+  color: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .pn-layers-sheet__close {
+  border-color: rgba(226, 232, 240, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-layers-sheet__close {
+    border-color: rgba(226, 232, 240, 0.28);
+  }
+}
+
+.pn-layers-sheet__body {
+  padding: 14px 16px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pn-layers-switches {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pn-layers-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  gap: 12px;
+}
+
+.pn-layers-switch-row__label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.pn-switch {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  min-height: 44px;
+  padding: 8px 2px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pn-switch::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 28px;
+  border-radius: 999px;
+  background: #64748B;
+}
+
+.pn-switch--on::before {
+  background: #0B7A75;
+}
+
+:root[data-theme="dark"] .pn-switch--on::before {
+  background: #2BB5AE;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-switch--on::before {
+    background: #2BB5AE;
+  }
+}
+
+.pn-switch__thumb {
+  position: relative;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  transform: translateX(2px);
+  transition: transform 0.14s ease-out;
+}
+
+.pn-switch--on .pn-switch__thumb {
+  transform: translateX(22px);
+}
+
+.pn-layers-section-label,
+.pn-layers-section-title {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.pn-layers-modes__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pn-mode-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 30, 61, 0.24);
+  background: #F8FAFC;
+  color: #0F1E3D;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .pn-mode-filter-chip {
+  background: #1E293B;
+  color: #F8FAFC;
+  border-color: rgba(226, 232, 240, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-mode-filter-chip {
+    background: #1E293B;
+    color: #F8FAFC;
+    border-color: rgba(226, 232, 240, 0.28);
+  }
+}
+
+.pn-mode-filter-chip--on {
+  background: #0F1E3D;
+  color: #FFFFFF;
+  border-color: #0F1E3D;
+}
+
+:root[data-theme="dark"] .pn-mode-filter-chip--on {
+  background: #F8FAFC;
+  color: #0B1220;
+  border-color: #F8FAFC;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-mode-filter-chip--on {
+    background: #F8FAFC;
+    color: #0B1220;
+    border-color: #F8FAFC;
+  }
+}
+
+.pn-layers-note {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(15, 30, 61, 0.06);
+  color: #334155;
+  font-size: 0.8125rem;
+}
+
+:root[data-theme="dark"] .pn-layers-note {
+  background: rgba(226, 232, 240, 0.08);
+  color: #CBD5E1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-layers-note {
+    background: rgba(226, 232, 240, 0.08);
+    color: #CBD5E1;
+  }
+}
+
+.pn-layers-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pn-layers-list__link {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 30, 61, 0.16);
+  background: #F8FAFC;
+  color: inherit;
+  text-decoration: none;
+}
+
+:root[data-theme="dark"] .pn-layers-list__link {
+  background: #1E293B;
+  border-color: rgba(226, 232, 240, 0.22);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-layers-list__link {
+    background: #1E293B;
+    border-color: rgba(226, 232, 240, 0.22);
+  }
+}
+
+.pn-layers-list__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pn-layers-list__sub,
+.pn-layers-empty {
+  font-size: 0.75rem;
+  color: #475569;
+  margin: 0;
+}
+
+:root[data-theme="dark"] .pn-layers-list__sub,
+:root[data-theme="dark"] .pn-layers-empty {
+  color: #CBD5E1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-layers-list__sub,
+  :root:not([data-theme="light"]) .pn-layers-empty {
+    color: #CBD5E1;
+  }
+}
+
+/* Selected overview route card on the home map (Task 12). */
+.pn-route-overview-card {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 84px);
+  z-index: 1050;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 30, 61, 0.22);
+  background: #FFFFFF;
+  color: #0F1E3D;
+  box-shadow: 0 8px 24px rgba(11, 18, 32, 0.24);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+:root[data-theme="dark"] .pn-route-overview-card {
+  background: #111A2E;
+  color: #F8FAFC;
+  border-color: rgba(226, 232, 240, 0.28);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-route-overview-card {
+    background: #111A2E;
+    color: #F8FAFC;
+    border-color: rgba(226, 232, 240, 0.28);
+  }
+}
+
+.pn-route-overview-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pn-route-overview-card__name {
+  flex: 1 1 auto;
+  font-size: 0.9375rem;
+}
+
+.pn-route-overview-card__close {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pn-route-overview-card__fleet,
+.pn-route-overview-card__approx {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #475569;
+}
+
+:root[data-theme="dark"] .pn-route-overview-card__fleet,
+:root[data-theme="dark"] .pn-route-overview-card__approx {
+  color: #CBD5E1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-route-overview-card__fleet,
+  :root:not([data-theme="light"]) .pn-route-overview-card__approx {
+    color: #CBD5E1;
+  }
+}
+
+.pn-route-overview-card__link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: #0B7A75;
+  color: #FFFFFF;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+:root[data-theme="dark"] .pn-route-overview-card__link {
+  background: #2BB5AE;
+  color: #0B1220;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-route-overview-card__link {
+    background: #2BB5AE;
+    color: #0B1220;
+  }
+}
+
+/* Notes for drawn approximate lines (T12-2): one-way caution and terminal access road. */
+.pn-line-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: #475569;
+}
+
+.pn-line-note--caution {
+  color: #92400E;
+  font-weight: 600;
+}
+
+.pn-line-note__text::first-letter {
+  text-transform: uppercase;
+}
+
+.pn-route-map-notes {
+  padding: 0 12px 8px;
+}
+
+:root[data-theme="dark"] .pn-line-note {
+  color: #CBD5E1;
+}
+
+:root[data-theme="dark"] .pn-line-note--caution {
+  color: #FCD34D;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pn-line-note {
+    color: #CBD5E1;
+  }
+
+  :root:not([data-theme="light"]) .pn-line-note--caution {
+    color: #FCD34D;
+  }
+}
+
+/* Terminals layer (Task 13): a rounded square per mode in the mode colour, with the glyph in the
+ * casing colour (white on Palette L, #0B1220 on Palette D). Several modes stack side by side. The
+ * marker element itself is the 44 px target (Leaflet divIcon, focusable when interactive). */
+.pn-terminal-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+}
+
+.pn-terminal-marker:focus-visible {
+  outline: 3px solid #0B7A75;
+  outline-offset: 1px;
+}
+
+.pn-terminal-marker__stack {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pn-terminal-marker__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--pn-tile);
+  color: var(--pn-tile-glyph);
+  border: 2px solid var(--pn-tile-glyph);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+.pn-terminal-marker__tile + .pn-terminal-marker__tile {
+  margin-left: -6px;
+}
+
+.pn-terminal-marker--emphasized .pn-terminal-marker__tile {
+  width: 34px;
+  height: 34px;
+  box-shadow: 0 0 0 3px var(--pn-tile), 0 1px 4px rgb(0 0 0 / 0.45);
+}
+
+/* A group marker's count (its accessible name lists the terminals). */
+.pn-terminal-marker__count {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #0F1E3D;
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}

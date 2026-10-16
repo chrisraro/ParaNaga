@@ -135,8 +135,8 @@ describe("SearchScreen", () => {
     await type("Centro");
     const routes = screen.getByTestId("search-group-routes");
     expect(routes.querySelectorAll("li")).toHaveLength(5);
-    fireEvent.click(screen.getByRole("button", { name: "Show all 11" }));
-    expect(screen.getByTestId("search-group-routes").querySelectorAll("li")).toHaveLength(11);
+    fireEvent.click(screen.getByRole("button", { name: "Show all 12" }));
+    expect(screen.getByTestId("search-group-routes").querySelectorAll("li")).toHaveLength(12);
   });
 
   it("says plainly when nothing matches", async () => {
@@ -267,7 +267,7 @@ describe("SearchScreen", () => {
     failing = true;
     vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     renderSearch();
-    await waitFor(() => expect(screen.getByTestId("search-offline").textContent).toBe("Offline · searching data from 15 Oct 2026"));
+    await waitFor(() => expect(screen.getByTestId("search-offline").textContent).toBe("Offline · searching data from 16 Oct 2026"));
     await type("plaza rizal");
     expect(screen.getByTestId("search-group-places")).toBeTruthy();
   });
@@ -309,7 +309,7 @@ describe("SearchScreen", () => {
     renderSearch();
     await ready();
     await type("Centro");
-    fireEvent.click(screen.getByRole("button", { name: "Show all 11" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show all 12" }));
     const rows = screen.getByTestId("search-group-routes").querySelectorAll("li > *");
     expect(document.activeElement).toBe(rows[5]);
   });

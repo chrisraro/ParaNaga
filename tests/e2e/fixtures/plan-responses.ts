@@ -5,8 +5,9 @@
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
 // The published revision every captured network fixture names (fixtures/network/*.json).
-export const REVISION = { revisionId: "67e56657-7542-462e-b57c-eb14439a0c7a", label: "osm-places-2026-10-15", kind: "provisional", publishedAt: "2026-10-15T12:59:57.089Z" };
-const LOOP_A = id(100);
+export const REVISION = { revisionId: "de72168a-7f94-4c1b-8c0d-05a2c488ce6a", label: "modes-lines-2026-10-16", kind: "provisional", publishedAt: "2026-10-16T01:49:26.840Z" };
+// The published Loop A (R8-A clockwise) variant, so trip lines match its drawn line by variant id.
+const LOOP_A = "9ca597b8-615b-4fdd-8d5d-136a2a663c90";
 
 const ORIGIN = { kind: "origin", lat: 13.6224, lng: 123.1838, stopId: null, name: null };
 const DESTINATION = { kind: "destination", lat: 13.6305, lng: 123.1912, stopId: null, name: null };
@@ -17,10 +18,30 @@ const A3 = { id: id(13), name: "Magsaysay Junction", lat: 13.6268, lng: 123.1889
 const A4 = { id: id(14), name: "Bichara Mall", lat: 13.6284, lng: 123.1899 };
 const A5 = { id: id(15), name: "Avenue Square", lat: 13.6299, lng: 123.1905 };
 
+/** The Loops run traditional jeepneys only, so a leg prices from F01 alone (ruling 2026-10-16). */
 const legFare = (min: number, max: number) => ({
   minCentavos: min, maxCentavos: max, status: "estimate", completeness: "estimate", approximate: true, discountsApplied: false,
-  ruleCodes: ["F01", "F02"],
+  ruleCodes: ["F01"], span: "traditional_rule", basis: "fare_rules", reportCodes: [],
 });
+
+/** The Loops' fleet as published (snapshot routes[]): traditional jeepneys, owner-confirmed. */
+const traditionalFleet = (route: "R8-A" | "R8-B") => ({
+  label: "Traditional jeepneys",
+  chip: "Jeepney · traditional",
+  colourKey: "traditional_puj",
+  classes: [
+    {
+      code: `FL-${route}-TRAD`, vehicleClass: "traditional_puj", evidenceLevels: ["legal_plan", "owner_confirmation"], status: "operating",
+      firstReportedOn: null, lastReportedOn: "2026-10-16", unitsNote: "PUJ Class 2 in the 2025 route plan", aircon: null,
+      airconSourceCodes: [], cooperatives: [], sourceCodes: ["N30", "U01"],
+      label: "Traditional jeepney · operating (owner-confirmed October 2026)",
+    },
+  ],
+});
+
+/** D13 ride fields: along the approximate path (Loop A here) or the straight-line sum (Loop B here). */
+const alongPath = (board: number, alight: number) => ({ distanceBasis: "approximate_path", boardMeasureM: board, alightMeasureM: alight });
+const straightLine = { distanceBasis: "stop_to_stop_straight_line", boardMeasureM: null, alightMeasureM: null };
 
 const asStop = (s: typeof A1) => ({ kind: "stop", lat: s.lat, lng: s.lng, stopId: s.id, name: s.name });
 
@@ -32,11 +53,11 @@ const recommended = {
     {
       kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
       stops: [A1, A2, A3, A4, A5], distanceMeters: 1240, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1700),
+      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(0, 1240),
     },
     { kind: "walk", from: asStop(A5), to: DESTINATION, distanceMeters: 92, estimateMeters: 120, pathVerified: false },
   ],
-  rides: 1, walkMeters: 269, walkEstimateMeters: 350, rideMeters: 1240, score: 660, fare: { minCentavos: 1400, maxCentavos: 1700, status: "estimate", completeness: "estimate" },
+  rides: 1, walkMeters: 269, walkEstimateMeters: 350, rideMeters: 1240, score: 660, fare: { minCentavos: 1400, maxCentavos: 1400, status: "estimate", completeness: "estimate" },
   evidence: "provisional",
 };
 
@@ -48,11 +69,11 @@ const leastWalking = {
     {
       kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
       stops: [A2, A3, A4], distanceMeters: 5486, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 2000),
+      fare: legFare(1600, 1800), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(265.6, 5751.6),
     },
     { kind: "walk", from: asStop(A4), to: DESTINATION, distanceMeters: 30, estimateMeters: 39, pathVerified: false },
   ],
-  rides: 1, walkMeters: 90, walkEstimateMeters: 117, rideMeters: 5486, score: 1488, fare: { minCentavos: 1400, maxCentavos: 2000, status: "estimate", completeness: "estimate" },
+  rides: 1, walkMeters: 90, walkEstimateMeters: 117, rideMeters: 5486, score: 1488, fare: { minCentavos: 1600, maxCentavos: 1800, status: "estimate", completeness: "estimate" },
   evidence: "provisional",
 };
 
@@ -134,7 +155,8 @@ export const WALK_FIRST_PLAN = {
 
 // Two rides with a transfer (guidance, Task 10): Loop A from Plaza Rizal to Magsaysay Junction,
 // walk to a Loop B pin, Loop B two stops on, walk to the destination.
-const LOOP_B = id(200);
+// The published Loop B (R8-B counterclockwise) variant.
+const LOOP_B = "9ddd04ca-ab7d-413e-8fd3-7d7f1a3ed7eb";
 const B1 = { id: id(21), name: "Del Rosario", lat: 13.6272, lng: 123.1893 };
 const B2 = { id: id(22), name: "Mother Seton Hospital", lat: 13.6287, lng: 123.1902 };
 const B3 = { id: id(23), name: "Avenue Plaza", lat: 13.6301, lng: 123.1909 };
@@ -147,17 +169,17 @@ const twoRides = {
     {
       kind: "ride", variantId: LOOP_A, routeCode: "R8-A", routeName: "Centro–Magsaysay Loop A", verification: "unverified",
       stops: [A1, A2, A3], distanceMeters: 560, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1700),
+      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-A"), ...alongPath(0, 560),
     },
     { kind: "walk", from: asStop(A3), to: asStop(B1), distanceMeters: 60, estimateMeters: 78, pathVerified: false },
     {
       kind: "ride", variantId: LOOP_B, routeCode: "R8-B", routeName: "Centro–Panganiban Loop B", verification: "unverified",
       stops: [B1, B2, B3], distanceMeters: 380, approximate: true, boardingVerified: false, pathVerified: false,
-      fare: legFare(1400, 1700),
+      fare: legFare(1400, 1400), mode: "jeepney", fleet: traditionalFleet("R8-B"), ...straightLine,
     },
     { kind: "walk", from: asStop(B3), to: DESTINATION, distanceMeters: 50, estimateMeters: 65, pathVerified: false },
   ],
-  rides: 2, walkMeters: 287, walkEstimateMeters: 373, rideMeters: 940, score: 900, fare: { minCentavos: 2800, maxCentavos: 3400, status: "estimate", completeness: "estimate" },
+  rides: 2, walkMeters: 287, walkEstimateMeters: 373, rideMeters: 940, score: 900, fare: { minCentavos: 2800, maxCentavos: 2800, status: "estimate", completeness: "estimate" },
   evidence: "provisional",
 };
 

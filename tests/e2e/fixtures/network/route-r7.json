@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-16T01:49:26.840Z"
  },
  "route": {
   "code": "R7",
@@ -18,6 +18,74 @@
   "verification": "unverified",
   "hasProvisionalStops": false,
   "hasTrial": false,
+  "mode": "jeepney",
+  "serviceStatus": "legal_plan",
+  "planning": "none",
+  "fleet": {
+   "label": "Traditional and modern jeepneys",
+   "chip": "Jeepney · traditional + modern",
+   "colourKey": "mixed_trad_modern",
+   "classes": [
+    {
+     "code": "FL-R7-TRAD",
+     "vehicleClass": "traditional_puj",
+     "evidenceLevels": [
+      "legal_plan",
+      "owner_confirmation"
+     ],
+     "status": "operating",
+     "firstReportedOn": null,
+     "lastReportedOn": "2026-10-16",
+     "unitsNote": "PUJ Class 2 in the 2025 route plan",
+     "aircon": null,
+     "airconSourceCodes": [],
+     "cooperatives": [],
+     "sourceCodes": [
+      "N30",
+      "U01"
+     ],
+     "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+    },
+    {
+     "code": "FL-R7-MOD",
+     "vehicleClass": "modern_puj",
+     "evidenceLevels": [
+      "official_report",
+      "news_report",
+      "owner_confirmation"
+     ],
+     "status": "operating",
+     "firstReportedOn": "2024-01-16",
+     "lastReportedOn": "2026-10-16",
+     "unitsNote": "about 5 units (2024 reports); current count not confirmed",
+     "aircon": true,
+     "airconSourceCodes": [
+      "U01"
+     ],
+     "cooperatives": [
+      "Naga City Allied Transport Cooperative (NACIATRASCO)",
+      "Carolina Panicuason Transport Cooperative (CAPATRANSCO)"
+     ],
+     "sourceCodes": [
+      "N38",
+      "N15",
+      "N41",
+      "U01"
+     ],
+     "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
+    }
+   ]
+  },
+  "operatingStatus": {
+   "status": "operating",
+   "label": "Operating (owner-confirmed 2026-10-16)",
+   "note": "Traditional jeepney service owner-confirmed 2026-10-16. Stop locations, stop order and paths stay unverified.",
+   "confirmedOn": "2026-10-16",
+   "confirmsServiceOnly": true,
+   "sourceCodes": [
+    "U01"
+   ]
+  },
   "notes": null,
   "sourceCodes": [
    "S01",
@@ -40,7 +108,8 @@
     "Carolina Rd",
     "Panicuason Rd"
    ],
-   "circuit": null
+   "circuit": null,
+   "branch": null
   },
   "additionalSourceStructures": [],
   "normalizationNote": null
@@ -48,6 +117,7 @@
  "variants": [
   {
    "variantId": "38b3d3c0-1cb6-4e97-8cf6-a199f9dc3372",
+   "name": null,
    "direction": "inbound",
    "kind": "permanent",
    "evidenceLevel": "documentary",
@@ -69,17 +139,26 @@
      "Elias Angeles St"
     ],
     "outbound": null,
-    "circuit": null
+    "circuit": null,
+    "branch": null
    },
    "notes": null,
    "sourceCodes": [
     "S01",
     "S02"
    ],
-   "stops": []
+   "stops": [],
+   "pathStatus": {
+    "status": "traced",
+    "reason": null,
+    "listedStreets": 6,
+    "matchedStreets": 6,
+    "unmatchedStreets": []
+   }
   },
   {
    "variantId": "a54b22a9-7a6b-44b8-b1d1-6566b488add5",
+   "name": null,
    "direction": "outbound",
    "kind": "permanent",
    "evidenceLevel": "documentary",
@@ -101,18 +180,49 @@
      "Carolina Rd",
      "Panicuason Rd"
     ],
-    "circuit": null
+    "circuit": null,
+    "branch": null
    },
    "notes": null,
    "sourceCodes": [
     "S01",
     "S02"
    ],
-   "stops": []
+   "stops": [],
+   "pathStatus": {
+    "status": "traced",
+    "reason": null,
+    "listedStreets": 6,
+    "matchedStreets": 6,
+    "unmatchedStreets": []
+   }
   }
  ],
  "trials": [],
  "aliases": [],
+ "cooperatives": [
+  {
+   "name": "Carolina Panicuason Transport Cooperative (CAPATRANSCO)",
+   "basis": "corridor_reported",
+   "label": "Reported on this corridor (June 2024)",
+   "reportedOn": "2024-06-24",
+   "notes": "Corridor inferred from the cooperative name and N15.",
+   "sourceCodes": [
+    "N15",
+    "N41"
+   ]
+  },
+  {
+   "name": "Naga City Allied Transport Cooperative (NACIATRASCO)",
+   "basis": "corridor_reported",
+   "label": "Reported on this corridor (January 2024)",
+   "reportedOn": "2024-01-16",
+   "notes": null,
+   "sourceCodes": [
+    "N38"
+   ]
+  }
+ ],
  "fareEvidence": {
   "basis": "route_mode",
   "rules": [
@@ -135,7 +245,9 @@
     "isEstimate": true,
     "sourceCodes": [
      "S05",
-     "S06"
+     "S06",
+     "N17",
+     "N32"
     ]
    },
    {
@@ -157,14 +269,62 @@
     "isEstimate": true,
     "sourceCodes": [
      "S05",
-     "S06"
+     "S06",
+     "N17",
+     "N32"
     ]
    }
   ],
   "observations": [],
-  "conflicts": []
+  "conflicts": [],
+  "reportedPractice": [
+   {
+    "code": "FO-R7-MOD",
+    "vehicleClass": "modern_puj",
+    "deltaQualifier": "at_least",
+    "deltaCentavosLow": 500,
+    "deltaCentavosHigh": null,
+    "observedOn": "2026-10-16",
+    "reportText": "R7 modern fare is at least P5 more than the traditional fare",
+    "sourceCodes": [
+     "U01"
+    ]
+   }
+  ]
  },
  "sources": [
+  {
+   "code": "N15",
+   "title": "Brigada News Naga: coop consolidation (2024-01-08) and Carolina Panicuason coop trip limits (2024-06-24)",
+   "url": "https://www.brigadanews.ph/biyahe-ng-ilang-traditional-jeepney-sa-naga-city-nilimitahan/",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2024-01-08; 2024-06-24",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N30",
+   "title": "Ordinance 2025-070 LPTRP + Resolution 2025-735 Eastbound trial (= S01/S02/S03)",
+   "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2025-070/",
+   "evidenceType": "official",
+   "publishedOrEnacted": "2025-09-23 / 2025-11-11",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N38",
+   "title": "Brigada News: NACIATRASCO, ibinahagi ang kagandahan ng modernized jeepney",
+   "url": "https://www.brigadanews.ph/naciatrasco-ibinahagi-ang-kagandahan-ng-modernized-jeepney/",
+   "evidenceType": "news",
+   "publishedOrEnacted": "2024-01-16",
+   "checkedOn": "2026-10-16"
+  },
+  {
+   "code": "N41",
+   "title": "CDA Region V: CamSur MPC signs Koop Kapatid MOA with NACIATRASCO and CAPATRANSCO",
+   "url": "https://cda.gov.ph/region-5/inspiring-change-and-cooperative-growth-camsur-multi-purpose-cooperative-signs-memorandum-of-agreement-on-koop-kapatid-program-with-two-2-transport-cooperatives-in-naga-city/",
+   "evidenceType": "government_news",
+   "publishedOrEnacted": "2023-10-09 (MOA 2023-10-05)",
+   "checkedOn": "2026-10-16"
+  },
   {
    "code": "S01",
    "title": "Naga approved LPTRP, Ordinance 2025-070",
@@ -180,6 +340,14 @@
    "evidenceType": "official",
    "publishedOrEnacted": "2025-09-23",
    "checkedOn": "2026-10-15"
+  },
+  {
+   "code": "U01",
+   "title": "Project owner confirmation to ParaNaga (2026-10-16): traditional jeepneys operate on every LPTRP route (R1–R8); air-conditioned modern jeepneys operate on R4 and R7; riders pay about P3–P5 more on R4 modern and at least P5 more on R7 modern than the traditional fare",
+   "url": null,
+   "evidenceType": "owner_confirmation",
+   "publishedOrEnacted": "2026-10-16",
+   "checkedOn": "2026-10-16"
   }
  ]
 }

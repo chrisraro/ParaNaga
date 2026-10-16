@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "67e56657-7542-462e-b57c-eb14439a0c7a",
-  "label": "osm-places-2026-10-15",
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-15T12:59:57.089Z"
+  "publishedAt": "2026-10-16T01:49:26.840Z"
  },
  "stops": [
   {
@@ -1713,7 +1713,41 @@
     "d7ba3262-3c04-4231-8f35-71b65c7240a1",
     "cbfda920-cb97-4c39-abf3-196679f6a7e7",
     "e3bc0522-9d04-4a9c-8f29-d4eee79d63d0"
-   ]
+   ],
+   "mode": "jeepney",
+   "measuresM": [
+    0,
+    265.6,
+    720.7,
+    1066.4,
+    1353.3,
+    1588.5,
+    1854.5,
+    2028.6,
+    2187.7,
+    2324.9,
+    2637.3,
+    2881.7,
+    3080.5,
+    3521.3,
+    3743.3,
+    3981.3,
+    4386.1,
+    4708.1,
+    4904.7,
+    5136.9,
+    5450.6,
+    5645.9,
+    5889.4,
+    6133.1,
+    6362.3,
+    6647.1,
+    6933,
+    7219.8,
+    7490.1,
+    7841.5
+   ],
+   "pathLengthM": 8039.1
   },
   {
    "variantId": "9ddd04ca-ab7d-413e-8fd3-7d7f1a3ed7eb",
@@ -1757,7 +1791,42 @@
     "0c49331b-1e23-41e4-badd-17afb9e97b0e",
     "a58df5fc-5a67-4e98-8973-97b6e45444e4",
     "f0c10e2e-7d72-4257-acf6-2ea20bbfb410"
-   ]
+   ],
+   "mode": "jeepney",
+   "measuresM": [
+    0,
+    370.3,
+    671.9,
+    1018.3,
+    1189.8,
+    1492.1,
+    1704.3,
+    1938.8,
+    2313.6,
+    2497.9,
+    2718.5,
+    3020.7,
+    3273.9,
+    3423,
+    3912,
+    4185.6,
+    4406.2,
+    4602,
+    4792,
+    5237.5,
+    5424.3,
+    5620.9,
+    5729.9,
+    5963.7,
+    6054.3,
+    6321,
+    6548.8,
+    6813.7,
+    7232.4,
+    7372.4,
+    7640.8
+   ],
+   "pathLengthM": 7867.6
   }
  ],
  "fareRules": [
@@ -1780,7 +1849,9 @@
    "isEstimate": true,
    "sourceCodes": [
     "S05",
-    "S06"
+    "S06",
+    "N17",
+    "N32"
    ]
   },
   {
@@ -1802,7 +1873,9 @@
    "isEstimate": true,
    "sourceCodes": [
     "S05",
-    "S06"
+    "S06",
+    "N17",
+    "N32"
    ]
   },
   {
@@ -1828,7 +1901,8 @@
    "publishExact": false,
    "isEstimate": true,
    "sourceCodes": [
-    "S04"
+    "S04",
+    "N33"
    ]
   },
   {
@@ -1852,5 +1926,803 @@
     "S07"
    ]
   }
- ]
+ ],
+ "terminals": [
+  {
+   "code": "T01",
+   "name": "Bicol Central Station",
+   "kind": "terminal",
+   "modes": [
+    "bus",
+    "uv_express"
+   ],
+   "lat": 13.6192359,
+   "lng": 123.1897426,
+   "coordSource": "osm_way_centroid",
+   "verification": "community_coordinate_official_address"
+  },
+  {
+   "code": "T02",
+   "name": "Eastbound Terminal",
+   "kind": "terminal",
+   "modes": [
+    "jeepney",
+    "uv_express"
+   ],
+   "lat": null,
+   "lng": null,
+   "coordSource": null,
+   "verification": "official_location_text_conflicting_street"
+  },
+  {
+   "code": "T03",
+   "name": "LCC / Integrated Southbound Terminal",
+   "kind": "terminal",
+   "modes": [
+    "jeepney",
+    "uv_express"
+   ],
+   "lat": 13.6189669,
+   "lng": 123.1782111,
+   "coordSource": "osm_way_centroid",
+   "verification": "community_coordinate_official_historical_franchise"
+  },
+  {
+   "code": "T04",
+   "name": "Integrated Northbound Terminal",
+   "kind": "terminal",
+   "modes": [
+    "jeepney",
+    "uv_express"
+   ],
+   "lat": 13.6344492,
+   "lng": 123.1849067,
+   "coordSource": "osm_node",
+   "verification": "community_coordinate_official_historical_franchise"
+  },
+  {
+   "code": "T05",
+   "name": "Centro loading cluster",
+   "kind": "loading_point",
+   "modes": [
+    "jeepney"
+   ],
+   "lat": null,
+   "lng": null,
+   "coordSource": null,
+   "verification": "official_street_structure"
+  },
+  {
+   "code": "T06",
+   "name": "Naga PNR railway station",
+   "kind": "station",
+   "modes": [
+    "rail"
+   ],
+   "lat": 13.619618,
+   "lng": 123.185879,
+   "coordSource": "osm_way_centroid",
+   "verification": "community_coordinate"
+  },
+  {
+   "code": "T07",
+   "name": "Eaglestar Naga Terminal",
+   "kind": "terminal",
+   "modes": [
+    "bus"
+   ],
+   "lat": 13.6163844,
+   "lng": 123.1866316,
+   "coordSource": "osm_node",
+   "verification": "community_only"
+  },
+  {
+   "code": "T08",
+   "name": "Milaor Jeepney Terminal",
+   "kind": "terminal",
+   "modes": [
+    "jeepney"
+   ],
+   "lat": 13.6180598,
+   "lng": 123.1831728,
+   "coordSource": "osm_node",
+   "verification": "community_only"
+  },
+  {
+   "code": "T09",
+   "name": "Jeepney station to Concepcion and Del Rosario",
+   "kind": "loading_point",
+   "modes": [
+    "jeepney"
+   ],
+   "lat": 13.6230645,
+   "lng": 123.1859752,
+   "coordSource": "osm_node",
+   "verification": "community_coordinate_matches_LPTRP_street"
+  },
+  {
+   "code": "T10",
+   "name": "Jeepney station to Pacol",
+   "kind": "loading_point",
+   "modes": [
+    "jeepney"
+   ],
+   "lat": 13.6209809,
+   "lng": 123.1846467,
+   "coordSource": "osm_node",
+   "verification": "community_only_old"
+  },
+  {
+   "code": "T11",
+   "name": "Jeepney station to Carolina and Panicuason",
+   "kind": "loading_point",
+   "modes": [
+    "jeepney"
+   ],
+   "lat": 13.6210805,
+   "lng": 123.1850123,
+   "coordSource": "osm_node",
+   "verification": "community_only_old"
+  },
+  {
+   "code": "T12",
+   "name": "Del Rosario → Centro jeepney station",
+   "kind": "loading_point",
+   "modes": [
+    "jeepney"
+   ],
+   "lat": 13.6181576,
+   "lng": 123.2338199,
+   "coordSource": "osm_node",
+   "verification": "community_only"
+  },
+  {
+   "code": "T13",
+   "name": "Gen. Luna St at Plaza Rizal (PUJ platform)",
+   "kind": "loading_point",
+   "modes": [
+    "jeepney"
+   ],
+   "lat": 13.623659,
+   "lng": 123.1847492,
+   "coordSource": "osm_node",
+   "verification": "community_only"
+  },
+  {
+   "code": "T14",
+   "name": "Balatas Tricycle Terminal",
+   "kind": "terminal",
+   "modes": [
+    "tricycle"
+   ],
+   "lat": 13.6318672,
+   "lng": 123.1973306,
+   "coordSource": "osm_node",
+   "verification": "community_only"
+  },
+  {
+   "code": "T15",
+   "name": "Deca Vistansa special-trimobile waiting area",
+   "kind": "waiting_area",
+   "modes": [
+    "tricycle"
+   ],
+   "lat": null,
+   "lng": null,
+   "coordSource": null,
+   "verification": "official_text_no_coordinate"
+  },
+  {
+   "code": "T16",
+   "name": "Cararayan Proper special-trimobile waiting area",
+   "kind": "waiting_area",
+   "modes": [
+    "tricycle"
+   ],
+   "lat": null,
+   "lng": null,
+   "coordSource": null,
+   "verification": "official_text_no_coordinate"
+  }
+ ],
+ "routes": [
+  {
+   "routeId": "e24d021d-a23c-49a7-82d9-bc6c0f7a0abf",
+   "routeCode": "R1",
+   "routeName": "Centro–San Isidro via Cararayan",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R1-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "1e8705ca-bb01-4c96-a0da-68a71173bbd4",
+   "routeCode": "R2",
+   "routeName": "Centro–Del Rosario via Magsaysay Avenue",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R2-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "71f7bd85-988d-4e30-989a-3fcc6ec1d23d",
+   "routeCode": "R3",
+   "routeName": "Centro–Del Rosario via Roxas Avenue",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R3-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "430e9763-1fbe-4cc0-8e74-13b5401e0850",
+   "routeCode": "R4",
+   "routeName": "Centro–Del Rosario via Panganiban Drive",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional and modern jeepneys",
+    "chip": "Jeepney · traditional + modern",
+    "colourKey": "mixed_trad_modern",
+    "classes": [
+     {
+      "code": "FL-R4-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     },
+     {
+      "code": "FL-R4-MOD",
+      "vehicleClass": "modern_puj",
+      "evidenceLevels": [
+       "official_report",
+       "news_report",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": "2023-04-17",
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "about 10 air-conditioned units (2023–2024 reports); current count not confirmed",
+      "aircon": true,
+      "airconSourceCodes": [
+       "N14",
+       "U01"
+      ],
+      "cooperatives": [
+       "Naga City Allied Transport Cooperative (NACIATRASCO)"
+      ],
+      "sourceCodes": [
+       "N14",
+       "N38",
+       "N39",
+       "N41",
+       "U01"
+      ],
+      "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "1f2ed35a-822a-4bf7-b4ec-ea42cae764a3",
+   "routeCode": "R5",
+   "routeName": "Centro–San Felipe",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R5-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "6a6cbd8b-8339-4352-87fe-20df16081fa0",
+   "routeCode": "R6",
+   "routeName": "Centro–Pacol",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R6-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "87de88e9-9d2a-47fb-924b-b13769b5396b",
+   "routeCode": "R7",
+   "routeName": "Centro–Carolina–Panicuason",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional and modern jeepneys",
+    "chip": "Jeepney · traditional + modern",
+    "colourKey": "mixed_trad_modern",
+    "classes": [
+     {
+      "code": "FL-R7-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     },
+     {
+      "code": "FL-R7-MOD",
+      "vehicleClass": "modern_puj",
+      "evidenceLevels": [
+       "official_report",
+       "news_report",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": "2024-01-16",
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "about 5 units (2024 reports); current count not confirmed",
+      "aircon": true,
+      "airconSourceCodes": [
+       "U01"
+      ],
+      "cooperatives": [
+       "Naga City Allied Transport Cooperative (NACIATRASCO)",
+       "Carolina Panicuason Transport Cooperative (CAPATRANSCO)"
+      ],
+      "sourceCodes": [
+       "N38",
+       "N15",
+       "N41",
+       "U01"
+      ],
+      "label": "Modern jeepney · air-conditioned · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "085d19f3-30a2-4e96-8596-f1f10ba781d9",
+   "routeCode": "R8-A",
+   "routeName": "Centro–Magsaysay Loop A",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-A-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "0abd7209-cc57-416e-a43b-bcb00227dce1",
+   "routeCode": "R8-B",
+   "routeName": "Centro–Magsaysay Loop B",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-B-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "cfe03151-f02a-4e44-b7ff-e185b4a0ebbe",
+   "routeCode": "R8-C",
+   "routeName": "Centro–Magsaysay Loop C",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-C-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "f26492f5-bdea-47bf-a324-5f5e67032f7c",
+   "routeCode": "R8-D",
+   "routeName": "Centro–Magsaysay Loop D",
+   "mode": "jeepney",
+   "serviceStatus": "legal_plan",
+   "fleet": {
+    "label": "Traditional jeepneys",
+    "chip": "Jeepney · traditional",
+    "colourKey": "traditional_puj",
+    "classes": [
+     {
+      "code": "FL-R8-D-TRAD",
+      "vehicleClass": "traditional_puj",
+      "evidenceLevels": [
+       "legal_plan",
+       "owner_confirmation"
+      ],
+      "status": "operating",
+      "firstReportedOn": null,
+      "lastReportedOn": "2026-10-16",
+      "unitsNote": "PUJ Class 2 in the 2025 route plan",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N30",
+       "U01"
+      ],
+      "label": "Traditional jeepney · operating (owner-confirmed October 2026)"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "0b813055-ddb0-4648-96e2-ae40870e7df5",
+   "routeCode": "TRI-VISTODA",
+   "routeName": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
+   "mode": "tricycle",
+   "serviceStatus": "authorized_feeder",
+   "fleet": {
+    "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified",
+    "chip": "Tricycle · special trimobile",
+    "colourKey": "tricycle",
+    "classes": [
+     {
+      "code": "FL-TRI-VISTODA",
+      "vehicleClass": "tricycle",
+      "evidenceLevels": [
+       "legal_plan"
+      ],
+      "status": "planned",
+      "firstReportedOn": "2025-09-09",
+      "lastReportedOn": "2025-09-09",
+      "unitsNote": "33 special trimobile units authorized",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N06"
+      ],
+      "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
+     }
+    ]
+   }
+  },
+  {
+   "routeId": "6204a9ea-5c5d-47e3-9b52-2871b089597c",
+   "routeCode": "TRI-DECALANGON",
+   "routeName": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
+   "mode": "tricycle",
+   "serviceStatus": "authorized_feeder",
+   "fleet": {
+    "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified",
+    "chip": "Tricycle · special trimobile",
+    "colourKey": "tricycle",
+    "classes": [
+     {
+      "code": "FL-TRI-DECALANGON",
+      "vehicleClass": "tricycle",
+      "evidenceLevels": [
+       "legal_plan"
+      ],
+      "status": "planned",
+      "firstReportedOn": "2025-03-18",
+      "lastReportedOn": "2025-03-18",
+      "unitsNote": "10 special trimobile units authorized",
+      "aircon": null,
+      "airconSourceCodes": [],
+      "cooperatives": [],
+      "sourceCodes": [
+       "N05"
+      ],
+      "label": "Tricycle (special trimobile) · authorized 2025 · operation not verified"
+     }
+    ]
+   }
+  }
+ ],
+ "etaModel": {
+  "timeZone": "Asia/Manila",
+  "utcOffsetMinutes": 480,
+  "params": [
+   {
+    "key": "jeepney_speed_offpeak_kmh",
+    "low": 10,
+    "high": 15,
+    "unit": "km_per_h",
+    "windows": null,
+    "days": null,
+    "appliesTo": [
+     "jeepney"
+    ],
+    "isAssumption": false,
+    "assumptionNote": null,
+    "basis": "Naga baseline about 10 km/h (SafeTravelPH SimEx); comparable-city observed upper about 15 km/h (Puerto Princesa)",
+    "sourceCodes": [
+     "N16",
+     "N29"
+    ]
+   },
+   {
+    "key": "jeepney_speed_peak_kmh",
+    "low": 7,
+    "high": 13,
+    "unit": "km_per_h",
+    "windows": null,
+    "days": null,
+    "appliesTo": [
+     "jeepney"
+    ],
+    "isAssumption": true,
+    "assumptionNote": "A2: the low end (7 km/h) is 30% below the Naga ~10 km/h baseline, an assumption; the high end (13) is N29's 13.3 rounded down",
+    "basis": "High end from N29 (observed peak 13.3 km/h); low end assumption A2",
+    "sourceCodes": [
+     "N29"
+    ]
+   },
+   {
+    "key": "peak_windows",
+    "low": null,
+    "high": null,
+    "unit": "windows",
+    "windows": [
+     {
+      "start": "06:00",
+      "end": "08:00"
+     },
+     {
+      "start": "11:00",
+      "end": "13:00"
+     },
+     {
+      "start": "16:00",
+      "end": "19:00"
+     }
+    ],
+    "days": "every_day",
+    "appliesTo": [
+     "jeepney"
+    ],
+    "isAssumption": true,
+    "assumptionNote": "A3: applied every day; no day-of-week source",
+    "basis": "Ordinance 2025-110 peak-hour truck ban on Roxas Ave (Asia/Manila)",
+    "sourceCodes": [
+     "N04"
+    ]
+   },
+   {
+    "key": "walk_slowdown_factor",
+    "low": 1,
+    "high": 1.25,
+    "unit": "factor",
+    "windows": null,
+    "days": null,
+    "appliesTo": [
+     "walk"
+    ],
+    "isAssumption": true,
+    "assumptionNote": "A1: crossings, waiting at roads, slower walkers (high end = low end × 1.25); no source",
+    "basis": "ParaNaga assumption A1",
+    "sourceCodes": []
+   },
+   {
+    "key": "walk_speed_kmh",
+    "low": 4.238,
+    "high": 4.238,
+    "unit": "km_per_h",
+    "windows": null,
+    "days": null,
+    "appliesTo": [
+     "walk"
+    ],
+    "isAssumption": false,
+    "assumptionNote": null,
+    "basis": "Walking speed 4.238 km/h, Metro Manila study (Tolentino & Sigua 2022)",
+    "sourceCodes": [
+     "N28"
+    ]
+   }
+  ]
+ }
 }

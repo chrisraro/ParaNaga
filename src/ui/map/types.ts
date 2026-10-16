@@ -1,10 +1,16 @@
+import type { Ref } from "react";
 import type { FixQuality, LocationFix } from "@/domain/geo/location-fix";
-import type { StopPin } from "@/domain/api/schemas";
+import type { Line, StopPin } from "@/domain/api/schemas";
+type TracedLine = Line;
 import type { Bounds, LatLng } from "@/domain/geo/types";
+import type { VisualKey } from "@/domain/modes/modes";
+import type { MapSurface } from "@/domain/modes/palette";
+import type { MapTerminal } from "./terminals-layer";
+import type { TripLinesData } from "./trip-lines-layer";
 
 export type NagaMapPins = { start?: LatLng; destination?: LatLng };
 
-/** A stop to highlight for a trip (boarding or getting off). Drawn as a marker, never joined by a line. */
+/** A stop to highlight for a trip (boarding or getting off). Drawn as a marker. */
 export type HighlightStop = { id: string; lat: number; lng: number; role: "board" | "alight"; label: string };
 
 export type NagaMapProps = {
@@ -15,11 +21,11 @@ export type NagaMapProps = {
   /** The fix is old: the dot is drawn dimmed and without the live pulse. */
   userStale?: boolean;
   pins?: NagaMapPins;
-  /** Trip stops to highlight; when the set changes the map fits them (and the pins) into view. */
+  /** Trip stops to highlight; when the set changes the map fits them (and the pins / trip lines) into view. */
   highlightStops?: readonly HighlightStop[];
   /** Bottom padding (px) when fitting highlighted stops, e.g. the part of the map under a sheet. */
   highlightPaddingBottom?: number;
-  /** Mapped stop pins to draw (one canvas layer). Never joined by lines. */
+  /** Mapped stop pins to draw (one canvas layer). */
   stopPins?: readonly StopPin[];
   /** Whether tapping a stop pin selects it (false while placing a pin). */
   stopPinsInteractive?: boolean;
@@ -33,9 +39,6 @@ export type NagaMapProps = {
   /**
    * Change this number to recentre: on the user fix when it is inside Naga, else Plaza Rizal.
    * Invariant: it starts at 0 and only ever increases for the lifetime of the screen that owns it.
-   * The map treats any value other than 0 seen at mount as a pending request (so a recentre asked
-   * for before this lazily loaded map existed still runs); a map remounted under a screen whose
-   * signal is already above 0 would therefore replay the last recentre once.
    */
   recenterSignal?: number;
   /** When set, the next recentre goes here (inside Naga) instead of to the user fix. */
@@ -44,6 +47,31 @@ export type NagaMapProps = {
   recenterTargetLabel?: string;
   /** Shows the locate/recenter button; the parent decides whether to start GPS. */
   onLocate?: () => void;
+  /** Shows the 48×48 px "Layers" button in Stack A (Task 12). */
+  onOpenLayers?: (() => void) | undefined;
+  layersButtonRef?: Ref<HTMLButtonElement>;
+  /** Trip walk + ride polylines, chevrons, and mid-leg chips (Task 12). */
+  tripLines?: TripLinesData | null;
+  /** Route overview or route-detail polylines (Task 12). */
+  routeLines?: readonly TracedLine[] | null;
+  /** Route code currently selected in the overview or route detail. */
+  selectedRouteCode?: string | null;
+  onSelectRoute?: ((routeCode: string) => void) | null;
+  /** When true (route detail), draws direction chevrons every 250 m along `routeLines`. */
+  showRouteChevrons?: boolean;
+  /** Terminals with a coordinate to draw (Task 13); terminals without one are never drawn. */
+  terminals?: readonly MapTerminal[] | null;
+  /** False on terminal detail: markers show where the terminal is and open nothing. */
+  terminalsInteractive?: boolean;
+  onTerminalSelect?: ((code: string) => void) | null;
+  /** The terminal a tricycle hint names (D15): its marker is emphasized. */
+  emphasizedTerminalCode?: string | null;
+  /** Optional polyline coordinates to fit into view when they change (e.g. route detail variant). */
+  fitBoundsCoords?: readonly LatLng[] | null;
+  /** Visual keys to show in the collapsible `MapLegend` above the attribution (Task 11/12). */
+  legend?: readonly VisualKey[] | null;
+  /** Explicit map surface override; otherwise derived from `mapSurface(effectiveTheme, tilesDrawn)`. */
+  mapSurface?: MapSurface;
   className?: string;
   /** Where the map opens (default: Naga City centre at the default zoom). Read once, at mount. */
   initialView?: { center: LatLng; zoom: number };

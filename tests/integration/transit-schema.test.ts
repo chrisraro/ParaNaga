@@ -21,7 +21,14 @@ const TABLES = [
   "transit.barangay", "transit.coverage_audit", "transit.feeder_lead", "transit.provider_presence",
   "transit.rail_status", "transit.designated_stop_candidate", "transit.external_destination_category",
   "transit.dataset_note",
+  // 0006
+  "transit.terminal_version", "transit.route_vehicle_class", "transit.route_cooperative",
+  "transit.route_operating_status", "transit.route_fare_observation", "transit.regional_service",
+  "transit.regional_service_version",
 ];
+
+/** 0006 tables: paranaga_app reads only; paranaga_import inserts only (no UPDATE/DELETE). */
+const MODES_TABLES = TABLES.slice(TABLES.indexOf("transit.terminal_version"));
 
 type Loop = {
   revisionId: string;
@@ -575,5 +582,89 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("transit and ingest schema (
         [loop.variantVersionId]);
       expect(await seqs()).toEqual([]);
     });
+  });
+
+  // ---------------------------------------------------------------- 0006 modes, fleets, terminals
+  /** A route and a terminal owned by this run (paranaga_import). */
+  const seedModesOwners = (tag: string) =>
+    asImportRole(async (c) => {
+      const route = await one(c,
+        `insert into transit.route (public_code, name, mode, service_status) values ($1, 'Modes test', 'jeepney', 'legal_plan')
+         returning id`, [`M-${run}-${tag}`]);
+      const terminal = await one(c, `insert into transit.terminal (code, name) values ($1, 'Modes test terminal') returning id`,
+        [`MT-${run}-${tag}`]);
+      return { routeId: route.id as string, terminalId: terminal.id as string };
+    });
+  const hash = (n: number) => n.toString(16).padStart(64, "0");
+
+  it("0006: paranaga_app reads the new tables and cannot write them; paranaga_import cannot update or remove rows", async () => {
+    for (const t of MODES_TABLES) {
+      expect(await appRows(null, sql.raw(`select count(*) from ${t}`)), t).toHaveLength(1);
+      expect((await pgCode(appRows(null, sql.raw(`insert into ${t} default values`)))).code, t).toBe("42501");
+      expect((await pgCode(appRows(null, sql.raw(`update ${t} set is_synthetic = is_synthetic`)))).code, t).toBe("42501");
+      expect((await pgCode(appRows(null, sql.raw(["dele", "te from ", t].join(""))))).code, t).toBe("42501");
+      expect((await pgCode(importer.query(`update ${t} set is_synthetic = is_synthetic`))).code, t).toBe("42501");
+      expect((await pgCode(importer.query(["dele", "te from ", t].join("")))).code, t).toBe("42501");
+    }
+  });
+
+  it("0006: a terminal version with a coordinate needs its OpenStreetMap id and must lie in the service area", async () => {
+    const { terminalId } = await seedModesOwners("tv");
+    const insert = (osmId: number | null, lon = 123.19, coordSource = "osm_node") => importer.query(
+      `insert into transit.terminal_version (terminal_id, name, kind, modes, geog, coord_source, osm_type, osm_id,
+                                              verification, source_codes, content_hash)
+       values ($1, 'T', 'terminal', '{bus}', extensions.ST_SetSRID(extensions.ST_MakePoint($2, 13.62), 4326)::extensions.geography,
+               $4, 'node', $3, 'test', '{N02}', $5)`, [terminalId, lon, osmId, coordSource, hash(osmId ?? 0)]);
+    expect((await pgCode(insert(null))).code).toBe("23514");
+    expect((await pgCode(insert(7, 121.0))).code).toBe("23514");
+    expect((await pgCode(insert(8, 123.19, "osm_way_centroid"))).code).toBe("23514");
+    await insert(9);
+    expect((await pgCode(importer.query(
+      `insert into transit.terminal_version (terminal_id, name, kind, modes, verification, source_codes, content_hash)
+       values ($1, 'T', 'terminal', '{e_jeepney}', 'test', '{N02}', $2)`, [terminalId, hash(10)]))).code).toBe("23514");
+  });
+
+  it("0006: vehicle-class records keep status and evidence consistent and never allow e_jeepney", async () => {
+    const { routeId } = await seedModesOwners("rvc");
+    let n = 100;
+    const insert = (vehicleClass: string, levels: string[], status: string, aircon: boolean | null = null, airconSources: string[] = []) =>
+      importer.query(
+        `insert into transit.route_vehicle_class (route_id, code, vehicle_class, evidence_levels, status, aircon,
+                                                  aircon_source_codes, source_codes, content_hash)
+         values ($1, 'FL-T', $2, $3, $4, $5, $6, '{N30}', $7)`,
+        [routeId, vehicleClass, levels, status, aircon, airconSources, hash(n++)]);
+    expect((await pgCode(insert("e_jeepney", ["legal_plan"], "planned"))).code).toBe("23514");
+    expect((await pgCode(insert("modern_puj", ["news_report"], "operating"))).code).toBe("23514");
+    expect((await pgCode(insert("modern_puj", ["secondary_claim"], "reported"))).code).toBe("23514");
+    expect((await pgCode(insert("modern_puj", ["news_report", "legal_plan"], "planned"))).code).toBe("23514");
+    expect((await pgCode(insert("modern_puj", ["news_report", "owner_confirmation"], "operating", true))).code).toBe("23514");
+    await insert("modern_puj", ["news_report", "owner_confirmation"], "operating", true, ["U01"]);
+    await insert("modern_puj", ["user_report"], "reported_not_confirmed");
+    await insert("traditional_puj", ["legal_plan"], "planned");
+  });
+
+  it("0006: a fare observation's high end is null exactly for 'at least'; cooperatives have no chair or address column", async () => {
+    const { routeId } = await seedModesOwners("rfo");
+    const insert = (qualifier: string, low: number, high: number | null, n: number) => importer.query(
+      `insert into transit.route_fare_observation (route_id, code, vehicle_class, kind, relative_to, delta_qualifier,
+                                                    delta_centavos_low, delta_centavos_high, observed_on, report_text,
+                                                    source_codes, content_hash)
+       values ($1, 'FO-T', 'modern_puj', 'reported_practice', 'traditional_fare', $2, $3, $4, '2026-10-16', 'test', '{U01}', $5)`,
+      [routeId, qualifier, low, high, hash(200 + n)]);
+    expect((await pgCode(insert("at_least", 500, 600, 1))).code).toBe("23514");
+    expect((await pgCode(insert("range", 500, null, 2))).code).toBe("23514");
+    expect((await pgCode(insert("range", 500, 300, 3))).code).toBe("23514");
+    await insert("range", 300, 500, 4);
+    await insert("at_least", 500, null, 5);
+    const columns = await owner.query<{ column_name: string }>(
+      `select column_name from information_schema.columns where table_schema = 'transit' and table_name = 'route_cooperative'`);
+    expect(columns.rows.map((r) => r.column_name).filter((c) => /chair|address|person|contact|phone/.test(c))).toEqual([]);
+  });
+
+  it("0006: new route rows default to mode jeepney and planning none; mode excludes e_jeepney", async () => {
+    const route = await one(owner, `select mode, service_status, planning from transit.route where public_code = $1`, [`READ-${run}`]);
+    expect(route).toEqual({ mode: "jeepney", service_status: null, planning: "none" });
+    expect((await pgCode(asImportRole((c) => c.query(
+      `insert into transit.route (public_code, name, mode) values ($1, 'x', 'e_jeepney')`, [`EJ-${run}`])))).code).toBe("23514");
   });
 });

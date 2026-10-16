@@ -2,8 +2,20 @@ import "server-only";
 import { sql, type SQL } from "drizzle-orm";
 import {
   fareModesForRouteMode,
+  INTRA_CITY_FARE_MODES,
+  LINES_ATTRIBUTION,
+  LINES_FORMAT_VERSION,
+  NOT_TRACED,
+  OSM_COPYRIGHT_URL,
+  PATH_LABEL,
+  UNTRACED_MESSAGE,
   variantVerification,
   type Bbox,
+  type EtaModel,
+  type EtaParam,
+  type Line,
+  type Lines,
+  type PathStatus,
   type FareRuleEstimate,
   type LegalStreets,
   type NetworkSnapshot,
@@ -15,6 +27,16 @@ import {
   type StopPin,
   type StopSummary,
 } from "@/domain/api/schemas";
+import {
+  cooperativeLabel,
+  fleetSummary,
+  operatingStatusLabel,
+  type CooperativeBasis,
+  type FleetRecord,
+  type RouteMode,
+} from "@/domain/modes/fleet";
+import { encodePolyline } from "@/domain/geo/polyline";
+import type { LatLng } from "@/domain/geo/types";
 import type { Db } from "@/server/db/context";
 
 // Reads the published network ONLY through the published views, v_published_* (security_invoker,
@@ -36,6 +58,62 @@ const strArray = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : [
 const strArrayOrNull = (v: unknown): string[] | null => (Array.isArray(v) ? v.map(String) : null);
 const isoOrNull = (v: unknown): string | null =>
   v === null || v === undefined ? null : v instanceof Date ? v.toISOString() : new Date(String(v)).toISOString();
+
+// ---------------------------------------------------------------- fleets and service status
+
+const FLEET_COLUMNS = sql`route_id, code, vehicle_class, evidence_levels::text[] as evidence_levels, status,
+  first_reported_on::text as first_reported_on, last_reported_on::text as last_reported_on, units_note, aircon,
+  aircon_source_codes::text[] as aircon_source_codes, cooperatives::text[] as cooperatives, source_codes::text[] as source_codes`;
+
+/** The published vehicle-class records per route id (v_published_route_vehicle_classes). */
+export async function fleetByRoute(db: Db, revisionId: string): Promise<Map<string, FleetRecord[]>> {
+  const found = await rows(db, sql`
+    select ${FLEET_COLUMNS} from transit.v_published_route_vehicle_classes
+     where revision_id = ${revisionId}::uuid order by route_id, code`);
+  const out = new Map<string, FleetRecord[]>();
+  for (const r of found) {
+    const list = out.get(str(r.route_id)) ?? [];
+    list.push({
+      code: str(r.code),
+      vehicleClass: r.vehicle_class as FleetRecord["vehicleClass"],
+      evidenceLevels: strArray(r.evidence_levels) as FleetRecord["evidenceLevels"][number][],
+      status: r.status as FleetRecord["status"],
+      firstReportedOn: strOrNull(r.first_reported_on),
+      lastReportedOn: strOrNull(r.last_reported_on),
+      unitsNote: strOrNull(r.units_note),
+      aircon: boolOrNull(r.aircon),
+      airconSourceCodes: strArray(r.aircon_source_codes),
+      cooperatives: strArray(r.cooperatives),
+      sourceCodes: strArray(r.source_codes),
+    });
+    out.set(str(r.route_id), list);
+  }
+  return out;
+}
+
+type OperatingStatus = NonNullable<RouteSummary["operatingStatus"]>;
+
+/** Owner-confirmed service per route id (confirms service only, never stops or paths). */
+async function operatingByRoute(db: Db, revisionId: string): Promise<Map<string, OperatingStatus>> {
+  const found = await rows(db, sql`
+    select route_id, operating_status, status_note, confirmed_on::text as confirmed_on, source_codes::text[] as source_codes
+      from transit.v_published_route_operating_statuses where revision_id = ${revisionId}::uuid`);
+  return new Map(found.map((r) => [str(r.route_id), {
+    status: "operating" as const,
+    label: operatingStatusLabel(str(r.confirmed_on)),
+    note: str(r.status_note),
+    confirmedOn: str(r.confirmed_on),
+    confirmsServiceOnly: true as const,
+    sourceCodes: strArray(r.source_codes),
+  }]));
+}
+
+type RouteExtras = { fleet: Map<string, FleetRecord[]>; operating: Map<string, OperatingStatus> };
+
+const routeExtras = async (db: Db, revisionId: string): Promise<RouteExtras> => ({
+  fleet: await fleetByRoute(db, revisionId),
+  operating: await operatingByRoute(db, revisionId),
+});
 
 // ---------------------------------------------------------------- revision
 
@@ -194,6 +272,16 @@ function toFareRule(r: Row): FareRuleEstimate {
   };
 }
 
+/** Published fare rules with these codes (any mode), ordered by code; [] for no codes. */
+export async function fareRulesByCode(db: Db, revisionId: string, codes: readonly string[]): Promise<FareRuleEstimate[]> {
+  if (codes.length === 0) return [];
+  const found = await rows(db, sql`
+    select ${FARE_COLUMNS} from transit.v_published_fare_rules
+     where revision_id = ${revisionId}::uuid and code in (${sql.join(codes.map((c) => sql`${c}`), sql`, `)})
+     order by code`);
+  return found.map(toFareRule);
+}
+
 // ---------------------------------------------------------------- snapshot
 
 /** The whole published network, or null when `revisionId` is not the published revision. */
@@ -204,17 +292,63 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
   const stops = await rows(db, sql`
     select ${STOP_COLUMNS} from transit.v_published_stops where revision_id = ${revisionId}::uuid order by ${STOP_ORDER}`);
   const variants = await rows(db, sql`
-    select v.variant_id, v.route_id, r.public_code, r.name, v.direction, v.kind, v.evidence_level, v.navigation_approved,
+    select v.variant_id, v.route_id, r.public_code, r.name, r.mode, v.direction, v.kind, v.evidence_level, v.navigation_approved,
            v.is_circular, array_agg(rs.stop_point_id::text order by rs.seq) as stop_ids
       from transit.v_published_variants v
       join transit.v_published_routes r on r.revision_id = v.revision_id and r.id = v.route_id
       join transit.v_published_route_stops rs on rs.revision_id = v.revision_id and rs.variant_version_id = v.variant_version_id
      where v.revision_id = ${revisionId}::uuid
-     group by v.variant_id, v.route_id, r.public_code, r.name, v.direction, v.kind, v.evidence_level,
+     group by v.variant_id, v.route_id, r.public_code, r.name, r.mode, v.direction, v.kind, v.evidence_level,
               v.navigation_approved, v.is_circular
      order by r.public_code, v.direction, v.kind`);
+  // Intra-city rules only: the regional bus/UV rules (F06–F12) are never planner inputs; they
+  // appear only on regional service / terminal detail.
   const fares = await rows(db, sql`
-    select ${FARE_COLUMNS} from transit.v_published_fare_rules where revision_id = ${revisionId}::uuid order by code`);
+    select ${FARE_COLUMNS} from transit.v_published_fare_rules
+     where revision_id = ${revisionId}::uuid
+       and mode_code in (${sql.join(INTRA_CITY_FARE_MODES.map((m) => sql`${m}`), sql`, `)})
+     order by code`);
+  const terminals = await rows(db, sql`
+    select code, name, kind, modes::text[] as modes, lat, lon, coord_source, evidence_status
+      from transit.v_published_terminals where revision_id = ${revisionId}::uuid order by code`);
+  const fleet = await fleetByRoute(db, revisionId);
+  const routes = await rows(db, sql`
+    select id, public_code, name, mode, service_status from transit.v_published_routes
+     where revision_id = ${revisionId}::uuid order by official_group_number nulls last, length(public_code), public_code`);
+  // Rider fare reports per route (an observation, never a rule): the mixed-fleet fare maximum.
+  const reports = await rows(db, sql`
+    select route_id, code, vehicle_class, delta_qualifier, delta_centavos_low, delta_centavos_high,
+           observed_on::text as observed_on, source_codes::text[] as source_codes
+      from transit.v_published_route_fare_observations
+     where revision_id = ${revisionId}::uuid and relative_to = 'traditional_fare'
+     order by code`);
+  const reportsOf = (routeId: string): NetworkSnapshot["routes"][number]["fareReports"] =>
+    reports.filter((o) => str(o.route_id) === routeId).map((o) => ({
+      code: str(o.code),
+      vehicleClass: o.vehicle_class as NetworkSnapshot["routes"][number]["fareReports"][number]["vehicleClass"],
+      deltaQualifier: o.delta_qualifier as "range" | "at_least",
+      deltaCentavosLow: Number(o.delta_centavos_low),
+      deltaCentavosHigh: numOrNull(o.delta_centavos_high),
+      observedOn: str(o.observed_on),
+      sourceCodes: strArray(o.source_codes),
+    }));
+  // D13: the traced path of each variant (length and stop measures by seq); untraced → none.
+  const shapes = await rows(db, sql`
+    select variant_id, length_m::float8 as length_m, stop_measures from transit.v_published_shapes
+     where revision_id = ${revisionId}::uuid and trace_status <> 'untraced'`);
+  const pathOf = new Map(shapes.map((s) => [str(s.variant_id), s]));
+  const measuresOf = (variantId: string, stopCount: number): { measuresM: number[] | null; pathLengthM: number | null } => {
+    const s = pathOf.get(variantId);
+    if (!s) return { measuresM: null, pathLengthM: null };
+    const list = Array.isArray(s.stop_measures) ? (s.stop_measures as Row[]) : [];
+    const bySeq = new Map(list.map((m) => [Number(m.seq), Number(m.measureM)]));
+    const measures = Array.from({ length: stopCount }, (_, i) => bySeq.get(i + 1));
+    return {
+      measuresM: stopCount > 0 && measures.every((m) => m !== undefined && Number.isFinite(m)) ? (measures as number[]) : null,
+      pathLengthM: Number(s.length_m),
+    };
+  };
+  const etaModel = await getEtaModel(db, revisionId);
 
   return {
     revision,
@@ -230,9 +364,212 @@ export async function getSnapshot(db: Db, revisionId: string): Promise<NetworkSn
       verification: variantVerification(str(r.evidence_level), Boolean(r.navigation_approved)),
       isCircular: Boolean(r.is_circular),
       stopIds: strArray(r.stop_ids),
+      mode: r.mode as RouteMode,
+      ...measuresOf(str(r.variant_id), strArray(r.stop_ids).length),
     })),
     fareRules: fares.map(toFareRule),
+    terminals: terminals.map((t) => {
+      const hasCoordinate = t.lat !== null && t.lat !== undefined && t.coord_source !== null && t.coord_source !== undefined;
+      return {
+        code: str(t.code),
+        name: str(t.name),
+        kind: strOrNull(t.kind) as NetworkSnapshot["terminals"][number]["kind"],
+        modes: strArray(t.modes),
+        lat: hasCoordinate ? Number(t.lat) : null,
+        lng: hasCoordinate ? Number(t.lon) : null,
+        coordSource: hasCoordinate ? (str(t.coord_source) as "osm_node" | "osm_way_centroid") : null,
+        verification: strOrNull(t.evidence_status),
+      };
+    }),
+    routes: routes.map((r) => ({
+      routeId: str(r.id),
+      routeCode: str(r.public_code),
+      routeName: str(r.name),
+      mode: r.mode as RouteMode,
+      serviceStatus: strOrNull(r.service_status) as NetworkSnapshot["routes"][number]["serviceStatus"],
+      fleet: fleetSummary(fleet.get(str(r.id)) ?? [], r.mode as RouteMode),
+      fareReports: reportsOf(str(r.id)),
+    })),
+    etaModel,
   };
+}
+
+// ---------------------------------------------------------------- time-estimate parameters
+
+const numOrNullFinite = (v: unknown): number | null => (v === null || v === undefined ? null : Number(v));
+
+/** The published time-estimate parameters (all five), or null when the revision has none. */
+export async function getEtaModel(db: Db, revisionId: string): Promise<EtaModel | null> {
+  const found = await rows(db, sql`
+    select key, value_low::float8 as value_low, value_high::float8 as value_high, unit, windows, days,
+           applies_to::text[] as applies_to, is_assumption, assumption_note, basis, source_codes::text[] as source_codes
+      from transit.v_published_eta_params where revision_id = ${revisionId}::uuid order by key`);
+  if (found.length === 0) return null;
+  return {
+    timeZone: "Asia/Manila",
+    utcOffsetMinutes: 480,
+    params: found.map((p) => ({
+      key: p.key as EtaParam["key"],
+      low: numOrNullFinite(p.value_low),
+      high: numOrNullFinite(p.value_high),
+      unit: p.unit as EtaParam["unit"],
+      windows: Array.isArray(p.windows) ? (p.windows as { start: string; end: string }[]).map((w) => ({ start: String(w.start), end: String(w.end) })) : null,
+      days: strOrNull(p.days) as EtaParam["days"],
+      appliesTo: strArray(p.applies_to) as EtaParam["appliesTo"],
+      isAssumption: Boolean(p.is_assumption),
+      assumptionNote: strOrNull(p.assumption_note),
+      basis: str(p.basis),
+      sourceCodes: strArray(p.source_codes),
+    })),
+  };
+}
+
+// ---------------------------------------------------------------- approximate paths (lines)
+
+export type LinesRead =
+  | { status: "not_published" }
+  /** The published revision has no paths (published before the road outputs). */
+  | { status: "none" }
+  /** Some member variants have no shape row: never served (503). */
+  | { status: "incomplete"; missing: number }
+  | { status: "ok"; body: Lines };
+
+type LineCoordinate = [number, number];
+
+function lineFromGeoJson(raw: unknown): LatLng[] {
+  const g = JSON.parse(String(raw)) as { type?: string; coordinates?: LineCoordinate[] };
+  if (g.type !== "LineString" || !Array.isArray(g.coordinates)) throw new Error("v_published_shapes: geojson is not a LineString");
+  return g.coordinates.map(([lng, lat]) => ({ lat, lng }));
+}
+
+const numberOr0 = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+
+/**
+ * The approximate paths of the published revision (D18, J1), built from v_published_shapes, the
+ * routes and variants views and the fleet colour key. Untraced variants are listed with their reason.
+ */
+export async function getLines(db: Db, revisionId: string): Promise<LinesRead> {
+  const revision = await getPublishedRevision(db);
+  if (!revision || revision.revisionId !== revisionId) return { status: "not_published" };
+
+  const shapes = await rows(db, sql`
+    select s.variant_id, s.route_id, s.trace_status, s.flag_reason, s.untraced_reason, s.geojson, s.length_m::float8 as length_m,
+           s.off_list_segments, s.trace_quality, s.label, s.road_source_code
+      from transit.v_published_shapes s where s.revision_id = ${revisionId}::uuid`);
+  if (shapes.length === 0) return { status: "none" };
+  const variants = await rows(db, sql`
+    select v.variant_id, v.route_id, v.name, v.direction, v.kind, r.public_code, r.name as route_name, r.mode,
+           r.service_status, r.planning
+      from transit.v_published_variants v
+      join transit.v_published_routes r on r.revision_id = v.revision_id and r.id = v.route_id
+     where v.revision_id = ${revisionId}::uuid
+     order by r.official_group_number nulls last, length(r.public_code), r.public_code, v.kind, v.direction, v.name nulls first, v.variant_id`);
+  const shapeOf = new Map(shapes.map((s) => [str(s.variant_id), s]));
+  const missing = variants.filter((v) => !shapeOf.has(str(v.variant_id))).length;
+  if (missing > 0 || shapes.length !== variants.length) return { status: "incomplete", missing };
+  const fleet = await fleetByRoute(db, revisionId);
+
+  const lines: Lines["lines"] = [];
+  const untraced: Lines["untraced"] = [];
+  for (const v of variants) {
+    const s = shapeOf.get(str(v.variant_id))!;
+    const q = (s.trace_quality && typeof s.trace_quality === "object" ? s.trace_quality : {}) as Row;
+    const base = {
+      variantId: str(v.variant_id),
+      routeId: str(v.route_id),
+      routeCode: str(v.public_code),
+      routeName: str(v.route_name),
+      variantName: strOrNull(v.name),
+      mode: v.mode as RouteMode,
+      direction: v.direction as Line["direction"],
+      kind: v.kind as Line["kind"],
+    };
+    if (s.trace_status === "untraced") {
+      untraced.push({
+        ...base,
+        reason: s.untraced_reason as Lines["untraced"][number]["reason"],
+        message: UNTRACED_MESSAGE,
+        quality: {
+          listedStreets: numberOr0(q.listedStreets),
+          matchedStreets: numberOr0(q.matchedStreets),
+          unmatchedStreets: strArray(q.unmatchedStreets),
+          anchorsUnresolved: strArray(q.anchorsUnresolved),
+        },
+      });
+      continue;
+    }
+    const summary = fleetSummary(fleet.get(str(v.route_id)) ?? [], v.mode as RouteMode);
+    const segments = Array.isArray(s.off_list_segments) ? (s.off_list_segments as Row[]) : [];
+    lines.push({
+      ...base,
+      serviceStatus: strOrNull(v.service_status) as Line["serviceStatus"],
+      planning: v.planning as Line["planning"],
+      fleet: summary,
+      colourKey: summary.colourKey,
+      status: s.trace_status as Line["status"],
+      flagReason: strOrNull(s.flag_reason) as Line["flagReason"],
+      encoded: encodePolyline(lineFromGeoJson(s.geojson)),
+      lengthM: Number(s.length_m),
+      label: PATH_LABEL,
+      roadSource: str(s.road_source_code),
+      attribution: LINES_ATTRIBUTION,
+      segments: segments.map((g) => ({
+        fromM: Number(g.fromM),
+        toM: Number(g.toM),
+        lengthM: Number(g.lengthM),
+        reason: g.reason as Line["segments"][number]["reason"],
+        streets: Array.isArray(g.streets) ? (g.streets as Row[]).map((x) => ({ name: str(x.name), m: Number(x.m) })) : [],
+        against: Array.isArray(g.against) ? strArray(g.against) : null,
+      })),
+      quality: {
+        listedStreets: numberOr0(q.listedStreets),
+        matchedStreets: numberOr0(q.matchedStreets),
+        unmatchedStreets: strArray(q.unmatchedStreets),
+        offListShare: typeof q.offListShare === "number" ? q.offListShare : null,
+        gateOffListShare: typeof q.gateOffListShare === "number" ? q.gateOffListShare : null,
+        terminalAccessM: numberOr0(q.terminalAccessM),
+      },
+    });
+  }
+  return {
+    status: "ok",
+    body: {
+      formatVersion: LINES_FORMAT_VERSION,
+      revision,
+      label: PATH_LABEL,
+      attribution: LINES_ATTRIBUTION,
+      attributionUrl: OSM_COPYRIGHT_URL,
+      licence: "ODbL 1.0",
+      roadSources: [...new Set(shapes.map((s) => str(s.road_source_code)))].sort(),
+      lines,
+      untraced,
+    },
+  };
+}
+
+// ---------------------------------------------------------------- walk graph
+
+export type WalkGraphMeta =
+  | { status: "not_published" }
+  | { status: "none" }
+  | { status: "ok"; versionId: string; sha256: string; bytes: number };
+
+/** The published walk graph's stored sha256 and size (Task 6 format v1), without the payload. */
+export async function getWalkGraphMeta(db: Db, revisionId: string): Promise<WalkGraphMeta> {
+  const revision = await getPublishedRevision(db);
+  if (!revision || revision.revisionId !== revisionId) return { status: "not_published" };
+  const [g] = await rows(db, sql`
+    select walk_graph_version_id, sha256, bytes from transit.v_published_walk_graph where revision_id = ${revisionId}::uuid`);
+  if (!g) return { status: "none" };
+  return { status: "ok", versionId: str(g.walk_graph_version_id), sha256: str(g.sha256), bytes: Number(g.bytes) };
+}
+
+/** That walk graph's payload, verbatim; null when it is no longer the published one. */
+export async function getWalkGraphPayload(db: Db, revisionId: string, versionId: string): Promise<string | null> {
+  const [g] = await rows(db, sql`
+    select payload from transit.v_published_walk_graph
+     where revision_id = ${revisionId}::uuid and walk_graph_version_id = ${versionId}::uuid`);
+  return g ? str(g.payload) : null;
 }
 
 // ---------------------------------------------------------------- routes
@@ -241,7 +578,7 @@ const EVIDENCE_RANK = { documentary: 0, provisional: 1, verified: 2 } as const;
 type Evidence = keyof typeof EVIDENCE_RANK;
 
 const ROUTE_COLUMNS = sql`id, public_code, official_group_number, name, mode_code, legal_status, allocated_units,
-  allocation_is_active_fleet_count, notes, source_codes::text[] as source_codes, properties`;
+  allocation_is_active_fleet_count, notes, source_codes::text[] as source_codes, properties, mode, service_status, planning`;
 
 type VariantRow = {
   routeId: string;
@@ -251,7 +588,7 @@ type VariantRow = {
   stopCount: number;
 };
 
-function summarize(r: Row, variants: VariantRow[], aliases: Row[]): RouteSummary {
+function summarize(r: Row, variants: VariantRow[], aliases: Row[], extras: RouteExtras): RouteSummary {
   const props = (r.properties && typeof r.properties === "object" ? r.properties : {}) as Row;
   const mine = variants.filter((v) => v.routeId === r.id);
   const strongest = mine.reduce<Evidence | null>(
@@ -273,6 +610,11 @@ function summarize(r: Row, variants: VariantRow[], aliases: Row[]): RouteSummary
     verification: verified ? "verified" : "unverified",
     hasProvisionalStops: mine.some((v) => v.evidenceLevel === "provisional" && v.stopCount > 0),
     hasTrial: mine.some((v) => v.kind === "trial"),
+    mode: r.mode as RouteMode,
+    serviceStatus: strOrNull(r.service_status) as RouteSummary["serviceStatus"],
+    planning: r.planning as RouteSummary["planning"],
+    fleet: fleetSummary(extras.fleet.get(str(r.id)) ?? [], r.mode as RouteMode),
+    operatingStatus: extras.operating.get(str(r.id)) ?? null,
   };
 }
 
@@ -305,10 +647,11 @@ export async function listRoutes(db: Db, revisionId: string): Promise<RouteList[
      order by official_group_number nulls last, length(public_code), public_code`);
   const variants = await variantSummaries(db, revisionId);
   const aliases = await aliasRows(db, revisionId);
+  const extras = await routeExtras(db, revisionId);
 
   const groups: RouteList["groups"] = [];
   for (const r of routes) {
-    const summary = summarize(r, variants, aliases);
+    const summary = summarize(r, variants, aliases, extras);
     const last = groups.at(-1);
     if (last && last.groupNumber === summary.groupNumber) last.routes.push(summary);
     else groups.push({ groupNumber: summary.groupNumber, routes: [summary] });
@@ -318,7 +661,12 @@ export async function listRoutes(db: Db, revisionId: string): Promise<RouteList[
 
 function legalStreetsOf(v: unknown): LegalStreets {
   const o = (v && typeof v === "object" ? v : {}) as Row;
-  return { inbound: strArrayOrNull(o.inbound), outbound: strArrayOrNull(o.outbound), circuit: strArrayOrNull(o.circuit) };
+  return {
+    inbound: strArrayOrNull(o.inbound),
+    outbound: strArrayOrNull(o.outbound),
+    circuit: strArrayOrNull(o.circuit),
+    branch: strArrayOrNull(o.branch),
+  };
 }
 
 export async function getRouteDetail(db: Db, revisionId: string, code: string): Promise<Omit<RouteDetail, "revision"> | null> {
@@ -328,11 +676,11 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
   const routeId = str(r.id);
 
   const variantRows = await rows(db, sql`
-    select variant_id, variant_version_id, direction, kind, evidence_level, navigation_approved, is_circular, headsign,
+    select variant_id, variant_version_id, name, direction, kind, evidence_level, navigation_approved, is_circular, headsign,
            vehicle_class, operating_status, trial_status, effective_from::text as effective_from, trial_duration_days,
            legal_streets, notes, source_codes::text[] as source_codes
       from transit.v_published_variants where revision_id = ${revisionId}::uuid and route_id = ${routeId}::uuid
-     order by kind, direction`);
+     order by kind, direction, name nulls first, variant_id`);
   const stopRows = await rows(db, sql`
     select rs.variant_version_id, rs.seq, s.stop_point_id, s.name, s.lat, s.lon, s.status, s.navigation_approved,
            s.source_layer, s.source_code_raw, s.label_raw
@@ -342,9 +690,27 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
      where rs.revision_id = ${revisionId}::uuid and v.route_id = ${routeId}::uuid
      order by rs.variant_version_id, rs.seq`);
   const aliases = (await aliasRows(db, revisionId)).filter((a) => a.route_id === routeId);
+  const shapeRows = await rows(db, sql`
+    select variant_id, trace_status, flag_reason, untraced_reason, trace_quality from transit.v_published_shapes
+     where revision_id = ${revisionId}::uuid and route_id = ${routeId}::uuid`);
+  const pathStatusOf = (variantId: string): PathStatus => {
+    const s = shapeRows.find((x) => str(x.variant_id) === variantId);
+    if (!s) return { ...NOT_TRACED };
+    const q = (s.trace_quality && typeof s.trace_quality === "object" ? s.trace_quality : {}) as Row;
+    const listed = typeof q.listedStreets === "number" ? q.listedStreets : null;
+    const status = s.trace_status === "ok" ? "traced" : (s.trace_status as "flagged" | "untraced");
+    return {
+      status,
+      reason: strOrNull(s.trace_status === "flagged" ? s.flag_reason : s.untraced_reason),
+      listedStreets: listed !== null && listed > 0 ? listed : null,
+      matchedStreets: listed !== null && listed > 0 && typeof q.matchedStreets === "number" ? q.matchedStreets : null,
+      unmatchedStreets: strArray(q.unmatchedStreets),
+    };
+  };
 
   const variants = variantRows.map((v) => ({
     variantId: str(v.variant_id),
+    name: strOrNull(v.name),
     direction: v.direction as RouteDetail["variants"][number]["direction"],
     kind: v.kind as RouteDetail["variants"][number]["kind"],
     evidenceLevel: v.evidence_level as Evidence,
@@ -362,15 +728,18 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
     stops: stopRows
       .filter((s) => s.variant_version_id === v.variant_version_id)
       .map((s) => ({ ...toStop(s), seq: Number(s.seq) })),
+    pathStatus: pathStatusOf(str(v.variant_id)),
   }));
   const permanent = variants.filter((v) => v.kind !== "trial");
   const trials = variants.filter((v) => v.kind === "trial");
 
-  const legalStreets: LegalStreets = { inbound: null, outbound: null, circuit: null };
+  const legalStreets: LegalStreets = { inbound: null, outbound: null, circuit: null, branch: null };
   for (const v of permanent) {
     legalStreets.inbound ??= v.legalStreets.inbound;
     legalStreets.outbound ??= v.legalStreets.outbound;
     legalStreets.circuit ??= v.legalStreets.circuit;
+    // Feeder branches: every branch's street text, in variant order.
+    if (v.legalStreets.branch) legalStreets.branch = [...(legalStreets.branch ?? []), ...v.legalStreets.branch];
   }
 
   const props = (r.properties && typeof r.properties === "object" ? r.properties : {}) as Row;
@@ -400,8 +769,27 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
             ${ruleIds.length === 0 ? sql`` : sql`or fare_rule_id in (${sql.join(ruleIds.map((id) => sql`${id}::uuid`), sql`, `)})`})
      order by code, category`);
 
+  const cooperatives = await rows(db, sql`
+    select name, basis, reported_on, notes, source_codes::text[] as source_codes
+      from transit.v_published_route_cooperatives
+     where revision_id = ${revisionId}::uuid and route_id = ${routeId}::uuid
+     order by basis, name`);
+  const practice = await rows(db, sql`
+    select code, vehicle_class, delta_qualifier, delta_centavos_low, delta_centavos_high, observed_on::text as observed_on,
+           report_text, source_codes::text[] as source_codes
+      from transit.v_published_route_fare_observations
+     where revision_id = ${revisionId}::uuid and route_id = ${routeId}::uuid
+     order by code`);
+  const extras = await routeExtras(db, revisionId);
+  const fleetRecords = extras.fleet.get(routeId) ?? [];
+  const operating = extras.operating.get(routeId);
+
   const codes = [...new Set([...strArray(r.source_codes), ...variants.flatMap((v) => v.sourceCodes),
-    ...aliases.map((a) => strOrNull(a.source_code)).filter((c): c is string => c !== null)])];
+    ...aliases.map((a) => strOrNull(a.source_code)).filter((c): c is string => c !== null),
+    ...fleetRecords.flatMap((f) => [...f.sourceCodes, ...f.airconSourceCodes]),
+    ...(operating?.sourceCodes ?? []),
+    ...cooperatives.flatMap((c) => strArray(c.source_codes)),
+    ...practice.flatMap((o) => strArray(o.source_codes))])];
   const sources = codes.length === 0 ? [] : await rows(db, sql`
     select code, title, url, evidence_type, published_or_enacted, checked_on::text as checked_on
       from transit.v_published_sources
@@ -415,7 +803,7 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
     navigationApproved: Boolean(v.navigation_approved),
     stopCount: stopRows.filter((s) => s.variant_version_id === v.variant_version_id).length,
   }));
-  const { aliases: _omit, ...summary } = summarize(r, variantSummary, aliases);
+  const { aliases: _omit, ...summary } = summarize(r, variantSummary, aliases, extras);
   void _omit;
 
   return {
@@ -430,6 +818,14 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
     variants: permanent,
     trials,
     aliases: aliases.map(toAlias),
+    cooperatives: cooperatives.map((c) => ({
+      name: str(c.name),
+      basis: c.basis as CooperativeBasis,
+      label: cooperativeLabel(c.basis as CooperativeBasis, strOrNull(c.reported_on)),
+      reportedOn: strOrNull(c.reported_on),
+      notes: strOrNull(c.notes),
+      sourceCodes: strArray(c.source_codes),
+    })),
     fareEvidence: {
       basis: "route_mode",
       rules: rules.map(toFareRule),
@@ -448,6 +844,16 @@ export async function getRouteDetail(db: Db, revisionId: string, code: string): 
         observationCode: strOrNull(k.observation_code),
         status: str(k.status),
         note: strOrNull(k.note),
+      })),
+      reportedPractice: practice.map((o) => ({
+        code: str(o.code),
+        vehicleClass: o.vehicle_class as RouteDetail["fareEvidence"]["reportedPractice"][number]["vehicleClass"],
+        deltaQualifier: o.delta_qualifier as "range" | "at_least",
+        deltaCentavosLow: Number(o.delta_centavos_low),
+        deltaCentavosHigh: numOrNull(o.delta_centavos_high),
+        observedOn: str(o.observed_on),
+        reportText: str(o.report_text),
+        sourceCodes: strArray(o.source_codes),
       })),
     },
     sources: sources.map((s) => ({

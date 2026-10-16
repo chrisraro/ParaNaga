@@ -8,7 +8,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { startSession, reduceSession } from "@/domain/guidance/session";
 import { guidanceView } from "@/domain/guidance/view";
 import { MYNAGA_LINKS } from "@/domain/mynaga/links";
+import { TRAFFIC_ROW, basisRows } from "@/domain/eta/basis";
 import SOURCES from "../e2e/fixtures/network/sources.json" with { type: "json" };
+import { ETA_MODEL } from "./eta-fixtures";
 import { oneRide, tripOf } from "./guidance-fixtures";
 
 const nav = vi.hoisted(() => ({ params: new URLSearchParams() }));
@@ -21,22 +23,26 @@ vi.mock("next/link", () => ({ default: ({ children, href, ...rest }: { children:
 
 const { AppFrameContext } = await import("@/ui/app-shell/app-frame-context");
 const { BADGE_MEANINGS, DATA_FOOTER, HelpScreen, INDEPENDENT_NOTE, SAFETY_TIPS } = await import("@/ui/help/help-screen");
-const { HelpArticleScreen } = await import("@/ui/help/help-article");
+const { HelpArticleScreen, NO_TIME_MODEL } = await import("@/ui/help/help-article");
 const { MAP_OWNER_NOTE, SourcesScreen } = await import("@/ui/help/sources-screen");
 const { LATER_NOTE, MYNAGA_FOOTER, MyNagaScreen, PREPARE_ITEMS } = await import("@/ui/mynaga/mynaga-screen");
 const { RideStep } = await import("@/ui/guidance/ride-step");
+const { resetSnapshotForTests } = await import("@/client/network/use-snapshot");
 
 const HEAD = { revisionId: "67e56657-7542-462e-b57c-eb14439a0c7a", label: "osm-places-2026-10-15", kind: "provisional", publishedAt: "2026-10-15T12:59:57.089Z" };
 
 let fetched: string[] = [];
+let snapshotBody: unknown = null;
 beforeEach(() => {
   nav.params = new URLSearchParams();
   fetched = [];
+  resetSnapshotForTests();
+  snapshotBody = { revision: HEAD, stops: [], variants: [], fareRules: [], terminals: [], routes: [], etaModel: ETA_MODEL };
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string) => {
       fetched.push(url);
-      const body = url.includes("/sources") ? SOURCES : HEAD;
+      const body = url.includes("/sources") ? SOURCES : url.includes("/network/snapshot/") ? snapshotBody : HEAD;
       return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
     }),
   );
@@ -56,6 +62,8 @@ describe("Help", () => {
       ["How trips are planned", "/app/help/how-trips-are-planned"],
       ["Why stops are not verified yet", "/app/help/why-stops-are-not-verified"],
       ["Using ParaNaga offline", "/app/help/using-paranaga-offline"],
+      ["How times are estimated", "/app/help/how-times-are-estimated"],
+      ["Vehicle types in Naga", "/app/help/vehicle-types-in-naga"],
       ["Report a problem with a driver", "/app/mynaga"],
     ]);
     expect(screen.getByTestId("help-independent").textContent).toBe(INDEPENDENT_NOTE);
@@ -83,6 +91,7 @@ describe("Help", () => {
       `Mapped candidate${BADGE_MEANINGS[1]!.text}`,
       `Documented only${BADGE_MEANINGS[2]!.text}`,
       `Unverified route — confirm with the driver${BADGE_MEANINGS[3]!.text}`,
+      `Approximate path${BADGE_MEANINGS[4]!.text}`,
     ]);
     expect(screen.getByTestId("help-sources-link").getAttribute("href")).toBe("/app/help/sources");
     expect(screen.getByTestId("help-data-footer").textContent).toBe(DATA_FOOTER);
@@ -96,8 +105,11 @@ describe("Help articles", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("How trips are planned");
     expect(screen.getByTestId("help-article-body").textContent).toBe(
       "ParaNaga suggests trips on Loops A and B only. Their stop order comes from the order of pins on a public map, not from a field survey, so every suggestion carries the badge “Unverified route — confirm with the driver”." +
-        "Walks to and from a stop are capped at 600 m, and 400 m between rides. Walking distances are straight-line estimates (× 1.3); paths and crossings are not checked." +
-        "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied. There are no times: ParaNaga does not know when jeepneys run.",
+        "Ride distances follow approximate paths traced along OpenStreetMap roads between candidate pins, or straight-line distances where roads are unmapped." +
+        "Walks to and from a stop are capped at 600 m, and 400 m between rides. Walk paths are routed along walkable streets where mapped, or straight-line estimates (× 1.3)." +
+        "A ride is only suggested if it saves walking: taking a jeepney must replace meaningful walking distance compared to walking all the way." +
+        "Times are estimated as ranges based on typical travel speeds in Naga (slower during peak hours). Times do not include waiting, because jeepneys have no published schedules." +
+        "Fares are estimates from reported fare rules; the official matrix is not verified and discounts are not applied.",
     );
     expect(fetched).toEqual([]);
     expect(document.title).toBe("How trips are planned · ParaNaga");
@@ -109,6 +121,43 @@ describe("Help articles", () => {
     expect(screen.getByTestId("help-article-body").textContent).not.toContain("Planning offline");
     expect(screen.getByTestId("help-article-body").textContent).not.toContain("…");
     await waitFor(() => expect(screen.getByTestId("help-article-body").textContent).toContain("Planning offline uses the data from Oct 15, 2026; fares may have changed."));
+  });
+
+  it("How times are estimated: the lead, then every basis row and A1–A3 from the time model on this phone", async () => {
+    render(<HelpArticleScreen slug="how-times-are-estimated" />);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("How times are estimated");
+    const body = () => screen.getByTestId("help-article-body").textContent ?? "";
+    expect(body()).toContain("Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.");
+    await waitFor(() => expect(body()).toContain("Tolentino & Sigua 2022, N28"));
+    for (const row of basisRows(ETA_MODEL)) expect(body()).toContain(row.text);
+    for (const code of ["N28", "N16", "N29", "N04"]) expect(body()).toContain(code);
+    for (const a of ["Assumption A1:", "Assumption A2:", "Assumption A3:"]) expect(body()).toContain(a);
+    expect(body()).toContain(TRAFFIC_ROW);
+    expect(body()).not.toMatch(/live/i);
+    expect(document.title).toBe("How times are estimated · ParaNaga");
+  });
+
+  it("How times are estimated: an older snapshot without a time model says so instead of guessing", async () => {
+    snapshotBody = { revision: HEAD, stops: [], variants: [], fareRules: [], terminals: [], routes: [] };
+    render(<HelpArticleScreen slug="how-times-are-estimated" />);
+    await waitFor(() => expect(screen.getByTestId("help-article-body").textContent).toContain(NO_TIME_MODEL));
+    expect(screen.getByTestId("help-article-body").textContent).not.toMatch(/km\/h/);
+  });
+
+  it("Vehicle types in Naga: one section per class, owner-confirmed modern units on R4/R7, no e-jeepney, no network request", () => {
+    render(<HelpArticleScreen slug="vehicle-types-in-naga" />);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Vehicle types in Naga");
+    const body = screen.getByTestId("help-article-body").textContent ?? "";
+    expect(body).toContain("Traditional jeepney: ₱14 first 4 km + ₱2.00/km");
+    expect(body).toContain("Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason)");
+    expect(body).toContain("Tricycle and e-tricycle");
+    expect(body).toContain("UV Express and bus");
+    // User decisions 2026-10-16: no e-jeepney anywhere; modern units operating now (no 2023–2024 caveat); nothing unsourced.
+    expect(body).not.toMatch(/e-?jeep|electric jeep/i);
+    expect(body).not.toMatch(/2023|last reported|Euro-?4/i);
+    expect(body).not.toMatch(/live/i);
+    expect(fetched).toEqual([]);
+    expect(document.title).toBe("Vehicle types in Naga · ParaNaga");
   });
 });
 

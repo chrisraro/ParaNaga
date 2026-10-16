@@ -24,7 +24,7 @@ import { GET as stopsGET } from "@/app/api/v1/stops/route";
 import { GET as stopGET } from "@/app/api/v1/stops/[id]/route";
 import { GET as routesGET } from "@/app/api/v1/routes/route";
 import { GET as routeGET } from "@/app/api/v1/routes/[code]/route";
-import { buildImportPlan, readDataFiles } from "../../scripts/lib/import-plan";
+import { buildImportPlan, readDataFiles, readNewestModesSeed, readNewestOsmSnapshot } from "../../scripts/lib/import-plan";
 import { commitImport } from "../../scripts/lib/import-writer";
 
 const ownerUrl = process.env.TEST_OWNER_DATABASE_URL;
@@ -353,6 +353,132 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("public read 
         [a1, published[0]!.stop_point_version_id, raw.rows[0].id])
       .then(() => null, (e: { code?: string }) => e.code);
     expect(refused).toBe("42501");
+  });
+
+  // ---------------------------------------------------------------- modes (0008, Increment D)
+
+  describe("with the modes revision published", () => {
+    let modesId: string;
+    const json = (v: unknown) => JSON.stringify(v);
+    /** Every object key anywhere in the value. */
+    const keys = (v: unknown): string[] =>
+      Array.isArray(v) ? v.flatMap(keys)
+        : v && typeof v === "object" ? Object.entries(v).flatMap(([k, x]) => [k, ...keys(x)]) : [];
+
+    beforeAll(async () => {
+      const plan = buildImportPlan(readDataFiles("Data_Sets"), readNewestOsmSnapshot(), readNewestModesSeed());
+      expect(plan.problems).toEqual([]);
+      await commitImport(ownerUrl!, plan);
+      const found = await owner.query<{ id: string }>("select id from transit.revision where label = $1", [plan.modes!.revisionLabel]);
+      modesId = found.rows[0]!.id;
+      if ((await pointer()) !== modesId) await publish(modesId);
+    }, 180_000);
+
+    afterAll(async () => {
+      if ((await pointer()) !== revisionId) await publish(revisionId);
+    });
+
+    it("snapshot: 16 terminals (T15/T16 without coordinates), fleets on R4/R7, intra-city fares only, no e-jeepney", async () => {
+      const raw = await (await snapshotGET(get(`/network/snapshot/${modesId}`), ctx({ revisionId: modesId }))).text();
+      const body = networkSnapshotSchema.parse(JSON.parse(raw));
+      expect(body.revision.label).toBe("modes-2026-10-16");
+      expect(body.stops).toHaveLength(128);
+      expect(body.terminals.map((t) => t.code)).toEqual(Array.from({ length: 16 }, (_, i) => `T${String(i + 1).padStart(2, "0")}`));
+      for (const code of ["T15", "T16"]) expect(body.terminals.find((t) => t.code === code), code).toMatchObject({ lat: null, lng: null, coordSource: null });
+      expect(body.terminals.find((t) => t.code === "T01")).toMatchObject({ lat: 13.6192359, lng: 123.1897426, coordSource: "osm_way_centroid" });
+
+      const route = (code: string) => body.routes.find((r) => r.routeCode === code)!;
+      expect(body.routes).toHaveLength(13);
+      for (const code of ["R4", "R7"]) {
+        expect(route(code).fleet, code).toMatchObject({
+          label: "Traditional and modern jeepneys", chip: "Jeepney · traditional + modern", colourKey: "mixed_trad_modern",
+        });
+        expect(route(code).fleet.classes.find((c) => c.vehicleClass === "modern_puj"), code).toMatchObject({ status: "operating", aircon: true });
+      }
+      for (const code of ["R1", "R2", "R3", "R5", "R6", "R8-A", "R8-B", "R8-C", "R8-D"]) {
+        expect(route(code).fleet.classes.map((c) => c.vehicleClass), code).toEqual(["traditional_puj"]);
+        expect(route(code).fleet.colourKey, code).toBe("traditional_puj");
+      }
+      expect(route("TRI-VISTODA")).toMatchObject({ mode: "tricycle", serviceStatus: "authorized_feeder", fleet: { colourKey: "tricycle" } });
+
+      // Only R8-A/R8-B have a stop order; their variants carry the mode, and the fleet joins by routeId. Feeders (no stops) are absent.
+      expect(body.variants.every((v) => !("fleet" in v))).toBe(true);
+      const fleetOf = (routeId: string) => body.routes.find((r) => r.routeId === routeId)!.fleet;
+      expect(body.variants.map((v) => [v.routeCode, v.mode, fleetOf(v.routeId).colourKey])).toEqual([
+        ["R8-A", "jeepney", "traditional_puj"], ["R8-B", "jeepney", "traditional_puj"],
+      ]);
+      // Rider fare reports (observations, never rules) reach the planner for the mixed-fleet maximum.
+      expect(route("R4").fareReports).toEqual([expect.objectContaining({
+        code: "FO-R4-MOD", vehicleClass: "modern_puj", deltaQualifier: "range", deltaCentavosLow: 300, deltaCentavosHigh: 500,
+      })]);
+      expect(route("R7").fareReports).toEqual([expect.objectContaining({
+        code: "FO-R7-MOD", vehicleClass: "modern_puj", deltaQualifier: "at_least", deltaCentavosLow: 500, deltaCentavosHigh: null,
+      })]);
+      for (const r of body.routes.filter((x) => x.routeCode !== "R4" && x.routeCode !== "R7")) expect(r.fareReports, r.routeCode).toEqual([]);
+      // Bus and UV rules (F06–F12) never reach the planner.
+      expect(body.fareRules.map((f) => f.code)).toEqual(["F01", "F02", "F03", "F04"]);
+      expect(raw).not.toMatch(/e[-_ ]?jeep/i);
+    });
+
+    it("routes: modes, service status, fleets and owner-confirmed service; feeders listed with their branches", async () => {
+      const list = await ok(await routesGET(get("/routes")), routeListSchema, "public, s-maxage=300");
+      const routes = list.groups.flatMap((g) => g.routes);
+      expect(routes.map((r) => r.code)).toEqual(expect.arrayContaining(["TRI-VISTODA", "TRI-DECALANGON"]));
+      expect(list.groups.at(-1)!.groupNumber).toBeNull();
+      const r1 = routes.find((r) => r.code === "R1")!;
+      expect(r1).toMatchObject({ mode: "jeepney", serviceStatus: "legal_plan", planning: "none", fleet: { label: "Traditional jeepneys" } });
+      expect(r1.operatingStatus).toMatchObject({ status: "operating", confirmedOn: "2026-10-16", confirmsServiceOnly: true, sourceCodes: ["U01"] });
+      // Service is confirmed; stops and paths are not: the route stays unverified.
+      expect(r1.verification).toBe("unverified");
+      expect(routes.find((r) => r.code === "R8-A")!.planning).toBe("provisional");
+
+      const tri = await ok(await routeGET(get("/routes/TRI-VISTODA"), ctx({ code: "TRI-VISTODA" })), routeDetailSchema, "public, s-maxage=300");
+      expect(tri.variants.map((v) => [v.direction, v.stops.length])).toEqual([["branch", 0], ["branch", 0]]);
+      expect(tri.variants.every((v) => v.name !== null && v.legalStreets.branch?.length === 1)).toBe(true);
+      expect(tri.route.legalStreets.branch).toHaveLength(2);
+      expect(tri.route.fleet.label).toBe("Tricycle (special trimobile) · authorized 2025 · operation not verified");
+      expect(tri.route.operatingStatus).toBeNull();
+      expect(tri.fareEvidence.rules.map((r) => r.code)).toEqual(["F03"]);
+    });
+
+    it("routes/R4: cooperatives with sources and dates, never a chair or an address; fares stay F01/F02", async () => {
+      const raw = await (await routeGET(get("/routes/R4"), ctx({ code: "R4" }))).text();
+      const body = routeDetailSchema.parse(JSON.parse(raw));
+      expect(body.cooperatives.map((c) => [c.name, c.basis])).toEqual([
+        ["Naga City Allied Transport Cooperative (NACIATRASCO)", "corridor_reported"],
+        ["Centro Panganiban Del Rosario Transport Cooperative", "name_matches_corridor"],
+        ["Del Rosario Panganiban Centro Bagong Pag-Asa Transport Cooperative (DCPC-BAPAGTRANSCO)", "name_matches_corridor"],
+      ].sort((a, b) => (a[1]! < b[1]! ? -1 : a[1]! > b[1]! ? 1 : a[0]! < b[0]! ? -1 : 1)));
+      for (const c of body.cooperatives) expect(c.sourceCodes.length).toBeGreaterThan(0);
+      expect(body.cooperatives.find((c) => c.basis === "name_matches_corridor")!.label).toMatch(/route not confirmed$/);
+      const forbidden = keys(JSON.parse(raw)).filter((k) => /chair|address/i.test(k));
+      expect(forbidden).toEqual([]);
+
+      expect(body.route.fleet).toMatchObject({ label: "Traditional and modern jeepneys", colourKey: "mixed_trad_modern" });
+      const modern = body.route.fleet.classes.find((c) => c.vehicleClass === "modern_puj")!;
+      expect(modern).toMatchObject({ aircon: true, airconSourceCodes: ["N14", "U01"], lastReportedOn: "2026-10-16" });
+      expect(body.fareEvidence.rules.map((r) => r.code)).toEqual(["F01", "F02"]);
+      expect(body.fareEvidence.reportedPractice).toEqual([expect.objectContaining({
+        code: "FO-R4-MOD", vehicleClass: "modern_puj", deltaQualifier: "range", deltaCentavosLow: 300, deltaCentavosHigh: 500,
+      })]);
+      const codes = body.sources.map((s) => s.code);
+      for (const c of [...body.route.fleet.classes.flatMap((x) => [...x.sourceCodes, ...x.airconSourceCodes]),
+        ...body.cooperatives.flatMap((x) => x.sourceCodes)]) expect(codes, c).toContain(c);
+      expect(json(body)).not.toMatch(/e[-_ ]?jeep/i);
+    });
+
+    it("an older revision still reads its terminals through the legacy rows (no coordinates, no kind)", async () => {
+      await publish(revisionId);
+      try {
+        const body = await ok(await snapshotGET(get(`/network/snapshot/${revisionId}`), ctx({ revisionId })), networkSnapshotSchema,
+          "public, s-maxage=31536000, immutable");
+        expect(body.terminals.map((t) => t.code)).toEqual(["T01", "T02", "T03", "T04", "T05", "T06"]);
+        expect(body.terminals.every((t) => t.lat === null && t.kind === null)).toBe(true);
+        expect(body.routes.every((r) => r.fleet.label === "Vehicle type not confirmed")).toBe(true);
+      } finally {
+        await publish(modesId);
+      }
+    });
   });
 
   /**

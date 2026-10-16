@@ -6,9 +6,12 @@
 // estimate range from the reported rules or "Unknown"; service hours were not observed.
 
 import Link from "next/link";
-import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useLines } from "@/client/network/use-lines";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { routeDetailSchema, type RouteDetail } from "@/domain/api/schemas";
+import { decodePolyline } from "@/domain/geo/polyline";
+import { cooperativeLabel } from "@/domain/modes/fleet";
 import {
   allocationText,
   directionLabels,
@@ -30,6 +33,9 @@ import {
   WarnIcon,
   useFocusOnMount,
 } from "@/ui/detail/detail-frame";
+import { LineNotesView } from "@/ui/map/layers-sheet";
+import { lineNotes, routeDirectionPath } from "@/ui/map/line-rules";
+import { NagaMap } from "@/ui/map/naga-map";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
 export function RouteDetailScreen({ code }: { code: string }) {
@@ -85,6 +91,9 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const uid = useId();
   const dirButtons = useRef<Record<Direction, HTMLButtonElement | null>>({ inbound: null, outbound: null });
 
+  const linesState = useLines(revision.revisionId);
+  const { lines } = linesState;
+
   const group = routeGroupText(route.groupNumber, route.modeCode);
   const fare = routeFareTile(fareEvidence.rules);
   const vehicle = vehicleTile(route.modeCode);
@@ -96,6 +105,27 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const ordered = variants.filter((v) => v.stops.length > 0);
   const provisional = route.hasProvisionalStops;
   const structures = route.additionalSourceStructures;
+
+  // The selected direction's own line only: an untraced direction never borrows the other one's.
+  const { line: activeLine, untraced } = useMemo(
+    () => routeDirectionPath(lines, route.code, twoWay, direction),
+    [lines, route.code, twoWay, direction],
+  );
+  const activeNotes = useMemo(() => (activeLine ? lineNotes(activeLine) : null), [activeLine]);
+  const pathStatus = activeLine
+    ? activeLine.label
+    : linesState.status === "loading"
+      ? "Loading the route path…"
+      : linesState.status === "skipped"
+        ? "Route path not loaded in low-data mode"
+        : linesState.status === "ready"
+          ? (untraced?.message ?? "Path could not be traced")
+          : "Route path unavailable";
+
+  const activeCoords = useMemo(() => {
+    if (!activeLine) return null;
+    return decodePolyline(activeLine.encoded);
+  }, [activeLine]);
 
   const pickDirection = (next: Direction) => setDirection(next);
   const onSegKey = (e: KeyboardEvent<HTMLButtonElement>) => {
@@ -134,6 +164,31 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
               ? "Shape not yet surveyed. Stops are mapped candidates in pin order, not reviewed."
               : "Shape not yet surveyed and stops not reviewed. Showing the legal plan's street order."}
           </p>
+        </div>
+
+        <div className="pn-route-map-container" style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--pn-border, #E2E8F0)" }}>
+          <div style={{ height: 240, position: "relative" }} data-testid="route-map">
+            <NagaMap
+              routeLines={activeLine ? [activeLine] : []}
+              selectedRouteCode={route.code}
+              showRouteChevrons={true}
+              fitBoundsCoords={activeCoords}
+              label={`Map of ${route.name}`}
+            />
+          </div>
+          <div className="pn-route-map-status" style={{ padding: "8px 12px", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pn-surface, #F8FAFC)" }} data-testid="route-map-status">
+            <span data-testid="route-path-status">{pathStatus}</span>
+            {activeLine ? (
+              <span className="pn-route-map-badge" style={{ fontSize: 11, fontWeight: 600, opacity: 0.8 }} data-testid="route-trace-badge">
+                {activeLine.status === "ok" ? "Trace: ok" : `Trace: flagged (${activeLine.flagReason})`}
+              </span>
+            ) : null}
+          </div>
+          {activeNotes ? (
+            <div className="pn-route-map-notes" data-testid="route-map-notes">
+              <LineNotesView notes={activeNotes} testIdPrefix="route-map" />
+            </div>
+          ) : null}
         </div>
 
         <dl className="pn-tiles">
@@ -226,6 +281,83 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             ) : null}
           </section>
         ))}
+
+        <section className="pn-section" aria-labelledby={`${uid}-fleet`} data-testid="route-fleet-section">
+          <h2 id={`${uid}-fleet`} className="pn-section__title">
+            Fleet
+          </h2>
+          <p className="pn-detail__caption" data-testid="route-fleet-label" style={{ fontWeight: 600, margin: "4px 0 8px" }}>
+            {route.fleet.label}
+          </p>
+          <div className="pn-group" data-testid="fleet-rows">
+            {route.fleet.classes.map((r, i) => {
+              const label = r.label;
+              const isUnconfirmed = r.status === "reported_not_confirmed";
+              const sourcesText = r.sourceCodes
+                .map((code: string) => {
+                  const s = sources.find((src) => src.code === code);
+                  if (!s) return code;
+                  const date = s.publishedOrEnacted ?? s.checkedOn;
+                  return date ? `${s.title}, ${date}` : s.title;
+                })
+                .join(" · ");
+
+              return (
+                <div key={i} className="pn-cell" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4, padding: "10px 14px" }} data-testid="fleet-row">
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "space-between" }}>
+                    <strong className="pn-cell__title">{label}</strong>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {r.sourceCodes.map((c) => (
+                        <span key={c} className="pn-mono" style={{ fontSize: 11, background: "rgba(0,0,0,0.06)", padding: "2px 4px", borderRadius: 4 }}>
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {sourcesText ? <p className="pn-footnote" style={{ margin: 0 }}>{sourcesText}</p> : null}
+                  {isUnconfirmed ? (
+                    <p className="pn-footnote" style={{ margin: 0 }}>
+                      Private guide, Oct 2025 · user report, unverified
+                    </p>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="pn-section" aria-labelledby={`${uid}-cooperatives`} data-testid="route-cooperatives-section">
+          <h2 id={`${uid}-cooperatives`} className="pn-section__title">
+            Cooperatives
+          </h2>
+          {data.cooperatives.length === 0 ? (
+            <p className="pn-footnote">No cooperatives on file for this corridor.</p>
+          ) : (
+            <ul className="pn-group" style={{ listStyle: "none", padding: 0, margin: 0 }} data-testid="cooperatives-list">
+              {data.cooperatives.map((c) => {
+                const label = cooperativeLabel(c.basis, c.reportedOn);
+                const sourcesText = c.sourceCodes
+                  .map((code) => {
+                    const s = sources.find((src) => src.code === code);
+                    return s ? s.title : code;
+                  })
+                  .join(" · ");
+                return (
+                  <li key={c.name} className="pn-cell" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4, padding: "10px 14px" }} data-testid="cooperative-row">
+                    <strong className="pn-cell__title">{c.name}</strong>
+                    <p className="pn-footnote" style={{ margin: 0 }}>
+                      {label}
+                      {sourcesText ? ` · ${sourcesText}` : ""}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <p className="pn-footnote" style={{ marginTop: 6 }} data-testid="cooperatives-footnote">
+            Cooperative leaders&apos; names are not shown; sources disagree.
+          </p>
+        </section>
 
         {ordered.map((variant) => (
           <section key={variant.variantId} className="pn-section" aria-labelledby={`${uid}-stops-${variant.variantId}`}>

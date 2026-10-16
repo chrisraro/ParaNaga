@@ -12,6 +12,7 @@
 import { useMemo, useState, type Dispatch } from "react";
 import { useGuidanceSession, type UseGuidanceSession } from "@/client/guidance/use-guidance-session";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
+import type { EtaModel } from "@/domain/api/schemas";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import type { LatLng } from "@/domain/geo/types";
 import { currentStep, type GuidanceSession } from "@/domain/guidance/session";
@@ -43,8 +44,11 @@ export function guidanceHighlights(session: GuidanceSession): HighlightStop[] {
   return [];
 }
 
-/** The trip as guidance needs it (labels, codes, loop directions) and as a saved-trip card. */
-export function guidanceTripFor(data: PlanResponse, option: PlanOptionDto, ends: TripEnds) {
+/** What guidance estimates the time left from: the snapshot's model and the plan's walk-graph lengths. */
+export type GuidanceEta = { etaModel: EtaModel | null; walkLengths: (number | null)[] };
+
+/** The trip as guidance needs it (labels, codes, loop directions, time model) and as a saved-trip card. */
+export function guidanceTripFor(data: PlanResponse, option: PlanOptionDto, ends: TripEnds, eta: GuidanceEta | null = null) {
   const card = buildSavedTrip({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), data, option, start: ends.start, destination: ends.destination });
   return {
     card,
@@ -53,6 +57,8 @@ export function guidanceTripFor(data: PlanResponse, option: PlanOptionDto, ends:
       stops: card.stops.map((s) => ({ id: s.id, name: s.name, code: s.code })),
       variants: card.variants.map((v) => ({ variantId: v.variantId, loopDirection: v.loopDirection })),
       destinationLabel: ends.destination.label,
+      etaModel: eta?.etaModel ?? null,
+      walkLengths: eta?.walkLengths.length === option.legs.length ? eta.walkLengths : undefined,
     },
   };
 }
@@ -116,8 +122,8 @@ export function homeGuidanceActions(ctx: HomeGuidanceContext) {
   const { home, endpoints, dispatch } = ctx;
   const { guidance } = home;
 
-  const start = (data: PlanResponse, option: PlanOptionDto, ends: TripEnds) => {
-    const { trip, card } = guidanceTripFor(data, option, ends);
+  const start = (data: PlanResponse, option: PlanOptionDto, ends: TripEnds, eta: GuidanceEta | null = null) => {
+    const { trip, card } = guidanceTripFor(data, option, ends, eta);
     guidance.start(trip, card);
     ctx.liftSheet();
     ctx.announce("Guidance started.");

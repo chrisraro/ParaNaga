@@ -151,11 +151,15 @@
 /* Glass controls, top-right, at the brief's positions. Stack A starts at top 60 with the
    layers button (48) + divider (1) — not built yet, so that slot stays empty — and locate at
    y 109-157. Stack B (zoom) sits at top 176. --naga-map-controls-top shifts both together. */
+.pn-map .pn-map-layers,
 .pn-map .pn-map-locate,
 .pn-map .pn-map-zoom {
   position: absolute;
   right: 16px;
   z-index: 1000;
+}
+.pn-map .pn-map-layers {
+  top: var(--naga-map-controls-top, 60px);
 }
 .pn-map .pn-map-locate {
   top: calc(var(--naga-map-controls-top, 60px) + 49px);

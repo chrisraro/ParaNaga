@@ -128,17 +128,19 @@ test("a study label: no trip action; its link searches mapped stops (query in th
   expect(urls.filter((u) => /uma/i.test(u))).toEqual([]);
 });
 
-test("T01: Loop A and Loop B with the trial line, no map, no directions button", async ({ page }) => {
+test("T01: the community-mapped badge and map, Loop A and Loop B with the trial line, directions to the map point", async ({ page }) => {
   await page.goto("/app/terminals/T01");
   const detail = terminal(page);
   await expect(detail.getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBeFocused();
-  await expect(detail.getByTestId("naga-map")).toHaveCount(0);
-  await expect(detail.getByTestId("terminal-pill")).toHaveText("Location not mapped");
+  await expect(detail.getByTestId("naga-map")).toHaveAttribute("aria-label", "Map of Bicol Central Station");
+  await expect(detail.getByTestId("terminal-pill")).toHaveText("Community-mapped location (OpenStreetMap)");
   await expect(detail.getByRole("note")).toHaveText("Not the PNR railway station.");
   await expect(detail.getByTestId("terminal-route-legal_plan").locator(".pn-loop-chip")).toHaveText(["Loop A", "Loop B"]);
   await expect(detail.getByTestId("terminal-route-trial").first()).toContainText("Named in the Nov 2025 trial · permanence unconfirmed");
   await expect(detail.getByTestId("terminal-route-trial").first()).toContainText("Trial — permanence unconfirmed");
-  await expect(detail.getByTestId("terminal-directions-note")).toHaveText("Directions unavailable until the terminal's location is mapped.");
+  await expect(detail.getByTestId("terminal-directions-note")).toHaveCount(0);
+  await expect(detail.getByRole("button", { name: "Directions to here" })).toBeVisible();
+  await expect(detail.getByTestId("terminal-osm-attribution")).toBeVisible();
   await detail.getByRole("tab", { name: "Hours" }).click();
   await expect(detail.getByRole("tabpanel")).toContainText("Opening hoursNot on file");
   await detail.getByRole("tab", { name: "Routes" }).click();
@@ -152,6 +154,9 @@ test("T06: no route plan names it", async ({ page }) => {
   await expect(detail.getByRole("heading", { level: 1, name: "Naga PNR railway station" })).toBeFocused();
   await expect(detail.getByTestId("terminal-no-routes")).toHaveText("No route plan names this terminal yet.");
   await expect(detail.getByRole("note")).toHaveText("Not Bicol Central Station (the bus terminal).");
+  await expect(detail.getByTestId("terminal-location")).toContainText("OSM way/23662289 v7 · building centroid, not an entrance");
+  await expect(detail.getByTestId("terminal-status-note")).toContainText("confirm with PNR");
+  await expect(detail.getByTestId("terminal-osm-attribution")).toBeVisible();
 });
 
 test("unknown terminal and place links get the not-found panel", async ({ page }) => {

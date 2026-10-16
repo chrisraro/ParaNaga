@@ -20,6 +20,11 @@ export function WalkDistance({ view }: { view: WalkView }) {
   const proposal = proposalOf(view);
   return (
     <>
+      {view.remainingTime ? (
+        <p className="pn-guide__time" data-testid="guidance-time">
+          {view.remainingTime}
+        </p>
+      ) : null}
       {view.distanceText ? (
         <p className="pn-guide__distance" data-testid="guidance-distance">
           {view.distanceText}
