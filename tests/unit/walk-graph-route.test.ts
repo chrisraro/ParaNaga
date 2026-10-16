@@ -67,6 +67,39 @@ describe("decode / encode", () => {
     expect(parseWalkGraph("nope").ok).toBe(false);
     expect(walkGraphPayloadSchema.safeParse({ ...good, edges: [0, 1, 10] }).success).toBe(false);
   });
+
+  it("parseWalkGraph refuses out-of-range values (huge length, bad or oversized bbox, points outside the bbox)", () => {
+    const good = buildWalkGraph(fakeRoadGraph([A, B, C, D, E, F], [{ a: 0, b: 1 }, { a: 1, b: 2 }, { a: 2, b: 3 }, { a: 3, b: 0, via: [BEND] }, { a: 0, b: 4 }, { a: 2, b: 5 }]), { roadSource: "TEST" }).payload;
+    expect(parseWalkGraph(good).ok).toBe(true);
+    const refused = (p: unknown) => {
+      const r = parseWalkGraph(p);
+      expect(r.ok).toBe(false);
+      return r.ok ? "" : r.error;
+    };
+    // lengthDm ≥ 2^31 would wrap negative in Int32Array (a negative cycle for A*).
+    const huge = [...good.edges];
+    huge[2] = 2 ** 31;
+    expect(refused({ ...good, edges: huge })).toMatch(/length over/);
+    const justOver = [...good.edges];
+    justOver[2] = 10_000_001;
+    expect(refused({ ...good, edges: justOver })).toMatch(/length over/);
+    const [s, w, n, e] = good.bbox;
+    expect(refused({ ...good, bbox: [s, w, 91e5, e] })).toMatch(/valid latitude/);
+    expect(refused({ ...good, bbox: [s, -181e5, n, e] })).toMatch(/valid latitude/);
+    expect(refused({ ...good, bbox: [s - 100_001, w, n, e] })).toMatch(/extent/);
+    expect(refused({ ...good, bbox: [s, w, n, w + 100_001] })).toMatch(/extent/);
+    // A node delta moving a point outside the bbox (and one that would overflow Int32).
+    const farNode = [...good.nodes];
+    farNode[2] = farNode[2]! + 1000;
+    expect(refused({ ...good, nodes: farNode })).toMatch(/nodes\[1\]: outside bbox/);
+    const overflow = [...good.nodes];
+    overflow[0] = 2 ** 40;
+    expect(refused({ ...good, nodes: overflow })).toMatch(/outside bbox/);
+    // A geometry delta outside the bbox.
+    const farGeom = [...good.geom];
+    farGeom[1] = farGeom[1]! + 5000;
+    expect(refused({ ...good, geom: farGeom })).toMatch(/geom point 0 .*outside bbox/);
+  });
 });
 
 describe("routeWalk: shortest path", () => {
@@ -214,7 +247,13 @@ describe("routeWalk: A* equals Dijkstra (fast-check)", () => {
               continue;
             }
             expect(r.kind).toBe("path");
-            if (r.kind === "path") expect(Math.abs(r.lengthM - r.snapFromM - r.snapToM - ref)).toBeLessThan(1e-6);
+            if (r.kind !== "path") continue;
+            expect(Math.abs(r.lengthM - r.snapFromM - r.snapToM - ref)).toBeLessThan(1e-6);
+            expect(r.coords[0]).toEqual(from);
+            expect(r.coords.at(-1)).toEqual(to);
+            let drawn = 0;
+            for (let k = 1; k < r.coords.length; k++) drawn += haversineMeters(r.coords[k - 1]!, r.coords[k]!);
+            expect(drawn).toBeLessThanOrEqual(r.lengthM + 1e-6);
           }
         },
       ),

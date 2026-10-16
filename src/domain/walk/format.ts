@@ -31,6 +31,10 @@ export const WALK_GRAPH_FORMAT_VERSION = 1;
 const MAX_NODES = 500_000;
 const MAX_EDGES = 1_000_000;
 const MAX_GEOM_POINTS = 5_000_000;
+/** 1,000 km: far beyond any walk edge; keeps Int32 lengths positive (a negative edge would loop A*). */
+export const MAX_EDGE_LENGTH_DM = 10_000_000;
+/** A city graph spans at most 1° (≈ 111 km) per axis; bounds the grid index build. */
+export const MAX_BBOX_EXTENT_E5 = 100_000;
 
 const int = z.number().int();
 
@@ -50,6 +54,10 @@ export const walkGraphPayloadSchema = z
     if (p.geom.length % 2 !== 0) issue("geom: odd length (expected lat/lng pairs)");
     const [south, west, north, east] = p.bbox;
     if (south > north || west > east) issue("bbox: south > north or west > east");
+    if (Math.abs(south) > 90e5 || Math.abs(north) > 90e5 || Math.abs(west) > 180e5 || Math.abs(east) > 180e5) {
+      issue("bbox: outside valid latitude/longitude");
+    }
+    if (north - south > MAX_BBOX_EXTENT_E5 || east - west > MAX_BBOX_EXTENT_E5) issue("bbox: extent over 1° per axis");
     const nodeCount = p.nodes.length / 2;
     let geomPoints = 0;
     for (let i = 0; i + 3 < p.edges.length; i += 4) {
@@ -67,9 +75,46 @@ export const walkGraphPayloadSchema = z
         issue(`edges[${i / 4}]: negative length or geometry count`);
         return;
       }
+      if (p.edges[i + 2]! > MAX_EDGE_LENGTH_DM) {
+        issue(`edges[${i / 4}]: length over ${MAX_EDGE_LENGTH_DM} dm`);
+        return;
+      }
       geomPoints += p.edges[i + 3]!;
     }
-    if (geomPoints * 2 !== p.geom.length) issue(`geom: ${p.geom.length / 2} points, edges reference ${geomPoints}`);
+    if (geomPoints * 2 !== p.geom.length) {
+      issue(`geom: ${p.geom.length / 2} points, edges reference ${geomPoints}`);
+      return;
+    }
+    // Absolute points (accumulated deltas) must lie inside the bbox: this also rules out Int32
+    // overflow in the decoder and unbounded grid cells.
+    const inside = (lat: number, lng: number) => lat >= south && lat <= north && lng >= west && lng <= east;
+    const nodeLat: number[] = [];
+    const nodeLng: number[] = [];
+    let lat = 0;
+    let lng = 0;
+    for (let i = 0; i + 1 < p.nodes.length; i += 2) {
+      lat += p.nodes[i]!;
+      lng += p.nodes[i + 1]!;
+      if (!inside(lat, lng)) {
+        issue(`nodes[${i / 2}]: outside bbox`);
+        return;
+      }
+      nodeLat.push(lat);
+      nodeLng.push(lng);
+    }
+    let g = 0;
+    for (let i = 0; i + 3 < p.edges.length; i += 4) {
+      lat = nodeLat[p.edges[i]!]!;
+      lng = nodeLng[p.edges[i]!]!;
+      for (let k = 0; k < p.edges[i + 3]!; k++, g++) {
+        lat += p.geom[2 * g]!;
+        lng += p.geom[2 * g + 1]!;
+        if (!inside(lat, lng)) {
+          issue(`geom point ${g} (edges[${i / 4}]): outside bbox`);
+          return;
+        }
+      }
+    }
   });
 
 export type WalkGraphPayload = z.infer<typeof walkGraphPayloadSchema>;

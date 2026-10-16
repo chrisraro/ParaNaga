@@ -425,6 +425,7 @@ export function routeWalk(g: WalkGraph, from: LatLng, to: LatLng): WalkRoute {
     }
     for (let k = g.adjStart[v]!; k < g.adjStart[v + 1]!; k++) {
       const e = g.adjEdge[k]!;
+      if (g.edgeLenDm[e]! < 0) continue; // defensive: the schema refuses these
       const w = g.edgeA[e] === v ? g.edgeB[e]! : g.edgeA[e]!;
       const nd = d + len(e);
       if (nd < dist[w]!) {
