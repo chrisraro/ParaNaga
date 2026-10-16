@@ -27,7 +27,7 @@ test("Street View is on demand, uses the stop coordinate and closes without chan
   expect(results.violations).toEqual([]);
   await section.getByRole("button", { name: "Close Street View" }).click();
   await expect(section.locator("iframe")).toHaveCount(0);
-  await expect(page.getByTestId("stop-detail")).toContainText("Stop sign photo pending");
+  await expect(page.getByTestId("stop-detail")).toContainText("Not verified for navigation.");
 });
 
 test("Street View opens inside place detail at 375 px with a fake embed and no overflow", async ({ page }) => {

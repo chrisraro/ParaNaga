@@ -117,20 +117,23 @@ describe("clearDeviceData when a store fails", () => {
 });
 
 describe("More screen", () => {
-  it("shows the exact copy and the data revision", async () => {
+  it("shows the exact copy and the Sources and credits row", async () => {
     render(<MoreScreen />);
-    expect(screen.getByText("Accounts arrive later")).toBeTruthy();
-    expect(screen.getByText("Everything works without one. Saved trips and places stay on this phone.")).toBeTruthy();
-    expect(screen.getByText("Filipino arrives after a reviewed translation.")).toBeTruthy();
+    expect(screen.getByText("No account needed")).toBeTruthy();
+    expect(screen.getByText("Saved trips and places stay on this phone.")).toBeTruthy();
+    expect(screen.getByText("Filipino planned.")).toBeTruthy();
     expect(screen.getByRole("radiogroup", { name: "Appearance" })).toBeTruthy();
     expect(screen.getByRole("switch", { name: "Low-data mode" })).toBeTruthy();
     expect(screen.getByRole("switch", { name: "High contrast" })).toBeTruthy();
     expect(screen.getByRole("switch", { name: "Trip history" }).getAttribute("aria-checked")).toBe("false");
     const help = screen.getByTestId("settings-help");
     expect(help.getAttribute("href")).toBe("/app/help");
-    expect(help.textContent).toBe("HelpSafety, how trips are planned, sources");
-    await waitFor(() => expect(screen.getByTestId("settings-data-revision").textContent).toContain("provisional-loops-2026-10-15 · Oct 15, 2026"));
-    expect(screen.getByTestId("settings-location-status").textContent).toBe("Not available");
+    expect(help.textContent).toBe("HelpSafety and how trips work");
+    const sources = screen.getByTestId("settings-sources");
+    expect(sources.getAttribute("href")).toBe("/app/help/sources");
+    expect(sources.textContent).toBe("Sources and credits");
+    expect(screen.queryByTestId("settings-data-revision")).toBeNull();
+    await waitFor(() => expect(screen.getByTestId("settings-location-status").textContent).toBe("Not available"));
   });
 
   it("formats the revision line in Naga City time and says when the date is unknown", () => {

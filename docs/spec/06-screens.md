@@ -20,6 +20,7 @@ All text/background pairs ≥ 4.5:1 (≥ 7:1 in high-contrast mode). Verified/ca
 **Type.** Inter (or system UI) — 16 px base, 20/24 px headings; numbers tabular. Filipino strings run ~20 % longer: layouts tested with `fil` pseudo-expanded strings.
 
 **Touch & motion.** ≥ 48 × 48 px targets; primary actions in bottom third on mobile. `prefers-reduced-motion` disables map fly-to animations (jump instead) and sheet springs.
+- Motion: see the motion tokens block (documented when U4 lands).
 
 **Status badges** (used everywhere): `Verified` (teal), `Mapped candidate` (amber, hollow), `Documented only` (grey), `Trial — permanence unconfirmed` (amber, dashed), `Temporary until {date}` (coral), `Retired` (grey, struck). Fare chips: `Exact`, `Estimate`, `Partial`, `Unknown`.
 
@@ -38,7 +39,7 @@ Bottom tab bar (mobile) / left rail (desktop)
 ├─ Community ─▶ Post ─▶ Comments · New post · My submissions · Guidelines
 ├─ Saved ─▶ Saved trip card (offline) · Saved places · History (if enabled)
 └─ More ─▶ Settings · Report a driver · My reports ─▶ Report detail ─▶ MyNaga handoff
-          · My corrections · Changelog · Help/Safety · About data & sources · Sign in
+          · My corrections · Changelog · Help/Safety · About > Sources and credits · Sign in
 
 /admin (role-gated)
 ├─ Dashboard · Imports · Candidate review · Routes & variants · Shape editor
@@ -56,6 +57,9 @@ Each screen lists purpose, key content, primary actions, and its required states
 ### S1 Home / Map
 - Content: map with layers (verified stops, candidates, terminals, reviewed shapes, disruptions), search bar, "Where to?" sheet with recent/saved places, nearby verified stops list, mode toggle **Explore mapped stops | Plan verified commute**.
 - Actions: search, locate me, recenter, legend, filter routes, low-data toggle.
+- Plan flow (UI pass 2026-10-16): when From and To are both set the map fits the whole route (both ends plus the recommended option's path) in the space above the sheet; it does not fly to one endpoint and does not announce "Map centered on". The recommended option's lines are drawn as a non-tappable preview (map scene `preview`); opening an option swaps the preview for that option's lines and re-fits, Back returns to the preview. The fit is keyed on the ends and the option, re-fits on a sheet snap change, and stays put once the rider pans. Pins keep at least 24 px clear of the sheet at peek and half. "Route shown" is announced once per new fit.
+- Sheet while options are listed: peek shows the From/To rows, a one-line summary of the best option and a constant "All options" toggle (`aria-expanded`, `aria-controls`, chevron). The toggle lifts the sheet to full and moves focus to the list heading; pressed again it returns to peek with focus on the toggle. Choosing an option opens its detail at half. Back restores the detent the rider left. Peek is forced only when the list appears for new ends, not on a same-ends re-plan.
+- Sheet action bar: a footer (`role="group"`, label "Actions") rides the sheet bottom edge, above the tab bar, at every snap: "Start trip" in trip detail, the step buttons and Missed/Arrive actions in guidance. It is outside the scrolling content; focus inside it never lifts the sheet, and the content's scroll padding keeps focused controls clear of it.
 - States: L skeleton sheet + map placeholder; E (no verified stops nearby) "No verified stops within 500 m — see mapped candidates"; P "Location off — set your starting point" with search/map-pick; O cached snapshot + date, tiles may be missing (shows list-only fallback); G accuracy circle + "Location approximate (±80 m)"; D banner "Verified coverage: Loops A–D only".
 
 ### S2 Search
@@ -70,13 +74,16 @@ Each screen lists purpose, key content, primary actions, and its required states
 
 ### S4 Trip options
 - Header: from → to, time (now / depart at), fare category chip.
-- Cards (≤ 4): label (Recommended/Cheapest/…), leg strip (walk icon → route chip → …), fare chip with completeness ("₱14 + 1 unknown"), walk m, transfers, confidence meter, restrictions, revision date.
+- Cards (≤ 4), minimal: first plan label, route (`Loop A`), `Est.` time range with "+ waiting (unknown)", `Est.` fare, transfers, and one "Unverified route" chip when the option rides. `Est.` is `<abbr title="Estimate">` and reads "Estimate" to screen readers. A one-word label (Recommended, Fastest) is shown; a longer one (Least walking, Fewest transfers) is kept for screen readers only. The leg strip, vehicle chip, peak note, walking-distance footer and revision footer are not on the card; they live in trip detail or on Sources and credits. Walk-only cards say "paths not verified".
+- Word budget (visible words, screen-reader-only text excluded; guarded by `tests/unit/copy-budget.test.tsx` and `tests/e2e/copy-sources.spec.ts`): card ≤ 16 words with one ride, ≤ 20 with two rides; trip-detail header block ≤ 16; guidance walk step ≤ 22.
 - States: E **coverage none** → "We don't have a verified commute for this trip yet" + nearest verified stops to origin/destination + "Explore mapped candidates" + "Help map this route"; D "Some legs use unverified walking paths"; X planner error with retry.
 
 ### S5 Trip detail
 - Vertical timeline: walk (distance, path verified?), board (stop code, landmark, photo, toward cue, signboard text "Look for: CENTRO–SAN FELIPE"), ride (stops count, alight at), transfer, arrive (entrance).
 - Fare breakdown table per leg with evidence date.
 - Actions: Start, Save, Share (text summary, no location), Report a correction.
+- Copy (UI pass): title is the route; header is title, time, fare, "How times are estimated", Save, Share, with the full "Unverified route — confirm with the driver" badge right under it. One small "Sources" link in the top bar (`aria-label` "Sources and credits") opens that item's records. Fare rows read `Estimate ₱14` plus one note and a "How fares are estimated" link to Sources. "Include exact points" sits under the fare section. Steps no longer carry "Mapped candidate", "Board here", basis text or "Corrections open soon". The "How times are estimated" sheet carries "Walking distances are estimates; paths not verified."
+- Guidance copy: walk steps show `≈ 110 m · straight-line, north` and the full unverified badge once; ride steps say `Keep this screen open.`; stop count reads `2 of 8 stops`. Working screens carry no source, revision or attribution text.
 
 ### S6 Walk to boarding (active)
 - Compass/heading arrow toward curb, distance, accuracy circle, boarding-side cue ("Wait on the side toward Centro, beside NCF Magsaysay"), photo.
@@ -99,7 +106,7 @@ Each screen lists purpose, key content, primary actions, and its required states
 - Header: name + status badge, source (e.g. "Loop Service B · code B23 · 13.6299849, 123.1980793"), raw description.
 - Routes serving (only via route-stop association) with direction arrows and boarding/alighting permissions; "Routes passing nearby (not confirmed to stop)" in a separate muted section.
 - Curb side, toward cue, photos (redacted), accessibility evidence, sign text, evidence freshness, "Help improve".
-- Candidate variant: amber banner "Mapped candidate — not verified for navigation. Source: public My Maps snapshot (15 Oct 2026)".
+- Candidate variant: amber "Mapped candidate" status badge. The source line and snapshot date are not repeated on the screen; they open from the "Sources" link (`?stop=<id>`).
 
 ### S11 Terminal detail
 - Entrances on map, bays list with routes/destinations, hours with evidence, "category labels are administrative, not compass directions" note.
@@ -161,7 +168,14 @@ Each screen lists purpose, key content, primary actions, and its required states
 - Email → OTP / magic link; Google. Explain why an account is optional.
 
 ### S22 Help, safety, about data
-- How verification works, badge legend, sources register (S01–S42 with dates), limitations (no live arrivals, foreground-only alerts), emergency numbers.
+- How verification works, badge legend, limitations (no live arrivals, foreground-only alerts), emergency numbers. The sources register is on S23.
+
+### S23 Sources and credits
+- Route `/app/help/sources`; title and h1 "Sources and credits". All source, revision and attribution text lives here. Working screens carry none, apart from the OpenStreetMap badge on OSM place screens, the on-map attribution, the "Photo credit" link on photos and the one "Sources" link on detail screens.
+- Reached from More > About ("Sources and credits"; the Data revision row is gone), the Help About-data tab, and the "Sources" link on stop, route, terminal and trip detail screens.
+- Lists: revision (label and published date), data basis with the My Maps retrieval date (from the register's S39 checked date), owner confirmation U01, fare basis, time basis, OpenStreetMap attribution, places and rail notes, the source register (S01–S42 with dates), licences, full photo credits, the rights register (S33/S34/S39/S40 stay unresolved), and one note "Corrections and verification aren't open yet."
+- Per-item query links show only that item's records: `?stop=<id>` (source records, My Maps owner note), `?route=<code>` (fleet, cooperative, plan, trial and fare-rule sources), `?terminal=<code>` (address, mode and regional-service sources, fare-rate note, OSM object), `?osm=<type>/<id>&v=<n>` (OpenStreetMap object; with `&s=<snapshot id>` it also shows the snapshot date), `?src=S33,S34` (named register entries). An unknown or malformed value shows "Nothing found for that link." and is never echoed.
+- Hash links (`#fare-basis`, photo credits) scroll to and focus their target. Back from Sources returns focus to the detail heading.
 
 ## 6.4 Admin screens
 

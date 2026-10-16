@@ -98,15 +98,14 @@ test("search sets the start and the destination; the map announces, recentres an
   await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
   await expect(page).toHaveURL(/\/app$/);
 
-  // The HomeScreen consumer of requestEndpoint: row label and the recentre on the new
-  // destination (the announcement is asserted in the next test, where no plan follows it).
+  // Focus returns to the row that was set, and the home screen did not scroll.
+  await expect(rowMain(page, "destination")).toBeFocused();
+  expect(await page.evaluate(() => document.querySelector(".pn-home")?.scrollTop ?? 0)).toBe(0);
+  // The HomeScreen consumer of requestEndpoint: row label. With both ends set the map no longer
+  // flies to (zooms in on) the destination; it fits the route instead.
   await expect(rowMain(page, "destination")).toContainText("SM City Naga");
-  await expect
-    .poll(async () => {
-      const c = await readCenter(page);
-      return Math.abs(c.lat - SM.lat) < 0.0005 && Math.abs(c.lng - SM.lng) < 0.0005;
-    })
-    .toBe(true);
+  await expect(page.getByText(/Map centered on SM City/)).toHaveCount(0);
+  await expect.poll(() => plans.length).toBe(1);
   await expect.poll(() => plans.length).toBe(1);
   expect(plans[0]).toMatchObject({
     origin: { lat: STOP_A1.stop.lat, lng: STOP_A1.stop.lng },
@@ -134,7 +133,7 @@ test('"Diversion": the corner first, old names footnoted, OSM attributed; a rout
   await expect(places.locator("li").first()).toContainText("Cor. Diversion Rd. & Fraternidad St.");
   await expect(page.getByTestId("search-legacy-note")).toHaveText("Old route names are historical hints, not current routes.");
   await expect(page.getByTestId("search-group-legacy")).toContainText("Historical name (1993) · not matched to a current route · S28");
-  await expect(page.getByTestId("search-osm-attribution")).toHaveText("© OpenStreetMap contributors (ODbL)");
+  await expect(page.getByTestId("search-osm-attribution")).toHaveCount(0); // the credit is on Sources and credits
   await expect(page.getByTestId("search-group-routes")).toHaveCount(0);
 
   await searchBox(page).fill("r8a");
@@ -146,7 +145,7 @@ test('"Diversion": the corner first, old names footnoted, OSM attributed; a rout
 test("no match, regional connections, and a barangay opens its place detail", async ({ page }) => {
   await page.goto("/app/search?for=start");
   await searchBox(page).fill("xyz");
-  await expect(page.getByTestId("search-empty")).toHaveText("No match in Naga — try a place, stop name, street, route or barangay.");
+  await expect(page.getByTestId("search-empty")).toHaveText("No match. Try a place, stop, street or route.");
   await searchBox(page).fill("Iriga");
   await expect(page.getByTestId("search-empty")).toBeVisible();
   await page.getByRole("switch", { name: "Include regional connections" }).click();
@@ -280,7 +279,7 @@ test("from Explore (browsing): a place opens place detail, whose Plan trip from 
   await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
   await expect(page).toHaveURL(/\/app\/places\/osm\/(node|way|relation)\/\d+$/);
   const detail = page.getByTestId("place-detail");
-  await expect(detail.getByTestId("place-location-note")).toHaveText("Location from OpenStreetMap — entrance not mapped.");
+  await expect(detail.getByTestId("place-entrance")).toContainText("Not mapped. Trips end at the map point.");
   await detail.getByRole("radio", { name: "Directions from here" }).click();
   await detail.getByRole("button", { name: "Plan trip from SM City Naga" }).click();
   await expect(page).toHaveURL(/\/app$/);

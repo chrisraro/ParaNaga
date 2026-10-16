@@ -6,7 +6,7 @@
 // When expanded, renders only the items passed (each with an SVG line/marker swatch showing the
 // real casing + pattern, the ModeIcon, and the text label), plus:
 //   - Walk note: "Dotted: approximate walking path · crossings not checked"
-//   - Mixed-fleet note: "Alternating colours: traditional and modern jeepneys both operate (owner-confirmed)"
+//   - Mixed-fleet note: "Alternating colours: traditional and modern jeepneys"
 //   - Fixed footnote: "Lines are approximate paths, not verified route shapes."
 // Keyboard operable; pressing Escape inside the legend closes it and returns focus to the button.
 
@@ -30,7 +30,7 @@ import { ONEWAY_CAUTION } from "./line-rules";
 export const LEGEND_FOOTNOTE = "Lines are approximate paths, not verified route shapes." as const;
 export const LEGEND_WALK_NOTE = "Dotted: approximate walking path · crossings not checked" as const;
 export const LEGEND_STOP_LABEL = "Mapped stop, not verified" as const;
-export const LEGEND_MIXED_NOTE = "Alternating colours: traditional and modern jeepneys both operate (owner-confirmed)" as const;
+export const LEGEND_MIXED_NOTE = "Alternating colours: traditional and modern jeepneys" as const;
 
 /** Extra entries a trip can need: padyak (dashed), a straight line that is not a route, a free board or get-off point. */
 export type LegendExtra = "padyak" | "approx_street" | "free_point";
@@ -221,8 +221,8 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
           {announcement}
         </span>
       ) : null}
-      {open ? (
-        <div id={panelId} className="pn-map-legend__panel" role="region" aria-label="Map legend" data-testid="map-legend-panel">
+      {/* Always mounted so closing can fade out; CSS hides it (visibility) once the fade ends. */}
+      <div id={panelId} className="pn-map-legend__panel" data-open={open} role="region" aria-label="Map legend" data-testid="map-legend-panel">
           <ul className="pn-map-legend__list">
             {entries.map(({ key, label }) => (
               <li key={key} className="pn-map-legend__item" data-legend-item={key}>
@@ -267,14 +267,13 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
             </p>
           ) : null}
           <p className="pn-map-legend__footnote">{LEGEND_FOOTNOTE}</p>
-        </div>
-      ) : null}
+      </div>
       <button
         ref={buttonRef}
         type="button"
         className="pn-map-legend__toggle"
         aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
+        aria-controls={panelId}
         onClick={() => setOpen((prev) => !prev)}
         data-testid="map-legend-button"
       >

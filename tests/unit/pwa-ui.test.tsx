@@ -136,7 +136,8 @@ describe("UpdatePrompt", () => {
   it("Later hides the card; More → App keeps Update ready — Reload", () => {
     const worker = { postMessage: vi.fn() } as unknown as ServiceWorker;
     Object.defineProperty(navigator, "serviceWorker", { value: { addEventListener: vi.fn(), controller: null }, configurable: true });
-    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    // Reduced motion: the card leaves at once (otherwise it waits for its exit animation to end).
+    vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduced-motion") }));
     render(
       <>
         <UpdatePrompt />
@@ -149,6 +150,23 @@ describe("UpdatePrompt", () => {
     expect(screen.queryByTestId("update-prompt")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Update ready — Reload/ }));
     expect(worker.postMessage).toHaveBeenCalledWith({ type: "SKIP_WAITING" });
+    delete (navigator as unknown as { serviceWorker?: unknown }).serviceWorker;
+  });
+
+  it("Later, pressed with the keyboard, hands focus to the page heading instead of dropping it", () => {
+    Object.defineProperty(navigator, "serviceWorker", { value: { addEventListener: vi.fn(), controller: null }, configurable: true });
+    vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduced-motion") }));
+    render(
+      <main>
+        <h1>ParaNaga</h1>
+        <UpdatePrompt />
+      </main>,
+    );
+    act(() => sw.setWaitingForTests({ postMessage: vi.fn() } as unknown as ServiceWorker));
+    screen.getByRole("button", { name: "Later" }).focus();
+    fireEvent.click(screen.getByRole("button", { name: "Later" }));
+    expect(screen.queryByTestId("update-prompt")).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "ParaNaga" }));
     delete (navigator as unknown as { serviceWorker?: unknown }).serviceWorker;
   });
 

@@ -296,7 +296,7 @@ test.describe("geolocation inside Naga", () => {
     await expect.poll(spy.clearCalls).toBeGreaterThan(0);
   });
 
-  test("Clear start and destination stops the watch", async ({ page }) => {
+  test("Clear trip stops the watch", async ({ page }) => {
     const spy = await installWatchSpy(page);
     await openApp(page);
     await useLocation(page).click();
@@ -305,7 +305,7 @@ test.describe("geolocation inside Naga", () => {
     await pin(page, "destination");
     expect(await spy.clearCalls()).toBe(0);
 
-    await page.getByRole("button", { name: "Clear start and destination" }).click();
+    await page.getByRole("button", { name: "Clear trip" }).click();
 
     await expect(page.getByTestId("accuracy-pill")).toBeHidden();
     await expect(rowMain(page, "start")).toContainText("Choose start");
@@ -346,7 +346,7 @@ test.describe("geolocation denied", () => {
     await openApp(page);
     await useLocation(page).click();
 
-    await expect(page.getByTestId("location-status")).toContainText("Location is off. You can still pin your start on the map.");
+    await expect(page.getByTestId("location-status")).toContainText("Location off. Pin your start on the map.");
     await chooseOnMap(page).click();
     await expect(page.getByRole("region", { name: "Choose start on map" })).toBeVisible();
     await page.getByRole("button", { name: "Set start here" }).click();
@@ -369,7 +369,7 @@ test.describe("pinning without GPS", () => {
     await expect.poll(async () => (await readView(page)).lng).not.toBe(view.lng);
     await page.getByRole("button", { name: "Set destination here" }).click();
 
-    await expect(page.getByTestId("no-provisional-route")).toContainText("Loops A and B are the only routes we can suggest for now.");
+    await expect(page.getByTestId("no-provisional-route")).toContainText("Only Loops A and B for now.");
     await expect(page.getByRole("heading", { name: "No provisional route connects these points yet" })).toBeVisible();
     await expect(page.locator(".leaflet-marker-pane").getByRole("img")).toHaveCount(2);
     expect(await overlayPaths(page).count()).toBe(pathsBefore);
@@ -422,17 +422,17 @@ test.describe("crosshair outside the city", () => {
     await panTo(page, OUTSIDE_POLYGON);
     expectInsideMaxBounds(await readView(page));
 
-    await expect(page.getByTestId("pick-outside-hint")).toHaveText("Move the pin inside Naga City");
+    await expect(page.getByTestId("pick-outside-hint")).toHaveText("Pin must be in Naga City");
     const confirm = page.getByRole("button", { name: "Set start here" });
     await expect(confirm).toHaveAttribute("aria-disabled", "true");
 
     // The announcer holds a known message (the pin prompt); the forced click must leave it alone.
     const announcer = page.getByTestId("home-announcer");
-    await expect(announcer).toHaveText("Move the map to place the start pin.");
+    await expect(announcer).toHaveText("Move the map to place the pin.");
     await confirm.click({ force: true });
     // Still picking, nothing was set, and nothing was announced as set.
     await expect(page.getByRole("region", { name: "Choose start on map" })).toBeVisible();
-    await expect(announcer).toHaveText("Move the map to place the start pin.");
+    await expect(announcer).toHaveText("Move the map to place the pin.");
     await expect(announcer).not.toContainText("set:");
 
     await page.getByRole("button", { name: "Cancel" }).click();

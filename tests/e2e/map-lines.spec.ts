@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { LINES, routeNetwork } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
+import { chooseOption } from "./fixtures/options";
 
 test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate");
 
@@ -21,6 +22,12 @@ test.afterEach(async ({ page }) => {
 });
 
 const mapEl = (page: Page) => page.getByTestId("naga-map");
+
+/** No pan or zoom (drag, its inertia, an animated fit) is under way: the map's data-moving flag. */
+const mapSettled = (page: Page) => expect(mapEl(page)).toHaveAttribute("data-moving", "false");
+/** The legend panel's open state is an attribute, so a test waits on it instead of on timing. */
+const legendOpen = (page: Page, open: boolean) =>
+  expect(page.getByTestId("map-legend-panel")).toHaveAttribute("data-open", String(open));
 
 async function openApp(page: Page) {
   await page.goto("/app");
@@ -57,7 +64,7 @@ test("trip lines draw walk (dotted) and ride (solid) layers with chevrons and le
   await openApp(page);
   await pinBoth(page);
 
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
 
   // Verify trip lines rendered on the map
   const walkLines = page.locator("path.pn-line--walk");
@@ -289,7 +296,7 @@ test("a trip ride that uses a terminal access road says so in trip detail", asyn
   await openApp(page);
   await pinBoth(page);
   // "Least walking": Loop A 265.6 -> 5751.6 m passes the terminal access road at 5663.6 m.
-  await page.getByTestId("trip-option").nth(1).click();
+  await chooseOption(page, 1);
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.getByTestId("ride-terminal-access")).toHaveText("terminal access road");
   await expect(page.locator("path.pn-line--ride.pn-line--caution")).toHaveCount(0);
@@ -325,6 +332,7 @@ async function expectLegendListsWalkAndStops(page: Page, notice?: string) {
   const button = page.getByTestId("map-legend-button");
   await expect(button).toBeVisible();
   await button.click();
+  await legendOpen(page, true);
   const panel = page.getByTestId("map-legend-panel");
   await expect(panel).toContainText("Walk");
   await expect(panel).toContainText("Dotted: approximate walking path");
@@ -333,6 +341,7 @@ async function expectLegendListsWalkAndStops(page: Page, notice?: string) {
   if (notice) await expect(page.getByTestId("map-legend-notice")).toHaveText(notice);
   else await expect(page.getByTestId("map-legend-notice")).toHaveCount(0);
   await page.keyboard.press("Escape");
+  await legendOpen(page, false);
   await expect(panel).toBeHidden();
 }
 
@@ -342,7 +351,7 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
   );
   await openApp(page);
   await pinBoth(page);
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await expectLegendAndLineAboveSheet(page); // trip detail too, sheet untouched
   await page.getByTestId("trip-start").click();
@@ -369,11 +378,116 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
 
   // Still there on the next steps (the ride).
   await page.getByRole("button", { name: /^Expand sheet/ }).first().click();
-  await guide.getByRole("button", { name: "I'm at the stop", exact: true }).click();
-  await guide.getByRole("button", { name: /^I boarded/ }).click();
+  await page.getByTestId("trip-sheet").getByRole("button", { name: "I'm at the stop", exact: true }).click();
+  await page.getByTestId("trip-sheet").getByRole("button", { name: /^I boarded/ }).click();
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
   await expect(page.getByTestId("map-legend-button")).toBeVisible();
+});
+
+test("after choosing From and To the recommended option's lines are previewed above the sheet", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect(page.getByTestId("trip-detail")).toHaveCount(0);
+  // Walk dotted, ride solid; overview routes are hidden under the preview.
+  const walk = page.locator("path.pn-line--walk");
+  await expect(walk.first()).toBeAttached({ timeout: 15000 });
+  await expect(walk.first()).toHaveAttribute("stroke-dasharray", /.+/);
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
+  await expect(page.locator("path.pn-line--route")).toHaveCount(0);
+  await expectLegendListsWalkAndStops(page);
+  await page.getByTestId("map-legend-button").click();
+  await legendOpen(page, true);
+  await expect(page.getByTestId("map-legend-panel")).toContainText(/jeepney/i);
+  await page.keyboard.press("Escape");
+  await legendOpen(page, false);
+  // The sheet rests at peek and the map has stopped moving; then the whole path is inside the
+  // map, at least 24 px above the sheet.
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "0");
+  await mapSettled(page);
+  const mapBox = (await page.getByTestId("naga-map").boundingBox())!;
+  await expect
+    .poll(async () => {
+      const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+      for (const sel of ["path.pn-line--ride", "path.pn-line--walk"]) {
+        for (const el of await page.locator(sel).all()) {
+          const b = await el.boundingBox();
+          if (!b) continue;
+          if (b.x < mapBox.x || b.x + b.width > mapBox.x + mapBox.width || b.y < mapBox.y || b.y + b.height > sheetTop - 24) return false;
+        }
+      }
+      return true;
+    }, { timeout: 10_000 })
+    .toBe(true);
+  // Opening an option swaps to its lines; Back returns to the preview.
+  await chooseOption(page);
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await page.getByTestId("trip-detail").getByRole("button", { name: /back/i }).first().click();
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
+});
+
+/** Both pins are inside the map and at least 24 px above the sheet's top edge. */
+async function pinsClearOfSheet(page: Page): Promise<boolean> {
+  const mapBox = (await mapEl(page).boundingBox())!;
+  const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+  const pins = await page.locator(".pn-marker").all();
+  if (pins.length !== 2) return false;
+  for (const pin of pins) {
+    const b = await pin.boundingBox();
+    if (!b || b.x < mapBox.x || b.x + b.width > mapBox.x + mapBox.width || b.y < mapBox.y || b.y + b.height > sheetTop - 24) return false;
+  }
+  return true;
+}
+const centreOf = async (page: Page) => `${await mapEl(page).getAttribute("data-center-lat")},${await mapEl(page).getAttribute("data-center-lng")}`;
+
+test("the route re-fits on a snap change and a new route, but a user pan stays put", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
+
+  // Peek: the sheet is lower, the route re-fits with the same clearance.
+  await peekSheet(page);
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "0");
+  await mapSettled(page);
+  await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
+
+  // A user pan wins: a re-render (legend open and closed) does not take the view back.
+  await drag(page, -60, 40);
+  // The drag's inertia ends with a moveend.
+  await mapSettled(page);
+  const panned = await centreOf(page);
+  await page.getByTestId("map-legend-button").click();
+  await legendOpen(page, true);
+  await page.keyboard.press("Escape");
+  await legendOpen(page, false);
+  await expect(page.getByTestId("map-legend-panel")).toBeHidden();
+  await mapSettled(page);
+  expect(await centreOf(page)).toBe(panned);
+
+  // A new route (the destination moved) re-fits.
+  await page.getByTestId("endpoint-destination").locator("button.pn-endpoint__main").click();
+  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await drag(page, 100, -60);
+  await page.getByRole("button", { name: "Set destination here" }).click();
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
+});
+
+test("both pins are framed while the plan has not arrived or failed", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) => route.fulfill({ status: 500, contentType: "application/json", body: "{}" }));
+  await openApp(page);
+  await pinBoth(page);
+  await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
+  expect(Number(await mapEl(page).getAttribute("data-zoom"))).toBeLessThanOrEqual(17);
 });
 
 test("scrolling a sheet element into view never shifts the map, so the legend stays on screen", async ({ page }) => {
@@ -382,7 +496,7 @@ test("scrolling a sheet element into view never shifts the map, so the legend st
   );
   await openApp(page);
   await pinBoth(page);
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
 
   const expectMapStill = async () => {
@@ -420,7 +534,7 @@ test("the legend and the walking line still show when the route lines are not lo
   await expectLegendListsWalkAndStops(page);
 
   await pinBoth(page);
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await peekSheet(page);
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached({ timeout: 15000 });
@@ -428,8 +542,8 @@ test("the legend and the walking line still show when the route lines are not lo
   await expectLegendListsWalkAndStops(page, "Route lines for this trip didn't load.");
 });
 
-// Keyboard focus is never left below the screen edge: the half sheet cannot scroll it into view, so
-// a keyboard Tab to a cut-off control lifts the sheet (a tap does not).
+// Keyboard focus is never left below the screen edge (the content scrolls inside the visible sheet;
+// the primary action lives in the sheet's footer, outside the guidance/detail element).
 
 async function expectTabbedControlsOnScreen(page: Page, scope: string, wanted: RegExp[]) {
   const seen = new Set<RegExp>();
@@ -438,7 +552,7 @@ async function expectTabbedControlsOnScreen(page: Page, scope: string, wanted: R
     await page.keyboard.press("Tab");
     const state = await page.evaluate((testId) => {
       const el = document.activeElement as HTMLElement | null;
-      if (!el || !el.closest(`[data-testid="${testId}"]`)) return null;
+      if (!el || !(el.closest(`[data-testid="${testId}"]`) || el.closest(".pn-sheet-footer"))) return null;
       const r = el.getBoundingClientRect();
       return { bottom: r.bottom, top: r.top, name: (el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 60) };
     }, scope);
@@ -460,7 +574,7 @@ test("tabbing through trip detail and guidance at half keeps the focused control
   );
   await openApp(page);
   await pinBoth(page);
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1"); // a tap left it at half
   await expectTabbedControlsOnScreen(page, "trip-detail", [/Start trip/]);
@@ -469,4 +583,92 @@ test("tabbing through trip detail and guidance at half keeps the focused control
   await expect(page.getByTestId("guidance")).toBeVisible();
   await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
   await expectTabbedControlsOnScreen(page, "guidance", [/I'm at the stop/, /End guidance/]);
+});
+
+/** Computed transition (property -> duration in ms) of an element, split into its parallel lists. */
+async function transitions(locator: ReturnType<Page["locator"]>) {
+  return locator.first().evaluate((el) => {
+    const cs = getComputedStyle(el);
+    const props = cs.transitionProperty.split(",").map((p) => p.trim());
+    const durs = cs.transitionDuration.split(",").map((d) => d.trim());
+    const ms = (d: string) => (d.endsWith("ms") ? parseFloat(d) : parseFloat(d) * 1000);
+    return { props, ms: props.map((_, i) => ms(durs[i % durs.length]!)), animation: cs.animationDuration };
+  });
+}
+
+test("motion: the sheet animates transform only (padding-bottom applies at once), the list and legend fade", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  const sheet = await transitions(page.getByTestId("trip-sheet"));
+  const timed = sheet.props.filter((_, i) => sheet.ms[i]! > 0);
+  expect(timed).toEqual(["transform"]);
+  // The footer rides the same curve, also on transform alone.
+  const footer = await transitions(page.locator(".pn-sheet-footer"));
+  expect(footer.props.filter((_, i) => footer.ms[i]! > 0)).toEqual(["transform"]);
+  // Cards and the legend panel do have motion (so the reduced-motion test below proves something).
+  expect((await transitions(page.getByTestId("map-legend-panel"))).ms.some((m) => m > 0)).toBe(true);
+  expect((await transitions(page.getByTestId("trip-option"))).ms.some((m) => m > 0)).toBe(true);
+});
+
+test("a lift applies the sheet padding at once (data-grow); a drop to peek delays it", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  const delayed = () => sheet.evaluate((el) => getComputedStyle(el).transitionProperty.split(",").map((p) => p.trim()));
+  // Peek -> half: the content must fill the rising sheet, so only the transform is timed.
+  await page.getByTestId("endpoint-destination").locator(".pn-endpoint__main").click();
+  await expect(sheet).toHaveAttribute("data-snap", "1");
+  await expect(sheet).toHaveAttribute("data-grow", "");
+  expect(await delayed()).toEqual(["transform"]);
+  // Half -> full -> peek: shrinking keeps the padding delayed until the snap settles.
+  await page.getByRole("button", { name: "Expand sheet to full" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await page.getByRole("button", { name: "Collapse sheet" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(sheet).not.toHaveAttribute("data-grow", /.*/);
+  expect(await delayed()).toEqual(["transform", "padding-bottom"]);
+});
+
+test("the map is inert under the full sheet, so Tab skips its hidden controls", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  const map = page.locator(".pn-home__map");
+  await expect(map).not.toHaveAttribute("inert", /.*/);
+  await page.getByTestId("options-toggle").click();
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "2");
+  await expect(map).toHaveAttribute("inert", "");
+  // Tab from the sheet's first control never lands in a map control.
+  await page.getByRole("button", { name: "Collapse sheet" }).focus();
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.closest(".pn-home__map") !== null)).toBe(false);
+  }
+  await page.getByRole("button", { name: "Collapse sheet" }).click();
+  await expect(map).not.toHaveAttribute("inert", /.*/);
+});
+
+test("reduced motion: no transition or animation on the sheet, the list items or the legend", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  for (const target of [page.getByTestId("trip-sheet"), page.locator(".pn-sheet-footer"), page.getByTestId("trip-option"), page.getByTestId("map-legend-panel")]) {
+    const t = await transitions(target);
+    expect(t.ms.every((m) => m === 0), `${t.props} ${t.ms}`).toBe(true);
+    expect(t.animation.split(",").every((d) => parseFloat(d) === 0), t.animation).toBe(true);
+  }
 });

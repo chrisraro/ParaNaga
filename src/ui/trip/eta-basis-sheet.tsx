@@ -15,6 +15,8 @@ import { ETA_WAITING_NOTE } from "@/ui/help/articles";
 
 export const ETA_BASIS_TITLE = "How times are estimated" as const;
 export { ETA_WAITING_NOTE };
+/** Said once, here, instead of under every list of options. */
+export const ETA_WALK_NOTE = "Walking distances are estimates; paths not verified.";
 
 type Props = {
   open: boolean;
@@ -95,7 +97,7 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
         {/* Scrollable on small phones: focusable so it scrolls by keyboard (axe scrollable-region-focusable). */}
         <div className="pn-layers-sheet__body" tabIndex={0} role="region" aria-labelledby={titleId} data-testid="eta-basis-body">
           <p className="pn-eta-sheet__lead" data-testid="eta-basis-lead">
-            {ETA_WAITING_NOTE}
+            {ETA_WAITING_NOTE} {ETA_WALK_NOTE}
           </p>
 
           {rows.length === 0 ? (

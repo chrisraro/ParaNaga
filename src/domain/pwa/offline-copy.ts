@@ -33,6 +33,13 @@ export function offlinePlanNote(publishedAt: string | null | undefined, reason: 
     : "Planned offline from the data on this phone. Fares may have changed.";
 }
 
+/** The same note as one short line, for the sheet's peek: "Offline plan, data of Oct 15, 2026". */
+export function offlinePlanChip(publishedAt: string | null | undefined, reason: "offline" | "unreachable" = "offline"): string {
+  const date = publishedDateText(publishedAt);
+  const base = reason === "unreachable" ? "Planned on this phone" : "Offline plan";
+  return date ? `${base}, data of ${date}` : base;
+}
+
 /** A detail panel waiting for the network (useOffline). */
 export const OFFLINE_PANEL_TEXT = "You're offline · This opens when you're back online.";
 

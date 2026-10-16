@@ -1,7 +1,6 @@
 "use client";
 
-// Arrive (artboard Arrive): "You've arrived", "{destination}. Guidance has ended and ParaNaga has
-// stopped using your location." (the watch and the wake lock stop before this renders), the trip
+// Arrive (artboard Arrive): "You've arrived", "{destination}. Location use stopped." (the watch and the wake lock stop before this renders), the trip
 // summary (walk estimate, route chips with their stop counts, the fare estimate), a real "Save
 // this trip" toggle (the device's saved trips, as in Trip detail) and "Done". No rating (D7), no
 // entrance (none is mapped).
@@ -10,6 +9,7 @@ import { useState } from "react";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { ArriveView } from "@/domain/guidance/view";
 import type { SavedTrip } from "@/domain/saved/saved";
+import { SheetBar } from "@/ui/app-shell/sheet-bar";
 import { RouteChip, UndoButton, type StepProps } from "./guidance-parts";
 
 function SaveTripRow({ card }: { card: SavedTrip }) {
@@ -35,11 +35,11 @@ function SaveTripRow({ card }: { card: SavedTrip }) {
           <path d="M6 3h12v18l-6-4.5L6 21z" />
         </svg>
         <span className="pn-guide__save-text">
-          <strong>{saved ? "Trip saved" : "Save this trip"}</strong>
-          <span>{saved ? "Available offline in Saved" : "Keep it for next time, works offline"}</span>
+          <strong>{saved ? "Saved" : "Save this trip"}</strong>
+          {saved ? <span>Works offline</span> : null}
         </span>
       </button>
-      {unavailable ? <p className="pn-guide__note">Saving needs storage on this phone, which is not available.</p> : null}
+      {unavailable ? <p className="pn-guide__note">Saving isn’t available on this phone.</p> : null}
       <p className="pn-guide__note" aria-live="polite" data-testid="arrive-save-status">
         {status}
       </p>
@@ -68,7 +68,7 @@ export function ArriveStep({ view, onSend, headingRef, card, onDone }: Omit<Step
       </div>
       {card ? <SaveTripRow card={card} /> : null}
       {/* "Done" is the view's `end` action: it also clears the trip (the screen's onDone). */}
-      <div className="pn-guide__actions">
+      <SheetBar className="pn-guide__actions">
         {view.actions
           .filter((a) => a.event === "end")
           .map((a) => (
@@ -76,7 +76,7 @@ export function ArriveStep({ view, onSend, headingRef, card, onDone }: Omit<Step
             {a.label}
           </button>
         ))}
-      </div>
+      </SheetBar>
       <UndoButton undo={view.undo} onSend={onSend} />
     </section>
   );

@@ -1,11 +1,11 @@
 // Throttle for the guidance screens' polite live region. Pure.
 //
 // GPS changes the walk view's `live` text on every fix, and under jitter it flips between the
-// distance, "You look close to …" and the step title (a fix crossing the 50 m usability gate or
+// distance, "Close to …" and the step title (a fix crossing the 50 m usability gate or
 // the near-target radius). A screen reader must not be flooded, so within a step (the announcer is
 // reset whenever focus moves to the step heading, which reads the title):
 //  - a fall-back to the title is never announced (the heading already said it);
-//  - the first "You look close to …" is announced at once, then latched: never again in the step;
+//  - the first "Close to …" is announced at once, then latched: never again in the step;
 //  - a distance is announced only once ANNOUNCE_MS have passed since the last announcement (or
 //    the step start) AND it moved by DISTANCE_ANNOUNCE_M since the last announced distance;
 //  - any other change (a GPS stop count) at most once per ANNOUNCE_MS.
@@ -31,7 +31,7 @@ export type Announcer = {
   proposalSaid: boolean;
 };
 
-const DISTANCE = /^(?:≈ (\d+)|Under 10) m to (.+) in a straight line$/;
+const DISTANCE = /^(?:About (\d+)|Under 10) m to (.+), straight line$/;
 
 /** The metres of a straight-line walk distance line (0 for "Under 10 m"), else null. */
 export function walkDistanceOf(text: string): number | null {
@@ -46,7 +46,7 @@ export function liveKind(view: GuidanceView): LiveKind {
   const text = view.live.text;
   if (view.screen === "walk") {
     if (text === view.title) return "fallback";
-    if (text.startsWith("You look close to")) return "proposal";
+    if (text.startsWith("Close to")) return "proposal";
     if (walkDistanceOf(text) !== null) return "distance";
   }
   return "change";

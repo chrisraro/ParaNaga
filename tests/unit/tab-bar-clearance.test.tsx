@@ -5,7 +5,7 @@ import { cleanup, render } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useBottomClearance } from "@/ui/app-shell/tab-bar";
-import { HALF_VISIBLE, PEEK_VISIBLE, offsetFor } from "@/ui/home/endpoint-sheet";
+import { HALF_VISIBLE, MAP_MIN_SHARE, PEEK_VISIBLE, offsetFor } from "@/ui/home/endpoint-sheet";
 
 afterEach(() => {
   cleanup();
@@ -26,8 +26,12 @@ describe("offsetFor", () => {
     expect(offsetFor(2, H, 108)).toBe(0);
   });
 
-  it("never goes negative on a short sheet", () => {
-    expect(offsetFor(0, 250, 108)).toBe(0);
+  it("never goes negative on a short sheet, and keeps a quarter of it as map at peek and half", () => {
+    expect(offsetFor(0, 250, 108)).toBeGreaterThanOrEqual(0);
+    expect(offsetFor(0, 100, 108)).toBe(0);
+    expect(offsetFor(0, 300, 108)).toBe(Math.round(300 * MAP_MIN_SHARE));
+    expect(offsetFor(1, 300, 108)).toBe(Math.round(300 * MAP_MIN_SHARE));
+    expect(offsetFor(2, 300, 108)).toBe(0);
   });
 });
 

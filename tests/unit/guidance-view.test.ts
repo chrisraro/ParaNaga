@@ -28,13 +28,13 @@ describe("Walk (walk_to_board)", () => {
     if (v.screen !== "walk") throw new Error(v.screen);
     expect(v.stepLabel).toBe("Step 1 of 3 · Walk");
     expect(v.title).toBe("Walk to Plaza Rizal (A1)");
-    expect(v.distanceText).toBe("≈ 140 m walk · straight-line estimate, path not verified");
+    expect(v.distanceText).toBe("≈ 140 m");
     expect(v.directionText).toBeNull();
-    expect(v.remainingTime).toBe("About 2–3 min to Plaza Rizal (A1) (estimate)");
+    expect(v.remainingTime).toBe("≈ 2–3 min (estimate)");
     expect(v.locationNote).toBeNull();
-    expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown("Loop A")]);
-    expect(v.nextRide).toEqual({ chip: "Loop A", routeName: "Centro–Magsaysay Loop A", direction: "clockwise (from pin order)", badge: UNVERIFIED_ROUTE_BADGE });
-    expect(v.keepOpen).toBe("Keep ParaNaga open for guidance.");
+    expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown()]);
+    expect(v.nextRide).toEqual({ chip: "Loop A", routeName: "Centro–Magsaysay Loop A", direction: "clockwise", badge: UNVERIFIED_ROUTE_BADGE });
+    expect(v.keepOpen).toBe("Keep this screen open.");
     expect(labels(v)).toEqual(["primary:atStop:I'm at the stop", "secondary:boarded:I boarded Loop A", "secondary:end:End guidance"]);
     expect(v.live).toEqual({ politeness: "polite", text: "Walk to Plaza Rizal (A1)" });
   });
@@ -43,26 +43,26 @@ describe("Walk (walk_to_board)", () => {
     const from = { lat: LOOP_A[0]!.lat - 0.0018, lng: LOOP_A[0]!.lng }; // ≈ 200 m south of the stop
     const v = guidanceView(s, fixAt(from, 12, NOW), NOW);
     if (v.screen !== "walk") throw new Error(v.screen);
-    expect(v.distanceText).toBe("≈ 200 m to Plaza Rizal (A1) in a straight line");
-    expect(v.directionText).toBe("In a straight line, Plaza Rizal (A1) is to the north.");
-    expect(v.remainingTime).toBe("About 3–5 min to Plaza Rizal (A1) (estimate)"); // 200 m × 1.3
-    expect(v.live).toEqual({ politeness: "polite", text: "≈ 200 m to Plaza Rizal (A1) in a straight line" });
+    expect(v.distanceText).toBe("≈ 200 m · straight-line");
+    expect(v.directionText).toBe("north");
+    expect(v.remainingTime).toBe("≈ 3–5 min (estimate)"); // 200 m × 1.3
+    expect(v.live).toEqual({ politeness: "polite", text: "About 200 m to Plaza Rizal (A1), straight line" });
   });
 
   it("an imprecise or stale fix hides distance and direction, and says why", () => {
     const approx = guidanceView(s, fixAt(BASE, 80, NOW), NOW);
     if (approx.screen !== "walk") throw new Error(approx.screen);
-    expect(approx.distanceText).toBe("≈ 140 m walk · straight-line estimate, path not verified");
+    expect(approx.distanceText).toBe("≈ 140 m");
     expect(approx.directionText).toBeNull();
-    expect(approx.locationNote).toBe("Your location is approximate (± 80 m), so distance and direction are hidden.");
+    expect(approx.locationNote).toBe("Location too rough (± 80 m): distance hidden.");
     const stale = guidanceView(s, fixAt(BASE, 5, NOW - STALE_MS - 1), NOW);
-    expect(stale.screen === "walk" && stale.locationNote).toBe("Your location hasn't updated recently, so distance and direction are hidden.");
+    expect(stale.screen === "walk" && stale.locationNote).toBe("Location is stale: distance hidden.");
   });
 
   it("near the stop, GPS only proposes; the person confirms", () => {
     const v = guidanceView(s, fixAt(LOOP_A[0]!, 8, NOW), NOW);
     if (v.screen !== "walk") throw new Error(v.screen);
-    expect(v.live).toEqual({ politeness: "polite", text: "You look close to Plaza Rizal (A1). Tap “I'm at the stop” when you're there." });
+    expect(v.live).toEqual({ politeness: "polite", text: "Close to Plaza Rizal (A1). Tap “I'm at the stop”." });
     expect(guidanceView(s, fixAt(LOOP_A[0]!, 8, NOW), NOW)).toEqual(v); // nothing advanced
   });
 
@@ -70,7 +70,7 @@ describe("Walk (walk_to_board)", () => {
     const v = guidanceView(run(s, "atStop"), null, NOW);
     if (v.screen !== "walk") throw new Error(v.screen);
     expect(v.title).toBe("Wait for Loop A at Plaza Rizal (A1)");
-    expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown("Loop A"), GUIDANCE_COPY.signboardUnknown("Loop A")]);
+    expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown(), GUIDANCE_COPY.signboardUnknown("Loop A")]);
     expect(labels(v)).toEqual(["primary:boarded:I boarded Loop A", "secondary:end:End guidance"]);
   });
 
@@ -96,12 +96,12 @@ describe("Time left (snapshot model, Task 14)", () => {
 
   it("off-peak (09:30 Manila): the off-peak band 10–15 km/h", () => {
     const v = guidanceView(boardedAt(oneRide(), manila("09:30").getTime()), null, manila("09:30").getTime());
-    expect(v.screen === "ride" && v.remainingTime).toBe("About 4–6 min of riding left (estimate)"); // 1 km: 4.0–6.0
+    expect(v.screen === "ride" && v.remainingTime).toBe("≈ 4–6 min left (estimate)"); // 1 km: 4.0–6.0
   });
 
   it("peak (07:10 Manila): the peak band 7–13 km/h", () => {
     const v = guidanceView(boardedAt(oneRide(), manila("07:10").getTime()), null, manila("07:10").getTime());
-    expect(v.screen === "ride" && v.remainingTime).toBe("About 4–9 min of riding left (estimate)"); // 1 km: 4.6–8.6
+    expect(v.screen === "ride" && v.remainingTime).toBe("≈ 4–9 min left (estimate)"); // 1 km: 4.6–8.6
   });
 
   it("the peak test spans the rest of the trip: 10:50 + the remaining legs reaches the 11:00 window", () => {
@@ -111,20 +111,20 @@ describe("Time left (snapshot model, Task 14)", () => {
     longRide.legs[1] = { ...r, distanceMeters: 3000 };
     const at = manila("10:50").getTime();
     const v = guidanceView(boardedAt(longRide, at), null, at);
-    expect(v.screen === "ride" && v.remainingTime).toBe("About 13–26 min of riding left (estimate)"); // peak band
+    expect(v.screen === "ride" && v.remainingTime).toBe("≈ 13–26 min left (estimate)"); // peak band
   });
 
   it("measures-based: the last passed stop's measure to the alighting measure", () => {
     const s = reduceSession(boardedAt(measured(), NOW), fixEvent(fixAt(LOOP_A[2]!, 10, NOW)));
     const v = guidanceView(s, fixAt(LOOP_A[2]!, 10, NOW), NOW);
     // 1350 − 600 = 750 m at 10–15 km/h: 3.0–4.5 min.
-    expect(v.screen === "ride" && v.remainingTime).toBe("About 3–5 min of riding left (estimate)");
+    expect(v.screen === "ride" && v.remainingTime).toBe("≈ 3–5 min left (estimate)");
   });
 
   it("without measures, a passed stop splits the ride by stop count, and says so", () => {
     const s = reduceSession(boardedAt(oneRide(), NOW), fixEvent(fixAt(LOOP_A[2]!, 10, NOW)));
     const v = guidanceView(s, fixAt(LOOP_A[2]!, 10, NOW), NOW);
-    expect(v.screen === "ride" && v.remainingTime).toBe(`About 2–4 min of riding left (estimate) · ${BY_STOP_COUNT}`);
+    expect(v.screen === "ride" && v.remainingTime).toBe(`≈ 2–4 min left (estimate) · ${BY_STOP_COUNT}`);
   });
 
   it("no model on file (an older snapshot): Time not available, never a guess", () => {
@@ -136,13 +136,13 @@ describe("Time left (snapshot model, Task 14)", () => {
 
   it("a walk uses the plan's graph path length when one was on file", () => {
     const v = guidanceView(startSession({ ...tripOf(oneRide()), walkLengths: [400, null, null] }, NOW), null, NOW);
-    expect(v.screen === "walk" && v.remainingTime).toBe("About 5–8 min to Plaza Rizal (A1) (estimate)"); // 400 m: 5.7–7.1
+    expect(v.screen === "walk" && v.remainingTime).toBe("≈ 5–8 min (estimate)"); // 400 m: 5.7–7.1
   });
 
   it("a GPS remainder is a straight line, so it is ×1.3 like the plan", () => {
     const from = { lat: LOOP_A[0]!.lat - 0.0018, lng: LOOP_A[0]!.lng }; // ≈ 200 m
     const v = guidanceView(startSession(tripOf(oneRide()), NOW), fixAt(from, 12, NOW), NOW);
-    expect(v.screen === "walk" && v.remainingTime).toBe("About 3–5 min to Plaza Rizal (A1) (estimate)"); // 260 m: 3.7–4.6
+    expect(v.screen === "walk" && v.remainingTime).toBe("≈ 3–5 min (estimate)"); // 260 m: 3.7–4.6
   });
 });
 
@@ -154,16 +154,15 @@ describe("Ride", () => {
     if (v.screen !== "ride") throw new Error(v.screen);
     expect(v.stepLabel).toBe("Step 2 of 3 · Ride");
     expect(v.title).toBe("Ride to Naga Cathedral");
-    expect(v.subtitle).toBe("Loop A · clockwise (from pin order)");
+    expect(v.subtitle).toBe("Loop A");
     expect(v.badge).toBe(UNVERIFIED_ROUTE_BADGE);
-    expect(v.boardedText).toBe("Plaza Rizal (A1) · boarded");
-    expect(v.alightText).toBe("Get off · Naga Cathedral");
-    expect(v.countText).toBe("5 stops after Plaza Rizal (A1), by pin order");
+    expect(v.alightText).toBeNull(); // the title already says "Ride to Naga Cathedral"
+    expect(v.countText).toBe("5 stops after Plaza Rizal (A1)");
     expect(v.countNote).toBe(GUIDANCE_COPY.stopsByPinOrder);
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "ahead", "ahead", "ahead", "ahead", "alight"]);
     expect(v.para).toBeNull();
     expect(labels(v)).toEqual(["secondary:nextStopIsMine:My stop is next", "secondary:gotOff:I got off", "secondary:missedStop:I missed my stop", "secondary:end:End guidance"]);
-    expect(v.remainingTime).toBe("About 4–6 min of riding left (estimate)");
+    expect(v.remainingTime).toBe("≈ 4–6 min left (estimate)");
     expect(v.reportDriver).toBe(true);
   });
 
@@ -173,7 +172,7 @@ describe("Ride", () => {
     if (v.screen !== "ride") throw new Error(v.screen);
     expect(v.title).toBe("3 stops to go");
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "passed", "passed", "ahead", "ahead", "alight"]);
-    expect(v.remainingTime).toBe(`About 2–4 min of riding left (estimate) · ${BY_STOP_COUNT}`);
+    expect(v.remainingTime).toBe(`≈ 2–4 min left (estimate) · ${BY_STOP_COUNT}`);
     expect(v.para).toBeNull();
   });
 
@@ -231,7 +230,7 @@ describe("Ride", () => {
     const v = guidanceView(lost, null, NOW);
     if (v.screen !== "ride") throw new Error(v.screen);
     expect(v.title).toBe("Ride to Naga Cathedral");
-    expect(v.countText).toBe("5 stops after Plaza Rizal (A1), by pin order");
+    expect(v.countText).toBe("5 stops after Plaza Rizal (A1)");
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "ahead", "ahead", "ahead", "ahead", "alight"]);
     expect(v.para).toBeNull();
     const synced = reduceSession(lost, at(5));
@@ -264,7 +263,7 @@ describe("Transfer", () => {
     expect(v.stepLabel).toBe("Step 3 of 5 · Transfer");
     expect(v.title).toBe("Walk to Del Rosario");
     expect(v.subtitle).toBe("Naga Cathedral → Del Rosario");
-    expect(v.distanceText).toBe("≈ 60 m walk · straight-line estimate, path not verified");
+    expect(v.distanceText).toBe("≈ 60 m");
     expect(v.checklist).toEqual([
       { text: "Got off at Naga Cathedral", done: true },
       { text: "Walk to Del Rosario", done: false },
@@ -293,7 +292,7 @@ describe("Walk to destination and Arrive", () => {
     expect(v.stepLabel).toBe("Step 3 of 3 · Walk");
     expect(v.title).toBe("Walk to SM City Naga");
     expect(v.notes).toEqual([GUIDANCE_COPY.entranceUnknown]);
-    expect(v.live?.text).toBe("You look close to SM City Naga. Tap “I've arrived” when you're there.");
+    expect(v.live?.text).toBe("Close to SM City Naga. Tap “I've arrived”.");
     expect(labels(v)).toEqual(["primary:arrived:I've arrived", "secondary:end:End guidance"]);
   });
 
@@ -301,11 +300,11 @@ describe("Walk to destination and Arrive", () => {
     const s = run(startSession(tripOf(twoRides()), NOW), "boarded", "gotOff", "boarded", "gotOff", "arrived");
     const v = guidanceView(s, fixAt(DEST, 5, NOW), NOW);
     if (v.screen !== "arrive") throw new Error(v.screen);
-    expect(v.stepLabel).toBe("Trip complete · Step 5 of 5");
+    expect(v.stepLabel).toBe("Step 5 of 5");
     expect(v.title).toBe("You've arrived");
-    expect(v.body).toBe("SM City Naga. Guidance has ended and ParaNaga has stopped using your location.");
+    expect(v.body).toBe("SM City Naga. Location use stopped.");
     expect(v.summary).toEqual({
-      walkText: "≈ 390 m walk · estimate",
+      walkText: "≈ 390 m walk",
       rides: [
         { chip: "Loop A", stopsText: "5 stops" },
         { chip: "Loop B", stopsText: "4 stops" },
@@ -314,13 +313,13 @@ describe("Walk to destination and Arrive", () => {
     });
     expect(v.usesLocation).toBe(false);
     expect(labels(v)).toEqual(["primary:end:Done"]);
-    expect(v.undo).toEqual({ event: "back", label: "Undo last step", kind: "secondary" });
+    expect(v.undo).toEqual({ event: "back", label: "Undo", kind: "secondary" });
   });
 
   it("Arrive without a destination name starts with a sentence", () => {
     const s = run(startSession(tripOf(walkOnly(), null), NOW), "arrived");
     const v = guidanceView(s, null, NOW);
-    expect(v.screen === "arrive" && v.body).toBe("You're at your destination. Guidance has ended and ParaNaga has stopped using your location.");
+    expect(v.screen === "arrive" && v.body).toBe("You're at your destination. Location use stopped.");
   });
 
   it("a walk-only trip is a single walk step", () => {
@@ -339,7 +338,7 @@ describe("Missed stop and ended", () => {
       replan: true,
       usesLocation: false,
       actions: [{ event: "end", label: "End guidance", kind: "primary" }],
-      undo: { event: "back", label: "Undo last step", kind: "secondary" },
+      undo: { event: "back", label: "Undo", kind: "secondary" },
       live: { politeness: "polite", text: "Missed your stop?" },
     });
   });
@@ -398,7 +397,7 @@ const optionArb = fc.constantFrom(walkOnly(), oneRide(), oneRide(5), twoRides(),
 
 describe("view properties (fixed seeds)", () => {
   it("the duration rule: minutes only inside a labelled estimate", () => {
-    expect(["Estimate 12–18 min + waiting (unknown)", "≈ 3–5 min walk", "About 10–16 min left (estimate)", "≈ 140 m walk"].every(durationLabelled)).toBe(true);
+    expect(["Estimate 12–18 min + waiting (unknown)", "≈ 3–5 min walk", "≈ 10–16 min left (estimate)", "≈ 140 m walk"].every(durationLabelled)).toBe(true);
     expect(["5 min to Plaza Rizal", "Ride 1 h 5 min", "Next stop in 2 mins", "5 min to Plaza Rizal (estimates vary)"].some(durationLabelled)).toBe(false);
   });
 
@@ -479,7 +478,7 @@ describe("street ride (tricycle / padyak)", () => {
     expect(labels(v)).toEqual(["primary:arrived:I've arrived", "secondary:end:End guidance"]);
     const done = guidanceView(run(s, "arrived"), null, NOW);
     expect(done.screen).toBe("arrive");
-    if (done.screen === "arrive") expect(done.summary).toEqual({ walkText: "≈ 0 m walk · estimate", rides: [{ chip: "Tricycle", stopsText: "along streets" }], fareText: "Minimum fare ₱15" });
+    if (done.screen === "arrive") expect(done.summary).toEqual({ walkText: "≈ 0 m walk", rides: [{ chip: "Tricycle", stopsText: "along streets" }], fareText: "Minimum fare ₱15" });
     expect(guidanceView(run(s, "arrived", "back"), null, NOW).screen).toBe("street_ride");
   });
 
@@ -544,7 +543,7 @@ describe("pinless ride: free points and progress along the path", () => {
   it("the jeepney time left is an estimate along the path, with waiting not folded in", () => {
     const v = guidanceView(riding, null, manila("09:30").getTime());
     if (v.screen !== "ride") throw new Error(v.screen);
-    expect(v.remainingTime).toMatch(/^About \d+–\d+ min of riding left \(estimate\)$/);
+    expect(v.remainingTime).toMatch(/^≈ \d+–\d+ min left \(estimate\)$/);
   });
 });
 

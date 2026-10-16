@@ -38,7 +38,7 @@
 }
 .pn-detail a:focus-visible,
 .pn-detail button:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 /* Headings take focus programmatically when a panel opens; no ring for that. */
@@ -71,13 +71,27 @@
   box-shadow: 0 1px 3px var(--pn-shadow);
   color: var(--pn-label);
   cursor: pointer;
-  transition: transform 0.08s ease-out;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 .pn-detail__round:active {
   transform: scale(0.96);
 }
 .pn-detail__spacer {
   width: 44px;
+}
+.pn-detail__header-end {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pn-detail__sources {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--pn-accent);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .pn-detail__main {
@@ -246,7 +260,7 @@
   text-decoration: none;
 }
 a.pn-cell {
-  transition: transform 0.08s ease-out;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 a.pn-cell:active {
   transform: scale(0.98);
@@ -320,7 +334,7 @@ a.pn-cell:active {
 }
 .pn-disclosure svg {
   flex: none;
-  transition: transform 0.42s var(--ease-sheet, cubic-bezier(0.32, 0.72, 0, 1));
+  transition: transform var(--pn-dur) var(--pn-ease);
 }
 .pn-disclosure[aria-expanded="true"] svg {
   transform: rotate(180deg);
@@ -523,12 +537,12 @@ a.pn-cell:active {
 }
 
 .pn-detail-in {
-  animation: pn-detail-in 0.45s cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation: pn-detail-in var(--pn-dur-slow) var(--pn-ease) both;
 }
 @keyframes pn-detail-in {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(var(--pn-rise-lg));
   }
   to {
     opacity: 1;

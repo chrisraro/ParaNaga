@@ -90,8 +90,8 @@
   font-weight: 600;
   cursor: pointer;
   transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+    background-color var(--pn-dur) var(--pn-ease),
+    color var(--pn-dur) var(--pn-ease);
 }
 .pn-explore__chip[aria-selected="true"] {
   background: var(--pn-explore-chip-on-bg);
@@ -218,7 +218,7 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.08s ease-out;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 .pn-explore__commute:active {
   transform: scale(0.98);

@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_SHORTER_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
+import { chooseOption, expandOptions } from "./fixtures/options";
 
 // Trip options and trip detail (Task 6). POST /api/v1/plan is intercepted with fixtures
 // (allowed in tests only), so nothing here needs a database. Tiles are aborted.
@@ -79,33 +80,31 @@ test("trip options show the unverified badge, estimate chips and honest time est
   // Two jeepney cards, then the Recommended tricycle (a trip of 500 m or more has no walk card).
   await expect(cards.evaluateAll((els) => els.map((el) => el.getAttribute("data-mode")))).resolves.toEqual(["jeepney", "jeepney", "tricycle"]);
   for (const card of await options.locator('[data-mode="jeepney"]').all()) {
-    await expect(card.getByTestId("unverified-badge")).toHaveText(BADGE);
+    // A card is minimal: the caution chip (the full badge is in the detail), the route, an estimated range.
+    await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
+    await expect(card.getByTestId("unverified-badge")).toHaveCount(0);
     await expect(card).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
     await expect(card).toContainText("Loop A");
-    await expect(card).toContainText("clockwise");
+    await expect(card.locator('abbr[title="Estimate"]').first()).toHaveText("Est.Estimate");
   }
-  await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Estimate ₱14");
+  await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱14");
   await expect(cards.nth(0)).toContainText("Fewest transfers");
   await expect(cards.nth(0)).toContainText("No transfers");
-  await expect(cards.nth(0)).toContainText("≈ 230 m");
-  // Ride distance on the ride leg of the strip too (decision B).
-  await expect(cards.nth(0).locator(".pn-legstrip")).toContainText("≈ 1.2 km");
-  // Least walking: the long loop ride is obvious.
+  // Leg-by-leg text, distances, the vehicle chip and the footers are not on the card.
+  await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|clockwise|Walk ≈|Jeepney/);
   await expect(cards.nth(1)).toContainText("Least walking");
-  await expect(cards.nth(1)).toContainText("≈ 5.5 km");
-  await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Estimate ₱16–₱18");
+  await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱16–₱18");
   // The tricycle card: Recommended, the minimum fare, no minutes, no driver badge (it is not a jeepney ride).
   await expect(cards.nth(2)).toContainText("Recommended");
   await expect(cards.nth(2).getByTestId("fare-chip")).toHaveText("Minimum fare ₱15");
   await expect(cards.nth(2).getByTestId("trip-option-time")).toHaveText("Time not estimated");
-  await expect(cards.nth(2).getByTestId("unverified-badge")).toHaveCount(0);
+  await expect(cards.nth(2).getByTestId("card-unverified")).toHaveCount(0);
   await expect(page.locator(".pn-trip-card--primary")).toHaveCount(1);
 
-  // Accessible names carry the label and the fare estimate.
-  await expect(page.getByRole("button", { name: /Fewest transfers.*Estimate ₱14(?!–)/ })).toBeVisible();
+  // Accessible names carry the label, the caution and the fare estimate, with the full word.
+  await expect(page.getByRole("button", { name: /Fewest transfers.*Unverified route.*Loop A.*Estimate ₱14(?!–)/ })).toBeVisible();
 
-  await expect(options).toContainText("Walking distances are estimates; paths not verified.");
-  await expect(options).toContainText("Transport data revision modes-lines-2026-10-16");
+  await expect(options).not.toContainText(/Walking distances|revision|Source/);
   await expect(page.getByText("Verified route", { exact: true })).toHaveCount(0);
   await expect(page.getByText(/Exact|arrive/i)).toHaveCount(0);
   await expect(page.getByTestId("no-verified-commute")).toHaveCount(0);
@@ -117,14 +116,42 @@ test("trip options show the unverified badge, estimate chips and honest time est
   expect(last.body).toMatchObject({ origin: { lat: expect.any(Number), lng: expect.any(Number) }, destination: { lat: expect.any(Number), lng: expect.any(Number) } });
 });
 
+test("setting both ends fits the whole route above the sheet instead of zooming in", async ({ page }) => {
+  await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-options")).toBeVisible();
+
+  const box = (await mapEl(page).boundingBox())!;
+  const pins = page.locator(".pn-marker");
+  await expect(pins).toHaveCount(2);
+  // The fit animates (0.8 s): wait until both pins settle inside the area above the sheet.
+  await expect
+    .poll(async () => {
+      const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+      for (const pin of await pins.all()) {
+        const b = await pin.boundingBox();
+        if (!b || b.x < box.x || b.x + b.width > box.x + box.width || b.y < box.y || b.y + b.height > sheetTop - 24) return false;
+      }
+      return true;
+    }, { timeout: 10_000 })
+    .toBe(true);
+  const zoom = Number(await mapEl(page).getAttribute("data-zoom"));
+  expect(zoom).toBeLessThanOrEqual(17);
+  // Concise, and never "Map centered on ..." when fitting a route.
+  await expect(page.getByTestId("home-announcer")).toContainText("Route shown.");
+  await expect(page.getByTestId("naga-map").locator("p.sr-only")).not.toHaveText("Route shown");
+  await expect(page.getByText(/Map centered on/)).toHaveCount(0);
+});
+
 test("trip detail lists the legs, highlights stops as markers above the trip lines", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
   await pinBoth(page);
 
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   const detail = page.getByTestId("trip-detail");
-  await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+  await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
   await expect(detail).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
@@ -133,17 +160,19 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps).toHaveCount(4);
   await expect(steps.nth(0)).toContainText("Walk ≈ 230 m to Plaza Rizal (A1)");
   await expect(steps.nth(0)).toContainText("path not verified");
-  await expect(steps.nth(1)).toContainText("Get on near Plaza Rizal (A1)");
-  await expect(steps.nth(1)).toContainText("Direction: clockwise (from pin order)");
-  await expect(steps.nth(1)).toContainText("Signboard not yet verified");
-  await expect(steps.nth(1)).toContainText("Ride 4 stops");
-  await expect(steps.nth(2)).toContainText("Get off near Avenue Square (A5)");
-  await expect(steps.nth(2)).toContainText("Para!");
+  await expect(steps.nth(1)).toContainText("Board Loop A (clockwise) at Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("4 stops");
+  await expect(steps.nth(1)).not.toContainText(/Signboard|1.2 km/);
+  await expect(steps.nth(1)).toContainText("Approximate path, not a verified route shape");
+  await expect(steps).not.toContainText(["Mapped candidate"]);
+  await expect(steps.nth(2)).toContainText("Get off at Avenue Square (A5)");
+  await expect(steps.nth(2)).toContainText("Say “Para!” near here");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
-  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14 · traditional jeepney rate · from reported fare rules · matrix not verified/);
-  await expect(detail).toContainText("Corrections open soon");
-  await expect(detail.getByRole("link")).toHaveCount(0);
+  await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14$/);
+  await expect(detail).not.toContainText(/Corrections|from reported fare rules|matrix not verified/);
+  // Only two links: the Sources link in the top bar and the fare basis.
+  await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated"]);
 
   // Boarding and getting-off stops are DOM markers above the trip's own lines (Task 12); the
   // routes overview is not drawn while a trip is shown.
@@ -179,7 +208,7 @@ async function expectAxeClean(page: Page, selector: string) {
 
 const TIMES = {
   "09:30": { peak: null, first: EST_0930_FIRST, second: EST_0930_SECOND },
-  "07:10": { peak: "Peak hours · slower estimate (06:00–08:00)", first: EST_0710_FIRST, second: EST_0710_SECOND },
+  "07:10": { peak: "Peak hours: slower (06:00–08:00)", first: EST_0710_FIRST, second: EST_0710_SECOND },
 } as const;
 
 for (const colorScheme of ["light", "dark"] as const) {
@@ -190,12 +219,13 @@ for (const colorScheme of ["light", "dark"] as const) {
       await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
       await openApp(page);
       await pinBoth(page);
+      await expandOptions(page);
       const want = TIMES[clock];
       const cards = page.getByTestId("trip-option");
       await expect(cards.nth(0).getByTestId("trip-option-time")).toContainText(want.first);
       await expect(cards.nth(1).getByTestId("trip-option-time")).toContainText(want.second);
-      if (want.peak) await expect(cards.nth(0).getByTestId("trip-peak-note")).toHaveText(want.peak);
-      else await expect(page.getByTestId("trip-peak-note")).toHaveCount(0);
+      // The peak note is in the detail only; the card's range already includes the peak band.
+      await expect(page.getByTestId("trip-option").getByTestId("trip-peak-note")).toHaveCount(0);
       // The range is spoken in words in the card's accessible name.
       await expect(cards.nth(0)).toHaveAccessibleName(/Estimate \d+ to \d+ minutes \+ waiting \(unknown\)/);
       await expectAxeClean(page, '[data-testid="trip-sheet"]');
@@ -205,8 +235,8 @@ for (const colorScheme of ["light", "dark"] as const) {
       await expect(detail.getByTestId("trip-detail-time")).toContainText(want.first);
       if (want.peak) await expect(detail.getByTestId("trip-peak-note")).toHaveText(want.peak);
       else await expect(detail.getByTestId("trip-peak-note")).toHaveCount(0);
-      await expect(detail.getByTestId("leg-time").filter({ hasText: "ride" })).toContainText(/^≈ \d+–\d+ min ride · along the approximate path/);
-      await expect(detail.getByTestId("ride-fleet-class").first()).toContainText(/^Traditional jeepney · operating \(owner-confirmed/);
+      await expect(detail.getByTestId("leg-time").filter({ hasText: "ride" })).toHaveText(/^≈ \d+–\d+ min ride$/);
+      await expect(detail.getByTestId("ride-fleet-class").first()).toHaveText("Traditional jeepney");
       await expectAxeClean(page, '[data-testid="trip-sheet"]');
 
       const opener = detail.getByTestId("how-times-estimated-btn");
@@ -242,7 +272,7 @@ test("opening and closing a trip detail keeps exactly one stop-pin canvas", asyn
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
   await expect(canvases).toHaveCount(1);
   for (let i = 0; i < 2; i++) {
-    await page.getByTestId("trip-option").first().click();
+    await chooseOption(page);
     await expect(page.getByTestId("trip-detail")).toBeVisible();
     await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
     await page.getByRole("button", { name: "Back to trip options" }).click();
@@ -261,7 +291,7 @@ test("no coverage keeps a clear message", async ({ page }) => {
 
   const card = page.getByTestId("no-provisional-route");
   await expect(card.getByRole("heading", { name: "No provisional route connects these points yet" })).toBeVisible();
-  await expect(card).toContainText("Loops A and B are the only routes we can suggest for now.");
+  await expect(card).toContainText("Only Loops A and B for now.");
   await expect(page.getByTestId("trip-option")).toHaveCount(0);
   expect(await overlayPaths(page).count()).toBe(pathsBefore);
 });
@@ -283,12 +313,13 @@ test("a server error offers a retry that recovers", async ({ page }) => {
   await pinBoth(page);
 
   const error = page.getByTestId("trip-error");
-  await expect(error).toContainText("Couldn't load trip options");
+  await expect(error).toContainText("Couldn't load options");
   await error.getByRole("button", { name: "Try again" }).click();
   await expect(page.getByTestId("trip-option")).toHaveCount(3);
   await expect(page.getByTestId("trip-error")).toHaveCount(0);
-  // Focus is not lost with the unmounted Retry button: it lands on the results heading.
-  await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
+  // Focus is not lost with the unmounted Retry button: the list rests at peek, so it lands on the
+  // "All options" toggle; once the list is open the toggle's target heading takes it.
+  await expect(page.getByTestId("options-toggle")).toBeFocused();
 });
 
 test("loading is announced through the persistent announcer", async ({ page }) => {
@@ -301,9 +332,9 @@ test("loading is announced through the persistent announcer", async ({ page }) =
   await openApp(page);
   await pinBoth(page);
   await expect(page.getByTestId("trip-loading")).toBeVisible();
-  await expect(page.getByTestId("home-announcer")).toHaveText("Looking for provisional routes…");
+  await expect(page.getByTestId("home-announcer")).toHaveText("Looking for routes…");
   release();
-  await expect(page.getByTestId("home-announcer")).toContainText("3 provisional trip options found");
+  await expect(page.getByTestId("home-announcer")).toContainText("3 options found");
 });
 
 test("a rejected request offers to change the points instead of a retry", async ({ page }) => {
@@ -354,7 +385,7 @@ test("moving a pin by hand never shows the previous trip's options while the new
 
   await expect(page.getByTestId("trip-loading")).toBeVisible();
   await expect(page.getByTestId("trip-option")).toHaveCount(0);
-  await expect(page.getByText("Updating for your new location…")).toHaveCount(0);
+  await expect(page.getByText("Updating…")).toHaveCount(0);
   release();
   await expect(page.getByTestId("trip-option")).toHaveCount(3);
 });
@@ -412,7 +443,7 @@ test.describe("GPS refinement while results are shown", () => {
       await fulfill(route, PROVISIONAL_PLAN);
     });
     await gpsStartAndPinDestination(page);
-    await page.getByTestId("trip-option").first().click();
+    await chooseOption(page);
     const detail = page.getByTestId("trip-detail");
     await expect(detail).toBeVisible();
     const before = calls.length;
@@ -425,13 +456,13 @@ test.describe("GPS refinement while results are shown", () => {
 
     // In flight: the detail stays, its heading keeps focus, and no loading state replaces it.
     await expect(detail).toBeVisible();
-    await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+    await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);
     release();
 
     // Settled: still open and focused.
     await expect(detail).toBeVisible();
-    await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+    await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);
     await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
   });
@@ -460,7 +491,7 @@ test.describe("GPS refinement while results are shown", () => {
     let replanned = false;
     await interceptPlan(page, (route) => fulfill(route, replanned ? LEAST_WALKING_ONLY_PLAN : PROVISIONAL_PLAN));
     await gpsStartAndPinDestination(page);
-    await page.getByTestId("trip-option").first().click();
+    await chooseOption(page);
     await expect(page.getByTestId("trip-detail")).toBeVisible();
 
     replanned = true;
@@ -473,3 +504,117 @@ test.describe("GPS refinement while results are shown", () => {
     await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
   });
 });
+
+// U2: options rest at peek with the best option and a toggle; the toggle lifts the sheet to full.
+test("options peek: best-option summary and a labelled toggle; full lists every option; Back returns as left", async ({ page }) => {
+  await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  const toggle = page.getByTestId("options-toggle");
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(page.getByTestId("options-best")).toContainText(/Loop A.*Estimate \d+–\d+ min.*Estimate ₱14/);
+  await expect(toggle).toHaveText("All options");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  // The best option is labelled unverified right at the peek (the cards are out of sight there).
+  await expect(page.getByTestId("options-best-unverified")).toHaveText("Unverified route");
+  await expect(toggle).toHaveAttribute("aria-controls", "pn-trip-options-list");
+  // Both rows, the summary and the toggle are inside the visible sheet, targets >= 44 px.
+  const vh = page.viewportSize()!.height;
+  for (const el of [toggle, page.getByTestId("options-best"), page.getByTestId("endpoint-destination")]) {
+    const box = (await el.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(vh);
+    expect(box.height).toBeGreaterThanOrEqual(44 - 1);
+  }
+
+  await toggle.click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await expect(toggle).toHaveText("All options");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByTestId("options-best")).toHaveCount(0); // the list is open: no duplicate summary
+  await expect(page.getByRole("heading", { name: "Trip options" })).toBeFocused();
+  await expect(page.getByRole("region", { name: "Trip options" })).toBeVisible();
+  await expect(page.getByTestId("trip-option")).toHaveCount(3);
+
+  // Choosing an option opens its detail at half; Back returns to the list at full, focus on the card.
+  await page.getByTestId("trip-option").nth(1).click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await expect(sheet).toHaveAttribute("data-snap", "1");
+  await page.getByRole("button", { name: "Back to trip options" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await expect(page.getByTestId("trip-option").nth(1)).toBeFocused();
+
+  // Collapse: back to peek, focus stays on the toggle.
+  await toggle.click();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(toggle).toBeFocused();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByTestId("options-best")).toBeVisible();
+});
+
+test("a re-plan of the same ends keeps the detent the rider chose; new ends return to peek", async ({ page }) => {
+  await interceptPlan(page, (route, n) => (n === 2 ? fulfill(route, { error: { code: "unavailable", message: "Try again.", requestId: "r1" } }, 503) : fulfill(route, PROVISIONAL_PLAN)));
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  await page.getByTestId("options-toggle").click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  // Swap -> new ends -> peek again.
+  await page.getByRole("button", { name: "Swap start and destination" }).click();
+  await expect(page.getByTestId("trip-error")).toBeVisible();
+  await page.getByTestId("trip-error").getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByTestId("options-toggle")).toBeVisible();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await page.getByTestId("options-toggle").click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+});
+
+test("the list leaving and returning for the same ends (a cancelled pick) keeps full and stays interactive", async ({ page }) => {
+  await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  await page.getByTestId("options-toggle").click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await page.getByTestId("endpoint-start").locator(".pn-endpoint__main").click();
+  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("options-toggle")).toBeVisible();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await expect(page.getByTestId("options-toggle")).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator(".pn-sheet__rest")).not.toHaveAttribute("inert", /.*/);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+});
+
+for (const mode of ["light", "dark", "high contrast"] as const) {
+  test(`axe is clean on options peek, options full, detail and a guidance step (${mode})`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: mode === "dark" ? "dark" : "light" });
+    if (mode === "high contrast") {
+      await page.addInitScript(() => {
+        localStorage.setItem("paranaga.prefs", JSON.stringify({ theme: "system", highContrast: true, lowData: false, historyEnabled: false }));
+      });
+    }
+    await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+    await openApp(page);
+    await pinBoth(page);
+    if (mode === "high contrast") await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
+    await expect(page.getByTestId("options-toggle")).toBeVisible();
+    await expectAxeClean(page, '[data-testid="trip-sheet"]');
+    await expandOptions(page);
+    await expectAxeClean(page, '[data-testid="trip-sheet"]');
+    await chooseOption(page);
+    await expect(page.getByTestId("trip-detail")).toBeVisible();
+    await expectAxeClean(page, '[data-testid="trip-sheet"]');
+    await page.getByTestId("trip-start").click();
+    await expect(page.getByTestId("guidance")).toBeVisible();
+    await expectAxeClean(page, '[data-testid="trip-sheet"]');
+    // Keyboard focus on the primary action: it is the focused element, visible and inside the viewport.
+    const primary = page.getByTestId("guidance-atStop");
+    await primary.focus();
+    await expect(primary).toBeFocused();
+    const box = (await primary.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+    await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
+  });
+}

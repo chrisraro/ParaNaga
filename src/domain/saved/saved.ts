@@ -313,7 +313,7 @@ export type Reopen = { kind: "current"; optionId: string } | { kind: "replanned"
 /**
  * A saved trip reopened and re-planned on the current data: show the same option when it is
  * still there (`replanned` when the revision changed, so the screen says so), else the options
- * with "Route changed since you saved this".
+ * with "Changed since saved".
  */
 export function resolveReopen(card: SavedTrip, live: PlanResponse): Reopen {
   if (live.plan.coverage !== "provisional") return { kind: "changed" };

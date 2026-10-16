@@ -13,7 +13,7 @@
 // endpoint channel (requestEndpoint / requestPick / requestGps) and requestTrip (reopen a saved trip),
 // each a numbered request applied once.
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
 import type { LatLng } from "@/domain/geo/types";
 import type { EndpointWhich } from "@/domain/trip/endpoints";
 import { HomeScreen } from "@/ui/home/home-screen";
@@ -139,7 +139,11 @@ export function AppFrame({ children }: { children: ReactNode }) {
       <div ref={homeLayer} inert={open} data-testid="app-home-layer">
         <HomeScreen />
       </div>
-      {children}
+      {/* Route changes are transitions: the outgoing panel (or the bare map) crossfades into the
+          incoming one, so a navigation never cuts to an empty frame (globals.css, .pn-panel). */}
+      <ViewTransition name="pn-panel" default="none" update="pn-panel" enter="pn-panel" exit="pn-panel" share="pn-panel">
+        {children}
+      </ViewTransition>
       {/* usePathname in a layout: Suspense keeps the static shell valid for dynamic segments. */}
       {tabBarVisible ? (
         <Suspense fallback={null}>

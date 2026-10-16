@@ -5,7 +5,7 @@ Priority: **P0** = first vertical slice, **P1** = v1 launch, **P2** = after laun
 ## A. Map and discovery
 
 ### F-A1 Home map — P0
-Full-screen React-Leaflet map centred on Naga (loop pins span approx. 123.183–123.201 E, 13.616–13.634 N; the service-area polygon covers all 27 barangays). Search bar on top, draggable bottom sheet (peek / half / full), recenter, layer/legend button, low-data toggle.
+Full-screen React-Leaflet map centred on Naga (loop pins span approx. 123.183–123.201 E, 13.616–13.634 N; the service-area polygon covers all 27 barangays). Search bar on top, draggable bottom sheet (peek / half / full), recenter, layer/legend button, low-data toggle. With From and To set, the map fits the whole route above the sheet and previews the recommended option's lines; peek shows a one-line best-option summary and an "All options" toggle that lifts the sheet to full (see [Screens §6.3](06-screens.md)).
 - Layers: verified stops (solid), mapped candidates (hollow + badge), terminals, route shapes (only when reviewed), disruptions.
 - Stops render as a GeoJSON source with symbol/circle layers, never as DOM markers.
 - Rules: candidate pins never get connecting lines; no route line is drawn from unordered pins.
@@ -44,12 +44,13 @@ Route list grouped by group number; variant detail with direction, signboard/hea
 
 ### F-B1 Trip options — P1 (engine P0 with fixtures)
 Up to 4 Pareto alternatives labelled **Recommended**, **Cheapest**, **Fewest transfers**, **Least walking**. **Fastest** appears only when travel/wait evidence is adequate.
-Each option: legs summary, known fare + completeness, walk metres, transfers, confidence, restrictions, data revision. Leg fare status is `exact` / `estimate` / `unknown`; trip completeness is `exact` (all legs exact) / `estimate` (all known, ≥1 estimate) / `partial` (≥1 unknown, ≥1 known) / `unknown`.
+Each option holds legs, known fare + completeness, walk metres, transfers, confidence, restrictions and data revision; the list card shows only the label, route, `Est.` time and fare, transfers and an "Unverified route" chip (the rest is in trip detail or on Sources and credits). Leg fare status is `exact` / `estimate` / `unknown`; trip completeness is `exact` (all legs exact) / `estimate` (all known, ≥1 estimate) / `partial` (≥1 unknown, ≥1 known) / `unknown`.
 - Rules: an option with any unknown leg fare can never be labelled Cheapest over an option with a fully known fare, and estimates rank below exact fares of equal amount [AC-6]; candidate stops never enter verified planning; when nothing qualifies, show "No verified commute yet for this trip" + nearest verified info + a candidate-exploration link.
 - AC: the planner rejects wrong-direction, prohibited, disconnected and unavailable boarding [AC-5].
 - Increment E: riders get on and off anywhere along a route path (free points, "stop not marked"); walking is recommended only under 500 m; a tricycle option follows the jeepney options and is Recommended from 500 m; a padyak option appears inside a documented padyak area; every plan with options has exactly one Recommended option (so up to 6 options, labels may be empty). Tricycle and padyak options carry no minutes; tricycle routing avoids the restricted roads that could be located; jeepney service hours are a soft "unconfirmed" hint.
 
 ### F-B2 Trip detail — P1
+The primary action (Start trip, guidance step buttons) sits in a sheet footer visible at every snap. A "Sources" link opens the trip's source records on the Sources and credits screen.
 Ordered legs: walk → board → ride → alight → transfer → … → arrive. Per ride leg: route name, signboard text, vehicle class, boarding stop code + landmark + photo, "toward" cue, alighting point, leg fare breakdown, source freshness. Walk legs show a path only if reviewed or routed by a pedestrian-profile provider; otherwise distance + "path not verified".
 - AC: a walk leg crossing a mapped median without an approved crossing is rejected, not drawn.
 

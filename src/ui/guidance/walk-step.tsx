@@ -9,11 +9,11 @@
 import { UnverifiedBadge } from "@/ui/trip/trip-parts";
 import type { WalkView } from "@/domain/guidance/view";
 import { GUIDANCE_COPY } from "@/domain/guidance/view";
-import { GuidanceButtons, GuidanceNotes, KeepOpen, LocationOffer, RouteChip, UndoButton, type StepProps } from "./guidance-parts";
+import { GuidanceButtons, GuidanceNotes, LocationOffer, UndoButton, type StepProps } from "./guidance-parts";
 
 /** The view's GPS proposal ("You look close to …"), shown as well as announced. */
 export function proposalOf(view: WalkView): string | null {
-  return view.live.text.startsWith("You look close to") ? view.live.text : null;
+  return view.live.text.startsWith("Close to") ? view.live.text : null;
 }
 
 export function WalkDistance({ view }: { view: WalkView }) {
@@ -28,9 +28,9 @@ export function WalkDistance({ view }: { view: WalkView }) {
       {view.distanceText ? (
         <p className="pn-guide__distance" data-testid="guidance-distance">
           {view.distanceText}
+          {view.directionText ? <span className="pn-guide__direction">, {view.directionText}</span> : null}
         </p>
       ) : null}
-      {view.directionText ? <p className="pn-guide__direction">{view.directionText}</p> : null}
       {view.locationNote ? (
         <p className="pn-guide__card pn-guide__card--warn" data-testid="guidance-location-note">
           {view.locationNote}
@@ -45,18 +45,9 @@ export function WalkDistance({ view }: { view: WalkView }) {
   );
 }
 
-export function NextRide({ next }: { next: NonNullable<WalkView["nextRide"]> }) {
-  return (
-    <div className="pn-guide__next" data-testid="guidance-next-ride">
-      <p className="pn-guide__next-row">
-        <span>Next:</span>
-        <RouteChip chip={next.chip} />
-        <span className="pn-guide__route-name">{next.routeName}</span>
-      </p>
-      {next.direction ? <p className="pn-guide__sub">Direction: {next.direction}</p> : null}
-      <UnverifiedBadge />
-    </div>
-  );
+/** The one caution on a step that leads to a ride: the full badge (the route is named in the title and the note). */
+export function NextRide() {
+  return <UnverifiedBadge />;
 }
 
 export function WalkStep({ view, onSend, location, headingRef }: StepProps<WalkView>) {
@@ -69,8 +60,7 @@ export function WalkStep({ view, onSend, location, headingRef }: StepProps<WalkV
       <WalkDistance view={view} />
       <LocationOffer location={location} manual={manual} />
       <GuidanceNotes notes={view.notes} />
-      {view.nextRide ? <NextRide next={view.nextRide} /> : null}
-      <KeepOpen text={view.keepOpen} />
+      {view.nextRide ? <NextRide /> : null}
       <GuidanceButtons actions={view.actions} onSend={onSend} />
       <UndoButton undo={view.undo} onSend={onSend} />
     </section>

@@ -7,7 +7,7 @@
 //    naming its data date (never as the current plan);
 //  - once the plan is in: the same option opens (onOpen), with "Re-planned on the current data"
 //    when the revision changed; or, when it is gone or its rides changed, the options show under
-//    "Route changed since you saved this".
+//    "Changed since saved".
 // Changing an end ends the reopen. Render-phase updates only set state ("adjust state while
 // rendering"); the device read happens in an effect.
 
@@ -31,12 +31,12 @@ type Restored = { card: SavedTrip; phase: "waiting" | "changed" | "done"; dismis
 /** The note on a saved option shown as saved: checking, or why the current data is not in. */
 export function storedNote(card: SavedTrip, error: "offline" | "server" | "invalid" | null): TripNote {
   const date = manilaDate(card.publishedAt) ?? `revision ${card.revisionLabel}`;
-  if (error === "offline") return { text: `Offline: shown as saved, with data from ${date}. It may have changed since.`, tone: "warning" };
-  if (error) return { text: `Could not check the current data: shown as saved, with data from ${date}.`, tone: "warning" };
-  return { text: `Saved trip, data from ${date}. Checking the current data…`, tone: "info" };
+  if (error === "offline") return { text: `Offline: saved ${date}. May have changed.`, tone: "warning" };
+  if (error) return { text: `Couldn't check updates: saved ${date}.`, tone: "warning" };
+  return { text: `Saved ${date}. Checking…`, tone: "info" };
 }
 
-export const REPLANNED_NOTE: TripNote = { text: "Re-planned on the current data", tone: "info" };
+export const REPLANNED_NOTE: TripNote = { text: "Updated", tone: "info" };
 
 type Args = {
   tripRequest: TripRequest | null;
@@ -55,7 +55,7 @@ type Args = {
 export type SavedTripReopen = {
   /** The saved option shown as saved (re-plan pending or failed), or null. */
   stored: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds; note: TripNote } | null;
-  /** Show "Route changed since you saved this" above the options. */
+  /** Show "Changed since saved" above the options. */
   changed: boolean;
   /** Note for the live option the reopen opened ("Re-planned on the current data"). */
   note: TripNote | null;

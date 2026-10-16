@@ -49,7 +49,7 @@ export function SourceCredits({ revisionId }: { revisionId?: string }) {
         <p className="pn-footnote">Each photo keeps its creator, source and license. Capture dates describe the image, not a recent site inspection. Images may be resized and cropped in cards; adaptations retain their source license. No Google Maps or Street View screenshots are redistributed.</p>
         <p><a href="/media/places/CREDITS.json" download>Download photo attribution manifest</a></p>
         <ul className="pn-group" data-testid="photo-credits">
-          {PLACE_PHOTOS.map((photo) => <li key={photo.id} id={photo.id} className="pn-source" data-testid="photo-credit"><ReferencePhoto photo={photo} /></li>)}
+          {PLACE_PHOTOS.map((photo) => <li key={photo.id} id={photo.id} className="pn-source" data-testid="photo-credit"><ReferencePhoto photo={photo} full /></li>)}
         </ul>
       </section>
       <details className="pn-source" data-testid="research-rights">

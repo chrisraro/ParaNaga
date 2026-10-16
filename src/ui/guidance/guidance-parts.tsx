@@ -8,6 +8,7 @@ import type { RefObject } from "react";
 import type { GeolocationState } from "@/client/geo/use-geolocation";
 import type { GuidanceTap } from "@/client/guidance/use-guidance-session";
 import type { GuidanceAction } from "@/domain/guidance/view";
+import { SheetBar } from "@/ui/app-shell/sheet-bar";
 
 export type LocationUi = { state: GeolocationState; watching: boolean; onEnable: () => void };
 
@@ -19,14 +20,14 @@ export type StepProps<V> = {
   headingRef: RefObject<HTMLHeadingElement | null>;
 };
 
-export const USE_LOCATION = "Use my location for progress";
+export const USE_LOCATION = "Use my location";
 
 /** The step's own buttons (End lives in the header, so it is left out here). */
 export function GuidanceButtons({ actions, onSend }: { actions: readonly GuidanceAction[]; onSend: (event: GuidanceTap) => void }) {
   const shown = actions.filter((a) => a.event !== "end");
   if (shown.length === 0) return null;
   return (
-    <div className="pn-guide__actions">
+    <SheetBar className="pn-guide__actions">
       {shown.map((a) => (
         <button
           key={a.event}
@@ -38,7 +39,7 @@ export function GuidanceButtons({ actions, onSend }: { actions: readonly Guidanc
           {a.label}
         </button>
       ))}
-    </div>
+    </SheetBar>
   );
 }
 
@@ -46,7 +47,7 @@ export function GuidanceButtons({ actions, onSend }: { actions: readonly Guidanc
 export function UndoButton({ undo, onSend }: { undo: GuidanceAction | null; onSend: (event: GuidanceTap) => void }) {
   if (!undo) return null;
   return (
-    <button type="button" className="pn-text-btn pn-guide__undo" onClick={() => onSend({ type: "back" })} data-testid="guidance-undo">
+    <button type="button" className="pn-text-btn pn-guide__undo" aria-label="Undo last step" onClick={() => onSend({ type: "back" })} data-testid="guidance-undo">
       {undo.label}
     </button>
   );
@@ -102,14 +103,14 @@ export function LocationOffer({ location, manual }: { location: LocationUi; manu
   if (state === "denied" || state === "unsupported" || state === "insecure") {
     return (
       <p className="pn-guide__loc pn-guide__loc--off" data-testid="guidance-location-off">
-        Location is off. Follow the steps and tap “{manual}” when you get there.
+        Location off. Tap “{manual}” when there.
       </p>
     );
   }
   if (state === "unavailable" || state === "timeout") {
     return (
       <p className="pn-guide__loc pn-guide__loc--off" data-testid="guidance-location-off">
-        Your location isn&apos;t available right now. Follow the steps and tap “{manual}” when you get there.
+        No location now. Tap “{manual}” when there.
       </p>
     );
   }

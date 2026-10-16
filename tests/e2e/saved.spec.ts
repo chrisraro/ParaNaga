@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
+import { chooseOption } from "./fixtures/options";
 
 // Saved trips, saved places, Share and history (Increment A, Task 8; decision D3: everything on
 // this phone, IndexedDB). POST /api/v1/plan is intercepted with fixtures; tiles are aborted;
@@ -60,7 +61,7 @@ async function planAndOpenTrip(page: Page) {
   await drag(page, -120, 80);
   await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
   await page.getByRole("button", { name: "Set destination here" }).click();
-  await page.getByTestId("trip-option").first().click();
+  await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
 }
 
@@ -117,7 +118,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
 
   await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Saved" })).toBeFocused();
-  await expect(page.getByText("Saved trips open without signal. Map tiles may be missing offline, so each card works as text.")).toBeVisible();
+  await expect(page.getByText("Saved trips work offline, as text.")).toBeVisible();
   const card = page.getByTestId("saved-trip");
   await expect(card).toHaveCount(1);
   await expect(card).toContainText("Available offline");
@@ -153,11 +154,11 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(page).toHaveURL(/\/app$/);
   const detail = page.getByTestId("trip-detail");
   await expect(detail).toBeVisible();
-  await expect(detail.getByTestId("trip-reopen-note")).toContainText("shown as saved, with data from 16 Oct 2026");
+  await expect(detail.getByTestId("trip-reopen-note")).toContainText("saved 16 Oct 2026");
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps).toHaveCount(4);
-  await expect(steps.nth(1)).toContainText("Get on near Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("Board Loop A (clockwise) at Plaza Rizal (A1)");
   await expect(detail.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
   await context.setOffline(false);
 });
@@ -171,7 +172,7 @@ test("reopening online re-plans on the current data and opens the same option", 
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
   await expect(page).toHaveURL(/\/app$/);
   const detail = page.getByTestId("trip-detail");
-  await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+  await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
   // Same revision: the live option, without the "shown as saved" note.
   await expect(detail.getByTestId("trip-reopen-note")).toHaveCount(0);
   await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
@@ -192,12 +193,12 @@ test("reopening after the network changed: the same rides are re-planned and say
   await page.route("**/api/v1/network/head", (route) => fulfill(route, next.revision));
   await page.goto("/app/saved");
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
-  await expect(page.getByTestId("trip-detail").getByTestId("trip-reopen-note")).toHaveText("Re-planned on the current data");
+  await expect(page.getByTestId("trip-detail").getByTestId("trip-reopen-note")).toHaveText("Updated");
   // The saved copy is on older data: offer to update it rather than showing it as saved.
   const save = page.getByTestId("trip-save");
   await expect(save).toHaveAttribute("data-state", "older");
   await expect(save).toHaveText("Update saved copy");
-  await expect(page.getByTestId("trip-save-older")).toHaveText("Your saved copy uses data from 16 Oct 2026.");
+  await expect(page.getByTestId("trip-save-older")).toHaveText("Saved copy: 16 Oct 2026");
   await save.click();
   await expect(save).toHaveAttribute("data-state", "saved");
   await expect(page.getByTestId("trip-action-status")).toHaveText("Saved copy updated to the current data.");
@@ -207,7 +208,7 @@ test("reopening after the network changed: the same rides are re-planned and say
   await page.route("**/api/v1/plan", (route) => fulfill(route, LEAST_WALKING_ONLY_PLAN));
   await page.goto("/app/saved");
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
-  await expect(page.getByTestId("trip-changed-note")).toHaveText("Route changed since you saved this");
+  await expect(page.getByTestId("trip-changed-note")).toHaveText("Changed since saved");
   await expect(page.getByTestId("trip-option")).toHaveCount(2);
   await expect(page.getByTestId("trip-detail")).toHaveCount(0);
 });
@@ -244,7 +245,7 @@ test("history is off by default and nothing is recorded", async ({ page }) => {
   await expect(page).toHaveURL(/\/app\/saved\?tab=history$/);
   const off = page.getByTestId("history-off");
   await expect(off.getByRole("heading", { name: "History is off" })).toBeVisible();
-  await expect(off).toContainText("ParaNaga keeps no record of your trips unless you turn history on. When on, it stays on this device.");
+  await expect(off).toContainText("History is off. When on, it stays on this device.");
   await expect(off.getByRole("link", { name: "Turn on in More" })).toHaveAttribute("href", "/app/more");
   expect(await countStore(page, "history")).toBe(0);
 });

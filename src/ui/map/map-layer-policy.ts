@@ -4,6 +4,7 @@
 //
 //   idle / options  overview lines, tappable routes, terminals, Layers button
 //   picking         overview lines stay (not tappable), no terminals / Layers
+//   preview         the recommended option's lines (options listed, none open); overview hidden, not tappable
 //   detail          the trip's lines (walk dotted, rides solid)
 //   guiding         the trip's lines too, the current leg emphasised
 //
@@ -12,7 +13,7 @@
 
 import type { VisualKey } from "@/domain/modes/modes";
 
-export type MapScene = "idle" | "picking" | "detail" | "guiding";
+export type MapScene = "idle" | "picking" | "preview" | "detail" | "guiding";
 
 export type MapSceneInput = {
   guiding: boolean;
@@ -20,12 +21,15 @@ export type MapSceneInput = {
   tripOpen: boolean;
   /** The crosshair is up: a point is being chosen on the map. */
   picking: boolean;
+  /** Both ends set, options listed, none open: the recommended option is drawn as a preview. */
+  previewing?: boolean;
 };
 
-export function mapScene({ guiding, tripOpen, picking }: MapSceneInput): MapScene {
+export function mapScene({ guiding, tripOpen, picking, previewing = false }: MapSceneInput): MapScene {
   if (guiding) return "guiding";
   if (tripOpen) return "detail";
   if (picking) return "picking";
+  if (previewing) return "preview";
   return "idle";
 }
 
@@ -58,7 +62,7 @@ export type MapLayerPolicyInput = MapSceneInput & {
 
 export function mapLayerPolicy(input: MapLayerPolicyInput): MapLayerPolicy {
   const scene = mapScene(input);
-  const trip = scene === "detail" || scene === "guiding";
+  const trip = scene === "detail" || scene === "guiding" || scene === "preview";
   // Missing only once the fetch ended without lines: never while it is still loading (no flash).
   const missing = trip && input.tripHasRides && input.tripLinesStatus === "failed";
   const standIn = missing && input.sameRevisionAsOverview;

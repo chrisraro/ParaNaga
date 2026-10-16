@@ -11,6 +11,7 @@ import L from "leaflet";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, Polygon, TileLayer, useMap } from "react-leaflet";
 import { OSM_ATTRIBUTION, attributionParts, currentTileConfig } from "@/client/map/tile-config";
+import { usePresence } from "@/ui/app-shell/presence";
 import { prefersReducedMotion, useReducedMotion } from "@/client/map/use-reduced-motion";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import type { LocationFix } from "@/domain/geo/location-fix";
@@ -27,6 +28,7 @@ import {
 import type { Bounds, LatLng } from "@/domain/geo/types";
 import { mapSurface as computeMapSurface } from "@/domain/modes/palette";
 import { MapControls } from "./map-controls";
+import { ROUTE_FIT_DURATION_S, ROUTE_FIT_EASE_LINEARITY, ROUTE_FIT_MAX_ZOOM, routeFitKey, routeFitPadding } from "./route-fit";
 import { MapLegend } from "./map-legend";
 import { legendVisualKeys } from "./map-layer-policy";
 import { RouteLinesLayer, collectRouteLegendItems, linesHaveOnewayCaution } from "./route-lines-layer";
@@ -123,20 +125,29 @@ function FitHighlights({
   tripLines,
   fitBoundsCoords,
   paddingBottom,
+  refitSignal,
+  fitId,
+  fitPathReady,
 }: {
   stops: readonly HighlightStop[] | undefined;
   pins: NagaMapPins | undefined;
   tripLines: TripLinesData | null | undefined;
   fitBoundsCoords: readonly LatLng[] | null | undefined;
   paddingBottom: number;
+  /** Changes when the sheet snaps: the fit is redone so the route stays above the sheet. */
+  refitSignal: number | undefined;
+  /** When set, the coords fit is keyed on its two ends + this id, not on every coordinate. */
+  fitId: string | undefined;
+  /** The route's path arrived after the first fit: refines it unless the rider has panned. */
+  fitPathReady: boolean | undefined;
 }) {
   const map = useMap();
   const stopsKey = stops && stops.length > 0 ? stops.map((s) => s.id).join("|") : "";
   const linesKey = stopsKey && tripLines ? `${tripLines.walkSegments.length}:${tripLines.rideSegments.map((r) => r.key).join(",")}:${tripLines.streetSegments.map((r) => r.key).join(",")}` : "";
-  const coordsKey = fitBoundsCoords && fitBoundsCoords.length >= 2
-    ? `${fitBoundsCoords.length}:${fitBoundsCoords[0]!.lat.toFixed(5)},${fitBoundsCoords[0]!.lng.toFixed(5)}:${fitBoundsCoords[fitBoundsCoords.length - 1]!.lat.toFixed(5)}`
-    : "";
-  const key = [stopsKey, linesKey, coordsKey].filter(Boolean).join("#");
+  const endsKey = fitBoundsCoords ? routeFitKey(fitBoundsCoords.slice(0, 2)) : "";
+  const coordsKey = fitBoundsCoords ? (fitId === undefined ? routeFitKey(fitBoundsCoords) : `${endsKey}|${fitId}`) : "";
+  const fitKey = [stopsKey, linesKey, coordsKey].filter(Boolean).join("#");
+  // A snap change re-fits; a pan, zoom or GPS fix never does (the rider's view wins until the route changes).
 
   const fit = useEffectEvent(() => {
     const points: L.LatLngTuple[] = [];
@@ -151,18 +162,56 @@ function FitHighlights({
       for (const c of fitBoundsCoords) points.push([c.lat, c.lng]);
     }
     if (points.length === 0) return;
+    // Leaflet drops a fit that needs a new zoom while a zoom animation is running (setView returns
+    // early), which leaves the route behind the sheet. Redo it when that zoom has ended.
+    if ((map as unknown as { _animatingZoom?: boolean })._animatingZoom) {
+      fitAfterZoom.current = true;
+      return;
+    }
+    // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
+    // locate controls (48 px wide, 16 px from the edge): 64 + 13 + a gap.
+    const pad = routeFitPadding(paddingBottom, map.getSize().y);
     map.fitBounds(L.latLngBounds(points), {
-      paddingTopLeft: [40, 80],
-      // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
-      // locate controls (48 px wide, 16 px from the edge): 64 + 13 + a gap.
-      paddingBottomRight: [84, paddingBottom],
-      maxZoom: 17,
+      paddingTopLeft: [pad.left, pad.top],
+      paddingBottomRight: [pad.right, pad.bottom],
+      maxZoom: ROUTE_FIT_MAX_ZOOM,
+      duration: ROUTE_FIT_DURATION_S,
+      easeLinearity: ROUTE_FIT_EASE_LINEARITY,
       animate: !prefersReducedMotion(),
     });
   });
+  const fitAfterZoom = useRef(false);
   useEffect(() => {
-    if (key) fit();
-  }, [key]);
+    const onZoomEnd = () => {
+      if (!fitAfterZoom.current) return;
+      fitAfterZoom.current = false;
+      fit();
+    };
+    map.on("zoomend", onZoomEnd);
+    return () => {
+      map.off("zoomend", onZoomEnd);
+    };
+  }, [map]);
+  // The rider dragged the map: a late path load does not take the view back.
+  const moved = useRef(false);
+  useEffect(() => {
+    const onDrag = () => {
+      moved.current = true;
+    };
+    map.on("dragstart", onDrag);
+    return () => {
+      map.off("dragstart", onDrag);
+    };
+  }, [map]);
+  const prev = useRef<{ fitKey: string; refit: number | undefined; path: boolean | undefined } | null>(null);
+  useEffect(() => {
+    const before = prev.current;
+    prev.current = { fitKey, refit: refitSignal, path: fitPathReady };
+    if (!fitKey) return;
+    if (!before || before.fitKey !== fitKey) moved.current = false;
+    else if (before.refit === refitSignal && before.path !== fitPathReady && moved.current) return;
+    fit();
+  }, [fitKey, refitSignal, fitPathReady]);
   return null;
 }
 
@@ -258,6 +307,9 @@ export default function NagaMapLeaflet({
   pins,
   highlightStops,
   highlightPaddingBottom = 40,
+  refitSignal,
+  fitId,
+  fitPathReady,
   stopPins,
   stopPinsInteractive = true,
   onStopSelect,
@@ -298,6 +350,12 @@ export default function NagaMapLeaflet({
   const { lowData, theme, highContrast } = usePrefs();
   const [backgroundOnce, setBackgroundOnce] = useState(false);
   const tileUrl = lowData && !backgroundOnce ? null : tiles.url;
+  // "Show background once" removes its own notice: focus then moves to the map region.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const { shown: notice, props: noticePresence } = usePresence(
+    tiles.url === null ? "unavailable" : tileUrl === null ? "lowData" : null,
+    () => rootRef.current,
+  );
   const effectiveTheme = useEffectiveTheme(theme);
   const surface = explicitMapSurface ?? computeMapSurface(effectiveTheme, tileUrl !== null);
   const legendItems = useMemo(
@@ -360,8 +418,24 @@ export default function NagaMapLeaflet({
     [map, stopPins, stopPinsInteractive, onStopSelect],
   );
 
+  // data-moving: a pan or zoom (a drag, its inertia, an animated fit) is under way; tests wait on it.
+  useEffect(() => {
+    const el = map?.getContainer().parentElement;
+    if (!map || !el) return undefined;
+    const set = (moving: boolean) => el.setAttribute("data-moving", String(moving));
+    const start = () => set(true);
+    const end = () => set(false);
+    set(false);
+    map.on("movestart", start).on("moveend", end);
+    return () => {
+      map.off("movestart", start).off("moveend", end);
+    };
+  }, [map]);
+
   return (
     <div
+      ref={rootRef}
+      tabIndex={-1}
       data-testid="naga-map"
       role="region"
       aria-label={label}
@@ -454,6 +528,9 @@ export default function NagaMapLeaflet({
           tripLines={fitTripLines ? tripLines : null}
           fitBoundsCoords={fitBoundsCoords}
           paddingBottom={highlightPaddingBottom}
+          refitSignal={refitSignal}
+          fitId={fitId}
+          fitPathReady={fitPathReady}
         />
         <MapViewSync
           recenterSignal={recenterSignal}
@@ -503,10 +580,10 @@ export default function NagaMapLeaflet({
         notice={legendNotice}
       />
 
-      {tiles.url === null ? (
-        <p className="pn-map-notice">Map background unavailable</p>
-      ) : tileUrl === null ? (
-        <p className="pn-map-notice pn-map-notice--action" data-testid="map-low-data-notice">
+      {notice === "unavailable" ? (
+        <p className="pn-map-notice" {...noticePresence}>Map background unavailable</p>
+      ) : notice === "lowData" ? (
+        <p className="pn-map-notice pn-map-notice--action" data-testid="map-low-data-notice" {...noticePresence}>
           <span>Map background off (low-data mode)</span>
           <button type="button" className="pn-map-notice__btn" onClick={() => setBackgroundOnce(true)}>
             Show background once

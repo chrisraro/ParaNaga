@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { routeNetwork } from "./fixtures/network";
+import { expandOptions } from "./fixtures/options";
 import {
   ANYWHERE_DROP_OFF_PLAN,
   COMMUNITY_NOTE,
@@ -39,6 +40,8 @@ async function planWith(page: Page, plan: unknown, at = MIDDAY) {
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
   await expect(page.getByTestId("trip-sheet")).toBeVisible();
   await pinBoth(page);
+  // The sheet rests at peek with the best option; the cards are reached through "All options".
+  await expandOptions(page);
   await expect(page.getByRole("heading", { name: "Trip options" })).toBeVisible();
 }
 
@@ -87,14 +90,14 @@ test("(a) any-point drop-off: a path-only jeepney boards and drops off anywhere,
   await planWith(page, ANYWHERE_DROP_OFF_PLAN);
   expect(await modes(page)).toEqual(["jeepney", "tricycle"]);
   const jeep = options(page).nth(0);
-  await expect(jeep).toContainText("Jeep R2");
-  await expect(jeep.getByTestId("unverified-badge")).toBeVisible();
+  await expect(jeep).toContainText("R2");
+  await expect(jeep.getByTestId("card-unverified")).toHaveText("Unverified route");
   await expectOneRecommended(page);
   await expectAxeBothSchemes(page);
 
   await jeep.click();
   const detail = page.getByTestId("trip-detail");
-  await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+  await expect(detail.locator("#pn-trip-detail-title")).toBeFocused();
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps.filter({ hasText: /Get on near/ })).toContainText("Stop not marked · confirm with the driver");
   const off = steps.filter({ hasText: /Get off near/ });
@@ -116,9 +119,9 @@ test.describe("(b) a trip under 500 m", () => {
     const walk = options(page).nth(0);
     await expect(walk).toHaveClass(/pn-trip-card--primary/);
     await expect(walk).toContainText("Walk ≈ 390 m");
-    await expect(walk.getByTestId("unverified-badge")).toHaveCount(0);
+    await expect(walk.getByTestId("card-unverified")).toHaveCount(0);
     await expect(options(page).nth(1).locator(".pn-trip-card__label")).toHaveText("Least walking");
-    await expect(options(page).nth(2).locator(".pn-trip-card__label")).toHaveText("");
+    await expect(options(page).nth(2).locator(".pn-trip-card__label")).toHaveCount(0);
     await expectAxeBothSchemes(page);
   });
 
@@ -128,11 +131,11 @@ test.describe("(b) a trip under 500 m", () => {
     await expectOneRecommended(page);
     const jeep = options(page).nth(1);
     await expect(jeep).toHaveClass(/pn-trip-card--primary/);
-    await expect(jeep.locator(".pn-trip-card__label")).toHaveText("Recommended · Least walking");
+    await expect(jeep.locator(".pn-trip-card__label")).toHaveText("Recommended");
     // The walk card is still offered first, unlabelled.
     await expect(options(page).nth(0)).not.toHaveClass(/pn-trip-card--primary/);
     await expect(options(page).nth(0)).toContainText("Walk ≈ 390 m");
-    await expect(options(page).nth(0).locator(".pn-trip-card__label")).toHaveText("");
+    await expect(options(page).nth(0).locator(".pn-trip-card__label")).toHaveCount(0);
     await expectAxeBothSchemes(page);
   });
 });
@@ -149,12 +152,12 @@ test("(c) a trip of 500 m or more: the tricycle is Recommended after the jeepney
   await expect(tricycle).not.toContainText(/\d\s*min\b/i);
   await expect(tricycle.getByTestId("street-distance")).toContainText("along streets");
   await expect(tricycle.getByTestId("street-restriction")).toContainText("Avoids the restricted roads we could locate");
-  await expect(tricycle.getByTestId("unverified-badge")).toHaveCount(0);
+  await expect(tricycle.getByTestId("card-unverified")).toHaveCount(0);
   await expectAxeBothSchemes(page);
 
   await tricycle.click();
   const detail = page.getByTestId("trip-detail");
-  await expect(detail.getByRole("heading", { name: "To your destination" })).toBeFocused();
+  await expect(detail.locator("#pn-trip-detail-title")).toBeFocused();
   await expect(detail.getByRole("list", { name: "Trip steps" })).toContainText("Take a tricycle to");
   await expect(detail.getByTestId("street-distance")).toContainText("along streets");
   await expect(detail.getByTestId("leg-fare")).toContainText("Minimum fare ₱15 · confirm with the driver");
@@ -270,7 +273,7 @@ test.describe("(f) route notes and the soft service window", () => {
       const detail = page.getByTestId("trip-detail");
       const full = detail.getByTestId("service-window-note");
       await expect(full).toContainText("Usually runs about 5:00-21:00 · unconfirmed");
-      await expect(detail.getByTestId("trip-start")).toBeVisible();
+      await expect(page.getByTestId("trip-start")).toBeVisible();
       await expectAxeBothSchemes(page);
     });
   }

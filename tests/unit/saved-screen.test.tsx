@@ -159,7 +159,7 @@ describe("Saved → Trips", () => {
     await screen.findByText("Removed Alpha.");
     const put = vi.spyOn(db, "putSavedPlace").mockRejectedValueOnce(new Error("blocked"));
     fireEvent.click(screen.getByRole("button", { name: "Undo" }));
-    await screen.findByText("Could not undo on this phone.");
+    await screen.findByText("Couldn't undo.");
     put.mockRestore();
     fireEvent.click(screen.getByRole("button", { name: "Remove: Beta" }));
     await screen.findByText("Removed Beta.");
@@ -184,7 +184,7 @@ describe("Saved → Trips", () => {
     raw.close();
     renderSaved();
     const note = await screen.findByTestId("saved-dropped");
-    expect(note.textContent).toContain("damaged and can't be read");
+    expect(note.textContent).toContain("damaged");
     expect(screen.getAllByTestId("saved-trip")).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Remove unreadable items" }));
     expect(screen.getByTestId("saved-remove-unreadable-dialog").hasAttribute("open")).toBe(true);
@@ -217,7 +217,7 @@ describe("Saved → Trips", () => {
     raw.close();
     renderSaved();
     const note = await screen.findByTestId("saved-dropped");
-    expect(note.textContent).toContain("from a newer version of ParaNaga");
+    expect(note.textContent).toContain("from a newer version");
     expect(screen.queryByRole("button", { name: "Remove unreadable items" })).toBeNull();
   });
 });
@@ -255,7 +255,7 @@ describe("Saved → History", () => {
   it("off by default: the artboard copy, a link to More, and nothing is recorded", async () => {
     renderSaved("history");
     expect(screen.getByRole("heading", { name: "History is off" })).toBeTruthy();
-    expect(screen.getByText("ParaNaga keeps no record of your trips unless you turn history on. When on, it stays on this device.")).toBeTruthy();
+    expect(screen.getByText("History is off. When on, it stays on this device.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Turn on in More" }).getAttribute("href")).toBe("/app/more");
     expect(await recordTrip("Plaza Rizal", "SM City Naga")).toBe(false);
     expect(await db.countHistory()).toBe(0);

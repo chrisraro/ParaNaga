@@ -8,7 +8,7 @@
 // A saved trip reopened from Saved (requestTrip) restores both ends and re-plans on the current
 // data. While that plan loads (or fails, offline) the saved option shows as saved, labelled with
 // its data date; once the plan is in, the same option opens ("Re-planned on the current data" when
-// the revision changed), or the options show under "Route changed since you saved this".
+// the revision changed), or the options show under "Changed since saved".
 //
 // Guidance (Task 10): "Start trip" in Trip detail starts a session; while it runs the sheet shows
 // the Walk / Ride / Transfer / Arrive step instead of the planner, the tab bar is hidden, the map
@@ -25,7 +25,7 @@ import { useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, us
 import { useGeolocation } from "@/client/geo/use-geolocation";
 import { useStopsInView } from "@/client/map/use-stops-in-view";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
-import { offlinePlanNote } from "@/domain/pwa/offline-copy";
+import { offlinePlanChip, offlinePlanNote } from "@/domain/pwa/offline-copy";
 import type { PlanResponse } from "@/domain/api/plan";
 import type { StopPin } from "@/domain/api/schemas";
 import { haversineMeters } from "@/domain/geo/geometry";
@@ -35,7 +35,7 @@ import type { Bounds, LatLng } from "@/domain/geo/types";
 import type { Endpoint } from "@/domain/trip/endpoints";
 import { SAME_PLACE_M } from "@/domain/planner/labels";
 import type { SavedPlaceSource, SavedTrip } from "@/domain/saved/saved";
-import { SAME_PLACE_TITLE, noCoverageCopy } from "@/domain/trip/present";
+import { SAME_PLACE_TITLE, planAnnouncement } from "@/domain/trip/present";
 import {
   endpointLabel,
   endpointsReducer,
@@ -48,10 +48,10 @@ import { useAppFrame, useApplyOnce, useHideTabBar } from "@/ui/app-shell/app-fra
 import { Guidance } from "@/ui/guidance/guidance";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail, type TripEnds } from "@/ui/trip/trip-detail";
-import { TripOptions, optionDomId } from "@/ui/trip/trip-options";
+import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
-import { EndpointSheet, endpointRowMainId, useSheet } from "./endpoint-sheet";
+import { EndpointSheet, PEEK_NOTE_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, TINY_SHEET, endpointRowMainId, mapInsetFor, useSheet, type Snap } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
   LocationStatus,
@@ -80,18 +80,15 @@ import {
   overviewLinesForTrip,
 } from "@/ui/map/map-layer-policy";
 import { ridePathsFor } from "@/domain/guidance/ride-paths";
+import { routeFitPoints } from "@/ui/map/route-fit";
 import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
-
-/** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
-const MAP_BOTTOM_INSET = 186;
 
 /** Pins while a trip detail is open: the layer stays mounted (one canvas for the session), just empty. */
 const NO_PINS: readonly StopPin[] = [];
 
 const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Destination" };
 
-const samePlaceHint = (which: EndpointWhich) =>
-  which === "start" ? "Move the pin away from your destination." : "Move the pin away from your start.";
+const SAME_PLACE_HINT = "Move the pin.";
 
 /** Which row to offer next after `which` was just set. */
 function nextFocus(state: EndpointsState, which: EndpointWhich): EndpointWhich | null {
@@ -161,7 +158,7 @@ function SamePlaceNotice({ which, onChooseOnMap }: { which: EndpointWhich; onCho
       </svg>
       <div className="pn-status__body">
         <p className="pn-status__title">
-          {SAME_PLACE_TITLE}. {samePlaceHint(which)}
+          {SAME_PLACE_TITLE}. {SAME_PLACE_HINT}
         </p>
         <button type="button" className="pn-status__action" onClick={onChooseOnMap}>
           {which === "start" ? "Choose start on map" : "Choose destination on map"}
@@ -197,7 +194,6 @@ export function HomeScreen() {
   // An end that was refused for being the same place as the other end (GPS start on the destination).
   const [samePlaceRefused, setSamePlaceRefused] = useState<EndpointWhich | null>(null);
   // The tab bar floats over the sheet's bottom edge (measured; 0 while it is hidden).
-  const sheet = useSheet(1, frame?.tabBarClearance ?? 0);
   const [pickHeight, pickRef] = useMeasuredHeight();
 
   const bumpRecenter = (target: LatLng | null = null, label = "the start pin") => {
@@ -230,6 +226,14 @@ export function HomeScreen() {
     onOpen: setOpenedId,
   });
   const stored = reopen.stored;
+  // Trip options are listed (none open): the sheet rests at peek with the best option's summary.
+  const optionsListed =
+    ready && !guiding && !picking && !stored && !openOption && planData !== null && planData.plan.coverage === "provisional" && planData.plan.options.length > 0;
+  // The two staleness notes also show at the peek (the list below is inert there), one line each.
+  const peekNotes: string[] = [];
+  if (optionsListed && reopen.changed) peekNotes.push("Changed since saved");
+  if (optionsListed && plan.status === "ready" && plan.offline) peekNotes.push(offlinePlanChip(plan.data.revision.publishedAt, plan.offline));
+  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE + PEEK_NOTE_VISIBLE * peekNotes.length : PEEK_VISIBLE);
   // Where focus goes once the results render: the results heading, or an option card.
   const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);
   // No trip, no pending focus move: a stale request must not pull focus once a trip is set again.
@@ -273,9 +277,9 @@ export function HomeScreen() {
     if (!accepted) {
       if (next.error === "same_place") {
         setSamePlaceRefused(which);
-        announce(`${SAME_PLACE_TITLE}. ${samePlaceHint(which)}`);
+        announce(`${SAME_PLACE_TITLE}. ${SAME_PLACE_HINT}`);
       } else {
-        announce("That spot is outside Naga City. Choose a point inside Naga City.");
+        announce("Outside Naga City. Choose a point inside.");
       }
       return false;
     }
@@ -294,7 +298,8 @@ export function HomeScreen() {
     }
     setGpsIntent(false);
     setGpsStartAccuracy(fix.accuracy);
-    bumpRecenter();
+    // With a destination set the map fits the whole route instead (no zoom-in on the start).
+    if (!endpoints.destination) bumpRecenter();
   };
 
   // Announce loading, and each settled plan whose outcome changed (a refresh that returns the
@@ -302,20 +307,17 @@ export function HomeScreen() {
   const [seenPlanStatus, setSeenPlanStatus] = useState(plan.status);
   if (plan.status !== seenPlanStatus) {
     setSeenPlanStatus(plan.status);
-    if (plan.status === "loading") setAnnouncement("Looking for provisional routes…");
+    if (plan.status === "loading") setAnnouncement("Looking for routes…");
   }
   const planSignature = planData ? `${planData.plan.coverage}|${planData.plan.options.map((o) => o.id).join(",")}` : null;
   const [seenSignature, setSeenSignature] = useState<string | null>(null);
+  // The same words twice in a row are no change for a live region: the text alternates by a silent mark.
+  const [announceTick, setAnnounceTick] = useState(false);
   if (planSignature !== seenSignature) {
     setSeenSignature(planSignature);
     if (planData) {
-      const n = planData.plan.options.length;
-      const anyRide = planData.plan.options.some((o) => o.rides > 0);
-      setAnnouncement(
-        planData.plan.coverage === "none"
-          ? noCoverageCopy(planData.plan.reason, planData.plan.directWalkEstimateMeters).title
-          : `${n} provisional trip ${n === 1 ? "option" : "options"} found.${anyRide ? " Unverified route — confirm with the driver." : ""}`,
-      );
+      setAnnouncement(planAnnouncement(planData, stored !== null, announceTick));
+      setAnnounceTick(!announceTick);
     }
   }
 
@@ -412,7 +414,7 @@ export function HomeScreen() {
     if (which === "start") setGpsIntent(false);
     setRecenterOnFix(false);
     dispatch({ type: "pick", which });
-    announce(`Move the map to place the ${which === "start" ? "start" : "destination"} pin.`);
+    announce("Move the map to place the pin.");
   };
 
   // When the pick panel closes, focus returns to the endpoint row that was set (or cancelled).
@@ -422,7 +424,7 @@ export function HomeScreen() {
     const which = endpoints.picking;
     if (!which || !center.inside) return;
     if (pickSamePlace) {
-      setAnnouncement(`${SAME_PLACE_TITLE}. ${samePlaceHint(which)}`);
+      setAnnouncement(`${SAME_PLACE_TITLE}. ${SAME_PLACE_HINT}`);
       return;
     }
     const wasGps = gpsEndpointKey(endpoints) === which;
@@ -456,9 +458,42 @@ export function HomeScreen() {
     if (!planData) return;
     setFocusTarget(null);
     setOpenedId(id);
+    // Back returns to the list as the rider left it (peek, half or full).
+    setSnapBeforeDetail(sheet.snap);
     // Half, never full: tapping the option focused it, which lifts a sheet to full, and that
     // would cover the trip's lines and the legend. Full stays the rider's own drag or tap.
     if (sheet.snap !== 1) sheet.setSnap(1);
+  };
+
+  // The list's detent before an option opened is restored when the list returns (Back, End guidance).
+  // The sheet is forced to peek only when the list appears for new ends; a re-plan of the same ends
+  // (retry, GPS refinement, picking a point and cancelling) keeps the rider's detent. Adjusted during
+  // render, so the detent is settled in the same commit that shows the list.
+  const [snapBeforeDetail, setSnapBeforeDetail] = useState<Snap | null>(null);
+  const [wasListed, setWasListed] = useState(false);
+  const [peekedFor, setPeekedFor] = useState<string | null>(null);
+  const endsSignature = endpoints.start && endpoints.destination ? [endpoints.start.point, endpoints.destination.point].map((p) => `${p.lat.toFixed(3)},${p.lng.toFixed(3)}`).join("|") : null;
+  if (optionsListed !== wasListed) {
+    setWasListed(optionsListed);
+    if (optionsListed) {
+      if (snapBeforeDetail !== null) sheet.setSnap(snapBeforeDetail);
+      else if (peekedFor !== endsSignature) sheet.setSnap(0);
+      setPeekedFor(endsSignature);
+      setSnapBeforeDetail(null);
+    }
+  }
+  if (!ready && peekedFor !== null) setPeekedFor(null);
+  if (snapBeforeDetail !== null && (!ready || plan.status === "loading")) setSnapBeforeDetail(null);
+
+  // "All options" lifts the sheet to full and focuses the list heading; pressed again it returns to
+  // the peek with focus staying on the toggle.
+  const handleToggleOptions = () => {
+    if (sheet.snap === 2) {
+      sheet.setSnap(0);
+      return;
+    }
+    sheet.setSnap(2);
+    setFocusTarget({ kind: "results" });
   };
 
   const handleCloseOption = () => {
@@ -489,10 +524,12 @@ export function HomeScreen() {
   const focusDone = useRef<object | null>(null);
   useEffect(() => {
     if (!focusTarget || focusDone.current === focusTarget || plan.status === "loading" || openOption) return;
-    const el =
+    let el =
       focusTarget.kind === "option"
         ? document.getElementById(optionDomId(focusTarget.id))
         : document.querySelector<HTMLElement>("[data-results-heading]");
+    // The list rests below the screen edge at peek (inert): focus the toggle that opens it.
+    if (!el || el.closest("[inert]")) el = document.getElementById(OPTIONS_TOGGLE_ID) ?? el;
     if (!el) return;
     el.focus();
     focusDone.current = focusTarget;
@@ -535,7 +572,7 @@ export function HomeScreen() {
     if (!picking) {
       const row = returnFocusTo.current;
       returnFocusTo.current = null;
-      if (row) document.getElementById(endpointRowMainId(row))?.focus();
+      if (row) document.getElementById(endpointRowMainId(row))?.focus({ preventScroll: true });
       return undefined;
     }
     confirmRef.current?.focus();
@@ -564,11 +601,15 @@ export function HomeScreen() {
     gpsIntent && !endpoints.start && statusCopy?.kind === "requesting" ? "Finding your location…" : gpsKey === "start" ? gpsSub : undefined;
   const destinationSub = gpsKey === "destination" ? gpsSub : undefined;
 
-  // The map ends MAP_BOTTOM_INSET above the screen bottom (just under the peek sheet's top), so
-  // its centre (recentre target, crosshair) is never hidden behind the sheet. The attribution
-  // rides the sheet's top edge, measured from the map's bottom.
-  const attributionBottom = Math.max(0, (picking ? pickHeight : sheet.visible) - MAP_BOTTOM_INSET);
-  const rootStyle = { ["--naga-map-attribution-bottom" as string]: `${Math.round(attributionBottom)}px` };
+  // The map ends mapInset above the screen bottom (just under the peek sheet's top, 186 px on a
+  // phone held upright), so its centre (recentre target, crosshair) is never hidden behind the
+  // sheet. The attribution rides the sheet's top edge, measured from the map's bottom.
+  const mapInset = mapInsetFor(sheet.height);
+  const attributionBottom = Math.max(0, (picking ? pickHeight : sheet.visible) - mapInset);
+  const rootStyle = {
+    ["--naga-map-attribution-bottom" as string]: `${Math.round(attributionBottom)}px`,
+    ["--pn-map-inset" as string]: `${mapInset}px`,
+  };
 
   const pins = guiding
     ? home.destination
@@ -613,9 +654,14 @@ export function HomeScreen() {
     () => (guidedSession && guidedCard ? { option: guidedSession.trip.option, variants: guidedCard.variants, revisionId: guidedCard.revisionId } : null),
     [guidedSession, guidedCard],
   );
+  // Options listed, none open: the recommended option is drawn as a preview (not tappable).
+  const previewOption =
+    ready && !guiding && !picking && !stored && !openOption && planData ? (planData.plan.options[0] ?? null) : null;
+  const previewing = previewOption !== null;
+  const shownOption = openOption ?? previewOption;
   const tripRevisionId = guidedTrip
     ? guidedTrip.revisionId
-    : (stored?.data.revision.revisionId ?? (planData && openOption ? planData.revision.revisionId : null));
+    : (stored?.data.revision.revisionId ?? (planData && shownOption ? planData.revision.revisionId : null));
   // The guided walks draw the street path like trip detail, from the walk graph on the phone
   // (a stored copy only when saving data); without it they stay straight dotted lines.
   const guidedWalkGraph = useWalkGraph(guidedTrip?.revisionId ?? null, guidedTrip !== null);
@@ -625,13 +671,23 @@ export function HomeScreen() {
   );
   const tripLinesState = useLines(tripRevisionId, tripRevisionId !== null);
   const tripRevisionLines = tripLinesState.lines;
-  const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : openOption;
+  const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : shownOption;
   const tripLines = useMemo(() => {
     if (guidedTrip && guidedOption) return buildTripLinesData(guidedOption, guidedTrip.variants, tripRevisionLines);
     if (stored) return buildTripLinesData(stored.option, stored.data.variants, tripRevisionLines);
-    if (planData && openOption) return buildTripLinesData(openOption, planData.variants, tripRevisionLines);
+    if (planData && shownOption) return buildTripLinesData(shownOption, planData.variants, tripRevisionLines);
     return null;
-  }, [guidedTrip, guidedOption, stored, planData, openOption, tripRevisionLines]);
+  }, [guidedTrip, guidedOption, stored, planData, shownOption, tripRevisionLines]);
+  // Both ends set, options listed, none open: fit the whole route (ends + the previewed path, or
+  // the option's stops while its lines load) above the sheet. An open option fits via its highlights.
+  const routeFitCoords = useMemo(() => {
+    if (!endpoints.start || !endpoints.destination || tripDetailOpen || guiding || picking) return null;
+    // No preview (plan loading, no coverage, error): the pins alone are framed.
+    if (!previewOption) return routeFitPoints(endpoints.start.point, endpoints.destination.point);
+    const path = tripLines && tripLines.allCoords.length > 0 ? tripLines.allCoords : null;
+    const stops = path ?? previewOption.legs.flatMap((l) => (l.kind === "ride" ? l.stops.map((st) => ({ lat: st.lat, lng: st.lng })) : []));
+    return routeFitPoints(endpoints.start.point, endpoints.destination.point, stops);
+  }, [previewOption, tripLines, tripDetailOpen, guiding, picking, endpoints.start, endpoints.destination]);
   // Lines never vanish: the overview stays while picking a point. When the trip's own lines ended
   // without loading (error, or saving data; never while loading) and the trip is on the snapshot's
   // revision, the overview of exactly the trip's ridden variants stands in for the rides, dimmed
@@ -639,7 +695,8 @@ export function HomeScreen() {
   const tripLinesStatus = tripLinesState.status === "ready" ? "ready" : tripLinesState.status === "error" || tripLinesState.status === "skipped" ? "failed" : "loading";
   const layerPolicy = mapLayerPolicy({
     guiding,
-    tripOpen: tripLines !== null,
+    tripOpen: tripLines !== null && !previewing,
+    previewing,
     picking: picking !== null,
     tripHasRides: tripOption ? tripOption.legs.some((l) => l.kind === "ride") : guiding,
     tripLinesStatus,
@@ -670,7 +727,7 @@ export function HomeScreen() {
   if (selectedRouteCode !== null && !showOverview) setSelectedRouteCode(null);
   const mapLegend = legendVisualKeys(tripLines?.legendItems ?? null, collectRouteLegendItems(overviewLines));
   // Guidance has its own announcements: the drawn trip is not read out again then.
-  const tripAnnouncement = guiding ? "" : (tripLines?.announcement ?? "");
+  const tripAnnouncement = guiding || previewing ? "" : (tripLines?.announcement ?? "");
   const [seenTripAnnouncement, setSeenTripAnnouncement] = useState("");
   if (tripAnnouncement !== seenTripAnnouncement) {
     setSeenTripAnnouncement(tripAnnouncement);
@@ -732,7 +789,10 @@ export function HomeScreen() {
       // Like a pinned point: a pending "use current location" no longer applies to this end.
       if (which === "start") setGpsIntent(false);
       if (wasGps) setGpsStartAccuracy(null);
-      bumpRecenter(endpoint.point, endpoint.label);
+      // Only a lone end is centred; with both ends set the map fits the whole route.
+      if (!endpoints[which === "start" ? "destination" : "start"]) bumpRecenter(endpoint.point, endpoint.label);
+      // After the search page closes, focus goes back to this end's row (see the pick effect).
+      if (covered) returnFocusTo.current = which;
     }
   });
   // "Open trip" on a saved trip card (loaded by useSavedTripReopen): restore both ends through the
@@ -753,7 +813,6 @@ export function HomeScreen() {
     setFocused(null);
     setOpenedId(null);
     if (sheet.snap === 0) sheet.setSnap(1);
-    bumpRecenter(card.start.point, card.start.label);
     announce(`Saved trip: ${card.start.label} to ${card.destination.label}.`);
   }
 
@@ -764,7 +823,10 @@ export function HomeScreen() {
 
   // The tab bar would cover the crosshair panel: hidden while a pin is being placed, and while
   // guidance runs (the steps need the whole sheet).
-  useHideTabBar(picking !== null || guiding);
+  // About 300 px of height (400 % zoom, a phone on its side): the tab bar would leave no room for
+  // the content at half and full, so it steps aside there; collapsing to peek brings it back.
+  const tinySheet = sheet.height !== null && sheet.height < TINY_SHEET && sheet.snap > 0;
+  useHideTabBar(picking !== null || guiding || tinySheet);
   if (!picking && pickPrompt !== null) setPickPrompt(null);
 
   const guidanceActions = homeGuidanceActions({
@@ -797,13 +859,17 @@ export function HomeScreen() {
       <h1 className="sr-only" tabIndex={-1} data-home-heading="">
         ParaNaga trip planner
       </h1>
-      <div className="pn-home__map">
+      <div className="pn-home__map" inert={sheet.snap === 2 && picking === null}>
         <NagaMap
           userFix={guiding ? (guidance.location.watching ? guidance.location.fix : null) : userFix}
           userStale={guiding ? false : (assessment?.stale ?? false)}
           pins={pins}
           highlightStops={highlightStops}
-          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET + 40)}
+          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - mapInset)}
+          refitSignal={sheet.snap}
+          fitBoundsCoords={routeFitCoords}
+          fitId={previewOption?.id ?? "ends"}
+          fitPathReady={tripLines !== null && tripLines.allCoords.length > 0}
           crosshair={picking !== null}
           onCenterChange={handleCenterChange}
           recenterSignal={recenterSignal}
@@ -861,15 +927,15 @@ export function HomeScreen() {
           aria-label={picking === "start" ? "Choose start on map" : "Choose destination on map"}
         >
           <p className="pn-pick__title">
-            {picking === "start" ? (pickPrompt ?? "Move the map to your starting point") : "Move the map to your destination"}
+            {picking === "start" ? (pickPrompt ?? "Move the map to your start") : "Move the map to your destination"}
           </p>
           {!center.inside ? (
             <p id="pn-pick-blocked" className="pn-pick__hint pn-pick__hint--warn" data-testid="pick-outside-hint">
-              Move the pin inside Naga City
+              Pin must be in Naga City
             </p>
           ) : pickSamePlace ? (
             <p id="pn-pick-blocked" className="pn-pick__hint pn-pick__hint--warn" data-testid="pick-same-place-hint">
-              {SAME_PLACE_TITLE}. {samePlaceHint(picking)}
+              {SAME_PLACE_TITLE}. {SAME_PLACE_HINT}
             </p>
           ) : (
             <p className="pn-pick__hint">The pin marks the centre of the map.</p>
@@ -902,6 +968,11 @@ export function HomeScreen() {
           onUseCurrentLocation={() => handleUseCurrentLocation()}
           onChooseOnMap={handleChooseOnMap}
           detailOpen={tripDetailOpen || guiding}
+          summary={
+            optionsListed && planData ? (
+              <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} listShown={sheet.snap !== 0} notes={peekNotes} onToggle={handleToggleOptions} />
+            ) : null
+          }
           after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
         >
           {guiding ? (
@@ -936,7 +1007,7 @@ export function HomeScreen() {
             <>
               {reopen.changed ? (
                 <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-changed-note">
-                  Route changed since you saved this
+                  Changed since saved
                 </p>
               ) : null}
               {plan.status === "ready" && plan.offline ? (
@@ -959,7 +1030,7 @@ export function HomeScreen() {
                 />
               ) : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>
-                Clear start and destination
+                Clear trip
               </button>
             </>
           ) : null}

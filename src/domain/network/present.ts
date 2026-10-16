@@ -119,15 +119,15 @@ export function streetNote(index: number, count: number, circuit: boolean): stri
   return "Street on plan";
 }
 
-/** "33 units allocated in the plan (not a count of jeepneys running)." or the group form. */
+/** "33 units allocated (not jeepneys running)." or the group form. */
 export function allocationText(route: {
   allocatedUnits: number | null;
   groupAllocatedUnits: number | null;
   groupNumber: number | null;
   allocationIsActiveFleetCount: boolean | null;
 }): string {
-  const caveat = route.allocationIsActiveFleetCount === true ? "" : " (not a count of jeepneys running)";
-  if (route.allocatedUnits !== null) return `${route.allocatedUnits} units allocated in the plan${caveat}.`;
+  const caveat = route.allocationIsActiveFleetCount === true ? "" : " (not jeepneys running)";
+  if (route.allocatedUnits !== null) return `${route.allocatedUnits} units allocated${caveat}.`;
   if (route.groupAllocatedUnits !== null) {
     const group = route.groupNumber === null ? "its group" : `group ${route.groupNumber}`;
     return `${route.groupAllocatedUnits} units allocated to ${group} in the plan, no per-route count${caveat}.`;

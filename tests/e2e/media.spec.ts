@@ -15,12 +15,15 @@ test("licensed Explore photo loads and its credits remain available when the sou
   const photo = card.getByRole("img", { name: "SM City Naga, Dec 2025" });
   await expect(photo).toBeVisible();
   await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
-  await expect(card.getByRole("link", { name: /Photo credits/ })).toContainText("CC BY-SA 4.0");
+  // The card carries only the image and one link; creator and licence are on Sources and credits.
+  await expect(card.getByRole("link", { name: "Photo credit" })).toHaveAttribute("href", /^\/app\/help\/sources#photo-/);
+  await expect(card).not.toContainText("CC BY-SA");
   await card.screenshot({ path: "docs/media/explore-markets-mobile.png" });
   await page.route("**/api/v1/sources", (route) => route.fulfill({ status: 503, body: "{}" }));
-  await card.getByRole("link", { name: /Photo credits/ }).click();
+  await card.getByRole("link", { name: "Photo credit" }).click();
   await expect(page.getByTestId("source-credits")).toBeVisible();
   await expect(page.getByTestId("photo-credit")).toHaveCount(17);
+  await expect(page.getByTestId("photo-credit").first()).toContainText("CC BY");
   await expect(page.getByText("Bundled photo credits", { exact: false })).toBeVisible();
   await page.locator("#photo-c182bd120772").scrollIntoViewIfNeeded();
   await page.screenshot({ path: "docs/media/sources-photo-credit-mobile.png" });
@@ -30,8 +33,7 @@ test("licensed Explore photo loads and its credits remain available when the sou
 test("landmark image does not assert that a stop sign or boarding curb is verified", async ({ page }) => {
   await page.goto(`/app/stops/${STOP_A1.stop.id}`);
   const detail = page.getByTestId("stop-detail");
-  await expect(detail.getByText("Stop sign photo pending", { exact: false })).toBeVisible();
-  await expect(detail.getByTestId("reference-photo")).toContainText("stop sign and boarding curb unverified");
+  await expect(detail.getByTestId("reference-photo")).toContainText("Landmark photo, not the stop.");
   await detail.getByTestId("reference-photo").scrollIntoViewIfNeeded();
   await expect.poll(() => detail.getByTestId("reference-photo").locator("img").evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
   await page.screenshot({ path: "docs/media/stop-landmark-reference-mobile.png" });
@@ -45,5 +47,5 @@ test("a failed photo keeps its credit and a readable fallback", async ({ page })
   await page.goto(`/app/places/osm/${sm.key.slice(4)}`);
   const ref = page.getByTestId("reference-photo");
   await expect(ref).toContainText("Photo unavailable on this device.");
-  await expect(ref.getByRole("link", { name: "CC BY-SA 4.0" })).toBeVisible();
+  await expect(ref.getByRole("link", { name: "Photo credit" })).toBeVisible();
 });

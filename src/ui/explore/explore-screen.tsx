@@ -32,12 +32,11 @@ import {
 } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { useSearchIndex, type MorePlacesState } from "@/client/search/use-search-index";
-import { routeListSchema, sourceListSchema, type SearchIndex, type SearchOsmPlace } from "@/domain/api/schemas";
+import { routeListSchema, type SearchIndex, type SearchOsmPlace } from "@/domain/api/schemas";
 import {
   CARD_LIMIT,
   DIRECTORY_SEGMENTS,
   EXPLORE_CATEGORIES,
-  EXPLORE_PLACES_NOTE,
   RAIL_STATUS_TEXT,
   terminalLocationText,
   barangaysAZ,
@@ -48,7 +47,6 @@ import {
   mappedStopsAZ,
   pinPlaceSub,
   placesInCategory,
-  railSourcesText,
   routeDirectoryGroups,
   routeEvidenceBadge,
   showMoreCards,
@@ -66,7 +64,6 @@ import { ModeChip } from "@/ui/modes/mode-chip";
 import { ModeIcon } from "@/ui/modes/mode-icon";
 import { modeName, type RouteMode } from "@/domain/modes/fleet";
 import { terminalKindLabel, terminalMatchesModes, terminalRouteModes } from "@/domain/places/terminals";
-import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Segmented } from "@/ui/kit/segmented";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
@@ -89,7 +86,7 @@ export function ExploreScreen() {
       <div className="pn-explore">
         <div className="pn-detail__stack" data-testid="explore-error">
           <p role="alert" className="pn-footnote">
-            {state.problem === "offline" ? "You are offline. Check your connection, then try again." : "Could not load the places. Try again."}
+            {state.problem === "offline" ? "You're offline. Try again." : "Couldn't load places. Try again."}
           </p>
           <button type="button" className="pn-detail__retry" onClick={state.retry}>
             Try again
@@ -249,8 +246,6 @@ function PlacesByCategory({ places, morePlaces, onRetry }: { places: readonly Se
           </button>
         ) : null}
       </div>
-      <Note testId="explore-places-note">{EXPLORE_PLACES_NOTE}</Note>
-      <OsmAttribution testId="explore-osm-attribution" />
     </>
   );
 }
@@ -284,7 +279,7 @@ const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchO
   const [photoFailed, setPhotoFailed] = useState(false);
   const chip = chipOfOsmCategory(place.category);
   const href = osmPlaceHref(place.key);
-  const kind = `${OSM_CATEGORY_LABEL[place.category]} · from OpenStreetMap`;
+  const kind = OSM_CATEGORY_LABEL[place.category];
   return (
     <li className="pn-explore__card" data-testid="explore-card" data-category={place.category}>
       <div className={`pn-explore__tile pn-explore__tile--${chip}`}>
@@ -310,7 +305,7 @@ const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchO
             )}
           </h2>
           <p className="pn-explore__kind">{kind}</p>
-          {photo ? <Link className="pn-explore__credit" href={`/app/help/sources#${photo.id}`}>{photo.creator} · {photo.license} · Photo credits</Link> : null}
+          {photo ? <Link className="pn-explore__credit" href={`/app/help/sources#${photo.id}`}>Photo credit</Link> : null}
         </div>
         <button
           type="button"
@@ -383,7 +378,7 @@ function MappedStops({ index }: { index: SearchIndex }) {
           <ListCell key={p.key} href={pinPlaceHref(p.key)} title={p.label} sub={pinPlaceSub(p)} badges={<StatusBadge variant="candidate" />} />
         ))}
       </ul>
-      <Note>Pins sharing one name within 60 m are one row. Positions are unverified.</Note>
+      <Note>Pins within 60 m with one name are one row.</Note>
     </>
   );
 }
@@ -403,7 +398,7 @@ function Routes() {
     return (
       <div className="pn-detail__stack" data-testid="explore-routes-error">
         <p role="alert" className="pn-footnote">
-          {offline ? "You are offline. Check your connection, then try again." : "Could not load the routes. Try again."}
+          {offline ? "You're offline. Try again." : "Could not load the routes. Try again."}
         </p>
         <button type="button" className="pn-detail__retry" onClick={resource.retry}>
           Try again
@@ -442,7 +437,7 @@ function Routes() {
           </section>
         ))}
       </div>
-      <Note>Street order from the approved route plan. Route shapes and stops are not yet surveyed.</Note>
+      <Note>Street order from the route plan. Shapes and stops unverified.</Note>
     </>
   );
 }
@@ -513,9 +508,6 @@ function Barangays({ index }: { index: SearchIndex }) {
 
 function Leads({ index }: { index: SearchIndex }) {
   const leads = feederLeadsByCode(index.feederLeads);
-  // The sources register says which rail source codes it lists (S20 is not in it today).
-  const sources = useNetworkResource("/api/v1/sources", sourceListSchema);
-  const register = sources.status === "ready" ? new Set(sources.data.sources.map((s) => s.code)) : null;
   return (
     <>
       <Count>{`${leads.length} feeder leads`}</Count>
@@ -525,7 +517,7 @@ function Leads({ index }: { index: SearchIndex }) {
         ))}
       </ul>
       <p className="pn-explore__rail" data-testid="explore-rail">
-        {RAIL_STATUS_TEXT} <span data-testid="explore-rail-sources">{`Sources ${railSourcesText(register)}`}</span>
+        {RAIL_STATUS_TEXT}
       </p>
     </>
   );

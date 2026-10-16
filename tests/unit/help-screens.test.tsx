@@ -82,7 +82,7 @@ describe("Help", () => {
     expect(report.getAttribute("href")).toBe("/app/mynaga");
   });
 
-  it("About data: badge meanings, the data revision, sources link and footer", async () => {
+  it("About data: badge meanings, sources link and footer", async () => {
     nav.params = new URLSearchParams("tab=data");
     render(<HelpScreen />);
     const rows = within(screen.getByTestId("help-badges")).getAllByRole("listitem");
@@ -95,7 +95,8 @@ describe("Help", () => {
     ]);
     expect(screen.getByTestId("help-sources-link").getAttribute("href")).toBe("/app/help/sources");
     expect(screen.getByTestId("help-data-footer").textContent).toBe(DATA_FOOTER);
-    await waitFor(() => expect(screen.getByTestId("help-data-revision").textContent).toBe("Data revisionosm-places-2026-10-15 · Oct 15, 2026"));
+    // The revision label moved to Sources and credits: no revision row here.
+    expect(screen.queryByTestId("help-data-revision")).toBeNull();
   });
 });
 
@@ -106,13 +107,13 @@ describe("Help articles", () => {
     const body = screen.getByTestId("help-article-body").textContent ?? "";
     for (const phrase of [
       "Unverified route — confirm with the driver",
-      "get on and drop off anywhere along a route",
+      "get on and off anywhere along a route",
       "Tell the driver ‘para’ · stop not marked",
       "up to 500 m straight-line and 750 m along streets",
-      "recommends walking only when the whole trip is under 500 m",
-      "a tricycle is suggested after the jeepney options and marked Recommended",
+      "recommended only under 500 m",
+      "a tricycle follows the jeepney options, marked Recommended",
       "avoid the restricted roads we could locate",
-      "Tricycle and padyak trips show no minutes",
+      "Tricycle and padyak show no minutes",
     ])
       expect(body).toContain(phrase);
     expect(body).not.toMatch(/capped at 600 m|exact|guaranteed|official fare/i);
@@ -191,6 +192,20 @@ describe("Sources register", () => {
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toBe("noopener noreferrer");
     expect(screen.getByTestId("sources-owner-note").textContent).toBe(MAP_OWNER_NOTE);
+    // The register is a named list under its own heading.
+    expect(screen.getByRole("list", { name: "Source register" })).toBe(screen.getByTestId("sources-list"));
+  });
+
+  it("a malformed hash (#%E0) is no target and does not crash the screen", async () => {
+    window.history.replaceState(null, "", "/app/help/sources#%E0");
+    expect(window.location.hash).toBe("#%E0");
+    try {
+      render(<SourcesScreen />);
+      await waitFor(() => expect(screen.getAllByTestId("source-row")).toHaveLength(SOURCES.sources.length));
+      await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("heading", { level: 1 })));
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
   });
 
   it("credits Google Places as third-party, unverified suggestions with an unresolved rights note", () => {

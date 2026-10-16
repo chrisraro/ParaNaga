@@ -15,6 +15,7 @@ import { readSnapshotMeta } from "@/client/storage/db";
 import { networkHeadSchema } from "@/domain/api/schemas";
 import { basisRows } from "@/domain/eta/basis";
 import { publishedDateText } from "@/domain/network/present";
+import { useDocumentTitle } from "@/ui/app-shell/document-title";
 import { DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
 import { findArticle, type Article, type ArticleSlug } from "./articles";
 
@@ -85,15 +86,7 @@ export function HelpArticleScreen({ slug }: { slug: ArticleSlug }) {
   // The tab and history entry name the article (the route's static metadata says "Help"). The
   // old title is restored only if it is still ours (see DetailNotFound).
   const title = article?.title;
-  useEffect(() => {
-    if (!title) return undefined;
-    const previous = document.title;
-    const mine = `${title} · ParaNaga`;
-    document.title = mine;
-    return () => {
-      if (document.title === mine) document.title = previous;
-    };
-  }, [title]);
+  useDocumentTitle(title);
   if (!article) return null;
   return (
     <DetailPanel title="Help" testId="help-article">

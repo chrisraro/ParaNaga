@@ -106,7 +106,7 @@ async function ready() {
 describe("SearchScreen", () => {
   it("opens with the keyboard on the labelled box and the artboard's placeholder", async () => {
     renderSearch("start");
-    expect(box()).toHaveProperty("placeholder", "Place, stop, street, route or barangay");
+    expect(box()).toHaveProperty("placeholder", "Place, stop or route");
     expect(document.activeElement).toBe(box());
     expect(screen.getByRole("heading", { level: 1, name: "Search" })).toBeTruthy();
     await ready();
@@ -131,7 +131,7 @@ describe("SearchScreen", () => {
     expect(live.textContent).toMatch(/^\d+ results?$/);
     expect(screen.getByTestId("search-group-places").textContent).toContain("Cor. Diversion Rd. & Fraternidad St.");
     expect(screen.getByTestId("search-legacy-note").textContent).toBe("Old route names are historical hints, not current routes.");
-    expect(screen.getByTestId("search-osm-attribution").textContent).toBe("© OpenStreetMap contributors (ODbL)");
+    expect(screen.queryByTestId("search-osm-attribution")).toBeNull(); // the credit is on Sources and credits
   });
 
   it("shows 5 per group and \"Show all {n}\"", async () => {
@@ -172,7 +172,7 @@ describe("SearchScreen", () => {
     renderSearch();
     await ready();
     await type("xyz");
-    expect(screen.getByTestId("search-empty").textContent).toBe("No match in Naga — try a place, stop name, street, route or barangay.");
+    expect(screen.getByTestId("search-empty").textContent).toBe("No match. Try a place, stop, street or route.");
     expect(screen.getByTestId("search-announcer").textContent).toBe("0 results");
   });
 
@@ -183,7 +183,7 @@ describe("SearchScreen", () => {
     expect(screen.queryByTestId("search-group-regional")).toBeNull();
     fireEvent.click(screen.getByRole("switch", { name: "Include regional connections" }));
     expect(screen.getByTestId("search-regional-note").textContent).toBe(
-      "Regional connections on: terminal destination categories are included. Individual services are not verified.",
+      "Includes regional terminals. Services not verified.",
     );
     expect(screen.getByTestId("search-group-regional").textContent).toContain("Eastbound destinations from Eastbound Terminal · services not verified");
   });
@@ -296,7 +296,7 @@ describe("SearchScreen", () => {
     failing = true;
     vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     renderSearch();
-    await waitFor(() => expect(screen.getByTestId("search-offline").textContent).toBe("Offline · searching data from 16 Oct 2026"));
+    await waitFor(() => expect(screen.getByTestId("search-offline").textContent).toBe("Offline · data from 16 Oct 2026"));
     await type("plaza rizal");
     expect(screen.getByTestId("search-group-places")).toBeTruthy();
   });
@@ -353,7 +353,7 @@ describe("SearchScreen", () => {
     await screen.findByTestId("search-group-saved");
     await type("SM City");
     fireEvent.click(screen.getAllByTestId("search-result-osm")[0]!);
-    expect(screen.getByTestId("search-already-saved").textContent).toBe("Already saved on this phone as “The mall”.");
+    expect(screen.getByTestId("search-already-saved").textContent).toBe("Already saved as “The mall”.");
     expect(screen.getByTestId("search-save-dialog").hasAttribute("open")).toBe(false);
     expect((await listSavedPlaces()).records).toHaveLength(1);
   });
@@ -361,7 +361,7 @@ describe("SearchScreen", () => {
   it("for=save: a place opens the name dialog prefilled; Save stores it on this phone and goes back", async () => {
     renderSearch("save");
     await ready();
-    expect(screen.getByTestId("search-save-note").textContent).toBe("Pick a place to save on this phone. OpenStreetMap places and mapped pins can be saved.");
+    expect(screen.getByTestId("search-save-note").textContent).toBe("Pick a place to save.");
     expect(screen.queryByText(/opens soon/)).toBeNull();
     await type("SM City");
     fireEvent.click(screen.getAllByTestId("search-result-osm")[0]!);
