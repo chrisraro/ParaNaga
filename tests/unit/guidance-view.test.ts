@@ -278,12 +278,14 @@ describe("Missed stop and ended", () => {
 
 // ---------------------------------------------------------------- honesty properties
 
+// A duration token may appear only in a string labelled as an estimate (Task 9, D12).
+const DURATION = /\d\s*(h|min|mins|minutes?|secs?|seconds?|hrs?|hours?)\b/i;
+const durationLabelled = (t: string) => !DURATION.test(t) || /estimate/i.test(t) || /^(≈|About)/.test(t);
 const FORBIDDEN = [
   /\blive\b/i,
   /arriving/i,
   /arrives? in/i,
   /\bETA\b/,
-  /\d\s*(min|mins|minutes?|secs?|seconds?|hrs?|hours?)\b/i,
   /guarantee/i,
   /\bofficial\b/i,
   /on route/i,
@@ -322,12 +324,17 @@ const fixArb = fc.option(
 const optionArb = fc.constantFrom(walkOnly(), oneRide(), oneRide(5), twoRides(), twoRides(8));
 
 describe("view properties (fixed seeds)", () => {
+  it("the duration rule: minutes only inside a labelled estimate", () => {
+    expect(["Estimate 12–18 min + waiting (unknown)", "≈ 3–5 min walk", "About 10–16 min left (estimate)", "≈ 140 m walk"].every(durationLabelled)).toBe(true);
+    expect(["5 min to Plaza Rizal", "Ride 1 h 5 min", "Next stop in 2 mins"].some(durationLabelled)).toBe(false);
+  });
+
   it("no copy ever claims times, live tracking, curb sides or certainty", () => {
     fc.assert(
       fc.property(optionArb, fc.array(eventArb, { maxLength: 30 }), fixArb, (option, events, fix) => {
         const s = events.reduce(reduceSession, startSession(tripOf(option), NOW));
         const text = strings(guidanceView(s, fix, NOW));
-        return text.every((t) => FORBIDDEN.every((re) => !re.test(t)));
+        return text.every((t) => FORBIDDEN.every((re) => !re.test(t)) && durationLabelled(t));
       }),
       { seed: 2026, numRuns: 500 },
     );
