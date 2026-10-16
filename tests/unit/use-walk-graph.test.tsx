@@ -2,7 +2,7 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetLinesForTests, useLines } from "@/client/network/use-lines";
-import { resetWalkGraphForTests, useWalkGraph, useWalkGraphDownload } from "@/client/network/use-walk-graph";
+import { resetWalkGraphForTests, useSavedWalkLengths, useWalkGraph, useWalkGraphDownload } from "@/client/network/use-walk-graph";
 import { resetPrefs, updatePrefs } from "@/client/prefs/use-prefs";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
 import { WALK_LOADING_LABEL, WALK_OFFLINE_LABEL, WALK_PATH_LABEL } from "@/domain/trip/enrich";
@@ -280,5 +280,37 @@ describe("walk graph offline and cache safety (Task 15)", () => {
     const online = renderHook(() => ({ graph: useWalkGraph(REV_ID), offer: useWalkGraphDownload(REV_ID) }));
     await waitFor(() => expect(online.result.current.graph.status).toBe("ready"));
     expect(online.result.current.offer.offer).toBe(false);
+  });
+});
+
+// Saved cards (and the offline page) use the cached graph's lengths, never the network.
+describe("useSavedWalkLengths", () => {
+  const WG_URL = `/api/v1/network/walk-graph/${REV_ID}`;
+  const option = structuredClone(PROVISIONAL_PLAN.plan.options[0]!);
+  const walk = option.legs.find((l) => l.kind === "walk")!;
+  if (walk.kind === "walk") {
+    walk.from = { ...walk.from, lat: 13.6234, lng: 123.1847 };
+    walk.to = { ...walk.to, lat: 13.6238, lng: 123.1852 };
+    walk.distanceMeters = 70;
+    walk.estimateMeters = 91;
+  }
+  const stubStored = (stored: Map<string, string>) =>
+    vi.stubGlobal("caches", { match: vi.fn(async (url: string) => (stored.has(url) ? new Response(stored.get(url)) : undefined)) });
+
+  it("uses the stored copy's path lengths for the walks, with no network request", async () => {
+    stubStored(new Map([[WG_URL, JSON.stringify(walkGraphFixture)]]));
+    const { result } = renderHook(() => useSavedWalkLengths(option, REV_ID));
+    expect(result.current.every((m) => m === null)).toBe(true);
+    await waitFor(() => expect(result.current.some((m) => typeof m === "number")).toBe(true));
+    expect(result.current.map((m, i) => (option.legs[i]!.kind === "ride" ? m === null : true)).every(Boolean)).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("stays on the x1.3 estimates (all null) with no stored copy, and never downloads one", async () => {
+    stubStored(new Map());
+    const { result } = renderHook(() => useSavedWalkLengths(option, REV_ID));
+    await act(async () => undefined);
+    expect(result.current.every((m) => m === null)).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

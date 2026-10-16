@@ -171,3 +171,14 @@ describe("honesty (property)", () => {
     );
   });
 });
+
+describe("TIME_NOT_AVAILABLE has a single definition", () => {
+  it("is exported by eta/format and not redefined by the guidance, saved or trip modules", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { TIME_NOT_AVAILABLE } = await import("@/domain/eta/format");
+    expect(TIME_NOT_AVAILABLE).toBe("Time not available");
+    for (const file of ["src/domain/guidance/view.ts", "src/domain/saved/saved.ts", "src/ui/trip/eta-text.tsx"]) {
+      expect(readFileSync(file, "utf8")).not.toMatch(/const TIME_NOT_AVAILABLE\s*=/);
+    }
+  });
+});

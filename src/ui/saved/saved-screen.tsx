@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { clearHistory } from "@/client/history/trip-history";
+import { useSavedWalkLengths } from "@/client/network/use-walk-graph";
 import { useSnapshot } from "@/client/network/use-snapshot";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import { useHistoryList, useSavedPlaces, useSavedTrips, useTripRevalidation } from "@/client/saved/use-saved";
@@ -235,6 +236,7 @@ function TripCard({
   const changed = status === "changed";
   const lookups = useMemo(() => planLookups(savedTripResponse(trip)), [trip]);
   const id = useId();
+  const walkLengths = useSavedWalkLengths(trip.option, trip.revisionId);
   return (
     <li>
       <article className="pn-saved-card" aria-labelledby={`${id}-to`} data-testid="saved-trip">
@@ -257,7 +259,7 @@ function TripCard({
           </h2>
         </div>
         <LegStrip option={trip.option} lookups={lookups} />
-        <p className="pn-saved-card__meta">{tripCardMeta(trip, model)}</p>
+        <p className="pn-saved-card__meta">{tripCardMeta(trip, model, new Date(), walkLengths)}</p>
         <p className="pn-saved-card__date">Saved {manilaDate(trip.savedAt) ?? "on this phone"}</p>
         <div className="pn-saved-card__actions">
           <button type="button" className={changed ? "pn-saved-cta pn-saved-cta--primary" : "pn-saved-cta"} onClick={onOpen} data-testid="saved-trip-open">

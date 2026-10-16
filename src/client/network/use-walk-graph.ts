@@ -18,11 +18,13 @@
 //    detail offers "Download street paths (≈ 80 KB)". Only that tap fetches it
 //    (`downloadWalkGraph`); the worker then keeps it, so later low-data trips use the stored copy.
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { usePrefs } from "@/client/prefs/use-prefs";
 import { decodeJson, fetchRevisionJson, readStoredCopy } from "@/client/pwa/data-handoff";
 import { savingData } from "@/client/pwa/prefetch-index";
 import { parseUuidParam } from "@/domain/api/schemas";
+import type { PlanOptionDto } from "@/domain/api/plan";
+import { walkPathLengths } from "@/domain/trip/enrich";
 import { parseWalkGraph, type WalkGraph } from "@/domain/walk/walk-graph";
 
 export type WalkGraphState =
@@ -193,4 +195,38 @@ export function useWalkGraph(revisionId: string | null | undefined, enabled = tr
   if (inMemory) return { status: "ready", graph: inMemory, revisionId: rev, retry };
   if (current.revisionId === rev && current.status !== "ready") return { ...current, retry };
   return saveData ? { status: "skipped", graph: null, revisionId: rev, retry } : { status: "loading", graph: null, revisionId: rev, retry };
+}
+
+/**
+ * The decoded walk graph for `revisionId` from memory or the copy the worker stored; never the
+ * network (a saved card must not download 80 KB by being listed). Null when there is none.
+ */
+export async function storedWalkGraph(revisionId: string): Promise<WalkGraph | null> {
+  const parsedRev = parseUuidParam(revisionId, "revisionId");
+  if (!parsedRev.ok) return null;
+  const rev = parsedRev.value;
+  const held = byRevision.get(rev);
+  if (held) return held;
+  const stored = await readStoredCopy(`/api/v1/network/walk-graph/${encodeURIComponent(rev)}`);
+  const graph = stored === null ? null : decodeJson(stored, decodeGraph);
+  if (graph) byRevision.set(rev, graph);
+  return graph;
+}
+
+/**
+ * Walk-graph path lengths for a saved trip's walks when that revision's graph is cached on this
+ * phone (so the saved estimate matches trip options); all null until then and without a copy.
+ */
+export function useSavedWalkLengths(option: PlanOptionDto, revisionId: string): (number | null)[] {
+  const [graph, setGraph] = useState<WalkGraph | null>(() => heldWalkGraph(revisionId));
+  useEffect(() => {
+    let live = true;
+    void storedWalkGraph(revisionId).then((g) => {
+      if (live && g) setGraph(g);
+    });
+    return () => {
+      live = false;
+    };
+  }, [revisionId]);
+  return useMemo(() => walkPathLengths(option, graph), [option, graph]);
 }

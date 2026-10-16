@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { estimateOption, roundRange, type EtaEstimate, type EtaOptionInput } from "@/domain/eta/eta";
 import type { PlanOption } from "@/domain/planner/plan";
+import { formatLeg } from "@/domain/eta/format";
 import { ETA_MODEL, jeep, manila, opt, trike, walk } from "./eta-fixtures";
 
 const OFFPEAK = manila("09:30");
@@ -12,6 +13,21 @@ function ok(option: EtaOptionInput, dep: Date, walkLengths: (number | null)[] = 
   if (!r.ok) throw new Error(r.reason);
   return r.estimate;
 }
+
+describe("a 0 m same-stop transfer", () => {
+  it("adds no walk time (not the 1–2 min minimum) and formats as no walking", () => {
+    const withTransfer = ok(opt(walk(0), jeep(2000), walk(0), jeep(1500), walk(0)), OFFPEAK, [0, null, 0, null, 0]);
+    const without = ok(opt(jeep(2000), jeep(1500)), OFFPEAK);
+    expect(withTransfer.legs[0]).toMatchObject({ kind: "walk", lowMin: 0, highMin: 0, estimated: true });
+    expect(withTransfer.legs[2]).toMatchObject({ lowMin: 0, highMin: 0 });
+    expect(withTransfer.total.lowMin).toBe(without.total.lowMin);
+    expect(withTransfer.total.highMin).toBe(without.total.highMin);
+    expect(formatLeg(withTransfer.legs[2]!)).toBe("No walking");
+    // From the ×1.3 estimate too, and a real walk still has its minimum.
+    expect(ok(opt(walk(0), jeep(2000)), OFFPEAK).legs[0]).toMatchObject({ lowMin: 0, highMin: 0 });
+    expect(ok(opt(walk(5), jeep(2000)), OFFPEAK).legs[0]).toMatchObject({ lowMin: 1, highMin: 2 });
+  });
+});
 
 describe("roundRange (outward, whole minutes, never a single number)", () => {
   it("floors the low end and ceils the high end", () => {
@@ -160,7 +176,8 @@ describe("properties (fixed seeds)", () => {
     fc.assert(
       fc.property(optionArb, depArb, (o, dep) => {
         const e = ok(o, dep);
-        const ranges = [...e.legs.filter((l) => l.estimated), ...(e.total.lowMin === null ? [] : [e.total])];
+        // A 0 m walk is the one 0–0 range (a same-stop transfer takes no time); a trip of only those totals 0–0 too.
+        const ranges = [...e.legs.filter((l) => l.estimated && l.meters > 0), ...(e.total.lowMin === null || e.total.highMin === 0 ? [] : [e.total])];
         const est = e.legs.filter((l) => l.estimated);
         const sums = e.total.lowMin === null || (e.total.lowMin === est.reduce((a, l) => a + l.lowMin!, 0) && e.total.highMin === est.reduce((a, l) => a + l.highMin!, 0));
         return sums && ranges.every((r) => Number.isInteger(r.lowMin) && Number.isInteger(r.highMin) && r.lowMin! >= 1 && r.lowMin! < r.highMin!);

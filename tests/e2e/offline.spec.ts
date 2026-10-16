@@ -291,6 +291,20 @@ async function endGuidance(page: Page) {
   await expect(page.getByTestId("guidance")).toHaveCount(0);
 }
 
+test("positive control: a lines or walk-graph request made offline IS recorded, so the no-attempt checks can fail", async ({ page, context }) => {
+  await firstVisit(page);
+  await goOffline(context);
+  // Revisions that were never stored: nothing can answer from a cache, so the request must try the network.
+  const unknown = "00000000-0000-4000-8000-000000000000";
+  const outcomes = await page.evaluate(
+    (id) => Promise.all([`/api/v1/network/lines/${id}`, `/api/v1/network/walk-graph/${id}`].map((u) => fetch(u).then(() => "answered", () => "failed"))),
+    unknown,
+  );
+  expect(outcomes).toEqual(["failed", "failed"]);
+  expect(attemptsTo(/\/api\/v1\/network\/lines\//)).toEqual([`/api/v1/network/lines/${unknown}`]);
+  expect(attemptsTo(/\/api\/v1\/network\/walk-graph\//)).toEqual([`/api/v1/network/walk-graph/${unknown}`]);
+});
+
 test("route detail draws its path from the stored lines when the lines endpoint is unreachable (Task 15)", async ({ page, context }) => {
   await firstVisit(page);
   await expect.poll(async () => (await page.evaluate(() => caches.keys())).some((n) => /^pn-lines-f\d+-/.test(n))).toBe(true);
