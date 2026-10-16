@@ -19,7 +19,7 @@ const nid = (r: number, c: number) => 1000 + 10 * r + c;
 type Piece = { id: number; nodes: [number, number]; tags: RoadWay["tags"] };
 type RC = [number, number];
 
-function grid(edit?: (pieces: Piece[]) => void): RoadGraph {
+function grid(edit?: (pieces: Piece[], extraNodes: Map<number, LatLng>) => void): RoadGraph {
   const pieces: Piece[] = [];
   let id = 1;
   for (let r = 0; r < N; r++) {
@@ -28,8 +28,8 @@ function grid(edit?: (pieces: Piece[]) => void): RoadGraph {
   for (let c = 0; c < N; c++) {
     for (let r = 0; r + 1 < N; r++) pieces.push({ id: id++, nodes: [nid(r, c), nid(r + 1, c)], tags: { highway: "residential", name: `Col ${c} Ave` } });
   }
-  edit?.(pieces);
   const nodes = new Map<number, LatLng>();
+  edit?.(pieces, nodes);
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) nodes.set(nid(r, c), at(r, c));
   const ways: RoadWay[] = pieces.map((p) => ({ id: p.id, version: 1, timestamp: "2020-01-01T00:00:00Z", nodeIds: p.nodes, tags: p.tags }));
   return buildRoadGraph({ ways, nodes }, { profile: "vehicle" });
@@ -82,7 +82,14 @@ describe("traceVariant: street-list mode", () => {
     const legal = traceVariant(input({ streets: ["Col 0 Ave", "Row 2 St", "Col 5 Ave"] }), g, []);
     expect(legal.ok).toBe(true);
     const illegal = traceVariant(input({ streets: ["Col 5 Ave", "Row 2 St", "Col 0 Ave"] }), g, []);
-    const line = illegal.ok ? illegal.line : illegal.parts.flat();
+    // Drawn, flagged: the detour exists because the listed Row 2 is one-way against the travel order.
+    expect(illegal.status).toBe("flagged");
+    if (illegal.status !== "flagged") return;
+    expect(illegal.flag).toBe("oneway_conflict");
+    expect(illegal.offListSegments.length).toBeGreaterThan(0);
+    expect(illegal.offListSegments.every((x) => x.reason === "oneway_conflict")).toBe(true);
+    expect(illegal.offListSegments[0]!.streets[0]!.name).toMatch(/^(row 1|row 3) street$/);
+    const line = illegal.line;
     const row2 = at(2, 0).lat;
     for (let i = 1; i < line.length; i++) {
       const onRow = Math.abs(line[i - 1]!.lat - row2) < 1e-9 && Math.abs(line[i]!.lat - row2) < 1e-9;
@@ -106,21 +113,24 @@ describe("traceVariant: street-list mode", () => {
     expect(r.quality.unmatchedStreets).toEqual([]);
   });
 
-  it("off-list share 20 % fails the gate; 10 % passes", () => {
+  it("off-list share 20 % is drawn flagged with its off-list segment; 10 % passes", () => {
     // Row 0 (500 m) then Col 5 (500 m): two Row 0 pieces renamed -> 200 m of 1000 m off the list.
     const twenty = grid((p) => {
       retag(p, [0, 1], [0, 2], { name: "Other St" });
       retag(p, [0, 2], [0, 3], { name: "Other St" });
     });
     const bad = traceVariant(input({ streets: ["Row 0 St", "Col 5 Ave"] }), twenty, []);
-    expect(bad.ok).toBe(false);
-    if (bad.ok) return;
-    expect(bad.reason).toBe("off_list_share");
+    expect(bad.status).toBe("flagged");
+    if (bad.status !== "flagged") return;
+    expect(bad.flag).toBe("off_list_detour");
+    expect(bad.offListSegments).toEqual([
+      { fromM: expect.closeTo(100, 0), toM: expect.closeTo(300, 0), lengthM: expect.closeTo(200, 0), streets: [{ name: "other street", m: 200 }], reason: "off_list_detour" },
+    ]);
     expect(bad.quality.offListShare!).toBeCloseTo(0.2, 2);
     expect(bad.quality.offListShare!).toBeGreaterThan(MAX_OFF_LIST_SHARE);
     const ten = grid((p) => retag(p, [0, 1], [0, 2], { name: "Other St" }));
     const good = traceVariant(input({ streets: ["Row 0 St", "Col 5 Ave"] }), ten, []);
-    expect(good.ok).toBe(true);
+    expect(good.status).toBe("ok");
     expect(good.quality.offListShare!).toBeCloseTo(0.1, 2);
   });
 
@@ -132,6 +142,7 @@ describe("traceVariant: street-list mode", () => {
     expect(r.ok).toBe(false);
     if (r.ok) return;
     expect(r.reason).toBe("not_continuous");
+    expect(r.status).toBe("fail");
     expect(r.quality.continuous).toBe(false);
     expect(r.quality.gaps).toBe(1);
     expect(r.parts.length).toBe(2);
@@ -201,6 +212,32 @@ describe("traceVariant: pin mode", () => {
     expect(r.stopMeasures[3]!).toBeLessThan(r.lengthM);
     expect(r.line[0]!.lat).toBeCloseTo(r.line.at(-1)!.lat, 9);
     expect(r.line[0]!.lng).toBeCloseTo(r.line.at(-1)!.lng, 9);
+  });
+
+  it("a pin snaps to the carriageway it can be driven along in the travel direction (within 25 m)", () => {
+    // Row 2 is a divided road: the grid row is eastbound only, a westbound carriageway runs 15 m south.
+    const south = (p: LatLng, m: number): LatLng => ({ lat: p.lat - m / M_PER_DEG_LAT, lng: p.lng });
+    const g = grid((p, nodes) => {
+      for (let c = 0; c + 1 < N; c++) retag(p, [2, c], [2, c + 1], { oneway: "yes" });
+      let id = 900;
+      for (let c = 0; c < N; c++) nodes.set(2000 + c, south(at(2, c), 15));
+      for (let c = 0; c + 1 < N; c++) p.push({ id: id++, nodes: [2000 + c + 1, 2000 + c], tags: { highway: "residential", name: "Row 2 St", oneway: "yes" } });
+      p.push({ id: id++, nodes: [nid(2, 0), 2000], tags: { highway: "residential", name: "Row 2 St" } });
+      p.push({ id: id++, nodes: [2005, nid(2, 5)], tags: { highway: "residential", name: "Row 2 St" } });
+    });
+    // Each pin is 9 m south of the eastbound row and 6 m north of the westbound carriageway (the
+    // nearest edge); the route runs east, so the eastbound row (within 25 m) is preferred.
+    const pins = [south(mid(at(2, 1), at(2, 2)), 9), south(mid(at(2, 3), at(2, 4)), 9)];
+    const r = traceVariant(input({ streets: ["Row 2 St"], pins }), g, []);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.quality.maxSnapM).toBeCloseTo(9, 0);
+    expect(r.lengthM).toBeCloseTo(200, -1);
+    // 30 m further south only the westbound carriageway is within 25 m: the nearest-edge fallback
+    // snaps there and the trace has to loop around.
+    const far = traceVariant(input({ streets: ["Row 2 St"], pins: pins.map((x) => south(x, 30)) }), g, []);
+    expect(far.ok).toBe(true);
+    if (far.ok) expect(far.lengthM).toBeGreaterThan(400);
   });
 
   it("a pin 80 m from any road -> fail", () => {

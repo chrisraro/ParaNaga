@@ -26,7 +26,7 @@
 //
 // Pure and deterministic: ties go to the lower node index (node indices follow OSM node ids).
 import { haversineMeters } from "../geo/geometry";
-import { nearestEdge, type EdgeHit, type RoadGraph } from "../geo/road-graph";
+import { edgesWithin, nearestEdge, type EdgeHit, type RoadEdge, type RoadGraph } from "../geo/road-graph";
 import { normalizeStreetName, type StreetAlias } from "../geo/street-names";
 import type { LatLng } from "../geo/types";
 
@@ -35,6 +35,10 @@ export const TRACE_BUILDER_VERSION = "trace-route/1";
 export const MAX_OFF_LIST_SHARE = 0.15;
 /** D6: every pin snaps within this distance of the road graph. */
 export const PIN_SNAP_MAX_M = 60;
+/** A pin prefers an edge it can be driven along in the route's direction within this distance. */
+export const PIN_DIRECTION_SNAP_M = 25;
+/** A relaxed re-route (listed one-ways usable both ways) that removes at least this share of a leg's off-list length marks the leg oneway_conflict. */
+const ONEWAY_CONFLICT_GAIN = 0.5;
 /** A landmark or point anchor (a terminal centroid, a place node) snaps within this distance. */
 export const LANDMARK_SNAP_MAX_M = 200;
 
@@ -94,17 +98,39 @@ export type TraceQuality = {
   lengthM: number;
 };
 
-export type TraceFailure =
-  | "anchor_unresolved"
-  | "pin_unsnapped"
-  | "unmatched_streets"
-  | "not_continuous"
-  | "off_list_share"
-  | "empty";
+/** Why a trace has no line (no connected path, or an anchor/pin/street that could not be placed). */
+export type TraceFailure = "anchor_unresolved" | "pin_unsnapped" | "unmatched_streets" | "not_continuous" | "empty";
 
+/**
+ * Why a continuous line is drawn flagged (off-list share above MAX_OFF_LIST_SHARE):
+ *   oneway_conflict - the off-list detour exists because listed streets are one-way against the
+ *                     travel order (re-routing with those one-ways usable both ways removes most of it);
+ *   off_list_detour - any other off-list detour.
+ */
+export type TraceFlagReason = "oneway_conflict" | "off_list_detour";
+
+/** A stretch of the line on streets not on the list, by measure along the line. */
+export type OffListSegment = {
+  fromM: number;
+  toM: number;
+  lengthM: number;
+  /** Normalized OSM names (or "(unnamed)") with metres, longest first. */
+  streets: { name: string; m: number }[];
+  reason: TraceFlagReason;
+};
+
+type Drawn = { line: LatLng[]; lengthM: number; stopMeasures: number[]; quality: TraceQuality; offListSegments: OffListSegment[] };
+
+/**
+ * ok      - passes the D6 gate; drawn as an approximate path.
+ * flagged - continuous but over the off-list threshold; drawn, with its off-list segments marked
+ *           (rendered later as dashed with a caution) and the reason.
+ * fail    - no line: unresolved anchors, pins or streets, or no connected path (`parts` for preview only).
+ */
 export type TraceResult =
-  | { ok: true; line: LatLng[]; lengthM: number; stopMeasures: number[]; quality: TraceQuality }
-  | { ok: false; reason: TraceFailure; quality: TraceQuality; parts: LatLng[][] };
+  | ({ ok: true; status: "ok" } & Drawn)
+  | ({ ok: true; status: "flagged"; flag: TraceFlagReason } & Drawn)
+  | { ok: false; status: "fail"; reason: TraceFailure; quality: TraceQuality; parts: LatLng[][] };
 
 // ---------------------------------------------------------------- endpoints and routing
 
@@ -277,6 +303,63 @@ function route(graph: RoadGraph, from: Spot & { kind: "node" | "point" }, to: Sp
   return { pieces, end };
 }
 
+/**
+ * The graph plus a reversed copy of every one-way edge (indices after the real ones; `reverseOf`
+ * maps them back). Used only to test whether an off-list detour is caused by listed one-ways.
+ */
+type Relaxed = { graph: RoadGraph; reverseOf: Map<number, number>; realEdges: number };
+const relaxedCache = new WeakMap<RoadGraph, Relaxed>();
+function relaxedGraph(graph: RoadGraph): Relaxed {
+  const hit = relaxedCache.get(graph);
+  if (hit) return hit;
+  const edges: RoadEdge[] = [...graph.edges];
+  const out = graph.out.map((l) => [...l]);
+  const reverseOf = new Map<number, number>();
+  for (const e of graph.edges) {
+    if (e.twin !== null) continue;
+    const index = edges.length;
+    edges.push({ ...e, index, from: e.to, to: e.from, coords: [...e.coords].reverse(), reverse: !e.reverse, twin: null });
+    out[e.to]!.push(index);
+    reverseOf.set(index, e.index);
+  }
+  const relaxed = { graph: { ...graph, edges, out }, reverseOf, realEdges: graph.edges.length };
+  relaxedCache.set(graph, relaxed);
+  return relaxed;
+}
+
+/** Compass bearing (degrees) from a to b, planar at city scale. */
+function bearing(a: LatLng, b: LatLng): number {
+  const x = (b.lng - a.lng) * Math.cos((((a.lat + b.lat) / 2) * Math.PI) / 180);
+  return (Math.atan2(x, b.lat - a.lat) * 180) / Math.PI;
+}
+const angleBetween = (a: number, b: number) => {
+  const d = (((a - b) % 360) + 360) % 360;
+  return d > 180 ? 360 - d : d;
+};
+
+/**
+ * Snaps a pin: among the edges within PIN_DIRECTION_SNAP_M, the nearest one that can be driven in
+ * the travel direction (two-way, or one-way within 90 degrees of `travel`, the bearing from the
+ * previous pin to the next); otherwise the nearest edge within PIN_SNAP_MAX_M.
+ */
+function withDirs(h: EdgeHit): EdgeHit & { dirs: DirAt[] } {
+  const dirs: DirAt[] = [{ edge: h.edge.index, t: h.t }];
+  if (h.edge.twin !== null) dirs.push({ edge: h.edge.twin, t: 1 - h.t });
+  return { ...h, dirs };
+}
+
+function snapPin(graph: RoadGraph, p: LatLng, travel: number | null): (EdgeHit & { dirs: DirAt[] }) | null {
+  if (travel !== null) {
+    for (const h of edgesWithin(graph, p, PIN_DIRECTION_SNAP_M)) {
+      // A two-way edge can always be driven in the travel direction; a one-way edge only when it
+      // points within 90 degrees of it.
+      if (h.edge.twin !== null || angleBetween(bearing(h.edge.coords[h.seg - 1]!, h.edge.coords[h.seg]!), travel) < 90) return withDirs(h);
+    }
+  }
+  const h = nearestEdge(graph, p, PIN_SNAP_MAX_M);
+  return h ? withDirs(h) : null;
+}
+
 // ---------------------------------------------------------------- line building
 
 class LineBuilder {
@@ -298,7 +381,9 @@ class LineBuilder {
   start(p: LatLng) {
     if (this.current.length === 0) this.current.push(p);
   }
-  add(leg: Leg) {
+  segments: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean }[] = [];
+  private open: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean } | null = null;
+  add(leg: Leg, conflict = false) {
     for (const piece of leg.pieces) {
       for (const p of piece.coords) {
         const last = this.current[this.current.length - 1];
@@ -311,7 +396,14 @@ class LineBuilder {
             this.offListM += m;
             const name = this.nameOf(piece.edge);
             this.offListByName.set(name, (this.offListByName.get(name) ?? 0) + m);
-          }
+            if (!this.open) {
+              this.open = { fromM: this.currentLength - m, toM: this.currentLength, streets: new Map(), conflict: false };
+              this.segments.push(this.open);
+            }
+            this.open.toM = this.currentLength;
+            this.open.streets.set(name, (this.open.streets.get(name) ?? 0) + m);
+            if (conflict) this.open.conflict = true;
+          } else this.open = null;
         }
         this.current.push(p);
       }
@@ -320,6 +412,7 @@ class LineBuilder {
   /** A gap: the current part ends; the next part starts at `p`. */
   breakAt(p: LatLng | null) {
     this.gaps++;
+    this.open = null;
     this.flush();
     this.currentLength = 0;
     if (p) this.current.push(p);
@@ -458,14 +551,32 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
   const terminusSnaps: number[] = [];
   const stopMeasures: number[] = [];
 
+  const legOffListM = (pieces: readonly Piece[], isOff: (e: number) => boolean) =>
+    pieces.reduce((sum, p) => (isOff(p.edge) ? sum + cumulative(p.coords)[p.coords.length - 1]! : sum), 0);
+  /**
+   * Whether a leg's off-list detour is caused by listed one-way streets: re-routing with listed
+   * one-ways usable both ways uses such a reversed edge and removes at least half the off-list length.
+   */
+  const onewayConflict = (from: Spot & { kind: "node" | "point" }, to: Spot, weight: (e: number) => number, leg: Leg): boolean => {
+    const off = legOffListM(leg.pieces, offList);
+    if (off <= 0) return false;
+    const relaxed = relaxedGraph(graph);
+    const real = (e: number) => relaxed.reverseOf.get(e) ?? e;
+    const w = (e: number) => (e < relaxed.realEdges ? weight(e) : listed.has(real(e)) ? weight(real(e)) : Infinity);
+    const alt = route(relaxed.graph, from, to, w);
+    if (!alt || !alt.pieces.some((p) => p.edge >= relaxed.realEdges)) return false;
+    return legOffListM(alt.pieces, (e) => offList(real(e))) <= off * (1 - ONEWAY_CONFLICT_GAIN);
+  };
+
   /** Follows waypoints from `start`; a waypoint that cannot be reached is a gap. */
   const follow = (start: Spot & { kind: "node" | "point" }, waypoints: readonly Waypoint[], weightFor: (w: Waypoint) => (e: number) => number, onArrive?: (i: number) => void) => {
     let pos = start;
     line.start(spotPoint(graph, pos));
     waypoints.forEach((w, i) => {
-      const leg = route(graph, pos, w.target, weightFor(w));
+      const weight = weightFor(w);
+      const leg = route(graph, pos, w.target, weight);
       if (leg) {
-        line.add(leg);
+        line.add(leg, hasList && onewayConflict(pos, w.target, weight, leg));
         pos = leg.end;
       } else {
         const here = spotPoint(graph, pos);
@@ -479,12 +590,18 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
 
   if (mode === "pins") {
     const spots: (Spot & { kind: "point" })[] = [];
-    input.pins!.forEach((p, i) => {
-      const hit = nearestEdge(graph, p, PIN_SNAP_MAX_M);
+    const pins = input.pins!;
+    pins.forEach((p, i) => {
+      // Travel direction at the pin: from the previous pin to the next (wrapping on a circuit).
+      const n = pins.length;
+      const prev = i > 0 ? pins[i - 1]! : input.isCircular && n > 2 ? pins[n - 1]! : p;
+      const next = i < n - 1 ? pins[i + 1]! : input.isCircular && n > 2 ? pins[0]! : p;
+      const travel = prev === next ? null : bearing(prev, next);
+      const hit = snapPin(graph, p, travel);
       if (!hit) q.unsnappedPins.push(i);
       else {
         snaps.push(hit.distM);
-        spots.push(pointSpot(graph, hit));
+        spots.push({ kind: "point", at: hit.point, dirs: hit.dirs });
       }
     });
     if (spots.length > 0) {
@@ -649,9 +766,21 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
             ? "not_continuous"
             : line.parts.length === 0 || line.lengthM === 0
               ? "empty"
-              : q.offListShare !== null && q.offListShare > MAX_OFF_LIST_SHARE
-                ? "off_list_share"
-                : null;
-  if (reason !== null) return { ok: false, reason, quality: q, parts: line.parts };
-  return { ok: true, line: line.parts[0]!, lengthM: q.lengthM, stopMeasures: stopMeasures.map((m) => round(m, 1)), quality: q };
+              : null;
+  if (reason !== null) return { ok: false, status: "fail", reason, quality: q, parts: line.parts };
+  const offListSegments: OffListSegment[] = line.segments.map((sg) => ({
+    fromM: round(sg.fromM, 1),
+    toM: round(sg.toM, 1),
+    lengthM: round(sg.toM - sg.fromM, 1),
+    streets: [...sg.streets].map(([name, m]) => ({ name, m: round(m, 0) })).sort((a, b) => b.m - a.m || (a.name < b.name ? -1 : 1)),
+    reason: sg.conflict ? "oneway_conflict" : "off_list_detour",
+  }));
+  const drawn: Drawn = { line: line.parts[0]!, lengthM: q.lengthM, stopMeasures: stopMeasures.map((m) => round(m, 1)), quality: q, offListSegments };
+  if (q.offListShare !== null && q.offListShare > MAX_OFF_LIST_SHARE) {
+    // The flag reason is the one carrying most of the off-list length.
+    const byReason = (r: TraceFlagReason) => offListSegments.filter((x) => x.reason === r).reduce((sum, x) => sum + x.lengthM, 0);
+    const flag: TraceFlagReason = byReason("oneway_conflict") > byReason("off_list_detour") ? "oneway_conflict" : "off_list_detour";
+    return { ok: true, status: "flagged", flag, ...drawn };
+  }
+  return { ok: true, status: "ok", ...drawn };
 }

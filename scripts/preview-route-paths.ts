@@ -119,16 +119,20 @@ function main(): number {
     const r: TraceResult = traceVariant(job.input, graph, aliases);
     const q = r.quality;
     const parts = r.ok ? [r.line] : r.parts;
+    const result = r.status === "fail" ? `fail (${r.reason})` : r.status === "flagged" ? `flagged (${r.flag})` : "pass";
     features.push({
       type: "Feature",
-      properties: { variant: job.id, ok: r.ok, reason: r.ok ? null : r.reason, note: job.note, label: "Approximate path, not a verified route shape", ...q },
+      properties: { variant: job.id, status: r.status, reason: r.status === "fail" ? r.reason : r.status === "flagged" ? r.flag : null,
+        offListSegments: r.ok ? r.offListSegments : [], note: job.note, label: "Approximate path, not a verified route shape", ...q },
       geometry: { type: "MultiLineString", coordinates: parts.map((p) => p.map((c) => [Number(c.lng.toFixed(6)), Number(c.lat.toFixed(6))])) },
     });
     const coverage = q.listedStreets > 0 ? `${q.matchedStreets}/${q.listedStreets} (${Math.round((100 * q.matchedStreets) / q.listedStreets)} %)` : "n/a";
     const off = q.offListShare === null ? "n/a" : `${(100 * q.offListShare).toFixed(1)} %`;
     const notes = [...q.unmatchedStreets.map((x) => `unmatched: ${x}`), ...q.landmarksUnresolved.map((x) => `landmark: ${x}`), ...q.anchorsUnresolved.map((x) => `anchor: ${x}`),
-      ...q.disjointPairs.map((x) => `no junction: ${x}`), ...(r.ok ? [] : q.offListStreets.slice(0, 3).map((x) => `off-list ${x.name} ${x.m} m`)), ...q.unsnappedPins.map((x) => `pin ${x + 1} unsnapped`)].join("; ");
-    rows.push(`| ${job.id} | ${r.ok ? "pass" : `fail (${r.reason})`} | ${coverage} | ${off} | ${(q.lengthM / 1000).toFixed(2)} | ${q.gaps} | ${q.maxSnapM ?? "–"} | ${q.terminusSnapM ?? "–"} | ${notes || "–"} |`);
+      ...q.disjointPairs.map((x) => `no junction: ${x}`), ...(r.status === "flagged"
+        ? r.offListSegments.filter((x) => x.lengthM >= 50).map((x) => `${x.reason} ${x.lengthM} m @${Math.round(x.fromM)} m: ${x.streets.map((y) => `${y.name} ${y.m}`).join(", ")}`)
+        : []), ...q.unsnappedPins.map((x) => `pin ${x + 1} unsnapped`)].join("; ");
+    rows.push(`| ${job.id} | ${result} | ${coverage} | ${off} | ${(q.lengthM / 1000).toFixed(2)} | ${q.gaps} | ${q.maxSnapM ?? "–"} | ${q.terminusSnapM ?? "–"} | ${notes || "–"} |`);
   }
 
   mkdirSync("tmp", { recursive: true });

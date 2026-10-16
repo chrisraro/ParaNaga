@@ -198,14 +198,15 @@ export type EdgeHit = {
   distM: number;
   /** The projected point on the edge. */
   point: LatLng;
+  /** 1-based index of the polyline segment the point projects onto (coords[seg-1] → coords[seg]). */
+  seg: number;
 };
 
 /**
- * The edge nearest to `point` within `maxM` metres (projection onto its segments), or null.
- * Two-way pieces are indexed once (the way-order edge; use `twin` for the other direction).
- * Ties go to the lower edge index.
+ * Every edge within `maxM` metres of `point` (its nearest projection each), nearest first; ties go
+ * to the lower edge index. Two-way pieces are indexed once (the way-order edge; use `twin`).
  */
-export function nearestEdge(graph: RoadGraph, point: LatLng, maxM: number): EdgeHit | null {
+export function edgesWithin(graph: RoadGraph, point: LatLng, maxM: number): EdgeHit[] {
   const { grid } = graph;
   const [px, py] = toXY(grid, point);
   const r = Math.ceil(maxM / grid.cellM);
@@ -215,10 +216,10 @@ export function nearestEdge(graph: RoadGraph, point: LatLng, maxM: number): Edge
   for (let cx = cx0 - r; cx <= cx0 + r; cx++) {
     for (let cy = cy0 - r; cy <= cy0 + r; cy++) for (const i of grid.cells.get(`${cx},${cy}`) ?? []) candidates.add(i);
   }
-
-  let best: { i: number; d2: number; seg: number; u: number } | null = null;
+  const hits: EdgeHit[] = [];
   for (const i of [...candidates].sort((a, b) => a - b)) {
     const coords = graph.edges[i]!.coords;
+    let best: { d2: number; seg: number; u: number } | null = null;
     for (let s = 1; s < coords.length; s++) {
       const [ax, ay] = toXY(grid, coords[s - 1]!);
       const [bx, by] = toXY(grid, coords[s]!);
@@ -229,15 +230,24 @@ export function nearestEdge(graph: RoadGraph, point: LatLng, maxM: number): Edge
       const qx = ax + u * dx - px;
       const qy = ay + u * dy - py;
       const d2 = qx * qx + qy * qy;
-      if (best === null || d2 < best.d2) best = { i, d2, seg: s, u };
+      if (best === null || d2 < best.d2) best = { d2, seg: s, u };
     }
+    if (best === null || Math.sqrt(best.d2) > maxM) continue;
+    const edge = graph.edges[i]!;
+    const a = edge.coords[best.seg - 1]!;
+    const b = edge.coords[best.seg]!;
+    const at = { lat: a.lat + best.u * (b.lat - a.lat), lng: a.lng + best.u * (b.lng - a.lng) };
+    const before = polylineLength(edge.coords.slice(0, best.seg)) + haversineMeters(a, at);
+    hits.push({ edge, t: edge.lengthM === 0 ? 0 : Math.min(1, before / edge.lengthM), distM: Math.sqrt(best.d2), point: at, seg: best.seg });
   }
-  if (best === null || Math.sqrt(best.d2) > maxM) return null;
+  return hits.sort((x, y) => x.distM - y.distM || x.edge.index - y.edge.index);
+}
 
-  const edge = graph.edges[best.i]!;
-  const a = edge.coords[best.seg - 1]!;
-  const b = edge.coords[best.seg]!;
-  const at = { lat: a.lat + best.u * (b.lat - a.lat), lng: a.lng + best.u * (b.lng - a.lng) };
-  const before = polylineLength(edge.coords.slice(0, best.seg)) + haversineMeters(a, at);
-  return { edge, t: edge.lengthM === 0 ? 0 : Math.min(1, before / edge.lengthM), distM: Math.sqrt(best.d2), point: at };
+/**
+ * The edge nearest to `point` within `maxM` metres (projection onto its segments), or null.
+ * Two-way pieces are indexed once (the way-order edge; use `twin` for the other direction).
+ * Ties go to the lower edge index.
+ */
+export function nearestEdge(graph: RoadGraph, point: LatLng, maxM: number): EdgeHit | null {
+  return edgesWithin(graph, point, maxM)[0] ?? null;
 }
