@@ -148,19 +148,19 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
     const previousPlaces = previous.filter((m) => m.entity_kind === "place").length;
     const result = await commitImport(ownerUrl!, plan);
     expect(result).toMatchObject({ outcome: "unchanged", places: { outcome: "committed", revisionLabel: LABEL } });
-    // The fixture's ids (999…) are never real OSM ids: all 11 are added, and every place of the
+    // The fixture's ids (999…) are never real OSM ids: all 12 are added, and every place of the
     // starting revision (233 real ones on a branch of main, none on a transit-only database) is missing.
     expect(result.places?.counts).toMatchObject({
-      places: 11, places_added: 11, places_changed: 0, places_unchanged: 0, places_missing: previousPlaces,
-      place_rows_inserted: 11, place_versions_inserted: 11, carried_members: previousTransit.length,
-      dropped_unnamed: 2, dropped_outside_boundary: 1, dropped_other_tags: 1, dropped_no_coordinate: 1,
+      places: 12, places_added: 12, places_changed: 0, places_unchanged: 0, places_missing: previousPlaces,
+      place_rows_inserted: 12, place_versions_inserted: 12, carried_members: previousTransit.length,
+      dropped_unnamed: 2, dropped_outside_boundary: 1, dropped_other_tags: 0, dropped_no_coordinate: 1,
     });
 
     const revisionId = (await revisionIdOf(LABEL))!;
     expect(await appRows(sql`select label, kind from transit.v_published_revision`)).toEqual([{ label: LABEL, kind: "provisional" }]);
     const after = await members(revisionId);
     expect(after.filter((m) => m.entity_kind !== "place")).toEqual(previousTransit);
-    expect(after.filter((m) => m.entity_kind === "place")).toHaveLength(11);
+    expect(after.filter((m) => m.entity_kind === "place")).toHaveLength(12);
     const revision = await asImport(async (c) => (await c.query(
       `select status, parent_revision_id, created_by from transit.revision where id = $1`, [revisionId])).rows[0]);
     expect(revision).toEqual({ status: "published", parent_revision_id: startRevisionId, created_by: "scripts/import-naga" });
@@ -184,7 +184,7 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
       `select r.identity_method, r.source_layer, count(*)::int as n from ingest.raw_feature r
          join ingest.batch b on b.id = r.batch_id where b.snapshot_version = $1
         group by 1, 2`, [`osm:relation/3084673:${DATE}`])).rows);
-    expect(raw).toEqual([{ identity_method: "osm_id", source_layer: "osm", n: 11 }]);
+    expect(raw).toEqual([{ identity_method: "osm_id", source_layer: "osm", n: 12 }]);
     const sources = await appRows(sql`select code from transit.v_published_sources where code like 'OSM-%'`);
     expect(sources).toEqual([{ code: SOURCE }]);
   });
@@ -192,7 +192,7 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
   it("listPlaces reads the published places as paranaga_app", async () => {
     const revisionId = (await revisionIdOf(LABEL))!;
     const places = await appRun((db) => listPlaces(db, revisionId));
-    expect(places).toHaveLength(11);
+    expect(places).toHaveLength(12);
     for (const p of places) expect(osmPlaceSchema.parse(p)).toEqual(p);
     expect(places.find((p) => p.key === "osm:way/999000000003")).toEqual({
       key: "osm:way/999000000003", name: "Fakemart Synthetic Mall", aliases: [], category: "mall",
@@ -227,7 +227,7 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
     const result = await commitImport(ownerUrl!, buildImportPlan(readDataFiles("Data_Sets"), realLikeFixture()));
     expect(result).toMatchObject({
       outcome: "unchanged",
-      places: { outcome: "unchanged", revisionLabel: LABEL, publishedRevisionLabel: LABEL, counts: { places: 11 } },
+      places: { outcome: "unchanged", revisionLabel: LABEL, publishedRevisionLabel: LABEL, counts: { places: 12 } },
     });
     expect(await tableCounts()).toEqual(before);
     expect(await appRows(sql`select label from transit.v_published_revision`)).toEqual([{ label: LABEL }]);
@@ -252,8 +252,8 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
     const result = await commitImport(ownerUrl!, buildImportPlan(readDataFiles("Data_Sets"), refresh));
     expect(result.places).toMatchObject({ outcome: "committed", revisionLabel: `osm-places-${REFRESH_DATE}` });
     expect(result.places?.counts).toMatchObject({
-      places: 10, places_added: 0, places_changed: 1, places_unchanged: 9, places_missing: 1,
-      place_rows_inserted: 0, place_versions_inserted: 1, carried_members: parent.length - 11,
+      places: 11, places_added: 0, places_changed: 1, places_unchanged: 10, places_missing: 1,
+      place_rows_inserted: 0, place_versions_inserted: 1, carried_members: parent.length - 12,
     });
 
     const childId = (await revisionIdOf(`osm-places-${REFRESH_DATE}`))!;
@@ -261,15 +261,15 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
     expect(child.filter((m) => m.entity_kind !== "place")).toEqual(parent.filter((m) => m.entity_kind !== "place"));
     const parentPlaces = new Map(parent.filter((m) => m.entity_kind === "place").map((m) => [m.entity_id, m.version_id]));
     const childPlaces = child.filter((m) => m.entity_kind === "place");
-    expect(childPlaces).toHaveLength(10);
-    // Same stable place ids; 9 reuse the parent's version id, 1 (the version bump) has a new one.
+    expect(childPlaces).toHaveLength(11);
+    // Same stable place ids; 10 reuse the parent's version id, 1 (the version bump) has a new one.
     expect(childPlaces.every((m) => parentPlaces.has(m.entity_id))).toBe(true);
-    expect(childPlaces.filter((m) => parentPlaces.get(m.entity_id) === m.version_id)).toHaveLength(9);
+    expect(childPlaces.filter((m) => parentPlaces.get(m.entity_id) === m.version_id)).toHaveLength(10);
 
     const changes = await asImport(async (c) => (await c.query(
       `select c.kind, count(*)::int as n from ingest.change c join ingest.batch b on b.id = c.batch_id
         where b.snapshot_version = $1 group by 1 order by 1`, [`osm:relation/3084673:${REFRESH_DATE}`])).rows);
-    expect(changes).toEqual([{ kind: "changed", n: 1 }, { kind: "missing", n: 1 }, { kind: "unchanged", n: 9 }]);
+    expect(changes).toEqual([{ kind: "changed", n: 1 }, { kind: "missing", n: 1 }, { kind: "unchanged", n: 10 }]);
     const parentOf = await asImport(async (c) => (await c.query(
       "select parent_revision_id from transit.revision where id = $1", [childId])).rows[0].parent_revision_id);
     expect(parentOf).toBe(parentId);

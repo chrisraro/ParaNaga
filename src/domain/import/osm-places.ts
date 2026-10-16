@@ -26,24 +26,66 @@ export const OSM_ALIAS_TAGS = ["name:en", "name:fil", "alt_name", "old_name"] as
 
 type Rule = { category: OsmPlaceCategory; key: string; values: readonly string[]; also?: Record<string, string> };
 
+/** In a rule's `values`: any value of the key except "no" (the key marks the element as that kind of place). */
+const ANY = "*";
+
 /**
  * Fixed precedence: the first category with a matching rule wins (one category per place).
  * Values separated by ";" (OSM multi-values) match each part. The stored `tags` are the matching
- * rules' tags of the winning category, verbatim.
+ * rules' tags of the winning category, verbatim. The D10 rules come first and keep their order;
+ * the specific business rules follow; the ANY rules (a named element with that key) come last, so
+ * a named element with any place key is searchable, and `other_place` ("Place") ends the table.
  */
 export const CATEGORY_RULES: readonly Rule[] = [
   { category: "bus_terminal", key: "amenity", values: ["bus_station"] },
   { category: "bus_terminal", key: "public_transport", values: ["station"], also: { bus: "yes" } },
   { category: "hospital_clinic", key: "amenity", values: ["hospital", "clinic"] },
+  { category: "hospital_clinic", key: "building", values: ["hospital"] },
   { category: "college_university", key: "amenity", values: ["college", "university"] },
-  { category: "school", key: "amenity", values: ["school"] },
+  { category: "college_university", key: "building", values: ["college", "university"] },
+  { category: "school", key: "amenity", values: ["school", "kindergarten"] },
+  { category: "school", key: "building", values: ["school", "kindergarten"] },
   { category: "place_of_worship", key: "amenity", values: ["place_of_worship"] },
+  { category: "place_of_worship", key: "building", values: ["church", "chapel", "cathedral", "mosque", "temple", "shrine"] },
   { category: "government", key: "amenity", values: ["townhall", "police", "fire_station", "post_office"] },
   { category: "government", key: "office", values: ["government"] },
   { category: "market", key: "amenity", values: ["marketplace"] },
   { category: "mall", key: "shop", values: ["mall"] },
   { category: "park", key: "leisure", values: ["park"] },
   { category: "square", key: "place", values: ["square"] },
+  // ---- Task 14: business and service categories (specific values first)
+  { category: "restaurant", key: "amenity", values: ["restaurant", "food_court"] },
+  { category: "fast_food", key: "amenity", values: ["fast_food", "ice_cream"] },
+  { category: "cafe", key: "amenity", values: ["cafe"] },
+  { category: "bar", key: "amenity", values: ["bar", "pub", "biergarten", "nightclub"] },
+  { category: "bakery", key: "shop", values: ["bakery", "pastry"] },
+  { category: "supermarket", key: "shop", values: ["supermarket", "wholesale"] },
+  { category: "convenience_store", key: "shop", values: ["convenience", "general", "variety_store"] },
+  { category: "department_store", key: "shop", values: ["department_store"] },
+  { category: "bank", key: "amenity", values: ["bank"] },
+  { category: "atm", key: "amenity", values: ["atm"] },
+  { category: "pharmacy", key: "amenity", values: ["pharmacy"] },
+  { category: "pharmacy", key: "healthcare", values: ["pharmacy"] },
+  { category: "pharmacy", key: "shop", values: ["chemist"] },
+  { category: "health_service", key: "amenity", values: ["doctors", "dentist", "veterinary"] },
+  { category: "health_service", key: "healthcare", values: [ANY] },
+  { category: "fuel", key: "amenity", values: ["fuel"] },
+  { category: "hotel", key: "tourism", values: ["hotel", "motel", "resort"] },
+  { category: "lodging", key: "tourism", values: ["guest_house", "hostel", "apartment", "chalet", "camp_site"] },
+  { category: "museum", key: "tourism", values: ["museum"] },
+  { category: "library", key: "amenity", values: ["library"] },
+  { category: "sports", key: "leisure", values: ["sports_centre", "fitness_centre", "pitch", "stadium", "swimming_pool", "track", "golf_course"] },
+  // Information boards and guideposts are signs, not attractions: the generic "Place".
+  { category: "other_place", key: "tourism", values: ["information"] },
+  // ---- ANY rules: a named element with the key is a place of that kind
+  { category: "attraction", key: "tourism", values: [ANY] },
+  { category: "historic", key: "historic", values: [ANY] },
+  { category: "leisure", key: "leisure", values: [ANY] },
+  { category: "office", key: "office", values: [ANY] },
+  { category: "craft", key: "craft", values: [ANY] },
+  { category: "shop", key: "shop", values: [ANY] },
+  { category: "building", key: "building", values: [ANY] },
+  { category: "other_place", key: "amenity", values: [ANY] },
 ];
 
 /** OSM contributor metadata: never stored in a committed snapshot, never imported. */
@@ -151,7 +193,8 @@ function matches(tags: Record<string, string>, rule: Rule): boolean {
   const value = tags[rule.key];
   if (value === undefined) return false;
   const parts = value.split(";").map((p) => p.trim());
-  if (!rule.values.some((v) => parts.includes(v))) return false;
+  const any = rule.values.includes(ANY);
+  if (any ? parts.every((p) => p === "no" || p === "") : !rule.values.some((v) => parts.includes(v))) return false;
   return Object.entries(rule.also ?? {}).every(([k, v]) => tags[k] === v);
 }
 

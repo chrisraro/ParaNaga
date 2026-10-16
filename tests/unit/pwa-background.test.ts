@@ -27,11 +27,15 @@ afterEach(() => {
 });
 
 describe("background search-index fetch", () => {
-  it("fetches the head and the index of that revision once", async () => {
+  it("fetches the head, the index and the named-places chunk of that revision once", async () => {
     const fetchMock = vi.fn(async (url: string) => (url === "/api/v1/network/head" ? json(snapshot.revision) : json({})));
     vi.stubGlobal("fetch", fetchMock);
     expect(await prefetchSearchIndexNow()).toBe("fetched");
-    expect(fetchMock.mock.calls.map((c) => c[0])).toEqual(["/api/v1/network/head", `/api/v1/network/search-index/${snapshot.revision.revisionId}`]);
+    expect(fetchMock.mock.calls.map((c) => c[0])).toEqual([
+      "/api/v1/network/head",
+      `/api/v1/network/search-index/${snapshot.revision.revisionId}`,
+      `/api/v1/network/search-places/${snapshot.revision.revisionId}`,
+    ]);
   });
 
   it("is skipped with Low-data mode on", async () => {

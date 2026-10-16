@@ -31,7 +31,7 @@ import {
   type RefObject,
 } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
-import { useSearchIndex } from "@/client/search/use-search-index";
+import { useSearchIndex, type MorePlacesState } from "@/client/search/use-search-index";
 import { routeListSchema, sourceListSchema, type SearchIndex, type SearchOsmPlace } from "@/domain/api/schemas";
 import {
   CARD_LIMIT,
@@ -51,6 +51,7 @@ import {
   railSourcesText,
   routeDirectoryGroups,
   routeEvidenceBadge,
+  showMoreCards,
   type DirectorySegment,
   type ExploreCategoryId,
 } from "@/domain/places/explore";
@@ -98,10 +99,10 @@ export function ExploreScreen() {
       </div>
     );
   }
-  return <ExploreView index={state.index} />;
+  return <ExploreView index={state.index} morePlaces={state.morePlaces} onRetry={state.retry} />;
 }
 
-export function ExploreView({ index }: { index: SearchIndex }) {
+export function ExploreView({ index, morePlaces = "ready", onRetry }: { index: SearchIndex; morePlaces?: MorePlacesState; onRetry?: () => void }) {
   const directoryHeading = useRef<HTMLHeadingElement>(null);
   return (
     <div className="pn-explore">
@@ -118,7 +119,7 @@ export function ExploreView({ index }: { index: SearchIndex }) {
       >
         Jump to directory
       </a>
-      <PlacesByCategory places={index.osmPlaces} />
+      <PlacesByCategory places={index.osmPlaces} morePlaces={morePlaces} onRetry={onRetry} />
       <Directory index={index} headingRef={directoryHeading} />
     </div>
   );
@@ -143,17 +144,18 @@ function useOnCommute(): (place: SearchOsmPlace) => void {
   }, []);
 }
 
-function PlacesByCategory({ places }: { places: readonly SearchOsmPlace[] }) {
+function PlacesByCategory({ places, morePlaces, onRetry }: { places: readonly SearchOsmPlace[]; morePlaces: MorePlacesState; onRetry?: () => void }) {
   const uid = useId();
   const [cat, setCat] = useState<ExploreCategoryId>("all");
-  const [expanded, setExpanded] = useState<ExploreCategoryId | null>(null);
+  const [reveal, setReveal] = useState<{ cat: ExploreCategoryId; n: number } | null>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const cardList = useRef<HTMLUListElement>(null);
   const focusCard = useRef<number | null>(null);
   const onCommute = useOnCommute();
   const list = useMemo(() => placesInCategory(places, cat), [places, cat]);
-  const showAll = expanded === cat || list.length <= CARD_LIMIT;
-  const shown = showAll ? list : list.slice(0, CARD_LIMIT);
+  const shownCount = reveal?.cat === cat ? reveal.n : CARD_LIMIT;
+  const shown = list.slice(0, shownCount);
+  const more = list.length > CARD_LIMIT ? showMoreCards(list.length, shownCount) : null;
   const active = Math.max(0, EXPLORE_CATEGORIES.findIndex((c) => c.id === cat));
   const tabId = (id: ExploreCategoryId) => `${uid}-cat-${id}`;
   const panelId = `${uid}-cards`;
@@ -212,7 +214,17 @@ function PlacesByCategory({ places }: { places: readonly SearchOsmPlace[] }) {
         })}
       </div>
       <div id={panelId} role="tabpanel" aria-labelledby={tabId(cat)} className="pn-explore__panel" data-testid="explore-cards">
-        {list.length === 0 ? (
+        {list.length === 0 && morePlaces !== "ready" ? (
+          // Task 14: shops, restaurants and the rest are a lazy chunk; never say "none on file" before it arrived.
+          <p className="pn-explore__empty" role={morePlaces === "loading" ? "status" : undefined} data-testid="explore-more-pending">
+            {morePlaces === "loading" ? "Loading more places…" : "Could not load these places. "}
+            {morePlaces === "failed" && onRetry ? (
+              <button type="button" className="pn-detail__retry" onClick={onRetry}>
+                Try again
+              </button>
+            ) : null}
+          </p>
+        ) : list.length === 0 ? (
           <p className="pn-explore__empty" data-testid="explore-empty">
             {emptyCategoryText(cat)}
           </p>
@@ -223,19 +235,19 @@ function PlacesByCategory({ places }: { places: readonly SearchOsmPlace[] }) {
             ))}
           </ul>
         )}
-        {showAll ? null : (
+        {more ? (
           <button
             type="button"
             className="pn-btn pn-btn--secondary pn-explore__more"
             onClick={() => {
-              focusCard.current = CARD_LIMIT;
-              setExpanded(cat);
+              focusCard.current = shown.length;
+              setReveal({ cat, n: more.next });
             }}
             data-testid="explore-show-all"
           >
-            {`Show all ${list.length} places`}
+            {more.label}
           </button>
-        )}
+        ) : null}
       </div>
       <Note testId="explore-places-note">{EXPLORE_PLACES_NOTE}</Note>
       <OsmAttribution testId="explore-osm-attribution" />
@@ -251,6 +263,12 @@ const ICON_PATH: Record<Exclude<ExploreCategoryId, "all">, string> = {
   government: "M4 21h16M6 21V10M18 21V10M12 21V10M3 10l9-6 9 6z",
   parks: "M12 22v-6M12 2l6 9h-3l4 5H5l4-5H6z",
   terminals: "M5 17V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11zM5 12h14M8 20v-3M16 20v-3M8 15h.01M16 15h.01",
+  food: "M7 3v8M5 3v4a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-3 4-3 7h3v11",
+  shops: "M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2",
+  services: "M3 10l9-6 9 6M5 10v9M19 10v9M9 10v9M15 10v9M3 21h18",
+  stay: "M3 19V8M3 14h18v5M21 14v-2a3 3 0 0 0-3-3h-7v5M7 12h.01",
+  sights: "M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z",
+  other: "M12 21s-6-5.6-6-11a6 6 0 0 1 12 0c0 5.4-6 11-6 11zM12 8v4M12 14h.01",
 };
 
 function CommuteIcon() {

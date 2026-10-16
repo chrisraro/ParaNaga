@@ -721,6 +721,19 @@ export const searchIndexSchema = z.object({
 });
 export type SearchIndex = z.infer<typeof searchIndexSchema>;
 
+// ---------------------------------------------------------------- GET /api/v1/network/search-places/:revisionId
+
+/**
+ * Task 14: every other named OpenStreetMap place (restaurants, shops, banks, ... the categories of
+ * MORE_PLACE_CATEGORIES) as a second, lazy chunk. Same immutable-per-revision rules as the search
+ * index. It may be empty (a revision imported before Task 14 holds none): that is a complete answer.
+ */
+export const searchPlacesSchema = z.object({
+  revision: revisionMetaSchema,
+  places: z.array(searchOsmPlaceSchema),
+});
+export type SearchPlaces = z.infer<typeof searchPlacesSchema>;
+
 /**
  * The index is cached as immutable, so an empty read is never sent: a published revision always
  * has labelled candidate pins and routes (same rule as isCompleteSnapshot, which needs stops).

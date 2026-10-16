@@ -75,6 +75,13 @@ function toSource(s: Row): SourceList["sources"][number] {
 
 // ---------------------------------------------------------------- search index
 
+/** The published OSM places of `revisionId` (Task 14's lazy chunk), or null when it is not the published revision. */
+export async function getSearchPlacesSource(db: Db, revisionId: string): Promise<Pick<SearchIndexSource, "revision" | "places"> | null> {
+  const revision = await getPublishedRevision(db);
+  if (!revision || revision.revisionId !== revisionId) return null;
+  return { revision, places: await listPlaces(db, revisionId) };
+}
+
 /** Everything the search index is built from, or null when `revisionId` is not the published revision. */
 export async function getSearchIndexSource(db: Db, revisionId: string): Promise<SearchIndexSource | null> {
   const revision = await getPublishedRevision(db);

@@ -6,9 +6,11 @@ import { searchIndexSchema } from "@/domain/api/schemas";
 import {
   GROUP_LIMIT,
   GROUP_ORDER,
+  PLACES_STEP,
   bigramDice,
   countResults,
   endpointForResult,
+  groupView,
   resultSubtitle,
   searchIndex,
   type SearchGroup,
@@ -198,5 +200,99 @@ describe("endpointForResult", () => {
     }
     const iriga = searchIndex(index, "Iriga", on).flatMap((g) => g.results).find((r) => r.kind === "regional")!;
     expect(endpointForResult(iriga)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------- Task 14: every named place
+
+const osm = (name: string, category: SearchIndexPlace["category"], n: number, aliases: string[] = []): SearchIndexPlace => ({
+  key: `osm:node/${n}`, name, aliases, category, lat: 13.62 + n / 100000, lng: 123.18, osmVersion: 1, sourceCode: "OSM-2026-10-17",
+});
+type SearchIndexPlace = (typeof index.osmPlaces)[number];
+const pinPlace = (label: string, n: number) => ({
+  key: `pin${n}`, label, spellings: [label],
+  pins: [{ stopId: "00000000-0000-4000-8000-00000000000" + n, code: null, layer: "Loop Service A", lat: 13.62, lng: 123.18, onRoute: true }],
+});
+const withPlaces = (osmPlaces: SearchIndexPlace[], pinPlaces: ReturnType<typeof pinPlace>[] = []) => ({ ...index, osmPlaces, pinPlaces });
+
+describe("searchIndex: named places (Task 14)", () => {
+  it("finds a restaurant, a cafe, a pharmacy and a bank from the lazy chunk, labelled from OpenStreetMap, never verified", () => {
+    const idx = withPlaces([
+      osm("Mang Inasal Naga", "restaurant", 1), osm("Bo's Coffee", "cafe", 2), osm("Mercury Drug", "pharmacy", 3, ["Mercury Drug Store"]),
+      osm("BDO Naga", "bank", 4), osm("Nameless Hall", "other_place", 5),
+    ]);
+    const sub = (q: string) => resultSubtitle(first(searchIndex(idx, q, off)));
+    expect(sub("mang inasal")).toBe("Restaurant · from OpenStreetMap");
+    expect(sub("coffee")).toBe("Cafe · from OpenStreetMap");
+    expect(sub("mercury drug store")).toBe("Pharmacy · from OpenStreetMap");
+    expect(sub("bdo")).toBe("Bank · from OpenStreetMap");
+    expect(sub("nameless")).toBe("Place · from OpenStreetMap");
+    for (const q of ["mang inasal", "coffee", "bdo"]) expect(resultSubtitle(first(searchIndex(idx, q, off)))).not.toMatch(/verified/i);
+  });
+
+  it("a business name beats a mapped-stop street label that matches the same way, and the Places group leads the routes found only through a street", () => {
+    const idx = withPlaces([osm("Magsaysay Drug", "pharmacy", 1)], [pinPlace("Magsaysay Ave", 1)]);
+    expect(searchIndex(idx, "magsaysay", off)[0]!.results.map((r) => r.kind)).toEqual(["osm", "pin"]);
+    // A route whose legal plan lists the street scores as a substring, but sits in the Routes group, below every place.
+    const street = { ...index.routes[0]!, streets: ["Magsaysay Ave"] };
+    const ids = searchIndex({ ...idx, routes: [street] }, "magsaysay", off).map((g) => g.id);
+    expect(ids.indexOf("places")).toBeLessThan(ids.indexOf("routes"));
+  });
+
+  it("a match that starts earlier still wins over a business that only contains the query", () => {
+    const idx = withPlaces([osm("Mercury Drug Magsaysay", "pharmacy", 1)], [pinPlace("Cor. Magsaysay Ave & Elias Angeles St", 1)]);
+    expect(searchIndex(idx, "magsaysay", off)[0]!.results.map((r) => r.kind)).toEqual(["pin", "osm"]);
+  });
+
+  it("a higher score wins: a street label that starts with the query beats a business that only contains it", () => {
+    const idx = withPlaces([osm("Mercury Drug Magsaysay", "pharmacy", 1)], [pinPlace("Magsaysay Ave", 1)]);
+    expect(searchIndex(idx, "magsaysay", off)[0]!.results.map((r) => r.kind)).toEqual(["pin", "osm"]);
+  });
+
+  it("a real business ranks above a generic building or unclassified place of the same score", () => {
+    const idx = withPlaces([osm("Rizal Building", "building", 1), osm("Rizal Hall", "other_place", 2), osm("Rizal Bakery", "bakery", 3)]);
+    const titlesOf = searchIndex(idx, "rizal", off)[0]!.results.map((r) => r.title);
+    expect(titlesOf[0]).toBe("Rizal Bakery");
+    expect(new Set(titlesOf.slice(1))).toEqual(new Set(["Rizal Building", "Rizal Hall"]));
+  });
+
+  it("exact and prefix still lead inside the places group", () => {
+    const idx = withPlaces([osm("Naga Pharmacy Annex", "pharmacy", 1), osm("Pharmacy", "pharmacy", 2), osm("Pharmacy Plus", "pharmacy", 3)]);
+    expect(searchIndex(idx, "pharmacy", off)[0]!.results.map((r) => r.title)).toEqual(["Pharmacy", "Pharmacy Plus", "Naga Pharmacy Annex"]);
+  });
+});
+
+describe("groupView: GROUP_LIMIT and show more", () => {
+  const many = (n: number) => ({
+    id: "places" as const, title: "Places",
+    results: Array.from({ length: n }, (_, i) => ({ kind: "osm" as const, key: `osm:node/${i + 1}`, title: `P${i}`, category: "shop" as const, point: { lat: 13.6, lng: 123.1 }, score: 40, offset: 0 })),
+  });
+
+  it("starts at GROUP_LIMIT rows; a small group says Show all N and reveals everything", () => {
+    const v = groupView(many(12));
+    expect(v.rows).toHaveLength(GROUP_LIMIT);
+    expect(v.label).toBe("Show all 12");
+    expect(groupView(many(12), v.next).rows).toHaveLength(12);
+    expect(groupView(many(12), v.next).label).toBeNull();
+    expect(groupView(many(3)).label).toBeNull();
+  });
+
+  it("a large places group reveals PLACES_STEP more at a time, then Show all", () => {
+    expect(PLACES_STEP).toBe(25);
+    const g = many(80);
+    const a = groupView(g);
+    expect(a.label).toBe("Show 25 more");
+    const b = groupView(g, a.next);
+    expect(b.rows).toHaveLength(30);
+    expect(b.label).toBe("Show 25 more");
+    const c = groupView(g, b.next);
+    expect(c.rows).toHaveLength(55);
+    expect(c.label).toBe("Show all 80");
+    expect(groupView(g, c.next).rows).toHaveLength(80);
+  });
+
+  it("other large groups keep Show all", () => {
+    const g = { ...many(80), id: "routes" as const };
+    expect(groupView(g).label).toBe("Show all 80");
   });
 });

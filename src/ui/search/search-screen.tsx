@@ -23,7 +23,7 @@ import { useSavedPlaces } from "@/client/saved/use-saved";
 import { useSearchIndex } from "@/client/search/use-search-index";
 import { putSavedPlace } from "@/client/storage/db";
 import { findSavedPlace, type SavedPlaceSource } from "@/domain/saved/saved";
-import { GROUP_LIMIT, countResults, resultSubtitle, searchIndex, type SearchGroup, type SearchGroupId, type SearchResult } from "@/domain/search/search";
+import { countResults, groupView, resultSubtitle, searchIndex, type SearchGroup, type SearchGroupId, type SearchResult } from "@/domain/search/search";
 import { queryFromHash } from "@/domain/places/place-detail";
 import { actionFor, noticeFor, parseSearchPurpose, type SearchAction, type SearchPurpose } from "@/domain/search/select";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
@@ -172,20 +172,22 @@ function ResultRow({ result, purpose, onSelect }: { result: SearchResult; purpos
 
 function ResultGroup({
   group,
-  expanded,
+  shownRows,
   onExpand,
   purpose,
   onSelect,
 }: {
   group: SearchGroup;
-  expanded: boolean;
-  onExpand: () => void;
+  /** Rows revealed so far (undefined = the first GROUP_LIMIT). */
+  shownRows: number | undefined;
+  /** Reveals more; `firstNew` is the first row it adds, `next` the revealed count afterwards. */
+  onExpand: (firstNew: SearchResult, next: number) => void;
   purpose: SearchPurpose | null;
   onSelect: (r: SearchResult) => void;
 }) {
   const id = useId();
-  const shown = expanded ? group.results : group.results.slice(0, GROUP_LIMIT);
-  const hidden = group.results.length - shown.length;
+  const view = groupView(group, shownRows);
+  const shown = view.rows;
   return (
     <section className="pn-section" aria-labelledby={id} data-testid={`search-group-${group.id}`}>
       <h2 id={id} className="pn-section__title">
@@ -196,9 +198,9 @@ function ResultGroup({
           <ResultRow key={resultKey(r)} result={r} purpose={purpose} onSelect={onSelect} />
         ))}
       </ul>
-      {hidden > 0 ? (
-        <button type="button" className="pn-text-btn pn-search__more" onClick={onExpand}>
-          Show all {group.results.length}
+      {view.label ? (
+        <button type="button" className="pn-text-btn pn-search__more" onClick={() => onExpand(group.results[shown.length]!, view.next)}>
+          {view.label}
         </button>
       ) : null}
       {group.id === "places" && shown.some((r) => r.kind === "osm") ? <OsmAttribution testId="search-osm-attribution" /> : null}
@@ -326,7 +328,7 @@ function SearchBody({
   const [regional, setRegional] = useState(false);
   // "Show all" and the open notice belong to one (debounced) query. The notice remembers the
   // row that opened it, so Close puts focus back there.
-  const [expanded, setExpanded] = useState<{ query: string; ids: SearchGroupId[] }>({ query: "", ids: [] });
+  const [expanded, setExpanded] = useState<{ query: string; rows: Partial<Record<SearchGroupId, number>> }>({ query: "", rows: {} });
   const [notice, setNotice] = useState<{ query: string; result: SearchResult } | null>(null);
   // A row to focus once it has rendered (after Close, or the first row "Show all" revealed).
   // One attempt only: if the row is gone (the query changed meanwhile), the request is dropped,
@@ -349,6 +351,7 @@ function SearchBody({
   const debounced = query.trim() === "" ? "" : typed;
 
   const index = indexState.status === "ready" ? indexState.index : null;
+  const morePlaces = indexState.status === "ready" ? indexState.morePlaces : "ready";
   const savedPlaces = useSavedPlaces();
   const saved = useMemo(
     () => (savedPlaces.status === "ready" ? savedPlaces.records.map((p) => ({ id: p.id, label: p.label, point: p.point, source: p.source })) : []),
@@ -361,7 +364,7 @@ function SearchBody({
   const total = countResults(groups);
   const hasQuery = debounced.trim() !== "";
   const openNotice = notice && notice.query === debounced ? notice.result : null;
-  const expandedIds = expanded.query === debounced ? expanded.ids : [];
+  const expandedRows = expanded.query === debounced ? expanded.rows : {};
 
   const goBack = () => {
     if (cameFromInsideApp()) router.back();
@@ -530,20 +533,34 @@ function SearchBody({
           />
         ) : null}
 
-        {index && hasQuery && total === 0 ? (
+        {/* Task 14: shops, restaurants and the rest arrive as a lazy chunk after the index. */}
+        {index && hasQuery && total === 0 && morePlaces === "loading" ? (
+          <p className="pn-search__empty" role="status" data-testid="search-more-loading">
+            Loading more places…
+          </p>
+        ) : null}
+        {index && hasQuery && total === 0 && morePlaces !== "loading" ? (
           <p className="pn-search__empty" data-testid="search-empty">
             {EMPTY_COPY}
           </p>
+        ) : null}
+        {index && hasQuery && morePlaces === "failed" ? (
+          <div className="pn-search__error" data-testid="search-more-failed">
+            <p>Shops, restaurants and other places could not load, so they are missing from these results.</p>
+            <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
+              Try again
+            </button>
+          </div>
         ) : null}
         {groups.map((g) => (
           <ResultGroup
             key={g.id}
             group={g}
-            expanded={expandedIds.includes(g.id)}
-            onExpand={() => {
-              // The button goes away: focus moves to the first row it revealed.
-              pendingFocus.current = resultKey(g.results[GROUP_LIMIT]!);
-              setExpanded({ query: debounced, ids: [...expandedIds, g.id] });
+            shownRows={expandedRows[g.id]}
+            onExpand={(firstNew, next) => {
+              // Focus moves to the first row it revealed (the button may have gone away).
+              pendingFocus.current = resultKey(firstNew);
+              setExpanded({ query: debounced, rows: { ...expandedRows, [g.id]: next } });
             }}
             purpose={purpose}
             onSelect={onSelect}

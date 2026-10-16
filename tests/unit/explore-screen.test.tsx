@@ -111,9 +111,27 @@ describe("Explore: places by category", () => {
     fireEvent.keyDown(screen.getByRole("tab", { name: "Markets & malls" }), { key: "ArrowRight" });
     expect(document.activeElement).toBe(screen.getByRole("tab", { name: "Health" }));
     expect(cards().every((c) => c.dataset.category === "hospital_clinic")).toBe(true);
-    fireEvent.keyDown(document.activeElement!, { key: "End" });
+    fireEvent.click(screen.getByTestId("explore-chip-terminals"));
     expect(cards().every((c) => c.dataset.category === "bus_terminal")).toBe(true);
     expect(cards()[0]!.textContent).toContain("Bus station · from OpenStreetMap");
+    fireEvent.keyDown(document.activeElement!, { key: "End" });
+    expect(screen.getByRole("tab", { name: "Other places" }).getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("the Task 14 chips list the named places; before their chunk arrived an empty chip says loading, never none on file", () => {
+    const cafe = { key: "osm:node/1", name: "Bo's Coffee", aliases: [], category: "cafe" as const, lat: 13.62, lng: 123.18, osmVersion: 1, sourceCode: "OSM-2026-10-17" };
+    const pharmacy = { ...cafe, key: "osm:node/2", name: "Mercury Drug", category: "pharmacy" as const };
+    const { unmount } = render(<ExploreView index={{ ...index, osmPlaces: [...index.osmPlaces, cafe, pharmacy] }} />);
+    fireEvent.click(screen.getByRole("tab", { name: "Food & drink" }));
+    expect(cards().map((c) => c.textContent)).toEqual([expect.stringContaining("Bo's Coffee")]);
+    expect(cards()[0]!.textContent).toContain("Cafe · from OpenStreetMap");
+    fireEvent.click(screen.getByRole("tab", { name: "Health" }));
+    expect(cards().map((c) => c.dataset.category)).toContain("pharmacy");
+    unmount();
+    render(<ExploreView index={index} morePlaces="loading" />);
+    fireEvent.click(screen.getByRole("tab", { name: "Food & drink" }));
+    expect(screen.getByTestId("explore-more-pending").textContent).toBe("Loading more places…");
+    expect(screen.queryByTestId("explore-empty")).toBeNull();
   });
 
   it("an empty category says so", () => {

@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { NAGA_BOUNDARY } from "@/domain/geo/naga";
-import { CATEGORY_RULES, KEPT_TAGS, parseOsmPlaces, stripOverpassResponse, type OsmPlace } from "@/domain/import/osm-places";
-import { OSM_PLACE_CATEGORIES } from "@/domain/places/osm-categories";
+import { CATEGORY_RULES, KEPT_TAGS, categorize, parseOsmPlaces, stripOverpassResponse, type OsmPlace } from "@/domain/import/osm-places";
+import { CORE_PLACE_CATEGORIES, OSM_CATEGORY_LABEL, OSM_PLACE_CATEGORIES, isCorePlaceCategory } from "@/domain/places/osm-categories";
 
 const FIXTURE = "tests/fixtures/osm/naga-places-2026-10-15.osm.json";
 const fixture = () => JSON.parse(readFileSync(FIXTURE, "utf8")) as { header: Record<string, unknown>; response: { elements: Record<string, unknown>[] } };
@@ -21,11 +21,11 @@ describe("parseOsmPlaces on the synthetic fixture", () => {
   it("keeps only named, categorised features inside the boundary", () => {
     const { places, dropped } = parse();
     expect(places.map((p) => p.key)).toEqual([
-      "osm:node/999000000001", "osm:node/999000000002", "osm:node/999000000009", "osm:node/999000000010",
+      "osm:node/999000000001", "osm:node/999000000002", "osm:node/999000000008", "osm:node/999000000009", "osm:node/999000000010",
       "osm:node/999000000012", "osm:node/999000000013", "osm:node/999000000015", "osm:node/999000000016",
       "osm:way/999000000003", "osm:way/999000000011", "osm:relation/999000000004",
     ]);
-    expect(dropped).toEqual({ unnamed: 2, outside_boundary: 1, other_tags: 1, no_coordinate: 1 });
+    expect(dropped).toEqual({ unnamed: 2, outside_boundary: 1, other_tags: 0, no_coordinate: 1 });
   });
 
   it("drops unnamed and blank-named features", () => {
@@ -60,11 +60,14 @@ describe("parseOsmPlaces on the synthetic fixture", () => {
   });
 
   it("the precedence table covers every ParaNaga category exactly once", () => {
-    expect([...new Set(CATEGORY_RULES.map((r) => r.category))]).toEqual([
+    // The D10 categories keep their order at the top of the table; the fallbacks come last.
+    const order = [...new Set(CATEGORY_RULES.map((r) => r.category))];
+    expect(order.slice(0, 10)).toEqual([
       "bus_terminal", "hospital_clinic", "college_university", "school", "place_of_worship", "government",
       "market", "mall", "park", "square",
     ]);
-    expect([...new Set(CATEGORY_RULES.map((r) => r.category))].sort()).toEqual([...OSM_PLACE_CATEGORIES].sort());
+    expect(CATEGORY_RULES.at(-1)!.category).toBe("other_place");
+    expect([...order].sort()).toEqual([...OSM_PLACE_CATEGORIES].sort());
   });
 
   it("keeps the name and the alias tags verbatim, skipping empty ones", () => {
@@ -126,8 +129,8 @@ describe("parseOsmPlaces on the synthetic fixture", () => {
 
   it("counts kept places per category", () => {
     expect(parse().counts).toEqual({
-      bus_terminal: 1, hospital_clinic: 0, college_university: 1, school: 2, place_of_worship: 0, government: 3,
-      market: 1, mall: 1, park: 2, square: 0,
+      ...Object.fromEntries(OSM_PLACE_CATEGORIES.map((c) => [c, 0])),
+      bus_terminal: 1, college_university: 1, school: 2, government: 3, market: 1, mall: 1, park: 2, restaurant: 1,
     });
   });
 });
@@ -217,8 +220,8 @@ describe("stripOverpassResponse", () => {
 
   it("keeps only the tags the importer reads, and the parser output is unchanged", () => {
     expect([...KEPT_TAGS].sort()).toEqual([
-      "alt_name", "amenity", "bus", "leisure", "name", "name:en", "name:fil", "office", "old_name", "place",
-      "public_transport", "shop",
+      "alt_name", "amenity", "building", "bus", "craft", "healthcare", "historic", "leisure", "name", "name:en",
+      "name:fil", "office", "old_name", "place", "public_transport", "shop", "tourism",
     ]);
     const noisy = structuredClone(overpass);
     Object.assign(noisy.elements[0]!.tags, {
@@ -243,5 +246,89 @@ describe("stripOverpassResponse", () => {
     const result = parse({ header, response });
     expect(result.problems).toEqual([]);
     expect(result.places.map((p) => p.key)).toEqual(["osm:node/1", "osm:way/2", "osm:relation/3"]);
+  });
+});
+
+describe("category mapping (Task 14: every named place)", () => {
+  const cat = (tags: Record<string, string>) => categorize(tags)?.category ?? null;
+
+  it.each([
+    [{ amenity: "restaurant" }, "restaurant"],
+    [{ amenity: "food_court" }, "restaurant"],
+    [{ amenity: "fast_food" }, "fast_food"],
+    [{ amenity: "cafe" }, "cafe"],
+    [{ amenity: "pub" }, "bar"],
+    [{ shop: "bakery" }, "bakery"],
+    [{ shop: "supermarket" }, "supermarket"],
+    [{ shop: "convenience" }, "convenience_store"],
+    [{ shop: "department_store" }, "department_store"],
+    [{ shop: "clothes" }, "shop"],
+    [{ amenity: "bank" }, "bank"],
+    [{ amenity: "atm" }, "atm"],
+    [{ amenity: "pharmacy" }, "pharmacy"],
+    [{ shop: "chemist" }, "pharmacy"],
+    [{ healthcare: "pharmacy" }, "pharmacy"],
+    [{ amenity: "dentist" }, "health_service"],
+    [{ healthcare: "laboratory" }, "health_service"],
+    [{ amenity: "fuel" }, "fuel"],
+    [{ tourism: "hotel" }, "hotel"],
+    [{ tourism: "guest_house" }, "lodging"],
+    [{ tourism: "museum" }, "museum"],
+    [{ tourism: "viewpoint" }, "attraction"],
+    [{ tourism: "information", information: "board" }, "other_place"],
+    [{ historic: "monument" }, "historic"],
+    [{ amenity: "library" }, "library"],
+    [{ leisure: "fitness_centre" }, "sports"],
+    [{ leisure: "playground" }, "leisure"],
+    [{ office: "company" }, "office"],
+    [{ craft: "tailor" }, "craft"],
+    [{ amenity: "kindergarten" }, "school"],
+    [{ building: "cathedral" }, "place_of_worship"],
+    [{ building: "yes" }, "building"],
+    [{ amenity: "bicycle_parking" }, "other_place"],
+  ] as const)("%j is %s", (tags, category) => {
+    expect(cat({ ...tags })).toBe(category);
+  });
+
+  it("keeps the D10 precedence over the new rules", () => {
+    expect(cat({ shop: "mall", amenity: "restaurant" })).toBe("mall");
+    expect(cat({ amenity: "hospital", healthcare: "hospital" })).toBe("hospital_clinic");
+    expect(cat({ amenity: "post_office", shop: "stationery" })).toBe("government");
+    expect(cat({ amenity: "place_of_worship", building: "church" })).toBe("place_of_worship");
+  });
+
+  it("an unlisted value of a place key falls back to the generic categories; no place key is no place", () => {
+    expect(cat({ shop: "unheard_of_kind" })).toBe("shop");
+    expect(cat({ amenity: "unheard_of_kind" })).toBe("other_place");
+    expect(cat({ shop: "no" })).toBeNull();
+    expect(cat({ highway: "residential", name: "Rizal Avenue" })).toBeNull();
+  });
+
+  it("stores only the tags that decided the category", () => {
+    expect(categorize({ amenity: "cafe", cuisine: "coffee_shop", shop: "coffee" })?.tags).toEqual({ amenity: "cafe" });
+  });
+
+  it("every category has a human label, and the D10 ten are the core set", () => {
+    for (const c of OSM_PLACE_CATEGORIES) expect(OSM_CATEGORY_LABEL[c], c).toMatch(/^[A-Z]/);
+    expect(OSM_CATEGORY_LABEL.other_place).toBe("Place");
+    expect(OSM_CATEGORY_LABEL.restaurant).toBe("Restaurant");
+    expect(CORE_PLACE_CATEGORIES).toHaveLength(10);
+    expect(isCorePlaceCategory("mall")).toBe(true);
+    expect(isCorePlaceCategory("cafe")).toBe(false);
+  });
+
+  it("the stored tags include every key the rules read, so the snapshot strip keeps them", () => {
+    for (const key of ["shop", "amenity", "tourism", "leisure", "office", "craft", "healthcare", "historic", "building"]) {
+      expect(KEPT_TAGS.has(key), key).toBe(true);
+    }
+  });
+});
+
+describe("migration 0011", () => {
+  it("lists exactly the ParaNaga categories in the place_version check", () => {
+    const sqlText = readFileSync("db/migrations/0011_osm_place_categories.sql", "utf8");
+    const check = sqlText.slice(sqlText.indexOf("add constraint place_version_category_check"));
+    const listed = [...check.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+    expect([...listed].sort()).toEqual([...OSM_PLACE_CATEGORIES].sort());
   });
 });

@@ -22,6 +22,8 @@ import { pinPlaceEndpointLabel, pinPlacePoint } from "../places/place-detail";
 import { compactText, foldText, isCodeLikeQuery, tokenize } from "./normalize";
 
 export const GROUP_LIMIT = 5;
+/** Task 14: a large Places group reveals this many more rows per tap ("Show 25 more"). */
+export const PLACES_STEP = 25;
 export const FUZZY_MIN_CHARS = 4;
 export const FUZZY_MIN_DICE = 0.6;
 
@@ -249,10 +251,22 @@ function evidenceOf(level: SearchIndex["routes"][number]["evidenceLevel"]): "doc
 }
 
 
+/** Categories that say little about what a named place is (a named building, an unclassified amenity). */
+const GENERIC_CATEGORIES: ReadonlySet<OsmPlaceCategory> = new Set(["building", "other_place"]);
+
+/**
+ * On the same score and match offset a real business or landmark (an OpenStreetMap place with a
+ * real category) comes before a generic building or unclassified amenity.
+ */
+function tier(r: SearchResult): number {
+  return r.kind === "osm" && !GENERIC_CATEGORIES.has(r.category) ? 0 : 1;
+}
+
 function compareResults(a: SearchResult & { i: number }, b: SearchResult & { i: number }): number {
   return (
     b.score - a.score ||
     a.offset - b.offset ||
+    tier(a) - tier(b) ||
     KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) ||
     a.i - b.i
   );
@@ -328,6 +342,29 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
   }
   // Fixed group order (brief, artboard): current data first, old route names (hints only) last.
   return [...groups].filter(([, results]) => results.length > 0).map(([id, results]) => ({ id, title: GROUP_TITLE[id], results }));
+}
+
+export type GroupView = {
+  /** The rows to show now. */
+  rows: SearchResult[];
+  /** Button text, or null when nothing is hidden. */
+  label: string | null;
+  /** The row count after one tap of the button. */
+  next: number;
+};
+
+/**
+ * What a group shows when `shown` rows are revealed (GROUP_LIMIT at first). A button reveals
+ * everything ("Show all N"), except a large Places group (Naga has thousands of named places),
+ * which reveals PLACES_STEP more at a time until the rest fits in one step.
+ */
+export function groupView(group: SearchGroup, shown: number = GROUP_LIMIT): GroupView {
+  const total = group.results.length;
+  const rows = group.results.slice(0, shown);
+  const hidden = total - rows.length;
+  if (hidden <= 0) return { rows, label: null, next: total };
+  if (group.id === "places" && hidden > PLACES_STEP) return { rows, label: `Show ${PLACES_STEP} more`, next: rows.length + PLACES_STEP };
+  return { rows, label: `Show all ${total}`, next: total };
 }
 
 export function countResults(groups: readonly SearchGroup[]): number {
