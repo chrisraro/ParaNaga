@@ -256,6 +256,15 @@ describe("searchIndex: named places (Task 14)", () => {
     expect(new Set(titlesOf.slice(1))).toEqual(new Set(["Rizal Building", "Rizal Hall"]));
   });
 
+  it("a category word finds places of that category whose name lacks it; a name match outranks a category-only match", () => {
+    const idx = withPlaces([osm("Starbucks", "cafe", 1), osm("Cafe Real", "restaurant", 2), osm("Mercury Drug", "pharmacy", 3)]);
+    const hits = searchIndex(idx, "cafe", off)[0]!.results;
+    expect(hits.map((r) => r.title)).toEqual(["Cafe Real", "Starbucks"]);
+    expect(hits[1]!.score).toBe(40);
+    expect(searchIndex(idx, "pharmacy", off)[0]!.results.map((r) => r.title)).toEqual(["Mercury Drug"]);
+    expect(searchIndex(idx, "place of worship", off)).toEqual([]);
+  });
+
   it("exact and prefix still lead inside the places group", () => {
     const idx = withPlaces([osm("Naga Pharmacy Annex", "pharmacy", 1), osm("Pharmacy", "pharmacy", 2), osm("Pharmacy Plus", "pharmacy", 3)]);
     expect(searchIndex(idx, "pharmacy", off)[0]!.results.map((r) => r.title)).toEqual(["Pharmacy", "Pharmacy Plus", "Naga Pharmacy Annex"]);

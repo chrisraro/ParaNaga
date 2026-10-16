@@ -332,3 +332,13 @@ describe("migration 0011", () => {
     expect([...listed].sort()).toEqual([...OSM_PLACE_CATEGORIES].sort());
   });
 });
+
+describe("signboards", () => {
+  it("drops named tourism=information boards (signs, not places) and counts them as other_tags", () => {
+    const f = fixture();
+    f.response.elements.push({ type: "node", id: 999000000500, lat: 13.62, lon: 123.18, version: 1, timestamp: "2026-01-01T00:00:00Z", tags: { name: "Jeepney Station/Stop from A to B", tourism: "information" } });
+    const r = parse(f);
+    expect(r.places.map((p) => p.key)).not.toContain("osm:node/999000000500");
+    expect(r.dropped.other_tags).toBe(parse().dropped.other_tags + 1);
+  });
+});

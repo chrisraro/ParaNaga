@@ -268,6 +268,10 @@ export function parseOsmPlaces(snapshot: unknown, boundary: readonly LngLat[]): 
       dropped.other_tags++;
       continue;
     }
+    if (tags.tourism === "information" && category.category === "other_place") {
+      dropped.other_tags++; // an information board or guidepost is a sign, not a place
+      continue;
+    }
     const name = tags.name;
     if (name === undefined || name.trim() === "") {
       dropped.unnamed++;

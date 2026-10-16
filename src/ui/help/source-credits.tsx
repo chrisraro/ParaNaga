@@ -15,7 +15,7 @@ export function SourceCredits({ revisionId }: { revisionId?: string }) {
         <p className="pn-footnote">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>. OSM source data and ParaNaga databases derived from it are available under the <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Open Database License 1.0</a>.</p>
         <p className="pn-footnote">{tile.url ? "Configured basemap credits: " : "No production basemap provider configured. "}{attributionParts(tile.attribution).map((part, i) => part.href ? <a key={i} href={part.href} target="_blank" rel="noopener noreferrer">{part.text}</a> : <span key={i}>{part.text}</span>)}</p>
         <ul className="pn-group">
-          <li className="pn-source"><a href="/data/attribution/naga-places-2026-10-15.osm.json" download>Download OSM places source extract (15 Oct 2026)</a></li>
+          <li className="pn-source"><a href="/data/attribution/naga-places-2026-10-16.osm.json" download>Download OSM places source extract (16 Oct 2026)</a></li>
           <li className="pn-source"><a href="/data/attribution/naga-roads-2026-10-16.osm.json" download>Download OSM roads source extract (16 Oct 2026)</a></li>
           <li className="pn-source"><a href="/data/attribution/naga-city-boundary.json" download>Download OSM Naga boundary (relation 3084673)</a></li>
           <li className="pn-source"><a href="/data/attribution/NOTICE.txt">Read data license and transformation notice</a></li>

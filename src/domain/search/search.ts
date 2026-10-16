@@ -295,7 +295,10 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
     add({ kind: "saved", id: s.id, title: s.label, point: { ...s.point }, source: s.source ?? "pinned", ...best([s.label]) });
   }
   for (const p of index.osmPlaces) {
-    add({ kind: "osm", key: p.key, title: p.name, category: p.category, point: { lat: p.lat, lng: p.lng }, ...best([p.name, ...p.aliases]) });
+    // The category word ("cafe", "pharmacy") finds a place whose name lacks it, below any name match.
+    const byName = best([p.name, ...p.aliases]);
+    const byCategory = textScore(query, OSM_CATEGORY_LABEL[p.category], fold, false).score > 0 ? { score: SECONDARY, offset: FAR - 2 } : NONE;
+    add({ kind: "osm", key: p.key, title: p.name, category: p.category, point: { lat: p.lat, lng: p.lng }, ...better(byName, byCategory) });
   }
   for (const p of index.pinPlaces) {
     const loops = [...new Set(p.pins.flatMap((x) => (x.layer ? [loopName(x.layer)] : [])))].sort();
