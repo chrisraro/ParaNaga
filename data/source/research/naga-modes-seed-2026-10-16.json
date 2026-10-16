@@ -9,10 +9,20 @@
       "tricycle-restrictions-candidates-2026-10.json@sha256:3b7ea92096ce2268095deb7da395e507872599d847a5ec48caaac8d560a20b0b",
       "loops-and-routes-candidates-2026-10.json@sha256:7ea0a8eceaf4729eb2e7738f37dd09e0453deaa1ac0ebd53f51d0495569ec32f",
       "padyak-candidates-2026-10.json@sha256:be572e366c5d0c25f34dde5be373b89db7d4c5ef45ff5e3740ba8b22c715e744",
-      "jeepney-hours-candidates-2026-10.json@sha256:6f6e6c3043cbd233fa37b07eba2310da6558780a75155130b0d64a023d761067"
+      "jeepney-hours-candidates-2026-10.json@sha256:6f6e6c3043cbd233fa37b07eba2310da6558780a75155130b0d64a023d761067",
+      "tricycle-restrictions-2026-10.md@sha256:29d18a5fae1b4191b04c57dc749010ce1360a70cacbf644cc268d5b23a2ee66a",
+      "loops-and-routes-2026-10.md@sha256:752e4eae1511ec4092354646004d0f088fbde49d7584df957385ba914837020b",
+      "padyak-2026-10.md@sha256:c761ed4d7d15bd2cc5df29feaaa560221a401108375e727e898261c11f551dec",
+      "data/source/osm/naga-roads-2026-10-16.osm.json@sha256:4c270b87dc1b9b91d81a4b1bb314918cc76b42c98f64e4b7fcf606effd30a469"
     ],
     "reviewer": "controller",
-    "jevModel": "typesafe/jev-1.13-20260917"
+    "jevModel": "typesafe/jev-1.13-20260917",
+    "assumptions": {
+      "A4": {
+        "statement": "A point is in a padyak area when its nearest place node in the whole road snapshot is one of the area's place nodes and lies within maxDistanceM of it; both trip ends must be in the same area. Approximate; plan decision E-J5, not from any source.",
+        "maxDistanceM": 1000
+      }
+    }
   },
   "sources": [
     {
@@ -5523,6 +5533,1232 @@
         "decision": "import",
         "reason": "Research conflict 6",
         "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "code": "CX10",
+      "topic": "Loops C/D and J. Miranda Ave",
+      "description": "Resolution 2025-172 (22 Apr 2025) adds J. Miranda Ave to Loops C and D; Ordinance 2025-070 (23 Sep 2025) omits it. The seed follows the ordinance; route note RN01 tells riders to ask the driver.",
+      "refs": [
+        "R8-C",
+        "R8-D",
+        "RN01"
+      ],
+      "source_codes": [
+        "RL01",
+        "RL03"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research conflict 1 (loops-and-routes-2026-10.md)",
+        "reviewedOn": "2026-10-17"
+      }
+    }
+  ],
+  "roadRules": [
+    {
+      "code": "TRI-2006-P1",
+      "ruleCode": "TRI-2006",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "National Road (San Felipe portion)"
+      ],
+      "ruleText": "National Road (San Felipe portion), from Peñafrancia Cemetery towards Barangay San Felipe and the upper Barangays.",
+      "enacted": "2006-01-30",
+      "exceptWindow": {
+        "from": "21:00",
+        "to": "05:00"
+      },
+      "geometry": "not_mapped",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Recorded without geometry: the start point, Peñafrancia Cemetery, is not in the road or places snapshot and the research gives no location for it. Not applied until located.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-P2",
+      "ruleCode": "TRI-2006",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "National Road (Concepcion Pequeña to Del Rosario portion)"
+      ],
+      "ruleText": "National Road (Concepcion Pequeña to Del Rosario portion), from the junction of Magsaysay Avenue, Roxas and Panganiban Drive towards Barangay Del Rosario.",
+      "enacted": "2006-01-30",
+      "exceptWindow": {
+        "from": "21:00",
+        "to": "05:00"
+      },
+      "geometry": "ways",
+      "wayIds": [
+        252223487,
+        721779677,
+        760083147,
+        760083145,
+        760083146,
+        760083149,
+        760083148,
+        760083143,
+        760083142,
+        241595632,
+        760083154,
+        760083153,
+        252222954,
+        252222953,
+        760083138,
+        769916315,
+        238038899,
+        793410140,
+        793410139,
+        760083141,
+        760083139,
+        760083140
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "From the Naga Rotonda (where Magsaysay Ave, Roxas Ave and Panganiban Drive meet; the rotonda ways and the 6 m connector way/721779676 are the junction and are not listed) east along OSM Maharlika Highway (the Concepcion Road / Maharlika Highway way, research §4) toward Del Rosario, to way/760083140, which crosses the city boundary. The ordinance names no end point.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-P3",
+      "ruleCode": "TRI-2006",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Roxas Avenue (Diversion Road)"
+      ],
+      "ruleText": "Along Roxas Avenue (Diversion Road). No segment limits are given.",
+      "enacted": "2006-01-30",
+      "exceptWindow": {
+        "from": "21:00",
+        "to": "05:00"
+      },
+      "geometry": "ways",
+      "wayIds": [
+        238039993,
+        252221727,
+        252222638,
+        252222640,
+        252222643,
+        252223488,
+        700454449,
+        721779678,
+        760083151,
+        760083152,
+        767876206,
+        798633361,
+        959623251,
+        1465244988,
+        1465244990,
+        1465244991
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Whole length: every OSM way named Roxas Avenue, from the Mabolo Road junction to the Naga Rotonda.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-P4",
+      "ruleCode": "TRI-2006",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "National Road (Magsaysay Avenue Portion)"
+      ],
+      "ruleText": "National Road (Magsaysay Avenue Portion), from the corner of Basilica Road and Dayangdang Street and Magsaysay Avenue towards Roxas Avenue.",
+      "enacted": "2006-01-30",
+      "exceptWindow": {
+        "from": "21:00",
+        "to": "05:00"
+      },
+      "geometry": "ways",
+      "wayIds": [
+        252223483,
+        252223486,
+        721779873
+      ],
+      "clips": [
+        {
+          "wayId": 252223483,
+          "fromNodeId": 254713607,
+          "toNodeId": 254716465
+        }
+      ],
+      "junctionNodeId": null,
+      "clipNote": "From node 254713607, where Dayangdang Street meets Magsaysay Avenue (OSM names the road on the other side Balatas-Cararayan Road; it leads to the Basilica Loop; OSM has no Basilica Road at this corner), south to the Naga Rotonda, with the two one-way links into the rotonda.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X1",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Roxas Avenue"
+      ],
+      "ruleText": "Crossing through, both ways: Roxas Avenue from CBD II Primo Outpost to ALDP Compound (2006-015 spells it ADLP).",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "not_mapped",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Recorded without geometry: CBD II Primo Outpost and ALDP Compound are not in the road or places snapshot.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X2",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Dayangdang St.",
+        "Basilica Drive"
+      ],
+      "ruleText": "Crossing through, both ways: the Dayangdang St. and Basilica Drive junction going to Basilica.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "junction",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": 254713607,
+      "clipNote": "Junction node 254713607 (Dayangdang Street / Balatas-Cararayan Road / Magsaysay Avenue). It is also where TRI-2006-P4 starts, so crossing uses no restricted edge.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X3",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Kayanga Road"
+      ],
+      "ruleText": "Crossing through, both ways: the Kayanga Road junction going to Mariano Subdivision via the Kayanga entrance.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "junction",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": 254710061,
+      "clipNote": "Junction node 254710061, where Kayanga Road (west) and Kayangga Street (east) meet Magsaysay Avenue. Mariano Subdivision is not in the snapshot.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X4",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Taal Avenue"
+      ],
+      "ruleText": "Crossing through, both ways: Taal Avenue to Mariano Subdivision via the Kayanga entrance.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        252223483
+      ],
+      "clips": [
+        {
+          "wayId": 252223483,
+          "fromNodeId": 254710065,
+          "toNodeId": 254710061
+        }
+      ],
+      "junctionNodeId": null,
+      "clipNote": "The Magsaysay Avenue segment between the Taal Avenue junction (node 254710065) and the Kayanga Road junction (node 254710061), about 85 m.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X5",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Leon SA. Aureus"
+      ],
+      "ruleText": "Crossing through, both ways: the Leon SA. Aureus junction going to Naga City Science High School.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "junction",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": 254714878,
+      "clipNote": "Junction node 254714878, where Leon Sa Aureus Street crosses Magsaysay Avenue and continues east to Naga City Science HS Road.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "TRI-2006-X6",
+      "ruleCode": "TRI-2006",
+      "kind": "exempt",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Mayflower Street"
+      ],
+      "ruleText": "Crossing through, both ways: the Mayflower Street junction going to Gimenez Park Subdivision.",
+      "enacted": "2006-01-30",
+      "exceptWindow": null,
+      "geometry": "junction",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": 254715589,
+      "clipNote": "Junction node 254715589, where Mayflower Street crosses Magsaysay Avenue. Gimenez Park Subdivision is not in the snapshot.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RT01",
+        "RT02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-1",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Central Business District"
+      ],
+      "ruleText": "Within the Central Business District, except from 8:00 P.M. to 6:00 A.M.",
+      "enacted": "1993",
+      "exceptWindow": {
+        "from": "20:00",
+        "to": "06:00"
+      },
+      "geometry": "not_mapped",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Recorded without geometry: CBD boundary not defined in the ordinance text",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-2",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Mabolo Drive"
+      ],
+      "ruleText": "Along Mabolo Drive",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "not_mapped",
+      "wayIds": [],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Recorded without geometry: no OSM way is named Mabolo Drive and the research does not say which OSM road it is (Mabolo Road is not equated without a source).",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-3",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Roxas Avenue (formerly Diversion Road)"
+      ],
+      "ruleText": "Along Roxas Avenue (formerly Diversion Road)",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        238039993,
+        252221727,
+        252222638,
+        252222640,
+        252222643,
+        252223488,
+        700454449,
+        721779678,
+        760083151,
+        760083152,
+        767876206,
+        798633361,
+        959623251,
+        1465244988,
+        1465244990,
+        1465244991
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Whole length: every OSM way named Roxas Avenue (same ways as TRI-2006-P3).",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-4",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Panganiban Avenue"
+      ],
+      "ruleText": "Along Panganiban Avenue",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        23518904,
+        23519164,
+        23519483,
+        23540253,
+        23540254,
+        252223485,
+        272595409,
+        721779874,
+        836685800,
+        836685805,
+        1553212752
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "No OSM way is named Panganiban Avenue. Mapped to OSM Panganiban Drive (rotonda to Peñafrancia Avenue), the only Panganiban road at the junction 'of Panganiban and Concepcion Road' named in item 6. J. Panganiban Street is a different street. Judgement for owner review.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-5",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Concepcion Road"
+      ],
+      "ruleText": "Along Concepcion Road from the junction of Diversion (Roxas Avenue) and Magsaysay Avenue up to the City Boundary at Del Rosario",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        252223487,
+        721779677,
+        760083147,
+        760083145,
+        760083146,
+        760083149,
+        760083148,
+        760083143,
+        760083142,
+        241595632,
+        760083154,
+        760083153,
+        252222954,
+        252222953,
+        760083138,
+        769916315,
+        238038899,
+        793410140,
+        793410139,
+        760083141,
+        760083139,
+        760083140
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "From the Naga Rotonda (where Magsaysay Ave, Roxas Ave and Panganiban Drive meet; the rotonda ways and the 6 m connector way/721779676 are the junction and are not listed) east along OSM Maharlika Highway (the Concepcion Road / Maharlika Highway way, research §4) to way/760083140, which crosses the city boundary at Del Rosario.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-6",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Magsaysay Avenue"
+      ],
+      "ruleText": "Along Magsaysay Avenue from the junction of Panganiban and Concepcion Road up to Penafrancia Avenue junction",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        30518281,
+        30518283,
+        252223483,
+        252223486,
+        721779873,
+        1060925382
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Whole length: every OSM way named Magsaysay Avenue, from the Naga Rotonda to the Peñafrancia Avenue junction (node 254709879).",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-7",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Penafrancia Avenue"
+      ],
+      "ruleText": "Along Penafrancia Avenue",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        23519386,
+        23521401,
+        23521917,
+        838916319,
+        1529540511,
+        1529540512
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Whole length: every OSM way named Peñafrancia Avenue.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PADYAK-SEC132-8",
+      "ruleCode": "PADYAK-SEC132",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Elias Angeles Street",
+        "Bagumbayan Road"
+      ],
+      "ruleText": "Along Elias Angeles Street and Bagumbayan Road up to the City Boundary at Bagumbayan Norte",
+      "enacted": "1993",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        23520905,
+        596568239,
+        596568243,
+        724187422,
+        936923544,
+        1529540510,
+        1553212755,
+        1553212756,
+        1553218895,
+        1553218896,
+        1560123986,
+        23520886
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Every OSM way named Elias Angeles Street, and OSM Bagumbayan Street (way/23520886, the reviewed alias of Bagumbayan Rd) from Elias Angeles Street to its end at the city boundary (node 254711601).",
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
+        "reviewedOn": "2026-10-17"
+      }
+    }
+  ],
+  "padyakAreas": [
+    {
+      "code": "PA01",
+      "area": "Abella",
+      "associations": [
+        "APODA"
+      ],
+      "barangays": [
+        "Abella"
+      ],
+      "placeNodeIds": [
+        12717296953
+      ],
+      "documentedYear": 2002,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP13",
+        "U02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; also owner-reported (U02)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA02",
+      "area": "Sabang",
+      "associations": [
+        "SAPADOA"
+      ],
+      "barangays": [
+        "Sabang"
+      ],
+      "placeNodeIds": [
+        12717296939
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "U02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; also owner-reported (U02)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA03",
+      "area": "Igualdad",
+      "associations": [
+        "IPODA"
+      ],
+      "barangays": [
+        "Igualdad Interior"
+      ],
+      "placeNodeIds": [
+        12717296945
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "U02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; also owner-reported (U02)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA04",
+      "area": "Santa Cruz",
+      "associations": [
+        "STC-PODA"
+      ],
+      "barangays": [
+        "Santa Cruz"
+      ],
+      "placeNodeIds": [
+        12717296936
+      ],
+      "documentedYear": 2018,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP09",
+        "U02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; also owner-reported (U02)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA05",
+      "area": "Balatas",
+      "associations": [
+        "BAPODA",
+        "MAVIPODA",
+        "BALUPODA"
+      ],
+      "barangays": [
+        "Balatas"
+      ],
+      "placeNodeIds": [
+        1875494497
+      ],
+      "documentedYear": 2020,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP07"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA06",
+      "area": "Cararayan (Liberty Compound)",
+      "associations": [
+        "LiPODA"
+      ],
+      "barangays": [
+        "Cararayan"
+      ],
+      "placeNodeIds": [
+        12717296950
+      ],
+      "documentedYear": 2019,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP08"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; Liberty Compound itself has no place node",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA07",
+      "area": "Bagumbayan Sur",
+      "associations": [
+        "BASPODA"
+      ],
+      "barangays": [
+        "Bagumbayan Sur"
+      ],
+      "placeNodeIds": [
+        10577982322
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA08",
+      "area": "Calauag",
+      "associations": [
+        "CALIPODA"
+      ],
+      "barangays": [
+        "Calauag"
+      ],
+      "placeNodeIds": [
+        12717296951
+      ],
+      "documentedYear": 2026,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; CALIPODA named again in Ord 2026-024",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA09",
+      "area": "Liboton",
+      "associations": [
+        "CALIPODA"
+      ],
+      "barangays": [
+        "Liboton"
+      ],
+      "placeNodeIds": [
+        12717296942
+      ],
+      "documentedYear": 2026,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; CALIPODA named again in Ord 2026-024",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA10",
+      "area": "Tinago (City Heights Subd, Dayangdang, Taal Ave)",
+      "associations": [
+        "CHESTA"
+      ],
+      "barangays": [
+        "Tinago"
+      ],
+      "placeNodeIds": [
+        4811249487
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; Ord 2002-013 seen only as an index title, not read, so 2001",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA11",
+      "area": "Concepcion Pequeña",
+      "associations": [
+        "COPODA",
+        "GIMOPODA",
+        "IDPODA",
+        "MOPODA",
+        "VILVIPODA"
+      ],
+      "barangays": [
+        "Concepcion Pequeña"
+      ],
+      "placeNodeIds": [
+        12717296948
+      ],
+      "documentedYear": 2002,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP14"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; COPPODA in Ord 2026-024 = COPODA is an inference, not used",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA12",
+      "area": "Concepcion Grande",
+      "associations": [
+        "SOLPODA",
+        "VIGPODA",
+        "VISOPODA",
+        "RAVIPODA",
+        "St. James-St. Andrew"
+      ],
+      "barangays": [
+        "Concepcion Grande"
+      ],
+      "placeNodeIds": [
+        12717296949
+      ],
+      "documentedYear": 2026,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP11",
+        "RP06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; St. James PODA named again in Ord 2026-024",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA13",
+      "area": "Del Rosario",
+      "associations": [
+        "DELPODA"
+      ],
+      "barangays": [
+        "Del Rosario",
+        "Villa Corazon Subdivision"
+      ],
+      "placeNodeIds": [
+        12717296946,
+        11111873776
+      ],
+      "documentedYear": 2004,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; Villa Corazon Subd is a DELPODA area in Ord 2004-069",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA14",
+      "area": "Triangulo (Naga City Subd)",
+      "associations": [
+        "NACISUPODA"
+      ],
+      "barangays": [
+        "Naga City Subdivision"
+      ],
+      "placeNodeIds": [
+        5507289431
+      ],
+      "documentedYear": 2026,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02",
+        "RP06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; the area is Naga City Subd only, so its own place node, not the Triangulo node",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA15",
+      "area": "San Felipe",
+      "associations": [
+        "SAFODA",
+        "WILPODA"
+      ],
+      "barangays": [
+        "San Felipe"
+      ],
+      "placeNodeIds": [
+        12717296938
+      ],
+      "documentedYear": 2001,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA16",
+      "area": "Mabolo",
+      "associations": [
+        "MATAPODA"
+      ],
+      "barangays": [
+        "Mabolo"
+      ],
+      "placeNodeIds": [
+        12717296943
+      ],
+      "documentedYear": 2002,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP12"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Task 2 review: association area per ordinance; place node name-matched in naga-roads-2026-10-16.osm.json; route runs to Tarosanan, Camaligan (outside the city)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA17",
+      "area": "Tabuco",
+      "associations": [],
+      "barangays": [],
+      "placeNodeIds": [],
+      "documentedYear": null,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "Tabuco is named only as a limit of the SAPADOA (Sabang) area, not as an area of its own",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA18",
+      "area": "Bagumbayan Norte",
+      "associations": [],
+      "barangays": [],
+      "placeNodeIds": [],
+      "documentedYear": null,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP01"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "No padyak association is named here; only the 1993 plate-colour table (colours repealed) and the Sec 132 boundary",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "PA19",
+      "area": "Pacol / Lerma / Panicuason / Carolina / Penafrancia / Dayangdang (outside CHESTA)",
+      "associations": [],
+      "barangays": [],
+      "placeNodeIds": [],
+      "documentedYear": null,
+      "evidence": "official",
+      "sourceCodes": [
+        "RP02"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "No ordinance names a padyak association here (research: Unknown)",
+        "reviewedOn": "2026-10-17"
+      }
+    }
+  ],
+  "routeNotes": [
+    {
+      "code": "RN01",
+      "routeCodes": [
+        "R8-C",
+        "R8-D"
+      ],
+      "text": "City Hall, BFP and BIR are on J. Miranda Ave. This loop's listed streets skip it (Ord 2025-070); ask the driver.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RL01",
+        "RL03",
+        "RL12",
+        "RL14",
+        "U02"
+      ],
+      "near": {
+        "lat": 13.6256,
+        "lng": 123.199,
+        "radiusM": 450
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Ord 2025-070 omits J. Miranda for C/D; Res 2025-172 had added it (conflict CX10). near = between City Hall and BFP (RL12)",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RN02",
+      "routeCodes": [
+        "R8-A",
+        "R8-B"
+      ],
+      "text": "Passes J. Miranda Ave (City Hall, BFP, BIR) on its listed streets.",
+      "evidence": "official",
+      "sourceCodes": [
+        "RL01",
+        "RL12",
+        "RL14"
+      ],
+      "near": {
+        "lat": 13.6256,
+        "lng": 123.199,
+        "radiusM": 450
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Ord 2025-070 lists J. Miranda Ave for A/B; landmarks per RL12/RL14",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RN03",
+      "routeCodes": [
+        "R8-A",
+        "R8-B",
+        "R8-C",
+        "R8-D"
+      ],
+      "text": "A local reports drivers may turn into side streets on request (e.g. Magsaysay Ave). Ask the driver.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U02"
+      ],
+      "near": null,
+      "review": {
+        "decision": "import",
+        "reason": "Owner report only; no document records request reroutes",
+        "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "RN04",
+      "routeCodes": [
+        "R2"
+      ],
+      "text": "A local reports a 'Francia' signboard may be this route; unconfirmed.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U02",
+        "RL15"
+      ],
+      "near": null,
+      "review": {
+        "decision": "import",
+        "reason": "'Francia' is in no instrument; owner report plus a private guide listing",
+        "reviewedOn": "2026-10-17"
       }
     }
   ]
