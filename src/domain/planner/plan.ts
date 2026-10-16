@@ -15,9 +15,11 @@
 // the lowest score, "Fewest transfers" and "Least walking" (one option may hold several labels).
 // Score: walk + 0.25 × ride + 600 × (rides − 1); ties: rides, walk, ride, id.
 //
-// Options, in order (at most 6): walk (only when the direct walk is < 500 m and no jeepney option
-// exists; "Recommended") → jeepney options by score → tricycle (always; "Recommended" when the
-// direct walk is ≥ 500 m) → padyak (both ends in one documented area and a padyak street path
+// Options, in order (at most 6): walk (when the direct walk is < 500 m) → jeepney options by score
+// → tricycle (always) → padyak. Exactly one option is "Recommended" (ruling d, review I1):
+// ≥ 500 m → the tricycle; < 500 m → the walk, unless the best-score jeepney passes the destination
+// (its drop-off within PASSES_DESTINATION_M straight-line), which is then Recommended instead.
+// Padyak (both ends in one documented area and a padyak street path
 // ≤ 2,000 m; "Short local ride"). Tricycle and padyak are routed with routeStreet on the planner's
 // clock (Asia/Manila from the epoch, rules.ts): the 2006 tricycle restrictions are lifted 21:00–05:00.
 // A tricycle with no street route (a daytime pocket) gets the straight-line distance, flagged
@@ -46,6 +48,8 @@ import { approaches, MAX_ACCESS_WALK_GRAPH_M, nameFreePoint, rideMeters, type Ap
 export { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel };
 
 export const WALK_CARD_MAX_M = 500;
+/** A jeepney "passes the destination" when its drop-off point is this close to it (straight-line metres). */
+export const PASSES_DESTINATION_M = 100;
 export const MAX_TRANSFER_WALK_GRAPH_M = 450;
 export const PADYAK_MAX_M = 2000;
 export const MAX_OPTIONS = 6;
@@ -281,7 +285,7 @@ function search(net: PlanningNetwork, g: WalkGraph | null, origin: LatLng, desti
   const least = [...pareto].sort((a, b) => a.walkM - b.walkM || compare(a, b))[0];
   const picked = [...new Set([pareto[0], fewest, least])].filter((c): c is Cand => c !== undefined).sort(compare);
   const options = picked.map((c) => ({
-    c, labels: [...(c === fewest ? ["Fewest transfers" as const] : []), ...(c === least ? ["Least walking" as const] : [])],
+    c, labels: [...(c === fewest ? ["Fewest transfers"] : []), ...(c === least ? ["Least walking"] : [])] as PlanLabel[],
   }));
   const reason: JeepneyReason | null = options.length > 0 ? null
     : !boards.some((b) => b.length > 0) ? "no_path_near_origin"
@@ -357,7 +361,7 @@ function streetLeg(g: WalkGraph | null, origin: LatLng, destination: LatLng, rou
   const from: Place = { kind: "origin", lat: origin.lat, lng: origin.lng, stopId: null, name: null };
   const to: Place = { kind: "destination", lat: destination.lat, lng: destination.lng, stopId: null, name: null };
   if (!g || !route || (route.kind === "straight" && route.reason === "no_mode_data")) {
-    return { from, to, distanceMeters: null, path: null, basis: "unavailable", notes: ["Street route not available offline"], ruleCodes: [] };
+    return { from, to, distanceMeters: null, path: null, basis: "unavailable", notes: ["Street route not available"], ruleCodes: [] };
   }
   if (route.kind === "straight") {
     return {
@@ -374,7 +378,7 @@ function tricycleOption(g: WalkGraph | null, snapshot: PlannerSnapshot, origin: 
   const fare = tricycleFare(snapshot.fareRules);
   const notes = [
     ...base.notes,
-    ...(base.basis === "unavailable" ? [] : g!.rules.flatMap((r) => ruleNote(r, base.ruleCodes.includes(r.code), now) ?? [])),
+    ...(base.basis !== "street_graph" ? [] : g!.rules.flatMap((r) => ruleNote(r, base.ruleCodes.includes(r.code), now) ?? [])),
     ...(route?.kind === "path" && route.usesNationalRoad ? ["National rules may limit tricycles on national roads; Naga has not published a tricycle route plan."] : []),
     fare.minCentavos === null ? "Fare not available · confirm with the driver"
       : `Minimum fare ${peso(fare.minCentavos)} (Ordinance 2024-002) · discounts not applied · confirm with the driver`,
@@ -441,9 +445,13 @@ export function planTrip(
   const notes: string[] = [];
   const o: Place = { kind: "origin", lat: origin.lat, lng: origin.lng, stopId: null, name: null };
   const d: Place = { kind: "destination", lat: destination.lat, lng: destination.lng, stopId: null, name: null };
-  if (direct.m < WALK_CARD_MAX_M && jeep.options.length === 0) {
+  const short = direct.m < WALK_CARD_MAX_M;
+  const best = jeep.options[0];
+  const jeepRecommended = short && best !== undefined && best.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M;
+  if (jeepRecommended) best.labels.unshift("Recommended");
+  if (short) {
     options.push({
-      id: "walk", mode: "walk", labels: ["Recommended"], legs: [walkLeg(g, o, d, direct, directRoute ?? undefined)], rides: 0,
+      id: "walk", mode: "walk", labels: jeepRecommended ? [] : ["Recommended"], legs: [walkLeg(g, o, d, direct, directRoute ?? undefined)], rides: 0,
       walkMeters: direct.m, walkEstimateMeters: direct.m, rideMeters: 0, score: direct.m, fare: sumFares([]), evidence: "provisional",
     });
   } else {
@@ -453,7 +461,7 @@ export function planTrip(
   }
   for (const { c, labels } of jeep.options) options.push(jeepneyOption(c, labels, net, g, snapshot, origin, destination));
   if (jeep.options.length > 0) notes.unshift(UNVERIFIED_ROUTE_BADGE);
-  options.push(tricycleOption(g, snapshot, origin, destination, now, direct.m >= WALK_CARD_MAX_M));
+  options.push(tricycleOption(g, snapshot, origin, destination, now, !short));
   const padyak = padyakOption(g, snapshot, origin, destination, now);
   if (padyak) options.push(padyak);
 

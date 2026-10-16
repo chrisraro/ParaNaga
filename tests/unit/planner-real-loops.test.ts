@@ -32,6 +32,7 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   expect([...idx].sort((a, b) => a - b)).toEqual(idx);
   expect(new Set(p.options.map((o) => o.id)).size).toBe(p.options.length);
   expect((p.jeepneyReason === null) === p.options.some((o) => o.mode === "jeepney")).toBe(true);
+  expect(p.options.filter((o) => o.labels.includes("Recommended"))).toHaveLength(1);
   for (const o of p.options.filter((x: PlanOption) => x.mode === "jeepney")) {
     const legs = o.legs;
     legs.forEach((l, i) => expect(l.kind).toBe(i % 2 === 0 ? "walk" : "ride"));
@@ -130,11 +131,11 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
 });
 
 /**
- * Recorded at Task 6 (commit message: diff against the stop-based Loop A/B baseline of 308 options).
+ * Recorded at Task 6 and re-recorded for review I1 (exactly one Recommended; walk card on every trip < 500 m).
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  */
 const REGRESSION_BASELINE = {
-  options: 517,
-  byMode: { jeepney: 307, tricycle: 200, padyak: 8, walk: 2 },
-  digest: "039b418c1a75682f5c45da5686040977afd42221e8c7181feafbcaf08cde1fc2",
+  options: 525,
+  byMode: { jeepney: 307, tricycle: 200, padyak: 8, walk: 10 },
+  digest: "d0930a3e53b2b36b2a2fde0d3808428ea2317917a51410fcd43511288c990afa",
 };

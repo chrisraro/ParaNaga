@@ -40,6 +40,24 @@ describe("planTrip: recommendation rules (plan E §B)", () => {
     expect(p.jeepneyReason).toBe("walk_shorter"); // Q passes 300 m away: 600 m of walking ≥ 450 m direct
   });
 
+  it("< 500 m, the best jeepney passes the destination (drop-off ≤ 100 m): jeepney Recommended, walk first unlabelled", () => {
+    const p = plan(at(2400, 10), at(2850, 10));
+    expect(p.directWalkEstimateMeters).toBeLessThan(500);
+    expect(modes(p).slice(0, 2)).toEqual(["walk", "jeepney"]);
+    expect(p.options[0]!.labels).toEqual([]);
+    expect(p.options[1]!.labels[0]).toBe("Recommended");
+    expect(p.options.find((o) => o.mode === "tricycle")!.labels).toEqual([]);
+  });
+
+  it("< 500 m, the best jeepney drops off > 100 m from the destination: walk Recommended, jeepney keeps its own labels", () => {
+    const p = plan(at(2700, 10), at(3000, 150));
+    expect(p.directWalkEstimateMeters).toBeLessThan(500);
+    expect(modes(p).slice(0, 2)).toEqual(["walk", "jeepney"]);
+    expect(p.options[0]!.labels).toEqual(["Recommended"]);
+    expect(p.options[1]!.labels).not.toContain("Recommended");
+    expect(p.options.find((o) => o.mode === "tricycle")!.labels).toEqual([]);
+  });
+
   it("520 m: no walk card, jeepney options first, tricycle Recommended after them", () => {
     const p = plan(at(2400, 10), at(2920, 10));
     expect(p.directWalkEstimateMeters).toBeGreaterThanOrEqual(500);
@@ -160,6 +178,7 @@ describe("planTrip: tricycle and padyak (plan E §C)", () => {
     expect(leg).toMatchObject({ basis: "straight_line", path: null });
     expect(leg.distanceMeters).toBeGreaterThan(0);
     expect(leg.notes[0]).toMatch(/^Route not confirmed/);
+    expect(leg.notes.some((n) => n.startsWith("Avoids"))).toBe(false); // no routed avoidance is claimed
   });
 
   it("padyak only when both ends share the area and the street path is ≤ 2,000 m; ₱10 flat (₱8 with ID), no minutes", () => {
@@ -179,7 +198,7 @@ describe("planTrip: tricycle and padyak (plan E §C)", () => {
     for (const w of p.options.flatMap(walkLegs)) expect(w).toMatchObject({ basis: "straight_x1_3", path: null });
     const t = p.options.find((o) => o.mode === "tricycle")!.legs[0] as TricycleLeg;
     expect(t).toMatchObject({ distanceMeters: null, path: null, basis: "unavailable" });
-    expect(t.notes).toContain("Street route not available offline");
+    expect(t.notes).toContain("Street route not available");
     expect(modes(p)).not.toContain("padyak");
   });
 
@@ -210,6 +229,9 @@ describe("planTrip: properties", () => {
         expect([...idx].sort((a, b) => a - b)).toEqual(idx);
         expect(new Set(p.options.map((x) => x.id)).size).toBe(p.options.length);
         expect(p.options.filter((x) => x.mode === "tricycle")).toHaveLength(1);
+        expect(p.options.filter((x) => x.labels.includes("Recommended"))).toHaveLength(1);
+        for (const x of p.options) expect(x.labels.includes("Short local ride")).toBe(x.mode === "padyak");
+        expect(p.options.some((x) => x.mode === "walk")).toBe(p.directWalkEstimateMeters! < 500);
         for (const x of p.options.filter((y) => y.mode === "jeepney")) {
           const w = walkLegs(x);
           w.forEach((l, i) => expect(l.estimateMeters).toBeLessThanOrEqual(i === 0 || i === w.length - 1 ? 750 : 450));
