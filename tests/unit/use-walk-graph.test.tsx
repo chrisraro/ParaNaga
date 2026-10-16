@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { planResponseSchema } from "@/domain/api/plan";
 import { resetLinesForTests, useLines } from "@/client/network/use-lines";
 import { resetWalkGraphForTests, useSavedWalkLengths, useWalkGraph, useWalkGraphDownload } from "@/client/network/use-walk-graph";
 import { resetPrefs, updatePrefs } from "@/client/prefs/use-prefs";
@@ -286,7 +287,7 @@ describe("walk graph offline and cache safety (Task 15)", () => {
 // Saved cards (and the offline page) use the cached graph's lengths, never the network.
 describe("useSavedWalkLengths", () => {
   const WG_URL = `/api/v1/network/walk-graph/${REV_ID}`;
-  const option = structuredClone(PROVISIONAL_PLAN.plan.options[0]!);
+  const option = planResponseSchema.parse(structuredClone(PROVISIONAL_PLAN)).plan.options[0]!;
   const walk = option.legs.find((l) => l.kind === "walk")!;
   if (walk.kind === "walk") {
     walk.from = { ...walk.from, lat: 13.6234, lng: 123.1847 };
