@@ -378,6 +378,7 @@ test.describe("pinning without GPS", () => {
 
 test.describe("Naga lock", () => {
   test("panning far away and zooming out never leaves the city bounds or goes below the min zoom", async ({ page }) => {
+    test.slow(); // dozens of large drags: ~26 s alone, over the 30 s default in a full parallel run
     await openApp(page);
 
     // Away (east/south), then back (west/north), 20 large drags each.
