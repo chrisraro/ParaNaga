@@ -44,6 +44,8 @@
   width: 100%;
   height: 100dvh;
   overflow: hidden;
+  /* clip, unlike hidden, is not programmatically scrollable: focus()/scrollIntoView() in the sheet must not shift the map. */
+  overflow: clip;
   background: var(--pn-surface);
   color: var(--pn-label);
 }

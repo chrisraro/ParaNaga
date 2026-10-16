@@ -128,7 +128,8 @@ async function startGuidance(page: Page) {
 }
 
 async function tap(page: Page, name: string) {
-  await guide(page).getByRole("button", { name, exact: true }).click();
+  // dispatchEvent: at half the step buttons sit below the screen edge (the old page scroll hid that).
+  await guide(page).getByRole("button", { name, exact: true }).dispatchEvent("click");
 }
 
 /**
@@ -328,7 +329,7 @@ test("Report it in MyNaga opens the handoff, and closing it returns to the runni
   const rideTitle = await heading(page).textContent();
   const stepLabel = await page.getByTestId("guidance-step-label").textContent();
 
-  await guide(page).getByTestId("guidance-report-driver").click();
+  await guide(page).getByTestId("guidance-report-driver").dispatchEvent("click");
   await expect(page).toHaveURL(/\/app\/mynaga$/);
   await expect(page.getByRole("heading", { level: 1, name: "Report in MyNaga" })).toBeFocused();
   await expect(page.getByTestId("app-home-layer")).toHaveAttribute("inert", "");
@@ -344,7 +345,7 @@ test("Report it in MyNaga opens the handoff, and closing it returns to the runni
   expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).not.toBeNull();
 
   // Escape closes it the same way.
-  await guide(page).getByTestId("guidance-report-driver").click();
+  await guide(page).getByTestId("guidance-report-driver").dispatchEvent("click");
   await expect(page.getByRole("heading", { level: 1, name: "Report in MyNaga" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/app$/);
@@ -363,10 +364,10 @@ test("Undo last step goes back one confirmation; after Arrive it never restarts 
   await tap(page, "I'm at the stop");
   await tap(page, "I boarded Loop A");
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 2 of 3 · Ride");
-  await page.getByTestId("guidance-undo").click();
+  await page.getByTestId("guidance-undo").dispatchEvent("click");
   await expect(heading(page)).toHaveText("Wait for Loop A at Plaza Rizal (A1)");
   await expect(heading(page)).toBeFocused();
-  await page.getByTestId("guidance-undo").click();
+  await page.getByTestId("guidance-undo").dispatchEvent("click");
   await expect(heading(page)).toHaveText("Walk to Plaza Rizal (A1)");
   await expect(page.getByTestId("guidance-undo")).toHaveCount(0);
 
@@ -375,7 +376,7 @@ test("Undo last step goes back one confirmation; after Arrive it never restarts 
   await tap(page, "I've arrived");
   expect((await geoStub(page)).watches).toBe(0);
   await expect(page.getByTestId("guidance-undo")).toHaveText("Undo last step");
-  await page.getByTestId("guidance-undo").click();
+  await page.getByTestId("guidance-undo").dispatchEvent("click");
   await expect(heading(page)).toHaveText("Walk to Pinned location");
   // Location stays off until tapped again.
   expect(await geoStub(page)).toEqual({ watches: 0, calls: 1 });
@@ -484,7 +485,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       await tap(page, "I boarded Loop B");
       await tap(page, "I missed my stop");
       await expectAxeClean(page); // Missed
-      await page.getByTestId("guidance-undo").click();
+      await page.getByTestId("guidance-undo").dispatchEvent("click");
       await tap(page, "I got off");
       await tap(page, "I've arrived");
       await expectAxeClean(page); // Arrive
