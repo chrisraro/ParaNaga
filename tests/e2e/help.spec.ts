@@ -68,7 +68,7 @@ test("Help opens from More with its three tabs, and Back returns to More", async
   await tabs(page).getByRole("tab", { name: "About data" }).click();
   await expect(page.getByTestId("help-badges").getByRole("listitem")).toHaveCount(5);
   await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionmodes-lines-2026-10-16 · Oct 16, 2026");
-  await expect(page.getByTestId("help-data-footer")).toHaveText("No live arrival times. Stop alerts work only while ParaNaga is open on your screen.");
+  await expect(page.getByTestId("help-data-footer")).toHaveText("ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.");
 
   await page.getByTestId("help-page").getByTestId("detail-back").click();
   await expect(h1(page, "Settings")).toBeVisible();

@@ -82,6 +82,21 @@ pnpm db:import --commit    # write everything in one transaction
 - A second `--commit` on the same data reports `unchanged`. A changed-data import is refused for now (a versioned importer is a follow-up).
 - Integration tests and RLS checks against a throwaway Neon branch: `bash scripts/with-neon-branch.sh pnpm test:integration` (also works with `pnpm db:check-rls`).
 
+### Modes, lines and time-estimate import
+
+`pnpm db:import` also reads the reviewed modes seed (`data/source/research/naga-modes-seed-*.json`) and the pinned OpenStreetMap road snapshot (`data/source/osm/naga-roads-*.osm.json`). It traces the approximate ride paths and builds the walk graph from that snapshot, then publishes `modes-lines-<road snapshot date>`. Run `--dry-run` first: it aborts with the list of problems (a missing time-estimate parameter, an unpinned or altered snapshot, a seed record that fails review) and writes nothing. Preview the traced paths locally with `pnpm data:preview-paths` (writes the git-ignored `tmp/route-paths-preview.geojson`).
+
+### Refreshing the road snapshot
+
+Owner-run, never in CI or at build time. The app and the importer only read committed files.
+
+1. `pnpm exec tsx scripts/fetch-osm-roads.ts --dry-run` prints the two Overpass queries and sends nothing. Check them.
+2. `pnpm exec tsx scripts/fetch-osm-roads.ts` writes `data/source/osm/naga-roads-<UTC date>.osm.json` (contributor data is stripped before writing). Keep `.gitattributes` (`*.osm.json -text`) so the bytes stay exact.
+3. Review the new file (way, node and place-node counts, regional relation lengths) against the previous one, then add its row (bytes, counts, sha256) to `data/source/osm/README.md`.
+4. Add its sha256 to `ROADS_SNAPSHOT_PINS` in `scripts/lib/roads-snapshot.ts`. The importer and the preview refuse an unpinned file.
+5. Re-check the street aliases (`streetAliases` in the modes seed): a unit test verifies every alias against the pinned snapshot, and `pnpm data:preview-paths` shows what could not be traced.
+6. `pnpm db:import --dry-run`, a Neon backup branch of `main`, then `pnpm db:import --commit`, as in the runbook below. The new revision `modes-lines-<new date>` carries the new paths and walk graph; phones refetch them when the revision changes.
+
 ### Production runbook
 
 Run in this order. The app code needs migration 0002 and a published revision, so merge only after step 8.

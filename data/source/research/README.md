@@ -33,6 +33,22 @@ because `Data_Sets/` is the original research package and is read as a whole.
   the OSM API 0.6 on 2026-10-16, and each timestamp precedes the research query's `osm_base`, so the
   research coordinate belongs to the same version. Way coordinates are centroids, not entrances.
 
+## Import and publication
+
+`pnpm db:import --dry-run` parses this file, checks it against the pinned road snapshot (it aborts
+on any problem, for example a missing time-estimate parameter) and prints the counts of what would
+be written; `--commit` writes everything in one transaction and publishes the revision
+`modes-lines-<road snapshot date>`, carrying the earlier transit data forward. Excluded records are
+reported with their reason and never written. The records land in the tables of migrations 0006 to
+0009 (`docs/spec/04-data-model.md`, "Modes, approximate paths and estimate records").
+
+## What is still not in this file
+
+Headways and waiting times, reviewed (surveyed) shapes, TODA zones and tricycle speeds, the LTFRB
+Region V route and unit lists and the fuel-subsidy beneficiary list, PNR timetables and fares, and
+the SimEx and 2025 LPTRP tricycle-zone results. They need the City PSO or the cooperatives office,
+or field work; see `docs/spec/07-delivery.md` section 7.10.
+
 ## Review rule
 
 Every record carries `review: { decision: "import" | "exclude", reason, reviewedOn }`. Excluded

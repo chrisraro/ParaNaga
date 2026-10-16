@@ -131,3 +131,45 @@ Field kit: `field_survey_template.csv` (45 columns) imports through the survey m
 - Reword "(from pin order)" direction text to the documented direction.
 - Home map: bbox query strings reach platform access logs (read pins from the immutable snapshot or snap coarser); add `stale-while-revalidate` to list caching.
 - Landing page mockup shows "Exact · [₱ fare]"; remove or reword.
+
+## 7.10 Readiness: modes, lines and time estimates (16 Oct 2026)
+
+Branch `feat/modes-lines-eta` (Increment D). Not production-ready; see "Still missing".
+
+**Implemented**
+
+- Reviewed modes seed (sources N01 to N41 and U01, terminals T01 to T16, tricycle feeders, per-route vehicle classes and cooperative names, regional services RS01 to RS07, fare rules F06 to F12 and rider fare observations, time-estimate parameters, street aliases, conflicts register). Migrations 0006 to 0009; published revision `modes-lines-{date}` once the owner import runs.
+- OpenStreetMap road snapshot (`naga-roads-2026-10-16.osm.json`), approximate ride paths for every variant that can be traced, and the on-device walk graph.
+- Planner: ride distances along approximate paths, vehicle classes and mixed-fleet fare spans (R4, R7), regional per-km fare estimates on terminal detail, tricycle hint card, "must save walking" re-check on the device (D14).
+- Map: mode palette and legend, Layers sheet, terminals layer and detail, route lines on the trip guide, route overview and route detail.
+- Time estimates in options, trip detail, guidance, saved trips and Help ("How times are estimated"), with their basis sheet.
+- PWA: lines, walk graph and search index cached; lines and street paths work offline once stored; low-data mode never downloads the walk graph unasked.
+- Copy audit (Task 16): the About-data footer and the trip-detail fare note were reworded; no user-visible "live", "arrival", "ETA", "exact" or e-jeepney text remains (see `.superpowers/sdd/task-16-report.md`).
+
+**Owner decisions in force (2026-10-16)**
+
+- E-jeepney dropped everywhere; the 2017 route is not imported (N09 excluded).
+- Modern jeepneys operate on R4 and R7 (owner-confirmed, source U01); R2, R3, R5, R6 and R8 are traditional only; traditional jeepneys operate on every route R1 to R8. This confirms service, not stop locations, stop order or paths: pins and paths keep their unverified and approximate labels and the trip badge stays.
+
+**Verified**
+
+- `pnpm verify` (types, lint, boundaries, unit tests, build, bundle secret scan), `pnpm test:integration` on a throwaway Neon branch, and the full Playwright suite at the end of the increment; counts are in the task report. Visual QA on Pixel 7 and 360 x 640 (light, dark, high contrast, low-data) is a separate pass.
+
+**Blocked by credentials**
+
+- None for this increment. The Street View embed needs `NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY` (set in Vercel; separate branch).
+
+**Still missing (blocks verified routing and exact answers)**
+
+- Headways and waiting times: none on file, so waiting is always "unknown" and no clock time is shown.
+- Verified shapes: every drawn path is an approximate OSM trace; no variant has a reviewed shape (GPS ride log or survey).
+- TODA zones and tricycle speeds: no zone map and no speed, so tricycles get a hint card only, never minutes or a ride line.
+- Fleet registry: the LTFRB Region V route and unit lists, the April 2026 fuel-subsidy beneficiary list (Ordinance 2026-038) and cooperative fleet counts are not available; vehicle classes rest on the owner confirmation and reports.
+- PNR (Philippine National Railways) service times and station facts: stations are mapped as terminals but no timetable or fare is on file.
+- Loops C and D stop order, curb sides, boarding points and an approved fare matrix (see 7.5 and 7.8).
+- SimEx speed and headway results and the 2025 LPTRP tricycle-zone map (City PSO and cooperatives office only).
+- Source-rights items from the Codex source-compliance audit (branch `codex/place-media`, not yet merged): S33 and S34 (legacy graphic and transcription rights) and S39 and S40 (My Maps export reuse, recorded as "reuse unconfirmed") remain unresolved. Do not describe the app as legally cleared. Transitive auth packages (`@triplit/db`, react, logger) lack installed licence declarations and need a release review.
+
+**Not production-ready because** §7.5 items 1 to 3 and 5 still block verified routing and exact fares, headways are unknown, and the source-rights items above are open.
+
+**Owner and controller steps to publish**: `pnpm db:import --dry-run`, a Neon backup branch of `main`, `pnpm db:import --commit`, verify the published revision `modes-lines-{date}` and the API on a preview deployment. Refresh the road snapshot by the procedure in `docs/setup.md`.

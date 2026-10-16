@@ -87,22 +87,20 @@ category tag, and every other tag — opening hours, phone, website, image, entr
 operator, etc. — and the contributor data removed by the fetch script (above). Duplicate names are
 kept as separate places.
 
-## Snapshots
-
-| File | Fetched (UTC) | OSM data as of | Places kept |
-|---|---|---|---|
-| _none committed yet — the owner runs `scripts/fetch-osm-places.ts` once and adds the row here_ | | | |
-
 Test data lives elsewhere: `tests/fixtures/osm/` holds a hand-made extract with fake names, flagged
 `"synthetic": true`; `transit.publish_revision` refuses to publish synthetic places.
 
-## Snapshots
+## Places snapshots
 
 | File | Fetched (UTC) | OSM base | Elements | Places kept | sha256 |
 |---|---|---|---|---|---|
 | `naga-places-2026-10-15.osm.json` | 2026-10-15 | 2026-10-15T12:56:10Z | 261 | 233 (28 unnamed dropped) | `38bf7571f20fb57b95f5af7bd48fdcc081b2a878a2ec07cbf41ea656dec15a9e` |
 
 # OpenStreetMap road snapshots
+
+Refreshing the road snapshot is an owner-run procedure, written out in `docs/setup.md`
+("Refreshing the road snapshot"): a new dated file, a new sha256 row in the table below and a new
+pin in `scripts/lib/roads-snapshot.ts`, then a new import.
 
 The road network ParaNaga traces approximate ride paths on (J1, "Approximate path, not a verified
 route shape") and builds the on-device walk graph from (J2, D7). It also resolves the feeder

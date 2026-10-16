@@ -35,7 +35,7 @@ export function parseHelpTab(raw: string | null): HelpTab {
 }
 
 export const INDEPENDENT_NOTE = "ParaNaga is an independent commuter guide. It is not an official City Government app.";
-export const DATA_FOOTER = "No live arrival times. Stop alerts work only while ParaNaga is open on your screen.";
+export const DATA_FOOTER = "ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.";
 export const SAFETY_TIPS = [
   "Wait off the road, where other passengers wait.",
   "Ask the driver where the jeepney goes before you board; signboards are not verified yet.",

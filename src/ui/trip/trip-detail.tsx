@@ -454,7 +454,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
                 <span>{fareChipText(option.fare)}</span>
               </p>
             ) : null}
-            <p className="pn-fares__note">Vehicle class unknown, so each range spans the traditional and modern jeepney minimums. Discounts not applied.</p>
+            <p className="pn-fares__note">Fares are estimates from reported rules. Where a route runs both traditional and modern jeepneys, the range spans both. Discounts not applied.</p>
           </>
         )}
       </section>
