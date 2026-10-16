@@ -5,7 +5,7 @@ import { haversineMeters } from "@/domain/geo/geometry";
 import { buildRoadGraph } from "@/domain/geo/road-graph";
 import { parseOsmRoads } from "@/domain/import/osm-roads";
 import { walkGraphPayloadSchema } from "@/domain/walk/format";
-import { buildWalkGraph } from "@/domain/walk/walk-graph-build";
+import { buildStreetGraph, buildWalkGraph } from "@/domain/walk/walk-graph-build";
 import { chain, fakeRoadGraph, gridRoadGraph, type Piece } from "./walk-graph-fixtures";
 
 // Square A-B-C-D with spurs A-E and C-F; D-A bends south-west (longer). B and D have degree 2.
@@ -159,5 +159,29 @@ describe("buildWalkGraph: deterministic", () => {
       }),
       { numRuns: 50 },
     );
+  });
+});
+
+describe("buildStreetGraph: v2 contraction keeps flag changes", () => {
+  const nodes = new Map([
+    [1, { lat: 13.62, lng: 123.19 }],
+    [2, { lat: 13.62, lng: 123.191 }],
+    [3, { lat: 13.62, lng: 123.192 }],
+    [4, { lat: 13.62, lng: 123.193 }],
+  ]);
+  const way = (id: number, nodeIds: number[], tags: Record<string, string>) => ({ id, version: 1, timestamp: "2026-10-16T00:00:00Z", nodeIds, tags: { highway: "residential", ...tags } });
+  const v2 = (ways: ReturnType<typeof way>[]) => buildStreetGraph({ nodes, ways, places: [] }, [], [], { roadSource: "TEST", minComponentNodes: 1 }).payload;
+
+  it("a degree-2 node between a two-way and a one-way piece stays; equal one-way pieces contract in either way direction", () => {
+    const mixed = v2([way(1, [1, 2], {}), way(2, [2, 3, 4], { oneway: "yes" })]);
+    expect(mixed.v).toBe(2);
+    expect(edgeQuads(mixed.edges)).toHaveLength(2);
+    expect([...mixed.flags].sort((x, y) => x - y)).toEqual([1 | 2 | 32, 1 | 2 | 4 | 32]);
+    // Node 2 joins way 1 (forward one-way) and way 2 (reversed node order, oneway=-1): same direction, contracts.
+    const same = v2([way(1, [1, 2], { oneway: "yes" }), way(2, [4, 3, 2], { oneway: "-1" })]);
+    expect(edgeQuads(same.edges)).toEqual([[0, 1, expect.any(Number), 2]]);
+    expect(same.flags).toEqual([1 | 2 | 32]); // a = west end (lower lng at equal lat): tricycle a→b only
+    const back = v2([way(1, [2, 1], { oneway: "-1" }), way(2, [2, 3, 4], { oneway: "yes" })]);
+    expect(back.flags).toEqual(same.flags);
   });
 });

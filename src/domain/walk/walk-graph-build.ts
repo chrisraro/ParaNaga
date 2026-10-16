@@ -1,26 +1,60 @@
-// Walk graph builder (import side): walk-profile road graph → compact payload v1 (format.ts).
+// Street graph builder (import side): road graph → compact payload (format.ts).
+//
+//   buildWalkGraph(walkRoadGraph)          → v1 (walk only).
+//   buildStreetGraph(roads, rules, areas)  → v2: the union of walk- and tricycle-profile ways
+//                                            (road-graph.ts "street") with per-edge flags, the
+//                                            tricycle restriction rules and the padyak area anchors.
 //
 //   1. The D7 filters are the road graph's walk profile (road-graph.ts); a vehicle graph is refused.
 //   2. Components (union-find over the undirected pieces): the largest one plus every component of
 //      more than `minComponentNodes` (default 50) road-graph nodes is kept; smaller islands are
 //      dropped and counted.
-//   3. Degree-2 contraction: a node with exactly two piece ends (not one self-loop) is folded into
-//      the edge polyline; a ring with no junction keeps its lowest node and becomes a loop edge.
+//   3. Degree-2 contraction: a node with exactly two piece ends (not one self-loop) whose two pieces
+//      carry the same flags (oriented through the node) is folded into the edge polyline; a ring
+//      with no junction keeps its lowest node and becomes a loop edge.
 //   4. Precision 5: every coordinate is rounded to integer degrees × 1e5. Consecutive duplicate
 //      points are dropped. Edge length (decimetres) is the original haversine length, but never
 //      less than the haversine length of the rounded polyline (keeps the A* heuristic admissible).
 //   5. Deterministic order: nodes by (lat, lng, road-graph index); edges oriented a ≤ b (a loop
-//      takes the lexicographically smaller direction) and sorted by (a, b, length, geometry).
+//      takes the lexicographically smaller direction; the tricycle direction bits swap with it) and
+//      sorted by (a, b, length, geometry, flags).
+//
+// v2 rules (plan E §C): a reviewed `exclude` record of a tricycle rule marks the edges of its ways
+// (clipped between its clip nodes) with the rule's index + 1, unless an `exempt` record of the same
+// rule covers them (exempt crossings stay usable at all hours; a junction exemption is a single
+// node, which no restricted edge needs). Padyak `exclude` records set the padyak-banned bit; a drawn
+// padyak rule with an hours exception cannot be carried and is refused. Records with no geometry
+// (not_mapped) mark nothing. A listed way absent from the snapshot aborts the build.
+//
+// Padyak areas (controller ruling, Task 3): anchors of neighbouring areas sit 345–670 m apart, so
+// each area gets an effective radius min(seed radiusM ?? 1,000, max(250, 0.6 × distance from its
+// anchors to the nearest anchor of any other area)), rounded down to whole metres.
 //
 // Pure: no fs, no DB.
 import { haversineMeters } from "../geo/geometry";
-import type { RoadGraph } from "../geo/road-graph";
+import { buildRoadGraph, wayDirections, wayIncluded, type RoadEdge, type RoadGraph } from "../geo/road-graph";
 import type { LatLng } from "../geo/types";
-import { WALK_GRAPH_FORMAT_VERSION, type WalkGraphPayload } from "./format";
+import type { ModesSeedPadyakArea, ModesSeedRoadRule } from "../import/modes-seed";
+import type { OsmRoads } from "../import/osm-roads";
+import {
+  FLAG_NATIONAL, FLAG_PADYAK_BANNED, FLAG_PADYAK_CLASS, FLAG_RULE_SHIFT, FLAG_TRI_AB, FLAG_TRI_BA, FLAG_WALK,
+  STREET_GRAPH_FORMAT_VERSION, WALK_GRAPH_FORMAT_VERSION, type StreetGraphPayload, type WalkGraphPayload,
+} from "./format";
+import { STREET_RULE_LABELS, type StreetRule } from "./rules";
 
 export const DEFAULT_MIN_COMPONENT_NODES = 50;
 /** Recorded with every stored walk graph (transit.walk_graph_version.builder_version). */
 export const WALK_GRAPH_BUILDER_VERSION = "walk-graph-build/1";
+export const STREET_GRAPH_BUILDER_VERSION = "street-graph-build/2";
+
+export const PADYAK_MAX_RADIUS_M = 1000;
+export const PADYAK_MIN_RADIUS_M = 250;
+const NATIONAL = new Set(["trunk", "primary", "trunk_link", "primary_link"]);
+/** Padyak road classes (plan E §C): the tricycle classes plus small streets and tracks. */
+const PADYAK_CLASSES = new Set([
+  "trunk", "primary", "secondary", "tertiary", "trunk_link", "primary_link", "secondary_link", "tertiary_link",
+  "unclassified", "residential", "service", "living_street", "track",
+]);
 
 export type WalkGraphBuildStats = {
   /** Nodes and undirected edges in the payload (after contraction). */
@@ -38,22 +72,107 @@ export type WalkGraphBuildStats = {
 
 export type WalkGraphBuild = { payload: WalkGraphPayload; stats: WalkGraphBuildStats };
 
-type Chain = { a: number; b: number; coords: LatLng[]; lengthM: number };
-type RoundedEdge = { a: number; b: number; lengthDm: number; pts: [number, number][] };
+type Chain = { a: number; b: number; coords: LatLng[]; lengthM: number; flags: number };
+type RoundedEdge = { a: number; b: number; lengthDm: number; pts: [number, number][]; flags: number };
+type Place = [number, number, number, number];
+type V2Extras = { flagOf: (piece: RoadEdge) => number; rules: StreetRule[]; areas: { code: string; radiusM: number }[]; places: Place[] };
+type BuildOptions = { roadSource: string; minComponentNodes?: number };
 
 const E5 = 1e5;
 const toE5 = (p: LatLng): [number, number] => [Math.round(p.lat * E5), Math.round(p.lng * E5)];
 const fromE5 = ([lat, lng]: readonly [number, number]): LatLng => ({ lat: lat / E5, lng: lng / E5 });
+/** Flags of a piece walked against its stored direction: the tricycle a→b / b→a bits swap. */
+const turn = (f: number) => (f & ~(FLAG_TRI_AB | FLAG_TRI_BA)) | ((f & FLAG_TRI_AB) << 1) | ((f & FLAG_TRI_BA) >> 1);
+const byCode = (x: { code: string }, y: { code: string }) => (x.code < y.code ? -1 : x.code > y.code ? 1 : 0);
 
-export function buildWalkGraph(
-  road: Pick<RoadGraph, "profile" | "nodes" | "edges">,
-  options: { roadSource: string; minComponentNodes?: number },
-): WalkGraphBuild {
+export function buildWalkGraph(road: Pick<RoadGraph, "profile" | "nodes" | "edges">, options: BuildOptions): WalkGraphBuild {
   if (road.profile !== "walk") throw new Error(`buildWalkGraph: needs the walk profile, got "${road.profile}"`);
+  return build(road, options, null);
+}
+
+/** Street graph v2 from the road snapshot, the reviewed road rules and padyak areas (imported records only). */
+export function buildStreetGraph(
+  roads: Pick<OsmRoads, "ways" | "nodes" | "places">,
+  rules: readonly ModesSeedRoadRule[],
+  areas: readonly ModesSeedPadyakArea[],
+  options: BuildOptions,
+): { payload: StreetGraphPayload; stats: WalkGraphBuildStats } {
+  const ways = new Map(roads.ways.map((w) => [w.id, w]));
+  const imported = rules.filter((r) => r.review.decision === "import");
+  const drawn = imported.filter((r) => r.geometry === "ways");
+  for (const r of drawn) for (const id of r.wayIds) if (!ways.has(id)) throw new Error(`buildStreetGraph: rule ${r.code}: way/${id} is not in the road snapshot`);
+  for (const r of drawn) {
+    if (r.appliesTo[0] === "padyak" && r.kind === "exclude" && r.exceptWindow !== null) throw new Error(`buildStreetGraph: padyak rule ${r.code} has hours, which the graph cannot carry`);
+  }
+  const splitAt = new Set(drawn.flatMap((r) => r.clips.flatMap((c) => [c.fromNodeId, c.toNodeId])));
+  const road = buildRoadGraph(roads, { profile: "street", splitAt });
+
+  // Tricycle restrictions: one payload rule per rule code, sorted.
+  const triCodes = [...new Set(imported.filter((r) => r.appliesTo[0] === "tricycle" && r.kind === "exclude").map((r) => r.ruleCode))].sort();
+  const streetRules: StreetRule[] = triCodes.map((code) => {
+    const records = imported.filter((r) => r.ruleCode === code && r.kind === "exclude");
+    if (new Set(records.map((r) => JSON.stringify(r.exceptWindow))).size !== 1) throw new Error(`buildStreetGraph: rule ${code}: its records disagree on the hours exception`);
+    const label = STREET_RULE_LABELS[code];
+    if (!label) throw new Error(`buildStreetGraph: rule ${code} has no label`);
+    const w = records[0]!.exceptWindow;
+    return { code, label, sourceCodes: [...new Set(records.flatMap((r) => r.sourceCodes))].sort(), liftedFrom: w?.from ?? null, liftedTo: w?.to ?? null };
+  });
+
+  // A record covers a piece (way order) on its ways, inside the clip when the way is clipped.
+  const covers = (r: ModesSeedRoadRule, e: RoadEdge) => {
+    if (!r.wayIds.includes(e.wayId)) return false;
+    const clip = r.clips.find((c) => c.wayId === e.wayId);
+    if (!clip) return true;
+    const ids = ways.get(e.wayId)!.nodeIds;
+    const [i, j] = [ids.indexOf(clip.fromNodeId), ids.indexOf(clip.toNodeId)];
+    return ids.indexOf(road.nodes[e.from]!.osmId) >= Math.min(i, j) && ids.lastIndexOf(road.nodes[e.to]!.osmId) <= Math.max(i, j);
+  };
+  const flagOf = (e: RoadEdge) => {
+    const way = ways.get(e.wayId)!;
+    const walk = wayIncluded(way, "walk");
+    const tri = wayIncluded(way, "tricycle") ? wayDirections(way, "tricycle") : { forward: false, backward: false };
+    let f = (walk ? FLAG_WALK : 0) | (tri.forward ? FLAG_TRI_AB : 0) | (tri.backward ? FLAG_TRI_BA : 0);
+    if (NATIONAL.has(way.tags.highway)) f |= FLAG_NATIONAL;
+    if (walk && PADYAK_CLASSES.has(way.tags.highway)) f |= FLAG_PADYAK_CLASS;
+    if (drawn.some((r) => r.appliesTo[0] === "padyak" && r.kind === "exclude" && covers(r, e))) f |= FLAG_PADYAK_BANNED;
+    if (tri.forward || tri.backward) {
+      const i = triCodes.findIndex((code) => {
+        const mine = drawn.filter((r) => r.ruleCode === code && covers(r, e));
+        return mine.some((r) => r.kind === "exclude") && !mine.some((r) => r.kind === "exempt");
+      });
+      if (i >= 0) f |= (i + 1) << FLAG_RULE_SHIFT;
+    }
+    return f;
+  };
+
+  // Padyak areas (sorted by code) and their anchor place nodes, one row per membership.
+  const placeById = new Map(roads.places.map((p) => [p.id, p]));
+  const areaList = areas.filter((a) => a.review.decision === "import").sort(byCode);
+  const places: Place[] = [];
+  areaList.forEach((a, i) => {
+    for (const id of a.placeNodeIds) {
+      const p = placeById.get(id);
+      if (!p) throw new Error(`buildStreetGraph: padyak area ${a.code}: node/${id} is not a place node in the snapshot`);
+      places.push([id, ...toE5(p), i]);
+    }
+  });
+  places.sort((x, y) => x[0] - y[0] || x[3] - y[3]);
+  const anchor = ([, lat, lng]: Place) => fromE5([lat, lng]);
+  const areaRows = areaList.map((a, i) => {
+    let nearestOtherM = Infinity;
+    for (const p of places) if (p[3] === i) for (const q of places) if (q[3] !== i) nearestOtherM = Math.min(nearestOtherM, haversineMeters(anchor(p), anchor(q)));
+    const radiusM = Math.floor(Math.min(a.radiusM ?? PADYAK_MAX_RADIUS_M, Math.max(PADYAK_MIN_RADIUS_M, 0.6 * nearestOtherM)));
+    return { code: a.code, radiusM };
+  });
+
+  return build(road, options, { flagOf, rules: streetRules, areas: areaRows, places }) as { payload: StreetGraphPayload; stats: WalkGraphBuildStats };
+}
+
+function build(road: Pick<RoadGraph, "profile" | "nodes" | "edges">, options: BuildOptions, v2: V2Extras | null): WalkGraphBuild {
   const minNodes = options.minComponentNodes ?? DEFAULT_MIN_COMPONENT_NODES;
   const n = road.nodes.length;
 
-  // Undirected pieces: the way-order edge of each two-way pair (walk edges always have a twin).
+  // Undirected pieces: the way-order edge of each two-way pair (walk and street edges always have a twin).
   const pieces = road.edges.filter((e) => e.twin === null || !e.reverse);
 
   // 2. Components.
@@ -93,7 +212,8 @@ export function buildWalkGraph(
     return keep;
   });
 
-  // 3. Degree-2 contraction.
+  // 3. Degree-2 contraction (only through nodes where the flags continue unchanged).
+  const flags = kept.map((p) => (v2 ? v2.flagOf(p) : 0));
   const incident: number[][] = Array.from({ length: n }, () => []);
   kept.forEach((p, i) => {
     incident[p.from]!.push(i);
@@ -101,7 +221,12 @@ export function buildWalkGraph(
   });
   const isKeep = (v: number) => {
     const inc = incident[v]!;
-    return inc.length > 0 && (inc.length !== 2 || inc[0] === inc[1]);
+    if (inc.length === 0) return false;
+    if (inc.length !== 2 || inc[0] === inc[1]) return true;
+    const [i, j] = [inc[0]!, inc[1]!];
+    const into = kept[i]!.to === v ? flags[i]! : turn(flags[i]!);
+    const out = kept[j]!.from === v ? flags[j]! : turn(flags[j]!);
+    return into !== out;
   };
   const used = new Array<boolean>(kept.length).fill(false);
   const chains: Chain[] = [];
@@ -109,6 +234,7 @@ export function buildWalkGraph(
     let at = start;
     let piece = first;
     const coords: LatLng[] = [{ lat: road.nodes[start]!.lat, lng: road.nodes[start]!.lng }];
+    const chainFlags = kept[first]!.from === start ? flags[first]! : turn(flags[first]!);
     let lengthM = 0;
     for (;;) {
       used[piece] = true;
@@ -123,7 +249,7 @@ export function buildWalkGraph(
       if (next === undefined || used[next]) break;
       piece = next;
     }
-    chains.push({ a: start, b: at, coords, lengthM });
+    chains.push({ a: start, b: at, coords, lengthM, flags: chainFlags });
   };
   const keepNodes = new Set<number>();
   for (let v = 0; v < n; v++) {
@@ -163,13 +289,15 @@ export function buildWalkGraph(
     let a = newIndex.get(c.a)!;
     let b = newIndex.get(c.b)!;
     let geometry = pts;
+    let f = c.flags;
     if (a > b || (a === b && compareSeq([...pts].reverse(), pts) < 0)) {
       [a, b] = [b, a];
       geometry = [...pts].reverse();
+      f = turn(f);
     }
-    return { a, b, lengthDm, pts: geometry };
+    return { a, b, lengthDm, pts: geometry, flags: f };
   });
-  rounded.sort((x, y) => x.a - y.a || x.b - y.b || x.lengthDm - y.lengthDm || compareSeq(x.pts, y.pts));
+  rounded.sort((x, y) => x.a - y.a || x.b - y.b || x.lengthDm - y.lengthDm || compareSeq(x.pts, y.pts) || x.flags - y.flags);
 
   // Encode.
   const nodes: number[] = [];
@@ -201,10 +329,14 @@ export function buildWalkGraph(
       extend(q);
     }
   }
-  const bbox: [number, number, number, number] = order.length === 0 ? [0, 0, 0, 0] : [south, west, north, east];
+  for (const [, lat, lng] of v2?.places ?? []) extend([lat, lng]);
+  const bbox: [number, number, number, number] = south === Infinity ? [0, 0, 0, 0] : [south, west, north, east];
+  const base = { roadSource: options.roadSource, bbox, nodes, edges, geom };
 
   return {
-    payload: { v: WALK_GRAPH_FORMAT_VERSION, roadSource: options.roadSource, bbox, nodes, edges, geom },
+    payload: v2
+      ? { v: STREET_GRAPH_FORMAT_VERSION, ...base, flags: rounded.map((e) => e.flags), rules: v2.rules, areas: v2.areas, places: v2.places }
+      : { v: WALK_GRAPH_FORMAT_VERSION, ...base },
     stats: {
       nodes: order.length,
       edges: rounded.length,

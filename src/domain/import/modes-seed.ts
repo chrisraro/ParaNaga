@@ -370,6 +370,8 @@ const PadyakArea = z.strictObject({
   /** Place-node names the area matched (OSM `place` node names in the road snapshot). */
   barangays: z.array(text),
   placeNodeIds: z.array(osmId),
+  /** Optional cap on the area's anchor radius in metres (the graph builder caps it further; default 1,000). */
+  radiusM: z.number().positive().max(1000).optional(),
   /** Year of the latest ordinance naming the area or its association. */
   documentedYear: z.number().int().min(1989).max(2100).nullable(),
   evidence,

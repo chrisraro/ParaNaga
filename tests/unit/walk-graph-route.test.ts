@@ -178,14 +178,14 @@ describe("snapWalk: prefers the largest component", () => {
     // 20 m south of the island, 46.7 m north of the main grid's top row.
     const p = { lat: 13.6226 - 20 / M_PER_DEG_LAT, lng: 123.1901 };
     const s = snapWalk(g, p)!;
-    expect(g.component[g.edgeA[s.edge]!]).toBe(g.mainComponent);
+    expect(g.components.walk.id[g.edgeA[s.edge]!]).toBe(g.components.walk.main);
     expect(s.distM).toBeCloseTo((p.lat - top) * M_PER_DEG_LAT, 0);
   });
 
   it("snaps to the island when the point is clearly on it (≤ 5 m)", () => {
     const p = { lat: 13.6226 + 2 / M_PER_DEG_LAT, lng: 123.1901 };
     const s = snapWalk(g, p)!;
-    expect(g.component[g.edgeA[s.edge]!]).not.toBe(g.mainComponent);
+    expect(g.components.walk.id[g.edgeA[s.edge]!]).not.toBe(g.components.walk.main);
     expect(s.distM).toBeCloseTo(2, 0);
   });
 });
