@@ -616,13 +616,12 @@ export function HomeScreen() {
   );
   // Options listed, none open: the recommended option is drawn as a preview (not tappable).
   const previewOption =
-    ready && !guiding && !picking && !stored && !openOption && planData && planData.plan.coverage === "provisional"
-      ? (planData.plan.options[0] ?? null)
-      : null;
+    ready && !guiding && !picking && !stored && !openOption && planData ? (planData.plan.options[0] ?? null) : null;
   const previewing = previewOption !== null;
+  const shownOption = openOption ?? previewOption;
   const tripRevisionId = guidedTrip
     ? guidedTrip.revisionId
-    : (stored?.data.revision.revisionId ?? (planData && (openOption ?? previewOption) ? planData.revision.revisionId : null));
+    : (stored?.data.revision.revisionId ?? (planData && shownOption ? planData.revision.revisionId : null));
   // The guided walks draw the street path like trip detail, from the walk graph on the phone
   // (a stored copy only when saving data); without it they stay straight dotted lines.
   const guidedWalkGraph = useWalkGraph(guidedTrip?.revisionId ?? null, guidedTrip !== null);
@@ -632,21 +631,23 @@ export function HomeScreen() {
   );
   const tripLinesState = useLines(tripRevisionId, tripRevisionId !== null);
   const tripRevisionLines = tripLinesState.lines;
-  const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : (openOption ?? previewOption);
+  const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : shownOption;
   const tripLines = useMemo(() => {
     if (guidedTrip && guidedOption) return buildTripLinesData(guidedOption, guidedTrip.variants, tripRevisionLines);
     if (stored) return buildTripLinesData(stored.option, stored.data.variants, tripRevisionLines);
-    if (planData && (openOption ?? previewOption)) return buildTripLinesData((openOption ?? previewOption)!, planData.variants, tripRevisionLines);
+    if (planData && shownOption) return buildTripLinesData(shownOption, planData.variants, tripRevisionLines);
     return null;
-  }, [guidedTrip, guidedOption, stored, planData, openOption, previewOption, tripRevisionLines]);
+  }, [guidedTrip, guidedOption, stored, planData, shownOption, tripRevisionLines]);
   // Both ends set, options listed, none open: fit the whole route (ends + the previewed path, or
   // the option's stops while its lines load) above the sheet. An open option fits via its highlights.
   const routeFitCoords = useMemo(() => {
-    if (!previewOption || !endpoints.start || !endpoints.destination) return null;
+    if (!endpoints.start || !endpoints.destination || tripDetailOpen || guiding || picking) return null;
+    // No preview (plan loading, no coverage, error): the pins alone are framed.
+    if (!previewOption) return routeFitPoints(endpoints.start.point, endpoints.destination.point);
     const path = tripLines && tripLines.allCoords.length > 0 ? tripLines.allCoords : null;
     const stops = path ?? previewOption.legs.flatMap((l) => (l.kind === "ride" ? l.stops.map((st) => ({ lat: st.lat, lng: st.lng })) : []));
     return routeFitPoints(endpoints.start.point, endpoints.destination.point, stops);
-  }, [previewOption, tripLines, endpoints.start, endpoints.destination]);
+  }, [previewOption, tripLines, tripDetailOpen, guiding, picking, endpoints.start, endpoints.destination]);
   // Lines never vanish: the overview stays while picking a point. When the trip's own lines ended
   // without loading (error, or saving data; never while loading) and the trip is on the snapshot's
   // revision, the overview of exactly the trip's ridden variants stands in for the rides, dimmed
@@ -843,10 +844,12 @@ export function HomeScreen() {
           userStale={guiding ? false : (assessment?.stale ?? false)}
           pins={pins}
           highlightStops={highlightStops}
-          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET + 64)}
+          highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET)}
           refitSignal={sheet.snap}
           fitBoundsCoords={routeFitCoords}
           fitAnnouncement="Route shown"
+          fitId={previewOption?.id ?? "ends"}
+          fitPathReady={tripLines !== null && tripLines.allCoords.length > 0}
           crosshair={picking !== null}
           onCenterChange={handleCenterChange}
           recenterSignal={recenterSignal}

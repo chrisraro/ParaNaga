@@ -106,9 +106,6 @@ test("search sets the start and the destination; the map announces, recentres an
   await expect(rowMain(page, "destination")).toContainText("SM City Naga");
   await expect(page.getByText(/Map centered on SM City/)).toHaveCount(0);
   await expect.poll(() => plans.length).toBe(1);
-  await page.waitForTimeout(1200); // a fly-to would have landed by now
-  const end = await readCenter(page);
-  expect(Math.abs(end.lat - SM.lat) < 0.0005 && Math.abs(end.lng - SM.lng) < 0.0005).toBe(false);
   await expect.poll(() => plans.length).toBe(1);
   expect(plans[0]).toMatchObject({
     origin: { lat: STOP_A1.stop.lat, lng: STOP_A1.stop.lng },

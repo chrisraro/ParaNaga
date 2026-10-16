@@ -29,6 +29,10 @@ export type NagaMapProps = {
   refitSignal?: number;
   /** Announced once each time `fitBoundsCoords` is fitted anew (a snap re-fit stays silent). */
   fitAnnouncement?: string;
+  /** Keys the `fitBoundsCoords` fit on its two ends + this id (e.g. an option id), not on every coordinate. */
+  fitId?: string;
+  /** The route's path loaded after the first fit: refines it unless the rider has panned meanwhile. */
+  fitPathReady?: boolean;
   /** Mapped stop pins to draw (one canvas layer). */
   stopPins?: readonly StopPin[];
   /** Whether tapping a stop pin selects it (false while placing a pin). */

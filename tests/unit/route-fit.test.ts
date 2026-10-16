@@ -3,6 +3,7 @@ import {
   ROUTE_FIT_MIN_VISIBLE,
   ROUTE_FIT_PAD_RIGHT,
   ROUTE_FIT_PAD_TOP,
+  ROUTE_FIT_SHEET_GAP,
   routeFitKey,
   routeFitPadding,
   routeFitPoints,
@@ -14,13 +15,15 @@ const B = { lat: 13.63, lng: 123.2 };
 describe("routeFitPadding", () => {
   it("uses the hidden sheet height as bottom padding, clear of controls", () => {
     const p = routeFitPadding(200, 700);
-    expect(p).toEqual({ top: ROUTE_FIT_PAD_TOP, left: 40, right: ROUTE_FIT_PAD_RIGHT, bottom: 200 });
+    expect(p).toEqual({ top: ROUTE_FIT_PAD_TOP, left: 40, right: ROUTE_FIT_PAD_RIGHT, bottom: 200 + ROUTE_FIT_SHEET_GAP });
   });
   it("keeps a minimum bottom gap", () => {
-    expect(routeFitPadding(0, 700).bottom).toBe(40);
+    expect(routeFitPadding(0, 700).bottom).toBe(ROUTE_FIT_SHEET_GAP);
   });
   it("never leaves less than the minimum visible strip under a full sheet", () => {
+    // Full snap: the clearance is not guaranteed, but the fit area stays usable and finite.
     const p = routeFitPadding(900, 700);
+    expect(Number.isFinite(p.bottom)).toBe(true);
     expect(700 - p.top - p.bottom).toBeGreaterThanOrEqual(ROUTE_FIT_MIN_VISIBLE);
   });
 });

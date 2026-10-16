@@ -417,6 +417,67 @@ test("after choosing From and To the recommended option's lines are previewed ab
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
 });
 
+/** Both pins are inside the map and at least 24 px above the sheet's top edge. */
+async function pinsClearOfSheet(page: Page): Promise<boolean> {
+  const mapBox = (await mapEl(page).boundingBox())!;
+  const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+  const pins = await page.locator(".pn-marker").all();
+  if (pins.length !== 2) return false;
+  for (const pin of pins) {
+    const b = await pin.boundingBox();
+    if (!b || b.x < mapBox.x || b.x + b.width > mapBox.x + mapBox.width || b.y < mapBox.y || b.y + b.height > sheetTop - 24) return false;
+  }
+  return true;
+}
+const centreOf = async (page: Page) => `${await mapEl(page).getAttribute("data-center-lat")},${await mapEl(page).getAttribute("data-center-lng")}`;
+
+test("the route re-fits on a snap change and a new route, but a user pan stays put", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
+
+  // Peek: the sheet is lower, the route re-fits with the same clearance.
+  await peekSheet(page);
+  await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
+
+  // A user pan wins: a re-render (legend open and closed) does not take the view back.
+  await drag(page, -60, 40);
+  // Let the drag's inertia settle: two equal reads in a row.
+  let panned = "";
+  await expect
+    .poll(async () => {
+      const now = await centreOf(page);
+      const settled = now === panned;
+      panned = now;
+      return settled;
+    }, { intervals: [300] })
+    .toBe(true);
+  await page.getByTestId("map-legend-button").click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("map-legend-panel")).toBeHidden();
+  expect(await centreOf(page)).toBe(panned);
+
+  // A new route (the destination moved) re-fits.
+  await page.getByTestId("endpoint-destination").locator("button.pn-endpoint__main").click();
+  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await drag(page, 100, -60);
+  await page.getByRole("button", { name: "Set destination here" }).click();
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
+});
+
+test("both pins are framed while the plan has not arrived or failed", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) => route.fulfill({ status: 500, contentType: "application/json", body: "{}" }));
+  await openApp(page);
+  await pinBoth(page);
+  await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
+  expect(Number(await mapEl(page).getAttribute("data-zoom"))).toBeLessThanOrEqual(17);
+});
+
 test("the overview lines and the legend stay while a point is being chosen on the map", async ({ page }) => {
   await openApp(page);
   await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });

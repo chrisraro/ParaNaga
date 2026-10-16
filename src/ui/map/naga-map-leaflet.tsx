@@ -118,6 +118,8 @@ function FitHighlights({
   paddingBottom,
   refitSignal,
   fitAnnouncement,
+  fitId,
+  fitPathReady,
   onAnnounce,
 }: {
   stops: readonly HighlightStop[] | undefined;
@@ -129,17 +131,20 @@ function FitHighlights({
   refitSignal: number | undefined;
   /** Announced once per new fit of `fitBoundsCoords` (none: silent). */
   fitAnnouncement: string | undefined;
+  /** When set, the coords fit is keyed on its two ends + this id, not on every coordinate. */
+  fitId: string | undefined;
+  /** The route's path arrived after the first fit: refines it unless the rider has panned. */
+  fitPathReady: boolean | undefined;
   onAnnounce: (message: string) => void;
 }) {
   const map = useMap();
   const stopsKey = stops && stops.length > 0 ? stops.map((s) => s.id).join("|") : "";
   const linesKey = stopsKey && tripLines ? `${tripLines.walkSegments.length}:${tripLines.rideSegments.map((r) => r.key).join(",")}` : "";
-  const coordsKey = fitBoundsCoords ? routeFitKey(fitBoundsCoords) : "";
   // Announce per pair of ends: the path loading in later refits silently.
   const endsKey = fitBoundsCoords ? routeFitKey(fitBoundsCoords.slice(0, 2)) : "";
+  const coordsKey = fitBoundsCoords ? (fitId === undefined ? routeFitKey(fitBoundsCoords) : `${endsKey}|${fitId}`) : "";
   const fitKey = [stopsKey, linesKey, coordsKey].filter(Boolean).join("#");
   // A snap change re-fits; a pan, zoom or GPS fix never does (the rider's view wins until the route changes).
-  const key = fitKey ? `${fitKey}@${refitSignal ?? ""}` : "";
   const announcedKey = useRef("");
 
   const fit = useEffectEvent(() => {
@@ -171,9 +176,26 @@ function FitHighlights({
       onAnnounce(fitAnnouncement);
     }
   });
+  // The rider dragged the map: a late path load does not take the view back.
+  const moved = useRef(false);
   useEffect(() => {
-    if (key) fit();
-  }, [key]);
+    const onDrag = () => {
+      moved.current = true;
+    };
+    map.on("dragstart", onDrag);
+    return () => {
+      map.off("dragstart", onDrag);
+    };
+  }, [map]);
+  const prev = useRef<{ fitKey: string; refit: number | undefined; path: boolean | undefined } | null>(null);
+  useEffect(() => {
+    const before = prev.current;
+    prev.current = { fitKey, refit: refitSignal, path: fitPathReady };
+    if (!fitKey) return;
+    if (!before || before.fitKey !== fitKey) moved.current = false;
+    else if (before.refit === refitSignal && before.path !== fitPathReady && moved.current) return;
+    fit();
+  }, [fitKey, refitSignal, fitPathReady]);
   return null;
 }
 
@@ -271,6 +293,8 @@ export default function NagaMapLeaflet({
   highlightPaddingBottom = 40,
   refitSignal,
   fitAnnouncement,
+  fitId,
+  fitPathReady,
   stopPins,
   stopPinsInteractive = true,
   onStopSelect,
@@ -463,6 +487,8 @@ export default function NagaMapLeaflet({
           paddingBottom={highlightPaddingBottom}
           refitSignal={refitSignal}
           fitAnnouncement={fitAnnouncement}
+          fitId={fitId}
+          fitPathReady={fitPathReady}
           onAnnounce={setAnnouncement}
         />
         <MapViewSync
