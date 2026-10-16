@@ -50,16 +50,14 @@ export function SourcesScreen() {
   const heading = useRef<HTMLHeadingElement>(null);
   // A hash link (#photo-…, #fare-basis) lands on its target; otherwise the h1 takes focus.
   useEffect(() => {
-    const place = (again: boolean) => {
-      const id = decodeURIComponent(window.location.hash.slice(1));
+    const id = decodeURIComponent(window.location.hash.slice(1));
+    // Lands on the target once it exists: the first frame after mount (after the router's own hash
+    // handling), or the moment the source list renders it.
+    const place = (): boolean => {
       const target = id ? document.getElementById(id) : null;
-      if (!target) {
-        if (!again) heading.current?.focus();
-        return;
-      }
+      if (!target) return false;
       target.tabIndex = -1;
       target.scrollIntoView({ block: "start" });
-      if (again && target.contains(document.activeElement)) return;
       target.focus({ preventScroll: true });
       if (document.activeElement !== target) {
         // Not focusable itself (a list item): its first link, or its heading, takes focus.
@@ -69,11 +67,31 @@ export function SourcesScreen() {
           inner.focus({ preventScroll: true });
         }
       }
+      // Content above that grows afterwards (images, late rows) keeps the target at the top until
+      // the rider scrolls or taps.
+      const grow = new ResizeObserver(() => target.scrollIntoView({ block: "start" }));
+      grow.observe(target.closest("main") ?? document.body);
+      const stop = () => grow.disconnect();
+      stopGrow = stop;
+      for (const type of ["wheel", "touchstart", "pointerdown", "keydown"]) window.addEventListener(type, stop, { once: true, passive: true });
+      return true;
     };
-    // After the panel's own mount work (and the router's hash handling) has settled; once more in
-    // case the page was scrolled back meanwhile.
-    const timers = [window.setTimeout(() => place(false), 60), window.setTimeout(() => place(true), 500)];
-    return () => timers.forEach((t) => window.clearTimeout(t));
+    let stopGrow: (() => void) | undefined;
+    let observer: MutationObserver | undefined;
+    const frame = requestAnimationFrame(() => {
+      if (!id) heading.current?.focus();
+      else if (!place()) {
+        observer = new MutationObserver(() => {
+          if (place()) observer?.disconnect();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      stopGrow?.();
+    };
   }, []);
   return (
     <DetailPanel title="Sources" testId="sources-page">

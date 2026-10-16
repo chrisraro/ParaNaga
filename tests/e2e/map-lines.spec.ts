@@ -23,6 +23,12 @@ test.afterEach(async ({ page }) => {
 
 const mapEl = (page: Page) => page.getByTestId("naga-map");
 
+/** No pan or zoom (drag, its inertia, an animated fit) is under way: the map's data-moving flag. */
+const mapSettled = (page: Page) => expect(mapEl(page)).toHaveAttribute("data-moving", "false");
+/** The legend panel's open state is an attribute, so a test waits on it instead of on timing. */
+const legendOpen = (page: Page, open: boolean) =>
+  expect(page.getByTestId("map-legend-panel")).toHaveAttribute("data-open", String(open));
+
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
@@ -326,6 +332,7 @@ async function expectLegendListsWalkAndStops(page: Page, notice?: string) {
   const button = page.getByTestId("map-legend-button");
   await expect(button).toBeVisible();
   await button.click();
+  await legendOpen(page, true);
   const panel = page.getByTestId("map-legend-panel");
   await expect(panel).toContainText("Walk");
   await expect(panel).toContainText("Dotted: approximate walking path");
@@ -334,6 +341,7 @@ async function expectLegendListsWalkAndStops(page: Page, notice?: string) {
   if (notice) await expect(page.getByTestId("map-legend-notice")).toHaveText(notice);
   else await expect(page.getByTestId("map-legend-notice")).toHaveCount(0);
   await page.keyboard.press("Escape");
+  await legendOpen(page, false);
   await expect(panel).toBeHidden();
 }
 
@@ -393,9 +401,14 @@ test("after choosing From and To the recommended option's lines are previewed ab
   await expect(page.locator("path.pn-line--route")).toHaveCount(0);
   await expectLegendListsWalkAndStops(page);
   await page.getByTestId("map-legend-button").click();
+  await legendOpen(page, true);
   await expect(page.getByTestId("map-legend-panel")).toContainText(/jeepney/i);
   await page.keyboard.press("Escape");
-  // The whole path settles inside the map, at least 24 px above the sheet.
+  await legendOpen(page, false);
+  // The sheet rests at peek and the map has stopped moving; then the whole path is inside the
+  // map, at least 24 px above the sheet.
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "0");
+  await mapSettled(page);
   const mapBox = (await page.getByTestId("naga-map").boundingBox())!;
   await expect
     .poll(async () => {
@@ -443,23 +456,21 @@ test("the route re-fits on a snap change and a new route, but a user pan stays p
 
   // Peek: the sheet is lower, the route re-fits with the same clearance.
   await peekSheet(page);
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "0");
+  await mapSettled(page);
   await expect.poll(() => pinsClearOfSheet(page), { timeout: 10_000 }).toBe(true);
 
   // A user pan wins: a re-render (legend open and closed) does not take the view back.
   await drag(page, -60, 40);
-  // Let the drag's inertia settle: two equal reads in a row.
-  let panned = "";
-  await expect
-    .poll(async () => {
-      const now = await centreOf(page);
-      const settled = now === panned;
-      panned = now;
-      return settled;
-    }, { intervals: [300] })
-    .toBe(true);
+  // The drag's inertia ends with a moveend.
+  await mapSettled(page);
+  const panned = await centreOf(page);
   await page.getByTestId("map-legend-button").click();
+  await legendOpen(page, true);
   await page.keyboard.press("Escape");
+  await legendOpen(page, false);
   await expect(page.getByTestId("map-legend-panel")).toBeHidden();
+  await mapSettled(page);
   expect(await centreOf(page)).toBe(panned);
 
   // A new route (the destination moved) re-fits.
@@ -569,4 +580,48 @@ test("tabbing through trip detail and guidance at half keeps the focused control
   await expect(page.getByTestId("guidance")).toBeVisible();
   await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
   await expectTabbedControlsOnScreen(page, "guidance", [/I'm at the stop/, /End guidance/]);
+});
+
+/** Computed transition (property -> duration in ms) of an element, split into its parallel lists. */
+async function transitions(locator: ReturnType<Page["locator"]>) {
+  return locator.first().evaluate((el) => {
+    const cs = getComputedStyle(el);
+    const props = cs.transitionProperty.split(",").map((p) => p.trim());
+    const durs = cs.transitionDuration.split(",").map((d) => d.trim());
+    const ms = (d: string) => (d.endsWith("ms") ? parseFloat(d) : parseFloat(d) * 1000);
+    return { props, ms: props.map((_, i) => ms(durs[i % durs.length]!)), animation: cs.animationDuration };
+  });
+}
+
+test("motion: the sheet animates transform only (padding-bottom applies at once), the list and legend fade", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  const sheet = await transitions(page.getByTestId("trip-sheet"));
+  const timed = sheet.props.filter((_, i) => sheet.ms[i]! > 0);
+  expect(timed).toEqual(["transform"]);
+  // The footer rides the same curve, also on transform alone.
+  const footer = await transitions(page.locator(".pn-sheet-footer"));
+  expect(footer.props.filter((_, i) => footer.ms[i]! > 0)).toEqual(["transform"]);
+  // Cards and the legend panel do have motion (so the reduced-motion test below proves something).
+  expect((await transitions(page.getByTestId("map-legend-panel"))).ms.some((m) => m > 0)).toBe(true);
+  expect((await transitions(page.getByTestId("trip-option"))).ms.some((m) => m > 0)).toBe(true);
+});
+
+test("reduced motion: no transition or animation on the sheet, the list items or the legend", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  for (const target of [page.getByTestId("trip-sheet"), page.locator(".pn-sheet-footer"), page.getByTestId("trip-option"), page.getByTestId("map-legend-panel")]) {
+    const t = await transitions(target);
+    expect(t.ms.every((m) => m === 0), `${t.props} ${t.ms}`).toBe(true);
+    expect(t.animation.split(",").every((d) => parseFloat(d) === 0), t.animation).toBe(true);
+  }
 });
