@@ -3,6 +3,9 @@ import type { LatLng } from "@/domain/geo/types";
 
 /** Never zoom tighter than this when fitting a route (street level, both ends stay in view). */
 export const ROUTE_FIT_MAX_ZOOM = 17;
+/** Fit pan: the sheet snap's duration (--pn-dur-slow, 360 ms) and a matching ease-out. */
+export const ROUTE_FIT_DURATION_S = 0.36;
+export const ROUTE_FIT_EASE_LINEARITY = 0.1;
 /** Top padding clears the map controls; right padding clears the zoom and locate buttons. */
 export const ROUTE_FIT_PAD_TOP = 80;
 export const ROUTE_FIT_PAD_SIDE = 40;

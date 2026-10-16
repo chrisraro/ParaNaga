@@ -27,7 +27,7 @@ import {
 import type { Bounds, LatLng } from "@/domain/geo/types";
 import { mapSurface as computeMapSurface } from "@/domain/modes/palette";
 import { MapControls } from "./map-controls";
-import { ROUTE_FIT_MAX_ZOOM, routeFitKey, routeFitPadding } from "./route-fit";
+import { ROUTE_FIT_DURATION_S, ROUTE_FIT_EASE_LINEARITY, ROUTE_FIT_MAX_ZOOM, routeFitKey, routeFitPadding } from "./route-fit";
 import { MapLegend } from "./map-legend";
 import { legendVisualKeys } from "./map-layer-policy";
 import { RouteLinesLayer, collectRouteLegendItems, linesHaveOnewayCaution } from "./route-lines-layer";
@@ -160,6 +160,12 @@ function FitHighlights({
       for (const c of fitBoundsCoords) points.push([c.lat, c.lng]);
     }
     if (points.length === 0) return;
+    // Leaflet drops a fit that needs a new zoom while a zoom animation is running (setView returns
+    // early), which leaves the route behind the sheet. Redo it when that zoom has ended.
+    if ((map as unknown as { _animatingZoom?: boolean })._animatingZoom) {
+      fitAfterZoom.current = true;
+      return;
+    }
     // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
     // locate controls (48 px wide, 16 px from the edge): 64 + 13 + a gap.
     const pad = routeFitPadding(paddingBottom, map.getSize().y);
@@ -167,6 +173,8 @@ function FitHighlights({
       paddingTopLeft: [pad.left, pad.top],
       paddingBottomRight: [pad.right, pad.bottom],
       maxZoom: ROUTE_FIT_MAX_ZOOM,
+      duration: ROUTE_FIT_DURATION_S,
+      easeLinearity: ROUTE_FIT_EASE_LINEARITY,
       animate: !prefersReducedMotion(),
     });
     // One short announcement per new route fit (not for a snap re-fit, not for a trip detail
@@ -176,6 +184,18 @@ function FitHighlights({
       onAnnounce(fitAnnouncement);
     }
   });
+  const fitAfterZoom = useRef(false);
+  useEffect(() => {
+    const onZoomEnd = () => {
+      if (!fitAfterZoom.current) return;
+      fitAfterZoom.current = false;
+      fit();
+    };
+    map.on("zoomend", onZoomEnd);
+    return () => {
+      map.off("zoomend", onZoomEnd);
+    };
+  }, [map]);
   // The rider dragged the map: a late path load does not take the view back.
   const moved = useRef(false);
   useEffect(() => {
@@ -390,6 +410,20 @@ export default function NagaMapLeaflet({
     },
     [map, stopPins, stopPinsInteractive, onStopSelect],
   );
+
+  // data-moving: a pan or zoom (a drag, its inertia, an animated fit) is under way; tests wait on it.
+  useEffect(() => {
+    const el = map?.getContainer().parentElement;
+    if (!map || !el) return undefined;
+    const set = (moving: boolean) => el.setAttribute("data-moving", String(moving));
+    const start = () => set(true);
+    const end = () => set(false);
+    set(false);
+    map.on("movestart", start).on("moveend", end);
+    return () => {
+      map.off("movestart", start).off("moveend", end);
+    };
+  }, [map]);
 
   return (
     <div

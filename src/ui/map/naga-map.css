@@ -197,7 +197,7 @@
   background: transparent;
   color: var(--pn-label);
   cursor: pointer;
-  transition: transform 0.08s ease-out;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 .pn-map .pn-ctl--zoom {
   height: 44px;

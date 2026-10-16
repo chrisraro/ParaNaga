@@ -81,7 +81,7 @@
   color: var(--pn-label);
   text-align: left;
   cursor: pointer;
-  transition: transform 0.08s ease-out, box-shadow 0.2s ease;
+  transition: transform var(--pn-dur-fast) var(--pn-ease), box-shadow var(--pn-dur) var(--pn-ease);
 }
 .pn-trip-card--primary {
   box-shadow: 0 0 0 2px var(--pn-accent), 0 8px 24px var(--pn-glow);
@@ -614,12 +614,13 @@ abbr.pn-est {
 
 /* Entrance (artboard .pn-in); reduced motion fades instead. */
 .pn-trip-in {
-  animation: pn-trip-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pn-trip-in var(--pn-dur-slow) var(--pn-ease) both;
+  animation-delay: calc(var(--i, 0) * var(--pn-stagger));
 }
 @keyframes pn-trip-in {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(var(--pn-rise));
   }
   to {
     opacity: 1;
@@ -637,7 +638,7 @@ abbr.pn-est {
 
 @media (prefers-reduced-motion: reduce) {
   .pn-trip-in {
-    animation: pn-trip-fade 0.15s both;
+    animation: pn-trip-fade var(--pn-dur) both;
   }
   .pn-trip-card {
     transition: none;

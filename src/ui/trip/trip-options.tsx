@@ -77,7 +77,7 @@ function OptionCard({
         type="button"
         id={optionDomId(option.id)}
         className={primary ? "pn-trip-card pn-trip-card--primary pn-trip-in" : "pn-trip-card pn-trip-in"}
-        style={{ animationDelay: `${index * 0.06}s` }}
+        style={{ ["--i" as string]: Math.min(index, 5) }}
         data-testid="trip-option"
         onClick={() => onOpen(option.id)}
       >

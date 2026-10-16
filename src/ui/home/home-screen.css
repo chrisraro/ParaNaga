@@ -213,12 +213,15 @@
   box-sizing: border-box;
   padding-bottom: var(--pn-sheet-offset, 0px);
   transform: translateY(var(--pn-sheet-offset, calc(100% - 444px)));
-  /* padding-bottom (and the footer's bottom) follow the same curve as the transform, so the visible
-     area stays the screen's bottom edge throughout the snap. */
+  /* Only the transform animates (compositor). The padding follows once the snap has settled when
+     the sheet gets shorter (no per-frame layout); a lift to full applies it at once (below). */
   transition:
-    transform 0.5s cubic-bezier(0.32, 0.72, 0, 1),
-    padding-bottom 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+    transform var(--pn-dur-slow) var(--pn-ease-snap),
+    padding-bottom 0s linear var(--pn-dur-slow);
   will-change: transform;
+}
+.pn-sheet[data-snap="2"] {
+  transition: transform var(--pn-dur-slow) var(--pn-ease-snap);
 }
 /* Grabber: full-width 44px target (min touch size); the visible pill is 36x5. */
 .pn-grabber {
@@ -275,18 +278,20 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: calc(var(--pn-sheet-offset, 0px) + var(--pn-sheet-clearance, 0px));
+  bottom: var(--pn-sheet-clearance, 0px);
+  /* Cancels the sheet's own translate, on the same curve, so the bar stays on the screen's edge. */
+  transform: translateY(calc(-1 * var(--pn-sheet-offset, 0px)));
   z-index: 2;
   padding: 12px 16px calc(12px + var(--pn-sheet-safe, 0px));
   background: var(--pn-surface);
   border-top: 1px solid var(--pn-sep);
-  transition: bottom 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform var(--pn-dur-slow) var(--pn-ease-snap);
 }
 .pn-sheet-footer:empty {
   display: none;
 }
-.pn-sheet--dragging,
-.pn-sheet--dragging .pn-sheet-footer {
+.pn-sheet.pn-sheet--dragging,
+.pn-sheet.pn-sheet--dragging .pn-sheet-footer {
   transition: none;
 }
 
@@ -333,7 +338,7 @@
   cursor: pointer;
 }
 .pn-peek__toggle svg {
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform var(--pn-dur) var(--pn-ease);
 }
 .pn-peek__toggle[aria-expanded="true"] svg {
   transform: rotate(180deg);
@@ -661,7 +666,7 @@ a.pn-option {
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.08s ease-out;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 .pn-btn:active:not([aria-disabled="true"]) {
   transform: scale(0.97);

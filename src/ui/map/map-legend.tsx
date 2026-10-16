@@ -190,8 +190,8 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
           {announcement}
         </span>
       ) : null}
-      {open ? (
-        <div id={panelId} className="pn-map-legend__panel" role="region" aria-label="Map legend" data-testid="map-legend-panel">
+      {/* Always mounted so closing can fade out; CSS hides it (visibility) once the fade ends. */}
+      <div id={panelId} className="pn-map-legend__panel" data-open={open} role="region" aria-label="Map legend" data-testid="map-legend-panel">
           <ul className="pn-map-legend__list">
             {entries.map(({ key, label }) => (
               <li key={key} className="pn-map-legend__item" data-legend-item={key}>
@@ -228,14 +228,13 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
             </p>
           ) : null}
           <p className="pn-map-legend__footnote">{LEGEND_FOOTNOTE}</p>
-        </div>
-      ) : null}
+      </div>
       <button
         ref={buttonRef}
         type="button"
         className="pn-map-legend__toggle"
         aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
+        aria-controls={panelId}
         onClick={() => setOpen((prev) => !prev)}
         data-testid="map-legend-button"
       >
