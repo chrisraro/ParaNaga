@@ -752,7 +752,6 @@ abbr.pn-est {
   border-radius: 18px;
   background: var(--pn-surface);
   box-shadow: 0 0 0 1px var(--pn-ring);
-  border-left: 4px solid var(--pn-mode-tricycle);
   color: var(--pn-label);
   font-size: 14px;
   line-height: 1.45;
