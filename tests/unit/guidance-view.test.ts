@@ -45,7 +45,7 @@ describe("Walk (walk_to_board)", () => {
     expect(v.distanceText).toBe("≈ 200 m · straight-line");
     expect(v.directionText).toBe("north");
     expect(v.remainingTime).toBe("≈ 3–5 min (estimate)"); // 200 m × 1.3
-    expect(v.live).toEqual({ politeness: "polite", text: "≈ 200 m to Plaza Rizal (A1)" });
+    expect(v.live).toEqual({ politeness: "polite", text: "About 200 m to Plaza Rizal (A1), straight line" });
   });
 
   it("an imprecise or stale fix hides distance and direction, and says why", () => {

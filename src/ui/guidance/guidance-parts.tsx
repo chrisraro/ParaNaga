@@ -47,7 +47,7 @@ export function GuidanceButtons({ actions, onSend }: { actions: readonly Guidanc
 export function UndoButton({ undo, onSend }: { undo: GuidanceAction | null; onSend: (event: GuidanceTap) => void }) {
   if (!undo) return null;
   return (
-    <button type="button" className="pn-text-btn pn-guide__undo" onClick={() => onSend({ type: "back" })} data-testid="guidance-undo">
+    <button type="button" className="pn-text-btn pn-guide__undo" aria-label="Undo last step" onClick={() => onSend({ type: "back" })} data-testid="guidance-undo">
       {undo.label}
     </button>
   );

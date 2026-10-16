@@ -135,6 +135,8 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
     ["/app/more", "Settings"],
     ["/app/help/how-times-are-estimated", "How times are estimated"],
     ["/app/help/vehicle-types-in-naga", "Vehicle types in Naga"],
+    // Trip detail links its fare basis and sources here: a saved trip reopened offline reaches them.
+    ["/app/help/sources#fare-basis", "Sources and credits"],
   ] as const) {
     await page.goto(path);
     const h1 = page.getByRole("heading", { level: 1, name: heading });
@@ -151,6 +153,21 @@ test("cold start offline: Saved, Explore and Help shells open; a page that needs
   await expect(page.getByRole("link", { name: "Open the map" })).toHaveAttribute("href", "/app");
   await page.goto("/app/does-not-exist");
   await expect(page.getByRole("heading", { level: 1, name: "You're offline" })).toBeVisible();
+});
+
+test("offline: a saved trip reopened cold opens Sources from its fare basis link", async ({ page, context }) => {
+  await firstVisit(page);
+  await setEnds(page);
+  await chooseOption(page);
+  await page.getByTestId("trip-save").click();
+  await expect(page.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
+  await goOffline(context);
+  await page.goto("/app/saved");
+  await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await page.getByRole("link", { name: "How fares are estimated" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Sources and credits" })).toBeVisible();
+  await expect(page.getByTestId("sources-fare-basis")).toBeVisible();
 });
 
 test("offline: search works from a cold start without searching first (index fetched once in the background)", async ({ page, context }) => {
@@ -228,6 +245,8 @@ test("offline: a trip is re-planned on the phone from the cached snapshot, with 
   await goOffline(context);
   await page.getByRole("button", { name: "Swap start and destination" }).click();
   await expect(page.getByTestId("trip-offline-note")).toHaveText(`Planned offline from data of ${DATA_DATE}. Fares may have changed.`);
+  // The sheet rests at peek, where the list (and its note) is inert: the note is on the peek too.
+  await expect(page.getByTestId("options-peek-note")).toHaveText(`Offline plan, data of ${DATA_DATE}`);
   // The request never reached the server; the plan came from the cached snapshot.
   expect(planRequests).toBe(before);
 });
@@ -355,7 +374,7 @@ test("Cache Storage holds no plan, auth, RSC, admin or private response", async 
   // The pre-paint theme script is precached (a cold start offline never flashes the wrong theme).
   expect(entries.some((e) => new URL(e.url).pathname === "/theme-init.js")).toBe(true);
   // The two Task 14 Help articles are install-time shells.
-  for (const path of ["/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga"]) {
+  for (const path of ["/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga", "/app/help/sources"]) {
     expect(entries.some((e) => e.cache.startsWith("pn-shell-") && new URL(e.url).pathname === path), path).toBe(true);
   }
 });

@@ -159,6 +159,9 @@ function locationNote(fix: LocationFix | null, now: number): string | null {
 
 const gpsMeters = (progress: WalkProgress) => (progress.distanceMeters < 10 ? "Under 10 m" : `≈ ${progress.distanceMeters} m`);
 
+// Spoken live text: no "≈" (read as "almost equal to"), and the straight-line basis stays in it.
+const spokenMeters = (progress: WalkProgress) => (progress.distanceMeters < 10 ? "Under 10 m" : `About ${progress.distanceMeters} m`);
+
 function distanceLine(progress: WalkProgress | null, estimateMeters: number, negligible: boolean): string | null {
   if (progress) {
     return `${gpsMeters(progress)} · straight-line`;
@@ -290,7 +293,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     keepOpen: GUIDANCE_COPY.keepOpen,
     actions,
     undo: undoAction(session),
-    live: { politeness: "polite", text: proposal ?? (progress ? `${gpsMeters(progress)} to ${targetName}` : title) },
+    live: { politeness: "polite", text: proposal ?? (progress ? `${spokenMeters(progress)} to ${targetName}, straight line` : title) },
     usesLocation: true,
   };
 }

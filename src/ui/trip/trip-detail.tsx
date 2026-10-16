@@ -171,7 +171,8 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
               // Each vehicle class with its evidence label and date (not a nested list: the steps are the list).
               fleet.classes.map((c) => (
                 <p key={`${c.vehicleClass}-${c.status}`} className="pn-tl__sub" data-testid="ride-fleet-class">
-                  {c.label.split(" · ")[0]}
+                  {/* An operating class is its name; any other status keeps its evidence ("reported, not confirmed"). */}
+                  {c.status === "operating" ? c.label.split(" · ")[0] : c.label}
                 </p>
               ))
             ) : (

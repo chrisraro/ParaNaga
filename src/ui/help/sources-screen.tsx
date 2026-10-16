@@ -50,7 +50,13 @@ export function SourcesScreen() {
   const heading = useRef<HTMLHeadingElement>(null);
   // A hash link (#photo-…, #fare-basis) lands on its target; otherwise the h1 takes focus.
   useEffect(() => {
-    const id = decodeURIComponent(window.location.hash.slice(1));
+    // A malformed escape (#%E0) is no target at all, not an error.
+    let id = "";
+    try {
+      id = decodeURIComponent(window.location.hash.slice(1));
+    } catch {
+      id = "";
+    }
     // Lands on the target once it exists: the first frame after mount (after the router's own hash
     // handling), or the moment the source list renders it.
     const place = (): boolean => {
@@ -128,7 +134,8 @@ export function SourcesScreen() {
             <p className="pn-footnote" data-testid="sources-revision">
               Cited by the published data revision {resource.data.revision.label}{publishedDateText(resource.data.revision.publishedAt) ? `, published ${publishedDateText(resource.data.revision.publishedAt)}` : ""}.
             </p>
-            <ul className="pn-group" data-testid="sources-list">
+            <h2 id="source-register-title" className="pn-section__title">Source register</h2>
+            <ul className="pn-group" data-testid="sources-list" aria-labelledby="source-register-title">
               {resource.data.sources.map((s) => {
                 const href = externalHref(s.url);
                 return (

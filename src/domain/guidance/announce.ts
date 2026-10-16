@@ -31,7 +31,7 @@ export type Announcer = {
   proposalSaid: boolean;
 };
 
-const DISTANCE = /^(?:≈ (\d+)|Under 10) m to (.+)$/;
+const DISTANCE = /^(?:About (\d+)|Under 10) m to (.+), straight line$/;
 
 /** The metres of a straight-line walk distance line (0 for "Under 10 m"), else null. */
 export function walkDistanceOf(text: string): number | null {

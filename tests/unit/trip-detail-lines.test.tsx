@@ -105,6 +105,16 @@ describe("TripDetail time estimates (Task 14 fixes: basis, fleet evidence, spoke
     expect(ride.fleet.classes[0]!.label).toMatch(/^Traditional jeepney · operating \(owner-confirmed \w+ \d{4}\)$/);
   });
 
+  it("a class that is not operating keeps its evidence status with its name", () => {
+    at("09:30");
+    const data = structuredClone(enrichPlan(plan, null, { walkGraphStatus: "skipped" }));
+    const ride = data.plan.options[0]!.legs.find((l) => l.kind === "ride")!;
+    if (ride.kind !== "ride") throw new Error("ride");
+    ride.fleet.classes[0] = { ...ride.fleet.classes[0]!, status: "reported_not_confirmed", label: "Modern jeepney · reported, not confirmed" };
+    render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
+    expect(screen.getAllByTestId("ride-fleet-class")[0]!.textContent).toBe("Modern jeepney · reported, not confirmed");
+  });
+
   it("at 07:10 Manila the peak band is used and the peak note shows; no model → Time not available, no sheet link", () => {
     at("07:10");
     const data = enrichPlan(plan, null, { walkGraphStatus: "skipped" });

@@ -9,7 +9,7 @@ import { reduceSession, startSession } from "@/domain/guidance/session";
 import { LOOP_A, ORIGIN, fixAt, oneRide, tripOf } from "./guidance-fixtures";
 
 const TITLE = "Walk to Plaza Rizal (A1)";
-const dist = (m: number) => `≈ ${m} m to Plaza Rizal (A1)`;
+const dist = (m: number) => `About ${m} m to Plaza Rizal (A1), straight line`;
 const NEAR = "Close to Plaza Rizal (A1). Tap “I'm at the stop”.";
 
 function run(seq: [string, LiveKind, number][]) {
@@ -26,7 +26,8 @@ function run(seq: [string, LiveKind, number][]) {
 describe("walkDistanceOf", () => {
   it("reads the straight-line walk distance lines only", () => {
     expect(walkDistanceOf(dist(240))).toBe(240);
-    expect(walkDistanceOf("Under 10 m to Plaza Rizal (A1)")).toBe(0);
+    expect(walkDistanceOf("Under 10 m to Plaza Rizal (A1), straight line")).toBe(0);
+    expect(walkDistanceOf("About 230 m to Plaza Rizal (A1)")).toBeNull(); // the basis is part of the line
     expect(walkDistanceOf("3 stops to go")).toBeNull();
     expect(walkDistanceOf("≈ 230 m")).toBeNull();
   });

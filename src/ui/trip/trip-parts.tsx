@@ -46,7 +46,8 @@ export function FareChip({ fare, short = false }: { fare: FareLike; short?: bool
 /** The card form of the fare: "Est. ₱14–₱17", "Fare n/a" or "No fare". */
 export function FareShort({ fare }: { fare: FareLike }) {
   const range = fareRangeText(fare);
-  if (range) return <><EstAbbr /> {range}</>;
+  // A range is spoken like the time range: "₱14 to ₱17", not a dash.
+  if (range) return <><EstAbbr /> {range.includes("–") ? <span role="img" aria-label={range.replace("–", " to ")}>{range}</span> : range}</>;
   return <>{fare.status === "no_ride" ? "No fare" : "Fare n/a"}</>;
 }
 

@@ -172,6 +172,20 @@ describe("Sources register", () => {
     expect(link.getAttribute("target")).toBe("_blank");
     expect(link.getAttribute("rel")).toBe("noopener noreferrer");
     expect(screen.getByTestId("sources-owner-note").textContent).toBe(MAP_OWNER_NOTE);
+    // The register is a named list under its own heading.
+    expect(screen.getByRole("list", { name: "Source register" })).toBe(screen.getByTestId("sources-list"));
+  });
+
+  it("a malformed hash (#%E0) is no target and does not crash the screen", async () => {
+    window.history.replaceState(null, "", "/app/help/sources#%E0");
+    expect(window.location.hash).toBe("#%E0");
+    try {
+      render(<SourcesScreen />);
+      await waitFor(() => expect(screen.getAllByTestId("source-row")).toHaveLength(SOURCES.sources.length));
+      await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("heading", { level: 1 })));
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
   });
 });
 
