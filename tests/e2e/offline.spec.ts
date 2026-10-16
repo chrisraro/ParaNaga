@@ -254,9 +254,8 @@ test("offline after one online trip: overview, ride lines and street walk paths 
   await expect(page.getByTestId("guidance")).toBeVisible();
   await endGuidance(page);
   await expect(page.getByTestId("trip-option").first()).toBeVisible();
-  // The recommended option's lines (the preview replaces the overview while options are listed)
-  // draw from the stored lines.
-  await expect(page.locator("path.pn-line--ride").first()).toBeAttached({ timeout: 15_000 });
+  // The Recommended option is the tricycle in this fixture, and its leg carries no street path, so the
+  // preview draws no jeepney ride line; the stored lines are exercised by opening the jeepney option below.
   await chooseOption(page);
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
