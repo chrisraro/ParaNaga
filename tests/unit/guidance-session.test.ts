@@ -21,7 +21,7 @@ const tap = (type: Exclude<GuidanceEvent["type"], "fix">): GuidanceEvent => ({ t
 describe("startSession", () => {
   it("starts on the first step, nothing confirmed", () => {
     const s = startSession(tripOf(twoRides()), NOW);
-    expect(s).toMatchObject({ v: 1, startedAt: NOW, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null });
+    expect(s).toMatchObject({ v: 2, startedAt: NOW, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null });
     expect(currentStep(s).kind).toBe("walk_to_board");
   });
 });
@@ -258,12 +258,21 @@ describe("parseSession (sessionStorage is untrusted)", () => {
   const raw = JSON.parse(serializeSession(s)) as Record<string, unknown>;
   const bad = (patch: Record<string, unknown>) => JSON.stringify({ ...raw, ...patch });
 
+  it("an old format-1 session (before ridePaths) still resumes, as format 2; format 1 is no longer written", () => {
+    const trip = { ...(raw.trip as Record<string, unknown>) };
+    delete trip.ridePaths;
+    const old = JSON.stringify({ ...raw, v: 1, trip });
+    expect(parseSession(old, NOW)).toEqual({ ...s, v: 2 });
+    expect(JSON.parse(serializeSession(s)).v).toBe(2);
+    expect(parseSession(JSON.stringify({ ...raw, v: 1, trip: { ...trip, unknownFromFuture: 1 } }), NOW)).toBeNull();
+  });
+
   it("refuses nothing, junk, other formats and broken invariants", () => {
     expect(parseSession(null, NOW)).toBeNull();
     expect(parseSession("", NOW)).toBeNull();
     expect(parseSession("{not json", NOW)).toBeNull();
     expect(parseSession("[]", NOW)).toBeNull();
-    expect(parseSession(bad({ v: 2 }), NOW)).toBeNull();
+    expect(parseSession(bad({ v: 3 }), NOW)).toBeNull();
     expect(parseSession(bad({ stepIndex: 9 }), NOW)).toBeNull();
     expect(parseSession(bad({ stepIndex: 0 }), NOW)).toBeNull(); // a ride memory on a walk step
     expect(parseSession(bad({ ride: null }), NOW)).toBeNull(); // on a ride step without its memory

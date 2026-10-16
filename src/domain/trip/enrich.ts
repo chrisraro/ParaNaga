@@ -1,26 +1,19 @@
-// On-device walk-path enrichment and the D14 "must save walking" re-check. Pure: no I/O.
+// On-device walk-path enrichment. Pure: no I/O.
 //
-// Why on the phone: the walk graph (~81 KB gzip) is fetched lazily on the device (D18) and never
-// sent in the POST /api/v1/plan response. Once the plan arrives (online or offline), each walk leg
-// and the direct walk (origin → destination) are routed on the walk graph via `routeWalk`:
-//   - Walk legs receive `path: { kind, coords, lengthM, label, ... }`.
-//   - D14 "must save walking" re-check: compare like with like — if the direct walk and every walk
-//     leg of a ride option have graph paths (`kind === "path"`), compare the sum of graph walk
-//     lengths against the direct graph walk length (`optionGraphM < directGraphM`). Otherwise
-//     compare the × 1.3 straight-line estimates (`optionEstimateM < directEstimateM`).
-//   - Failing ride options are dropped. Remaining ride options keep their labels unless the
-//     "Recommended" option was dropped, in which case the remaining ride options are relabelled in
-//     `PLAN_LABELS` order using the planner's deterministic `pickLabelled` rule.
-//   - When no options remain, `coverage` becomes `"none"` and `reason` becomes `"walk_shorter"`.
+// The planner now routes walks on the street graph itself: a walk leg with an encoded `path`
+// (basis "street_graph") is decoded here and left as planned. Only a legacy walk leg with no
+// path (an older body, or a plan made without the graph) is routed on the walk graph the phone
+// fetched lazily (D18, ~81 KB gzip), via `routeWalk`; without the graph it keeps the straight
+// fallback. The direct walk (origin to destination) is routed the same way for the "walk"
+// notices. The old D14 "must save walking" re-check and relabelling are gone: the planner decides.
 //
-// Imported by client code (`use-trip-plan.ts`), so it imports `PLAN_LABELS` from `../planner/labels`
-// and never pulls in `src/domain/planner/plan.ts`.
+// Imported by client code (`use-trip-plan.ts`), so it never pulls in `src/domain/planner/plan.ts`.
 import type { PadyakLegDto, PlanLegDto, PlanOptionDto, PlanResponse, RideLegDto, TricycleLegDto, WalkLegDto } from "../api/plan";
 import type { NetworkSnapshot } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
+import { decodePolyline } from "../geo/polyline";
 import { WALK_PATHS_OFFLINE_NOTE } from "../pwa/offline-copy";
 import type { LatLng } from "../geo/types";
-import { PLAN_LABELS, type PlanLabel } from "../planner/labels";
 import { routeWalk, type WalkGraph, type WalkStraightReason } from "../walk/walk-graph";
 
 export const WALK_PATH_LABEL = "Approximate walking path · crossings not checked" as const;
@@ -144,41 +137,12 @@ function inferEnds(options: readonly PlanOptionDto[], opts: EnrichOptions): { or
   return { origin: { lat: origin.lat, lng: origin.lng }, destination: { lat: destination.lat, lng: destination.lng } };
 }
 
-function compareOption(a: EnrichedPlanOption, b: EnrichedPlanOption): number {
-  return (
-    a.score - b.score ||
-    a.rides - b.rides ||
-    a.walkMeters - b.walkMeters ||
-    a.rideMeters - b.rideMeters ||
-    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-  );
-}
-
-function dominatesOption(a: EnrichedPlanOption, b: EnrichedPlanOption): boolean {
-  const le = a.rides <= b.rides && a.walkMeters <= b.walkMeters && a.rideMeters <= b.rideMeters;
-  const lt = a.rides < b.rides || a.walkMeters < b.walkMeters || a.rideMeters < b.rideMeters;
-  return le && lt;
-}
-
-/** Deterministic relabelling matching `pickLabelled` in `src/domain/planner/plan.ts`. */
-function relabelOptions(cands: EnrichedPlanOption[], labels: readonly PlanLabel[]): EnrichedPlanOption[] {
-  const pareto = cands.filter((a) => !cands.some((b) => b !== a && dominatesOption(b, a))).sort(compareOption);
-  if (pareto.length === 0) return [];
-  // Task 8 deletes this relabelling; "Short local ride" (padyak) is never a ride option's label.
-  const winner: Partial<Record<PlanLabel, EnrichedPlanOption>> = {
-    Recommended: pareto[0]!,
-    "Fewest transfers": [...pareto].sort((a, b) => a.rides - b.rides || compareOption(a, b))[0]!,
-    "Least walking": [...pareto].sort((a, b) => a.walkMeters - b.walkMeters || compareOption(a, b))[0]!,
-  };
-  const out: { cand: EnrichedPlanOption; labels: PlanLabel[] }[] = [];
-  for (const label of labels) {
-    const c = winner[label];
-    if (!c) continue;
-    const existing = out.find((o) => o.cand.id === c.id);
-    if (existing) existing.labels.push(label);
-    else out.push({ cand: c, labels: [label] });
+/** A walk leg's path: the planner's own street path as it is, else routed on the phone's walk graph. */
+function legPath(leg: WalkLegDto, walkGraph: WalkGraph | null, status: WalkGraphStatus): WalkLegPath {
+  if (typeof leg.path === "string") {
+    return { kind: "path", coords: decodePolyline(leg.path), lengthM: leg.estimateMeters, snapFromM: 0, snapToM: 0, label: WALK_PATH_LABEL };
   }
-  return out.map(({ cand, labels: nextLabels }) => ({ ...cand, labels: nextLabels }));
+  return routeOneWalk(walkGraph, leg.from, leg.to, leg.distanceMeters, leg.estimateMeters, status);
 }
 
 /**
@@ -188,30 +152,10 @@ function relabelOptions(cands: EnrichedPlanOption[], labels: readonly PlanLabel[
  */
 export function walkPathLengths(option: PlanOptionDto, graph: WalkGraph | null): (number | null)[] {
   return option.legs.map((leg) => {
-    if (leg.kind !== "walk" || graph === null) return null;
-    const path = routeOneWalk(graph, leg.from, leg.to, leg.distanceMeters, leg.estimateMeters, "ready");
+    if (leg.kind !== "walk") return null;
+    const path = legPath(leg, graph, "ready");
     return path.kind === "path" ? path.lengthM : null;
   });
-}
-
-function savesWalkingD14(
-  option: EnrichedPlanOption,
-  directWalk: WalkLegPath | null,
-  directEstimateM: number,
-): boolean {
-  // Walk-only option (0 rides) is the direct walk itself; only ride options are checked by D14.
-  if (option.rides === 0) return true;
-  const walkLegs = option.legs.filter((l): l is EnrichedWalkLeg => l.kind === "walk");
-  const allGraphPaths =
-    directWalk !== null &&
-    directWalk.kind === "path" &&
-    walkLegs.every((l) => l.path.kind === "path");
-  if (allGraphPaths) {
-    const optionGraphM = walkLegs.reduce((sum, l) => sum + l.path.lengthM, 0);
-    return optionGraphM < directWalk.lengthM;
-  }
-  const optionEstimateM = walkLegs.reduce((sum, l) => sum + l.estimateMeters, 0);
-  return optionEstimateM < directEstimateM;
 }
 
 function enrichTripPlan(
@@ -235,38 +179,11 @@ function enrichTripPlan(
   const routedOptions: EnrichedPlanOption[] = plan.options.map((option) => ({
     ...option,
     legs: option.legs.map((leg): EnrichedLeg => {
-      if (leg.kind !== "walk") return leg;
-      const path = routeOneWalk(walkGraph, leg.from, leg.to, leg.distanceMeters, leg.estimateMeters, status);
-      return { ...leg, path };
+      return leg.kind === "walk" ? { ...leg, path: legPath(leg, walkGraph, status) } : leg;
     }),
   }));
 
-  // D14 compares like with like, so it waits for the walk graph to settle: while it loads every
-  // option is kept (straight estimates would drop some now and the graph would drop others a
-  // moment later, making options vanish and closing an opened detail).
-  const kept =
-    status === "loading"
-      ? routedOptions
-      : routedOptions.filter((option) => savesWalkingD14(option, directWalk, directEstimateM));
-  if (kept.length === 0) {
-    return {
-      ...plan,
-      coverage: "none",
-      reason: "walk_shorter",
-      options: [],
-      directWalk,
-    };
-  }
-
-  // Keep existing labels unless the "Recommended" option was dropped.
-  const hasRecommended = kept.some((o) => o.labels.includes("Recommended"));
-  const finalOptions = hasRecommended ? kept : relabelOptions(kept, PLAN_LABELS);
-
-  return {
-    ...plan,
-    options: finalOptions,
-    directWalk,
-  };
+  return { ...plan, options: routedOptions, directWalk };
 }
 
 export function enrichPlan(
@@ -300,7 +217,7 @@ export function enrichOptionWalks(option: PlanOptionDto, walkGraph: WalkGraph | 
   return {
     ...option,
     legs: option.legs.map((leg): EnrichedLeg =>
-      leg.kind !== "walk" ? leg : { ...leg, path: routeOneWalk(walkGraph, leg.from, leg.to, leg.distanceMeters, leg.estimateMeters, status) },
+      leg.kind !== "walk" ? leg : { ...leg, path: legPath(leg, walkGraph, status) },
     ),
   };
 }

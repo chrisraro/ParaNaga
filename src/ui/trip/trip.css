@@ -721,47 +721,6 @@
   min-height: 52px;
 }
 
-/* "Tricycle may serve this" (D15): an information card below the options, not an option. */
-.pn-trike-hint {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--pn-surface);
-  box-shadow: 0 0 0 1px var(--pn-ring);
-  border-left: 4px solid var(--pn-mode-tricycle);
-  color: var(--pn-label);
-  font-size: 14px;
-  line-height: 1.45;
-}
-.pn-trike-hint p {
-  margin: 0;
-}
-.pn-trike-hint__title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-}
-.pn-trike-hint__icon {
-  display: inline-flex;
-}
-.pn-trike-hint__match {
-  font-weight: 600;
-}
-.pn-trike-hint__sources {
-  color: var(--pn-label2);
-  font-size: 13px;
-}
-.pn-trike-hint__btn {
-  align-self: flex-start;
-  min-height: 44px;
-  margin-top: 4px;
-}
-
 /* Low-data opt-in: download the walk graph (Task 15 follow-up). */
 .pn-trip-paths-offer {
   margin: 12px 0;

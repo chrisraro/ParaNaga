@@ -95,12 +95,18 @@ type Schema<T> = { safeParse: (v: unknown) => { success: true; data: T } | { suc
  * format (another tab running a newer build) is skipped and kept, never rewritten or deleted;
  * an older one is migrated on read before validation.
  */
-export const RECORD_FORMAT = 1;
+export const RECORD_FORMAT = 2;
 
 export type Decoded<T> = { ok: true; record: T } | { ok: false; reason: "newer_format" | "invalid" };
 
-/** Migrations of older record formats, by the format they upgrade from (none yet). */
-const MIGRATE_FROM: Record<number, (value: Record<string, unknown>) => Record<string, unknown>> = {};
+/**
+ * Migrations of older record formats, by the format they upgrade from. 1 → 2 (Increment E): the
+ * new plan fields (leg path/basis, ride board/alight, notes, option mode) all have schema
+ * defaults, so a format-1 record is already valid and only its version changes.
+ */
+const MIGRATE_FROM: Record<number, (value: Record<string, unknown>) => Record<string, unknown>> = {
+  1: (value) => value,
+};
 
 /** A stored value → a validated record; records without `v` are format 1 (Increment A). */
 export function decodeStored<T>(value: unknown, schema: Schema<T>): Decoded<T> {

@@ -19,7 +19,9 @@ import type { LocationFix } from "../geo/location-fix";
 import { CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, rideProgress, usableFix, type RideMemory } from "./progress";
 import { guidanceSteps, type GuidanceStep, type GuidanceTrip } from "./steps";
 
-export const GUIDANCE_SESSION_FORMAT = 1;
+/** 2: street rides and `trip.ridePaths` (Increment E). Format-1 sessions still read (migrated to 2 on parse);
+ *  format-1 code (rollback) discards a format-2 session, as it does any unreadable one. */
+export const GUIDANCE_SESSION_FORMAT = 2;
 /** A restored session older than this (a forgotten tab) is not resumed. */
 export const GUIDANCE_SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 /** sessionStorage key (same "paranaga." prefix as the other device keys). */
@@ -178,7 +180,7 @@ const rideSchema = z.strictObject({
 });
 
 const sessionSchema = z.strictObject({
-  v: z.literal(GUIDANCE_SESSION_FORMAT),
+  v: z.union([z.literal(1), z.literal(GUIDANCE_SESSION_FORMAT)]),
   trip: tripSchema,
   startedAt: z.number().int().nonnegative(),
   status: z.enum(["active", "missed_stop", "arrived", "ended"]),
@@ -232,7 +234,7 @@ export function parseSession(raw: string | null, now: number): GuidanceSession |
   }
   const parsed = sessionSchema.safeParse(json);
   if (!parsed.success) return null;
-  const session = parsed.data as GuidanceSession;
+  const session = { ...parsed.data, v: GUIDANCE_SESSION_FORMAT } as GuidanceSession;
   if (session.startedAt > now + CLOCK_SKEW_MS || now - session.startedAt > GUIDANCE_SESSION_MAX_AGE_MS) return null;
   return consistent(session) ? session : null;
 }

@@ -284,6 +284,35 @@ describe("record format and decoding", () => {
     expect(decodeStored({ id: "x" }, savedTripSchema)).toEqual({ ok: false, reason: "invalid" });
     expect(decodeStored(null, savedTripSchema)).toEqual({ ok: false, reason: "invalid" });
   });
+
+  // The raw format-1 record: the legacy plan body of the e2e fixture (no mode, no board/alight, no
+  // path or basis) saved before Increment E, stored with v: 1 (or no v at all).
+  const legacyOption = PROVISIONAL_PLAN.plan.options[0] as unknown as Record<string, unknown>;
+  const formatOne = () => ({ ...JSON.parse(JSON.stringify(card())), option: JSON.parse(JSON.stringify(legacyOption)), v: 1 });
+
+  it("a format-1 saved record (legacy plan body) migrates to the current schema and reopens", () => {
+    expect(legacyOption).not.toHaveProperty("mode");
+    expect(RECORD_FORMAT).toBe(2);
+    const decoded = decodeStored(formatOne(), savedTripSchema);
+    if (!decoded.ok) throw new Error(decoded.reason);
+    expect(decoded.record.option.mode).toBe("jeepney");
+    const reopened = savedTripResponse(decoded.record);
+    expect(planResponseSchema.safeParse(reopened).success).toBe(true);
+    expect(resolveReopen(decoded.record, { ...plan, plan: { ...plan.plan, options: [decoded.record.option] } })).toEqual({ kind: "current", optionId: decoded.record.option.id });
+    const noVersion: Record<string, unknown> = formatOne();
+    delete noVersion.v;
+    expect(decodeStored(noVersion, savedTripSchema).ok).toBe(true);
+  });
+
+  it("format-1 code (rollback) keeps a format-2 record as newer_format and never opens it", () => {
+    // Frozen copy of the format-1 decoder on master (RECORD_FORMAT = 1, no migrations).
+    const decodeFormat1 = (value: Record<string, unknown>) => {
+      const v = typeof value.v === "number" && Number.isInteger(value.v) ? value.v : 1;
+      return v > 1 ? { ok: false, reason: "newer_format" } : { ok: true };
+    };
+    expect(decodeFormat1({ ...card(), v: RECORD_FORMAT })).toEqual({ ok: false, reason: "newer_format" });
+    expect(decodeFormat1(formatOne())).toEqual({ ok: true });
+  });
 });
 
 describe("labels count code points", () => {

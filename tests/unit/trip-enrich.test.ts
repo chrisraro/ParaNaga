@@ -8,6 +8,7 @@ import {
   enrichPlan,
   walkPathLengths,
 } from "@/domain/trip/enrich";
+import { decodePolyline, encodePolyline } from "@/domain/geo/polyline";
 import { parseWalkGraph, type WalkGraph } from "@/domain/walk/walk-graph";
 import walkGraphFixture from "../e2e/fixtures/network/walk-graph.json";
 import { extractWalkLengths } from "@/ui/trip/eta-text";
@@ -106,7 +107,7 @@ function makeOption(
   };
 }
 
-describe("enrichPlan (Task 10, D14)", () => {
+describe("enrichPlan", () => {
   it("routes each walk leg on the walk graph and attaches path metadata and label", () => {
     const insideCentro = makeOption(
       "centro-opt",
@@ -143,144 +144,6 @@ describe("enrichPlan (Task 10, D14)", () => {
     }
   });
 
-  it("keeps an option whose graph walk is shorter than the direct graph walk and drops one that is longer", () => {
-    const g = buildTestGraph();
-    // Direct walk from node 0 (13.62, 123.18) to node 2 (13.62, 123.185) is 220 + 330 = 550 m on the graph.
-    // Option "short-walk": boards at node 1 (220 m graph walk) and alights at node 2 (0 m walk) -> 220 m < 550 m -> KEPT.
-    // Option "detour-walk": boards at node 3 (220 + 900 = 1120 m graph walk, even though straight-line was short) -> 1120 m >= 550 m -> DROPPED.
-    const shortOpt = makeOption(
-      "opt-short",
-      ["Least walking"],
-      { lat: 13.62, lng: 123.182 }, // node 1
-      { lat: 13.62, lng: 123.185 }, // node 2
-      { accessM: 180, egressM: 10, score: 500 },
-    );
-    const detourOpt = makeOption(
-      "opt-detour",
-      ["Recommended", "Fewest transfers"],
-      { lat: 13.621, lng: 123.182 }, // node 3 (900 m edge on graph!)
-      { lat: 13.62, lng: 123.185 }, // node 2
-      { accessM: 150, egressM: 10, score: 400 },
-    );
-    const raw: PlanResponse = {
-      ...basePlan(),
-      plan: {
-        ...basePlan().plan,
-        directWalkEstimateMeters: 700,
-        options: [detourOpt, shortOpt],
-      },
-    };
-
-    const enriched = enrichPlan(raw, g);
-    expect(enriched.plan.coverage).toBe("provisional");
-    expect(enriched.plan.options.map((o) => o.id)).toEqual(["opt-short"]);
-    // Because "Recommended" was dropped, the remaining option is relabelled via pickLabelled.
-    expect(enriched.plan.options[0]!.labels).toEqual(["Recommended", "Fewest transfers", "Least walking"]);
-  });
-
-  it("sets coverage to none and reason to walk_shorter when every ride option fails the D14 re-check", () => {
-    const g = buildTestGraph();
-    const detourOpt = makeOption(
-      "opt-detour",
-      ["Recommended", "Fewest transfers", "Least walking"],
-      { lat: 13.621, lng: 123.182 }, // 1120 m on graph vs 550 m direct
-      { lat: 13.62, lng: 123.185 },
-      { accessM: 150, egressM: 10 },
-    );
-    const raw: PlanResponse = {
-      ...basePlan(),
-      plan: {
-        ...basePlan().plan,
-        directWalkEstimateMeters: 700,
-        options: [detourOpt],
-      },
-    };
-
-    const enriched = enrichPlan(raw, g);
-    expect(enriched.plan.coverage).toBe("none");
-    expect(enriched.plan.reason).toBe("walk_shorter");
-    expect(enriched.plan.options).toEqual([]);
-  });
-
-  it("falls back to ×1.3 estimate comparisons when any walk leg or the direct walk is straight", () => {
-    const g = buildTestGraph();
-    // Egress stop is far from any graph edge (13.625, 123.185 > 100 m from bbox), so egress leg is straight.
-    // Even if the access graph walk is 220 m, D14 must compare like-with-like using ×1.3 estimates:
-    //   option estimate = round(100 * 1.3) + round(100 * 1.3) = 260 m < directWalkEstimateMeters (700 m) -> kept;
-    //   failing option estimate = round(300 * 1.3) + round(300 * 1.3) = 780 m >= 700 m -> dropped.
-    const keptOpt = makeOption(
-      "opt-kept-straight",
-      ["Recommended", "Fewest transfers"],
-      { lat: 13.621, lng: 123.182 }, // node 3 (would fail graph comparison if mixed, 1120 m > 550 m)
-      { lat: 13.625, lng: 123.185 }, // > 100 m off graph -> straight leg!
-      { accessM: 100, egressM: 100, score: 400 },
-    );
-    const droppedOpt = makeOption(
-      "opt-dropped-straight",
-      ["Least walking"],
-      { lat: 13.62, lng: 123.182 },
-      { lat: 13.625, lng: 123.185 },
-      { accessM: 300, egressM: 300, score: 900 },
-    );
-    const raw: PlanResponse = {
-      ...basePlan(),
-      plan: {
-        ...basePlan().plan,
-        directWalkEstimateMeters: 700,
-        options: [keptOpt, droppedOpt],
-      },
-    };
-
-    const enriched = enrichPlan(raw, g);
-    expect(enriched.plan.options.map((o) => o.id)).toEqual(["opt-kept-straight"]);
-    // Recommended was kept, so its existing labels stay intact.
-    expect(enriched.plan.options[0]!.labels).toEqual(["Recommended", "Fewest transfers"]);
-    const egress = enriched.plan.options[0]!.legs[2]!;
-    expect(egress.kind === "walk" && egress.path.kind).toBe("straight");
-    expect(egress.kind === "walk" && egress.path.label).toBe(WALK_STRAIGHT_LABEL);
-  });
-
-  it("relabels deterministically in PLAN_LABELS order when the Recommended option is dropped", () => {
-    const g = buildTestGraph();
-    const droppedRec = makeOption(
-      "opt-a-dropped",
-      ["Recommended"],
-      { lat: 13.621, lng: 123.182 }, // 1120 m graph walk -> dropped
-      { lat: 13.62, lng: 123.185 },
-      { accessM: 80, egressM: 10, rides: 1, rideMeters: 800, score: 300 },
-    );
-    const fewTransfers = makeOption(
-      "opt-b-fewest",
-      ["Fewest transfers"],
-      { lat: 13.62, lng: 123.182 }, // 220 m graph walk -> kept
-      { lat: 13.62, lng: 123.185 },
-      { accessM: 160, egressM: 20, rides: 1, rideMeters: 1600, score: 634 },
-    );
-    const leastWalk = makeOption(
-      "opt-c-least-walk",
-      ["Least walking"],
-      { lat: 13.62, lng: 123.182 }, // 220 m graph walk -> kept
-      { lat: 13.62, lng: 123.185 },
-      { accessM: 90, egressM: 10, rides: 2, rideMeters: 900, score: 955 },
-    );
-    const raw: PlanResponse = {
-      ...basePlan(),
-      plan: {
-        ...basePlan().plan,
-        directWalkEstimateMeters: 700,
-        options: [droppedRec, fewTransfers, leastWalk],
-      },
-    };
-
-    const first = enrichPlan(raw, g);
-    const second = enrichPlan(raw, g);
-    expect(first).toEqual(second);
-    expect(first.plan.options.map((o) => ({ id: o.id, labels: o.labels }))).toEqual([
-      { id: "opt-b-fewest", labels: ["Recommended", "Fewest transfers"] },
-      { id: "opt-c-least-walk", labels: ["Least walking"] },
-    ]);
-  });
-
   it("marks walk legs with the polite loading label while the walk graph is loading", () => {
     const plan = basePlan();
     const loading = enrichPlan(plan, null, { walkGraphStatus: "loading" });
@@ -299,28 +162,36 @@ describe("enrichPlan (Task 10, D14)", () => {
     }
   });
 
-  it("D14 waits for the walk graph: no option is dropped while it loads, the check runs once it settles", () => {
+  it("never drops or relabels options: the planner decides (D14 re-check is gone)", () => {
     const g = buildTestGraph();
-    const detourOpt = makeOption(
-      "opt-detour",
-      ["Recommended", "Fewest transfers", "Least walking"],
-      { lat: 13.621, lng: 123.182 }, // 1120 m on the graph vs 550 m direct
-      { lat: 13.62, lng: 123.185 },
-      { accessM: 150, egressM: 10 },
-    );
-    const raw: PlanResponse = {
-      ...basePlan(),
-      plan: { ...basePlan().plan, directWalkEstimateMeters: 100, options: [detourOpt] },
-    };
-    const loading = enrichPlan(raw, null, { walkGraphStatus: "loading" });
-    expect(loading.plan.coverage).toBe("provisional");
-    expect(loading.plan.options.map((o) => o.id)).toEqual(["opt-detour"]);
-    // Settled with the graph: the same option now fails D14 (it would have vanished a moment after showing).
-    const ready = enrichPlan(raw, g, { walkGraphStatus: "ready" });
-    expect(ready.plan.reason).toBe("walk_shorter");
-    expect(ready.plan.options).toEqual([]);
-    // Settled without a graph (error): the estimate comparison runs (160 m of walking vs a 100 m direct walk).
-    expect(enrichPlan(raw, null, { walkGraphStatus: "error" }).plan.reason).toBe("walk_shorter");
+    // 1120 m on the graph against a 100 m direct walk: this used to vanish as "walk_shorter".
+    const detour = makeOption("opt-detour", ["Recommended", "Fewest transfers"], { lat: 13.621, lng: 123.182 }, { lat: 13.62, lng: 123.185 }, { accessM: 150, egressM: 10 });
+    const raw: PlanResponse = { ...basePlan(), plan: { ...basePlan().plan, directWalkEstimateMeters: 100, options: [detour] } };
+    for (const enriched of [enrichPlan(raw, g), enrichPlan(raw, null, { walkGraphStatus: "error" }), enrichPlan(raw, null, { walkGraphStatus: "loading" })]) {
+      expect(enriched.plan.coverage).toBe("provisional");
+      expect(enriched.plan.options.map((o) => ({ id: o.id, labels: o.labels }))).toEqual([{ id: "opt-detour", labels: ["Recommended", "Fewest transfers"] }]);
+    }
+  });
+
+  it("routes a legacy walk leg (no path) but leaves a planner street path untouched", () => {
+    const g = buildTestGraph();
+    const opt = makeOption("opt", ["Recommended"], { lat: 13.62, lng: 123.182 }, { lat: 13.62, lng: 123.185 }, { accessM: 180, egressM: 10 });
+    const planned = encodePolyline([{ lat: 13.62, lng: 123.18 }, { lat: 13.6203, lng: 123.181 }, { lat: 13.62, lng: 123.182 }]);
+    const [access, ride, egress] = opt.legs;
+    if (access?.kind !== "walk" || egress?.kind !== "walk" || !ride) throw new Error("fixture shape");
+    const mixed: PlanOptionDto = { ...opt, legs: [{ ...access, path: planned, basis: "street_graph", estimateMeters: 321 }, ride, egress] };
+    const enriched = enrichPlan({ ...basePlan(), plan: { ...basePlan().plan, options: [mixed] } }, g).plan.options[0]!;
+    const [a, , e] = enriched.legs;
+    if (a?.kind !== "walk" || e?.kind !== "walk") throw new Error("walk legs expected");
+    // Street-graph leg: the planner's own coordinates and length, not re-routed on the phone's graph.
+    expect(a.path).toMatchObject({ kind: "path", lengthM: 321, label: WALK_PATH_LABEL });
+    expect(a.path.coords).toEqual(decodePolyline(planned));
+    // Legacy leg: routed on the walk graph.
+    expect(e.path.kind).toBe("path");
+    expect(e.path.lengthM).not.toBe(e.estimateMeters);
+    // And a planned leg needs no graph at all.
+    const noGraph = enrichPlan({ ...basePlan(), plan: { ...basePlan().plan, options: [mixed] } }, null, { walkGraphStatus: "error" }).plan.options[0]!.legs[0]!;
+    expect(noGraph.kind === "walk" && noGraph.path.kind).toBe("path");
   });
 });
 
