@@ -32,6 +32,8 @@ Final affected browser suite: **27/27 passed** across Explore, place details, He
 
 ## Integration
 
+Street View follow-up: the 128-stop gallery, CSV and inventory now include coordinate-specific Google Maps Street View links. No screenshots or Google imagery were downloaded. Coverage, panorama location, capture date and signage visibility remain unchecked. Google's Geo Guidelines explicitly prohibit screenshotting Street View and downloading its imagery for separate use; supported links/embeds/API displays are the alternative. No Street View API configuration was found in this worktree. References: https://about.google/brand-resource-center/products-and-services/geo-guidelines/#street-view and https://developers.google.com/maps/documentation/streetview/policies .
+
 Claude Code owns the integration branch; Antigravity owns Tasks 10–12. Their active worktrees are unchanged. Updates were appended to the integration worktree's `.superpowers/sdd/HARNESS-SYNC.md` and `progress.md`. This branch adds one small service-worker manifest exclusion in `src/app/serwist/[path]/route.ts`; preserve it when doing Task 15. No intermediate production deployment or merge was performed.
 
 Review `contact-sheet.jpg`, the mobile screenshots, and `stop-coverage.html`. `review.html` is the historical candidate review; six named-creator selections are now approved and in the app. Bicol Medical Center remains staged.

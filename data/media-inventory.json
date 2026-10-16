@@ -5416,7 +5416,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-8cf1dbd5e5f1",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6233869%2C123.1846726",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6233869%2C123.1846726",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-002",
@@ -5486,7 +5488,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-c13f8f9306a2",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6244338%2C123.1861778",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6244338%2C123.1861778",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-003",
@@ -5499,7 +5503,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-ebf0d287fc24",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6298321%2C123.190976",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6298321%2C123.190976",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-004",
@@ -5512,7 +5518,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6314651%2C123.1927517",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6314651%2C123.1927517",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-005",
@@ -5525,7 +5533,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6328896%2C123.1942656",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6328896%2C123.1942656",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-006",
@@ -5538,7 +5548,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6309839%2C123.1970077",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6309839%2C123.1970077",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-007",
@@ -5551,7 +5563,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6292228%2C123.1985007",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6292228%2C123.1985007",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-008",
@@ -5564,7 +5578,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6265116%2C123.1990963",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6265116%2C123.1990963",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-009",
@@ -5577,7 +5593,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6261192%2C123.200876",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6261192%2C123.200876",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-010",
@@ -5590,7 +5608,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6277598%2C123.1997995",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6277598%2C123.1997995",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-011",
@@ -5603,7 +5623,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6185759%2C123.1985904",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6185759%2C123.1985904",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-012",
@@ -5616,7 +5638,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6176694%2C123.1970291",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6176694%2C123.1970291",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-013",
@@ -5629,7 +5653,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-356559228771",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6157173%2C123.1925205",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6157173%2C123.1925205",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-014",
@@ -5642,7 +5668,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6162097%2C123.1890293",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6162097%2C123.1890293",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-015",
@@ -5655,7 +5683,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6165957%2C123.1864136",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6165957%2C123.1864136",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-016",
@@ -5668,7 +5698,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6185569%2C123.183673",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6185569%2C123.183673",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-017",
@@ -5752,7 +5784,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.621666%2C123.1842716",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.621666%2C123.1842716",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-018",
@@ -5780,7 +5814,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6189216%2C123.1890866",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6189216%2C123.1890866",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-019",
@@ -5793,7 +5829,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.628149%2C123.1978132",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.628149%2C123.1978132",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-020",
@@ -5806,7 +5844,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6249841%2C123.1995469",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6249841%2C123.1995469",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-021",
@@ -5819,7 +5859,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.623996%2C123.2008868",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.623996%2C123.2008868",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-022",
@@ -5861,7 +5903,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6204547%2C123.2006852",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6204547%2C123.2006852",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-023",
@@ -5874,7 +5918,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6166307%2C123.1951644",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6166307%2C123.1951644",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-024",
@@ -5887,7 +5933,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6160052%2C123.1907468",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6160052%2C123.1907468",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-025",
@@ -5900,7 +5948,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6166855%2C123.1838985",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6166855%2C123.1838985",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-026",
@@ -5913,7 +5963,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6179234%2C123.1908514",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6179234%2C123.1908514",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-027",
@@ -5926,7 +5978,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-255d93d213c4",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6276709%2C123.1887035",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6276709%2C123.1887035",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-028",
@@ -5939,7 +5993,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6173035%2C123.1880936",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6173035%2C123.1880936",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-029",
@@ -5952,7 +6008,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.632102%2C123.1958976",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.632102%2C123.1958976",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-A-030",
@@ -5965,7 +6023,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6299067%2C123.1979773",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6299067%2C123.1979773",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-001",
@@ -6035,7 +6095,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-c13f8f9306a2",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6244247%2C123.1861684",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6244247%2C123.1861684",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-002",
@@ -6048,7 +6110,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-255d93d213c4",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6290106%2C123.1878649",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6290106%2C123.1878649",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-003",
@@ -6061,7 +6125,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.634123%2C123.1876057",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.634123%2C123.1876057",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-004",
@@ -6074,7 +6140,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6340388%2C123.1899757",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6340388%2C123.1899757",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-005",
@@ -6087,7 +6155,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.633623%2C123.192217",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.633623%2C123.192217",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-006",
@@ -6100,7 +6170,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6309852%2C123.1970077",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6309852%2C123.1970077",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-007",
@@ -6113,7 +6185,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6292228%2C123.1985007",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6292228%2C123.1985007",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-008",
@@ -6126,7 +6200,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6281558%2C123.1978198",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6281558%2C123.1978198",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-009",
@@ -6139,7 +6215,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.626509%2C123.199099",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.626509%2C123.199099",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-010",
@@ -6152,7 +6230,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6261127%2C123.200876",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6261127%2C123.200876",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-011",
@@ -6194,7 +6274,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6204549%2C123.200684",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6204549%2C123.200684",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-012",
@@ -6207,7 +6289,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6185759%2C123.1985917",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6185759%2C123.1985917",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-013",
@@ -6220,7 +6304,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-356559228771",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6157199%2C123.1925178",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6157199%2C123.1925178",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-014",
@@ -6233,7 +6319,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6160011%2C123.1907486",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6160011%2C123.1907486",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-015",
@@ -6246,7 +6334,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6185686%2C123.1836676",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6185686%2C123.1836676",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-016",
@@ -6330,7 +6420,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6216739%2C123.1842703",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6216739%2C123.1842703",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-017",
@@ -6414,7 +6506,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-8cf1dbd5e5f1",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6233869%2C123.1846726",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6233869%2C123.1846726",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-018",
@@ -6427,7 +6521,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6321529%2C123.1877839",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6321529%2C123.1877839",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-019",
@@ -6440,7 +6536,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6277598%2C123.1997995",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6277598%2C123.1997995",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-020",
@@ -6453,7 +6551,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.624988%2C123.1995509",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.624988%2C123.1995509",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-021",
@@ -6466,7 +6566,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6239699%2C123.2008761",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6239699%2C123.2008761",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-022",
@@ -6479,7 +6581,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6176655%2C123.1970278",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6176655%2C123.1970278",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-023",
@@ -6492,7 +6596,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6166163%2C123.1951631",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6166163%2C123.1951631",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-024",
@@ -6505,7 +6611,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6179234%2C123.1908514",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6179234%2C123.1908514",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-025",
@@ -6533,7 +6641,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6189216%2C123.1890866",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6189216%2C123.1890866",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-026",
@@ -6546,7 +6656,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6162097%2C123.1890293",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6162097%2C123.1890293",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-027",
@@ -6559,7 +6671,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6165935%2C123.1864133",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6165935%2C123.1864133",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-028",
@@ -6572,7 +6686,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6173041%2C123.1880962",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6173041%2C123.1880962",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-029",
@@ -6585,7 +6701,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6166855%2C123.1838985",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6166855%2C123.1838985",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-030",
@@ -6598,7 +6716,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6333978%2C123.1940142",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6333978%2C123.1940142",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-031",
@@ -6682,7 +6802,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-08002c435a52",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6271576%2C123.1872994",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6271576%2C123.1872994",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-032",
@@ -6695,7 +6817,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.632102%2C123.1958976",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.632102%2C123.1958976",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-033",
@@ -6708,7 +6832,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6299067%2C123.1979773",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6299067%2C123.1979773",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-C-034",
@@ -6721,7 +6847,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6257968%2C123.1864866",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6257968%2C123.1864866",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-001",
@@ -6805,7 +6933,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-8cf1dbd5e5f1",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6232548%2C123.185086",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6232548%2C123.185086",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-002",
@@ -6889,7 +7019,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6210147%2C123.1840106",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6210147%2C123.1840106",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-003",
@@ -6902,7 +7034,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6183652%2C123.183465",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6183652%2C123.183465",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-004",
@@ -6915,7 +7049,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-356559228771",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6155551%2C123.1927602",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6155551%2C123.1927602",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-005",
@@ -6928,7 +7064,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6164729%2C123.1952572",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6164729%2C123.1952572",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-006",
@@ -6941,7 +7079,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6182747%2C123.198405",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6182747%2C123.198405",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-007",
@@ -6983,7 +7123,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6214426%2C123.2011051",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6214426%2C123.2011051",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-008",
@@ -6996,7 +7138,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6239018%2C123.2011408",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6239018%2C123.2011408",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-009",
@@ -7009,7 +7153,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6264882%2C123.2008883",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6264882%2C123.2008883",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-010",
@@ -7022,7 +7168,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6278605%2C123.1998742",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6278605%2C123.1998742",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-011",
@@ -7035,7 +7183,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6292459%2C123.198745",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6292459%2C123.198745",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-012",
@@ -7048,7 +7198,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6315759%2C123.192658",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6315759%2C123.192658",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-013",
@@ -7061,7 +7213,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-ebf0d287fc24",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6299509%2C123.1908639",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6299509%2C123.1908639",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-014",
@@ -7074,7 +7228,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6251079%2C123.1859734",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6251079%2C123.1859734",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-015",
@@ -7087,7 +7243,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6329889%2C123.1941831",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6329889%2C123.1941831",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-016",
@@ -7100,7 +7258,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6279812%2C123.1981041",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6279812%2C123.1981041",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-017",
@@ -7113,7 +7273,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6266719%2C123.1992224",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6266719%2C123.1992224",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-018",
@@ -7141,7 +7303,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6186967%2C123.1891074",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6186967%2C123.1891074",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-019",
@@ -7154,7 +7318,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6178597%2C123.1906439",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6178597%2C123.1906439",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-020",
@@ -7167,7 +7333,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6316088%2C123.1966893",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6316088%2C123.1966893",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-021",
@@ -7180,7 +7348,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6160537%2C123.1890343",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6160537%2C123.1890343",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-022",
@@ -7193,7 +7363,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.615822%2C123.1907239",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.615822%2C123.1907239",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-023",
@@ -7206,7 +7378,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6175984%2C123.1972154",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6175984%2C123.1972154",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-024",
@@ -7219,7 +7393,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6249848%2C123.1997631",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6249848%2C123.1997631",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-025",
@@ -7232,7 +7408,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-255d93d213c4",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6278131%2C123.1881629",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6278131%2C123.1881629",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-026",
@@ -7245,7 +7423,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6164679%2C123.1862188",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6164679%2C123.1862188",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-027",
@@ -7329,7 +7509,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-08002c435a52",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6272763%2C123.1870736",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6272763%2C123.1870736",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-028",
@@ -7342,7 +7524,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6321528%2C123.1960653",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6321528%2C123.1960653",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-029",
@@ -7355,7 +7539,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6299849%2C123.1980793",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6299849%2C123.1980793",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-030",
@@ -7368,7 +7554,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6173902%2C123.1883366",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6173902%2C123.1883366",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-B-031",
@@ -7381,7 +7569,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.616439%2C123.1847296",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.616439%2C123.1847296",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-001",
@@ -7394,7 +7584,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.633776%2C123.1922303",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.633776%2C123.1922303",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-002",
@@ -7407,7 +7599,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6343011%2C123.1875888",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6343011%2C123.1875888",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-003",
@@ -7420,7 +7614,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-255d93d213c4",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6294487%2C123.1877824",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6294487%2C123.1877824",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-004",
@@ -7504,7 +7700,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-8cf1dbd5e5f1",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6232548%2C123.185086",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6232548%2C123.185086",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-005",
@@ -7517,7 +7715,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6183651%2C123.1834704",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6183651%2C123.1834704",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-006",
@@ -7530,7 +7730,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6164834%2C123.1847391",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6164834%2C123.1847391",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-007",
@@ -7543,7 +7745,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6158211%2C123.1907315",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6158211%2C123.1907315",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-008",
@@ -7556,7 +7760,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-356559228771",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6155537%2C123.1927589",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6155537%2C123.1927589",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-009",
@@ -7569,7 +7775,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.618276%2C123.198405",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.618276%2C123.198405",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-010",
@@ -7611,7 +7819,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.621453%2C123.2011078",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.621453%2C123.2011078",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-011",
@@ -7624,7 +7834,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.623894%2C123.2011381",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.623894%2C123.2011381",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-012",
@@ -7637,7 +7849,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6264895%2C123.2008897",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6264895%2C123.2008897",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-013",
@@ -7650,7 +7864,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6278631%2C123.1998729",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6278631%2C123.1998729",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-014",
@@ -7663,7 +7879,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6292511%2C123.1987369",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6292511%2C123.1987369",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-015",
@@ -7676,7 +7894,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6316034%2C123.196698",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6316034%2C123.196698",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-016",
@@ -7704,7 +7924,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6187201%2C123.1891288",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6187201%2C123.1891288",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-017",
@@ -7717,7 +7939,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6178532%2C123.1906412",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6178532%2C123.1906412",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-018",
@@ -7730,7 +7954,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6266745%2C123.1992197",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6266745%2C123.1992197",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-019",
@@ -7743,7 +7969,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6279759%2C123.1980961",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6279759%2C123.1980961",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-020",
@@ -7756,7 +7984,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6335483%2C123.1940304",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6335483%2C123.1940304",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-021",
@@ -7769,7 +7999,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6341934%2C123.1900064",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6341934%2C123.1900064",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-022",
@@ -7782,7 +8014,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6320061%2C123.1876901",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6320061%2C123.1876901",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-023",
@@ -7866,7 +8100,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-08002c435a52",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6272763%2C123.1870736",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6272763%2C123.1870736",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-024",
@@ -7879,7 +8115,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6249874%2C123.1997671",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6249874%2C123.1997671",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-025",
@@ -7892,7 +8130,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6175984%2C123.1972154",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6175984%2C123.1972154",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-026",
@@ -7905,7 +8145,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6164742%2C123.1952572",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6164742%2C123.1952572",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-027",
@@ -7918,7 +8160,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6160539%2C123.1890394",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6160539%2C123.1890394",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-028",
@@ -8002,7 +8246,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.621021%2C123.1840057",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.621021%2C123.1840057",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-029",
@@ -8015,7 +8261,9 @@
     "signageStatus": "unverified",
     "selectedAsset": "photo-c13f8f9306a2",
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.625107%2C123.185969",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.625107%2C123.185969",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-030",
@@ -8028,7 +8276,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6164679%2C123.1862228",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6164679%2C123.1862228",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-031",
@@ -8041,7 +8291,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6174012%2C123.1883294",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6174012%2C123.1883294",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-032",
@@ -8054,7 +8306,9 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6321528%2C123.1960653",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6321528%2C123.1960653",
+    "streetViewStatus": "not_checked"
   },
   {
     "key": "MYM-D-033",
@@ -8067,6 +8321,8 @@
     "signageStatus": "unverified",
     "selectedAsset": null,
     "researchUrl": "https://www.google.com/maps/search/?api=1&query=13.6299849%2C123.1980793",
-    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied."
+    "researchNote": "Candidate metadata only. Some individual searches were rate-limited; no absence-of-photo claim. Google link is for manual reference only; Google content is not copied.",
+    "streetViewUrl": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=13.6299849%2C123.1980793",
+    "streetViewStatus": "not_checked"
   }
 ]
