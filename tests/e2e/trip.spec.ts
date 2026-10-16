@@ -513,11 +513,13 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   const sheet = page.getByTestId("trip-sheet");
   const toggle = page.getByTestId("options-toggle");
   await expect(sheet).toHaveAttribute("data-snap", "0");
-  await expect(page.getByTestId("options-best")).toContainText(/Loop A.*Estimate \d+–\d+ min.*Estimate ₱14/);
+  // The Recommended option is the tricycle here (500 m or more), so that is what the peek reads, with no minutes and no wait.
+  await expect(page.getByTestId("options-best")).toContainText(/Tricycle.*Time not estimated.*Minimum fare ₱15/);
+  await expect(page.getByTestId("options-best")).not.toContainText(/waiting|Loop A/);
   await expect(toggle).toHaveText("All options");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
-  // The best option is labelled unverified right at the peek (the cards are out of sight there).
-  await expect(page.getByTestId("options-best-unverified")).toHaveText("Unverified route");
+  // A tricycle is not a jeepney ride: no unverified-route chip at the peek.
+  await expect(page.getByTestId("options-best-unverified")).toHaveCount(0);
   await expect(toggle).toHaveAttribute("aria-controls", "pn-trip-options-list");
   // Both rows, the summary and the toggle are inside the visible sheet, targets >= 44 px.
   const vh = page.viewportSize()!.height;

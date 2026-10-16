@@ -6,25 +6,12 @@
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "../api/plan";
 import type { ServiceWindowNote } from "../eta/service-window";
 import { FLAGGED_PATH_NOTE } from "../planner/notes";
-import { fareChipText, formatDistance, routeChipLabel } from "./present";
+import { fareChipText, formatDistance } from "./present";
 import type { OptionNotesView, RideNoteView } from "./option-notes";
 
 /** The first Recommended option, or -1: exactly one card is drawn as the primary one. */
 export function recommendedIndex(options: readonly Pick<PlanOptionDto, "labels">[]): number {
   return options.findIndex((o) => o.labels.includes("Recommended"));
-}
-
-export function optionHeadline(option: PlanOptionDto): string {
-  switch (option.mode) {
-    case "walk":
-      return `Walk ${formatDistance(option.walkEstimateMeters)}`;
-    case "tricycle":
-      return "Tricycle";
-    case "padyak":
-      return "Padyak";
-    default:
-      return `Jeep ${option.legs.flatMap((l) => (l.kind === "ride" ? [routeChipLabel(l.routeCode, l.routeName)] : [])).join(" + ")}`;
-  }
 }
 
 const JEEPNEY_REASON: Record<NonNullable<PlanResponse["plan"]["jeepneyReason"]>, string> = {

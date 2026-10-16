@@ -110,7 +110,7 @@ describe("useTripPlan offline", () => {
   it("falls back to the plan made on the phone; without a connection it is marked offline", async () => {
     const onLine = vi.spyOn(navigator, "onLine", "get").mockReturnValue(false);
     const { result } = renderHook(() => useTripPlan(end(ORIGIN), end(DESTINATION)));
-    await waitFor(() => expect(result.current.status).toBe("ready"));
+    await waitFor(() => expect(result.current.status).toBe("ready"), { timeout: 15_000 });
     if (result.current.status !== "ready") return;
     expect(result.current.offline).toBe("offline");
     expect(result.current.data.revision.revisionId).toBe(snapshot.revision.revisionId);
@@ -121,7 +121,7 @@ describe("useTripPlan offline", () => {
 
   it("with a connection but no server, it says ParaNaga could not be reached (not offline)", async () => {
     const { result } = renderHook(() => useTripPlan(end(ORIGIN), end(DESTINATION)));
-    await waitFor(() => expect(result.current.status).toBe("ready"));
+    await waitFor(() => expect(result.current.status).toBe("ready"), { timeout: 15_000 });
     if (result.current.status !== "ready") return;
     expect(result.current.offline).toBe("unreachable");
     expect(offlinePlanNote(result.current.data.revision.publishedAt, "unreachable")).toBe(

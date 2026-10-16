@@ -118,13 +118,14 @@ Model tiers per task are in "Task order and sizing".
 
 ### F. Rollout
 
-1. Merge PR (CI e2e gates merge).
-2. Owner: create a Neon backup branch of `main`; note the published revision id (rollback target).
-3. Apply migration `0010` (additive).
+Order: backup, migrate, deploy, import, smoke test. The new snapshot query needs `v_published_route_notes` (0010), so migrate before the merge deploys.
+
+1. Owner: create a Neon backup branch of `main`; note the published revision id (rollback target).
+2. `pnpm db:migrate` (additive: 0010 route notes and graph v2, 0011 OSM place categories, 0012 Google Places guard), then `pnpm db:check-rls`. 0011 must precede the places import; 0012 must precede `PLACES_GOOGLE_ENABLED=true` (keep it `false` until then).
+3. Merge PR (CI e2e gates merge); Vercel deploys. The new code reads v1 graphs of the old revision until the import publishes v2, so deploy-before-import is safe (tricycle shows "Street route not available", no padyak).
 4. `pnpm db:import --dry-run` (prints road-rule lengths, padyak areas, graph bytes, notes), then `--commit`: publishes `anywhere-alight-{date}` through `carryForwardRevision` (stop and route ids unchanged).
-5. Deploy happens with the merge (Vercel); the new code reads v1 graphs of the old revision until the import publishes v2, so deploy-before-import is safe.
-6. Smoke test on production: the seven trips in Task 13.
-- **Rollback:** re-publish the noted revision (`publish_revision` rollback path, docs/setup.md), then redeploy the previous build. Migration 0010 stays (additive, unused by old code). Saved trips written by new code show as "made by a newer version" in old code.
+5. Smoke test on production: the seven trips in Task 13.
+- **Rollback:** re-publish the noted revision first (`publish_revision` rollback path, docs/setup.md), then redeploy the previous build (the old code rejects a v2 graph). Migrations 0010-0012 stay (additive, unused by old code). Saved trips written by new code show as "made by a newer version" in old code.
 
 ## Global Constraints
 

@@ -334,7 +334,6 @@ export default function NagaMapLeaflet({
   terminals = null,
   terminalsInteractive = true,
   onTerminalSelect = null,
-  emphasizedTerminalCode = null,
   fitBoundsCoords = null,
   legend = null,
   mapSurface: explicitMapSurface,
@@ -497,7 +496,6 @@ export default function NagaMapLeaflet({
             terminals={terminals}
             surface={surface}
             interactive={terminalsInteractive && onTerminalSelect !== null}
-            emphasizedCode={emphasizedTerminalCode}
             onSelect={onTerminalSelect ?? undefined}
             onTapThrough={stopTapThrough}
           />

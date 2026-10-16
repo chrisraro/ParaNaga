@@ -6,7 +6,7 @@ import { offlinePlanChip } from "@/domain/pwa/offline-copy";
 import { UndoButton } from "@/ui/guidance/guidance-parts";
 import { OptionsPeek } from "@/ui/trip/trip-options";
 import { FareShort } from "@/ui/trip/trip-parts";
-import { PROVISIONAL_PLAN } from "../e2e/fixtures/plan-responses";
+import { PROVISIONAL_PLAN, SHORT_JEEP_PASSES_PLAN, TRICYCLE_RECOMMENDED_PLAN } from "../e2e/fixtures/plan-responses";
 
 const data = planResponseSchema.parse(PROVISIONAL_PLAN);
 const noop = () => undefined;
@@ -26,6 +26,30 @@ describe("OptionsPeek", () => {
     expect(screen.getByTestId("options-toggle").getAttribute("aria-expanded")).toBe("false");
     rerender(<OptionsPeek data={data} expanded={false} listShown onToggle={noop} />);
     expect(screen.getByTestId("options-toggle").getAttribute("aria-expanded")).toBe("true");
+  });
+});
+
+describe("OptionsPeek names the Recommended option, not the first card", () => {
+  it("a trip of 1.26 km: the tricycle is Recommended, so the peek reads the tricycle", () => {
+    const plan = planResponseSchema.parse(TRICYCLE_RECOMMENDED_PLAN);
+    expect(plan.plan.options[0]!.mode).toBe("jeepney");
+    render(<OptionsPeek data={plan} expanded={false} listShown={false} onToggle={noop} />);
+    const best = screen.getByTestId("options-best").textContent ?? "";
+    expect(best).toContain("Tricycle");
+    expect(best).not.toContain("Loop");
+    expect(best).toContain("Time not estimated");
+    expect(best).not.toContain("waiting");
+    // A tricycle is not a jeepney ride: no unverified-route chip.
+    expect(screen.queryByTestId("options-best-unverified")).toBeNull();
+  });
+
+  it("under 500 m with a jeepney passing the destination: the peek reads that jeepney, not the walk card", () => {
+    const plan = planResponseSchema.parse(SHORT_JEEP_PASSES_PLAN);
+    expect(plan.plan.options[0]!.mode).toBe("walk");
+    render(<OptionsPeek data={plan} expanded={false} listShown={false} onToggle={noop} />);
+    const best = screen.getByTestId("options-best").textContent ?? "";
+    expect(best).not.toContain("Walk");
+    expect(screen.getByTestId("options-best-unverified").textContent).toBe("Unverified route");
   });
 });
 

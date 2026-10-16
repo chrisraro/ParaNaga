@@ -29,7 +29,7 @@ const modes = (page: Page) => options(page).evaluateAll((els) => els.map((el) =>
 /** A time with no service-window warning (Manila). */
 const MIDDAY = "2026-10-17T11:00:00+08:00";
 
-async function planWith(page: Page, plan: unknown, at = MIDDAY) {
+async function planWith(page: Page, plan: unknown, at = MIDDAY, expand = true) {
   await page.clock.setFixedTime(new Date(at));
   await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
   await routeNetwork(page);
@@ -41,6 +41,7 @@ async function planWith(page: Page, plan: unknown, at = MIDDAY) {
   await expect(page.getByTestId("trip-sheet")).toBeVisible();
   await pinBoth(page);
   // The sheet rests at peek with the best option; the cards are reached through "All options".
+  if (!expand) return;
   await expandOptions(page);
   await expect(page.getByRole("heading", { name: "Trip options" })).toBeVisible();
 }
@@ -167,6 +168,12 @@ test("(c) a trip of 500 m or more: the tricycle is Recommended after the jeepney
   // The terminal closest to the trip's end (T14, about 60 m away).
   await expect(detail.getByTestId("tricycle-terminal")).toHaveText(/^Nearest tricycle terminal: Balatas Tricycle Terminal, about \d+ m/);
   await expectAxeBothSchemes(page);
+});
+
+test("(c2) the peek's best option is the Recommended one, the tricycle", async ({ page }) => {
+  await planWith(page, TRICYCLE_RECOMMENDED_PLAN, MIDDAY, false);
+  await expect(page.getByTestId("options-best")).toContainText("Tricycle");
+  await expect(page.getByTestId("options-best")).not.toContainText("R2");
 });
 
 test.describe("(d) no jeepney available", () => {

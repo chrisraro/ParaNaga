@@ -468,13 +468,16 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const now = useMinuteTicker();
   const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
   const stepContext: StepContext = { start: ends?.start.label || "your start", destination: ends?.destination.label || "your destination", notes, terminals, showOnMap: frame ? frame.showOnMap : null };
+  const noMinutes = estimate !== null && !estimate.legs.some((l) => l.estimated);
   const streets = option.legs.filter((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
 
   // Walk legs show "Straight line · loading street paths…" until the walk graph arrives: say so politely.
   const loadingPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "straight" && (l as EnrichedWalkLeg).path.label === WALK_LOADING_LABEL);
   const [sawLoadingPaths, setSawLoadingPaths] = useState(false);
   if (loadingPaths && !sawLoadingPaths) setSawLoadingPaths(true);
-  const pathsStatus = loadingPaths ? "Loading street paths…" : sawLoadingPaths ? "Street paths updated" : "";
+  // "Updated" only when a street path really arrived; a failed load says nothing.
+  const gotStreetPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "path");
+  const pathsStatus = loadingPaths ? "Loading street paths…" : sawLoadingPaths && gotStreetPaths ? "Street paths updated" : "";
   // Low-data opt-in (Task 15 follow-up): the walk graph downloads only on this tap, then stays stored.
   const pathsDownload = useWalkGraphDownload(data.revision.revisionId);
   const downloadPaths = async () => {
@@ -498,7 +501,12 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           {optionTitle(option)}
         </h2>
         <div className="pn-trip-detail__meta">
-          <EtaTotalText estimate={estimate} className={estimate ? "pn-trip-detail__time" : undefined} testId="trip-detail-time" />
+          {noMinutes && streets[0] ? (
+            // A tricycle or padyak trip with no estimated leg: no minutes and no jeepney wait to report.
+            <span className="pn-trip-detail__time" data-testid="trip-detail-time">{streetCardView(streets[0]).timeText}</span>
+          ) : (
+            <EtaTotalText estimate={estimate} className={estimate ? "pn-trip-detail__time" : undefined} testId="trip-detail-time" />
+          )}
           <FareChip fare={option.fare} />
         </div>
         {estimate?.total.peak ? (
@@ -506,7 +514,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
             <EtaPeakNote estimate={estimate} testId="trip-peak-note" />
           </p>
         ) : null}
-        {estimate ? (
+        {estimate && !noMinutes ? (
           <button type="button" className="pn-trip-detail__basis-btn" onClick={() => setBasisOpen(true)} data-testid="how-times-estimated-btn">
             How times are estimated
           </button>

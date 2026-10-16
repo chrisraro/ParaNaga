@@ -6,13 +6,12 @@ import { FLAGGED_PATH_NOTE } from "@/domain/planner/notes";
 import {
   cardRouteNotes,
   jeepneyReasonText,
-  optionHeadline,
   recommendedIndex,
   serviceWindowCardLine,
   streetCardView,
 } from "@/domain/trip/option-card";
 import { optionNotesView } from "@/domain/trip/option-notes";
-import { oneRide, streetOnly, twoRides, walkOnly } from "./guidance-fixtures";
+import { oneRide, streetOnly, walkOnly } from "./guidance-fixtures";
 
 const tricycleLeg = (o = streetOnly("tricycle")) => o.legs[0] as TricycleLegDto;
 
@@ -25,16 +24,6 @@ describe("recommendedIndex", () => {
   });
   it("is -1 when none is labelled (never guesses)", () => {
     expect(recommendedIndex([{ ...streetOnly("tricycle"), labels: [] }])).toBe(-1);
-  });
-});
-
-describe("optionHeadline", () => {
-  it("names the mode", () => {
-    expect(optionHeadline(walkOnly())).toBe("Walk ≈ 390 m");
-    expect(optionHeadline(streetOnly("tricycle"))).toBe("Tricycle");
-    expect(optionHeadline(streetOnly("padyak"))).toBe("Padyak");
-    expect(optionHeadline(oneRide())).toBe("Jeep Loop A");
-    expect(optionHeadline(twoRides())).toBe("Jeep Loop A + Loop B");
   });
 });
 

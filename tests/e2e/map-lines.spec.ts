@@ -386,8 +386,16 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
 });
 
 test("after choosing From and To the recommended option's lines are previewed above the sheet", async ({ page }) => {
+  // The recommended option here is a jeepney ride (walk dotted, ride solid): the fixture's tricycle is not Recommended.
+  const jeepneyRecommended = {
+    ...PROVISIONAL_PLAN,
+    plan: {
+      ...PROVISIONAL_PLAN.plan,
+      options: PROVISIONAL_PLAN.plan.options.map((o, i) => ({ ...o, labels: (o.labels as string[]).filter((l) => l !== "Recommended").concat(i === 0 ? ["Recommended"] : []) })),
+    },
+  };
   await page.route("**/api/v1/plan", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(jeepneyRecommended) }),
   );
   await openApp(page);
   await pinBoth(page);

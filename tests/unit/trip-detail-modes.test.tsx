@@ -8,6 +8,7 @@ import type { PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/p
 import { AppFrameContext, type AppFrameValue } from "@/ui/app-shell/app-frame-context";
 import { TripDetail } from "@/ui/trip/trip-detail";
 import { PROVISIONAL_PLAN } from "../e2e/fixtures/plan-responses";
+import { ETA_MODEL } from "./eta-fixtures";
 import { BASE, DEST, PATH_LINE, ORIGIN, pathRide, streetOnly, walk } from "./guidance-fixtures";
 
 vi.mock("@/client/saved/use-saved-trip-toggle", () => ({
@@ -116,6 +117,13 @@ describe("tricycle and padyak steps", () => {
     expect(screen.getByTestId("street-distance").textContent).toBe("≈ 1.5 km along streets");
     expect(screen.getByTestId("trip-detail").textContent).not.toMatch(/\d\s*min\b|Estimate \d/);
     expect(within(screen.getByTestId("leg-fare")).getByText(/Minimum fare ₱15 · confirm with the driver/)).toBeTruthy();
+  });
+
+  it("with a time model, no minutes means no waiting line and no estimate-basis button", () => {
+    show(tricycle(), { etaModel: ETA_MODEL });
+    const detail = screen.getByTestId("trip-detail").textContent!;
+    expect(detail).not.toMatch(/waiting/i);
+    expect(screen.queryByTestId("how-times-estimated-btn")).toBeNull();
   });
 
   it("names the nearest tricycle terminal when one is within reach", () => {

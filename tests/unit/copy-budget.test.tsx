@@ -65,7 +65,8 @@ describe("copy budgets", () => {
     // A jeepney card is the budgeted one; a tricycle or padyak card also carries its street rule (distance,
     // restricted roads or area), so it has a larger, still bounded, budget of its own.
     for (const card of cards) {
-      const budget = card.getAttribute("data-mode") === "jeepney" ? CARD_WORDS_ONE_RIDE : CARD_WORDS_STREET;
+      const mode = card.getAttribute("data-mode");
+      const budget = mode === "tricycle" || mode === "padyak" ? CARD_WORDS_STREET : CARD_WORDS_ONE_RIDE;
       expect(visibleWords(card)).toBeLessThanOrEqual(budget);
     }
     const first = cards[0]!;

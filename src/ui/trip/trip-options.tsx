@@ -254,7 +254,9 @@ export function OptionsPeek({
   notes?: readonly string[];
   onToggle: () => void;
 }) {
-  const best = data.plan.options[0];
+  // The Recommended option (the tricycle at 500 m or more), not the first card: what is read out must match the list.
+  const best = data.plan.options[Math.max(0, recommendedIndex(data.plan.options))];
+  const bestStreet = best?.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
   const walkLengths = useMemo(() => extractWalkLengths(best?.legs ?? []), [best]);
   const { estimate } = useOptionEta(best, walkLengths, etaModel);
   if (!best) return null;
@@ -266,7 +268,7 @@ export function OptionsPeek({
         <span>
           {optionTitle(best)}
           <span aria-hidden="true"> · </span>
-          <EtaTotalText estimate={estimate} short />
+          {bestStreet ? streetCardView(bestStreet).timeText : <EtaTotalText estimate={estimate} short />}
           <span aria-hidden="true"> · </span>
           <FareShort fare={best.fare} />
         </span>
