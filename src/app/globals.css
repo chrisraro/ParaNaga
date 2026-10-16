@@ -144,8 +144,15 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 3px;
+}
+
+/* Forced colours replace the palette: the ring keeps a system colour whatever the rule's specificity. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight !important;
+  }
 }
 
 /* Route lines in the hero draw in once; reduced motion shows them finished. */

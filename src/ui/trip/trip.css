@@ -213,7 +213,7 @@ abbr.pn-est {
   outline: none;
 }
 [data-results-heading]:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 .pn-trip-chevron {
@@ -397,7 +397,7 @@ abbr.pn-est {
   outline: none;
 }
 .pn-trip-detail__title:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 .pn-trip-detail__meta {
@@ -701,7 +701,7 @@ abbr.pn-est {
   cursor: progress;
 }
 .pn-trip-action:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 .pn-trip-actions__check {

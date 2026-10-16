@@ -114,7 +114,7 @@
   color: var(--pn-on-primary);
 }
 .pn-saved-cta:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 .pn-saved__remove {
@@ -243,7 +243,7 @@
   font-size: 17px;
 }
 .pn-saved-dialog__input:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 1px;
 }
 .pn-saved-dialog__input[aria-invalid="true"] {

@@ -118,7 +118,8 @@
   fill: #2bb5ae;
   transform-box: fill-box;
   transform-origin: center;
-  animation: pn-pulse 2.4s ease-out infinite;
+  /* Two beats (4.8 s), then it rests: no non-essential motion past 5 s (WCAG 2.2.2). */
+  animation: pn-pulse 2.4s ease-out 2 forwards;
 }
 @keyframes pn-pulse {
   0% {
@@ -214,7 +215,7 @@
 }
 .pn-map .pn-ctl:focus-visible,
 .pn-map .pn-attribution a:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 
@@ -338,6 +339,6 @@
   cursor: pointer;
 }
 .pn-map .pn-map-notice__btn:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }

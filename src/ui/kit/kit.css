@@ -103,7 +103,7 @@ button.pn-cell:active {
   transform: scale(0.98);
 }
 .pn-cell:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
   border-radius: 10px;
 }
@@ -237,7 +237,7 @@ button.pn-cell:active {
   transform: translateX(20px);
 }
 .pn-switch:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 
@@ -282,7 +282,7 @@ button.pn-cell:active {
   font-size: 17px;
 }
 .pn-dialog button:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 
@@ -333,7 +333,7 @@ button.pn-cell:active {
   font-weight: 600;
 }
 .pn-tabbar__tab:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 @media (prefers-reduced-transparency: reduce) {

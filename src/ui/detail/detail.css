@@ -38,7 +38,7 @@
 }
 .pn-detail a:focus-visible,
 .pn-detail button:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 /* Headings take focus programmatically when a panel opens; no ring for that. */

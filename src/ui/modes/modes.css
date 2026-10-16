@@ -190,7 +190,7 @@
 }
 
 .pn-map-legend__toggle:focus-visible {
-  outline: 3px solid #2BB5AE;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 
