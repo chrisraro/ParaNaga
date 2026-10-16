@@ -352,3 +352,52 @@ describe("real file content", () => {
     expect(real.sources.find((s) => s.code === "U01")!.type).toBe("owner_confirmation");
   });
 });
+
+describe("research sources RT/RL/RP/RH and owner report U02 (2026-10-17)", () => {
+  const research = real.sources.filter((s) => /^R[TLPH][0-9]{2}$/.test(s.code));
+
+  it("has one record per candidate: 24 tricycle, 19 loops, 22 padyak, 21 jeepney-hours (counts of the candidate files)", () => {
+    const count = (p: string) => research.filter((s) => s.code.startsWith(p)).length;
+    expect({ RT: count("RT"), RL: count("RL"), RP: count("RP"), RH: count("RH") }).toEqual({ RT: 24, RL: 19, RP: 22, RH: 21 });
+  });
+
+  it("every new code is unique and matches the R-prefixed pattern; the parser refuses other R codes", () => {
+    const codes = research.map((s) => s.code);
+    expect(new Set(codes).size).toBe(codes.length);
+    expect(codes.every((c) => /^R[TLPH][0-9]{2}$/.test(c))).toBe(true);
+    const bad = clone(realJson) as Json;
+    bad.sources.find((s: Json) => s.code === "RT01").code = "RX01";
+    expect(() => parseModesSeed(bad)).toThrow();
+  });
+
+  it("U02 is the owner report with the exact plan title, imported as user_report_unverified", () => {
+    const u02 = real.sources.find((s) => s.code === "U02")!;
+    expect(u02.type).toBe("user_report_unverified");
+    expect(u02.title).toBe("Project owner report to ParaNaga, 2026-10-17: request reroutes on loops; 'Francia' signboard; padyak in Abella, Sabang, Sta. Cruz, Igualdad; some jeepneys start about 5 am or before");
+    expect(u02.review.decision).toBe("import");
+  });
+
+  it("sources the research marks not used are excluded with a reason (P22, H16, H17)", () => {
+    const excluded = research.filter((s) => s.review.decision === "exclude").map((s) => s.code).sort();
+    expect(excluded).toEqual(["RH16", "RH17", "RP22"]);
+    for (const s of research.filter((x) => x.review.decision === "exclude")) expect(s.review.reason).toMatch(/not used/);
+  });
+
+  it("keeps no private individual's name from the research (hashed tokens, as for chair names)", () => {
+    const forbidden = new Set([
+      "87afeaec6cb1e23ad5e6ff51f919ef108db191154f9a05738134685cd58652cc", // josiah
+      "4ee3679892e6ac5a5b513eba7fd529d363d7a96508421c5dbd44b01b349cf514", // antonio
+      "6b70e2d592dd17196b7940574ee89f31c354435338179245457ad54064ba7f77", // drei
+      "74a2a3d228c40bb43ced9e4854b97d78ccb0dbac1ea94ecded7e548f0723eab7", // laurel
+      "f11d1d57230f4a05280dbef76e5b96170f4f5b80c112df9786b3dc994dd2afbb", // gumba
+      "f25772b747d11e686c8c1f5c74468ae1cee22ae8c54ba8b22d2346925f82a60b", // kyna
+      "df835dcf8d6c492c3d340604b9e58d8603d98cd5f90e754a3a85cf174488e17d", // castro
+      "9b36b2dfb7c5090ae999e275b48f32ac10970f89b0d8a37d9bc2d57627dc89c4", // kruseman
+      "dc960fe73c59d30e68a354db0180bfabf8a089b69de12cd39972c52578690c89", // bernadas
+      "07473a4253fa248590947c91a9e008b5dff1b3a397f7d8f9c613394bf3f77665", // keren
+    ]);
+    const hash = (s: string) => createHash("sha256").update(s).digest("hex");
+    const tokens = new Set(readFileSync(REAL_PATH, "utf8").toLowerCase().split(/[^a-z0-9-]+/));
+    expect([...tokens].filter((t) => forbidden.has(hash(t)))).toEqual([]);
+  });
+});

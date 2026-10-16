@@ -58,7 +58,8 @@ const Header = z.strictObject({
 });
 
 const Source = z.strictObject({
-  code: z.string().regex(/^(N|U|X)[0-9]{2}$/),
+  /** N/U/X codes; R-prefixed research codes (RT/RL/RP/RH) from the 2026-10 research, kept apart from terminal codes T01… */
+  code: z.string().regex(/^(N|U|X)[0-9]{2}$|^R[TLPH][0-9]{2}$/),
   title: text,
   url: text.nullable(),
   extra_urls: z.array(text),

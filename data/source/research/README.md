@@ -1,7 +1,7 @@
 # Reviewed research seeds
 
 `naga-modes-seed-YYYY-MM-DD.json` holds the reviewed records for all transport modes: sources
-N01–N41 and U01, terminals T01–T16, the tricycle feeder routes, per-route vehicle classes (fleet),
+N01–N41, U01 and U02 (owner report), research sources RT01–RT24, RL01–RL19, RP01–RP22 and RH01–RH21, terminals T01–T16, the tricycle feeder routes, per-route vehicle classes (fleet),
 cooperative names, regional services, fare-rule source additions, new fare rules F06–F12, fare
 observations, time-estimate parameters, street aliases and a conflicts register.
 
@@ -9,6 +9,30 @@ The importer reads only this file (newest date wins). It is validated by
 `src/domain/import/modes-seed.ts` (`parseModesSeed` for the strict shape, `validateModesSeed` for
 the rules, `importableRecords` for what may be imported). The file lives here, not in `Data_Sets/`,
 because `Data_Sets/` is the original research package and is read as a whole.
+
+## Research families (2026-10-17)
+
+| Family | Codes | Records | Input (sha256 in `header.preparedFrom`; not committed) | Imported | Excluded |
+|---|---|---|---|---|---|
+| Tricycle restrictions | RT01–RT24 | 24 | `tricycle-restrictions-candidates-2026-10.json` | 24 | 0 |
+| Loops and routes | RL01–RL19 | 19 | `loops-and-routes-candidates-2026-10.json` | 19 | 0 |
+| Padyak | RP01–RP22 | 22 | `padyak-candidates-2026-10.json` (sources in `padyak-2026-10.md`) | 21 | 1 (RP22: no padyak content) |
+| Jeepney hours | RH01–RH21 | 21 | `jeepney-hours-candidates-2026-10.json` (sources in `jeepney-hours-2026-10.md`) | 19 | 2 (RH16, RH17: no service content) |
+| Owner report | U02 | 1 | Project owner report, 2026-10-17 (plan section E) | 1 | 0 |
+
+The R-prefixed codes never clash with terminal codes `T01…`. Their pattern is `^R[TLPH][0-9]{2}# Reviewed research seeds
+
+`naga-modes-seed-YYYY-MM-DD.json` holds the reviewed records for all transport modes: sources
+N01–N41, U01 and U02 (owner report), research sources RT01–RT24, RL01–RL19, RP01–RP22 and RH01–RH21, terminals T01–T16, the tricycle feeder routes, per-route vehicle classes (fleet),
+cooperative names, regional services, fare-rule source additions, new fare rules F06–F12, fare
+observations, time-estimate parameters, street aliases and a conflicts register.
+
+The importer reads only this file (newest date wins). It is validated by
+`src/domain/import/modes-seed.ts` (`parseModesSeed` for the strict shape, `validateModesSeed` for
+the rules, `importableRecords` for what may be imported). The file lives here, not in `Data_Sets/`,
+because `Data_Sets/` is the original research package and is read as a whole.
+
+.
 
 ## Provenance
 
@@ -75,7 +99,7 @@ named street. A unit test checks every alias against the pinned snapshot.
 
 ## Personal data
 
-No cooperative chairperson names and no addresses are kept. The schema has no field for them and
+No cooperative chairperson names and no addresses are kept. Private individuals named in the research (blog authors, a journalist, a map owner) are not kept either: the site or publication name is used instead. The schema has no field for them and
 refuses unknown keys; the chairperson conflict is recorded in `conflicts` without the names.
 
 ## Synthetic data
