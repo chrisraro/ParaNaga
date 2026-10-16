@@ -65,7 +65,10 @@ import { useSavedTripReopen } from "./use-saved-trip-reopen";
 import { useLines } from "@/client/network/use-lines";
 import { useSnapshot } from "@/client/network/use-snapshot";
 import { updateLayers, usePrefs } from "@/client/prefs/use-prefs";
-import { LayersSheet, SelectedRouteCard, distinctRoutesFromLines } from "@/ui/map/layers-sheet";
+import { LayersSheet, SelectedRouteCard, distinctRoutesFromLines, filterMapTerminals } from "@/ui/map/layers-sheet";
+import type { MapTerminal } from "@/ui/map/terminals-layer";
+import { tricycleHint as computeTricycleHint, tricycleHintSources } from "@/domain/trip/tricycle-hint";
+import { TricycleHintCard } from "@/ui/trip/tricycle-hint";
 import { collectRouteLegendItems, filterOverviewLines } from "@/ui/map/route-lines-layer";
 import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
 
@@ -616,6 +619,44 @@ export function HomeScreen() {
     setSeenTripAnnouncement(tripAnnouncement);
     if (tripAnnouncement) setAnnouncement(tripAnnouncement);
   }
+  // Terminals layer (Task 13): only terminals with a coordinate, filtered like the overview (D16).
+  const mapTerminals = useMemo<MapTerminal[]>(
+    () =>
+      showOverview
+        ? filterMapTerminals(snapshotState.snapshot?.terminals, layers).map((t) => ({ code: t.code, name: t.name, modes: t.modes, lat: t.lat!, lng: t.lng! }))
+        : [],
+    [showOverview, snapshotState.snapshot, layers],
+  );
+  const handleTerminalSelect = useCallback(
+    (code: string) => {
+      const path = `/app/terminals/${encodeURIComponent(code)}`;
+      markHomeNavigation?.(path);
+      router.push(path);
+    },
+    [router, markHomeNavigation],
+  );
+  // D15: computed on the phone from the two trip ends; nothing is sent anywhere.
+  const startPoint = endpoints.start?.point ?? null;
+  const destinationPoint = endpoints.destination?.point ?? null;
+  const trikeHint = useMemo(
+    () => (planData && startPoint && destinationPoint ? computeTricycleHint(startPoint, destinationPoint, snapshotState.snapshot, lines) : null),
+    [planData, startPoint, destinationPoint, snapshotState.snapshot, lines],
+  );
+  const trikeHintCard = trikeHint ? (
+    <TricycleHintCard
+      hint={trikeHint}
+      sources={tricycleHintSources(trikeHint, snapshotState.snapshot)}
+      onShowOnMap={(terminal) => bumpRecenter({ lat: terminal.lat, lng: terminal.lng }, terminal.name)}
+    />
+  ) : null;
+  // The terminal a hint names is always drawn while the hint shows (its "Show on map" and the
+  // emphasized marker), even when the Terminals layer or the mode filter would hide it.
+  const drawnTerminals = useMemo<MapTerminal[]>(() => {
+    const t = trikeHint?.terminal;
+    if (!t || !showOverview || mapTerminals.some((m) => m.code === t.code)) return mapTerminals;
+    const modes = snapshotState.snapshot?.terminals.find((s) => s.code === t.code)?.modes ?? ["tricycle"];
+    return [...mapTerminals, { code: t.code, name: t.name, modes, lat: t.lat, lng: t.lng }];
+  }, [trikeHint, showOverview, mapTerminals, snapshotState.snapshot]);
   const closeLayers = useCallback(() => {
     setLayersOpen(false);
     layersBtnRef.current?.focus();
@@ -741,6 +782,9 @@ export function HomeScreen() {
           routeLines={showOverview ? overviewLines : null}
           selectedRouteCode={selectedRouteCode}
           onSelectRoute={showOverview ? setSelectedRouteCode : null}
+          terminals={drawnTerminals}
+          onTerminalSelect={picking === null ? handleTerminalSelect : null}
+          emphasizedTerminalCode={trikeHint?.terminal?.code ?? null}
           legend={mapLegend}
           onOpenLayers={showOverview && lines ? () => setLayersOpen(true) : undefined}
           layersButtonRef={layersBtnRef}
@@ -854,9 +898,14 @@ export function HomeScreen() {
               ) : null}
               {plan.status === "loading" ? <TripLoading /> : null}
               {plan.status === "error" ? <TripError kind={plan.kind} onRetry={handleRetry} onChangeEndpoints={handleChangeEndpoints} /> : null}
-              {planData && planData.plan.coverage === "none" ? <TripNoCoverage data={planData} /> : null}
+              {planData && planData.plan.coverage === "none" ? (
+                <>
+                  <TripNoCoverage data={planData} />
+                  {trikeHintCard}
+                </>
+              ) : null}
               {planData && planData.plan.coverage === "provisional" ? (
-                <TripOptions data={planData} refreshing={plan.status === "ready" && plan.refreshing} onOpen={handleOpenOption} />
+                <TripOptions data={planData} refreshing={plan.status === "ready" && plan.refreshing} onOpen={handleOpenOption} tricycleHint={trikeHintCard} />
               ) : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>
                 Clear start and destination

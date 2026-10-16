@@ -5,6 +5,7 @@ type TracedLine = Line;
 import type { Bounds, LatLng } from "@/domain/geo/types";
 import type { VisualKey } from "@/domain/modes/modes";
 import type { MapSurface } from "@/domain/modes/palette";
+import type { MapTerminal } from "./terminals-layer";
 import type { TripLinesData } from "./trip-lines-layer";
 
 export type NagaMapPins = { start?: LatLng; destination?: LatLng };
@@ -58,6 +59,13 @@ export type NagaMapProps = {
   onSelectRoute?: ((routeCode: string) => void) | null;
   /** When true (route detail), draws direction chevrons every 250 m along `routeLines`. */
   showRouteChevrons?: boolean;
+  /** Terminals with a coordinate to draw (Task 13); terminals without one are never drawn. */
+  terminals?: readonly MapTerminal[] | null;
+  /** False on terminal detail: markers show where the terminal is and open nothing. */
+  terminalsInteractive?: boolean;
+  onTerminalSelect?: ((code: string) => void) | null;
+  /** The terminal a tricycle hint names (D15): its marker is emphasized. */
+  emphasizedTerminalCode?: string | null;
   /** Optional polyline coordinates to fit into view when they change (e.g. route detail variant). */
   fitBoundsCoords?: readonly LatLng[] | null;
   /** Visual keys to show in the collapsible `MapLegend` above the attribution (Task 11/12). */

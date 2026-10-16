@@ -168,6 +168,12 @@ test("the directory: each segment lists the right count and its rows open the ri
   await expect(terminals).toHaveCount(16);
   await expect(terminals.first()).toContainText("Community-mapped location (OpenStreetMap)");
   await expect(terminals.nth(1)).toContainText("Location not mapped");
+  await expect(terminals.first().getByTestId("mode-chip")).toHaveText(["Bus", "UV Express"]);
+  await directory.getByTestId("explore-terminal-filter-tricycle").click();
+  await expect(terminals).toHaveCount(3);
+  await expect(terminals.nth(1)).toContainText("Waiting area · Location not mapped");
+  await directory.getByRole("button", { name: "All", exact: true }).click();
+  await expect(terminals).toHaveCount(16);
   await terminals.first().click();
   await expect(page.getByTestId("terminal-detail").getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBeFocused();
   await page.getByTestId("terminal-detail").getByTestId("detail-back").click();

@@ -35,6 +35,7 @@ import terminalT01 from "./network/terminal-t01.json" with { type: "json" };
 // T06 is built from Data_Sets/naga_transport_seed.json and the captured sources until the next
 // capture run writes it (tests/integration/reference-api.test.ts saves it too).
 import terminalT06 from "./network/terminal-t06.json" with { type: "json" };
+import terminalT14 from "./network/terminal-t14.json" with { type: "json" };
 
 export const STOPS_ALL = stopsAll;
 export const STOP_A1 = stopA1;
@@ -72,8 +73,9 @@ export const SEARCH_INDEX = searchIndex;
 
 export const TERMINAL_T01 = terminalT01;
 export const TERMINAL_T06 = terminalT06;
+export const TERMINAL_T14 = terminalT14;
 export const SOURCES = sourcesList;
-const TERMINALS = new Map([terminalT01, terminalT06].map((t) => [t.terminal.code, t]));
+const TERMINALS = new Map([terminalT01, terminalT06, terminalT14].map((t) => [t.terminal.code, t]));
 
 /** The captured snapshot of the published revision (128 pins, Loops A and B, fare rules F01–F04). */
 export const SNAPSHOT = snapshot;

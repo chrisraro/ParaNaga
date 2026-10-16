@@ -175,6 +175,23 @@ describe("Explore: directory", () => {
     expect(rows[0]!.textContent).toContain("Community-mapped location (OpenStreetMap)");
     const unmapped = rows.filter((r) => r.textContent!.includes("Location not mapped")).map((r) => r.getAttribute("href"));
     expect(unmapped).toEqual(["/app/terminals/T02", "/app/terminals/T05", "/app/terminals/T15", "/app/terminals/T16"]);
+    // Kind sub-label and mode chips (icon + text).
+    const t05 = rows.find((r) => r.getAttribute("href") === "/app/terminals/T05")!;
+    expect(t05.textContent).toContain("Loading point · Location not mapped");
+    const t15 = rows.find((r) => r.getAttribute("href") === "/app/terminals/T15")!;
+    expect(t15.textContent).toContain("Waiting area · Location not mapped");
+    expect([...rows[0]!.querySelectorAll('[data-testid="mode-chip"]')].map((c) => c.textContent)).toEqual(["Bus", "UV Express"]);
+  });
+
+  it("Terminals: the mode filter (Tricycle) leaves T14 and the two waiting areas; All restores 16", () => {
+    renderExplore();
+    segment("Terminals");
+    fireEvent.click(screen.getByRole("button", { name: "Tricycle" }));
+    const rows = () => within(screen.getByTestId("explore-terminals")).getAllByRole("link");
+    expect(rows().map((r) => r.getAttribute("href"))).toEqual(["/app/terminals/T14", "/app/terminals/T15", "/app/terminals/T16"]);
+    expect(screen.getByRole("button", { name: "Tricycle" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    expect(rows()).toHaveLength(16);
   });
 
   it("Barangays: 27 rows, Not surveyed, linking to place detail", () => {

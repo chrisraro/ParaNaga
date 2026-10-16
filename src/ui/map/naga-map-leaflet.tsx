@@ -30,6 +30,7 @@ import { MapControls } from "./map-controls";
 import { MapLegend } from "./map-legend";
 import { RouteLinesLayer, linesHaveOnewayCaution } from "./route-lines-layer";
 import { StopsLayer } from "./stops-layer";
+import { TerminalsLayer } from "./terminals-layer";
 import { TripLinesLayer, type TripLinesData } from "./trip-lines-layer";
 import type { HighlightStop, NagaMapPins, NagaMapProps } from "./types";
 import { UserLocationLayer } from "./user-location-layer";
@@ -265,6 +266,10 @@ export default function NagaMapLeaflet({
   selectedRouteCode = null,
   onSelectRoute = null,
   showRouteChevrons = false,
+  terminals = null,
+  terminalsInteractive = true,
+  onTerminalSelect = null,
+  emphasizedTerminalCode = null,
   fitBoundsCoords = null,
   legend = null,
   mapSurface: explicitMapSurface,
@@ -369,6 +374,15 @@ export default function NagaMapLeaflet({
             data={tripLines}
             surface={surface}
             highContrast={highContrast}
+          />
+        ) : null}
+        {terminals && terminals.length > 0 ? (
+          <TerminalsLayer
+            terminals={terminals}
+            surface={surface}
+            interactive={terminalsInteractive && onTerminalSelect !== null}
+            emphasizedCode={emphasizedTerminalCode}
+            onSelect={onTerminalSelect ?? undefined}
           />
         ) : null}
         {stopPins ? <StopsLayer stops={stopPins} interactive={stopPinsInteractive} onSelect={onStopSelect} /> : null}

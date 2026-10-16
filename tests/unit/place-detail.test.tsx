@@ -259,12 +259,14 @@ describe("Terminal detail", () => {
       </AppFrameContext.Provider>,
     );
 
-  it("T01: no map, the community-mapped badge, the note, Loop A and Loop B with the trial line", () => {
+  it("T01: the map at its coordinate, the community-mapped badge, the note, Loop A and Loop B with the trial line", () => {
     renderTerminal(rawT01);
     expect(screen.getByRole("heading", { level: 1, name: "Bicol Central Station" })).toBe(document.activeElement);
-    expect(screen.queryByTestId("naga-map-stub")).toBeNull();
+    const map = screen.getByTestId("naga-map-stub");
+    expect(map.getAttribute("aria-label")).toBe("Map of Bicol Central Station");
+    expect(map.getAttribute("data-lat")).toBe(String(rawT01.terminal.lat));
     expect(screen.getByTestId("terminal-pill").textContent).toBe("Community-mapped location (OpenStreetMap)");
-    expect(screen.getByTestId("terminal-sub").textContent).toBe("Bus, UV Express · Ninoy & Cory Avenue, Triangulo");
+    expect(screen.getByTestId("terminal-sub").textContent).toBe("Terminal · Bus, UV Express · Ninoy & Cory Avenue, Triangulo");
     expect(screen.getByText("Documented only")).toBeTruthy();
     expect(screen.getByTestId("terminal-address").textContent).toBe("Address: city source · location community-mapped S09 N02 N01");
     const note = screen.getByRole("note");
@@ -276,16 +278,58 @@ describe("Terminal detail", () => {
     expect(trial[0]!.textContent).toContain("Named in the Nov 2025 trial · permanence unconfirmed");
     expect(trial[0]!.textContent).toContain("Trial — permanence unconfirmed");
     expect(legal[0]!.getAttribute("href")).toBe("/app/routes/R8-A");
-    expect(screen.getByText("From the legal route plan. Bays and regional services are not mapped yet.")).toBeTruthy();
-    expect(screen.getByTestId("terminal-directions-note").textContent).toBe("Directions unavailable until the terminal's location is mapped.");
+    expect(screen.getByText("From the legal route plan. Bays are not mapped yet.")).toBeTruthy();
+    // A coordinate is on file: no "unmapped" copy anywhere, the provenance row and the attribution.
+    expect(screen.queryByTestId("terminal-directions-note")).toBeNull();
+    expect(document.body.textContent).not.toMatch(/regional services are not mapped|until the terminal's location is mapped/);
+    expect(screen.getByTestId("terminal-location").textContent).toBe(
+      "LocationOSM way/293702439 v6 · centroid, not an entranceCommunity-mapped location (OpenStreetMap)",
+    );
+    expect(screen.getByTestId("terminal-osm-attribution").textContent).toBe("© OpenStreetMap contributors (ODbL)");
+    expect(screen.getByTestId("terminal-status-note").textContent).toBe(rawT01.terminal.statusNote);
+    expect(screen.getByTestId("terminal-mode-bus").textContent).toBe("Bus S09 N02");
+    expect(screen.getByTestId("terminal-mode-uv_express").textContent).toBe("UV Express N01");
+  });
+
+  it("T01: regional services with distance, fare estimate, operator caveat and sources", () => {
+    renderTerminal(rawT01);
+    const rs05 = screen.getByTestId("terminal-regional-RS05");
+    expect(rs05.querySelector('[data-testid="mode-chip"]')!.textContent).toBe("UV");
+    expect(rs05.textContent).toContain("Tabaco · operator not on file");
+    expect(rs05.textContent).toContain("≈ 94 km by the community-mapped route · Estimate ₱245–₱283");
+    expect(rs05.textContent).toContain("operator prices may differ");
+    expect(rs05.textContent).toContain("Sources N01 OSMR-2026-10-16");
+    expect(screen.getByRole("region", { name: "Regional destinations" })).toBeTruthy();
+  });
+
+  it("Directions to here sets the destination to the map point, named as such", () => {
+    frame.requestEndpoint.mockClear();
+    renderTerminal(rawT01);
+    fireEvent.click(screen.getByRole("button", { name: "Directions to here" }));
+    expect(frame.requestEndpoint).toHaveBeenCalledWith("destination", {
+      point: { lat: rawT01.terminal.lat, lng: rawT01.terminal.lng },
+      label: "Bicol Central Station (map point, entrance not mapped)",
+    });
+  });
+
+  it("without a coordinate: no map, no directions, the honest unmapped copy", () => {
+    renderTerminal({ ...rawT01, terminal: { ...rawT01.terminal, lat: null, lng: null, coordinate: null } });
+    expect(screen.queryByTestId("naga-map-stub")).toBeNull();
     expect(screen.queryByRole("button", { name: /directions/i })).toBeNull();
+    expect(screen.queryByTestId("terminal-osm-attribution")).toBeNull();
+    expect(screen.getByTestId("terminal-directions-note").textContent).toBe("Directions unavailable until the terminal's location is mapped.");
+    expect(screen.getByTestId("terminal-location").textContent).toBe("LocationLocation not mapped");
+    fireEvent.click(screen.getByRole("tab", { name: "Entrances" }));
+    expect(screen.getByRole("tabpanel").textContent).toBe(
+      "No entrances surveyed yetParaNaga has no location for this terminal yet, so trips can't start or end here.",
+    );
   });
 
   it("tabs: Entrances and Hours say what is not on file", () => {
     renderTerminal(rawT01);
     fireEvent.click(screen.getByRole("tab", { name: "Entrances" }));
     expect(screen.getByRole("tabpanel").textContent).toBe(
-      "No entrances surveyed yetParaNaga has no location for this terminal yet, so trips can't start or end here.",
+      "No entrances surveyed yetTrips end at the terminal's map point until an entrance is surveyed.",
     );
     fireEvent.click(screen.getByRole("tab", { name: "Hours" }));
     expect(screen.getByRole("tabpanel").textContent).toBe("Opening hoursNot on fileEvidenceNone on file");

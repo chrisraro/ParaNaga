@@ -9,7 +9,6 @@ import { ALL_ROUTES, ROUTE_R8A, SNAPSHOT, STOP_A1, STOPS_ALL, routeNetwork } fro
 test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
 
 const mapEl = (page: Page) => page.getByTestId("naga-map");
-const overlayPaths = (page: Page) => page.locator(".leaflet-overlay-pane path");
 const A1_ID = STOP_A1.stop.id;
 const B18 = STOPS_ALL.stops.find((s) => s.source.layer === "Loop Service B" && s.source.code === "B18")!;
 
@@ -19,6 +18,20 @@ test.beforeEach(async ({ page }) => {
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(NO_ROUTE_PLAN) }),
   );
 });
+
+/**
+ * Terminal markers (Task 13) are DOM markers above the pin canvas: A1 (Plaza Rizal) sits under the
+ * Gen. Luna St platform (T13). The pin-tap tests turn the Terminals layer off, as a rider can in
+ * the Layers sheet, so the tap reaches the pin.
+ */
+async function hideTerminals(page: Page) {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "paranaga.prefs",
+      JSON.stringify({ theme: "system", highContrast: false, lowData: false, historyEnabled: false, layers: { routes: true, terminals: false, modes: [] } }),
+    );
+  });
+}
 
 async function openApp(page: Page) {
   await page.goto("/app");
@@ -59,13 +72,16 @@ test("pins come from the snapshot as one canvas layer, with no lines and no extr
   // never goes to the server (no stops?bbox= request).
   expect(calls.snapshots).toEqual([SNAPSHOT.revision.revisionId]);
   expect(calls.bboxes).toEqual([]);
-  // Canvas, not DOM markers or SVG paths: the overlay paths are only the boundary and the mask.
+  // Canvas, not DOM markers or SVG paths: apart from the routes overview lines (Task 12), the
+  // overlay paths are only the boundary and the mask.
   await expect(page.locator(".leaflet-overlay-pane canvas")).toHaveCount(1);
-  expect(await overlayPaths(page).count()).toBe(2);
-  await expect(page.locator(".leaflet-marker-pane .leaflet-marker-icon")).toHaveCount(0);
+  expect(await page.locator('.leaflet-overlay-pane path:not([class*="pn-line"])').count()).toBe(2);
+  // The only DOM markers are the terminals layer's (Task 13), never a stop.
+  await expect(page.locator(".leaflet-marker-pane .leaflet-marker-icon:not(.pn-terminal-marker)")).toHaveCount(0);
 });
 
 test("tapping a pin opens the stop with exactly the source pin's layer, coordinates and description (A1)", async ({ page }) => {
+  await hideTerminals(page);
   await routeNetwork(page);
   await openApp(page);
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
@@ -315,6 +331,7 @@ test.describe("Show on map history", () => {
   const showOnMap = (page: Page) => page.getByTestId("stop-detail").filter({ visible: true }).getByRole("button", { name: "Show on map" });
 
   test("from a pin tap it goes back in history (Back does not reopen the stop)", async ({ page }) => {
+    await hideTerminals(page);
     await routeNetwork(page);
     await openApp(page);
     await tapA1(page);
@@ -336,6 +353,7 @@ test.describe("Show on map history", () => {
   });
 
   test("after panel → panel links (stop → route → stop) it opens the map as a new entry", async ({ page }) => {
+    await hideTerminals(page);
     await routeNetwork(page);
     await openApp(page);
     await tapA1(page);

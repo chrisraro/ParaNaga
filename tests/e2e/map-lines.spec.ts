@@ -230,6 +230,14 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
 }
 
 test("tapping an overview line opens SelectedRouteCard with route details link", async ({ page }) => {
+  // A forced tap at a line's centre can land on a terminal marker (Task 13, DOM markers above the
+  // lines): the Terminals layer is off here, as a rider can set it in the Layers sheet.
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "paranaga.prefs",
+      JSON.stringify({ theme: "system", highContrast: false, lowData: false, historyEnabled: false, layers: { routes: true, terminals: false, modes: [] } }),
+    );
+  });
   await openApp(page);
 
   // Tap an overview line to select it

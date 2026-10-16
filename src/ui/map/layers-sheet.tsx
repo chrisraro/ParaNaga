@@ -18,6 +18,8 @@ import { useEffect, useId, useMemo, useRef, type KeyboardEvent as ReactKeyboardE
 import type { Line, SnapshotTerminal } from "@/domain/api/schemas";
 import { modeName, type RouteMode } from "@/domain/modes/fleet";
 import type { VisualKey } from "@/domain/modes/modes";
+import { terminalLocationText } from "@/domain/places/explore";
+import { terminalMatchesModes, terminalModesPhrase } from "@/domain/places/terminals";
 import type { LayersPref } from "@/domain/prefs/prefs";
 import { ModeChip } from "@/ui/modes/mode-chip";
 import { ModeIcon } from "@/ui/modes/mode-icon";
@@ -37,6 +39,17 @@ const MODE_FILTER_ITEMS: readonly { mode: RouteMode; label: string; iconKey: Vis
 export const REGIONAL_ROUTES_NOTE =
   "Regional UV Express and bus routes leave the city; see their terminals." as const;
 
+/**
+ * The Layers sheet's list equivalent of the terminals layer: every terminal matching the mode
+ * filter, including those without a coordinate (listed as "Location not mapped", never drawn).
+ */
+export function listTerminals(
+  terminals: readonly SnapshotTerminal[] | null | undefined,
+  layers: LayersPref,
+): SnapshotTerminal[] {
+  return (terminals ?? []).filter((t) => terminalMatchesModes(t, layers.modes));
+}
+
 export function filterMapTerminals(
   terminals: readonly SnapshotTerminal[] | null | undefined,
   layers: LayersPref,
@@ -44,8 +57,7 @@ export function filterMapTerminals(
   if (!terminals || !layers.terminals) return [];
   return terminals.filter((t) => {
     if (t.lat === null || t.lng === null) return false;
-    if (layers.modes.length > 0 && !t.modes.some((m: string) => layers.modes.includes(m as RouteMode))) return false;
-    return true;
+    return terminalMatchesModes(t, layers.modes);
   });
 }
 
@@ -144,7 +156,7 @@ export function LayersSheet({
   };
 
   const mapRoutes = useMemo(() => distinctRoutesFromLines(tracedLines), [tracedLines]);
-  const mapTerminals = useMemo(() => filterMapTerminals(terminals, layers), [terminals, layers]);
+  const terminalList = useMemo(() => listTerminals(terminals, layers), [terminals, layers]);
 
   if (!open) return null;
 
@@ -285,13 +297,13 @@ export function LayersSheet({
 
           <section className="pn-layers-list-section" aria-labelledby={`${titleId}-terminals-list`}>
             <h3 id={`${titleId}-terminals-list`} className="pn-layers-section-title">
-              Terminals ({mapTerminals.length})
+              Terminals ({terminalList.length})
             </h3>
-            {mapTerminals.length === 0 ? (
-              <p className="pn-layers-empty">No mapped terminals match the current filter.</p>
+            {terminalList.length === 0 ? (
+              <p className="pn-layers-empty">No terminals match the current filter.</p>
             ) : (
               <ul className="pn-layers-list" data-testid="layers-terminals-list">
-                {mapTerminals.map((terminal) => (
+                {terminalList.map((terminal) => (
                   <li key={terminal.code}>
                     <Link
                       href={`/app/terminals/${encodeURIComponent(terminal.code)}`}
@@ -301,8 +313,8 @@ export function LayersSheet({
                       <span className="pn-layers-list__top">
                         <strong>{terminal.name}</strong>
                       </span>
-                      <span className="pn-layers-list__sub">
-                        {terminal.modes.map((m: string) => modeName(m as RouteMode) ?? m).join(" · ")}
+                      <span className="pn-layers-list__sub" data-testid="layers-terminal-sub">
+                        {`${terminalModesPhrase(terminal.modes)} · ${terminalLocationText(terminal.lat !== null)}`}
                       </span>
                     </Link>
                   </li>

@@ -758,3 +758,70 @@
     color: #FCD34D;
   }
 }
+
+/* Terminals layer (Task 13): a rounded square per mode in the mode colour, with the glyph in the
+ * casing colour (white on Palette L, #0B1220 on Palette D). Several modes stack side by side. The
+ * marker element itself is the 44 px target (Leaflet divIcon, focusable when interactive). */
+.pn-terminal-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+}
+
+.pn-terminal-marker:focus-visible {
+  outline: 3px solid #0B7A75;
+  outline-offset: 1px;
+}
+
+.pn-terminal-marker__stack {
+  display: flex;
+  align-items: center;
+}
+
+.pn-terminal-marker__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--pn-tile);
+  color: var(--pn-tile-glyph);
+  border: 2px solid var(--pn-tile-glyph);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+.pn-terminal-marker__tile + .pn-terminal-marker__tile {
+  margin-left: -6px;
+}
+
+.pn-terminal-marker--emphasized .pn-terminal-marker__tile {
+  width: 34px;
+  height: 34px;
+  box-shadow: 0 0 0 3px var(--pn-tile), 0 1px 4px rgb(0 0 0 / 0.45);
+}
+
+.pn-terminal-marker__stack {
+  position: relative;
+}
+
+/* A group marker's count (its accessible name lists the terminals). */
+.pn-terminal-marker__count {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #0F1E3D;
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}

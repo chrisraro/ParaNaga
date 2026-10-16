@@ -218,3 +218,25 @@ export function tricycleHint(
     },
   };
 }
+
+type SourcesSnapshot = {
+  fareRules: readonly { modeCode: string; sourceCodes: readonly string[] }[];
+  routes?: readonly { routeCode: string; fleet: { classes: readonly { sourceCodes: readonly string[] }[] } }[];
+};
+
+/**
+ * The sources a hint card cites: the tricycle fare rule's (F03, Ordinance 2024-002) and, when a
+ * feeder matched, that feeder route's fleet sources (its authorizing ordinance).
+ */
+export function tricycleHintSources(
+  hint: Pick<TricycleHint, "feeder">,
+  snapshot: SourcesSnapshot | null | undefined,
+): { fare: string[]; feeder: string[] } {
+  const unique = (codes: readonly string[]) => [...new Set(codes)];
+  const fareRule = snapshot?.fareRules.find((r) => r.modeCode.startsWith("trimobile"));
+  const route = hint.feeder ? snapshot?.routes?.find((r) => r.routeCode === hint.feeder!.routeCode) : undefined;
+  return {
+    fare: unique(fareRule?.sourceCodes ?? []),
+    feeder: unique(route ? route.fleet.classes.flatMap((c) => c.sourceCodes) : []),
+  };
+}

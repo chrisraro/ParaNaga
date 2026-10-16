@@ -268,3 +268,16 @@
     transform: none;
   }
 }
+
+/* Terminals directory (Task 13): mode filter chips and mode chips per row. */
+.pn-explore__mode-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.pn-explore__terminal-modes {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

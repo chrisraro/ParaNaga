@@ -8,7 +8,7 @@
 
 import "./trip.css";
 
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { formatDistance, isNegligibleWalk, routeChipLabel, transfersText } from "@/domain/trip/present";
@@ -104,9 +104,11 @@ type Props = {
   /** A newer plan (refined GPS point) is on its way; these options stay until it arrives. */
   refreshing?: boolean;
   onOpen: (optionId: string) => void;
+  /** The "Tricycle may serve this" card (D15), shown below the options; never an option itself. */
+  tricycleHint?: ReactNode;
 };
 
-export function TripOptions({ data, refreshing = false, onOpen }: Props) {
+export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = null }: Props) {
   const lookups = planLookups(data);
   const extraNotes = data.plan.notes.filter((n) => n !== UNVERIFIED_ROUTE_BADGE);
   return (
@@ -132,6 +134,7 @@ export function TripOptions({ data, refreshing = false, onOpen }: Props) {
           ))}
         </div>
       </div>
+      {tricycleHint}
       <p className="pn-trip__revision">Transport data revision {data.revision.label}</p>
     </section>
   );
