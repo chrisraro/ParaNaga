@@ -75,6 +75,8 @@ type PanelProps = {
   title: string;
   /** Round action on the right of the header; a spacer keeps the title centred without one. */
   action?: ReactNode;
+  /** The one small "Sources" link (to Sources and credits), for a screen that shows data. */
+  sources?: string;
   children: ReactNode;
   testId?: string;
 };
@@ -83,7 +85,7 @@ type PanelProps = {
  * Full-screen detail panel: marks itself open on the app frame (the map underneath turns inert and
  * the tab bar hides), with a Back button; Escape goes back too.
  */
-export function DetailPanel({ title, action, children, testId }: PanelProps) {
+export function DetailPanel({ title, action, sources, children, testId }: PanelProps) {
   useAppPanel("detail");
   const root = useRef<HTMLDivElement>(null);
   useEscapeToClose(root);
@@ -92,7 +94,14 @@ export function DetailPanel({ title, action, children, testId }: PanelProps) {
       <header className="pn-detail__header">
         <BackButton />
         <span className="pn-detail__header-title">{title}</span>
-        {action ?? <span className="pn-detail__spacer" aria-hidden="true" />}
+        <span className="pn-detail__header-end">
+          {sources ? (
+            <Link href={sources} className="pn-detail__sources" aria-label="Sources and credits" data-testid="detail-sources">
+              Sources
+            </Link>
+          ) : null}
+          {action ?? <span className="pn-detail__spacer" aria-hidden="true" />}
+        </span>
       </header>
       {children}
     </div>

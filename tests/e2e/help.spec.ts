@@ -67,7 +67,9 @@ test("Help opens from More with its three tabs, and Back returns to More", async
 
   await tabs(page).getByRole("tab", { name: "About data" }).click();
   await expect(page.getByTestId("help-badges").getByRole("listitem")).toHaveCount(5);
-  await expect(page.getByTestId("help-data-revision")).toHaveText("Data revisionmodes-lines-2026-10-16 · Oct 16, 2026");
+  // The revision label lives on Sources and credits, not here.
+  await expect(page.getByTestId("help-data-revision")).toHaveCount(0);
+  await expect(page.getByTestId("help-sources-link")).toContainText("Sources and credits");
   await expect(page.getByTestId("help-data-footer")).toHaveText("ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.");
 
   await page.getByTestId("help-page").getByTestId("detail-back").click();
@@ -78,7 +80,7 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   await openHelpFromMore(page);
   for (const [title, phrase] of [
     ["How trips are planned", "every suggestion carries the badge “Unverified route — confirm with the driver”."],
-    ["Why stops are not verified yet", "Every stop on the map comes from a public My Maps snapshot (retrieved 15 October 2026)."],
+    ["Why stops are not verified yet", "Stops come from a public map."],
     ["How times are estimated", "Jeepney peak: 7–13 km/h (upper from N29; lower is a ParaNaga assumption)"],
     ["Vehicle types in Naga", "Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7"],
     ["Using ParaNaga offline", "Planning offline uses the data from Oct 16, 2026; fares may have changed."],
@@ -107,11 +109,11 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   await expect(h1(page, "Not found")).toBeVisible();
 });
 
-test("the sources register lists the captured sources with checked dates and safe external links", async ({ page }) => {
+test("Sources and credits lists the captured sources with checked dates and safe external links", async ({ page }) => {
   test.slow(); // one assertion per source row
   await page.goto("/app/help?tab=data");
   await page.getByTestId("help-sources-link").click();
-  await expect(h1(page, "Sources and dates")).toBeFocused();
+  await expect(h1(page, "Sources and credits")).toBeFocused();
   const rows = page.getByTestId("source-row");
   await expect(rows).toHaveCount(SOURCES.sources.length);
   const codes = await rows.evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.code));
@@ -198,7 +200,7 @@ async function axeAll(page: Page) {
   for (const name of ["Safety", "About data"]) {
     await tabs(page).getByRole("tab", { name }).click();
     await expect(tabs(page).getByRole("tab", { name })).toHaveAttribute("aria-selected", "true");
-    if (name === "About data") await expect(page.getByTestId("help-data-revision")).toContainText("modes-lines-2026-10-16");
+    if (name === "About data") await expect(page.getByTestId("help-sources-link")).toBeVisible();
     await expectAxeClean(page, "help-page");
   }
   await page.goto("/app/help/using-paranaga-offline");

@@ -47,7 +47,7 @@ describe("MapLegend (Task 11)", () => {
   });
 
   it("mixed-fleet note says both fleets operate (owner-confirmed), not 'reported'", () => {
-    expect(LEGEND_MIXED_NOTE).toBe("Alternating colours: traditional and modern jeepneys both operate (owner-confirmed)");
+    expect(LEGEND_MIXED_NOTE).toBe("Alternating colours: traditional and modern jeepneys");
     expect(LEGEND_MIXED_NOTE).not.toMatch(/reported/);
   });
 
@@ -56,15 +56,18 @@ describe("MapLegend (Task 11)", () => {
 
     const btn = screen.getByRole("button", { name: /Legend/i });
     expect(btn.getAttribute("aria-expanded")).toBe("false");
-    expect(screen.queryByText(LEGEND_FOOTNOTE)).toBeNull();
+    // The panel stays mounted so closing can fade; data-open drives its visibility (CSS).
+    const panel = screen.getByTestId("map-legend-panel");
+    expect(panel.getAttribute("data-open")).toBe("false");
 
     fireEvent.click(btn);
     expect(btn.getAttribute("aria-expanded")).toBe("true");
+    expect(panel.getAttribute("data-open")).toBe("true");
     expect(screen.getByText(LEGEND_FOOTNOTE)).toBeTruthy();
 
     fireEvent.keyDown(btn, { key: "Escape" });
     expect(btn.getAttribute("aria-expanded")).toBe("false");
-    expect(screen.queryByText(LEGEND_FOOTNOTE)).toBeNull();
+    expect(panel.getAttribute("data-open")).toBe("false");
   });
 
   it("draws the swatches in the palette of the surface it is given (the lines' surface, T11-1)", () => {

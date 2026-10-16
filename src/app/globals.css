@@ -76,6 +76,45 @@
   }
 }
 
+/* Motion tokens, shared by every screen: transform/opacity only. Durations: fast = press feedback,
+   normal = chevrons, fades, chips; slow = sheet snaps, panel and list entrances. Easings: ease =
+   standard ease-out; ease-snap = the sheet's detent curve (critically damped, no overshoot);
+   ease-exit = ease-in for leaving content. */
+:root {
+  --pn-dur-fast: 120ms;
+  --pn-dur: 220ms;
+  --pn-dur-slow: 360ms;
+  --pn-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pn-ease-snap: cubic-bezier(0.32, 0.72, 0, 1);
+  --pn-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --pn-stagger: 60ms;
+  --pn-rise-sm: 6px;
+  --pn-rise: 8px;
+  --pn-rise-lg: 12px;
+}
+
+/* Things that appear in place fade in: trip and preview lines on the map (no draw-in), the map's
+   notices, the offline banner and the update card. */
+@keyframes pn-fade-in {
+  from { opacity: 0; }
+}
+.pn-map .pn-line,
+.pn-map-notice,
+.pn-offline-banner,
+.pn-update {
+  animation: pn-fade-in var(--pn-dur) var(--pn-ease) both;
+}
+/* Their exit (usePresence): quicker than the entrance, ease-in, then removed on animationend. */
+@keyframes pn-exit {
+  to { opacity: 0; translate: 0 var(--pn-rise-sm); }
+}
+.pn-map-notice[data-exiting="true"],
+.pn-offline-banner[data-exiting="true"],
+.pn-update[data-exiting="true"] {
+  animation: pn-exit var(--pn-dur-fast) var(--pn-ease-exit) both;
+  pointer-events: none;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 72px;
@@ -105,8 +144,15 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 3px;
+}
+
+/* Forced colours replace the palette: the ring keeps a system colour whatever the rule's specificity. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight !important;
+  }
 }
 
 /* Route lines in the hero draw in once; reduced motion shows them finished. */
@@ -119,8 +165,10 @@ body {
   html { scroll-behavior: auto; }
   .route-draw { stroke-dashoffset: 0; }
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
 }

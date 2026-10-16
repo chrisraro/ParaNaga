@@ -3,8 +3,9 @@
 // always the warning "Unverified route", fares are always estimates.
 
 import type { PlanResponse, RideLegDto } from "@/domain/api/plan";
-import { directionText, fareChipText, routeChipLabel, stopLabel, type LoopDirection } from "@/domain/trip/present";
+import { directionText, fareChipText, fareRangeText, routeChipLabel, stopLabel, type LoopDirection } from "@/domain/trip/present";
 import { StatusBadge } from "@/ui/kit/badge";
+import { EstAbbr } from "./eta-text";
 
 export function WalkIcon() {
   return (
@@ -23,6 +24,9 @@ export function Chevron() {
   );
 }
 
+/** The caution chip on an option card or the peek (the full badge is in the detail). */
+export const UNVERIFIED_CHIP = "Unverified route";
+
 /** Warning-style badge (never the teal "Verified route"). */
 export function UnverifiedBadge() {
   return <StatusBadge variant="unverified-route" testId="unverified-badge" />;
@@ -31,13 +35,20 @@ export function UnverifiedBadge() {
 type FareLike = { status: string; minCentavos: number | null; maxCentavos: number | null };
 
 /** Gold outline for an estimate (like "+ 1 unknown"); dashed grey when there is none. */
-export function FareChip({ fare }: { fare: FareLike }) {
-  const estimate = fare.status === "estimate" && fare.minCentavos !== null && fare.maxCentavos !== null;
+export function FareChip({ fare, short = false }: { fare: FareLike; short?: boolean }) {
   return (
-    <span className={estimate ? "pn-fare-chip" : "pn-fare-chip pn-fare-chip--none"} data-testid="fare-chip">
-      {fareChipText(fare)}
+    <span className={fareRangeText(fare) ? "pn-fare-chip" : "pn-fare-chip pn-fare-chip--none"} data-testid="fare-chip">
+      {short ? <FareShort fare={fare} /> : fareChipText(fare)}
     </span>
   );
+}
+
+/** The card form of the fare: "Est. ₱14–₱17", "Fare n/a" or "No fare". */
+export function FareShort({ fare }: { fare: FareLike }) {
+  const range = fareRangeText(fare);
+  // A range is spoken like the time range: "₱14 to ₱17", not a dash.
+  if (range) return <><EstAbbr /> {range.includes("–") ? <span role="img" aria-label={range.replace("–", " to ")}>{range}</span> : range}</>;
+  return <>{fare.status === "no_ride" ? "No fare" : "Fare n/a"}</>;
 }
 
 /** Route chip, e.g. "Loop A" with its loop arrow (or an arrow for a line route), optionally followed by the direction. */

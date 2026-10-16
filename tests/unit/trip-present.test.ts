@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { planResponseSchema } from "@/domain/api/plan";
+import { PROVISIONAL_PLAN } from "../e2e/fixtures/plan-responses";
 import { fleetSummary, type FleetRecord } from "@/domain/modes/fleet";
 import {
   directionText,
@@ -8,6 +10,7 @@ import {
   formatDistance,
   legFareText,
   noCoverageCopy,
+  planAnnouncement,
   ringDirection,
   routeChipLabel,
   isNegligibleWalk,
@@ -99,21 +102,21 @@ describe("labels", () => {
 });
 
 describe("noCoverageCopy", () => {
-  const ONLY = "Loops A and B are the only routes we can suggest for now.";
+  const ONLY = "Only Loops A and B for now.";
   it("says which end has no stop within the 600 m walk, with the direct walk estimate", () => {
     expect(noCoverageCopy("no_stop_near_origin", 1200)).toEqual({
       title: "No mapped stop within 600 m of your start",
-      detail: `Walking the whole way: ≈ 1.2 km (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walk ≈ 1.2 km (estimate, path not verified). ${ONLY}`,
     });
     expect(noCoverageCopy("no_stop_near_destination", 845)).toEqual({
       title: "No mapped stop within 600 m of your destination",
-      detail: `Walking the whole way: ≈ 850 m (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walk ≈ 850 m (estimate, path not verified). ${ONLY}`,
     });
   });
   it("no_route: stops at both ends, but no provisional ride joins them", () => {
     expect(noCoverageCopy("no_route", 1460)).toEqual({
       title: "No provisional route connects these points yet",
-      detail: `Walking the whole way: ≈ 1.5 km (straight-line estimate; path not verified). ${ONLY}`,
+      detail: `Walk ≈ 1.5 km (estimate, path not verified). ${ONLY}`,
     });
   });
   it("same_place asks to move a pin", () => {
@@ -131,7 +134,7 @@ describe("noCoverageCopy", () => {
   it("walk_shorter names the direct walk estimate", () => {
     expect(noCoverageCopy("walk_shorter", 845)).toEqual({
       title: "Walking (≈ 850 m) is shorter than any ride we can suggest.",
-      detail: `Straight-line estimate; path not verified. ${ONLY}`,
+      detail: `Estimate, path not verified. ${ONLY}`,
     });
   });
   it("without an estimate it never invents one", () => {
@@ -202,5 +205,19 @@ describe("ride leg copy (Task 8: D13 distance basis, mixed fleets)", () => {
     for (const t of [rideFleetText("jeepney", fleetSummary([rec("traditional_puj", null), rec("modern_puj", true)], "jeepney"))]) {
       expect(t).not.toMatch(/e-jeep/i);
     }
+  });
+});
+
+describe("planAnnouncement", () => {
+  const data = planResponseSchema.parse(PROVISIONAL_PLAN);
+  it("says Route shown only when options are listed and drawn", () => {
+    expect(planAnnouncement(data, false, false)).toMatch(/^\d+ options? found\. Unverified\. Route shown\.$/);
+    expect(planAnnouncement(data, true, false)).not.toContain("Route shown");
+    const none = { ...data, plan: { ...data.plan, coverage: "none" as const, options: [] } };
+    expect(planAnnouncement(none, false, false)).not.toContain("Route shown");
+  });
+  it("changes text for the same plan twice in a row, so it is spoken again", () => {
+    expect(planAnnouncement(data, false, true)).not.toBe(planAnnouncement(data, false, false));
+    expect(planAnnouncement(data, false, true).replace("​", "")).toBe(planAnnouncement(data, false, false));
   });
 });

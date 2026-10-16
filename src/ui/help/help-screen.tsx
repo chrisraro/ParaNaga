@@ -24,7 +24,7 @@ import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { Segmented, type SegmentedOption } from "@/ui/kit/segmented";
 import { StatusBadge, type BadgeVariant } from "@/ui/kit/badge";
-import { DataRevisionRow } from "@/ui/settings/data-revision-row";
+import { SOURCES_HREF } from "./sources-href";
 import { ARTICLES, articleHref, type ArticleSlug } from "./articles";
 
 export type HelpTab = "help" | "safety" | "data";
@@ -44,11 +44,11 @@ export const SAFETY_TIPS = [
   "Share your trip summary with someone you trust.",
 ] as const;
 export const BADGE_MEANINGS: readonly { variant: BadgeVariant; text: string }[] = [
-  { variant: "verified", text: "Checked against field evidence. Nothing in Naga is verified yet." },
-  { variant: "candidate", text: "From a public map, not yet checked. Loops A and B use these pins for unverified trip suggestions." },
-  { variant: "documented", text: "Named in documents, with no mapped location yet. Treat it as a lead, not a route." },
-  { variant: "unverified-route", text: "A trip built from mapped pins. Confirm with the driver before you ride." },
-  { variant: "approximate-path", text: "Traced along OpenStreetMap roads between candidate pins. Not a surveyed or official route shape." },
+  { variant: "verified", text: "Checked in the field. Nothing in Naga yet." },
+  { variant: "candidate", text: "From a public map, not checked." },
+  { variant: "documented", text: "Named in documents; no mapped location." },
+  { variant: "unverified-route", text: "Built from mapped pins. Confirm with the driver." },
+  { variant: "approximate-path", text: "Traced along roads between pins. Not a surveyed shape." },
 ];
 
 const ICON = { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: false } as const;
@@ -135,8 +135,7 @@ function DataPanel() {
         </ul>
       </section>
       <ListGroup label="Data" testId="help-data">
-        <DataRevisionRow testId="help-data-revision" />
-        <ListCell title="Sources and dates" href="/app/help/sources" compact testId="help-sources-link" />
+        <ListCell title="Sources and credits" href={SOURCES_HREF} compact testId="help-sources-link" />
       </ListGroup>
       <Note testId="help-data-footer">{DATA_FOOTER}</Note>
     </>

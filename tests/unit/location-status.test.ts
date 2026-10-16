@@ -14,7 +14,7 @@ const assessment = (over: Partial<FixAssessment> = {}): FixAssessment => ({
   ...over,
 });
 
-const PIN_LATER = "You can still pin your start on the map.";
+const PIN_LATER = "Pin your start on the map.";
 
 describe("formatAccuracy", () => {
   it("rounds to whole metres with a ± sign", () => {
@@ -58,7 +58,7 @@ describe("locationStatusCopy", () => {
     expect(copy).toEqual({
       kind: "approximate",
       tone: "warn",
-      title: "Your location is approximate. Check the pin or move it.",
+      title: "Location approximate. Check the pin.",
       detail: "± 80 m",
       action: "pick_start",
       actionLabel: "Move start pin",
@@ -89,7 +89,7 @@ describe("locationStatusCopy", () => {
       expect(copy).toEqual({
         kind: "outside_city",
         tone: "info",
-        title: "You're outside Naga City. Pin your starting point in Naga, or choose a point on the map.",
+        title: "You're outside Naga City. Pin a start in Naga.",
         action: "pick_start",
       });
     }
@@ -99,8 +99,8 @@ describe("locationStatusCopy", () => {
     expect(locationStatusCopy("denied", null, null)).toEqual({
       kind: "denied",
       tone: "error",
-      title: `Location is off. ${PIN_LATER}`,
-      detail: "To turn it on, allow location for this site in your browser settings.",
+      title: `Location off. ${PIN_LATER}`,
+      detail: "Allow location in browser settings.",
       action: "pick_start",
     });
   });
@@ -110,7 +110,7 @@ describe("locationStatusCopy", () => {
       expect(locationStatusCopy(state, null, null)).toEqual({
         kind: state,
         tone: "warn",
-        title: `Can't get your location right now. ${PIN_LATER}`,
+        title: "No location now. Pin your start.",
         action: "pick_start",
       });
     }
@@ -120,7 +120,7 @@ describe("locationStatusCopy", () => {
     expect(locationStatusCopy("unsupported", null, null)).toEqual({
       kind: "unsupported",
       tone: "warn",
-      title: `This browser can't share your location. ${PIN_LATER}`,
+      title: "This browser can't share location. Pin your start.",
       action: "pick_start",
     });
   });
@@ -129,7 +129,7 @@ describe("locationStatusCopy", () => {
     expect(locationStatusCopy("insecure", null, null)).toEqual({
       kind: "insecure",
       tone: "warn",
-      title: `Location needs a secure (https) connection. ${PIN_LATER}`,
+      title: "Location needs https. Pin your start.",
       action: "pick_start",
     });
   });

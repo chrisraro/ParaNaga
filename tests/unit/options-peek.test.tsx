@@ -1,0 +1,41 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import { planResponseSchema } from "@/domain/api/plan";
+import { offlinePlanChip } from "@/domain/pwa/offline-copy";
+import { UndoButton } from "@/ui/guidance/guidance-parts";
+import { OptionsPeek } from "@/ui/trip/trip-options";
+import { FareShort } from "@/ui/trip/trip-parts";
+import { PROVISIONAL_PLAN } from "../e2e/fixtures/plan-responses";
+
+const data = planResponseSchema.parse(PROVISIONAL_PLAN);
+const noop = () => undefined;
+afterEach(cleanup);
+
+describe("OptionsPeek", () => {
+  it("shows the staleness notes at the peek, outside the inert list, and not once the list is visible", () => {
+    const notes = ["Changed since saved", offlinePlanChip("2026-10-15T12:59:57.089Z")];
+    const { rerender } = render(<OptionsPeek data={data} expanded={false} listShown={false} notes={notes} onToggle={noop} />);
+    expect(screen.getAllByTestId("options-peek-note").map((n) => n.textContent)).toEqual(["Changed since saved", "Offline plan, data of Oct 15, 2026"]);
+    rerender(<OptionsPeek data={data} expanded={false} listShown notes={notes} onToggle={noop} />);
+    expect(screen.queryByTestId("options-peek-note")).toBeNull();
+  });
+
+  it("the toggle reads expanded whenever the list is visible (half or full)", () => {
+    const { rerender } = render(<OptionsPeek data={data} expanded={false} listShown={false} onToggle={noop} />);
+    expect(screen.getByTestId("options-toggle").getAttribute("aria-expanded")).toBe("false");
+    rerender(<OptionsPeek data={data} expanded={false} listShown onToggle={noop} />);
+    expect(screen.getByTestId("options-toggle").getAttribute("aria-expanded")).toBe("true");
+  });
+});
+
+describe("spoken names", () => {
+  it("a fare range is spoken like the time range", () => {
+    render(<FareShort fare={{ status: "estimate", minCentavos: 1400, maxCentavos: 1700 }} />);
+    expect(screen.getByRole("img", { name: "₱14 to ₱17" }).textContent).toBe("₱14–₱17");
+  });
+  it("Undo says what it undoes", () => {
+    render(<UndoButton undo={{ label: "Undo", event: { type: "back" } } as never} onSend={noop} />);
+    expect(screen.getByRole("button", { name: "Undo last step" }).textContent).toBe("Undo");
+  });
+});

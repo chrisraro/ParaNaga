@@ -22,7 +22,7 @@ import { updatePrefs, usePrefs } from "@/client/prefs/use-prefs";
 import { locationAccessLabel } from "@/domain/device/location-permission";
 import type { ThemePref } from "@/domain/prefs/prefs";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
-import { DataRevisionRow } from "./data-revision-row";
+import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { InstallRow } from "@/ui/pwa/install-row";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
@@ -126,14 +126,14 @@ export function MoreScreen() {
           <AccountIcon />
         </span>
         <span className="pn-settings__account-text">
-          <strong>Accounts arrive later</strong>
-          <span>Everything works without one. Saved trips and places stay on this phone.</span>
+          <strong>No account needed</strong>
+          <span>Saved trips and places stay on this phone.</span>
         </span>
       </div>
 
       <div className="pn-settings__group">
         <ListGroup title="General" testId="settings-general">
-          <ListCell title="Language" trailing="English" sub="Filipino arrives after a reviewed translation." />
+          <ListCell title="Language" trailing="English" sub="Filipino planned." />
           <ListCell title="Fare category" trailing="Regular" />
           <li className="pn-settings__appearance">
             <span className="pn-settings__row-label" aria-hidden="true">
@@ -149,7 +149,7 @@ export function MoreScreen() {
           </li>
         </ListGroup>
         <Note testId="settings-fare-note">
-          Discounts for students, seniors and PWD apply only where a verified fare rule allows them. None is verified yet, so ParaNaga shows regular fares.
+          Discounts aren’t applied: no verified rule yet. Regular fares shown.
         </Note>
       </div>
 
@@ -212,8 +212,8 @@ export function MoreScreen() {
       <InstallRow />
 
       <ListGroup title="About" testId="settings-about">
-        <ListCell title="Help" sub="Safety, how trips are planned, sources" href="/app/help" testId="settings-help" />
-        <DataRevisionRow />
+        <ListCell title="Help" sub="Safety and how trips work" href="/app/help" testId="settings-help" />
+        <ListCell title="Sources and credits" href={SOURCES_HREF} testId="settings-sources" />
       </ListGroup>
 
       <ConfirmDialog

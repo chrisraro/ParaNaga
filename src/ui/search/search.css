@@ -25,7 +25,7 @@
   color: var(--pn-label2);
 }
 .pn-search__field:focus-within {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 .pn-search__field > svg {

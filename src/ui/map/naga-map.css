@@ -118,7 +118,8 @@
   fill: #2bb5ae;
   transform-box: fill-box;
   transform-origin: center;
-  animation: pn-pulse 2.4s ease-out infinite;
+  /* Two beats (4.8 s), then it rests: no non-essential motion past 5 s (WCAG 2.2.2). */
+  animation: pn-pulse 2.4s ease-out 2 forwards;
 }
 @keyframes pn-pulse {
   0% {
@@ -197,7 +198,7 @@
   background: transparent;
   color: var(--pn-label);
   cursor: pointer;
-  transition: transform 0.08s ease-out;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 .pn-map .pn-ctl--zoom {
   height: 44px;
@@ -214,7 +215,7 @@
 }
 .pn-map .pn-ctl:focus-visible,
 .pn-map .pn-attribution a:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 
@@ -222,7 +223,9 @@
 .pn-map .pn-attribution {
   position: absolute;
   right: 0;
-  bottom: var(--naga-map-attribution-bottom, 0px);
+  bottom: 0;
+  transform: translateY(calc(-1 * var(--naga-map-attribution-bottom, 0px)));
+  transition: transform var(--pn-map-chrome-dur, var(--pn-dur-slow)) var(--pn-ease-snap);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -252,7 +255,9 @@
   position: absolute;
   left: 8px;
   /* Above the attribution strip (24 px links) with a gap, never under it. */
-  bottom: calc(var(--naga-map-attribution-bottom, 0px) + 32px);
+  bottom: 32px;
+  transform: translateY(calc(-1 * var(--naga-map-attribution-bottom, 0px)));
+  transition: transform var(--pn-map-chrome-dur, var(--pn-dur-slow)) var(--pn-ease-snap);
   z-index: 1000;
   margin: 0;
   padding: 4px 10px;
@@ -334,6 +339,6 @@
   cursor: pointer;
 }
 .pn-map .pn-map-notice__btn:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }

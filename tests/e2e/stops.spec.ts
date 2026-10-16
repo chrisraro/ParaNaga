@@ -79,24 +79,19 @@ test("tapping a pin opens the stop with exactly the source pin's layer, coordina
   const detail = page.getByTestId("stop-detail");
   await expect(detail.getByRole("heading", { level: 1, name: "Plaza Rizal" })).toBeFocused();
   await expect(detail.getByTestId("stop-status-badge")).toHaveText("Mapped candidate");
-  await expect(detail.getByTestId("stop-warning")).toHaveText(
-    "Not verified for navigation. Source: public My Maps snapshot (15 Oct 2026).",
-  );
-  const record = detail.getByTestId("source-record");
-  await expect(record).toHaveCount(1);
-  await expect(record).toContainText("Loop Service A · code A1");
-  await expect(record.getByTestId("source-coordinates")).toHaveText("13.6233869, 123.1846726");
-  await expect(record.getByTestId("source-description")).toContainText("Raw description: “Plaza Rizal”");
-  await expect(record.getByTestId("source-description")).toContainText("same point also listed in Loop Service C (A1)");
+  await expect(detail.getByTestId("stop-warning")).toHaveText("Not verified for navigation.");
+  // The pin's source record is not on the working screen; one Sources link opens it.
+  await expect(detail.getByTestId("source-record")).toHaveCount(0);
+  await expect(detail.getByTestId("detail-sources")).toHaveAttribute("href", "/app/help/sources?stop=" + A1_ID);
   const serving = detail.getByTestId("serving-routes");
   await expect(serving.getByRole("link")).toHaveCount(1);
   await expect(serving).toContainText("Loop A");
   await expect(serving).toContainText("Centro–Magsaysay Loop A");
-  await expect(serving).toContainText("Provisional stop 1 · clockwise (from pin order)");
-  await expect(serving).toContainText("Unverified route");
-  await expect(detail).toContainText("Not yet surveyed");
-  await expect(detail).toContainText("Stop sign photo pending");
-  await expect(detail).toContainText("Verification opens soon");
+  await expect(serving).toContainText("Stop 1 · clockwise (from pin order)");
+  await expect(serving).toContainText("Unverified");
+  await expect(detail).toContainText("Not surveyed");
+  await expect(detail).toContainText("Sign");
+  await expect(detail).not.toContainText(/Verification opens soon|Source record|Retrieved|revision/);
   await expect(detail.getByRole("button", { name: /help verify/i })).toHaveCount(0);
   await expect(detail).not.toContainText(/verified stop|exact/i);
 
@@ -127,7 +122,8 @@ test("keyboard: the Nearby stops list opens the same stop, and focus returns to 
   const nearby = page.getByTestId("nearby-stops");
   const first = nearby.getByRole("link").first();
   await expect(first).toContainText("Plaza Rizal (A1)");
-  await expect(first).toContainText("Mapped candidate · not yet verified");
+  await expect(first).toContainText("Mapped candidate");
+  await expect(first).not.toContainText("not yet verified");
   await first.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(new RegExp(`/app/stops/${A1_ID}$`));
@@ -175,17 +171,15 @@ test("route R8-A: 30 provisional stops in pin order, the trial notice and an est
   await expect(stops).toHaveCount(30);
   await expect(stops.first()).toContainText("Plaza Rizal (A1)");
   await expect(stops.nth(29)).toContainText(`(A30)`);
-  await expect(route).toContainText("Direction: clockwise (from pin order).");
+  await expect(route).toContainText("Clockwise · mapped, unverified");
 
   const trial = route.getByTestId("trial-notice");
   await expect(trial).toHaveCount(1);
-  await expect(trial).toContainText("Resolution 2025-735");
-  await expect(trial).toContainText("adopted 11 Nov 2025 for 30 days; permanence unconfirmed");
+  await expect(trial).toContainText("Trial · permanence unconfirmed");
+  await expect(trial).not.toContainText("Resolution");
   await expect(route.getByTestId("street-order").getByRole("listitem")).toHaveCount(ROUTE_R8A.route.legalStreets.circuit!.length);
-  await expect(route.getByTestId("route-allocation")).toContainText(
-    "71 units allocated to group 8 in the plan, no per-route count (not a count of jeepneys running). Sources S01, S02 · revision modes-lines-2026-10-16.",
-  );
-  await expect(route).toContainText("Corrections open soon");
+  await expect(route.getByTestId("route-allocation")).toHaveText("71 units allocated to group 8 in the plan, no per-route count (not jeepneys running).");
+  await expect(route).not.toContainText(/Corrections|Sources S0|revision modes/);
   await expectAxeClean(page);
 
   // Back goes to the stop it came from.
@@ -199,18 +193,17 @@ test("route R3 shows its two street structures separately", async ({ page }) => 
   const route = page.getByTestId("route-detail");
   await expect(route.getByRole("heading", { level: 1, name: "Centro–Del Rosario via Roxas Avenue" })).toBeVisible();
   await expect(route.getByTestId("route-evidence")).toHaveText("Documented only");
-  await expect(route.getByTestId("route-partial")).toContainText("Showing the legal plan's street order.");
+  await expect(route.getByTestId("route-partial")).toContainText("Street order from the plan.");
   await expect(route.getByTestId("street-order").getByRole("listitem")).toHaveCount(14);
   const extra = route.getByTestId("extra-structure");
   await expect(extra).toHaveCount(1);
   await expect(extra.getByRole("listitem")).toHaveCount(9);
   await expect(extra).toContainText("Southbound Terminal");
-  await expect(route).toContainText("they are shown separately and not merged");
-  await expect(route).toContainText("Felix Plaxo");
+  await expect(route).not.toContainText("not merged");
   await expect(route.getByTestId("route-stops")).toHaveCount(0);
   await expect(route.getByRole("radiogroup", { name: "Direction" })).toHaveCount(0);
   await expect(route.getByTestId("trial-notice")).toHaveCount(0);
-  await expect(route.getByTestId("route-allocation")).toContainText("28 units allocated in the plan (not a count of jeepneys running).");
+  await expect(route.getByTestId("route-allocation")).toContainText("28 units allocated (not jeepneys running).");
   await expectAxeClean(page);
 });
 
@@ -239,7 +232,9 @@ test("Show on map closes the stop and centres the map on it", async ({ page }) =
   await page.goto(`/app/stops/${B18.id}`);
   const detail = page.getByTestId("stop-detail");
   await expect(detail.getByRole("heading", { level: 1, name: "Unnamed pin B18" })).toBeVisible();
-  await expect(detail.getByTestId("source-description")).toContainText("Raw description: empty");
+  await page.goto(`/app/help/sources?stop=${B18.id}`);
+  await expect(page.getByTestId("source-description")).toContainText("Raw description: empty");
+  await page.goBack();
   await detail.getByRole("button", { name: "Show on map" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect.poll(async () => Math.abs(Number(await mapEl(page).getAttribute("data-center-lat")) - B18.lat)).toBeLessThan(0.0005);

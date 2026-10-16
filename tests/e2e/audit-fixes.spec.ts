@@ -1,3 +1,4 @@
+import { expandOptions } from "./fixtures/options";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { routeNetwork } from "./fixtures/network";
@@ -8,7 +9,6 @@ import { AT_STOP_PLAN, NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_FIRST_PLAN } from "
 // checks that the page raised no Content-Security-Policy (report-only) violation.
 
 const BISCAST = { latitude: 13.6314651, longitude: 123.1927517 };
-const BADGE = "Unverified route — confirm with the driver";
 
 const mapEl = (page: Page) => page.getByTestId("naga-map");
 const row = (page: Page, which: "start" | "destination") => page.getByTestId(`endpoint-${which}`);
@@ -143,7 +143,7 @@ test.describe("phone", () => {
       await chooseOnMap(page).click();
       const confirm = page.getByRole("button", { name: "Set destination here" });
       await expect(page.getByTestId("pick-same-place-hint")).toHaveText(
-        "Start and destination are the same place. Move the pin away from your start.",
+        "Start and destination are the same place. Move the pin.",
       );
       await expect(confirm).toHaveAttribute("aria-disabled", "true");
       await confirm.click({ force: true });
@@ -164,11 +164,13 @@ test.describe("phone", () => {
       await planWith(page, WALK_FIRST_PLAN);
       await openApp(page);
       await pinBoth(page);
+      await expandOptions(page);
       const cards = page.getByTestId("trip-option");
       await expect(cards).toHaveCount(2);
       await expect(cards.nth(0)).toContainText("Walk");
       await expect(cards.nth(0).getByTestId("unverified-badge")).toHaveCount(0);
-      await expect(cards.nth(1).getByTestId("unverified-badge")).toHaveText(BADGE);
+      await expect(cards.nth(1).getByTestId("card-unverified")).toHaveText("Unverified route");
+      await expect(cards.nth(0).getByTestId("card-unverified")).toHaveCount(0);
       await cards.nth(0).click();
       await expect(page.getByTestId("trip-detail").getByTestId("unverified-badge")).toHaveCount(0);
     });
@@ -180,19 +182,20 @@ test.describe("phone", () => {
     await pinBoth(page);
     const card = page.getByTestId("no-provisional-route");
     await expect(card.getByRole("heading", { name: "No mapped stop within 600 m of your destination" })).toBeVisible();
-    await expect(card).toContainText("Walking the whole way: ≈ 1.5 km (straight-line estimate; path not verified).");
+    await expect(card).toContainText("Walk ≈ 1.5 km (estimate, path not verified).");
   });
 
   test("F-20 starting at the stop: no 'Walk ≈ 0 m' step", async ({ page }) => {
     await planWith(page, AT_STOP_PLAN);
     await openApp(page);
     await pinBoth(page);
+    await expandOptions(page);
     const card = page.getByTestId("trip-option").first();
-    await expect(card.locator(".pn-legstrip")).not.toContainText("≈ 0 m");
+    await expect(card).not.toContainText("≈ 0 m");
     await card.click();
     const steps = page.getByTestId("trip-detail").getByRole("list", { name: "Trip steps" }).getByRole("listitem");
     await expect(steps.nth(0)).toContainText("Start at Plaza Rizal (A1)");
-    await expect(steps.nth(0)).toContainText("Board here");
+    await expect(steps.nth(0)).not.toContainText("Board here");
     await expect(page.getByTestId("trip-detail")).not.toContainText("Walk ≈ 0 m");
   });
 
@@ -225,7 +228,7 @@ test.describe("phone", () => {
     await openApp(page);
     const rows = page.getByTestId("nearby-stops").getByRole("link");
     await expect(rows.first()).toContainText("Plaza Rizal (A1)");
-    await expect(rows.first()).toContainText("Same point in Loop Service A (A1) · Loop Service C (A1)");
+    await expect(rows.first()).not.toContainText("Same point in");
     // Pins at exactly the same point never get two rows (A1 of Loops A and C, B1 of Loops B and D).
     await expect(rows.filter({ hasText: "Plaza Rizal (A1)" })).toHaveCount(1);
     await expect(rows.filter({ hasText: "Plaza Rizal (B1)" })).toHaveCount(1);

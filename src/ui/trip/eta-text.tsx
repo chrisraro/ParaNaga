@@ -99,10 +99,30 @@ export function SpokenRange({ text, range, className, testId }: { text: string; 
   );
 }
 
-/** The option total ("Estimate 18–27 min + waiting (unknown)"), or "Time not available". */
-export function EtaTotalText({ estimate, className, testId }: { estimate: EtaEstimate | null | undefined; className?: string; testId?: string }) {
+/** "Est." for sighted readers; screen readers hear "Estimate" (the accessible name keeps the full word). */
+export function EstAbbr() {
+  return (
+    <abbr title="Estimate" className="pn-est">
+      <span aria-hidden="true">Est.</span>
+      <span className="sr-only">Estimate</span>
+    </abbr>
+  );
+}
+
+/**
+ * The option total ("Estimate 18–27 min + waiting (unknown)"), or "Time not available". `short` is
+ * the card form: "Est." as an abbreviation, and "(unknown)" without the ride count.
+ */
+export function EtaTotalText({ estimate, className, testId, short = false }: { estimate: EtaEstimate | null | undefined; className?: string; testId?: string; short?: boolean }) {
   if (!estimate) return <span className={className} data-testid={testId}>{TIME_NOT_AVAILABLE}</span>;
-  return <SpokenRange text={formatTotal(estimate.total)} range={estimate.total} className={className} testId={testId} />;
+  const full = formatTotal(estimate.total);
+  if (!short || !full.startsWith("Estimate ")) return <SpokenRange text={full} range={estimate.total} className={className} testId={testId} />;
+  const rest = full.slice("Estimate ".length).replace(/\(unknown, \d+ rides\)/, "(unknown)");
+  return (
+    <span className={className} data-testid={testId}>
+      <EstAbbr /> <SpokenRange text={rest} range={estimate.total} />
+    </span>
+  );
 }
 
 /** "Peak hours · slower estimate (06:00–08:00)" when the trip uses the peak band (a span: it may sit in a button). */

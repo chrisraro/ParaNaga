@@ -1,6 +1,6 @@
 // Facts: test file for src/domain/guidance/announce.ts (Task 10, fix round 1), the throttle of the
 // guidance screens' polite live region. Review Important 1: every GPS-driven change within a step
-// is throttled (≤ every 15 s / 50 m), the first "You look close to …" per step is announced once
+// is throttled (≤ every 15 s / 50 m), the first "Close to …" per step is announced once
 // (latched), and a fall-back to the step title is never announced.
 import { describe, expect, it } from "vitest";
 import { ANNOUNCE_MS, DISTANCE_ANNOUNCE_M, liveKind, nextPolite, resetAnnouncer, walkDistanceOf, type LiveKind } from "@/domain/guidance/announce";
@@ -9,8 +9,8 @@ import { reduceSession, startSession } from "@/domain/guidance/session";
 import { LOOP_A, ORIGIN, fixAt, oneRide, tripOf } from "./guidance-fixtures";
 
 const TITLE = "Walk to Plaza Rizal (A1)";
-const dist = (m: number) => `≈ ${m} m to Plaza Rizal (A1) in a straight line`;
-const NEAR = "You look close to Plaza Rizal (A1). Tap “I'm at the stop” when you're there.";
+const dist = (m: number) => `About ${m} m to Plaza Rizal (A1), straight line`;
+const NEAR = "Close to Plaza Rizal (A1). Tap “I'm at the stop”.";
 
 function run(seq: [string, LiveKind, number][]) {
   let state = resetAnnouncer(TITLE, 0);
@@ -26,9 +26,10 @@ function run(seq: [string, LiveKind, number][]) {
 describe("walkDistanceOf", () => {
   it("reads the straight-line walk distance lines only", () => {
     expect(walkDistanceOf(dist(240))).toBe(240);
-    expect(walkDistanceOf("Under 10 m to Plaza Rizal (A1) in a straight line")).toBe(0);
+    expect(walkDistanceOf("Under 10 m to Plaza Rizal (A1), straight line")).toBe(0);
+    expect(walkDistanceOf("About 230 m to Plaza Rizal (A1)")).toBeNull(); // the basis is part of the line
     expect(walkDistanceOf("3 stops to go")).toBeNull();
-    expect(walkDistanceOf("≈ 230 m walk · straight-line estimate, path not verified")).toBeNull();
+    expect(walkDistanceOf("≈ 230 m")).toBeNull();
   });
 });
 

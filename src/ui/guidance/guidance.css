@@ -79,7 +79,7 @@
   outline: none;
 }
 .pn-guide__title:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 .pn-guide__title--big {
@@ -350,7 +350,7 @@
   text-decoration: none;
 }
 .pn-guide__report:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 

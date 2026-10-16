@@ -4,9 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import type { PlacePhoto } from "@/domain/media/photos";
+import { SOURCES_HREF } from "@/ui/help/sources-href";
 import "./reference-photo.css";
 
-export function ReferencePhoto({ photo, stop = false }: { photo: PlacePhoto; stop?: boolean }) {
+/**
+ * A reference photo. On a working screen: the image and a "Photo credit" link only; `full` (the
+ * Sources and credits screen) adds the title, creator, licence, capture date and modifications.
+ */
+export function ReferencePhoto({ photo, stop = false, full = false }: { photo: PlacePhoto; stop?: boolean; full?: boolean }) {
   const [failed, setFailed] = useState(false);
   return (
     <figure className="pn-reference-photo" data-testid="reference-photo">
@@ -14,12 +19,19 @@ export function ReferencePhoto({ photo, stop = false }: { photo: PlacePhoto; sto
         <Image src={photo.src} alt={photo.alt} width={960} height={720} sizes="(max-width: 600px) 100vw, 560px" onError={() => setFailed(true)} />
       )}
       <figcaption>
-        {stop ? <strong>Nearby landmark reference · stop sign and boarding curb unverified. </strong> : null}
-        <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer">{photo.title}</a>
-        {` · ${photo.creator} · `}
-        <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer">{photo.license}</a>
-        {` · Captured: ${photo.capturedAt}. ${photo.modifications} `}
-        <Link href={`/app/help/sources#${photo.id}`}>Photo credits</Link>
+        {full ? (
+          <>
+            <a href={photo.sourceUrl} target="_blank" rel="noopener noreferrer">{photo.title}</a>
+            {` · ${photo.creator} · `}
+            <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer">{photo.license}</a>
+            {` · Captured: ${photo.capturedAt}. ${photo.modifications}`}
+          </>
+        ) : (
+          <>
+            {stop ? "Landmark photo, not the stop. " : null}
+            <Link href={`${SOURCES_HREF}#${photo.id}`}>Photo credit</Link>
+          </>
+        )}
       </figcaption>
     </figure>
   );

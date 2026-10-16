@@ -107,9 +107,9 @@ describe("route detail copy", () => {
 
   it("says an allocation is not a count of running jeepneys", () => {
     const r3 = routeDetailSchema.parse(routeR3);
-    expect(allocationText(r3.route)).toBe("28 units allocated in the plan (not a count of jeepneys running).");
+    expect(allocationText(r3.route)).toBe("28 units allocated (not jeepneys running).");
     const r8a = routeDetailSchema.parse(routeR8A);
-    expect(allocationText(r8a.route)).toBe("71 units allocated to group 8 in the plan, no per-route count (not a count of jeepneys running).");
+    expect(allocationText(r8a.route)).toBe("71 units allocated to group 8 in the plan, no per-route count (not jeepneys running).");
     expect(allocationText({ allocatedUnits: null, groupAllocatedUnits: null, groupNumber: null, allocationIsActiveFleetCount: null })).toBe(
       "Units allocated in the plan: unknown.",
     );

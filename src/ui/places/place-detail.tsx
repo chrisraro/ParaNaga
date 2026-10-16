@@ -16,16 +16,12 @@ import { photoForPlace, photoForPinPlace } from "@/domain/media/photos";
 import { ReferencePhoto } from "./reference-photo";
 import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, type ReactNode } from "react";
-import { useNetworkResource } from "@/client/network/use-network-resource";
 import { useSearchIndex } from "@/client/search/use-search-index";
-import { sourceListSchema, stopDetailSchema, type SearchIndex, type SearchOsmPlace, type SearchPinPlace, type StopPin } from "@/domain/api/schemas";
-import { formatIsoDate, latestRetrievedOn } from "@/domain/network/present";
+import { type SearchIndex, type SearchOsmPlace, type SearchPinPlace, type StopPin } from "@/domain/api/schemas";
 import { OSM_CATEGORY_LABEL, type OsmElementType } from "@/domain/places/osm-categories";
 import {
   findPlace,
   nearestMappedStops,
-  osmObjectUrl,
-  osmSourceText,
   otherSpellings,
   pinPlaceEndpointLabel,
   pinPlaceMainPin,
@@ -42,15 +38,20 @@ import { DetailError, DetailLoading, DetailNotFound, DetailPanel, useFocusOnMoun
 import { StatusBadge, type BadgeVariant } from "@/ui/kit/badge";
 import { ListCell } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
-import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { Segmented } from "@/ui/kit/segmented";
+import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { SavePlaceButton } from "@/ui/saved/save-place-button";
 import { NagaMap } from "@/ui/map/naga-map";
 
 const TITLE = "Place";
+
+/** The Sources link of a place with source codes (only well-formed S00 codes travel in the address). */
+function codedSourcesHref(codes: readonly string[]): string {
+  const valid = codes.filter((c) => /^S[0-9]{2}$/.test(c)).slice(0, 6);
+  return valid.length > 0 ? `${SOURCES_HREF}?src=${valid.join(",")}` : SOURCES_HREF;
+}
 /** Street level: a mapped-pin group spans at most 60 m, so its pins all show. */
 const PLACE_ZOOM = 17;
-const NOT_SOURCED = "Hours, photos and ratings are not shown unless sourced.";
 
 export function PlaceDetailScreen({ placeRef }: { placeRef: PlaceRef }) {
   const state = useSearchIndex();
@@ -201,29 +202,14 @@ function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: S
     {
       key: "entrance",
       label: "Entrance",
-      value: "Not yet mapped",
-      sub: "Trips end at the place's map point until an entrance is surveyed.",
+      value: "Not mapped. Trips end at the map point.",
       testId: "place-entrance",
     },
   ];
   if (place.aliases.length > 0) rows.push({ key: "aka", label: "Also known as", value: place.aliases.join(" · "), testId: "place-aka" });
-  rows.push({
-    key: "source",
-    label: "Source",
-    value: osmSourceText(place, type, id),
-    sub: (
-      <>
-        <a className="pn-inline-link" href={osmObjectUrl(type, id)} target="_blank" rel="noopener noreferrer" data-testid="place-osm-link">
-          View on OpenStreetMap
-        </a>
-        <span className="pn-place__fact-sub-line">{NOT_SOURCED}</span>
-      </>
-    ),
-    testId: "place-source",
-  });
 
   return (
-    <DetailPanel title={TITLE} testId="place-detail">
+    <DetailPanel title={TITLE} sources={`${SOURCES_HREF}?osm=${type}/${id}&v=${place.osmVersion}&s=${place.sourceCode}`} testId="place-detail">
       <PlaceMap>
         <NagaMap
           initialView={{ center: point, zoom: PLACE_ZOOM }}
@@ -232,9 +218,8 @@ function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: S
         />
       </PlaceMap>
       <main className="pn-detail__main pn-detail-in">
-        <PlaceHead title={place.name} kind={`${OSM_CATEGORY_LABEL[place.category]} · from OpenStreetMap`} badges={["osm"]} />
+        <PlaceHead title={place.name} kind={OSM_CATEGORY_LABEL[place.category]} badges={["osm"]} />
         <PlanTrip name={place.name} point={point} label={place.name} />
-        <Note testId="place-location-note">Location from OpenStreetMap — entrance not mapped.</Note>
         <SavePlaceButton label={place.name} point={point} source="osm" testId="place-save" />
         <FactRows rows={rows} label="About this place" />
         <section className="pn-section" aria-labelledby={`${uid}-near`}>
@@ -250,16 +235,15 @@ function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: S
                   key={s.stopId}
                   href={`/app/stops/${s.stopId}`}
                   title={s.label}
-                  sub={[formatDistance(s.meters), s.code, s.layer].filter(Boolean).join(" · ")}
+                  sub={[formatDistance(s.meters), s.code].filter(Boolean).join(" · ")}
                   subTone="gold"
                 />
               ))
             )}
           </ul>
-          {nearby.length > 0 ? <Note>Straight-line distance to unverified mapped pins.</Note> : null}
+          {nearby.length > 0 ? <Note>Straight-line, unverified pins.</Note> : null}
         </section>
         {photoForPlace(place.key) ? <ReferencePhoto photo={photoForPlace(place.key)!} /> : <PhotoPending />}
-        <OsmAttribution testId="place-osm-attribution" />
       </main>
     </DetailPanel>
   );
@@ -284,31 +268,20 @@ function pinsForMap(place: SearchPinPlace): StopPin[] {
   }));
 }
 
-/** "Public My Maps snapshot · retrieved 15 Oct 2026", dated from the main pin's source record. */
-function useMyMapsSourceText(stopId: string): string {
-  const resource = useNetworkResource(`/api/v1/stops/${encodeURIComponent(stopId)}`, stopDetailSchema);
-  if (resource.status === "loading") return "Public My Maps snapshot";
-  if (resource.status !== "ready") return "Public My Maps snapshot · retrieval date not loaded";
-  const date = formatIsoDate(latestRetrievedOn(resource.data.sourceRecords));
-  return `Public My Maps snapshot · ${date ? `retrieved ${date}` : "retrieval date not recorded"}`;
-}
-
 function PinPlaceView({ place }: { place: SearchPinPlace }) {
   const router = useRouter();
   const uid = useId();
   const point = useMemo(() => pinPlacePoint(place), [place]);
-  const sourceText = useMyMapsSourceText(pinPlaceMainPin(place).stopId);
   const mapPins = useMemo(() => pinsForMap(place), [place]);
   const spellings = otherSpellings(place);
   const rows: Row[] = [
-    { key: "entrance", label: "Entrance", value: "Not yet mapped", sub: "Trips end at the pin until an entrance is surveyed.", testId: "place-entrance" },
+    { key: "entrance", label: "Entrance", value: "Not mapped. Trips end at the pin.", testId: "place-entrance" },
   ];
   if (spellings.length > 0) rows.push({ key: "aka", label: "Also known as", value: spellings.join(" · "), testId: "place-aka" });
-  rows.push({ key: "source", label: "Source", value: sourceText, sub: NOT_SOURCED, testId: "place-source" });
   const n = place.pins.length;
 
   return (
-    <DetailPanel title={TITLE} testId="place-detail">
+    <DetailPanel title={TITLE} sources={`${SOURCES_HREF}?stop=${pinPlaceMainPin(place).stopId}`} testId="place-detail">
       <PlaceMap>
         <NagaMap
           initialView={{ center: point, zoom: PLACE_ZOOM }}
@@ -320,7 +293,7 @@ function PinPlaceView({ place }: { place: SearchPinPlace }) {
       <main className="pn-detail__main pn-detail-in">
         <PlaceHead title={place.label} kind={`Mapped stop · ${n === 1 ? "1 pin" : `${n} pins`}`} badges={["candidate"]} />
         <PlanTrip name={place.label} point={point} label={pinPlaceEndpointLabel(place.label)} />
-        <Note testId="place-location-note">Trips use unverified mapped pins.</Note>
+        <Note testId="place-location-note">Mapped pin, not verified.</Note>
         <SavePlaceButton label={place.label} point={point} source="pin" testId="place-save" />
         <section className="pn-section" aria-labelledby={`${uid}-pins`}>
           <h2 id={`${uid}-pins`} className="pn-section__title">
@@ -332,7 +305,7 @@ function PinPlaceView({ place }: { place: SearchPinPlace }) {
                 key={p.stopId}
                 href={`/app/stops/${p.stopId}`}
                 title={`${p.code ?? "No code"} · ${p.layer ?? "No layer"}`}
-                sub={p.onRoute ? "Listed in a provisional stop order" : "Not in a route's stop order"}
+                sub={p.onRoute ? "On a route" : "Not on a route"}
                 subTone="gold"
               />
             ))}
@@ -347,29 +320,15 @@ function PinPlaceView({ place }: { place: SearchPinPlace }) {
 
 // ------------------------------------------------------------------ barangay
 
-/** "{title} · checked {date}" from the sources register; the code alone until it loads. */
-function useSourceText(code: string | null): string {
-  const resource = useNetworkResource("/api/v1/sources", sourceListSchema);
-  if (!code) return "Not recorded";
-  if (resource.status !== "ready") return code;
-  const source = resource.data.sources.find((s) => s.code === code);
-  if (!source) return code;
-  const date = formatIsoDate(source.checkedOn);
-  return `${source.title} · ${date ? `checked ${date}` : "check date not recorded"}`;
-}
-
 function BarangayView({ place }: { place: SearchIndex["barangays"][number] }) {
   const frame = useAppFrame();
   const returnToMap = useReturnToMap();
   const [which, setWhich] = useState<EndpointWhich>("destination");
-  const source = useSourceText(place.sourceCode);
   const rows: Row[] = [
-    { key: "boundary", label: "Boundary", value: "Not on file", testId: "place-boundary" },
-    { key: "stops", label: "Stops in this barangay", value: "Unknown until a boundary is mapped", testId: "place-stops" },
-    { key: "source", label: "Source", value: source, testId: "place-source" },
+    { key: "boundary", label: "Boundary", value: "Not mapped", testId: "place-boundary" },
   ];
   return (
-    <DetailPanel title={TITLE} testId="place-detail">
+    <DetailPanel title={TITLE} sources={codedSourcesHref(place.sourceCode ? [place.sourceCode] : [])} testId="place-detail">
       <main className="pn-detail__main pn-detail-in">
         <PlaceHead title={place.name} kind="Barangay" badges={["not-surveyed"]} />
         <DirectionsChoice which={which} onChange={setWhich} />
@@ -381,7 +340,7 @@ function BarangayView({ place }: { place: SearchIndex["barangays"][number] }) {
         >
           {`Choose a point in ${place.name} on the map`}
         </PrimaryAction>
-        <Note testId="place-location-note">No location on file for this barangay: you place the pin yourself.</Note>
+        <Note testId="place-location-note">No location. Place the pin yourself.</Note>
         <FactRows rows={rows} label="About this barangay" />
       </main>
     </DetailPanel>
@@ -393,12 +352,11 @@ function BarangayView({ place }: { place: SearchIndex["barangays"][number] }) {
 function StudyLabelView({ place }: { place: SearchIndex["studyLabels"][number] }) {
   const rows: Row[] = [
     { key: "route", label: "Route", value: studyRouteText(place.routeCode, place.direction), testId: "place-route" },
-    { key: "location", label: "Location", value: "Not mapped. This is a schematic label, not a curb.", testId: "place-location" },
-    { key: "status", label: "Status", value: "Historical pilot label; current status unverified", testId: "place-status" },
-    { key: "sources", label: "Sources", value: place.sourceCodes.length > 0 ? place.sourceCodes.join(", ") : "Not recorded", testId: "place-source" },
+    { key: "location", label: "Location", value: "Not mapped (schematic label)", testId: "place-location" },
+    { key: "status", label: "Status", value: "Historical label, unverified", testId: "place-status" },
   ];
   return (
-    <DetailPanel title={TITLE} testId="place-detail">
+    <DetailPanel title={TITLE} sources={codedSourcesHref(place.sourceCodes)} testId="place-detail">
       <main className="pn-detail__main pn-detail-in">
         <PlaceHead title={place.label} kind={studyKindText(place.sourceContext)} badges={["documented"]} />
         <Note testId="place-location-note">No location on file, so trips can&apos;t start or end here.</Note>

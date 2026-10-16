@@ -2,12 +2,12 @@
 
 // Transfer step (artboard Transfer): "{alight stop} → {board stop}", the ordered checklist (got
 // off, walk, wait) and the boarding notes. The artboard's curb, crossing and "[SIGNBOARD TEXT]"
-// lines do not exist in the data, so the view says so ("Boarding side isn't mapped…", "Signboard
-// text isn't on file…"). Buttons step by step: "I'm at the stop", then "I boarded {route}".
+// lines do not exist in the data, so the view says so ("Ask where Loop A stops.", "Signboard
+// unverified…"). Buttons step by step: "I'm at the stop", then "I boarded {route}".
 
 import type { WalkView } from "@/domain/guidance/view";
 import { GUIDANCE_COPY } from "@/domain/guidance/view";
-import { GuidanceButtons, GuidanceNotes, KeepOpen, LocationOffer, RouteChip, UndoButton, type StepProps } from "./guidance-parts";
+import { GuidanceButtons, GuidanceNotes, LocationOffer, RouteChip, UndoButton, type StepProps } from "./guidance-parts";
 import { NextRide, WalkDistance } from "./walk-step";
 
 export function TransferStep({ view, onSend, location, headingRef }: StepProps<WalkView>) {
@@ -46,8 +46,7 @@ export function TransferStep({ view, onSend, location, headingRef }: StepProps<W
       </ol>
       <LocationOffer location={location} manual={GUIDANCE_COPY.atStop} />
       <GuidanceNotes notes={view.notes} />
-      {view.nextRide ? <NextRide next={view.nextRide} /> : null}
-      <KeepOpen text={view.keepOpen} />
+      {view.nextRide ? <NextRide /> : null}
       <GuidanceButtons actions={view.actions} onSend={onSend} />
       <UndoButton undo={view.undo} onSend={onSend} />
     </section>

@@ -21,6 +21,7 @@ import type { UseGuidanceSession, GuidanceTap } from "@/client/guidance/use-guid
 import { liveKind, nextPolite, resetAnnouncer, type Announcer } from "@/domain/guidance/announce";
 import { assessFix } from "@/domain/geo/location-fix";
 import type { GuidanceView, MissedView } from "@/domain/guidance/view";
+import { SheetBar } from "@/ui/app-shell/sheet-bar";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { formatAccuracy } from "@/ui/home/location-status";
 import { ArriveStep } from "./arrive-step";
@@ -31,7 +32,7 @@ import { WalkStep } from "./walk-step";
 
 export const END_CONFIRM_TITLE = "End guidance?";
 export const END_CONFIRM_BODY = "Your trip stays in the options.";
-export const REPLAN = "Plan again from where you are";
+export const REPLAN = "Re-plan from here";
 
 type Props = {
   guidance: UseGuidanceSession;
@@ -57,11 +58,11 @@ function MissedStep({ view, onSend, onReplan, headingRef }: { view: MissedView; 
         {view.title}
       </h2>
       <p className="pn-guide__body">{view.body}</p>
-      <div className="pn-guide__actions">
+      <SheetBar className="pn-guide__actions">
         <button type="button" className="pn-btn pn-btn--primary" onClick={onReplan} data-testid="guidance-replan">
           {REPLAN}
         </button>
-      </div>
+      </SheetBar>
       <UndoButton undo={view.undo} onSend={onSend} />
     </section>
   );

@@ -49,12 +49,12 @@ import { SavePlaceDialog } from "./save-place-dialog";
 export type SavedTab = "trips" | "places" | "history";
 const TABS: readonly SavedTab[] = ["trips", "places", "history"];
 
-export const TRIPS_INTRO = "Saved trips open without signal. Map tiles may be missing offline, so each card works as text.";
-export const NO_TRIPS = "No saved trips yet. Plan a trip, then tap Save on its details.";
+export const TRIPS_INTRO = "Saved trips work offline, as text.";
+export const NO_TRIPS = "No saved trips. Open a trip and tap Save.";
 export const NO_PLACES = "No saved places yet.";
-const NEWER_NOTE = "Some saved items on this phone are from a newer version of ParaNaga and can't be shown here. They are kept as they are.";
-const UNREADABLE_NOTE = "Some saved items on this phone are damaged and can't be read. They are kept until you remove them.";
-const UNAVAILABLE = "Saving needs storage on this phone, which is blocked or not available (for example in private browsing).";
+const NEWER_NOTE = "Some saved items are from a newer version and can't be shown.";
+const UNREADABLE_NOTE = "Some saved items are damaged. They stay until you remove them.";
+const UNAVAILABLE = "Saving isn't available (private browsing?).";
 
 function readError(what: string, unavailable: boolean): string {
   return unavailable ? UNAVAILABLE : `${what} could not be read on this phone.`;
@@ -126,7 +126,7 @@ function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | 
         setStatus(n === 1 ? "Removed 1 damaged item." : `Removed ${n} damaged items.`);
         statusRef.current?.focus();
       },
-      () => setStatus("Could not remove on this phone."),
+      () => setStatus("Couldn't remove. Try again."),
     );
   };
   return (
@@ -172,7 +172,7 @@ function useRemoval() {
     setRemoved(null);
     remove().then(
       () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text, undo })),
-      () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text: "Could not remove on this phone.", undo: null })),
+      () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text: "Couldn't remove. Try again.", undo: null })),
     );
   };
   return { removed, run, clear: () => setRemoved(null) };
@@ -183,7 +183,7 @@ function UndoBody({ removed, onDone }: { removed: NonNullable<Removed>; onDone: 
   const undo = removed.undo;
   return (
     <>
-      <span>{failed ? "Could not undo on this phone." : removed.text}</span>
+      <span>{failed ? "Couldn't undo." : removed.text}</span>
       {failed || !undo ? null : (
         <button
           type="button"
@@ -421,7 +421,7 @@ function HistoryOff() {
       <h2 id="pn-history-off" className="pn-saved-off__title">
         History is off
       </h2>
-      <p className="pn-saved-off__text">ParaNaga keeps no record of your trips unless you turn history on. When on, it stays on this device.</p>
+      <p className="pn-saved-off__text">History is off. When on, it stays on this device.</p>
       <Link href="/app/more" className="pn-saved-off__link">
         Turn on in More
       </Link>
@@ -443,7 +443,7 @@ function HistoryPanel() {
     setStatus("");
     clearHistory().then(
       () => setStatus("Trip history on this phone deleted."),
-      () => setStatus("The trip history could not be deleted. Try again."),
+      () => setStatus("Couldn't delete history. Try again."),
     );
   };
   return (
@@ -463,7 +463,7 @@ function HistoryPanel() {
           ))
         )}
       </ul>
-      <Note>Kept on this phone for 90 days. Only place names are recorded, never locations.</Note>
+      <Note>Kept 90 days on this phone. Place names only.</Note>
       {history.records.length > 0 ? (
         <button type="button" className="pn-btn pn-btn--secondary pn-saved__clear" onClick={() => setConfirm(true)}>
           Clear history

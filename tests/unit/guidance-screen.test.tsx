@@ -65,7 +65,7 @@ describe("Guidance announcements and focus", () => {
 
     // A distance after 20 s is announced; GPS then becomes unusable (title fall-back): quiet.
     rerender(ui(fake(s, near(0, T0 + 20_000), T0 + 20_000)));
-    expect(announcer.textContent).toMatch(/m to Plaza Rizal \(A1\) in a straight line$/);
+    expect(announcer.textContent).toMatch(/m to Plaza Rizal \(A1\), straight line$/);
     const said = announcer.textContent;
     const button = screen.getByRole("button", { name: "I'm at the stop" });
     button.focus();

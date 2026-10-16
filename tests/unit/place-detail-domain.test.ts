@@ -125,10 +125,10 @@ describe("terminal copy", () => {
     expect(terminalNoteSentences("T01", false)).toEqual(["Not the PNR railway station."]);
     expect(terminalNoteSentences("T06", false)).toEqual(["Not Bicol Central Station (the bus terminal)."]);
     expect(terminalNoteSentences("T02", true)).toEqual([
-      "Category labels such as northbound and eastbound are administrative, not compass directions.",
+      "Northbound/eastbound are administrative labels.",
     ]);
     expect(terminalNoteSentences("T05", false)).toEqual([]);
-    expect(terminalRouteSub("legal_plan")).toBe("Named in the legal route plan · bay not mapped");
-    expect(terminalRouteSub("trial")).toBe("Named in the Nov 2025 trial · permanence unconfirmed");
+    expect(terminalRouteSub("legal_plan")).toBe("Legal route plan");
+    expect(terminalRouteSub("trial")).toBe("Nov 2025 trial");
   });
 });
