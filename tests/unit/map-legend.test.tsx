@@ -30,6 +30,11 @@ describe("MapLegend (Task 11)", () => {
     expect(screen.queryByText(/^Bus$/i)).toBeNull();
   });
 
+  it("mixed-fleet note says both fleets operate (owner-confirmed), not 'reported'", () => {
+    expect(LEGEND_MIXED_NOTE).toBe("Alternating colours: traditional and modern jeepneys both operate (owner-confirmed)");
+    expect(LEGEND_MIXED_NOTE).not.toMatch(/reported/);
+  });
+
   it("toggles via button click and closes when Escape is pressed", () => {
     render(<MapLegend items={["traditional_puj", "tricycle"]} />);
 

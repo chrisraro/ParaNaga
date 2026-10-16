@@ -95,7 +95,7 @@ test("tapping a pin opens the stop with exactly the source pin's layer, coordina
   await expect(serving).toContainText("Provisional stop 1 · clockwise (from pin order)");
   await expect(serving).toContainText("Unverified route");
   await expect(detail).toContainText("Not yet surveyed");
-  await expect(detail).toContainText("Photo pending");
+  await expect(detail).toContainText("Stop sign photo pending");
   await expect(detail).toContainText("Verification opens soon");
   await expect(detail.getByRole("button", { name: /help verify/i })).toHaveCount(0);
   await expect(detail).not.toContainText(/verified stop|exact/i);

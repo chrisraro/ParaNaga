@@ -14,10 +14,12 @@ import "./help.css";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { sourceListSchema } from "@/domain/api/schemas";
 import { externalHref, sourceMetaLine, sourceTitleLine } from "@/domain/sources/present";
-import { DetailError, DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
+import { DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
 import { Note } from "@/ui/kit/note";
+import { SourceCredits } from "./source-credits";
+import { rightsForSource } from "@/domain/sources/rights";
 
-export const MAP_OWNER_NOTE = "The public My Maps owner is listed as “Tan Gumba”; the owner's identity is not verified.";
+export const MAP_OWNER_NOTE = "Naga City Designated Stops — shared publicly by Tan Gumba";
 
 function ExternalIcon() {
   return (
@@ -30,9 +32,6 @@ function ExternalIcon() {
 export function SourcesScreen() {
   const resource = useNetworkResource("/api/v1/sources", sourceListSchema);
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
-  if (resource.status === "error" || resource.status === "not_found") {
-    return <DetailError title="Sources" offline={resource.status === "error" && resource.offline} onRetry={resource.retry} />;
-  }
   return (
     <DetailPanel title="Help" testId="sources-page">
       <main className="pn-detail__main pn-detail-in">
@@ -44,7 +43,7 @@ export function SourcesScreen() {
             <div className="pn-skeleton" style={{ width: "90%", height: 64 }} />
             <div className="pn-skeleton" style={{ width: "90%", height: 64 }} />
           </div>
-        ) : (
+        ) : resource.status === "ready" ? (
           <>
             <p className="pn-footnote" data-testid="sources-revision">
               Cited by the published data revision {resource.data.revision.label}.
@@ -56,6 +55,7 @@ export function SourcesScreen() {
                   <li key={s.code} className="pn-source" data-testid="source-row" data-code={s.code}>
                     <span className="pn-source__title">{sourceTitleLine(s)}</span>
                     <span className="pn-source__meta">{sourceMetaLine(s)}</span>
+                    <span className="pn-source__meta">{rightsForSource(s.code)?.publisher ?? "Publisher not recorded"} · {rightsForSource(s.code)?.license ?? "Reuse rights not recorded"}</span>
                     {href ? (
                       <a
                         className="pn-source__link"
@@ -78,8 +78,9 @@ export function SourcesScreen() {
               })}
             </ul>
           </>
-        )}
-        <Note testId="sources-owner-note">{MAP_OWNER_NOTE}</Note>
+        ) : <div role="status"><p>The current revision’s source list is unavailable. Bundled photo credits and research notes remain available below.</p><button type="button" className="pn-detail__retry" onClick={resource.retry}>Try again</button></div>}
+        <Note testId="sources-owner-note"><a href="https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4" target="_blank" rel="noopener noreferrer">{MAP_OWNER_NOTE}</a></Note>
+        <SourceCredits revisionId={resource.status === "ready" ? resource.data.revision.revisionId : undefined} />
       </main>
     </DetailPanel>
   );

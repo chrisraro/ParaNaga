@@ -4,7 +4,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { linesSchema } from "@/domain/api/schemas";
 import { DEFAULT_LAYERS_PREF, type LayersPref } from "@/domain/prefs/prefs";
-import { LayersSheet, SelectedRouteCard, distinctRoutesFromLines } from "@/ui/map/layers-sheet";
+import { LINES_NOT_LOADED, LayersSheet, SelectedRouteCard, distinctRoutesFromLines } from "@/ui/map/layers-sheet";
 import { ONEWAY_CAUTION, TERMINAL_ACCESS_NOTE } from "@/ui/map/line-rules";
 import linesFixture from "../e2e/fixtures/network/lines.json";
 
@@ -96,5 +96,16 @@ describe("SelectedRouteCard notes (T12-2)", () => {
     render(<SelectedRouteCard route={r5} onClose={() => undefined} />);
     expect(screen.queryByText(ONEWAY_CAUTION)).toBeNull();
     expect(screen.queryByText(TERMINAL_ACCESS_NOTE)).toBeNull();
+  });
+});
+
+describe("LayersSheet without route lines (final-review fix)", () => {
+  it("opens with no lines and says route lines are not loaded, instead of 'no match'", () => {
+    render(
+      <LayersSheet open onClose={() => {}} layers={DEFAULT_LAYERS_PREF} onUpdateLayers={() => {}} tracedLines={[]} linesLoaded={false} terminals={[]} />,
+    );
+    expect(screen.getByTestId("layers-lines-not-loaded").textContent).toBe("Route lines aren't loaded on this device.");
+    expect(LINES_NOT_LOADED).toBe("Route lines aren't loaded on this device.");
+    expect(screen.queryByText("No routes match the current filter.")).toBeNull();
   });
 });

@@ -149,4 +149,4 @@ export function railSourcesText(registerCodes: ReadonlySet<string> | null): stri
   return RAIL_SOURCE_CODES.map((c) => (registerCodes && !registerCodes.has(c) ? `${c} (not in register)` : c)).join(", ");
 }
 
-export const EXPLORE_PLACES_NOTE = "Places come from OpenStreetMap. Entrances, hours and photos are not mapped yet.";
+export const EXPLORE_PLACES_NOTE = "Places come from OpenStreetMap. Sourced photos show landmarks; entrances and hours remain unverified. Photo dates and credits are linked on each image.";
