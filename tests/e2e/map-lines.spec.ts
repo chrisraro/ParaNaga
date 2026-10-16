@@ -122,6 +122,16 @@ async function openLayers(page: Page) {
   return { layersBtn, sheet };
 }
 
+test("the Layers button still opens the sheet, with an honest line, when route lines are not loaded (404)", async ({ page }) => {
+  await page.route(/\/api\/v1\/network\/lines\/[^/?]+$/, (route) => route.fulfill({ status: 404, contentType: "application/json", body: "{}" }));
+  await openApp(page);
+  const layersBtn = page.getByRole("button", { name: "Layers" });
+  await expect(layersBtn).toBeVisible();
+  await layersBtn.click();
+  await expect(page.getByTestId("layers-sheet")).toBeVisible();
+  await expect(page.getByTestId("layers-lines-not-loaded")).toHaveText("Route lines aren't loaded on this device.");
+});
+
 test("route overview lines draw on the home map and the Tricycle filter leaves only TRI-* lines", async ({ page }) => {
   await routeLinesWithTricycle(page);
   await openApp(page);

@@ -6,7 +6,7 @@
 // When expanded, renders only the items passed (each with an SVG line/marker swatch showing the
 // real casing + pattern, the ModeIcon, and the text label), plus:
 //   - Walk note: "Dotted: approximate walking path · crossings not checked"
-//   - Mixed-fleet note: "Alternating colours: traditional and modern jeepneys reported"
+//   - Mixed-fleet note: "Alternating colours: traditional and modern jeepneys both operate (owner-confirmed)"
 //   - Fixed footnote: "Lines are approximate paths, not verified route shapes."
 // Keyboard operable; pressing Escape inside the legend closes it and returns focus to the button.
 
@@ -27,7 +27,7 @@ import { ONEWAY_CAUTION } from "./line-rules";
 
 export const LEGEND_FOOTNOTE = "Lines are approximate paths, not verified route shapes." as const;
 export const LEGEND_WALK_NOTE = "Dotted: approximate walking path · crossings not checked" as const;
-export const LEGEND_MIXED_NOTE = "Alternating colours: traditional and modern jeepneys reported" as const;
+export const LEGEND_MIXED_NOTE = "Alternating colours: traditional and modern jeepneys both operate (owner-confirmed)" as const;
 
 export type LegendEntry =
   | VisualKey

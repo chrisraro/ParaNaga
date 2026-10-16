@@ -786,7 +786,7 @@ export function HomeScreen() {
           onTerminalSelect={picking === null ? handleTerminalSelect : null}
           emphasizedTerminalCode={trikeHint?.terminal?.code ?? null}
           legend={mapLegend}
-          onOpenLayers={showOverview && lines ? () => setLayersOpen(true) : undefined}
+          onOpenLayers={showOverview ? () => setLayersOpen(true) : undefined}
           layersButtonRef={layersBtnRef}
         />
         {selectedRoute ? <SelectedRouteCard route={selectedRoute} onClose={() => setSelectedRouteCode(null)} /> : null}
@@ -797,6 +797,7 @@ export function HomeScreen() {
         layers={layers}
         onUpdateLayers={updateLayers}
         tracedLines={overviewLines}
+        linesLoaded={lines !== null}
         terminals={snapshotState.snapshot?.terminals ?? null}
       />
 

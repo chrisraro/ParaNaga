@@ -101,12 +101,16 @@ export function distinctRoutesFromLines(lines: readonly Line[]): DistinctMapRout
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+export const LINES_NOT_LOADED = "Route lines aren't loaded on this device." as const;
+
 type Props = {
   open: boolean;
   onClose: () => void;
   layers: LayersPref;
   onUpdateLayers: (patch: Partial<LayersPref>) => void;
   tracedLines: readonly Line[];
+  /** False when route lines were not loaded (low-data, offline, or not published): say so. */
+  linesLoaded?: boolean;
   terminals?: readonly SnapshotTerminal[] | null;
 };
 
@@ -116,6 +120,7 @@ export function LayersSheet({
   layers,
   onUpdateLayers,
   tracedLines,
+  linesLoaded = true,
   terminals = null,
 }: Props) {
   const titleId = useId();
@@ -274,7 +279,11 @@ export function LayersSheet({
             <h3 id={`${titleId}-routes-list`} className="pn-layers-section-title">
               Routes on the map ({mapRoutes.length})
             </h3>
-            {mapRoutes.length === 0 ? (
+            {!linesLoaded ? (
+              <p className="pn-layers-empty" data-testid="layers-lines-not-loaded">
+                {LINES_NOT_LOADED}
+              </p>
+            ) : mapRoutes.length === 0 ? (
               <p className="pn-layers-empty">No routes match the current filter.</p>
             ) : (
               <ul className="pn-layers-list" data-testid="layers-routes-list">
