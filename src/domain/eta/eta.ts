@@ -5,7 +5,7 @@
 //                when the leg has one, else the leg's round(straight × 1.3) estimate.
 //   Jeepney (D9): d / high speed … d / low speed, in the off-peak or the peak band.
 //                 Band, decided per trip in two passes: estimate with the off-peak band; if
-//                 [departure, departure + total high end] touches a peak window, every ride leg
+//                 [departure, departure + displayed total high end] touches a peak window, every ride leg
 //                 uses the peak band. A leg that crosses a window boundary is therefore never
 //                 split: the whole trip takes the slower band (conservative).
 //   Other modes (tricycle, …): no speed is on file (D11): the leg is not estimated and the total
@@ -43,13 +43,13 @@ export type EtaLeg = {
   /** Whole minutes rounded outward (see roundRange); null when not estimated. */
   lowMin: number | null;
   highMin: number | null;
-  /** Unrounded minutes, for sums (the total, guidance's time left). */
+  /** Unrounded minutes (diagnostics; totals and time left sum the rounded ranges). */
   rawLowMin: number | null;
   rawHighMin: number | null;
 };
 
 export type EtaTotal = {
-  /** Sum of the estimated legs, rounded outward; null when no leg is estimated. Waiting is not in it. */
+  /** Sum of the estimated legs' displayed (rounded) ranges; null when no leg is estimated. Waiting is not in it. */
   lowMin: number | null;
   highMin: number | null;
   rawLowMin: number | null;
@@ -163,14 +163,18 @@ export function estimateOption(
   const offLegs = legsAt("offpeak");
   if (!offLegs) return { ok: false, reason: "invalid_leg" };
   const hasJeepney = offLegs.some((l) => l.band !== null);
-  const hit = hasJeepney ? peakWindowsHit(departure, sum(offLegs, (l) => l.rawHighMin), s.windows) : [];
+  // The window test uses the displayed (rounded) total high end: the same number the rider sees.
+  const hit = hasJeepney ? peakWindowsHit(departure, sum(offLegs, (l) => l.highMin), s.windows) : [];
   const peak = hit.length > 0;
   const legs = peak ? legsAt("peak")! : offLegs;
 
   const estimated = legs.filter((l) => l.estimated);
   const rawLow = estimated.length > 0 ? sum(estimated, (l) => l.rawLowMin) : null;
   const rawHigh = estimated.length > 0 ? sum(estimated, (l) => l.rawHighMin) : null;
-  const rounded = rawLow !== null && rawHigh !== null ? roundRange(rawLow, rawHigh) : { lowMin: null, highMin: null };
+  // The total is the sum of the displayed leg ranges, so adding up the legs gives the same numbers.
+  const rounded = estimated.length > 0
+    ? { lowMin: sum(estimated, (l) => l.lowMin), highMin: sum(estimated, (l) => l.highMin) }
+    : { lowMin: null, highMin: null };
   const rides = legs.filter((l) => l.kind === "ride").length;
 
   return {

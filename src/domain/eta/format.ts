@@ -1,7 +1,7 @@
 // Copy for time estimates (D12). Durations only, always labelled as an estimate: never a clock
 // time, never "arriving" or "ETA". The peak note names the peak windows (clock times of the
 // windows, not of the trip). Pure.
-import { roundRange, type EtaEstimate, type EtaLeg, type EtaTotal } from "./eta";
+import { type EtaEstimate, type EtaLeg, type EtaTotal } from "./eta";
 
 /** 5 → "5 min"; 60 → "1 h"; 65 → "1 h 5 min". */
 export function formatDuration(min: number): string {
@@ -18,11 +18,10 @@ export function formatRange(lowMin: number, highMin: number): string {
 }
 
 export const TRICYCLE_NOT_ESTIMATED = "Tricycle time not estimated";
-const WAITING = " + waiting (unknown)";
 
-/** "Estimate 18–27 min + waiting (unknown)", "Estimate 14–18 min walk", "… · tricycle time not estimated". */
+/** "Estimate 18–27 min + waiting (unknown)" ("+ waiting (unknown, 2 rides)" for several rides), "Estimate 14–18 min walk", "… · tricycle time not estimated". */
 export function formatTotal(t: EtaTotal): string {
-  const waiting = t.rides > 0 ? WAITING : "";
+  const waiting = t.rides === 0 ? "" : t.rides === 1 ? " + waiting (unknown)" : ` + waiting (unknown, ${t.rides} rides)`;
   if (t.lowMin === null || t.highMin === null) return `${TRICYCLE_NOT_ESTIMATED}${waiting}`;
   const walk = t.walkOnly ? " walk" : "";
   const partial = t.partial ? " · tricycle time not estimated" : "";
@@ -44,13 +43,13 @@ export function formatLeg(l: EtaLeg): string {
 export type RemainingKind = "trip" | "riding";
 
 /**
- * The estimated time of legs fromLeg… (rides only for "riding"), rounded outward; null when no
+ * The estimated time of legs fromLeg… (rides only for "riding"): the sum of their displayed ranges; null when no
  * such estimated leg is left. Waiting stays outside.
  */
 export function remainingRange(e: EtaEstimate, fromLeg: number, kind: RemainingKind): { lowMin: number; highMin: number } | null {
   const legs = e.legs.slice(fromLeg).filter((l) => l.estimated && (kind === "trip" || l.kind === "ride"));
   if (legs.length === 0) return null;
-  return roundRange(legs.reduce((s, l) => s + l.rawLowMin!, 0), legs.reduce((s, l) => s + l.rawHighMin!, 0));
+  return { lowMin: legs.reduce((s, l) => s + l.lowMin!, 0), highMin: legs.reduce((s, l) => s + l.highMin!, 0) };
 }
 
 /** "About 10–16 min left (estimate)" / "About 10–16 min of riding left (estimate)". */

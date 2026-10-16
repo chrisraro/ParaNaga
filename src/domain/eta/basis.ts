@@ -22,7 +22,7 @@ const CITATION: Readonly<Record<string, string>> = {
 };
 
 export const WAITING_ROW = "Waiting: unknown — no published schedules or headways for Naga";
-export const TRAFFIC_ROW = "Not live traffic. ParaNaga uses no traffic service.";
+export const TRAFFIC_ROW = "Based on typical speeds. ParaNaga uses no traffic service.";
 
 const cite = (codes: readonly string[]) => codes.map((c) => (CITATION[c] ? `${CITATION[c]}, ${c}` : c)).join("; ");
 const num = (n: number) => String(Math.round(n * 100) / 100);

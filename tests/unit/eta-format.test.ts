@@ -46,9 +46,17 @@ describe("format (exact copy)", () => {
     expect(formatTotal(e.total)).toBe("Estimate 12–18 min + waiting (unknown)");
   });
 
+  it("several rides: the waiting text gives the ride count", () => {
+    const e = est(opt(walk(200), jeep(2500), walk(150), jeep(3000), walk(300)), manila("14:00"));
+    expect(formatTotal(e.total)).toBe("Estimate 30–46 min + waiting (unknown, 2 rides)");
+    expect(formatTotal(est(opt(walk(200), jeep(2500), walk(150), jeep(3000), walk(300)), manila("17:00")).total)).toBe(
+      "Estimate 32 min–1 h 1 min + waiting (unknown, 2 rides)",
+    );
+  });
+
   it("a partial total says tricycle time is not estimated", () => {
     const e = est(opt(walk(300), trike(1500), jeep(3000)), manila("09:30"));
-    expect(formatTotal(e.total)).toMatch(/^Estimate \d+–\d+ min \+ waiting \(unknown\) · tricycle time not estimated$/);
+    expect(formatTotal(e.total)).toMatch(/^Estimate \d+–\d+ min \+ waiting \(unknown, 2 rides\) · tricycle time not estimated$/);
     expect(formatTotal(est(opt(trike(1500)), manila("09:30")).total)).toBe("Tricycle time not estimated + waiting (unknown)");
   });
 
@@ -78,11 +86,11 @@ describe("format (exact copy)", () => {
     expect(formatRemaining({ lowMin: 10, highMin: 16 }, "riding")).toBe("About 10–16 min of riding left (estimate)");
   });
 
-  it("remainingRange sums the legs from an index (rides only for riding), rounded outward", () => {
+  it("remainingRange sums the displayed leg ranges from an index (rides only for riding)", () => {
     const e = est(opt(walk(1000), jeep(3000), walk(500)), manila("09:30"));
     expect(remainingRange(e, 1, "riding")).toEqual({ lowMin: 12, highMin: 18 });
     const rest = remainingRange(e, 1, "trip")!;
-    expect(rest.lowMin).toBe(Math.floor(e.legs[1]!.rawLowMin! + e.legs[2]!.rawLowMin!));
+    expect(rest).toEqual({ lowMin: e.legs[1]!.lowMin! + e.legs[2]!.lowMin!, highMin: e.legs[1]!.highMin! + e.legs[2]!.highMin! });
     expect(remainingRange(e, 3, "trip")).toBeNull();
     expect(remainingRange(e, 2, "riding")).toBeNull();
   });
@@ -96,7 +104,7 @@ describe("basis rows (exact copy from the model)", () => {
       "Jeepney peak: 7–13 km/h (upper from N29; lower is a ParaNaga assumption)",
       "Peak windows: 06:00–08:00, 11:00–13:00, 16:00–19:00 (Ordinance 2025-110, N04), applied every day (no day-of-week data)",
       "Waiting: unknown — no published schedules or headways for Naga",
-      "Not live traffic. ParaNaga uses no traffic service.",
+      "Based on typical speeds. ParaNaga uses no traffic service.",
     ]);
   });
 
@@ -122,7 +130,7 @@ const depArb = fc.integer({ min: 0, max: 2 * 365 * 24 * 60 }).map((m) => new Dat
 const walkLengthsArb = fc.array(fc.option(meters, { nil: null }), { maxLength: 6 });
 
 describe("honesty (property)", () => {
-  it("formatted strings never say arriv…, ETA, a clock time (outside the peak note) or a bare number of minutes", () => {
+  it("formatted strings never say arriv…, ETA, live, a clock time (outside the peak note) or a bare number of minutes", () => {
     fc.assert(
       fc.property(optionArb, depArb, walkLengthsArb, (o, dep, wl) => {
         const e = est(o, dep, wl);
@@ -132,7 +140,7 @@ describe("honesty (property)", () => {
         const note = formatPeakNote(e.total);
         const all = [...timed, ...(note ? [note] : []), ...e.basis.map((b) => b.text)];
         return (
-          all.every((t) => !/arriv/i.test(t) && !/\bETA\b/.test(t)) &&
+          all.every((t) => !/arriv/i.test(t) && !/\bETA\b/.test(t) && !/\blive\b/i.test(t)) &&
           timed.every((t) => !/\d{1,2}:\d{2}/.test(t)) &&
           timed.every((t) => /^(Estimate|≈|About|Tricycle time not estimated)/.test(t) || !/\d\s*(h|min)\b/.test(t)) &&
           timed.every((t) => !/NaN|undefined|null/.test(t))

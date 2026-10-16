@@ -96,6 +96,12 @@ describe("estimateOption", () => {
     expect(e.total).toMatchObject({ rides: 2, waitUnknown: true });
   });
 
+  it("the total equals the sum of the displayed leg ranges", () => {
+    const e = ok(opt(walk(200), jeep(2500), walk(150), jeep(3000), walk(300)), OFFPEAK);
+    expect(e.legs.map((l) => [l.lowMin, l.highMin])).toEqual([[2, 4], [10, 15], [2, 3], [12, 18], [4, 6]]);
+    expect([e.total.lowMin, e.total.highMin]).toEqual([30, 46]);
+  });
+
   it("carries the basis rows from the model", () => {
     const e = ok(opt(jeep(3000)), OFFPEAK);
     expect(e.basis.map((b) => b.key)).toEqual(["walk", "jeepney_offpeak", "jeepney_peak", "peak_windows", "waiting", "traffic"]);
@@ -149,7 +155,9 @@ describe("properties (fixed seeds)", () => {
       fc.property(optionArb, depArb, (o, dep) => {
         const e = ok(o, dep);
         const ranges = [...e.legs.filter((l) => l.estimated), ...(e.total.lowMin === null ? [] : [e.total])];
-        return ranges.every((r) => Number.isInteger(r.lowMin) && Number.isInteger(r.highMin) && r.lowMin! >= 1 && r.lowMin! < r.highMin!);
+        const est = e.legs.filter((l) => l.estimated);
+        const sums = e.total.lowMin === null || (e.total.lowMin === est.reduce((a, l) => a + l.lowMin!, 0) && e.total.highMin === est.reduce((a, l) => a + l.highMin!, 0));
+        return sums && ranges.every((r) => Number.isInteger(r.lowMin) && Number.isInteger(r.highMin) && r.lowMin! >= 1 && r.lowMin! < r.highMin!);
       }),
       { seed: 9001, numRuns: 1000 },
     );
