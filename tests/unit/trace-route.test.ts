@@ -163,6 +163,24 @@ describe("traceVariant: street-list mode", () => {
     expect(r.quality.terminusSnapM).toBeCloseTo(0.001 * M_PER_DEG_LAT, -1);
   });
 
+  it("terminal access: an off-list stretch (≤ 1 km) reaching a listed terminal is recorded but not gated", () => {
+    // 200 m of 1000 m off the list (20 %), next to a listed terminal at (0, 2).
+    const g = grid((p) => {
+      retag(p, [0, 1], [0, 2], { name: "Station Rd" });
+      retag(p, [0, 2], [0, 3], { name: "Station Rd" });
+    });
+    const r = traceVariant(input({ streets: ["Row 0 St", "Col 5 Ave"], terminals: [at(0, 2)] }), g, []);
+    expect(r.status).toBe("ok");
+    if (!r.ok) return;
+    expect(r.offListSegments.map((x) => x.reason)).toEqual(["terminal_access"]);
+    expect(r.quality.offListShare!).toBeCloseTo(0.2, 2);
+    expect(r.quality.gateOffListShare).toBe(0);
+    expect(r.quality.terminalAccessM).toBeCloseTo(200, -1);
+    // A terminal the stretch does not reach (300 m away) does not exempt it.
+    const far = traceVariant(input({ streets: ["Row 0 St", "Col 5 Ave"], terminals: [{ lat: at(0, 2).lat + 300 / M_PER_DEG_LAT, lng: at(0, 2).lng }] }), g, []);
+    expect(far.status).toBe("flagged");
+  });
+
   it("a circuit closes back to its first waypoint", () => {
     const r = traceVariant(input({ streets: ["Row 1 St", "Col 4 Ave", "Row 4 St", "Col 1 Ave", "Row 1 St"], isCircular: true }), plain, []);
     expect(r.ok).toBe(true);

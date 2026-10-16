@@ -65,6 +65,9 @@ function main(): number {
 
   const resolved = resolveRouteLandmarks(ROUTE_LANDMARKS, { terminals, graph, boundary: NAGA_BOUNDARY, aliases, places: roads.places });
   const landmarks = Object.fromEntries(Object.entries(resolved).map(([k, v]) => [k, v.point]));
+  /** Points of the listed terminals of a street list (landmark rules of kind "terminal" that resolved). */
+  const terminalsOf = (streets: readonly string[]): LatLng[] =>
+    [...new Set(streets)].flatMap((n) => (ROUTE_LANDMARKS[n]?.kind === "terminal" && landmarks[n] ? [landmarks[n]!] : []));
 
   const jobs: Job[] = [];
   const terminusOf = (code: string): LatLng | null => {
@@ -76,20 +79,20 @@ function main(): number {
   for (const r of seed.routes) {
     const s = r.legalStreets;
     const terminus = terminusOf(r.publicCode);
-    if (s.inbound) jobs.push({ id: `${r.publicCode} inbound`, input: { streets: s.inbound, landmarks, termini: { start: terminus }, isCircular: false }, note: "street list" });
-    if (s.outbound) jobs.push({ id: `${r.publicCode} outbound`, input: { streets: s.outbound, landmarks, termini: { end: terminus }, isCircular: false }, note: "street list" });
+    if (s.inbound) jobs.push({ id: `${r.publicCode} inbound`, input: { streets: s.inbound, landmarks, terminals: terminalsOf(s.inbound), termini: { start: terminus }, isCircular: false }, note: "street list" });
+    if (s.outbound) jobs.push({ id: `${r.publicCode} outbound`, input: { streets: s.outbound, landmarks, terminals: terminalsOf(s.outbound), termini: { end: terminus }, isCircular: false }, note: "street list" });
     if (s.circuit) {
       const seq = r.publicCode === "R8-A" || r.publicCode === "R8-B" ? provisionalLoopSequence(records, r.publicCode) : null;
       if (seq) {
         const byId = new Map(records.map((x) => [x.sourceIdentity, x]));
         const pins: LatLng[] = seq.map((q) => ({ lat: byId.get(q.recordIdentity)!.lat, lng: byId.get(q.recordIdentity)!.lng }));
-        jobs.push({ id: `${r.publicCode} circuit (pins)`, input: { streets: s.circuit, landmarks, pins, isCircular: true }, note: `${pins.length} provisional pins` });
+        jobs.push({ id: `${r.publicCode} circuit (pins)`, input: { streets: s.circuit, landmarks, terminals: terminalsOf(s.circuit), pins, isCircular: true }, note: `${pins.length} provisional pins` });
       }
-      jobs.push({ id: `${r.publicCode} circuit`, input: { streets: s.circuit, landmarks, isCircular: true }, note: "street list" });
+      jobs.push({ id: `${r.publicCode} circuit`, input: { streets: s.circuit, landmarks, terminals: terminalsOf(s.circuit), isCircular: true }, note: "street list" });
     }
   }
   for (const t of seed.trialChanges) {
-    jobs.push({ id: `${t.routeCode} trial ${t.adopted ?? ""}`, input: { streets: t.simplifiedCircuit, landmarks, isCircular: true }, note: "trial circuit" });
+    jobs.push({ id: `${t.routeCode} trial ${t.adopted ?? ""}`, input: { streets: t.simplifiedCircuit, landmarks, terminals: terminalsOf(t.simplifiedCircuit), isCircular: true }, note: "trial circuit" });
   }
   for (const route of modes.routes) {
     route.variants.forEach((v, i) => {
@@ -127,10 +130,10 @@ function main(): number {
       geometry: { type: "MultiLineString", coordinates: parts.map((p) => p.map((c) => [Number(c.lng.toFixed(6)), Number(c.lat.toFixed(6))])) },
     });
     const coverage = q.listedStreets > 0 ? `${q.matchedStreets}/${q.listedStreets} (${Math.round((100 * q.matchedStreets) / q.listedStreets)} %)` : "n/a";
-    const off = q.offListShare === null ? "n/a" : `${(100 * q.offListShare).toFixed(1)} %`;
+    const off = q.offListShare === null ? "n/a" : `${(100 * q.gateOffListShare!).toFixed(1)} % (raw ${(100 * q.offListShare).toFixed(1)} %)`;
     const notes = [...q.unmatchedStreets.map((x) => `unmatched: ${x}`), ...q.landmarksUnresolved.map((x) => `landmark: ${x}`), ...q.anchorsUnresolved.map((x) => `anchor: ${x}`),
-      ...q.disjointPairs.map((x) => `no junction: ${x}`), ...(r.status === "flagged"
-        ? r.offListSegments.filter((x) => x.lengthM >= 50).map((x) => `${x.reason} ${x.lengthM} m @${Math.round(x.fromM)} m: ${x.streets.map((y) => `${y.name} ${y.m}`).join(", ")}`)
+      ...q.disjointPairs.map((x) => `no junction: ${x}`), ...(r.ok
+        ? r.offListSegments.filter((x) => x.lengthM >= 50 && (r.status === "flagged" || x.reason === "terminal_access")).map((x) => `${x.reason} ${x.lengthM} m @${Math.round(x.fromM)} m: ${x.streets.map((y) => `${y.name} ${y.m}`).join(", ")}`)
         : []), ...q.unsnappedPins.map((x) => `pin ${x + 1} unsnapped`)].join("; ");
     rows.push(`| ${job.id} | ${result} | ${coverage} | ${off} | ${(q.lengthM / 1000).toFixed(2)} | ${q.gaps} | ${q.maxSnapM ?? "–"} | ${q.terminusSnapM ?? "–"} | ${notes || "–"} |`);
   }

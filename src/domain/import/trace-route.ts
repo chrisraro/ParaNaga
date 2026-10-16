@@ -21,8 +21,25 @@
 //   order (×1 everywhere); any unresolved anchor fails with anchor_unresolved.
 //
 // Never fabricates: an unmatched street or an unreachable waypoint is a gap. The line breaks there
-// (`parts`), `continuous` is false and the gate fails. Gate (D6): every listed street matched,
-// off-list share ≤ 15 %, continuous, every pin snapped within 60 m.
+// (`parts`), `continuous` is false and the trace fails.
+//
+// Result status (controller rulings 2026-10-16):
+//   ok      — every listed street matched, continuous, every pin snapped within 60 m, and the gate
+//             off-list share ≤ 15 %. Drawn solid; its off-list segments (short connectors) render
+//             solid too.
+//   flagged — the same but the gate off-list share is > 15 %. Drawn; its off-list segments render
+//             DASHED (dashing applies only to flagged traces) with "street order conflicts with
+//             one-way mapping — confirm on the ground" (oneway_conflict) or the generic caution
+//             (off_list_detour), plus a route-detail note.
+//   fail    — no line: an unresolved anchor, pin or street, or no connected path.
+// Off-list segment reasons:
+//   terminal_access — a stretch of at most 1 km that reaches a listed terminal (`terminals`, e.g.
+//                     Bicol Central Station; some point within 250 m of it): the road that only
+//                     connects the terminal to the listed streets. Recorded, rendered as normal (never dashed) with the note
+//                     "terminal access road", and excluded from the gate off-list share;
+//   oneway_conflict — re-routing the leg with the listed one-way streets usable both ways uses such a
+//                     reversed street and removes at least half of the leg's off-list length;
+//   off_list_detour — any other off-list stretch.
 //
 // Pure and deterministic: ties go to the lower node index (node indices follow OSM node ids).
 import { haversineMeters } from "../geo/geometry";
@@ -59,6 +76,8 @@ export type TraceInput = {
   anchors?: readonly TraceAnchor[];
   /** Provisional pins in order (pin mode). */
   pins?: readonly LatLng[];
+  /** Points of listed terminals (e.g. Bicol Central Station): off-list stretches of ≤ 1 km reaching them are terminal_access. */
+  terminals?: readonly LatLng[];
   /**
    * Open lists only: the route's outer terminus (a reviewed place, e.g. the barangay in the route
    * name). The trace starts (`start`) or ends (`end`) at the node of the first/last street nearest
@@ -81,6 +100,10 @@ export type TraceQuality = {
   disjointPairs: string[];
   /** Share of the traced length on edges of no listed street; null when there is no list. */
   offListShare: number | null;
+  /** The share used by the gate: off-list length minus terminal_access stretches; null without a list. */
+  gateOffListShare: number | null;
+  /** Length of terminal_access stretches, metres. */
+  terminalAccessM: number;
   /** The off-list streets the path uses most, by length (normalized OSM name, or "(unnamed)"); at most 6. */
   offListStreets: { name: string; m: number }[];
   /** Largest pin or anchor snap distance in metres; null when nothing was snapped. */
@@ -108,6 +131,12 @@ export type TraceFailure = "anchor_unresolved" | "pin_unsnapped" | "unmatched_st
  *   off_list_detour - any other off-list detour.
  */
 export type TraceFlagReason = "oneway_conflict" | "off_list_detour";
+/** Per-segment reason: a flag reason, or a terminal access road (never dashed, not gated). */
+export type OffListReason = TraceFlagReason | "terminal_access";
+/** A terminal_access stretch is at most this long… */
+export const TERMINAL_ACCESS_M = 1000;
+/** …and reaches within this distance of the listed terminal's point. */
+export const TERMINAL_REACH_M = 250;
 
 /** A stretch of the line on streets not on the list, by measure along the line. */
 export type OffListSegment = {
@@ -116,7 +145,7 @@ export type OffListSegment = {
   lengthM: number;
   /** Normalized OSM names (or "(unnamed)") with metres, longest first. */
   streets: { name: string; m: number }[];
-  reason: TraceFlagReason;
+  reason: OffListReason;
 };
 
 type Drawn = { line: LatLng[]; lengthM: number; stopMeasures: number[]; quality: TraceQuality; offListSegments: OffListSegment[] };
@@ -381,8 +410,10 @@ class LineBuilder {
   start(p: LatLng) {
     if (this.current.length === 0) this.current.push(p);
   }
-  segments: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean }[] = [];
-  private open: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean } | null = null;
+  segments: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean; minTerminalM: number }[] = [];
+  private open: { fromM: number; toM: number; streets: Map<string, number>; conflict: boolean; minTerminalM: number } | null = null;
+  /** Distance from a point to the nearest listed terminal (Infinity without terminals). */
+  terminalDist: (p: LatLng) => number = () => Infinity;
   add(leg: Leg, conflict = false) {
     for (const piece of leg.pieces) {
       for (const p of piece.coords) {
@@ -397,9 +428,10 @@ class LineBuilder {
             const name = this.nameOf(piece.edge);
             this.offListByName.set(name, (this.offListByName.get(name) ?? 0) + m);
             if (!this.open) {
-              this.open = { fromM: this.currentLength - m, toM: this.currentLength, streets: new Map(), conflict: false };
+              this.open = { fromM: this.currentLength - m, toM: this.currentLength, streets: new Map(), conflict: false, minTerminalM: this.terminalDist(last) };
               this.segments.push(this.open);
             }
+            this.open.minTerminalM = Math.min(this.open.minTerminalM, this.terminalDist(p));
             this.open.toM = this.currentLength;
             this.open.streets.set(name, (this.open.streets.get(name) ?? 0) + m);
             if (conflict) this.open.conflict = true;
@@ -510,7 +542,7 @@ type Waypoint = { target: Spot; current: StreetInfo | null };
 function emptyQuality(mode: TraceQuality["mode"]): TraceQuality {
   return {
     builderVersion: TRACE_BUILDER_VERSION, mode, listedStreets: 0, matchedStreets: 0, unmatchedStreets: [], landmarksUnresolved: [],
-    anchorsUnresolved: [], disjointPairs: [], offListShare: null, offListStreets: [], maxSnapM: null, maxLandmarkSnapM: null, terminusSnapM: null, unsnappedPins: [],
+    anchorsUnresolved: [], disjointPairs: [], offListShare: null, gateOffListShare: null, terminalAccessM: 0, offListStreets: [], maxSnapM: null, maxLandmarkSnapM: null, terminusSnapM: null, unsnappedPins: [],
     continuous: true, gaps: 0, lengthM: 0,
   };
 }
@@ -546,6 +578,8 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
   const hasList = q.listedStreets > 0;
   const offList = (e: number) => hasList && !listed.has(e);
   const line = new LineBuilder(offList, (e) => graph.edges[e]!.names[0] ?? "(unnamed)");
+  const terminals = input.terminals ?? [];
+  if (terminals.length > 0) line.terminalDist = (p) => Math.min(...terminals.map((t) => haversineMeters(p, t)));
   const snaps: number[] = [];
   const landmarkSnaps: number[] = [];
   const terminusSnaps: number[] = [];
@@ -768,15 +802,20 @@ export function traceVariant(input: TraceInput, graph: RoadGraph, aliases: reado
               ? "empty"
               : null;
   if (reason !== null) return { ok: false, status: "fail", reason, quality: q, parts: line.parts };
+  const isTerminalAccess = (sg: { fromM: number; toM: number; minTerminalM: number }) =>
+    sg.minTerminalM <= TERMINAL_REACH_M && sg.toM - sg.fromM <= TERMINAL_ACCESS_M;
   const offListSegments: OffListSegment[] = line.segments.map((sg) => ({
     fromM: round(sg.fromM, 1),
     toM: round(sg.toM, 1),
     lengthM: round(sg.toM - sg.fromM, 1),
     streets: [...sg.streets].map(([name, m]) => ({ name, m: round(m, 0) })).sort((a, b) => b.m - a.m || (a.name < b.name ? -1 : 1)),
-    reason: sg.conflict ? "oneway_conflict" : "off_list_detour",
+    reason: isTerminalAccess(sg) ? "terminal_access" : sg.conflict ? "oneway_conflict" : "off_list_detour",
   }));
+  const terminalM = line.segments.filter(isTerminalAccess).reduce((sum, sg) => sum + (sg.toM - sg.fromM), 0);
+  q.terminalAccessM = round(terminalM, 1);
+  q.gateOffListShare = hasList ? (line.lengthM > 0 ? round(Math.max(0, line.offListM - terminalM) / line.lengthM, 4) : 0) : null;
   const drawn: Drawn = { line: line.parts[0]!, lengthM: q.lengthM, stopMeasures: stopMeasures.map((m) => round(m, 1)), quality: q, offListSegments };
-  if (q.offListShare !== null && q.offListShare > MAX_OFF_LIST_SHARE) {
+  if (q.gateOffListShare !== null && q.gateOffListShare > MAX_OFF_LIST_SHARE) {
     // The flag reason is the one carrying most of the off-list length.
     const byReason = (r: TraceFlagReason) => offListSegments.filter((x) => x.reason === r).reduce((sum, x) => sum + x.lengthM, 0);
     const flag: TraceFlagReason = byReason("oneway_conflict") > byReason("off_list_detour") ? "oneway_conflict" : "off_list_detour";
