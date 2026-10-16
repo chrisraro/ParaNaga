@@ -12,7 +12,8 @@
 //
 // Guidance (Task 10): "Start trip" in Trip detail starts a session; while it runs the sheet shows
 // the Walk / Ride / Transfer / Arrive step instead of the planner, the tab bar is hidden, the map
-// highlights only the current leg's stops (markers, never a line) and shows the user dot only when
+// highlights the current leg's stops, keeps the trip's lines drawn (walking dotted, rides solid, the
+// current leg emphasised) with the current ride's stops as pins, and shows the user dot only when
 // guidance uses location (its own watch, from a tap). A reload resumes the step from
 // sessionStorage. "End guidance" puts the trip back in the options; Arrive → "Done" clears it;
 // a missed stop plans again from the current fix (or asks where you are on the map).
@@ -70,6 +71,7 @@ import type { MapTerminal } from "@/ui/map/terminals-layer";
 import { tricycleHint as computeTricycleHint, tricycleHintSources } from "@/domain/trip/tricycle-hint";
 import { TricycleHintCard } from "@/ui/trip/tricycle-hint";
 import { collectRouteLegendItems, filterOverviewLines } from "@/ui/map/route-lines-layer";
+import { legendVisualKeys, mapLayerPolicy } from "@/ui/map/map-layer-policy";
 import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
@@ -591,19 +593,41 @@ export function HomeScreen() {
   const snapshotState = useSnapshot(true);
   const linesState = useLines(snapshotState.snapshot?.revision.revisionId ?? null, true);
   const lines = linesState.lines;
-  // Trip lines come from the lines of the PLAN's revision (a stored trip's own revision), never the
-  // snapshot's: the legs' variant ids and measures belong to that revision.
-  const tripRevisionId = guiding ? null : (stored?.data.revision.revisionId ?? (planData && openOption ? planData.revision.revisionId : null));
+  // Trip lines come from the lines of the PLAN's revision (a stored trip's own revision, the
+  // guided trip's own revision), never the snapshot's: the legs' variant ids and measures belong to
+  // that revision. They stay drawn while the trip is guided (the current leg emphasised).
+  const guidedSession = guidance.session;
+  const guidedCard = guidance.card;
+  const guidedTrip = useMemo(
+    () => (guidedSession && guidedCard ? { option: guidedSession.trip.option, variants: guidedCard.variants, revisionId: guidedCard.revisionId } : null),
+    [guidedSession, guidedCard],
+  );
+  const tripRevisionId = guidedTrip
+    ? guidedTrip.revisionId
+    : (stored?.data.revision.revisionId ?? (planData && openOption ? planData.revision.revisionId : null));
   const tripLinesState = useLines(tripRevisionId, tripRevisionId !== null);
   const tripRevisionLines = tripLinesState.lines;
+  const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : openOption;
   const tripLines = useMemo(() => {
-    if (guiding) return null;
+    if (guidedTrip) return buildTripLinesData(guidedTrip.option, guidedTrip.variants, tripRevisionLines);
     if (stored) return buildTripLinesData(stored.option, stored.data.variants, tripRevisionLines);
     if (planData && openOption) return buildTripLinesData(openOption, planData.variants, tripRevisionLines);
     return null;
-  }, [guiding, stored, planData, openOption, tripRevisionLines]);
-  const showOverview = !guiding && !tripLines && picking === null;
-  const overviewLines = useMemo(() => (showOverview ? filterOverviewLines(lines, layers) : []), [showOverview, lines, layers]);
+  }, [guidedTrip, stored, planData, openOption, tripRevisionLines]);
+  // Lines never vanish: the overview stays while picking a point, and stands in for the rides when
+  // the trip revision's lines are not loaded (low-data, offline, 404).
+  const layerPolicy = mapLayerPolicy({
+    guiding,
+    tripOpen: tripLines !== null,
+    picking: picking !== null,
+    tripHasRides: tripOption ? tripOption.legs.some((l) => l.kind === "ride") : guiding,
+    tripLinesLoaded: tripRevisionLines !== null,
+  });
+  const showOverview = layerPolicy.overviewInteractive;
+  const overviewLines = useMemo(
+    () => (layerPolicy.overviewLines ? filterOverviewLines(lines, layers) : []),
+    [layerPolicy.overviewLines, lines, layers],
+  );
   const [layersOpen, setLayersOpen] = useState(false);
   const layersBtnRef = useRef<HTMLButtonElement>(null);
   const [selectedRouteCode, setSelectedRouteCode] = useState<string | null>(null);
@@ -612,8 +636,9 @@ export function HomeScreen() {
     [selectedRouteCode, overviewLines],
   );
   if (selectedRouteCode !== null && !showOverview) setSelectedRouteCode(null);
-  const mapLegend = tripLines ? tripLines.legendItems : collectRouteLegendItems(overviewLines);
-  const tripAnnouncement = tripLines?.announcement ?? "";
+  const mapLegend = legendVisualKeys(tripLines?.legendItems ?? null, collectRouteLegendItems(overviewLines));
+  // Guidance has its own announcements: the drawn trip is not read out again then.
+  const tripAnnouncement = guiding ? "" : (tripLines?.announcement ?? "");
   const [seenTripAnnouncement, setSeenTripAnnouncement] = useState("");
   if (tripAnnouncement !== seenTripAnnouncement) {
     setSeenTripAnnouncement(tripAnnouncement);
@@ -773,13 +798,15 @@ export function HomeScreen() {
           recenterSignal={recenterSignal}
           recenterTarget={recenterTarget}
           recenterTargetLabel={recenterLabel}
-          stopPins={tripDetailOpen || guiding ? NO_PINS : stopsInView.stops}
-          stopPinsInteractive={picking === null}
+          stopPins={guiding ? home.stopPins : tripDetailOpen ? NO_PINS : stopsInView.stops}
+          stopPinsInteractive={picking === null && !guiding}
           onStopSelect={handleStopSelect}
           onBoundsChange={setViewBounds}
           onLocate={handleLocate}
           tripLines={tripLines}
-          routeLines={showOverview ? overviewLines : null}
+          activeLegIndex={guiding ? home.activeLegIndex : null}
+          fitTripLines={!guiding}
+          routeLines={overviewLines}
           selectedRouteCode={selectedRouteCode}
           onSelectRoute={showOverview ? setSelectedRouteCode : null}
           terminals={drawnTerminals}

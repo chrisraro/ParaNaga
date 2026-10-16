@@ -52,6 +52,10 @@ export type NagaMapProps = {
   layersButtonRef?: Ref<HTMLButtonElement>;
   /** Trip walk + ride polylines, chevrons, and mid-leg chips (Task 12). */
   tripLines?: TripLinesData | null;
+  /** The option leg the guidance is on: its line is drawn at full strength, the others softer. */
+  activeLegIndex?: number | null;
+  /** False in guidance: the map follows the current step's stops, not the whole trip. Default true. */
+  fitTripLines?: boolean;
   /** Route overview or route-detail polylines (Task 12). */
   routeLines?: readonly TracedLine[] | null;
   /** Route code currently selected in the overview or route detail. */

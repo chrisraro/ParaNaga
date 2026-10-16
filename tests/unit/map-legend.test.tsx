@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   LEGEND_FOOTNOTE,
   LEGEND_MIXED_NOTE,
+  LEGEND_STOP_LABEL,
   LEGEND_WALK_NOTE,
   MapLegend,
 } from "@/ui/map/map-legend";
@@ -12,6 +13,21 @@ import { ONEWAY_CAUTION } from "@/ui/map/line-rules";
 
 afterEach(() => {
   cleanup();
+});
+
+describe("MapLegend: always present with walking and stops", () => {
+  it("with no vehicle class known it still has the button and lists the mapped-stop entry", () => {
+    render(<MapLegend items={["walk"]} defaultOpen />);
+    expect(screen.getByRole("button", { name: /Legend/i })).toBeTruthy();
+    expect(screen.getByText(LEGEND_WALK_NOTE)).toBeTruthy();
+    expect(screen.getByText(LEGEND_STOP_LABEL)).toBeTruthy();
+    expect(screen.getByText(LEGEND_FOOTNOTE)).toBeTruthy();
+  });
+
+  it("renders even with no items at all", () => {
+    render(<MapLegend items={[]} />);
+    expect(screen.getByTestId("map-legend-button")).toBeTruthy();
+  });
 });
 
 describe("MapLegend (Task 11)", () => {

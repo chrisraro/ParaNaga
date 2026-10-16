@@ -28,7 +28,8 @@ import type { Bounds, LatLng } from "@/domain/geo/types";
 import { mapSurface as computeMapSurface } from "@/domain/modes/palette";
 import { MapControls } from "./map-controls";
 import { MapLegend } from "./map-legend";
-import { RouteLinesLayer, linesHaveOnewayCaution } from "./route-lines-layer";
+import { legendVisualKeys } from "./map-layer-policy";
+import { RouteLinesLayer, collectRouteLegendItems, linesHaveOnewayCaution } from "./route-lines-layer";
 import { STOP_HIT_RADIUS_PX, StopsLayer } from "./stops-layer";
 import { TerminalsLayer } from "./terminals-layer";
 import { TripLinesLayer, type TripLinesData } from "./trip-lines-layer";
@@ -262,6 +263,8 @@ export default function NagaMapLeaflet({
   onOpenLayers,
   layersButtonRef,
   tripLines = null,
+  activeLegIndex = null,
+  fitTripLines = true,
   routeLines = null,
   selectedRouteCode = null,
   onSelectRoute = null,
@@ -287,8 +290,12 @@ export default function NagaMapLeaflet({
   const tileUrl = lowData && !backgroundOnce ? null : tiles.url;
   const effectiveTheme = useEffectiveTheme(theme);
   const surface = explicitMapSurface ?? computeMapSurface(effectiveTheme, tileUrl !== null);
+  const legendItems = useMemo(
+    () => legendVisualKeys(null, legend ?? collectRouteLegendItems(routeLines ?? [])),
+    [legend, routeLines],
+  );
   const legendCaution = useMemo(
-    () => (tripLines ? tripLines.caution : linesHaveOnewayCaution(routeLines)),
+    () => Boolean(tripLines?.caution) || linesHaveOnewayCaution(routeLines),
     [tripLines, routeLines],
   );
 
@@ -391,6 +398,7 @@ export default function NagaMapLeaflet({
             data={tripLines}
             surface={surface}
             highContrast={highContrast}
+            activeLegIndex={activeLegIndex}
           />
         ) : null}
         {terminals && terminals.length > 0 ? (
@@ -426,7 +434,7 @@ export default function NagaMapLeaflet({
         <FitHighlights
           stops={highlightStops}
           pins={pins}
-          tripLines={tripLines}
+          tripLines={fitTripLines ? tripLines : null}
           fitBoundsCoords={fitBoundsCoords}
           paddingBottom={highlightPaddingBottom}
         />
@@ -464,15 +472,15 @@ export default function NagaMapLeaflet({
         layersButtonRef={layersButtonRef}
       />
 
-      {legend && legend.length > 0 ? (
-        <MapLegend
-          items={legend}
-          // The swatches use the same palette as the drawn lines (Palette L whenever tiles are drawn,
-          // even in dark theme); the legend panel itself keeps the theme's colours.
-          surface={surface}
-          caution={legendCaution}
-        />
-      ) : null}
+      {/* Always present: walking and mapped stops are always on the map, plus a swatch for every
+          vehicle class the screen draws (none while the lines load, are filtered out or fail). */}
+      <MapLegend
+        items={legendItems}
+        // The swatches use the same palette as the drawn lines (Palette L whenever tiles are drawn,
+        // even in dark theme); the legend panel itself keeps the theme's colours.
+        surface={surface}
+        caution={legendCaution}
+      />
 
       {tiles.url === null ? (
         <p className="pn-map-notice">Map background unavailable</p>

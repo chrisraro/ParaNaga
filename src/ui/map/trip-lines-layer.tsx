@@ -69,6 +69,8 @@ export function rideStrokeLayers(colourKey: ColourKey): RideStrokeLayer[] {
 
 export type TripWalkSegment = {
   key: string;
+  /** Index of the leg in the option (guidance emphasises the current leg). */
+  legIndex: number;
   coords: LatLng[];
   lengthM: number;
   midpoint: LatLng | null;
@@ -77,6 +79,7 @@ export type TripWalkSegment = {
 
 export type TripRideSegment = {
   key: string;
+  legIndex: number;
   variantId: string;
   routeCode: string;
   routeName: string;
@@ -142,6 +145,7 @@ export function buildTripLinesData(
       const label = enriched.path ? enriched.path.label : WALK_STRAIGHT_LABEL;
       walkSegments.push({
         key: `walk-${idx}`,
+        legIndex: idx,
         coords,
         lengthM,
         midpoint: lengthM > 150 ? midpointOnPolyline(coords) : null,
@@ -184,6 +188,7 @@ export function buildTripLinesData(
     const chipText = MAP_CHIP_TEXT[colourKey];
     rideSegments.push({
       key: `ride-${idx}-${leg.variantId}`,
+      legIndex: idx,
       variantId: leg.variantId,
       routeCode: leg.routeCode,
       routeName: leg.routeName,
@@ -232,12 +237,22 @@ type Props = {
   data: TripLinesData;
   surface: MapSurface;
   highContrast: boolean;
+  /** Guidance: the leg being walked or ridden is drawn at full strength, the others softer. */
+  activeLegIndex?: number | null;
 };
+
+/** Opacity of the legs other than the current one while guided. */
+export const INACTIVE_LEG_OPACITY = 0.5;
 
 /** The dash of a caution section (same as the route lines). */
 export const CAUTION_DASH_ARRAY = "8 6" as const;
 
-export function TripLinesLayer({ data, surface, highContrast }: Props) {
+/** 1 for every leg unless a current leg is named; then only that leg stays at full strength. */
+export function legOpacity(activeLegIndex: number | null, legIndex: number): number {
+  return activeLegIndex === null || activeLegIndex === legIndex ? 1 : INACTIVE_LEG_OPACITY;
+}
+
+export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = null }: Props) {
   const palette = paletteForSurface(surface);
   const widths = useMemo(() => lineWidths(highContrast), [highContrast]);
 
@@ -245,6 +260,7 @@ export function TripLinesLayer({ data, surface, highContrast }: Props) {
     const walkEls = data.walkSegments.map((seg) => {
       const positions = seg.coords.map((c) => [c.lat, c.lng] as [number, number]);
       const swatch = palette.walk;
+      const opacity = legOpacity(activeLegIndex, seg.legIndex);
       return (
         <Fragment key={seg.key}>
           <Polyline
@@ -255,6 +271,7 @@ export function TripLinesLayer({ data, surface, highContrast }: Props) {
               className: "pn-line pn-line--casing pn-line--walk-casing",
               color: swatch.casing,
               weight: widths.walkDotPx + widths.casingSidePx * 2,
+              opacity,
               lineCap: "round",
               lineJoin: "round",
             }}
@@ -269,6 +286,7 @@ export function TripLinesLayer({ data, surface, highContrast }: Props) {
               color: swatch.core,
               weight: widths.walkDotPx,
               dashArray: "1 9",
+              opacity,
               lineCap: "round",
               lineJoin: "round",
             }}
@@ -290,6 +308,7 @@ export function TripLinesLayer({ data, surface, highContrast }: Props) {
     const rideEls = data.rideSegments.map((seg) => {
       const layers = rideStrokeLayers(seg.colourKey);
       const baseSwatch = palette[seg.colourKey === "mixed_trad_modern" ? "traditional_puj" : seg.colourKey];
+      const opacity = legOpacity(activeLegIndex, seg.legIndex);
       return (
         <Fragment key={seg.key}>
           {seg.runs.map((run, rIdx) => {
@@ -319,6 +338,7 @@ export function TripLinesLayer({ data, surface, highContrast }: Props) {
                       color: isCasing ? swatch.casing : swatch.core,
                       weight: isCasing ? widths.tripRideCorePx + widths.casingSidePx * 2 : widths.tripRideCorePx,
                       dashArray: dashArray ?? undefined,
+                      opacity,
                       lineCap: dashArray ? "butt" : "round",
                       lineJoin: "round",
                     }}
@@ -356,7 +376,7 @@ export function TripLinesLayer({ data, surface, highContrast }: Props) {
     });
 
     return [...walkEls, ...rideEls];
-  }, [data, palette, widths, highContrast]);
+  }, [data, palette, widths, highContrast, activeLegIndex]);
 
   return <>{elements}</>;
 }
