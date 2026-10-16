@@ -185,7 +185,12 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     expect(index.studyLabels).toHaveLength(32);
     expect(index.terminals).toHaveLength(16);
     expect(index.routes).toHaveLength(13);
-    expect(index.osmPlaces).toHaveLength(233);
+    // Derived from the revision (every place member is in the index), not a magic number: the core
+    // categories grew in Task 14 and the real snapshot grows with each refresh.
+    const placeMembers = await owner.query<{ n: number }>(
+      "select count(*)::int as n from transit.revision_member where revision_id = $1 and entity_kind = 'place'", [revisionId]);
+    expect(placeMembers.rows[0]!.n).toBeGreaterThan(0);
+    expect(index.osmPlaces).toHaveLength(placeMembers.rows[0]!.n);
     expect(index.destinationCategories).toHaveLength(5);
     expect(index.feederLeads).toHaveLength(5);
     expect(index.legacyNames).toHaveLength(6);

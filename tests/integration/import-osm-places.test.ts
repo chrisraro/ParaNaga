@@ -118,6 +118,17 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
   }, 120_000);
 
   afterAll(async () => {
+    // The 2099 test batches must not outlive this file: the importer refuses any snapshot older than
+    // the newest committed one, so a left-over 2099-01-02 batch would make every later file that
+    // imports the real 2026 snapshot fail. Provenance is append-only, but a batch's outcome is
+    // updatable: mark this file's batches aborted (the importer's guard reads committed batches only).
+    // Their revisions stay as superseded drafts-of-record; nothing else references them.
+    if (owner) {
+      await owner.query(
+        `update ingest.batch set status = 'aborted', finished_at = coalesce(finished_at, now())
+          where snapshot_version in ($1, $2)`,
+        [`osm:relation/3084673:${DATE}`, `osm:relation/3084673:${REFRESH_DATE}`]);
+    }
     if (owner && startRevisionId) {
       const current = await owner.query("select revision_id from transit.published_pointer");
       if (current.rows[0]?.revision_id !== startRevisionId) await publish(startRevisionId);
