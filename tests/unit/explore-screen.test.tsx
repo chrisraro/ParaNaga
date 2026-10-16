@@ -91,7 +91,9 @@ describe("Explore: places by category", () => {
     expect(screen.getByTestId("explore-places-note").textContent).toContain("Sourced photos show landmarks; entrances and hours remain unverified.");
     expect(screen.getByRole("link", { name: "© OpenStreetMap contributors (ODbL)" })).toBeTruthy();
     expect(screen.getByRole("tabpanel", { name: "All" })).toBeTruthy();
-  }, 30_000); // renders every OSM place and runs role queries over them: 8–9 s on slower machines
+  }, 30_000); // Show all renders every OSM place and the whole-document role queries (getByRole by name over
+  // hundreds of links/images) dominate: 7-9 s standalone, more under parallel load. Not cheap to cut
+  // without weakening the assertions, so it keeps a generous timeout.
 
   it("Jump to directory moves focus to the Directory heading", () => {
     renderExplore();
