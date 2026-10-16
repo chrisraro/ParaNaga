@@ -1,0 +1,4 @@
+.pn-street-view { padding: 16px; border-radius: 18px; background: var(--pn-surface); min-width: 0; }
+.pn-street-view iframe { display: block; width: 100%; min-width: 200px; height: 340px; border: 0; border-radius: 12px; margin: 12px 0; }
+.pn-street-view a { color: var(--pn-accent); text-decoration: underline; text-underline-offset: 3px; }
+.pn-street-view a:focus-visible { outline: 2px solid var(--pn-accent); outline-offset: 4px; }

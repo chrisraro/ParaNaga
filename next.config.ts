@@ -16,6 +16,7 @@ const cspReportOnly = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://tile.openstreetmap.org https://api.maptiler.com",
   "connect-src 'self'",
+  "frame-src 'self' https://www.google.com",
   "worker-src 'self' blob:",
   "child-src blob:",
   "font-src 'self'",

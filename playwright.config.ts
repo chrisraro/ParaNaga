@@ -36,14 +36,14 @@ export default defineConfig({
       command: `pnpm build && pnpm start --port ${PORT}`,
       // PARANAGA_E2E_SW_VARIANT: test-only, lets offline.spec.ts publish new worker bytes at the
       // same URL through a cookie (src/app/serwist/[path]/route.ts). Never set for a deployment.
-      env: { NEXT_DIST_DIR: ".next-e2e", NEXT_PUBLIC_TILE_URL: E2E_TILE_URL, PARANAGA_E2E_SW_VARIANT: "1" },
+      env: { NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY: "paranaga-e2e-embed-key", NEXT_DIST_DIR: ".next-e2e", NEXT_PUBLIC_TILE_URL: E2E_TILE_URL, PARANAGA_E2E_SW_VARIANT: "1" },
       url: `http://localhost:${PORT}/api/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,
     },
     {
       command: `pnpm build && pnpm start --port ${NO_TILES_PORT}`,
-      env: { NEXT_DIST_DIR: ".next-e2e-notiles", NEXT_PUBLIC_TILE_URL: "" },
+      env: { NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY: "paranaga-e2e-embed-key", NEXT_DIST_DIR: ".next-e2e-notiles", NEXT_PUBLIC_TILE_URL: "" },
       url: `http://localhost:${NO_TILES_PORT}/api/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,

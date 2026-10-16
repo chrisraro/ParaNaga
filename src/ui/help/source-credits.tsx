@@ -32,6 +32,11 @@ export function SourceCredits({ revisionId }: { revisionId?: string }) {
         <p><a href="/licenses/Geist-OFL.txt">Geist copyright and full font license</a></p>
         <p><a href="/licenses/THIRD-PARTY-NOTICES.txt">Third-party copyright and license notices</a></p>
       </section>
+      <section aria-labelledby="street-view-credits">
+        <h2 id="street-view-credits" className="pn-section__title">Google Street View</h2>
+        <p className="pn-footnote">Interactive panoramas are provided directly by Google Maps through Maps Embed API, only after you open the viewer. Google and imagery-provider attribution remains inside the viewer. Coverage, image dates, signs and boarding curbs are not verified by ParaNaga. No Street View imagery is downloaded or cached by ParaNaga.</p>
+        <p><a href="https://www.google.com/intl/en-US_US/help/terms_maps/" target="_blank" rel="noopener noreferrer">Google Maps terms</a> · <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google privacy policy</a></p>
+      </section>
       <section aria-labelledby="photo-credits">
         <h2 id="photo-credits" className="pn-section__title">Photo credits and capture dates</h2>
         <p className="pn-footnote">Each photo keeps its creator, source and license. Capture dates describe the image, not a recent site inspection. Images may be resized and cropped in cards; adaptations retain their source license. No Google Maps or Street View screenshots are redistributed.</p>

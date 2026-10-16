@@ -128,7 +128,7 @@ test("the sources register lists the captured sources with checked dates and saf
     const url = new URL(href);
     expect(url.search === "" || (url.hostname === "www.google.com" && url.pathname === "/maps/d/viewer" && [...url.searchParams.keys()].join() === "mid"), href).toBe(true);
   }
-  await expect(page.getByTestId("sources-owner-note")).toHaveText("The public My Maps owner is listed as “Tan Gumba”; the owner's identity is not verified.");
+  await expect(page.getByTestId("sources-owner-note")).toHaveText("Naga City Designated Stops — shared publicly by Tan Gumba");
 });
 
 test("MyNaga: the independence note, the checklist and four verified links that change nothing in the app", async ({ page, context }) => {

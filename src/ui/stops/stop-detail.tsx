@@ -9,6 +9,7 @@ import "@/ui/kit/styles";
 import Link from "next/link";
 import { photoForStopSource } from "@/domain/media/photos";
 import { ReferencePhoto } from "@/ui/places/reference-photo";
+import { StopStreetView } from "@/ui/street-view/stop-street-view";
 import { useId, useState } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { stopDetailSchema, type StopDetail } from "@/domain/api/schemas";
@@ -242,6 +243,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
           </div>
         </dl>
         {referencePhoto ? <ReferencePhoto photo={referencePhoto} stop /> : null}
+        <StopStreetView key={stop.id} lat={stop.lat} lng={stop.lng} name={stopDisplayName(stop.name, stop.source.code)} />
 
         <p className="pn-soon">Verification opens soon.</p>
 
