@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { planResponseSchema } from "@/domain/api/plan";
+import { PROVISIONAL_PLAN } from "../e2e/fixtures/plan-responses";
 import { fleetSummary, type FleetRecord } from "@/domain/modes/fleet";
 import {
   directionText,
@@ -8,6 +10,7 @@ import {
   formatDistance,
   legFareText,
   noCoverageCopy,
+  planAnnouncement,
   ringDirection,
   routeChipLabel,
   isNegligibleWalk,
@@ -202,5 +205,19 @@ describe("ride leg copy (Task 8: D13 distance basis, mixed fleets)", () => {
     for (const t of [rideFleetText("jeepney", fleetSummary([rec("traditional_puj", null), rec("modern_puj", true)], "jeepney"))]) {
       expect(t).not.toMatch(/e-jeep/i);
     }
+  });
+});
+
+describe("planAnnouncement", () => {
+  const data = planResponseSchema.parse(PROVISIONAL_PLAN);
+  it("says Route shown only when options are listed and drawn", () => {
+    expect(planAnnouncement(data, false, false)).toMatch(/^\d+ options? found\. Unverified\. Route shown\.$/);
+    expect(planAnnouncement(data, true, false)).not.toContain("Route shown");
+    const none = { ...data, plan: { ...data.plan, coverage: "none" as const, options: [] } };
+    expect(planAnnouncement(none, false, false)).not.toContain("Route shown");
+  });
+  it("changes text for the same plan twice in a row, so it is spoken again", () => {
+    expect(planAnnouncement(data, false, true)).not.toBe(planAnnouncement(data, false, false));
+    expect(planAnnouncement(data, false, true).replace("​", "")).toBe(planAnnouncement(data, false, false));
   });
 });

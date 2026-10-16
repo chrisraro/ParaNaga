@@ -27,8 +27,6 @@ export type NagaMapProps = {
   highlightPaddingBottom?: number;
   /** Change (e.g. the sheet's snap) to re-fit the current highlights / route into the visible map. */
   refitSignal?: number;
-  /** Announced once each time `fitBoundsCoords` is fitted anew (a snap re-fit stays silent). */
-  fitAnnouncement?: string;
   /** Keys the `fitBoundsCoords` fit on its two ends + this id (e.g. an option id), not on every coordinate. */
   fitId?: string;
   /** The route's path loaded after the first fit: refines it unless the rider has panned meanwhile. */

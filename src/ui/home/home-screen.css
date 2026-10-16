@@ -148,7 +148,7 @@
 }
 .pn-home button:focus-visible,
 .pn-home a.pn-option:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 
@@ -214,13 +214,14 @@
   padding-bottom: var(--pn-sheet-offset, 0px);
   transform: translateY(var(--pn-sheet-offset, calc(100% - 444px)));
   /* Only the transform animates (compositor). The padding follows once the snap has settled when
-     the sheet gets shorter (no per-frame layout); a lift to full applies it at once (below). */
+     the sheet gets shorter (no per-frame layout); a lift (data-grow, and always to full) applies it at once (below). */
   transition:
     transform var(--pn-dur-slow) var(--pn-ease-snap),
     padding-bottom 0s linear var(--pn-dur-slow);
   will-change: transform;
 }
-.pn-sheet[data-snap="2"] {
+.pn-sheet[data-snap="2"],
+.pn-sheet[data-grow] {
   transition: transform var(--pn-dur-slow) var(--pn-ease-snap);
 }
 /* Grabber: full-width 44px target (min touch size); the visible pill is 36x5. */
@@ -325,6 +326,14 @@
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
+}
+.pn-peek__note {
+  margin: 0;
+  min-height: 22px;
+  color: var(--pn-warn-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 22px;
 }
 .pn-peek__toggle {
   display: flex;
@@ -752,7 +761,7 @@ a.pn-option {
   text-decoration: none;
 }
 .pn-nearby__cell:focus-visible {
-  outline: 3px solid #2bb5ae;
+  outline: 3px solid var(--pn-accent, #0b7a75);
   outline-offset: 2px;
 }
 .pn-nearby__text {

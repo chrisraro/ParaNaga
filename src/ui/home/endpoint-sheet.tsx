@@ -17,6 +17,8 @@ export type Snap = 0 | 1 | 2;
 export const PEEK_VISIBLE = 214;
 /** Peek while trip options are listed: rows + best-option summary + "All options" (two 44 px rows). */
 export const PEEK_OPTIONS_VISIBLE = 276;
+/** One staleness line (offline plan, changed since saved) under the best option at the peek snap. */
+export const PEEK_NOTE_VISIBLE = 24;
 export const HALF_VISIBLE = 444;
 const DRAG_SLOP = 6;
 /** How far ahead (ms) a release's velocity carries the sheet before picking the nearest snap. */
@@ -36,6 +38,11 @@ const GRABBER_LABEL: Record<Snap, string> = {
 export function offsetFor(snap: Snap, height: number, clearance = 0, peek = PEEK_VISIBLE): number {
   if (snap === 2) return 0;
   return Math.max(0, height - (snap === 0 ? peek + clearance : HALF_VISIBLE));
+}
+
+/** The sheet is getting taller on screen (its offset shrinks): its bottom padding must follow at once. */
+export function sheetGrows(prev: number | null, next: number | null): boolean {
+  return prev !== null && next !== null && next < prev;
 }
 
 export type SheetControl = {
@@ -298,6 +305,14 @@ export function EndpointSheet({
   summary,
 }: Props) {
   const { attach, snap, offset, dragging } = sheet;
+  // Growing: the padding that stands for the off-screen part shrinks with the lift, not 360 ms
+  // later (the content would leave a blank strip under it while the sheet slides up).
+  const [seenOffset, setSeenOffset] = useState(offset);
+  const [grow, setGrow] = useState(false);
+  if (offset !== seenOffset) {
+    setSeenOffset(offset);
+    setGrow(sheetGrows(seenOffset, offset));
+  }
   const [footer, setFooter] = useState<HTMLDivElement | null>(null);
   const [footerHeight, setFooterHeight] = useState(0);
   // The scrolling content keeps its last rows and focused controls clear of the footer.
@@ -330,6 +345,7 @@ export function EndpointSheet({
       aria-label="Trip planner"
       data-testid="trip-sheet"
       data-snap={snap}
+      data-grow={grow ? "" : undefined}
       className={dragging ? "pn-sheet pn-sheet--dragging" : "pn-sheet"}
       style={style}
     >

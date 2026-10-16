@@ -118,10 +118,8 @@ function FitHighlights({
   fitBoundsCoords,
   paddingBottom,
   refitSignal,
-  fitAnnouncement,
   fitId,
   fitPathReady,
-  onAnnounce,
 }: {
   stops: readonly HighlightStop[] | undefined;
   pins: NagaMapPins | undefined;
@@ -130,23 +128,18 @@ function FitHighlights({
   paddingBottom: number;
   /** Changes when the sheet snaps: the fit is redone so the route stays above the sheet. */
   refitSignal: number | undefined;
-  /** Announced once per new fit of `fitBoundsCoords` (none: silent). */
-  fitAnnouncement: string | undefined;
   /** When set, the coords fit is keyed on its two ends + this id, not on every coordinate. */
   fitId: string | undefined;
   /** The route's path arrived after the first fit: refines it unless the rider has panned. */
   fitPathReady: boolean | undefined;
-  onAnnounce: (message: string) => void;
 }) {
   const map = useMap();
   const stopsKey = stops && stops.length > 0 ? stops.map((s) => s.id).join("|") : "";
   const linesKey = stopsKey && tripLines ? `${tripLines.walkSegments.length}:${tripLines.rideSegments.map((r) => r.key).join(",")}` : "";
-  // Announce per pair of ends: the path loading in later refits silently.
   const endsKey = fitBoundsCoords ? routeFitKey(fitBoundsCoords.slice(0, 2)) : "";
   const coordsKey = fitBoundsCoords ? (fitId === undefined ? routeFitKey(fitBoundsCoords) : `${endsKey}|${fitId}`) : "";
   const fitKey = [stopsKey, linesKey, coordsKey].filter(Boolean).join("#");
   // A snap change re-fits; a pan, zoom or GPS fix never does (the rider's view wins until the route changes).
-  const announcedKey = useRef("");
 
   const fit = useEffectEvent(() => {
     const points: L.LatLngTuple[] = [];
@@ -178,12 +171,6 @@ function FitHighlights({
       easeLinearity: ROUTE_FIT_EASE_LINEARITY,
       animate: !prefersReducedMotion(),
     });
-    // One short announcement per new route fit (not for a snap re-fit, not for a trip detail
-    // fit, which has its own announcement).
-    if (fitAnnouncement && !(stops && stops.length > 0) && endsKey && announcedKey.current !== endsKey) {
-      announcedKey.current = endsKey;
-      onAnnounce(fitAnnouncement);
-    }
   });
   const fitAfterZoom = useRef(false);
   useEffect(() => {
@@ -313,7 +300,6 @@ export default function NagaMapLeaflet({
   highlightStops,
   highlightPaddingBottom = 40,
   refitSignal,
-  fitAnnouncement,
   fitId,
   fitPathReady,
   stopPins,
@@ -356,7 +342,12 @@ export default function NagaMapLeaflet({
   const { lowData, theme, highContrast } = usePrefs();
   const [backgroundOnce, setBackgroundOnce] = useState(false);
   const tileUrl = lowData && !backgroundOnce ? null : tiles.url;
-  const { shown: notice, props: noticePresence } = usePresence(tiles.url === null ? "unavailable" : tileUrl === null ? "lowData" : null);
+  // "Show background once" removes its own notice: focus then moves to the map region.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const { shown: notice, props: noticePresence } = usePresence(
+    tiles.url === null ? "unavailable" : tileUrl === null ? "lowData" : null,
+    () => rootRef.current,
+  );
   const effectiveTheme = useEffectiveTheme(theme);
   const surface = explicitMapSurface ?? computeMapSurface(effectiveTheme, tileUrl !== null);
   const legendItems = useMemo(
@@ -429,6 +420,8 @@ export default function NagaMapLeaflet({
 
   return (
     <div
+      ref={rootRef}
+      tabIndex={-1}
       data-testid="naga-map"
       role="region"
       aria-label={label}
@@ -522,10 +515,8 @@ export default function NagaMapLeaflet({
           fitBoundsCoords={fitBoundsCoords}
           paddingBottom={highlightPaddingBottom}
           refitSignal={refitSignal}
-          fitAnnouncement={fitAnnouncement}
           fitId={fitId}
           fitPathReady={fitPathReady}
-          onAnnounce={setAnnouncement}
         />
         <MapViewSync
           recenterSignal={recenterSignal}

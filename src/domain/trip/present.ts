@@ -3,6 +3,7 @@
 // Honesty: fares are always "Estimate …" ranges in whole pesos (never "Exact"), distances are
 // "≈" estimates, a loop's direction is derived from the order of its mapped pins and labelled so,
 // and no-coverage copy never implies a verified route exists.
+import type { PlanResponse } from "../api/plan";
 import type { LatLng } from "../geo/types";
 import { modeName, type FleetSummary, type RouteMode } from "../modes/fleet";
 import { MAX_ACCESS_WALK_M } from "../planner/labels";
@@ -177,4 +178,19 @@ export function noCoverageCopy(reason: NoCoverageReason | null, directWalkEstima
     default:
       return { title: "No provisional route nearby yet", detail: ONLY_LOOPS };
   }
+}
+
+/**
+ * What the home live region says when a plan settles. "Route shown" only when a route is drawn
+ * (options listed, not a stored trip). `alt` swaps a silent mark in so the same words twice in a
+ * row still change the region's text and are spoken again.
+ */
+export function planAnnouncement(data: PlanResponse, stored: boolean, alt: boolean): string {
+  const { plan } = data;
+  const mark = alt ? "​" : "";
+  if (plan.coverage === "none") return noCoverageCopy(plan.reason, plan.directWalkEstimateMeters).title + mark;
+  const n = plan.options.length;
+  const anyRide = plan.options.some((o) => o.rides > 0);
+  const drawn = n > 0 && !stored;
+  return `${n} ${n === 1 ? "option" : "options"} found.${anyRide ? " Unverified." : ""}${drawn ? " Route shown." : ""}${mark}`;
 }

@@ -611,6 +611,50 @@ test("motion: the sheet animates transform only (padding-bottom applies at once)
   expect((await transitions(page.getByTestId("trip-option"))).ms.some((m) => m > 0)).toBe(true);
 });
 
+test("a lift applies the sheet padding at once (data-grow); a drop to peek delays it", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  const delayed = () => sheet.evaluate((el) => getComputedStyle(el).transitionProperty.split(",").map((p) => p.trim()));
+  // Peek -> half: the content must fill the rising sheet, so only the transform is timed.
+  await page.getByTestId("endpoint-destination").locator(".pn-endpoint__main").click();
+  await expect(sheet).toHaveAttribute("data-snap", "1");
+  await expect(sheet).toHaveAttribute("data-grow", "");
+  expect(await delayed()).toEqual(["transform"]);
+  // Half -> full -> peek: shrinking keeps the padding delayed until the snap settles.
+  await page.getByRole("button", { name: "Expand sheet to full" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "2");
+  await page.getByRole("button", { name: "Collapse sheet" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(sheet).not.toHaveAttribute("data-grow", /.*/);
+  expect(await delayed()).toEqual(["transform", "padding-bottom"]);
+});
+
+test("the map is inert under the full sheet, so Tab skips its hidden controls", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  const map = page.locator(".pn-home__map");
+  await expect(map).not.toHaveAttribute("inert", /.*/);
+  await page.getByTestId("options-toggle").click();
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "2");
+  await expect(map).toHaveAttribute("inert", "");
+  // Tab from the sheet's first control never lands in a map control.
+  await page.getByRole("button", { name: "Collapse sheet" }).focus();
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press("Tab");
+    expect(await page.evaluate(() => document.activeElement?.closest(".pn-home__map") !== null)).toBe(false);
+  }
+  await page.getByRole("button", { name: "Collapse sheet" }).click();
+  await expect(map).not.toHaveAttribute("inert", /.*/);
+});
+
 test("reduced motion: no transition or animation on the sheet, the list items or the legend", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.route("**/api/v1/plan", (route) =>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HALF_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, offsetFor } from "@/ui/home/endpoint-sheet";
+import { HALF_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, offsetFor, sheetGrows } from "@/ui/home/endpoint-sheet";
 
 describe("offsetFor with a taller peek (options listed)", () => {
   it("defaults to the 214 px peek and keeps half and full", () => {
@@ -15,5 +15,15 @@ describe("offsetFor with a taller peek (options listed)", () => {
   it("peek leaves room for the rows, the summary and a 44 px toggle", () => {
     expect(PEEK_OPTIONS_VISIBLE).toBeGreaterThanOrEqual(PEEK_VISIBLE + 44);
     expect(PEEK_OPTIONS_VISIBLE).toBeLessThan(HALF_VISIBLE);
+  });
+});
+
+describe("sheetGrows", () => {
+  it("is true only when the offset shrinks (a lift), so the padding does not trail the lift", () => {
+    expect(sheetGrows(offsetFor(0, 800), offsetFor(1, 800))).toBe(true);
+    expect(sheetGrows(offsetFor(1, 800), offsetFor(2, 800))).toBe(true);
+    expect(sheetGrows(offsetFor(2, 800), offsetFor(0, 800))).toBe(false);
+    expect(sheetGrows(300, 300)).toBe(false);
+    expect(sheetGrows(null, 300)).toBe(false);
   });
 });

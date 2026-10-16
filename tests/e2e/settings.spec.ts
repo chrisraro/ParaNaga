@@ -216,9 +216,12 @@ test.describe("phone", () => {
     expect(tileRequests).toEqual([]);
 
     // Once, on request.
-    await lowData.getByRole("button", { name: "Show background once" }).click();
+    await lowData.getByRole("button", { name: "Show background once" }).focus();
+    await page.keyboard.press("Enter");
     await expect.poll(() => tileRequests.length).toBeGreaterThan(0);
     await expect(lowData).toHaveCount(0);
+    // The notice removed the focused button: focus moved to the map, not to <body>.
+    await expect(page.getByTestId("naga-map")).toBeFocused();
   });
 
   test("the Low-data switch turns the map background off for the home map", async ({ page }) => {

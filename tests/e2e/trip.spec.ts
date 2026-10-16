@@ -130,7 +130,8 @@ test("setting both ends fits the whole route above the sheet instead of zooming 
   const zoom = Number(await mapEl(page).getAttribute("data-zoom"));
   expect(zoom).toBeLessThanOrEqual(17);
   // Concise, and never "Map centered on ..." when fitting a route.
-  await expect(page.getByTestId("naga-map").locator("p.sr-only")).toHaveText("Route shown");
+  await expect(page.getByTestId("home-announcer")).toContainText("Route shown.");
+  await expect(page.getByTestId("naga-map").locator("p.sr-only")).not.toHaveText("Route shown");
   await expect(page.getByText(/Map centered on/)).toHaveCount(0);
 });
 

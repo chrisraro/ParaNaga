@@ -155,17 +155,24 @@ export function TripOptions({ data, refreshing = false, onOpen, tricycleHint = n
 /**
  * Peek of the sheet once From and To are set: one line for the best option (route, time range,
  * fare, a caution chip for a ride) and the toggle "All options" that lifts the sheet to full with
- * every option (aria-expanded while full, the chevron turns). The summary hides at full: the list is there.
+ * every option (aria-expanded while the list is visible, the chevron turns at full). The summary hides at full: the list is there.
  */
 export function OptionsPeek({
   data,
   etaModel,
   expanded,
+  listShown,
+  notes = [],
   onToggle,
 }: {
   data: PlanResponse;
   etaModel?: EtaModel | null;
+  /** Full: the list is all there is, so the best-option line is hidden. */
   expanded: boolean;
+  /** The list is visible (half or full): the toggle reads as expanded. */
+  listShown: boolean;
+  /** Staleness lines (offline plan, changed since saved), shown at the peek where the list is inert. */
+  notes?: readonly string[];
   onToggle: () => void;
 }) {
   const best = data.plan.options[0];
@@ -191,11 +198,18 @@ export function OptionsPeek({
         ) : null}
       </p>
       )}
+      {listShown
+        ? null
+        : notes.map((note) => (
+            <p key={note} className="pn-peek__note" data-testid="options-peek-note">
+              {note}
+            </p>
+          ))}
       <button
         type="button"
         id={OPTIONS_TOGGLE_ID}
         className="pn-peek__toggle"
-        aria-expanded={expanded}
+        aria-expanded={listShown}
         aria-controls={OPTIONS_LIST_ID}
         onClick={onToggle}
         data-testid="options-toggle"

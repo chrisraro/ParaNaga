@@ -25,7 +25,7 @@ import { useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, us
 import { useGeolocation } from "@/client/geo/use-geolocation";
 import { useStopsInView } from "@/client/map/use-stops-in-view";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
-import { offlinePlanNote } from "@/domain/pwa/offline-copy";
+import { offlinePlanChip, offlinePlanNote } from "@/domain/pwa/offline-copy";
 import type { PlanResponse } from "@/domain/api/plan";
 import type { StopPin } from "@/domain/api/schemas";
 import { haversineMeters } from "@/domain/geo/geometry";
@@ -35,7 +35,7 @@ import type { Bounds, LatLng } from "@/domain/geo/types";
 import type { Endpoint } from "@/domain/trip/endpoints";
 import { SAME_PLACE_M } from "@/domain/planner/labels";
 import type { SavedPlaceSource, SavedTrip } from "@/domain/saved/saved";
-import { SAME_PLACE_TITLE, noCoverageCopy } from "@/domain/trip/present";
+import { SAME_PLACE_TITLE, planAnnouncement } from "@/domain/trip/present";
 import {
   endpointLabel,
   endpointsReducer,
@@ -51,7 +51,7 @@ import { TripDetail, type TripEnds } from "@/ui/trip/trip-detail";
 import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
-import { EndpointSheet, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, endpointRowMainId, useSheet, type Snap } from "./endpoint-sheet";
+import { EndpointSheet, PEEK_NOTE_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, endpointRowMainId, useSheet, type Snap } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
   LocationStatus,
@@ -231,7 +231,11 @@ export function HomeScreen() {
   // Trip options are listed (none open): the sheet rests at peek with the best option's summary.
   const optionsListed =
     ready && !guiding && !picking && !stored && !openOption && planData !== null && planData.plan.coverage === "provisional" && planData.plan.options.length > 0;
-  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE : PEEK_VISIBLE);
+  // The two staleness notes also show at the peek (the list below is inert there), one line each.
+  const peekNotes: string[] = [];
+  if (optionsListed && reopen.changed) peekNotes.push("Changed since saved");
+  if (optionsListed && plan.status === "ready" && plan.offline) peekNotes.push(offlinePlanChip(plan.data.revision.publishedAt, plan.offline));
+  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE + PEEK_NOTE_VISIBLE * peekNotes.length : PEEK_VISIBLE);
   // Where focus goes once the results render: the results heading, or an option card.
   const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);
   // No trip, no pending focus move: a stale request must not pull focus once a trip is set again.
@@ -309,16 +313,13 @@ export function HomeScreen() {
   }
   const planSignature = planData ? `${planData.plan.coverage}|${planData.plan.options.map((o) => o.id).join(",")}` : null;
   const [seenSignature, setSeenSignature] = useState<string | null>(null);
+  // The same words twice in a row are no change for a live region: the text alternates by a silent mark.
+  const [announceTick, setAnnounceTick] = useState(false);
   if (planSignature !== seenSignature) {
     setSeenSignature(planSignature);
     if (planData) {
-      const n = planData.plan.options.length;
-      const anyRide = planData.plan.options.some((o) => o.rides > 0);
-      setAnnouncement(
-        planData.plan.coverage === "none"
-          ? noCoverageCopy(planData.plan.reason, planData.plan.directWalkEstimateMeters).title
-          : `${n} ${n === 1 ? "option" : "options"} found.${anyRide ? " Unverified." : ""}`,
-      );
+      setAnnouncement(planAnnouncement(planData, stored !== null, announceTick));
+      setAnnounceTick(!announceTick);
     }
   }
 
@@ -874,7 +875,7 @@ export function HomeScreen() {
       <h1 className="sr-only" tabIndex={-1} data-home-heading="">
         ParaNaga trip planner
       </h1>
-      <div className="pn-home__map">
+      <div className="pn-home__map" inert={sheet.snap === 2 && picking === null}>
         <NagaMap
           userFix={guiding ? (guidance.location.watching ? guidance.location.fix : null) : userFix}
           userStale={guiding ? false : (assessment?.stale ?? false)}
@@ -883,7 +884,6 @@ export function HomeScreen() {
           highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET)}
           refitSignal={sheet.snap}
           fitBoundsCoords={routeFitCoords}
-          fitAnnouncement="Route shown"
           fitId={previewOption?.id ?? "ends"}
           fitPathReady={tripLines !== null && tripLines.allCoords.length > 0}
           crosshair={picking !== null}
@@ -987,7 +987,7 @@ export function HomeScreen() {
           detailOpen={tripDetailOpen || guiding}
           summary={
             optionsListed && planData ? (
-              <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} onToggle={handleToggleOptions} />
+              <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} listShown={sheet.snap !== 0} notes={peekNotes} onToggle={handleToggleOptions} />
             ) : null
           }
           after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
