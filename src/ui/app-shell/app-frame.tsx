@@ -141,7 +141,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
       </div>
       {/* Route changes are transitions: the outgoing panel (or the bare map) crossfades into the
           incoming one, so a navigation never cuts to an empty frame (globals.css, .pn-panel). */}
-      <ViewTransition default="none" update="pn-panel" enter="pn-panel" exit="pn-panel">
+      <ViewTransition name="pn-panel" default="none" update="pn-panel" enter="pn-panel" exit="pn-panel" share="pn-panel">
         {children}
       </ViewTransition>
       {/* usePathname in a layout: Suspense keeps the static shell valid for dynamic segments. */}

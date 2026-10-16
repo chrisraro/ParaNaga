@@ -88,6 +88,7 @@ test.describe("phone", () => {
       test(`moving among Map, Explore, Saved, More and Search never shows a blank or white frame (${scheme})`, async ({ page }) => {
         await page.goto("/app");
         await expect(page.getByTestId("trip-sheet")).toBeVisible();
+        await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
         await startSampler(page);
         await tour(page);
         await expectNoBlankFrame(page, scheme === "dark");
@@ -114,6 +115,53 @@ test.describe("phone", () => {
         await expectSwitchGeometry(routes, 22);
         await axeClean(page, '[data-testid="layers-sheet"]');
       });
+
+      test(`panel to panel, nothing shows through a mid-transition frame (${scheme})`, async ({ page, browser }, info) => {
+        await page.goto("/app/explore");
+        await expect(page.getByRole("heading", { level: 1, name: "Explore" })).toBeAttached();
+        // Paint the map and the page canvas magenta: any magenta in a frame of a panel-to-panel swap is
+        // the map, or nothing at all, showing through between the two panels.
+        await page.addStyleTag({ content: "html, .leaflet-container,.leaflet-pane, .pn-map-placeholder { background: #ff00ff !important; } .leaflet-pane { opacity: 1 !important; }" });
+        const analyser = await browser.newPage();
+        const worst: { t: number; share: number }[] = [];
+        for (const t of [40, 100, 160, 220, 280]) {
+          const to = page.url().includes("/explore") ? "Saved" : "Explore";
+          await tab(page, to).click();
+          // Freeze the view transition at t ms and take the composited frame.
+          const caught = await page.waitForFunction(
+            (ms) => {
+              const vt = document.getAnimations().filter((a) => (a.effect as KeyframeEffect | null)?.pseudoElement?.startsWith("::view-transition"));
+              if (vt.length === 0) return false;
+              for (const a of vt) {
+                a.pause();
+                a.currentTime = ms;
+              }
+              return true;
+            },
+            t,
+            { polling: "raf", timeout: 5000 },
+          );
+          expect(await caught.jsonValue()).toBe(true);
+          const shot = await page.screenshot();
+          if (process.env.VT_SHOTS) (await import("node:fs")).writeFileSync(`${process.env.VT_SHOTS}/vt-${scheme}-${t}ms.png`, shot);
+          const share = await magentaShare(analyser, shot);
+          worst.push({ t, share: Math.round(share * 1000) / 1000 });
+          if (t === 160) await info.attach(`mid-transition-${t}ms.png`, { body: shot, contentType: "image/png" });
+          await page.evaluate(() => document.getAnimations().forEach((a) => a.finish()));
+          await expect(page).toHaveURL(new RegExp(`/app/${to.toLowerCase()}$`));
+          await expect(page.getByRole("heading", { level: 1, name: to })).toBeVisible();
+          await page.waitForTimeout(300);
+        }
+        // Control: the detector does see the map once it is the screen.
+        await tab(page, "Map").click();
+        await expect(page).toHaveURL(/\/app$/);
+        await page.waitForTimeout(500);
+        const control = await magentaShare(analyser, await page.screenshot());
+        await analyser.close();
+        console.log(`map share per frame: ${JSON.stringify(worst)}; map screen: ${control.toFixed(3)}`);
+        expect(control).toBeGreaterThan(0.1);
+        expect(worst.filter((w) => w.share > 0.002), "map pixels visible mid-transition").toEqual([]);
+      });
     });
   }
 
@@ -124,8 +172,39 @@ test.describe("phone", () => {
     await history.click();
     expect(await knobOffset(history)).toBe(22); // no slide in flight
     await history.click();
+    await page.evaluate(() => {
+      const w = window as unknown as { __vt: number };
+      w.__vt = 0;
+      const look = () => {
+        w.__vt += document.getAnimations().filter((a) => (a.effect as KeyframeEffect | null)?.pseudoElement?.startsWith("::view-transition") && a.playState === "running" && Number(a.effect?.getComputedTiming().duration) > 0).length;
+        requestAnimationFrame(look);
+      };
+      requestAnimationFrame(look);
+    });
+    await tab(page, "Saved").click();
+    await expect(page.getByRole("heading", { level: 1, name: "Saved" })).toBeAttached();
+    await page.waitForTimeout(400);
+    expect(await page.evaluate(() => (window as unknown as { __vt: number }).__vt)).toBe(0);
   });
 });
+
+/** Share of the screenshot's pixels that are magenta-ish (the painted map, even partly blended). */
+async function magentaShare(analyser: Page, shot: Buffer): Promise<number> {
+  return analyser.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = document.createElement("canvas");
+    c.width = img.width;
+    c.height = img.height;
+    const ctx = c.getContext("2d")!;
+    ctx.drawImage(img, 0, 0);
+    const d = ctx.getImageData(0, 0, c.width, c.height).data;
+    let hits = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i]! - d[i + 1]! > 24 && d[i + 2]! - d[i + 1]! > 24) hits++;
+    return hits / (d.length / 4);
+  }, shot.toString("base64"));
+}
 
 async function knobOffset(sw: Locator): Promise<number> {
   return sw.evaluate((el) => Math.round(el.firstElementChild!.getBoundingClientRect().x - el.getBoundingClientRect().x));

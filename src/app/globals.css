@@ -115,14 +115,18 @@
   pointer-events: none;
 }
 
-/* Panel transition on navigation (src/ui/app-shell/app-frame.tsx). The new panel fades and rises
-   in over the old one, which stays opaque underneath (panel to panel: the map never shows through
-   mid-swap); a panel closing to the map (old snapshot alone) fades out quickly. The tab bar keeps
-   its own layer above the panels; clicks pass through to the live page. */
+/* Panel transition on navigation (src/ui/app-shell/app-frame.tsx). The incoming panel fades and
+   rises in. Panel to panel, the outgoing panel is part of the page's root snapshot (routes stay
+   alive under Activity, so it never gets a snapshot of its own) and the new root stays opaque
+   underneath: the map never shows through (tests/e2e/transitions.spec.ts checks a paused
+   mid-transition frame). A panel closing to the map is the only old pn-panel snapshot: it fades
+   out quickly. The tab bar keeps its own layer above the panels; clicks pass through. */
 ::view-transition {
   pointer-events: none;
 }
-::view-transition-old(.pn-panel),
+::view-transition-old(.pn-panel) {
+  animation: pn-vt-out var(--pn-dur-fast) var(--pn-ease-exit) both;
+}
 ::view-transition-new(.pn-panel) {
   mix-blend-mode: normal;
 }
