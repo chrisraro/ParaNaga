@@ -16,7 +16,7 @@ import type { EtaModel, StopPin } from "@/domain/api/schemas";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import type { LatLng } from "@/domain/geo/types";
 import { currentStep, type GuidanceSession } from "@/domain/guidance/session";
-import { guidanceSteps } from "@/domain/guidance/steps";
+import { guidanceSteps, type GuidanceTrip } from "@/domain/guidance/steps";
 import { buildSavedTrip, type SavedTrip } from "@/domain/saved/saved";
 import { endpointsReducer, initialEndpointsState, type Endpoint, type EndpointWhich, type EndpointsAction, type EndpointsState } from "@/domain/trip/endpoints";
 import type { HighlightStop } from "@/ui/map/naga-map";
@@ -73,7 +73,7 @@ export function guidanceStopPins(session: GuidanceSession): StopPin[] {
 }
 
 /** What guidance estimates the time left from: the snapshot's model and the plan's walk-graph lengths. */
-export type GuidanceEta = { etaModel: EtaModel | null; walkLengths: (number | null)[] };
+export type GuidanceEta = { etaModel: EtaModel | null; walkLengths: (number | null)[]; ridePaths?: GuidanceTrip["ridePaths"] };
 
 /** The trip as guidance needs it (labels, codes, loop directions, time model) and as a saved-trip card. */
 export function guidanceTripFor(data: PlanResponse, option: PlanOptionDto, ends: TripEnds, eta: GuidanceEta | null = null) {
@@ -87,6 +87,7 @@ export function guidanceTripFor(data: PlanResponse, option: PlanOptionDto, ends:
       destinationLabel: ends.destination.label,
       etaModel: eta?.etaModel ?? null,
       walkLengths: eta?.walkLengths.length === option.legs.length ? eta.walkLengths : undefined,
+      ...(eta?.ridePaths ? { ridePaths: eta.ridePaths } : {}),
     },
   };
 }

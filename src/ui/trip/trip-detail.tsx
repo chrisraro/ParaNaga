@@ -20,12 +20,15 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "rea
 import { useLines } from "@/client/network/use-lines";
 import { WALK_GRAPH_DOWNLOAD_LABEL, useWalkGraphDownload } from "@/client/network/use-walk-graph";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
-import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
-import type { EtaModel } from "@/domain/api/schemas";
+import type { PadyakLegDto, PlanOptionDto, PlanResponse, RideLegDto, TricycleLegDto, WalkLegDto } from "@/domain/api/plan";
+import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
 import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
 import { formatLeg } from "@/domain/eta/format";
+import { streetCardView } from "@/domain/trip/option-card";
+import { optionNotesView, type OptionNotesView } from "@/domain/trip/option-notes";
 import { rideEnds } from "@/domain/trip/ride-ends";
+import { nearestTricycleTerminal } from "@/domain/trip/tricycle-hint";
 import { WALK_LOADING_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { LineNotesView } from "@/ui/map/line-notes-view";
 import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
@@ -33,7 +36,9 @@ import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/s
 import { directionText, distanceBasisText, fareChipText, formatDistance, isNegligibleWalk, legFareText, rideFleetText, routeChipLabel } from "@/domain/trip/present";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { EtaBasisSheet } from "./eta-basis-sheet";
-import { EtaPeakNote, EtaTotalText, SpokenRange, extractWalkLengths, useOptionEta } from "./eta-text";
+import { EtaPeakNote, EtaTotalText, SpokenRange, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
+import { RouteNote } from "./route-note";
+import { ServiceWindowNote } from "./service-window-note";
 import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
 
 export type TripEnds = { start: SavedEnd; destination: SavedEnd };
@@ -50,6 +55,9 @@ type Props = {
   /** "Start trip": starts guidance (Task 10) with the walk-graph lengths the estimate used. Without it there is no Start button. */
   onStart?: ((walkLengths: (number | null)[]) => void) | null;
   etaModel?: EtaModel | null;
+  /** The snapshot routes (the evidence behind ride notes) and terminals (the nearest tricycle terminal). */
+  routes?: NetworkSnapshot["routes"] | null;
+  terminals?: NetworkSnapshot["terminals"] | null;
 };
 
 const CANDIDATE = "Mapped candidate · not yet verified";
@@ -93,9 +101,15 @@ function Marker({ kind }: { kind: "origin" | "board" | "alight" | "destination" 
 
 type Step = { key: string; marker: Parameters<typeof Marker>[0]["kind"]; rail: "walk" | "ride" | null; body: ReactNode };
 
-function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideLegDto) => RideTrace, estimate?: EtaEstimate | null): Step[] {
+/** What the steps need besides the plan: how the person named the ends, the notes and the terminals. */
+type StepContext = { start: string; destination: string; notes: OptionNotesView; terminals: NetworkSnapshot["terminals"] | null };
+
+function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideLegDto) => RideTrace, ctx: StepContext, estimate?: EtaEstimate | null): Step[] {
   const out: Step[] = [];
   const last = option.legs.length - 1;
+  const lastRide = option.legs.map((l) => l.kind).lastIndexOf("ride");
+  // A free board point with no pin name reads as the place the person is at: the start, or where the last ride got off.
+  let here = ctx.start;
   option.legs.forEach((leg, i) => {
     if (leg.kind === "walk" && option.rides > 0 && isNegligibleWalk(leg)) {
       // The point is at the stop itself: no "Walk ≈ 0 m" step. The first such leg becomes a
@@ -140,27 +154,44 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
       });
       return;
     }
-    if (leg.kind !== "ride") return; // tricycle and padyak steps: Task 10
-    out.push(...rideSteps(leg, i, lookups, traceOf(leg), estimate));
+    if (leg.kind === "tricycle" || leg.kind === "padyak") {
+      out.push(...streetSteps(leg, i, ctx));
+      return;
+    }
+    if (leg.kind !== "ride") return;
+    const ride = rideSteps(leg, i, lookups, traceOf(leg), ctx, here, i === lastRide, estimate);
+    here = ride.alightName;
+    out.push(...ride.steps);
   });
   if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive at your destination</strong> });
   return out;
 }
 
-function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: RideTrace, estimate?: EtaEstimate | null): Step[] {
-  const ends = rideEnds(leg);
-  if (!ends) return [];
+function rideSteps(
+  leg: RideLegDto,
+  i: number,
+  lookups: PlanLookups,
+  trace: RideTrace,
+  ctx: StepContext,
+  here: string,
+  isLastRide: boolean,
+  estimate?: EtaEstimate | null,
+): { steps: Step[]; alightName: string } {
+  const ends = rideEnds(leg, isLastRide ? ctx.destination : undefined);
+  if (!ends) return { steps: [], alightName: here };
   const { board, alight } = ends;
-  const boardName = lookups.stopName(board.id, board.name);
-  const alightName = lookups.stopName(alight.id, alight.name);
-  const route = routeChipLabel(leg.routeCode, leg.routeName);
+  const boardNamed = ends.pinned || Boolean(leg.board?.stopId || leg.board?.name);
+  const alightNamed = ends.pinned || Boolean(leg.alight?.stopId || leg.alight?.name);
+  const boardName = boardNamed ? lookups.stopName(board.id, board.name) : here;
+  const alightName = alightNamed ? lookups.stopName(alight.id, alight.name) : isLastRide ? alight.name : "the transfer point";
+  const rideNotes = ctx.notes.rides.find((r) => r.legIndex === i)?.notes ?? [];
   const dir = directionText(lookups.direction(leg.variantId), "long");
   const count = ends.pinned ? ends.stops.length - 1 : null;
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
   const etaLeg = estimate?.legs[i];
   const fleet = leg.fleet;
 
-  return [
+  const built: Step[] = [
     {
       key: `b${i}`,
       marker: "board",
@@ -168,10 +199,8 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
       body: (
         <div className="pn-tl__stack">
           <div>
-            <strong className="pn-tl__title">
-              Board {route} at {boardName}
-            </strong>
-            <p className="pn-tl__sub pn-tl__sub--gold">{CANDIDATE}</p>
+            <strong className="pn-tl__title">Get on near {boardName}</strong>
+            <p className="pn-tl__sub pn-tl__sub--gold">{boardNamed ? CANDIDATE : "Stop not marked · confirm with the driver"}</p>
             {dir ? <p className="pn-tl__sub">Direction: {dir}</p> : null}
             <p className="pn-tl__sub" data-testid="ride-fleet">{rideFleetText(leg.mode, fleet)}</p>
             {fleet.classes.length > 0 ? (
@@ -197,7 +226,19 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
           <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">
             {pathLabel}
           </p>
+          {leg.stops.length > 0 ? (
+            <p className="pn-tl__sub" data-testid="ride-passed-stops">
+              Marked stops on the way: {leg.stops.map((s) => lookups.stopName(s.id, s.name)).join(", ")}
+            </p>
+          ) : null}
           <LineNotesView notes={trace.notes} testIdPrefix="ride" />
+          {rideNotes.length > 0 ? (
+            <div className="pn-tl__notes" data-testid="ride-route-notes">
+              {rideNotes.map((n) => (
+                <RouteNote key={n.text} note={n} />
+              ))}
+            </div>
+          ) : null}
         </div>
       ),
     },
@@ -208,12 +249,55 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
       body: (
         <div className="pn-tl__stack">
           <div>
-            <strong className="pn-tl__title">Get off at {alightName}</strong>
-            <p className="pn-tl__sub pn-tl__sub--gold">{CANDIDATE}</p>
+            <strong className="pn-tl__title">Get off near {alightName}</strong>
+            <p className="pn-tl__sub" data-testid="ride-free-alight">
+              Tell the driver &lsquo;para&rsquo; · stop not marked
+            </p>
+            {alightNamed ? <p className="pn-tl__sub pn-tl__sub--gold">{CANDIDATE}</p> : null}
           </div>
           <div className="pn-para">
             <span className="pn-para__word">Para!</span>
             <span>Say it to the driver as you near this stop.</span>
+          </div>
+        </div>
+      ),
+    },
+  ];
+  return { steps: built, alightName };
+}
+
+/** A tricycle or padyak step: the destination, how far and on what basis, then the planner notes (rules, fare, "time not estimated"). */
+function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepContext): Step[] {
+  const v = streetCardView(leg);
+  const terminal = leg.kind === "tricycle" ? nearestTricycleTerminal(leg.from, leg.to, ctx.terminals ?? []) : undefined;
+  return [
+    {
+      key: `s${i}`,
+      marker: "board",
+      rail: "ride",
+      body: (
+        <div className="pn-tl__stack">
+          <div>
+            <strong className="pn-tl__title">
+              Take a {leg.kind} to {ctx.destination}
+            </strong>
+            {v.distanceText ? (
+              <p className="pn-tl__sub" data-testid="street-distance">
+                {v.distanceText}
+              </p>
+            ) : null}
+          </div>
+          <div className="pn-tl__notes" data-testid="street-notes">
+            {leg.notes.map((n) => (
+              <p key={n} className="pn-tl__sub">
+                {n}
+              </p>
+            ))}
+            {terminal ? (
+              <p className="pn-tl__sub" data-testid="tricycle-terminal">
+                Nearest tricycle terminal: {terminal.name}, about {Math.round(terminal.distanceM / 10) * 10} m
+              </p>
+            ) : null}
           </div>
         </div>
       ),
@@ -329,7 +413,7 @@ function TripActions({ data, option, ends, etaModel, walkLengths }: { data: Plan
 
 export const START_TRIP = "Start trip";
 
-export function TripDetail({ data, option, onBack, ends = null, note = null, onStart = null, etaModel = null }: Props) {
+export function TripDetail({ data, option, onBack, ends = null, note = null, onStart = null, etaModel = null, routes = null, terminals = null }: Props) {
   const [basisOpen, setBasisOpen] = useState(false);
   const lookups = planLookups(data);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -347,6 +431,10 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const traceOf = (leg: RideLegDto) => rideTrace(leg, lines, circular.get(leg.variantId) ?? false);
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
+  const now = useMinuteTicker();
+  const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
+  const stepContext: StepContext = { start: ends?.start.label || "your start", destination: ends?.destination.label || "your destination", notes, terminals };
+  const streets = option.legs.filter((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
 
   // Walk legs show "Straight line · loading street paths…" until the walk graph arrives: say so politely.
   const loadingPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "straight" && (l as EnrichedWalkLeg).path.label === WALK_LOADING_LABEL);
@@ -404,6 +492,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           {START_TRIP}
         </button>
       ) : null}
+      {notes.serviceWindow ? <ServiceWindowNote note={notes.serviceWindow} /> : null}
       {ends ? <TripActions data={data} option={option} ends={ends} etaModel={etaModel} walkLengths={walkLengths} /> : null}
 
       <p className="sr-only" role="status" aria-live="polite" data-testid="trip-paths-status">
@@ -425,7 +514,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
         </div>
       ) : null}
       <ol className="pn-tl" aria-label="Trip steps">
-        {steps(option, lookups, traceOf, estimate).map((step) => (
+        {steps(option, lookups, traceOf, stepContext, estimate).map((step) => (
           <li key={step.key} className="pn-tl__step">
             <div className="pn-tl__rail">
               <Marker kind={step.marker} />
@@ -438,11 +527,18 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
 
       <section className="pn-fares" aria-labelledby="pn-fares-title">
         <h3 id="pn-fares-title">Fare estimate</h3>
-        {rides.length === 0 ? (
+        {rides.length === 0 && streets.length === 0 ? (
           <p className="pn-fares__row">
             <span>Walking only</span>
             <span>{fareChipText(option.fare)}</span>
           </p>
+        ) : rides.length === 0 ? (
+          streets.map((leg, i) => (
+            <p key={i} className="pn-fares__row" data-testid="leg-fare">
+              <span>{leg.kind === "tricycle" ? "Tricycle" : "Padyak"}</span>
+              <span>{fareChipText(leg.fare)} · confirm with the driver</span>
+            </p>
+          ))
         ) : (
           <>
             {rides.map((leg, i) => (

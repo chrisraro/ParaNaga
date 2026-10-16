@@ -33,7 +33,9 @@ import {
   WarnIcon,
   useFocusOnMount,
 } from "@/ui/detail/detail-frame";
+import { noteView } from "@/domain/trip/option-notes";
 import { LineNotesView } from "@/ui/map/layers-sheet";
+import { RouteNote } from "@/ui/trip/route-note";
 import { lineNotes, routeDirectionPath } from "@/ui/map/line-rules";
 import { NagaMap } from "@/ui/map/naga-map";
 import { LoopChip } from "@/ui/trip/trip-parts";
@@ -215,6 +217,21 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           </div>
         </dl>
         {fare.detail ? <p className="pn-footnote">Fare: {fare.detail}.</p> : null}
+
+        {data.notes.length > 0 ? (
+          <section className="pn-section" aria-labelledby={`${uid}-notes`} data-testid="route-notes">
+            <h2 id={`${uid}-notes`} className="pn-section__title">
+              Notes
+            </h2>
+            <ul className="pn-route-notes">
+              {data.notes.map((n) => (
+                <li key={n.text}>
+                  <RouteNote note={noteView(n.text, data.notes)} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {twoWay ? (
           <div role="radiogroup" aria-label="Direction" className="pn-seg">

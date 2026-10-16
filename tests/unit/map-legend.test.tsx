@@ -85,3 +85,21 @@ describe("MapLegend (Task 11)", () => {
     expect(screen.queryByTestId("map-legend-caution")).toBeNull();
   });
 });
+
+describe("MapLegend extras (Increment E Task 10)", () => {
+  it("lists Padyak, the approximate line and the free point with their own swatches, in text", () => {
+    render(<MapLegend items={["tricycle"]} extras={["padyak", "approx_street", "free_point"]} showStops={false} defaultOpen />);
+    expect(screen.getByText("Padyak")).toBeTruthy();
+    expect(screen.getByText("Approximate, not a route")).toBeTruthy();
+    expect(screen.getByText("Board or get off here (stop not marked)")).toBeTruthy();
+    expect(screen.queryByText(LEGEND_STOP_LABEL)).toBeNull();
+    const padyak = document.querySelector('[data-legend-item="padyak"] line:last-of-type');
+    expect(padyak?.getAttribute("stroke-dasharray")).toBe("8 6");
+    expect(padyak?.getAttribute("stroke")).toBe(PALETTE_L.tricycle.core);
+  });
+
+  it("a legend with only extras still renders its button", () => {
+    render(<MapLegend items={[]} showStops={false} extras={["padyak"]} />);
+    expect(screen.getByTestId("map-legend-button")).toBeTruthy();
+  });
+});

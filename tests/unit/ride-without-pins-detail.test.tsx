@@ -32,8 +32,9 @@ describe("a ride without pins (R1)", () => {
   it("trip detail shows the boarding and getting-off steps with no stop count", () => {
     const enriched = enrichPlan(data, null, { walkGraphStatus: "skipped" });
     render(<TripDetail data={enriched} option={enriched.plan.options.find((o) => o.id === option.id)!} onBack={() => undefined} />);
-    expect(screen.getByText(/^Board R1/)).toBeTruthy();
-    expect(screen.getByText(/Get off at/)).toBeTruthy();
+    expect(screen.getByText(/^Get on near/)).toBeTruthy();
+    expect(screen.getByText(/^Get off near/)).toBeTruthy();
+    expect(screen.getByTestId("ride-free-alight").textContent).toMatch(/para.*stop not marked/);
     expect(screen.getByText(/Ride along the approximate path/)).toBeTruthy();
   });
 });

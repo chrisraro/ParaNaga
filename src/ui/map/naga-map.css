@@ -337,3 +337,8 @@
   outline: 3px solid #2bb5ae;
   outline-offset: 2px;
 }
+
+/* A free board or get-off point (no stop of its own): a diamond, not the stop ring. */
+.pn-trip-stop--free .pn-trip-stop__ring {
+  stroke-linejoin: miter;
+}

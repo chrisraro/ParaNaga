@@ -79,6 +79,7 @@ import {
   mapLayerPolicy,
   overviewLinesForTrip,
 } from "@/ui/map/map-layer-policy";
+import { ridePathsFor } from "@/domain/guidance/ride-paths";
 import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
@@ -912,8 +913,10 @@ export function HomeScreen() {
               onBack={handleCloseStored}
               ends={stored.ends}
               note={stored.note}
-              onStart={(walkLengths) => guidanceActions.start(stored.data, stored.option, stored.ends, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths })}
+              onStart={(walkLengths) => guidanceActions.start(stored.data, stored.option, stored.ends, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths, ridePaths: ridePathsFor(stored.option, tripRevisionLines) })}
               etaModel={snapshotState.snapshot?.etaModel}
+              routes={snapshotState.snapshot?.routes}
+              terminals={snapshotState.snapshot?.terminals}
             />
           ) : ready && openOption && planData && endpoints.start && endpoints.destination ? (
             <TripDetail
@@ -923,9 +926,11 @@ export function HomeScreen() {
               ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
               note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline), tone: "warning" } : null)}
               onStart={(walkLengths) =>
-                guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths })
+                guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths, ridePaths: ridePathsFor(openOption, tripRevisionLines) })
               }
               etaModel={snapshotState.snapshot?.etaModel}
+              routes={snapshotState.snapshot?.routes}
+              terminals={snapshotState.snapshot?.terminals}
             />
           ) : ready ? (
             <>
@@ -950,6 +955,7 @@ export function HomeScreen() {
                   refreshing={plan.status === "ready" && plan.refreshing}
                   onOpen={handleOpenOption}
                   etaModel={snapshotState.snapshot?.etaModel}
+                  routes={snapshotState.snapshot?.routes}
                 />
               ) : null}
               <button type="button" className="pn-text-btn" onClick={handleClearAll}>

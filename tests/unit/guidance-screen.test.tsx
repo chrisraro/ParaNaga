@@ -10,7 +10,7 @@ import type { LocationFix } from "@/domain/geo/location-fix";
 import { startSession, type GuidanceSession } from "@/domain/guidance/session";
 import { guidanceView } from "@/domain/guidance/view";
 import { Guidance } from "@/ui/guidance/guidance";
-import { ORIGIN, oneRide, tripOf } from "./guidance-fixtures";
+import { ORIGIN, oneRide, streetOnly, tripOf } from "./guidance-fixtures";
 
 vi.mock("next/link", () => ({ default: ({ children, href, ...rest }: { children: React.ReactNode; href: string }) => <a href={href} {...rest}>{children}</a> }));
 vi.mock("@/client/saved/use-saved-trip-toggle", () => ({
@@ -83,5 +83,30 @@ describe("Guidance announcements and focus", () => {
     fireEvent.click(button);
     expect(send).toHaveBeenCalledWith({ type: "boarded" });
     expect(document.activeElement).toBe(screen.getByRole("heading", { level: 2 }));
+  });
+});
+
+describe("Guidance street ride (tricycle / padyak)", () => {
+  it("shows the instruction, the notes, 'time not estimated' and an arrived button; no stops, no minutes", () => {
+    const send = vi.fn();
+    const s = startSession(tripOf(streetOnly("tricycle"), "Naga City Hall"), T0);
+    render(ui(fake(s, null, T0, send)));
+    const screenEl = screen.getByTestId("guidance-street-ride");
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Take a tricycle to Naga City Hall");
+    expect(screen.getByTestId("guidance-street-instruction").textContent).toMatch(/along streets · minimum fare ₱15 · confirm with the driver/);
+    expect(screen.getByTestId("guidance-street-time").textContent).toBe("Tricycle time not estimated");
+    expect(screen.getByTestId("guidance-step-label").textContent).toBe("Step 1 of 1 · Tricycle");
+    expect(screenEl.textContent).not.toMatch(/\d\s*min|Estimate \d|stops? left/);
+    expect(document.activeElement).toBe(screen.getByRole("heading", { level: 2 }));
+    fireEvent.click(screen.getByRole("button", { name: "I've arrived" }));
+    expect(send).toHaveBeenCalledWith({ type: "arrived" });
+  });
+
+  it("a padyak step is named padyak and never tricycle", () => {
+    const s = startSession(tripOf(streetOnly("padyak"), "Sabang"), T0);
+    render(ui(fake(s, null, T0)));
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Take a padyak to Sabang");
+    expect(screen.getByTestId("guidance-street-time").textContent).toBe("Padyak time not estimated");
+    expect(screen.getByTestId("guidance-street-ride").textContent).not.toMatch(/tricycle/i);
   });
 });

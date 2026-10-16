@@ -13,6 +13,9 @@ export type RideEnds = {
   pinned: boolean;
 };
 
+/** A free board or alight point has no stop of its own: its id is `pt:{variant}:{measure}`. */
+export const isFreePointId = (id: string) => id.startsWith("pt:");
+
 type EndLeg = Pick<RideLegDto, "variantId" | "routeCode" | "stops" | "board" | "alight">;
 
 const freeEnd = (leg: EndLeg, p: NonNullable<RideLegDto["board"]>): RideEnd => ({

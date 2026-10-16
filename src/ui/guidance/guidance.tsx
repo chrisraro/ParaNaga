@@ -2,7 +2,7 @@
 
 // Guidance inside the home sheet (Task 10): the header (round "End guidance" with a confirmation,
 // "Step i of n · Walk|Ride|Transfer", the GPS accuracy "± N m" while location is in use), then the
-// current step: Walk, Ride, Transfer, Arrive, or "Missed your stop?". Everything shown comes from
+// current step: Walk, Ride (jeepney), Street ride (tricycle or padyak), Transfer, Arrive, or "Missed your stop?". Everything shown comes from
 // the guidance view (src/domain/guidance/view.ts).
 //
 // Accessibility: focus moves to the step's heading when the step or screen changes, after a tap on
@@ -26,6 +26,7 @@ import { formatAccuracy } from "@/ui/home/location-status";
 import { ArriveStep } from "./arrive-step";
 import { UndoButton, type LocationUi } from "./guidance-parts";
 import { RideStep } from "./ride-step";
+import { StreetRideStep } from "./street-ride-step";
 import { TransferStep } from "./transfer-step";
 import { WalkStep } from "./walk-step";
 
@@ -178,7 +179,9 @@ export function Guidance({ guidance, covered, onEnd, onDone, onReplan }: Props) 
         <ArriveStep view={shown} onSend={send} headingRef={headingRef} card={card} onDone={onDone} />
       ) : shown.screen === "missed" ? (
         <MissedStep view={shown} onSend={send} onReplan={onReplan} headingRef={headingRef} />
-      ) : null /* street_ride (tricycle / padyak) screen: Task 10 */}
+      ) : shown.screen === "street_ride" ? (
+        <StreetRideStep view={shown} {...stepProps} />
+      ) : null}
       <p className="sr-only" aria-live="polite" data-testid="guidance-announcer">
         {liveText}
       </p>

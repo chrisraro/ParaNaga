@@ -35,7 +35,7 @@ export type OptionNotesView = {
 
 type RouteNotes = { routeCode: string; notes: readonly RouteNote[] };
 
-function noteView(text: string, records: readonly RouteNote[]): RideNoteView {
+export function noteView(text: string, records: readonly RouteNote[]): RideNoteView {
   const r = records.find((n) => n.text === text);
   if (!r) return { text, evidence: null, evidenceLabel: null, sourceCodes: [], unverified: text !== FLAGGED_PATH_NOTE };
   return { text, evidence: r.evidence, evidenceLabel: EVIDENCE_LABEL[r.evidence], sourceCodes: [...r.sourceCodes], unverified: r.evidence === "owner_report_unverified" };
@@ -43,9 +43,10 @@ function noteView(text: string, records: readonly RouteNote[]): RideNoteView {
 
 export function optionNotesView(option: { legs: readonly PlanLegDto[] }, routes: readonly RouteNotes[] | null | undefined, now: Date): OptionNotesView {
   const rides = option.legs.flatMap((leg, legIndex) => {
-    if (leg.kind !== "ride" || leg.notes.length === 0) return [];
+    const texts: readonly string[] = leg.kind === "ride" ? (leg.notes ?? []) : []; // bodies from before Increment E have no notes
+    if (leg.kind !== "ride" || texts.length === 0) return [];
     const records = routes?.find((r) => r.routeCode === leg.routeCode)?.notes ?? [];
-    return [{ legIndex, routeCode: leg.routeCode, notes: leg.notes.map((t) => noteView(t, records)) }];
+    return [{ legIndex, routeCode: leg.routeCode, notes: texts.map((t) => noteView(t, records)) }];
   });
   return { serviceWindow: optionServiceWindowNote(option, now), rides };
 }

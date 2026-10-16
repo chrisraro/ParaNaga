@@ -20,10 +20,11 @@ import { decodePolyline } from "@/domain/geo/polyline";
 import type { LatLng } from "@/domain/geo/types";
 import type { ColourKey } from "@/domain/modes/fleet";
 import { MAP_CHIP_TEXT, type VisualKey } from "@/domain/modes/modes";
-import { lineWidths, paletteForSurface, type MapSurface } from "@/domain/modes/palette";
+import { APPROX_STREET_DASH_ARRAY, PADYAK_DASH_ARRAY, lineWidths, paletteForSurface, type MapSurface } from "@/domain/modes/palette";
 import { WALK_STRAIGHT_LABEL, type EnrichedPlanOption, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { isNegligibleWalk, routeChipLabel } from "@/domain/trip/present";
 import { chevronSvgHtml, sampleChevrons, type DirectionChevron } from "./direction-chevrons";
+import type { LegendExtra } from "./map-legend";
 import {
   lineNotes,
   midpointOnPolyline,
@@ -95,9 +96,27 @@ export type TripRideSegment = {
   label: string;
 };
 
+/** A tricycle or padyak leg: its street path, or (a tricycle with no street route) the straight line, drawn only as approximate. */
+export type TripStreetSegment = {
+  key: string;
+  legIndex: number;
+  mode: "tricycle" | "padyak";
+  coords: LatLng[];
+  /** A straight line with no street route: "approximate, not a route". */
+  approximate: boolean;
+  midpoint: LatLng | null;
+  chipText: string;
+  label: string;
+};
+
+export const APPROX_STREET_LABEL = "Approximate, not a route";
+
 export type TripLinesData = {
   walkSegments: TripWalkSegment[];
   rideSegments: TripRideSegment[];
+  streetSegments: TripStreetSegment[];
+  /** Legend entries beyond the vehicle classes: padyak, an approximate street line. */
+  legendExtras: LegendExtra[];
   allCoords: LatLng[];
   legendItems: VisualKey[];
   announcement: string;
@@ -122,6 +141,8 @@ export function buildTripLinesData(
 ): TripLinesData {
   const walkSegments: TripWalkSegment[] = [];
   const rideSegments: TripRideSegment[] = [];
+  const streetSegments: TripStreetSegment[] = [];
+  const legendExtras = new Set<LegendExtra>();
   const allCoords: LatLng[] = [];
   const legendSet = new Set<VisualKey>();
   const announcedParts: string[] = [];
@@ -156,7 +177,41 @@ export function buildTripLinesData(
       announcedParts.push("walk");
       return;
     }
-    if (leg.kind !== "ride") return; // tricycle and padyak lines on the map: Task 10
+    if (leg.kind === "tricycle" || leg.kind === "padyak") {
+      announcedParts.push(leg.kind === "tricycle" ? "Tricycle" : "Padyak");
+      const routed = leg.basis === "street_graph" && leg.path !== null;
+      let coords: LatLng[] | null = null;
+      if (routed) {
+        try {
+          coords = decodePolyline(leg.path!);
+        } catch {
+          coords = null;
+        }
+      } else if (leg.basis === "straight_line") {
+        coords = [
+          { lat: leg.from.lat, lng: leg.from.lng },
+          { lat: leg.to.lat, lng: leg.to.lng },
+        ];
+      }
+      if (!coords || coords.length < 2) return;
+      const approximate = !routed;
+      streetSegments.push({
+        key: `street-${idx}`,
+        legIndex: idx,
+        mode: leg.kind,
+        coords,
+        approximate,
+        midpoint: midpointOnPolyline(coords),
+        chipText: leg.kind === "tricycle" ? MAP_CHIP_TEXT.tricycle : "Padyak",
+        label: approximate ? APPROX_STREET_LABEL : leg.kind === "tricycle" ? "Street route" : "Street route (padyak)",
+      });
+      allCoords.push(...coords);
+      if (approximate) legendExtras.add("approx_street");
+      else if (leg.kind === "padyak") legendExtras.add("padyak");
+      else legendSet.add("tricycle");
+      return;
+    }
+    if (leg.kind !== "ride") return;
 
     announcedParts.push(routeChipLabel(leg.routeCode, leg.routeName));
     if (leg.distanceBasis !== "approximate_path" || leg.boardMeasureM === null || leg.alightMeasureM === null) {
@@ -214,6 +269,8 @@ export function buildTripLinesData(
   return {
     walkSegments,
     rideSegments,
+    streetSegments,
+    legendExtras: [...legendExtras],
     allCoords,
     legendItems: [...legendSet],
     announcement,
@@ -258,7 +315,7 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
   const widths = useMemo(() => lineWidths(highContrast), [highContrast]);
   // A current leg with no drawn segment (an undrawn ride, a negligible walk) dims nothing.
   const current =
-    activeLegIndex !== null && [...data.walkSegments, ...data.rideSegments].some((s) => s.legIndex === activeLegIndex) ? activeLegIndex : null;
+    activeLegIndex !== null && [...data.walkSegments, ...data.rideSegments, ...data.streetSegments].some((s) => s.legIndex === activeLegIndex) ? activeLegIndex : null;
 
   const elements = useMemo(() => {
     const walkEls = data.walkSegments.map((seg) => {
@@ -304,6 +361,35 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
               keyboard={false}
               zIndexOffset={-200}
             />
+          ) : null}
+        </Fragment>
+      );
+    });
+
+    // Tricycle: solid in its colour. Padyak: the same colour, dashed. A straight line with no street route:
+    // thin and sparse, so it is never read as a route.
+    const streetEls = data.streetSegments.map((seg) => {
+      const swatch = palette.tricycle;
+      const opacity = legOpacity(current, seg.legIndex);
+      const positions = seg.coords.map((c) => [c.lat, c.lng] as [number, number]);
+      const dashArray = seg.approximate ? APPROX_STREET_DASH_ARRAY : seg.mode === "padyak" ? PADYAK_DASH_ARRAY : undefined;
+      const core = seg.approximate ? Math.max(2, Math.round(widths.tripRideCorePx / 2)) : widths.tripRideCorePx;
+      const kind = seg.approximate ? "pn-line--street-approx" : seg.mode === "padyak" ? "pn-line--padyak" : "pn-line--tricycle";
+      const cap = dashArray ? "butt" : "round";
+      return (
+        <Fragment key={seg.key}>
+          <Polyline
+            positions={positions}
+            pathOptions={{ className: "pn-line pn-line--casing", color: swatch.casing, weight: core + widths.casingSidePx * 2, opacity, lineCap: cap, lineJoin: "round", dashArray }}
+            interactive={false}
+          />
+          <Polyline
+            positions={positions}
+            pathOptions={{ className: `pn-line pn-line--ride ${kind}`, color: swatch.core, weight: core, opacity, lineCap: cap, lineJoin: "round", dashArray }}
+            interactive={false}
+          />
+          {seg.midpoint && !seg.approximate ? (
+            <Marker position={[seg.midpoint.lat, seg.midpoint.lng]} icon={midChipIcon(seg.chipText, swatch.core, swatch.casing)} interactive={false} keyboard={false} zIndexOffset={-200} />
           ) : null}
         </Fragment>
       );
@@ -379,7 +465,7 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
       );
     });
 
-    return [...walkEls, ...rideEls];
+    return [...walkEls, ...streetEls, ...rideEls];
   }, [data, palette, widths, highContrast, current]);
 
   return <>{elements}</>;
