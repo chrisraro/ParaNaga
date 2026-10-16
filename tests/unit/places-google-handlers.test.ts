@@ -15,7 +15,6 @@ const store = vi.hoisted(() => ({
   counts: new Map<string, number>(),
   cache: new Map<string, unknown>(),
   calls: 0,
-  cap: 0,
 }));
 vi.mock("@/server/repos/places-guard-repo", () => ({
   countRequest: async (_db: unknown, key: string) => {
@@ -25,9 +24,9 @@ vi.mock("@/server/repos/places-guard-repo", () => ({
   },
   readCache: async (_db: unknown, key: string) => store.cache.get(key) ?? null,
   writeCache: async (_db: unknown, key: string, payload: unknown) => void store.cache.set(key, payload),
-  takeGoogleCall: async (_db: unknown, cap: number) => {
-    store.cap = cap;
-    if (store.calls >= cap) return false;
+  // The real cap (300) lives in SQL (ops.places_take_call); the fake mirrors it.
+  takeGoogleCall: async () => {
+    if (store.calls >= 300) return false;
     store.calls += 1;
     return true;
   },
@@ -142,7 +141,6 @@ describe("POST /api/v1/places/suggest", () => {
     const res = await ask("bigg's diner");
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ status: "capped" });
-    expect(store.cap).toBe(300);
     expect(seen).toEqual([]);
   });
 
@@ -152,6 +150,13 @@ describe("POST /api/v1/places/suggest", () => {
     expect((await (await ask("other address", "198.51.100.1")).json()).status).toBe("ok");
     // Addresses are stored only as keyed hashes.
     for (const key of store.counts.keys()) expect(key).not.toContain("203.0.113.7");
+  });
+
+  it("rate-limits an IPv6 /64 as one address; IPv4 stays per address", async () => {
+    for (let i = 0; i < 30; i++) await ask(`v6 query ${i}`, `2001:db8:1:2::${(i + 1).toString(16)}`);
+    expect(await (await ask("same prefix", "2001:db8:1:2:ffff:ffff:ffff:ffff")).json()).toEqual({ status: "rate_limited" });
+    expect((await (await ask("next prefix", "2001:db8:1:3::1")).json()).status).toBe("ok");
+    expect((await (await ask("ipv4 neighbour", "203.0.113.8")).json()).status).toBe("ok");
   });
 
   it("refuses bad bodies with 400 before any guard or Google work", async () => {

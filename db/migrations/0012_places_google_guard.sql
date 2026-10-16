@@ -2,7 +2,8 @@
 -- Increment E2, Task 15: the cost guard of the Google Places proxy (/api/v1/places/*). Additive.
 --   - ops.places_daily_usage: Google calls taken per Asia/Manila day. paranaga_app has NO table
 --     privileges; it takes a call only through ops.places_take_call (SECURITY DEFINER), which
---     refuses once the cap (passed by the app, constant GOOGLE_DAILY_CAP = 300, at most 1000) is reached.
+--     refuses once 300 calls were taken that day. The cap is hard-coded here, not passed by the
+--     app (GOOGLE_DAILY_CAP in src/domain/places/google.ts mirrors it; a unit test pins the two).
 --   - ops.places_cache: answers cached by a keyed hash (HMAC-SHA-256 under the server key) of the
 --     normalized query + bias or of the place id. No query text, no IP address. Payloads are
 --     Google suggestions (place id, title, subtitle) or a point, re-validated by the app on read.
@@ -36,29 +37,24 @@ create policy places_cache_app on ops.places_cache for all to paranaga_app using
 grant create on schema ops to paranaga_definer;
 
 -- One call from today's budget: true if taken, false at the cap (the counter never passes it).
-create function ops.places_take_call(p_cap integer) returns boolean
+create function ops.places_take_call() returns boolean
   language plpgsql volatile security definer
   set search_path = pg_catalog, ops, pg_temp
 as $$
 declare
+  v_cap constant integer := 300;
   v_calls integer;
 begin
-  if p_cap is null or p_cap < 0 or p_cap > 1000 then
-    raise exception 'cap must be between 0 and 1000' using errcode = '22023';
-  end if;
-  if p_cap = 0 then
-    return false;
-  end if;
   insert into ops.places_daily_usage as u (day, calls)
   values ((now() at time zone 'Asia/Manila')::date, 1)
-  on conflict (day) do update set calls = u.calls + 1 where u.calls < p_cap
+  on conflict (day) do update set calls = u.calls + 1 where u.calls < v_cap
   returning u.calls into v_calls;
   return v_calls is not null;
 end
 $$;
-alter function ops.places_take_call(integer) owner to paranaga_definer;
+alter function ops.places_take_call() owner to paranaga_definer;
 
 revoke create on schema ops from paranaga_definer;
 
-revoke execute on function ops.places_take_call(integer) from public;
-grant execute on function ops.places_take_call(integer) to paranaga_app;
+revoke execute on function ops.places_take_call() from public;
+grant execute on function ops.places_take_call() to paranaga_app;

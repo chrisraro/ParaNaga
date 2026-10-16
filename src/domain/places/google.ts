@@ -11,7 +11,7 @@ import { z } from "zod";
 import { NAGA_BOUNDS } from "../geo/naga";
 import type { LatLng } from "../geo/types";
 
-/** Google calls (autocomplete + details) the server makes per Manila day, at most. */
+/** Google calls (autocomplete + details) per Manila day, at most. Enforced in SQL (migration 0012). */
 export const GOOGLE_DAILY_CAP = 300;
 export const GOOGLE_QUERY_MIN = 3;
 export const GOOGLE_QUERY_MAX = 80;
@@ -25,6 +25,22 @@ export const GOOGLE_SUGGEST_TTL_SECONDS = 86_400;
 /** Google allows caching place ids indefinitely and coordinates for up to 30 days. */
 export const GOOGLE_PLACE_TTL_SECONDS = 30 * 86_400;
 export const PLACES_BODY_MAX_BYTES = 1024;
+
+/**
+ * What the per-address rate limit counts: an IPv4 address as is, an IPv6 address by its /64 prefix
+ * (one subscriber usually holds a whole /64), an IPv4-mapped IPv6 address as its IPv4 address.
+ */
+export function rateLimitAddress(ip: string): string {
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(ip);
+  if (mapped) return mapped[1]!;
+  if (!ip.includes(":")) return ip;
+  const bare = ip.split("%")[0]!.toLowerCase();
+  const [head = "", tail] = bare.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const groups = tail === undefined ? left : [...left, ...Array<string>(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right];
+  return `${groups.slice(0, 4).map((g) => (Number.parseInt(g || "0", 16) || 0).toString(16)).join(":")}::/64`;
+}
 
 /** Suggestions are biased (restricted) to the Naga City bounding box, never to the rider. */
 export const NAGA_RECTANGLE = {

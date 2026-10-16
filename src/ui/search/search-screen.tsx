@@ -3,7 +3,8 @@
 // Search (artboard Search, /app/search?for=start|destination|save): one box over everything on
 // file for Naga, searched in the browser over the published search index (decision D1). The query
 // leaves this phone only for Google suggestions (Task 15: fewer than 3 results here, or "Search
-// more places"), as a POST body to our server, which never stores or logs it. A full-screen panel over the mounted home
+// more places"), as a POST body through our server to Google; the server logs no query and keeps Google's
+// answer up to 24 hours under a one-way hash only. A full-screen panel over the mounted home
 // map (tab bar hidden, Escape or Cancel goes back).
 //
 // Picking: with for=start|destination an OpenStreetMap or mapped-pin place sets that trip end

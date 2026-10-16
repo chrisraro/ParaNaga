@@ -31,8 +31,8 @@ export async function writeCache(db: Db, keyHash: string, payload: unknown, ttlS
   await db.execute(sql`delete from ops.rate_limit_bucket where key_hash like 'places:%' and window_start < now() - interval '1 day'`);
 }
 
-/** Takes one Google call from today's (Asia/Manila) budget; false once `cap` calls were taken. */
-export async function takeGoogleCall(db: Db, cap: number): Promise<boolean> {
-  const result = await db.execute(sql`select ops.places_take_call(${cap}::int) as ok`);
+/** Takes one Google call from today's (Asia/Manila) budget; false once 300 were taken (cap in SQL). */
+export async function takeGoogleCall(db: Db): Promise<boolean> {
+  const result = await db.execute(sql`select ops.places_take_call() as ok`);
   return (result.rows[0] as { ok: boolean }).ok === true;
 }

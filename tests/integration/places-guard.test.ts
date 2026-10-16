@@ -18,6 +18,18 @@ describe.skipIf(!ownerUrl || !appUrl)("Google Places guard (Neon branch)", () =>
   let app: pg.Pool;
   const as = <T>(fn: Parameters<typeof runInRequestContext<T>>[2]) => runInRequestContext<T>(app, { userId: null, requestId: `test-${run}` }, fn);
   const manilaToday = "(now() at time zone 'Asia/Manila')::date";
+  const asDefiner = async (statement: string) => {
+    await owner.query("begin");
+    try {
+      await owner.query("set local role paranaga_definer");
+      const { rows } = await owner.query(statement);
+      await owner.query("commit");
+      return rows;
+    } catch (error) {
+      await owner.query("rollback");
+      throw error;
+    }
+  };
 
   beforeAll(async () => {
     owner = new pg.Client({ connectionString: ownerUrl });
@@ -25,7 +37,7 @@ describe.skipIf(!ownerUrl || !appUrl)("Google Places guard (Neon branch)", () =>
     app = new pg.Pool({ connectionString: appUrl, max: 1 });
   });
   afterAll(async () => {
-    await owner?.query(`delete from ops.places_daily_usage where day = ${manilaToday}`).catch(() => undefined);
+    if (owner) await asDefiner(`delete from ops.places_daily_usage where day = ${manilaToday}`).catch(() => undefined);
     await owner?.query("delete from ops.places_cache where key_hash like $1", [`${run.slice(0, 16)}%`]).catch(() => undefined);
     await owner?.query("delete from ops.rate_limit_bucket where key_hash like $1", [`places:${run}%`]).catch(() => undefined);
     await owner?.end();
@@ -42,19 +54,15 @@ describe.skipIf(!ownerUrl || !appUrl)("Google Places guard (Neon branch)", () =>
     ]);
   });
 
-  it("takes calls up to the cap, then refuses, for today's Manila date", async () => {
-    await owner.query(`delete from ops.places_daily_usage where day = ${manilaToday}`);
-    expect(await as((db) => takeGoogleCall(db, 2))).toBe(true);
-    expect(await as((db) => takeGoogleCall(db, 2))).toBe(true);
-    expect(await as((db) => takeGoogleCall(db, 2))).toBe(false);
-    expect(await as((db) => takeGoogleCall(db, 0))).toBe(false);
-    const { rows } = await owner.query(`select calls from ops.places_daily_usage where day = ${manilaToday}`);
-    expect(rows[0].calls).toBe(2);
-  });
-
-  it("refuses an out-of-range cap", async () => {
-    await expect(as((db) => takeGoogleCall(db, 100000))).rejects.toThrow();
-    await expect(as((db) => takeGoogleCall(db, -1))).rejects.toThrow();
+  it("takes calls up to the hard-coded cap of 300, then refuses, for today's Manila date", async () => {
+    // Seeded near the cap through the definer role (RLS is forced, even for the owner).
+    await asDefiner(`delete from ops.places_daily_usage where day = ${manilaToday}`);
+    await asDefiner(`insert into ops.places_daily_usage (day, calls) values (${manilaToday}, 298)`);
+    expect(await as((db) => takeGoogleCall(db))).toBe(true);
+    expect(await as((db) => takeGoogleCall(db))).toBe(true);
+    expect(await as((db) => takeGoogleCall(db))).toBe(false);
+    const rows = await asDefiner(`select calls from ops.places_daily_usage where day = ${manilaToday}`);
+    expect(rows[0].calls).toBe(300);
   });
 
   it("the app role cannot read or change the usage table directly", async () => {

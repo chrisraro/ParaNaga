@@ -183,6 +183,10 @@ describe("Sources register", () => {
     expect(google).toContain("not verified");
     expect(google).toContain("unresolved");
     expect(google).toContain("300");
+    expect(google).toContain("Google receives what you typed");
+    expect(google).toContain("up to 24 hours under a one-way hash");
+    expect(google).toContain("no typed text and no IP address");
+    expect(google).not.toMatch(/does not store|never stores/);
   });
 });
 

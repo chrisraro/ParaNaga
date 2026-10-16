@@ -3,11 +3,11 @@ import { createHmac } from "node:crypto";
 import { ipAddress } from "@vercel/functions";
 import type { z } from "zod";
 import {
-  GOOGLE_DAILY_CAP,
   GOOGLE_RATE_LIMIT,
   NAGA_RECTANGLE,
   parseAutocomplete,
   parsePlaceLocation,
+  rateLimitAddress,
   type GoogleSuggestion,
 } from "@/domain/places/google";
 import type { LatLng } from "@/domain/geo/types";
@@ -49,7 +49,7 @@ export async function guardedGoogleCall<T>(opts: {
   const key = googleKey();
   if (!key) return { status: "unavailable" };
   const ctx = { userId: null, requestId: opts.requestId };
-  const addressKey = `places:${keyedHash(key, `ip|${ipAddress(opts.request) ?? "unknown"}`)}`;
+  const addressKey = `places:${keyedHash(key, `ip|${rateLimitAddress(ipAddress(opts.request) ?? "unknown")}`)}`;
   const cacheKey = keyedHash(key, opts.cacheText);
 
   // Short transaction; the Google call happens outside it so no pooled connection waits on Google.
@@ -57,7 +57,7 @@ export async function guardedGoogleCall<T>(opts: {
     if ((await countRequest(db, addressKey, GOOGLE_RATE_LIMIT.windowSeconds)) > GOOGLE_RATE_LIMIT.max) return { status: "rate_limited" };
     const cached = opts.schema.safeParse(await readCache(db, cacheKey));
     if (cached.success) return { status: "ok", value: cached.data };
-    return (await takeGoogleCall(db, GOOGLE_DAILY_CAP)) ? null : { status: "capped" };
+    return (await takeGoogleCall(db)) ? null : { status: "capped" };
   });
   if (early) return early;
 

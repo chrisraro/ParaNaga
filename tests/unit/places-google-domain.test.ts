@@ -1,10 +1,12 @@
 // Google Places cost guard, pure side (src/domain/places/google.ts): when the phone may ask
 // Google, the strict request schemas, and parsing Google's answers down to what we keep.
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   GOOGLE_DAILY_CAP,
   GOOGLE_QUERY_MAX,
   normalizeGoogleQuery,
+  rateLimitAddress,
   parseAutocomplete,
   parsePlaceLocation,
   resolveRequestSchema,
@@ -20,6 +22,23 @@ describe("Google Places guard (domain)", () => {
   it("caps Google at 300 calls a day and 80 characters a query", () => {
     expect(GOOGLE_DAILY_CAP).toBe(300);
     expect(GOOGLE_QUERY_MAX).toBe(80);
+  });
+
+  it("the cap is hard-coded in SQL (ops.places_take_call takes no cap) and matches the constant", () => {
+    const sql = readFileSync("db/migrations/0012_places_google_guard.sql", "utf8");
+    expect(sql).toContain(`v_cap constant integer := ${GOOGLE_DAILY_CAP};`);
+    expect(sql).toContain("create function ops.places_take_call() returns boolean");
+  });
+
+  it("rate-limits IPv6 by its /64 prefix and IPv4 by the full address", () => {
+    expect(rateLimitAddress("203.0.113.7")).toBe("203.0.113.7");
+    expect(rateLimitAddress("2001:DB8:1:2::1")).toBe("2001:db8:1:2::/64");
+    expect(rateLimitAddress("2001:db8:0001:0002:aaaa:bbbb:cccc:dddd")).toBe("2001:db8:1:2::/64");
+    expect(rateLimitAddress("2001:db8::1")).toBe("2001:db8:0:0::/64");
+    expect(rateLimitAddress("::1")).toBe("0:0:0:0::/64");
+    expect(rateLimitAddress("fe80::1%eth0")).toBe("fe80:0:0:0::/64");
+    expect(rateLimitAddress("::ffff:203.0.113.7")).toBe("203.0.113.7");
+    expect(rateLimitAddress("unknown")).toBe("unknown");
   });
 
   it("normalizes a query: width-folded, trimmed, spaces collapsed, lower case", () => {

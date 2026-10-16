@@ -136,7 +136,10 @@ describe("Search: Google suggestions", () => {
     expect(row.textContent).toContain("Google suggestion");
     expect(row.textContent).toContain("not verified");
     expect(row.textContent).not.toContain("Verified");
-    expect(screen.getByTestId("search-google").textContent).toContain("Suggestions from Google Maps");
+    const footnote = screen.getByTestId("search-google-attribution").textContent;
+    expect(footnote).toBe(
+      "Suggestions from Google Maps. Google receives what you typed. ParaNaga keeps Google's answer up to 24 hours under a one-way hash, with no typed text and no IP address.",
+    );
   });
 
   it("does not ask with fewer than 3 characters", async () => {

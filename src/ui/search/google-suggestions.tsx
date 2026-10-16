@@ -140,7 +140,7 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
         </div>
       ) : null}
       <p className="pn-footnote" data-testid="search-google-attribution">
-        {GOOGLE_ATTRIBUTION}. What you typed was sent to Google to find these; ParaNaga does not store it.
+        {GOOGLE_ATTRIBUTION}. Google receives what you typed. ParaNaga keeps Google&apos;s answer up to 24 hours under a one-way hash, with no typed text and no IP address.
       </p>
     </section>
   );
