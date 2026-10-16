@@ -21,6 +21,7 @@ import type { VisualKey } from "@/domain/modes/modes";
 import { terminalLocationText } from "@/domain/places/explore";
 import { terminalMatchesModes, terminalModesPhrase } from "@/domain/places/terminals";
 import type { LayersPref } from "@/domain/prefs/prefs";
+import { Switch } from "@/ui/kit/switch";
 import { ModeChip } from "@/ui/modes/mode-chip";
 import { ModeIcon } from "@/ui/modes/mode-icon";
 import { lineNotes, type LineNotes } from "./line-rules";
@@ -204,40 +205,8 @@ export function LayersSheet({
 
         <div className="pn-layers-sheet__body">
           <div className="pn-layers-switches" role="group" aria-label="Layer visibility">
-            <div className="pn-layers-switch-row">
-              <span id={`${titleId}-routes`} className="pn-layers-switch-row__label">
-                Routes
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={layers.routes}
-                aria-labelledby={`${titleId}-routes`}
-                className={layers.routes ? "pn-switch pn-switch--on" : "pn-switch"}
-                onClick={() => onUpdateLayers({ routes: !layers.routes })}
-                data-testid="layer-switch-routes"
-              >
-                <span className="pn-switch__thumb" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="pn-layers-switch-row">
-              <span id={`${titleId}-terminals`} className="pn-layers-switch-row__label">
-                Terminals
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={layers.terminals}
-                aria-labelledby={`${titleId}-terminals`}
-                className={layers.terminals ? "pn-switch pn-switch--on" : "pn-switch"}
-                onClick={() => onUpdateLayers({ terminals: !layers.terminals })}
-                data-testid="layer-switch-terminals"
-              >
-                <span className="pn-switch__thumb" aria-hidden="true" />
-              </button>
-            </div>
-
+            <Switch label="Routes" checked={layers.routes} onChange={(routes) => onUpdateLayers({ routes })} testId="layer-switch-routes" />
+            <Switch label="Terminals" checked={layers.terminals} onChange={(terminals) => onUpdateLayers({ terminals })} testId="layer-switch-terminals" />
           </div>
 
           <div className="pn-layers-modes" role="group" aria-label="Filter by mode">

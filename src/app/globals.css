@@ -115,6 +115,43 @@
   pointer-events: none;
 }
 
+/* Panel transition on navigation (src/ui/app-shell/app-frame.tsx). The incoming panel fades and
+   rises in. Panel to panel, the outgoing panel is part of the page's root snapshot (routes stay
+   alive under Activity, so it never gets a snapshot of its own) and the new root stays opaque
+   underneath: the map never shows through (tests/e2e/transitions.spec.ts checks a paused
+   mid-transition frame). A panel closing to the map is the only old pn-panel snapshot: it fades
+   out quickly. The tab bar keeps its own layer above the panels; clicks pass through. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(.pn-panel) {
+  animation: pn-vt-out var(--pn-dur-fast) var(--pn-ease-exit) both;
+}
+::view-transition-new(.pn-panel) {
+  mix-blend-mode: normal;
+}
+::view-transition-old(.pn-panel) {
+  animation: none;
+}
+::view-transition-old(.pn-panel):only-child {
+  animation: pn-vt-out var(--pn-dur-fast) var(--pn-ease-exit) both;
+}
+::view-transition-new(.pn-panel) {
+  animation: pn-vt-in var(--pn-dur) var(--pn-ease) both;
+}
+@keyframes pn-vt-out {
+  to { opacity: 0; }
+}
+@keyframes pn-vt-in {
+  from { opacity: 0; translate: 0 var(--pn-rise-sm); }
+}
+.pn-tabbar {
+  view-transition-name: pn-tabbar;
+}
+::view-transition-group(pn-tabbar) {
+  z-index: 1;
+}
+
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 72px;
@@ -170,5 +207,10 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0s !important;
     transition-delay: 0s !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
