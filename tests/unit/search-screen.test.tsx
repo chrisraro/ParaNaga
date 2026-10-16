@@ -41,12 +41,15 @@ const frame = {
 
 let urls: string[] = [];
 let failing = false;
+/** The lazy named-places chunk: null = the request fails. */
+let morePlaces: { revision: typeof raw.revision; places: unknown[] } | null = null;
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 
 beforeEach(async () => {
   await clearAllStores();
   urls = [];
   failing = false;
+  morePlaces = { revision: raw.revision, places: [] };
   resetSearchIndexCache();
   vi.stubGlobal(
     "fetch",
@@ -55,6 +58,7 @@ beforeEach(async () => {
       if (failing) throw new TypeError("Failed to fetch");
       if (url === "/api/v1/network/head") return json(HEAD);
       if (url === `/api/v1/network/search-index/${HEAD.revisionId}`) return json(raw);
+      if (url === `/api/v1/network/search-places/${HEAD.revisionId}` && morePlaces) return json(morePlaces);
       return new Response("{}", { status: 404 });
     }),
   );
@@ -108,12 +112,13 @@ describe("SearchScreen", () => {
     await ready();
   });
 
-  it("fetches the head and the index once; the query is never sent anywhere", async () => {
+  it("fetches the head, the index and the lazy places chunk once; the query is never sent anywhere", async () => {
     renderSearch("destination");
     await ready();
     await type("plaza rizal");
     await type("Diversion");
-    expect(urls).toEqual(["/api/v1/network/head", `/api/v1/network/search-index/${HEAD.revisionId}`]);
+    // Task 14: the named-places chunk follows the index (a lazy second GET); neither carries the query.
+    expect(urls).toEqual(["/api/v1/network/head", `/api/v1/network/search-index/${HEAD.revisionId}`, `/api/v1/network/search-places/${HEAD.revisionId}`]);
     for (const u of urls) expect(u.toLowerCase()).not.toMatch(/plaza|diversion|\?/);
   });
 
@@ -137,6 +142,30 @@ describe("SearchScreen", () => {
     expect(routes.querySelectorAll("li")).toHaveLength(5);
     fireEvent.click(screen.getByRole("button", { name: "Show all 12" }));
     expect(screen.getByTestId("search-group-routes").querySelectorAll("li")).toHaveLength(12);
+  });
+
+  it("finds a cafe from the lazy places chunk, from OpenStreetMap, never verified; a failed chunk is said plainly", async () => {
+    morePlaces = {
+      revision: raw.revision,
+      places: [{ key: "osm:node/42", name: "Synthetic Brew Cafe", aliases: [], category: "cafe", lat: 13.62, lng: 123.18, osmVersion: 1, sourceCode: "OSM-2026-10-17" }],
+    };
+    renderSearch();
+    await ready();
+    await type("synthetic brew");
+    await waitFor(() => expect(screen.getByTestId("search-group-places").textContent).toContain("Synthetic Brew Cafe"));
+    expect(screen.getByTestId("search-group-places").textContent).toContain("Cafe · from OpenStreetMap");
+    expect(screen.getByTestId("search-group-places").textContent).not.toMatch(/verified/i);
+    expect(screen.queryByTestId("search-more-failed")).toBeNull();
+    cleanup();
+
+    morePlaces = null;
+    resetSearchIndexCache();
+    renderSearch();
+    await ready();
+    await type("Centro");
+    await waitFor(() => expect(screen.getByTestId("search-more-failed")).toBeTruthy());
+    // The core index still answers.
+    expect(screen.getByTestId("search-group-routes")).toBeTruthy();
   });
 
   it("says plainly when nothing matches", async () => {

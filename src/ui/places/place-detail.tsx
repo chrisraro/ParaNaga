@@ -57,6 +57,11 @@ export function PlaceDetailScreen({ placeRef }: { placeRef: PlaceRef }) {
   const state = useSearchIndex();
   if (state.status === "loading") return <DetailLoading title={TITLE} />;
   if (state.status === "error") return <DetailError title={TITLE} offline={state.problem === "offline"} onRetry={state.retry} />;
+  // Task 14: a restaurant or shop lives in the lazy places chunk; until it arrives (or when it
+  // failed) a missing place is not "not found".
+  if (state.morePlaces !== "ready" && placeRef.kind === "osm" && !findPlace(state.index, placeRef)) {
+    return state.morePlaces === "loading" ? <DetailLoading title={TITLE} /> : <DetailError title={TITLE} offline={state.problem === "offline"} onRetry={state.retry} />;
+  }
   return <PlaceDetailView index={state.index} placeRef={placeRef} />;
 }
 

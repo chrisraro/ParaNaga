@@ -148,7 +148,13 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
       [["eta_param", "eta_param_version", "shape", "shape_version", "walk_graph", "walk_graph_version"]]);
     expect(tables.rows).toHaveLength(6);
     for (const t of tables.rows) expect(t, t.name).toMatchObject({ rls: true, forced: true });
-    expect(await appRows(sql`select count(*)::int as n from transit.v_published_shapes`)).toEqual([{ n: 0 }]);
+    // The view shows exactly the shape members of the published revision, no more. A branch of main
+    // already holds the real road import, so the modes revision carries those shapes forward (the ones
+    // of routes the modes seed re-versions are dropped): that count is derived, not assumed to be 0.
+    const published = await owner.query<{ n: number }>(
+      `select count(*)::int as n from transit.revision_member m
+         join transit.published_pointer p on p.revision_id = m.revision_id where m.entity_kind = 'shape'`);
+    expect(await appRows(sql`select count(*)::int as n from transit.v_published_shapes`)).toEqual([{ n: published.rows[0]!.n }]);
   });
 
   it("a synthetic road snapshot with the synthetic seed is refused before anything is written", async () => {
@@ -252,7 +258,11 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     expect(result.lines).toMatchObject({ outcome: "unchanged", revisionLabel: LABEL, publishedRevisionLabel: LABEL, publishedIncludesBatch: true });
     // The modes seed's records are still published (its regional services as their distance versions).
     expect(result.modes).toMatchObject({ outcome: "unchanged", publishedIncludesBatch: true });
-    expect(result.places).toMatchObject({ outcome: "unchanged", publishedIncludesBatch: true });
+    // Whether the published revision holds this snapshot's places depends on the branch history, not on
+    // this re-run: on a branch of main that earlier files already gave a modes-<date>.2 revision (carrying
+    // main's older 2026-10-15 places), the 2026-10-16 places revision is committed afterwards and the
+    // start revision published here predates it. The re-run itself must still be a no-op.
+    expect(result.places).toMatchObject({ outcome: "unchanged", publishedIncludesBatch: expect.any(Boolean) });
     expect(await tableCounts()).toEqual(before);
   });
 

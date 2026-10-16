@@ -23,6 +23,8 @@ import routeR8C from "./network/route-r8-c.json" with { type: "json" };
 import routeR8D from "./network/route-r8-d.json" with { type: "json" };
 import routesList from "./network/routes.json" with { type: "json" };
 import searchIndex from "./network/search-index.json" with { type: "json" };
+// SYNTHETIC lazy chunk (Task 14): fake named places (restaurant, cafe, pharmacy, bank, hotel …) for the e2e suite.
+import searchPlaces from "./network/search-places.json" with { type: "json" };
 import snapshot from "./network/snapshot.json" with { type: "json" };
 import lines from "./network/lines.json" with { type: "json" };
 import walkGraph from "./network/walk-graph.json" with { type: "json" };
@@ -70,6 +72,8 @@ const notFound = (route: Route) => reply(false)(route, { error: { code: "not_fou
 export const ROUTES_LIST = routesList;
 /** The captured search index of the published revision (233 OSM places, 47 mapped-pin places …). */
 export const SEARCH_INDEX = searchIndex;
+/** The synthetic lazy places chunk served at /api/v1/network/search-places/:revisionId. */
+export const SEARCH_PLACES = searchPlaces;
 
 export const TERMINAL_T01 = terminalT01;
 export const TERMINAL_T06 = terminalT06;
@@ -90,6 +94,7 @@ export type NetworkCalls = {
   routes: string[];
   routeLists: number;
   searchIndexes: string[];
+  searchPlaces: string[];
   snapshots: string[];
   heads: number;
   terminals: string[];
@@ -112,7 +117,7 @@ export async function routeNetwork(target: Page | BrowserContext, opts: { realCa
   // Passed to every handler through this closure: each call keeps its own setting.
   const json = reply(opts.realCacheHeaders ?? false);
   const page = target;
-  const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [], snapshots: [], heads: 0, terminals: [],
+  const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [], searchPlaces: [], snapshots: [], heads: 0, terminals: [],
     lines: [], walkGraphs: [] };
   await page.route(/\/api\/v1\/stops(\?|\/|$)/, async (route) => {
     const url = new URL(route.request().url());
@@ -142,6 +147,11 @@ export async function routeNetwork(target: Page | BrowserContext, opts: { realCa
     const id = decodeURIComponent(/search-index\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);
     calls.searchIndexes.push(id);
     return id === searchIndex.revision.revisionId ? json(route, searchIndex, 200, "immutable") : notFound(route);
+  });
+  await page.route(/\/api\/v1\/network\/search-places\/[^/?]+$/, (route) => {
+    const id = decodeURIComponent(/search-places\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);
+    calls.searchPlaces.push(id);
+    return id === searchPlaces.revision.revisionId ? json(route, searchPlaces, 200, "immutable") : notFound(route);
   });
   await page.route(/\/api\/v1\/network\/lines\/[^/?]+$/, (route) => {
     const id = decodeURIComponent(/lines\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);

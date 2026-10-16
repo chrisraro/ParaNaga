@@ -192,6 +192,20 @@ describe("Sources register", () => {
     expect(link.getAttribute("rel")).toBe("noopener noreferrer");
     expect(screen.getByTestId("sources-owner-note").textContent).toBe(MAP_OWNER_NOTE);
   });
+
+  it("credits Google Places as third-party, unverified suggestions with an unresolved rights note", () => {
+    render(<SourcesScreen />);
+    const google = screen.getByTestId("google-places-credits").textContent ?? "";
+    expect(google).toContain("Suggestions from Google Maps");
+    expect(google).toContain("third-party");
+    expect(google).toContain("not verified");
+    expect(google).toContain("unresolved");
+    expect(google).toContain("300");
+    expect(google).toContain("Google receives what you typed");
+    expect(google).toContain("up to 24 hours under a one-way hash");
+    expect(google).toContain("no typed text and no IP address");
+    expect(google).not.toMatch(/does not store|never stores/);
+  });
 });
 
 describe("MyNaga handoff", () => {
