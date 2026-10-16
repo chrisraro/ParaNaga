@@ -41,8 +41,13 @@ MATCo, the Sabang regional routes, the pre-hike ticket prices, the Eastbound dis
 unverified tricycle speed) and are never returned by `importableRecords()`. A change to a record
 is a new review: edit the value, the reason and `reviewedOn` together.
 
-`streetAliases` maps a legal-text street name to an OSM name for path tracing. Each alias needs a
-reason; the list starts empty and is filled from the tracer's unmatched streets.
+`streetAliases` maps a legal-text street name to an OSM name for path tracing (Task 5). Each alias
+carries its evidence: `osm_way_ids` (the ways carrying `osm_name`) and `evidence_snapshot` (the
+pinned road snapshot they were read from), plus a reason. An alias is added only when the evidence
+is unambiguous: when two OSM streets could match, the one meeting both list neighbours (by shared
+node) is taken and the reason says so; otherwise the street stays unmatched and the variant shows
+"Path could not be traced from the street list". A compound legal entry ("A / B") gets one alias per
+named street. A unit test checks every alias against the pinned snapshot.
 
 ## Licences
 

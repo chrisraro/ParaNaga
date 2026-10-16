@@ -56,6 +56,51 @@ describe("buildRoadGraph: classes and access", () => {
   });
 });
 
+describe("buildRoadGraph: jeepney (vehicle) access tags", () => {
+  it("psv=yes or bus=yes lets jeepneys through access=no|private", () => {
+    const g = buildRoadGraph(roads((f) => {
+      setTags(f, 1, { access: "no", psv: "yes" });
+      setTags(f, 2, { access: "private", bus: "designated" });
+      setTags(f, 4, { access: "no" });
+    }), { profile: "vehicle" });
+    expect(ways(g)).toContain(1);
+    expect(ways(g)).toContain(2);
+    expect(ways(g)).not.toContain(4);
+  });
+
+  it("motor_vehicle=no or vehicle=no blocks (unless psv/bus=yes)", () => {
+    const g = buildRoadGraph(roads((f) => {
+      setTags(f, 1, { motor_vehicle: "no" });
+      setTags(f, 2, { vehicle: "no" });
+      setTags(f, 4, { motor_vehicle: "no", psv: "yes" });
+    }), { profile: "vehicle" });
+    expect(ways(g)).not.toContain(1);
+    expect(ways(g)).not.toContain(2);
+    expect(ways(g)).toContain(4);
+  });
+
+  it("service=parking_aisle|drive-through is not a jeepney road (walking still uses it)", () => {
+    const edit = (f: ReturnType<typeof raw>) => {
+      setTags(f, 9, { highway: "service", service: "parking_aisle" });
+      setTags(f, 11, { highway: "service", service: "drive-through" });
+    };
+    const g = buildRoadGraph(roads(edit), { profile: "vehicle" });
+    expect(ways(g)).not.toContain(9);
+    expect(ways(g)).not.toContain(11);
+    expect(ways(buildRoadGraph(roads(edit), { profile: "walk" }))).toContain(9);
+  });
+
+  it("oneway:psv overrides oneway for jeepneys", () => {
+    const g = buildRoadGraph(roads((f) => {
+      setTags(f, 3, { "oneway:psv": "no" });
+      setTags(f, 4, { "oneway:psv": "-1" });
+    }), { profile: "vehicle" });
+    expect(wayEdges(g, 3).some((e) => e.reverse)).toBe(true);
+    expect(wayEdges(g, 3).some((e) => !e.reverse)).toBe(true);
+    expect(wayEdges(g, 4).every((e) => e.reverse)).toBe(true);
+  });
+});
+
 describe("buildRoadGraph: direction", () => {
   it("a one-way street exists in one direction for vehicles and in both for walking", () => {
     expect(wayEdges(vehicle, 3).length).toBeGreaterThan(0);

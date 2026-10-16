@@ -16,7 +16,8 @@
 //
 // Contributor data is removed BEFORE anything is written (stripRoadsResponse): ways keep type, id,
 // version, timestamp, nodes and the road tags (highway, name, alt_name, old_name, official_name,
-// ref, oneway, junction, access, foot, area); nodes keep type, id, lat, lon, and place nodes their
+// ref, oneway, junction, access, foot, area, and for jeepney access motor_vehicle, vehicle, psv,
+// bus, oneway:psv, service); nodes keep type, id, lat, lon, and place nodes their
 // name and place. user, uid, changeset and every other tag are dropped. Both responses' sha256 are
 // recorded as received, before the removal. The file is deterministic: the header pretty-printed,
 // then one element per line.

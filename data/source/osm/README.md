@@ -153,7 +153,8 @@ line.
 
 **Kept:** ways with `type`, `id`, `version`, `timestamp`, `nodes` and only the tags `highway`,
 `name`, `alt_name`, `old_name`, `official_name`, `ref`, `oneway`, `junction`, `access`, `foot`,
-`area`; nodes with `id`, `lat`, `lon`; place nodes also `name` and `place`.
+`area`, and (from the 2026-10-16 snapshot, for jeepney access) `motor_vehicle`, `vehicle`, `psv`,
+`bus`, `oneway:psv`, `service`; nodes with `id`, `lat`, `lon`; place nodes also `name` and `place`.
 **Dropped before writing:** `user`, `uid`, `changeset` (contributor data) and every other tag
 (`otherTags`). `src/domain/import/osm-roads.ts` refuses a file whose elements still carry
 `user`/`uid`/`changeset`, and its schemas never output an unknown tag. `responseSha256` and
@@ -166,12 +167,21 @@ bytes exact.
 - `src/domain/geo/street-names.ts`: name normalization for matching only (NFC, diacritics
   stripped, case-folded, `Ave`/`St`/`Dr`/`Rd`/`Hwy`/`Gen.` expanded, punctuation removed);
   `matchStreet` checks `name`, `alt_name`, `old_name`, `official_name` and reviewed aliases.
-- `src/domain/geo/road-graph.ts`: `buildRoadGraph(roads, {profile})`. **vehicle**: drivable
-  classes plus `busway`, one-way respected (`oneway=yes|1|-1`, `junction=roundabout`), `access=no|private` and
-  `area=yes` left out. **walk** (D7): every class except `motorway`, `motorway_link`,
+- `src/domain/geo/road-graph.ts`: `buildRoadGraph(roads, {profile})`. **vehicle** (the jeepney
+  profile): drivable classes plus `busway`, one-way respected (`oneway=yes|1|-1`,
+  `junction=roundabout`; `oneway:psv` overrides `oneway`); `psv=yes|designated` or
+  `bus=yes|designated` lets a jeepney through, otherwise `motor_vehicle=no|private`,
+  `vehicle=no|private` and `access=no|private` block; `area=yes` and
+  `service=parking_aisle|drive-through` left out. **walk** (D7): every class except `motorway`, `motorway_link`,
   `construction`, `proposed` (and the lifecycle values `abandoned`, `disused`, `razed`); `foot=no`
   excluded; `access=private|no` excluded unless `foot=yes|designated`; undirected. Degree-2 nodes
   are contracted into edge polylines; ~100 m spatial grid; `nearestEdge(point, maxM)`.
+- `src/domain/import/trace-route.ts`: the approximate ride path tracer (J1, D6), on the vehicle
+  graph. `scripts/preview-route-paths.ts` (`pnpm data:preview-paths`, dev only) writes
+  `tmp/route-paths-preview.geojson` (git-ignored, never uploaded) for review in a local GIS tool.
+- **Pin.** The importer and the preview read only the newest snapshot whose sha256 equals its pin
+  in `scripts/lib/roads-snapshot.ts` (`ROADS_SNAPSHOT_PINS`, the same value as the table below),
+  and refuse a snapshot with parse problems or a synthetic one.
 - Feeder `place_name` anchors resolve by normalized name against the place nodes; no match or
   more than one match stays **unresolved** (never guessed).
 
@@ -179,9 +189,17 @@ bytes exact.
 
 | File | Fetched (UTC) | OSM base | Ways | Nodes | Place nodes | Regional relations | Bytes | sha256 |
 |---|---|---|---|---|---|---|---|---|
-| `naga-roads-2026-10-15.osm.json` | 2026-10-15T23:01:07Z | 2026-10-15T23:00:38Z | 4409 | 17826 | 60 | 14 (RS01–RS07) | 2035617 | `bd9d0d75cb7948dc10893eab2d541c4165d9f292ef6678076632592ce602c1c7` |
+| `naga-roads-2026-10-16.osm.json` | 2026-10-16T00:00:40Z | 2026-10-16T00:01:51Z | 4409 | 17826 | 60 | 14 (RS01–RS07) | 2037344 | `4c270b87dc1b9b91d81a4b1bb314918cc76b42c98f64e4b7fcf606effd30a469` |
+| ~~`naga-roads-2026-10-15.osm.json`~~ (removed) | 2026-10-15T23:01:07Z | 2026-10-15T23:00:38Z | 4409 | 17826 | 60 | 14 (RS01–RS07) | 2035617 | `bd9d0d75cb7948dc10893eab2d541c4165d9f292ef6678076632592ce602c1c7` |
 
-In the 2026-10-15 snapshot, Langon, Vistansa, Salunguigui and Deca Vistansa are **not** mapped as
+The 2026-10-16 snapshot is the same query with the jeepney access tags added to the kept list
+(`motor_vehicle`, `vehicle`, `psv`, `bus`, `oneway:psv`, `service`). The 2026-10-15 file was
+superseded one hour later, was never imported or pinned in `ingest`, and was removed from the tree
+to avoid carrying two 2 MB copies of the same data; it stays in git history (commit ac03cc1).
+Kept-tag counts in 2026-10-16: `motor_vehicle` 6 (5 `no`), `vehicle` 13 (`private`),
+`service` 62 (8 `parking_aisle`, 2 `drive-through`); no `psv`, `bus` or `oneway:psv` tags in Naga.
+
+In the 2026-10-16 snapshot, Langon, Vistansa, Salunguigui and Deca Vistansa are **not** mapped as
 place nodes, so those feeder anchors stay unresolved.
 
 Test data: `tests/fixtures/osm/roads-synthetic.osm.json` is a hand-made fake grid with fake names

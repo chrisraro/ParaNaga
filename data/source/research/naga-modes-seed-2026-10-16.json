@@ -3255,7 +3255,235 @@
       }
     }
   ],
-  "streetAliases": [],
+  "streetAliases": [
+    {
+      "legal_name": "Balatas Rd",
+      "osm_name": "Balatas-Cararayan Road",
+      "osm_way_ids": [
+        23521696
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Topology: the only OSM road named Balatas that meets both neighbours in the R1 lists — Cararayan–San Isidro Rd (node 254714052) and Magsaysay Ave / Dayangdang St (node 254713607). \"City Science-Balatas Road\" meets neither, so it is not used.",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Diaz St",
+      "osm_name": "P. Diaz Street",
+      "osm_way_ids": [
+        23519407,
+        838919067,
+        838919068,
+        1529540509
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Topology: the only OSM 'Diaz' street meeting both list neighbours, Peñafrancia Ave (node 254709344) and Elias Angeles St (node 254715935). Ramon Diaz Street and Ramon Diaz Extension meet neither.",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Pacol Rd",
+      "osm_name": "San Felipe-Pacol-Carolina-Panicuason Road",
+      "osm_way_ids": [
+        23520279,
+        23520589,
+        23520755,
+        23521327,
+        23521368,
+        23521748,
+        32000493,
+        600486831,
+        1227398592,
+        1529540508
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Topology: the road leaving Peñafrancia Ave toward San Felipe and Pacol (R5/R6/R7 list neighbour) is the OSM 'San Felipe-Pacol-Carolina-Panicuason Road'. The OSM way named 'Pacol Road' is a 0.7 km local spur in Pacol that does not reach Peñafrancia Ave; the exact-name match is kept, this alias adds the through road.",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Carolina Rd",
+      "osm_name": "San Felipe-Pacol-Carolina-Panicuason Road",
+      "osm_way_ids": [
+        23520279,
+        23520589,
+        23520755,
+        23521327,
+        23521368,
+        23521748,
+        32000493,
+        600486831,
+        1227398592,
+        1529540508
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Topology: the only 'Carolina' road meeting the Pacol road (node 254707316); 'San Isidro - Carolina Road' does not meet it. The OSM name lists Carolina.",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Panicuason Rd",
+      "osm_name": "San Felipe-Pacol-Carolina-Panicuason Road",
+      "osm_way_ids": [
+        23520279,
+        23520589,
+        23520755,
+        23521327,
+        23521368,
+        23521748,
+        32000493,
+        600486831,
+        1227398592,
+        1529540508
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "The only OSM road named for Panicuason; it continues the Carolina road to Panicuason.",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Leon SA Aureus St / Mayflower St",
+      "osm_name": "Leon Sa Aureus Street",
+      "osm_way_ids": [
+        23519204
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Compound legal entry split: first named street. Meets Magsaysay Ave (node 254714878).",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Leon SA Aureus St / Mayflower St",
+      "osm_name": "Mayflower Street",
+      "osm_way_ids": [
+        23519688,
+        23520342,
+        23520423,
+        905683903
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Compound legal entry split: second named street. Meets Magsaysay Ave (node 254715589).",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Bagumbayan Sur Rd",
+      "osm_name": "Bagumbayan Street",
+      "osm_way_ids": [
+        23520886
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Topology: the only 'Bagumbayan' road meeting both R8-C neighbours, Elias Angeles St (node 254709700) and M.T. Villanueva Ave (node 254709673). 'Bagumbayan Marupit Road' meets neither.",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Bagumbayan Rd",
+      "osm_name": "Bagumbayan Street",
+      "osm_way_ids": [
+        23520886
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Topology: the only 'Bagumbayan' road meeting both R8-D neighbours, M.T. Villanueva Ave (node 254709673) and Elias Angeles St (node 254709700).",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "Raul S. Roco St",
+      "osm_name": "Sen. Raul S. Roco Street",
+      "osm_way_ids": [
+        23520592,
+        760083150
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "The only OSM 'Raul S. Roco' street (title 'Sen.' added in OSM); meets Roxas Ave (trial R8-B circuit neighbour).",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "J. Miranda Ave",
+      "osm_name": "Juan Miranda Avenue",
+      "osm_way_ids": [
+        23518788,
+        601444718
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "Topology: 'Juan Miranda Avenue' meets all three Loop A/B list neighbours, Taal Ave (node 254710160), Leon Sa Aureus Street (node 254715903) and Mayflower Street (nodes 254708639, 8410709993). The OSM ways named exactly 'J. Miranda Avenue' are a short residential street about 1 km north that meets none of them; the exact-name match is kept, this alias adds the avenue the loops run on.",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    },
+    {
+      "legal_name": "AH26",
+      "osm_name": "Maharlika Highway",
+      "osm_way_ids": [
+        49062074,
+        238038899,
+        241595632,
+        252222953,
+        252222954,
+        252223487,
+        721779676,
+        721779677,
+        760083138,
+        760083139,
+        760083140,
+        760083141,
+        760083142,
+        760083143,
+        760083145,
+        760083146,
+        760083147,
+        760083148,
+        760083149,
+        760083153,
+        760083154,
+        769916313,
+        769916315,
+        793410139,
+        793410140
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
+      "reason": "AH26 is concurrent with N1 (Pan-Philippine Highway); in Naga N1 runs on Roxas Avenue (Diversion Road) to the Naga Rotonda, then east as Maharlika Highway to Pili (https://en.wikipedia.org/wiki/N1_highway_(Philippines), retrieved 2026-10-16). The legal text's AH26 at the Naga–Pili boundary (Del Rosario) is therefore the Maharlika Highway segment; the OSM ways carry ref=1 (N1).",
+      "review": {
+        "decision": "import",
+        "reason": "Task 5 alias review: OSM name and way ids checked against the pinned road snapshot",
+        "reviewedOn": "2026-10-16"
+      }
+    }
+  ],
   "conflicts": [
     {
       "code": "CX01",

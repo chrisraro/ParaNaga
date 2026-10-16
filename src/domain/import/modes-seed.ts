@@ -263,9 +263,14 @@ const EtaParam = z.strictObject({
   review: Review,
 });
 
+/** A reviewed legal-name → OSM-name mapping for the path tracer, with its evidence (OSM way ids). */
 const StreetAlias = z.strictObject({
   legal_name: text,
   osm_name: text,
+  /** The OSM ways carrying `osm_name` in the road snapshot the alias was reviewed against. */
+  osm_way_ids: z.array(z.number().int().positive()).min(1),
+  /** The road snapshot file the evidence was read from. */
+  evidence_snapshot: z.string().regex(/^naga-roads-\d{4}-\d{2}-\d{2}\.osm\.json$/),
   reason: text,
   review: Review,
 });

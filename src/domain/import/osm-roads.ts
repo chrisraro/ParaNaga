@@ -16,13 +16,18 @@
 // ODbL 1.0, © OpenStreetMap contributors (see data/source/osm/README.md).
 import { z } from "zod";
 import { haversineMeters } from "../geo/geometry";
-import { normalizeStreetName } from "../geo/street-names";
+import { normalizeStreetName, wayStreetNames } from "../geo/street-names";
 import type { LatLng } from "../geo/types";
 import { CONTRIBUTOR_FIELDS, OSM_ATTRIBUTION, OSM_BOUNDARY_RELATION, OSM_LICENCE } from "./osm-places";
 import { zodMessage } from "./zod-message";
 
 /** Way tags a road snapshot keeps (everything the path tracer and the walk graph read). */
-export const ROAD_TAGS = ["highway", "name", "alt_name", "old_name", "official_name", "ref", "oneway", "junction", "access", "foot", "area"] as const;
+export const ROAD_TAGS = [
+  "highway", "name", "alt_name", "old_name", "official_name", "ref", "oneway", "junction", "access", "foot", "area",
+  // Jeepney access (vehicle profile): psv/bus=yes lifts access=no; motor_vehicle/vehicle=no blocks;
+  // service=parking_aisle|drive-through is not a through road; oneway:psv overrides oneway.
+  "motor_vehicle", "vehicle", "psv", "bus", "oneway:psv", "service",
+] as const;
 /** Place-node tags a road snapshot keeps. */
 export const PLACE_TAGS = ["name", "place"] as const;
 /** Place classes queried as feeder anchors. */
@@ -284,4 +289,25 @@ export function resolvePlaceName(places: readonly PlaceNode[], name: string): Pl
   const matches = wanted === "" ? [] : places.filter((p) => normalizeStreetName(p.name) === wanted);
   if (matches.length === 1) return { status: "resolved", place: matches[0]! };
   return { status: "unresolved", reason: matches.length === 0 ? "not_found" : "ambiguous", candidates: matches.map((p) => p.id).sort((a, b) => a - b) };
+}
+
+/**
+ * Checks reviewed street aliases against a road snapshot: every listed way exists and carries the
+ * alias's OSM name (name, alt_name, old_name or official_name). Returns the problems (empty = ok).
+ */
+export function verifyStreetAliases(
+  aliases: readonly { legal_name: string; osm_name: string; osm_way_ids: readonly number[] }[],
+  roads: Pick<OsmRoads, "ways">,
+): string[] {
+  const byId = new Map(roads.ways.map((w) => [w.id, w]));
+  const problems: string[] = [];
+  for (const a of aliases) {
+    const wanted = normalizeStreetName(a.osm_name);
+    for (const id of a.osm_way_ids) {
+      const way = byId.get(id);
+      if (!way) problems.push(`alias "${a.legal_name}" → "${a.osm_name}": way/${id} is not in the snapshot`);
+      else if (!wayStreetNames(way.tags).includes(wanted)) problems.push(`alias "${a.legal_name}" → "${a.osm_name}": way/${id} does not carry that name`);
+    }
+  }
+  return problems;
 }

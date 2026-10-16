@@ -1,9 +1,12 @@
 // Road graph built from a parsed OpenStreetMap road snapshot (src/domain/import/osm-roads.ts).
 //
 // Two profiles:
-//   vehicle — drivable classes (motorway … residential, unclassified, service, living_street, *_link, busway),
-//             one-way respected (oneway=yes|1|true, oneway=-1, junction=roundabout|circular);
-//             access=no|private and area=yes ways are left out (no public vehicle passes there).
+//   vehicle — the jeepney profile: drivable classes (motorway … residential, unclassified, service,
+//             living_street, *_link, busway), one-way respected (oneway=yes|1|true, oneway=-1,
+//             junction=roundabout|circular; oneway:psv overrides oneway). psv=yes|designated or
+//             bus=yes|designated lets a jeepney through; otherwise motor_vehicle=no|private,
+//             vehicle=no|private and access=no|private block. area=yes and
+//             service=parking_aisle|drive-through are left out (not through roads).
 //   walk    — D7: every highway class except motorway, motorway_link, construction, proposed (and
 //             the lifecycle values abandoned, disused, razed, which are not roads); foot=no is
 //             excluded, and access=private|no unless foot=yes|designated. Undirected.
@@ -71,8 +74,12 @@ function included(way: RoadWay, profile: RoadProfile): boolean {
   const t = way.tags;
   if (profile === "vehicle") {
     if (!DRIVABLE.has(t.highway)) return false;
-    if (t.access === "no" || t.access === "private") return false;
-    return t.area !== "yes";
+    if (t.area === "yes") return false;
+    if (t.service === "parking_aisle" || t.service === "drive-through") return false;
+    const allowed = (v: string | undefined) => v === "yes" || v === "designated";
+    if (allowed(t.psv) || allowed(t.bus)) return true;
+    const blocked = (v: string | undefined) => v === "no" || v === "private";
+    return !blocked(t.motor_vehicle) && !blocked(t.vehicle) && !blocked(t.access);
   }
   if (NOT_WALKABLE.has(t.highway)) return false;
   if (t.foot === "no") return false;
@@ -83,7 +90,7 @@ function included(way: RoadWay, profile: RoadProfile): boolean {
 /** Which directions a vehicle may use: forward (way order), backward, or both. Walking: both. */
 function directions(way: RoadWay, profile: RoadProfile): { forward: boolean; backward: boolean } {
   if (profile === "walk") return { forward: true, backward: true };
-  const oneway = way.tags.oneway;
+  const oneway = way.tags["oneway:psv"] ?? way.tags.oneway;
   if (oneway === "-1" || oneway === "reverse") return { forward: false, backward: true };
   if (oneway === "yes" || oneway === "1" || oneway === "true") return { forward: true, backward: false };
   if (oneway === "no" || oneway === "false" || oneway === "0") return { forward: true, backward: true };

@@ -6,7 +6,7 @@ import {
   regionalRelationSummary,
   relationLengthKm,
   resolvePlaceName,
-  stripRoadsResponse,
+  stripRoadsResponse, verifyStreetAliases,
 } from "@/domain/import/osm-roads";
 
 const fixture = () => JSON.parse(readFileSync("tests/fixtures/osm/roads-synthetic.osm.json", "utf8")) as {
@@ -82,7 +82,8 @@ describe("stripRoadsResponse", () => {
       osm3s: { timestamp_osm_base: "2026-10-16T00:00:00Z", copyright: "c" },
       elements: [
         { type: "way", id: 7, version: 3, timestamp: "2020-01-01T00:00:00Z", changeset: 1, user: "u", uid: 2, nodes: [1, 2],
-          tags: { surface: "asphalt", highway: "residential", name: "A", lanes: "2", oneway: "yes", access: "private", foot: "yes" } },
+          tags: { surface: "asphalt", highway: "residential", name: "A", lanes: "2", oneway: "yes", access: "private", foot: "yes",
+            motor_vehicle: "no", vehicle: "no", psv: "yes", bus: "yes", "oneway:psv": "no", service: "alley", maxspeed: "30" } },
         { type: "node", id: 1, lat: 13.6, lon: 123.1 },
         { type: "node", id: 2, lat: 13.61, lon: 123.11, version: 4, timestamp: "2020-01-01T00:00:00Z", user: "u", uid: 2, changeset: 9,
           tags: { place: "hamlet", name: "P", population: "3", is_in: "x" } },
@@ -96,7 +97,8 @@ describe("stripRoadsResponse", () => {
       osm3s: body.osm3s,
       elements: [
         { type: "way", id: 7, version: 3, timestamp: "2020-01-01T00:00:00Z", nodes: [1, 2],
-          tags: { highway: "residential", name: "A", oneway: "yes", access: "private", foot: "yes" } },
+          tags: { highway: "residential", name: "A", oneway: "yes", access: "private", foot: "yes",
+            motor_vehicle: "no", vehicle: "no", psv: "yes", bus: "yes", "oneway:psv": "no", service: "alley" } },
         { type: "node", id: 1, lat: 13.6, lon: 123.1 },
         { type: "node", id: 2, lat: 13.61, lon: 123.11, tags: { place: "hamlet", name: "P" } },
       ],
@@ -166,7 +168,7 @@ describe("resolvePlaceName (feeder place_name anchors)", () => {
 });
 
 describe("committed road snapshot", () => {
-  const file = "data/source/osm/naga-roads-2026-10-15.osm.json";
+  const file = "data/source/osm/naga-roads-2026-10-16.osm.json";
   const text = readFileSync(file, "utf8");
 
   it("parses without problems, is real (not synthetic) and carries no contributor data", () => {
@@ -177,5 +179,14 @@ describe("committed road snapshot", () => {
     expect(text).not.toMatch(/"(user|uid|changeset)":/);
     expect(r.ways.length).toBeGreaterThan(1000);
     expect(r.regionalRelations.map((x) => x.relationId)).toHaveLength(14);
+  });
+});
+
+describe("verifyStreetAliases", () => {
+  const roads = parseOsmRoads(JSON.parse(readFileSync("tests/fixtures/osm/roads-synthetic.osm.json", "utf8")));
+  it("accepts an alias whose ways carry the OSM name (any name tag), refuses a wrong or missing way", () => {
+    expect(verifyStreetAliases([{ legal_name: "Ex Dr", osm_name: "Example Dr.", osm_way_ids: [5] }], roads)).toEqual([]);
+    expect(verifyStreetAliases([{ legal_name: "X", osm_name: "Mock Lane", osm_way_ids: [1] }], roads)[0]).toMatch(/does not carry/);
+    expect(verifyStreetAliases([{ legal_name: "X", osm_name: "Mock Lane", osm_way_ids: [999] }], roads)[0]).toMatch(/not in the snapshot/);
   });
 });

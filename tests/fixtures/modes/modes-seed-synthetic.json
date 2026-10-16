@@ -538,6 +538,10 @@
     {
       "legal_name": "Fake St",
       "osm_name": "Fake Street",
+      "osm_way_ids": [
+        9000001
+      ],
+      "evidence_snapshot": "naga-roads-2026-10-16.osm.json",
       "reason": "synthetic abbreviation",
       "review": {
         "decision": "import",

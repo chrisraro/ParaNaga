@@ -19,6 +19,7 @@
     "db:check-rls": "tsx --env-file-if-exists=.env.local scripts/check-rls.ts",
     "db:import": "tsx --env-file-if-exists=.env.local scripts/import-naga.ts",
     "admin:bootstrap": "tsx --env-file-if-exists=.env.local scripts/bootstrap-admin.ts",
+    "data:preview-paths": "tsx scripts/preview-route-paths.ts",
     "check:boundaries": "tsx scripts/check-boundaries.ts",
     "check:bundle-secrets": "tsx scripts/check-bundle-secrets.ts",
     "verify": "pnpm typecheck && pnpm lint && pnpm check:boundaries && pnpm test && pnpm build && pnpm check:bundle-secrets"
