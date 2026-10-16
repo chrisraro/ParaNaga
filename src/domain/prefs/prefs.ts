@@ -4,12 +4,32 @@
 //
 // No units setting (metric only, matching the data), no fare-category or language setting
 // (discounts are unverified and there is no reviewed translation, decision D8).
+// Increment D, Task 12 (decision D16): adds `layers` for the map overview and mode filter.
 import { z } from "zod";
+import { ROUTE_MODES, type RouteMode } from "../modes/fleet";
 
 export const PREFS_STORAGE_KEY = "paranaga.prefs";
 
 export const THEMES = ["system", "light", "dark"] as const;
 export type ThemePref = (typeof THEMES)[number];
+
+export type LayersPref = {
+  /** Routes overview on the home map when no trip is shown (D16: on by default). */
+  routes: boolean;
+  /** Terminals layer on the home map (D16: on by default). */
+  terminals: boolean;
+  /** Historical routes (e.g. 2017 e-jeepney ordinance; off by default). */
+  historical: boolean;
+  /** Selected mode filter chips; empty array means "All" modes are shown. */
+  modes: RouteMode[];
+};
+
+export const DEFAULT_LAYERS_PREF: Readonly<LayersPref> = Object.freeze({
+  routes: true,
+  terminals: true,
+  historical: false,
+  modes: [],
+});
 
 export type Prefs = {
   /** "system" follows the device; "light" / "dark" override it. */
@@ -20,6 +40,8 @@ export type Prefs = {
   lowData: boolean;
   /** Keep a trip history on this device. Off by default. */
   historyEnabled: boolean;
+  /** Map layers and mode filter (D16). */
+  layers: LayersPref;
 };
 
 export const DEFAULT_PREFS: Readonly<Prefs> = Object.freeze({
@@ -27,7 +49,29 @@ export const DEFAULT_PREFS: Readonly<Prefs> = Object.freeze({
   highContrast: false,
   lowData: false,
   historyEnabled: false,
+  layers: DEFAULT_LAYERS_PREF,
 });
+
+const modeEnum = z.enum(ROUTE_MODES);
+
+const layersSchema = z
+  .object({
+    routes: z.boolean().catch(DEFAULT_LAYERS_PREF.routes),
+    terminals: z.boolean().catch(DEFAULT_LAYERS_PREF.terminals),
+    historical: z.boolean().catch(DEFAULT_LAYERS_PREF.historical),
+    modes: z
+      .array(z.unknown())
+      .transform((arr) => {
+        const out: RouteMode[] = [];
+        for (const item of arr) {
+          const parsed = modeEnum.safeParse(item);
+          if (parsed.success && !out.includes(parsed.data)) out.push(parsed.data);
+        }
+        return out;
+      })
+      .catch([]),
+  })
+  .catch({ ...DEFAULT_LAYERS_PREF, modes: [] });
 
 // Each field falls back to its default on its own, so one bad value does not reset the others.
 const prefsSchema = z.object({
@@ -35,23 +79,42 @@ const prefsSchema = z.object({
   highContrast: z.boolean().catch(DEFAULT_PREFS.highContrast),
   lowData: z.boolean().catch(DEFAULT_PREFS.lowData),
   historyEnabled: z.boolean().catch(DEFAULT_PREFS.historyEnabled),
+  layers: layersSchema,
 });
+
+function cloneDefaultPrefs(): Prefs {
+  return {
+    ...DEFAULT_PREFS,
+    layers: { ...DEFAULT_LAYERS_PREF, modes: [] },
+  };
+}
 
 /** Stored text → preferences. Missing, malformed or non-object data gives the defaults. */
 export function parsePrefs(raw: string | null): Prefs {
-  if (!raw) return { ...DEFAULT_PREFS };
+  if (!raw) return cloneDefaultPrefs();
   let value: unknown;
   try {
     value = JSON.parse(raw);
   } catch {
-    return { ...DEFAULT_PREFS };
+    return cloneDefaultPrefs();
   }
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return { ...DEFAULT_PREFS };
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return cloneDefaultPrefs();
   const parsed = prefsSchema.safeParse(value);
-  return parsed.success ? parsed.data : { ...DEFAULT_PREFS };
+  return parsed.success ? parsed.data : cloneDefaultPrefs();
 }
 
 export function serializePrefs(prefs: Prefs): string {
-  const { theme, highContrast, lowData, historyEnabled } = prefs;
-  return JSON.stringify({ theme, highContrast, lowData, historyEnabled });
+  const { theme, highContrast, lowData, historyEnabled, layers = DEFAULT_LAYERS_PREF } = prefs;
+  return JSON.stringify({
+    theme,
+    highContrast,
+    lowData,
+    historyEnabled,
+    layers: {
+      routes: layers.routes,
+      terminals: layers.terminals,
+      historical: layers.historical,
+      modes: [...layers.modes],
+    },
+  });
 }

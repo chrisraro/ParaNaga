@@ -12,7 +12,8 @@
 
 import "@/ui/modes/modes.css";
 
-import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import L from "leaflet";
 import { MODE_DISPLAY_NAMES, resolveVisualKey, type RouteMode, type VisualKey } from "@/domain/modes/modes";
 import {
   PALETTE_D,
@@ -126,7 +127,15 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const entries = normalizeItems(items);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  }, []);
 
   if (entries.length === 0) return null;
 
@@ -139,7 +148,14 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
   };
 
   return (
-    <div className="pn-map-legend" data-testid="map-legend" onKeyDown={onKeyDown}>
+    <div
+      ref={containerRef}
+      className="pn-map-legend"
+      data-testid="map-legend"
+      onKeyDown={onKeyDown}
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+    >
       {announcement ? (
         <span className="sr-only" role="status" aria-live="polite">
           {announcement}

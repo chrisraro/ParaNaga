@@ -195,7 +195,7 @@ test.describe("phone", () => {
     await openHome(page);
     await expect.poll(() => tileRequests.length).toBeGreaterThan(0);
     await expect(page.getByTestId("map-low-data-notice")).toHaveCount(0);
-    await expect(page.locator(".pn-attribution")).not.toContainText("Boundary");
+    await expect(page.locator(".pn-attribution")).not.toContainText("Map data");
 
     // Low-data mode on (stored before load): no tile layer, no tile request.
     await page.evaluate((k) => localStorage.setItem(k, JSON.stringify({ lowData: true })), PREFS_KEY);
@@ -207,7 +207,7 @@ test.describe("phone", () => {
     await expect(lowData).toHaveText("Map background off (low-data mode)Show background once");
     // Pins still show.
     await expect(page.getByTestId("naga-map")).not.toHaveAttribute("data-stop-pins", "0");
-    await expect(page.locator(".pn-attribution")).toContainText("Boundary © OpenStreetMap contributors");
+    await expect(page.locator(".pn-attribution")).toContainText("Map data © OpenStreetMap contributors");
     await expect(page.locator(".leaflet-tile-pane .leaflet-layer")).toHaveCount(0);
     // Pan and zoom: still nothing requested.
     await page.getByRole("button", { name: "Zoom in" }).click();

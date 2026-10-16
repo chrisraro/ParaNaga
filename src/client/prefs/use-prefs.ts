@@ -8,7 +8,8 @@
 // visit, in memory.
 
 import { useLayoutEffect, useSyncExternalStore } from "react";
-import { DEFAULT_PREFS, PREFS_STORAGE_KEY, parsePrefs, serializePrefs, type Prefs } from "@/domain/prefs/prefs";
+import { DEFAULT_PREFS, PREFS_STORAGE_KEY, parsePrefs, serializePrefs, type LayersPref, type Prefs } from "@/domain/prefs/prefs";
+export type { LayersPref, Prefs };
 
 type Listener = () => void;
 
@@ -81,6 +82,18 @@ export function updatePrefs(patch: Partial<Prefs>): Prefs {
   applyDocumentPrefs(next);
   notify();
   return next;
+}
+
+/** Merges a partial `layers` update into the stored preferences (D16). */
+export function updateLayers(patch: Partial<LayersPref>): Prefs {
+  const current = readPrefs();
+  return updatePrefs({
+    layers: {
+      ...current.layers,
+      ...patch,
+      modes: patch.modes ? [...patch.modes] : [...current.layers.modes],
+    },
+  });
 }
 
 /** Removes the stored preferences (back to the defaults) — part of "Clear data on this device". */

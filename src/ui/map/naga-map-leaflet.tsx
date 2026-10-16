@@ -5,6 +5,7 @@
 
 import "leaflet/dist/leaflet.css";
 import "./naga-map.css";
+import "../modes/modes.css";
 
 import L from "leaflet";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
@@ -24,8 +25,12 @@ import {
   isInsideNaga,
 } from "@/domain/geo/naga";
 import type { Bounds, LatLng } from "@/domain/geo/types";
+import { mapSurface as computeMapSurface } from "@/domain/modes/palette";
 import { MapControls } from "./map-controls";
+import { MapLegend } from "./map-legend";
+import { RouteLinesLayer } from "./route-lines-layer";
 import { StopsLayer } from "./stops-layer";
+import { TripLinesLayer, type TripLinesData } from "./trip-lines-layer";
 import type { HighlightStop, NagaMapPins, NagaMapProps } from "./types";
 import { UserLocationLayer } from "./user-location-layer";
 
@@ -85,7 +90,7 @@ function PlaceMarker({ point, label }: { point: LatLng; label: string }) {
   return <Marker position={[point.lat, point.lng]} icon={icon} interactive={false} keyboard={false} />;
 }
 
-/** Boarding (filled) / getting-off (hollow) stop marker: a DOM marker, so no path is added. */
+/** Boarding (filled) / getting-off (hollow) stop marker: a DOM marker above the lines. */
 function tripStopIcon(stop: HighlightStop): L.DivIcon {
   const label = escapeHtml(`${stop.role === "board" ? "Board at" : "Get off at"} ${stop.label}`);
   return L.divIcon({
@@ -98,18 +103,44 @@ function tripStopIcon(stop: HighlightStop): L.DivIcon {
 
 function TripStopMarker({ stop }: { stop: HighlightStop }) {
   const icon = useMemo(() => tripStopIcon(stop), [stop]);
-  return <Marker position={[stop.lat, stop.lng]} icon={icon} interactive={false} keyboard={false} />;
+  return <Marker position={[stop.lat, stop.lng]} icon={icon} interactive={false} keyboard={false} zIndexOffset={200} />;
 }
 
-/** Fits the highlighted stops and the pins into view whenever the highlighted set changes. */
-function FitHighlights({ stops, pins, paddingBottom }: { stops: readonly HighlightStop[] | undefined; pins: NagaMapPins | undefined; paddingBottom: number }) {
+/** Fits the highlighted stops, pins, and trip lines (or explicit fitBoundsCoords) into view whenever they change. */
+function FitHighlights({
+  stops,
+  pins,
+  tripLines,
+  fitBoundsCoords,
+  paddingBottom,
+}: {
+  stops: readonly HighlightStop[] | undefined;
+  pins: NagaMapPins | undefined;
+  tripLines: TripLinesData | null | undefined;
+  fitBoundsCoords: readonly LatLng[] | null | undefined;
+  paddingBottom: number;
+}) {
   const map = useMap();
-  const key = stops?.map((s) => s.id).join("|") ?? "";
+  const stopsKey = stops && stops.length > 0 ? stops.map((s) => s.id).join("|") : "";
+  const linesKey = stopsKey && tripLines ? `${tripLines.walkSegments.length}:${tripLines.rideSegments.map((r) => r.key).join(",")}` : "";
+  const coordsKey = fitBoundsCoords && fitBoundsCoords.length >= 2
+    ? `${fitBoundsCoords.length}:${fitBoundsCoords[0]!.lat.toFixed(5)},${fitBoundsCoords[0]!.lng.toFixed(5)}:${fitBoundsCoords[fitBoundsCoords.length - 1]!.lat.toFixed(5)}`
+    : "";
+  const key = [stopsKey, linesKey, coordsKey].filter(Boolean).join("#");
+
   const fit = useEffectEvent(() => {
-    if (!stops || stops.length === 0) return;
-    const points: L.LatLngTuple[] = stops.map((s) => [s.lat, s.lng]);
-    if (pins?.start) points.push([pins.start.lat, pins.start.lng]);
-    if (pins?.destination) points.push([pins.destination.lat, pins.destination.lng]);
+    const points: L.LatLngTuple[] = [];
+    if (stops && stops.length > 0) {
+      for (const s of stops) points.push([s.lat, s.lng]);
+      if (tripLines && tripLines.allCoords.length > 0) {
+        for (const c of tripLines.allCoords) points.push([c.lat, c.lng]);
+      }
+      if (pins?.start) points.push([pins.start.lat, pins.start.lng]);
+      if (pins?.destination) points.push([pins.destination.lat, pins.destination.lng]);
+    } else if (fitBoundsCoords && fitBoundsCoords.length > 0) {
+      for (const c of fitBoundsCoords) points.push([c.lat, c.lng]);
+    }
+    if (points.length === 0) return;
     map.fitBounds(L.latLngBounds(points), {
       paddingTopLeft: [40, 80],
       // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
@@ -191,6 +222,25 @@ function MapViewSync({ recenterSignal, userFix, target, targetLabel, onView, onA
   return null;
 }
 
+function useEffectiveTheme(themePref: "system" | "light" | "dark"): "light" | "dark" {
+  const [systemDark, setSystemDark] = useState(() =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-color-scheme: dark)").matches
+      : false,
+  );
+  useEffect(() => {
+    if (themePref !== "system" || typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => setSystemDark(mql.matches);
+    onChange();
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, [themePref]);
+  if (themePref === "dark") return "dark";
+  if (themePref === "light") return "light";
+  return systemDark ? "dark" : "light";
+}
+
 export default function NagaMapLeaflet({
   userFix,
   userQuality,
@@ -208,6 +258,16 @@ export default function NagaMapLeaflet({
   recenterTarget,
   recenterTargetLabel = "the start pin",
   onLocate,
+  onOpenLayers,
+  layersButtonRef,
+  tripLines = null,
+  routeLines = null,
+  selectedRouteCode = null,
+  onSelectRoute = null,
+  showRouteChevrons = false,
+  fitBoundsCoords = null,
+  legend = null,
+  mapSurface: explicitMapSurface,
   className,
   initialView,
   placeMarker,
@@ -217,10 +277,13 @@ export default function NagaMapLeaflet({
   const [tiles] = useState(currentTileConfig);
   // Low-data mode (Settings): no tile layer, so no tile is requested, until the user asks for the
   // background once (for as long as the map stays mounted).
-  const { lowData } = usePrefs();
+  const { lowData, theme, highContrast } = usePrefs();
   const [backgroundOnce, setBackgroundOnce] = useState(false);
   const tileUrl = lowData && !backgroundOnce ? null : tiles.url;
-  // No basemap: only the OSM boundary data needs crediting.
+  const effectiveTheme = useEffectiveTheme(theme);
+  const surface = explicitMapSurface ?? computeMapSurface(effectiveTheme, tileUrl !== null);
+
+  // No basemap: OSM derived data (boundary, route paths, walk graph) needs crediting ("Map data").
   const attribution = useMemo(
     () => attributionParts(tileUrl === null ? OSM_ATTRIBUTION : tiles.attribution),
     [tileUrl, tiles.attribution],
@@ -257,6 +320,7 @@ export default function NagaMapLeaflet({
       data-center-lng={view ? view.lng.toFixed(6) : undefined}
       data-zoom={view ? String(view.zoom) : undefined}
       data-stop-pins={stopPins ? stopPins.length : 0}
+      data-map-surface={surface}
       className={className ? `pn-map ${className}` : "pn-map"}
     >
       <MapContainer
@@ -286,6 +350,23 @@ export default function NagaMapLeaflet({
           positions={OUTLINE}
           pathOptions={OUTLINE_STYLE}
         />
+        {routeLines && routeLines.length > 0 ? (
+          <RouteLinesLayer
+            lines={routeLines}
+            surface={surface}
+            highContrast={highContrast}
+            selectedRouteCode={selectedRouteCode}
+            onSelectRoute={onSelectRoute}
+            showChevrons={showRouteChevrons}
+          />
+        ) : null}
+        {tripLines ? (
+          <TripLinesLayer
+            data={tripLines}
+            surface={surface}
+            highContrast={highContrast}
+          />
+        ) : null}
         {stopPins ? <StopsLayer stops={stopPins} interactive={stopPinsInteractive} onSelect={onStopSelect} /> : null}
         <UserLocationLayer fix={userFix} quality={userQuality} stale={userStale} />
         {pins?.start ? (
@@ -306,7 +387,13 @@ export default function NagaMapLeaflet({
         ) : null}
         {placeMarker ? <PlaceMarker point={placeMarker.point} label={placeMarker.label} /> : null}
         {highlightStops?.map((stop) => <TripStopMarker key={`${stop.role}:${stop.id}`} stop={stop} />)}
-        <FitHighlights stops={highlightStops} pins={pins} paddingBottom={highlightPaddingBottom} />
+        <FitHighlights
+          stops={highlightStops}
+          pins={pins}
+          tripLines={tripLines}
+          fitBoundsCoords={fitBoundsCoords}
+          paddingBottom={highlightPaddingBottom}
+        />
         <MapViewSync
           recenterSignal={recenterSignal}
           userFix={userFix}
@@ -337,7 +424,16 @@ export default function NagaMapLeaflet({
         onZoomIn={() => zoomBy(1)}
         onZoomOut={() => zoomBy(-1)}
         onLocate={onLocate}
+        onOpenLayers={onOpenLayers}
+        layersButtonRef={layersButtonRef}
       />
+
+      {legend && legend.length > 0 ? (
+        <MapLegend
+          items={legend}
+          surface={surface === "dark" || effectiveTheme === "dark" ? "dark" : "light"}
+        />
+      ) : null}
 
       {tiles.url === null ? (
         <p className="pn-map-notice">Map background unavailable</p>
@@ -356,7 +452,7 @@ export default function NagaMapLeaflet({
         </a>
         <span aria-hidden="true">|</span>
         <span>
-          {tileUrl === null ? "Boundary " : null}
+          {tileUrl === null ? "Map data " : null}
           {attribution.map((part, i) =>
             part.href ? (
               <a key={i} href={part.href} target="_blank" rel="noopener noreferrer">

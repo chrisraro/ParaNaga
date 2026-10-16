@@ -1,8 +1,9 @@
 "use client";
 
 // Glass map controls at the design brief's positions (map design brief §1). Stack A (top 60):
-// layers slot (not built yet, left empty) then locate. Stack B (top 176): zoom capsule.
+// layers slot (48 px) then locate. Stack B (top 176): zoom capsule.
 // Rendered outside the Leaflet container so map gestures never swallow taps.
+import type { Ref } from "react";
 
 type Props = {
   canZoomIn: boolean;
@@ -10,11 +11,39 @@ type Props = {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onLocate?: (() => void) | undefined;
+  onOpenLayers?: (() => void) | undefined;
+  layersButtonRef?: Ref<HTMLButtonElement>;
 };
 
-export function MapControls({ canZoomIn, canZoomOut, onZoomIn, onZoomOut, onLocate }: Props) {
+export function MapControls({
+  canZoomIn,
+  canZoomOut,
+  onZoomIn,
+  onZoomOut,
+  onLocate,
+  onOpenLayers,
+  layersButtonRef,
+}: Props) {
   return (
     <>
+      {onOpenLayers ? (
+        <div className="pn-glass pn-capsule pn-map-layers">
+          <button
+            ref={layersButtonRef}
+            type="button"
+            className="pn-ctl pn-ctl--layers"
+            aria-label="Layers"
+            onClick={onOpenLayers}
+            data-testid="map-layers-btn"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+              <path d="M12 3L2 8l10 5 10-5-10-5z" />
+              <path d="M2 12l10 5 10-5" />
+              <path d="M2 16l10 5 10-5" />
+            </svg>
+          </button>
+        </div>
+      ) : null}
       {onLocate ? (
         <div className="pn-glass pn-capsule pn-map-locate">
           <button

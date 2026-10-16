@@ -284,6 +284,7 @@ export const snapshotTerminalSchema = z
   .refine((t) => (t.lat === null) === (t.lng === null) && (t.lat === null) === (t.coordSource === null), {
     message: "a coordinate always comes with its source",
   });
+export type SnapshotTerminal = z.infer<typeof snapshotTerminalSchema>;
 
 export const networkSnapshotSchema = z.object({
   revision: revisionMetaSchema,
@@ -819,6 +820,7 @@ export const linesSchema = z.object({
 });
 export type Lines = z.infer<typeof linesSchema>;
 export type Line = z.infer<typeof lineSchema>;
+export type UntracedLine = z.infer<typeof untracedLineSchema>;
 
 // ---------------------------------------------------------------- GET /api/v1/terminals/:code
 

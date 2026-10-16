@@ -16,9 +16,11 @@
 
 import "./trip.css";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useLines } from "@/client/network/use-lines";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { PlanOptionDto, PlanResponse, RideLegDto, WalkLegDto } from "@/domain/api/plan";
+import { PATH_LABEL } from "@/domain/api/schemas";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel } from "@/domain/trip/present";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
@@ -80,7 +82,7 @@ function Marker({ kind }: { kind: "origin" | "board" | "alight" | "destination" 
 
 type Step = { key: string; marker: Parameters<typeof Marker>[0]["kind"]; rail: "walk" | "ride" | null; body: ReactNode };
 
-function steps(option: PlanOptionDto, lookups: PlanLookups): Step[] {
+function steps(option: PlanOptionDto, lookups: PlanLookups, untracedVariants: ReadonlySet<string>): Step[] {
   const out: Step[] = [];
   const last = option.legs.length - 1;
   option.legs.forEach((leg, i) => {
@@ -110,6 +112,8 @@ function steps(option: PlanOptionDto, lookups: PlanLookups): Step[] {
       // The final walk carries the destination marker (artboard); a walk-only trip keeps the
       // origin marker and ends with an "Arrive" step.
       const final = i === last && i > 0;
+      const walkPath = (leg as { path?: { label?: string } }).path;
+      const pathLabel = walkPath?.label ?? "Estimate · path not verified";
       out.push({
         key: `w${i}`,
         marker: i === 0 ? "origin" : final ? "destination" : "walk",
@@ -117,19 +121,19 @@ function steps(option: PlanOptionDto, lookups: PlanLookups): Step[] {
         body: (
           <>
             <strong className="pn-tl__title">{walkTitle(leg, lookups)}</strong>
-            <p className="pn-tl__sub">Estimate · path not verified</p>
+            <p className="pn-tl__sub">{pathLabel.includes("path not verified") ? pathLabel : `${pathLabel} · path not verified`}</p>
           </>
         ),
       });
       return;
     }
-    out.push(...rideSteps(leg, i, lookups));
+    out.push(...rideSteps(leg, i, lookups, untracedVariants.has(leg.variantId)));
   });
   if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive at your destination</strong> });
   return out;
 }
 
-function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups): Step[] {
+function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, isUntraced: boolean): Step[] {
   const board = leg.stops[0]!;
   const alight = leg.stops[leg.stops.length - 1]!;
   const boardName = lookups.stopName(board.id, board.name);
@@ -137,6 +141,12 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups): Step[] {
   const route = routeChipLabel(leg.routeCode, leg.routeName);
   const dir = directionText(lookups.direction(leg.variantId), "long");
   const count = leg.stops.length - 1;
+  const distanceBasis =
+    leg.distanceBasis === "approximate_path" ? "along approximate path" : "straight-line between pins";
+  const pathLabel = isUntraced
+    ? "Path could not be traced from the street list; stops shown only"
+    : PATH_LABEL;
+
   return [
     {
       key: `b${i}`,
@@ -150,6 +160,7 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups): Step[] {
             </strong>
             <p className="pn-tl__sub pn-tl__sub--gold">{CANDIDATE}</p>
             {dir ? <p className="pn-tl__sub">Direction: {dir}</p> : null}
+            {leg.fleet?.label ? <p className="pn-tl__sub">{leg.fleet.label}</p> : null}
           </div>
           <div className="pn-sign">
             <span className="pn-sign__kicker">Signboard</span>
@@ -157,7 +168,10 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups): Step[] {
             <LoopChip leg={leg} />
           </div>
           <p className="pn-tl__sub">
-            Ride {count} {count === 1 ? "stop" : "stops"} · {formatDistance(leg.distanceMeters)} (straight-line between pins)
+            Ride {count} {count === 1 ? "stop" : "stops"} · {formatDistance(leg.distanceMeters)} ({distanceBasis})
+          </p>
+          <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">
+            {pathLabel}
           </p>
         </div>
       ),
@@ -290,6 +304,10 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
     if (!covered) headingRef.current?.focus();
   }, [option.id, covered]);
   const rides = option.legs.filter((l): l is RideLegDto => l.kind === "ride");
+  const { lines } = useLines(data.revision.revisionId);
+  const untracedVariants = useMemo(() => {
+    return new Set(lines?.untraced.map((u) => u.variantId) ?? []);
+  }, [lines]);
 
   return (
     <section className="pn-trip pn-trip-detail" aria-labelledby="pn-trip-detail-title" data-testid="trip-detail">
@@ -322,7 +340,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       {ends ? <TripActions data={data} option={option} ends={ends} /> : null}
 
       <ol className="pn-tl" aria-label="Trip steps">
-        {steps(option, lookups).map((step) => (
+        {steps(option, lookups, untracedVariants).map((step) => (
           <li key={step.key} className="pn-tl__step">
             <div className="pn-tl__rail">
               <Marker kind={step.marker} />

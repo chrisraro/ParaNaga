@@ -62,6 +62,12 @@ import {
 import { NearbyStops } from "./nearby-stops";
 import { homeGuidanceActions, useHomeGuidance } from "./use-home-guidance";
 import { useSavedTripReopen } from "./use-saved-trip-reopen";
+import { useLines } from "@/client/network/use-lines";
+import { useSnapshot } from "@/client/network/use-snapshot";
+import { updateLayers, usePrefs } from "@/client/prefs/use-prefs";
+import { LayersSheet, SelectedRouteCard, distinctRoutesFromLines } from "@/ui/map/layers-sheet";
+import { collectRouteLegendItems, filterOverviewLines } from "@/ui/map/route-lines-layer";
+import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
 const MAP_BOTTOM_INSET = 186;
@@ -576,6 +582,40 @@ export function HomeScreen() {
   // "Show on map" from a stop panel: centre the map on that stop (adjusted during render).
   useApplyOnce(frame?.mapFocus ?? null, (focus) => bumpRecenter(focus.point, "the stop"));
 
+  // Map lines (Task 12): the trip guide when a trip detail is open, else the routes overview (D16).
+  const prefs = usePrefs();
+  const layers = prefs.layers;
+  const snapshotState = useSnapshot(true);
+  const linesState = useLines(snapshotState.snapshot?.revision.revisionId ?? null, true);
+  const lines = linesState.lines;
+  const tripLines = useMemo(() => {
+    if (guiding) return null;
+    if (stored) return buildTripLinesData(stored.option, stored.data.variants, lines);
+    if (planData && openOption) return buildTripLinesData(openOption, planData.variants, lines);
+    return null;
+  }, [guiding, stored, planData, openOption, lines]);
+  const showOverview = !guiding && !tripLines && picking === null;
+  const overviewLines = useMemo(() => (showOverview ? filterOverviewLines(lines, layers) : []), [showOverview, lines, layers]);
+  const [layersOpen, setLayersOpen] = useState(false);
+  const layersBtnRef = useRef<HTMLButtonElement>(null);
+  const [selectedRouteCode, setSelectedRouteCode] = useState<string | null>(null);
+  const selectedRoute = useMemo(
+    () => (selectedRouteCode ? (distinctRoutesFromLines(overviewLines).find((r) => r.routeCode === selectedRouteCode) ?? null) : null),
+    [selectedRouteCode, overviewLines],
+  );
+  if (selectedRouteCode !== null && !showOverview) setSelectedRouteCode(null);
+  const mapLegend = tripLines ? tripLines.legendItems : collectRouteLegendItems(overviewLines);
+  const tripAnnouncement = tripLines?.announcement ?? "";
+  const [seenTripAnnouncement, setSeenTripAnnouncement] = useState("");
+  if (tripAnnouncement !== seenTripAnnouncement) {
+    setSeenTripAnnouncement(tripAnnouncement);
+    if (tripAnnouncement) setAnnouncement(tripAnnouncement);
+  }
+  const closeLayers = useCallback(() => {
+    setLayersOpen(false);
+    layersBtnRef.current?.focus();
+  }, [setLayersOpen]);
+
   // The endpoint channel: another screen (search, a place, a saved place) set an end of the trip
   // or asked to choose one on the map, then navigated here. Each request applies once, through
   // the same rules as the sheet (inside Naga, not the same place as the other end). It usually
@@ -692,8 +732,24 @@ export function HomeScreen() {
           onStopSelect={handleStopSelect}
           onBoundsChange={setViewBounds}
           onLocate={handleLocate}
+          tripLines={tripLines}
+          routeLines={showOverview ? overviewLines : null}
+          selectedRouteCode={selectedRouteCode}
+          onSelectRoute={showOverview ? setSelectedRouteCode : null}
+          legend={mapLegend}
+          onOpenLayers={showOverview && lines ? () => setLayersOpen(true) : undefined}
+          layersButtonRef={layersBtnRef}
         />
+        {selectedRoute ? <SelectedRouteCard route={selectedRoute} onClose={() => setSelectedRouteCode(null)} /> : null}
       </div>
+      <LayersSheet
+        open={layersOpen && showOverview}
+        onClose={closeLayers}
+        layers={layers}
+        onUpdateLayers={updateLayers}
+        tracedLines={overviewLines}
+        terminals={snapshotState.snapshot?.terminals ?? null}
+      />
 
       {!guiding && fixInside && geo.fix ? (
         <div
