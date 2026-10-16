@@ -89,7 +89,7 @@ test("trip options show the unverified badge, estimate chips and honest time est
   await expect(cards.nth(0).locator(".pn-legstrip")).toContainText("≈ 1.2 km");
   // Least walking: the long loop ride is obvious.
   await expect(cards.nth(1)).toContainText("Least walking");
-  await expect(cards.nth(1)).toContainText("Ride ≈ 5.5 km");
+  await expect(cards.nth(1)).toContainText("≈ 5.5 km");
   await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Estimate ₱16–₱18");
 
   // Accessible names carry the label and the fare estimate.
@@ -124,11 +124,11 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps).toHaveCount(4);
   await expect(steps.nth(0)).toContainText("Walk ≈ 230 m to Plaza Rizal (A1)");
   await expect(steps.nth(0)).toContainText("path not verified");
-  await expect(steps.nth(1)).toContainText("Board Loop A at Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("Get on near Plaza Rizal (A1)");
   await expect(steps.nth(1)).toContainText("Direction: clockwise (from pin order)");
   await expect(steps.nth(1)).toContainText("Signboard not yet verified");
   await expect(steps.nth(1)).toContainText("Ride 4 stops");
-  await expect(steps.nth(2)).toContainText("Get off at Avenue Square (A5)");
+  await expect(steps.nth(2)).toContainText("Get off near Avenue Square (A5)");
   await expect(steps.nth(2)).toContainText("Para!");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");

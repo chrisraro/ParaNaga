@@ -18,6 +18,8 @@
 // cached) still parse.
 import { z } from "zod";
 import { isInsideNaga } from "../geo/naga";
+import { encodePolyline } from "../geo/polyline";
+import type { LatLng } from "../geo/types";
 import { fleetSummary } from "../modes/fleet";
 import { PLAN_LABELS } from "../planner/labels";
 import { isCircuitLine, type PlanningLine } from "../planner/paths";
@@ -205,6 +207,22 @@ export type TricycleLegDto = z.infer<typeof tricycleLegSchema>;
 export type PadyakLegDto = z.infer<typeof padyakLegSchema>;
 export type PlanLegDto = WalkLegDto | RideLegDto | TricycleLegDto | PadyakLegDto;
 export type PlanOptionDto = Omit<z.infer<typeof planOptionSchema>, "legs"> & { legs: PlanLegDto[] };
+
+/**
+ * The option as stored (a saved trip, a guidance session): walk paths back in wire form. The screens
+ * hold the routed WalkLegPath object; storage validates against `planOptionSchema`, which wants the
+ * encoded string. A routed path keeps its street shape; a straight one goes back to an estimate.
+ */
+export function toWireOption(option: PlanOptionDto): PlanOptionDto {
+  const legs = option.legs.map((leg): PlanLegDto => {
+    if (leg.kind !== "walk" || typeof leg.path === "string" || leg.path === null) return leg;
+    const p = leg.path as { kind?: string; coords?: LatLng[] };
+    return p.kind === "path" && p.coords
+      ? { ...leg, path: encodePolyline(p.coords), basis: "street_graph" }
+      : { ...leg, path: null, basis: "straight_x1_3" };
+  });
+  return { ...option, legs };
+}
 
 export const planResponseSchema = z.object({
   revision: revisionMetaSchema,

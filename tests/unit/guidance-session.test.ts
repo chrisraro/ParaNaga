@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { STALE_MS } from "@/domain/geo/location-fix";
+import type { PlanOptionDto } from "@/domain/api/plan";
 import { paraSuggested } from "@/domain/guidance/progress";
 import {
   GUIDANCE_SESSION_MAX_AGE_MS,
@@ -250,6 +251,20 @@ describe("undo after leaving a ride keeps its progress (lastRide)", () => {
     const undone = run(ridden, tap("missedStop"), tap("back"));
     expect(undone).toMatchObject({ status: "active", lastRide: null });
     expect(undone.ride).toEqual(ridden.ride);
+  });
+});
+
+describe("a session started on routed walks (the screens hold a decoded path, storage the encoded one)", () => {
+  it("survives serialize and parse", () => {
+    const opt = oneRide();
+    const coords = [BASE, { lat: BASE.lat + 0.0003, lng: BASE.lng }];
+    const legs = opt.legs.map((l) =>
+      l.kind === "walk" ? { ...l, path: { kind: "path", coords, lengthM: 40, snapFromM: 0, snapToM: 0, label: "x" } } : l,
+    ) as PlanOptionDto["legs"];
+    const s = startSession(tripOf({ ...opt, legs }), NOW);
+    const back = parseSession(serializeSession(s), NOW);
+    expect(back).not.toBeNull();
+    expect(back!.trip.option.legs.find((l) => l.kind === "walk")).toMatchObject({ basis: "street_graph", path: expect.any(String) });
   });
 });
 

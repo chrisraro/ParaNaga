@@ -334,6 +334,15 @@ describe("matchSavedTrip", () => {
     expect(matchSavedTrip([c], "other", START.point, DEST.point, REVISION.revisionId)).toEqual({ kind: "none" });
   });
 
+  it("a trip saved from routed walks (decoded path on screen) still validates", () => {
+    const coords = [START.point, DEST.point];
+    const legs = option.legs.map((l) =>
+      l.kind === "walk" ? { ...l, path: { kind: "path", coords, lengthM: 40, snapFromM: 0, snapToM: 0, label: "x" } } : l,
+    ) as typeof option.legs;
+    const c = buildSavedTrip({ id: "t", savedAt: "2026-10-16T02:00:00.000Z", data: plan, option: { ...option, legs }, start: START, destination: DEST });
+    expect(savedTripSchema.safeParse(c).success).toBe(true);
+  });
+
   it("keeps where a trip end came from", () => {
     const c = buildSavedTrip({ id: "t", savedAt: "2026-10-16T02:00:00.000Z", data: plan, option, start: { ...START, place: "osm" }, destination: DEST });
     expect(savedTripSchema.parse(c).start.place).toBe("osm");

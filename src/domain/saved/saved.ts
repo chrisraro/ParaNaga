@@ -11,7 +11,7 @@
 //    for the exact points;
 //  - history keeps labels and a date only, never coordinates.
 import { z } from "zod";
-import { planOptionSchema, planResponseSchema, type PlanOptionDto, type PlanResponse, type RideLegDto } from "../api/plan";
+import { planOptionSchema, planResponseSchema, toWireOption, type PlanOptionDto, type PlanResponse, type RideLegDto } from "../api/plan";
 import type { NetworkSnapshot } from "../api/schemas";
 import type { LatLng } from "../geo/types";
 import { formatIsoDate } from "../network/present";
@@ -166,7 +166,8 @@ export function buildSavedTrip(input: {
   start: SavedEnd;
   destination: SavedEnd;
 }): SavedTrip {
-  const { data, option } = input;
+  const { data } = input;
+  const option = toWireOption(input.option);
   const stopIds = new Set(optionStopIds(option));
   const variantIds = new Set(rideLegs(option).map((l) => l.variantId));
   return {

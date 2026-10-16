@@ -13,7 +13,7 @@
 // Zod on the way back in, and dropped after GUIDANCE_SESSION_MAX_AGE_MS. It has no time estimate:
 // `startedAt` is only for that expiry.
 import { z } from "zod";
-import { planOptionSchema } from "../api/plan";
+import { planOptionSchema, toWireOption } from "../api/plan";
 import { etaModelSchema } from "../api/schemas";
 import type { LocationFix } from "../geo/location-fix";
 import { CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, rideProgress, usableFix, type RideMemory } from "./progress";
@@ -70,7 +70,7 @@ const NEW_RIDE: RideState = { ...NEW_RIDE_MEMORY, gpsSeen: false, stopIsNext: fa
 
 /** The first step is walk_to_board, walk_to_destination or a street_ride (guidanceSteps), never a ride. */
 export function startSession(trip: GuidanceTrip, now: number): GuidanceSession {
-  return { v: GUIDANCE_SESSION_FORMAT, trip, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null };
+  return { v: GUIDANCE_SESSION_FORMAT, trip: { ...trip, option: toWireOption(trip.option) }, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null };
 }
 
 export function sessionSteps(session: GuidanceSession): GuidanceStep[] {
