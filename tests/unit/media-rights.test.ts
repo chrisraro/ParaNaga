@@ -15,7 +15,7 @@ describe("reference photo identity and source rights", () => {
     expect(photoForStopSource({ ...source, layer: "Loop Service B" })).toBeNull();
   });
   it("does not turn a citation into reuse permission", () => {
-    expect(rightsForSource("S39")?.status).toBe("permission_required");
+    expect(rightsForSource("S39")?.status).toBe("reuse_unconfirmed");
     expect(rightsForSource("N01")?.license).toBe("ODbL 1.0");
     expect(rightsForSource("new-unknown-source")).toBeNull();
     expect(SOURCE_RIGHTS_BLOCKERS.map((s) => s.code)).toEqual(expect.arrayContaining(["S34", "S39", "S40"]));

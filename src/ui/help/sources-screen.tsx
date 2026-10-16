@@ -19,7 +19,7 @@ import { Note } from "@/ui/kit/note";
 import { SourceCredits } from "./source-credits";
 import { rightsForSource } from "@/domain/sources/rights";
 
-export const MAP_OWNER_NOTE = "The public My Maps owner is listed as “Tan Gumba”; the owner's identity is not verified.";
+export const MAP_OWNER_NOTE = "Naga City Designated Stops — shared publicly by Tan Gumba";
 
 function ExternalIcon() {
   return (
@@ -79,7 +79,7 @@ export function SourcesScreen() {
             </ul>
           </>
         ) : <div role="status"><p>The current revision’s source list is unavailable. Bundled photo credits and research notes remain available below.</p><button type="button" className="pn-detail__retry" onClick={resource.retry}>Try again</button></div>}
-        <Note testId="sources-owner-note">{MAP_OWNER_NOTE}</Note>
+        <Note testId="sources-owner-note"><a href="https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4" target="_blank" rel="noopener noreferrer">{MAP_OWNER_NOTE}</a></Note>
         <SourceCredits revisionId={resource.status === "ready" ? resource.data.revision.revisionId : undefined} />
       </main>
     </DetailPanel>

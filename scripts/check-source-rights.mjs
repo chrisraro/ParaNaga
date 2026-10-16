@@ -30,7 +30,7 @@ const codes = rights.map((r) => r.code);
 if (new Set(codes).size !== codes.length) errors.push("Duplicate source codes");
 for (const code of [...seed.sources.map((s) => s.id), ...modes.sources.map((s) => s.code)]) if (!codes.includes(code)) errors.push(`Missing source rights record: ${code}`);
 if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-const blockers = rights.filter((r) => r.status === "permission_required").map((r) => `${r.code}: ${r.license}`);
+const blockers = rights.filter((r) => r.status === "permission_required" || r.status === "reuse_unconfirmed").map((r) => `${r.code}: ${r.license}`);
 blockers.push(...software.filter((p) => p.license === "NOT RECORDED").map((p) => `${p.package}: exact-version license not established`));
 console.log(`Credits integrity OK: ${catalog.assets.length} photos, ${rights.length} data/research sources, ${software.length} installed locked packages.`);
 if (blockers.length) console.log(`Unresolved release rights (${blockers.length}):\n${blockers.join("\n")}`);
