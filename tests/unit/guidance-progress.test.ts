@@ -461,3 +461,24 @@ function pointAt(line: readonly { lat: number; lng: number }[], m: number) {
   }
   return line.at(-1)!;
 }
+
+describe("pathRideProgress: out-and-back (review I1)", () => {
+  const M = 111_195;
+  const c = { lat: 13.62, lng: 123.19 };
+  const k = Math.cos((c.lat * Math.PI) / 180);
+  const o = (east: number, north: number) => ({ lat: c.lat + north / M, lng: c.lng + east / (M * k) });
+  // North 1,000 m, 60 m east, back south on a parallel street: the two passes run 60 m apart.
+  const OUT_BACK = [o(0, 0), o(0, 1000), o(60, 1000), o(60, 0)];
+
+  it("a fix slightly nearer the return pass still reads the earlier (outbound) pass", () => {
+    const fix: LocationFix = { ...o(35, 500), accuracy: 10, timestamp: 1_000_000 };
+    const p = pathRideProgress(OUT_BACK, false, 100, 2000, fix, 1_000_000);
+    expect(p).toMatchObject({ offPath: false, getReady: false });
+    expect((p as { remainingM: number }).remainingM).toBeCloseTo(1500, -1);
+  });
+
+  it("a fix clearly on the return pass reads the return pass", () => {
+    const fix: LocationFix = { ...o(60, 300), accuracy: 10, timestamp: 1_000_000 };
+    expect((pathRideProgress(OUT_BACK, false, 100, 2000, fix, 1_000_000) as { remainingM: number }).remainingM).toBeCloseTo(240, -1);
+  });
+});

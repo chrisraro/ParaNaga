@@ -559,3 +559,11 @@ describe("view properties: new options (fixed seeds)", () => {
     );
   });
 });
+
+describe("malformed options (review M1)", () => {
+  it("an option with zero legs gives a safe view, never a throw", () => {
+    const s = startSession(tripOf({ ...walkOnly(), legs: [] }), NOW);
+    expect(() => guidanceView(s, null, NOW)).not.toThrow();
+    expect(guidanceView(s, null, NOW).screen).toBe("ended");
+  });
+});

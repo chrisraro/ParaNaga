@@ -38,7 +38,7 @@ export function serviceWindowNote(now: Date): ServiceWindowNote | null {
   return null;
 }
 
-/** The note for an option: only when it rides a jeepney (walk, tricycle and padyak have no window). */
-export function optionServiceWindowNote(option: { legs: readonly { kind: string }[] }, now: Date): ServiceWindowNote | null {
-  return option.legs.some((l) => l.kind === "ride") ? serviceWindowNote(now) : null;
+/** The note for an option: only when it rides a jeepney (walk, tricycle, padyak and other modes have no window). */
+export function optionServiceWindowNote(option: { legs: readonly { kind: string; mode?: string }[] }, now: Date): ServiceWindowNote | null {
+  return option.legs.some((l) => l.kind === "ride" && (l.mode ?? "jeepney") === "jeepney") ? serviceWindowNote(now) : null;
 }

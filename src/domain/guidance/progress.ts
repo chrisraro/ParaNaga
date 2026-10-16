@@ -180,6 +180,8 @@ export function rideProgress(stops: readonly LatLng[], memory: RideMemory, fix: 
 export const PATH_OFF_M = 100;
 /** "Get ready" once this little riding is left. */
 export const GET_READY_M = 300;
+/** Projections within this much of the nearest one count as the same place (the earliest pass wins). */
+export const SAME_PLACE_M = 25;
 
 export type PathRideProgress = { offPath: true; distM: number } | { offPath: false; remainingM: number; getReady: boolean };
 
@@ -200,7 +202,7 @@ export function pathRideProgress(
   for (let i = 1; i < path.length; i++) cum.push(cum[i - 1]! + haversineMeters(path[i - 1]!, path[i]!));
   const length = cum.at(-1)!;
   const end = isCircuit && length > 0 ? boardM + ((((alightM - boardM) % length) + length) % length) : alightM;
-  let best: { distM: number; m: number } | null = null;
+  const candidates: { distM: number; m: number }[] = [];
   for (const offset of isCircuit ? [0, length] : [0]) {
     for (let i = 1; i < path.length; i++) {
       const m0 = cum[i - 1]! + offset;
@@ -212,10 +214,14 @@ export function pathRideProgress(
       const b = path[i]!;
       const at = (m: number) => ({ lat: a.lat + ((m - m0) / (m1 - m0)) * (b.lat - a.lat), lng: a.lng + ((m - m0) / (m1 - m0)) * (b.lng - a.lng) });
       const pr = projectOnLine([at(lo), at(hi)], fix);
-      if (!best || pr.distM < best.distM) best = { distM: pr.distM, m: lo + pr.measureM };
+      candidates.push({ distM: pr.distM, m: lo + pr.measureM });
     }
   }
-  if (!best) return null;
+  if (candidates.length === 0) return null;
+  // An out-and-back slice passes the same place twice: GPS noise must not jump to the later pass, so
+  // among projections about as near as the nearest, the earliest measure (least progress) wins.
+  const nearest = Math.min(...candidates.map((x) => x.distM));
+  const best = candidates.filter((x) => x.distM <= nearest + SAME_PLACE_M).reduce((a, b) => (b.m < a.m ? b : a));
   if (best.distM > PATH_OFF_M) return { offPath: true, distM: Math.round(best.distM) };
   const remainingM = Math.max(0, Math.round(end - best.m));
   return { offPath: false, remainingM, getReady: remainingM <= GET_READY_M };

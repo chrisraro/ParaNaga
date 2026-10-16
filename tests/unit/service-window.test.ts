@@ -71,3 +71,12 @@ describe("optionServiceWindowNote", () => {
     expect(optionServiceWindowNote(oneRide(), manila("09:00"))).toBeNull();
   });
 });
+
+describe("optionServiceWindowNote: jeepney rides only (review M4)", () => {
+  it("a ride leg of another mode gets no jeepney window note", () => {
+    const o = oneRide();
+    const uv = { ...o, legs: o.legs.map((l) => (l.kind === "ride" ? { ...l, mode: "uv_express" as const } : l)) };
+    expect(optionServiceWindowNote(uv, manila("22:00"))).toBeNull();
+    expect(optionServiceWindowNote(streetOnly("padyak"), manila("04:00"))).toBeNull();
+  });
+});

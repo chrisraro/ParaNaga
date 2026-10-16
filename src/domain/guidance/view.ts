@@ -440,7 +440,8 @@ export function guidanceView(session: GuidanceSession, fix: LocationFix | null, 
   }
   const steps = sessionSteps(session);
   if (session.status === "arrived") return arriveView(session, steps);
-  const step = steps[session.stepIndex]!;
+  const step = steps[session.stepIndex];
+  if (!step) return { screen: "ended", usesLocation: false }; // a malformed option with no steps
   if (step.kind === "ride") return rideView(session, session.ride!, step, steps.length, fix, now);
   if (step.kind === "street_ride") return streetView(session, step, steps.length);
   return walkView(session, step, steps.length, fix, now);
