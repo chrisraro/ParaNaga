@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
+import { PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "./fixtures/plan-responses";
 import { SEARCH_INDEX, SOURCES, STOP_A1, routeNetwork } from "./fixtures/network";
 import { chooseOption, expandOptions } from "./fixtures/options";
 
@@ -10,7 +10,8 @@ import { chooseOption, expandOptions } from "./fixtures/options";
 
 test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
 
-const CARD_WORDS = 14;
+const CARD_WORDS_ONE_RIDE = 16;
+const CARD_WORDS_TWO_RIDES = 20;
 const DETAIL_HEADER_WORDS = 16;
 const GUIDANCE_WALK_WORDS = 22;
 const SM = SEARCH_INDEX.osmPlaces.find((p) => p.name === "SM City Naga")!;
@@ -47,7 +48,7 @@ const workingText = (loc: Locator) =>
       .forEach((n) => n.remove());
     return clone.textContent ?? "";
   });
-const FORBIDDEN = /Source|Retrieved|\bS0\d|OpenStreetMap|[Rr]evision/;
+const FORBIDDEN = /Source|Retrieved|\bS0\d|OpenStreetMap|[Rr]evision|Mapped candidate · not yet verified|My Maps|snapshot|Corrections|Verification opens/;
 
 async function pinBoth(page: Page) {
   const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
@@ -77,7 +78,7 @@ test("word budgets: an option card, the trip detail header and the first guidanc
   await openApp(page);
   await pinBoth(page);
   await expandOptions(page);
-  for (const card of await page.getByTestId("trip-option").all()) expect(await words(card)).toBeLessThanOrEqual(CARD_WORDS);
+  for (const card of await page.getByTestId("trip-option").all()) expect(await words(card)).toBeLessThanOrEqual(CARD_WORDS_ONE_RIDE);
 
   await chooseOption(page);
   const detail = page.getByTestId("trip-detail");
@@ -127,6 +128,7 @@ test("working screens carry no source, retrieval, revision or attribution text",
     expect(await workingText(screen), path).not.toMatch(FORBIDDEN);
     // One small "Sources" link in the top bar, nothing else named Source.
     await expect(screen.getByTestId("detail-sources")).toHaveText("Sources");
+    await expect(screen.getByTestId("detail-sources")).toHaveAccessibleName("Sources and credits");
   }
 });
 
@@ -207,3 +209,74 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
     await axe('[data-testid="trip-sheet"]');
   });
 }
+
+test("a two-ride option card stays within 20 words and keeps the caution", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(TWO_RIDE_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expandOptions(page);
+  const cards = page.getByTestId("trip-option");
+  await expect(cards.first()).toBeVisible();
+  for (const card of await cards.all()) {
+    expect(await words(card)).toBeLessThanOrEqual(CARD_WORDS_TWO_RIDES);
+    await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
+  }
+});
+
+test("hash links land on their target: a photo credit and the fare basis", async ({ page }) => {
+  await page.goto("/app/help/sources");
+  const ids = await page.getByTestId("photo-credit").evaluateAll((els) => els.map((e) => e.id));
+  const last = ids.at(-1)!;
+  await page.goto("/app/more"); // a new page load, as a link from another screen is
+  await page.goto(`/app/help/sources#${last}`);
+  await expect(page.locator(`[id="${last}"]`)).toBeInViewport();
+  await expect.poll(() => page.evaluate((id) => document.getElementById(id)!.contains(document.activeElement), last)).toBe(true);
+  await page.goto("/app/more");
+  await page.goto("/app/help/sources#fare-basis");
+  await expect(page.locator("#fare-basis")).toBeInViewport();
+  await expect.poll(() => page.evaluate(() => document.getElementById("fare-basis")!.contains(document.activeElement))).toBe(true);
+  // No hash: the h1 takes focus.
+  await page.goto("/app/more");
+  await page.goto("/app/help/sources");
+  await expect(h1(page, "Sources and credits")).toBeFocused();
+});
+
+test("per-item sources: a terminal names its address, mode and regional-service sources; the route its fare rules", async ({ page }) => {
+  await page.goto("/app/help/sources?terminal=T01");
+  const terminal = page.getByTestId("entity-terminal-sources");
+  await expect(terminal).toContainText("Address:");
+  await expect(terminal).toContainText("S09");
+  await expect(terminal).toContainText("Bus:");
+  await expect(terminal).toContainText("RS05");
+  await expect(terminal).toContainText("View on OpenStreetMap");
+  await expect(page.getByTestId("entity-sources")).toContainText("28 Sep 2026 national per-km rates");
+  await page.goto("/app/help/sources?route=R8-A");
+  await expect(page.getByTestId("entity-fare-sources")).toContainText("Fare rule");
+  await page.goto("/app/help/sources?src=S33,S34");
+  await expect(page.getByTestId("entity-coded-sources")).toContainText("S33");
+  await page.goto("/app/help/sources?osm=way/293702439&v=6&s=OSM-2026-10-15");
+  await expect(page.getByTestId("entity-osm-object")).toContainText("OSM snapshot 15 Oct 2026 · object way/293702439 v6");
+});
+
+test("unknown or malformed source links show a short fallback and never echo the value", async ({ page }) => {
+  for (const query of ["stop=zz", "osm=node/1;x", `route=${encodeURIComponent("<script>alert(1)</script>")}`, "terminal=T99", "src=S1", "src=S33,<b>"]) {
+    await page.goto(`/app/help/sources?${query}`);
+    await expect(page.getByTestId("entity-sources-none")).toHaveText("Nothing found for that link.");
+    expect(await page.getByTestId("sources-page").textContent()).not.toMatch(/<script>|alert\(1\)|<b>|node\/1;x/);
+  }
+});
+
+test("Back from Sources returns to the open trip detail with focus kept in the detail", async ({ page }) => {
+  await openApp(page);
+  await pinBoth(page);
+  await chooseOption(page);
+  const link = page.getByTestId("trip-detail").getByRole("link", { name: "Sources and credits" });
+  await link.click();
+  await expect(h1(page, "Sources and credits")).toBeFocused();
+  await page.getByTestId("detail-back").click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  // Focus is never lost: the detail takes it back on its heading (U2).
+  await expect(page.getByTestId("trip-detail").getByRole("heading", { level: 2 })).toBeFocused();
+});

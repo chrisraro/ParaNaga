@@ -37,7 +37,7 @@ import { SheetBar } from "@/ui/app-shell/sheet-bar";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { EtaBasisSheet } from "./eta-basis-sheet";
 import { EtaPeakNote, EtaTotalText, SpokenRange, extractWalkLengths, useOptionEta } from "./eta-text";
-import { FareChip, LoopChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
+import { FareChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
 
 export type TripEnds = { start: SavedEnd; destination: SavedEnd };
 export type TripNote = { text: string; tone: "info" | "warning" };
@@ -165,26 +165,21 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
         <div className="pn-tl__stack">
           <div>
             <strong className="pn-tl__title">
-              Board {route} at {boardName}
+              Board {route}{dir ? ` (${dir})` : ""} at {boardName}
             </strong>
-            {dir ? <p className="pn-tl__sub pn-tl__sub--dir">{dir.charAt(0).toUpperCase() + dir.slice(1)}</p> : null}
             {fleet.classes.length > 0 ? (
               // Each vehicle class with its evidence label and date (not a nested list: the steps are the list).
               fleet.classes.map((c) => (
                 <p key={`${c.vehicleClass}-${c.status}`} className="pn-tl__sub" data-testid="ride-fleet-class">
-                  {c.label}
+                  {c.label.split(" · ")[0]}
                 </p>
               ))
             ) : (
               <p className="pn-tl__sub" data-testid="ride-fleet-class">Vehicle type not confirmed</p>
             )}
           </div>
-          <div className="pn-sign">
-            <span className="pn-sign__text">Signboard unverified</span>
-            <LoopChip leg={leg} />
-          </div>
           <p className="pn-tl__sub">
-            {count} {count === 1 ? "stop" : "stops"} · {formatDistance(leg.distanceMeters)}
+            {count} {count === 1 ? "stop" : "stops"}
           </p>
           {etaLeg ? <LegTime leg={etaLeg} /> : null}
           <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">
@@ -363,7 +358,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
             <path d="M10 2L2 10l8 8" />
           </svg>
         </button>
-        <Link href={SOURCES_HREF} className="pn-trip-detail__sources">Sources</Link>
+        <Link href={SOURCES_HREF} className="pn-trip-detail__sources" aria-label="Sources and credits">Sources</Link>
       </div>
       <div className="pn-trip-detail__header" data-testid="trip-detail-header">
         <h2 id="pn-trip-detail-title" ref={headingRef} tabIndex={-1} className="pn-trip-detail__title">

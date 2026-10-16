@@ -48,10 +48,11 @@ export function RideStep({ view, onSend, location, headingRef, alertKey }: StepP
           {view.countText}
         </p>
         <Rail stops={view.stops} />
-        <p className="pn-guide__rail-labels">
-          <span>{view.boardedText}</span>
-          <span className="pn-guide__rail-alight">{view.alightText}</span>
-        </p>
+        {view.alightText ? (
+          <p className="pn-guide__rail-labels">
+            <span className="pn-guide__rail-alight">{view.alightText}</span>
+          </p>
+        ) : null}
         <p className="pn-guide__note">{view.countNote}</p>
       </div>
 

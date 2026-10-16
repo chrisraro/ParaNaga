@@ -112,7 +112,7 @@ describe("OpenStreetMap place", () => {
     // The object, its version and the snapshot live on Sources and credits, one link away.
     const sources = screen.getByTestId("detail-sources");
     expect(sources.textContent).toBe("Sources");
-    expect(sources.getAttribute("href")).toBe("/app/help/sources?osm=" + smRef().type + "/" + smRef().id + "&v=" + SM.osmVersion);
+    expect(sources.getAttribute("href")).toBe("/app/help/sources?osm=" + smRef().type + "/" + smRef().id + "&v=" + SM.osmVersion + "&s=" + SM.sourceCode);
     expect(screen.queryByTestId("place-osm-link")).toBeNull();
     // The photo shows its image and one "Photo credit" link; the creator and licence are on Sources.
     expect(screen.getByTestId("reference-photo").textContent).toBe("Photo credit");
@@ -287,7 +287,7 @@ describe("Terminal detail", () => {
     expect(document.body.textContent).not.toMatch(/regional services are not mapped|until the terminal's location is mapped/);
     expect(screen.getByTestId("terminal-location").textContent).toBe("LocationMapped point · centroid, not an entrance");
     expect(screen.queryByTestId("terminal-osm-attribution")).toBeNull();
-    expect(screen.getByTestId("detail-sources").getAttribute("href")).toBe("/app/help/sources?osm=way/293702439&v=6");
+    expect(screen.getByTestId("detail-sources").getAttribute("href")).toBe("/app/help/sources?terminal=T01");
     expect(screen.getByTestId("terminal-status-note").textContent).toBe(rawT01.terminal.statusNote);
     expect(screen.getByTestId("terminal-mode-bus").textContent).toBe("Bus");
     expect(screen.getByTestId("terminal-mode-uv_express").textContent).toBe("UV Express");

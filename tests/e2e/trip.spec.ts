@@ -88,7 +88,7 @@ test("trip options show the unverified badge, estimate chips and honest time est
   await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱14");
   await expect(cards.nth(0)).toContainText("No transfers");
   // Leg-by-leg text, distances, the vehicle chip and the footers are not on the card.
-  await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|clockwise|Walk|Jeepney/);
+  await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|clockwise|Walk ≈|Jeepney/);
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱16–₱18");
 
@@ -150,10 +150,9 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps).toHaveCount(4);
   await expect(steps.nth(0)).toContainText("Walk ≈ 230 m to Plaza Rizal (A1)");
   await expect(steps.nth(0)).toContainText("path not verified");
-  await expect(steps.nth(1)).toContainText("Board Loop A at Plaza Rizal (A1)");
-  await expect(steps.nth(1)).toContainText("Clockwise");
-  await expect(steps.nth(1)).toContainText("Signboard unverified");
-  await expect(steps.nth(1)).toContainText("4 stops · ≈ 1.2 km");
+  await expect(steps.nth(1)).toContainText("Board Loop A (clockwise) at Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("4 stops");
+  await expect(steps.nth(1)).not.toContainText(/Signboard|1.2 km/);
   await expect(steps.nth(1)).toContainText("Approximate path, not a verified route shape");
   await expect(steps).not.toContainText(["Mapped candidate"]);
   await expect(steps.nth(2)).toContainText("Get off at Avenue Square (A5)");
@@ -227,7 +226,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       if (want.peak) await expect(detail.getByTestId("trip-peak-note")).toHaveText(want.peak);
       else await expect(detail.getByTestId("trip-peak-note")).toHaveCount(0);
       await expect(detail.getByTestId("leg-time").filter({ hasText: "ride" })).toHaveText(/^≈ \d+–\d+ min ride$/);
-      await expect(detail.getByTestId("ride-fleet-class").first()).toContainText(/^Traditional jeepney · operating \(owner-confirmed/);
+      await expect(detail.getByTestId("ride-fleet-class").first()).toHaveText("Traditional jeepney");
       await expectAxeClean(page, '[data-testid="trip-sheet"]');
 
       const opener = detail.getByTestId("how-times-estimated-btn");

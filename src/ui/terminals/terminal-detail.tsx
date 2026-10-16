@@ -229,7 +229,7 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
   const activeTabId = tabs.find((t) => t.value === tab)!.id;
 
   return (
-    <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">{terminal.coordinate !== null ? "Community-mapped" : TERMINAL_ROW_SUB}</span>} sources={terminal.coordinate ? `${SOURCES_HREF}?osm=${terminal.coordinate.osmType}/${terminal.coordinate.osmId}${terminal.coordinate.osmVersion !== null ? `&v=${terminal.coordinate.osmVersion}` : ""}` : SOURCES_HREF} testId="terminal-detail">
+    <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">{terminal.coordinate !== null ? "Community-mapped" : TERMINAL_ROW_SUB}</span>} sources={`${SOURCES_HREF}?terminal=${terminal.code}`} testId="terminal-detail">
       {point ? <TerminalMap terminal={terminal} point={point} /> : null}
       <main className="pn-detail__main pn-detail-in">
         <div className="pn-place__head">

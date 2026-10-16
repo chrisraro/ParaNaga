@@ -44,13 +44,13 @@ export const GUIDANCE_COPY = {
   gotOff: "I got off",
   missedStop: "I missed my stop",
   done: "Done",
-  boardingSideUnknown: (chip: string) => `Ask where ${chip} stops.`,
+  boardingSideUnknown: () => "Ask where it stops.",
   signboardUnknown: (chip: string) => `Signboard unverified. Ask the driver: “${chip}?”`,
   entranceUnknown: "Entrance not mapped.",
   locationApproximate: (accuracy: number) => `Location too rough (± ${Math.round(accuracy)} m): distance hidden.`,
   locationStale: "Location is stale: distance hidden.",
   locationImprecise: "Location too rough: distance hidden.",
-  stopsByPinOrder: "Stop count is approximate. Watch for your stop.",
+  stopsByPinOrder: "Approximate; watch for your stop.",
   paraTitle: "Para! Next stop is yours",
   paraBody: (stop: string) => `Get off at ${stop}. Say “Para” to the driver when you see it.`,
   paraAckTitle: "Getting off at the next stop",
@@ -95,8 +95,8 @@ export type RideView = {
   title: string;
   subtitle: string;
   badge: string;
-  boardedText: string;
-  alightText: string;
+  /** "Get off · Y" under the rail; null when the title already says "Ride to Y". */
+  alightText: string | null;
   countText: string;
   countNote: string;
   remainingTime: string | null;
@@ -157,9 +157,11 @@ function locationNote(fix: LocationFix | null, now: number): string | null {
   return GUIDANCE_COPY.locationApproximate(fix.accuracy);
 }
 
+const gpsMeters = (progress: WalkProgress) => (progress.distanceMeters < 10 ? "Under 10 m" : `≈ ${progress.distanceMeters} m`);
+
 function distanceLine(progress: WalkProgress | null, estimateMeters: number, negligible: boolean): string | null {
   if (progress) {
-    return progress.distanceMeters < 10 ? "Under 10 m" : `≈ ${progress.distanceMeters} m`;
+    return `${gpsMeters(progress)} · straight-line`;
   }
   return negligible ? null : formatDistance(estimateMeters);
 }
@@ -265,7 +267,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
         { text: `Wait for ${chip} at ${step.target.label}`, done: false },
       ];
     }
-    notes = at ? [GUIDANCE_COPY.boardingSideUnknown(chip), GUIDANCE_COPY.signboardUnknown(chip)] : [GUIDANCE_COPY.boardingSideUnknown(chip)];
+    notes = at ? [GUIDANCE_COPY.boardingSideUnknown(), GUIDANCE_COPY.signboardUnknown(chip)] : [GUIDANCE_COPY.boardingSideUnknown()];
     nextRide = nextRideInfo(step.nextRide);
     const board: GuidanceAction = { event: "boarded", label: GUIDANCE_COPY.boarded(chip), kind: at ? "primary" : "secondary" };
     actions = at ? [board, END] : [{ event: "atStop", label: GUIDANCE_COPY.atStop, kind: "primary" }, board, END];
@@ -288,7 +290,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     keepOpen: GUIDANCE_COPY.keepOpen,
     actions,
     undo: undoAction(session),
-    live: { politeness: "polite", text: proposal ?? (progress ? `${distanceText!} to ${targetName}` : title) },
+    live: { politeness: "polite", text: proposal ?? (progress ? `${gpsMeters(progress)} to ${targetName}` : title) },
     usesLocation: true,
   };
 }
@@ -301,7 +303,6 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
   const stopsRemaining = Math.max(0, alightIndex - ride.passedIndex);
   const alight = step.alight.label;
   const chip = step.ride.routeChip;
-  const direction = directionText(step.ride.loopDirection, "short");
   const remainingTime = rideRemainingTime(session.trip, step, ride, now);
 
   let title: string;
@@ -328,10 +329,9 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
     screen: "ride",
     stepLabel: stepLabel(step.index, total, "ride"),
     title,
-    subtitle: direction ? `${chip} · ${direction}` : chip,
+    subtitle: chip,
     badge: UNVERIFIED_ROUTE_BADGE,
-    boardedText: `${step.board.label} · boarded`,
-    alightText: `Get off · ${alight}`,
+    alightText: title.startsWith("Ride to") ? null : `Get off · ${alight}`,
     countText: gps
       ? `${ride.passedIndex} of ${stopsCount(step.stopsToRide)}`
       : `${stopsCount(step.stopsToRide)} after ${step.board.label}`,

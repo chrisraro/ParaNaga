@@ -174,7 +174,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(heading(page)).toBeFocused();
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 1 of 3 · Walk");
   await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 230 m");
-  await expect(guide(page)).toContainText("Ask where Loop A stops.");
+  await expect(guide(page)).toContainText("Ask where it stops.");
   // Walk steps carry the one full caution and no keep-open line (that is on ride steps).
   await expect(guide(page).getByTestId("unverified-badge")).toHaveText("Unverified route — confirm with the driver");
   await expect(page.getByTestId("guidance-keep-open")).toHaveCount(0);
@@ -185,7 +185,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 1 });
   await emit(page, { lat: 13.6224, lng: 123.1838 }, 12);
   await expect(page.getByTestId("guidance-accuracy")).toHaveText("GPS accuracy ± 12 m");
-  await expect(page.getByTestId("guidance-distance")).toHaveText(/^≈ \d+ m( · \w+)?$/);
+  await expect(page.getByTestId("guidance-distance")).toHaveText(/^≈ [0-9]+ m · straight-line(, \w+)?$/);
   await emit(page, A1, 8);
   await expect(page.getByTestId("guidance-proposal")).toContainText("Close to Plaza Rizal (A1).");
 
@@ -197,9 +197,8 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   // Ride: the rail follows the fixes in pin order.
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 2 of 3 · Ride");
   await expect(page.getByTestId("guidance-ride-time")).toHaveText(/^≈ [0-9]+–[0-9]+ min left \(estimate\)$/);
-  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop A · clockwise");
-  await expect(page.getByTestId("ride-progress")).toContainText("Plaza Rizal (A1) · boarded");
-  await expect(page.getByTestId("ride-progress")).toContainText("Get off · Avenue Square (A5)");
+  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop A");
+  await expect(page.getByTestId("ride-progress")).not.toContainText("boarded");
   await expectHonest(page);
   await emit(page, A2);
   await expect(page.getByTestId("ride-count")).toHaveText("1 of 4 stops");
@@ -310,7 +309,7 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expect(guide(page)).toContainText("Signboard unverified. Ask the driver: “Loop B?”");
   await tap(page, "I boarded Loop B");
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 4 of 5 · Ride");
-  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop B · counterclockwise");
+  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop B");
   await tap(page, "I got off");
   await tap(page, "I've arrived");
   await expect(heading(page)).toHaveText("You've arrived");

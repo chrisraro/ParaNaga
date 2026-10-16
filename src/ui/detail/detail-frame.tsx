@@ -96,7 +96,7 @@ export function DetailPanel({ title, action, sources, children, testId }: PanelP
         <span className="pn-detail__header-title">{title}</span>
         <span className="pn-detail__header-end">
           {sources ? (
-            <Link href={sources} className="pn-detail__sources" data-testid="detail-sources">
+            <Link href={sources} className="pn-detail__sources" aria-label="Sources and credits" data-testid="detail-sources">
               Sources
             </Link>
           ) : null}

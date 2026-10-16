@@ -101,7 +101,7 @@ describe("TripDetail time estimates (Task 14 fixes: basis, fleet evidence, spoke
     render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
     const ride = data.plan.options[0]!.legs.find((l) => l.kind === "ride")!;
     if (ride.kind !== "ride") throw new Error("ride");
-    expect(screen.getAllByTestId("ride-fleet-class").map((el) => el.textContent)).toEqual(ride.fleet.classes.map((c) => c.label));
+    expect(screen.getAllByTestId("ride-fleet-class").map((el) => el.textContent)).toEqual(ride.fleet.classes.map((c) => c.label.split(" · ")[0]));
     expect(ride.fleet.classes[0]!.label).toMatch(/^Traditional jeepney · operating \(owner-confirmed \w+ \d{4}\)$/);
   });
 

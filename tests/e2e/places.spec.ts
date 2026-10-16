@@ -63,7 +63,7 @@ test("an OpenStreetMap place: map at its coordinate, attribution, and Plan trip 
   await expect(detail.getByTestId("place-entrance")).toContainText("Not mapped. Trips end at the map point.");
   // Attribution, the OSM object and the snapshot are on Sources and credits: one link away.
   await expect(detail.getByTestId("place-osm-attribution")).toHaveCount(0);
-  await expect(detail.getByTestId("detail-sources")).toHaveAttribute("href", /^\/app\/help\/sources\?osm=(node|way|relation)\/[0-9]+&v=[0-9]+$/);
+  await expect(detail.getByTestId("detail-sources")).toHaveAttribute("href", /^\/app\/help\/sources\?osm=(node|way|relation)\/[0-9]+&v=[0-9]+&s=OSM-[0-9-]+$/);
   await expect(detail.getByTestId("place-nearest-stops").getByRole("link").first()).toHaveAttribute("href", /^\/app\/stops\//);
 
   await detail.getByRole("button", { name: "Plan trip to SM City Naga" }).click();

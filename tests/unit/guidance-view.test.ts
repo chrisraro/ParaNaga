@@ -31,7 +31,7 @@ describe("Walk (walk_to_board)", () => {
     expect(v.directionText).toBeNull();
     expect(v.remainingTime).toBe("≈ 2–3 min (estimate)");
     expect(v.locationNote).toBeNull();
-    expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown("Loop A")]);
+    expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown()]);
     expect(v.nextRide).toEqual({ chip: "Loop A", routeName: "Centro–Magsaysay Loop A", direction: "clockwise", badge: UNVERIFIED_ROUTE_BADGE });
     expect(v.keepOpen).toBe("Keep this screen open.");
     expect(labels(v)).toEqual(["primary:atStop:I'm at the stop", "secondary:boarded:I boarded Loop A", "secondary:end:End guidance"]);
@@ -42,7 +42,7 @@ describe("Walk (walk_to_board)", () => {
     const from = { lat: LOOP_A[0]!.lat - 0.0018, lng: LOOP_A[0]!.lng }; // ≈ 200 m south of the stop
     const v = guidanceView(s, fixAt(from, 12, NOW), NOW);
     if (v.screen !== "walk") throw new Error(v.screen);
-    expect(v.distanceText).toBe("≈ 200 m");
+    expect(v.distanceText).toBe("≈ 200 m · straight-line");
     expect(v.directionText).toBe("north");
     expect(v.remainingTime).toBe("≈ 3–5 min (estimate)"); // 200 m × 1.3
     expect(v.live).toEqual({ politeness: "polite", text: "≈ 200 m to Plaza Rizal (A1)" });
@@ -69,7 +69,7 @@ describe("Walk (walk_to_board)", () => {
     const v = guidanceView(run(s, "atStop"), null, NOW);
     if (v.screen !== "walk") throw new Error(v.screen);
     expect(v.title).toBe("Wait for Loop A at Plaza Rizal (A1)");
-    expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown("Loop A"), GUIDANCE_COPY.signboardUnknown("Loop A")]);
+    expect(v.notes).toEqual([GUIDANCE_COPY.boardingSideUnknown(), GUIDANCE_COPY.signboardUnknown("Loop A")]);
     expect(labels(v)).toEqual(["primary:boarded:I boarded Loop A", "secondary:end:End guidance"]);
   });
 
@@ -153,10 +153,9 @@ describe("Ride", () => {
     if (v.screen !== "ride") throw new Error(v.screen);
     expect(v.stepLabel).toBe("Step 2 of 3 · Ride");
     expect(v.title).toBe("Ride to Naga Cathedral");
-    expect(v.subtitle).toBe("Loop A · clockwise");
+    expect(v.subtitle).toBe("Loop A");
     expect(v.badge).toBe(UNVERIFIED_ROUTE_BADGE);
-    expect(v.boardedText).toBe("Plaza Rizal (A1) · boarded");
-    expect(v.alightText).toBe("Get off · Naga Cathedral");
+    expect(v.alightText).toBeNull(); // the title already says "Ride to Naga Cathedral"
     expect(v.countText).toBe("5 stops after Plaza Rizal (A1)");
     expect(v.countNote).toBe(GUIDANCE_COPY.stopsByPinOrder);
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "ahead", "ahead", "ahead", "ahead", "alight"]);

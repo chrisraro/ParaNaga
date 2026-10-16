@@ -83,8 +83,7 @@ function OptionCard({
       >
         <span className="pn-trip-card__top">
           {option.labels[0] ? (
-            // One word is shown ("Recommended", "Fastest"); a longer label is read aloud only, to keep the card short.
-            <span className={!option.labels[0].includes(" ") ? (primary ? "pn-trip-card__label pn-trip-card__label--primary" : "pn-trip-card__label") : "sr-only"}>{option.labels[0]}</span>
+            <span className={primary ? "pn-trip-card__label pn-trip-card__label--primary" : "pn-trip-card__label"}>{option.labels[0]}</span>
           ) : null}
           {/* The driver caveat belongs to rides only; a walk has no driver. The full badge is in the detail. */}
           {option.rides > 0 ? (
@@ -98,6 +97,7 @@ function OptionCard({
         </span>
         <span className="pn-trip-card__head">
           <strong>{optionTitle(option)}</strong>
+          {option.rides === 0 ? <span className="pn-trip-card__time">paths not verified</span> : null}
           <span className="sr-only">. </span>
           <EtaTotalText estimate={estimate} className="pn-trip-card__time" testId="trip-option-time" short />
         </span>

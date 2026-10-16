@@ -15,12 +15,13 @@ import "./help.css";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { sourceListSchema } from "@/domain/api/schemas";
 import { externalHref, sourceMetaLine, sourceTitleLine } from "@/domain/sources/present";
-import { DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
+import { useEffect, useRef } from "react";
+import { DetailPanel } from "@/ui/detail/detail-frame";
 import Link from "next/link";
 import { Suspense } from "react";
 import { EXPLORE_PLACES_NOTE, RAIL_STATUS_TEXT, railSourcesText } from "@/domain/places/explore";
 import { EntitySources } from "./entity-sources";
-import { publishedDateText } from "@/domain/network/present";
+import { formatIsoDate, publishedDateText } from "@/domain/network/present";
 import { Note } from "@/ui/kit/note";
 import { ListGroup } from "@/ui/kit/list";
 import { OsmAttribution } from "@/ui/kit/osm-attribution";
@@ -28,7 +29,8 @@ import { DataRevisionRow } from "@/ui/settings/data-revision-row";
 import { SourceCredits } from "./source-credits";
 import { rightsForSource } from "@/domain/sources/rights";
 
-export const DATA_BASIS_NOTE = "Stops come from a public My Maps snapshot (retrieved 15 Oct 2026). Nobody has checked boarding sides, signs or whether boarding is allowed. Ride paths are traced along OpenStreetMap roads between pins; walk paths follow mapped walkable streets or straight-line estimates (× 1.3).";
+/** The My Maps retrieval date comes from the register (S39 checked date), never typed here. */
+export const dataBasisNote = (retrieved: string | null) => `Stops come from a public My Maps snapshot (retrieved ${formatIsoDate(retrieved) ?? "date not recorded"}). Nobody has checked boarding sides, signs or whether boarding is allowed. Ride paths are traced along OpenStreetMap roads between pins; walk paths follow mapped walkable streets or straight-line estimates (× 1.3).`;
 export const FLEET_BASIS_NOTE = "Fleet: the project owner confirmed on 16 Oct 2026 (U01) that traditional jeepneys run on every route group (R1–R8) and modern jeepneys on R4 and R7. This confirms service, not stop locations, stop order or paths.";
 export const FARE_BASIS_NOTE = "Fares are estimates from reported fare rules; the fare matrix is not verified. Where a route runs both traditional and modern jeepneys, the range spans both. Discounts are not applied. National per-km rates of 28 Sep 2026. The tricycle minimum fare of ₱15 follows Ordinance 2024-002.";
 export const TIME_BASIS_NOTE = "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are ParaNaga assumptions.";
@@ -45,7 +47,34 @@ function ExternalIcon() {
 
 export function SourcesScreen() {
   const resource = useNetworkResource("/api/v1/sources", sourceListSchema);
-  const heading = useFocusOnMount<HTMLHeadingElement>(true);
+  const heading = useRef<HTMLHeadingElement>(null);
+  // A hash link (#photo-…, #fare-basis) lands on its target; otherwise the h1 takes focus.
+  useEffect(() => {
+    const place = (again: boolean) => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      const target = id ? document.getElementById(id) : null;
+      if (!target) {
+        if (!again) heading.current?.focus();
+        return;
+      }
+      target.tabIndex = -1;
+      target.scrollIntoView({ block: "start" });
+      if (again && target.contains(document.activeElement)) return;
+      target.focus({ preventScroll: true });
+      if (document.activeElement !== target) {
+        // Not focusable itself (a list item): its first link, or its heading, takes focus.
+        const inner = target.querySelector<HTMLElement>("a[href], h2");
+        if (inner) {
+          if (!inner.matches("a[href]")) inner.tabIndex = -1;
+          inner.focus({ preventScroll: true });
+        }
+      }
+    };
+    // After the panel's own mount work (and the router's hash handling) has settled; once more in
+    // case the page was scrolled back meanwhile.
+    const timers = [window.setTimeout(() => place(false), 60), window.setTimeout(() => place(true), 500)];
+    return () => timers.forEach((t) => window.clearTimeout(t));
+  }, []);
   return (
     <DetailPanel title="Sources" testId="sources-page">
       <main className="pn-detail__main pn-detail-in">
@@ -60,7 +89,7 @@ export function SourcesScreen() {
         </Suspense>
         <section aria-labelledby="data-basis" className="pn-section">
           <h2 id="data-basis" className="pn-section__title">Data basis</h2>
-          <p className="pn-footnote" data-testid="sources-data-basis">{DATA_BASIS_NOTE}</p>
+          <p className="pn-footnote" data-testid="sources-data-basis">{dataBasisNote(resource.status === "ready" ? (resource.data.sources.find((x) => x.code === "S39")?.checkedOn ?? null) : null)}</p>
           <p className="pn-footnote">{FLEET_BASIS_NOTE}</p>
         </section>
         <section aria-labelledby="fare-basis-title" className="pn-section" id="fare-basis">

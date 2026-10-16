@@ -44,6 +44,12 @@ import { SavePlaceButton } from "@/ui/saved/save-place-button";
 import { NagaMap } from "@/ui/map/naga-map";
 
 const TITLE = "Place";
+
+/** The Sources link of a place with source codes (only well-formed S00 codes travel in the address). */
+function codedSourcesHref(codes: readonly string[]): string {
+  const valid = codes.filter((c) => /^S[0-9]{2}$/.test(c)).slice(0, 6);
+  return valid.length > 0 ? `${SOURCES_HREF}?src=${valid.join(",")}` : SOURCES_HREF;
+}
 /** Street level: a mapped-pin group spans at most 60 m, so its pins all show. */
 const PLACE_ZOOM = 17;
 
@@ -203,7 +209,7 @@ function OsmPlaceView({ index, place, type, id }: { index: SearchIndex; place: S
   if (place.aliases.length > 0) rows.push({ key: "aka", label: "Also known as", value: place.aliases.join(" · "), testId: "place-aka" });
 
   return (
-    <DetailPanel title={TITLE} sources={`${SOURCES_HREF}?osm=${type}/${id}&v=${place.osmVersion}`} testId="place-detail">
+    <DetailPanel title={TITLE} sources={`${SOURCES_HREF}?osm=${type}/${id}&v=${place.osmVersion}&s=${place.sourceCode}`} testId="place-detail">
       <PlaceMap>
         <NagaMap
           initialView={{ center: point, zoom: PLACE_ZOOM }}
@@ -322,7 +328,7 @@ function BarangayView({ place }: { place: SearchIndex["barangays"][number] }) {
     { key: "boundary", label: "Boundary", value: "Not mapped", testId: "place-boundary" },
   ];
   return (
-    <DetailPanel title={TITLE} sources={SOURCES_HREF} testId="place-detail">
+    <DetailPanel title={TITLE} sources={codedSourcesHref(place.sourceCode ? [place.sourceCode] : [])} testId="place-detail">
       <main className="pn-detail__main pn-detail-in">
         <PlaceHead title={place.name} kind="Barangay" badges={["not-surveyed"]} />
         <DirectionsChoice which={which} onChange={setWhich} />
@@ -350,7 +356,7 @@ function StudyLabelView({ place }: { place: SearchIndex["studyLabels"][number] }
     { key: "status", label: "Status", value: "Historical label, unverified", testId: "place-status" },
   ];
   return (
-    <DetailPanel title={TITLE} sources={SOURCES_HREF} testId="place-detail">
+    <DetailPanel title={TITLE} sources={codedSourcesHref(place.sourceCodes)} testId="place-detail">
       <main className="pn-detail__main pn-detail-in">
         <PlaceHead title={place.label} kind={studyKindText(place.sourceContext)} badges={["documented"]} />
         <Note testId="place-location-note">No location on file, so trips can&apos;t start or end here.</Note>

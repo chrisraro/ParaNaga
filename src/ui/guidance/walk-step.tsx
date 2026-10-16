@@ -28,7 +28,7 @@ export function WalkDistance({ view }: { view: WalkView }) {
       {view.distanceText ? (
         <p className="pn-guide__distance" data-testid="guidance-distance">
           {view.distanceText}
-          {view.directionText ? <span className="pn-guide__direction"> · {view.directionText}</span> : null}
+          {view.directionText ? <span className="pn-guide__direction">, {view.directionText}</span> : null}
         </p>
       ) : null}
       {view.locationNote ? (

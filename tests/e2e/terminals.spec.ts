@@ -162,7 +162,7 @@ test("T01 detail: the coordinate badge, one Sources link, RS05 with a UV fare es
   await expect(map.getByRole("img", { name: "Bicol Central Station, Bus and UV Express terminal, community-mapped location" })).toHaveCount(1);
   await expect(detail.getByTestId("terminal-location")).toContainText("Mapped point · centroid, not an entrance");
   await expect(detail.getByTestId("terminal-osm-attribution")).toHaveCount(0);
-  await expect(detail.getByTestId("detail-sources")).toHaveAttribute("href", "/app/help/sources?osm=way/293702439&v=6");
+  await expect(detail.getByTestId("detail-sources")).toHaveAttribute("href", "/app/help/sources?terminal=T01");
   await expect(detail.getByTestId("terminal-directions-note")).toHaveCount(0);
   await expect(detail).not.toContainText("regional services are not mapped");
   const rs05 = detail.getByTestId("terminal-regional-RS05");

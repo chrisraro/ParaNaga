@@ -16,7 +16,7 @@ import { enrichPlan } from "@/domain/trip/enrich";
 import { Guidance } from "@/ui/guidance/guidance";
 import { TripDetail } from "@/ui/trip/trip-detail";
 import { TripOptions } from "@/ui/trip/trip-options";
-import { PROVISIONAL_PLAN } from "../e2e/fixtures/plan-responses";
+import { PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "../e2e/fixtures/plan-responses";
 import { ETA_MODEL, manila } from "./eta-fixtures";
 import { ORIGIN, oneRide, tripOf } from "./guidance-fixtures";
 
@@ -24,7 +24,8 @@ vi.mock("@/client/saved/use-saved-trip-toggle", () => ({
   useSavedTripToggle: () => ({ match: null, kind: "none", waiting: false, unavailable: false, toggle: async () => undefined }),
 }));
 
-export const CARD_WORDS = 14;
+export const CARD_WORDS_ONE_RIDE = 16; // a two-word plan label is shown
+export const CARD_WORDS_TWO_RIDES = 20; // the route is "Loop A + Loop B"
 export const DETAIL_HEADER_WORDS = 16;
 export const GUIDANCE_WALK_WORDS = 22;
 
@@ -55,12 +56,12 @@ afterEach(() => {
 const plan = PROVISIONAL_PLAN as unknown as PlanResponse;
 
 describe("copy budgets", () => {
-  it("an option card shows at most 14 words and says the essentials", () => {
+  it("a one-ride option card shows at most 16 words and says the essentials", () => {
     const data = enrichPlan(plan, null, { walkGraphStatus: "skipped" });
     render(<TripOptions data={data} onOpen={() => undefined} etaModel={ETA_MODEL} />);
     const cards = screen.getAllByTestId("trip-option");
     expect(cards.length).toBeGreaterThan(0);
-    for (const card of cards) expect(visibleWords(card)).toBeLessThanOrEqual(CARD_WORDS);
+    for (const card of cards) expect(visibleWords(card)).toBeLessThanOrEqual(CARD_WORDS_ONE_RIDE);
     const first = cards[0]!;
     // Estimates stay ranges, the wait stays unknown, the caution stays; no leg-by-leg text, source or revision.
     expect(first.textContent).toMatch(/Est\.Estimate \d+–\d+ min \+ waiting \(unknown\)/);
@@ -68,6 +69,22 @@ describe("copy budgets", () => {
     expect(first.textContent).toContain("Unverified route");
     expect(first.textContent).not.toMatch(/revision|Source|OpenStreetMap|Mapped candidate|Walk ≈|Signboard/);
     expect(first.querySelector('abbr[title="Estimate"]')).not.toBeNull();
+  });
+
+  it("a two-ride option card shows at most 20 words and keeps the caution", () => {
+    const data = enrichPlan(TWO_RIDE_PLAN as unknown as PlanResponse, null, { walkGraphStatus: "skipped" });
+    render(<TripOptions data={data} onOpen={() => undefined} etaModel={ETA_MODEL} />);
+    const card = screen.getAllByTestId("trip-option").find((c) => c.textContent?.includes("Loop A + "));
+    expect(card, "a two-ride card").toBeTruthy();
+    expect(visibleWords(card!)).toBeLessThanOrEqual(CARD_WORDS_TWO_RIDES);
+    expect(card!.textContent).toContain("Unverified route");
+  });
+
+  it("a walk-only card keeps its path caution", () => {
+    const data = enrichPlan(plan, null, { walkGraphStatus: "skipped" });
+    const walkOnly = { ...data, plan: { ...data.plan, options: [{ ...data.plan.options[0]!, rides: 0, legs: data.plan.options[0]!.legs.filter((l) => l.kind === "walk") }] } };
+    render(<TripOptions data={walkOnly} onOpen={() => undefined} etaModel={null} />);
+    expect(screen.getByTestId("trip-option").textContent).toContain("paths not verified");
   });
 
   it("the trip detail header shows at most 16 words", () => {

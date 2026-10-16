@@ -158,7 +158,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps).toHaveCount(4);
-  await expect(steps.nth(1)).toContainText("Board Loop A at Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("Board Loop A (clockwise) at Plaza Rizal (A1)");
   await expect(detail.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
   await context.setOffline(false);
 });
