@@ -57,6 +57,10 @@ const strategies = {
     cacheName: cacheName("search-index", BUILD_ID),
     plugins: [onlyCacheable, new ExpirationPlugin({ maxEntries: REVISIONS_KEPT })],
   }),
+  lines: new CacheFirst({
+    cacheName: cacheName("lines", BUILD_ID),
+    plugins: [onlyCacheable, new ExpirationPlugin({ maxEntries: REVISIONS_KEPT })],
+  }),
   head: new NetworkFirst({
     cacheName: cacheName("head", BUILD_ID),
     networkTimeoutSeconds: HEAD_TIMEOUT_S,

@@ -10,6 +10,8 @@
 import { z } from "zod";
 import { NAGA_MAX_BOUNDS } from "../geo/naga";
 import { decodePolyline } from "../geo/polyline";
+import { ETA_PARAM_KEYS } from "../eta/params";
+import { LINES_FORMAT_VERSION } from "./lines-format";
 import { OSM_ELEMENT_TYPES, OSM_PLACE_CATEGORIES } from "../places/osm-categories";
 import {
   COLOUR_KEYS,
@@ -204,10 +206,7 @@ export const snapshotVariantSchema = z.object({
   }
 });
 
-/** The five time-estimate parameters (D8/D9). */
-export const ETA_PARAM_KEYS = [
-  "walk_speed_kmh", "walk_slowdown_factor", "jeepney_speed_offpeak_kmh", "jeepney_speed_peak_kmh", "peak_windows",
-] as const;
+export { ETA_PARAM_KEYS };
 const clockTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 /**
@@ -782,7 +781,11 @@ export const untracedLineSchema = z.object({
   }),
 });
 
+export { LINES_FORMAT_VERSION };
+
 export const linesSchema = z.object({
+  /** LINES_FORMAT_VERSION: bumped whenever this shape changes (the worker keys its cache by it). */
+  formatVersion: z.literal(LINES_FORMAT_VERSION),
   revision: revisionMetaSchema,
   label: z.literal(PATH_LABEL),
   attribution: z.literal(LINES_ATTRIBUTION),

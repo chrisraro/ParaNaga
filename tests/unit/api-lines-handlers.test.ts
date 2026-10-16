@@ -16,11 +16,14 @@ import {
 } from "@/domain/api/schemas";
 import { encodePolyline } from "@/domain/geo/polyline";
 import { fleetSummary } from "@/domain/modes/fleet";
-import type { LinesRead, WalkGraphRead } from "@/server/repos/network-repo";
+import type { LinesRead } from "@/server/repos/network-repo";
+
+type WalkState = { status: "not_published" } | { status: "none" } | { status: "ok"; payload: string; sha256: string; bytes: number };
 
 const calls: { options: unknown }[] = [];
 let linesRead: LinesRead = { status: "not_published" };
-let walkRead: WalkGraphRead = { status: "not_published" };
+let walkRead: WalkState = { status: "not_published" };
+let payloadReads = 0;
 
 vi.mock("@/server/db/context", () => ({
   withRequestContext: async (_ctx: unknown, fn: (db: unknown) => Promise<unknown>, options?: unknown) => {
@@ -28,7 +31,14 @@ vi.mock("@/server/db/context", () => ({
     return fn({});
   },
 }));
-vi.mock("@/server/repos/network-repo", () => ({ getLines: async () => linesRead, getWalkGraph: async () => walkRead }));
+vi.mock("@/server/repos/network-repo", () => ({
+  getLines: async () => linesRead,
+  getWalkGraphMeta: async () => (walkRead.status === "ok" ? { status: "ok", versionId: "v1", sha256: walkRead.sha256, bytes: walkRead.bytes } : walkRead),
+  getWalkGraphPayload: async () => {
+    payloadReads += 1;
+    return walkRead.status === "ok" ? walkRead.payload : null;
+  },
+}));
 
 const { GET: linesGET } = await import("@/app/api/v1/network/lines/[revisionId]/route");
 const { GET: walkGET } = await import("@/app/api/v1/network/walk-graph/[revisionId]/route");
@@ -60,6 +70,7 @@ const line: Line = {
   quality: { listedStreets: 7, matchedStreets: 7, unmatchedStreets: [], offListShare: 0.031, gateOffListShare: 0.031, terminalAccessM: 0 },
 };
 const body: Lines = {
+  formatVersion: 1,
   revision, label: PATH_LABEL, attribution: LINES_ATTRIBUTION, attributionUrl: OSM_COPYRIGHT_URL, licence: "ODbL 1.0",
   roadSources: ["OSMR-2026-10-16"], lines: [line],
   untraced: [{
@@ -145,15 +156,22 @@ describe("GET /api/v1/network/walk-graph/:revisionId", () => {
     expect(response.headers.get("cache-control")).toBe("public, s-maxage=31536000, immutable");
     expect(response.headers.get("etag")).toBe(`"${sha(payload)}"`);
     expect(await response.text()).toBe(payload);
-    expect(calls).toEqual([{ options: { readOnly: true } }]);
+    // The stored etag first, then the payload: two read-only transactions.
+    expect(calls).toEqual([{ options: { readOnly: true } }, { options: { readOnly: true } }]);
   });
 
-  it("answers a matching If-None-Match with 304 and no body", async () => {
+  it("answers a matching If-None-Match with 304 and no body, without reading the payload", async () => {
     walkRead = { status: "ok", payload, sha256: sha(payload), bytes: Buffer.byteLength(payload) };
+    payloadReads = 0;
     const response = await walk(revisionId, { headers: { "if-none-match": `W/"other", "${sha(payload)}"` } });
     expect(response.status).toBe(304);
     expect(response.headers.get("etag")).toBe(`"${sha(payload)}"`);
     expect(await response.text()).toBe("");
+    expect(payloadReads).toBe(0);
+    // A stale copy (another etag) reads and serves the payload.
+    const fresh = await walk(revisionId, { headers: { "if-none-match": '"other"' } });
+    expect(fresh.status).toBe(200);
+    expect(payloadReads).toBe(1);
   });
 
   it.each([

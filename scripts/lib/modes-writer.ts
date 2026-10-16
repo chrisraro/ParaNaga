@@ -346,7 +346,9 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
 /**
  * Copies the membership of `fromRevision` into the draft `toRevision` by id (entity and version),
  * except members of `dropKinds`, members whose (kind, entity) is in `replace` (the caller adds
- * those itself), and the variants of `dropVariantsOfRoutes`. Returns the number copied.
+ * those itself), and the variants of `dropVariantsOfRoutes` together with their shapes (a shape
+ * must follow its variant's member version; the road stage, run in the same transaction, traces
+ * the new versions). Returns the number copied.
  */
 export async function carryForwardRevision(
   c: pg.ClientBase,
@@ -362,7 +364,10 @@ export async function carryForwardRevision(
         and not exists (select 1 from jsonb_to_recordset($4::jsonb) as r(entity_kind text, entity_id uuid)
                          where r.entity_kind = m.entity_kind and r.entity_id = m.entity_id)
         and not (m.entity_kind = 'variant' and exists (
-              select 1 from transit.variant v where v.id = m.entity_id and v.route_id = any($5::uuid[])))`,
+              select 1 from transit.variant v where v.id = m.entity_id and v.route_id = any($5::uuid[])))
+        and not (m.entity_kind = 'shape' and exists (
+              select 1 from transit.shape s join transit.variant v on v.id = s.variant_id
+               where s.id = m.entity_id and v.route_id = any($5::uuid[])))`,
     [toRevision, fromRevision, opts.dropKinds,
       JSON.stringify(opts.replace.map((m) => ({ entity_kind: m.entity_kind, entity_id: m.entity_id }))),
       opts.dropVariantsOfRoutes],

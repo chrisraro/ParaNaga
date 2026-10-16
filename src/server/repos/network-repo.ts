@@ -4,6 +4,7 @@ import {
   fareModesForRouteMode,
   INTRA_CITY_FARE_MODES,
   LINES_ATTRIBUTION,
+  LINES_FORMAT_VERSION,
   NOT_TRACED,
   OSM_COPYRIGHT_URL,
   PATH_LABEL,
@@ -515,6 +516,7 @@ export async function getLines(db: Db, revisionId: string): Promise<LinesRead> {
   return {
     status: "ok",
     body: {
+      formatVersion: LINES_FORMAT_VERSION,
       revision,
       label: PATH_LABEL,
       attribution: LINES_ATTRIBUTION,
@@ -529,19 +531,27 @@ export async function getLines(db: Db, revisionId: string): Promise<LinesRead> {
 
 // ---------------------------------------------------------------- walk graph
 
-export type WalkGraphRead =
+export type WalkGraphMeta =
   | { status: "not_published" }
   | { status: "none" }
-  | { status: "ok"; payload: string; sha256: string; bytes: number };
+  | { status: "ok"; versionId: string; sha256: string; bytes: number };
 
-/** The published walk graph payload (Task 6 format v1), verbatim, with its stored sha256 and size. */
-export async function getWalkGraph(db: Db, revisionId: string): Promise<WalkGraphRead> {
+/** The published walk graph's stored sha256 and size (Task 6 format v1), without the payload. */
+export async function getWalkGraphMeta(db: Db, revisionId: string): Promise<WalkGraphMeta> {
   const revision = await getPublishedRevision(db);
   if (!revision || revision.revisionId !== revisionId) return { status: "not_published" };
   const [g] = await rows(db, sql`
-    select payload, sha256, bytes from transit.v_published_walk_graph where revision_id = ${revisionId}::uuid`);
+    select walk_graph_version_id, sha256, bytes from transit.v_published_walk_graph where revision_id = ${revisionId}::uuid`);
   if (!g) return { status: "none" };
-  return { status: "ok", payload: str(g.payload), sha256: str(g.sha256), bytes: Number(g.bytes) };
+  return { status: "ok", versionId: str(g.walk_graph_version_id), sha256: str(g.sha256), bytes: Number(g.bytes) };
+}
+
+/** That walk graph's payload, verbatim; null when it is no longer the published one. */
+export async function getWalkGraphPayload(db: Db, revisionId: string, versionId: string): Promise<string | null> {
+  const [g] = await rows(db, sql`
+    select payload from transit.v_published_walk_graph
+     where revision_id = ${revisionId}::uuid and walk_graph_version_id = ${versionId}::uuid`);
+  return g ? str(g.payload) : null;
 }
 
 // ---------------------------------------------------------------- routes

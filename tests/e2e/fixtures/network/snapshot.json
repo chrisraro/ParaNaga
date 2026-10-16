@@ -1,9 +1,9 @@
 {
  "revision": {
-  "revisionId": "bb68c0db-c46b-48fc-b94a-93fa2dda49fe",
+  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
   "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-16T01:28:32.603Z"
+  "publishedAt": "2026-10-16T01:49:26.840Z"
  },
  "stops": [
   {
@@ -2558,7 +2558,7 @@
    }
   },
   {
-   "routeId": "77e29836-468c-49bd-868c-1f7a0f0c5f91",
+   "routeId": "0b813055-ddb0-4648-96e2-ae40870e7df5",
    "routeCode": "TRI-VISTODA",
    "routeName": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
    "mode": "tricycle",
@@ -2590,7 +2590,7 @@
    }
   },
   {
-   "routeId": "443a4611-88c8-4814-85a5-8be77aebc2ff",
+   "routeId": "6204a9ea-5c5d-47e3-9b52-2871b089597c",
    "routeCode": "TRI-DECALANGON",
    "routeName": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
    "mode": "tricycle",

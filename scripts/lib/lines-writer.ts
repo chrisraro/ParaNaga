@@ -9,8 +9,10 @@
 //       distance (a new version: the seed row plus the D5 distance). Stop, route and variant ids
 //       are unchanged, so saved trips stay valid. Rows are inserted only where the content is new
 //       (content hash); released rows are never updated. Then transit.publish_revision.
-//   - committed batch with the same inputs hash -> "unchanged", nothing written;
-//   - same key with other inputs, or a road snapshot older than a committed one -> refused.
+//   - committed batch with the same key (roads date, seed date and inputs hash) -> "unchanged";
+//   - the same roads date with other inputs (a new places snapshot, Data_Sets, seed or builder) -> a new
+//       revision labelled modes-lines-<roads date>.<n>;
+//   - a road snapshot older than a committed one -> refused.
 // Every member variant of the published revision must have a planned trace of exactly its member
 // version (content hash), and every planned trace a member variant: otherwise refused (the paths
 // would not describe what is published).
@@ -212,10 +214,14 @@ export async function writeLines(c: pg.ClientBase, lines: LinesPlan): Promise<Li
 
   // ---------------------------------------------------------------- revision: carry forward + road members
   const revisionId = randomUUID();
+  // Revision labels are unique: a later batch on the same roads date gets .2, .3 …
+  const taken = await c.query<{ n: number }>(
+    `select count(*)::int as n from transit.revision where label = $1 or label like $1 || '.%'`, [lines.revisionLabel]);
+  const revisionLabel = taken.rows[0]!.n === 0 ? lines.revisionLabel : `${lines.revisionLabel}.${taken.rows[0]!.n + 1}`;
   await c.query(
     `insert into transit.revision (id, label, kind, status, created_by, parent_revision_id, content_hash)
      values ($1, $2, $3, 'draft', $4, $5, $6)`,
-    [revisionId, lines.revisionLabel, base.kind, IMPORT_ACTOR, base.id, lines.inputsHash],
+    [revisionId, revisionLabel, base.kind, IMPORT_ACTOR, base.id, lines.inputsHash],
   );
   const added: Member[] = [
     ...shapeVersions.map((s) => ({ entity_kind: "shape", entity_id: s.owner, version_id: s.id })),
@@ -241,7 +247,7 @@ export async function writeLines(c: pg.ClientBase, lines: LinesPlan): Promise<Li
     [batchId, JSON.stringify({
       ...counts, inputs_hash: lines.inputsHash, document_sha256: lines.roadsSha256, file: lines.roadsFileName,
       source_code: lines.sourceCode, osm_base_timestamp: lines.osmBaseTimestamp, aliases_hash: lines.aliasesHash,
-      revision_id: revisionId, revision_label: lines.revisionLabel, parent_revision_id: base.id, parent_revision_label: base.label,
+      revision_id: revisionId, revision_label: revisionLabel, parent_revision_id: base.id, parent_revision_label: base.label,
       walk_graph_sha256: wg.sha256,
       // Review decisions that live in code (route-landmarks.ts, trace-context.ts), with their resolution.
       trace_rules: lines.traceRules,
@@ -253,7 +259,7 @@ export async function writeLines(c: pg.ClientBase, lines: LinesPlan): Promise<Li
       regional_without_distance: lines.regionalWithoutDistance,
     })],
   );
-  return { outcome: "committed", batchId, revisionId, revisionLabel: lines.revisionLabel, counts };
+  return { outcome: "committed", batchId, revisionId, revisionLabel, counts };
 }
 
 /** The OSMR-<date> source row (D2): inserted once; an existing row must be the same. */
@@ -313,8 +319,8 @@ async function checkLinesUnchanged(
 ): Promise<LinesOutcome> {
   if (last.counts.inputs_hash !== lines.inputsHash) {
     throw new ImportRefusedError(
-      `the road outputs' inputs differ from the committed batch ${last.id} (${last.snapshot_version}); a revised road ` +
-        "snapshot or seed is a new dated file. Nothing was written.",
+      `batch ${last.id} (${last.snapshot_version}) has the same key but another inputs hash (a hash-prefix collision); ` +
+        "nothing was written.",
     );
   }
   const pointer = await c.query<{ label: string }>(

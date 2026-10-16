@@ -224,7 +224,7 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     // The review decisions that live in code are recorded with the batch.
     const batch = await asImport(async (c) => (await c.query(
       `select counts->'trace_rules' as rules, counts->>'revision_label' as label from ingest.batch
-        where snapshot_version = 'modes-lines:2026-10-16:2026-10-16' and status = 'committed'`)).rows);
+        where snapshot_version like 'modes-lines:2026-10-16:2026-10-16:%' and status = 'committed'`)).rows);
     expect(batch).toHaveLength(1);
     expect(batch[0].label).toBe(LABEL);
     expect(batch[0].rules.landmarks.map((l: { item: string }) => l.item)).toContain("Naga–Pili boundary, Del Rosario");
@@ -380,5 +380,55 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
       }
     });
     expect(failure).toBe("23514");
+  });
+
+  // ---------------------------------------------------------------- follow-up imports (fix round 1)
+  // Last in the file: they publish newer revisions (afterAll restores the start revision).
+
+  it("a newer places snapshot with the same roads publishes a new modes-lines revision (not a refusal)", async () => {
+    const json = JSON.parse(osm!.bytes.toString("utf8"));
+    json.header.fetchedAt = "2099-01-03T00:00:00Z";
+    const places = { fileName: "naga-places-2099-01-03.osm.json", bytes: Buffer.from(`${JSON.stringify(json, null, 1)}\n`) };
+    const plan = buildImportPlan(files, places, seed, roads);
+    expect(plan.problems).toEqual([]);
+    const result = await commitImport(ownerUrl!, plan);
+    expect(result.places).toMatchObject({ outcome: "committed", revisionLabel: "osm-places-2099-01-03" });
+    expect(result.modes).toMatchObject({ outcome: "unchanged" });
+    expect(result.lines).toMatchObject({ outcome: "committed", revisionLabel: `${LABEL}.2` });
+    expect(await appRows(sql`select label from transit.v_published_revision`)).toEqual([{ label: `${LABEL}.2` }]);
+    // Same variants and road snapshot: the shapes are reused (same rows), carried into the new revision.
+    const id = (await revisionIdOf(`${LABEL}.2`))!;
+    const shapes = (list: Member[]) => list.filter((m) => m.entity_kind === "shape");
+    expect(shapes(await members(id))).toEqual(shapes(await members(linesRevisionId)));
+    const again = await commitImport(ownerUrl!, buildImportPlan(files, places, seed, roads));
+    expect(again.lines).toMatchObject({ outcome: "unchanged", revisionLabel: `${LABEL}.2` });
+  });
+
+  it("a newer modes seed that changes a feeder variant publishes: its shape follows the new variant version", async () => {
+    const json = JSON.parse(seed.bytes.toString("utf8"));
+    json.header.preparedOn = "2026-10-17";
+    const route = json.routes.find((r: { code: string }) => r.code === "TRI-DECALANGON");
+    route.variants[0].anchors[1] = { kind: "place_name", name: "Sitio Salunguigui" };
+    const seed2: ModesFile = { fileName: "naga-modes-seed-2026-10-17.json", bytes: Buffer.from(JSON.stringify(json, null, 1)) };
+    const plan = buildImportPlan(files, osm, seed2, roads);
+    expect(plan.problems).toEqual([]);
+    const result = await commitImport(ownerUrl!, plan);
+    expect(result.modes).toMatchObject({ outcome: "committed", revisionLabel: "modes-2026-10-17" });
+    expect(result.lines).toMatchObject({ outcome: "committed", revisionLabel: `${LABEL}.3` });
+    const id = (await revisionIdOf(`${LABEL}.3`))!;
+    const feeder = await asImport(async (c) => (await c.query(
+      `select vv.anchors->1->>'name' as anchor, sv.trace_status
+         from transit.revision_member vm
+         join transit.variant v on v.id = vm.entity_id
+         join transit.route r on r.id = v.route_id
+         join transit.variant_version vv on vv.id = vm.version_id
+         join transit.shape s on s.variant_id = v.id
+         join transit.revision_member sm on sm.revision_id = vm.revision_id and sm.entity_kind = 'shape' and sm.entity_id = s.id
+         join transit.shape_version sv on sv.id = sm.version_id and sv.variant_version_id = vm.version_id
+        where vm.revision_id = $1 and vm.entity_kind = 'variant' and r.public_code = 'TRI-DECALANGON'`, [id])).rows);
+    expect(feeder).toEqual([{ anchor: "Sitio Salunguigui", trace_status: "untraced" }]);
+    const response = await linesGET(new Request(`http://localhost/api/v1/network/lines/${id}`), ctx(id));
+    expect(response.status).toBe(200);
+    expect(linesSchema.parse(await response.json()).untraced).toHaveLength(3);
   });
 });

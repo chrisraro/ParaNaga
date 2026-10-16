@@ -31,8 +31,13 @@ describe("buildLinesPlan on the committed snapshot", () => {
     expect(plan.problems).toEqual([]);
     expect(lines).toMatchObject({
       roadsFileName: "naga-roads-2026-10-16.osm.json", sourceCode: "OSMR-2026-10-16",
-      snapshotVersion: "modes-lines:2026-10-16:2026-10-16", revisionLabel: "modes-lines-2026-10-16",
+      revisionLabel: "modes-lines-2026-10-16",
     });
+    // Keyed by every input: another places snapshot, Data_Sets or seed is a new batch, not a refusal.
+    expect(lines.snapshotVersion).toBe(`modes-lines:2026-10-16:2026-10-16:${lines.inputsHash.slice(0, 12)}`);
+    const otherPlaces = buildLinesPlan({ ...inputOf(plan), osmPlacesSha256: "0".repeat(64) });
+    expect(otherPlaces.snapshotVersion).not.toBe(lines.snapshotVersion);
+    expect(otherPlaces.revisionLabel).toBe(lines.revisionLabel);
   });
 
   it("traces every member variant: 18 drawn (R1–R8 and both trials), 3 feeders untraced (reported, not an abort)", () => {

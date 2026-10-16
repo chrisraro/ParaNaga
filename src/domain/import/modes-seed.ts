@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ETA_PARAM_KEYS } from "../eta/params";
 import { isInsideNaga } from "../geo/naga";
 import { zodMessage } from "./zod-message";
 
@@ -27,9 +28,7 @@ export const EVIDENCE_LEVELS = [
 ] as const;
 export const FLEET_STATUSES = ["planned", "reported", "reported_not_confirmed", "operating"] as const;
 export const TERMINAL_KINDS = ["terminal", "loading_point", "waiting_area", "station"] as const;
-export const ETA_PARAM_KEYS = [
-  "walk_speed_kmh", "walk_slowdown_factor", "jeepney_speed_offpeak_kmh", "jeepney_speed_peak_kmh", "peak_windows",
-] as const;
+export { ETA_PARAM_KEYS } from "../eta/params";
 
 /** J7: national PUJ rates effective 2026-09-28 [N17, N32]; the seed's F01/F02 must equal them. */
 export const NATIONAL_PUJ_RATES_2026_09_28 = {

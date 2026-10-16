@@ -1,6 +1,7 @@
 // The service worker allow-list (src/domain/pwa/sw-routes.ts): every allow-listed and denied
 // pattern of the Task 12 brief.
 import { describe, expect, it } from "vitest";
+import { LINES_FORMAT_VERSION } from "@/domain/api/lines-format";
 import {
   buildIdFromManifest,
   cacheName,
@@ -47,6 +48,13 @@ describe("classifyRequest: runtime data caches", () => {
     expect(classifyRequest(req(`/api/v1/network/snapshot/${REV}`))).toEqual({ kind: "cache-first", cache: "snapshot" });
     expect(classifyRequest(req(`/api/v1/network/search-index/${REV}`))).toEqual({ kind: "cache-first", cache: "search-index" });
     expect(classifyRequest(req("/api/v1/network/snapshot/not-a-uuid"))).toEqual({ kind: "network-only" });
+  });
+
+  it("caches a revision's approximate paths CacheFirst in a cache keyed by the lines format version", () => {
+    expect(classifyRequest(req(`/api/v1/network/lines/${REV}`))).toEqual({ kind: "cache-first", cache: "lines" });
+    expect(classifyRequest(req("/api/v1/network/lines/not-a-uuid"))).toEqual({ kind: "network-only" });
+    expect(cacheName("lines", "b1")).toBe(`pn-lines-f${LINES_FORMAT_VERSION}-b1`);
+    expect(outdatedCaches([cacheName("lines", "b1"), "pn-lines-f0-b1", "pn-lines-b1"], "b1")).toEqual(["pn-lines-f0-b1", "pn-lines-b1"]);
   });
 
   it("serves the published head NetworkFirst with a cached fallback", () => {

@@ -53,12 +53,16 @@ async function publicHandler<S extends z.ZodType>(request: Request, route: strin
   });
 }
 
-export type TextResult = { text: string; contentType: string; cacheControl: string; etag: string };
+/**
+ * Stored text served verbatim. `load` is called only when the client's copy is stale: a matching
+ * If-None-Match gets 304 from the stored etag alone, without reading or checking the body.
+ */
+export type TextResult = { etag: string; contentType: string; cacheControl: string; load: () => Promise<string> };
 
 /**
- * A public, read-only GET that serves stored text verbatim (e.g. the walk graph payload): the
- * caller validates it before returning. A strong ETag is sent; a matching If-None-Match gets 304.
- * Same request id, read-only transaction and error envelope as publicGet.
+ * A public, read-only GET that serves stored text verbatim (e.g. the walk graph payload): `load`
+ * reads and validates it. A strong ETag is sent; a matching If-None-Match gets 304 first.
+ * Same request id, read-only transaction(s) and error envelope as publicGet.
  */
 export function publicText(request: Request, route: string, run: (ctx: RunContext) => Promise<TextResult>): Promise<Response> {
   return handle(request, route, async (ctx) => {
@@ -69,7 +73,8 @@ export function publicText(request: Request, route: string, run: (ctx: RunContex
     if (match !== null && match.split(",").some((t) => t.trim().replace(/^W\//, "") === etag)) {
       return new Response(null, { status: 304, headers });
     }
-    return new Response(result.text, { headers: { ...headers, "Content-Type": result.contentType } });
+    const text = await result.load();
+    return new Response(text, { headers: { ...headers, "Content-Type": result.contentType } });
   });
 }
 

@@ -95,9 +95,12 @@ export type LinesPlan = {
   osmBaseTimestamp: string | null;
   /** ingest.source code of the road snapshot, OSMR-YYYY-MM-DD (D2). */
   sourceCode: string;
-  /** ingest.batch.snapshot_version: modes-lines:<roads date>:<modes seed date>. */
+  /**
+   * ingest.batch.snapshot_version: modes-lines:<roads date>:<modes seed date>:<first 12 hex of inputsHash>.
+   * Any input change (places snapshot, Data_Sets, seed, builders) is a new key, so a new revision.
+   */
   snapshotVersion: string;
-  /** modes-lines-<roads date>. */
+  /** modes-lines-<roads date>; the writer appends .2, .3 … when that label exists (same roads date, other inputs). */
   revisionLabel: string;
   /** sha256 over every input (road snapshot, modes seed, Data_Sets, places snapshot, builders). */
   inputsHash: string;
@@ -170,7 +173,7 @@ export function buildLinesPlan(input: LinesPlanInput): LinesPlan {
   const base = {
     roadsFileName: roads.fileName, roadsSha256: roads.sha256, roadsBytes: roads.bytes, roadsDate,
     osmBaseTimestamp: roads.roads?.header.osmBaseTimestamp ?? null, sourceCode,
-    snapshotVersion: `modes-lines:${roadsDate}:${modes.seedDate}`, revisionLabel: `modes-lines-${roadsDate}`,
+    snapshotVersion: `modes-lines:${roadsDate}:${modes.seedDate}:${inputsHash.slice(0, 12)}`, revisionLabel: `modes-lines-${roadsDate}`,
     inputsHash, aliasesHash,
   };
   const empty = {
