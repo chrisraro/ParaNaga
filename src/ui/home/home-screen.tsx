@@ -80,6 +80,7 @@ import {
   mapLayerPolicy,
   overviewLinesForTrip,
 } from "@/ui/map/map-layer-policy";
+import { routeFitPoints } from "@/ui/map/route-fit";
 import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
@@ -293,7 +294,8 @@ export function HomeScreen() {
     }
     setGpsIntent(false);
     setGpsStartAccuracy(fix.accuracy);
-    bumpRecenter();
+    // With a destination set the map fits the whole route instead (no zoom-in on the start).
+    if (!endpoints.destination) bumpRecenter();
   };
 
   // Announce loading, and each settled plan whose outcome changed (a refresh that returns the
@@ -534,7 +536,7 @@ export function HomeScreen() {
     if (!picking) {
       const row = returnFocusTo.current;
       returnFocusTo.current = null;
-      if (row) document.getElementById(endpointRowMainId(row))?.focus();
+      if (row) document.getElementById(endpointRowMainId(row))?.focus({ preventScroll: true });
       return undefined;
     }
     confirmRef.current?.focus();
@@ -583,6 +585,15 @@ export function HomeScreen() {
   const router = useRouter();
   const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
   const tripDetailOpen = ready && (openOption !== null || stored !== null);
+  // Both ends set and options ready, none open: fit the whole route (ends + the recommended
+  // option's stops) above the sheet. An open option fits through its own highlights instead.
+  const routeFitCoords = useMemo(() => {
+    if (!planData || planData.plan.coverage !== "provisional" || tripDetailOpen || guiding || picking) return null;
+    if (!endpoints.start || !endpoints.destination) return null;
+    const best = planData.plan.options[0];
+    const stops = best ? best.legs.flatMap((l) => (l.kind === "ride" ? l.stops.map((st) => ({ lat: st.lat, lng: st.lng })) : [])) : [];
+    return routeFitPoints(endpoints.start.point, endpoints.destination.point, stops);
+  }, [planData, tripDetailOpen, guiding, picking, endpoints.start, endpoints.destination]);
   const stopsInView = useStopsInView(viewBounds, !tripDetailOpen && !guiding);
   const markHomeNavigation = frame?.markHomeNavigation;
   const handleStopSelect = useCallback(
@@ -753,7 +764,10 @@ export function HomeScreen() {
       // Like a pinned point: a pending "use current location" no longer applies to this end.
       if (which === "start") setGpsIntent(false);
       if (wasGps) setGpsStartAccuracy(null);
-      bumpRecenter(endpoint.point, endpoint.label);
+      // Only a lone end is centred; with both ends set the map fits the whole route.
+      if (!endpoints[which === "start" ? "destination" : "start"]) bumpRecenter(endpoint.point, endpoint.label);
+      // After the search page closes, focus goes back to this end's row (see the pick effect).
+      if (covered) returnFocusTo.current = which;
     }
   });
   // "Open trip" on a saved trip card (loaded by useSavedTripReopen): restore both ends through the
@@ -774,7 +788,6 @@ export function HomeScreen() {
     setFocused(null);
     setOpenedId(null);
     if (sheet.snap === 0) sheet.setSnap(1);
-    bumpRecenter(card.start.point, card.start.label);
     announce(`Saved trip: ${card.start.label} to ${card.destination.label}.`);
   }
 
@@ -825,6 +838,9 @@ export function HomeScreen() {
           pins={pins}
           highlightStops={highlightStops}
           highlightPaddingBottom={Math.max(40, Math.round(sheet.visible) - MAP_BOTTOM_INSET + 40)}
+          refitSignal={sheet.snap}
+          fitBoundsCoords={routeFitCoords}
+          fitAnnouncement="Route shown"
           crosshair={picking !== null}
           onCenterChange={handleCenterChange}
           recenterSignal={recenterSignal}

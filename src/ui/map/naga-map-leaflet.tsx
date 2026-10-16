@@ -27,6 +27,7 @@ import {
 import type { Bounds, LatLng } from "@/domain/geo/types";
 import { mapSurface as computeMapSurface } from "@/domain/modes/palette";
 import { MapControls } from "./map-controls";
+import { ROUTE_FIT_MAX_ZOOM, routeFitKey, routeFitPadding } from "./route-fit";
 import { MapLegend } from "./map-legend";
 import { legendVisualKeys } from "./map-layer-policy";
 import { RouteLinesLayer, collectRouteLegendItems, linesHaveOnewayCaution } from "./route-lines-layer";
@@ -115,20 +116,29 @@ function FitHighlights({
   tripLines,
   fitBoundsCoords,
   paddingBottom,
+  refitSignal,
+  fitAnnouncement,
+  onAnnounce,
 }: {
   stops: readonly HighlightStop[] | undefined;
   pins: NagaMapPins | undefined;
   tripLines: TripLinesData | null | undefined;
   fitBoundsCoords: readonly LatLng[] | null | undefined;
   paddingBottom: number;
+  /** Changes when the sheet snaps: the fit is redone so the route stays above the sheet. */
+  refitSignal: number | undefined;
+  /** Announced once per new fit of `fitBoundsCoords` (none: silent). */
+  fitAnnouncement: string | undefined;
+  onAnnounce: (message: string) => void;
 }) {
   const map = useMap();
   const stopsKey = stops && stops.length > 0 ? stops.map((s) => s.id).join("|") : "";
   const linesKey = stopsKey && tripLines ? `${tripLines.walkSegments.length}:${tripLines.rideSegments.map((r) => r.key).join(",")}` : "";
-  const coordsKey = fitBoundsCoords && fitBoundsCoords.length >= 2
-    ? `${fitBoundsCoords.length}:${fitBoundsCoords[0]!.lat.toFixed(5)},${fitBoundsCoords[0]!.lng.toFixed(5)}:${fitBoundsCoords[fitBoundsCoords.length - 1]!.lat.toFixed(5)}`
-    : "";
-  const key = [stopsKey, linesKey, coordsKey].filter(Boolean).join("#");
+  const coordsKey = fitBoundsCoords ? routeFitKey(fitBoundsCoords) : "";
+  const fitKey = [stopsKey, linesKey, coordsKey].filter(Boolean).join("#");
+  // A snap change re-fits; a pan, zoom or GPS fix never does (the rider's view wins until the route changes).
+  const key = fitKey ? `${fitKey}@${refitSignal ?? ""}` : "";
+  const announcedKey = useRef("");
 
   const fit = useEffectEvent(() => {
     const points: L.LatLngTuple[] = [];
@@ -143,14 +153,21 @@ function FitHighlights({
       for (const c of fitBoundsCoords) points.push([c.lat, c.lng]);
     }
     if (points.length === 0) return;
+    // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
+    // locate controls (48 px wide, 16 px from the edge): 64 + 13 + a gap.
+    const pad = routeFitPadding(paddingBottom, map.getSize().y);
     map.fitBounds(L.latLngBounds(points), {
-      paddingTopLeft: [40, 80],
-      // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
-      // locate controls (48 px wide, 16 px from the edge): 64 + 13 + a gap.
-      paddingBottomRight: [84, paddingBottom],
-      maxZoom: 17,
+      paddingTopLeft: [pad.left, pad.top],
+      paddingBottomRight: [pad.right, pad.bottom],
+      maxZoom: ROUTE_FIT_MAX_ZOOM,
       animate: !prefersReducedMotion(),
     });
+    // One short announcement per new route fit (not for a snap re-fit, not for a trip detail
+    // fit, which has its own announcement).
+    if (fitAnnouncement && !(stops && stops.length > 0) && coordsKey && announcedKey.current !== coordsKey) {
+      announcedKey.current = coordsKey;
+      onAnnounce(fitAnnouncement);
+    }
   });
   useEffect(() => {
     if (key) fit();
@@ -250,6 +267,8 @@ export default function NagaMapLeaflet({
   pins,
   highlightStops,
   highlightPaddingBottom = 40,
+  refitSignal,
+  fitAnnouncement,
   stopPins,
   stopPinsInteractive = true,
   onStopSelect,
@@ -440,6 +459,9 @@ export default function NagaMapLeaflet({
           tripLines={fitTripLines ? tripLines : null}
           fitBoundsCoords={fitBoundsCoords}
           paddingBottom={highlightPaddingBottom}
+          refitSignal={refitSignal}
+          fitAnnouncement={fitAnnouncement}
+          onAnnounce={setAnnouncement}
         />
         <MapViewSync
           recenterSignal={recenterSignal}

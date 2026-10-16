@@ -25,6 +25,10 @@ export type NagaMapProps = {
   highlightStops?: readonly HighlightStop[];
   /** Bottom padding (px) when fitting highlighted stops, e.g. the part of the map under a sheet. */
   highlightPaddingBottom?: number;
+  /** Change (e.g. the sheet's snap) to re-fit the current highlights / route into the visible map. */
+  refitSignal?: number;
+  /** Announced once each time `fitBoundsCoords` is fitted anew (a snap re-fit stays silent). */
+  fitAnnouncement?: string;
   /** Mapped stop pins to draw (one canvas layer). */
   stopPins?: readonly StopPin[];
   /** Whether tapping a stop pin selects it (false while placing a pin). */

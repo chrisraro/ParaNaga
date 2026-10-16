@@ -98,15 +98,17 @@ test("search sets the start and the destination; the map announces, recentres an
   await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
   await expect(page).toHaveURL(/\/app$/);
 
-  // The HomeScreen consumer of requestEndpoint: row label and the recentre on the new
-  // destination (the announcement is asserted in the next test, where no plan follows it).
+  // Focus returns to the row that was set, and the home screen did not scroll.
+  await expect(rowMain(page, "destination")).toBeFocused();
+  expect(await page.evaluate(() => document.querySelector(".pn-home")?.scrollTop ?? 0)).toBe(0);
+  // The HomeScreen consumer of requestEndpoint: row label. With both ends set the map no longer
+  // flies to (zooms in on) the destination; it fits the route instead.
   await expect(rowMain(page, "destination")).toContainText("SM City Naga");
-  await expect
-    .poll(async () => {
-      const c = await readCenter(page);
-      return Math.abs(c.lat - SM.lat) < 0.0005 && Math.abs(c.lng - SM.lng) < 0.0005;
-    })
-    .toBe(true);
+  await expect(page.getByText(/Map centered on SM City/)).toHaveCount(0);
+  await expect.poll(() => plans.length).toBe(1);
+  await page.waitForTimeout(1200); // a fly-to would have landed by now
+  const end = await readCenter(page);
+  expect(Math.abs(end.lat - SM.lat) < 0.0005 && Math.abs(end.lng - SM.lng) < 0.0005).toBe(false);
   await expect.poll(() => plans.length).toBe(1);
   expect(plans[0]).toMatchObject({
     origin: { lat: STOP_A1.stop.lat, lng: STOP_A1.stop.lng },

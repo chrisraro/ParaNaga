@@ -108,6 +108,34 @@ test("trip options show the unverified badge, estimate chips and honest time est
   expect(last.body).toMatchObject({ origin: { lat: expect.any(Number), lng: expect.any(Number) }, destination: { lat: expect.any(Number), lng: expect.any(Number) } });
 });
 
+test("setting both ends fits the whole route above the sheet instead of zooming in", async ({ page }) => {
+  await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-options")).toBeVisible();
+
+  const box = (await mapEl(page).boundingBox())!;
+  const pins = page.locator(".pn-marker");
+  await expect(pins).toHaveCount(2);
+  // The fit animates (0.8 s): wait until both pins settle inside the area above the sheet.
+  await expect
+    .poll(async () => {
+      const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+      for (const pin of await pins.all()) {
+        const b = await pin.boundingBox();
+        if (!b || b.x < box.x || b.x + b.width > box.x + box.width || b.y < box.y || b.y + b.height > sheetTop) return false;
+      }
+      return true;
+    }, { timeout: 10_000 })
+    .toBe(true);
+  const zoom = Number(await mapEl(page).getAttribute("data-zoom"));
+  expect(zoom).toBeLessThanOrEqual(17);
+  expect(zoom).toBeLessThan(16); // a locate-style zoom-in on one end would be >= 16
+  // Concise, and never "Map centered on ..." when fitting a route.
+  await expect(page.getByTestId("naga-map").locator("p.sr-only")).toHaveText("Route shown");
+  await expect(page.getByText(/Map centered on/)).toHaveCount(0);
+});
+
 test("trip detail lists the legs, highlights stops as markers above the trip lines", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
