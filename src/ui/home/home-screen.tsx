@@ -64,6 +64,7 @@ import { NearbyStops } from "./nearby-stops";
 import { homeGuidanceActions, useHomeGuidance } from "./use-home-guidance";
 import { useSavedTripReopen } from "./use-saved-trip-reopen";
 import { useWalkGraph } from "@/client/network/use-walk-graph";
+import { rideEnds } from "@/domain/trip/ride-ends";
 import { enrichOptionWalks } from "@/domain/trip/enrich";
 import { useLines } from "@/client/network/use-lines";
 import { useSnapshot } from "@/client/network/use-snapshot";
@@ -100,14 +101,15 @@ function nextFocus(state: EndpointsState, which: EndpointWhich): EndpointWhich |
 }
 
 /** Boarding and getting-off stops of an option's ride legs, for the map (markers only). */
-function highlightsFor(data: PlanResponse, optionId: string): HighlightStop[] {
+export function highlightsFor(data: PlanResponse, optionId: string): HighlightStop[] {
   const option = data.plan.options.find((o) => o.id === optionId);
   if (!option) return [];
   const lookups = planLookups(data);
   return option.legs.flatMap((leg) => {
     if (leg.kind !== "ride") return [];
-    const board = leg.stops[0]!;
-    const alight = leg.stops[leg.stops.length - 1]!;
+    const ends = rideEnds(leg);
+    if (!ends) return [];
+    const { board, alight } = ends;
     return [
       { id: board.id, lat: board.lat, lng: board.lng, role: "board" as const, label: lookups.stopName(board.id, board.name) },
       { id: alight.id, lat: alight.lat, lng: alight.lng, role: "alight" as const, label: lookups.stopName(alight.id, alight.name) },

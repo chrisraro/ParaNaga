@@ -26,9 +26,17 @@ async function load(db: Db, revisionId: string): Promise<PlanNetwork> {
   let streets: WalkGraph | null = null;
   const meta = await getWalkGraphMeta(db, revisionId);
   if (meta.status === "ok") {
+    // A published street graph that cannot be read is never replaced by "no graph": the plan route answers 503.
     const payload = await getWalkGraphPayload(db, revisionId, meta.versionId);
-    const parsed = payload === null ? null : parseWalkGraph(JSON.parse(payload));
-    if (parsed?.ok) streets = parsed.graph;
+    let raw: unknown = null;
+    try {
+      raw = payload === null ? null : JSON.parse(payload);
+    } catch {
+      raw = null;
+    }
+    const parsed = raw === null ? null : parseWalkGraph(raw);
+    if (!parsed?.ok) throw new NetworkIncomplete("The published street graph could not be read.");
+    streets = parsed.graph;
   }
   return { lines, streets };
 }

@@ -51,6 +51,7 @@ export const GUIDANCE_COPY = {
   locationApproximate: (accuracy: number) => `Your location is approximate (± ${Math.round(accuracy)} m), so distance and direction are hidden.`,
   locationStale: "Your location hasn't updated recently, so distance and direction are hidden.",
   locationImprecise: "Your location isn't precise enough, so distance and direction are hidden.",
+  noMarkedStops: "This route has no marked stops. Watch for your stop, and tell the driver “para” when you are near.",
   stopsByPinOrder: "Stops are counted by pin order on a provisional route, and jeepneys may stop elsewhere. Watch for your stop too.",
   paraTitle: "Para! Next stop is yours",
   paraBody: (stop: string) => `Get off at ${stop}. Say “Para” to the driver when you see it.`,
@@ -334,10 +335,12 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
     badge: UNVERIFIED_ROUTE_BADGE,
     boardedText: `${step.board.label} · boarded`,
     alightText: `Get off · ${alight}`,
-    countText: gps
+    countText: !step.pinned
+      ? `Ride along the approximate path to ${alight}`
+      : gps
       ? `${ride.passedIndex} of ${stopsCount(step.stopsToRide)} passed, by pin order`
       : `${stopsCount(step.stopsToRide)} after ${step.board.label}, by pin order`,
-    countNote: GUIDANCE_COPY.stopsByPinOrder,
+    countNote: step.pinned ? GUIDANCE_COPY.stopsByPinOrder : GUIDANCE_COPY.noMarkedStops,
     remainingTime,
     stops: step.stops.map((s: StopRef, i) => ({
       label: s.label,
@@ -365,7 +368,7 @@ function arriveView(session: GuidanceSession, steps: GuidanceStep[]): ArriveView
     body: GUIDANCE_COPY.arrivedBody(named),
     summary: {
       walkText: `${formatDistance(option.walkEstimateMeters)} walk · estimate`,
-      rides: steps.flatMap((s) => (s.kind === "ride" ? [{ chip: s.ride.routeChip, stopsText: stopsCount(s.stopsToRide) }] : [])),
+      rides: steps.flatMap((s) => (s.kind === "ride" ? [{ chip: s.ride.routeChip, stopsText: s.pinned ? stopsCount(s.stopsToRide) : "along the path" }] : [])),
       fareText: fareChipText(option.fare),
     },
     actions: [{ event: "end", label: GUIDANCE_COPY.done, kind: "primary" }],

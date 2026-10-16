@@ -16,6 +16,7 @@ import type { NetworkSnapshot } from "../api/schemas";
 import type { LatLng } from "../geo/types";
 import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
+import { rideEnds } from "../trip/ride-ends";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel, stopLabel } from "../trip/present";
 import type { EtaModel } from "../api/schemas";
 import { estimateOption } from "../eta/eta";
@@ -276,6 +277,7 @@ export function revalidateSavedTrip(card: SavedTrip, snapshot: Pick<NetworkSnaps
   if (!optionStopIds(card.option).every((id) => stopIds.has(id))) return "changed";
   const variants = new Map(snapshot.variants.map((v) => [v.variantId, v]));
   for (const leg of rideLegs(card.option)) {
+    if (leg.stops.length === 0) continue; // a route without pins: the re-plan compares variant and board/alight (sameRides)
     const variant = variants.get(leg.variantId);
     if (!variant) return "changed";
     if (!isConsecutiveRun(variant.stopIds, leg.stops.map((s) => s.id), variant.isCircular)) return "changed";
@@ -289,7 +291,12 @@ function sameRides(a: PlanOptionDto, b: PlanOptionDto): boolean {
   if (ra.length !== rb.length) return false;
   return ra.every((leg, i) => {
     const other = rb[i]!;
-    return leg.variantId === other.variantId && leg.stops.length === other.stops.length && leg.stops.every((s, k) => s.id === other.stops[k]!.id);
+    // Same variant and the same board/alight (50 m); a format-1 leg (no measures) compares stops, as before.
+    if (leg.variantId !== other.variantId) return false;
+    if (leg.boardMeasureM !== null && other.boardMeasureM !== null && leg.alightMeasureM !== null && other.alightMeasureM !== null) {
+      return Math.abs(leg.boardMeasureM - other.boardMeasureM) <= 50 && Math.abs(leg.alightMeasureM - other.alightMeasureM) <= 50;
+    }
+    return leg.stops.length === other.stops.length && leg.stops.every((s, k) => s.id === other.stops[k]!.id);
   });
 }
 
@@ -340,12 +347,13 @@ export function shareText(
       continue;
     }
     if (leg.kind !== "ride") continue; // tricycle and padyak share text: Task 9
-    const board = leg.stops[0]!;
-    const alight = leg.stops[leg.stops.length - 1]!;
+    const ends = rideEnds(leg);
+    if (!ends) continue;
+    const { board, alight } = ends;
     const dir = directionText(direction(leg.variantId), "long");
-    const count = leg.stops.length - 1;
+    const count = ends.stops.length - 1;
     steps.push(`Board ${routeChipLabel(leg.routeCode, leg.routeName)} at ${name(board.id, board.name)}${dir ? `, direction ${dir}` : ""}`);
-    steps.push(`Ride ${count} ${count === 1 ? "stop" : "stops"}, get off at ${name(alight.id, alight.name)}. Say "Para!" to the driver.`);
+    steps.push(`${ends.pinned ? `Ride ${count} ${count === 1 ? "stop" : "stops"}, get off` : "Ride along the approximate path, get off"} at ${name(alight.id, alight.name)}. Say "Para!" to the driver.`);
   }
   lines.push(...steps.map((s, i) => `${i + 1}. ${s}`));
   lines.push(`Fare: ${option.rides > 0 ? legFareText(option.fare) : fareChipText(option.fare)}`);

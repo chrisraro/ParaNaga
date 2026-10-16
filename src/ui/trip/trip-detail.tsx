@@ -25,6 +25,7 @@ import type { EtaModel } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
 import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
 import { formatLeg } from "@/domain/eta/format";
+import { rideEnds } from "@/domain/trip/ride-ends";
 import { WALK_LOADING_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { LineNotesView } from "@/ui/map/line-notes-view";
 import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
@@ -147,13 +148,14 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
 }
 
 function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: RideTrace, estimate?: EtaEstimate | null): Step[] {
-  const board = leg.stops[0]!;
-  const alight = leg.stops[leg.stops.length - 1]!;
+  const ends = rideEnds(leg);
+  if (!ends) return [];
+  const { board, alight } = ends;
   const boardName = lookups.stopName(board.id, board.name);
   const alightName = lookups.stopName(alight.id, alight.name);
   const route = routeChipLabel(leg.routeCode, leg.routeName);
   const dir = directionText(lookups.direction(leg.variantId), "long");
-  const count = leg.stops.length - 1;
+  const count = ends.pinned ? ends.stops.length - 1 : null;
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
   const etaLeg = estimate?.legs[i];
   const fleet = leg.fleet;
@@ -189,7 +191,7 @@ function rideSteps(leg: RideLegDto, i: number, lookups: PlanLookups, trace: Ride
             <LoopChip leg={leg} />
           </div>
           <p className="pn-tl__sub">
-            Ride {count} {count === 1 ? "stop" : "stops"} · {distanceBasisText(leg.distanceMeters, leg.distanceBasis)}
+            {count === null ? "Ride along the approximate path" : `Ride ${count} ${count === 1 ? "stop" : "stops"}`} · {distanceBasisText(leg.distanceMeters, leg.distanceBasis)}
           </p>
           {etaLeg ? <LegTime leg={etaLeg} basis={leg.distanceBasis === "approximate_path" ? "along the approximate path" : "stop to stop (straight line)"} /> : null}
           <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">

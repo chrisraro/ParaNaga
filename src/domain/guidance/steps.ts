@@ -11,6 +11,7 @@
 // leg (`legIndex`), so view.ts can estimate the time left from the snapshot's model (Task 14).
 import type { PlanOptionDto, RideLegDto, WalkLegDto } from "../api/plan";
 import type { EtaModel } from "../api/schemas";
+import { rideEnds } from "../trip/ride-ends";
 import { isNegligibleWalk, routeChipLabel, stopLabel, type LoopDirection } from "../trip/present";
 
 /** What a guidance session is built from: the option plus the plan's stop codes and loop directions. */
@@ -42,6 +43,8 @@ export type RideStep = {
   stops: StopRef[];
   board: StopRef;
   alight: StopRef;
+  /** False when the route has no marked stops: `stops` is just the free board and alight points. */
+  pinned: boolean;
   /** Stops after boarding up to and including the alighting stop, by pin order. */
   stopsToRide: number;
   distanceMeters: number;
@@ -104,7 +107,9 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
       continue;
     }
     if (leg.kind !== "ride") continue; // tricycle and padyak steps: Task 9
-    const stops = leg.stops.map(stopRef);
+    const ends = rideEnds(leg);
+    if (!ends) continue;
+    const stops = ends.stops.map(stopRef);
     const board = stops[0]!;
     const alight = stops.at(-1)!;
     const ride = rideRef(leg);
@@ -121,11 +126,14 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
       board,
       alight,
       stopsToRide: stops.length - 1,
+      pinned: ends.pinned,
       distanceMeters: leg.distanceMeters,
       legIndex,
       mode: leg.mode ?? "jeepney",
       distanceBasis: leg.distanceBasis ?? "stop_to_stop_straight_line",
-      stopMeasuresM: leg.stopMeasuresM?.length === stops.length ? leg.stopMeasuresM : null,
+      stopMeasuresM: ends.pinned
+        ? (leg.stopMeasuresM?.length === stops.length ? leg.stopMeasuresM : null)
+        : leg.boardMeasureM === null ? null : [leg.boardMeasureM, leg.boardMeasureM + leg.distanceMeters],
     });
     pendingWalk = null;
     lastAlight = alight;
