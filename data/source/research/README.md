@@ -59,7 +59,7 @@ Record sections added with these families:
 `pnpm db:import --dry-run` parses this file, checks it against the pinned road snapshot (it aborts
 on any problem, for example a missing time-estimate parameter) and prints the counts of what would
 be written; `--commit` writes everything in one transaction and publishes the revision
-`modes-lines-<road snapshot date>`, carrying the earlier transit data forward. Excluded records are
+`anywhere-alight-<road snapshot date>`, carrying the earlier transit data forward. Excluded records are
 reported with their reason and never written. The records land in the tables of migrations 0006 to
 0009 (`docs/spec/04-data-model.md`, "Modes, approximate paths and estimate records").
 

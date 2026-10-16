@@ -180,7 +180,7 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       "public, s-maxage=31536000, immutable",
     );
     const index = searchIndexSchema.parse(JSON.parse(raw));
-    expect(index.revision).toMatchObject({ revisionId, label: "modes-lines-2026-10-16", kind: "provisional" });
+    expect(index.revision).toMatchObject({ revisionId, label: "anywhere-alight-2026-10-16", kind: "provisional" });
     expect(index.barangays).toHaveLength(27);
     expect(index.studyLabels).toHaveLength(32);
     expect(index.terminals).toHaveLength(16);

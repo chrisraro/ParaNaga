@@ -10,7 +10,10 @@
 //       Rows are inserted only where the content is new (content hash); released rows are never
 //       updated. Then transit.publish_revision.
 //   - committed batch with the same file hash -> "unchanged", nothing written;
-//   - same date with another file, or older than a committed seed -> refused.
+//   - same date with another file (the reviewed seed was edited in place, e.g. Increment E added road
+//       rules, padyak areas and route notes) -> a new batch under the key modes-seed:<date>:<sha12> and
+//       a revision labelled modes-<date>.<n>;
+//   - older than a committed seed -> refused.
 // A synthetic seed (header.synthetic) is written with every row flagged is_synthetic (its X-coded
 // sources are not written) and handed to transit.publish_revision, which refuses it; the caller
 // rolls the whole transaction back.
@@ -51,7 +54,7 @@ type Member = { entity_kind: string; entity_id: string; version_id: string };
 export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<ModesOutcome> {
   const synthetic = modes.synthetic;
   // A synthetic run never commits; its own batch key keeps it apart from a real batch of the same date.
-  const snapshotVersion = synthetic ? `${modes.snapshotVersion}:synthetic` : modes.snapshotVersion;
+  let snapshotVersion = synthetic ? `${modes.snapshotVersion}:synthetic` : modes.snapshotVersion;
   await c.query("select pg_advisory_xact_lock(hashtext($1))", [modes.snapshotVersion]);
 
   if (!synthetic) {
@@ -60,12 +63,15 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
         where mode = 'commit' and status = 'committed' and split_part(snapshot_version, ':', 1) = 'modes-seed'
         order by split_part(snapshot_version, ':', 2) desc, finished_at desc nulls last`,
     );
-    const same = prior.rows.find((b) => b.snapshot_version === snapshotVersion);
+    const dateOf = (v: string) => v.split(":")[1] ?? "";
+    const sameDate = prior.rows.filter((b) => dateOf(b.snapshot_version) === modes.seedDate);
+    const same = sameDate.find((b) => b.counts.document_sha256 === modes.sha256);
     if (same) return checkModesUnchanged(c, modes, same);
-    const newer = prior.rows.find((b) => b.snapshot_version > snapshotVersion);
+    const newer = prior.rows.find((b) => dateOf(b.snapshot_version) > modes.seedDate);
     if (newer) {
       throw new ImportRefusedError(`modes seed ${modes.fileName} is older than the committed ${newer.snapshot_version}; nothing written`);
     }
+    if (sameDate.length > 0) snapshotVersion = `${modes.snapshotVersion}:${modes.sha256.slice(0, 12)}`;
   }
 
   // The base must stay the published revision until our publish: take publish_revision's own
@@ -295,10 +301,14 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
 
   // ---------------------------------------------------------------- revision: carry forward + seed members
   const revisionId = randomUUID();
+  // Revision labels are unique: a revised seed of the same date gets .2, .3 …
+  const taken = await c.query<{ n: number }>(
+    `select count(*)::int as n from transit.revision where label = $1 or label like $1 || '.%'`, [modes.revisionLabel]);
+  const revisionLabel = taken.rows[0]!.n === 0 ? modes.revisionLabel : `${modes.revisionLabel}.${taken.rows[0]!.n + 1}`;
   await c.query(
     `insert into transit.revision (id, label, kind, status, created_by, parent_revision_id, content_hash, is_synthetic)
      values ($1, $2, $3, 'draft', $4, $5, $6, $7)`,
-    [revisionId, modes.revisionLabel, base.kind, IMPORT_ACTOR, base.id, modes.sha256, synthetic],
+    [revisionId, revisionLabel, base.kind, IMPORT_ACTOR, base.id, modes.sha256, synthetic],
   );
   const same = (kind: string, ids: string[]): Member[] => ids.map((id) => ({ entity_kind: kind, entity_id: id, version_id: id }));
   const added: Member[] = [
@@ -337,10 +347,10 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
     `update ingest.batch set status = 'committed', finished_at = now(), counts = $2::jsonb where id = $1`,
     [batchId, JSON.stringify({
       ...counts, document_sha256: modes.sha256, file: modes.fileName, revision_id: revisionId,
-      revision_label: modes.revisionLabel, parent_revision_id: base.id, parent_revision_label: base.label,
+      revision_label: revisionLabel, parent_revision_id: base.id, parent_revision_label: base.label,
     })],
   );
-  return { outcome: "committed", batchId, revisionId, revisionLabel: modes.revisionLabel, counts };
+  return { outcome: "committed", batchId, revisionId, revisionLabel, counts };
 }
 
 /**

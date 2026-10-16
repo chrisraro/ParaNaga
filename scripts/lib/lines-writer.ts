@@ -3,15 +3,16 @@
 // pg_advisory_xact_lock(hashtext(<lines snapshot_version>)).
 //
 //   - no committed batch for this road snapshot + modes seed -> a new draft revision
-//       `modes-lines-<roads date>` that carries the published revision forward
-//       (carryForwardRevision): every member is copied by id except the shapes, the walk graph and
-//       the time-estimate parameters (replaced as a whole) and the regional services that get a
+//       `anywhere-alight-<roads date>` that carries the published revision forward
+//       (carryForwardRevision): every member is copied by id except the shapes, the street graph
+//       (format v2), the time-estimate parameters and the route notes (replaced as a whole) and the
+//       regional services that get a
 //       distance (a new version: the seed row plus the D5 distance). Stop, route and variant ids
 //       are unchanged, so saved trips stay valid. Rows are inserted only where the content is new
 //       (content hash); released rows are never updated. Then transit.publish_revision.
 //   - committed batch with the same key (roads date, seed date and inputs hash) -> "unchanged";
 //   - the same roads date with other inputs (a new places snapshot, Data_Sets, seed or builder) -> a new
-//       revision labelled modes-lines-<roads date>.<n>;
+//       revision labelled anywhere-alight-<roads date>.<n>;
 //   - a road snapshot older than a committed one -> refused.
 // Every member variant of the published revision must have a planned trace of exactly its member
 // version (content hash), and every planned trace a member variant: otherwise refused (the paths
@@ -22,7 +23,7 @@ import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import type { LinesPlan, PlannedTrace } from "./lines-plan";
 import { carryForwardRevision } from "./modes-writer";
-import { IMPORT_ACTOR, ImportRefusedError, insertRows, numberArray, publishedIncludes, textArrayNotNull, type Row } from "./sql-rows";
+import { IMPORT_ACTOR, ImportRefusedError, insertRows, numberArray, point, publishedIncludes, textArrayNotNull, type Row } from "./sql-rows";
 
 export type LinesOutcome =
   | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
@@ -37,7 +38,7 @@ export type LinesOutcome =
     };
 
 /** Member kinds whose whole set comes from the road stage (replaced, never carried). */
-export const LINES_OWNED_KINDS = ["shape", "walk_graph", "eta_param"] as const;
+export const LINES_OWNED_KINDS = ["shape", "walk_graph", "eta_param", "route_note"] as const;
 
 const OSMR_TITLE = "OpenStreetMap road network snapshot for Naga City (highways, OSM relation 3084673 + 300 m)";
 const OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright";
@@ -190,6 +191,25 @@ export async function writeLines(c: pg.ClientBase, lines: LinesPlan): Promise<Li
       ["assumption_note", "text"], ["basis", "text"], ["source_codes", "jsonb", textArrayNotNull("source_codes")],
       ["content_hash", "text"]]);
 
+  // ---------------------------------------------------------------- route notes (E-J7): every note's route must be a member
+  const memberRoutes = await c.query<{ id: string; public_code: string }>(
+    `select t.id, t.public_code from transit.revision_member m join transit.route t on t.id = m.entity_id
+      where m.revision_id = $1 and m.entity_kind = 'route'`, [base.id]);
+  const routeIdByCode = new Map(memberRoutes.rows.map((r) => [r.public_code, r.id]));
+  const noteItems = lines.routeNotes.map((n) => {
+    const owner = routeIdByCode.get(n.routeCode);
+    if (!owner) throw new ImportRefusedError(`route note ${n.noteCode}: route ${n.routeCode} is not in the published revision; nothing written`);
+    return { owner, hash: n.contentHash, row: n };
+  });
+  const noteVersions = await reuseOrPlan(c, "transit.route_note", "route_id", noteItems);
+  counts.route_notes_inserted = await insertRows(c, "transit.route_note",
+    noteVersions.filter((n) => n.isNew).map(({ id, owner, row: n }) => ({
+      id, route_id: owner, note_code: n.noteCode, text: n.text, evidence: n.evidence, near_radius_m: n.nearRadiusM,
+      source_codes: n.sourceCodes, content_hash: n.contentHash, lon: n.nearLng, lat: n.nearLat,
+    })), [["id", "uuid"], ["route_id", "uuid"], ["note_code", "text"], ["text", "text"], ["evidence", "text"],
+      ["near_radius_m", "integer"], ["source_codes", "jsonb", textArrayNotNull("source_codes")], ["content_hash", "text"]],
+    { inputs: [["lon", "float8"], ["lat", "float8"]], computed: [["near_geog", point("lon", "lat")]] });
+
   // ---------------------------------------------------------------- regional services: distance versions
   const services = await c.query<{ id: string; code: string }>(
     `select s.id, s.code from transit.revision_member m join transit.regional_service s on s.id = m.entity_id
@@ -227,6 +247,7 @@ export async function writeLines(c: pg.ClientBase, lines: LinesPlan): Promise<Li
     ...shapeVersions.map((s) => ({ entity_kind: "shape", entity_id: s.owner, version_id: s.id })),
     ...graphVersions.map((g) => ({ entity_kind: "walk_graph", entity_id: g.owner, version_id: g.id })),
     ...paramVersions.map((p) => ({ entity_kind: "eta_param", entity_id: p.owner, version_id: p.id })),
+    ...noteVersions.map((n) => ({ entity_kind: "route_note", entity_id: n.id, version_id: n.id })),
     ...distanceVersions.map((d) => ({ entity_kind: "regional_service", entity_id: d.owner, version_id: d.id })),
   ];
   const carried = await carryForwardRevision(c, base.id, revisionId, {

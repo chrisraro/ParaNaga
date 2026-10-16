@@ -286,6 +286,19 @@ export const snapshotTerminalSchema = z
   });
 export type SnapshotTerminal = z.infer<typeof snapshotTerminalSchema>;
 
+/**
+ * A reviewed note on a route (E-J7, <= 120 characters). With `near` it shows when the board or alight
+ * point (or the destination) is within radiusM of it; without, in route and ride detail only.
+ * Evidence is the research's own level; owner reports are never presented as verified.
+ */
+export const routeNoteSchema = z.object({
+  text: z.string().min(1).max(120),
+  evidence: z.enum(["official", "news", "community", "owner_report_unverified"]),
+  sourceCodes: z.array(z.string()).min(1),
+  near: z.object({ lat: latitude, lng: longitude, radiusM: z.number().int().min(50).max(2000) }).nullable(),
+});
+export type RouteNote = z.infer<typeof routeNoteSchema>;
+
 export const networkSnapshotSchema = z.object({
   revision: revisionMetaSchema,
   stops: z.array(stopSummarySchema),
@@ -310,6 +323,8 @@ export const networkSnapshotSchema = z.object({
       fleet: fleetSummarySchema.default(unconfirmedFleet),
       /** Rider fare reports for this route (mixed-fleet fare maximum, fares.ts); [] for older snapshots. */
       fareReports: z.array(routeFareReportSchema).default(() => []),
+      /** Reviewed route notes (E-J7); [] for older snapshots. */
+      notes: z.array(routeNoteSchema).default(() => []),
     }),
   ).default(() => []),
   /** The time-estimate parameters (D8/D9), or null for a revision published without them. */
@@ -518,6 +533,8 @@ export const routeDetailSchema = z.object({
   }),
   variants: z.array(routeVariantSchema),
   trials: z.array(routeVariantSchema),
+  /** Reviewed route notes (E-J7); [] for older revisions. */
+  notes: z.array(routeNoteSchema).default(() => []),
   /** Legacy and local names (historical ones flagged). */
   aliases: z.array(routeAliasSchema),
   /** Cooperative NAMES on this corridor (C8), with source and date: never chair names or addresses. */

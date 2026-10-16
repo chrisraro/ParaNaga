@@ -1,5 +1,6 @@
 // Road outputs import (Increment D, Task 7: migration 0007 + views 0009, approximate paths, walk
-// graph, time-estimate parameters, regional distances) and the lines / walk-graph endpoints,
+// graph, time-estimate parameters, regional distances; Increment E, Task 4: migration 0010, street
+// graph v2, route notes) and the lines / walk-graph endpoints,
 // against a throwaway Neon branch:
 //   bash scripts/with-neon-branch.sh pnpm test:integration
 // Named so it runs after import-modes-seed (which needs to commit the modes seed itself). The start
@@ -36,13 +37,15 @@ const ownerUrl = process.env.TEST_OWNER_DATABASE_URL;
 const appUrl = process.env.TEST_APP_DATABASE_URL;
 const runtimeUrl = process.env.PARANAGA_DATABASE_URL;
 
-const LABEL = "modes-lines-2026-10-16";
+const LABEL = "anywhere-alight-2026-10-16";
+/** The Increment D road revision a database that already holds the earlier import still has (graph format v1). */
+const OLD_LABEL = "modes-lines-2026-10-16";
 const TABLES = [
   "ingest.source", "ingest.source_document", "ingest.batch", "transit.revision", "transit.revision_member",
   "transit.shape", "transit.shape_version", "transit.walk_graph", "transit.walk_graph_version", "transit.eta_param",
-  "transit.eta_param_version", "transit.regional_service_version",
+  "transit.eta_param_version", "transit.regional_service_version", "transit.route_note",
 ];
-const ROAD_KINDS = ["shape", "walk_graph", "eta_param", "regional_service"];
+const ROAD_KINDS = ["shape", "walk_graph", "eta_param", "regional_service", "route_note"];
 const IMMUTABLE = "public, s-maxage=31536000, immutable";
 
 type Member = { entity_kind: string; entity_id: string; version_id: string };
@@ -120,8 +123,9 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     // Transit, places and the modes seed (no road snapshot): "unchanged" where already imported.
     const base = buildImportPlan(files, osm, seed);
     expect(base.problems).toEqual([]);
-    await commitImport(ownerUrl!, base);
-    startRevisionId = (await revisionIdOf(base.modes!.revisionLabel))!;
+    // A database that holds the earlier seed of this date gets the revised seed as modes-<date>.2.
+    const modesResult = (await commitImport(ownerUrl!, base)).modes;
+    startRevisionId = (await revisionIdOf((modesResult && "revisionLabel" in modesResult && modesResult.revisionLabel) || base.modes!.revisionLabel))!;
     const current = await owner.query("select revision_id from transit.published_pointer");
     if (current.rows[0]?.revision_id !== startRevisionId) await publish(startRevisionId);
   }, 180_000);
@@ -190,6 +194,7 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     expect(kinds("shape")).toHaveLength(kinds("variant").length);
     expect(kinds("walk_graph")).toHaveLength(1);
     expect(kinds("eta_param")).toHaveLength(5);
+    expect(kinds("route_note")).toHaveLength(9);
     expect(kinds("regional_service")).toHaveLength(7);
 
     const shapes = await appRows(sql`
@@ -234,9 +239,9 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     // The review decisions that live in code are recorded with the batch.
     const batch = await asImport(async (c) => (await c.query(
       `select counts->'trace_rules' as rules, counts->>'revision_label' as label from ingest.batch
-        where snapshot_version like 'modes-lines:2026-10-16:2026-10-16:%' and status = 'committed'`)).rows);
+        where snapshot_version like 'modes-lines:2026-10-16:2026-10-16:%' and status = 'committed'
+          and counts->>'revision_label' = $1`, [LABEL])).rows);
     expect(batch).toHaveLength(1);
-    expect(batch[0].label).toBe(LABEL);
     expect(batch[0].rules.landmarks.map((l: { item: string }) => l.item)).toContain("Naga–Pili boundary, Del Rosario");
     expect(batch[0].rules.termini.map((t: { routeCode: string }) => t.routeCode)).toEqual(["R1", "R2", "R5", "R6", "R7"]);
   });
@@ -292,7 +297,9 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     const stored = await appRows(sql`select sha256, bytes from transit.v_published_walk_graph`);
     expect(stored).toEqual([{ sha256: sha, bytes: Buffer.byteLength(text) }]);
     expect(walkGraphPayloadSchema.parse(JSON.parse(text)).roadSource).toBe("OSMR-2026-10-16");
-    expect(Buffer.byteLength(text)).toBeLessThanOrEqual(600 * 1024);
+    expect(walkGraphPayloadSchema.parse(JSON.parse(text))).toMatchObject({ v: 2 });
+    expect(await appRows(sql`select format_version from transit.v_published_walk_graph`)).toEqual([{ format_version: 2 }]);
+    expect(Buffer.byteLength(text)).toBeLessThanOrEqual(800 * 1024);
     console.info(`walk graph payload: ${Buffer.byteLength(text)} B`);
     const again = await walkGET(new Request(url, { headers: { "if-none-match": `"${sha}"` } }), ctx(linesRevisionId));
     expect(again.status).toBe(304);
@@ -323,6 +330,101 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     ]);
     const feeder = await detail("TRI-VISTODA");
     for (const v of feeder.variants) expect(v.pathStatus).toMatchObject({ status: "untraced", reason: "anchor_unresolved", listedStreets: null });
+  });
+
+  it("the snapshot and route detail carry the reviewed route notes with evidence, sources and the near circle", async () => {
+    const response = await snapshotGET(new Request(`http://localhost/api/v1/network/snapshot/${linesRevisionId}`), ctx(linesRevisionId));
+    const snapshot = networkSnapshotSchema.parse(await response.json());
+    const notesOf = (code: string) => snapshot.routes.find((r) => r.routeCode === code)!.notes;
+    expect(snapshot.routes.reduce((n, r) => n + r.notes.length, 0)).toBe(9);
+    expect(notesOf("R8-C").map((n) => n.evidence).sort()).toEqual(["community", "owner_report_unverified"]);
+    expect(notesOf("R8-C").find((n) => n.near !== null)).toMatchObject({
+      text: expect.stringContaining("J. Miranda"), near: { lat: 13.6256, lng: 123.199, radiusM: 450 },
+    });
+    expect(notesOf("R2")).toEqual([expect.objectContaining({ evidence: "owner_report_unverified", near: null, sourceCodes: expect.arrayContaining(["U02", "RL15"]) })]);
+    expect(notesOf("R1")).toEqual([]);
+
+    const detail = await routeGET(new Request("http://localhost/api/v1/routes/R8-C"), { params: Promise.resolve({ code: "R8-C" }) } as never);
+    const body = routeDetailSchema.parse(await detail.json());
+    expect(body.notes).toEqual(notesOf("R8-C"));
+    // The notes' sources are in the register and in the route's own sources.
+    for (const n of body.notes) for (const code of n.sourceCodes) expect(body.sources.map((s) => s.code)).toContain(code);
+    expect(await appRows(sql`select code from transit.v_published_sources where code in ('RL01', 'U02') order by code`))
+      .toEqual([{ code: "RL01" }, { code: "U02" }]);
+  });
+
+  it("an older revision still serves its v1 walk graph (databases that hold the earlier import)", async () => {
+    const oldId = await revisionIdOf(OLD_LABEL);
+    if (!oldId) return; // a database without the earlier import has no v1 graph
+    await publish(oldId);
+    try {
+      const response = await walkGET(new Request(`http://localhost/api/v1/network/walk-graph/${oldId}`), ctx(oldId));
+      expect(response.status).toBe(200);
+      const text = await response.text();
+      expect(walkGraphPayloadSchema.parse(JSON.parse(text))).toMatchObject({ v: 1 });
+      expect(response.headers.get("etag")).toBe(`"${createHash("sha256").update(text, "utf8").digest("hex")}"`);
+      // Its notes-free snapshot still parses: notes default to [].
+      const snap = await snapshotGET(new Request(`http://localhost/api/v1/network/snapshot/${oldId}`), ctx(oldId));
+      expect(networkSnapshotSchema.parse(await snap.json()).routes.every((r) => r.notes.length === 0)).toBe(true);
+    } finally {
+      await publish(linesRevisionId);
+    }
+  });
+
+  it("migration 0010: research source codes, route_note checks and RLS", async () => {
+    const rls = await owner.query<{ rls: boolean; forced: boolean }>(
+      `select relrowsecurity as rls, relforcerowsecurity as forced from pg_class where oid = 'transit.route_note'::regclass`);
+    expect(rls.rows[0]).toEqual({ rls: true, forced: true });
+    expect(await appRows(sql`select code from ingest.source where code in ('RT01', 'RL01', 'RP01', 'RH01', 'U02') order by code`))
+      .toEqual([{ code: "RH01" }, { code: "RL01" }, { code: "RP01" }, { code: "RT01" }, { code: "U02" }]);
+    const code = async (query: string, params: unknown[] = []) => asImport(async (c) => {
+      try {
+        await c.query(query, params);
+        return "inserted";
+      } catch (error) {
+        return (error as { code?: string }).code;
+      }
+    });
+    const source = (c: string) => code(
+      `insert into ingest.source (code, title) values ($1, 'test')`, [c]);
+    expect(await source("RT99")).toBe("inserted");
+    expect(await source("RX01")).toBe("23514");
+    expect(await source("RT1")).toBe("23514");
+    const insertNote = (text: string, evidence: string, near: "none" | "both" | "geog_only") => code(
+      `insert into transit.route_note (route_id, note_code, text, evidence, source_codes, content_hash, near_geog, near_radius_m)
+       select id, 'RN99', $1, $2, '{RL01}', repeat('c', 64),
+              ${near === "none" ? "null" : "extensions.ST_SetSRID(extensions.ST_MakePoint(123.19, 13.62), 4326)::extensions.geography"},
+              ${near === "both" ? "450" : "null"}
+         from transit.route where public_code = 'R1'`, [text, evidence]);
+    expect(await insertNote("ok", "community", "none")).toBe("inserted");
+    expect(await insertNote("x".repeat(121), "community", "none")).toBe("23514");
+    expect(await insertNote("ok", "verified", "none")).toBe("23514");
+    expect(await insertNote("ok", "ordinance", "none")).toBe("23514");
+    expect(await insertNote("ok", "owner_report_unverified", "geog_only")).toBe("23514");
+    expect(await insertNote("ok", "news", "both")).toBe("inserted");
+  });
+
+  it("publish_revision refuses a route note whose route is not a member, and a synthetic note", async () => {
+    const orphan = await publishCopyWithout(linesRevisionId, "orphannote", "false", async (c, rev) => {
+      const route = await c.query<{ id: string }>(
+        `insert into transit.route (public_code, name, mode_code, mode, service_status, planning, source_codes, properties)
+         select 'TRI-NOTETEST', name, mode_code, mode, service_status, planning, source_codes, properties
+           from transit.route where public_code = 'TRI-VISTODA' returning id`);
+      const note = await c.query<{ id: string }>(
+        `insert into transit.route_note (route_id, note_code, text, evidence, source_codes, content_hash)
+         values ($1, 'RN98', 'A note on a route that is not a member.', 'community', '{RL01}', repeat('d', 64)) returning id`,
+        [route.rows[0]!.id]);
+      await c.query(`insert into transit.revision_member values ($1, 'route_note', $2, $2)`, [rev, note.rows[0]!.id]);
+    });
+    expect(orphan).toMatch(/^23514 .*route records whose route is not a member: route_note:/);
+    const synthetic = await publishCopyWithout(linesRevisionId, "syntheticnote", "false", async (c, rev) => {
+      const note = await c.query<{ id: string }>(
+        `insert into transit.route_note (route_id, note_code, text, evidence, source_codes, content_hash, is_synthetic)
+         select id, 'RN97', 'A synthetic note.', 'community', '{RL01}', repeat('e', 64), true from transit.route where public_code = 'R1'
+         returning id`);
+      await c.query(`insert into transit.revision_member values ($1, 'route_note', $2, $2)`, [rev, note.rows[0]!.id]);
+    });
+    expect(synthetic).toMatch(/^23514 .*synthetic or missing members: route_note:/);
   });
 
   it("publish_revision refuses a shape whose variant is not a member", async () => {

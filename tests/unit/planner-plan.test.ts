@@ -171,7 +171,7 @@ describe("ride legs: D13 distance basis, mode and fleet (Task 8)", () => {
     deltaCentavosHigh: 500, observedOn: "2026-10-16", sourceCodes: ["SYN"] };
   const route = (i: number, fleet = fleetSummary([], "jeepney"), fareReports: RouteFareReport[] = []) => {
     const v = snap.variants[i]!;
-    return { routeId: v.routeId, routeCode: v.routeCode, routeName: v.routeName, mode: "jeepney" as const, serviceStatus: null, fleet, fareReports };
+    return { routeId: v.routeId, routeCode: v.routeCode, routeName: v.routeName, mode: "jeepney" as const, serviceStatus: null, fleet, fareReports, notes: [] };
   };
   /** Loop S with path measures 2300 m apart (ring 13 800 m): P1 → P3 is 4600 m along the path, ~2000 m straight. */
   const measured = () => {
