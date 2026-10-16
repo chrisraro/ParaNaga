@@ -339,8 +339,13 @@ export function EndpointSheet({
           className="pn-sheet__rest"
           inert={snap === 0 && !detailOpen}
           onFocusCapture={(e) => {
-            // Trip detail stays operable at the peek snap (its header is visible there).
-            if (snap !== 2 && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) sheet.setSnap(snap === 0 ? 1 : 2);
+            // Trip detail stays operable at the peek snap (its header is visible there). Detail and
+            // guidance never jump to full on their own (that would cover the map, its lines and the
+            // legend): the sheet scrolls, and full is the rider's choice.
+            if (snap !== 2 && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) {
+              if (snap === 0) sheet.setSnap(1);
+              else if (!detailOpen && !(e.target as Element).closest("[data-testid=trip-detail], [data-testid=guidance]")) sheet.setSnap(2);
+            }
           }}
         >
         {children}

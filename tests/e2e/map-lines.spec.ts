@@ -72,7 +72,7 @@ test("trip lines draw walk (dotted) and ride (solid) layers with chevrons and le
   await expect(chevrons.first()).toBeAttached();
 
   // Map legend lists Walk and vehicle class
-  await page.getByRole("button", { name: "Collapse sheet" }).click();
+  // No sheet change needed: trip detail opens at half, so the map and legend are in view.
   const legend = page.getByTestId("map-legend");
   await expect(legend).toBeVisible();
   await page.getByTestId("map-legend-button").click();
@@ -305,6 +305,19 @@ async function peekSheet(page: Page) {
   await expect(toHalf).toBeVisible();
 }
 
+/** The legend button and part of a ride line are inside the viewport and above the sheet's top edge. */
+async function expectLegendAndLineAboveSheet(page: Page) {
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached({ timeout: 15000 });
+  await page.waitForTimeout(800); // the map fits the trip
+  const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+  const legend = (await page.getByTestId("map-legend-button").boundingBox())!;
+  expect(legend.y).toBeGreaterThanOrEqual(0);
+  expect(legend.y + legend.height).toBeLessThanOrEqual(sheetTop + 1);
+  const line = (await page.locator("path.pn-line--ride").first().boundingBox())!;
+  expect(line.y).toBeLessThan(sheetTop);
+  expect(line.y + line.height).toBeGreaterThan(0);
+}
+
 async function expectLegendListsWalkAndStops(page: Page) {
   const button = page.getByTestId("map-legend-button");
   await expect(button).toBeVisible();
@@ -326,10 +339,12 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
   await pinBoth(page);
   await page.getByTestId("trip-option").first().click();
   await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await expectLegendAndLineAboveSheet(page); // trip detail too, sheet untouched
   await page.getByTestId("trip-start").click();
   const guide = page.getByTestId("guidance");
   await expect(guide).toBeVisible();
-  await peekSheet(page); // the map is behind the open sheet
+  // Without touching the sheet: the legend and a trip line are on the map above the sheet's top edge.
+  await expectLegendAndLineAboveSheet(page);
 
   const walk = page.locator("path.pn-line--walk");
   await expect(walk.first()).toBeAttached({ timeout: 15000 });

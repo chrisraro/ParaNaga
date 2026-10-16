@@ -63,6 +63,8 @@ import {
 import { NearbyStops } from "./nearby-stops";
 import { homeGuidanceActions, useHomeGuidance } from "./use-home-guidance";
 import { useSavedTripReopen } from "./use-saved-trip-reopen";
+import { useWalkGraph } from "@/client/network/use-walk-graph";
+import { enrichOptionWalks } from "@/domain/trip/enrich";
 import { useLines } from "@/client/network/use-lines";
 import { useSnapshot } from "@/client/network/use-snapshot";
 import { updateLayers, usePrefs } from "@/client/prefs/use-prefs";
@@ -447,7 +449,9 @@ export function HomeScreen() {
     if (!planData) return;
     setFocusTarget(null);
     setOpenedId(id);
-    if (sheet.snap === 0) sheet.setSnap(1);
+    // Half, never full: tapping the option focused it, which lifts a sheet to full, and that
+    // would cover the trip's lines and the legend. Full stays the rider's own drag or tap.
+    if (sheet.snap !== 1) sheet.setSnap(1);
   };
 
   const handleCloseOption = () => {
@@ -605,15 +609,22 @@ export function HomeScreen() {
   const tripRevisionId = guidedTrip
     ? guidedTrip.revisionId
     : (stored?.data.revision.revisionId ?? (planData && openOption ? planData.revision.revisionId : null));
+  // The guided walks draw the street path like trip detail, from the walk graph on the phone
+  // (a stored copy only when saving data); without it they stay straight dotted lines.
+  const guidedWalkGraph = useWalkGraph(guidedTrip?.revisionId ?? null, guidedTrip !== null);
+  const guidedOption = useMemo(
+    () => (guidedTrip ? enrichOptionWalks(guidedTrip.option, guidedWalkGraph.graph) : null),
+    [guidedTrip, guidedWalkGraph.graph],
+  );
   const tripLinesState = useLines(tripRevisionId, tripRevisionId !== null);
   const tripRevisionLines = tripLinesState.lines;
   const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : openOption;
   const tripLines = useMemo(() => {
-    if (guidedTrip) return buildTripLinesData(guidedTrip.option, guidedTrip.variants, tripRevisionLines);
+    if (guidedTrip && guidedOption) return buildTripLinesData(guidedOption, guidedTrip.variants, tripRevisionLines);
     if (stored) return buildTripLinesData(stored.option, stored.data.variants, tripRevisionLines);
     if (planData && openOption) return buildTripLinesData(openOption, planData.variants, tripRevisionLines);
     return null;
-  }, [guidedTrip, stored, planData, openOption, tripRevisionLines]);
+  }, [guidedTrip, guidedOption, stored, planData, openOption, tripRevisionLines]);
   // Lines never vanish: the overview stays while picking a point, and stands in for the rides when
   // the trip revision's lines are not loaded (low-data, offline, 404).
   const layerPolicy = mapLayerPolicy({
@@ -761,8 +772,9 @@ export function HomeScreen() {
     home,
     endpoints,
     dispatch,
+    // Guidance opens at half (the map's lines and legend stay in view), also from peek or full.
     liftSheet: () => {
-      if (sheet.snap === 0) sheet.setSnap(1);
+      if (sheet.snap !== 1) sheet.setSnap(1);
     },
     dismissStored: reopen.dismissStored,
     setOpenedId,
