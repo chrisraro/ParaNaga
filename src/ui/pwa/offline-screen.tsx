@@ -10,10 +10,12 @@ import "./pwa.css";
 
 import { useEffect, useState } from "react";
 import { useSnapshot } from "@/client/network/use-snapshot";
+import { useSavedWalkLengths } from "@/client/network/use-walk-graph";
 import { useSavedTrips } from "@/client/saved/use-saved";
 import { readSnapshotMeta } from "@/client/storage/db";
 import { offlineDataLine } from "@/domain/pwa/offline-copy";
-import { tripCardMeta, type SnapshotMeta } from "@/domain/saved/saved";
+import type { EtaModel } from "@/domain/api/schemas";
+import { tripCardMeta, type SavedTrip, type SnapshotMeta } from "@/domain/saved/saved";
 import { savedTripSteps } from "@/domain/saved/trip-text";
 
 function DataLine() {
@@ -30,6 +32,11 @@ function DataLine() {
     };
   }, []);
   return <p data-testid="offline-data-date">{meta === undefined ? "Checking the data on this phone…" : offlineDataLine(meta?.publishedAt, meta !== null)}</p>;
+}
+
+function OfflineTripMeta({ trip, etaModel }: { trip: SavedTrip; etaModel: EtaModel | null }) {
+  const walkLengths = useSavedWalkLengths(trip.option, trip.revisionId);
+  return <p className="pn-offline__meta">{tripCardMeta(trip, etaModel, new Date(), walkLengths)}</p>;
 }
 
 function SavedTrips() {
@@ -55,7 +62,7 @@ function SavedTrips() {
                 <li key={i}>{step}</li>
               ))}
             </ol>
-            <p className="pn-offline__meta">{tripCardMeta(trip, snapshot?.etaModel ?? null)}</p>
+            <OfflineTripMeta trip={trip} etaModel={snapshot?.etaModel ?? null} />
           </details>
         </li>
       ))}

@@ -108,6 +108,11 @@ export function groupPinPlaces(stops: readonly SearchSourceStop[]): SearchPinPla
 }
 
 const distinct = (values: Iterable<string>): string[] => [...new Set(values)];
+/** Feeder (TRI-*) street lists come from an unordered query: sort them so a recapture is stable. */
+const routeStreets = (code: string, lists: string[][]): string[] => {
+  const streets = distinct(lists.flat());
+  return code.startsWith("TRI-") ? streets.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)) : streets;
+};
 
 /**
  * URL-safe key from the folded name ("Bagumbayan Norte" → "bagumbayan-norte"); a name without
@@ -153,7 +158,7 @@ export function buildSearchIndex(source: SearchIndexSource): SearchIndex {
       groupNumber: r.groupNumber,
       evidenceLevel: r.evidenceLevel,
       hasTrial: r.hasTrial,
-      streets: distinct(r.streetLists.flat()),
+      streets: routeStreets(r.code, r.streetLists),
       mode: r.mode,
       fleetLabel: r.fleetLabel,
     })),

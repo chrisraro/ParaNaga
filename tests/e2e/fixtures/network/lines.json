@@ -1,10 +1,10 @@
 {
  "formatVersion": 1,
  "revision": {
-  "revisionId": "de72168a-7f94-4c1b-8c0d-05a2c488ce6a",
+  "revisionId": "20ca7d87-d4b2-46bc-93e4-10fced9935c6",
   "label": "modes-lines-2026-10-16",
   "kind": "provisional",
-  "publishedAt": "2026-10-16T01:49:26.840Z"
+  "publishedAt": "2026-10-16T08:27:21.544Z"
  },
  "label": "Approximate path, not a verified route shape",
  "attribution": "Map data © OpenStreetMap contributors (ODbL)",
@@ -1763,8 +1763,8 @@
  ],
  "untraced": [
   {
-   "variantId": "54d8f4d6-0b84-4655-99bf-fa9431f4a798",
-   "routeId": "0b813055-ddb0-4648-96e2-ae40870e7df5",
+   "variantId": "a00a5b4b-9340-45a8-8712-e10688bb3c17",
+   "routeId": "d59409d2-207b-4eb5-b48c-81f777d13d1c",
    "routeCode": "TRI-VISTODA",
    "routeName": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
    "variantName": "Langon – Ateneo de Naga via Vistansa Subd",
@@ -1784,8 +1784,8 @@
    }
   },
   {
-   "variantId": "0805c2e1-3b94-41d2-85a5-c04c9767c2d8",
-   "routeId": "0b813055-ddb0-4648-96e2-ae40870e7df5",
+   "variantId": "48285e10-cc89-4366-ae53-cb3314b40c6a",
+   "routeId": "d59409d2-207b-4eb5-b48c-81f777d13d1c",
    "routeCode": "TRI-VISTODA",
    "routeName": "VISTODA/LAVISTODA special trimobile (Langon – Ateneo de Naga; Langon – Centro Cararayan)",
    "variantName": "Langon – Centro Cararayan (San Miguel St / Tecla San Andres-Ziga Rd corner) via Sitio Salunguigui",
@@ -1806,8 +1806,8 @@
    }
   },
   {
-   "variantId": "6db61bb6-b0fc-4e1e-9ef8-e97bc4917414",
-   "routeId": "6204a9ea-5c5d-47e3-9b52-2871b089597c",
+   "variantId": "f8544dc5-eede-4b42-ba7e-d2042f33c1d0",
+   "routeId": "f0c456f2-7007-4908-a1aa-a0bc962bdeaf",
    "routeCode": "TRI-DECALANGON",
    "routeName": "Special trimobile: Cararayan Rd corner (Langon) – Deca Vistansa via Salunguigui",
    "variantName": "Langon (Cararayan Rd corner) – Deca Vistansa via Salunguigui",

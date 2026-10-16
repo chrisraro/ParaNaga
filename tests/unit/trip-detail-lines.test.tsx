@@ -80,18 +80,19 @@ describe("TripDetail time estimates (Task 14 fixes: basis, fleet evidence, spoke
     const data = enrichPlan(two, null, { walkGraphStatus: "skipped" });
     render(<TripDetail data={data} option={data.plan.options[0]!} onBack={() => undefined} etaModel={ETA_MODEL} />);
     const total = screen.getByTestId("trip-detail-time");
-    const shown = total.querySelector("[aria-hidden='true']")!.textContent!;
+    const shown = total.textContent!;
+    expect(total.querySelector("[aria-hidden='true'], .sr-only")).toBeNull(); // the text is in the DOM once
     expect(shown).toMatch(/^Estimate (\d+)–(\d+) min \+ waiting \(unknown, 2 rides\)$/);
     const [, lo, hi] = /(\d+)–(\d+)/.exec(shown)!;
-    expect(total.querySelector(".sr-only")!.textContent).toBe(`Estimate ${lo} to ${hi} minutes + waiting (unknown, 2 rides)`);
+    expect(total.getAttribute("aria-label")).toBe(`Estimate ${lo} to ${hi} minutes + waiting (unknown, 2 rides)`);
     expect(screen.queryByTestId("trip-peak-note")).toBeNull();
 
-    const legs = screen.getAllByTestId("leg-time").map((el) => el.querySelector("[aria-hidden='true']")?.textContent ?? el.textContent);
+    const legs = screen.getAllByTestId("leg-time").map((el) => el.textContent);
     const rides = legs.filter((t) => t!.includes(" ride · "));
     // TWO_RIDE_PLAN: the Loop A leg has path measures, the Loop B leg is straight-line between pins.
     expect(rides).toEqual([expect.stringMatching(/^≈ \d+–\d+ min ride · along the approximate path$/), expect.stringMatching(/^≈ \d+–\d+ min ride · stop to stop \(straight line\)$/)]);
     expect(legs.filter((t) => t!.includes(" walk · ")).every((t) => /^≈ \d+–\d+ min walk · straight line$/.test(t!))).toBe(true);
-    for (const el of screen.getAllByTestId("leg-time")) expect(el.querySelector(".sr-only")!.textContent).toMatch(/^≈ \d+ to \d+ minutes (walk|ride) · /);
+    for (const el of screen.getAllByTestId("leg-time")) expect(el.querySelector("[role='img']")!.getAttribute("aria-label")).toMatch(/^≈ \d+ to \d+ minutes (walk|ride) · /);
     expect(screen.getAllByText(/stop to stop \(straight line\)$/).length).toBeGreaterThan(0);
   });
 

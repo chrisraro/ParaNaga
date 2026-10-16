@@ -19,7 +19,7 @@ import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, legFareText, routeChipLabel, stopLabel } from "../trip/present";
 import type { EtaModel } from "../api/schemas";
 import { estimateOption } from "../eta/eta";
-import { formatTotal } from "../eta/format";
+import { TIME_NOT_AVAILABLE, formatTotal } from "../eta/format";
 
 /** Saved-place names: at most 40 characters, counted in code points (an emoji is one). */
 export const PLACE_LABEL_MAX = 40;
@@ -215,8 +215,6 @@ export function manilaDate(iso: string | null): string | null {
   if (Number.isNaN(ms)) return null;
   return formatIsoDate(new Date(ms + 8 * 3_600_000).toISOString().slice(0, 10));
 }
-
-export const TIME_NOT_AVAILABLE = "Time not available";
 
 /**
  * The option's time estimate from the (cached) snapshot's model, departing now: "Estimate 8–15 min

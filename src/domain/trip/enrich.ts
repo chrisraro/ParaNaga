@@ -176,6 +176,19 @@ function relabelOptions(cands: EnrichedPlanOption[], labels: readonly PlanLabel[
   return out.map(({ cand, labels: nextLabels }) => ({ ...cand, labels: nextLabels }));
 }
 
+/**
+ * Per-leg walk-graph path lengths of `option` (metres, rounded as trip options show them): the
+ * path length for a walk routed on `graph`, else null (rides, no graph, no street path). Lets a
+ * saved card's estimate use the same lengths as the trip options when the graph is cached.
+ */
+export function walkPathLengths(option: PlanOptionDto, graph: WalkGraph | null): (number | null)[] {
+  return option.legs.map((leg) => {
+    if (leg.kind !== "walk" || graph === null) return null;
+    const path = routeOneWalk(graph, leg.from, leg.to, leg.distanceMeters, leg.estimateMeters, "ready");
+    return path.kind === "path" ? path.lengthM : null;
+  });
+}
+
 function savesWalkingD14(
   option: EnrichedPlanOption,
   directWalk: WalkLegPath | null,
@@ -223,7 +236,13 @@ function enrichTripPlan(
     }),
   }));
 
-  const kept = routedOptions.filter((option) => savesWalkingD14(option, directWalk, directEstimateM));
+  // D14 compares like with like, so it waits for the walk graph to settle: while it loads every
+  // option is kept (straight estimates would drop some now and the graph would drop others a
+  // moment later, making options vanish and closing an opened detail).
+  const kept =
+    status === "loading"
+      ? routedOptions
+      : routedOptions.filter((option) => savesWalkingD14(option, directWalk, directEstimateM));
   if (kept.length === 0) {
     return {
       ...plan,

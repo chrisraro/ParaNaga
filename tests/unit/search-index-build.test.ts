@@ -14,6 +14,19 @@ const index = buildSearchIndex(source);
 const stopOf = (layer: string, code: string) => source.stops.find((s) => s.layer === layer && s.code === code)!;
 const groupWith = (stopId: string) => index.pinPlaces.find((g) => g.pins.some((p) => p.stopId === stopId));
 
+describe("route street order", () => {
+  const withRoute = (code: string) =>
+    buildSearchIndex({
+      ...source,
+      routes: [{ ...source.routes[0]!, code, streetLists: [["Zeta St", "Alpha St"], ["Mid St", "Alpha St"]] }],
+    }).routes[0]!.streets;
+
+  it("sorts the TRI-VISTODA streets so a recapture is stable, and keeps jeepney routes in legal order", () => {
+    expect(withRoute("TRI-VISTODA")).toEqual(["Alpha St", "Mid St", "Zeta St"]);
+    expect(withRoute("R1")).toEqual(["Zeta St", "Alpha St", "Mid St"]);
+  });
+});
+
 describe("buildSearchIndex on the real data", () => {
   it("produces a schema-valid, complete index", () => {
     expect(() => searchIndexSchema.parse(index)).not.toThrow();

@@ -6,9 +6,11 @@ import {
   WALK_STRAIGHT_LABEL,
   enrichOptionWalks,
   enrichPlan,
+  walkPathLengths,
 } from "@/domain/trip/enrich";
 import { parseWalkGraph, type WalkGraph } from "@/domain/walk/walk-graph";
 import walkGraphFixture from "../e2e/fixtures/network/walk-graph.json";
+import { extractWalkLengths } from "@/ui/trip/eta-text";
 import { PROVISIONAL_PLAN } from "../e2e/fixtures/plan-responses";
 
 const parsedFixture = parseWalkGraph(walkGraphFixture);
@@ -291,6 +293,49 @@ describe("enrichPlan (Task 10, D14)", () => {
       expect(failedWalk.path.kind).toBe("straight");
       expect(failedWalk.path.label).toBe(WALK_STRAIGHT_LABEL);
     }
+  });
+
+  it("D14 waits for the walk graph: no option is dropped while it loads, the check runs once it settles", () => {
+    const g = buildTestGraph();
+    const detourOpt = makeOption(
+      "opt-detour",
+      ["Recommended", "Fewest transfers", "Least walking"],
+      { lat: 13.621, lng: 123.182 }, // 1120 m on the graph vs 550 m direct
+      { lat: 13.62, lng: 123.185 },
+      { accessM: 150, egressM: 10 },
+    );
+    const raw: PlanResponse = {
+      ...basePlan(),
+      plan: { ...basePlan().plan, directWalkEstimateMeters: 100, options: [detourOpt] },
+    };
+    const loading = enrichPlan(raw, null, { walkGraphStatus: "loading" });
+    expect(loading.plan.coverage).toBe("provisional");
+    expect(loading.plan.options.map((o) => o.id)).toEqual(["opt-detour"]);
+    // Settled with the graph: the same option now fails D14 (it would have vanished a moment after showing).
+    const ready = enrichPlan(raw, g, { walkGraphStatus: "ready" });
+    expect(ready.plan.reason).toBe("walk_shorter");
+    expect(ready.plan.options).toEqual([]);
+    // Settled without a graph (error): the estimate comparison runs (160 m of walking vs a 100 m direct walk).
+    expect(enrichPlan(raw, null, { walkGraphStatus: "error" }).plan.reason).toBe("walk_shorter");
+  });
+});
+
+describe("walkPathLengths (saved cards use the cached graph)", () => {
+  it("returns the lengths the trip options use: graph path lengths for walks, null for rides and without a graph", () => {
+    const option = makeOption(
+      "centro-opt",
+      ["Recommended"],
+      { lat: 13.6238, lng: 123.1852 },
+      { lat: 13.6258, lng: 123.1872 },
+      { origin: { lat: 13.6234, lng: 123.1847 }, destination: { lat: 13.6262, lng: 123.1876 }, accessM: 60, egressM: 60 },
+    );
+    const plan: PlanResponse = { ...basePlan(), plan: { ...basePlan().plan, directWalkEstimateMeters: 600, options: [option] } };
+    const enriched = enrichPlan(plan, centroGraph).plan.options[0]!;
+    const lengths = walkPathLengths(option, centroGraph);
+    expect(lengths).toEqual(extractWalkLengths(enriched.legs));
+    expect(lengths.some((m) => typeof m === "number")).toBe(true);
+    expect(option.legs.every((leg, i) => (leg.kind === "walk") === (lengths[i] !== null))).toBe(true);
+    expect(walkPathLengths(option, null)).toEqual(option.legs.map(() => null));
   });
 });
 

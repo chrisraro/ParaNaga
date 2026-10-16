@@ -18,7 +18,7 @@ import { COMPASS_WORDS } from "../geo/bearing";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance } from "../trip/present";
 import { estimateOption, type EtaLeg, type EtaOptionInput } from "../eta/eta";
-import { formatLeg, formatRange, formatRemaining } from "../eta/format";
+import { TIME_NOT_AVAILABLE, formatLeg, formatRange, formatRemaining } from "../eta/format";
 import { paraSuggested, usableFix, walkProgress, type WalkProgress } from "./progress";
 import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
 import {
@@ -172,7 +172,6 @@ function distanceLine(progress: WalkProgress | null, name: string, estimateMeter
 // Walks: a GPS remainder is a straight line, so it is ×1.3 like the plan's estimates; without GPS
 // the plan's walk (its graph path length when one was on file, else its ×1.3 estimate).
 
-export const TIME_NOT_AVAILABLE = "Time not available";
 /** Shown after a ride's time left when no path measures exist and the ride is split by stop count. */
 export const BY_STOP_COUNT = "split by stop count";
 

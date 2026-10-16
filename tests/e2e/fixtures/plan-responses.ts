@@ -5,7 +5,7 @@
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
 // The published revision every captured network fixture names (fixtures/network/*.json).
-export const REVISION = { revisionId: "de72168a-7f94-4c1b-8c0d-05a2c488ce6a", label: "modes-lines-2026-10-16", kind: "provisional", publishedAt: "2026-10-16T01:49:26.840Z" };
+export const REVISION = { revisionId: "20ca7d87-d4b2-46bc-93e4-10fced9935c6", label: "modes-lines-2026-10-16", kind: "provisional", publishedAt: "2026-10-16T08:27:21.544Z" };
 // The published Loop A (R8-A clockwise) variant, so trip lines match its drawn line by variant id.
 const LOOP_A = "9ca597b8-615b-4fdd-8d5d-136a2a663c90";
 
