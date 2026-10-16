@@ -108,6 +108,7 @@ test("each article opens with its copy, and Back returns to the Help tab", async
 });
 
 test("the sources register lists the captured sources with checked dates and safe external links", async ({ page }) => {
+  test.slow(); // one assertion per source row
   await page.goto("/app/help?tab=data");
   await page.getByTestId("help-sources-link").click();
   await expect(h1(page, "Sources and dates")).toBeFocused();
@@ -218,6 +219,7 @@ async function axeAll(page: Page) {
 }
 
 test("Help, an article, the sources register and MyNaga pass axe (light)", async ({ page }) => {
+  test.slow(); // eight pages, each with an axe scan: 26-28 s on a quiet machine, over the 30 s default under load
   await axeAll(page);
 });
 
@@ -225,6 +227,7 @@ test.describe("dark mode", () => {
   test.use({ colorScheme: "dark" });
 
   test("Help, an article, the sources register and MyNaga pass axe (dark)", async ({ page }) => {
+    test.slow(); // see the light variant
     await axeAll(page);
   });
 });
