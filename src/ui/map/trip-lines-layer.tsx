@@ -255,12 +255,15 @@ export function legOpacity(activeLegIndex: number | null, legIndex: number): num
 export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = null }: Props) {
   const palette = paletteForSurface(surface);
   const widths = useMemo(() => lineWidths(highContrast), [highContrast]);
+  // A current leg with no drawn segment (an undrawn ride, a negligible walk) dims nothing.
+  const current =
+    activeLegIndex !== null && [...data.walkSegments, ...data.rideSegments].some((s) => s.legIndex === activeLegIndex) ? activeLegIndex : null;
 
   const elements = useMemo(() => {
     const walkEls = data.walkSegments.map((seg) => {
       const positions = seg.coords.map((c) => [c.lat, c.lng] as [number, number]);
       const swatch = palette.walk;
-      const opacity = legOpacity(activeLegIndex, seg.legIndex);
+      const opacity = legOpacity(current, seg.legIndex);
       return (
         <Fragment key={seg.key}>
           <Polyline
@@ -308,7 +311,7 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
     const rideEls = data.rideSegments.map((seg) => {
       const layers = rideStrokeLayers(seg.colourKey);
       const baseSwatch = palette[seg.colourKey === "mixed_trad_modern" ? "traditional_puj" : seg.colourKey];
-      const opacity = legOpacity(activeLegIndex, seg.legIndex);
+      const opacity = legOpacity(current, seg.legIndex);
       return (
         <Fragment key={seg.key}>
           {seg.runs.map((run, rIdx) => {
@@ -376,7 +379,7 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
     });
 
     return [...walkEls, ...rideEls];
-  }, [data, palette, widths, highContrast, activeLegIndex]);
+  }, [data, palette, widths, highContrast, current]);
 
   return <>{elements}</>;
 }

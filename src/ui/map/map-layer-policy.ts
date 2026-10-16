@@ -29,12 +29,19 @@ export function mapScene({ guiding, tripOpen, picking }: MapSceneInput): MapScen
   return "idle";
 }
 
+/** How the trip revision's lines fetch stands: still going, in, or ended without lines (error / saving data). */
+export type TripLinesStatus = "loading" | "ready" | "failed";
+
 export type MapLayerPolicy = {
   scene: MapScene;
   /** The trip's own lines (walk dotted + ride slices) are drawn. */
   tripLines: boolean;
   /** The overview route lines are drawn (behind the trip lines when both show). */
   overviewLines: boolean;
+  /** The overview is only a stand-in for the trip's rides: clip it to them, dimmed, not tappable. */
+  overviewStandIn: boolean;
+  /** The trip's rides could not be drawn from their own lines (say so in the legend). */
+  tripLinesMissing: boolean;
   /** Overview routes are tappable and the Layers button / terminals show (idle only). */
   overviewInteractive: boolean;
   /** The legend button is present. Always true. */
@@ -44,18 +51,23 @@ export type MapLayerPolicy = {
 export type MapLayerPolicyInput = MapSceneInput & {
   /** The trip has at least one ride leg that the lines should draw. */
   tripHasRides: boolean;
-  /** The trip revision's lines are loaded (not skipped, offline, or failed). */
-  tripLinesLoaded: boolean;
+  tripLinesStatus: TripLinesStatus;
+  /** The trip's revision is the snapshot's (so the overview is the same network as its variants). */
+  sameRevisionAsOverview: boolean;
 };
 
 export function mapLayerPolicy(input: MapLayerPolicyInput): MapLayerPolicy {
   const scene = mapScene(input);
   const trip = scene === "detail" || scene === "guiding";
-  const fallback = trip && input.tripHasRides && !input.tripLinesLoaded;
+  // Missing only once the fetch ended without lines: never while it is still loading (no flash).
+  const missing = trip && input.tripHasRides && input.tripLinesStatus === "failed";
+  const standIn = missing && input.sameRevisionAsOverview;
   return {
     scene,
     tripLines: trip,
-    overviewLines: !trip || fallback,
+    overviewLines: !trip || standIn,
+    overviewStandIn: standIn,
+    tripLinesMissing: missing,
     overviewInteractive: scene === "idle",
     legend: true,
   };
@@ -63,13 +75,22 @@ export function mapLayerPolicy(input: MapLayerPolicyInput): MapLayerPolicy {
 
 /**
  * The vehicle classes the legend lists: what the trip draws (during a trip) and what the overview
- * draws, in a stable order, then the walking entry, which is always there.
+ * draws, in a stable order, then the walking entry when a walk is drawn or no trip is open.
  */
 export function legendVisualKeys(tripKeys: readonly VisualKey[] | null, overviewKeys: readonly VisualKey[]): VisualKey[] {
   const out: VisualKey[] = [];
   for (const key of [...(tripKeys ?? []), ...overviewKeys]) {
     if (key !== "walk" && !out.includes(key)) out.push(key);
   }
-  out.push("walk");
+  if (tripKeys === null || tripKeys.includes("walk")) out.push("walk");
   return out;
 }
+
+/** The overview lines of exactly the variants the trip rides (variant id only, never the route code). */
+export function overviewLinesForTrip<T extends { variantId: string }>(lines: readonly T[], rideVariantIds: readonly string[]): T[] {
+  const ids = new Set(rideVariantIds);
+  return lines.filter((l) => ids.has(l.variantId));
+}
+
+export const TRIP_LINES_MISSING_NOTE = "Route lines for this trip didn't load." as const;
+export const TRIP_LINES_OVERVIEW_NOTE = "Route lines for this trip didn't load; showing the route overview." as const;

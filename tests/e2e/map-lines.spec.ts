@@ -308,17 +308,20 @@ async function peekSheet(page: Page) {
 /** The legend button and part of a ride line are inside the viewport and above the sheet's top edge. */
 async function expectLegendAndLineAboveSheet(page: Page) {
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached({ timeout: 15000 });
-  await page.waitForTimeout(800); // the map fits the trip
   const sheetTop = (await page.getByTestId("trip-sheet").boundingBox())!.y;
+  // Once the map has fitted the trip, part of a ride line is on the map above the sheet.
+  await expect
+    .poll(async () => {
+      const line = await page.locator("path.pn-line--ride").first().boundingBox();
+      return line !== null && line.y < sheetTop && line.y + line.height > 0;
+    })
+    .toBe(true);
   const legend = (await page.getByTestId("map-legend-button").boundingBox())!;
   expect(legend.y).toBeGreaterThanOrEqual(0);
   expect(legend.y + legend.height).toBeLessThanOrEqual(sheetTop + 1);
-  const line = (await page.locator("path.pn-line--ride").first().boundingBox())!;
-  expect(line.y).toBeLessThan(sheetTop);
-  expect(line.y + line.height).toBeGreaterThan(0);
 }
 
-async function expectLegendListsWalkAndStops(page: Page) {
+async function expectLegendListsWalkAndStops(page: Page, notice?: string) {
   const button = page.getByTestId("map-legend-button");
   await expect(button).toBeVisible();
   await button.click();
@@ -327,6 +330,8 @@ async function expectLegendListsWalkAndStops(page: Page) {
   await expect(panel).toContainText("Dotted: approximate walking path");
   await expect(panel).toContainText("Mapped stop, not verified");
   await expect(panel).toContainText("Lines are approximate paths, not verified route shapes.");
+  if (notice) await expect(page.getByTestId("map-legend-notice")).toHaveText(notice);
+  else await expect(page.getByTestId("map-legend-notice")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(panel).toBeHidden();
 }
@@ -394,5 +399,45 @@ test("the legend and the walking line still show when the route lines are not lo
   await peekSheet(page);
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached({ timeout: 15000 });
   await expect(page.locator("path.pn-line--ride")).toHaveCount(0); // never an invented path
-  await expectLegendListsWalkAndStops(page);
+  await expectLegendListsWalkAndStops(page, "Route lines for this trip didn't load.");
+});
+
+// Keyboard focus is never left below the screen edge: the half sheet cannot scroll it into view, so
+// a keyboard Tab to a cut-off control lifts the sheet (a tap does not).
+
+async function expectTabbedControlsOnScreen(page: Page, scope: string, wanted: RegExp[]) {
+  const seen = new Set<RegExp>();
+  const viewportHeight = page.viewportSize()!.height;
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press("Tab");
+    const state = await page.evaluate((testId) => {
+      const el = document.activeElement as HTMLElement | null;
+      if (!el || !el.closest(`[data-testid="${testId}"]`)) return null;
+      const r = el.getBoundingClientRect();
+      return { bottom: r.bottom, top: r.top, name: (el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 60) };
+    }, scope);
+    if (!state) continue;
+    expect(state.top, state.name).toBeGreaterThanOrEqual(0);
+    expect(state.bottom, state.name).toBeLessThanOrEqual(viewportHeight);
+    for (const w of wanted) if (w.test(state.name)) seen.add(w);
+    if (seen.size === wanted.length) return;
+  }
+  throw new Error(`never reached every control: ${wanted.join(", ")}`);
+}
+
+test("tabbing through trip detail and guidance at half keeps the focused control on screen", async ({ page }) => {
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await page.getByTestId("trip-option").first().click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1"); // a tap left it at half
+  await expectTabbedControlsOnScreen(page, "trip-detail", [/Start trip/]);
+
+  await page.getByTestId("trip-start").click();
+  await expect(page.getByTestId("guidance")).toBeVisible();
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "1");
+  await expectTabbedControlsOnScreen(page, "guidance", [/I'm at the stop/, /End guidance/]);
 });

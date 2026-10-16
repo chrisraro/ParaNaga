@@ -73,7 +73,13 @@ import type { MapTerminal } from "@/ui/map/terminals-layer";
 import { tricycleHint as computeTricycleHint, tricycleHintSources } from "@/domain/trip/tricycle-hint";
 import { TricycleHintCard } from "@/ui/trip/tricycle-hint";
 import { collectRouteLegendItems, filterOverviewLines } from "@/ui/map/route-lines-layer";
-import { legendVisualKeys, mapLayerPolicy } from "@/ui/map/map-layer-policy";
+import {
+  TRIP_LINES_MISSING_NOTE,
+  TRIP_LINES_OVERVIEW_NOTE,
+  legendVisualKeys,
+  mapLayerPolicy,
+  overviewLinesForTrip,
+} from "@/ui/map/map-layer-policy";
 import { buildTripLinesData } from "@/ui/map/trip-lines-layer";
 
 /** Peek sheet height (214) minus its 28px corner radius; keep in sync with home-screen.css. */
@@ -625,20 +631,34 @@ export function HomeScreen() {
     if (planData && openOption) return buildTripLinesData(openOption, planData.variants, tripRevisionLines);
     return null;
   }, [guidedTrip, guidedOption, stored, planData, openOption, tripRevisionLines]);
-  // Lines never vanish: the overview stays while picking a point, and stands in for the rides when
-  // the trip revision's lines are not loaded (low-data, offline, 404).
+  // Lines never vanish: the overview stays while picking a point. When the trip's own lines ended
+  // without loading (error, or saving data; never while loading) and the trip is on the snapshot's
+  // revision, the overview of exactly the trip's ridden variants stands in for the rides, dimmed
+  // and not tappable; on another revision only the walks and the legend are drawn.
+  const tripLinesStatus = tripLinesState.status === "ready" ? "ready" : tripLinesState.status === "error" || tripLinesState.status === "skipped" ? "failed" : "loading";
   const layerPolicy = mapLayerPolicy({
     guiding,
     tripOpen: tripLines !== null,
     picking: picking !== null,
     tripHasRides: tripOption ? tripOption.legs.some((l) => l.kind === "ride") : guiding,
-    tripLinesLoaded: tripRevisionLines !== null,
+    tripLinesStatus,
+    sameRevisionAsOverview: tripRevisionId !== null && tripRevisionId === (snapshotState.snapshot?.revision.revisionId ?? null),
   });
   const showOverview = layerPolicy.overviewInteractive;
-  const overviewLines = useMemo(
-    () => (layerPolicy.overviewLines ? filterOverviewLines(lines, layers) : []),
-    [layerPolicy.overviewLines, lines, layers],
+  const rideVariantIds = useMemo(
+    () => (tripOption ? tripOption.legs.flatMap((l) => (l.kind === "ride" ? [l.variantId] : [])) : []),
+    [tripOption],
   );
+  const overviewLines = useMemo(() => {
+    if (!layerPolicy.overviewLines) return [];
+    if (layerPolicy.overviewStandIn) return lines ? overviewLinesForTrip(lines.lines, rideVariantIds) : [];
+    return filterOverviewLines(lines, layers);
+  }, [layerPolicy.overviewLines, layerPolicy.overviewStandIn, lines, layers, rideVariantIds]);
+  const legendNotice = layerPolicy.tripLinesMissing
+    ? overviewLines.length > 0
+      ? TRIP_LINES_OVERVIEW_NOTE
+      : TRIP_LINES_MISSING_NOTE
+    : null;
   const [layersOpen, setLayersOpen] = useState(false);
   const layersBtnRef = useRef<HTMLButtonElement>(null);
   const [selectedRouteCode, setSelectedRouteCode] = useState<string | null>(null);
@@ -819,6 +839,8 @@ export function HomeScreen() {
           activeLegIndex={guiding ? home.activeLegIndex : null}
           fitTripLines={!guiding}
           routeLines={overviewLines}
+          routeLinesDimmed={layerPolicy.overviewStandIn}
+          legendNotice={legendNotice}
           selectedRouteCode={selectedRouteCode}
           onSelectRoute={showOverview ? setSelectedRouteCode : null}
           terminals={drawnTerminals}

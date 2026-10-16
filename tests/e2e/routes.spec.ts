@@ -29,7 +29,7 @@ test("R4 route detail shows fleet label and no chair names", async ({ page }) =>
   const legendPanel = page.getByTestId("route-map").getByTestId("map-legend-panel");
   await expect(legendPanel).toContainText("Traditional and modern jeepneys");
   await expect(legendPanel).toContainText("Walk");
-  await expect(legendPanel).toContainText("Mapped stop, not verified");
+  await expect(legendPanel).not.toContainText("Mapped stop"); // no stop pins on the route map
   await page.keyboard.press("Escape");
 
   // Trace label and status

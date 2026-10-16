@@ -54,6 +54,10 @@ export type NagaMapProps = {
   tripLines?: TripLinesData | null;
   /** The option leg the guidance is on: its line is drawn at full strength, the others softer. */
   activeLegIndex?: number | null;
+  /** Line for the legend panel (e.g. the trip's lines did not load). */
+  legendNotice?: string | null;
+  /** Overview lines are only a stand-in for the trip's rides: drawn dimmed and not tappable. */
+  routeLinesDimmed?: boolean;
   /** False in guidance: the map follows the current step's stops, not the whole trip. Default true. */
   fitTripLines?: boolean;
   /** Route overview or route-detail polylines (Task 12). */

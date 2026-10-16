@@ -48,6 +48,8 @@ export type MapLegendProps = {
   caution?: boolean;
   /** The "Mapped stop, not verified" entry (the amber ring); on by default: the pins are always on the map. */
   showStops?: boolean;
+  /** One honest line above the footnote (e.g. the trip's own lines did not load). */
+  notice?: string | null;
 };
 
 function normalizeItems(items: readonly LegendEntry[]): { key: VisualKey; label: string }[] {
@@ -149,7 +151,7 @@ function CautionSwatch({ surface }: { surface: MapSurface }) {
   );
 }
 
-export function MapLegend({ items, defaultOpen = false, surface = "light", announcement, caution = false, showStops = true }: MapLegendProps) {
+export function MapLegend({ items, defaultOpen = false, surface = "light", announcement, caution = false, showStops = true, notice = null }: MapLegendProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -220,6 +222,11 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
               </li>
             ) : null}
           </ul>
+          {notice ? (
+            <p className="pn-map-legend__note" data-testid="map-legend-notice">
+              {notice}
+            </p>
+          ) : null}
           <p className="pn-map-legend__footnote">{LEGEND_FOOTNOTE}</p>
         </div>
       ) : null}

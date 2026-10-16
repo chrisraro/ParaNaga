@@ -66,6 +66,8 @@ type Props = {
   onSelectRoute?: ((routeCode: string) => void) | null;
   /** When true (on RouteDetail), draws direction chevrons every 250 m and uses thicker strokes. */
   showChevrons?: boolean;
+  /** A stand-in overview (a trip's own lines are missing): softer, never tappable. */
+  dimmed?: boolean;
 };
 
 export function RouteLinesLayer({
@@ -75,6 +77,7 @@ export function RouteLinesLayer({
   selectedRouteCode = null,
   onSelectRoute = null,
   showChevrons = false,
+  dimmed = false,
 }: Props) {
   const palette = paletteForSurface(surface);
   const widths = useMemo(() => lineWidths(highContrast), [highContrast]);
@@ -103,7 +106,8 @@ export function RouteLinesLayer({
       const baseSwatch = palette[baseKey];
       const runs = splitLineIntoRuns(coords, line.lengthM, line.segments, line.status);
       const chevrons = showChevrons ? sampleChevrons(coords, 250) : [];
-      const clickable = Boolean(onSelectRoute);
+      const clickable = Boolean(onSelectRoute) && !dimmed;
+      const opacity = dimmed ? 0.55 : 1;
       const handleSelect = clickable ? { click: () => onSelectRoute?.(line.routeCode) } : undefined;
 
       return (
@@ -131,6 +135,7 @@ export function RouteLinesLayer({
                     className: "pn-line pn-line--casing pn-line--route-casing",
                     color: baseSwatch.casing,
                     weight: casingWeight,
+                    opacity,
                     lineCap: "round",
                     lineJoin: "round",
                   }}
@@ -143,6 +148,7 @@ export function RouteLinesLayer({
                     className: classBase,
                     color: baseSwatch.core,
                     weight: coreWeight,
+                    opacity,
                     dashArray: run.dashed ? "8 6" : undefined,
                     lineCap: run.dashed ? "butt" : "round",
                     lineJoin: "round",
@@ -158,6 +164,7 @@ export function RouteLinesLayer({
                       className: `${classBase} pn-line--ride-secondary`,
                       color: palette.modern_puj.core,
                       weight: coreWeight,
+                      opacity,
                       dashArray: "24 24",
                       lineCap: "butt",
                       lineJoin: "round",
@@ -187,7 +194,7 @@ export function RouteLinesLayer({
         </Fragment>
       );
     });
-  }, [orderedLines, palette, widths, selectedRouteCode, showChevrons, onSelectRoute, highContrast]);
+  }, [orderedLines, palette, widths, selectedRouteCode, showChevrons, onSelectRoute, highContrast, dimmed]);
 
   return <>{rendered}</>;
 }
