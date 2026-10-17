@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { backToMap, chooseOption } from "./fixtures/options";
+import { backToMap, chooseOption, pinTrip } from "./fixtures/options";
 
 // Saved trips, saved places, Share and history (Increment A, Task 8; decision D3: everything on
 // this phone, IndexedDB). POST /api/v1/plan is intercepted with fixtures; tiles are aborted;
@@ -36,31 +36,12 @@ test.afterEach(async ({ page }) => {
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
-}
-
-async function drag(page: Page, dx: number, dy: number) {
-  const box = await mapEl(page).boundingBox();
-  if (!box) throw new Error("map has no box");
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x + dx / 2, y + dy / 2, { steps: 4 });
-  await page.mouse.move(x + dx, y + dy, { steps: 4 });
-  await page.mouse.up();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 /** Pins both ends on the map, then opens the first trip option. */
 async function planAndOpenTrip(page: Page) {
-  const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-  await chooseOnMap.click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap.click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  await drag(page, -120, 80);
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
   await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
 }

@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { SEARCH_INDEX, SEARCH_PLACES, STOP_A1, routeNetwork } from "./fixtures/network";
+import { openSearch, openTripSheet } from "./fixtures/options";
 
 // Search (Increment A, Task 5): the search screen over the captured search index, setting trip
 // ends from it through the endpoint channel, and the HomeScreen side of that channel (row label,
@@ -50,7 +51,7 @@ test.afterEach(async ({ page }, testInfo) => {
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function readCenter(page: Page) {
@@ -73,39 +74,35 @@ test("search sets the start and the destination; the map announces, recentres an
   const { plans } = (testInfo as unknown as { seen: Seen }).seen;
   await openApp(page);
 
-  // Start: the endpoint sheet's new option opens Search for the start.
-  await page.getByRole("link", { name: "Search places and stops" }).click();
+  // Destination: "Where to?" on the bare map opens Search for the destination.
+  const before = await readCenter(page);
+  expect(Math.abs(before.lng - SM.lng)).toBeGreaterThan(0.004);
+  await openSearch(page);
+  await expect(page).toHaveURL(/\/app\/search\?for=destination$/);
+  await expect(searchBox(page)).toBeFocused();
+  await searchBox(page).fill("SM City");
+  await expect(page.getByTestId("search-announcer")).toHaveText(/^\d+ results?$/);
+  await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(rowMain(page, "destination")).toContainText("SM City Naga");
+  await expect(page.getByTestId("home-announcer")).toHaveText("Destination set: SM City Naga");
+  expect(plans).toHaveLength(0);
+  // Focus returns to the row that was set, and the home screen did not scroll.
+  await expect(rowMain(page, "destination")).toBeFocused();
+  expect(await page.evaluate(() => document.querySelector(".pn-home")?.scrollTop ?? 0)).toBe(0);
+
+  // Start: the sheet's option opens Search for the start.
+  await openSearch(page, "start");
   await expect(page).toHaveURL(/\/app\/search\?for=start$/);
+  // Each opening starts fresh (the destination's query is gone).
+  await expect(searchBox(page)).toHaveValue("");
   await expect(searchBox(page)).toBeFocused();
   await searchBox(page).fill("plaza rizal");
   const places = page.getByTestId("search-group-places");
   await places.getByRole("button", { name: /^Plaza Rizal Mapped stop/ }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(rowMain(page, "start")).toContainText("Plaza Rizal (mapped pin)");
-  await expect(page.getByTestId("home-announcer")).toHaveText("Start set: Plaza Rizal (mapped pin)");
-  expect(plans).toHaveLength(0);
-
-  // Destination: the sheet now offers the destination row's options.
-  const before = await readCenter(page);
-  expect(Math.abs(before.lng - SM.lng)).toBeGreaterThan(0.004);
-  await page.getByRole("link", { name: "Search places and stops" }).click();
-  await expect(page).toHaveURL(/\/app\/search\?for=destination$/);
-  // Each opening starts fresh (the start's query is gone).
-  await expect(searchBox(page)).toHaveValue("");
-  await expect(searchBox(page)).toBeFocused();
-  await searchBox(page).fill("SM City");
-  await expect(page.getByTestId("search-announcer")).toHaveText(/^\d+ results?$/);
-  await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
-  await expect(page).toHaveURL(/\/app$/);
-
-  // Focus returns to the row that was set, and the home screen did not scroll.
-  await expect(rowMain(page, "destination")).toBeFocused();
-  expect(await page.evaluate(() => document.querySelector(".pn-home")?.scrollTop ?? 0)).toBe(0);
-  // The HomeScreen consumer of requestEndpoint: row label. With both ends set the map no longer
-  // flies to (zooms in on) the destination; it fits the route instead.
-  await expect(rowMain(page, "destination")).toContainText("SM City Naga");
-  await expect(page.getByText(/Map centered on SM City/)).toHaveCount(0);
-  await expect.poll(() => plans.length).toBe(1);
+  await expect(rowMain(page, "start")).toBeFocused();
   await expect.poll(() => plans.length).toBe(1);
   expect(plans[0]).toMatchObject({
     origin: { lat: STOP_A1.stop.lat, lng: STOP_A1.stop.lng },
@@ -115,8 +112,7 @@ test("search sets the start and the destination; the map announces, recentres an
 
 test("the destination announcement waits for the map and then says what was set", async ({ page }) => {
   await openApp(page);
-  await rowMain(page, "destination").click();
-  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await openSearch(page);
   await searchBox(page).fill("SM City");
   await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
   await expect(page).toHaveURL(/\/app$/);
@@ -174,19 +170,19 @@ test("for=save: a place opens the name dialog, whose Cancel returns focus to its
 
 test("a search pick within 25 m of the other trip end is refused with the same-place notice", async ({ page }) => {
   await openApp(page);
-  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await openSearch(page);
   await searchBox(page).fill("plaza rizal");
   await page.getByTestId("search-group-places").getByRole("button", { name: /^Plaza Rizal Mapped stop/ }).click();
   await expect(page).toHaveURL(/\/app$/);
-  await expect(rowMain(page, "start")).toContainText("Plaza Rizal (mapped pin)");
-  // The destination search picks the same pin: refused, with the notice, and nothing is set.
-  await page.getByRole("link", { name: "Search places and stops" }).click();
-  await expect(page).toHaveURL(/\/app\/search\?for=destination$/);
+  await expect(rowMain(page, "destination")).toContainText("Plaza Rizal (mapped pin)");
+  // The start search picks the same pin: refused, with the notice, and nothing is set.
+  await openSearch(page, "start");
+  await expect(page).toHaveURL(/\/app\/search\?for=start$/);
   await searchBox(page).fill("plaza rizal");
   await page.getByTestId("search-group-places").getByRole("button", { name: /^Plaza Rizal Mapped stop/ }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByTestId("same-place-notice")).toContainText("Start and destination are the same place");
-  await expect(rowMain(page, "destination")).not.toContainText("Plaza Rizal");
+  await expect(rowMain(page, "start")).not.toContainText("Plaza Rizal");
 });
 
 test('"Show all" moves focus to the first row it revealed', async ({ page }) => {
@@ -225,12 +221,12 @@ test("every named place: a restaurant, cafe, pharmacy, bank and hotel come from 
 
 test("reopening Search starts fresh: query and regional switch reset", async ({ page }) => {
   await openApp(page);
-  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await openSearch(page);
   await searchBox(page).fill("Iriga");
   await page.getByRole("switch", { name: "Include regional connections" }).click();
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page).toHaveURL(/\/app$/);
-  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await openSearch(page);
   await expect(searchBox(page)).toHaveValue("");
   await expect(searchBox(page)).toBeFocused();
   await expect(page.getByRole("switch", { name: "Include regional connections" })).toHaveAttribute("aria-checked", "false");
@@ -238,23 +234,42 @@ test("reopening Search starts fresh: query and regional switch reset", async ({ 
 
 test("Cancel and Escape go back to the map", async ({ page }) => {
   await openApp(page);
-  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await openSearch(page);
   await expect(page).toHaveURL(/\/app\/search/);
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page).toHaveURL(/\/app$/);
-  await page.getByRole("link", { name: "Search places and stops" }).click();
+  // Focus is back on the "Where to?" bar.
+  await expect(page.getByTestId("home-search")).toBeFocused();
+  await openSearch(page);
   await expect(searchBox(page)).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/app$/);
+  await expect(page.getByTestId("home-search")).toBeFocused();
 });
 
 test("Choose on map from search opens the crosshair for that end", async ({ page }) => {
   await openApp(page);
-  await rowMain(page, "destination").click();
-  await page.getByRole("link", { name: "Search places and stops" }).click();
+  await openSearch(page);
   await page.getByTestId("search-screen").getByRole("button", { name: "Choose on map" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByRole("button", { name: "Set destination here" })).toBeFocused();
+});
+
+test("empty search shows Stops near the map and remembers Recent picks on this device", async ({ page }) => {
+  await openApp(page);
+  await openSearch(page);
+  await expect(page.getByTestId("search-nearby")).toBeVisible();
+  await expect(page.getByTestId("nearby-stops")).toContainText("Stops near the map");
+  await expect(page.getByTestId("search-recent")).toHaveCount(0);
+
+  await searchBox(page).fill("SM City");
+  await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
+  await expect(page).toHaveURL(/\/app$/);
+
+  await openSearch(page, "start");
+  const recent = page.getByTestId("search-recent");
+  await expect(recent).toBeVisible();
+  await expect(recent.getByTestId("search-result-recent")).toContainText(["SM City Naga"]);
 });
 
 test.describe("with location permission", () => {
@@ -262,7 +277,8 @@ test.describe("with location permission", () => {
 
   test("Use current location from search sets the start by GPS", async ({ page }) => {
     await openApp(page);
-    await page.getByRole("link", { name: "Search places and stops" }).click();
+    await openTripSheet(page);
+    await openSearch(page, "start");
     await page.getByTestId("search-screen").getByRole("button", { name: "Use current location" }).click();
     await expect(page).toHaveURL(/\/app$/);
     await expect(rowMain(page, "start")).toContainText("Your location");

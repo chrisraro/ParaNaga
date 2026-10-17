@@ -1,4 +1,4 @@
-import { expandOptions } from "./fixtures/options";
+import { expandOptions, openTripSheet, pinTrip, useLocationFromSearch } from "./fixtures/options";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { routeNetwork } from "./fixtures/network";
@@ -25,7 +25,7 @@ async function planWith(page: Page, body: unknown) {
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function drag(page: Page, dx: number, dy: number) {
@@ -42,13 +42,7 @@ async function drag(page: Page, dx: number, dy: number) {
 
 /** Pins the start at the default centre and the destination a little north-east of it. */
 async function pinBoth(page: Page) {
-  await chooseOnMap(page).click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap(page).click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  await drag(page, -120, 80);
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
   await expect(rowMain(page, "destination")).toContainText("Pinned location");
 }
 
@@ -94,7 +88,7 @@ test.describe("phone", () => {
         Object.defineProperty(navigator, "geolocation", { value: geolocation, configurable: true });
       }, BISCAST);
       await openApp(page);
-      await page.getByRole("button", { name: "Use current location" }).click();
+      await useLocationFromSearch(page);
       const pill = page.getByTestId("accuracy-pill");
       await expect(pill).toContainText("± 15 m");
       await expect(rowMain(page, "start")).toContainText("Your location");
@@ -138,16 +132,15 @@ test.describe("phone", () => {
         return fulfill(route, NO_ROUTE_PLAN);
       });
       await openApp(page);
+      await openTripSheet(page);
       await chooseOnMap(page).click();
-      await page.getByRole("button", { name: "Set start here" }).click();
-      await chooseOnMap(page).click();
-      const confirm = page.getByRole("button", { name: "Set destination here" });
+      const confirm = page.getByRole("button", { name: "Set start here" });
       await expect(page.getByTestId("pick-same-place-hint")).toHaveText(
         "Start and destination are the same place. Move the pin.",
       );
       await expect(confirm).toHaveAttribute("aria-disabled", "true");
       await confirm.click({ force: true });
-      await expect(page.getByRole("region", { name: "Choose destination on map" })).toBeVisible();
+      await expect(page.getByRole("region", { name: "Choose start on map" })).toBeVisible();
       await expect(page.getByTestId("home-announcer")).toContainText("Start and destination are the same place");
       expect(planned).toBe(0);
 
@@ -157,7 +150,7 @@ test.describe("phone", () => {
       await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
       await expect(page.getByTestId("pick-same-place-hint")).toHaveCount(0);
       await confirm.click();
-      await expect(rowMain(page, "destination")).toContainText("Pinned location");
+      await expect(rowMain(page, "start")).toContainText("Pinned location");
     });
 
     test("the driver badge appears only on options with a ride", async ({ page }) => {
@@ -201,6 +194,7 @@ test.describe("phone", () => {
 
   test("F-16 tapping the highlighted Start row keeps its options open", async ({ page }) => {
     await openApp(page);
+    await openTripSheet(page);
     await expect(rowMain(page, "start")).toHaveAttribute("aria-pressed", "true");
     await rowMain(page, "start").click();
     await expect(rowMain(page, "start")).toHaveAttribute("aria-pressed", "true");
@@ -209,6 +203,7 @@ test.describe("phone", () => {
 
   test("F-21 the swap button sits outside the focused row's outline", async ({ page }) => {
     await openApp(page);
+    await openTripSheet(page);
     const rowBox = (await row(page, "start").boundingBox())!;
     const swapBox = (await page.getByRole("button", { name: "Swap start and destination" }).boundingBox())!;
     expect(rowBox.x + rowBox.width).toBeLessThanOrEqual(swapBox.x);
@@ -267,7 +262,8 @@ test.describe("phone", () => {
 
   test("F-15 a held or repeated Escape goes back only once", async ({ page }) => {
     await openApp(page);
-    await page.getByTestId("nearby-stops").getByRole("link").first().click();
+    await page.getByTestId("nearby-stops").getByRole("link").first().focus();
+    await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/app\/stops\//);
     await page.keyboard.down("Escape");
     await page.keyboard.down("Escape"); // auto-repeat
@@ -338,9 +334,8 @@ test.describe("desktop", () => {
   test("F-02 widening a window covers the app with the gate (inert) and keeps its state", async ({ page }) => {
     await page.setViewportSize({ width: 800, height: 720 });
     await openApp(page);
-    await chooseOnMap(page).click();
-    await page.getByRole("button", { name: "Set start here" }).click();
-    await expect(rowMain(page, "start")).toContainText("Pinned location");
+    await openTripSheet(page);
+    await expect(rowMain(page, "destination")).toContainText("Pinned location");
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await expect(page.getByTestId("large-screen-overlay")).toBeVisible();
@@ -352,7 +347,7 @@ test.describe("desktop", () => {
     await page.setViewportSize({ width: 800, height: 720 });
     await expect(page.getByTestId("large-screen-overlay")).toHaveCount(0);
     expect(await page.getByTestId("app-root").evaluate((el) => (el as HTMLElement).inert)).toBe(false);
-    await expect(rowMain(page, "start")).toContainText("Pinned location");
+    await expect(rowMain(page, "destination")).toContainText("Pinned location");
   });
 });
 

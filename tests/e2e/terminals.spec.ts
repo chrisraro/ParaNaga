@@ -38,7 +38,7 @@ test.afterEach(async ({ page }) => {
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(homeMap(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function expectAxeClean(page: Page, selectors: string[]) {

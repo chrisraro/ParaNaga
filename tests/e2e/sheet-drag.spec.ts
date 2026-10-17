@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
+import { openTripSheet } from "./fixtures/options";
 
 // The shared sheet drag (app-shell/sheet-drag.ts): real pointer drags on the handle, the settle,
 // reduced motion, and the per-move main-thread cost. Phone-only (the map lives behind the gate).
@@ -15,10 +16,12 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
+/** The bare map has no sheet: a destination pin brings it up (at half). */
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
+  await openTripSheet(page);
 }
 
 /** Drag the handle by `dy` px in `steps` moves, releasing after `pause` ms (a pause is not a fling). */

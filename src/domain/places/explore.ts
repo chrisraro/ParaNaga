@@ -168,3 +168,8 @@ export function railSourcesText(registerCodes: ReadonlySet<string> | null): stri
 }
 
 export const EXPLORE_PLACES_NOTE = "Places come from OpenStreetMap. Sourced photos show landmarks; entrances and hours remain unverified. Photo dates and credits are linked on each image.";
+
+/** A category id from a `?c=` query (the Home chips link here); null when absent or unknown. */
+export function parseExploreCategory(raw: string | null): ExploreCategoryId | null {
+  return EXPLORE_CATEGORY_IDS.find((id) => id === raw) ?? null;
+}

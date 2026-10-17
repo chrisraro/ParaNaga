@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { chooseOption, sheetSettled } from "./fixtures/options";
+import { chooseOption, pinTrip, sheetSettled } from "./fixtures/options";
 
 // Home redesign T2: the tab bar belongs to the map alone; Escape and the browser Back button step
 // out of guidance, detail and directions one state at a time (the on-screen Back / End / Clear trip
@@ -24,25 +24,11 @@ test.beforeEach(async ({ page }) => {
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(sheet(page)).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function pinBoth(page: Page) {
-  const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-  await chooseOnMap.click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap.click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  const box = (await mapEl(page).boundingBox())!;
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x - 60, y + 40, { steps: 4 });
-  await page.mouse.move(x - 120, y + 80, { steps: 4 });
-  await page.mouse.up();
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
   await expect(page.getByTestId("options-best")).toBeVisible();
 }
 
@@ -72,9 +58,10 @@ test("Escape steps out: detail, then directions (clears the trip and brings the 
   await expect(page.getByTestId("trip-option").first()).toBeVisible();
   await expect(tabBar(page)).toBeHidden();
   await page.keyboard.press("Escape");
-  await expect(page.getByTestId("endpoint-destination")).not.toContainText(/Pinned|Map point|location/i);
+  await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
   await expect(page.getByTestId("options-best")).toHaveCount(0);
   await expect(tabBar(page)).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeFocused();
 });
 
 test("browser Back steps out one state at a time and stays on /app", async ({ page }) => {

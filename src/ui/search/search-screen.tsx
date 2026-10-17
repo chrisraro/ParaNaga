@@ -19,17 +19,19 @@ import "./search.css";
 import "@/ui/kit/styles";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { useSavedPlaces } from "@/client/saved/use-saved";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useId, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
+import { useRecentSearches, useSavedPlaces } from "@/client/saved/use-saved";
 import { useSearchIndex } from "@/client/search/use-search-index";
-import { putSavedPlace } from "@/client/storage/db";
+import { putSavedPlace, recordRecentSearch } from "@/client/storage/db";
 import { findSavedPlace, type SavedPlaceSource } from "@/domain/saved/saved";
+import { recentKeyForEndpoint, type RecentSearchEntry } from "@/domain/search/recents";
 import { countResults, groupView, resultSubtitle, searchIndex, type SearchGroup, type SearchGroupId, type SearchResult } from "@/domain/search/search";
 import { queryFromHash } from "@/domain/places/place-detail";
 import { actionFor, noticeFor, parseSearchPurpose, type SearchAction, type SearchPurpose } from "@/domain/search/select";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
 import { useEscapeToClose } from "@/ui/app-shell/panel";
+import { NearbyStops } from "@/ui/home/nearby-stops";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
@@ -66,6 +68,14 @@ function PinGlyph() {
     <svg {...ICON} width={20} height={20}>
       <path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z" />
       <circle cx="12" cy="9" r="2.5" />
+    </svg>
+  );
+}
+function ClockGlyph() {
+  return (
+    <svg {...ICON} width={16} height={16}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5v5l3 2" />
     </svg>
   );
 }
@@ -250,6 +260,45 @@ function NoticeCard({
   );
 }
 
+function RecentSection({
+  entries,
+  onSelect,
+}: {
+  entries: readonly RecentSearchEntry[];
+  onSelect: (entry: RecentSearchEntry) => void;
+}) {
+  const id = useId();
+  if (entries.length === 0) return null;
+  return (
+    <section className="pn-section" aria-labelledby={id} data-testid="search-recent">
+      <h2 id={id} className="pn-section__title">
+        Recent
+      </h2>
+      <ul className="pn-group">
+        {entries.map((entry) => (
+          <li key={entry.key}>
+            <button
+              type="button"
+              className="pn-cell pn-search__cell"
+              data-testid="search-result-recent"
+              onClick={() => onSelect(entry)}
+            >
+              <span className="pn-search__kind pn-search__kind--grey">
+                <ClockGlyph />
+              </span>
+              <span className="pn-cell__text">
+                <span className="pn-cell__title">{entry.label}</span>
+                {entry.subtitle ? <span className="pn-cell__sub">{entry.subtitle}</span> : null}
+              </span>
+              <ListChevron />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 // ------------------------------------------------------------------ screen
 
 function publishedDate(iso: string | null): string | null {
@@ -318,6 +367,8 @@ function SearchBody({
   initialQuery: string;
 }) {
   const frame = useAppFrame();
+  const pathname = usePathname();
+  const isSearchRoute = pathname === "/app/search";
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const body = useRef<HTMLDivElement>(null);
@@ -353,6 +404,7 @@ function SearchBody({
   const index = indexState.status === "ready" ? indexState.index : null;
   const morePlaces = indexState.status === "ready" ? indexState.morePlaces : "ready";
   const savedPlaces = useSavedPlaces();
+  const recents = useRecentSearches();
   const saved = useMemo(
     () => (savedPlaces.status === "ready" ? savedPlaces.records.map((p) => ({ id: p.id, label: p.label, point: p.point, source: p.source })) : []),
     [savedPlaces],
@@ -375,13 +427,24 @@ function SearchBody({
     if ((purpose === "start" || purpose === "destination") && cameFromInsideApp()) router.back();
     else router.push("/app");
   };
-  const setEnd = (which: "start" | "destination", endpoint: { point: { lat: number; lng: number }; label: string; place?: SavedPlaceSource }) => {
+  const setEnd = (
+    which: "start" | "destination",
+    endpoint: { point: { lat: number; lng: number }; label: string; place?: SavedPlaceSource },
+    recentMeta?: { key?: string; subtitle?: string | null },
+  ) => {
+    void recordRecentSearch({
+      key: recentKeyForEndpoint(endpoint, recentMeta?.key),
+      label: endpoint.label,
+      ...(recentMeta?.subtitle ? { subtitle: recentMeta.subtitle } : {}),
+      point: endpoint.point,
+      ...(endpoint.place ? { place: endpoint.place } : {}),
+    });
     frame?.requestEndpoint(which, endpoint);
     returnToMap();
   };
   const onSelect = (result: SearchResult) => {
     const action = actionFor(result, purpose);
-    if (action.type === "endpoint") setEnd(action.which, action.endpoint);
+    if (action.type === "endpoint") setEnd(action.which, action.endpoint, { key: resultKey(result), subtitle: resultSubtitle(result) });
     else if (action.type === "save") {
       // Never save the same point twice; wait for the saved places before deciding.
       if (savedPlaces.status === "loading") return;
@@ -390,6 +453,17 @@ function SearchBody({
       else setSaving(action.place);
     }
     else if (action.type === "notice") setNotice({ query: debounced, result });
+  };
+  const onSelectRecent = (entry: RecentSearchEntry) => {
+    if (purpose === "save") {
+      if (savedPlaces.status === "loading") return;
+      const existing = savedPlaces.status === "ready" ? findSavedPlace(savedPlaces.records, entry.point) : null;
+      if (existing) setAlreadySaved({ query: debounced, label: existing.label });
+      else setSaving({ label: entry.label, point: entry.point, source: entry.place ?? "pinned" });
+      return;
+    }
+    const which = purpose === "start" ? "start" : "destination";
+    setEnd(which, { point: entry.point, label: entry.label, ...(entry.place ? { place: entry.place } : {}) }, { key: entry.key, subtitle: entry.subtitle });
   };
   const savePlace = async (label: string) => {
     if (!saving) return;
@@ -402,45 +476,48 @@ function SearchBody({
 
   const liveText = !hasQuery || !index ? "" : total === 1 ? "1 result" : `${total} results`;
   const date = index ? publishedDate(index.revision.publishedAt) : null;
+  const nearby = frame?.nearbyStops;
 
   return (
     <div ref={body}>
       <h1 className="sr-only">Search</h1>
       <header className="pn-search__header">
-        <div className="pn-search__field">
-          <SearchGlyph />
-          <label htmlFor="pn-search-q" className="sr-only">
-            Search places, stops and routes
-          </label>
-          <input
-            ref={input}
-            id="pn-search-q"
-            type="search"
-            className="pn-search__input"
-            placeholder="Place, stop or route"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            enterKeyHint="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          {query !== "" ? (
-            <button
-              type="button"
-              className="pn-search__clear"
-              aria-label="Clear search"
-              onClick={() => {
-                setQuery("");
-                input.current?.focus();
-              }}
-            >
-              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true" focusable="false">
-                <path d="M3 3l10 10M13 3L3 13" />
-              </svg>
-            </button>
-          ) : null}
-        </div>
+        <ViewTransition name="pn-search-field">
+          <div className="pn-search__field">
+            <SearchGlyph />
+            <label htmlFor="pn-search-q" className="sr-only">
+              Search places, stops and routes
+            </label>
+            <input
+              ref={input}
+              id="pn-search-q"
+              type="search"
+              className="pn-search__input"
+              placeholder="Place, stop or route"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            {query !== "" ? (
+              <button
+                type="button"
+                className="pn-search__clear"
+                aria-label="Clear search"
+                onClick={() => {
+                  setQuery("");
+                  input.current?.focus();
+                }}
+              >
+                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true" focusable="false">
+                  <path d="M3 3l10 10M13 3L3 13" />
+                </svg>
+              </button>
+            ) : null}
+          </div>
+        </ViewTransition>
         <button type="button" className="pn-search__cancel" onClick={goBack}>
           Cancel
         </button>
@@ -525,12 +602,26 @@ function SearchBody({
           <NoticeCard
             result={openNotice}
             purpose={purpose}
-            onSet={setEnd}
+            onSet={(which, endpoint) => setEnd(which, endpoint, { key: resultKey(openNotice), subtitle: resultSubtitle(openNotice) })}
             onClose={() => {
               pendingFocus.current = resultKey(openNotice);
               setNotice(null);
             }}
           />
+        ) : null}
+
+        {!hasQuery ? <RecentSection entries={recents} onSelect={onSelectRecent} /> : null}
+        {!hasQuery && isSearchRoute && nearby ? (
+          <div data-testid="search-nearby">
+            <NearbyStops
+              title="Stops near the map"
+              stops={nearby.stops}
+              center={nearby.center}
+              status={nearby.status}
+              truncated={nearby.truncated}
+              onOpen={frame?.markHomeNavigation}
+            />
+          </div>
         ) : null}
 
         {/* Task 14: shops, restaurants and the rest arrive as a lazy chunk after the index. */}
@@ -573,7 +664,7 @@ function SearchBody({
             localCount={total}
             ready={morePlaces !== "loading"}
             purpose={purpose}
-            onEndpoint={setEnd}
+            onEndpoint={(which, endpoint) => setEnd(which, endpoint)}
             onSave={(place) => setSaving(place)}
           />
         ) : null}

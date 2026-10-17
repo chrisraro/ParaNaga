@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { routeNetwork } from "./fixtures/network";
-import { expandOptions } from "./fixtures/options";
+import { expandOptions, pinTrip } from "./fixtures/options";
 import {
   ANYWHERE_DROP_OFF_PLAN,
   COMMUNITY_NOTE,
@@ -38,7 +38,7 @@ async function planWith(page: Page, plan: unknown, at = MIDDAY, expand = true) {
   );
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
   await pinBoth(page);
   // The sheet rests at peek with the best option; the cards are reached through "All options".
   if (!expand) return;
@@ -48,22 +48,7 @@ async function planWith(page: Page, plan: unknown, at = MIDDAY, expand = true) {
 
 /** Pins the start at the default centre and the destination a little north-east of it. */
 async function pinBoth(page: Page) {
-  const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-  await chooseOnMap.click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap.click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  const box = await mapEl(page).boundingBox();
-  if (!box) throw new Error("map has no box");
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x - 60, y + 40, { steps: 4 });
-  await page.mouse.move(x - 120, y + 80, { steps: 4 });
-  await page.mouse.up();
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
 }
 
 /** Axe on the trip sheet in the light scheme and the dark scheme; the page is left in the scheme it started in. */

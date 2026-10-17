@@ -13,6 +13,7 @@ const nav = vi.hoisted(() => ({ back: vi.fn(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: nav.back, push: nav.push, replace: vi.fn(), prefetch: vi.fn() }),
   usePathname: () => "/app/explore",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 const { AppFrameContext, setEntryPath } = await import("@/ui/app-shell/app-frame-context");

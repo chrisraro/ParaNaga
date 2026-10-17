@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { STOP_A1, routeNetwork } from "./fixtures/network";
+import { chooseOnMapVia, openTripSheet } from "./fixtures/options";
 
 // The app shell (Increment A, Task 1): the tab bar (Map · Explore · Saved · More), tab pages as
 // panels over the mounted home map, and where the tab bar hides. Tiles are aborted and the network
@@ -22,7 +23,7 @@ const homeHeading = (page: Page) => page.getByRole("heading", { level: 1, name: 
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function expectAxeClean(page: Page, include?: string) {
@@ -94,9 +95,9 @@ test.describe("phone", () => {
 
   test("the home trip and map view survive a round trip through the tabs", async ({ page }) => {
     await openApp(page);
-    await page.getByRole("button", { name: "Choose on map", exact: true }).click();
-    await page.getByRole("button", { name: "Set start here" }).click();
-    await expect(rowMain(page, "start")).toContainText("Pinned location");
+    await chooseOnMapVia(page);
+    await page.getByRole("button", { name: "Set destination here" }).click();
+    await expect(rowMain(page, "destination")).toContainText("Pinned location");
     const center = await mapEl(page).getAttribute("data-center-lng");
 
     await tab(page, "Saved").click();
@@ -105,7 +106,7 @@ test.describe("phone", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Explore" })).toBeFocused();
     await tab(page, "Map").click();
 
-    await expect(rowMain(page, "start")).toContainText("Pinned location");
+    await expect(rowMain(page, "destination")).toContainText("Pinned location");
     await expect(mapEl(page)).toHaveAttribute("data-center-lng", center!);
   });
 
@@ -125,8 +126,8 @@ test.describe("phone", () => {
     await expect(tabBar(page)).toBeVisible();
 
     // Placing a pin: the crosshair panel owns the bottom of the screen.
-    await page.getByRole("button", { name: "Choose on map", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Set start here" })).toBeVisible();
+    await chooseOnMapVia(page);
+    await expect(page.getByRole("button", { name: "Set destination here" })).toBeVisible();
     await expect(tabBar(page)).toHaveCount(0);
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(tabBar(page)).toBeVisible();
@@ -150,11 +151,14 @@ test.describe("phone", () => {
     await expect(tabBar(page)).toBeVisible();
   });
 
-  /** Bottom edges of both endpoint rows and the attribution, minus the tab bar's top (≤ 0 = clear). */
-  async function overlapWithTabBar(page: Page): Promise<number> {
+  /** Bottom edges of the sheet's rows (when up) and the map's bottom chrome, minus the tab bar's top (≤ 0 = clear). */
+  async function overlapWithTabBar(page: Page, withRows: boolean): Promise<number> {
     const bar = await tabBar(page).boundingBox();
     if (!bar) return Infinity;
-    const boxes = await Promise.all([rowMain(page, "start"), rowMain(page, "destination"), page.locator(".pn-attribution")].map((l) => l.boundingBox()));
+    const chrome = withRows
+      ? [rowMain(page, "start"), rowMain(page, "destination"), page.locator(".pn-attribution")]
+      : [page.locator(".pn-attribution"), page.getByTestId("map-legend-button"), page.getByRole("button", { name: "Center on my location" }), page.getByRole("button", { name: "Zoom out" })];
+    const boxes = await Promise.all(chrome.map((l) => l.boundingBox()));
     return Math.max(...boxes.map((b) => (b ? b.y + b.height - bar.y : Infinity)));
   }
 
@@ -165,17 +169,23 @@ test.describe("phone", () => {
     await expect(sheet).toHaveAttribute("data-snap", "0");
   }
 
+  test("on the bare map the attribution, Legend, locate and zoom stay above the tab bar", async ({ page }) => {
+    await openApp(page);
+    await expect.poll(() => overlapWithTabBar(page, false)).toBeLessThanOrEqual(0);
+  });
+
   test("at the peek snap the endpoint rows and the map attribution stay above the tab bar", async ({ page }) => {
     await openApp(page);
+    await openTripSheet(page);
     await collapseToPeek(page);
     // Polled: the sheet glides to the snap.
-    await expect.poll(() => overlapWithTabBar(page)).toBeLessThanOrEqual(0);
+    await expect.poll(() => overlapWithTabBar(page, true)).toBeLessThanOrEqual(0);
   });
 
   test("with a home-indicator inset the measured clearance still keeps the rows above the tab bar", async ({ page }) => {
     // Chromium has no safe-area emulation: lift the bar the way env(safe-area-inset-bottom) = 34 px
     // would (kit.css: bottom = max(24px, inset + 8px) = 42px). The clearance is measured, so the
-    // peek snap follows.
+    // bare map's chrome and the peek snap follow.
     await page.addInitScript(() => {
       document.addEventListener("DOMContentLoaded", () => {
         const style = document.createElement("style");
@@ -184,11 +194,13 @@ test.describe("phone", () => {
       });
     });
     await openApp(page);
-    await collapseToPeek(page);
     const bar = (await tabBar(page).boundingBox())!;
     const viewport = page.viewportSize()!;
     expect(viewport.height - bar.y).toBeGreaterThan(100); // 42 + 66: more than the old fixed 90
-    await expect.poll(() => overlapWithTabBar(page)).toBeLessThanOrEqual(0);
+    await expect.poll(() => overlapWithTabBar(page, false)).toBeLessThanOrEqual(0);
+    await openTripSheet(page);
+    await collapseToPeek(page);
+    await expect.poll(() => overlapWithTabBar(page, true)).toBeLessThanOrEqual(0);
   });
 
   test("the tab bar and the tab pages pass axe (light)", async ({ page }) => {

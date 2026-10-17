@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { LINES, routeNetwork } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
-import { chooseOption } from "./fixtures/options";
+import { chooseOnMapVia, chooseOption, pinTrip } from "./fixtures/options";
 
 test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate");
 
@@ -32,7 +32,7 @@ const legendOpen = (page: Page, open: boolean) =>
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function drag(page: Page, dx: number, dy: number) {
@@ -48,12 +48,7 @@ async function drag(page: Page, dx: number, dy: number) {
 }
 
 async function pinBoth(page: Page) {
-  const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-  await chooseOnMap.click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap.click();
-  await drag(page, -120, 80);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
 }
 
 test("trip lines draw walk (dotted) and ride (solid) layers with chevrons and legend", async ({ page }) => {
@@ -527,8 +522,8 @@ test("scrolling a sheet element into view never shifts the map, so the legend st
 test("the overview lines and the legend stay while a point is being chosen on the map", async ({ page }) => {
   await openApp(page);
   await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Set start here" })).toBeVisible();
+  await chooseOnMapVia(page);
+  await expect(page.getByRole("button", { name: "Set destination here" })).toBeVisible();
   await expect(page.locator("path.pn-line--route").first()).toBeAttached();
   await expectLegendListsWalkAndStops(page);
 });
