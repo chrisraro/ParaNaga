@@ -169,6 +169,13 @@ describe("edit, comment, reaction", () => {
     expect(submitPostResponseSchema.parse(await res.json()).post).toMatchObject({ isEdit: true, state: "pending", visibleToOthers: false });
     expect(state.sql.some((s) => s.includes("community.edit_post"))).toBe(true);
   });
+  it("editing someone else's post is the same 404 as a missing one (no existence oracle)", async () => {
+    state.acked = true;
+    state.dbFail = { code: "42501" };
+    const { topic: _t, ...edit } = postBody();
+    void _t;
+    await expectError(await send(EDIT, `/api/v1/community/posts/${POST_ID}`, edit, "PATCH"), 404, "not_found");
+  });
   it("a reply to a reply (depth) is a 400 from the database", async () => {
     state.acked = true;
     state.dbFail = { code: "22023" };

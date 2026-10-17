@@ -17,7 +17,7 @@ import {
   toggleResponseSchema,
 } from "@/domain/community/schemas";
 import { contentState } from "@/domain/community/status";
-import { authedRoute, ApiProblem, badRequest, CACHE, forbidden, notFound, readJsonBody, tooManyRequests } from "@/server/api/http";
+import { authedRoute, ApiProblem, badRequest, CACHE, notFound, readJsonBody, tooManyRequests } from "@/server/api/http";
 import { authorize } from "@/server/auth/authorize";
 import { withRequestContext, type Db } from "@/server/db/context";
 import { checkRateLimit, RATE_LIMITS, type RateLimitConfig } from "@/server/ratelimit/rate-limiter";
@@ -35,14 +35,17 @@ function pgCode(error: unknown): string | undefined {
   return typeof code === "string" ? code : undefined;
 }
 
-/** Definer functions signal: P0002 not found, 42501 not yours, 22023 not allowed. */
+/**
+ * Definer functions signal: P0002 not found, 42501 not yours, 22023 not allowed. "Not yours" answers
+ * the same 404 as "not found", so a caller cannot probe whether someone else's post exists (B10).
+ */
 async function guarded<T>(run: () => Promise<T>, messages: { invalid?: string } = {}): Promise<T> {
   try {
     return await run();
   } catch (error) {
     const code = pgCode(error);
     if (code === "P0002") throw notFound("This is no longer available.");
-    if (code === "42501") throw forbidden();
+    if (code === "42501") throw notFound("This is no longer available.");
     if (code === "22023") throw badRequest(messages.invalid ?? "That is not allowed.");
     throw error;
   }
