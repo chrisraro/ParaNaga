@@ -5,7 +5,7 @@
 // passes in. The sheet engine (detents, drag, hand-off) is app-shell/bottom-sheet.tsx.
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { ViewTransition, useEffect, useState, type ReactNode } from "react";
 import { savePlacePrefill } from "@/domain/saved/saved";
 import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
 import { SheetGrabber, TINY_SHEET, sheetGrows, useHeaderDrag, useScrollHandoff, type SheetControl } from "@/ui/app-shell/bottom-sheet";
@@ -92,7 +92,7 @@ export function EndpointSheet({
   const [list, setList] = useState<HTMLDivElement | null>(null);
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
   useScrollHandoff(sheet, list);
-  useHeaderDrag(sheet, header);
+  useHeaderDrag(sheet, header ?? list, header ? undefined : '[data-testid="trip-detail-header"], [data-testid="guidance-header"]');
   // Tiny peek: only the grabber shows; the rows and the footer lie under the tab bar.
   const tinyPeek = snap === 0 && sheet.height !== null && sheet.height < TINY_SHEET;
   // Growing: the padding that stands for the off-screen part shrinks with the lift, not 360 ms
@@ -144,15 +144,17 @@ export function EndpointSheet({
       <div ref={setList} className="pn-sheet__content" inert={tinyPeek}>
         {detailOpen ? null : (
           <div ref={setHeader} className="pn-sheet__head" data-testid="sheet-header">
-            <TripEndsCard
-              endpoints={endpoints}
-              focused={focused}
-              startSub={startSub}
-              destinationSub={destinationSub}
-              onFocus={onRowTap}
-              onClear={onClear}
-              onSwap={onSwap}
-            />
+            <ViewTransition name="pn-trip-ends">
+              <TripEndsCard
+                endpoints={endpoints}
+                focused={focused}
+                startSub={startSub}
+                destinationSub={destinationSub}
+                onFocus={onRowTap}
+                onClear={onClear}
+                onSwap={onSwap}
+              />
+            </ViewTransition>
             {summary}
           </div>
         )}
