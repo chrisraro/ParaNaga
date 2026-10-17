@@ -69,12 +69,17 @@
   background: var(--pn-fill);
   color: var(--pn-label);
   font-size: 16px;
-  outline: none;
   transition: border-color var(--pn-dur-fast) var(--pn-ease);
 }
 
 .pn-signin__input:focus {
   border-color: var(--pn-accent);
+}
+
+/* Keep a visible focus ring (WCAG 2.4.7 / 1.4.11); the border change alone is too faint. */
+.pn-signin__input:focus-visible {
+  outline: 2px solid var(--pn-accent);
+  outline-offset: 2px;
 }
 
 .pn-signin__btn {

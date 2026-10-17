@@ -3,7 +3,7 @@
 import "@/ui/kit/styles";
 import "@/ui/auth/sign-in.css";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getAuthClient } from "@/client/auth/client";
 
@@ -13,6 +13,19 @@ export function SignInScreen() {
   const [step, setStep] = useState<"email" | "otp">("email");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const backToEmail = useRef(false);
+
+  // "Use a different email" unmounts the code form: put focus back on the email field.
+  useEffect(() => {
+    if (step === "email" && backToEmail.current) {
+      backToEmail.current = false;
+      emailRef.current?.focus();
+    }
+  }, [step]);
+
+  // Never pretend: without a configured auth service nobody can sign in, and nothing is sent.
+  const unavailableMessage = "Sign-in is not available right now. Everything in ParaNaga still works as a guest.";
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,11 +35,7 @@ export function SignInScreen() {
     try {
       const client = getAuthClient();
       if (!client) {
-        setStatus({
-          type: "info",
-          message: "Sign-in service is currently in offline/preview mode. Testing email accepted.",
-        });
-        setStep("otp");
+        setStatus({ type: "error", message: unavailableMessage });
         return;
       }
       // Trigger email OTP / magic code via neon auth client
@@ -55,8 +64,7 @@ export function SignInScreen() {
     try {
       const client = getAuthClient();
       if (!client) {
-        setStatus({ type: "success", message: "Signed in successfully (test mode). Redirecting..." });
-        window.location.href = "/app/more";
+        setStatus({ type: "error", message: unavailableMessage });
         return;
       }
       const res = await (client as unknown as { signIn?: { emailOtp: (args: { email: string; otp: string }) => Promise<{ error?: { message?: string } }> } }).signIn?.emailOtp({
@@ -107,7 +115,7 @@ export function SignInScreen() {
 
       <div className="pn-card pn-signin__card">
         {status && (
-          <div className={`pn-signin__status pn-signin__status--${status.type}`} role="status">
+          <div className={`pn-signin__status pn-signin__status--${status.type}`} role={status.type === "error" ? "alert" : "status"}>
             {status.message}
           </div>
         )}
@@ -123,6 +131,7 @@ export function SignInScreen() {
                 type="email"
                 required
                 autoComplete="email"
+                ref={emailRef}
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -150,6 +159,7 @@ export function SignInScreen() {
                 type="text"
                 required
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 pattern="[0-9]*"
                 maxLength={6}
                 placeholder="123456"
@@ -172,6 +182,7 @@ export function SignInScreen() {
               type="button"
               className="pn-btn pn-btn--secondary"
               onClick={() => {
+                backToEmail.current = true;
                 setStep("email");
                 setStatus(null);
               }}

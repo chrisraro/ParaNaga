@@ -3,12 +3,19 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SignInScreen } from "@/ui/auth/sign-in-screen";
 
+const auth = vi.hoisted(() => ({
+  configured: true,
+  sendVerificationOtp: vi.fn(async () => ({})),
+}));
+
 vi.mock("@/client/auth/client", () => ({
-  getAuthClient: () => null,
+  getAuthClient: () => (auth.configured ? { emailOtp: { sendVerificationOtp: auth.sendVerificationOtp } } : null),
 }));
 
 describe("SignInScreen (S21)", () => {
   beforeEach(() => {
+    auth.configured = true;
+    auth.sendVerificationOtp.mockClear();
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 })));
   });
 
@@ -48,5 +55,17 @@ describe("SignInScreen (S21)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Use a different email" }));
 
     expect(screen.getByLabelText("Email address")).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByLabelText("Email address"));
+  });
+
+  it("never pretends to sign in when the auth service is not configured", async () => {
+    auth.configured = false;
+    render(<SignInScreen />);
+    fireEvent.change(screen.getByLabelText("Email address"), { target: { value: "commuter@example.com" } });
+    fireEvent.click(screen.getByTestId("send-otp-btn"));
+
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/not available right now/));
+    expect(screen.queryByTestId("verify-otp-btn")).toBeNull();
+    expect(document.body.textContent).not.toMatch(/Signed in|code sent/i);
   });
 });
