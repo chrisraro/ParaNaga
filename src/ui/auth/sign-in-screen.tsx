@@ -7,6 +7,26 @@ import { useState } from "react";
 import Link from "next/link";
 import { getAuthClient } from "@/client/auth/client";
 
+type AuthResult = { error?: { message?: string } | null } | undefined | null;
+
+/** The slice of the Neon Auth client this screen uses; any method may be missing on a misconfigured service. */
+type AuthClientLike = {
+  emailOtp?: { sendVerificationOtp?: (args: { email: string; type: string }) => Promise<AuthResult> };
+  signIn?: {
+    emailOtp?: (args: { email: string; otp: string }) => Promise<AuthResult>;
+    social?: (args: { provider: string; callbackURL: string }) => Promise<AuthResult>;
+  };
+};
+
+/** Turns the service's technical messages into calm copy; unknown messages fall back to ours. */
+function friendlyAuthError(message: string | undefined, fallback: string): string {
+  if (!message) return fallback;
+  if (/invalid origin/i.test(message)) return "Sign-in is not set up for this address yet. You can keep using ParaNaga as a guest.";
+  if (/too many|rate/i.test(message)) return "Too many tries. Please wait a minute and try again.";
+  if (/invalid|expired|otp/i.test(message)) return "That code did not work. Check it, or ask for a new one.";
+  return fallback;
+}
+
 export function SignInScreen() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -14,34 +34,30 @@ export function SignInScreen() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
 
+  const fail = (error: { message?: string } | null | undefined, fallback: string) =>
+    setStatus({ type: "error", message: friendlyAuthError(error?.message, fallback) });
+
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
     setBusy(true);
     setStatus(null);
     try {
-      const client = getAuthClient();
-      if (!client) {
-        setStatus({
-          type: "info",
-          message: "Sign-in service is currently in offline/preview mode. Testing email accepted.",
-        });
-        setStep("otp");
+      const client = getAuthClient() as AuthClientLike | null;
+      // Never report success unless the service answered without an error.
+      if (!client?.emailOtp?.sendVerificationOtp) {
+        fail(null, "Sign-in is not available right now. You can keep using ParaNaga as a guest.");
         return;
       }
-      // Trigger email OTP / magic code via neon auth client
-      const res = await (client as unknown as { emailOtp?: { sendVerificationOtp: (args: { email: string; type: string }) => Promise<{ error?: { message?: string } }> } }).emailOtp?.sendVerificationOtp({
-        email: email.trim(),
-        type: "sign-in",
-      });
-      if (res?.error) {
-        setStatus({ type: "error", message: res.error.message || "Failed to send code. Please try again." });
-      } else {
-        setStatus({ type: "success", message: `Verification code sent to ${email.trim()}.` });
-        setStep("otp");
+      const res = await client.emailOtp.sendVerificationOtp({ email: email.trim(), type: "sign-in" });
+      if (!res || res.error) {
+        fail(res?.error, "Could not send the code. Please try again.");
+        return;
       }
+      setStatus({ type: "success", message: `Verification code sent to ${email.trim()}.` });
+      setStep("otp");
     } catch {
-      setStatus({ type: "error", message: "Network error sending code. Please try again." });
+      fail(null, "Network error sending the code. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -53,24 +69,20 @@ export function SignInScreen() {
     setBusy(true);
     setStatus(null);
     try {
-      const client = getAuthClient();
-      if (!client) {
-        setStatus({ type: "success", message: "Signed in successfully (test mode). Redirecting..." });
-        window.location.href = "/app/more";
+      const client = getAuthClient() as AuthClientLike | null;
+      if (!client?.signIn?.emailOtp) {
+        fail(null, "Sign-in is not available right now. You can keep using ParaNaga as a guest.");
         return;
       }
-      const res = await (client as unknown as { signIn?: { emailOtp: (args: { email: string; otp: string }) => Promise<{ error?: { message?: string } }> } }).signIn?.emailOtp({
-        email: email.trim(),
-        otp: otp.trim(),
-      });
-      if (res?.error) {
-        setStatus({ type: "error", message: res.error.message || "Invalid code. Please check and try again." });
-      } else {
-        setStatus({ type: "success", message: "Signed in successfully. Redirecting..." });
-        window.location.href = "/app/more";
+      const res = await client.signIn.emailOtp({ email: email.trim(), otp: otp.trim() });
+      if (!res || res.error) {
+        fail(res?.error, "That code did not work. Check it and try again.");
+        return;
       }
+      setStatus({ type: "success", message: "Signed in. Redirecting..." });
+      window.location.href = "/app/more";
     } catch {
-      setStatus({ type: "error", message: "Could not verify code. Please try again." });
+      fail(null, "Could not verify the code. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -80,17 +92,16 @@ export function SignInScreen() {
     setBusy(true);
     setStatus(null);
     try {
-      const client = getAuthClient();
-      if (!client) {
-        setStatus({ type: "info", message: "Google OAuth is not configured on this environment." });
+      const client = getAuthClient() as AuthClientLike | null;
+      if (!client?.signIn?.social) {
+        fail(null, "Google sign-in is not available right now.");
         return;
       }
-      await client.signIn.social({
-        provider: "google",
-        callbackURL: "/app/more",
-      });
+      // Absolute, so Neon sends the browser back to this site (its host is a trusted origin) and not to its own.
+      const res = await client.signIn.social({ provider: "google", callbackURL: `${window.location.origin}/app/more` });
+      if (res?.error) fail(res.error, "Could not start Google sign-in.");
     } catch {
-      setStatus({ type: "error", message: "Could not initiate Google sign in." });
+      fail(null, "Could not start Google sign-in.");
     } finally {
       setBusy(false);
     }
