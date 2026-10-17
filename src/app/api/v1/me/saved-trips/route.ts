@@ -1,15 +1,14 @@
 import { sql } from "drizzle-orm";
 import { withRequestContext } from "@/server/db/context";
 import { authorize } from "@/server/auth/authorize";
-import { CACHE, readJsonBody, badRequest } from "@/server/api/http";
-import { safeRequestId } from "@/server/request-id";
+import { authedRoute, CACHE, readJsonBody, badRequest, tooManyRequests } from "@/server/api/http";
+import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
 import { savedTripsResponseSchema, syncSavedTripsPayloadSchema } from "@/domain/saved/sync-schemas";
 import type { SavedTrip } from "@/domain/saved/saved";
 import type { PlanOptionDto } from "@/domain/api/plan";
 
-export async function GET(request: Request) {
+async function getSaved(request: Request, requestId: string) {
   const user = await authorize("account.saved.sync");
-  const requestId = safeRequestId(request.headers.get("x-vercel-id") ?? request.headers.get("x-request-id"));
 
   const trips = await withRequestContext({ userId: user.id, requestId }, async (db) => {
     const rows = await db.execute<{
@@ -74,14 +73,18 @@ export async function GET(request: Request) {
   });
 }
 
-export async function POST(request: Request) {
+async function postSaved(request: Request, requestId: string) {
   const user = await authorize("account.saved.sync");
-  const requestId = safeRequestId(request.headers.get("x-vercel-id") ?? request.headers.get("x-request-id"));
   const raw = await readJsonBody(request, 131072);
   const parsed = syncSavedTripsPayloadSchema.safeParse(raw);
   if (!parsed.success) {
     throw badRequest("Invalid saved trips payload.");
   }
+
+  const allowed = await withRequestContext({ userId: user.id, requestId }, (db) =>
+    checkRateLimit(db, request, RATE_LIMITS.mutationPerMinute, user.id),
+  );
+  if (!allowed) throw tooManyRequests();
 
   await withRequestContext({ userId: user.id, requestId }, async (db) => {
     for (const trip of parsed.data.trips) {
@@ -132,4 +135,13 @@ export async function POST(request: Request) {
   return Response.json({ ok: true, count: parsed.data.trips.length }, {
     headers: { "Cache-Control": CACHE.none, "X-Request-Id": requestId },
   });
+}
+
+/** Every path (no session, bad body, DB error) answers the standard error envelope. */
+export function GET(request: Request): Promise<Response> {
+  return authedRoute(request, "saved-trips-get", (requestId) => getSaved(request, requestId));
+}
+
+export function POST(request: Request): Promise<Response> {
+  return authedRoute(request, "saved-trips-post", (requestId) => postSaved(request, requestId));
 }
