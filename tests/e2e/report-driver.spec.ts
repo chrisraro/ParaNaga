@@ -142,7 +142,7 @@ test("guest reads the explainer and is asked to sign in", async ({ page }) => {
   await open(page);
   await expect(page.getByTestId("driver-progress")).toHaveText("Step 1 of 4");
   await expect(page.getByTestId("driver-emergency")).toContainText("In an emergency, call 911.");
-  await expect(page.getByTestId("driver-explainer")).toContainText("not sent to Naga City");
+  await expect(page.getByTestId("driver-explainer")).toContainText("does not send it to Naga City");
   await expect(page.getByTestId("driver-explainer")).toContainText("never posted in Community");
   await expect(page.getByTestId("driver-signin").getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/app/sign-in");
   await expect(page.getByTestId("driver-next")).toHaveCount(0);

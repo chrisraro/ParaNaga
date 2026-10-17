@@ -60,7 +60,7 @@ test.describe("phone", () => {
 
   test("the tab bar navigates Map ↔ Explore ↔ Saved ↔ More, focusing each screen's h1", async ({ page }) => {
     await openApp(page);
-    await expect(tabBar(page).getByRole("link")).toHaveText(["Map", "Explore", "Saved", "More"]);
+    await expect(tabBar(page).getByRole("link")).toHaveText(["Map", "Explore", "Saved", "Community", "More"]);
     await expect(tab(page, "Map")).toHaveAttribute("aria-current", "page");
 
     await tab(page, "Explore").click();
