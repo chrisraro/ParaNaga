@@ -334,9 +334,8 @@ test.describe("desktop", () => {
   test("F-02 widening a window covers the app with the gate (inert) and keeps its state", async ({ page }) => {
     await page.setViewportSize({ width: 800, height: 720 });
     await openApp(page);
-    await chooseOnMap(page).click();
-    await page.getByRole("button", { name: "Set start here" }).click();
-    await expect(rowMain(page, "start")).toContainText("Pinned location");
+    await openTripSheet(page);
+    await expect(rowMain(page, "destination")).toContainText("Pinned location");
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await expect(page.getByTestId("large-screen-overlay")).toBeVisible();
@@ -348,7 +347,7 @@ test.describe("desktop", () => {
     await page.setViewportSize({ width: 800, height: 720 });
     await expect(page.getByTestId("large-screen-overlay")).toHaveCount(0);
     expect(await page.getByTestId("app-root").evaluate((el) => (el as HTMLElement).inert)).toBe(false);
-    await expect(rowMain(page, "start")).toContainText("Pinned location");
+    await expect(rowMain(page, "destination")).toContainText("Pinned location");
   });
 });
 
