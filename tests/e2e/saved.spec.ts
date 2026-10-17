@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { chooseOption } from "./fixtures/options";
+import { backToMap, chooseOption } from "./fixtures/options";
 
 // Saved trips, saved places, Share and history (Increment A, Task 8; decision D3: everything on
 // this phone, IndexedDB). POST /api/v1/plan is intercepted with fixtures; tiles are aborted;
@@ -116,6 +116,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(save).toHaveAccessibleName("Saved, remove from saved trips");
   await expect(page.getByTestId("trip-action-status")).toContainText("Saved on this phone");
 
+  await backToMap(page);
   await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Saved" })).toBeFocused();
   await expect(page.getByText("Saved trips work offline, as text.")).toBeVisible();
@@ -168,6 +169,7 @@ test("reopening online re-plans on the current data and opens the same option", 
   await planAndOpenTrip(page);
   await page.getByTestId("trip-save").click();
   await expect(page.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
+  await backToMap(page);
   await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
   await expect(page).toHaveURL(/\/app$/);
@@ -240,6 +242,7 @@ test("Share copies a text-only summary (no coordinates, no links) when the share
 test("history is off by default and nothing is recorded", async ({ page }) => {
   await openApp(page);
   await planAndOpenTrip(page);
+  await backToMap(page);
   await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
   await page.getByRole("tab", { name: "History" }).click();
   await expect(page).toHaveURL(/\/app\/saved\?tab=history$/);
@@ -296,6 +299,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       await expect(page.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
       await page.getByLabel("Include exact points when sharing").check();
       await expectTripDetailAxeClean(page);
+      await backToMap(page);
       await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
       await expect(page.getByTestId("saved-trip")).toBeVisible();
       await expectAxeClean(page);

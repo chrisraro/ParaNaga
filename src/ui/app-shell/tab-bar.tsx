@@ -3,8 +3,8 @@
 // The app's tab bar (artboard Home "Main" nav; Components "Tab bar · Liquid Glass over the map"):
 // a glass pill 16 px from the sides and 24 px from the bottom, over the map and the tab pages.
 // Map · Explore · Saved · More (decision D4: no Community tab until it has content). The current
-// tab carries aria-current="page". AppFrame hides it in detail panels, while a pin is being placed
-// and while guidance runs.
+// tab carries aria-current="page". AppFrame hides it in detail panels, and the home screen hides it
+// whenever the map is not the whole screen: a pin being placed, planning, a trip's detail, guidance.
 //
 // Offline (Task 12): a soft navigation cannot reach the server, so while useIsOffline() is true
 // the tabs are plain links (a document navigation) and the service worker serves the tab's
@@ -55,14 +55,14 @@ export function useBottomClearance(ref: RefObject<HTMLElement | null>, report: (
   }, [ref, report]);
 }
 
-export function TabBar({ onClearance }: { onClearance: (px: number) => void }) {
+export function TabBar({ onClearance, returning = false }: { onClearance: (px: number) => void; returning?: boolean }) {
   const current = activeTab(usePathname());
   const offline = useIsOffline();
   const Anchor = offline ? "a" : Link;
   const nav = useRef<HTMLElement>(null);
   useBottomClearance(nav, onClearance);
   return (
-    <nav ref={nav} aria-label="Main" className="pn-tabbar" data-tabbar="" data-testid="tab-bar">
+    <nav ref={nav} aria-label="Main" className="pn-tabbar" data-tabbar="" data-returning={returning ? "" : undefined} data-testid="tab-bar">
       {TABS.map((tab) => (
         <Anchor
           key={tab.href}

@@ -416,7 +416,8 @@ test("a reload resumes the step with location off; End guidance puts the trip ba
   await expect(guide(page)).toHaveCount(0);
   await expect(page.getByTestId("trip-option")).toHaveCount(3);
   await expect(page.getByTestId("endpoint-destination")).toContainText("Pinned location");
-  await expect(tabBar(page)).toBeVisible();
+  // The trip is back in the options (directions): the tab bar returns with the map, not before.
+  await expect(tabBar(page)).toBeHidden();
   expect(await page.evaluate((k) => window.sessionStorage.getItem(k), SESSION_KEY)).toBeNull();
 });
 
@@ -550,7 +551,7 @@ for (const [width, height] of [
   [360, 640],
   [390, 844],
 ] as const) {
-  test(`Start trip stays on screen, above the tab bar and unobscured at peek, half and full on ${width}x${height}`, async ({ page, context }) => {
+  test(`Start trip stays on screen and unobscured at peek, half and full on ${width}x${height}`, async ({ page, context }) => {
     await page.setViewportSize({ width, height });
     await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
     await grantLocation(context);
@@ -572,8 +573,9 @@ for (const [width, height] of [
     const check = async () => {
       await sheetSettled(page);
       const box = (await start.boundingBox())!;
-      const tabTop = (await tabBar(page).boundingBox())!.y;
-      expect(box.y + box.height, "above the tab bar").toBeLessThanOrEqual(tabTop + 1);
+      // No tab bar in detail (it belongs to the map): the action sits above the screen's bottom edge.
+      await expect(tabBar(page)).toBeHidden();
+      expect(box.y + box.height, "above the screen edge").toBeLessThanOrEqual(page.viewportSize()!.height + 1);
       expect(box.y, "inside the sheet").toBeGreaterThanOrEqual((await sheet.boundingBox())!.y);
       expect(box.height).toBeGreaterThanOrEqual(44);
       // Hit test: a real tap at its centre lands on the button, not on the tab bar or the map.
