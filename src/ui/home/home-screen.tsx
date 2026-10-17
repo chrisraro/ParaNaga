@@ -981,8 +981,8 @@ export function HomeScreen() {
           recenterSignal={recenterSignal}
           recenterTarget={recenterTarget}
           recenterTargetLabel={recenterLabel}
-          stopPins={guiding ? home.stopPins : tripDetailOpen ? NO_PINS : stopsInView.stops}
-          stopPinsInteractive={picking === null && !guiding}
+          stopPins={atHome || picking !== null ? stopsInView.stops : NO_PINS}
+          stopPinsInteractive={atHome}
           onStopSelect={handleStopSelect}
           onBoundsChange={setViewBounds}
           onLocate={handleLocate}

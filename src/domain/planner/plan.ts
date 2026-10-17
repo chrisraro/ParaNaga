@@ -657,10 +657,9 @@ export function planTrip(
   const d: Place = { kind: "destination", lat: destination.lat, lng: destination.lng, stopId: null, name: null };
   const short = direct.m < WALK_CARD_MAX_M;
   const best = jeep.options[0];
-  const jeepRecommended = best !== undefined && (farZone !== null || (short && best.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M));
-  if (jeepRecommended) best.labels.unshift("Recommended");
+  const jeepRecommended = best !== undefined && (!short || best.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M);
   // A short trip with no jeepney keeps its Recommended walk, far end or not (review I2).
-  else if (best === undefined && access && !short) access.labels.push("Recommended");
+  if (best === undefined && access && !short) access.labels.push("Recommended");
   const walkShown = short;
   // Far trip: a special trip from a tricycle terminal serving the zone; else, when there is no jeepney nor access
   // option, ONE special-trip tricycle card (the owner-described special trip) rather than a long walk alone.
@@ -693,15 +692,20 @@ export function planTrip(
       ? `Walking the whole way is about ${direct.m} m along streets`
       : `Walking the whole way is about ${direct.m} m (straight-line estimate)`);
   }
+  const jeepBuilt: PlanOption[] = [];
   for (const { c, labels } of block) {
-    const o1 = jeepneyOption(c, labels, net, g, snapshot, origin, destination);
+    const o1 = jeepneyOption(c, [...labels], net, g, snapshot, origin, destination);
     // Only the best candidate of a via route carries the chip (a second variant of the same route does not).
     const via = vias.reps.has(c) ? vias.byRoute.get(net.variants[c.hops[0]!.v]!.routeCode) : undefined;
-    options.push(via ? { ...o1, via } : o1);
+    jeepBuilt.push(via ? { ...o1, via } : o1);
   }
+  const fareMin = (opt: PlanOption) => opt.fare.minCentavos ?? Number.POSITIVE_INFINITY;
+  jeepBuilt.sort((a, b) => fareMin(a) - fareMin(b) || a.score - b.score);
+  if (jeepRecommended && jeepBuilt[0]) jeepBuilt[0].labels.unshift("Recommended");
+  options.push(...jeepBuilt);
   if (access) options.push(access);
   if (jeep.options.length > 0 || access) notes.unshift(UNVERIFIED_ROUTE_BADGE);
-  if (farZone === null) options.push(tricycleOption(g, snapshot, origin, destination, now, !short));
+  if (farZone === null) options.push(tricycleOption(g, snapshot, origin, destination, now, !short && !jeepRecommended));
   else if (special) options.push(tricycleOption(g, snapshot, origin, destination, now, false, special));
   if (padyak) options.push(padyak);
 

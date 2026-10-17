@@ -35,7 +35,6 @@ import { RouteLinesLayer, collectRouteLegendItems, linesHaveOnewayCaution } from
 import { STOP_HIT_RADIUS_PX, StopsLayer } from "./stops-layer";
 import { TerminalsLayer } from "./terminals-layer";
 import { TripLinesLayer, type TripLinesData } from "./trip-lines-layer";
-import { isFreePointId } from "@/domain/trip/ride-ends";
 import type { HighlightStop, NagaMapPins, NagaMapProps } from "./types";
 import { UserLocationLayer } from "./user-location-layer";
 
@@ -93,29 +92,6 @@ const DESTINATION_ICON = pinIcon("destination");
 function PlaceMarker({ point, label }: { point: LatLng; label: string }) {
   const icon = useMemo(() => pinIcon("destination", label), [label]);
   return <Marker position={[point.lat, point.lng]} icon={icon} interactive={false} keyboard={false} />;
-}
-
-/** Boarding (filled) / getting-off (hollow) stop marker: a DOM marker above the lines. */
-function tripStopIcon(stop: HighlightStop): L.DivIcon {
-  const free = isFreePointId(stop.id);
-  // A free point is a place along the route, not a stop: a diamond, and named so.
-  const label = escapeHtml(
-    free ? `${stop.role === "board" ? "Board" : "Get off"} near here, stop not marked` : `${stop.role === "board" ? "Board at" : "Get off at"} ${stop.label}`,
-  );
-  const shape = free
-    ? '<rect class="pn-trip-stop__ring" x="6" y="6" width="12" height="12" transform="rotate(45 12 12)" />'
-    : '<circle class="pn-trip-stop__ring" cx="12" cy="12" r="8" />';
-  return L.divIcon({
-    className: `pn-trip-stop pn-trip-stop--${stop.role}${free ? " pn-trip-stop--free" : ""}`,
-    html: `<svg width="24" height="24" viewBox="0 0 24 24" role="img" aria-label="${label}">${shape}</svg>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-}
-
-function TripStopMarker({ stop }: { stop: HighlightStop }) {
-  const icon = useMemo(() => tripStopIcon(stop), [stop]);
-  return <Marker position={[stop.lat, stop.lng]} icon={icon} interactive={false} keyboard={false} zIndexOffset={200} />;
 }
 
 /**
@@ -380,12 +356,7 @@ export default function NagaMapLeaflet({
     () => legendVisualKeys(null, legend ?? collectRouteLegendItems(routeLines ?? [])),
     [legend, routeLines],
   );
-  const freePoints = highlightStops?.some((s) => isFreePointId(s.id)) ?? false;
-  const namedStops = highlightStops?.some((s) => !isFreePointId(s.id)) ?? false;
-  const legendExtras = useMemo(
-    () => [...(tripLines?.legendExtras ?? []), ...(freePoints ? (["free_point"] as const) : [])],
-    [tripLines, freePoints],
-  );
+  const legendExtras = useMemo(() => [...(tripLines?.legendExtras ?? [])], [tripLines]);
   const legendCaution = useMemo(
     () => Boolean(tripLines?.caution) || linesHaveOnewayCaution(routeLines),
     [tripLines, routeLines],
@@ -538,7 +509,6 @@ export default function NagaMapLeaflet({
           />
         ) : null}
         {placeMarker ? <PlaceMarker point={placeMarker.point} label={placeMarker.label} /> : null}
-        {highlightStops?.map((stop) => <TripStopMarker key={`${stop.role}:${stop.id}`} stop={stop} />)}
         <ResizeSync />
         <FitHighlights
           stops={highlightStops}
@@ -593,8 +563,8 @@ export default function NagaMapLeaflet({
         // even in dark theme); the legend panel itself keeps the theme's colours.
         surface={surface}
         caution={legendCaution}
-        // The stop entry only while stop pins (or a trip's stop markers) are on the map.
-        showStops={(stopPins?.length ?? 0) > 0 || namedStops}
+        // The stop entry only while stop pins are on the map (route screens draw none).
+        showStops={(stopPins?.length ?? 0) > 0}
         extras={legendExtras}
         notice={legendNotice}
       />

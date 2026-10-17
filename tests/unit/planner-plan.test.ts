@@ -58,12 +58,12 @@ describe("planTrip: recommendation rules (plan E §B)", () => {
     expect(p.options.find((o) => o.mode === "tricycle")!.labels).toEqual([]);
   });
 
-  it("520 m: no walk card, jeepney options first, tricycle Recommended after them", () => {
+  it("520 m: no walk card, cheapest jeepney option first and Recommended, tricycle after them", () => {
     const p = plan(at(2400, 10), at(2920, 10));
     expect(p.directWalkEstimateMeters).toBeGreaterThanOrEqual(500);
     expect(modes(p).filter((m) => m !== "padyak")).toEqual(["jeepney", "tricycle"]);
-    expect(p.options.find((o) => o.mode === "tricycle")!.labels).toEqual(["Recommended"]);
-    expect(p.options[0]!.labels).not.toContain("Recommended");
+    expect(p.options[0]!.labels).toContain("Recommended");
+    expect(p.options.find((o) => o.mode === "tricycle")!.labels).toEqual([]);
     expect(p.notes.some((n) => /Walking the whole way is about \d+ m along streets/.test(n))).toBe(true);
     expect(p.jeepneyReason).toBeNull();
   });

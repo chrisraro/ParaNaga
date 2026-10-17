@@ -4,7 +4,8 @@
 // plan-level `jeepneyReason` and `notes`. The client validates them, so a drift fails the e2e run.
 // Values are illustrative (Loop A pins near Plaza Rizal, R2 and Loop C away from any pin), not
 // planner output, but the recommendation rules follow planTrip (src/domain/planner/plan.ts):
-//   at least 500 m   no walk card; jeepneys, then the tricycle (Recommended), then padyak;
+//   at least 500 m   no walk card; the cheapest jeepney (Recommended), the other jeepneys, then the tricycle
+//                    (Recommended only with no jeepney), then padyak;
 //   under 500 m      the walk card is Recommended, or the best jeepney when it passes within 100 m.
 import { encodePolyline } from "../../../src/domain/geo/polyline";
 import { parseWalkGraph, routeWalk } from "../../../src/domain/walk/walk-graph";
@@ -213,7 +214,7 @@ export const PROVISIONAL_PLAN = {
     reason: null,
     directWalkEstimateMeters: 1450,
     jeepneyReason: null,
-    options: [recommended, leastWalking, tricycleOption(TRICYCLE_ROUTED, true)],
+    options: [{ ...recommended, labels: ["Recommended", "Fewest transfers"] }, leastWalking, tricycleOption(TRICYCLE_ROUTED, false)],
     notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1450 m (straight-line estimate)"],
   },
   stops: [
@@ -241,7 +242,7 @@ export const WALK_SHORTER_PLAN = {
 /** The same trip after a replan in which the first jeepney option is gone (the tricycle stays Recommended). */
 export const LEAST_WALKING_ONLY_PLAN = {
   ...PROVISIONAL_PLAN,
-  plan: { ...PROVISIONAL_PLAN.plan, options: [leastWalking, tricycleOption(TRICYCLE_ROUTED, true)] },
+  plan: { ...PROVISIONAL_PLAN.plan, options: [{ ...leastWalking, labels: ["Recommended", "Least walking"] }, tricycleOption(TRICYCLE_ROUTED, false)] },
 };
 
 /** The origin is the boarding stop itself: the first walk is 0 m (F-20). */
@@ -250,8 +251,8 @@ export const AT_STOP_PLAN = {
   plan: {
     ...PROVISIONAL_PLAN.plan,
     options: [
-      withTotals({ ...recommended, legs: [walkLeg({ ...ORIGIN, lat: A1.lat, lng: A1.lng }, asStop(A1), 0, 0), ...recommended.legs.slice(1)] }),
-      tricycleOption(TRICYCLE_ROUTED, true),
+      withTotals({ ...recommended, labels: ["Recommended", "Fewest transfers"], legs: [walkLeg({ ...ORIGIN, lat: A1.lat, lng: A1.lng }, asStop(A1), 0, 0), ...recommended.legs.slice(1)] }),
+      tricycleOption(TRICYCLE_ROUTED, false),
     ],
   },
 };
@@ -334,7 +335,7 @@ const twoRides = withTotals({
 
 export const TWO_RIDE_PLAN = {
   ...PROVISIONAL_PLAN,
-  plan: { ...PROVISIONAL_PLAN.plan, options: [twoRides, tricycleOption(TRICYCLE_ROUTED, true)] },
+  plan: { ...PROVISIONAL_PLAN.plan, options: [{ ...twoRides, labels: ["Recommended", "Fewest transfers"] }, tricycleOption(TRICYCLE_ROUTED, false)] },
   stops: [
     ...PROVISIONAL_PLAN.stops,
     { id: B1.id, name: B1.name, code: "B1" },
@@ -376,7 +377,7 @@ export const ANYWHERE_DROP_OFF_PLAN = {
   revision: REVISION,
   plan: {
     revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 1450, jeepneyReason: null,
-    options: [r2Option(), tricycleOption(TRICYCLE_ROUTED, true)],
+    options: [r2Option([], ["Recommended", "Fewest transfers"]), tricycleOption(TRICYCLE_ROUTED, false)],
     notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1450 m (straight-line estimate)"],
   },
   stops: [],
@@ -396,7 +397,7 @@ export const TRICYCLE_RECOMMENDED_PLAN = {
   plan: {
     ...ANYWHERE_DROP_OFF_PLAN.plan,
     directWalkEstimateMeters: 1260,
-    options: [r2Option(), tricycleOption(T14_TRICYCLE, true)],
+    options: [r2Option([], ["Recommended", "Fewest transfers"]), tricycleOption(T14_TRICYCLE, false)],
     notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1260 m along streets"],
   },
 };
@@ -467,7 +468,7 @@ export const ROUTE_NOTES_PLAN = {
   revision: REVISION,
   plan: {
     revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 1450, jeepneyReason: null,
-    options: [r2Option([OWNER_REPORT_NOTE]), loopCOption([COMMUNITY_NOTE]), tricycleOption(TRICYCLE_ROUTED, true)],
+    options: [r2Option([OWNER_REPORT_NOTE], ["Recommended", "Fewest transfers"]), loopCOption([COMMUNITY_NOTE]), tricycleOption(TRICYCLE_ROUTED, false)],
     notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1450 m (straight-line estimate)"],
   },
   stops: [],
@@ -510,10 +511,10 @@ export const VIA_PLAN = {
   plan: {
     revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 1450, jeepneyReason: null,
     options: [
-      viaOption(R2_OUT, "R2", "Centro–Del Rosario via Magsaysay Avenue", "Magsaysay", FRANCIA_NOTE, ["Fewest transfers"]),
+      viaOption(R2_OUT, "R2", "Centro–Del Rosario via Magsaysay Avenue", "Magsaysay", FRANCIA_NOTE, ["Recommended", "Fewest transfers"]),
       viaOption(R3_CIRCUIT, "R3", "Centro–Del Rosario via Roxas Avenue (Diversion)", "Roxas (Diversion)", null, []),
       viaOption(R4_CIRCUIT, "R4", "Centro–Del Rosario via Panganiban Drive", "Panganiban", null, []),
-      tricycleOption(TRICYCLE_ROUTED, true),
+      tricycleOption(TRICYCLE_ROUTED, false),
     ],
     notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1450 m (straight-line estimate)"],
   },
