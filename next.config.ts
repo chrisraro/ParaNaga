@@ -10,6 +10,16 @@ if (envProblem) throw new Error(envProblem);
 // (docs/spec/05-security.md §5.10) and is enforced once MapLibre, PMTiles and
 // the service worker have been verified under it. The service worker (/serwist/sw.js, Task 12)
 // fetches same-origin only (connect-src 'self') and is a same-origin script (worker-src 'self').
+// Browser uploads PUT straight to the object store with a presigned URL (B4/B6/B8), so that one
+// origin is allowed in connect-src (spec 05 §5.10 lists https://{storage-host}). Not a secret.
+const storageOrigin = (() => {
+  try {
+    return process.env.STORAGE_ENDPOINT ? new URL(process.env.STORAGE_ENDPOINT).origin : "";
+  } catch {
+    return "";
+  }
+})();
+
 const cspReportOnly = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
@@ -17,7 +27,7 @@ const cspReportOnly = [
   "img-src 'self' data: blob: https://tile.openstreetmap.org https://api.maptiler.com",
   // Report a driver (task B8): the in-app camera preview and captured clips are local blob: URLs.
   "media-src 'self' blob:",
-  "connect-src 'self'",
+  storageOrigin ? `connect-src 'self' ${storageOrigin}` : "connect-src 'self'",
   "frame-src 'self' https://www.google.com/maps/embed/",
   "worker-src 'self' blob:",
   "child-src blob:",
