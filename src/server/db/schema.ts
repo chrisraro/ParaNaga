@@ -47,6 +47,38 @@ export const preference = core.table("preference", {
   historyEnabled: boolean("history_enabled").notNull(),
 });
 
+export const savedPlace = core.table("saved_place", {
+  id: uuid("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  clientId: text("client_id").notNull(),
+  label: text("label").notNull(),
+  point: text("point").notNull(),
+  source: text("source").notNull(),
+  savedAt: timestamp("saved_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+export const savedTrip = core.table("saved_trip", {
+  id: uuid("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  clientId: text("client_id").notNull(),
+  revisionId: uuid("revision_id").notNull(),
+  revisionLabel: text("revision_label").notNull(),
+  revisionKind: text("revision_kind").notNull(),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  startLabel: text("start_label").notNull(),
+  startPoint: text("start_point").notNull(),
+  startPlace: text("start_place"),
+  destLabel: text("dest_label").notNull(),
+  destPoint: text("dest_point").notNull(),
+  destPlace: text("dest_place"),
+  option: jsonb("option").notNull(),
+  stops: jsonb("stops").notNull(),
+  variants: jsonb("variants").notNull(),
+  savedAt: timestamp("saved_at", { withTimezone: true }).notNull(),
+  invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
+});
+
 // ---------------------------------------------------------------- transit / ingest (0001)
 // Public, read-only for the app. Only the tables the app reads are mirrored here; the import
 // script writes with plain SQL. Geography columns come back as EWKB hex; read coordinates

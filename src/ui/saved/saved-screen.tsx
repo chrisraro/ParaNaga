@@ -21,6 +21,8 @@ import "./saved.css";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useAuthSession } from "@/client/auth/use-auth-session";
+import { syncSavedItems } from "@/client/saved/sync";
 import { clearHistory } from "@/client/history/trip-history";
 import { useSavedWalkLengths } from "@/client/network/use-walk-graph";
 import { useSnapshot } from "@/client/network/use-snapshot";
@@ -510,12 +512,47 @@ export function SavedScreen() {
     setSeenUrl(fromUrl);
     setTab(fromUrl);
   }
+  const { user } = useAuthSession();
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
+
   const choose = (next: SavedTab) => {
     setTab(next);
     window.history.replaceState(window.history.state, "", next === "trips" ? "/app/saved" : `/app/saved?tab=${next}`);
   };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setSyncStatus(null);
+    try {
+      const res = await syncSavedItems();
+      setSyncStatus(`Synced with account: ${res.placesUploaded + res.tripsUploaded} sent, ${res.placesDownloaded + res.tripsDownloaded} received.`);
+    } catch {
+      setSyncStatus("Sync failed. Check your network connection.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <div className="pn-saved" data-testid="saved-screen">
+      {user && (
+        <div className="pn-card pn-saved__sync" data-testid="saved-sync-card">
+          <div className="pn-saved__sync-text">
+            <strong>Account sync</strong>
+            <span>{syncStatus || "Backup saved trips & places to your account"}</span>
+          </div>
+          <button
+            type="button"
+            className="pn-btn pn-btn--secondary pn-saved__sync-btn"
+            onClick={handleSync}
+            disabled={syncing}
+            data-testid="saved-sync-btn"
+          >
+            {syncing ? "Syncing..." : "Sync now"}
+          </button>
+        </div>
+      )}
       <Segmented options={TAB_OPTIONS} value={tab} onChange={choose} label="Saved sections" variant="tablist" testId="saved-tabs" />
       <div id="pn-saved-panel" role="tabpanel" aria-labelledby={`pn-saved-tab-${tab}`} className="pn-saved__panel" data-testid={`saved-panel-${tab}`}>
         {PANELS[tab]()}
