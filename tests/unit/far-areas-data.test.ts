@@ -124,6 +124,23 @@ describe("committed far-areas-2026-10-18.json", () => {
     ]);
   });
 
+  it("every sourceCodes entry in the far-areas file exists as an imported source in the modes seed", () => {
+    const known = new Set(seed.sources.filter((s) => s.review.decision === "import").map((s) => s.code));
+    const cited = new Set<string>();
+    const walk = (v: unknown): void => {
+      if (Array.isArray(v)) v.forEach(walk);
+      else if (v && typeof v === "object") {
+        for (const [k, x] of Object.entries(v)) {
+          if (k === "sourceCodes") for (const c of x as string[]) cited.add(c);
+          else walk(x);
+        }
+      }
+    };
+    walk(data);
+    expect(cited.size).toBeGreaterThan(0);
+    for (const c of cited) expect(known.has(c), c).toBe(true);
+  });
+
   it("zoneOf on anchors and city points", () => {
     const at = (id: number) => ({ lat: nodes.get(id)!.lat!, lng: nodes.get(id)!.lon! });
     expect(zoneOf(at(12717296950), data)).toBe("FZ01");

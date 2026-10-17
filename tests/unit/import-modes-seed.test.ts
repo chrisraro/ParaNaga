@@ -356,9 +356,9 @@ describe("real file content", () => {
 describe("research sources RT/RL/RP/RH and owner report U02 (2026-10-17)", () => {
   const research = real.sources.filter((s) => /^R[TLPH][0-9]{2}$/.test(s.code));
 
-  it("has one record per candidate: 24 tricycle, 19 loops, 22 padyak, 21 jeepney-hours (counts of the candidate files)", () => {
+  it("has one record per candidate: 24 tricycle candidates + 8 TODA ordinances (RT25-RT32), 19 loops, 22 padyak, 21 jeepney-hours", () => {
     const count = (p: string) => research.filter((s) => s.code.startsWith(p)).length;
-    expect({ RT: count("RT"), RL: count("RL"), RP: count("RP"), RH: count("RH") }).toEqual({ RT: 24, RL: 19, RP: 22, RH: 21 });
+    expect({ RT: count("RT"), RL: count("RL"), RP: count("RP"), RH: count("RH") }).toEqual({ RT: 32, RL: 19, RP: 22, RH: 21 });
   });
 
   it("every new code is unique and matches the R-prefixed pattern; the parser refuses other R codes", () => {
@@ -375,6 +375,28 @@ describe("research sources RT/RL/RP/RH and owner report U02 (2026-10-17)", () =>
     expect(u02.type).toBe("user_report_unverified");
     expect(u02.title).toBe("Project owner report to ParaNaga, 2026-10-17: request reroutes on loops; 'Francia' signboard; padyak in Abella, Sabang, Sta. Cruz, Igualdad; some jeepneys start about 5 am or before");
     expect(u02.review.decision).toBe("import");
+  });
+
+  it("RT25-RT32 are the TODA ordinances, official, imported, each with an ordinance URL on www2.naga.gov.ph", () => {
+    const toda = real.sources.filter((s) => /^RT(2[5-9]|3[0-2])$/.test(s.code));
+    expect(toda.map((s) => s.code)).toEqual(["RT25", "RT26", "RT27", "RT28", "RT29", "RT30", "RT31", "RT32"]);
+    expect(toda.map((s) => s.title.match(/\d{4}-\d{3}/)![0])).toEqual(["1998-103", "1998-107", "1999-046", "2001-047", "2004-008", "2009-073", "2018-079", "2020-052"]);
+    for (const s of toda) {
+      expect(s.type).toBe("official");
+      expect(s.url).toMatch(/^https:\/\/www2\.naga\.gov\.ph\/(prev-ordinance|sp_ordinances)\/ordinance-no-\d{4}-\d{3}\/$/);
+      expect(s.review.decision).toBe("import");
+    }
+  });
+
+  it("U03 is the 2026-10-18 owner report (far areas, TODAs), unverified, and RN04 cites it as owner_report_unverified", () => {
+    const u03 = real.sources.find((s) => s.code === "U03")!;
+    expect(u03.type).toBe("user_report_unverified");
+    expect(u03.url).toBeNull();
+    expect(u03.title).toBe("Project owner report to ParaNaga, 2026-10-18: far areas (Cararayan, Pacol, Panicuason) tricycles charge special trips; Balatas to Cararayan tricycle terminal; Del Rosario vias (Panganiban, Diversion, Magsaysay-Francia); Ateneo and jeepney-terminal TODAs");
+    expect(u03.review.decision).toBe("import");
+    const rn04 = real.routeNotes.find((n) => n.code === "RN04")!;
+    expect(rn04).toMatchObject({ routeCodes: ["R2"], evidence: "owner_report_unverified" });
+    expect(rn04.sourceCodes).toContain("U03");
   });
 
   it("sources the research marks not used are excluded with a reason (P22, H16, H17)", () => {

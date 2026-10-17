@@ -1,7 +1,7 @@
 # Reviewed research seeds
 
 `naga-modes-seed-YYYY-MM-DD.json` holds the reviewed records for all transport modes: sources
-N01–N41, U01 and U02 (owner report), research sources RT01–RT24, RL01–RL19, RP01–RP22 and RH01–RH21, terminals T01–T16, the tricycle feeder routes, per-route vehicle classes (fleet),
+N01–N41, U01, U02 and U03 (owner reports), research sources RT01–RT32, RL01–RL19, RP01–RP22 and RH01–RH21, terminals T01–T16, the tricycle feeder routes, per-route vehicle classes (fleet),
 cooperative names, regional services, fare-rule source additions, new fare rules F06–F12, fare
 observations, time-estimate parameters, street aliases and a conflicts register.
 
@@ -15,10 +15,12 @@ because `Data_Sets/` is the original research package and is read as a whole.
 | Family | Codes | Records | Input (sha256 in `header.preparedFrom`; not committed) | Imported | Excluded |
 |---|---|---|---|---|---|
 | Tricycle restrictions | RT01–RT24 | 24 | `tricycle-restrictions-candidates-2026-10.json` | 24 | 0 |
+| TODA ordinances (Increment F) | RT25–RT32 | 8 | TODA research 2026-10-17 (ordinances 1998-103, 1998-107, 1999-046, 2001-047, 2004-008, 2009-073, 2018-079, 2020-052) | 8 | 0 |
 | Loops and routes | RL01–RL19 | 19 | `loops-and-routes-candidates-2026-10.json` | 19 | 0 |
 | Padyak | RP01–RP22 | 22 | `padyak-candidates-2026-10.json` (sources in `padyak-2026-10.md`) | 21 | 1 (RP22: no padyak content) |
 | Jeepney hours | RH01–RH21 | 21 | `jeepney-hours-candidates-2026-10.json` (sources in `jeepney-hours-2026-10.md`) | 19 | 2 (RH16, RH17: no service content) |
 | Owner report | U02 | 1 | Project owner report, 2026-10-17 (plan section E) | 1 | 0 |
+| Owner report | U03 | 1 | Project owner report, 2026-10-18 (far areas plan) | 1 | 0 |
 
 The R-prefixed codes never clash with terminal codes `T01…`. Their pattern is `^R[TLPH][0-9]{2}$`.
 
@@ -107,3 +109,9 @@ refuses unknown keys; the chairperson conflict is recorded in `conflicts` withou
 ## Revised seed policy (Increment E)
 
 The seed was edited in place after its first import (same file name, new hash). The importer now treats the same date with a different hash as a revised-seed batch (key `modes-seed:<date>:<sha12>`, revision `modes-<date>.<n>`) instead of refusing it; an older date is still refused. A revised batch records its own research-conflict register. See ADR 010 in `docs/spec/03-architecture.md`.
+
+## TODA and tricycle terminal research (Increment F, revised batch)
+
+The seed gained U03 (owner report of 2026-10-18: far areas Cararayan, Pacol and Panicuason charge special trips; a Balatas to Cararayan tricycle terminal; Del Rosario vias Panganiban, Diversion and Magsaysay-Francia; TODAs at Ateneo and at jeepney terminals) and the official ordinance sources RT25 to RT32. U03 is unverified and never shown as a fact. Ordinance 2025-067 is already N06 and RT08. Note RN04 (the 'Francia' signboard on R2) now also cites U03.
+
+What the TODA research found: Naga has no published roster of registered TODAs and no TODA terminal list. Core-city for-hire trimobiles run on a color-zoned franchise system with no published names or terminals. The upper barangays (Panicuason, Carolina, Pacol, San Isidro, Cararayan, Balatas, Del Rosario) run on 1998 to 2025 ordinances that name special-franchise zones, unit counts and centro-to-junction routes; zone units may not operate outside their zone except in emergencies. The data supports a jeepney to the upper-barangay centro or junction, then a zone tricycle, but not door-to-door tricycle service from Centro. The only tricycle route documented to touch Ateneo de Naga is VISTODA/LAVISTODA (Ord 2025-067), with waiting areas at Deca Vistansa and Cararayan Proper that have no coordinates. An Ateneo TODA terminal and TODAs at jeepney terminals are not documented anywhere and rest on the owner report only. The single OSM tricycle terminal is Balatas Tricycle Terminal (T14, community). Because no other TODA terminal has coordinates, no TODA terminal rows were added: they could not be planned. No distance fare matrix or special-trip fare exists in any ordinance; the P60 to P80 special-trip figures are unofficial. Open conflicts: VISTODA unit counts (30 vs 33), the Cararayan Orange zone merged into White (2009-073) against later unit counts, and Salunguigui versus Deca-Langon (10 units each, same or different).
