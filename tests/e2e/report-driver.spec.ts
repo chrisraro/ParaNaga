@@ -216,7 +216,7 @@ test("signed in: capture, retake, details, review and a private receipt; the cam
   await expect(summary).toContainText("Overcharging");
   await expect(summary).toContainText("ABC 1234");
   await expect(summary).toContainText("about 18 m · Near the plaza");
-  await expect(page.getByTestId("driver-ack-notice")).toContainText("not automatically sent to Naga City");
+  await expect(page.getByTestId("driver-ack-notice")).toContainText("ParaNaga does not send it to Naga City");
 
   await page.getByTestId("driver-send").click();
   await expect(page.getByTestId("driver-error")).toContainText("Tick the box");

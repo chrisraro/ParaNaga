@@ -7,7 +7,7 @@ export const DRIVER_NOTICE_VERSION = "2026-10-v1";
 
 export const EXPLAINER_POINTS = [
   "Your report stays private inside ParaNaga. It is never posted in Community and never shown to other commuters.",
-  "It is not sent to Naga City or any agency automatically. After you send it, you can choose to continue in MyNaga yourself.",
+  "ParaNaga does not send it to Naga City or any agency. After you send it, you can choose to continue in MyNaga yourself.",
   "A ParaNaga reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer.",
   "Stick to what you saw. Avoid filming faces of other passengers where you can.",
 ] as const;
