@@ -1,0 +1,329 @@
+{
+  "header": {
+    "schemaVersion": 1,
+    "preparedOn": "2026-10-18",
+    "roadSnapshot": "naga-roads-2026-10-16.osm.json",
+    "reviewer": "owner review pending (Increment F, T1)"
+  },
+  "barangayAnchors": [
+    {
+      "osmNodeId": 12717296953,
+      "name": "Abella",
+      "place": "quarter",
+      "lat": 13.62372,
+      "lng": 123.1793108
+    },
+    {
+      "osmNodeId": 12717296952,
+      "name": "Bagumbayan Norte",
+      "place": "quarter",
+      "lat": 13.6377208,
+      "lng": 123.1855635
+    },
+    {
+      "osmNodeId": 10577982322,
+      "name": "Bagumbayan Sur",
+      "place": "quarter",
+      "lat": 13.6302786,
+      "lng": 123.1856451
+    },
+    {
+      "osmNodeId": 1875494497,
+      "name": "Balatas",
+      "place": "quarter",
+      "lat": 13.6309562,
+      "lng": 123.2023391
+    },
+    {
+      "osmNodeId": 12717296951,
+      "name": "Calauag",
+      "place": "quarter",
+      "lat": 13.6419237,
+      "lng": 123.1906521
+    },
+    {
+      "osmNodeId": 12717296950,
+      "name": "Cararayan",
+      "place": "village",
+      "lat": 13.6288288,
+      "lng": 123.2406424,
+      "radiusM": 1500
+    },
+    {
+      "osmNodeId": 12717296954,
+      "name": "Carolina",
+      "place": "village",
+      "lat": 13.6643348,
+      "lng": 123.2908614,
+      "radiusM": 3000
+    },
+    {
+      "osmNodeId": 12717296949,
+      "name": "Concepcion Grande",
+      "place": "quarter",
+      "lat": 13.6195273,
+      "lng": 123.2214347
+    },
+    {
+      "osmNodeId": 12717296948,
+      "name": "Concepcion Pequeña",
+      "place": "quarter",
+      "lat": 13.6210606,
+      "lng": 123.2010377
+    },
+    {
+      "osmNodeId": 12717296947,
+      "name": "Dayangdang",
+      "place": "quarter",
+      "lat": 13.6275264,
+      "lng": 123.1964651
+    },
+    {
+      "osmNodeId": 12717296946,
+      "name": "Del Rosario",
+      "place": "quarter",
+      "lat": 13.6173903,
+      "lng": 123.2375487
+    },
+    {
+      "osmNodeId": 12122619454,
+      "name": "Dinaga",
+      "place": "quarter",
+      "lat": 13.6215646,
+      "lng": 123.1854205
+    },
+    {
+      "osmNodeId": 12717296945,
+      "name": "Igualdad Interior",
+      "place": "quarter",
+      "lat": 13.6219077,
+      "lng": 123.1819055
+    },
+    {
+      "osmNodeId": 12717296944,
+      "name": "Lerma",
+      "place": "quarter",
+      "lat": 13.6228707,
+      "lng": 123.1873367
+    },
+    {
+      "osmNodeId": 12717296942,
+      "name": "Liboton",
+      "place": "quarter",
+      "lat": 13.6381236,
+      "lng": 123.1907331
+    },
+    {
+      "osmNodeId": 12717296943,
+      "name": "Mabolo",
+      "place": "quarter",
+      "lat": 13.6145058,
+      "lng": 123.1826654
+    },
+    {
+      "osmNodeId": 12717296941,
+      "name": "Pacol",
+      "place": "village",
+      "lat": 13.6595434,
+      "lng": 123.2511904,
+      "radiusM": 3000
+    },
+    {
+      "osmNodeId": 11112006649,
+      "name": "Panicuason",
+      "place": "village",
+      "lat": 13.6632922,
+      "lng": 123.3179196,
+      "radiusM": 4500
+    },
+    {
+      "osmNodeId": 12717296940,
+      "name": "Peñafrancia",
+      "place": "quarter",
+      "lat": 13.6333839,
+      "lng": 123.194691
+    },
+    {
+      "osmNodeId": 12717296939,
+      "name": "Sabang",
+      "place": "quarter",
+      "lat": 13.6177003,
+      "lng": 123.1789552
+    },
+    {
+      "osmNodeId": 12717296938,
+      "name": "San Felipe",
+      "place": "quarter",
+      "lat": 13.6397717,
+      "lng": 123.2031012
+    },
+    {
+      "osmNodeId": 12717296937,
+      "name": "San Francisco",
+      "place": "quarter",
+      "lat": 13.6258665,
+      "lng": 123.1873255
+    },
+    {
+      "osmNodeId": 14084819763,
+      "name": "San Isidro",
+      "place": "village",
+      "lat": 13.6323904,
+      "lng": 123.2695351,
+      "radiusM": 1800
+    },
+    {
+      "osmNodeId": 12717296936,
+      "name": "Santa Cruz",
+      "place": "quarter",
+      "lat": 13.6260271,
+      "lng": 123.1827469
+    },
+    {
+      "osmNodeId": 12122477935,
+      "name": "Tabuco",
+      "place": "quarter",
+      "lat": 13.6170078,
+      "lng": 123.1831368
+    },
+    {
+      "osmNodeId": 4811249487,
+      "name": "Tinago",
+      "place": "quarter",
+      "lat": 13.6237043,
+      "lng": 123.1921903
+    },
+    {
+      "osmNodeId": 12717296935,
+      "name": "Triangulo",
+      "place": "quarter",
+      "lat": 13.6197825,
+      "lng": 123.1923097
+    }
+  ],
+  "farZones": [
+    {
+      "code": "FZ01",
+      "name": "Cararayan and San Isidro",
+      "nodeIds": [
+        12717296950,
+        14084819763
+      ],
+      "routes": [
+        "R1"
+      ],
+      "radiusM": 1500,
+      "note": "Per-anchor radiusM values are provisional (owner reviews them with pnpm data:far-zone-places): rural barangays extend several km from the village centre; Cararayan stays tighter because city-proper places (Ateneo JHS, Metro Naga Sports Complex) lie about 2 km from it.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U03"
+      ]
+    },
+    {
+      "code": "FZ02",
+      "name": "Pacol",
+      "nodeIds": [
+        12717296941
+      ],
+      "routes": [
+        "R6",
+        "R7"
+      ],
+      "radiusM": 1500,
+      "note": "Per-anchor radiusM values are provisional (owner reviews them with pnpm data:far-zone-places): rural barangays extend several km from the village centre; Cararayan stays tighter because city-proper places (Ateneo JHS, Metro Naga Sports Complex) lie about 2 km from it.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U03"
+      ]
+    },
+    {
+      "code": "FZ03",
+      "name": "Carolina and Panicuason",
+      "nodeIds": [
+        12717296954,
+        11112006649
+      ],
+      "routes": [
+        "R7"
+      ],
+      "radiusM": 1500,
+      "note": "Per-anchor radiusM values are provisional (owner reviews them with pnpm data:far-zone-places): rural barangays extend several km from the village centre; Cararayan stays tighter because city-proper places (Ateneo JHS, Metro Naga Sports Complex) lie about 2 km from it.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U03"
+      ]
+    }
+  ],
+  "routeBoarding": [
+    {
+      "routeCode": "R6",
+      "boarding": {
+        "terminalCode": "T10"
+      },
+      "pathLinkOk": true,
+      "note": "OSM 2017 loading point at Centro"
+    },
+    {
+      "routeCode": "R7",
+      "boarding": {
+        "terminalCode": "T11"
+      },
+      "pathLinkOk": true,
+      "note": "OSM 2017 loading point at Centro"
+    },
+    {
+      "routeCode": "R1",
+      "boarding": {
+        "pathStart": "outbound"
+      },
+      "note": "No Centro loading point on file; label: where R1 starts (route plan)"
+    }
+  ],
+  "viaGroups": [
+    {
+      "code": "VG-CENTRO-DELROSARIO",
+      "routes": [
+        {
+          "routeCode": "R2",
+          "via": "Magsaysay",
+          "aliasNote": "Locals may call it Francia (unconfirmed)"
+        },
+        {
+          "routeCode": "R3",
+          "via": "Roxas (Diversion)"
+        },
+        {
+          "routeCode": "R4",
+          "via": "Panganiban"
+        }
+      ],
+      "endAnchors": [
+        12717296946
+      ],
+      "evidence": "official",
+      "sourceCodes": [
+        "RH02"
+      ],
+      "note": "Ordinance 2025-070 routes R2, R3, R4; T12 note: Del Rosario boarding toward Centro via Panganiban, Magsaysay or Roxas. The Francia alias is an owner report (U03), not in any instrument. endAnchors: Del Rosario only; T09 also names Concepcion, but Concepcion Pequena lies in Centro and would bring back ordinary Centro hops, so it is not listed."
+    }
+  ],
+  "tricycleTerminals": [
+    {
+      "terminalCode": "T14",
+      "todas": [],
+      "serves": [
+        {
+          "farZone": "FZ01"
+        }
+      ],
+      "nearestJeepTerminal": null,
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U03",
+        "RT31",
+        "RT30"
+      ],
+      "note": "A franchised Balatas-Cararayan special tricycle route exists (Ord 2018-079, RT31; 18 units); its fare matrix is unknown, so the fare stays not fixed. Ord 2009-073 (RT30) merged the Orange Cararayan zone into White."
+    }
+  ]
+}

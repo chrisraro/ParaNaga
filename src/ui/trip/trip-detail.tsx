@@ -26,7 +26,7 @@ import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
 import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
 import { formatLeg } from "@/domain/eta/format";
-import { streetCardView } from "@/domain/trip/option-card";
+import { FARE_NOT_FIXED, isAccessOption, isSpecialTrip, specialFareText, streetCardView, viaChipText } from "@/domain/trip/option-card";
 import { optionNotesView, type OptionNotesView } from "@/domain/trip/option-notes";
 import { rideEnds } from "@/domain/trip/ride-ends";
 import { nearestTricycleTerminal } from "@/domain/trip/tricycle-hint";
@@ -44,7 +44,7 @@ import { EtaBasisSheet } from "./eta-basis-sheet";
 import { EtaPeakNote, EtaTotalText, SpokenRange, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
 import { RouteNote } from "./route-note";
 import { ServiceWindowNote } from "./service-window-note";
-import { FareChip, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
+import { FareChip, FarNote, UnverifiedBadge, planLookups, type PlanLookups } from "./trip-parts";
 
 export type TripEnds = { start: SavedEnd; destination: SavedEnd };
 export type TripNote = { text: string; tone: "info" | "warning" };
@@ -157,7 +157,8 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
       return;
     }
     if (leg.kind === "tricycle" || leg.kind === "padyak") {
-      out.push(...streetSteps(leg, i, ctx));
+      // Not the last leg (the access option): the tricycle ends at its named loading point.
+      out.push(...streetSteps(leg, i, i < last ? { ...ctx, toName: leg.to.name ?? "the jeepney" } : ctx));
       return;
     }
     if (leg.kind !== "ride") return;
@@ -278,7 +279,7 @@ function rideSteps(
 }
 
 /** A tricycle or padyak step: the destination, how far and on what basis, then the planner notes (rules, fare, "time not estimated"). */
-function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepContext): Step[] {
+function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepContext & { toName?: string }): Step[] {
   const v = streetCardView(leg);
   const terminal = leg.kind === "tricycle" ? nearestTricycleTerminal(leg.from, leg.to, ctx.terminals ?? []) : undefined;
   return [
@@ -290,7 +291,7 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
         <div className="pn-tl__stack">
           <div>
             <strong className="pn-tl__title">
-              Take a {leg.kind} to {ctx.destination}
+              Take a {leg.kind} to {ctx.toName ?? ctx.destination}
             </strong>
             {v.headline ? (
               <p className="pn-tl__sub pn-tl__sub--gold" data-testid="street-state">
@@ -470,6 +471,8 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const stepContext: StepContext = { start: ends?.start.label || "your start", destination: ends?.destination.label || "your destination", notes, terminals, showOnMap: frame ? frame.showOnMap : null };
   const noMinutes = estimate !== null && !estimate.legs.some((l) => l.estimated);
   const streets = option.legs.filter((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
+  const access = isAccessOption(option);
+  const via = viaChipText(option);
 
   // Walk legs show "Straight line · loading street paths…" until the walk graph arrives: say so politely.
   const loadingPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "straight" && (l as EnrichedWalkLeg).path.label === WALK_LOADING_LABEL);
@@ -507,7 +510,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           ) : (
             <EtaTotalText estimate={estimate} className={estimate ? "pn-trip-detail__time" : undefined} testId="trip-detail-time" />
           )}
-          <FareChip fare={option.fare} />
+          <FareChip fare={option.fare} text={specialFareText(option)} />
         </div>
         {estimate?.total.peak ? (
           <p className="pn-trip-detail__peak">
@@ -521,6 +524,13 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
         ) : null}
         {ends ? <TripActions data={data} option={option} ends={ends} exactPoints={exactPoints} etaModel={etaModel} walkLengths={walkLengths} /> : null}
       </div>
+      {via ? (
+        <p className="pn-trip-detail__via" data-testid="detail-via">
+          {via}
+          {option.via?.note ? <> · {option.via.note}</> : null}
+        </p>
+      ) : null}
+      <FarNote note={data.plan.farNote} options={[option]} />
       {rides.length > 0 ? <UnverifiedBadge /> : null}
       {notes.serviceWindow ? <ServiceWindowNote note={notes.serviceWindow} /> : null}
       {note ? (
@@ -570,21 +580,29 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           streets.map((leg, i) => (
             <p key={i} className="pn-fares__row" data-testid="leg-fare">
               <span>{leg.kind === "tricycle" ? "Tricycle" : "Padyak"}</span>
-              <span>{fareChipText(leg.fare)} · confirm with the driver</span>
+              <span>{isSpecialTrip(option) ? FARE_NOT_FIXED : fareChipText(leg.fare)} · confirm with the driver</span>
             </p>
           ))
         ) : (
           <>
+            {access
+              ? streets.map((leg, i) => (
+                  <p key={`s${i}`} className="pn-fares__row" data-testid="leg-fare">
+                    <span>Tricycle</span>
+                    <span>{fareChipText(leg.fare)} · confirm with the driver</span>
+                  </p>
+                ))
+              : null}
             {rides.map((leg, i) => (
               <p key={i} className="pn-fares__row" data-testid="leg-fare">
                 <span>{routeChipLabel(leg.routeCode, leg.routeName)}</span>
                 <span>{fareChipText(leg.fare)}</span>
               </p>
             ))}
-            {rides.length > 1 ? (
+            {rides.length > 1 || access ? (
               <p className="pn-fares__row pn-fares__row--total">
                 <span>Total</span>
-                <span>{fareChipText(option.fare)}</span>
+                <span>{specialFareText(option) ?? fareChipText(option.fare)}</span>
               </p>
             ) : null}
             <p className="pn-fares__note">

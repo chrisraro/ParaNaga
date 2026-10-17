@@ -108,13 +108,13 @@ type StreetLegLike = { kind: "tricycle" | "padyak"; distanceMeters: number | nul
  * One tricycle or padyak leg as a step: "Take a tricycle to {destination} · about 1.5 km along streets ·
  * minimum fare ₱15 · confirm with the driver" (padyak: "₱10 per passenger"). Never a time.
  */
-export function streetRideText(leg: StreetLegLike, destination: string): string {
+export function streetRideText(leg: StreetLegLike, destination: string, midTrip = false): string {
   const km = leg.distanceMeters === null ? "" : `about ${(leg.distanceMeters / 1000).toFixed(1)} km`;
   const route = leg.basis === "street_graph" ? `${km} along streets`
     : leg.basis === "straight_line" ? `${km} in a straight line, route not confirmed`
     : "street route not available";
   const fare = leg.fare.minCentavos === null ? "fare not available"
-    : leg.kind === "tricycle" ? `minimum fare ${peso(leg.fare.minCentavos)}` : `${peso(leg.fare.minCentavos)} per passenger`;
+    : leg.kind === "tricycle" ? `minimum fare ${peso(leg.fare.minCentavos)}${midTrip ? " (Ordinance 2024-002)" : ""}` : `${peso(leg.fare.minCentavos)} per passenger`;
   return `Take a ${leg.kind} to ${destination} · ${route} · ${fare} · confirm with the driver`;
 }
 
@@ -142,7 +142,9 @@ export function optionTitle(option: { rides: number; walkEstimateMeters: number;
     if (street) return street.kind === "tricycle" ? "Tricycle" : "Padyak";
     return `Walk ${formatDistance(option.walkEstimateMeters)}`;
   }
-  return option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode ?? "", l.routeName ?? "")).join(" + ");
+  const rides = option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode ?? "", l.routeName ?? "")).join(" + ");
+  // The access option (Increment F): a tricycle to the jeep's loading point first.
+  return option.legs[0]?.kind === "tricycle" ? `Tricycle, then Jeep ${rides}` : rides;
 }
 
 /** "Loop A" from a name like "Centro–Magsaysay Loop A"; otherwise the public route code. */

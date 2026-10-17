@@ -6,6 +6,8 @@ import { FLAGGED_PATH_NOTE } from "@/domain/planner/notes";
 import {
   cardRouteNotes,
   jeepneyReasonText,
+  optionsCountText,
+  previewIndex,
   recommendedIndex,
   serviceWindowCardLine,
   streetCardView,
@@ -24,6 +26,20 @@ describe("recommendedIndex", () => {
   });
   it("is -1 when none is labelled (never guesses)", () => {
     expect(recommendedIndex([{ ...streetOnly("tricycle"), labels: [] }])).toBe(-1);
+  });
+});
+
+describe("previewIndex and optionsCountText (review I1: nothing Recommended)", () => {
+  it("previews the Recommended option; with none, the first non-walk option; with only walks, none", () => {
+    const walk = { ...walkOnly(), labels: [] as never[] };
+    const tri = { ...streetOnly("tricycle"), labels: [] as never[] };
+    expect(previewIndex([walk, { ...tri, labels: ["Recommended" as const] }])).toBe(1);
+    expect(previewIndex([walk, tri])).toBe(1);
+    expect(previewIndex([walk])).toBe(-1);
+  });
+  it("counts the options", () => {
+    expect(optionsCountText(1)).toBe("1 option");
+    expect(optionsCountText(3)).toBe("3 options");
   });
 });
 

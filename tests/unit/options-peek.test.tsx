@@ -53,6 +53,17 @@ describe("OptionsPeek names the Recommended option, not the first card", () => {
   });
 });
 
+describe("OptionsPeek with nothing Recommended (review I1)", () => {
+  it("says how many options there are and never announces a best option", () => {
+    const plan = planResponseSchema.parse(TRICYCLE_RECOMMENDED_PLAN);
+    const unlabelled = { ...plan, plan: { ...plan.plan, options: plan.plan.options.map((o) => ({ ...o, labels: [] })) } };
+    render(<OptionsPeek data={unlabelled} expanded={false} listShown={false} onToggle={noop} />);
+    expect(screen.getByTestId("options-count").textContent).toBe(`${plan.plan.options.length} options`);
+    expect(screen.queryByTestId("options-best")).toBeNull();
+    expect(screen.getByTestId("options-peek").textContent).not.toContain("Best option");
+  });
+});
+
 describe("spoken names", () => {
   it("a fare range is spoken like the time range", () => {
     render(<FareShort fare={{ status: "estimate", minCentavos: 1400, maxCentavos: 1700 }} />);

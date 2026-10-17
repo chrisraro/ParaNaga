@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "./fixtures/plan-responses";
+import { ACCESS_PLAN, PROVISIONAL_PLAN, SPECIAL_TRIP_PLAN, TWO_RIDE_PLAN, VIA_PLAN } from "./fixtures/plan-responses";
 import { SEARCH_INDEX, SOURCES, STOP_A1, routeNetwork } from "./fixtures/network";
 import { chooseOption, expandOptions } from "./fixtures/options";
 
@@ -14,7 +14,16 @@ const CARD_WORDS_ONE_RIDE = 16;
 const CARD_WORDS_TWO_RIDES = 20;
 /** A tricycle or padyak card also carries its street rule (distance, restricted roads or area). */
 const CARD_WORDS_STREET = 32;
-const cardBudget = async (card: Locator, jeepney: number) => ((await card.getAttribute("data-mode")) === "tricycle" || (await card.getAttribute("data-mode")) === "padyak" ? CARD_WORDS_STREET : jeepney);
+/** Increment F: a via chip adds two words; the access card carries a tricycle fare line besides the jeepney card. */
+const CARD_WORDS_ONE_RIDE_VIA = 18;
+const CARD_WORDS_ACCESS = 31;
+const cardBudget = async (card: Locator, jeepney: number) => {
+  const mode = await card.getAttribute("data-mode");
+  if (mode === "tricycle" || mode === "padyak") return CARD_WORDS_STREET;
+  if ((await card.getByTestId("access-line").count()) > 0) return CARD_WORDS_ACCESS;
+  if ((await card.getByTestId("card-via").count()) > 0) return CARD_WORDS_ONE_RIDE_VIA;
+  return jeepney;
+};
 const DETAIL_HEADER_WORDS = 16;
 const GUIDANCE_WALK_WORDS = 22;
 const SM = SEARCH_INDEX.osmPlaces.find((p) => p.name === "SM City Naga")!;
@@ -230,6 +239,24 @@ test("a two-ride option card stays within 20 words and keeps the caution", async
     await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
   }
 });
+
+for (const [name, plan] of [["via", VIA_PLAN], ["access", ACCESS_PLAN], ["special-trip", SPECIAL_TRIP_PLAN]] as const) {
+  test(`the ${name} plan cards stay within their word budgets and keep the caution`, async ({ page }) => {
+    await page.route("**/api/v1/plan", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(plan) }),
+    );
+    await openApp(page);
+    await pinBoth(page);
+    await expandOptions(page);
+    const cards = page.getByTestId("trip-option");
+    await expect(cards.first()).toBeVisible();
+    for (const card of await cards.all()) {
+      expect(await words(card)).toBeLessThanOrEqual(await cardBudget(card, CARD_WORDS_ONE_RIDE));
+      if ((await card.getAttribute("data-mode")) === "tricycle") continue;
+      await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
+    }
+  });
+}
 
 test("hash links land on their target: a photo credit and the fare basis", async ({ page }) => {
   await page.goto("/app/help/sources");

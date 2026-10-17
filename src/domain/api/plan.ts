@@ -196,6 +196,10 @@ export const planOptionSchema = z.object({
     completeness: z.literal("estimate"),
   }),
   evidence: z.literal("provisional"),
+  /** Increment F (T5): which via of a shared corridor this one-ride option takes; absent in older bodies and off the corridor. */
+  via: z.object({ group: z.string(), routeCode: z.string(), label: z.string(), note: z.string().nullable() }).optional(),
+  /** Increment F: a special-trip tricycle (fare not fixed); absent in older bodies and on every other option. */
+  specialTrip: z.literal(true).optional(),
 }).transform((o) => ({ ...o, mode: o.mode ?? legMode(o.legs.map((l) => l.kind)) }))
   .refine((o) => o.mode === legMode(o.legs.map((l) => l.kind)), { message: "the mode is the one the legs travel" });
 // On the wire a walk leg's `path` is the encoded street path (string | null). The client replaces it
@@ -235,6 +239,8 @@ export const planResponseSchema = z.object({
     jeepneyReason: z.enum(["no_path_near_origin", "no_path_near_destination", "walk_shorter", "no_route"]).nullable().default(null),
     options: z.array(planOptionSchema).max(6),
     notes: z.array(z.string()),
+    /** Increment F: why no tricycle is suggested when an end is in a far zone; null otherwise and in older bodies. */
+    farNote: z.string().nullable().default(null),
   }),
   /** Every stop the plan names, with its source code (e.g. "A1"); null when the pin has none. */
   stops: z.array(z.object({ id: z.uuid(), name: z.string(), code: z.string().nullable() })),

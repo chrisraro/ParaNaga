@@ -48,7 +48,7 @@ import { useAppFrame, useApplyOnce, useHideTabBar } from "@/ui/app-shell/app-fra
 import { Guidance } from "@/ui/guidance/guidance";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail, type TripEnds } from "@/ui/trip/trip-detail";
-import { recommendedIndex } from "@/domain/trip/option-card";
+import { previewIndex } from "@/domain/trip/option-card";
 import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
@@ -103,7 +103,11 @@ export function highlightsFor(data: PlanResponse, optionId: string): HighlightSt
   const option = data.plan.options.find((o) => o.id === optionId);
   if (!option) return [];
   const lookups = planLookups(data);
-  return option.legs.flatMap((leg) => {
+  return option.legs.flatMap((leg, i) => {
+    // The access option's tricycle ends at a named loading point (not the last leg): a named stop to get off at.
+    if (leg.kind === "tricycle" && i < option.legs.length - 1 && leg.to.name) {
+      return [{ id: `tricycle:${i}`, lat: leg.to.lat, lng: leg.to.lng, role: "alight" as const, label: leg.to.name }];
+    }
     if (leg.kind !== "ride") return [];
     const ends = rideEnds(leg);
     if (!ends) return [];
@@ -686,9 +690,10 @@ export function HomeScreen() {
     () => (guidedSession && guidedCard ? { option: guidedSession.trip.option, variants: guidedCard.variants, revisionId: guidedCard.revisionId } : null),
     [guidedSession, guidedCard],
   );
-  // Options listed, none open: the recommended option is drawn as a preview (not tappable).
+  // Options listed, none open: the recommended option is drawn as a preview (not tappable); with none
+  // Recommended, the first non-walk option, else no preview (previewIndex).
   const previewOption =
-    ready && !guiding && !picking && !stored && !openOption && planData ? (planData.plan.options[Math.max(0, recommendedIndex(planData.plan.options))] ?? null) : null;
+    ready && !guiding && !picking && !stored && !openOption && planData ? (planData.plan.options[previewIndex(planData.plan.options)] ?? null) : null;
   const previewing = previewOption !== null;
   const shownOption = openOption ?? previewOption;
   const tripRevisionId = guidedTrip

@@ -96,6 +96,19 @@ describe("planOffline", () => {
     }
   });
 
+  it("Plaza Rizal to Del Rosario offline: the same via options as the server's pure planner (parity)", async () => {
+    const from = { lat: 13.6233869, lng: 123.1846726 };
+    const to = { lat: 13.6173903, lng: 123.2375487 };
+    const result = await planOffline(from, to);
+    expect(result.status).toBe("ready");
+    if (result.status !== "ready") return;
+    const streets = walkGraph.ok ? walkGraph.graph : null;
+    const expected = planResponseSchema.parse(buildPlanResponse(snapshot, planTrip(snapshot, { lines, streets }, from, to, { now: NOW }), lines));
+    expect(result.data).toEqual(expected);
+    const labels = result.data.plan.options.flatMap((o) => (o.via ? [o.via.label] : [])).sort();
+    expect(labels).toEqual(["Magsaysay", "Panganiban", "Roxas (Diversion)"]);
+  });
+
   it("refuses points outside Naga City like the server does", async () => {
     expect((await planOffline({ lat: 14.6, lng: 121.0 }, DESTINATION)).status).toBe("invalid");
   });

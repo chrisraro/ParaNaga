@@ -46,6 +46,7 @@ export const GUIDANCE_COPY = {
   atStop: "I'm at the stop",
   boarded: (chip: string) => `I boarded ${chip}`,
   arrived: "I've arrived",
+  gotOffTricycle: "I got off the tricycle",
   nextStopIsMine: "My stop is next",
   paraAck: "I said “Para”",
   gotOff: "I got off",
@@ -462,7 +463,8 @@ function streetView(session: GuidanceSession, step: StreetRideStep, total: numbe
     notes: step.notes,
     remainingTime: `${modeTitle(step.mode)} time not estimated`,
     keepOpen: GUIDANCE_COPY.keepOpen,
-    actions: [{ event: "arrived", label: GUIDANCE_COPY.arrived, kind: "primary" }, END],
+    // Not the last step (the access option): the tricycle only takes the rider to the jeep, so the trip goes on.
+    actions: [{ event: "arrived", label: step.index < total - 1 ? GUIDANCE_COPY.gotOffTricycle : GUIDANCE_COPY.arrived, kind: "primary" }, END],
     undo: undoAction(session),
     live: { politeness: "polite", text: title },
     usesLocation: false,
