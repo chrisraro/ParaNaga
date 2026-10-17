@@ -15,6 +15,8 @@ import "@/ui/kit/styles";
 import "./settings.css";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useAuthSession } from "@/client/auth/use-auth-session";
 import { clearDeviceData } from "@/client/device-data";
 import { useLocationPermission } from "@/client/geo/use-location-permission";
 import { clearHistory, hasHistory } from "@/client/history/trip-history";
@@ -119,16 +121,38 @@ export function MoreScreen() {
     }
   };
 
+  const { user, signOut } = useAuthSession();
+
   return (
     <div className="pn-settings" data-ready={ready ? "" : undefined}>
       <div className="pn-card pn-settings__account" data-testid="settings-account">
-        <span className="pn-settings__avatar">
-          <AccountIcon />
-        </span>
-        <span className="pn-settings__account-text">
-          <strong>No account needed</strong>
-          <span>Saved trips and places stay on this phone.</span>
-        </span>
+        <div className="pn-settings__account-main">
+          <span className="pn-settings__avatar">
+            <AccountIcon />
+          </span>
+          <span className="pn-settings__account-text">
+            <strong>{user ? user.name : "No account needed"}</strong>
+            <span>{user ? `Signed in · ${user.roles.join(", ") || "commuter"}` : "Saved trips and places stay on this phone."}</span>
+          </span>
+        </div>
+        {user ? (
+          <button
+            type="button"
+            className="pn-settings__account-action"
+            onClick={signOut}
+            data-testid="settings-sign-out"
+          >
+            Sign out
+          </button>
+        ) : (
+          <Link
+            href="/app/sign-in"
+            className="pn-settings__account-action"
+            data-testid="settings-sign-in"
+          >
+            Sign in
+          </Link>
+        )}
       </div>
 
       <div className="pn-settings__group">
