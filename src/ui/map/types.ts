@@ -25,6 +25,8 @@ export type NagaMapProps = {
   highlightStops?: readonly HighlightStop[];
   /** Bottom padding (px) when fitting highlighted stops, e.g. the part of the map under a sheet. */
   highlightPaddingBottom?: number;
+  /** Top padding (px) when fitting highlighted stops / routes (defaults to ROUTE_FIT_PAD_TOP). */
+  highlightPaddingTop?: number;
   /** Change (e.g. the sheet's snap) to re-fit the current highlights / route into the visible map. */
   refitSignal?: number;
   /** Keys the `fitBoundsCoords` fit on its two ends + this id (e.g. an option id), not on every coordinate. */

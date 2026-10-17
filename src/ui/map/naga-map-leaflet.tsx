@@ -141,6 +141,7 @@ function FitHighlights({
   tripLines,
   fitBoundsCoords,
   paddingBottom,
+  paddingTop,
   refitSignal,
   fitId,
   fitPathReady,
@@ -150,6 +151,7 @@ function FitHighlights({
   tripLines: TripLinesData | null | undefined;
   fitBoundsCoords: readonly LatLng[] | null | undefined;
   paddingBottom: number;
+  paddingTop: number | undefined;
   /** Changes when the sheet snaps: the fit is redone so the route stays above the sheet. */
   refitSignal: number | undefined;
   /** When set, the coords fit is keyed on its two ends + this id, not on every coordinate. */
@@ -186,7 +188,7 @@ function FitHighlights({
     }
     // The right padding keeps a highlighted marker (≈ 13 px radius) clear of the zoom and
     // locate controls (48 px wide, 16 px from the edge): 64 + 13 + a gap.
-    const pad = routeFitPadding(paddingBottom, map.getSize().y);
+    const pad = routeFitPadding(paddingBottom, map.getSize().y, paddingTop);
     map.fitBounds(L.latLngBounds(points), {
       paddingTopLeft: [pad.left, pad.top],
       paddingBottomRight: [pad.right, pad.bottom],
@@ -323,6 +325,7 @@ export default function NagaMapLeaflet({
   pins,
   highlightStops,
   highlightPaddingBottom = 40,
+  highlightPaddingTop,
   refitSignal,
   fitId,
   fitPathReady,
@@ -543,6 +546,7 @@ export default function NagaMapLeaflet({
           tripLines={fitTripLines ? tripLines : null}
           fitBoundsCoords={fitBoundsCoords}
           paddingBottom={highlightPaddingBottom}
+          paddingTop={highlightPaddingTop}
           refitSignal={refitSignal}
           fitId={fitId}
           fitPathReady={fitPathReady}

@@ -24,8 +24,8 @@ export type RouteFitPadding = { top: number; left: number; right: number; bottom
  * padding is clamped to keep ROUTE_FIT_MIN_VISIBLE px usable, so the fit never fails or zooms
  * out to the minimum, and the clearance is not guaranteed there.
  */
-export function routeFitPadding(hiddenBottom: number, mapHeight: number): RouteFitPadding {
-  const top = ROUTE_FIT_PAD_TOP;
+export function routeFitPadding(hiddenBottom: number, mapHeight: number, topInset = ROUTE_FIT_PAD_TOP): RouteFitPadding {
+  const top = Math.max(ROUTE_FIT_PAD_TOP, Math.round(topInset));
   const wanted = Math.max(40, Math.round(hiddenBottom) + ROUTE_FIT_SHEET_GAP);
   const room = Math.max(40, mapHeight - top - ROUTE_FIT_MIN_VISIBLE);
   return { top, left: ROUTE_FIT_PAD_SIDE, right: ROUTE_FIT_PAD_RIGHT, bottom: Math.min(wanted, room) };
