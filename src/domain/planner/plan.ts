@@ -30,8 +30,8 @@
 // origin not far, within a SPECIAL_TRIP_TERMINAL_WALK_M walk of a published tricycle terminal serving the
 // destination zone; never Recommended, fare unavailable), the best-score jeepney is Recommended, and with no
 // jeepney the walk card is shown at any length, unlabelled (no Recommended option). The plan carries farNote.
-// Access option (T4): destination far, origin not, and the best zone jeepney walks over ACCESS_TRICYCLE_MIN_WALK_M
-// to its boarding point (or there is none): tricycle to the zone's loading point, walk, one ride, walk; id
+// Access option (T4): destination far, origin not, and every jeepney option shown walks over ACCESS_TRICYCLE_MIN_WALK_M
+// to its first boarding point (or there is none): tricycle (over 600 m) to the zone's loading point, walk, one ride, walk; id
 // "tri>{ride id}", after the jeepneys; Recommended only when there is no other jeepney option.
 // Non-far trips are unchanged.
 // Via groups (T5, far-areas viaGroups): when 2+ routes of one group have a one-ride candidate (after must-save-walking),
@@ -595,7 +595,8 @@ function accessOption(
     const triM = route?.kind === "path" ? route.lengthM : haversineMeters(origin, lp);
     if (!best || triM < best.triM) best = { lp, c, triM, route };
   }
-  if (!best) return null;
+  // A tricycle of ACCESS_TRICYCLE_MIN_WALK_M or less is no better than walking to the loading point.
+  if (!best || best.triM <= ACCESS_TRICYCLE_MIN_WALK_M) return null;
   const at: Place = { kind: "point", lat: best.lp.lat, lng: best.lp.lng, stopId: null, name: best.lp.name };
   const jeep = jeepneyOption(best.c, [], net, g, snapshot, best.lp, destination);
   const tri = tricycleLeg(g, snapshot, origin, best.lp, now, best.route, null, at);
@@ -637,11 +638,10 @@ export function planTrip(
   const net = planningNetwork(snapshot, network.lines);
   const cap = (z: FarZone | null) => (z ? FAR_END_WALK_CAP_M : MAX_ACCESS_WALK_GRAPH_M);
   const jeep = search(net, g, origin, destination, direct.m, cap(originZone), cap(destinationZone), originZone !== null, destinationZone !== null);
-  // Access option: destination far, origin not; the best zone jeepney's walk to its boarding point is over 600 m, or none.
-  const zoneBest = destinationZone && originZone === null
-    ? jeep.options.find((x) => destinationZone.routes.includes(net.variants[x.c.hops.at(-1)!.v]!.routeCode))
-    : undefined;
-  const access = destinationZone && originZone === null && (!zoneBest || zoneBest.c.walks[0]!.m > ACCESS_TRICYCLE_MIN_WALK_M)
+  // Access option (review I3 ruling): destination far, origin not; W = the shortest first walk among the jeepney
+  // options shown (any route, transfers included); offered when there is none or W > ACCESS_TRICYCLE_MIN_WALK_M.
+  const firstWalkM = Math.min(...jeep.options.map((x) => x.c.walks[0]!.m));
+  const access = destinationZone && originZone === null && firstWalkM > ACCESS_TRICYCLE_MIN_WALK_M
     ? accessOption(net, g, snapshot, origin, destination, now, destinationZone, jeep.alights, direct.m)
     : null;
   const options: PlanOption[] = [];

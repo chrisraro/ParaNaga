@@ -369,3 +369,19 @@ describe("far areas: short trips keep their Recommended walk (review I2)", () =>
     assertSpecialFallback(tricycle(p)!);
   });
 });
+
+describe("far areas: access W is the shortest first walk among the jeepney options shown (review I3)", () => {
+  const access = (p: TripPlan) => p.options.find((o) => o.id.startsWith("tri>"));
+  const firstWalks = (p: TripPlan) =>
+    p.options.filter((o) => o.mode === "jeepney" && !o.id.startsWith("tri>")).map((o) => (o.legs[0]!.kind === "walk" ? o.legs[0]!.estimateMeters : Infinity));
+
+  it.each([
+    ["(13.618, 123.184) → Pacol: R8-C>R6 walks about 106 m", { lat: 13.618, lng: 123.184 }, PACOL],
+    ["(13.618, 123.190) → Cararayan: R8-A>R1 walks about 398 m", { lat: 13.618, lng: 123.19 }, CARARAYAN],
+    ["Plaza Rizal → Ponte Cielo: R2 walks 9 m", PLAZA_RIZAL, { lat: 13.6235529, lng: 123.2401103 }],
+  ])("%s, so no access option", (_n, o, d) => {
+    const p = plan(o, d);
+    expect(Math.min(...firstWalks(p))).toBeLessThanOrEqual(600);
+    expect(access(p)).toBeUndefined();
+  });
+});
