@@ -630,3 +630,65 @@ export const SPECIAL_ONLY_PLAN = {
   stops: [],
   variants: [],
 };
+
+// ---------------------------------------------------------------- Increment F, T7: owner scenarios
+
+/** A far trip served by one jeepney route: the jeepney is Recommended, there is no tricycle card, the far note shows. */
+const farJeepPlan = (routeCode: string, routeName: string, farNote: string) => ({
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 7400, jeepneyReason: null,
+    options: [
+      withTotals({
+        id: `${R6_OUT}:pt:410:pt:8880`, mode: "jeepney", labels: ["Recommended"],
+        legs: [
+          walkLeg(place("origin", 13.6231, 123.1842), place("point", 13.6231, 123.1842), 90, 117),
+          rideLeg({
+            variantId: R6_OUT, routeCode, routeName, stops: [], distanceMeters: 8760,
+            board: freePoint(13.6231, 123.1842, 410), alight: freePoint(13.6596, 123.25116, 8880), fare: legFare(1800, 2000), fleet: routeOf(routeCode).fleet,
+          }),
+          walkLeg(place("point", 13.6596, 123.25116), PACOL, 90, 117),
+        ],
+        fare: { minCentavos: 1800, maxCentavos: 2000, status: "estimate", completeness: "estimate" },
+        evidence: "provisional",
+      }),
+    ],
+    notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 7400 m (straight-line estimate)"],
+    farNote,
+  },
+  stops: [],
+  variants: [{ variantId: R6_OUT, routeCode, routeName, isCircular: false, loopDirection: null }],
+});
+export const FAR_JEEP_PACOL_PLAN = farJeepPlan("R6", "Centro–Pacol", FAR_NOTE_PACOL);
+export const FAR_JEEP_PANICUASON_PLAN = farJeepPlan("R7", "Centro–Panicuason", "Local report: tricycles to Carolina and Panicuason charge special-trip fares, so we point you to the jeepney terminal instead.");
+export const FAR_JEEP_CARARAYAN_PLAN = farJeepPlan("R1", "Centro–Cararayan", "Local report: tricycles to Cararayan and San Isidro charge special-trip fares, so we point you to the jeepney terminal instead.");
+
+/** To Pacol from the south: the walk, the jeepney reached on foot (unlabelled) and the access option, in that order; nothing is Recommended. */
+export const ACCESS_NEXT_TO_WALK_PLAN = {
+  ...ACCESS_PLAN,
+  plan: {
+    ...ACCESS_PLAN.plan,
+    options: [
+      withTotals({
+        id: "walk", mode: "walk", labels: [] as string[],
+        legs: [walkLeg(SOUTH, PACOL, 7400, 9620)],
+        fare: { minCentavos: 0, maxCentavos: 0, status: "no_ride", completeness: "estimate" },
+        evidence: "provisional",
+      }),
+      withTotals({
+        id: `${R6_OUT}:pt:120:pt:8880`, mode: "jeepney", labels: [] as string[],
+        legs: [
+          walkLeg(SOUTH, place("point", 13.62152, 123.18541), 1000, 1300),
+          rideLeg({
+            variantId: R6_OUT, routeCode: "R6", routeName: "Centro–Pacol", stops: [], distanceMeters: 8760,
+            board: freePoint(13.62152, 123.18541, 120), alight: freePoint(13.6596, 123.25116, 8880), fare: legFare(1800, 2000), fleet: routeOf("R6").fleet,
+          }),
+          walkLeg(place("point", 13.6596, 123.25116), PACOL, 90, 117),
+        ],
+        fare: { minCentavos: 1800, maxCentavos: 2000, status: "estimate", completeness: "estimate" },
+        evidence: "provisional",
+      }),
+      accessOptionOf([]),
+    ],
+  },
+};
