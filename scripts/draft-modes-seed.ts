@@ -577,7 +577,7 @@ function main(): number {
     },
     sources, terminals, routes, routeStatusUpdates, fleet, cooperatives, regionalServices,
     fareRules, fareObservations, fareRuleSourceAdditions, etaParams, streetAliases: [], conflicts,
-    roadRules: [], padyakAreas: [], routeNotes: [],
+    roadRules: [], padyakAreas: [], routeNotes: [], routeAliases: [],
   };
 
   const parsed = parseModesSeed(JSON.parse(JSON.stringify(seed)));

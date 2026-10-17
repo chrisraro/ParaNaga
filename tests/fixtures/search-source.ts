@@ -9,12 +9,14 @@ import { NAGA_BOUNDARY } from "@/domain/geo/naga";
 import { buildSnapshot, parseGeojsonStops, withIdentities } from "@/domain/import/mapped-stops";
 import { parseOsmPlaces } from "@/domain/import/osm-places";
 import { provisionalLoopSequence } from "@/domain/import/provisional-loops";
+import { importableRecords, parseModesSeed } from "@/domain/import/modes-seed";
 import { normalizeSeed } from "@/domain/import/seed";
 import type { SearchIndexSource } from "@/domain/search/index-build";
 
 const DATA_SETS = new URL("../../Data_Sets/", import.meta.url);
 const read = (f: string) => readFileSync(new URL(f, DATA_SETS), "utf8");
 const OSM_FIXTURE = new URL("./osm/naga-places-2026-10-15.osm.json", import.meta.url);
+const MODES_SEED = new URL("../../data/source/research/naga-modes-seed-2026-10-16.json", import.meta.url);
 
 export function idFor(key: string): string {
   const h = createHash("sha256").update(key).digest("hex");
@@ -31,6 +33,9 @@ export function realSearchSource(): SearchIndexSource {
     (["R8-A", "R8-B"] as const).flatMap((code) => provisionalLoopSequence(records, code)!.map((s) => s.recordIdentity)),
   );
   const seed = normalizeSeed(JSON.parse(read("naga_transport_seed.json")));
+  // The reviewed route aliases (stop-sign letters, sign names) as the modes import publishes them.
+  const aliases = importableRecords(parseModesSeed(JSON.parse(readFileSync(MODES_SEED, "utf8")))).routeAliases
+    .filter((a) => !a.isHistorical);
 
   const parsed = parseOsmPlaces(JSON.parse(readFileSync(OSM_FIXTURE, "utf8")), NAGA_BOUNDARY);
   const places: OsmPlace[] = parsed.places.map((p) => ({
@@ -55,6 +60,7 @@ export function realSearchSource(): SearchIndexSource {
           .filter((l): l is string[] => l !== null),
         mode: "jeepney" as const,
         fleetLabel: "Vehicle type not confirmed",
+        aliases: aliases.filter((a) => a.routeCode === r.publicCode).map((a) => a.alias),
       };
     }),
     terminals: seed.terminals.map((t) => ({ code: t.code, name: t.name, locationText: t.locationText, modes: t.modes, kind: null, location: null })),

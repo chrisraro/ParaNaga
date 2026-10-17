@@ -2000,5 +2000,16 @@
     "status": "owner_report",
     "license": "Owner-supplied factual observation",
     "licenseUrl": null
+  },
+  {
+    "code": "U04",
+    "title": "Project owner field photo, 2026-10-18: PUJ stop sign at CSNHS (southbound) with route letters and names",
+    "url": null,
+    "publisher": "ParaNaga project owner",
+    "checkedOn": "2026-10-18",
+    "use": "Owner-contributed field photo, transcribed by the owner: route letters and names on one stop sign. Only the transcribed facts are used; the photo itself is not published.",
+    "status": "owner_report",
+    "license": "Owner-contributed field evidence",
+    "licenseUrl": null
   }
 ]
