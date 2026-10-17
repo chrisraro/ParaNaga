@@ -58,7 +58,8 @@ export function offsetFor(snap: Snap, height: number, clearance = 0, peek = PEEK
   if (snap === 2) return 0;
   if (snap === 0 && height < TINY_SHEET) return Math.max(0, height - GRABBER_VISIBLE - clearance);
   // Below ~417 px the controls cannot be cleared without a sheet shorter than its peek: those keep half.
-  const half = height - MAP_CONTROLS_CLEAR >= PEEK_VISIBLE ? Math.min(HALF_VISIBLE, height - MAP_CONTROLS_CLEAR) : HALF_VISIBLE;
+  // Never below the peek (options peek + tab bar can exceed the cap on 440-600 px screens).
+  const half = height - MAP_CONTROLS_CLEAR >= PEEK_VISIBLE ? Math.max(Math.min(HALF_VISIBLE, height - MAP_CONTROLS_CLEAR), peek + clearance) : HALF_VISIBLE;
   const visible = Math.min(snap === 0 ? peek + clearance : half, height * (1 - MAP_MIN_SHARE));
   return Math.max(0, Math.round(height - visible));
 }

@@ -41,7 +41,9 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
     const opener = captureOpener();
     closeBtnRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
       if (event.key === "Escape") {
+        event.preventDefault();
         event.stopPropagation();
         close();
         return;

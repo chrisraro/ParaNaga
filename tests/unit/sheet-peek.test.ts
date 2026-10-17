@@ -55,4 +55,15 @@ describe("short and zoomed screens (WCAG 1.4.10)", () => {
     expect(mapInsetFor(813)).toBe(PEEK_VISIBLE - 28);
     expect(mapInsetFor(154)).toBe(Math.round(154 * (1 - MAP_MIN_SHARE) - 28));
   });
+  it("orders the snaps tiny <= peek <= half <= full on every screen height (sheet height = viewport - 26)", () => {
+    for (const [peek, clearance] of [[PEEK_VISIBLE, 0], [PEEK_VISIBLE, 90], [PEEK_OPTIONS_VISIBLE, 60], [PEEK_OPTIONS_VISIBLE, 90]] as const) {
+      const heights = [...Array.from({ length: 29 }, (_, i) => 440 + i * 16), 640, 664, 568, 360, 300];
+      for (const vh of heights) {
+        const h = vh - 26;
+        const shown = (snap: 0 | 1 | 2) => h - offsetFor(snap, h, clearance, peek);
+        expect(shown(1), `half >= peek at ${vh} (${peek}+${clearance})`).toBeGreaterThanOrEqual(shown(0));
+        expect(shown(2)).toBeGreaterThanOrEqual(shown(1));
+      }
+    }
+  });
 });

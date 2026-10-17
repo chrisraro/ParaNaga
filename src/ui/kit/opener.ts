@@ -28,17 +28,25 @@ export function captureOpener(): HTMLElement | null {
 
 const TABBABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// Older browsers without checkVisibility keep every entry: the focus check in cycleTab still stops a stick.
+const canFocus = (el: HTMLElement) => !el.closest("[inert], [hidden]") && (el.checkVisibility?.({ visibilityProperty: true }) ?? true);
+
 /**
  * Modal Tab trap that does not depend on the browser's tab order (Safari skips links, so the last
- * focusable element may never receive Tab): every Tab moves focus to the next/previous control in
- * the container, wrapping at the ends, and a Tab from outside lands inside.
+ * focusable element may never receive Tab): every Tab moves focus to the next/previous visible
+ * control in the container, wrapping at the ends, and a Tab from outside lands inside. A control
+ * that refuses focus is skipped, so Tab can never stick.
  */
 export function cycleTab(event: KeyboardEvent, container: HTMLElement | null) {
-  if (event.key !== "Tab" || !container) return;
-  const list = [...container.querySelectorAll<HTMLElement>(TABBABLE)];
+  if (event.key !== "Tab" || event.defaultPrevented || event.ctrlKey || event.altKey || event.metaKey || !container) return;
+  const list = [...container.querySelectorAll<HTMLElement>(TABBABLE)].filter(canFocus);
   if (list.length === 0) return;
   event.preventDefault();
-  const i = list.indexOf(document.activeElement as HTMLElement);
-  const next = event.shiftKey ? (i <= 0 ? list.length - 1 : i - 1) : i === -1 || i === list.length - 1 ? 0 : i + 1;
-  list[next]!.focus();
+  const step = event.shiftKey ? -1 : 1;
+  const from = list.indexOf(document.activeElement as HTMLElement);
+  for (let n = 1; n <= list.length; n++) {
+    const i = from === -1 ? (step === 1 ? n - 1 : list.length - n) : (((from + step * n) % list.length) + list.length) % list.length;
+    list[i]!.focus();
+    if (document.activeElement === list[i]) return;
+  }
 }

@@ -201,10 +201,12 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      // A modal sheet or dialog above the map owns this Escape; so does any handler that ran first.
+      if (event.key !== "Escape" || event.defaultPrevented || document.querySelector('[aria-modal="true"], dialog[open]')) return;
       event.preventDefault(); // handled: the panel underneath must not also go back
       setOpen(false);
-      buttonRef.current?.focus();
+      const active = document.activeElement;
+      if (!active || active === document.body || containerRef.current?.contains(active)) buttonRef.current?.focus();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);

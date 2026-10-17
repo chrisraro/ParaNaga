@@ -133,7 +133,9 @@ export function LayersSheet({
     const opener = captureOpener();
     closeBtnRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
       if (event.key === "Escape") {
+        event.preventDefault();
         event.stopPropagation();
         onClose();
         return;
