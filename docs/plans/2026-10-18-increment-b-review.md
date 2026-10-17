@@ -62,7 +62,7 @@ API level:
 | Cache-Control | pass | Authenticated responses use `no-store` or `private, no-store`. The public feed has `s-maxage=30` only for viewer-less requests (`src/server/community/read.ts`). |
 | Cron secret only in the Authorization header, constant-time | pass | `src/app/api/cron/jobs/route.ts` |
 | No secrets, tokens or private text in logs, URLs or bodies | pass | Logs carry the event, route, request id and error class only. Signed evidence URLs last 60 s, are returned in the JSON body and are not cached. |
-| `pnpm check:bundle-secrets` | see PR body | Run after the e2e build. |
+| `pnpm check:bundle-secrets` | pass | 52 client files scanned after `pnpm build`; no secrets found. |
 
 ### 4. Privacy
 
@@ -81,7 +81,7 @@ API level:
 - **fixed** (Important): "Use a different email" dropped focus to body. Focus now returns to the email field. Errors use `role=alert`, and the code field has `autocomplete=one-time-code`.
 - **fixed** (Important): the Settings account action (Sign in / Sign out) was about 31 px tall. It is now at least 44 px.
 - pass: wizards focus the step heading. Reduced motion is covered by the global catch-all (`globals.css`). New CSS uses `--pn-*` tokens for light, dark and high contrast. Dialogs are native `<dialog>` with `aria-labelledby`. Live regions are present.
-- e2e (mobile project, fresh build, PORT=3531): community, my-reports, report-correction, report-driver, settings, shell and reflow. Results are in the PR body.
+- e2e (mobile project, fresh build, PORT=3531): community, my-reports, report-correction, report-driver, settings, shell and reflow, including axe in light and dark. Result: 60 passed, 1 skipped. Three stale assertions were fixed first: shell and settings still expected four tabs and no Reports section, and report-driver needed the copy fix.
 
 ### 6. Copy honesty
 
