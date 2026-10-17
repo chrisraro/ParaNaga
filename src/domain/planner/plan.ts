@@ -59,7 +59,7 @@ import { buildPlanningNetwork, type PlanningNetwork } from "./graph";
 import { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
 import { rideNotes } from "./notes";
 import { projectOnLine } from "../geo/measure";
-import { approaches, MAX_ACCESS_WALK_GRAPH_M, nameFreePoint, rideMeters, type Approach, type NamedStop, type PathVariant, type PlanningLine } from "./paths";
+import { APPROACH_RADIUS_M, approaches, MAX_ACCESS_WALK_GRAPH_M, nameFreePoint, rideMeters, type Approach, type NamedStop, type PathVariant, type PlanningLine } from "./paths";
 
 export { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel };
 
@@ -75,6 +75,8 @@ export const RIDE_WEIGHT = 0.25;
 export const TRANSFER_PENALTY_M = 600;
 /** Access or egress walk cap at an end in a far zone (Increment F), instead of MAX_ACCESS_WALK_GRAPH_M. */
 export const FAR_END_WALK_CAP_M = 1500;
+/** Approach radius (straight-line) at a far end, so the far-end walk cap can apply: FAR_END_WALK_CAP_M / 1.3. */
+export const FAR_END_APPROACH_RADIUS_M = 1150;
 /** A special-trip tricycle into a far zone is shown only from within this walk of a tricycle terminal serving it. */
 export const SPECIAL_TRIP_TERMINAL_WALK_M = 300;
 /** Access option (Increment F, T4): offered when the best zone jeepney's walk to its boarding point is over this, or there is none. */
@@ -247,14 +249,15 @@ function dominates(a: Cand, b: Cand): boolean {
 
 function search(
   net: PlanningNetwork, g: WalkGraph | null, origin: LatLng, destination: LatLng, directM: number, accessCapM: number, egressCapM: number,
+  originFar = false, destinationFar = false,
 ) {
   const access = walker(g, origin, WALK_RADIUS_M, accessCapM);
   const egress = walker(g, destination, WALK_RADIUS_M, egressCapM);
   // Each approach boards or alights at its straight-line projection. When that walk is over the cap or
   // unreachable (a campus or a river between), it falls back to the run sample with the shortest walk
   // (prod regression: the loops' nearest points to the Ateneo centroid are 820+ m around the campus).
-  const ends = (p: LatLng, w: Walker) =>
-    net.variants.map((v) => approaches(v, p).flatMap(({ run, ...a }) => {
+  const ends = (p: LatLng, w: Walker, far: boolean) =>
+    net.variants.map((v) => approaches(v, p, far ? FAR_END_APPROACH_RADIUS_M : APPROACH_RADIUS_M).flatMap(({ run, ...a }) => {
       let best: { a: Approach; walk: Walk } | null = null;
       const walk = w(a.point);
       if (walk) best = { a, walk };
@@ -273,8 +276,8 @@ function search(
       }
       return best ? [{ a: { ...best.a, measureM: round1(best.a.measureM) }, walk: best.walk }] : [];
     }));
-  const boards = ends(origin, access);
-  const alights = ends(destination, egress);
+  const boards = ends(origin, access, originFar);
+  const alights = ends(destination, egress, destinationFar);
   const transferWalks = new Map<string, Walk | null>();
   const transferWalk = (i: number, k: number): Walk | null => {
     const key = `${i}:${k}`;
@@ -452,10 +455,13 @@ function streetLeg(g: WalkGraph | null, origin: LatLng, destination: LatLng, rou
   return { from, to, distanceMeters: Math.round(route.lengthM), path: encodePolyline(route.coords), basis: "street_graph", notes: [], ruleCodes: route.usedRules };
 }
 
-/** `special`: a special trip into a far zone from this tricycle terminal (fare not fixed). `to`: a named end (the access option's loading point). */
+/** A special trip at a far end (fare not fixed): from a tricycle terminal serving the zone, or (terminal null) the far-trip fallback. */
+type SpecialTrip = { terminal: LocatedTerminal | null };
+
+/** `special`: a special trip (fare not fixed). `to`: a named end (the access option's loading point). */
 function tricycleLeg(
   g: WalkGraph | null, snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng, now: Date, route: StreetRoute | null,
-  special: LocatedTerminal | null, to?: Place,
+  special: SpecialTrip | null, to?: Place,
 ): TricycleLeg {
   const base = streetLeg(g, origin, destination, route, to);
   const fare: TricycleFare = special ? { ...tricycleFare(snapshot.fareRules), minCentavos: null, status: "unavailable" } : tricycleFare(snapshot.fareRules);
@@ -463,7 +469,8 @@ function tricycleLeg(
     ...base.notes,
     ...(base.basis !== "street_graph" ? [] : g!.rules.flatMap((r) => ruleNote(r, base.ruleCodes.includes(r.code), now) ?? [])),
     ...(route?.kind === "path" && route.usesNationalRoad ? ["National rules may limit tricycles on national roads; Naga has not published a tricycle route plan."] : []),
-    ...(special ? ["Special trip · fare not fixed · confirm with the driver", `From ${special.name}: local report, unconfirmed`]
+    ...(special ? ["Special trip · fare not fixed · confirm with the driver",
+      special.terminal ? `From ${special.terminal.name}: local report, unconfirmed` : "Special trip by local report, unconfirmed"]
       : [fare.minCentavos === null ? "Fare not available · confirm with the driver"
         : `Minimum fare ${peso(fare.minCentavos)} (Ordinance 2024-002) · discounts not applied · confirm with the driver`]),
     "Tricycle time not estimated",
@@ -472,9 +479,9 @@ function tricycleLeg(
   return { ...base, kind: "tricycle", fare, notes };
 }
 
-/** `special`: a special trip into a far zone from this tricycle terminal (fare not fixed, never Recommended). */
+/** `special`: a special trip at a far end (fare not fixed, never Recommended). */
 function tricycleOption(
-  g: WalkGraph | null, snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng, now: Date, recommended: boolean, special: LocatedTerminal | null = null,
+  g: WalkGraph | null, snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng, now: Date, recommended: boolean, special: SpecialTrip | null = null,
 ): PlanOption {
   const route = g ? routeStreet(g, origin, destination, { mode: "tricycle", now }) : null;
   const leg = tricycleLeg(g, snapshot, origin, destination, now, route, special);
@@ -629,7 +636,7 @@ export function planTrip(
   const farZone = destinationZone ?? originZone;
   const net = planningNetwork(snapshot, network.lines);
   const cap = (z: FarZone | null) => (z ? FAR_END_WALK_CAP_M : MAX_ACCESS_WALK_GRAPH_M);
-  const jeep = search(net, g, origin, destination, direct.m, cap(originZone), cap(destinationZone));
+  const jeep = search(net, g, origin, destination, direct.m, cap(originZone), cap(destinationZone), originZone !== null, destinationZone !== null);
   // Access option: destination far, origin not; the best zone jeepney's walk to its boarding point is over 600 m, or none.
   const zoneBest = destinationZone && originZone === null
     ? jeep.options.find((x) => destinationZone.routes.includes(net.variants[x.c.hops.at(-1)!.v]!.routeCode))
@@ -646,9 +653,12 @@ export function planTrip(
   const jeepRecommended = best !== undefined && (farZone !== null || (short && best.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M));
   if (jeepRecommended) best.labels.unshift("Recommended");
   else if (best === undefined && access) access.labels.push("Recommended");
-  // A far trip with no jeepney (nor access option) shows the walk card whatever its length, unlabelled.
-  const walkShown = short || (farZone !== null && best === undefined && !access);
-  const special = farZone !== null && originZone === null ? specialTripTerminal(g, snapshot, origin, farZone) : null;
+  const walkShown = short;
+  // Far trip: a special trip from a tricycle terminal serving the zone; else, when there is no jeepney nor access
+  // option, ONE special-trip tricycle card (the owner-described special trip) rather than a long walk alone.
+  const terminal = farZone !== null && originZone === null ? specialTripTerminal(g, snapshot, origin, farZone) : null;
+  const special: SpecialTrip | null = farZone === null ? null
+    : terminal ? { terminal } : best === undefined && !access ? { terminal: null } : null;
   const padyak = padyakOption(g, snapshot, origin, destination, now);
   // Via groups: the Pareto picks plus the best one-ride candidate of each via route, within the block budget. The
   // best-score option is never trimmed; non-via extras go first (worst score first), then vias; a label on a dropped

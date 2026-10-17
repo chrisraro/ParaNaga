@@ -9,7 +9,7 @@ import type { LatLng } from "@/domain/geo/types";
 import { RULE_EVIDENCE } from "@/domain/import/modes-seed";
 import { FAR_AREAS, FAR_EVIDENCE, zoneOf } from "@/domain/planner/far-areas";
 import {
-  ACCESS_TRICYCLE_MIN_WALK_M, FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan,
+  ACCESS_TRICYCLE_MIN_WALK_M, FAR_END_APPROACH_RADIUS_M, FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan,
 } from "@/domain/planner/plan";
 import { buildPlanResponse, planResponseSchema } from "@/domain/api/plan";
 import { routeStreet } from "@/domain/walk/walk-graph";
@@ -34,6 +34,15 @@ const MAGSAYSAY = { lat: 13.6270099, lng: 123.2005168 };
 /** Magsaysay Ave at Balatas-Cararayan Road: within 300 m of T14 (Balatas Tricycle Terminal). */
 const NEAR_T14 = { lat: 13.6314016, lng: 123.1967731 };
 
+/** The far-trip fallback (C1): unlabelled, fare unavailable, special-trip copy, no terminal named. */
+function assertSpecialFallback(t: PlanOption) {
+  expect(t).toMatchObject({ id: "tricycle", labels: [], fare: { minCentavos: null, status: "unavailable" } });
+  const leg = t.legs[0]!;
+  if (leg.kind !== "tricycle") throw new Error("tricycle leg");
+  expect(leg.notes).toContain("Special trip · fare not fixed · confirm with the driver");
+  expect(leg.notes).toContain("Special trip by local report, unconfirmed");
+  expect(leg.notes.some((n) => n.startsWith("Minimum fare") || n.startsWith("From "))).toBe(false);
+}
 const recommended = (p: TripPlan) => p.options.filter((o) => o.labels.includes("Recommended"));
 const rideCodes = (o: PlanOption) => o.legs.flatMap((l) => (l.kind === "ride" ? [l.routeCode] : []));
 const tricycle = (p: TripPlan) => p.options.find((o) => o.mode === "tricycle");
@@ -113,17 +122,15 @@ describe("far areas: zone membership and the far note", () => {
     expect(plan(PACOL, CARARAYAN).farNote).toBe(farNote("Cararayan and San Isidro"));
   });
 
-  it("8 Pacol → a point in Pacol 900 m away: no tricycle; a jeepney Recommended, else an unlabelled walk card", () => {
+  it("8 Pacol → a point in Pacol 900 m away (no jeepney): ONE unlabelled special-trip tricycle, no long walk card, nothing Recommended", () => {
     const to = near(PACOL, 0, -900);
     expect(zoneOf(to, FAR_AREAS)).toBe("FZ02");
     const p = plan(PACOL, to);
-    expect(tricycle(p)).toBeUndefined();
     expect(p.farNote).toBe(farNote("Pacol"));
-    if (p.options.some((o) => o.mode === "jeepney")) expect(recommended(p)[0]!.mode).toBe("jeepney");
-    else {
-      expect(recommended(p)).toHaveLength(0);
-      expect(p.options[0]).toMatchObject({ mode: "walk", labels: [] });
-    }
+    expect(p.jeepneyReason).not.toBeNull();
+    expect(p.options.map((o) => o.mode)).toEqual(["tricycle"]);
+    expect(recommended(p)).toHaveLength(0);
+    assertSpecialFallback(tricycle(p)!);
   });
 
   it("10 Plaza Rizal → SM City: not far, tricycle Recommended, no far note", () => {
@@ -184,7 +191,12 @@ describe("far areas: zone membership and the far note", () => {
         if (far && jeep) expect(recommended(p)[0]!.mode).toBe("jeepney");
         expect(p.farNote !== undefined).toBe(far);
         const t = tricycle(p);
-        if (far && t) {
+        const fromTerminal = t?.legs[0]?.kind === "tricycle" && t.legs[0].notes.some((n) => n.startsWith("From "));
+        if (far && t && !fromTerminal) {
+          expect(jeep).toBe(false);
+          assertSpecialFallback(t);
+        }
+        if (far && t && fromTerminal) {
           expect(oz).toBeNull();
           expect(FAR_AREAS.tricycleTerminals.find((x) => x.terminalCode === "T14")!.serves).toContainEqual({ farZone: dz });
           expect(haversineMeters(o, { lat: terminal.lat!, lng: terminal.lng! })).toBeLessThanOrEqual(SPECIAL_TRIP_TERMINAL_WALK_M);
@@ -321,4 +333,27 @@ describe("far areas: the access option (tricycle to the jeepney loading point, T
       { seed: 20261019, numRuns: 60 },
     );
   }, 120_000);
+});
+
+describe("far areas: far-end approaches and the no-jeepney fallback (review C1)", () => {
+  it.each([
+    ["Ateneo de Naga JHS", { lat: 13.6464862, lng: 123.233849 }],
+    ["Metro Naga Sports Complex", { lat: 13.6470607, lng: 123.2367197 }],
+    ["Ponte Cielo Park", { lat: 13.6235529, lng: 123.2401103 }],
+    ["Camella Heights", { lat: 13.6263, lng: 123.2417 }],
+  ])("Plaza Rizal → %s is never a walk-only plan; something is Recommended", (_n, d) => {
+    const p = plan(PLAZA_RIZAL, d);
+    expect(p.options.some((o) => o.mode !== "walk")).toBe(true);
+    expect(recommended(p)).toHaveLength(1);
+    expect(recommended(p)[0]!.mode).not.toBe("walk");
+  });
+
+  it("a far end 500–1,150 m straight from the route path gets a jeepney (approach radius FAR_END_APPROACH_RADIUS_M)", () => {
+    expect(FAR_END_APPROACH_RADIUS_M).toBe(1150);
+    const p = plan(PLAZA_RIZAL, { lat: 13.6263, lng: 123.2417 });
+    const r = recommended(p)[0]!;
+    expect(r.mode).toBe("jeepney");
+    const egress = r.legs.at(-1)!;
+    expect(egress.kind === "walk" && egress.estimateMeters).toBeGreaterThan(750);
+  });
 });
