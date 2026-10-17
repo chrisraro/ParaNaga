@@ -97,7 +97,8 @@ export function SignInScreen() {
         fail(null, "Google sign-in is not available right now.");
         return;
       }
-      const res = await client.signIn.social({ provider: "google", callbackURL: "/app/more" });
+      // Absolute, so Neon sends the browser back to this site (its host is a trusted origin) and not to its own.
+      const res = await client.signIn.social({ provider: "google", callbackURL: `${window.location.origin}/app/more` });
       if (res?.error) fail(res.error, "Could not start Google sign-in.");
     } catch {
       fail(null, "Could not start Google sign-in.");
