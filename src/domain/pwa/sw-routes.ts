@@ -18,6 +18,8 @@ import { LINES_FORMAT_VERSION } from "../api/lines-format";
 //  - Everything else is network-only and never touches a cache: POST /api/v1/plan (coordinates),
 //    /api/v1/stops?bbox=, /api/auth/**, /api/csp-report, RSC requests, /admin/**, /account/**,
 //    and every cross-origin request (map tiles are never cached: MapTiler terms, no offline map).
+//  - Private data is excluded explicitly and first (isPrivateRequest): /api/v1/complaints/**,
+//    /api/v1/me/**, /api/v1/media/** and anything in the evidence-private bucket (task B8).
 //  - A response is stored only when it is a 200 without `private` or `no-store`.
 
 /**
@@ -82,6 +84,18 @@ const LINES = new RegExp(`^/api/v1/network/lines/${UUID}$`);
 const WALK_GRAPH = new RegExp(`^/api/v1/network/walk-graph/${UUID}$`);
 const REFERENCE = [/^\/api\/v1\/stops\/[^/]+$/, /^\/api\/v1\/routes$/, /^\/api\/v1\/routes\/[^/]+$/, /^\/api\/v1\/terminals\/[^/]+$/, /^\/api\/v1\/sources$/];
 const PRIVATE_SECTIONS = /^\/(admin|account)(\/|$)/;
+/**
+ * Personal and private data (task B8): driver reports, the caller's own account data, media
+ * slots and private evidence. Checked before every other rule, so no later allow-list entry can
+ * ever route one of these into a cache, whatever the method, origin or headers.
+ */
+const PRIVATE_DATA = /^\/api\/v1\/(complaints|me|media)(\/|$)/;
+const PRIVATE_BUCKET = /(^|\/)evidence-private(\/|$)/;
+
+/** True for a request the worker must never cache: private API data or private evidence (any origin). */
+export function isPrivateRequest(url: URL): boolean {
+  return PRIVATE_DATA.test(url.pathname) || PRIVATE_BUCKET.test(url.pathname) || PRIVATE_BUCKET.test(url.hostname.split(".")[0] ?? "");
+}
 
 const trimSlash = (path: string) => (path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path);
 
@@ -97,6 +111,7 @@ export function isRscRequest(info: Pick<SwRequestInfo, "url" | "headers">): bool
 }
 
 export function classifyRequest(info: SwRequestInfo): SwRoute {
+  if (isPrivateRequest(info.url)) return NETWORK_ONLY; // driver reports, account data, evidence
   if (info.url.origin !== info.origin) return NETWORK_ONLY; // tiles and every other host
   if (info.method !== "GET") return NETWORK_ONLY; // POST /api/v1/plan, Server Actions, reports
   const path = info.url.pathname;

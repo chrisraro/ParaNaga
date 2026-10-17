@@ -6,6 +6,7 @@
 // estimate range from the reported rules or "Unknown"; service hours were not observed.
 
 import Link from "next/link";
+import { ReportLink } from "@/ui/report/report-link";
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useLines } from "@/client/network/use-lines";
 import { useNetworkResource } from "@/client/network/use-network-resource";
@@ -374,6 +375,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         <p className="pn-footnote" data-testid="route-allocation">
           {allocationText(route)}
         </p>
+        <ReportLink entityType="route" entityId={route.code} entityLabel={route.name} />
       </main>
     </DetailPanel>
   );

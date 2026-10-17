@@ -235,6 +235,11 @@ export function MoreScreen() {
 
       <InstallRow />
 
+      <ListGroup title="Reports" testId="settings-reports">
+        <ListCell title="My reports" sub="Corrections and driver reports you sent" href="/app/reports" testId="settings-my-reports" />
+        <ListCell title="Report a driver" sub="Private, never published" href="/app/report-driver" testId="settings-report-driver" />
+      </ListGroup>
+
       <ListGroup title="About" testId="settings-about">
         <ListCell title="Help" sub="Safety and how trips work" href="/app/help" testId="settings-help" />
         <ListCell title="Sources and credits" href={SOURCES_HREF} testId="settings-sources" />

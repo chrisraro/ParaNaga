@@ -50,7 +50,7 @@ describe("SignInScreen (S21)", () => {
     auth.client = fakeClient({ send: vi.fn(async () => ({ data: null, error: { message: "Invalid origin" } })) });
     render(<SignInScreen />);
     await submitEmail();
-    await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/not set up for this address/i));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/not set up for this address/i));
     expect(screen.queryByTestId("verify-otp-btn")).toBeNull();
     expect(screen.queryByText(/Verification code sent/)).toBeNull();
   });
@@ -59,7 +59,7 @@ describe("SignInScreen (S21)", () => {
     auth.client = { signIn: {} };
     render(<SignInScreen />);
     await submitEmail();
-    await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/not available right now/i));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/not available right now/i));
     expect(screen.queryByTestId("verify-otp-btn")).toBeNull();
   });
 
@@ -67,7 +67,7 @@ describe("SignInScreen (S21)", () => {
     auth.client = null;
     render(<SignInScreen />);
     await submitEmail();
-    await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/not available right now/i));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/not available right now/i));
     expect(screen.queryByText(/Signed in/)).toBeNull();
   });
 
@@ -78,7 +78,7 @@ describe("SignInScreen (S21)", () => {
     await waitFor(() => expect(screen.getByTestId("verify-otp-btn")).toBeTruthy());
     fireEvent.change(screen.getByLabelText(/One-time code/), { target: { value: "123456" } });
     fireEvent.click(screen.getByTestId("verify-otp-btn"));
-    await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/code did not work/i));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/code did not work/i));
     expect(screen.queryByText(/Signed in/)).toBeNull();
   });
 
@@ -94,6 +94,6 @@ describe("SignInScreen (S21)", () => {
     auth.client = fakeClient({ social: vi.fn(async () => ({ data: null, error: { message: "boom" } })) });
     render(<SignInScreen />);
     fireEvent.click(screen.getByTestId("google-sign-in-btn"));
-    await waitFor(() => expect(screen.getByRole("status").textContent).toMatch(/Could not start Google sign-in/));
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/Could not start Google sign-in/));
   });
 });

@@ -1,0 +1,410 @@
+/* Community hub (/app/community, S17). Reuses the --pn-* tokens; no new colours. Text on the soft
+   teal chips is --pn-teal-soft-text. Nothing animates, so reduced motion needs no special case. */
+.pn-comm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+.pn-comm__h2 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--pn-label);
+}
+.pn-comm__h2:focus-visible,
+.pn-comm__status:focus-visible,
+.pn-comm__post-title:focus-visible {
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.pn-comm__muted,
+.pn-comm__hint,
+.pn-comm__count {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--pn-label2);
+}
+.pn-comm__count {
+  align-self: flex-end;
+}
+.pn-comm__notice {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--pn-label2);
+}
+.pn-comm__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.pn-comm__action {
+  min-height: 48px;
+  padding: 0 20px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pn-comm__action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pn-comm__action.pn-btn--secondary,
+.pn-comm__small.pn-btn--secondary {
+  color: var(--pn-label);
+}
+.pn-comm__small {
+  width: auto;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.pn-comm__small[aria-pressed="true"] {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-weight: 700;
+}
+.pn-comm__danger {
+  color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
+}
+
+/* ------------------------------------------------------------------ filters */
+.pn-comm__search {
+  display: flex;
+  gap: 8px;
+}
+.pn-comm__search .pn-comm__input {
+  flex: 1;
+  min-width: 0;
+}
+.pn-comm__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pn-comm__chip {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--pn-ring);
+  background: var(--pn-fill);
+  color: var(--pn-label);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.pn-comm__chip[aria-pressed="true"] {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  border-color: var(--pn-teal-soft-text);
+}
+.pn-comm button:focus-visible,
+.pn-comm a:focus-visible,
+.pn-comm summary:focus-visible,
+.pn-comm__input:focus-visible,
+.pn-comm input:focus-visible {
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------ feed cards */
+.pn-comm__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pn-comm__card {
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-comm__post-title {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--pn-label);
+  overflow-wrap: anywhere;
+}
+.pn-comm__link {
+  color: inherit;
+  text-decoration: none;
+}
+.pn-comm__link:hover {
+  text-decoration: underline;
+}
+.pn-comm__excerpt {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--pn-label);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.pn-comm__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 13px;
+  color: var(--pn-label2);
+}
+.pn-comm__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pn-comm__badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.pn-comm__badge--official {
+  background: var(--pn-teal-soft-bg);
+  box-shadow: inset 0 0 0 1px var(--pn-teal-soft-text);
+}
+.pn-comm__badge--pending {
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+  box-shadow: inset 0 0 0 1px var(--pn-warn-ring);
+}
+.pn-comm__badge--rejected {
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
+}
+.pn-comm__tag {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--pn-accent);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.pn-comm__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+}
+.pn-comm__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------------ forms */
+.pn-comm__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.pn-comm__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.pn-comm__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pn-label);
+  padding: 0;
+}
+.pn-comm__input {
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--pn-ring);
+  background: var(--pn-fill);
+  color: var(--pn-label);
+  font-size: 16px;
+  font-family: inherit;
+  width: 100%;
+}
+.pn-comm__textarea {
+  resize: vertical;
+  line-height: 1.4;
+}
+.pn-comm__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--pn-sep);
+}
+.pn-comm__option:last-child {
+  border-bottom: 0;
+}
+.pn-comm__option input,
+.pn-comm__check input {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--pn-accent);
+}
+.pn-comm__option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pn-comm__option-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--pn-label);
+}
+.pn-comm__option-hint {
+  font-size: 14px;
+  color: var(--pn-label2);
+}
+.pn-comm__panel {
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--pn-fill);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pn-comm__panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--pn-label);
+}
+.pn-comm__check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pn-label);
+  cursor: pointer;
+}
+.pn-comm__status {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.pn-comm__status--pending {
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+  box-shadow: inset 0 0 0 1px var(--pn-warn-ring);
+}
+.pn-comm__status--rejected,
+.pn-comm__error {
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
+}
+.pn-comm__error {
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.pn-comm__nav {
+  display: flex;
+  gap: 10px;
+}
+.pn-comm__nav .pn-comm__action {
+  flex: 1;
+}
+
+/* ------------------------------------------------------------------ thread */
+.pn-comm__body {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--pn-label);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.pn-comm__comments {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pn-comm__comments .pn-comm__comments {
+  margin-top: 12px;
+  padding-left: 14px;
+  border-left: 2px solid var(--pn-sep);
+}
+.pn-comm__comment {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pn-comm__more > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pn-label);
+  background: var(--pn-fill);
+  cursor: pointer;
+  list-style: none;
+}
+.pn-comm__more > summary::-webkit-details-marker {
+  display: none;
+}
+.pn-comm__more[open] > summary {
+  margin-bottom: 8px;
+}
+.pn-comm__history {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--pn-label);
+}
+.pn-comm__history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+}
+.pn-comm__empty {
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--pn-label2);
+  font-size: 15px;
+}

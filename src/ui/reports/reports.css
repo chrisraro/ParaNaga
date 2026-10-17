@@ -1,0 +1,157 @@
+/* My reports (/app/reports, S19) and the MyNaga report handoff (S20). Builds on the kit and
+   report.css; --pn-* tokens only. Text on the soft teal chip uses --pn-teal-soft-text. */
+.pn-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+}
+.pn-reports__intro {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--pn-label);
+}
+.pn-reports__sub {
+  display: block;
+  font-size: 13px;
+  color: var(--pn-label2);
+}
+.pn-rchip {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  background: var(--pn-fill);
+  color: var(--pn-label);
+}
+.pn-rchip--done {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-rchip--waiting {
+  background: transparent;
+  border: 1.5px dashed var(--pn-warn-ring);
+  color: var(--pn-warn-text);
+}
+.pn-reports__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+  box-shadow: var(--pn-shadow);
+}
+.pn-reports__panel h2,
+.pn-reports__panel h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--pn-label);
+}
+.pn-reports__timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pn-reports__timeline li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 14px;
+  border-left: 3px solid var(--pn-sep);
+}
+.pn-reports__timeline li:last-child {
+  border-left-color: var(--pn-accent);
+}
+.pn-reports__event {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pn-label);
+}
+.pn-reports__when,
+.pn-reports__note {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--pn-label2);
+}
+.pn-reports__note {
+  color: var(--pn-label);
+}
+.pn-reports__kv {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.pn-reports__kv dt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pn-label2);
+}
+.pn-reports__kv dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--pn-label);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.pn-reports__summary {
+  width: 100%;
+  min-height: 190px;
+  resize: vertical;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--pn-sep);
+  background: var(--pn-fill);
+  color: var(--pn-label);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.pn-reports__summary:focus-visible {
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 2px;
+}
+.pn-reports__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-reports__actions .pn-btn {
+  min-height: 48px;
+}
+.pn-reports__actions .pn-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pn-reports__warn {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--pn-warn-ring);
+  color: var(--pn-warn-text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.pn-reports__warn p {
+  margin: 0;
+}
+.pn-reports__warn p + p {
+  margin-top: 6px;
+}
+.pn-reports__unavailable {
+  color: var(--pn-label2);
+  font-size: 14px;
+}

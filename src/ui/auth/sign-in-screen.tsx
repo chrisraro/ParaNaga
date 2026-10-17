@@ -3,7 +3,7 @@
 import "@/ui/kit/styles";
 import "@/ui/auth/sign-in.css";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getAuthClient } from "@/client/auth/client";
 
@@ -33,6 +33,16 @@ export function SignInScreen() {
   const [step, setStep] = useState<"email" | "otp">("email");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const backToEmail = useRef(false);
+
+  // "Use a different email" unmounts the code form: put focus back on the email field.
+  useEffect(() => {
+    if (step === "email" && backToEmail.current) {
+      backToEmail.current = false;
+      emailRef.current?.focus();
+    }
+  }, [step]);
 
   const fail = (error: { message?: string } | null | undefined, fallback: string) =>
     setStatus({ type: "error", message: friendlyAuthError(error?.message, fallback) });
@@ -118,7 +128,7 @@ export function SignInScreen() {
 
       <div className="pn-card pn-signin__card">
         {status && (
-          <div className={`pn-signin__status pn-signin__status--${status.type}`} role="status">
+          <div className={`pn-signin__status pn-signin__status--${status.type}`} role={status.type === "error" ? "alert" : "status"}>
             {status.message}
           </div>
         )}
@@ -134,6 +144,7 @@ export function SignInScreen() {
                 type="email"
                 required
                 autoComplete="email"
+                ref={emailRef}
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -161,6 +172,7 @@ export function SignInScreen() {
                 type="text"
                 required
                 inputMode="numeric"
+                autoComplete="one-time-code"
                 pattern="[0-9]*"
                 maxLength={6}
                 placeholder="123456"
@@ -183,6 +195,7 @@ export function SignInScreen() {
               type="button"
               className="pn-btn pn-btn--secondary"
               onClick={() => {
+                backToEmail.current = true;
                 setStep("email");
                 setStatus(null);
               }}

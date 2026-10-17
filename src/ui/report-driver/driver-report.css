@@ -1,0 +1,100 @@
+/* Report a driver (/app/report-driver, S18). Builds on report.css; --pn-* tokens only. */
+.pn-driver__emergency {
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
+}
+.pn-driver__emergency p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pn-driver__list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--pn-label);
+}
+.pn-driver__ack-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--pn-label);
+}
+.pn-driver__camera {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pn-driver__viewfinder,
+.pn-driver__media {
+  display: block;
+  width: 100%;
+  max-height: 50vh;
+  border-radius: 14px;
+  background: var(--pn-fill);
+  object-fit: contain;
+}
+.pn-driver__evidence {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pn-driver__evidence-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-driver__upload {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+.pn-driver__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.pn-driver__receipt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-driver__receipt-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+.pn-driver__reference {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 340px) {
+  .pn-driver__pair {
+    grid-template-columns: 1fr;
+  }
+}
+/* report.css gives small buttons the label colour (made for secondary ones); keep primary text on accent. */
+.pn-btn--primary.pn-report__small {
+  color: var(--pn-on-primary);
+}
+.pn-driver__evidence:focus-visible {
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 3px;
+  border-radius: 8px;
+}

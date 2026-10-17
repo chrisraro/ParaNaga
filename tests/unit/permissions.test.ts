@@ -14,7 +14,8 @@ describe("permission matrix (spec §5.3)", () => {
   it("a commuter is not an editor", () => {
     const commuter = user(["commuter"]);
     expect(decide(commuter, "transit.revision.edit").allowed).toBe(false);
-    expect(decide(commuter, "correction.submit").allowed).toBe(false);
+    expect(decide(commuter, "correction.review").allowed).toBe(false);
+    expect(decide(commuter, "correction.submit").allowed).toBe(true);
     expect(decide(commuter, "community.post").allowed).toBe(true);
   });
 

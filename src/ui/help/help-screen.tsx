@@ -111,6 +111,9 @@ function SafetyPanel() {
           ))}
         </ul>
       </section>
+      <Link href="/app/report-driver" className="pn-help__report" data-testid="help-report-driver-private">
+        Report a driver privately in ParaNaga
+      </Link>
       <Link href="/app/mynaga" className="pn-help__report" data-testid="help-report-driver">
         Report a driver to the City in MyNaga
       </Link>

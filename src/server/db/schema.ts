@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   numeric,
+  smallint,
   pgSchema,
   text,
   timestamp,
@@ -513,3 +514,205 @@ export const rateLimitBucket = ops.table("rate_limit_bucket", {
   count: integer("count").notNull(),
 });
 
+
+// ---------------------------------------------------------------- community (0016)
+export const community = pgSchema("community");
+
+export const correction = community.table("correction", {
+  id: uuid("id").primaryKey(),
+  authorId: text("author_id").notNull(),
+  clientRequestId: uuid("client_request_id").notNull(),
+  entityType: text("entity_type").$type<"stop" | "route" | "fare" | "trip">().notNull(),
+  entityId: text("entity_id").notNull(),
+  entityLabel: text("entity_label"),
+  entityRevisionId: uuid("entity_revision_id"),
+  kind: text("kind").notNull(),
+  description: text("description").notNull(),
+  proposed: jsonb("proposed").notNull(),
+  observedAt: timestamp("observed_at", { withTimezone: true }).notNull(),
+  locationAccuracyM: numeric("location_accuracy_m"),
+  mediaIds: uuid("media_ids").array().notNull(),
+  status: text("status").notNull(),
+  moderationReason: text("moderation_reason"),
+  duplicateOf: uuid("duplicate_of"),
+  reviewerNote: text("reviewer_note"),
+  incorporatedRevisionId: uuid("incorporated_revision_id"),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+export const correctionEvent = community.table("correction_event", {
+  id: uuid("id").primaryKey(),
+  correctionId: uuid("correction_id").notNull(),
+  fromStatus: text("from_status"),
+  toStatus: text("to_status").notNull(),
+  actorId: text("actor_id"),
+  actorRole: text("actor_role"),
+  reasonCode: text("reason_code"),
+  note: text("note"),
+  at: timestamp("at", { withTimezone: true }).notNull(),
+});
+
+// ---------------------------------------------------------------- community hub (0017)
+export const communityPost = community.table("post", {
+  id: uuid("id").primaryKey(),
+  seq: bigint("seq", { mode: "number" }).notNull(),
+  authorId: text("author_id").notNull(),
+  clientRequestId: uuid("client_request_id").notNull(),
+  topic: text("topic").$type<"commute_tips" | "first_time" | "route_stop_feedback">().notNull(),
+  routeCode: text("route_code"),
+  label: text("label").$type<"community" | "official_notice" | "incorporated_change">().notNull(),
+  publishedVersionId: uuid("published_version_id"),
+  helpfulCount: integer("helpful_count").notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+export const communityPostVersion = community.table("post_version", {
+  id: uuid("id").primaryKey(),
+  postId: uuid("post_id").notNull(),
+  n: integer("n").notNull(),
+  authorId: text("author_id").notNull(),
+  clientRequestId: uuid("client_request_id"),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  tags: text("tags").array().notNull(),
+  moderationStatus: text("moderation_status").$type<"pending" | "published" | "rejected" | "human_review" | "superseded">().notNull(),
+  moderationReason: text("moderation_reason"),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull(),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+});
+
+export const communityComment = community.table("comment", {
+  id: uuid("id").primaryKey(),
+  postId: uuid("post_id").notNull(),
+  parentCommentId: uuid("parent_comment_id"),
+  depth: smallint("depth").notNull(),
+  authorId: text("author_id").notNull(),
+  clientRequestId: uuid("client_request_id").notNull(),
+  body: text("body").notNull(),
+  moderationStatus: text("moderation_status").$type<"pending" | "published" | "rejected" | "human_review">().notNull(),
+  moderationReason: text("moderation_reason"),
+  helpfulCount: integer("helpful_count").notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+});
+
+export const communityReaction = community.table("reaction", {
+  userId: text("user_id").notNull(),
+  targetType: text("target_type").$type<"post" | "comment">().notNull(),
+  targetId: uuid("target_id").notNull(),
+  kind: text("kind").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
+export const communityBookmark = community.table("bookmark", {
+  userId: text("user_id").notNull(),
+  postId: uuid("post_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
+export const communityUserBlock = community.table("user_block", {
+  id: uuid("id").primaryKey(),
+  blockerId: text("blocker_id").notNull(),
+  blockedId: text("blocked_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
+export const communityContentReport = community.table("content_report", {
+  id: uuid("id").primaryKey(),
+  reporterId: text("reporter_id").notNull(),
+  targetType: text("target_type").$type<"post" | "comment">().notNull(),
+  targetId: uuid("target_id").notNull(),
+  reason: text("reason").notNull(),
+  note: text("note"),
+  status: text("status").$type<"open" | "actioned" | "dismissed">().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  resolvedBy: text("resolved_by"),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+});
+
+// ---------------------------------------------------------------- priv (0018, task B8)
+// Private driver reports. paranaga_app may SELECT only the reporter's own rows and only the
+// reporter-facing columns (column grants in 0018); every write goes through priv.* definer
+// functions. The geography column is left out (written only by priv.submit_complaint).
+export const priv = pgSchema("priv");
+
+export const complaint = priv.table("complaint", {
+  id: uuid("id").primaryKey(),
+  publicRef: text("public_ref").notNull(),
+  reporterId: text("reporter_id").notNull(),
+  clientRequestId: uuid("client_request_id").notNull(),
+  category: text("category")
+    .$type<"overcharging" | "reckless_driving" | "discount_refused" | "harassment" | "improper_loading" | "other">()
+    .notNull(),
+  description: text("description").notNull(),
+  incidentAt: timestamp("incident_at", { withTimezone: true }).notNull(),
+  locationAccuracyM: numeric("location_accuracy_m"),
+  locationSource: text("location_source").$type<"gps" | "manual" | "none">().notNull(),
+  locationText: text("location_text"),
+  operatorText: text("operator_text"),
+  plateText: text("plate_text"),
+  bodyNumberText: text("body_number_text"),
+  status: text("status").$type<"submitted" | "under_review" | "needs_information" | "closed" | "withdrawn">().notNull(),
+  outcomeCode: text("outcome_code"),
+  queue: text("queue").$type<"queue_normal" | "queue_priority" | "queue_check_completeness">().notNull(),
+  legalHold: boolean("legal_hold").notNull(),
+  retentionUntil: timestamp("retention_until", { withTimezone: true }),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull(),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+export const complaintMedia = priv.table("complaint_media", {
+  id: uuid("id").primaryKey(),
+  complaintId: uuid("complaint_id").notNull(),
+  mediaObjectId: uuid("media_object_id").notNull(),
+  captureKind: text("capture_kind").$type<"in_app_camera" | "file_upload">().notNull(),
+  capturedAtClient: timestamp("captured_at_client", { withTimezone: true }),
+  receivedAtServer: timestamp("received_at_server", { withTimezone: true }).notNull(),
+  sha256: text("sha256").notNull(),
+  gpsAccuracyM: numeric("gps_accuracy_m"),
+  originalKey: text("original_key").notNull(),
+  redactedKey: text("redacted_key"),
+});
+
+export const complaintEvent = priv.table("complaint_event", {
+  id: uuid("id").primaryKey(),
+  complaintId: uuid("complaint_id").notNull(),
+  fromStatus: text("from_status"),
+  toStatus: text("to_status").notNull(),
+  actorRole: text("actor_role").$type<"reporter" | "complaint_reviewer" | "system">().notNull(),
+  actorId: text("actor_id"),
+  visibility: text("visibility").$type<"reporter" | "reviewer_only">().notNull(),
+  outcomeCode: text("outcome_code"),
+  note: text("note"),
+  at: timestamp("at", { withTimezone: true }).notNull(),
+});
+
+export const evidenceAccess = priv.table("evidence_access", {
+  id: uuid("id").primaryKey(),
+  complaintId: uuid("complaint_id").notNull(),
+  mediaObjectId: uuid("media_object_id").notNull(),
+  accessorId: text("accessor_id").notNull(),
+  accessorRole: text("accessor_role").$type<"reporter" | "complaint_reviewer">().notNull(),
+  purpose: text("purpose").$type<"reporter_download" | "complaint_review">().notNull(),
+  issuedAt: timestamp("issued_at", { withTimezone: true }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  requestId: text("request_id"),
+});
+
+// ---------------------------------------------------------------- priv.external_handoff (0019, task B9)
+// What the reporter says they did in the official MyNaga app. Self-reported; written only by
+// priv.set_mynaga_handoff (definer); readable only by the reporter.
+export const externalHandoff = priv.table("external_handoff", {
+  complaintId: uuid("complaint_id").primaryKey(),
+  target: text("target").$type<"mynaga">().notNull(),
+  submittedExternallyAt: timestamp("submitted_externally_at", { withTimezone: true }),
+  selfReportedReference: text("self_reported_reference"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});

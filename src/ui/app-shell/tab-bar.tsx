@@ -2,7 +2,7 @@
 
 // The app's tab bar (artboard Home "Main" nav; Components "Tab bar · Liquid Glass over the map"):
 // a glass pill 16 px from the sides and 24 px from the bottom, over the map and the tab pages.
-// Map · Explore · Saved · More (decision D4: no Community tab until it has content). The current
+// Map · Explore · Saved · Community · More (task B7 adds Community now that it has content). The current
 // tab carries aria-current="page". AppFrame hides it in detail panels, and the home screen hides it
 // whenever the map is not the whole screen: a pin being placed, planning, a trip's detail, guidance.
 //
@@ -23,6 +23,7 @@ export const TABS: readonly Tab[] = [
   { href: "/app", label: "Map", icon: "M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" },
   { href: "/app/explore", label: "Explore", icon: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z" },
   { href: "/app/saved", label: "Saved", icon: "M6 3h12v18l-6-4.5L6 21z" },
+  { href: "/app/community", label: "Community", icon: "M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 19c0-2.5 2.5-4.5 5.5-4.5s5.5 2 5.5 4.5M14 14.7c.6-.2 1.2-.2 2-.2 2.8 0 5.5 1.8 5.5 4.5" },
   { href: "/app/more", label: "More", icon: "M5 12h.01M12 12h.01M19 12h.01", strokeWidth: 2.6 },
 ];
 

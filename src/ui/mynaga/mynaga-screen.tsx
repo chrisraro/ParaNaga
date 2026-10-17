@@ -11,10 +11,12 @@
 import "@/ui/kit/styles";
 import "@/ui/help/help.css";
 
+import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { detectPlatform, mynagaLinksFor, type Platform } from "@/domain/mynaga/links";
 import { DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
 import { Note } from "@/ui/kit/note";
+import { ReportHandoff } from "./report-handoff";
 
 export const PREPARE_ITEMS = [
   "When it happened (date and time)",
@@ -23,7 +25,7 @@ export const PREPARE_ITEMS = [
   "What happened, in your own words",
   "Photos you are entitled to share",
 ] as const;
-export const LATER_NOTE = "Private ParaNaga reports, with a summary you can copy and a place to note your MyNaga reference, arrive later.";
+export const LATER_NOTE = "Sent a private report in ParaNaga? Open it from My reports to copy a summary and note your MyNaga reference.";
 export const MYNAGA_FOOTER = "We can't see or confirm what happens in MyNaga.";
 
 const noSubscribe = () => () => undefined;
@@ -57,35 +59,12 @@ function StepTitle({ n, id, children }: { n: number; id: string; children: strin
   );
 }
 
-export function MyNagaScreen() {
+export function MyNagaScreen({ reportId }: { reportId?: string } = {}) {
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const platform = useSyncExternalStore(noSubscribe, clientPlatform, serverPlatform);
   const links = mynagaLinksFor(platform);
-  return (
-    <DetailPanel title="MyNaga" testId="mynaga-page">
-      <main className="pn-detail__main pn-detail-in">
-        <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
-          Report in MyNaga
-        </h1>
-        <Note tone="warning" testId="mynaga-independent">
-          <strong>ParaNaga is independent.</strong> It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.
-        </Note>
-
-        <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-s1">
-          <StepTitle n={1} id="pn-mynaga-s1">
-            Prepare what you will share
-          </StepTitle>
-          <ul className="pn-group" data-testid="mynaga-prepare">
-            {PREPARE_ITEMS.map((item) => (
-              <li key={item} className="pn-mynaga__check">
-                <CheckIcon />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-s2">
+  const linksStep = (
+    <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-s2">
           <StepTitle n={2} id="pn-mynaga-s2">
             Open MyNaga and submit there
           </StepTitle>
@@ -108,13 +87,49 @@ export function MyNagaScreen() {
           </ul>
         </section>
 
-        {/* Not a numbered step: nothing to do here yet (the artboard's "Tell us if you submitted it"). */}
-        <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-after">
-          <h2 id="pn-mynaga-after" className="pn-mynaga__step-title">
-            After you submit in MyNaga
-          </h2>
-          <Note testId="mynaga-later">{LATER_NOTE}</Note>
-        </section>
+ );
+  return (
+    <DetailPanel title="MyNaga" testId="mynaga-page">
+      <main className="pn-detail__main pn-detail-in">
+        <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
+          Report in MyNaga
+        </h1>
+        <Note tone="warning" testId="mynaga-independent">
+          <strong>ParaNaga is independent.</strong> It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.
+        </Note>
+
+        {reportId ? (
+          <ReportHandoff id={reportId} links={linksStep} />
+        ) : (
+          <>
+            <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-s1">
+              <StepTitle n={1} id="pn-mynaga-s1">
+                Prepare what you will share
+              </StepTitle>
+              <ul className="pn-group" data-testid="mynaga-prepare">
+                {PREPARE_ITEMS.map((item) => (
+                  <li key={item} className="pn-mynaga__check">
+                    <CheckIcon />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {linksStep}
+
+            {/* Not a numbered step: the self-report lives on a report's own handoff screen. */}
+            <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-after">
+              <h2 id="pn-mynaga-after" className="pn-mynaga__step-title">
+                After you submit in MyNaga
+              </h2>
+              <Note testId="mynaga-later">{LATER_NOTE}</Note>
+              <Link href="/app/reports" className="pn-mynaga__link" data-testid="mynaga-reports-link">
+                My reports
+              </Link>
+            </section>
+          </>
+        )}
 
         <Note testId="mynaga-footer">{MYNAGA_FOOTER}</Note>
       </main>

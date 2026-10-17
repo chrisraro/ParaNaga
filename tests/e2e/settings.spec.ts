@@ -91,7 +91,7 @@ test.describe("phone", () => {
     // The account card offers one optional link, to the sign-in screen.
     await expect(page.getByTestId("settings-account").locator("a")).toHaveCount(1);
     await expect(page.getByTestId("settings-sign-in")).toHaveAttribute("href", "/app/sign-in");
-    await expect(page.getByTestId("more-page").getByRole("heading", { level: 2 })).toHaveText(["General", "Display and data", "Location", "Data on this device", "App", "About"]);
+    await expect(page.getByTestId("more-page").getByRole("heading", { level: 2 })).toHaveText(["General", "Display and data", "Location", "Data on this device", "App", "Reports", "About"]);
     // Install: only what the browser offers. Headless Chromium has made no install offer, so the
     // row is text pointing to the browser menu, never a button that does nothing.
     const install = page.getByTestId("settings-install");
