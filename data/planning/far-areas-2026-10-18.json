@@ -286,11 +286,14 @@
           "via": "Panganiban"
         }
       ],
+      "endAnchors": [
+        12717296946
+      ],
       "evidence": "official",
       "sourceCodes": [
         "RH02"
       ],
-      "note": "Ordinance 2025-070 routes R2, R3, R4; T12 note: Del Rosario boarding toward Centro via Panganiban, Magsaysay or Roxas. The Francia alias is an owner report (U03), not in any instrument."
+      "note": "Ordinance 2025-070 routes R2, R3, R4; T12 note: Del Rosario boarding toward Centro via Panganiban, Magsaysay or Roxas. The Francia alias is an owner report (U03), not in any instrument. endAnchors: Del Rosario only; T09 also names Concepcion, but Concepcion Pequena lies in Centro and would bring back ordinary Centro hops, so it is not listed."
     }
   ],
   "tricycleTerminals": [

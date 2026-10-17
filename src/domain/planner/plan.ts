@@ -54,7 +54,7 @@ import { boundedDistances, padyakAreas, routeStreet, snapWalk, type StreetRoute,
 import {
   fareClasses, legFareEstimate, padyakFare, sumFares, tricycleFare, type LegFare, type PadyakFare, type TricycleFare, type TripFare,
 } from "./fares";
-import { FAR_AREAS, locatedTerminals, ROUTE_BOARDING_LINK_M, zoneOf, type FarZone, type LocatedTerminal, type ViaGroup } from "./far-areas";
+import { FAR_AREAS, locatedTerminals, nearestAnchorId, ROUTE_BOARDING_LINK_M, zoneOf, type FarZone, type LocatedTerminal, type ViaGroup } from "./far-areas";
 import { buildPlanningNetwork, type PlanningNetwork } from "./graph";
 import { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
 import { rideNotes } from "./notes";
@@ -351,12 +351,16 @@ function search(
 
 /**
  * Via groups (plan F, T5): a group is active when 2+ of its routes have a one-ride candidate (after must-save-walking,
- * the `best` map). `reps` holds the best candidate of each such route; `byRoute` says which route is which via.
+ * the `best` map). `reps` holds the best candidate of each such route (and, if the group has endAnchors, one end of the trip is at one); `byRoute` says which route is which via.
  */
-function activeVias(net: PlanningNetwork, cands: Cand[], groups: readonly ViaGroup[]): { reps: Set<Cand>; byRoute: Map<string, PlanVia> } {
+function activeVias(
+  net: PlanningNetwork, cands: Cand[], groups: readonly ViaGroup[], endAnchorIds: readonly (number | null)[],
+): { reps: Set<Cand>; byRoute: Map<string, PlanVia> } {
   const reps = new Set<Cand>();
   const byRoute = new Map<string, PlanVia>();
   for (const g of groups) {
+    // A group with endAnchors applies only to a trip with an end whose nearest barangay anchor is one of them.
+    if (g.endAnchors && !endAnchorIds.some((id) => id !== null && g.endAnchors!.includes(id))) continue;
     const found = g.routes.flatMap((r) => {
       const own = cands.filter((c) => c.hops.length === 1 && net.variants[c.hops[0]!.v]!.routeCode === r.routeCode).sort(compare)[0];
       return own ? [{ r, own }] : [];
@@ -649,7 +653,7 @@ export function planTrip(
   // Via groups: the Pareto picks plus the best one-ride candidate of each via route, within the block budget. The
   // best-score option is never trimmed; non-via extras go first (worst score first), then vias; a label on a dropped
   // option is dropped with it, never moved.
-  const vias = activeVias(net, jeep.cands, viaGroups);
+  const vias = activeVias(net, jeep.cands, viaGroups, [nearestAnchorId(origin, FAR_AREAS), nearestAnchorId(destination, FAR_AREAS)]);
   let block = jeep.options;
   if (vias.reps.size > 0) {
     const budget = Math.max(1, MAX_OPTIONS - (walkShown ? 1 : 0) - (access ? 1 : 0) - (farZone === null || special ? 1 : 0) - (padyak ? 1 : 0));
@@ -673,7 +677,8 @@ export function planTrip(
   }
   for (const { c, labels } of block) {
     const o1 = jeepneyOption(c, labels, net, g, snapshot, origin, destination);
-    const via = c.hops.length === 1 ? vias.byRoute.get(net.variants[c.hops[0]!.v]!.routeCode) : undefined;
+    // Only the best candidate of a via route carries the chip (a second variant of the same route does not).
+    const via = vias.reps.has(c) ? vias.byRoute.get(net.variants[c.hops[0]!.v]!.routeCode) : undefined;
     options.push(via ? { ...o1, via } : o1);
   }
   if (access) options.push(access);

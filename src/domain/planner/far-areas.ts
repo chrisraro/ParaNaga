@@ -64,6 +64,8 @@ const FarAreasSchema = z.strictObject({
       routes: z
         .array(z.strictObject({ routeCode, via: z.string().min(1), aliasNote: z.string().optional() }))
         .min(2),
+      /** Barangay anchor nodes at the group's far end: the vias apply only to a trip whose origin or destination is nearest to one. Absent: no geography filter. */
+      endAnchors: z.array(osmNodeId).min(1).optional(),
       evidence,
       sourceCodes: z.array(sourceCode).min(1),
       note: z.string().optional(),
@@ -96,12 +98,18 @@ export function parseFarAreas(raw: unknown): FarAreas {
 
 /** The far zone code of the barangay anchor nearest to `point`, or null when that anchor is in no far zone. */
 export function zoneOf(point: LatLng, data: FarAreas): string | null {
+  const id = nearestAnchorId(point, data);
+  return id === null ? null : (data.farZones.find((z) => z.nodeIds.includes(id))?.code ?? null);
+}
+
+/** The OSM node id of the barangay anchor nearest to `point`, or null with no anchors. */
+export function nearestAnchorId(point: LatLng, data: FarAreas): number | null {
   let best: { id: number; d: number } | null = null;
   for (const a of data.barangayAnchors) {
     const d = haversineMeters(point, a);
     if (best === null || d < best.d) best = { id: a.osmNodeId, d };
   }
-  return best === null ? null : (data.farZones.find((z) => z.nodeIds.includes(best.id))?.code ?? null);
+  return best?.id ?? null;
 }
 
 /** The committed far-areas data, bundled so offline planning applies the same rules. */

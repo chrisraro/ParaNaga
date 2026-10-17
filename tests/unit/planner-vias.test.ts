@@ -1,12 +1,14 @@
 // Via groups in the planner (Increment F, T5): the Centro-Del Rosario corridor shows each via route (R2 Magsaysay,
 // R3 Roxas (Diversion), R4 Panganiban) that yields a one-ride candidate, within the 6-option budget. Driven by the
 // far-areas viaGroups data (a 4th via is a data edit). Real committed Lines, snapshot and street graph (10:00 Manila).
+// The group applies only to a trip with an end at its endAnchors (Del Rosario). Tests were written after the code; the
+// viaGroups: [] checks prove R4 is hidden (and the chips absent) without the feature.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { buildPlanResponse, planOptionSchema, planResponseSchema } from "@/domain/api/plan";
 import { isInsideNaga } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
-import { FAR_AREAS, type ViaGroup } from "@/domain/planner/far-areas";
+import { FAR_AREAS, nearestAnchorId, type ViaGroup } from "@/domain/planner/far-areas";
 import { MAX_OPTIONS, planTrip, type PlanOption, type TripPlan } from "@/domain/planner/plan";
 import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
 import { realStreets } from "../fixtures/real-streets";
@@ -34,7 +36,7 @@ const jeeps = (p: TripPlan) => p.options.filter((o) => o.mode === "jeepney");
 const vias = (p: TripPlan) => p.options.filter((o) => o.via !== undefined);
 const recommended = (p: TripPlan) => p.options.filter((o) => o.labels.includes("Recommended"));
 const allRoutes = [...new Set(lines.lines.map((l) => l.routeCode))];
-const everyRouteAVia: ViaGroup = { ...group, code: "ALL", routes: allRoutes.map((routeCode) => ({ routeCode, via: `via ${routeCode}` })) };
+const everyRouteAVia: ViaGroup = { ...group, endAnchors: undefined, code: "ALL", routes: allRoutes.map((routeCode) => ({ routeCode, via: `via ${routeCode}` })) };
 
 describe("via groups: the Del Rosario corridor", () => {
   it("the data names three vias: R2 Magsaysay (Francia alias), R3 Roxas (Diversion), R4 Panganiban", () => {
@@ -72,6 +74,22 @@ describe("via groups: the Del Rosario corridor", () => {
     expect(recommended(p)).toHaveLength(1);
   });
 
+  it("Del Rosario to Plaza Rizal shows the vias too (either end)", () => {
+    const p = plan(DEL_ROSARIO, PLAZA_RIZAL);
+    expect(vias(p).flatMap(rideCodes).sort()).toEqual(["R2", "R3", "R4"]);
+    expect(recommended(p)).toHaveLength(1);
+  });
+
+  it("an ordinary Centro hop served by R2 and R4 has no via options (the group needs an end at Del Rosario)", () => {
+    const o = { lat: 13.624424756282671, lng: 123.18201845070709 };
+    const d = { lat: 13.626305849487222, lng: 123.18997667235419 };
+    expect(group.endAnchors).toEqual([12717296946]);
+    expect(vias(plan(o, d))).toHaveLength(0);
+    expect(JSON.stringify(plan(o, d))).toBe(JSON.stringify(plan(o, d, [])));
+    // The same hop with the filter removed from a test-only copy of the data did show them.
+    expect(vias(plan(o, d, [{ ...group, endAnchors: undefined }])).length).toBeGreaterThanOrEqual(2);
+  });
+
   it("a trip outside Del Rosario is unchanged: no chips and the same plan as with no via data", () => {
     const p = plan(PLAZA_RIZAL, SM_CITY);
     expect(vias(p)).toHaveLength(0);
@@ -107,7 +125,9 @@ describe("via groups: data-driven, budget and trim order", () => {
     const [o, d] = R1_R8D;
     // Real data: none of R2-R4 reaches this trip, so no chips. Adding R1 alone leaves one route: still none.
     expect(vias(plan(o, d))).toHaveLength(0);
-    const withR1: ViaGroup = { ...group, routes: [...group.routes, { routeCode: "R1", via: "Fake Road" }] };
+    // The fake group is anchored at this trip's own nearest barangay anchors, so the geography filter passes.
+    const here = [nearestAnchorId(o, FAR_AREAS)!, nearestAnchorId(d, FAR_AREAS)!];
+    const withR1: ViaGroup = { ...group, endAnchors: [...here, ...group.endAnchors!], routes: [...group.routes, { routeCode: "R1", via: "Fake Road" }] };
     expect(vias(plan(o, d, [withR1]))).toHaveLength(0);
     // R1 and R8-D appended: two routes of the group qualify, each shown with its own via label and note.
     const withBoth: ViaGroup = { ...withR1, routes: [...withR1.routes, { routeCode: "R8-D", via: "Other Road", aliasNote: "Fake alias" }] };

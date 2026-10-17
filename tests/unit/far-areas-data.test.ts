@@ -34,6 +34,15 @@ describe("parseFarAreas and zoneOf (synthetic)", () => {
     expect(() => parseFarAreas(oneRoute)).toThrow();
   });
 
+  it("a via group's endAnchors are optional (absent parses, as old data), non-empty, node ids only", () => {
+    const group = (extra: object) => ({ code: "G", routes: [{ routeCode: "R2", via: "A" }, { routeCode: "R3", via: "B" }], evidence: "official", sourceCodes: ["RH02"], ...extra });
+    const withIt = (extra: object) => ({ ...mini(), viaGroups: [group(extra)] });
+    expect(() => parseFarAreas(withIt({}))).not.toThrow();
+    expect(parseFarAreas(withIt({ endAnchors: [1] })).viaGroups[0]!.endAnchors).toEqual([1]);
+    expect(() => parseFarAreas(withIt({ endAnchors: [] }))).toThrow();
+    expect(() => parseFarAreas(withIt({ endAnchors: ["x"] }))).toThrow();
+  });
+
   it("zoneOf returns the zone of the nearest anchor, else null", () => {
     const d = parseFarAreas(mini());
     expect(zoneOf({ lat: 13.659, lng: 123.249 }, d)).toBe("FZ01");
@@ -91,6 +100,8 @@ describe("committed far-areas-2026-10-18.json", () => {
       for (const r of g.routes) expect(routeCodes.has(r.routeCode), r.routeCode).toBe(true);
     }
     expect(data.viaGroups[0]!.routes.map((r) => [r.routeCode, r.via])).toEqual([["R2", "Magsaysay"], ["R3", "Roxas (Diversion)"], ["R4", "Panganiban"]]);
+    // endAnchors are barangay anchors (so they exist in the road snapshot with the stated name, checked above): Del Rosario.
+    for (const g of data.viaGroups) for (const id of g.endAnchors ?? []) expect(data.barangayAnchors.find((a) => a.osmNodeId === id)?.name).toBe("Del Rosario");
   });
 
   it("terminal codes T10, T11 and T14 exist in the modes seed with coordinates", () => {
