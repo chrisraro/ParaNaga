@@ -305,3 +305,34 @@ describe("groupView: GROUP_LIMIT and show more", () => {
     expect(groupView(g).label).toBe("Show all 80");
   });
 });
+
+describe("searchIndex: route aliases (stop-sign letters and names)", () => {
+  const withAliases = searchIndexSchema.parse({
+    ...raw,
+    routes: index.routes.map((r) => ({
+      ...r,
+      aliases: ({ R2: ["E"], R6: ["I"], R7: ["J"], R1: ["Centro - Cararayan - San Isidro"] } as Record<string, string[]>)[r.code] ?? [],
+    })),
+  });
+  const routesFor = (q: string) => group(searchIndex(withAliases, q, off), "routes")?.results ?? [];
+
+  it.each([["E", "R2"], ["Route E", "R2"], ["route i", "R6"], ["J", "R7"]])("%s finds %s first and says which name matched", (q, code) => {
+    const top = routesFor(q)[0]!;
+    expect(top).toMatchObject({ kind: "route", code });
+    expect(resultSubtitle(top)).toMatch(/^Also called [EIJ]$/);
+  });
+
+  it("the sign's route name finds R1", () => {
+    expect(routesFor("Cararayan - San Isidro")[0]).toMatchObject({ kind: "route", code: "R1" });
+  });
+
+  it("a code or name match keeps the plain row (no alias subtitle)", () => {
+    const r2 = routesFor("R2")[0]!;
+    expect(r2).toMatchObject({ code: "R2", matchedAlias: null });
+    expect(resultSubtitle(r2)).toBe("");
+  });
+
+  it("an index without aliases parses with an empty list (older snapshots)", () => {
+    expect(index.routes.every((r) => r.aliases.length === 0)).toBe(true);
+  });
+});

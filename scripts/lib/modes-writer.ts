@@ -47,6 +47,7 @@ export type ModesOutcome =
 /** Member kinds whose whole set comes from the modes seed (replaced, never carried). */
 export const MODES_OWNED_KINDS = [
   "route_vehicle_class", "route_cooperative", "route_operating_status", "route_fare_observation", "regional_service",
+  "route_alias",
 ] as const;
 
 type Member = { entity_kind: string; entity_id: string; version_id: string };
@@ -281,6 +282,28 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
       ["delta_centavos_high", "integer"], ["observed_on", "date"], ["report_text", "text"], ["notes", "text"],
       ["source_codes", "jsonb", textArrayNotNull("source_codes")], ["content_hash", "text"], ["is_synthetic", "boolean"]]);
 
+  // ---------------------------------------------------------------- route aliases (signboard letters, names)
+  // transit.route_alias is unique on (route, kind, alias) and not versioned: an existing row is reused
+  // when it says the same thing, and refused when it differs (released rows are never updated).
+  const aliasOwners = modes.routeAliases.map((a) => ({ a, routeId: routeIdOf(a.routeCode, `route alias ${a.code}`) }));
+  const existingAliases = await c.query<{ id: string; route_id: string; kind: string; alias: string; is_historical: boolean; source_code: string | null; is_synthetic: boolean }>(
+    `select id, route_id, kind, alias, is_historical, source_code, is_synthetic from transit.route_alias where route_id = any($1::uuid[])`,
+    [[...new Set(aliasOwners.map((x) => x.routeId))]]);
+  const aliasByKey = new Map(existingAliases.rows.map((r) => [`${r.route_id}|${r.kind}|${r.alias}`, r]));
+  const aliasRows = aliasOwners.map(({ a, routeId }) => {
+    const found = aliasByKey.get(`${routeId}|${a.kind}|${a.alias}`);
+    if (found && (found.is_historical !== a.isHistorical || found.source_code !== a.sourceCode || found.is_synthetic !== synthetic)) {
+      throw new ImportRefusedError(`route alias ${a.code} differs from the committed transit.route_alias row ${found.id}; nothing written`);
+    }
+    return { id: found?.id ?? randomUUID(), isNew: !found, routeId, a };
+  });
+  counts.route_aliases_inserted = await insertRows(c, "transit.route_alias",
+    aliasRows.filter((x) => x.isNew).map(({ id, routeId, a }) => ({
+      id, route_id: routeId, alias: a.alias, kind: a.kind, is_historical: a.isHistorical, source_code: a.sourceCode,
+      is_synthetic: synthetic,
+    })), [["id", "uuid"], ["route_id", "uuid"], ["alias", "text"], ["kind", "text"], ["is_historical", "boolean"],
+      ["source_code", "text"], ["is_synthetic", "boolean"]]);
+
   // ---------------------------------------------------------------- regional services
   const serviceIds = await ensureIdentities(c, "transit.regional_service", "code", modes.regionalServices.map((r) => r.code),
     synthetic, (code) => ({ code, is_synthetic: synthetic }), [["code", "text"], ["is_synthetic", "boolean"]]);
@@ -325,6 +348,7 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
     ...same("route_vehicle_class", vehicleClasses.map((x) => x.id)),
     ...same("route_cooperative", cooperatives.map((x) => x.id)),
     ...same("route_fare_observation", observations.map((x) => x.id)),
+    ...same("route_alias", aliasRows.map((x) => x.id)),
     ...modes.regionalServices.map((r) => ({
       entity_kind: "regional_service", entity_id: serviceIds.ids.get(r.code)!, version_id: services.find((x) => x.row === r)!.id,
     })),

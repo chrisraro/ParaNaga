@@ -3117,6 +3117,25 @@
         "reason": "Increment F far-areas plan; owner report, evidence owner_report_unverified",
         "reviewedOn": "2026-10-17"
       }
+    },
+    {
+      "code": "U04",
+      "title": "Project owner field photo, 2026-10-18: PUJ stop sign at CSNHS (southbound) listing B Naga Loop Service; E Centro - Del Rosario via Magsaysay Ave; [G or H] Centro - San Felipe; I Centro - Pacol; J Centro - Carolina - Panicuason; [G or H] Centro - Cararayan - San Isidro",
+      "url": null,
+      "extra_urls": [],
+      "publisher": "ParaNaga project owner",
+      "date": "2026-10-18",
+      "type": "user_report_unverified",
+      "licence": null,
+      "retrieved": "2026-10-18",
+      "properties": {
+        "scope": "Owner-contributed field evidence (photo transcribed by the owner); letters on the San Felipe and Cararayan rows are blurred (G or H). No web source found for the E-J lettering (search 2026-10-18). Never shown as a fact or as stop geometry: the sign has no coordinate on file."
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Routes update 2026-10-18; owner field evidence, evidence owner_report_unverified",
+        "reviewedOn": "2026-10-18"
+      }
     }
   ],
   "terminals": [
@@ -5708,6 +5727,48 @@
         "reason": "Research conflict 1 (loops-and-routes-2026-10.md)",
         "reviewedOn": "2026-10-17"
       }
+    },
+    {
+      "code": "CX11",
+      "topic": "Route letters: 1998-2014 ordinances vs 2026 stop sign",
+      "description": "Older ordinances used letters for loop services: Magsaysay Loops A and B, Loops C and D (Bagumbayan-Calauag), multicab Loops G, H, I (1998-2001) and J (2014). The 2026 CSNHS sign uses I for Centro-Pacol and J for Centro-Carolina-Panicuason. The sign is newer; the old letters are not kept as aliases.",
+      "refs": [
+        "RA07",
+        "RA08",
+        "R6",
+        "R7"
+      ],
+      "source_codes": [
+        "RL06",
+        "RL09",
+        "RL10",
+        "U04"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Routes update 2026-10-18",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "CX12",
+      "topic": "Sign letters for San Felipe and Cararayan",
+      "description": "The owner's photo shows a blurred letter (G or H; the Cararayan row may also be K) for Centro-San Felipe (R5) and Centro-Cararayan-San Isidro (R1). No web source gives the letter. If the letters follow the plan numbers (E = Route 2, I = Route 6, J = Route 7), San Felipe (Route 5) would be H; this is an inference only, so neither letter is imported.",
+      "refs": [
+        "RA09",
+        "RA10",
+        "R1",
+        "R5"
+      ],
+      "source_codes": [
+        "U04",
+        "RL01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Routes update 2026-10-18",
+        "reviewedOn": "2026-10-18"
+      }
     }
   ],
   "roadRules": [
@@ -6914,6 +6975,192 @@
         "decision": "import",
         "reason": "'Francia' is in no instrument; owner reports (U02, U03: Magsaysay-Francia via to Del Rosario) plus a private guide listing",
         "reviewedOn": "2026-10-17"
+      }
+    }
+  ],
+  "routeAliases": [
+    {
+      "code": "RA01",
+      "routeCode": "R8-A",
+      "alias": "Naga Loop Service A",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "official",
+      "sourceCodes": [
+        "RL01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord 2025-070 names Route 8 'Naga Loop Service (A, B, C, D)'",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA02",
+      "routeCode": "R8-B",
+      "alias": "Naga Loop Service B",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "official",
+      "sourceCodes": [
+        "RL01",
+        "U04"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord 2025-070 Route 8 loop B; the CSNHS sign reads 'Naga Loop Service'",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA03",
+      "routeCode": "R8-C",
+      "alias": "Naga Loop Service C",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "official",
+      "sourceCodes": [
+        "RL01",
+        "RL02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord 2025-070 and Res 2025-128 name Loop Service C",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA04",
+      "routeCode": "R8-D",
+      "alias": "Naga Loop Service D",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "official",
+      "sourceCodes": [
+        "RL01",
+        "RL02"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord 2025-070 and Res 2025-128 name Loop Service D",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA05",
+      "routeCode": "R8-B",
+      "alias": "B",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U04",
+        "RL01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Sign letter B with 'Naga Loop Service' on a southbound stop; Loop B (counter-clockwise) runs Penafrancia Ave southbound (RL01). Inference from direction, unverified",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA06",
+      "routeCode": "R2",
+      "alias": "E",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U04",
+        "RL01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Letter read from the owner's CSNHS stop-sign photo (U04); route matched by the sign's route name to the LPTRP name (RL01). No web source gives the letter. Sign: 'Centro - Del Rosario via Magsaysay Ave'.",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA07",
+      "routeCode": "R6",
+      "alias": "I",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U04",
+        "RL01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Letter read from the owner's CSNHS stop-sign photo (U04); route matched by the sign's route name to the LPTRP name (RL01). No web source gives the letter. Sign: 'Centro - Pacol'. Old multicab Loop I is unrelated (CX11).",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA08",
+      "routeCode": "R7",
+      "alias": "J",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U04",
+        "RL01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Letter read from the owner's CSNHS stop-sign photo (U04); route matched by the sign's route name to the LPTRP name (RL01). No web source gives the letter. Sign: 'Centro - Carolina - Panicuason'. Old multicab Loop J is unrelated (CX11).",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA09",
+      "routeCode": "R5",
+      "alias": "H",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U04"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "Letter blurred in the photo (G or H) and no source confirms it (CX12); not imported until a clear photo or document",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA10",
+      "routeCode": "R1",
+      "alias": "G",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U04"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "Letter blurred in the photo (G or H, possibly K) and no source confirms it (CX12); not imported until a clear photo or document",
+        "reviewedOn": "2026-10-18"
+      }
+    },
+    {
+      "code": "RA11",
+      "routeCode": "R1",
+      "alias": "Centro - Cararayan - San Isidro",
+      "kind": "signboard",
+      "isHistorical": false,
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "U04",
+        "RL01"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Sign wording for LPTRP Route 1 'Centro - San Isidro via Cararayan' (RL01); lets the sign's name find R1",
+        "reviewedOn": "2026-10-18"
       }
     }
   ]

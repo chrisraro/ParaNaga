@@ -185,6 +185,7 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
     expect(kinds(after, "route_operating_status")).toHaveLength(11);
     expect(kinds(after, "route_fare_observation")).toHaveLength(2);
     expect(kinds(after, "regional_service")).toHaveLength(7);
+    expect(kinds(after, "route_alias")).toHaveLength(9);
     expect(kinds(after, "fare_rule")).toHaveLength(kinds(previous, "fare_rule").length + 7);
     if (result.modes?.outcome === "committed") {
       expect(result.modes.counts).toMatchObject({ carried_members: previous.length - 3 - 6, seed_members: after.length - previous.length + 9 });

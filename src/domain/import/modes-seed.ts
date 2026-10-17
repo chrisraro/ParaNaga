@@ -393,6 +393,23 @@ const RouteNote = z.strictObject({
   review: Review,
 });
 
+/**
+ * A reviewed route alias (signboard letter, local or legacy name) so an old or new name finds the
+ * route. Written as transit.route_alias (kind, is_historical, first source code). Letters read from
+ * a street sign photo are owner field evidence: owner_report_unverified until a document agrees.
+ */
+export const ROUTE_ALIAS_KINDS = ["signboard", "legacy_name", "local", "legacy_color"] as const;
+const RouteAlias = z.strictObject({
+  code: z.string().regex(/^RA[0-9]{2}$/),
+  routeCode: text,
+  alias: z.string().min(1).max(60),
+  kind: z.enum(ROUTE_ALIAS_KINDS),
+  isHistorical: z.boolean(),
+  evidence,
+  sourceCodes: codes.min(1),
+  review: Review,
+});
+
 const ModesSeedSchema = z.strictObject({
   header: Header,
   sources: z.array(Source),
@@ -411,6 +428,7 @@ const ModesSeedSchema = z.strictObject({
   roadRules: z.array(RoadRule),
   padyakAreas: z.array(PadyakArea),
   routeNotes: z.array(RouteNote),
+  routeAliases: z.array(RouteAlias).default(() => []),
 });
 
 export type ModesSeed = z.infer<typeof ModesSeedSchema>;
@@ -420,13 +438,14 @@ export type ModesSeedFareObservation = ModesSeed["fareObservations"][number];
 export type ModesSeedEtaParam = ModesSeed["etaParams"][number];
 export type ModesSeedRoadRule = ModesSeed["roadRules"][number];
 export type ModesSeedPadyakArea = ModesSeed["padyakAreas"][number];
+export type ModesSeedRouteAlias = ModesSeed["routeAliases"][number];
 type Reviewed = { review: { decision: "import" | "exclude" } };
 
 /** The arrays of records that carry a review. */
 const RECORD_KEYS = [
   "sources", "terminals", "routes", "routeStatusUpdates", "fleet", "cooperatives", "regionalServices",
   "fareRules", "fareObservations", "fareRuleSourceAdditions", "etaParams", "streetAliases", "conflicts",
-  "roadRules", "padyakAreas", "routeNotes",
+  "roadRules", "padyakAreas", "routeNotes", "routeAliases",
 ] as const satisfies readonly (keyof ModesSeed)[];
 
 // ---------------------------------------------------------------- parse
@@ -552,6 +571,7 @@ export function validateModesSeed(seed: ModesSeed, ctx: ModesSeedContext): strin
   imp.roadRules.forEach((r) => refs(`road rule ${r.code}`, r.sourceCodes));
   imp.padyakAreas.forEach((a) => refs(`padyak area ${a.code}`, a.sourceCodes));
   imp.routeNotes.forEach((n) => refs(`route note ${n.code}`, n.sourceCodes));
+  imp.routeAliases.forEach((a) => refs(`route alias ${a.code}`, a.sourceCodes));
 
   // evidence: owner-only records say so, and owner evidence cites the owner report
   const evidenceProblem = (ev: string, sources: string[]): string | null => {
@@ -606,6 +626,25 @@ export function validateModesSeed(seed: ModesSeed, ctx: ModesSeedContext): strin
     for (const rc of n.routeCodes) if (!noteRoutes.has(rc)) issues.push(`route note ${n.code}: unknown route ${rc}`);
     const ep = evidenceProblem(n.evidence, n.sourceCodes);
     if (ep) issues.push(`route note ${n.code}: ${ep}`);
+  }
+
+  // route aliases: known route; one current alias text (folded) names one route only
+  dupes("route alias code", seed.routeAliases.map((a) => a.code));
+  const aliasOwner = new Map<string, string>();
+  for (const a of imp.routeAliases) {
+    if (!noteRoutes.has(a.routeCode)) {
+      issues.push(`route alias ${a.code}: unknown route ${a.routeCode}`);
+      continue;
+    }
+    const ep = evidenceProblem(a.evidence, a.sourceCodes);
+    if (ep) issues.push(`route alias ${a.code}: ${ep}`);
+    if (a.isHistorical) continue;
+    const key = a.alias.trim().toLowerCase();
+    if (noteRoutes.has(a.alias.trim().toUpperCase())) issues.push(`route alias ${a.code}: "${a.alias}" is itself a route code`);
+    const owner = aliasOwner.get(key);
+    if (owner !== undefined && owner !== a.routeCode) issues.push(`route alias ${a.code}: "${a.alias}" already names route ${owner}`);
+    else if (owner === a.routeCode) issues.push(`route alias ${a.code}: duplicate alias "${a.alias}" on ${a.routeCode}`);
+    aliasOwner.set(key, a.routeCode);
   }
 
   // terminals

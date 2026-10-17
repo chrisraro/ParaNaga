@@ -648,6 +648,8 @@ export const searchRouteSchema = z.object({
   mode: legacyRouteMode(),
   /** The route's fleet sentence (fleetLabel), e.g. "Traditional and modern jeepneys". */
   fleetLabel: z.string().default(() => unconfirmedFleet().label),
+  /** Current (non-historical) route aliases, e.g. the stop-sign letter "E"; [] for older snapshots. */
+  aliases: z.array(z.string()).default(() => []),
 });
 
 export const searchTerminalSchema = z.object({

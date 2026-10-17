@@ -423,3 +423,66 @@ describe("research sources RT/RL/RP/RH and owner report U02 (2026-10-17)", () =>
     expect([...tokens].filter((t) => forbidden.has(hash(t)))).toEqual([]);
   });
 });
+
+describe("route aliases (routes update 2026-10-18)", () => {
+  const imp = importableRecords(real);
+  const knownSources = new Set([...ctx.externalSourceCodes, ...imp.sources.map((s) => s.code)]);
+  const routeCodes = new Set(ctx.existingRouteCodes);
+
+  it("the real file validates and every imported alias names an LPTRP route and cites known sources", () => {
+    expect(validateModesSeed(real, ctx)).toEqual([]);
+    expect(imp.routeAliases.length).toBeGreaterThan(0);
+    for (const a of imp.routeAliases) {
+      expect(routeCodes.has(a.routeCode)).toBe(true);
+      expect(a.sourceCodes.length).toBeGreaterThan(0);
+      for (const c of a.sourceCodes) expect(knownSources.has(c)).toBe(true);
+    }
+  });
+
+  it("maps the CSNHS sign letters by route name: B = R8-B, E = R2, I = R6, J = R7; each current alias names one route", () => {
+    const letters = Object.fromEntries(imp.routeAliases.filter((a) => /^[A-Z]$/.test(a.alias)).map((a) => [a.alias, a.routeCode]));
+    expect(letters).toEqual({ B: "R8-B", E: "R2", I: "R6", J: "R7" });
+    const current = imp.routeAliases.filter((a) => !a.isHistorical).map((a) => a.alias.toLowerCase());
+    expect(new Set(current).size).toBe(current.length);
+  });
+
+  it("sign letters are owner field evidence (U04), never shown as official", () => {
+    for (const a of imp.routeAliases.filter((x) => /^[A-Z]$/.test(x.alias))) {
+      expect(a).toMatchObject({ kind: "signboard", evidence: "owner_report_unverified" });
+      expect(a.sourceCodes[0]).toBe("U04");
+    }
+    const u04 = real.sources.find((s) => s.code === "U04")!;
+    expect(u04).toMatchObject({ type: "user_report_unverified", url: null, date: "2026-10-18" });
+  });
+
+  it("keeps the blurred San Felipe and Cararayan letters out (G or H; conflict CX12)", () => {
+    const blurred = real.routeAliases.filter((a) => a.code === "RA09" || a.code === "RA10");
+    expect(blurred.map((a) => [a.routeCode, a.review.decision])).toEqual([["R5", "exclude"], ["R1", "exclude"]]);
+    expect(real.conflicts.find((c) => c.code === "CX12")!.refs).toEqual(expect.arrayContaining(["RA09", "RA10"]));
+  });
+
+  it("refuses an unknown route, a letter on two routes, an unknown source and owner-only evidence called official", () => {
+    const j: Json = clone(realJson);
+    const e = j.routeAliases.find((a: Json) => a.alias === "E");
+    j.routeAliases.push({ ...e, code: "RA90", routeCode: "R9" });
+    j.routeAliases.push({ ...e, code: "RA91", routeCode: "R3" });
+    j.routeAliases.push({ ...e, code: "RA92", alias: "Q", sourceCodes: ["U99"] });
+    j.routeAliases.push({ ...e, code: "RA93", alias: "Z", evidence: "official", sourceCodes: ["U04"] });
+    const issues = validateModesSeed(parseModesSeed(j), ctx);
+    expect(issues).toEqual(expect.arrayContaining([
+      "route alias RA90: unknown route R9",
+      'route alias RA91: "E" already names route R2',
+      "route alias RA92 cites unknown source U99",
+      "route alias RA93: cites only owner reports, so evidence must be owner_report_unverified",
+    ]));
+  });
+
+  it("an alias may not be a route code, and the section defaults to empty for older files", () => {
+    const j: Json = clone(realJson);
+    j.routeAliases[0].alias = "R3";
+    expect(validateModesSeed(parseModesSeed(j), ctx)).toContain('route alias RA01: "R3" is itself a route code');
+    const old: Json = clone(realJson);
+    delete old.routeAliases;
+    expect(parseModesSeed(old).routeAliases).toEqual([]);
+  });
+});

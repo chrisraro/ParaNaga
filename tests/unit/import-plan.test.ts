@@ -134,7 +134,7 @@ describe("buildImportPlan on the research package", () => {
   });
 
   it("reports aliases as deferred", () => {
-    expect(plan.deferred).toEqual({ route_aliases: "deferred (no structured source)" });
+    expect(plan.deferred).toEqual({ route_aliases: "written by the modes seed stage (routeAliases), not from Data_Sets" });
     expect(plan.counts).not.toHaveProperty("route_aliases");
   });
 
@@ -204,12 +204,23 @@ describe("buildImportPlan with the reviewed modes seed", () => {
 
   it("counts every imported kind", () => {
     expect(modes.counts).toEqual({
-      sources: 134, terminals: 16, terminals_with_coordinate: 12, routes: 2, variants: 3,
+      sources: 135, terminals: 16, terminals_with_coordinate: 12, routes: 2, variants: 3,
       route_operating_statuses: 11, route_vehicle_classes: 15, route_cooperatives: 7, route_fare_observations: 2,
-      regional_services: 7, fare_rules_new: 7, fare_rule_versions_sources_added: 3, research_conflicts: 10,
-      excluded_records: modes.excluded.length,
+      regional_services: 7, fare_rules_new: 7, fare_rule_versions_sources_added: 3, research_conflicts: 12,
+      route_aliases: 9, excluded_records: modes.excluded.length,
     });
     expect(modes.deferred).toHaveProperty("eta_params");
+  });
+
+  it("plans the reviewed route aliases (sign letters E, I, J, B; loop names) with their first source, never the blurred G/H letters", () => {
+    expect(modes.routeAliases.map((a) => `${a.routeCode}=${a.alias}`)).toEqual([
+      "R8-A=Naga Loop Service A", "R8-B=Naga Loop Service B", "R8-C=Naga Loop Service C", "R8-D=Naga Loop Service D",
+      "R8-B=B", "R2=E", "R6=I", "R7=J", "R1=Centro - Cararayan - San Isidro",
+    ]);
+    expect(modes.routeAliases.find((a) => a.alias === "E")).toMatchObject({ kind: "signboard", isHistorical: false, sourceCode: "U04" });
+    const excluded = modes.excluded.join("\n");
+    expect(excluded).toMatch(/^routeAliases RA09: Letter blurred/m);
+    expect(excluded).toMatch(/^routeAliases RA10: Letter blurred/m);
   });
 
   it("reports the excluded records with their reason and never plans them", () => {

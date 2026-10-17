@@ -59,6 +59,8 @@ export type SearchResult = Ranked &
         evidence: "documented" | "provisional" | "verified";
         /** The legal-plan street that matched when the code and name did not; null otherwise. */
         matchedStreet: string | null;
+        /** The route alias (stop-sign letter or name) that matched when the code and name did not. */
+        matchedAlias?: string | null;
       }
     | { kind: "terminal"; code: string; title: string; locationText: string | null }
     | { kind: "barangay"; key: string; title: string }
@@ -222,6 +224,7 @@ export function resultSubtitle(result: SearchResult): string {
     case "pin":
       return `Mapped stop · ${result.loops.length > 0 ? `${result.loops.join(", ")} · ` : ""}candidate`;
     case "route":
+      if (result.matchedAlias) return `Also called ${result.matchedAlias}`;
       return result.matchedStreet ? `Legal route plan lists ${result.matchedStreet}` : "";
     case "terminal":
       return `Terminal · ${result.locationText ? `${result.locationText} · ` : ""}location not mapped`;
@@ -306,11 +309,18 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
   }
   for (const r of index.routes) {
     const title = `${r.code} ${r.name}`;
-    const own = best([r.code, r.name, title]);
+    const named = best([r.code, r.name, title]);
+    // A stop-sign letter ("E") or sign name finds its route as strongly as the code; "Route E" too.
+    const aliasHit = r.aliases.map((a) => ({ a, m: best([a, `Route ${a}`]) })).sort((x, y) => y.m.score - x.m.score)[0];
+    const byAlias = aliasHit !== undefined && aliasHit.m.score > named.score;
+    const own = byAlias ? aliasHit.m : named;
     const street = r.streets.find((s) => hits(s)) ?? null;
     const viaStreet = street !== null && own.score < SECONDARY;
     const rank = viaStreet ? { score: SECONDARY, offset: FAR - 2 } : own;
-    add({ kind: "route", code: r.code, title, evidence: evidenceOf(r.evidenceLevel), matchedStreet: viaStreet ? street : null, ...rank });
+    add({
+      kind: "route", code: r.code, title, evidence: evidenceOf(r.evidenceLevel), matchedStreet: viaStreet ? street : null,
+      matchedAlias: byAlias && !viaStreet ? aliasHit.a : null, ...rank,
+    });
   }
   for (const t of index.terminals) {
     const own = best([t.name]);

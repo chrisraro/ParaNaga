@@ -368,7 +368,7 @@ export function buildImportPlan(
     variants,
     datasetNotes,
     counts,
-    deferred: { route_aliases: "deferred (no structured source)" },
+    deferred: { route_aliases: "written by the modes seed stage (routeAliases), not from Data_Sets" },
     osm,
     modes,
     lines,

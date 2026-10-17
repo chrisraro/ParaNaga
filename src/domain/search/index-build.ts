@@ -41,6 +41,8 @@ export type SearchSourceRoute = {
   mode: SearchIndex["routes"][number]["mode"];
   /** fleetLabel of the published vehicle-class records. */
   fleetLabel: string;
+  /** Current (non-historical) published route aliases, verbatim. */
+  aliases: string[];
 };
 
 export type SearchIndexSource = {
@@ -170,6 +172,7 @@ export function buildSearchIndex(source: SearchIndexSource): SearchIndex {
       streets: routeStreets(r.code, r.streetLists),
       mode: r.mode,
       fleetLabel: r.fleetLabel,
+      aliases: [...r.aliases],
     })),
     terminals: source.terminals.map((t) => ({ ...t, location: t.location ? { ...t.location } : null })),
     barangays: source.barangays.map((b, i) => ({

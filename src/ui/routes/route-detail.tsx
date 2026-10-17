@@ -108,6 +108,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const ordered = variants.filter((v) => v.stops.length > 0);
   const provisional = route.hasProvisionalStops;
   const structures = route.additionalSourceStructures;
+  // Stop-sign letters and names on file (e.g. "E"); reviewed aliases, still unverified on the street.
+  const signs = data.aliases.filter((a) => a.kind === "signboard" && !a.isHistorical).map((a) => a.alias);
 
   // The selected direction's own line only: an untraced direction never borrows the other one's.
   const { line: activeLine, untraced } = useMemo(
@@ -155,7 +157,9 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
               {provisional ? <PinsIcon /> : <DocIcon />}
               {provisional ? "Provisional stops" : "Documented only"}
             </span>
-            <span className="pn-detail__caption">Signboard not yet verified</span>
+            <span className="pn-detail__caption" data-testid="route-signs">
+              {signs.length > 0 ? `Also signed ${signs.join(" · ")} · not yet verified` : "Signboard not yet verified"}
+            </span>
           </div>
         </div>
 

@@ -115,3 +115,16 @@ The seed was edited in place after its first import (same file name, new hash). 
 The seed gained U03 (owner report of 2026-10-17: far areas Cararayan, Pacol and Panicuason charge special trips; a Balatas to Cararayan tricycle terminal; Del Rosario vias Panganiban, Diversion and Magsaysay-Francia; TODAs at Ateneo and at jeepney terminals) and the official ordinance sources RT25 to RT32. U03 is unverified and never shown as a fact. Ordinance 2025-067 is already N06 and RT08. Note RN04 (the 'Francia' signboard on R2) now also cites U03.
 
 What the TODA research found: Naga has no published roster of registered TODAs and no TODA terminal list. Core-city for-hire trimobiles run on a color-zoned franchise system with no published names or terminals. The upper barangays (Panicuason, Carolina, Pacol, San Isidro, Cararayan, Balatas, Del Rosario) run on 1998 to 2025 ordinances that name special-franchise zones, unit counts and centro-to-junction routes; zone units may not operate outside their zone except in emergencies. The data supports a jeepney to the upper-barangay centro or junction, then a zone tricycle, but not door-to-door tricycle service from Centro. The only tricycle route documented to touch Ateneo de Naga is VISTODA/LAVISTODA (Ord 2025-067), with waiting areas at Deca Vistansa and Cararayan Proper that have no coordinates. An Ateneo TODA terminal and TODAs at jeepney terminals are not documented anywhere and rest on the owner report only. The single OSM tricycle terminal is Balatas Tricycle Terminal (T14, community). Because no other TODA terminal has coordinates, no TODA terminal rows were added: they could not be planned. No distance fare matrix or special-trip fare exists in any ordinance; the P60 to P80 special-trip figures are unofficial. Open conflicts: VISTODA unit counts (30 vs 33), the Cararayan Orange zone merged into White (2009-073) against later unit counts, and Salunguigui versus Deca-Langon (10 units each, same or different).
+
+## Route letters (routes update, revised batch 2026-10-18)
+
+The seed gained U04, the project owner's field photo of a PUJ stop sign at CSNHS (southbound,
+2026-10-18), a `routeAliases` section (RA01–RA11) and conflicts CX11–CX12. Aliases are written as
+`transit.route_alias` by the modes writer (owned kind `route_alias`: the whole set comes from this
+file) and feed route search and the route detail caption. The CSNHS sign letters were matched to
+the LPTRP routes by the route name printed beside each letter: B = R8-B (Naga Loop Service), E = R2,
+I = R6, J = R7; they are `owner_report_unverified`, since no web source gives the E–J lettering.
+The San Felipe (R5) and Cararayan (R1) letters are blurred (G or H) and are excluded until a clear
+photo or document confirms them. The 1998–2014 ordinance letters (multicab Loops G–J) are not kept
+(CX11). No stop coordinates were added: the sign has no location on file. See
+`docs/plans/2026-10-18-routes-update.md`.

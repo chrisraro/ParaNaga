@@ -137,6 +137,7 @@ export async function getSearchIndexSource(db: Db, revisionId: string): Promise<
           .filter((l): l is string[] => l !== null),
         mode: r.mode,
         fleetLabel: r.fleet.label,
+        aliases: r.aliases.filter((a) => !a.isHistorical).map((a) => a.alias),
       })),
     ),
     terminals: terminals.map((t) => ({

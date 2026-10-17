@@ -217,6 +217,17 @@ export type PlannedRouteNote = {
   contentHash: string;
 };
 
+/** A reviewed route alias (signboard letter or name); written as transit.route_alias by the modes writer. */
+export type PlannedRouteAlias = {
+  code: string;
+  routeCode: string;
+  alias: string;
+  kind: "signboard" | "legacy_name" | "local" | "legacy_color";
+  isHistorical: boolean;
+  /** transit.route_alias holds one source code: the record's first. */
+  sourceCode: string;
+};
+
 export type ModesPlan = {
   fileName: string;
   sha256: string;
@@ -244,6 +255,7 @@ export type ModesPlan = {
   roadRules: ModesSeedRoadRule[];
   padyakAreas: ModesSeedPadyakArea[];
   routeNotes: PlannedRouteNote[];
+  routeAliases: PlannedRouteAlias[];
   /** `kind code: reason` for every record the review excluded. */
   excluded: string[];
   /** Imported records that this task does not write yet, with the reason. */
@@ -422,6 +434,10 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
     return { ...row, contentHash: hash("route_note", row) };
   }));
 
+  const routeAliases = imp.routeAliases.map((a): PlannedRouteAlias => ({
+    code: a.code, routeCode: a.routeCode, alias: a.alias, kind: a.kind, isHistorical: a.isHistorical, sourceCode: a.sourceCodes[0]!,
+  }));
+
   // Written by the road stage (scripts/lib/lines-writer.ts), which needs the road snapshot.
   const deferred: Record<string, string> = {
     eta_params: `${etaParams.length} records; written with the road outputs (modes-lines revision, lines-writer)`,
@@ -444,6 +460,7 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
     fare_rules_new: newRules.length,
     fare_rule_versions_sources_added: updatedRules.length,
     research_conflicts: conflicts.length,
+    route_aliases: routeAliases.length,
     excluded_records: excludedRecords(seed).length,
   };
 
@@ -465,6 +482,7 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
     roadRules: imp.roadRules,
     padyakAreas: imp.padyakAreas,
     routeNotes,
+    routeAliases,
     excluded: excludedRecords(seed),
     deferred,
     counts,
@@ -475,7 +493,7 @@ export function buildModesPlan(file: ModesFile, dataSets: NormalizedSeed): Modes
 function emptyPlan() {
   return {
     synthetic: false, sources: [], terminals: [], routes: [], operatingStatuses: [], vehicleClasses: [], cooperatives: [],
-    routeFareObservations: [], regionalServices: [], fareRules: [], conflicts: [], etaParams: [], streetAliases: [], roadRules: [], padyakAreas: [], routeNotes: [], excluded: [],
+    routeFareObservations: [], regionalServices: [], fareRules: [], conflicts: [], etaParams: [], streetAliases: [], roadRules: [], padyakAreas: [], routeNotes: [], routeAliases: [], excluded: [],
     deferred: {}, counts: {},
   };
 }
