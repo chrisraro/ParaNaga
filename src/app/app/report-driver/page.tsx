@@ -1,0 +1,19 @@
+import type { Metadata } from "next";
+import { PageFrame } from "@/ui/app-shell/page-frame";
+import { DriverReportWizard } from "@/ui/report-driver/driver-report-wizard";
+
+export const metadata: Metadata = {
+  title: "Report a driver",
+  description: "Send ParaNaga a private report about a driver. It is never published and not sent to Naga City automatically.",
+  referrer: "no-referrer",
+};
+
+// Static shell: the session, camera and submission all run in the browser. Reading the explainer
+// works as a guest; sending needs an account (checked on step 1 and by the API).
+export default function ReportDriverPage() {
+  return (
+    <PageFrame title="Report a driver" back testId="report-driver-page">
+      <DriverReportWizard />
+    </PageFrame>
+  );
+}

@@ -15,6 +15,8 @@ const cspReportOnly = [
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://tile.openstreetmap.org https://api.maptiler.com",
+  // Report a driver (task B8): the in-app camera preview and captured clips are local blob: URLs.
+  "media-src 'self' blob:",
   "connect-src 'self'",
   "frame-src 'self' https://www.google.com/maps/embed/",
   "worker-src 'self' blob:",

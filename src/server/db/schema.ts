@@ -634,3 +634,74 @@ export const communityContentReport = community.table("content_report", {
   resolvedBy: text("resolved_by"),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
 });
+
+// ---------------------------------------------------------------- priv (0018, task B8)
+// Private driver reports. paranaga_app may SELECT only the reporter's own rows and only the
+// reporter-facing columns (column grants in 0018); every write goes through priv.* definer
+// functions. The geography column is left out (written only by priv.submit_complaint).
+export const priv = pgSchema("priv");
+
+export const complaint = priv.table("complaint", {
+  id: uuid("id").primaryKey(),
+  publicRef: text("public_ref").notNull(),
+  reporterId: text("reporter_id").notNull(),
+  clientRequestId: uuid("client_request_id").notNull(),
+  category: text("category")
+    .$type<"overcharging" | "reckless_driving" | "discount_refused" | "harassment" | "improper_loading" | "other">()
+    .notNull(),
+  description: text("description").notNull(),
+  incidentAt: timestamp("incident_at", { withTimezone: true }).notNull(),
+  locationAccuracyM: numeric("location_accuracy_m"),
+  locationSource: text("location_source").$type<"gps" | "manual" | "none">().notNull(),
+  locationText: text("location_text"),
+  operatorText: text("operator_text"),
+  plateText: text("plate_text"),
+  bodyNumberText: text("body_number_text"),
+  status: text("status").$type<"submitted" | "under_review" | "needs_information" | "closed" | "withdrawn">().notNull(),
+  outcomeCode: text("outcome_code"),
+  queue: text("queue").$type<"queue_normal" | "queue_priority" | "queue_check_completeness">().notNull(),
+  legalHold: boolean("legal_hold").notNull(),
+  retentionUntil: timestamp("retention_until", { withTimezone: true }),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull(),
+  closedAt: timestamp("closed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+export const complaintMedia = priv.table("complaint_media", {
+  id: uuid("id").primaryKey(),
+  complaintId: uuid("complaint_id").notNull(),
+  mediaObjectId: uuid("media_object_id").notNull(),
+  captureKind: text("capture_kind").$type<"in_app_camera" | "file_upload">().notNull(),
+  capturedAtClient: timestamp("captured_at_client", { withTimezone: true }),
+  receivedAtServer: timestamp("received_at_server", { withTimezone: true }).notNull(),
+  sha256: text("sha256").notNull(),
+  gpsAccuracyM: numeric("gps_accuracy_m"),
+  originalKey: text("original_key").notNull(),
+  redactedKey: text("redacted_key"),
+});
+
+export const complaintEvent = priv.table("complaint_event", {
+  id: uuid("id").primaryKey(),
+  complaintId: uuid("complaint_id").notNull(),
+  fromStatus: text("from_status"),
+  toStatus: text("to_status").notNull(),
+  actorRole: text("actor_role").$type<"reporter" | "complaint_reviewer" | "system">().notNull(),
+  actorId: text("actor_id"),
+  visibility: text("visibility").$type<"reporter" | "reviewer_only">().notNull(),
+  outcomeCode: text("outcome_code"),
+  note: text("note"),
+  at: timestamp("at", { withTimezone: true }).notNull(),
+});
+
+export const evidenceAccess = priv.table("evidence_access", {
+  id: uuid("id").primaryKey(),
+  complaintId: uuid("complaint_id").notNull(),
+  mediaObjectId: uuid("media_object_id").notNull(),
+  accessorId: text("accessor_id").notNull(),
+  accessorRole: text("accessor_role").$type<"reporter" | "complaint_reviewer">().notNull(),
+  purpose: text("purpose").$type<"reporter_download" | "complaint_review">().notNull(),
+  issuedAt: timestamp("issued_at", { withTimezone: true }).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  requestId: text("request_id"),
+});

@@ -20,6 +20,10 @@ export const RATE_LIMITS = {
   /** New accounts post rarely; the community hub keeps its own, lower limits (spec 5.3 "W (limits)"). */
   communityPostPerHour: { prefix: "cpost:hour", windowSeconds: 3600, limit: 10 },
   communityCommentPerHour: { prefix: "ccomment:hour", windowSeconds: 3600, limit: 60 },
+  /** Driver reports: 5/day per user (spec 05 §5.6). */
+  complaintPerDay: { prefix: "complaint:day", windowSeconds: 86400, limit: 5 },
+  /** Signed evidence links for the reporter's own files. */
+  evidenceUrlPerHour: { prefix: "evidence:hour", windowSeconds: 3600, limit: 60 },
 } as const;
 
 /**

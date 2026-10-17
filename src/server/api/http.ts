@@ -10,6 +10,8 @@ export const CACHE = {
   list: "public, s-maxage=300",
   reference: "public, s-maxage=300, stale-while-revalidate=600",
   none: "no-store",
+  /** Personal data (private reports, signed URLs): never stored by any cache, shared or not. */
+  private: "private, no-store",
 } as const;
 
 export class ApiProblem extends Error {
