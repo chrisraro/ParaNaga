@@ -6,6 +6,39 @@
   flex-direction: column;
   gap: 16px;
 }
+.pn-saved__sync {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--pn-surface);
+  border-radius: 16px;
+  border: 1px solid var(--pn-sep);
+}
+.pn-saved__sync-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pn-saved__sync-text strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--pn-label);
+}
+.pn-saved__sync-text span {
+  font-size: 13px;
+  color: var(--pn-label2);
+  line-height: 1.35;
+}
+.pn-saved__sync-btn {
+  flex: none;
+  height: 38px;
+  padding: 0 14px;
+  font-size: 14px;
+  width: auto;
+}
 .pn-saved__panel {
   display: flex;
   flex-direction: column;
