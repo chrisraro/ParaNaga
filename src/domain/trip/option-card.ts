@@ -47,12 +47,11 @@ export const isAccessOption = (o: Pick<PlanOptionDto, "rides" | "legs">) => o.ri
 export const isSpecialTrip = (o: { specialTrip?: true }) => o.specialTrip === true;
 
 export const FARE_NOT_FIXED = "Fare not fixed";
-/** "Tricycle to {loading point}, then ride R6. For when you'd rather not walk." */
+/** "Tricycle to the jeepney station, then ride R6. For when you'd rather not walk." (the OSM loading-point name stays in the detail and guidance steps) */
 export function accessLine(o: Pick<PlanOptionDto, "legs">): string {
-  const tri = o.legs.find((l): l is TricycleLegDto => l.kind === "tricycle");
   const ride = o.legs.find((l) => l.kind === "ride");
   const code = ride?.kind === "ride" ? routeChipLabel(ride.routeCode, ride.routeName) : "the jeepney";
-  return `Tricycle to ${tri?.to.name ?? "the jeepney"}, then ride ${code}. For when you'd rather not walk.`;
+  return `Tricycle to the jeepney station, then ride ${code}. For when you'd rather not walk.`;
 }
 const peso = (centavos: number) => `₱${Math.round(centavos / 100)}`;
 
@@ -76,15 +75,14 @@ export function accessTricycleChip(o: Pick<PlanOptionDto, "legs">): string {
 }
 
 const FAR_NOTE_PREFIX = /^Local report:\s*/;
-export const FAR_NOTE_SPECIAL = "A special-trip tricycle is listed below only for riders who still want one. Agree the fare with the driver.";
-export const FAR_NOTE_ACCESS = "The tricycle option below only takes you to the jeepney.";
+export const FAR_NOTE_SPECIAL = "A special-trip tricycle is listed only if you still want one.";
 /**
- * The far note as shown: its evidence label ("Local report") and the sentence, with a line added for each tricycle card
- * the list really has (a special trip, the access option), so the note never contradicts a card.
+ * The far note as shown: its evidence label ("Local report") and the sentence, with a line added when a special-trip
+ * card is listed, so the note never contradicts a card.
  */
 export function farNoteView(note: string | null, options: readonly Pick<PlanOptionDto, "specialTrip" | "rides" | "legs">[] = []): { label: string | null; text: string } | null {
   if (!note) return null;
-  const extra = [options.some(isSpecialTrip) ? FAR_NOTE_SPECIAL : null, options.some(isAccessOption) ? FAR_NOTE_ACCESS : null].filter((x) => x !== null);
+  const extra = options.some(isSpecialTrip) ? [FAR_NOTE_SPECIAL] : []; // the access card already says it goes to the jeepney
   const rest = note.replace(FAR_NOTE_PREFIX, "");
   const base = FAR_NOTE_PREFIX.test(note) ? rest.charAt(0).toUpperCase() + rest.slice(1) : note;
   return { label: FAR_NOTE_PREFIX.test(note) ? "Local report" : null, text: [base, ...extra].join(" ") };

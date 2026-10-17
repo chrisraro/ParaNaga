@@ -525,7 +525,7 @@ export const VIA_PLAN = {
   ],
 };
 
-const FAR_NOTE_PACOL = "Local report: tricycles to Pacol charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.";
+const FAR_NOTE_PACOL = "Local report: tricycles to Pacol charge special-trip fares, so we point you to the jeepney terminal instead.";
 const PACOL_TERMINAL = { kind: "point", lat: 13.6209809, lng: 123.1846467, stopId: null, name: "Jeepney station to Pacol" };
 const SOUTH = place("origin", 13.605, 123.187);
 const PACOL = place("destination", 13.6575, 123.2475);
@@ -612,7 +612,7 @@ export const SPECIAL_TRIP_PLAN = {
       specialOption(),
     ],
     notes: ["Unverified route — confirm with the driver"],
-    farNote: "Local report: tricycles to Cararayan and San Isidro charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.",
+    farNote: "Local report: tricycles to Cararayan and San Isidro charge special-trip fares, so we point you to the jeepney terminal instead.",
   },
   stops: [],
   variants: [{ variantId: R1_OUT, routeCode: "R1", routeName: "Centro–Cararayan", isCircular: false, loopDirection: null }],

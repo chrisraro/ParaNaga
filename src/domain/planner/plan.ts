@@ -707,6 +707,6 @@ export function planTrip(
   return {
     revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: direct.m, jeepneyReason: access ? null : jeep.reason,
     options: options.slice(0, MAX_OPTIONS), notes,
-    ...(farZone && { farNote: `Local report: tricycles ${destinationZone ? "to" : "from"} ${farZone.name} charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.` }),
+    ...(farZone && { farNote: `Local report: tricycles ${destinationZone ? "to" : "from"} ${farZone.name} charge special-trip fares, so we point you to the jeepney terminal instead.` }),
   };
 }

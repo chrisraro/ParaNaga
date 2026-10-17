@@ -65,7 +65,7 @@ test("Pacol from the south: the access card, its detail and guidance (the tricyc
   await open(page, ACCESS_PLAN);
   const card = page.getByTestId("trip-option").first();
   await expect(card).toContainText("Tricycle, then Jeep R6");
-  await expect(card.getByTestId("access-line")).toHaveText("Tricycle to Jeepney station to Pacol, then ride R6. For when you'd rather not walk.");
+  await expect(card.getByTestId("access-line")).toHaveText("Tricycle to the jeepney station, then ride R6. For when you'd rather not walk.");
   await expect(card.getByTestId("access-tricycle")).toHaveText("Tricycle min ₱15 · confirm with the driver");
   await expect(card.getByTestId("fare-chip")).toHaveText("From ₱33");
   await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");

@@ -77,12 +77,12 @@ describe("titles and notes", () => {
   });
 
   it("splits the far note into its evidence label and a capitalised sentence", () => {
-    const base = "Local report: tricycles to Pacol charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.";
-    const text = "Tricycles to Pacol charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.";
+    const base = "Local report: tricycles to Pacol charge special-trip fares, so we point you to the jeepney terminal instead.";
+    const text = "Tricycles to Pacol charge special-trip fares, so we point you to the jeepney terminal instead.";
     expect(farNoteView(base)).toEqual({ label: "Local report", text });
     expect(farNoteView(base, [mixedJeepney])!.text).toBe(text);
-    expect(farNoteView(base, [mixedJeepney, special])!.text).toBe(`${text} A special-trip tricycle is listed below only for riders who still want one. Agree the fare with the driver.`);
-    expect(farNoteView(base, [access])!.text).toBe(`${text} The tricycle option below only takes you to the jeepney.`);
+    expect(farNoteView(base, [mixedJeepney, special])!.text).toBe(`${text} A special-trip tricycle is listed only if you still want one.`);
+    expect(farNoteView(base, [access])!.text).toBe(text);
     expect(farNoteView("Something else")).toEqual({ label: null, text: "Something else" });
     expect(farNoteView(null)).toBeNull();
   });
