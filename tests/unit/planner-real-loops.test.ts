@@ -36,7 +36,8 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   // Increment F ruling (e): a far end with no jeepney option has no Recommended option.
   const farO = zoneOf(origin, FAR_AREAS) !== null;
   const farD = zoneOf(destination, FAR_AREAS) !== null;
-  const noneRecommended = (farO || farD) && !p.options.some((o) => o.mode === "jeepney");
+  // Increment F (review C1/I2): a long far trip with no jeepney shows only an unlabelled special-trip tricycle.
+  const noneRecommended = (farO || farD) && !p.options.some((o) => o.mode === "jeepney") && p.directWalkEstimateMeters! >= 500;
   expect(p.options.filter((o) => o.labels.includes("Recommended"))).toHaveLength(noneRecommended ? 0 : 1);
   for (const o of p.options.filter((x: PlanOption) => x.mode === "jeepney")) {
     // An access option (Increment F, T4) starts with a tricycle to the loading point, which is in the city proper.

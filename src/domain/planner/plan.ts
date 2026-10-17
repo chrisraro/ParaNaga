@@ -652,7 +652,8 @@ export function planTrip(
   const best = jeep.options[0];
   const jeepRecommended = best !== undefined && (farZone !== null || (short && best.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M));
   if (jeepRecommended) best.labels.unshift("Recommended");
-  else if (best === undefined && access) access.labels.push("Recommended");
+  // A short trip with no jeepney keeps its Recommended walk, far end or not (review I2).
+  else if (best === undefined && access && !short) access.labels.push("Recommended");
   const walkShown = short;
   // Far trip: a special trip from a tricycle terminal serving the zone; else, when there is no jeepney nor access
   // option, ONE special-trip tricycle card (the owner-described special trip) rather than a long walk alone.
@@ -677,7 +678,7 @@ export function planTrip(
   }
   if (walkShown) {
     options.push({
-      id: "walk", mode: "walk", labels: jeepRecommended || farZone !== null ? [] : ["Recommended"], legs: [walkLeg(g, o, d, direct, directRoute ?? undefined)], rides: 0,
+      id: "walk", mode: "walk", labels: jeepRecommended ? [] : ["Recommended"], legs: [walkLeg(g, o, d, direct, directRoute ?? undefined)], rides: 0,
       walkMeters: direct.m, walkEstimateMeters: direct.m, rideMeters: 0, score: direct.m, fare: sumFares([]), evidence: "provisional",
     });
   } else {

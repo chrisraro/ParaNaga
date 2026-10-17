@@ -187,7 +187,9 @@ describe("far areas: zone membership and the far note", () => {
         const far = oz !== null || dz !== null;
         expect(p.options.length).toBeLessThanOrEqual(6);
         const jeep = p.options.some((x) => x.mode === "jeepney");
-        expect(recommended(p)).toHaveLength(far && !jeep ? 0 : 1);
+        const short = p.directWalkEstimateMeters! < 500;
+        expect(recommended(p)).toHaveLength(far && !jeep && !short ? 0 : 1);
+        if (far && !jeep && short) expect(recommended(p)[0]!.mode).toBe("walk");
         if (far && jeep) expect(recommended(p)[0]!.mode).toBe("jeepney");
         expect(p.farNote !== undefined).toBe(far);
         const t = tricycle(p);
@@ -355,5 +357,15 @@ describe("far areas: far-end approaches and the no-jeepney fallback (review C1)"
     expect(r.mode).toBe("jeepney");
     const egress = r.legs.at(-1)!;
     expect(egress.kind === "walk" && egress.estimateMeters).toBeGreaterThan(750);
+  });
+});
+
+describe("far areas: short trips keep their Recommended walk (review I2)", () => {
+  it("Pacol → a point 300 m south: the walk card is Recommended; the fallback tricycle is unlabelled", () => {
+    const p = plan(PACOL, near(PACOL, 0, -300));
+    expect(p.directWalkEstimateMeters!).toBeLessThan(500);
+    expect(p.options.some((o) => o.mode === "jeepney")).toBe(false);
+    expect(recommended(p).map((o) => o.mode)).toEqual(["walk"]);
+    assertSpecialFallback(tricycle(p)!);
   });
 });
