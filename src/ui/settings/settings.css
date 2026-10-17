@@ -12,7 +12,14 @@
 .pn-settings__account {
   flex-direction: row;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
+}
+.pn-settings__account-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
 .pn-settings__avatar {
   display: flex;
@@ -39,6 +46,22 @@
   color: var(--pn-label2);
   font-size: 14px;
   line-height: 1.35;
+}
+.pn-settings__account-action {
+  flex: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pn-accent);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--pn-teal-soft-bg);
+  border: 0;
+  cursor: pointer;
+  transition: opacity var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-settings__account-action:hover {
+  opacity: 0.85;
 }
 
 /* Appearance: label above a full-width Light / Dark / System segmented control. */
