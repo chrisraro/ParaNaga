@@ -155,7 +155,7 @@
 /* The map is its own stacking context so Leaflet's z-indexes never cover the sheet. */
 .pn-home__map {
   position: absolute;
-  inset: 0 0 var(--pn-map-inset, 186px); /* mapInsetFor in endpoint-sheet.tsx */
+  inset: 0 0 var(--pn-map-inset, 186px); /* mapInsetFor in bottom-sheet.tsx */
   isolation: isolate;
   z-index: 0;
 }
@@ -312,9 +312,20 @@
 .pn-home:has(.pn-sheet--dragging) {
   --pn-map-chrome-dur: 0s;
 }
+/* sheet-drag.ts drives these two states from script: a transform per frame while dragging, then a
+   Web Animation to the detent while settling (transitions off for both). The shadow is a surface
+   copy below the sheet, so a rubber band past full stretches the sheet instead of baring the map. */
 .pn-sheet.pn-sheet--dragging,
-.pn-sheet.pn-sheet--dragging .pn-sheet-footer {
+.pn-sheet.pn-sheet--dragging .pn-sheet-footer,
+.pn-sheet.pn-sheet--settling,
+.pn-sheet.pn-sheet--settling .pn-sheet-footer {
   transition: none;
+}
+.pn-sheet.pn-sheet--dragging,
+.pn-sheet.pn-sheet--settling {
+  box-shadow:
+    0 -8px 32px var(--pn-shadow),
+    0 120px 0 var(--pn-surface);
 }
 
 /* Peek summary of the best option + the "Show more options" toggle (outside the inert part). */

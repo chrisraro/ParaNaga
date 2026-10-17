@@ -52,7 +52,8 @@ import { recommendedIndex } from "@/domain/trip/option-card";
 import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
-import { EndpointSheet, PEEK_NOTE_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, TINY_SHEET, endpointRowMainId, mapInsetFor, useSheet, type Snap } from "./endpoint-sheet";
+import { PEEK_NOTE_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, TINY_SHEET, mapInsetFor, useSheet, type Snap } from "@/ui/app-shell/bottom-sheet";
+import { EndpointSheet, endpointRowMainId } from "./endpoint-sheet";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
   LocationStatus,
@@ -169,6 +170,19 @@ function SamePlaceNotice({ which, onChooseOnMap }: { which: EndpointWhich; onCho
   );
 }
 
+const ATTRIBUTION_VAR = "--naga-map-attribution-bottom";
+/** The map chrome that sits on the sheet's edge (naga-map.css, modes.css): everything that reads ATTRIBUTION_VAR. */
+const SHEET_FOLLOWERS = ".pn-attribution, .pn-map-notice, .pn-map-legend, .pn-route-overview-card";
+
+function followSheet(root: HTMLElement | null, value: string, dragging: boolean) {
+  if (!root) return;
+  if (!dragging) root.style.setProperty(ATTRIBUTION_VAR, value);
+  for (const el of root.querySelectorAll<HTMLElement>(SHEET_FOLLOWERS)) {
+    if (dragging) el.style.setProperty(ATTRIBUTION_VAR, value);
+    else el.style.removeProperty(ATTRIBUTION_VAR);
+  }
+}
+
 export function HomeScreen() {
   const frame = useAppFrame();
   const geo = useGeolocation();
@@ -234,7 +248,13 @@ export function HomeScreen() {
   const peekNotes: string[] = [];
   if (optionsListed && reopen.changed) peekNotes.push("Changed since saved");
   if (optionsListed && plan.status === "ready" && plan.offline) peekNotes.push(offlinePlanChip(plan.data.revision.publishedAt, plan.offline));
-  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE + PEEK_NOTE_VISIBLE * peekNotes.length : PEEK_VISIBLE);
+  // The sheet drags without re-rendering this screen: the map chrome that rides its edge is written
+  // here directly (same value as attributionBottom below). During the drag the value goes on the
+  // followers themselves, not on the root: a custom property on the root re-styles the whole map.
+  const homeRef = useRef<HTMLElement>(null);
+  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE + PEEK_NOTE_VISIBLE * peekNotes.length : PEEK_VISIBLE, (visible, height, dragging) =>
+    followSheet(homeRef.current, `${Math.round(Math.max(0, visible - mapInsetFor(height)))}px`, dragging),
+  );
   // Where focus goes once the results render: the results heading, or an option card.
   const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);
   // No trip, no pending focus move: a stale request must not pull focus once a trip is set again.
@@ -856,7 +876,7 @@ export function HomeScreen() {
   });
 
   return (
-    <main className="pn-home" style={rootStyle} data-testid="home-screen">
+    <main ref={homeRef} className="pn-home" style={rootStyle} data-testid="home-screen">
       <h1 className="sr-only" tabIndex={-1} data-home-heading="">
         ParaNaga trip planner
       </h1>

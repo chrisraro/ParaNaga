@@ -5,7 +5,7 @@ import { cleanup, render } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useBottomClearance } from "@/ui/app-shell/tab-bar";
-import { HALF_VISIBLE, MAP_MIN_SHARE, PEEK_VISIBLE, offsetFor } from "@/ui/home/endpoint-sheet";
+import { HALF_VISIBLE, MAP_MIN_SHARE, PEEK_VISIBLE, offsetFor } from "@/ui/app-shell/bottom-sheet";
 
 afterEach(() => {
   cleanup();
