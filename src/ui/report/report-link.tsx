@@ -8,7 +8,7 @@ import { reportHref } from "@/domain/corrections/href";
 export function ReportLink({ entityType, entityId, entityLabel }: { entityType: EntityType; entityId: string; entityLabel?: string }) {
   return (
     <p className="pn-report-link">
-      <Link href={reportHref({ entityType, entityId, entityLabel })} data-testid="report-correction-link">
+      <Link href={reportHref({ entityType, entityId, entityLabel })} prefetch={false} data-testid="report-correction-link">
         Report a correction
       </Link>
     </p>
