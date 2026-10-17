@@ -255,6 +255,23 @@ test("Choose on map from search opens the crosshair for that end", async ({ page
   await expect(page.getByRole("button", { name: "Set destination here" })).toBeFocused();
 });
 
+test("empty search shows Stops near the map and remembers Recent picks on this device", async ({ page }) => {
+  await openApp(page);
+  await openSearch(page);
+  await expect(page.getByTestId("search-nearby")).toBeVisible();
+  await expect(page.getByTestId("nearby-stops")).toContainText("Stops near the map");
+  await expect(page.getByTestId("search-recent")).toHaveCount(0);
+
+  await searchBox(page).fill("SM City");
+  await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
+  await expect(page).toHaveURL(/\/app$/);
+
+  await openSearch(page, "start");
+  const recent = page.getByTestId("search-recent");
+  await expect(recent).toBeVisible();
+  await expect(recent.getByTestId("search-result-recent")).toContainText(["SM City Naga"]);
+});
+
 test.describe("with location permission", () => {
   test.use({ permissions: ["geolocation"], geolocation: { latitude: 13.6314651, longitude: 123.1927517, accuracy: 15 } });
 

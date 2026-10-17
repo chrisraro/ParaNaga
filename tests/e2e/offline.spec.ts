@@ -320,15 +320,15 @@ test("route detail draws its path from the stored lines when the lines endpoint 
 });
 
 test("tap a stop offline: the panel says it opens when back online, the trip stays in the sheet (F-03)", async ({ page, context }) => {
-  // Home redesign T4 moves the stops list to Search. Until then it is out of sight on the map, so
-  // Next does not prefetch its links and a first visit to a stop offline has no shell to open.
-  test.fixme(true, "re-specified in T4 (the stops list moves to Search)");
   await firstVisit(page);
   await setEnds(page);
   await expect(page.getByTestId("trip-options")).toBeVisible();
   await goOffline(context);
+  await openSearch(page);
   await page.getByTestId("nearby-stops").getByRole("link").first().click();
   await expect(page.getByTestId("detail-offline")).toContainText("You're offline · This opens when you're back online.");
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/app\/search/);
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByTestId("trip-options")).toBeVisible();

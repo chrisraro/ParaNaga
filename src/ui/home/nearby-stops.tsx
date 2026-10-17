@@ -18,11 +18,12 @@ type Props = {
   center: LatLng;
   status: "idle" | "loading" | "ready" | "error";
   truncated: boolean;
+  title?: string;
   /** Called with the stop path when a row is followed (lets "Show on map" go back in history). */
   onOpen?: (path: string) => void;
 };
 
-export function NearbyStops({ stops, center, status, truncated, onOpen }: Props) {
+export function NearbyStops({ stops, center, status, truncated, title = "Nearby stops", onOpen }: Props) {
   // Pins at exactly the same point (one source point listed in two layers) share one row.
   const nearest = nearestStopGroups(stops, center, NEARBY_LIMIT);
   let empty: string | null = null;
@@ -37,7 +38,7 @@ export function NearbyStops({ stops, center, status, truncated, onOpen }: Props)
   return (
     <section className="pn-nearby" aria-labelledby="pn-nearby-title" data-testid="nearby-stops">
       <h2 id="pn-nearby-title" className="pn-section-title">
-        Nearby stops
+        {title}
       </h2>
       <p className="pn-nearby__hint">Mapped, not verified.</p>
       {empty ? (

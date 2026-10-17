@@ -14,6 +14,7 @@
 // each a numbered request applied once.
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
+import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
 import type { EndpointWhich } from "@/domain/trip/endpoints";
 import { captureOpener } from "@/ui/kit/opener";
@@ -25,6 +26,7 @@ import {
   setEntryPath,
   type EndpointRequest,
   type MapFocus,
+  type NearbyStopsState,
   type PanelKind,
   type RequestedEndpoint,
   type TripRequest,
@@ -38,6 +40,12 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const [endpointRequest, setEndpointRequest] = useState<EndpointRequest | null>(null);
   const [tripRequest, setTripRequest] = useState<TripRequest | null>(null);
+  const [nearbyStops, setNearbyStops] = useState<NearbyStopsState>({
+    stops: [],
+    center: NAGA_DEFAULT_CENTER,
+    status: "idle",
+    truncated: false,
+  });
   const returnFocus = useRef<Element | null>(null);
   // The stop path the user opened straight from the home map (pin tap or Nearby-stops link).
   // "Show on map" may go back in history only while that panel is the one showing.
@@ -133,8 +141,10 @@ export function AppFrame({ children }: { children: ReactNode }) {
       requestGps,
       tripRequest,
       requestTrip,
+      nearbyStops,
+      setNearbyStops,
     }),
-    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick, requestGps, tripRequest, requestTrip],
+    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick, requestGps, tripRequest, requestTrip, nearbyStops],
   );
 
   return (

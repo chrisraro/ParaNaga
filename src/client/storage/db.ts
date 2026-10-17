@@ -29,11 +29,17 @@ import {
   type SavedTrip,
   type SnapshotMeta,
 } from "@/domain/saved/saved";
+import {
+  recordRecentSearchEntry,
+  recentSearchesSchema,
+  type RecentSearchEntry,
+} from "@/domain/search/recents";
 
 /** Same "paranaga." prefix as the Web Storage keys (STORAGE_PREFIX in device-data.ts). */
 export const DEVICE_DB_NAME = "paranaga.device";
 const DB_VERSION = 1;
 const META_KEY = "head";
+const RECENT_SEARCHES_KEY = "recentSearches";
 const CHANNEL = "paranaga.device";
 
 type Stores = "savedTrips" | "savedPlaces" | "history" | "snapshotMeta";
@@ -284,6 +290,27 @@ export async function readSnapshotMeta(): Promise<SnapshotMeta | null> {
   if (!db) return null;
   const decoded = decodeStored(await db.get("snapshotMeta", META_KEY), snapshotMetaSchema);
   return decoded.ok ? decoded.record : null;
+}
+
+// ---------------------------------------------------------------- recent searches (best effort, device-only)
+
+export async function listRecentSearches(): Promise<RecentSearchEntry[]> {
+  const db = await open();
+  if (!db) return [];
+  const decoded = decodeStored(await db.get("snapshotMeta", RECENT_SEARCHES_KEY), recentSearchesSchema);
+  return decoded.ok ? decoded.record.entries : [];
+}
+
+export async function recordRecentSearch(entry: Omit<RecentSearchEntry, "pickedAt"> & { pickedAt?: string }): Promise<void> {
+  const db = await open();
+  if (!db) return;
+  const current = await listRecentSearches();
+  const entries = recordRecentSearchEntry(current, {
+    ...entry,
+    pickedAt: entry.pickedAt ?? new Date().toISOString(),
+  });
+  await db.put("snapshotMeta", { entries, v: RECORD_FORMAT }, RECENT_SEARCHES_KEY);
+  notify();
 }
 
 // ---------------------------------------------------------------- everything
