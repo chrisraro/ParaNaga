@@ -5,6 +5,7 @@ import { withRequestContext, type Db } from "@/server/db/context";
 import { safeRequestId } from "@/server/request-id";
 import { getStorage } from "@/server/storage/adapter";
 import { sniffMagicBytes } from "@/domain/media/sniff";
+import { stripImageMetadata } from "@/domain/media/strip-metadata";
 import { serverEnv } from "@/server/env";
 import type { MediaPurpose } from "@/domain/media/schemas";
 
@@ -57,7 +58,7 @@ export async function createMediaSlot(
     slot.object_key,
     Number(slot.expected_bytes),
     mime,
-    900,
+    300, // spec 05 §5.8: 5-minute upload expiry
   );
 
   return {
@@ -69,15 +70,23 @@ export async function createMediaSlot(
   };
 }
 
+/** A confirm failure the route maps to a fixed message; `kind` never carries storage or DB text. */
+export class MediaConfirmError extends Error {
+  constructor(readonly kind: "not_found" | "rejected" | "failed") {
+    super(kind);
+    this.name = "MediaConfirmError";
+  }
+}
+
 /**
  * Confirms uploaded slot:
- *  - Checks slot ownership & status
- *  - HEADs and reads object from quarantine
- *  - Checks size cap and sniffs magic bytes
- *  - Calculates SHA-256
- *  - Copies to server-owned destination bucket (public-media or evidence-private)
- *  - Deletes quarantine copy
- *  - Updates core.media_object with status = 'verified'
+ *  - Checks slot ownership & status (a slot that is not the caller's is "not found", like a missing one)
+ *  - HEADs the quarantine object and refuses one over the expected size before reading it
+ *  - Sniffs magic bytes and computes SHA-256
+ *  - complaint_evidence: copies the original, untouched, to evidence-private
+ *  - every other purpose (public-media): images only; EXIF/XMP/GPS stripped before storing
+ *  - Stores under a per-slot key (two uploads of the same bytes never collide on object_key)
+ *  - Promotes in the DB, then deletes the quarantine copy (a failed promote keeps the upload)
  */
 export async function confirmMediaSlot(
   userId: string,
@@ -87,7 +96,7 @@ export async function confirmMediaSlot(
   const storage = getStorage();
   const env = serverEnv();
 
-  // 1. Fetch slot metadata from DB
+  // 1. Fetch slot metadata from DB (RLS: only the caller's own rows are visible)
   const slot = await withRequestContext({ userId, requestId }, async (db) => {
     const res = await db.execute<{
       id: string;
@@ -100,89 +109,84 @@ export async function confirmMediaSlot(
     }>(sql`
       select id, bucket, object_key, expected_bytes, owner_id, purpose, status
         from core.media_object
-       where id = ${slotId}::uuid
+       where id = ${slotId}::uuid and owner_id = ${userId}
     `);
     return res.rows[0] ?? null;
   });
 
-  if (!slot) {
-    throw new Error("Media slot not found.");
-  }
-  if (slot.owner_id !== userId) {
-    throw new Error("Forbidden: not media slot owner.");
-  }
-  if (slot.status !== "slot") {
-    throw new Error(`Media slot already processed with status: ${slot.status}`);
+  if (!slot || slot.owner_id !== userId || slot.status !== "slot") {
+    throw new MediaConfirmError("not_found");
   }
 
-  // 2. Read object from quarantine
+  const reject = async (deleteQuarantine: boolean) => {
+    if (deleteQuarantine) await storage.deleteObject(slot.bucket, slot.object_key);
+    await withRequestContext({ userId, requestId }, async (db) => {
+      await db.execute(sql`select core.reject_media(${slotId}::uuid)`);
+    });
+    return new MediaConfirmError("rejected");
+  };
+
+  // 2. Size check before buffering the object
+  const head = await storage.headObject(slot.bucket, slot.object_key);
+  if (!head || head.bytes === 0) throw await reject(false);
+  if (head.bytes > Number(slot.expected_bytes)) throw await reject(true);
+
   const bytes = await storage.getObject(slot.bucket, slot.object_key);
-  if (!bytes || bytes.byteLength === 0) {
-    await withRequestContext({ userId, requestId }, async (db) => {
-      await db.execute(sql`select core.reject_media(${slotId}::uuid)`);
-    });
-    throw new Error("Quarantine object not found or empty.");
-  }
-
-  if (bytes.byteLength > Number(slot.expected_bytes)) {
-    await storage.deleteObject(slot.bucket, slot.object_key);
-    await withRequestContext({ userId, requestId }, async (db) => {
-      await db.execute(sql`select core.reject_media(${slotId}::uuid)`);
-    });
-    throw new Error("Uploaded media exceeded expected bytes.");
-  }
+  if (!bytes || bytes.byteLength === 0) throw await reject(false);
+  if (bytes.byteLength > Number(slot.expected_bytes)) throw await reject(true);
 
   // 3. Verify magic bytes
   const sniffed = sniffMagicBytes(bytes);
-  if (sniffed.kind === "unknown") {
-    await storage.deleteObject(slot.bucket, slot.object_key);
-    await withRequestContext({ userId, requestId }, async (db) => {
-      await db.execute(sql`select core.reject_media(${slotId}::uuid)`);
-    });
-    throw new Error("Unsupported or corrupted file magic bytes.");
-  }
+  if (sniffed.kind === "unknown") throw await reject(true);
 
-  // 4. Compute SHA-256
-  const sha256 = createHash("sha256").update(bytes).digest("hex");
-
-  // 5. Determine destination bucket and server-owned object key
-  const destBucket =
-    slot.purpose === "complaint_evidence"
-      ? env.STORAGE_BUCKET_EVIDENCE
-      : env.STORAGE_BUCKET_PUBLIC;
-
+  const isEvidence = slot.purpose === "complaint_evidence";
+  const destBucket = isEvidence ? env.STORAGE_BUCKET_EVIDENCE : env.STORAGE_BUCKET_PUBLIC;
   const ext = sniffed.mime.split("/")[1] ?? "bin";
-  const destKey = `${slot.purpose}/${sha256.slice(0, 2)}/${sha256}.${ext}`;
+  const destKey = `${slot.purpose}/${slot.id}.${ext}`;
 
-  // 6. Copy to destination bucket
-  const copied = await storage.copyObject(slot.bucket, slot.object_key, destBucket, destKey);
-  if (!copied) {
-    throw new Error("Failed to copy media to destination bucket.");
+  // 4. Store: evidence originals verbatim; anything bound for public-media stripped of metadata
+  let stored: Uint8Array = bytes;
+  if (isEvidence) {
+    if (!(await storage.copyObject(slot.bucket, slot.object_key, destBucket, destKey))) {
+      throw new MediaConfirmError("failed");
+    }
+  } else {
+    if (sniffed.kind !== "image") throw await reject(true);
+    const stripped = stripImageMetadata(bytes, sniffed.mime);
+    if (!stripped) throw await reject(true);
+    stored = stripped;
+    if (!(await storage.putObject(destBucket, destKey, stored, sniffed.mime))) {
+      throw new MediaConfirmError("failed");
+    }
   }
+  const sha256 = createHash("sha256").update(stored).digest("hex");
 
-  // 7. Delete from quarantine
-  await storage.deleteObject(slot.bucket, slot.object_key);
-
-  // 8. Promote in DB
-  await withRequestContext({ userId, requestId }, async (db) => {
-    await db.execute(sql`
+  // 5. Promote in DB, then delete the quarantine copy
+  const promoted = await withRequestContext({ userId, requestId }, async (db) => {
+    const res = await db.execute<{ ok: boolean }>(sql`
       select core.verify_and_promote_media(
         ${slotId}::uuid,
         ${destBucket},
         ${destKey},
         ${sha256},
-        ${bytes.byteLength},
+        ${stored.byteLength},
         ${sniffed.mime}
-      )
+      ) as ok
     `);
+    return res.rows[0]?.ok === true;
   });
+  if (!promoted) {
+    await storage.deleteObject(destBucket, destKey);
+    throw new MediaConfirmError("not_found");
+  }
+  await storage.deleteObject(slot.bucket, slot.object_key);
 
   return {
     id: slot.id,
     bucket: destBucket,
     objectKey: destKey,
     status: "verified",
-    bytes: bytes.byteLength,
+    bytes: stored.byteLength,
     sha256,
   };
 }

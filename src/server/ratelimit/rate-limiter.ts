@@ -22,6 +22,8 @@ export const RATE_LIMITS = {
   communityCommentPerHour: { prefix: "ccomment:hour", windowSeconds: 3600, limit: 60 },
   /** Driver reports: 5/day per user (spec 05 §5.6). */
   complaintPerDay: { prefix: "complaint:day", windowSeconds: 86400, limit: 5 },
+  /** Upload slots: each one is a presigned PUT and a quarantine row (B10). */
+  mediaSlotPerHour: { prefix: "mslot:hour", windowSeconds: 3600, limit: 30 },
   /** Signed evidence links for the reporter's own files. */
   evidenceUrlPerHour: { prefix: "evidence:hour", windowSeconds: 3600, limit: 60 },
 } as const;
