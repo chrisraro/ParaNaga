@@ -1,14 +1,16 @@
 // Far-area data (Increment F): barangay anchors, far zones, route boarding links, Del Rosario via groups and
 // tricycle terminals. Reviewed JSON (data/planning/far-areas-2026-10-18.json), validated here; pure.
 import { z } from "zod";
-import { RULE_EVIDENCE } from "../import/modes-seed";
+import farAreasJson from "../../../data/planning/far-areas-2026-10-18.json";
 import { haversineMeters } from "../geo/geometry";
 import type { LatLng } from "../geo/types";
 
 // Source codes are shape-checked only: U03 and later RT codes are added to the modes seed by a later task,
 // so the loader must not cross-check them against the seed.
 const sourceCode = z.string().regex(/^(U|R[TLPH])[0-9]{2}$/);
-const evidence = z.enum(RULE_EVIDENCE);
+/** The modes seed's RULE_EVIDENCE, repeated so the client planner does not bundle the importer (node:crypto); a test keeps them equal. */
+export const FAR_EVIDENCE = ["official", "news", "community", "owner_report_unverified"] as const;
+const evidence = z.enum(FAR_EVIDENCE);
 const routeCode = z.string().regex(/^R[0-9]+(-[A-Z])?$/);
 const terminalCode = z.string().regex(/^T[0-9]{2}$/);
 const zoneCode = z.string().regex(/^FZ[0-9]{2}$/);
@@ -93,4 +95,17 @@ export function zoneOf(point: LatLng, data: FarAreas): string | null {
     if (best === null || d < best.d) best = { id: a.osmNodeId, d };
   }
   return best === null ? null : (data.farZones.find((z) => z.nodeIds.includes(best.id))?.code ?? null);
+}
+
+/** The committed far-areas data, bundled so offline planning applies the same rules. */
+export const FAR_AREAS: FarAreas = parseFarAreas(farAreasJson);
+
+/** A terminal the planner can locate: published (in the snapshot) with a coordinate. */
+export type LocatedTerminal = { code: string; name: string; lat: number; lng: number };
+
+/** Published terminals with a coordinate, by code (special trips now; the T4 access option's loading points next). */
+export function locatedTerminals(
+  terminals: readonly { code: string; name: string; lat: number | null; lng: number | null }[] | undefined,
+): Map<string, LocatedTerminal> {
+  return new Map((terminals ?? []).flatMap((t) => (t.lat === null || t.lng === null ? [] : [[t.code, { code: t.code, name: t.name, lat: t.lat, lng: t.lng }] as const])));
 }

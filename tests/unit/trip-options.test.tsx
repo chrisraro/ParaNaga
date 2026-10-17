@@ -17,7 +17,7 @@ afterEach(() => {
 
 const planOf = (options: PlanOptionDto[], jeepneyReason: PlanResponse["plan"]["jeepneyReason"] = null): PlanResponse => ({
   ...(PROVISIONAL_PLAN as unknown as PlanResponse),
-  plan: { revisionId: PROVISIONAL_PLAN.revision.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 900, jeepneyReason, options, notes: [] },
+  plan: { revisionId: PROVISIONAL_PLAN.revision.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 900, jeepneyReason, options, notes: [], farNote: null },
   stops: [],
   variants: [],
 });

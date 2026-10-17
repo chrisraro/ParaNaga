@@ -8,6 +8,7 @@ import { haversineMeters } from "@/domain/geo/geometry";
 import { projectOnLine } from "@/domain/geo/measure";
 import { isInsideNaga } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
+import { FAR_AREAS, zoneOf } from "@/domain/planner/far-areas";
 import { fareClasses, legFareEstimate } from "@/domain/planner/fares";
 import { planningNetwork, planTrip, type OptionMode, type PlanOption, type TripPlan } from "@/domain/planner/plan";
 import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
@@ -32,7 +33,11 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   expect([...idx].sort((a, b) => a - b)).toEqual(idx);
   expect(new Set(p.options.map((o) => o.id)).size).toBe(p.options.length);
   expect((p.jeepneyReason === null) === p.options.some((o) => o.mode === "jeepney")).toBe(true);
-  expect(p.options.filter((o) => o.labels.includes("Recommended"))).toHaveLength(1);
+  // Increment F ruling (e): a far end with no jeepney option has no Recommended option.
+  const farO = zoneOf(origin, FAR_AREAS) !== null;
+  const farD = zoneOf(destination, FAR_AREAS) !== null;
+  const noneRecommended = (farO || farD) && !p.options.some((o) => o.mode === "jeepney");
+  expect(p.options.filter((o) => o.labels.includes("Recommended"))).toHaveLength(noneRecommended ? 0 : 1);
   for (const o of p.options.filter((x: PlanOption) => x.mode === "jeepney")) {
     const legs = o.legs;
     legs.forEach((l, i) => expect(l.kind).toBe(i % 2 === 0 ? "walk" : "ride"));
@@ -42,7 +47,8 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
     expect(first.from).toMatchObject(origin);
     expect(last.to).toMatchObject(destination);
     const walks = legs.filter((l) => l.kind === "walk");
-    walks.forEach((w, i) => expect(w.estimateMeters).toBeLessThanOrEqual(i === 0 || i === walks.length - 1 ? 750 : 450));
+    walks.forEach((w, i) => expect(w.estimateMeters).toBeLessThanOrEqual(
+      i === 0 ? (farO ? 1500 : 750) : i === walks.length - 1 ? (farD ? 1500 : 750) : 450));
     expect(o.walkMeters).toBe(walks.reduce((s, w) => s + w.estimateMeters, 0));
     expect(o.walkMeters).toBeLessThan(p.directWalkEstimateMeters!);
     expect(o.rides).toBeLessThanOrEqual(2);
@@ -66,6 +72,15 @@ describe("planTrip on the real network (Lines, street graph v2, 10:00 Manila)", 
     ["Panicuason", { lat: 13.6632922, lng: 123.3179196 }, "R7"],
     ["Pacol", { lat: 13.6595434, lng: 123.2511904 }, "R6"],
     ["San Isidro", { lat: 13.6323904, lng: 123.2695351 }, "R1"],
+  ])("Plaza Rizal → %s (far zone, Increment F) rides %s; that jeepney is Recommended, no tricycle", (_name, d, route) => {
+    const p = plan(PLAZA_RIZAL, d);
+    assertWellFormed(p, PLAZA_RIZAL, d);
+    expect(p.options.some((o) => o.legs.some((l) => l.kind === "ride" && l.routeCode === route))).toBe(true);
+    expect(p.options.find((o) => o.labels.includes("Recommended"))!.mode).toBe("jeepney");
+    expect(p.options.some((o) => o.mode === "tricycle")).toBe(false);
+  });
+
+  it.each([
     ["Del Rosario", { lat: 13.6173903, lng: 123.2375487 }, "R2"],
     ["City Hall (J. Miranda Ave)", { lat: 13.6261, lng: 123.1987 }, "R8-A"],
   ])("Plaza Rizal → %s rides %s (former stop planner: unplannable or Loops only); tricycle Recommended last", (_name, d, route) => {

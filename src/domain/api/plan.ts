@@ -235,6 +235,8 @@ export const planResponseSchema = z.object({
     jeepneyReason: z.enum(["no_path_near_origin", "no_path_near_destination", "walk_shorter", "no_route"]).nullable().default(null),
     options: z.array(planOptionSchema).max(6),
     notes: z.array(z.string()),
+    /** Increment F: why no tricycle is suggested when an end is in a far zone; null otherwise and in older bodies. */
+    farNote: z.string().nullable().default(null),
   }),
   /** Every stop the plan names, with its source code (e.g. "A1"); null when the pin has none. */
   stops: z.array(z.object({ id: z.uuid(), name: z.string(), code: z.string().nullable() })),

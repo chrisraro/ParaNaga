@@ -22,7 +22,7 @@ afterEach(() => {
 
 const data = (option: PlanOptionDto): PlanResponse => ({
   ...(PROVISIONAL_PLAN as unknown as PlanResponse),
-  plan: { revisionId: PROVISIONAL_PLAN.revision.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 900, jeepneyReason: null, options: [option], notes: [] },
+  plan: { revisionId: PROVISIONAL_PLAN.revision.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 900, jeepneyReason: null, options: [option], notes: [], farNote: null },
   stops: [],
   variants: [],
 });

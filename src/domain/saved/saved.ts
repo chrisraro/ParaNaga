@@ -190,7 +190,7 @@ export function buildSavedTrip(input: {
 export function savedTripResponse(card: SavedTrip): PlanResponse {
   return {
     revision: { revisionId: card.revisionId, label: card.revisionLabel, kind: card.revisionKind, publishedAt: card.publishedAt },
-    plan: { revisionId: card.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: null, jeepneyReason: null, options: [card.option], notes: [] },
+    plan: { revisionId: card.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: null, jeepneyReason: null, options: [card.option], notes: [], farNote: null },
     stops: card.stops,
     variants: card.variants,
   };
