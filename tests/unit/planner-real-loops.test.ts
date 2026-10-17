@@ -39,6 +39,10 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   // Increment F (review C1/I2): a long far trip with no jeepney shows only an unlabelled special-trip tricycle.
   const noneRecommended = (farO || farD) && !p.options.some((o) => o.mode === "jeepney") && p.directWalkEstimateMeters! >= 500;
   expect(p.options.filter((o) => o.labels.includes("Recommended"))).toHaveLength(noneRecommended ? 0 : 1);
+  // Under 500 m a jeepney is Recommended only when it passes the destination (its last drop-off within 100 m).
+  const rec = p.options.find((o) => o.labels.includes("Recommended"));
+  const lastRide = rec?.legs.filter((l) => l.kind === "ride").at(-1);
+  if (p.directWalkEstimateMeters! < 500 && lastRide?.kind === "ride") expect(haversineMeters(lastRide.alight, destination)).toBeLessThanOrEqual(100);
   for (const o of p.options.filter((x: PlanOption) => x.mode === "jeepney")) {
     // An access option (Increment F, T4) starts with a tricycle to the loading point, which is in the city proper.
     const tri = o.id.startsWith("tri>") ? o.legs[0]! : null;
@@ -111,6 +115,15 @@ describe("planTrip on the real network (Lines, street graph v2, 10:00 Manila)", 
     const o = p.options.find((x) => x.mode === "jeepney")!;
     const egress = o.legs.at(-1)!;
     expect(egress.kind === "walk" ? egress.estimateMeters : Infinity).toBeLessThanOrEqual(750);
+  });
+
+  it("393 m Dayangdang → Balatas: the cheapest jeepney (a near-full R8-C lap) does not pass the destination, so the walk is Recommended (audit 2026-10-18)", () => {
+    const o = { lat: 13.63077649346346, lng: 123.19734154386518 };
+    const d = { lat: 13.632291139243893, lng: 123.19838304531253 };
+    const p = plan(o, d);
+    assertWellFormed(p, o, d);
+    expect(p.directWalkEstimateMeters).toBeLessThan(500);
+    expect(p.options.find((x) => x.labels.includes("Recommended"))!.mode).toBe("walk");
   });
 
   it("property: options are well formed on seeded trips across the city", () => {

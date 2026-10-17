@@ -2,6 +2,7 @@ import { buildPlanResponse, parsePlanRequest, planResponseSchema, PLAN_BODY_MAX_
 import { isCompleteSnapshot } from "@/domain/api/schemas";
 import { planTrip } from "@/domain/planner/plan";
 import { badRequest, CACHE, notFound, publicPost, readJsonBody, tooManyRequests, unavailable } from "@/server/api/http";
+import { withRequestContext } from "@/server/db/context";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
 import { NetworkIncomplete, planNetwork } from "@/server/repos/network-cache";
 import { getPublishedRevision, getSnapshot } from "@/server/repos/network-repo";
@@ -11,17 +12,21 @@ import { getPublishedRevision, getSnapshot } from "@/server/repos/network-repo";
 // transaction (with the revision's Lines and street graph, kept in memory per revision) and
 // planned in memory. Coordinates are personal data: the response is never cached (no-store) and nothing here logs the body or the points.
 export function POST(request: Request) {
-  return publicPost(request, "plan", planResponseSchema, async ({ withDb }) => {
+  return publicPost(request, "plan", planResponseSchema, async ({ requestId, withDb }) => {
     const parsed = parsePlanRequest(await readJsonBody(request, PLAN_BODY_MAX_BYTES));
     if (!parsed.ok) throw badRequest(parsed.message);
 
-    const { snapshot, network } = await withDb(async (db) => {
-      // Spec §7.8 follow-up: rate limit planning requests (30/min, 600/day)
-      const allowedMin = await checkRateLimit(db, request, RATE_LIMITS.planPerMinute);
-      if (!allowedMin) throw tooManyRequests("Plan rate limit exceeded (max 30 requests per minute).");
-      const allowedDay = await checkRateLimit(db, request, RATE_LIMITS.planPerDay);
-      if (!allowedDay) throw tooManyRequests("Daily plan rate limit exceeded (max 600 requests per day).");
+    // Spec §7.8 follow-up: rate limit planning requests (30/min, 600/day). Taking a token writes a counter
+    // row, and withDb is a READ ONLY transaction, so it runs in its own short read-write transaction.
+    const limited = await withRequestContext({ userId: null, requestId }, async (db) => {
+      if (!(await checkRateLimit(db, request, RATE_LIMITS.planPerMinute))) return "minute" as const;
+      if (!(await checkRateLimit(db, request, RATE_LIMITS.planPerDay))) return "day" as const;
+      return null;
+    });
+    if (limited === "minute") throw tooManyRequests("Plan rate limit exceeded (max 30 requests per minute).");
+    if (limited === "day") throw tooManyRequests("Daily plan rate limit exceeded (max 600 requests per day).");
 
+    const { snapshot, network } = await withDb(async (db) => {
       const revision = await getPublishedRevision(db);
       const snapshot = revision ? await getSnapshot(db, revision.revisionId) : null;
       if (!snapshot) return { snapshot: null, network: null };

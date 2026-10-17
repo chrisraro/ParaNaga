@@ -15,10 +15,10 @@
 // the lowest score, "Fewest transfers" and "Least walking" (one option may hold several labels).
 // Score: walk + 0.25 × ride + 600 × (rides − 1); ties: rides, walk, ride, id.
 //
-// Options, in order (at most 6): walk (when the direct walk is < 500 m) → jeepney options by score
-// → tricycle (always) → padyak. Exactly one option is "Recommended" (ruling d, review I1):
-// ≥ 500 m → the tricycle; < 500 m → the walk, unless the best-score jeepney passes the destination
-// (its drop-off within PASSES_DESTINATION_M straight-line), which is then Recommended instead.
+// Options, in order (at most 6): walk (when the direct walk is < 500 m) → jeepney options by cheapest fare
+// then score → tricycle (always) → padyak. Exactly one option is "Recommended" (ruling d, review I1, T7):
+// ≥ 500 m → the cheapest jeepney, else the tricycle; < 500 m → the walk, unless the cheapest jeepney passes
+// the destination (its drop-off within PASSES_DESTINATION_M straight-line), which is then Recommended instead.
 // Padyak (both ends in one documented area and a padyak street path
 // ≤ 2,000 m; "Short local ride"). Tricycle and padyak are routed with routeStreet on the planner's
 // clock (Asia/Manila from the epoch, rules.ts): the 2006 tricycle restrictions are lifted 21:00–05:00.
@@ -657,7 +657,6 @@ export function planTrip(
   const d: Place = { kind: "destination", lat: destination.lat, lng: destination.lng, stopId: null, name: null };
   const short = direct.m < WALK_CARD_MAX_M;
   const best = jeep.options[0];
-  const jeepRecommended = best !== undefined && (!short || best.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M);
   // A short trip with no jeepney keeps its Recommended walk, far end or not (review I2).
   if (best === undefined && access && !short) access.labels.push("Recommended");
   const walkShown = short;
@@ -682,6 +681,19 @@ export function planTrip(
     const dropped = new Set(trimOrder.slice(0, Math.max(0, pool.length - budget)));
     block = pool.filter((x) => !dropped.has(x)).sort((a, b) => compare(a.c, b.c));
   }
+  const jeepBuilt: { option: PlanOption; c: Cand }[] = [];
+  for (const { c, labels } of block) {
+    const o1 = jeepneyOption(c, [...labels], net, g, snapshot, origin, destination);
+    // Only the best candidate of a via route carries the chip (a second variant of the same route does not).
+    const via = vias.reps.has(c) ? vias.byRoute.get(net.variants[c.hops[0]!.v]!.routeCode) : undefined;
+    jeepBuilt.push({ option: via ? { ...o1, via } : o1, c });
+  }
+  const fareMin = (opt: PlanOption) => opt.fare.minCentavos ?? Number.POSITIVE_INFINITY;
+  jeepBuilt.sort((a, b) => fareMin(a.option) - fareMin(b.option) || a.option.score - b.option.score);
+  // The cheapest jeepney is the one that may be Recommended (T7); under 500 m only when it passes the destination
+  // (audit 2026-10-18: checking a different option than the one labelled recommended a ride that does not).
+  const cheapest = jeepBuilt[0];
+  const jeepRecommended = cheapest !== undefined && (!short || cheapest.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M);
   if (walkShown) {
     options.push({
       id: "walk", mode: "walk", labels: jeepRecommended ? [] : ["Recommended"], legs: [walkLeg(g, o, d, direct, directRoute ?? undefined)], rides: 0,
@@ -692,17 +704,8 @@ export function planTrip(
       ? `Walking the whole way is about ${direct.m} m along streets`
       : `Walking the whole way is about ${direct.m} m (straight-line estimate)`);
   }
-  const jeepBuilt: PlanOption[] = [];
-  for (const { c, labels } of block) {
-    const o1 = jeepneyOption(c, [...labels], net, g, snapshot, origin, destination);
-    // Only the best candidate of a via route carries the chip (a second variant of the same route does not).
-    const via = vias.reps.has(c) ? vias.byRoute.get(net.variants[c.hops[0]!.v]!.routeCode) : undefined;
-    jeepBuilt.push(via ? { ...o1, via } : o1);
-  }
-  const fareMin = (opt: PlanOption) => opt.fare.minCentavos ?? Number.POSITIVE_INFINITY;
-  jeepBuilt.sort((a, b) => fareMin(a) - fareMin(b) || a.score - b.score);
-  if (jeepRecommended && jeepBuilt[0]) jeepBuilt[0].labels.unshift("Recommended");
-  options.push(...jeepBuilt);
+  if (jeepRecommended && cheapest) cheapest.option.labels.unshift("Recommended");
+  options.push(...jeepBuilt.map((x) => x.option));
   if (access) options.push(access);
   if (jeep.options.length > 0 || access) notes.unshift(UNVERIFIED_ROUTE_BADGE);
   if (farZone === null) options.push(tricycleOption(g, snapshot, origin, destination, now, !short && !jeepRecommended));

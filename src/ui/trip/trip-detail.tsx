@@ -160,6 +160,8 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
     if (leg.kind === "tricycle" || leg.kind === "padyak") {
       // Not the last leg (the access option): the tricycle ends at its named loading point.
       out.push(...streetSteps(leg, i, i < last ? { ...ctx, toName: leg.to.name ?? "the jeepney" } : ctx));
+      // The rider is now at the loading point: an unnamed board point next reads as there, not as the start.
+      if (i < last) here = leg.to.name ?? "the jeepney";
       return;
     }
     if (leg.kind !== "ride") return;

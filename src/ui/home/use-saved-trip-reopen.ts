@@ -13,7 +13,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { getSavedTrip } from "@/client/storage/db";
-import type { TripPlanState } from "@/client/trip/use-trip-plan";
+import type { PlanErrorKind, TripPlanState } from "@/client/trip/use-trip-plan";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
 import { enrichOptionWalks } from "@/domain/trip/enrich";
 import { manilaDate, resolveReopen, samePoint, savedTripResponse, type SavedTrip } from "@/domain/saved/saved";
@@ -29,7 +29,7 @@ import type { TripEnds, TripNote } from "@/ui/trip/trip-detail";
 type Restored = { card: SavedTrip; phase: "waiting" | "changed" | "done"; dismissed: boolean };
 
 /** The note on a saved option shown as saved: checking, or why the current data is not in. */
-export function storedNote(card: SavedTrip, error: "offline" | "server" | "invalid" | null): TripNote {
+export function storedNote(card: SavedTrip, error: PlanErrorKind | null): TripNote {
   const date = manilaDate(card.publishedAt) ?? `revision ${card.revisionLabel}`;
   if (error === "offline") return { text: `Offline: saved ${date}. May have changed.`, tone: "warning" };
   if (error) return { text: `Couldn't check updates: saved ${date}.`, tone: "warning" };
