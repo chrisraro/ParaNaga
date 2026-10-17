@@ -557,7 +557,15 @@ async function expectTabbedControlsOnScreen(page: Page, scope: string, wanted: R
   const seen = new Set<RegExp>();
   const viewportHeight = page.viewportSize()!.height;
   for (let i = 0; i < 40; i++) {
+    await page.evaluate(() => ((window as unknown as { __tabFrom: Element | null }).__tabFrom = document.activeElement));
     await page.keyboard.press("Tab");
+    // Past the last control a browser moves focus to its own toolbar and comes back at the top of the
+    // page. Firefox under Playwright has no toolbar and leaves focus on the last control: do the wrap.
+    const stuck = await page.evaluate(() => document.activeElement === (window as unknown as { __tabFrom: Element | null }).__tabFrom);
+    if (stuck) {
+      await page.evaluate(() => (document.activeElement as HTMLElement).blur());
+      await page.keyboard.press("Tab");
+    }
     const state = await page.evaluate((testId) => {
       const el = document.activeElement as HTMLElement | null;
       if (!el || !(el.closest(`[data-testid="${testId}"]`) || el.closest(".pn-sheet-footer"))) return null;

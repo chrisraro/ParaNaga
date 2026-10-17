@@ -42,9 +42,13 @@ describe("short and zoomed screens (WCAG 1.4.10)", () => {
     expect(154 - offsetFor(0, 154, 60, PEEK_OPTIONS_VISIBLE)).toBe(44 + 60);
     expect(154 - offsetFor(0, 154, 0, PEEK_OPTIONS_VISIBLE)).toBe(44);
   });
-  it("keeps the upright phone detents (peek 214 / options 276 + tab bar, half 444) from 640 px up", () => {
-    expect(614 - offsetFor(0, 614, 90, PEEK_OPTIONS_VISIBLE)).toBe(PEEK_OPTIONS_VISIBLE + 90);
-    expect(614 - offsetFor(1, 614)).toBe(HALF_VISIBLE);
+  it("keeps the upright phone detents (peek 214 / options 276 + tab bar, half 444) from 673 px up", () => {
+    expect(647 - offsetFor(0, 647, 90, PEEK_OPTIONS_VISIBLE)).toBe(PEEK_OPTIONS_VISIBLE + 90);
+    expect(647 - offsetFor(1, 647)).toBe(HALF_VISIBLE);
+  });
+  it("on a shorter phone half stops short of the map controls (they end 229 px from the top)", () => {
+    for (const vh of [664, 640, 568]) expect(vh - 26 - offsetFor(1, vh - 26)).toBeLessThanOrEqual(vh - 229);
+    expect(664 - 26 - offsetFor(1, 664 - 26)).toBe(664 - 229);
   });
   it("ends the map just under the clamped peek sheet's top (186 px upright)", () => {
     expect(mapInsetFor(null)).toBe(PEEK_VISIBLE - 28);

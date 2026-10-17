@@ -11,6 +11,7 @@ import "./trip.css";
 import { useEffect, useEffectEvent, useId, useRef } from "react";
 import type { EtaModel } from "@/domain/api/schemas";
 import { basisRows } from "@/domain/eta/basis";
+import { captureOpener, cycleTab } from "@/ui/kit/opener";
 import { ETA_WAITING_NOTE } from "@/ui/help/articles";
 
 export const ETA_BASIS_TITLE = "How times are estimated" as const;
@@ -37,7 +38,7 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
   // the control that opened it ("How times are estimated").
   useEffect(() => {
     if (!open) return;
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const opener = captureOpener();
     closeBtnRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -45,19 +46,7 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
         close();
         return;
       }
-      if (event.key !== "Tab" || !sheetRef.current) return;
-      const focusable = [...sheetRef.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')];
-      if (focusable.length === 0) return;
-      const first = focusable[0]!;
-      const last = focusable.at(-1)!;
-      const inside = sheetRef.current.contains(document.activeElement);
-      if (event.shiftKey && (document.activeElement === first || !inside)) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (document.activeElement === last || !inside)) {
-        event.preventDefault();
-        first.focus();
-      }
+      cycleTab(event, sheetRef.current);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {

@@ -8,6 +8,7 @@ import "@/ui/kit/styles";
 import "./saved.css";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import { captureOpener } from "@/ui/kit/opener";
 import { PLACE_LABEL_MAX, cleanPlaceLabel, takeCodePoints } from "@/domain/saved/saved";
 
 type Props = {
@@ -44,7 +45,7 @@ export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Sav
     const el = dialog.current;
     if (!el) return;
     if (open && !el.open) {
-      returnFocus.current = document.activeElement;
+      returnFocus.current = captureOpener();
       if (typeof el.showModal === "function") el.showModal();
       else el.setAttribute("open", "");
       input.current?.focus();

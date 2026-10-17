@@ -16,6 +16,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
 import type { LatLng } from "@/domain/geo/types";
 import type { EndpointWhich } from "@/domain/trip/endpoints";
+import { captureOpener } from "@/ui/kit/opener";
 import { HomeScreen } from "@/ui/home/home-screen";
 import { OfflineBanner } from "@/ui/pwa/offline-banner";
 import { UpdatePrompt } from "@/ui/pwa/update-prompt";
@@ -48,8 +49,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   }, []);
 
   const openPanel = useCallback((kind: PanelKind = "detail") => {
-    const active = document.activeElement;
-    if (!returnFocus.current && active && active !== document.body) returnFocus.current = active;
+    if (!returnFocus.current) returnFocus.current = captureOpener();
     // A panel for another path (a link followed inside a panel) ends the home-started navigation.
     // The loading → content swap of the same page keeps it (same path).
     if (homeNavigation.current !== null && window.location.pathname !== homeNavigation.current) homeNavigation.current = null;

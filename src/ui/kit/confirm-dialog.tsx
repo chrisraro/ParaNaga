@@ -7,6 +7,7 @@
 // handled Escape).
 
 import "./styles";
+import { captureOpener } from "./opener";
 
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 
@@ -33,7 +34,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, cancelLabel
     const el = dialog.current;
     if (!el) return;
     if (open && !el.open) {
-      returnFocus.current = document.activeElement;
+      returnFocus.current = captureOpener();
       if (typeof el.showModal === "function") el.showModal();
       else el.setAttribute("open", "");
       cancel.current?.focus();
