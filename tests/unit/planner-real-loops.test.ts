@@ -170,11 +170,13 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  */
 const REGRESSION_BASELINE = {
-  options: 538,
-  byMode: { jeepney: 320, tricycle: 200, padyak: 8, walk: 10 },
+  options: 577,
+  byMode: { jeepney: 359, tricycle: 200, padyak: 8, walk: 10 },
   // Re-recorded after 3d2ea38: the fixture snapshot gained the reviewed route notes, so 254 of 417
   // ride legs (160 trips) now carry notes; with notes stripped the digest is still d0930a3e….
   // Re-recorded for the approach-run walk fallback (Ateneo fix): 22 trips change; 5 gain a jeepney
   // (4 were no_path_near_origin, 1 walk_shorter), 17 get other or more jeepney options (+13 options).
-  digest: "2ae78fae75983d8a7aa63ff66e5814680049dfc39e540812adf88371bfa293cc",
+  // Re-recorded for Increment F, T5 (via groups): 23 of 200 trips change (all with 2+ of R2/R3/R4 reaching them), +39 jeepney
+  // options (538 -> 577, jeepney 320 -> 359); the other 177 trips are byte-identical (digest 2ae78fae… before).
+  digest: "6d8045ecbead7958e958db1fd445cb0e931da7319d35b6b53b5e8aa551bf1a73",
 };

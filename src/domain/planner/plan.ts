@@ -34,6 +34,10 @@
 // to its boarding point (or there is none): tricycle to the zone's loading point, walk, one ride, walk; id
 // "tri>{ride id}", after the jeepneys; Recommended only when there is no other jeepney option.
 // Non-far trips are unchanged.
+// Via groups (T5, far-areas viaGroups): when 2+ routes of one group have a one-ride candidate (after must-save-walking),
+// the jeepney block is the Pareto picks plus the best candidate of each such route, each carrying `via` (data for a
+// chip), within MAX_OPTIONS minus the walk, access, tricycle and padyak options. Trim: non-via extras (worst score
+// first), then vias; the best-score option stays; a label on a dropped option goes with it.
 //
 // Ids: walk "walk", tricycle "tricycle", padyak "padyak:{area}", a ride
 // "{variantId}@{round10(board)}-{round10(alight)}", rides joined by ">".
@@ -50,7 +54,7 @@ import { boundedDistances, padyakAreas, routeStreet, snapWalk, type StreetRoute,
 import {
   fareClasses, legFareEstimate, padyakFare, sumFares, tricycleFare, type LegFare, type PadyakFare, type TricycleFare, type TripFare,
 } from "./fares";
-import { FAR_AREAS, locatedTerminals, ROUTE_BOARDING_LINK_M, zoneOf, type FarZone, type LocatedTerminal } from "./far-areas";
+import { FAR_AREAS, locatedTerminals, ROUTE_BOARDING_LINK_M, zoneOf, type FarZone, type LocatedTerminal, type ViaGroup } from "./far-areas";
 import { buildPlanningNetwork, type PlanningNetwork } from "./graph";
 import { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
 import { rideNotes } from "./notes";
@@ -135,6 +139,9 @@ export type PadyakLeg = StreetLeg & { kind: "padyak"; fare: PadyakFare };
 export type PlanLeg = WalkLeg | RideLeg | TricycleLeg | PadyakLeg;
 export type OptionMode = "walk" | "jeepney" | "tricycle" | "padyak";
 
+/** Which via of a shared corridor a one-ride jeepney option takes (far-areas viaGroups; Increment F, T5). Data for a chip. */
+export type PlanVia = { group: string; routeCode: string; label: string; note: string | null };
+
 export type PlanOption = {
   id: string;
   mode: OptionMode;
@@ -148,6 +155,8 @@ export type PlanOption = {
   score: number;
   fare: TripFare;
   evidence: "provisional";
+  /** Present only on a one-ride option of a route in a via group where 2+ of its routes serve the trip. Absent otherwise. */
+  via?: PlanVia;
 };
 
 /** The planner emits only outside_city and same_place; the others remain for older saved bodies. */
@@ -337,7 +346,28 @@ function search(
     : !boards.some((b) => b.length > 0) ? "no_path_near_origin"
       : !alights.some((a) => a.length > 0) ? "no_path_near_destination"
         : walkShorter ? "walk_shorter" : "no_route";
-  return { options, reason, alights };
+  return { options, reason, alights, cands };
+}
+
+/**
+ * Via groups (plan F, T5): a group is active when 2+ of its routes have a one-ride candidate (after must-save-walking,
+ * the `best` map). `reps` holds the best candidate of each such route; `byRoute` says which route is which via.
+ */
+function activeVias(net: PlanningNetwork, cands: Cand[], groups: readonly ViaGroup[]): { reps: Set<Cand>; byRoute: Map<string, PlanVia> } {
+  const reps = new Set<Cand>();
+  const byRoute = new Map<string, PlanVia>();
+  for (const g of groups) {
+    const found = g.routes.flatMap((r) => {
+      const own = cands.filter((c) => c.hops.length === 1 && net.variants[c.hops[0]!.v]!.routeCode === r.routeCode).sort(compare)[0];
+      return own ? [{ r, own }] : [];
+    });
+    if (found.length < 2) continue;
+    for (const { r, own } of found) {
+      reps.add(own);
+      if (!byRoute.has(r.routeCode)) byRoute.set(r.routeCode, { group: g.code, routeCode: r.routeCode, label: r.via, note: r.aliasNote ?? null });
+    }
+  }
+  return { reps, byRoute };
 }
 
 function freePoint(net: PlanningNetwork, v: PathVariant, a: Approach): FreePoint {
@@ -573,7 +603,7 @@ export function planTrip(
   network: PlannerNetwork,
   origin: LatLng,
   destination: LatLng,
-  { now }: { now: Date },
+  { now, viaGroups = FAR_AREAS.viaGroups }: { now: Date; viaGroups?: readonly ViaGroup[] },
 ): TripPlan {
   const revisionId = snapshot.revision.revisionId;
   const none = (reason: NoCoverageReason, direct: number | null): TripPlan => ({
@@ -613,7 +643,25 @@ export function planTrip(
   if (jeepRecommended) best.labels.unshift("Recommended");
   else if (best === undefined && access) access.labels.push("Recommended");
   // A far trip with no jeepney (nor access option) shows the walk card whatever its length, unlabelled.
-  if (short || (farZone !== null && best === undefined && !access)) {
+  const walkShown = short || (farZone !== null && best === undefined && !access);
+  const special = farZone !== null && originZone === null ? specialTripTerminal(g, snapshot, origin, farZone) : null;
+  const padyak = padyakOption(g, snapshot, origin, destination, now);
+  // Via groups: the Pareto picks plus the best one-ride candidate of each via route, within the block budget. The
+  // best-score option is never trimmed; non-via extras go first (worst score first), then vias; a label on a dropped
+  // option is dropped with it, never moved.
+  const vias = activeVias(net, jeep.cands, viaGroups);
+  let block = jeep.options;
+  if (vias.reps.size > 0) {
+    const budget = Math.max(1, MAX_OPTIONS - (walkShown ? 1 : 0) - (access ? 1 : 0) - (farZone === null || special ? 1 : 0) - (padyak ? 1 : 0));
+    const pool = [...jeep.options, ...[...vias.reps].filter((c) => !jeep.options.some((x) => x.c === c)).map((c) => ({ c, labels: [] as PlanLabel[] }))];
+    const worstFirst = (a: (typeof pool)[number], b: (typeof pool)[number]) => compare(b.c, a.c);
+    const top = pool.reduce((m, x) => (compare(x.c, m.c) < 0 ? x : m));
+    const droppable = pool.filter((x) => x !== top);
+    const trimOrder = [...droppable.filter((x) => !vias.reps.has(x.c)).sort(worstFirst), ...droppable.filter((x) => vias.reps.has(x.c)).sort(worstFirst)];
+    const dropped = new Set(trimOrder.slice(0, Math.max(0, pool.length - budget)));
+    block = pool.filter((x) => !dropped.has(x)).sort((a, b) => compare(a.c, b.c));
+  }
+  if (walkShown) {
     options.push({
       id: "walk", mode: "walk", labels: jeepRecommended || farZone !== null ? [] : ["Recommended"], legs: [walkLeg(g, o, d, direct, directRoute ?? undefined)], rides: 0,
       walkMeters: direct.m, walkEstimateMeters: direct.m, rideMeters: 0, score: direct.m, fare: sumFares([]), evidence: "provisional",
@@ -623,15 +671,15 @@ export function planTrip(
       ? `Walking the whole way is about ${direct.m} m along streets`
       : `Walking the whole way is about ${direct.m} m (straight-line estimate)`);
   }
-  for (const { c, labels } of jeep.options) options.push(jeepneyOption(c, labels, net, g, snapshot, origin, destination));
+  for (const { c, labels } of block) {
+    const o1 = jeepneyOption(c, labels, net, g, snapshot, origin, destination);
+    const via = c.hops.length === 1 ? vias.byRoute.get(net.variants[c.hops[0]!.v]!.routeCode) : undefined;
+    options.push(via ? { ...o1, via } : o1);
+  }
   if (access) options.push(access);
   if (jeep.options.length > 0 || access) notes.unshift(UNVERIFIED_ROUTE_BADGE);
   if (farZone === null) options.push(tricycleOption(g, snapshot, origin, destination, now, !short));
-  else {
-    const special = originZone === null ? specialTripTerminal(g, snapshot, origin, farZone) : null;
-    if (special) options.push(tricycleOption(g, snapshot, origin, destination, now, false, special));
-  }
-  const padyak = padyakOption(g, snapshot, origin, destination, now);
+  else if (special) options.push(tricycleOption(g, snapshot, origin, destination, now, false, special));
   if (padyak) options.push(padyak);
 
   return {
