@@ -284,7 +284,7 @@ export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null) 
  * the pointer and moves the sheet through `sheet.drag`, while a plain tap on a control inside the
  * header never captures the pointer and lets its click fire normally.
  */
-export function useHeaderDrag(sheet: SheetControl, header: HTMLElement | null) {
+export function useHeaderDrag(sheet: SheetControl, header: HTMLElement | null, selector?: string) {
   const { drag } = sheet;
   const heightRef = useRef(sheet.height);
   useLayoutEffect(() => {
@@ -296,6 +296,7 @@ export function useHeaderDrag(sheet: SheetControl, header: HTMLElement | null) {
     let captured = false;
     const onDown = (e: globalThis.PointerEvent) => {
       if (pointer !== null || heightRef.current === null || (e.pointerType === "mouse" && e.button !== 0)) return;
+      if (selector && !(e.target instanceof Element && e.target.closest(selector))) return;
       pointer = e.pointerId;
       captured = false;
       drag.start(e.clientY, e.timeStamp);
@@ -347,6 +348,6 @@ export function useHeaderDrag(sheet: SheetControl, header: HTMLElement | null) {
       header.removeEventListener("pointercancel", onCancel);
       header.removeEventListener("lostpointercapture", onCancel);
     };
-  }, [header, drag]);
+  }, [header, drag, selector]);
 }
 
