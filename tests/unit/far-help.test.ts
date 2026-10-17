@@ -11,7 +11,8 @@ describe("Help: how trips are planned", () => {
     expect(body).toContain("Cararayan and San Isidro, Pacol, Carolina and Panicuason");
     expect(body).toContain("local report, not an ordinance");
     expect(body).toContain("over 600 m");
-    expect(body).toContain("“Tricycle + Jeep”");
+    expect(body).toContain("“Tricycle, then Jeep R6”");
+    expect(body).toContain("as the only tricycle card when no jeepney can be reached");
     expect(body).toContain("within 300 m");
     expect(body).toContain("R2 via Magsaysay, R3 via Roxas (Diversion) and R4 via Panganiban");
     expect(body).toContain("“Francia” (unconfirmed)");

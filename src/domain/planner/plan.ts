@@ -26,10 +26,11 @@
 // "Route not confirmed", never a drawn path. Neither has minutes (D11).
 //
 // Far areas (Increment F, far-areas.ts): when either end's nearest barangay anchor is in a far zone, that
-// end's access/egress cap is FAR_END_WALK_CAP_M, there is no point-to-point tricycle (except a special trip:
-// origin not far, within a SPECIAL_TRIP_TERMINAL_WALK_M walk of a published tricycle terminal serving the
-// destination zone; never Recommended, fare unavailable), the best-score jeepney is Recommended, and with no
-// jeepney the walk card is shown at any length, unlabelled (no Recommended option). The plan carries farNote.
+// end's walk cap is FAR_END_WALK_CAP_M (approach radius FAR_END_APPROACH_RADIUS_M), there is no point-to-point
+// tricycle except a special trip (flagged specialTrip, never Recommended, fare not fixed): from within a
+// SPECIAL_TRIP_TERMINAL_WALK_M walk of a published tricycle terminal serving the destination zone, or as the one
+// fallback card when no jeepney or access option exists. The best-score jeepney is Recommended (a short trip with
+// none keeps its Recommended walk; a long one has no Recommended option). The plan carries farNote.
 // Access option (T4): destination far, origin not, and every jeepney option shown walks over ACCESS_TRICYCLE_MIN_WALK_M
 // to its first boarding point (or there is none): tricycle (over 600 m) to the zone's loading point, walk, one ride, walk; id
 // "tri>{ride id}", after the jeepneys; Recommended only when there is no other jeepney option.
@@ -707,6 +708,7 @@ export function planTrip(
   return {
     revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: direct.m, jeepneyReason: access ? null : jeep.reason,
     options: options.slice(0, MAX_OPTIONS), notes,
-    ...(farZone && { farNote: `Local report: tricycles ${destinationZone ? "to" : "from"} ${farZone.name} charge special-trip fares, so we point you to the jeepney terminal instead.` }),
+    // "Point you to the jeepney terminal" only when a jeepney (or access) option is shown; the special-trip fallback says no more.
+    ...(farZone && { farNote: `Local report: tricycles ${destinationZone ? "to" : "from"} ${farZone.name} charge special-trip fares${jeep.options.length > 0 || access ? ", so we point you to the jeepney terminal instead" : " that are not fixed"}.` }),
   };
 }

@@ -20,7 +20,7 @@ because `Data_Sets/` is the original research package and is read as a whole.
 | Padyak | RP01–RP22 | 22 | `padyak-candidates-2026-10.json` (sources in `padyak-2026-10.md`) | 21 | 1 (RP22: no padyak content) |
 | Jeepney hours | RH01–RH21 | 21 | `jeepney-hours-candidates-2026-10.json` (sources in `jeepney-hours-2026-10.md`) | 19 | 2 (RH16, RH17: no service content) |
 | Owner report | U02 | 1 | Project owner report, 2026-10-17 (plan section E) | 1 | 0 |
-| Owner report | U03 | 1 | Project owner report, 2026-10-18 (far areas plan) | 1 | 0 |
+| Owner report | U03 | 1 | Project owner report, 2026-10-17 (far areas plan) | 1 | 0 |
 
 The R-prefixed codes never clash with terminal codes `T01…`. Their pattern is `^R[TLPH][0-9]{2}$`.
 
@@ -112,6 +112,6 @@ The seed was edited in place after its first import (same file name, new hash). 
 
 ## TODA and tricycle terminal research (Increment F, revised batch)
 
-The seed gained U03 (owner report of 2026-10-18: far areas Cararayan, Pacol and Panicuason charge special trips; a Balatas to Cararayan tricycle terminal; Del Rosario vias Panganiban, Diversion and Magsaysay-Francia; TODAs at Ateneo and at jeepney terminals) and the official ordinance sources RT25 to RT32. U03 is unverified and never shown as a fact. Ordinance 2025-067 is already N06 and RT08. Note RN04 (the 'Francia' signboard on R2) now also cites U03.
+The seed gained U03 (owner report of 2026-10-17: far areas Cararayan, Pacol and Panicuason charge special trips; a Balatas to Cararayan tricycle terminal; Del Rosario vias Panganiban, Diversion and Magsaysay-Francia; TODAs at Ateneo and at jeepney terminals) and the official ordinance sources RT25 to RT32. U03 is unverified and never shown as a fact. Ordinance 2025-067 is already N06 and RT08. Note RN04 (the 'Francia' signboard on R2) now also cites U03.
 
 What the TODA research found: Naga has no published roster of registered TODAs and no TODA terminal list. Core-city for-hire trimobiles run on a color-zoned franchise system with no published names or terminals. The upper barangays (Panicuason, Carolina, Pacol, San Isidro, Cararayan, Balatas, Del Rosario) run on 1998 to 2025 ordinances that name special-franchise zones, unit counts and centro-to-junction routes; zone units may not operate outside their zone except in emergencies. The data supports a jeepney to the upper-barangay centro or junction, then a zone tricycle, but not door-to-door tricycle service from Centro. The only tricycle route documented to touch Ateneo de Naga is VISTODA/LAVISTODA (Ord 2025-067), with waiting areas at Deca Vistansa and Cararayan Proper that have no coordinates. An Ateneo TODA terminal and TODAs at jeepney terminals are not documented anywhere and rest on the owner report only. The single OSM tricycle terminal is Balatas Tricycle Terminal (T14, community). Because no other TODA terminal has coordinates, no TODA terminal rows were added: they could not be planned. No distance fare matrix or special-trip fare exists in any ordinance; the P60 to P80 special-trip figures are unofficial. Open conflicts: VISTODA unit counts (30 vs 33), the Cararayan Orange zone merged into White (2009-073) against later unit counts, and Salunguigui versus Deca-Langon (10 units each, same or different).

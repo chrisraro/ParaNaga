@@ -130,7 +130,8 @@ describe("far areas: zone membership and the far note", () => {
     const to = near(PACOL, 0, -900);
     expect(zoneOf(to, FAR_AREAS)).toBe("FZ02");
     const p = plan(PACOL, to);
-    expect(p.farNote).toBe(farNote("Pacol"));
+    // No jeepney (or access) option is shown, so the note does not point to the jeepney terminal (final review m-F1).
+    expect(p.farNote).toBe("Local report: tricycles to Pacol charge special-trip fares that are not fixed.");
     expect(p.jeepneyReason).not.toBeNull();
     expect(p.options.map((o) => o.mode)).toEqual(["tricycle"]);
     expect(recommended(p)).toHaveLength(0);

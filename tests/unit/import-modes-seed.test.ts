@@ -388,11 +388,11 @@ describe("research sources RT/RL/RP/RH and owner report U02 (2026-10-17)", () =>
     }
   });
 
-  it("U03 is the 2026-10-18 owner report (far areas, TODAs), unverified, and RN04 cites it as owner_report_unverified", () => {
+  it("U03 is the 2026-10-17 owner report (far areas, TODAs), unverified, and RN04 cites it as owner_report_unverified", () => {
     const u03 = real.sources.find((s) => s.code === "U03")!;
     expect(u03.type).toBe("user_report_unverified");
     expect(u03.url).toBeNull();
-    expect(u03.title).toBe("Project owner report to ParaNaga, 2026-10-18: far areas (Cararayan, Pacol, Panicuason) tricycles charge special trips; Balatas to Cararayan tricycle terminal; Del Rosario vias (Panganiban, Diversion, Magsaysay-Francia); Ateneo and jeepney-terminal TODAs");
+    expect(u03.title).toBe("Project owner report to ParaNaga, 2026-10-17: far areas (Cararayan, Pacol, Panicuason) tricycles charge special trips; Balatas to Cararayan tricycle terminal; Del Rosario vias (Panganiban, Diversion, Magsaysay-Francia); Ateneo and jeepney-terminal TODAs");
     expect(u03.review.decision).toBe("import");
     const rn04 = real.routeNotes.find((n) => n.code === "RN04")!;
     expect(rn04).toMatchObject({ routeCodes: ["R2"], evidence: "owner_report_unverified" });

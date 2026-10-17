@@ -6,7 +6,7 @@
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "../api/plan";
 import type { ServiceWindowNote } from "../eta/service-window";
 import { FLAGGED_PATH_NOTE } from "../planner/notes";
-import { fareChipText, formatDistance, routeChipLabel } from "./present";
+import { fareChipText, formatDistance } from "./present";
 import type { OptionNotesView, RideNoteView } from "./option-notes";
 
 /** The first Recommended option, or -1: exactly one card is drawn as the primary one. */
@@ -47,12 +47,8 @@ export const isAccessOption = (o: Pick<PlanOptionDto, "rides" | "legs">) => o.ri
 export const isSpecialTrip = (o: { specialTrip?: true }) => o.specialTrip === true;
 
 export const FARE_NOT_FIXED = "Fare not fixed";
-/** "Tricycle to the jeepney station, then ride R6. For when you'd rather not walk." (the OSM loading-point name stays in the detail and guidance steps) */
-export function accessLine(o: Pick<PlanOptionDto, "legs">): string {
-  const ride = o.legs.find((l) => l.kind === "ride");
-  const code = ride?.kind === "ride" ? routeChipLabel(ride.routeCode, ride.routeName) : "the jeepney";
-  return `Tricycle to the jeepney station, then ride ${code}. For when you'd rather not walk.`;
-}
+/** The access card says what the tricycle is for; the title already says tricycle, then the route. */
+export const ACCESS_LINE = "For when you'd rather not walk.";
 const peso = (centavos: number) => `₱${Math.round(centavos / 100)}`;
 
 /** "via Magsaysay" (the chip of a jeepney that shares a corridor with other vias), or null. */

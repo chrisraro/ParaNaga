@@ -72,7 +72,7 @@ describe("the access card", () => {
     const card = access();
     expect(card.dataset.mode).toBe("jeepney");
     expect(card.querySelector("strong")!.textContent).toBe("Tricycle, then Jeep R6");
-    expect(screen.getByTestId("access-line").textContent).toBe("Tricycle to the jeepney station, then ride R6. For when you'd rather not walk.");
+    expect(screen.getByTestId("access-line").textContent).toBe("For when you'd rather not walk.");
     expect(screen.getByTestId("access-tricycle").textContent).toBe("Tricycle min ₱15 · confirm with the driver");
     expect(screen.getByTestId("fare-chip").textContent).toBe("From ₱33");
     expect(card.textContent).not.toMatch(/Est\.Estimate ₱|₱33–|Minimum fare/);

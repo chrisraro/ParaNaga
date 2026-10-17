@@ -13,7 +13,7 @@ import { Fragment, useMemo } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
-import { accessLine, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, recommendedIndex, specialFareText, streetCardView, viaChipText } from "@/domain/trip/option-card";
+import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, recommendedIndex, specialFareText, streetCardView, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
@@ -192,7 +192,7 @@ function OptionCard({
           <>
             <span className="sr-only">. </span>
             <span className="pn-trip-card__street" data-testid="access-line">
-              {accessLine(option)}
+              {ACCESS_LINE}
             </span>
             <span className="pn-trip-card__street pn-trip-card__street--fare" data-testid="access-tricycle">
               {accessTricycleChip(option)}
