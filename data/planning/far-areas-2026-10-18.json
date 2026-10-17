@@ -311,8 +311,11 @@
       "nearestJeepTerminal": null,
       "evidence": "owner_report_unverified",
       "sourceCodes": [
-        "U03"
-      ]
+        "U03",
+        "RT31",
+        "RT30"
+      ],
+      "note": "A franchised Balatas-Cararayan special tricycle route exists (Ord 2018-079, RT31; 18 units); its fare matrix is unknown, so the fare stays not fixed. Ord 2009-073 (RT30) merged the Orange Cararayan zone into White."
     }
   ]
 }

@@ -83,6 +83,7 @@ const FarAreasSchema = z.strictObject({
       nearestJeepTerminal: terminalCode.nullable(),
       evidence,
       sourceCodes: z.array(sourceCode).min(1),
+      note: z.string().optional(),
     }),
   ),
 });

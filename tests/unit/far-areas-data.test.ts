@@ -129,10 +129,11 @@ describe("committed far-areas-2026-10-18.json", () => {
     }
   });
 
-  it("T14 serves FZ01 as an unverified owner report (U03)", () => {
+  it("T14 serves FZ01 as an unverified owner report (U03), citing RT31 (Ord 2018-079 route) and RT30 (Ord 2009-073 zone merger)", () => {
     expect(data.tricycleTerminals).toEqual([
-      expect.objectContaining({ terminalCode: "T14", serves: [{ farZone: "FZ01" }], evidence: "owner_report_unverified", sourceCodes: ["U03"] }),
+      expect.objectContaining({ terminalCode: "T14", serves: [{ farZone: "FZ01" }], evidence: "owner_report_unverified", sourceCodes: ["U03", "RT31", "RT30"] }),
     ]);
+    expect(data.tricycleTerminals[0]!.note).toMatch(/Ord 2018-079.*18 units.*fare matrix is unknown/);
   });
 
   it("every sourceCodes entry in the far-areas file exists as an imported source in the modes seed", () => {
