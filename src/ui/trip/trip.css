@@ -838,6 +838,45 @@ abbr.pn-est {
   font-size: 14px;
   line-height: 1.4;
 }
+/* The tricycle part of the access card: its fare rule, set apart from the plain lines. */
+.pn-trip-card__street--fare {
+  color: var(--pn-gold-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+/* Via chip: which road a Centro-Del Rosario jeepney takes. Outlined, so it reads next to (not as) the caution chip. */
+.pn-trip-card__via {
+  display: inline-block;
+  padding: 1px 9px;
+  border: 1px solid var(--pn-ring);
+  border-radius: 999px;
+  color: var(--pn-label);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pn-trip-detail__via {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.4;
+}
+/* Quiet note above the options and in the detail: a local report, labelled as one. */
+.pn-trip-farnote {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pn-trip-farnote__label {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 7px;
+  border: 1px solid var(--pn-ring);
+  border-radius: 999px;
+  color: var(--pn-label);
+  font-size: 12px;
+  font-weight: 700;
+}
 .pn-trip-card__street--state {
   color: var(--pn-warn-text);
   font-weight: 600;

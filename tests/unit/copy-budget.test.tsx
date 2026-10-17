@@ -16,7 +16,7 @@ import { enrichPlan } from "@/domain/trip/enrich";
 import { Guidance } from "@/ui/guidance/guidance";
 import { TripDetail } from "@/ui/trip/trip-detail";
 import { TripOptions } from "@/ui/trip/trip-options";
-import { PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "../e2e/fixtures/plan-responses";
+import { ACCESS_PLAN, PROVISIONAL_PLAN, SPECIAL_TRIP_PLAN, TWO_RIDE_PLAN, VIA_PLAN } from "../e2e/fixtures/plan-responses";
 import { ETA_MODEL, manila } from "./eta-fixtures";
 import { ORIGIN, oneRide, tripOf } from "./guidance-fixtures";
 
@@ -26,6 +26,8 @@ vi.mock("@/client/saved/use-saved-trip-toggle", () => ({
 
 export const CARD_WORDS_STREET = 32; // a tricycle or padyak card with its street rule
 export const CARD_WORDS_ONE_RIDE = 16; // a two-word plan label is shown
+export const CARD_WORDS_ONE_RIDE_VIA = 18; // a via chip ("via Roxas (Diversion)") is added
+export const CARD_WORDS_ACCESS = 32; // headline, the "rather not walk" line, the tricycle fare chip, the jeepney time and fare, the caution (plan said 24: the required strings alone are 29)
 export const CARD_WORDS_TWO_RIDES = 20; // the route is "Loop A + Loop B"
 export const DETAIL_HEADER_WORDS = 16;
 export const GUIDANCE_WALK_WORDS = 22;
@@ -76,6 +78,28 @@ describe("copy budgets", () => {
     expect(first.textContent).toContain("Unverified route");
     expect(first.textContent).not.toMatch(/revision|Source|OpenStreetMap|Mapped candidate|Walk ≈|Signboard/);
     expect(first.querySelector('abbr[title="Estimate"]')).not.toBeNull();
+  });
+
+  it("a via card adds only its chip: at most 18 words", () => {
+    const data = enrichPlan(VIA_PLAN as unknown as PlanResponse, null, { walkGraphStatus: "skipped" });
+    render(<TripOptions data={data} onOpen={() => undefined} etaModel={ETA_MODEL} />);
+    const vias = screen.getAllByTestId("trip-option").filter((c) => c.querySelector('[data-testid="card-via"]'));
+    expect(vias).toHaveLength(3);
+    for (const card of vias) expect(visibleWords(card)).toBeLessThanOrEqual(CARD_WORDS_ONE_RIDE_VIA);
+  });
+
+  it("the access card shows at most the access budget, Recommended label included", () => {
+    const data = enrichPlan(ACCESS_PLAN as unknown as PlanResponse, null, { walkGraphStatus: "skipped" });
+    render(<TripOptions data={data} onOpen={() => undefined} etaModel={ETA_MODEL} />);
+    const card = screen.getByTestId("trip-option");
+    expect(visibleWords(card)).toBeLessThanOrEqual(CARD_WORDS_ACCESS);
+  });
+
+  it("the special-trip card stays within the street budget", () => {
+    const data = enrichPlan(SPECIAL_TRIP_PLAN as unknown as PlanResponse, null, { walkGraphStatus: "skipped" });
+    render(<TripOptions data={data} onOpen={() => undefined} etaModel={ETA_MODEL} />);
+    const card = screen.getAllByTestId("trip-option").find((c) => c.dataset.mode === "tricycle")!;
+    expect(visibleWords(card)).toBeLessThanOrEqual(CARD_WORDS_STREET);
   });
 
   it("a two-ride option card shows at most 20 words and keeps the caution", () => {

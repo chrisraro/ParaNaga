@@ -129,7 +129,8 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
       continue;
     }
     if (leg.kind === "tricycle" || leg.kind === "padyak") {
-      street = streetStep(leg, legIndex, steps.length, destinationName);
+      // Not the last leg (the access option): the tricycle ends at its named loading point, not at the destination.
+      street = streetStep(leg, legIndex, steps.length, legIndex === legs.length - 1 ? destinationName : leg.to.name ?? "the jeepney", legIndex < legs.length - 1);
       steps.push(street);
       pendingWalk = null;
       continue;
@@ -180,7 +181,7 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
   return steps;
 }
 
-function streetStep(leg: TricycleLegDto | PadyakLegDto, legIndex: number, index: number, destinationName: string): StreetRideStep {
+function streetStep(leg: TricycleLegDto | PadyakLegDto, legIndex: number, index: number, destinationName: string, midTrip: boolean): StreetRideStep {
   return {
     kind: "street_ride",
     index,
@@ -189,7 +190,7 @@ function streetStep(leg: TricycleLegDto | PadyakLegDto, legIndex: number, index:
     target: { name: destinationName, lat: leg.to.lat, lng: leg.to.lng },
     distanceMeters: leg.distanceMeters,
     basis: leg.basis,
-    text: streetRideText(leg, destinationName),
+    text: streetRideText(leg, destinationName, midTrip),
     notes: [...leg.notes],
   };
 }

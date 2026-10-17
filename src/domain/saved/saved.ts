@@ -16,6 +16,7 @@ import type { NetworkSnapshot } from "../api/schemas";
 import type { LatLng } from "../geo/types";
 import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
+import { isAccessOption, specialFareText } from "../trip/option-card";
 import { rideEnds } from "../trip/ride-ends";
 import { directionText, fareChipText, formatDistance, freeAlightText, isNegligibleWalk, legFareText, routeChipLabel, stopLabel, streetRideText } from "../trip/present";
 import type { EtaModel } from "../api/schemas";
@@ -250,7 +251,7 @@ export function tripCardMeta(
 ): string {
   const date = manilaDate(card.publishedAt);
   const dataFrom = `data from ${date ?? `revision ${card.revisionLabel}`}`;
-  const fare = fareChipText(card.option.fare);
+  const fare = specialFareText(card.option) ?? fareChipText(card.option.fare);
   return `${savedEstimateText(card.option, model, departure, walkLengths)} · ${fare} · ${dataFrom}`;
 }
 
@@ -356,7 +357,9 @@ export function shareText(
       continue;
     }
     if (leg.kind === "tricycle" || leg.kind === "padyak") {
-      steps.push(streetRideText(leg, input.destination.label));
+      // The access option's tricycle ends at its named loading point; no minutes, only the distance and the minimum fare.
+      const mid = i < option.legs.length - 1;
+      steps.push(streetRideText(leg, mid ? (leg.to.name ?? "the jeepney") : input.destination.label, mid));
       continue;
     }
     const ends = rideEnds(leg, i === lastRide ? input.destination.label : undefined);
@@ -370,7 +373,8 @@ export function shareText(
       : `Ride along the approximate path. ${freeAlightText(name(alight.id, alight.name))}`);
   }
   lines.push(...steps.map((s, i) => `${i + 1}. ${s}`));
-  lines.push(`Fare: ${option.rides > 0 ? legFareText(option.fare) : fareChipText(option.fare)}`);
+  const special = specialFareText(option);
+  lines.push(`Fare: ${isAccessOption(option) && special ? `${special} (jeepney fare estimate plus the tricycle minimum; no maximum)` : special ?? (option.rides > 0 ? legFareText(option.fare) : fareChipText(option.fare))}`);
   lines.push(`${savedEstimateText(option, opts.etaModel, opts.departure, opts.walkLengths)}. Data revision ${input.revisionLabel}.`);
   if (opts.exactPoints) {
     lines.push(`Start point: ${fixed(input.start.point)}`);

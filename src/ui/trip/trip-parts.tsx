@@ -3,6 +3,7 @@
 // always the warning "Unverified route", fares are always estimates.
 
 import type { PlanResponse, RideLegDto } from "@/domain/api/plan";
+import { FARE_NOT_FIXED, farNoteView } from "@/domain/trip/option-card";
 import { directionText, fareChipText, fareRangeText, routeChipLabel, stopLabel, type LoopDirection } from "@/domain/trip/present";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ModeIcon } from "@/ui/modes/mode-icon";
@@ -51,17 +52,22 @@ export function UnverifiedBadge() {
 
 type FareLike = { status: string; minCentavos: number | null; maxCentavos: number | null };
 
-/** Gold outline for an estimate (like "+ 1 unknown"); dashed grey when there is none. */
-export function FareChip({ fare, short = false }: { fare: FareLike; short?: boolean }) {
+/**
+ * Gold outline for an estimate (like "+ 1 unknown"); dashed grey when there is none. `text` replaces the wording of an
+ * access option ("From ₱33") or a special trip ("Fare not fixed", dashed: there is no fare to give).
+ */
+export function FareChip({ fare, short = false, text = null }: { fare: FareLike; short?: boolean; text?: string | null }) {
+  const none = text === null ? !fareRangeText(fare) : text === FARE_NOT_FIXED;
   return (
-    <span className={fareRangeText(fare) ? "pn-fare-chip" : "pn-fare-chip pn-fare-chip--none"} data-testid="fare-chip">
-      {short ? <FareShort fare={fare} /> : fareChipText(fare)}
+    <span className={none ? "pn-fare-chip pn-fare-chip--none" : "pn-fare-chip"} data-testid="fare-chip">
+      {short ? <FareShort fare={fare} text={text} /> : (text ?? fareChipText(fare))}
     </span>
   );
 }
 
 /** The card form of the fare: "Est. ₱14–₱17", "Fare n/a" or "No fare". */
-export function FareShort({ fare }: { fare: FareLike }) {
+export function FareShort({ fare, text = null }: { fare: FareLike; text?: string | null }) {
+  if (text) return <>{text}</>;
   const range = fareRangeText(fare);
   // A range is spoken like the time range: "₱14 to ₱17", not a dash.
   if (range) return <><EstAbbr /> {range.includes("–") ? <span role="img" aria-label={range.replace("–", " to ")}>{range}</span> : range}</>;
@@ -92,6 +98,22 @@ export function LoopChip({
       </span>
       {dir ? <span className="pn-loop__dir">{dir}</span> : null}
     </span>
+  );
+}
+
+/**
+ * Why no tricycle is suggested near a far area, as a quiet note with its evidence label ("Local report": it is
+ * what riders report, not an ordinance). Null when the plan has no note.
+ */
+export function FarNote({ note }: { note: string | null }) {
+  const v = farNoteView(note);
+  if (!v) return null;
+  return (
+    <p className="pn-trip-farnote" data-testid="far-note">
+      {v.label ? <span className="pn-trip-farnote__label">{v.label}</span> : null}
+      {v.label ? <span className="sr-only">: </span> : null}
+      {v.text}
+    </p>
   );
 }
 

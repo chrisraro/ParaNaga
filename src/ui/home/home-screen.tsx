@@ -102,7 +102,11 @@ export function highlightsFor(data: PlanResponse, optionId: string): HighlightSt
   const option = data.plan.options.find((o) => o.id === optionId);
   if (!option) return [];
   const lookups = planLookups(data);
-  return option.legs.flatMap((leg) => {
+  return option.legs.flatMap((leg, i) => {
+    // The access option's tricycle ends at a named loading point (not the last leg): a named stop to get off at.
+    if (leg.kind === "tricycle" && i < option.legs.length - 1 && leg.to.name) {
+      return [{ id: `tricycle:${i}`, lat: leg.to.lat, lng: leg.to.lng, role: "alight" as const, label: leg.to.name }];
+    }
     if (leg.kind !== "ride") return [];
     const ends = rideEnds(leg);
     if (!ends) return [];

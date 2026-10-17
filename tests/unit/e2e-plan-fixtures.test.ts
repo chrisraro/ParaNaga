@@ -15,11 +15,12 @@ describe("e2e plan fixtures", () => {
     it(`${name} parses as a plan response with exactly one Recommended option (or none without options)`, () => {
       const parsed = planResponseSchema.parse(plan);
       const recommended = parsed.plan.options.filter((o) => o.labels.includes("Recommended"));
-      expect(recommended).toHaveLength(parsed.plan.options.length > 0 ? 1 : 0);
+      // A far plan (Increment F, ruling e) may have no Recommended option and carries a special-trip tricycle only at an end.
+      expect(recommended).toHaveLength(parsed.plan.farNote ? Math.min(1, recommended.length) : parsed.plan.options.length > 0 ? 1 : 0);
       // Options come walk, jeepneys, tricycle, padyak.
       const order = parsed.plan.options.map((o) => ["walk", "jeepney", "tricycle", "padyak"].indexOf(o.mode));
       expect(order).toEqual([...order].sort((a, b) => a - b));
-      if (parsed.plan.options.length > 0) expect(parsed.plan.options.some((o) => o.mode === "tricycle")).toBe(true);
+      if (parsed.plan.options.length > 0 && !parsed.plan.farNote) expect(parsed.plan.options.some((o) => o.mode === "tricycle")).toBe(true);
     });
   }
 
@@ -27,7 +28,7 @@ describe("e2e plan fixtures", () => {
     for (const [, plan] of PLANS) {
       const parsed = planResponseSchema.parse(plan);
       const d = parsed.plan.directWalkEstimateMeters;
-      if (parsed.plan.options.length === 0 || d === null || d < 500) continue;
+      if (parsed.plan.options.length === 0 || d === null || d < 500 || parsed.plan.farNote) continue;
       expect(parsed.plan.options.some((o) => o.mode === "walk")).toBe(false);
       expect(parsed.plan.options.find((o) => o.mode === "tricycle")!.labels).toContain("Recommended");
     }

@@ -13,13 +13,13 @@ import { Fragment, useMemo } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
-import { cardRouteNotes, jeepneyReasonText, optionsCountText, recommendedIndex, streetCardView } from "@/domain/trip/option-card";
+import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, recommendedIndex, specialFareText, streetCardView, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
 import { RouteNote } from "./route-note";
 import { ServiceWindowNote } from "./service-window-note";
-import { Chevron, FareChip, FareShort, LoopChip, StreetModeIcon, UNVERIFIED_CHIP, WalkIcon, type PlanLookups } from "./trip-parts";
+import { Chevron, FareChip, FareShort, FarNote, LoopChip, StreetModeIcon, UNVERIFIED_CHIP, WalkIcon, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
   return `pn-trip-option-${optionId.replace(/[^A-Za-z0-9_-]/g, "_")}`;
@@ -70,6 +70,8 @@ export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: 
 
 function StreetLines({ leg }: { leg: TricycleLegDto | PadyakLegDto }) {
   const v = streetCardView(leg);
+  // A special trip carries its own two lines instead of the street rule (the rule stays in the detail).
+  const special = v.specialNotes.length > 0;
   return (
     <>
       {v.headline ? (
@@ -82,7 +84,12 @@ function StreetLines({ leg }: { leg: TricycleLegDto | PadyakLegDto }) {
           {v.distanceText}
         </span>
       ) : null}
-      {v.restrictionNote ? (
+      {special ? v.specialNotes.map((n) => (
+        <span key={n} className="pn-trip-card__street" data-testid="street-special">
+          {n}
+        </span>
+      )) : null}
+      {v.restrictionNote && !special ? (
         <span className="pn-trip-card__street" data-testid="street-restriction">
           {v.restrictionNote}
         </span>
@@ -116,7 +123,11 @@ function OptionCard({
   now: Date;
   routes?: NetworkSnapshot["routes"] | null;
 }) {
-  const street = option.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
+  // The access option rides a jeepney after its tricycle: it keeps the jeepney card (minutes for the walk and ride only).
+  const access = isAccessOption(option);
+  const street = access ? undefined : option.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
+  const special = isSpecialTrip(option);
+  const via = viaChipText(option);
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
   const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
@@ -140,6 +151,14 @@ function OptionCard({
         <span className="pn-trip-card__top">
           {option.labels[0] ? (
             <span className={primary ? "pn-trip-card__label pn-trip-card__label--primary" : "pn-trip-card__label"}>{option.labels[0]}</span>
+          ) : null}
+          {via ? (
+            <>
+              <span className="sr-only">. </span>
+              <span className="pn-trip-card__via" data-testid="card-via">
+                {via}
+              </span>
+            </>
           ) : null}
           {/* The driver caveat belongs to rides only; a walk has no driver. The full badge is in the detail. */}
           {option.rides > 0 ? (
@@ -169,6 +188,17 @@ function OptionCard({
             <StreetLines leg={street} />
           </>
         ) : null}
+        {access ? (
+          <>
+            <span className="sr-only">. </span>
+            <span className="pn-trip-card__street" data-testid="access-line">
+              {ACCESS_LINE}
+            </span>
+            <span className="pn-trip-card__street pn-trip-card__street--fare" data-testid="access-tricycle">
+              {accessTricycleChip(option)}
+            </span>
+          </>
+        ) : null}
         {notes.serviceWindow || routeNotes.length > 0 ? (
           <span className="pn-trip-card__notes">
             {notes.serviceWindow ? <ServiceWindowNote note={notes.serviceWindow} compact /> : null}
@@ -179,9 +209,14 @@ function OptionCard({
         ) : null}
         <span className="sr-only">. </span>
         <span className="pn-trip-card__foot">
-          <FareChip fare={option.fare} short />
-          <span className="sr-only">. </span>
-          <span className="pn-trip-card__transfers">{transfersText(option.rides)}</span>
+          <FareChip fare={option.fare} short text={specialFareText(option)} />
+          {/* "No transfers" says nothing about a tricycle ride (and the access option changes vehicle by design). */}
+          {access || special ? null : (
+            <>
+              <span className="sr-only">. </span>
+              <span className="pn-trip-card__transfers">{transfersText(option.rides)}</span>
+            </>
+          )}
         </span>
       </button>
     </li>
@@ -209,6 +244,7 @@ export function TripOptions({ data, refreshing = false, onOpen, etaModel, routes
         Trip options
       </h2>
       {refreshing ? <p className="pn-trip__refreshing">Updating…</p> : null}
+      <FarNote note={data.plan.farNote} />
       <ul id={OPTIONS_LIST_ID} className="pn-trip-list">
         {data.plan.options.map((option, i) => (
           <OptionCard key={option.id} option={option} onOpen={onOpen} index={i} primary={i === primary} etaModel={etaModel} reason={reason} now={now} routes={routes} />
@@ -257,7 +293,7 @@ export function OptionsPeek({
   // The Recommended option (the tricycle at 500 m or more), not the first card: what is read out must match the list.
   // With nothing Recommended (a far trip without a jeepney) there is no best option: the peek counts the options.
   const best = data.plan.options[recommendedIndex(data.plan.options)];
-  const bestStreet = best?.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
+  const bestStreet = best && !isAccessOption(best) ? best.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak") : undefined;
   const walkLengths = useMemo(() => extractWalkLengths(best?.legs ?? []), [best]);
   const { estimate } = useOptionEta(best, walkLengths, etaModel);
   if (data.plan.options.length === 0) return null;
@@ -275,7 +311,7 @@ export function OptionsPeek({
           <span aria-hidden="true"> · </span>
           {bestStreet ? streetCardView(bestStreet).timeText : <EtaTotalText estimate={estimate} short />}
           <span aria-hidden="true"> · </span>
-          <FareShort fare={best.fare} />
+          <FareShort fare={best.fare} text={specialFareText(best)} />
         </span>
         {best.rides > 0 ? (
           <span className="pn-peek__chip" data-testid="options-best-unverified">

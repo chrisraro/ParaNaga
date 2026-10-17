@@ -108,7 +108,9 @@ function back(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSession 
     return { ...session, stepIndex: session.stepIndex - 1, atStop: true, ride: null };
   }
   if (session.stepIndex === 0) return session;
-  return { ...session, stepIndex: session.stepIndex - 1, atStop: false, ride: session.lastRide ?? NEW_RIDE, lastRide: null };
+  // The step before may be a tricycle ride (the access option): only a ride step carries ride memory.
+  const ride = steps[session.stepIndex - 1]?.kind === "ride" ? session.lastRide ?? NEW_RIDE : null;
+  return { ...session, stepIndex: session.stepIndex - 1, atStop: false, ride, lastRide: null };
 }
 
 /** The steps that end at the destination: "I've arrived" applies there. */
@@ -138,6 +140,8 @@ export function reduceSession(session: GuidanceSession, event: GuidanceEvent): G
     case "missedStop":
       return ride ? { ...session, status: "missed_stop", ride: null, lastRide: ride } : session;
     case "arrived":
+      // A tricycle that is not the last step (the access option) ends at its loading point: on to the walk.
+      if (step.kind === "street_ride" && session.stepIndex < steps.length - 1) return nextStep(session, steps);
       return endsTrip(step) ? { ...session, status: "arrived" } : session;
     case "fix": {
       if (!ride || step.kind !== "ride" || !usableFix(event.fix, event.now)) return session;

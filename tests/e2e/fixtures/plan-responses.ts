@@ -476,3 +476,157 @@ export const ROUTE_NOTES_PLAN = {
 
 /** Loop A pins, for fake location fixes along the ride. */
 export const LOOP_A_PINS = { A1, A2, A3, A4, A5 };
+
+// ---------------------------------------------------------------- Increment F: vias, access, special trips, far note
+
+const R3_CIRCUIT = "70cda719-c174-4cd1-8487-e89c7e1352cc";
+const R4_CIRCUIT = "07fe8536-6780-4361-bb05-29868c08d8d0";
+const R6_OUT = "c0c3643a-e541-464a-b831-a9a1def04c20";
+const R1_OUT = "40578b72-5444-429e-8ab7-ad0adc4bcf51";
+const VIA_GROUP = "VG-CENTRO-DELROSARIO";
+export const FRANCIA_NOTE = "Locals may call it Francia (unconfirmed)";
+
+/** One jeepney option on a Del Rosario via (T5): the chip text is `via.label`, R2's `via.note` is the Francia line. */
+const viaOption = (variantId: string, routeCode: string, routeName: string, label: string, note: string | null, labels: string[]) => withTotals({
+  id: `${variantId}:pt:410:pt:3530`,
+  mode: "jeepney",
+  labels,
+  via: { group: VIA_GROUP, routeCode, label, note },
+  legs: [
+    walkLeg(ORIGIN, place("point", 13.6231, 123.1842), 90, 117, true),
+    rideLeg({
+      variantId, routeCode, routeName, stops: [], distanceMeters: 3120,
+      board: freePoint(13.6231, 123.1842, 410), alight: freePoint(13.6294, 123.1904, 3530), fare: legFare(1400, 1400), fleet: routeOf(routeCode).fleet,
+    }),
+    walkLeg(place("point", 13.6294, 123.1904), DESTINATION, 140, 182, true),
+  ],
+  fare: { minCentavos: 1400, maxCentavos: 1400, status: "estimate", completeness: "estimate" },
+  evidence: "provisional",
+});
+
+/** Plaza Rizal to Del Rosario: R2 via Magsaysay (with the unconfirmed Francia line), R3 via Roxas (Diversion), R4 via Panganiban, tricycle Recommended. */
+export const VIA_PLAN = {
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 1450, jeepneyReason: null,
+    options: [
+      viaOption(R2_OUT, "R2", "Centro–Del Rosario via Magsaysay Avenue", "Magsaysay", FRANCIA_NOTE, ["Fewest transfers"]),
+      viaOption(R3_CIRCUIT, "R3", "Centro–Del Rosario via Roxas Avenue (Diversion)", "Roxas (Diversion)", null, []),
+      viaOption(R4_CIRCUIT, "R4", "Centro–Del Rosario via Panganiban Drive", "Panganiban", null, []),
+      tricycleOption(TRICYCLE_ROUTED, true),
+    ],
+    notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 1450 m (straight-line estimate)"],
+  },
+  stops: [],
+  variants: [
+    R2_VARIANT,
+    { variantId: R3_CIRCUIT, routeCode: "R3", routeName: "Centro–Del Rosario via Roxas Avenue (Diversion)", isCircular: true, loopDirection: null },
+    { variantId: R4_CIRCUIT, routeCode: "R4", routeName: "Centro–Del Rosario via Panganiban Drive", isCircular: true, loopDirection: null },
+  ],
+};
+
+const FAR_NOTE_PACOL = "Local report: tricycles to Pacol charge special-trip fares, so none is suggested.";
+const PACOL_TERMINAL = { kind: "point", lat: 13.6209809, lng: 123.1846467, stopId: null, name: "Jeepney station to Pacol" };
+const SOUTH = place("origin", 13.605, 123.187);
+const PACOL = place("destination", 13.6575, 123.2475);
+const ACCESS_NOTES = [
+  "Avoids the restricted roads we could locate (Ordinance 2006-005/015 · check for updates; allowed 9 pm–5 am)",
+  "Minimum fare ₱15 (Ordinance 2024-002) · discounts not applied · confirm with the driver",
+  "Tricycle time not estimated",
+  "Tricycles serve their franchise zone; a long trip may need a change (Ord 2020-113)",
+];
+
+/** The access option (T4): [tricycle to the loading point, walk, ride, walk]; mode jeepney, fare = ride minimum + PHP 15 with no maximum. */
+const accessOptionOf = (labels: string[]) => ({
+  ...withTotals({
+    id: `tri>${R6_OUT}@120-8880`,
+    mode: "jeepney",
+    labels,
+    legs: [
+      {
+        kind: "tricycle", from: SOUTH, to: PACOL_TERMINAL, distanceMeters: 2920, path: encodePolyline([{ lat: 13.605, lng: 123.187 }, { lat: 13.6125, lng: 123.1862 }, { lat: 13.6209809, lng: 123.1846467 }]),
+        basis: "street_graph", notes: ACCESS_NOTES, ruleCodes: [], fare: tricycleFare,
+      },
+      walkLeg(PACOL_TERMINAL, place("point", 13.62152, 123.18541), 100, 130),
+      rideLeg({
+        variantId: R6_OUT, routeCode: "R6", routeName: "Centro–Pacol", stops: [], distanceMeters: 8760,
+        board: freePoint(13.62152, 123.18541, 120), alight: freePoint(13.6596, 123.25116, 8880), fare: legFare(1800, 2000), fleet: routeOf("R6").fleet,
+      }),
+      walkLeg(place("point", 13.6596, 123.25116), PACOL, 90, 117),
+    ],
+    fare: { minCentavos: 3300, maxCentavos: null, status: "minimum", completeness: "estimate" },
+    evidence: "provisional",
+  }),
+});
+const R6_VARIANT = { variantId: R6_OUT, routeCode: "R6", routeName: "Centro–Pacol", isCircular: false, loopDirection: null };
+
+/** To Pacol from the south: the access option is the only way (Recommended), with the far note. */
+export const ACCESS_PLAN = {
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 7400, jeepneyReason: null,
+    options: [accessOptionOf(["Recommended"])],
+    notes: ["Unverified route — confirm with the driver", "Walking the whole way is about 7400 m (straight-line estimate)"],
+    farNote: FAR_NOTE_PACOL,
+  },
+  stops: [],
+  variants: [R6_VARIANT],
+};
+
+const SPECIAL_NOTES = [
+  "Special trip · fare not fixed · confirm with the driver",
+  "From Balatas Tricycle Terminal: local report, unconfirmed",
+  "Tricycle time not estimated",
+  "Tricycles serve their franchise zone; a long trip may need a change (Ord 2020-113)",
+];
+const specialOption = () => ({
+  id: "tricycle", mode: "tricycle", labels: [] as string[],
+  legs: [{
+    kind: "tricycle", from: place("origin", 13.6262, 123.1912), to: PACOL, distanceMeters: 4200,
+    path: encodePolyline([{ lat: 13.6262, lng: 123.1912 }, { lat: 13.6291, lng: 123.2150 }, { lat: 13.6575, lng: 123.2475 }]), basis: "street_graph", notes: SPECIAL_NOTES, ruleCodes: [],
+    fare: { minCentavos: null, maxCentavos: null, status: "unavailable", ruleCodes: ["F03"], discountsApplied: false },
+  }],
+  rides: 0, walkMeters: 0, walkEstimateMeters: 0, rideMeters: 0, score: 0,
+  fare: { minCentavos: null, maxCentavos: null, status: "unavailable", completeness: "estimate" }, evidence: "provisional",
+});
+
+/** Near the Balatas terminal to Cararayan: R1 Recommended, then the unlabelled special-trip tricycle; the far note names the zone. */
+export const SPECIAL_TRIP_PLAN = {
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 4200, jeepneyReason: null,
+    options: [
+      withTotals({
+        id: `${R1_OUT}:pt:900:pt:4100`, mode: "jeepney", labels: ["Recommended"],
+        legs: [
+          walkLeg(place("origin", 13.6262, 123.1912), place("point", 13.6285, 123.1925), 350, 455),
+          rideLeg({
+            variantId: R1_OUT, routeCode: "R1", routeName: "Centro–Cararayan", stops: [], distanceMeters: 3200,
+            board: freePoint(13.6285, 123.1925, 900), alight: freePoint(13.6322, 123.2372, 4100), fare: legFare(1400, 1600), fleet: routeOf("R1").fleet,
+          }),
+          walkLeg(place("point", 13.6322, 123.2372), PACOL, 120, 156),
+        ],
+        fare: { minCentavos: 1400, maxCentavos: 1600, status: "estimate", completeness: "estimate" },
+        evidence: "provisional",
+      }),
+      specialOption(),
+    ],
+    notes: ["Unverified route — confirm with the driver"],
+    farNote: "Local report: tricycles to Cararayan and San Isidro charge special-trip fares, so none is suggested.",
+  },
+  stops: [],
+  variants: [{ variantId: R1_OUT, routeCode: "R1", routeName: "Centro–Cararayan", isCircular: false, loopDirection: null }],
+};
+
+/** A long far trip with no jeepney: only the special-trip card (nothing Recommended) under the far note. */
+export const SPECIAL_ONLY_PLAN = {
+  revision: REVISION,
+  plan: {
+    revisionId: REVISION.revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: 7400, jeepneyReason: "no_path_near_destination",
+    options: [specialOption()],
+    notes: ["Walking the whole way is about 7400 m (straight-line estimate)"],
+    farNote: FAR_NOTE_PACOL,
+  },
+  stops: [],
+  variants: [],
+};
