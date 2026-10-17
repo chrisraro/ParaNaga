@@ -6,7 +6,7 @@ import { haversineMeters } from "@/domain/geo/geometry";
 import { projectOnLine } from "@/domain/geo/measure";
 import { decodePolyline } from "@/domain/geo/polyline";
 import { parseModesSeed } from "@/domain/import/modes-seed";
-import { parseFarAreas, zoneOf, type FarAreas } from "@/domain/planner/far-areas";
+import { parseFarAreas, ROUTE_BOARDING_LINK_M, zoneOf, type FarAreas } from "@/domain/planner/far-areas";
 import { realLines } from "../fixtures/real-lines";
 
 const read = (p: string) => JSON.parse(readFileSync(p, "utf8"));
@@ -102,7 +102,7 @@ describe("committed far-areas-2026-10-18.json", () => {
     for (const c of used) expect(terminals.get(c)?.coordinate, c).toBeTruthy();
   });
 
-  it("routeBoarding links: pathLinkOk equals the measured terminal-to-path distance (<= 100 m)", () => {
+  it("routeBoarding links: pathLinkOk equals the measured terminal-to-path distance (<= ROUTE_BOARDING_LINK_M, 150 m)", () => {
     const lines = realLines().lines;
     for (const b of data.routeBoarding) {
       expect(routeCodes.has(b.routeCode), b.routeCode).toBe(true);
@@ -114,7 +114,7 @@ describe("committed far-areas-2026-10-18.json", () => {
       const dists = lines.filter((l) => l.routeCode === b.routeCode).map((l) => projectOnLine(decodePolyline(l.encoded), c).distM);
       expect(dists.length).toBeGreaterThan(0);
       const min = Math.min(...dists);
-      expect(b.pathLinkOk, `${b.routeCode} ${b.boarding.terminalCode} min ${min.toFixed(1)} m`).toBe(min <= 100);
+      expect(b.pathLinkOk, `${b.routeCode} ${b.boarding.terminalCode} min ${min.toFixed(1)} m`).toBe(min <= ROUTE_BOARDING_LINK_M);
     }
   });
 

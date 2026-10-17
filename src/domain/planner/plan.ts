@@ -50,7 +50,7 @@ import { boundedDistances, padyakAreas, routeStreet, snapWalk, type StreetRoute,
 import {
   fareClasses, legFareEstimate, padyakFare, sumFares, tricycleFare, type LegFare, type PadyakFare, type TricycleFare, type TripFare,
 } from "./fares";
-import { FAR_AREAS, locatedTerminals, zoneOf, type FarZone, type LocatedTerminal } from "./far-areas";
+import { FAR_AREAS, locatedTerminals, ROUTE_BOARDING_LINK_M, zoneOf, type FarZone, type LocatedTerminal } from "./far-areas";
 import { buildPlanningNetwork, type PlanningNetwork } from "./graph";
 import { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
 import { rideNotes } from "./notes";
@@ -75,8 +75,6 @@ export const FAR_END_WALK_CAP_M = 1500;
 export const SPECIAL_TRIP_TERMINAL_WALK_M = 300;
 /** Access option (Increment F, T4): offered when the best zone jeepney's walk to its boarding point is over this, or there is none. */
 export const ACCESS_TRICYCLE_MIN_WALK_M = 600;
-/** A loading point boards a variant only when its path passes within this straight-line distance (far-areas data rule). */
-export const BOARDING_LINK_M = 100;
 const WALK_RADIUS_M = 1500;
 /** Approach-run search step (samples of 25 m) when the projection's walk is over the cap. */
 const RUN_STRIDE = 4;
@@ -499,8 +497,9 @@ type LoadingPoint = LatLng & { name: string; v: number; board: Approach };
 
 /**
  * The zone's loading points (far-areas `routeBoarding`): a published terminal with a coordinate and pathLinkOk, on
- * each variant of the route whose path passes within BOARDING_LINK_M (a direction that misses, like T10's outbound
- * at 101.97 m, is skipped); or the start of the route's `pathStart` variant. Points inside a far zone are dropped.
+ * each non-inbound (Centro-to-far) variant of the route whose path passes within ROUTE_BOARDING_LINK_M (else that
+ * variant is skipped); or the start of the route's `pathStart` variant. Points inside a far zone are dropped. A
+ * projection that leaves less than the minimum ride before the destination approach yields no ride (rideMeters).
  */
 function loadingPoints(net: PlanningNetwork, snapshot: PlannerSnapshot, zone: FarZone): LoadingPoint[] {
   const located = locatedTerminals(snapshot.terminals);
@@ -510,10 +509,11 @@ function loadingPoints(net: PlanningNetwork, snapshot: PlannerSnapshot, zone: Fa
     net.variants.forEach((v, i) => {
       if (v.routeCode !== b.routeCode) return;
       if ("terminalCode" in b.boarding) {
+        if (v.direction === "inbound") return;
         const t = b.pathLinkOk ? located.get(b.boarding.terminalCode) : undefined;
         if (!t) return;
         const pr = projectOnLine(v.points, t);
-        if (pr.distM <= BOARDING_LINK_M) out.push({ lat: t.lat, lng: t.lng, name: t.name, v: i, board: { measureM: round1(pr.measureM), point: pr.point, distM: pr.distM } });
+        if (pr.distM <= ROUTE_BOARDING_LINK_M) out.push({ lat: t.lat, lng: t.lng, name: t.name, v: i, board: { measureM: round1(pr.measureM), point: pr.point, distM: pr.distM } });
       } else if (v.direction === b.boarding.pathStart) {
         const p0 = v.points[0]!;
         out.push({ ...p0, name: `where ${b.routeCode} starts (route plan)`, v: i, board: { measureM: 0, point: p0, distM: 0 } });

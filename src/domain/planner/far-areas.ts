@@ -16,6 +16,13 @@ const terminalCode = z.string().regex(/^T[0-9]{2}$/);
 const zoneCode = z.string().regex(/^FZ[0-9]{2}$/);
 const osmNodeId = z.number().int().positive();
 
+/**
+ * A loading point boards a route only when the route path passes within this straight-line distance (controller
+ * ruling: the walk from the loading point to the path is shown to the rider as a normal short walk; T10 is 99.93 m
+ * from R6 inbound and 101.97 m from R6 outbound).
+ */
+export const ROUTE_BOARDING_LINK_M = 150;
+
 const FarAreasSchema = z.strictObject({
   header: z.strictObject({
     schemaVersion: z.literal(1),
@@ -46,7 +53,7 @@ const FarAreasSchema = z.strictObject({
     z.strictObject({
       routeCode,
       boarding: z.union([z.strictObject({ terminalCode }), z.strictObject({ pathStart: z.literal("outbound") })]),
-      /** Measured by the data test: is the terminal within 100 m of the route path? The planner ignores a false link. */
+      /** Measured by the data test: is the terminal within ROUTE_BOARDING_LINK_M of the route path? The planner ignores a false link. */
       pathLinkOk: z.boolean().optional(),
       note: z.string().optional(),
     }),

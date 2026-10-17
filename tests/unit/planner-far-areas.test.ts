@@ -12,6 +12,7 @@ import {
   ACCESS_TRICYCLE_MIN_WALK_M, FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan,
 } from "@/domain/planner/plan";
 import { buildPlanResponse, planResponseSchema } from "@/domain/api/plan";
+import { routeStreet } from "@/domain/walk/walk-graph";
 import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
 import { realStreets } from "../fixtures/real-streets";
 
@@ -233,6 +234,26 @@ describe("far areas: the access option (tricycle to the jeepney loading point, T
     expect(recommended(p)).toHaveLength(1);
     if (p.options.some((o) => o.mode === "jeepney" && o !== a)) expect(a.labels).toEqual([]);
     else expect(a.labels).toEqual(["Recommended"]);
+  });
+
+  it("5 Pacol access boards R6 outbound at T10 when T10's tricycle street route is shorter than T11's; Panicuason boards R7 at T11", () => {
+    const o = { lat: 13.605, lng: 123.187 };
+    const len = (t: typeof T10) => {
+      const r = routeStreet(streets, o, { lat: t.lat!, lng: t.lng! }, { mode: "tricycle", now: TEN.now });
+      return r.kind === "path" ? r.lengthM : Infinity;
+    };
+    expect(len(T10)).toBeLessThan(len(T11));
+    const a = access(plan(o, PACOL))!;
+    assertAccess(a, ["R6"]);
+    const [tri, walk, ride] = a.legs;
+    if (tri?.kind !== "tricycle" || walk?.kind !== "walk" || ride?.kind !== "ride") throw new Error("legs");
+    expect(tri).toMatchObject({ basis: "street_graph", distanceMeters: Math.round(len(T10)) });
+    expect(tri.to.name).toBe(T10.name);
+    expect(lines.lines.find((l) => l.variantId === ride.variantId)!.direction).toBe("outbound");
+    expect(ride.boardMeasureM).toBe(0);
+    const b = access(plan(o, PANICUASON))!;
+    assertAccess(b, ["R7"]);
+    expect(b.legs[0]!.kind === "tricycle" && b.legs[0]!.to.name).toBe(T11.name);
   });
 
   it("5 a city point → Cararayan: the access option boards R1 where it starts (route plan); the only jeepney-family option is Recommended", () => {
