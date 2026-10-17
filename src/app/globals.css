@@ -148,6 +148,10 @@
 .pn-tabbar {
   view-transition-name: pn-tabbar;
 }
+/* Back on the map after planning, detail or guidance: the bar fades in (never on the first load). */
+.pn-tabbar[data-returning] {
+  animation: pn-fade-in var(--pn-dur) var(--pn-ease) both;
+}
 ::view-transition-group(pn-tabbar) {
   z-index: 1;
 }

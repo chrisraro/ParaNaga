@@ -113,6 +113,9 @@ export function AppFrame({ children }: { children: ReactNode }) {
 
   const tabBarVisible = panels.detail === 0 && tabBarHides === 0;
   const tabBarClearance = tabBarVisible ? measuredClearance : 0;
+  // Once the bar has stepped aside (planning, detail, guidance, a panel), it fades back in on the map.
+  const [barWasHidden, setBarWasHidden] = useState(false);
+  if (!tabBarVisible && !barWasHidden) setBarWasHidden(true);
   const value = useMemo(
     () => ({
       openPanel,
@@ -147,7 +150,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
       {/* usePathname in a layout: Suspense keeps the static shell valid for dynamic segments. */}
       {tabBarVisible ? (
         <Suspense fallback={null}>
-          <TabBar onClearance={setMeasuredClearance} />
+          <TabBar onClearance={setMeasuredClearance} returning={barWasHidden} />
         </Suspense>
       ) : null}
       {/* Offline banner and the "new version" card (Task 12): above every panel, never blocking. */}

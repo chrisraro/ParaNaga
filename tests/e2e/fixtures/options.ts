@@ -22,3 +22,18 @@ export async function chooseOption(page: Page, index = 0) {
   await page.getByTestId("trip-option").nth(index).click();
   await sheetSettled(page);
 }
+
+/**
+ * Steps out of a planned trip to the bare map, where the tab bar is (it belongs to the map alone):
+ * Escape closes an open detail, then clears the trip. A no-op on the map.
+ */
+export async function backToMap(page: Page) {
+  const tabBar = page.getByRole("navigation", { name: "Main" });
+  if (await tabBar.isVisible()) return;
+  if ((await page.getByTestId("trip-detail").count()) > 0) {
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("trip-detail")).toHaveCount(0);
+  }
+  await page.keyboard.press("Escape");
+  await expect(tabBar).toBeVisible();
+}

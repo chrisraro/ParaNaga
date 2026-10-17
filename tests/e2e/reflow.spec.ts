@@ -183,36 +183,44 @@ for (const [width, height] of [
   });
 }
 
-test("on a short screen the actions are in flow and the tab bar is compact; upright they are pinned", async ({ page, context }) => {
+test("on a short screen the actions are in flow; upright they are pinned", async ({ page, context }) => {
   await context.grantPermissions(["geolocation"]);
   await planTrip(page);
   await page.getByTestId("options-toggle").click();
   await page.getByTestId("trip-option").first().click();
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   const footer = page.locator(".pn-sheet-footer");
-  const tab = page.getByTestId("tab-bar");
   await expect(footer).toHaveCSS("position", "absolute");
-  const tall = (await tab.boundingBox())!.height;
+  // The tab bar belongs to the map alone: planning and detail have none.
+  await expect(page.getByTestId("tab-bar")).toHaveCount(0);
 
   await page.setViewportSize({ width: 667, height: 375 });
   await expect(footer).toHaveCSS("position", "static");
+});
+
+test("on a short screen the tab bar is compact: icons only, the names stay", async ({ page }) => {
+  await page.goto("/app");
+  await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
+  const tab = page.getByTestId("tab-bar");
+  const tall = (await tab.boundingBox())!.height;
+  await page.setViewportSize({ width: 667, height: 375 });
   await expect.poll(async () => (await tab.boundingBox())!.height).toBeLessThan(tall);
-  // Icons only, the names stay: every tab keeps its accessible label.
   for (const name of ["Map", "Explore", "Saved", "More"]) await expect(tab.getByRole("link", { name })).toHaveCount(1);
 });
 
-test("at 400 % zoom (320x180) the tab bar steps aside at half and full and returns at peek", async ({ page, context }) => {
-  await context.grantPermissions(["geolocation"]);
-  await planTrip(page);
+test("at 400 % zoom (320x180) the tab bar steps aside at half and full and returns at peek", async ({ page }) => {
+  // The bare map: planning and detail hide the bar whatever the height.
+  await page.goto("/app");
+  await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
   await page.setViewportSize({ width: 320, height: 180 });
   const tab = page.getByTestId("tab-bar");
-  await expect(sheet(page)).toHaveAttribute("data-snap", "0");
-  await expect(tab).toBeVisible();
-  await page.getByRole("button", { name: "Expand sheet to half" }).click();
+  await expect(sheet(page)).toHaveAttribute("data-snap", "1");
   await expect(tab).toHaveCount(0);
   await page.getByRole("button", { name: "Expand sheet to full" }).click();
   await expect(tab).toHaveCount(0);
   await page.getByRole("button", { name: "Collapse sheet" }).click();
   await expect(sheet(page)).toHaveAttribute("data-snap", "0");
   await expect(tab).toBeVisible();
+  await page.getByRole("button", { name: "Expand sheet to half" }).click();
+  await expect(tab).toHaveCount(0);
 });

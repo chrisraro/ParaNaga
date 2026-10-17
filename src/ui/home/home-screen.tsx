@@ -65,6 +65,8 @@ import {
 import { NearbyStops } from "./nearby-stops";
 import { homeGuidanceActions, useHomeGuidance } from "./use-home-guidance";
 import { useSavedTripReopen } from "./use-saved-trip-reopen";
+import { historyDepth, screenState, stepOut, tabBarHidden } from "./screen-state";
+import { useStepHistory } from "./use-step-history";
 import { useWalkGraph } from "@/client/network/use-walk-graph";
 import { rideEnds } from "@/domain/trip/ride-ends";
 import { enrichOptionWalks } from "@/domain/trip/enrich";
@@ -858,12 +860,50 @@ export function HomeScreen() {
     setAnnouncement(deferredAnnouncement);
   }
 
-  // The tab bar would cover the crosshair panel: hidden while a pin is being placed, and while
-  // guidance runs (the steps need the whole sheet).
+  // The screen the map is showing (screen-state.ts). The tab bar belongs to the map alone: it steps
+  // aside for placing a pin, planning, a trip's detail and guidance (Back or Clear trip brings it back).
   // About 300 px of height (400 % zoom, a phone on its side): the tab bar would leave no room for
   // the content at half and full, so it steps aside there; collapsing to peek brings it back.
+  const flags = { picking: picking !== null, ready, detail: tripDetailOpen, guiding };
+  const screen = screenState(flags);
   const tinySheet = sheet.height !== null && sheet.height < TINY_SHEET && sheet.snap > 0;
-  useHideTabBar(picking !== null || guiding || tinySheet);
+  useHideTabBar(tabBarHidden(screen) || tinySheet);
+
+  // One step out of the current screen: guidance (asks first), detail, directions. Escape and the
+  // browser Back button both come here; the on-screen Back / End / Clear trip buttons do the same.
+  const stepOutNow = () => {
+    switch (stepOut(screen)) {
+      case "cancel-pick":
+        handleCancelPick();
+        break;
+      case "end-guidance":
+        document.querySelector<HTMLButtonElement>('[data-testid="guidance-end"]')?.click();
+        break;
+      case "close-detail":
+        if (stored) handleCloseStored();
+        else handleCloseOption();
+        break;
+      case "clear-trip":
+        handleClearAll();
+        break;
+      default:
+        break;
+    }
+  };
+  useStepHistory(historyDepth(flags), !covered, stepOutNow);
+  const escapeOut = useEffectEvent(stepOutNow);
+  useEffect(() => {
+    if (covered || screen === "home" || screen === "picking") return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.repeat || e.defaultPrevented) return;
+      // Not while a dialog or sheet above the map owns the key, or the app is covered and inert.
+      if (homeRef.current?.closest("[inert]") || document.querySelector('[aria-modal="true"], dialog[open]')) return;
+      e.preventDefault();
+      escapeOut();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [covered, screen]);
   if (!picking && pickPrompt !== null) setPickPrompt(null);
 
   const guidanceActions = homeGuidanceActions({
