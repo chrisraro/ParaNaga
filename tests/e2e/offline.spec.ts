@@ -3,6 +3,7 @@ import { expect, test, type BrowserContext, type Page, type Route } from "@playw
 import { SNAPSHOT, STOP_A1, routeNetwork, type NetworkCalls } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { chooseOption, openSearch } from "./fixtures/options";
+import { showMapLayers } from "./fixtures/layers";
 
 // The PWA (Task 12) on the production build with the service worker ALLOWED: first visit online,
 // then context.setOffline(true) and cold loads. The API is answered by context routes (they also
@@ -117,6 +118,7 @@ test("cold start offline: /app renders with pins from the cached snapshot and th
   const snapshotsBefore = calls.snapshots.length;
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
+  await showMapLayers(page, "Stops");
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
   await expect(page.getByTestId("offline-banner")).toHaveText(`Offline — data from ${DATA_DATE}. Fares may have changed.`);
   // The snapshot came from the cache, not the network.

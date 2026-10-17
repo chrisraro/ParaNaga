@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { chooseOnMapVia } from "./fixtures/options";
+import { showMapLayers } from "./fixtures/layers";
 import { ALL_ROUTES, ROUTE_R8A, SNAPSHOT, STOP_A1, STOPS_ALL, routeNetwork } from "./fixtures/network";
 
 // Stop pins on the map, Stop detail and Route detail (Task 7). The network API is answered with
@@ -24,6 +25,7 @@ async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
   await expect(page.getByTestId("home-search")).toBeVisible();
+  await showMapLayers(page, "Stops"); // pins are off until asked for
 }
 
 /** Screen position of a lat/lng from the map's reported centre and zoom (Web Mercator). */

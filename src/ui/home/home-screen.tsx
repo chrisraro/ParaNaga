@@ -702,8 +702,6 @@ export function HomeScreen() {
   const prefs = usePrefs();
   const layers = prefs.layers;
   const snapshotState = useSnapshot(true);
-  const linesState = useLines(snapshotState.snapshot?.revision.revisionId ?? null, true);
-  const lines = linesState.lines;
   // Trip lines come from the lines of the PLAN's revision (a stored trip's own revision, the
   // guided trip's own revision), never the snapshot's: the legs' variant ids and measures belong to
   // that revision. They stay drawn while the trip is guided (the current leg emphasised).
@@ -731,6 +729,11 @@ export function HomeScreen() {
   );
   const tripLinesState = useLines(tripRevisionId, tripRevisionId !== null);
   const tripRevisionLines = tripLinesState.lines;
+  // Route lines and stop pins are off until asked for (Layers sheet). The overview lines are not
+  // even fetched then, unless a trip is open (its stand-in overview needs them).
+  const [showRoutes, setShowRoutes] = useState(false);
+  const [showStops, setShowStops] = useState(false);
+  const lines = useLines(snapshotState.snapshot?.revision.revisionId ?? null, showRoutes || tripRevisionId !== null).lines;
   const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : shownOption;
   const tripLines = useMemo(() => {
     if (guidedTrip && guidedOption) return buildTripLinesData(guidedOption, guidedTrip.variants, tripRevisionLines);
@@ -770,8 +773,8 @@ export function HomeScreen() {
   const overviewLines = useMemo(() => {
     if (!layerPolicy.overviewLines) return [];
     if (layerPolicy.overviewStandIn) return lines ? overviewLinesForTrip(lines.lines, rideVariantIds) : [];
-    return filterOverviewLines(lines, layers);
-  }, [layerPolicy.overviewLines, layerPolicy.overviewStandIn, lines, layers, rideVariantIds]);
+    return filterOverviewLines(lines, { ...layers, routes: showRoutes });
+  }, [layerPolicy.overviewLines, layerPolicy.overviewStandIn, lines, showRoutes, layers, rideVariantIds]);
   const legendNotice = layerPolicy.tripLinesMissing
     ? overviewLines.length > 0
       ? TRIP_LINES_OVERVIEW_NOTE
@@ -983,7 +986,7 @@ export function HomeScreen() {
           recenterSignal={recenterSignal}
           recenterTarget={recenterTarget}
           recenterTargetLabel={recenterLabel}
-          stopPins={atHome || picking !== null ? stopsInView.stops : NO_PINS}
+          stopPins={showStops && (atHome || picking !== null) ? stopsInView.stops : NO_PINS}
           stopPinsInteractive={atHome}
           onStopSelect={handleStopSelect}
           onBoundsChange={setViewBounds}
@@ -998,7 +1001,7 @@ export function HomeScreen() {
           onSelectRoute={showOverview ? setSelectedRouteCode : null}
           terminals={mapTerminals}
           onTerminalSelect={picking === null ? handleTerminalSelect : null}
-          legend={mapLegend}
+          legend={showRoutes || tripLines ? mapLegend : []}
           onOpenLayers={showOverview ? () => setLayersOpen(true) : undefined}
           layersButtonRef={layersBtnRef}
         />
@@ -1009,6 +1012,16 @@ export function HomeScreen() {
         onClose={closeLayers}
         layers={layers}
         onUpdateLayers={updateLayers}
+        routesOn={showRoutes}
+        onRoutesChange={(on) => {
+          setShowRoutes(on);
+          setAnnouncement(on ? "Routes shown on the map" : "Routes hidden");
+        }}
+        stopsOn={showStops}
+        onStopsChange={(on) => {
+          setShowStops(on);
+          setAnnouncement(on ? "Stops shown on the map" : "Stops hidden");
+        }}
         tracedLines={overviewLines}
         linesLoaded={lines !== null}
         terminals={snapshotState.snapshot?.terminals ?? null}

@@ -14,8 +14,10 @@ afterEach(() => {
   cleanup();
 });
 
-function Harness() {
+function Harness({ routesStart = true }: { routesStart?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [routesOn, setRoutesOn] = useState(routesStart);
+  const [stopsOn, setStopsOn] = useState(false);
   const [layers, setLayers] = useState<LayersPref>({ ...DEFAULT_LAYERS_PREF, modes: [] });
   return (
     <>
@@ -28,6 +30,10 @@ function Harness() {
         onClose={() => setOpen(false)}
         layers={layers}
         onUpdateLayers={(patch) => setLayers((prev) => ({ ...prev, ...patch }))}
+        routesOn={routesOn}
+        onRoutesChange={setRoutesOn}
+        stopsOn={stopsOn}
+        onStopsChange={setStopsOn}
         tracedLines={LINES.lines.slice(0, 2)}
         terminals={[]}
       />
@@ -48,7 +54,23 @@ describe("LayersSheet (T12-4, T12-6)", () => {
     openSheet();
     expect(screen.queryByText(/historical/i)).toBeNull();
     expect(screen.queryByTestId("layer-switch-historical")).toBeNull();
-    expect(screen.getAllByRole("switch").map((s) => s.getAttribute("data-testid"))).toEqual(["layer-switch-routes", "layer-switch-terminals"]);
+    expect(screen.getAllByRole("switch").map((s) => s.getAttribute("data-testid"))).toEqual(["layer-switch-routes", "layer-switch-stops", "layer-switch-terminals"]);
+  });
+
+  it("Routes and Stops are real switches with names; off lists no routes, on lists them", () => {
+    render(<Harness routesStart={false} />);
+    fireEvent.click(screen.getByRole("button", { name: "Layers" }));
+    const routes = screen.getByRole("switch", { name: "Routes" });
+    const stops = screen.getByRole("switch", { name: "Stops" });
+    expect(routes.getAttribute("aria-checked")).toBe("false");
+    expect(stops.getAttribute("aria-checked")).toBe("false");
+    expect(screen.queryByTestId("layers-routes-list")).toBeNull();
+    expect(screen.getByText("Routes are switched off.")).toBeTruthy();
+    fireEvent.click(routes);
+    fireEvent.click(stops);
+    expect(routes.getAttribute("aria-checked")).toBe("true");
+    expect(stops.getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByTestId("layers-routes-list")).toBeTruthy();
   });
 
   it("traps Tab inside the dialog in both directions", () => {
@@ -102,7 +124,7 @@ describe("SelectedRouteCard notes (T12-2)", () => {
 describe("LayersSheet without route lines (final-review fix)", () => {
   it("opens with no lines and says route lines are not loaded, instead of 'no match'", () => {
     render(
-      <LayersSheet open onClose={() => {}} layers={DEFAULT_LAYERS_PREF} onUpdateLayers={() => {}} tracedLines={[]} linesLoaded={false} terminals={[]} />,
+      <LayersSheet open onClose={() => {}} layers={DEFAULT_LAYERS_PREF} onUpdateLayers={() => {}} routesOn onRoutesChange={() => {}} stopsOn={false} onStopsChange={() => {}} tracedLines={[]} linesLoaded={false} terminals={[]} />,
     );
     expect(screen.getByTestId("layers-lines-not-loaded").textContent).toBe("Route lines aren't loaded on this device.");
     expect(LINES_NOT_LOADED).toBe("Route lines aren't loaded on this device.");
