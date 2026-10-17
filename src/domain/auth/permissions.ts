@@ -15,6 +15,7 @@ export type Role = (typeof ROLES)[number];
 export const ACTIONS = [
   "account.preferences.write",
   "account.saved.sync",
+  "media.upload",
   "correction.submit",
   "community.post",
   "complaint.submit",
@@ -32,7 +33,7 @@ export const ACTIONS = [
 
 export type Action = (typeof ACTIONS)[number];
 
-const SIGNED_IN: readonly Action[] = ["account.preferences.write", "account.saved.sync", "community.post", "complaint.submit"];
+const SIGNED_IN: readonly Action[] = ["account.preferences.write", "account.saved.sync", "media.upload", "community.post", "complaint.submit"];
 
 const GRANTS: Record<Role, readonly Action[]> = {
   commuter: SIGNED_IN,
