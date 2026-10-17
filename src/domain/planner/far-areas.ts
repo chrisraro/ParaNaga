@@ -45,6 +45,8 @@ const FarAreasSchema = z.strictObject({
       name: z.string().min(1),
       nodeIds: z.array(osmNodeId).min(1),
       routes: z.array(routeCode).min(1),
+      /** A point is in the zone only within this distance of its (nearest) anchor; default FAR_ZONE_RADIUS_M. */
+      radiusM: z.number().int().positive().optional(),
       evidence,
       sourceCodes: z.array(sourceCode).min(1),
     }),
@@ -96,10 +98,15 @@ export function parseFarAreas(raw: unknown): FarAreas {
   return FarAreasSchema.parse(raw);
 }
 
-/** The far zone code of the barangay anchor nearest to `point`, or null when that anchor is in no far zone. */
+/** Default far-zone radius around each far anchor (review I5): farther than this from its anchor, a point is not far. */
+export const FAR_ZONE_RADIUS_M = 1500;
+
+/** The far zone code of the barangay anchor nearest to `point`; null when that anchor is in no far zone or `point` is beyond the zone radius. */
 export function zoneOf(point: LatLng, data: FarAreas): string | null {
   const id = nearestAnchorId(point, data);
-  return id === null ? null : (data.farZones.find((z) => z.nodeIds.includes(id))?.code ?? null);
+  const zone = id === null ? undefined : data.farZones.find((z) => z.nodeIds.includes(id));
+  const anchor = data.barangayAnchors.find((a) => a.osmNodeId === id);
+  return zone && anchor && haversineMeters(point, anchor) <= (zone.radiusM ?? FAR_ZONE_RADIUS_M) ? zone.code : null;
 }
 
 /** The OSM node id of the barangay anchor nearest to `point`, or null with no anchors. */

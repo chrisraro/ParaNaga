@@ -7,7 +7,7 @@ import { haversineMeters } from "@/domain/geo/geometry";
 import { isInsideNaga } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
 import { RULE_EVIDENCE } from "@/domain/import/modes-seed";
-import { FAR_AREAS, FAR_EVIDENCE, zoneOf } from "@/domain/planner/far-areas";
+import { FAR_AREAS, FAR_EVIDENCE, FAR_ZONE_RADIUS_M, zoneOf } from "@/domain/planner/far-areas";
 import {
   ACCESS_TRICYCLE_MIN_WALK_M, accessTricycleOk, accessWanted, FAR_END_APPROACH_RADIUS_M, FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan,
 } from "@/domain/planner/plan";
@@ -429,5 +429,38 @@ describe("far areas: pinned owner branch and boundaries (review I4)", () => {
     expect(inside?.legs[0]?.kind === "tricycle" && inside.legs[0].notes).toContain("From Balatas Tricycle Terminal: local report, unconfirmed");
     const outside = tricycle(plan(at(238), CARARAYAN, snap, off));
     expect(outside).toBeUndefined();
+  });
+});
+
+describe("far zones have a radius around their anchors (review I5)", () => {
+  it.each([
+    ["Ateneo de Naga University Junior High School", { lat: 13.6464862, lng: 123.233849 }],
+    ["Metro Naga Sports Complex", { lat: 13.6470607, lng: 123.2367197 }],
+    ["Naga City Children's Home", { lat: 13.6467006, lng: 123.2359422 }],
+    ["Paseo de San Ignacio", { lat: 13.6449607, lng: 123.2358314 }],
+  ])("%s (about 2 km from the Cararayan anchor) is not far; Plaza Rizal → it gets the city tricycle and no far note", (_n, p) => {
+    expect(zoneOf(p, FAR_AREAS)).toBeNull();
+    const q = plan(PLAZA_RIZAL, p);
+    expect(q.farNote).toBeUndefined();
+    expect(tricycle(q)!.labels).toEqual(["Recommended"]);
+  });
+
+  it("Camella Heights (about 300 m from the Cararayan anchor) stays far (owner decides, Q2)", () => {
+    expect(zoneOf({ lat: 13.6263, lng: 123.2417 }, FAR_AREAS)).toBe("FZ01");
+  });
+
+  it("every far zone carries radiusM 1,500 (FAR_ZONE_RADIUS_M) in the data", () => {
+    expect(FAR_ZONE_RADIUS_M).toBe(1500);
+    for (const z of FAR_AREAS.farZones) expect(z.radiusM).toBe(FAR_ZONE_RADIUS_M);
+  });
+
+  it("zoneOf honours a zone's radiusM and defaults to FAR_ZONE_RADIUS_M", () => {
+    const anchor = { lat: 13.6595434, lng: 123.2511904 };
+    const base = { ...FAR_AREAS, farZones: FAR_AREAS.farZones.map((z) => ({ ...z, radiusM: undefined })) };
+    expect(zoneOf(near(anchor, 0, -1400), base)).toBe("FZ02");
+    expect(zoneOf(near(anchor, 0, -1600), base)).toBeNull();
+    const tight = { ...FAR_AREAS, farZones: FAR_AREAS.farZones.map((z) => ({ ...z, radiusM: 500 })) };
+    expect(zoneOf(near(anchor, 0, -450), tight)).toBe("FZ02");
+    expect(zoneOf(near(anchor, 0, -550), tight)).toBeNull();
   });
 });

@@ -207,6 +207,7 @@
       "routes": [
         "R1"
       ],
+      "radiusM": 1500,
       "evidence": "owner_report_unverified",
       "sourceCodes": [
         "U03"
@@ -222,6 +223,7 @@
         "R6",
         "R7"
       ],
+      "radiusM": 1500,
       "evidence": "owner_report_unverified",
       "sourceCodes": [
         "U03"
@@ -237,6 +239,7 @@
       "routes": [
         "R7"
       ],
+      "radiusM": 1500,
       "evidence": "owner_report_unverified",
       "sourceCodes": [
         "U03"
