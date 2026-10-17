@@ -353,7 +353,8 @@ export default function NagaMapLeaflet({
   const effectiveTheme = useEffectiveTheme(theme);
   const surface = explicitMapSurface ?? computeMapSurface(effectiveTheme, tileUrl !== null);
   const legendItems = useMemo(
-    () => legendVisualKeys(null, legend ?? collectRouteLegendItems(routeLines ?? [])),
+    // An explicitly empty legend (the bare home map) lists nothing, not even Walk.
+    () => (legend?.length === 0 ? [] : legendVisualKeys(null, legend ?? collectRouteLegendItems(routeLines ?? []))),
     [legend, routeLines],
   );
   const legendExtras = useMemo(() => [...(tripLines?.legendExtras ?? [])], [tripLines]);

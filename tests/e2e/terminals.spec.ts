@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { showMapLayers } from "./fixtures/layers";
 import { SNAPSHOT, STOP_A1, routeNetwork } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 
@@ -72,6 +73,7 @@ test("the terminals layer draws every terminal with a coordinate, named, and the
   const t01 = homeMap(page).getByRole("button", { name: "Bicol Central Station, Bus and UV Express terminal, community-mapped location" });
   await expect(t01.locator(".pn-terminal-marker__tile svg")).toHaveCount(2);
 
+  await showMapLayers(page, "Routes");
   await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
   await page.getByRole("button", { name: "Layers" }).click();
   const sheet = page.getByTestId("layers-sheet");
@@ -115,6 +117,7 @@ async function screenPoint(page: Page, lat: number, lng: number) {
 test("with the Terminals layer on, a stop pin under a terminal marker wins the tap (A1 under Plaza Rizal's platform)", async ({ page }) => {
   await openApp(page);
   await expect.poll(() => drawnCodes(page)).toEqual(MAPPED_CODES);
+  await showMapLayers(page, "Stops");
   await expect.poll(() => homeMap(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
   const a1 = await screenPoint(page, STOP_A1.stop.lat, STOP_A1.stop.lng);
   // A terminal marker really is on top at A1's position.
@@ -178,6 +181,7 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
     if (mode === "high contrast") await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
     await expect.poll(() => drawnCodes(page)).toEqual(MAPPED_CODES);
     await expectAxeClean(page, ['[data-testid="home-screen"] [data-testid="naga-map"]']);
+    await showMapLayers(page, "Routes");
     await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
     await page.getByRole("button", { name: "Layers" }).click();
     await expect(page.getByTestId("layers-sheet")).toBeVisible();

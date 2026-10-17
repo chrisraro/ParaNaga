@@ -111,8 +111,8 @@ test.describe("phone", () => {
         await page.getByRole("button", { name: "Layers" }).click();
         const sheet = page.getByTestId("layers-sheet");
         const routes = sheet.getByRole("switch", { name: "Routes" });
-        await expect(routes).toHaveAttribute("aria-checked", "true");
-        await expectSwitchGeometry(routes, 22);
+        await expect(routes).toHaveAttribute("aria-checked", "false"); // off until asked for
+        await expectSwitchGeometry(routes, 2);
         await axeClean(page, '[data-testid="layers-sheet"]');
       });
 
