@@ -126,13 +126,13 @@ test.describe("(b) a trip under 500 m", () => {
   });
 });
 
-test("(c) a trip of 500 m or more: the tricycle is Recommended after the jeepneys, with the minimum fare and no minutes", async ({ page }) => {
+test("(c) a trip of 500 m or more: the jeepney is Recommended, the tricycle follows with the minimum fare and no minutes", async ({ page }) => {
   await planWith(page, TRICYCLE_RECOMMENDED_PLAN);
   expect(await modes(page)).toEqual(["jeepney", "tricycle"]);
   await expectOneRecommended(page);
   const tricycle = options(page).nth(1);
-  await expect(tricycle).toHaveClass(/pn-trip-card--primary/);
-  await expect(tricycle.locator(".pn-trip-card__label")).toHaveText("Recommended");
+  await expect(options(page).first()).toHaveClass(/pn-trip-card--primary/);
+  await expect(tricycle).not.toContainText("Recommended");
   await expect(tricycle.getByTestId("fare-chip")).toHaveText("Minimum fare ₱15");
   await expect(tricycle.getByTestId("trip-option-time")).toHaveText("Time not estimated");
   await expect(tricycle).not.toContainText(/\d\s*min\b/i);
@@ -155,10 +155,10 @@ test("(c) a trip of 500 m or more: the tricycle is Recommended after the jeepney
   await expectAxeBothSchemes(page);
 });
 
-test("(c2) the peek's best option is the Recommended one, the tricycle", async ({ page }) => {
+test("(c2) the peek's best option is the Recommended one, the jeepney", async ({ page }) => {
   await planWith(page, TRICYCLE_RECOMMENDED_PLAN, MIDDAY, false);
-  await expect(page.getByTestId("options-best")).toContainText("Tricycle");
-  await expect(page.getByTestId("options-best")).not.toContainText("R2");
+  await expect(page.getByTestId("options-best")).toContainText("R2");
+  await expect(page.getByTestId("options-best")).not.toContainText("Tricycle");
 });
 
 test.describe("(d) no jeepney available", () => {
