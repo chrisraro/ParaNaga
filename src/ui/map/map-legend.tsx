@@ -217,7 +217,7 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
   return (
     <div
       ref={containerRef}
-      className="pn-map-legend"
+      className="pn-map-legend" data-sheet-follower=""
       data-testid="map-legend"
       data-surface={surface}
       onMouseDown={(e) => e.stopPropagation()}

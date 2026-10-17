@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HALF_VISIBLE, MAP_MIN_SHARE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, mapInsetFor, offsetFor, sheetGrows } from "@/ui/home/endpoint-sheet";
+import { HALF_VISIBLE, MAP_MIN_SHARE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, mapInsetFor, offsetFor, sheetGrows } from "@/ui/app-shell/bottom-sheet";
 
 describe("offsetFor with a taller peek (options listed)", () => {
   it("defaults to the 214 px peek and keeps half and full", () => {

@@ -302,7 +302,7 @@ export function SelectedRouteCard({
 }) {
   return (
     <aside
-      className="pn-route-overview-card"
+      className="pn-route-overview-card" data-sheet-follower=""
       aria-label={`Selected route: ${route.routeName}`}
       data-testid="selected-route-card"
     >

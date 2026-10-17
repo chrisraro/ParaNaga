@@ -2,206 +2,15 @@
 
 // The home screen's bottom sheet ("Trip planner"): Start and Destination rows, the options for
 // the focused row ("Save this place" too once that end is set), and whatever cards the screen
-// passes in. Snaps follow the map design brief
-// §1 (visible 214 / 444 / full); drag with the grabber, or tap / arrow-key it.
+// passes in. The sheet engine (detents, drag, hand-off) is app-shell/bottom-sheet.tsx.
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { savePlacePrefill } from "@/domain/saved/saved";
 import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
+import { SheetGrabber, TINY_SHEET, sheetGrows, useScrollHandoff, type SheetControl } from "@/ui/app-shell/bottom-sheet";
 import { SheetFooterContext } from "@/ui/app-shell/sheet-bar";
 import { SavePlaceButton } from "@/ui/saved/save-place-button";
-
-export type Snap = 0 | 1 | 2;
-
-export const PEEK_VISIBLE = 214;
-/** Peek while trip options are listed: rows + best-option summary + "All options" (two 44 px rows). */
-export const PEEK_OPTIONS_VISIBLE = 276;
-/** One staleness line (offline plan, changed since saved) under the best option at the peek snap. */
-export const PEEK_NOTE_VISIBLE = 24;
-export const HALF_VISIBLE = 444;
-/**
- * Short or zoomed screens (landscape, 400 % zoom): peek and half never take more than this share
- * of the sheet's height, so a strip of map always stays above the sheet (full still covers it).
- */
-export const MAP_MIN_SHARE = 0.25;
-/**
- * The map's control stack (layers, locate, zoom) ends 221 px from the screen top (naga-map.css);
- * half leaves 8 px more, so on a short phone the sheet never covers a control (WCAG 2.5.8 target
- * size). The sheet starts 26 px down (--pn-sheet-top), so this is 229 - 26 in sheet height.
- */
-export const MAP_CONTROLS_CLEAR = 203;
-/**
- * Below this sheet height (a viewport of about 300 px: 400 % zoom, a small phone on its side) the
- * peek is the grabber alone over the tab bar (the content is inert there), and the tab bar steps
- * aside at half and full so the content keeps its room.
- */
-export const TINY_SHEET = 280;
-/** The grabber's own height: all the tiny peek shows above the tab bar. */
-const GRABBER_VISIBLE = 44;
-const DRAG_SLOP = 6;
-/** How far ahead (ms) a release's velocity carries the sheet before picking the nearest snap. */
-const FLING_MS = 200;
-
-const GRABBER_LABEL: Record<Snap, string> = {
-  0: "Expand sheet to half",
-  1: "Expand sheet to full",
-  2: "Collapse sheet",
-};
-
-/**
- * `clearance`: what the tab bar covers at the bottom of the screen. The peek snap rises by it so
- * the start and destination rows stay above the tab bar; half and full keep their height (their
- * content scrolls, with room at the end for the tab bar), so the map keeps its view.
- */
-export function offsetFor(snap: Snap, height: number, clearance = 0, peek = PEEK_VISIBLE): number {
-  if (snap === 2) return 0;
-  if (snap === 0 && height < TINY_SHEET) return Math.max(0, height - GRABBER_VISIBLE - clearance);
-  // Below ~417 px the controls cannot be cleared without a sheet shorter than its peek: those keep half.
-  // Never below the peek (options peek + tab bar can exceed the cap on 440-600 px screens).
-  const half = height - MAP_CONTROLS_CLEAR >= PEEK_VISIBLE ? Math.max(Math.min(HALF_VISIBLE, height - MAP_CONTROLS_CLEAR), peek + clearance) : HALF_VISIBLE;
-  const visible = Math.min(snap === 0 ? peek + clearance : half, height * (1 - MAP_MIN_SHARE));
-  return Math.max(0, Math.round(height - visible));
-}
-
-/**
- * How far above the screen bottom the map ends: just under the plain peek sheet's top (minus its
- * 28 px corner), so the map centre is never behind the sheet. Shrinks with the clamped peek.
- */
-export function mapInsetFor(height: number | null): number {
-  const peek = height === null ? PEEK_VISIBLE : Math.min(PEEK_VISIBLE, height * (1 - MAP_MIN_SHARE));
-  return Math.max(0, Math.round(peek - 28));
-}
-
-/** The sheet is getting taller on screen (its offset shrinks): its bottom padding must follow at once. */
-export function sheetGrows(prev: number | null, next: number | null): boolean {
-  return prev !== null && next !== null && next < prev;
-}
-
-export type SheetControl = {
-  snap: Snap;
-  setSnap: (snap: Snap) => void;
-  /** Measured sheet height in px, or null before the first measure. */
-  height: number | null;
-  /** Live translateY while the grabber is dragged. */
-  setDrag: (offset: number | null) => void;
-  /** Current translateY in px, or null before the sheet is measured. */
-  offset: number | null;
-  /** Height of the sheet showing above the bottom edge, in px. */
-  visible: number;
-  dragging: boolean;
-  attach: (el: HTMLElement | null) => (() => void) | undefined;
-  /** Height the tab bar covers at the bottom of the sheet, in px (0 without a tab bar). */
-  clearance: number;
-  /** Visible height at the peek snap, in px (taller while trip options are listed). */
-  peek: number;
-};
-
-export function useSheet(initial: Snap = 1, clearance = 0, peek = PEEK_VISIBLE): SheetControl {
-  const [snap, setSnap] = useState<Snap>(initial);
-  const [height, setHeight] = useState<number | null>(null);
-  const [drag, setDrag] = useState<number | null>(null);
-
-  const attach = useCallback((el: HTMLElement | null) => {
-    if (!el) return undefined;
-    setHeight(el.offsetHeight);
-    const observer = new ResizeObserver(() => setHeight(el.offsetHeight));
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  const offset = height === null ? null : (drag ?? offsetFor(snap, height, clearance, peek));
-  const visible = height === null || offset === null ? HALF_VISIBLE : height - offset;
-  return { snap, setSnap, height, setDrag, offset, visible, dragging: drag !== null, attach, clearance, peek };
-}
-
-type Gesture = { id: number; startY: number; base: number; lastY: number; lastT: number; v: number; moved: boolean };
-
-/**
- * Drag handle: pointer drag with a velocity-aware release, tap to cycle snaps, ArrowUp/Down
- * to step. touch-action: none (CSS) so the browser never scrolls instead.
- */
-function SheetGrabber({ sheet }: { sheet: SheetControl }) {
-  const { snap, setSnap, height, setDrag, clearance, peek } = sheet;
-  const gesture = useRef<Gesture | null>(null);
-  const suppressClick = useRef(false);
-
-  const clampOffset = (value: number, h: number) => Math.min(offsetFor(0, h, clearance, peek), Math.max(0, value));
-
-  const onPointerDown = (e: PointerEvent<HTMLButtonElement>) => {
-    suppressClick.current = false;
-    if (height === null || (e.pointerType === "mouse" && e.button !== 0)) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    gesture.current = {
-      id: e.pointerId,
-      startY: e.clientY,
-      base: offsetFor(snap, height, clearance, peek),
-      lastY: e.clientY,
-      lastT: e.timeStamp,
-      v: 0,
-      moved: false,
-    };
-  };
-  const onPointerMove = (e: PointerEvent<HTMLButtonElement>) => {
-    const g = gesture.current;
-    if (!g || g.id !== e.pointerId || height === null) return;
-    const dy = e.clientY - g.startY;
-    if (!g.moved && Math.abs(dy) < DRAG_SLOP) return;
-    g.moved = true;
-    const dt = e.timeStamp - g.lastT;
-    if (dt > 0) g.v = (e.clientY - g.lastY) / dt;
-    g.lastY = e.clientY;
-    g.lastT = e.timeStamp;
-    setDrag(clampOffset(g.base + dy, height));
-  };
-  const onPointerUp = (e: PointerEvent<HTMLButtonElement>) => {
-    const g = gesture.current;
-    gesture.current = null;
-    if (!g || !g.moved || height === null) return;
-    suppressClick.current = true;
-    const projected = clampOffset(g.base + (e.clientY - g.startY), height) + g.v * FLING_MS;
-    const snaps: Snap[] = [0, 1, 2];
-    const nearest = snaps.reduce((best, s) =>
-      Math.abs(offsetFor(s, height, clearance, peek) - projected) < Math.abs(offsetFor(best, height, clearance, peek) - projected) ? s : best,
-    );
-    setSnap(nearest);
-    setDrag(null);
-  };
-  const onPointerCancel = () => {
-    gesture.current = null;
-    setDrag(null);
-  };
-  const onClick = () => {
-    if (suppressClick.current) {
-      suppressClick.current = false;
-      return;
-    }
-    setSnap(((snap + 1) % 3) as Snap);
-  };
-  const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSnap(Math.min(2, snap + 1) as Snap);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSnap(Math.max(0, snap - 1) as Snap);
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      className="pn-grabber"
-      aria-label={GRABBER_LABEL[snap]}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-      onClick={onClick}
-      onKeyDown={onKeyDown}
-    />
-  );
-}
 
 const PLACEHOLDER: Record<EndpointWhich, string> = { start: "Choose start", destination: "Where to?" };
 const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Destination" };
@@ -337,7 +146,9 @@ export function EndpointSheet({
   after,
   summary,
 }: Props) {
-  const { attach, snap, offset, dragging } = sheet;
+  const { attach, snap, offset } = sheet;
+  const [list, setList] = useState<HTMLDivElement | null>(null);
+  useScrollHandoff(sheet, list);
   // Tiny peek: only the grabber shows; the rows and the footer lie under the tab bar.
   const tinyPeek = snap === 0 && sheet.height !== null && sheet.height < TINY_SHEET;
   // Growing: the padding that stands for the off-screen part shrinks with the lift, not 360 ms
@@ -381,12 +192,12 @@ export function EndpointSheet({
       data-testid="trip-sheet"
       data-snap={snap}
       data-grow={grow ? "" : undefined}
-      className={dragging ? "pn-sheet pn-sheet--dragging" : "pn-sheet"}
+      className="pn-sheet"
       style={style}
     >
       <SheetGrabber sheet={sheet} />
       <SheetFooterContext.Provider value={footer}>
-      <div className="pn-sheet__content" inert={tinyPeek}>
+      <div ref={setList} className="pn-sheet__content" inert={tinyPeek}>
         {detailOpen ? null : (
         <div className="pn-endpoints">
           <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onRowTap} onClear={onClear} />

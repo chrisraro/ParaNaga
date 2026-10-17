@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Map-first home mock</title>
+<!--
+  DESIGN MOCK, NOT THE PRODUCT. ParaNaga map-first home (plan: docs/plans/2026-10-18-home-map-first.md).
+  Self-contained: inline CSS, inline SVG, inline JS, no network. Values on screen (times, fares,
+  distances, stop names) are illustrative copies of the product's honest copy patterns, not data.
+  Interactions: tap the "Where to?" pill in HOME (shared-element morph into SEARCH, Back returns);
+  drag the results sheet by its handle or header in DIRECTIONS / TRIP DETAIL (pointer events,
+  rubber-banding, velocity snap, WAAPI settle); tap or Arrow keys on the handle step detents.
+  prefers-reduced-motion: morph and settle become instant swaps; state still changes.
+-->
+<style>
+:root {
+  --surface: #111a2e; --fill: #1a2540; --raised: #1d2a48; --label: #f2f5fa; --label2: #a9b3c7;
+  --sep: rgba(242,245,250,.1); --ring: rgba(242,245,250,.14); --shadow: rgba(0,0,0,.5);
+  --accent: #2bb5ae; --on-accent: #04201e; --accent-soft: rgba(43,181,174,.16); --accent-text: #5fd4cd;
+  --dest: #ff8a7a; --warn-bg: rgba(242,184,75,.14); --warn-text: #f2c877;
+  --banner: #0b2f3a; --banner-label: #e9fbfa; --banner-sub: #9fe3dd;
+  --map-land: #0d1525; --map-block: #121c30; --map-street: #1c2843; --map-major: #283a5f;
+  --map-river: #15344d; --map-park: #10261f; --map-route-faint: rgba(169,179,199,.28);
+  --map-label: #6f7d99; --page: #070c17; --page-label: #f2f5fa; --page-label2: #a9b3c7;
+  --dur-fast: 120ms; --dur: 220ms; --dur-slow: 360ms;
+  --ease: cubic-bezier(0.22,1,0.36,1); --ease-snap: cubic-bezier(0.32,0.72,0,1); --ease-exit: cubic-bezier(0.4,0,1,1);
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --surface: #ffffff; --fill: #eceff4; --raised: #ffffff; --label: #0f1e3d; --label2: #4a5468;
+  --sep: rgba(15,30,61,.08); --ring: rgba(15,30,61,.12); --shadow: rgba(15,30,61,.18);
+  --accent: #0b7a75; --on-accent: #ffffff; --accent-soft: rgba(11,122,117,.12); --accent-text: #075e5a;
+  --dest: #c73a2f; --warn-bg: #fff4dc; --warn-text: #5a3f00;
+  --banner: #0f1e3d; --banner-label: #ffffff; --banner-sub: #bfe9e6;
+  --map-land: #eef1f5; --map-block: #e4e8ef; --map-street: #ffffff; --map-major: #d5dbe5;
+  --map-river: #b7d5e6; --map-park: #d7eadb; --map-route-faint: rgba(15,30,61,.22);
+  --map-label: #6b7488; --page: #dfe4ec; --page-label: #0f1e3d; --page-label2: #4a5468;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--page); color: var(--page-label);
+  font: 15px/1.4 -apple-system, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--accent); color: var(--on-accent); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; color: inherit; }
+
+/* Page chrome (around the phones) */
+.doc { max-width: 1200px; margin: 0 auto; padding: 32px 16px 12px; display: flex; gap: 16px 32px; flex-wrap: wrap; align-items: end; justify-content: space-between; }
+.doc h1 { margin: 0 0 6px; font-size: 1.5rem; letter-spacing: -0.02em; }
+.doc p { margin: 0; color: var(--page-label2); max-width: 64ch; }
+.doc strong { color: var(--page-label); }
+.theme-btn { min-height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid var(--ring); background: var(--surface); color: var(--label); cursor: pointer; }
+.board { display: flex; gap: 28px; overflow-x: auto; padding: 20px 16px 40px; scroll-snap-type: x proximity; }
+.board::-webkit-scrollbar { height: 10px; }
+.board::-webkit-scrollbar-thumb { background: var(--ring); border-radius: 5px; }
+figure { margin: 0; flex: 0 0 auto; scroll-snap-align: start; }
+figcaption { width: 375px; padding: 14px 4px 0; }
+figcaption b { display: block; font-size: 1rem; }
+figcaption span { color: var(--page-label2); font-size: .875rem; }
+
+/* Phone */
+.phone {
+  position: relative; width: 375px; height: 812px; overflow: hidden; border-radius: 44px;
+  background: var(--map-land); color: var(--label);
+  box-shadow: 0 0 0 10px #000, 0 30px 60px -20px rgba(0,0,0,.6);
+  isolation: isolate; touch-action: manipulation;
+}
+.map { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.status { position: absolute; top: 0; left: 0; right: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-weight: 600; font-size: 15px; z-index: 8; pointer-events: none; }
+.status i { width: 26px; height: 12px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; opacity: .9; }
+.status i::after { content: ""; position: absolute; inset: 1.5px 6px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+.home-ind { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--label); opacity: .6; z-index: 9; pointer-events: none; }
+.ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* Elevation: one shadow, no border (craft floor) */
+.elev { background: var(--surface); box-shadow: 0 2px 6px -1px var(--shadow), 0 8px 24px -8px var(--shadow); }
+
+/* HOME: search pill + chips */
+.pill {
+  position: absolute; top: 52px; left: 12px; right: 12px; height: 52px; border-radius: 26px;
+  display: flex; align-items: center; gap: 12px; padding: 0 8px 0 18px; text-decoration: none; color: var(--label2);
+  border: 0; cursor: pointer; text-align: left; z-index: 3;
+}
+.pill .ph { flex: 1; font-size: 17px; }
+.pill .mark { width: 36px; height: 36px; border-radius: 18px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; font-weight: 700; font-size: 13px; letter-spacing: -0.01em; }
+.chips { position: absolute; top: 112px; left: 0; right: 0; display: flex; gap: 8px; padding: 0 12px; overflow-x: auto; scrollbar-width: none; z-index: 3; scroll-snap-type: x proximity; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; height: 36px; margin: 4px 0; padding: 0 14px; border-radius: 18px; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 550; color: var(--label); border: 0; cursor: pointer; scroll-snap-align: start; position: relative; white-space: nowrap;
+}
+.chip::before { content: ""; position: absolute; inset: -4px 0; } /* 44 px hit area */
+.chip .ico { width: 16px; height: 16px; color: var(--accent-text); }
+.chip--saved .ico { color: var(--accent-text); }
+
+/* FABs */
+.fab { position: absolute; width: 48px; height: 48px; border-radius: 24px; display: grid; place-items: center; border: 0; color: var(--label); cursor: pointer; z-index: 3; }
+.fab--layers { top: 164px; right: 12px; }
+.zoom { position: absolute; right: 12px; width: 48px; border-radius: 24px; display: flex; flex-direction: column; z-index: 3; }
+.zoom button { height: 48px; border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+.zoom hr { margin: 0 10px; border: 0; height: 1px; background: var(--sep); }
+.legend { position: absolute; left: 12px; height: 40px; padding: 0 14px; border-radius: 20px; border: 0; font-weight: 600; font-size: 14px; z-index: 3; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.legend::before { content: ""; position: absolute; inset: -2px 0; }
+.acc { position: absolute; left: 12px; height: 32px; padding: 0 12px; border-radius: 16px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; z-index: 3; }
+.acc b { width: 8px; height: 8px; border-radius: 4px; background: var(--accent); }
+
+/* Tab bar (incumbent glass pill, kept) */
+.tabbar { position: absolute; left: 16px; right: 16px; bottom: 24px; height: 64px; border-radius: 32px; display: flex; padding: 6px; z-index: 6; }
+.tab { flex: 1; border-radius: 26px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11px; font-weight: 600; color: var(--label2); text-decoration: none; }
+.tab .ico { width: 22px; height: 22px; }
+.tab[aria-current="page"] { background: var(--accent-soft); color: var(--accent-text); }
+
+/* SEARCH */
+.search { position: absolute; inset: 0; background: var(--surface); z-index: 7; display: flex; flex-direction: column; padding-top: 48px; }
+.search[hidden] { display: none; }
+.sfield { margin: 4px 12px 8px; height: 52px; border-radius: 26px; background: var(--fill); display: flex; align-items: center; gap: 4px; padding: 0 4px; }
+.sfield input { flex: 1; min-width: 0; height: 44px; border: 0; background: none; color: var(--label); font: inherit; font-size: 17px; outline: none; caret-color: var(--accent); }
+.sfield input::placeholder { color: var(--label2); }
+.round { width: 44px; height: 44px; border-radius: 22px; border: 0; background: none; display: grid; place-items: center; cursor: pointer; color: var(--label); flex: none; }
+.slist { flex: 1; overflow-y: auto; padding: 0 0 24px; overscroll-behavior: contain; }
+.sec { margin: 18px 20px 6px; font-size: 13px; font-weight: 650; color: var(--label2); }
+.row { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 8px 20px; text-decoration: none; color: var(--label); width: 100%; border: 0; background: none; text-align: left; cursor: pointer; }
+.row + .row { box-shadow: inset 60px 1px 0 -59px var(--sep); }
+.row .lead { width: 36px; height: 36px; border-radius: 18px; background: var(--fill); display: grid; place-items: center; color: var(--label2); flex: none; }
+.row .lead--accent { background: var(--accent-soft); color: var(--accent-text); }
+.row .t { flex: 1; min-width: 0; }
+.row .t b { display: block; font-weight: 550; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .t small { display: block; color: var(--label2); font-size: 13px; }
+.row .end { color: var(--label2); font-size: 13px; }
+.switch { width: 48px; height: 28px; border-radius: 14px; background: var(--fill); position: relative; flex: none; box-shadow: inset 0 0 0 1px var(--ring); }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 11px; background: var(--label2); }
+
+/* DIRECTIONS: top card */
+.ends { position: absolute; top: 48px; left: 8px; right: 8px; border-radius: 24px; padding: 6px 4px 6px 4px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; z-index: 4; }
+.ends .rows { display: flex; flex-direction: column; }
+.end-row { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 10px; border-radius: 14px; border: 0; background: none; text-align: left; color: var(--label); cursor: pointer; font-size: 16px; }
+.end-row + .end-row { box-shadow: inset 30px 1px 0 -29px var(--sep); border-radius: 0 0 14px 14px; }
+.dot { width: 12px; height: 12px; border-radius: 6px; border: 3px solid var(--accent); flex: none; margin: 0 4px; }
+.pin { color: var(--dest); flex: none; }
+.compact { position: absolute; top: 52px; left: 12px; right: 12px; height: 52px; border-radius: 26px; display: flex; align-items: center; gap: 6px; padding: 0 16px 0 4px; z-index: 4; font-weight: 600; }
+.compact span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Results sheet (non-modal: no scrim, map stays live above it) */
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; border-radius: 28px 28px 0 0; z-index: 5;
+  display: flex; flex-direction: column; will-change: auto;
+  box-shadow: 0 -2px 6px -1px var(--shadow), 0 -12px 32px -12px var(--shadow);
+}
+.sheet.is-dragging { will-change: transform; }
+.sheet-head { touch-action: none; cursor: grab; padding: 0 20px 8px; user-select: none; -webkit-user-select: none; }
+.sheet.is-dragging .sheet-head { cursor: grabbing; }
+.grab { display: block; width: 100%; height: 28px; margin: 0; border: 0; background: none; cursor: inherit; position: relative; }
+.grab::after { content: ""; position: absolute; left: 50%; top: 10px; width: 40px; height: 5px; margin-left: -20px; border-radius: 3px; background: var(--label2); opacity: .55; }
+.sheet h2 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
+.sheet .sub { margin: 2px 0 0; color: var(--label2); font-size: 13px; }
+.sheet-body { flex: 1; overflow-y: auto; padding: 4px 12px 32px; overscroll-behavior: contain; }
+.sheet[data-snap="0"] .sheet-body, .sheet[data-snap="1"] .sheet-body { overflow-y: hidden; }
+
+.opt { padding: 16px 8px 14px; }
+.opt + .opt { border-top: 1px solid var(--sep); }
+.opt--best { padding-top: 8px; }
+.opt-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.line-chip { height: 26px; padding: 0 9px; border-radius: 7px; background: #d9a520; color: #1d1400; font-weight: 750; font-size: 14px; display: inline-flex; align-items: center; letter-spacing: .01em; }
+.badge { height: 24px; padding: 0 9px; border-radius: 12px; background: var(--warn-bg); color: var(--warn-text); font-size: 12.5px; font-weight: 650; display: inline-flex; align-items: center; }
+.mode { display: inline-flex; align-items: center; gap: 6px; font-weight: 650; }
+.time { margin: 8px 0 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
+.time small { font-size: 15px; font-weight: 500; color: var(--label2); }
+.meta { margin: 2px 0 0; color: var(--label2); font-size: 14px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.legs { display: inline-flex; align-items: center; gap: 4px; }
+.legs .ico { width: 15px; height: 15px; }
+.acts { display: flex; gap: 8px; margin-top: 12px; }
+.btn { min-height: 44px; padding: 0 18px; border-radius: 22px; border: 0; font-weight: 650; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.btn--primary { background: var(--accent); color: var(--on-accent); }
+.btn--secondary { background: var(--fill); color: var(--label); box-shadow: inset 0 0 0 1px var(--ring); }
+.opt--best .btn--secondary { background: transparent; }
+.btn--grow { flex: 1; }
+.foot { margin: 16px 8px 0; color: var(--label2); font-size: 13px; }
+.textbtn { margin: 10px 0 0; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--accent-text); font-weight: 650; cursor: pointer; }
+
+/* TRIP DETAIL timeline */
+.tl { list-style: none; margin: 12px 0 0; padding: 0; }
+.tl li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding-bottom: 14px; position: relative; }
+.tl li::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--sep); }
+.tl li:last-child::before { display: none; }
+.tl .n { width: 28px; height: 28px; border-radius: 14px; background: var(--fill); display: grid; place-items: center; color: var(--label2); }
+.tl .n--ride { background: #d9a520; color: #1d1400; }
+.tl b { display: block; font-weight: 600; }
+.tl small { display: block; color: var(--label2); font-size: 13.5px; }
+.detail-actions { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 8px; padding: 10px 12px calc(14px + 18px); border-top: 1px solid var(--sep); background: var(--surface); }
+
+/* GUIDANCE */
+.banner { position: absolute; top: 48px; left: 8px; right: 8px; border-radius: 22px; background: var(--banner); color: var(--banner-label); z-index: 4; overflow: hidden; box-shadow: 0 8px 24px -8px rgba(0,0,0,.5); }
+.banner-main { display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 16px 16px 14px; align-items: center; }
+.banner-main .bi { width: 52px; height: 52px; border-radius: 16px; background: rgba(43,181,174,.22); display: grid; place-items: center; color: #5fd4cd; }
+.banner-main .bi .ico { width: 28px; height: 28px; }
+.banner h2 { margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: -0.02em; }
+.banner p { margin: 2px 0 0; color: var(--banner-sub); font-size: 14px; }
+.banner-then { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(0,0,0,.22); font-size: 14px; }
+.banner-then .line-chip { height: 22px; font-size: 12.5px; }
+.recenter { position: absolute; left: 12px; bottom: 214px; z-index: 4; }
+.gstrip { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 28px 28px 0 0; z-index: 5; padding: 14px 12px 34px; }
+.gstrip-row { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; }
+.gstrip-row .t b { display: block; font-size: 15px; }
+.gstrip-row .t small { display: block; color: var(--label2); font-size: 13px; }
+.gstrip .btn--primary { width: 100%; margin-top: 12px; min-height: 52px; font-size: 16px; border-radius: 26px; }
+.note-line { margin: 10px 2px 0; font-size: 13px; color: var(--label2); text-align: center; }
+
+/* View Transition morph (interactive HOME frame only; names set by script) */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+::view-transition-group(pnfield) { animation-duration: var(--dur-slow); animation-timing-function: var(--ease-snap); }
+::view-transition-new(pnsearch) { animation: vt-rise var(--dur) var(--ease) both; }
+::view-transition-old(pnsearch) { animation: vt-fade var(--dur-fast) var(--ease-exit) both; }
+::view-transition-old(pnchrome) { animation: vt-fade var(--dur-fast) var(--ease-exit) both; }
+::view-transition-new(pnchrome) { animation: vt-in var(--dur) var(--ease) both; }
+@keyframes vt-rise { from { opacity: 0; translate: 0 8px; } }
+@keyframes vt-in { from { opacity: 0; } }
+@keyframes vt-fade { to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+@media (forced-colors: active) {
+  .elev, .opt, .sheet, .banner, .gstrip { border: 1px solid CanvasText; }
+  .opt--best { outline: 2px solid Highlight; }
+  .grab::after { background: CanvasText; forced-color-adjust: none; }
+}
+.mocknote { max-width: 1200px; margin: 0 auto; padding: 0 16px 40px; color: var(--page-label2); font-size: .875rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<!-- Shared vector sources: the stylised Naga map (geometry, not a picture), the trip line, icons. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="naga" viewBox="0 0 375 812">
+      <rect width="375" height="812" style="fill:var(--map-land)"/>
+      <g style="fill:var(--map-block)">
+        <rect x="20" y="70" width="90" height="120" rx="6"/><rect x="128" y="60" width="110" height="96" rx="6"/>
+        <rect x="256" y="40" width="100" height="140" rx="6"/><rect x="24" y="214" width="96" height="150" rx="6"/>
+        <rect x="140" y="180" width="70" height="90" rx="6"/><rect x="272" y="206" width="90" height="70" rx="6"/>
+        <rect x="30" y="390" width="88" height="110" rx="6"/><rect x="176" y="500" width="80" height="60" rx="6"/>
+        <rect x="280" y="420" width="80" height="120" rx="6"/><rect x="20" y="640" width="120" height="140" rx="6"/>
+        <rect x="200" y="660" width="150" height="120" rx="6"/>
+      </g>
+      <path d="M138 432h44v44h-44z" style="fill:var(--map-park)"/>
+      <path d="M232 278c14-6 30-4 40 6l-6 30-34 4z" style="fill:var(--map-park)"/>
+      <path d="M-10 610C60 640 110 560 170 585S250 650 300 612 360 560 390 575" style="fill:none;stroke:var(--map-river);stroke-width:26;stroke-linecap:round"/>
+      <g style="fill:none;stroke:var(--map-street);stroke-width:6;stroke-linecap:round">
+        <path d="M0 200H375M0 380H375M0 520H375M0 760H375"/><path d="M124 0V812M262 0V812M60 0V812M330 0V812"/>
+        <path d="M0 110L375 160M0 300L375 250"/>
+      </g>
+      <g style="fill:none;stroke:var(--map-major);stroke-width:11;stroke-linecap:round">
+        <path d="M150 812C150 640 140 560 150 470S205 380 240 300 300 150 330 0"/>
+        <path d="M0 455C80 460 150 470 230 452S330 420 375 430"/>
+      </g>
+      <g style="fill:none;stroke:var(--map-route-faint);stroke-width:4;stroke-linecap:round;stroke-linejoin:round">
+        <path d="M0 448C80 452 150 462 230 446S330 414 375 424"/>
+        <path d="M70 812C80 700 100 560 145 470S200 300 210 0"/>
+        <path d="M375 330C300 340 260 360 230 420S190 600 210 812"/>
+      </g>
+      <g style="fill:var(--map-label);font:600 10px -apple-system,system-ui,sans-serif;letter-spacing:.12em">
+        <text x="30" y="250">BAGUMBAYAN SUR</text><text x="196" y="236">BAGUMBAYAN NORTE</text>
+        <text x="30" y="540">SANTA CRUZ</text><text x="250" y="720">TABUCO</text><text x="200" y="600" style="letter-spacing:.2em">NAGA RIVER</text>
+      </g>
+    </symbol>
+    <symbol id="trip" viewBox="0 0 375 812">
+      <path d="M150 470L162 452" style="fill:none;stroke:var(--label);stroke-width:4;stroke-dasharray:1 7;stroke-linecap:round"/>
+      <path d="M162 452C180 430 196 410 208 382S228 330 246 312" style="fill:none;stroke:#0b1220;stroke-width:9;stroke-linecap:round;opacity:.35"/>
+      <path d="M162 452C180 430 196 410 208 382S228 330 246 312" style="fill:none;stroke:#d9a520;stroke-width:6;stroke-linecap:round"/>
+      <path d="M246 312L254 296" style="fill:none;stroke:var(--label);stroke-width:4;stroke-dasharray:1 7;stroke-linecap:round"/>
+      <circle cx="162" cy="452" r="6" style="fill:var(--surface);stroke:#d9a520;stroke-width:3"/>
+      <circle cx="246" cy="312" r="6" style="fill:var(--surface);stroke:#d9a520;stroke-width:3"/>
+      <circle cx="150" cy="470" r="9" style="fill:var(--surface);stroke:var(--accent);stroke-width:4"/>
+      <path d="M254 300c0 0-13-12-13-22a13 13 0 0 1 26 0c0 10-13 22-13 22z" style="fill:var(--dest)"/>
+      <circle cx="254" cy="278" r="4.5" style="fill:var(--surface)"/>
+    </symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+    <symbol id="i-locate" viewBox="0 0 24 24"><path d="M21 3L3 10.5l7.5 2.9L13.4 21z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M8 4v16M8 4L4.5 7.5M8 4l3.5 3.5M16 20V4M16 20l-3.5-3.5M16 20l3.5-3.5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4.5L6 21z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4" r="2"/><path d="M10 21l2-6 3 3v3M8 12l2-4 4 1 2 4M12 15l-1-6"/></symbol>
+    <symbol id="i-jeep" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="11" rx="2"/><path d="M3 11h18M7 17v2M17 17v2"/></symbol>
+    <symbol id="i-trike" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8M10 9V6h4"/></symbol>
+    <symbol id="i-food" viewBox="0 0 24 24"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2 1-3 4-3 7h3"/></symbol>
+    <symbol id="i-school" viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/></symbol>
+    <symbol id="i-health" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-market" viewBox="0 0 24 24"><path d="M4 9l2-5h12l2 5M4 9h16v11H4zM9 20v-6h6v6"/></symbol>
+    <symbol id="i-gov" viewBox="0 0 24 24"><path d="M3 21h18M5 10v8M10 10v8M14 10v8M19 10v8M3 10l9-6 9 6z"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 21l1-3M16 21l-1-3"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></symbol>
+    <symbol id="i-explore" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-steps" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4M5 13v6h14v-6"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+  </defs>
+</svg>
+
+<header class="doc">
+  <div>
+    <h1>ParaNaga map-first home: design mock</h1>
+    <p><strong>A design mock, not the product.</strong> Six states at 375 x 812. Times, fares and stops are illustrative. Tap the "Where to?" pill in Home. Drag the results sheets by the handle or header, or use the handle with a tap or the arrow keys.</p>
+  </div>
+  <button type="button" class="theme-btn" id="themeBtn" aria-pressed="false">Light theme</button>
+</header>
+
+<main class="board" aria-label="Phone frames">
+
+  <!-- 1 HOME -->
+  <figure>
+    <div class="phone" id="homePhone" aria-label="Home state">
+      <svg class="map" aria-hidden="true"><use href="#naga"/></svg>
+      <div class="status"><span>9:41</span><i></i></div>
+      <div class="home-chrome" id="homeChrome">
+        <a class="pill elev" id="homePill" href="#search" role="button" aria-label="Search. Where to?">
+          <svg class="ico"><use href="#i-search"/></svg>
+          <span class="ph">Where to?</span>
+          <span class="mark" aria-hidden="true">PN</span>
+        </a>
+        <ul class="chips" aria-label="Browse places" style="list-style:none;margin:0">
+          <li><button class="chip elev chip--saved" type="button"><svg class="ico"><use href="#i-bookmark"/></svg>Home</button></li>
+          <li><button class="chip elev" type="button"><svg class="ico"><use href="#i-food"/></svg>Food &amp; drink</button></li>
+          <li><button class="chip elev" type="button"><svg class="ico"><use href="#i-school"/></svg>Schools</button></li>
+          <li><button class="chip elev" type="button"><svg class="ico"><use href="#i-health"/></svg>Health</button></li>
+          <li><button class="chip elev" type="button"><svg class="ico"><use href="#i-market"/></svg>Markets &amp; malls</button></li>
+          <li><button class="chip elev" type="button"><svg class="ico"><use href="#i-gov"/></svg>Government</button></li>
+          <li><button class="chip elev" type="button"><svg class="ico"><use href="#i-terminal"/></svg>Terminals</button></li>
+        </ul>
+        <button class="fab fab--layers elev" type="button" aria-label="Map layers"><svg class="ico"><use href="#i-layers"/></svg></button>
+        <div class="zoom elev" style="bottom:168px"><button type="button" aria-label="Zoom in"><svg class="ico"><use href="#i-plus"/></svg></button><hr><button type="button" aria-label="Zoom out"><svg class="ico"><use href="#i-minus"/></svg></button></div>
+        <button class="fab elev" type="button" aria-label="Show my location" style="right:12px;bottom:108px"><svg class="ico" style="color:var(--accent-text)"><use href="#i-locate"/></svg></button>
+        <button class="legend elev" type="button" style="bottom:108px">Legend</button>
+        <div class="acc elev" style="bottom:160px"><b></b>Location ± 12 m</div>
+      </div>
+      <nav class="tabbar elev" aria-label="Main" id="homeTabs">
+        <a class="tab" aria-current="page"><svg class="ico"><use href="#i-map"/></svg>Map</a>
+        <a class="tab"><svg class="ico"><use href="#i-explore"/></svg>Explore</a>
+        <a class="tab"><svg class="ico"><use href="#i-bookmark"/></svg>Saved</a>
+        <a class="tab"><svg class="ico" style="stroke-width:2.6"><use href="#i-more"/></svg>More</a>
+      </nav>
+      <div class="search" id="homeSearch" hidden></div>
+      <div class="home-ind"></div>
+    </div>
+    <figcaption><b>Home: no sheet</b><span>Full-bleed map. A floating "Where to?" pill, place chips, map controls on the right, Legend and location on the left, the tab bar. Tap the pill: it morphs into the search field (shared element, 360 ms), the chrome fades out in 120 ms.</span></figcaption>
+  </figure>
+
+  <!-- 2 SEARCH -->
+  <figure>
+    <div class="phone" aria-label="Search state">
+      <div class="search" id="staticSearch"></div>
+      <div class="status"><span>9:41</span><i></i></div>
+      <div class="home-ind"></div>
+    </div>
+    <figcaption><b>Search: full screen</b><span>The existing /app/search panel, opened from the pill. Choose on map, saved places, recents kept on this phone, stops near the map (the list alternative to the pins), and the regional switch. Back or Escape morphs the field back into the pill.</span></figcaption>
+  </figure>
+
+  <!-- 3 DIRECTIONS peek -->
+  <figure>
+    <div class="phone" aria-label="Directions state, results at peek">
+      <svg class="map" aria-hidden="true"><use href="#naga"/></svg>
+      <svg class="map" aria-hidden="true"><use href="#trip"/></svg>
+      <div class="status"><span>9:41</span><i></i></div>
+      <section class="ends elev" aria-label="Trip ends">
+        <button class="round" type="button" aria-label="Back to map"><svg class="ico"><use href="#i-back"/></svg></button>
+        <div class="rows">
+          <button class="end-row" type="button"><span class="dot"></span><span><span class="sr">Start: </span>Plaza Rizal</span></button>
+          <button class="end-row" type="button"><svg class="ico pin"><use href="#i-pin"/></svg><span><span class="sr">Destination: </span>Ateneo de Naga University</span></button>
+        </div>
+        <button class="round" type="button" aria-label="Swap start and destination"><svg class="ico"><use href="#i-swap"/></svg></button>
+      </section>
+      <button class="fab elev" type="button" aria-label="Show my location" style="right:12px;bottom:300px"><svg class="ico" style="color:var(--accent-text)"><use href="#i-locate"/></svg></button>
+      <section class="sheet elev" data-sheet data-top="168" data-start="0" aria-label="Trip options"></section>
+      <div class="home-ind"></div>
+    </div>
+    <figcaption><b>Directions: results at peek</b><span>A From/To card at the top, a non-modal results sheet (no scrim) with the best option and its actions. The map fits the route between the card and the sheet. Drag the header: peek, half or full.</span></figcaption>
+  </figure>
+
+  <!-- 4 DIRECTIONS full -->
+  <figure>
+    <div class="phone" aria-label="Directions state, results full">
+      <svg class="map" aria-hidden="true"><use href="#naga"/></svg>
+      <svg class="map" aria-hidden="true"><use href="#trip"/></svg>
+      <div class="status"><span>9:41</span><i></i></div>
+      <section class="ends elev" aria-label="Trip ends">
+        <button class="round" type="button" aria-label="Back to map"><svg class="ico"><use href="#i-back"/></svg></button>
+        <div class="rows">
+          <button class="end-row" type="button"><span class="dot"></span><span><span class="sr">Start: </span>Plaza Rizal</span></button>
+          <button class="end-row" type="button"><svg class="ico pin"><use href="#i-pin"/></svg><span><span class="sr">Destination: </span>Ateneo de Naga University</span></button>
+        </div>
+        <button class="round" type="button" aria-label="Swap start and destination"><svg class="ico"><use href="#i-swap"/></svg></button>
+      </section>
+      <section class="sheet elev" data-sheet data-top="168" data-start="2" aria-label="Trip options"></section>
+      <div class="home-ind"></div>
+    </div>
+    <figcaption><b>Directions: results full</b><span>The sheet stops under the From/To card, which stays usable. The map underneath is inert. The list scrolls inside the sheet. The note on estimates and "Clear trip" end the list.</span></figcaption>
+  </figure>
+
+  <!-- 5 TRIP DETAIL -->
+  <figure>
+    <div class="phone" aria-label="Trip detail state">
+      <svg class="map" aria-hidden="true"><use href="#naga"/></svg>
+      <svg class="map" aria-hidden="true"><use href="#trip"/></svg>
+      <div class="status"><span>9:41</span><i></i></div>
+      <div class="compact elev">
+        <button class="round" type="button" aria-label="Back to options"><svg class="ico"><use href="#i-back"/></svg></button>
+        <span>Jeep R8-C to Ateneo de Naga University</span>
+      </div>
+      <section class="sheet elev" data-sheet data-top="120" data-start="1" data-kind="detail" aria-label="Trip detail"></section>
+      <div class="home-ind"></div>
+    </div>
+    <figcaption><b>Trip detail: steps</b><span>Tapping an option or "Steps" opens the detail at half, with the route still drawn above it. The From/To card shrinks into a one-line bar with Back. Save, Share and Start trip are pinned to the sheet's footer at every detent.</span></figcaption>
+  </figure>
+
+  <!-- 6 GUIDANCE -->
+  <figure>
+    <div class="phone" aria-label="Guidance state">
+      <svg class="map" aria-hidden="true"><use href="#naga"/></svg>
+      <svg class="map" aria-hidden="true"><use href="#trip"/></svg>
+      <svg class="map" aria-hidden="true" viewBox="0 0 375 812"><circle cx="152" cy="466" r="16" fill="#2bb5ae" opacity=".22"/><circle cx="152" cy="466" r="7" fill="#2bb5ae" stroke="#fff" stroke-width="2.5"/></svg>
+      <div class="status" style="color:#fff"><span>9:41</span><i></i></div>
+      <section class="banner" aria-label="Current step">
+        <div class="banner-main">
+          <span class="bi"><svg class="ico"><use href="#i-walk"/></svg></span>
+          <div><h2>Walk to Plaza Rizal stop</h2><p>≈ 120 m · straight-line</p></div>
+        </div>
+        <div class="banner-then"><span>Then ride</span><span class="line-chip">R8-C</span><span>toward Ateneo</span></div>
+      </section>
+      <button class="btn btn--secondary elev recenter" type="button"><svg class="ico"><use href="#i-target"/></svg>Re-center</button>
+      <section class="gstrip elev" aria-label="Guidance">
+        <div class="gstrip-row">
+          <button class="round" type="button" aria-label="End guidance" style="background:var(--fill)"><svg class="ico"><use href="#i-x"/></svg></button>
+          <div class="t"><b>Step 1 of 3 · Walk</b><small>Est. 15–22 min + waiting (unknown)</small></div>
+          <button class="btn btn--secondary" type="button"><svg class="ico"><use href="#i-steps"/></svg>Steps</button>
+        </div>
+        <button class="btn btn--primary" type="button">I'm at the stop</button>
+        <p class="note-line">Keep this screen open.</p>
+      </section>
+      <div class="home-ind"></div>
+    </div>
+    <figcaption><b>Guidance: banner and strip</b><span>The step sits in a top banner with the "then" step under it. A bottom strip holds End, the step count, the estimate and Steps, with one large confirm button. Re-center shows only after a pan. There is no clock ETA and no live vehicle.</span></figcaption>
+  </figure>
+</main>
+
+<p class="mocknote">Illustrative values follow the product's copy rules: "Est." ranges, "+ waiting (unknown)", "Unverified route", a tricycle "₱15 minimum" with "Time not estimated", no arrival clock, no live positions, no e-jeep. Colours are the incumbent ParaNaga tokens: navy surfaces, teal accent, coral destination.</p>
+
+<template id="tplSearch">
+  <div class="sfield">
+    <button class="round" type="button" data-back aria-label="Back"><svg class="ico"><use href="#i-back"/></svg></button>
+    <input type="search" placeholder="Where to?" aria-label="Search place, stop or route" autocomplete="off">
+  </div>
+  <div class="slist">
+    <button class="row" type="button"><span class="lead lead--accent"><svg class="ico"><use href="#i-pin"/></svg></span><span class="t"><b>Choose on map</b></span></button>
+    <p class="sec">Saved</p>
+    <button class="row" type="button"><span class="lead lead--accent"><svg class="ico"><use href="#i-bookmark"/></svg></span><span class="t"><b>Home</b><small>Concepcion Pequeña</small></span></button>
+    <button class="row" type="button"><span class="lead lead--accent"><svg class="ico"><use href="#i-bookmark"/></svg></span><span class="t"><b>SM City Naga</b><small>Mall</small></span></button>
+    <p class="sec">Recent</p>
+    <button class="row" type="button"><span class="lead"><svg class="ico"><use href="#i-clock"/></svg></span><span class="t"><b>Ateneo de Naga University</b><small>School · Bagumbayan Sur</small></span></button>
+    <button class="row" type="button"><span class="lead"><svg class="ico"><use href="#i-clock"/></svg></span><span class="t"><b>Naga City Hall</b><small>Government</small></span></button>
+    <p class="sec">Stops near the map</p>
+    <button class="row" type="button"><span class="lead"><svg class="ico"><use href="#i-jeep"/></svg></span><span class="t"><b>Plaza Rizal stop</b><small>Mapped stop</small></span><span class="end">80 m</span></button>
+    <button class="row" type="button"><span class="lead"><svg class="ico"><use href="#i-jeep"/></svg></span><span class="t"><b>Peñafrancia Ave stop</b><small>Mapped stop</small></span><span class="end">240 m</span></button>
+    <div class="row" style="cursor:default"><span class="t"><b>Include regional connections</b><small>Terminals outside the city. Services not verified.</small></span><span class="switch" role="switch" aria-checked="false" aria-label="Include regional connections" tabindex="0"></span></div>
+  </div>
+</template>
+
+<template id="tplOptions">
+  <div class="sheet-head">
+    <button class="grab" type="button" data-grab></button>
+    <h2>3 ways to go</h2>
+    <p class="sub">Estimates only. Waiting time is not included.</p>
+  </div>
+  <div class="sheet-body">
+    <article class="opt opt--best" aria-label="Recommended: Jeep R8-C">
+      <div class="opt-top"><span class="line-chip">R8-C</span><span class="badge">Unverified route</span></div>
+      <p class="time">Est. 15–22 min <small>+ waiting (unknown)</small></p>
+      <p class="meta">Est. ₱14 · <span class="legs"><svg class="ico"><use href="#i-walk"/></svg>3 min, then jeep, then <svg class="ico"><use href="#i-walk"/></svg>1 min</span></p>
+      <div class="acts"><button class="btn btn--secondary btn--grow" type="button"><svg class="ico"><use href="#i-steps"/></svg>Steps</button><button class="btn btn--primary btn--grow" type="button">Start trip</button></div>
+    </article>
+    <article class="opt" aria-label="Tricycle">
+      <div class="opt-top"><span class="mode"><svg class="ico"><use href="#i-trike"/></svg>Tricycle</span></div>
+      <p class="time">Time not estimated</p>
+      <p class="meta">₱15 minimum · door to door</p>
+    </article>
+    <article class="opt" aria-label="Walk">
+      <div class="opt-top"><span class="mode"><svg class="ico"><use href="#i-walk"/></svg>Walk</span></div>
+      <p class="time">Est. 21–26 min</p>
+      <p class="meta">1.7 km · free</p>
+    </article>
+    <p class="foot">Times are ranges from the city's route data. Naga has no published jeepney schedules, so waiting is not included.</p>
+    <button class="textbtn" type="button">Clear trip</button>
+  </div>
+</template>
+
+<template id="tplDetail">
+  <div class="sheet-head">
+    <button class="grab" type="button" data-grab></button>
+    <div class="opt-top"><span class="line-chip">R8-C</span><span class="badge">Unverified route</span></div>
+    <p class="time" style="margin-top:8px">Est. 15–22 min <small>+ waiting (unknown)</small></p>
+    <p class="sub">Est. ₱14 · <a href="#" style="color:var(--accent-text);font-weight:650">How times are estimated</a></p>
+  </div>
+  <div class="sheet-body">
+    <ol class="tl">
+      <li><span class="n"><svg class="ico" style="width:16px;height:16px"><use href="#i-walk"/></svg></span><span><b>Walk to Plaza Rizal stop</b><small>About 300 m · Est. 3–4 min</small></span></li>
+      <li><span class="n n--ride"><svg class="ico" style="width:16px;height:16px"><use href="#i-jeep"/></svg></span><span><b>Ride R8-C toward Ateneo</b><small>Traditional jeepney · 6 stops · Est. 10–15 min</small><small>Get off at Ateneo Ave stop. Say "Para".</small></span></li>
+      <li><span class="n"><svg class="ico" style="width:16px;height:16px"><use href="#i-walk"/></svg></span><span><b>Walk to Ateneo de Naga University</b><small>About 90 m · Est. 1–2 min</small></span></li>
+    </ol>
+  </div>
+  <div class="detail-actions">
+    <button class="btn btn--secondary" type="button" aria-label="Save trip"><svg class="ico"><use href="#i-bookmark"/></svg></button>
+    <button class="btn btn--secondary" type="button" aria-label="Share trip"><svg class="ico"><use href="#i-share"/></svg></button>
+    <button class="btn btn--primary btn--grow" type="button">Start trip</button>
+  </div>
+</template>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  const EASE_SNAP = "cubic-bezier(0.32,0.72,0,1)";
+
+  // Theme toggle (dark default).
+  const themeBtn = document.getElementById("themeBtn");
+  themeBtn.addEventListener("click", () => {
+    const light = document.documentElement.dataset.theme !== "light";
+    document.documentElement.dataset.theme = light ? "light" : "dark";
+    themeBtn.textContent = light ? "Dark theme" : "Light theme";
+    themeBtn.setAttribute("aria-pressed", String(light));
+  });
+
+  // Fill templates.
+  const fill = (el, id) => el.appendChild(document.getElementById(id).content.cloneNode(true));
+  fill(document.getElementById("staticSearch"), "tplSearch");
+  const homeSearch = document.getElementById("homeSearch");
+  fill(homeSearch, "tplSearch");
+  document.querySelectorAll("[data-sheet]").forEach((s) => fill(s, s.dataset.kind === "detail" ? "tplDetail" : "tplOptions"));
+
+  // HOME -> SEARCH shared-element morph. Product: React <ViewTransition name="pn-search-field"> on
+  // the pill and on the search field across /app -> /app/search. Here: document.startViewTransition.
+  const pill = document.getElementById("homePill");
+  const chrome = document.getElementById("homeChrome");
+  const tabs = document.getElementById("homeTabs");
+  const field = homeSearch.querySelector(".sfield");
+  const input = homeSearch.querySelector("input");
+  function swap(toSearch) {
+    const after = () => (toSearch ? input : pill).focus({ preventScroll: true });
+    const apply = () => {
+      pill.style.viewTransitionName = toSearch ? "" : "pnfield";
+      field.style.viewTransitionName = toSearch ? "pnfield" : "";
+      homeSearch.hidden = !toSearch;
+      chrome.style.visibility = toSearch ? "hidden" : "";
+      tabs.style.visibility = toSearch ? "hidden" : "";
+    };
+    if (!document.startViewTransition || reduce.matches) { apply(); after(); return; }
+    (toSearch ? pill : field).style.viewTransitionName = "pnfield";
+    homeSearch.style.viewTransitionName = "pnsearch";
+    chrome.style.viewTransitionName = "pnchrome";
+    const vt = document.startViewTransition(apply);
+    vt.finished.finally(() => {
+      pill.style.viewTransitionName = field.style.viewTransitionName = "";
+      homeSearch.style.viewTransitionName = chrome.style.viewTransitionName = "";
+      after();
+    });
+  }
+  pill.addEventListener("click", (e) => { e.preventDefault(); swap(true); });
+  homeSearch.querySelector("[data-back]").addEventListener("click", () => swap(false));
+  homeSearch.addEventListener("keydown", (e) => { if (e.key === "Escape") swap(false); });
+
+  // Non-modal results sheet: pointer drag on the header, rubber band past the ends, velocity
+  // projection to the nearest detent, WAAPI settle. Transform only; no layout work per frame.
+  const LABEL = ["Expand sheet to half", "Expand sheet to full", "Collapse sheet"];
+  const RUBBER = 0.55, RUBBER_D = 120, FLING_MS = 200, SLOP = 6;
+  const rubber = (x) => (1 - 1 / ((x * RUBBER) / RUBBER_D + 1)) * RUBBER_D;
+
+  document.querySelectorAll("[data-sheet]").forEach((sheet) => {
+    const phone = sheet.closest(".phone");
+    const H = phone.clientHeight;
+    const top = Number(sheet.dataset.top);
+    const height = H - top;
+    sheet.style.height = height + "px";
+    const visible = [sheet.dataset.kind === "detail" ? 236 : 286, 430, height];
+    const yFor = (snap) => height - visible[snap];
+    const head = sheet.querySelector(".sheet-head");
+    const grab = sheet.querySelector("[data-grab]");
+    const body = sheet.querySelector(".sheet-body");
+    const mapLayers = phone.querySelectorAll(".map");
+    let snap = Number(sheet.dataset.start), y = yFor(snap), anim = null, g = null;
+
+    // The footer (Save, Share, Start trip) rides the visible bottom edge at every detent.
+    const footer = sheet.querySelector(".detail-actions");
+    if (footer) body.style.paddingBottom = footer.offsetHeight + 24 + "px";
+    const write = (v) => { y = v; sheet.style.transform = `translateY(${v}px)`; if (footer) footer.style.transform = `translateY(${-v}px)`; };
+    const commit = (s) => {
+      snap = s;
+      sheet.dataset.snap = String(s);
+      grab.setAttribute("aria-label", LABEL[s]);
+      mapLayers.forEach((m) => { m.style.opacity = s === 2 ? ".35" : ""; });
+      // Product: the map wrapper gets `inert` at full, and the camera re-fits once the sheet settles.
+    };
+    const settle = (s, v = 0) => {
+      const from = y, to = yFor(s);
+      commit(s);
+      if (anim) anim.cancel();
+      if (reduce.matches || from === to) { write(to); return; }
+      const dist = Math.abs(to - from);
+      const duration = Math.max(180, Math.min(360, dist * 0.9 - Math.abs(v) * 40));
+      anim = sheet.animate([{ transform: `translateY(${from}px)` }, { transform: `translateY(${to}px)` }], { duration, easing: EASE_SNAP });
+      if (footer) footer.animate([{ transform: `translateY(${-from}px)` }, { transform: `translateY(${-to}px)` }], { duration, easing: EASE_SNAP });
+      write(to);
+      anim.onfinish = () => { anim = null; };
+    };
+    const currentY = () => {
+      if (!anim) return y;
+      const m = new DOMMatrixReadOnly(getComputedStyle(sheet).transform);
+      anim.cancel(); anim = null;
+      if (footer) footer.getAnimations().forEach((a) => a.cancel());
+      return m.m42;
+    };
+    commit(snap); write(y);
+
+    head.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (e.target.closest("a")) return;
+      head.setPointerCapture(e.pointerId);
+      const base = currentY();
+      write(base);
+      g = { id: e.pointerId, startY: e.clientY, base, lastY: e.clientY, lastT: e.timeStamp, v: 0, moved: false };
+    });
+    head.addEventListener("pointermove", (e) => {
+      if (!g || g.id !== e.pointerId) return;
+      const dy = e.clientY - g.startY;
+      if (!g.moved && Math.abs(dy) < SLOP) return;
+      if (!g.moved) { g.moved = true; sheet.classList.add("is-dragging"); }
+      const dt = e.timeStamp - g.lastT;
+      if (dt > 0) g.v = 0.8 * ((e.clientY - g.lastY) / dt) + 0.2 * g.v;
+      g.lastY = e.clientY; g.lastT = e.timeStamp;
+      let raw = g.base + dy;
+      const max = yFor(0);
+      if (raw < 0) raw = -rubber(-raw);
+      else if (raw > max) raw = max + rubber(raw - max);
+      write(raw);
+    });
+    const end = (e) => {
+      if (!g || g.id !== e.pointerId) return;
+      const moved = g.moved, v = g.v;
+      g = null;
+      sheet.classList.remove("is-dragging");
+      if (!moved) return;
+      grab.dataset.suppress = "1";
+      const projected = y + v * FLING_MS;
+      const best = [0, 1, 2].reduce((a, s) => (Math.abs(yFor(s) - projected) < Math.abs(yFor(a) - projected) ? s : a), snap);
+      settle(best, v);
+    };
+    head.addEventListener("pointerup", end);
+    head.addEventListener("pointercancel", (e) => { if (g && g.id === e.pointerId) { g = null; sheet.classList.remove("is-dragging"); settle(snap); } });
+    grab.addEventListener("click", () => {
+      if (grab.dataset.suppress) { delete grab.dataset.suppress; return; }
+      settle((snap + 1) % 3);
+    });
+    grab.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") { e.preventDefault(); settle(Math.min(2, snap + 1)); }
+      else if (e.key === "ArrowDown") { e.preventDefault(); settle(Math.max(0, snap - 1)); }
+    });
+    // Scroll hand-off: at full, a downward drag on the list while it is at its top moves the sheet.
+    body.addEventListener("pointerdown", (e) => {
+      if (snap !== 2 || body.scrollTop > 0 || e.pointerType === "mouse") return;
+      const startY = e.clientY;
+      const move = (ev) => {
+        if (ev.clientY - startY > SLOP && body.scrollTop <= 0) {
+          body.removeEventListener("pointermove", move);
+          // Product: re-dispatch into the head gesture via setPointerCapture on the sheet.
+          settle(1);
+        }
+      };
+      body.addEventListener("pointermove", move);
+      body.addEventListener("pointerup", () => body.removeEventListener("pointermove", move), { once: true });
+    });
+  });
+})();
+</script>
+</body>
+</html>
