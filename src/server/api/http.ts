@@ -14,7 +14,7 @@ export const CACHE = {
 
 export class ApiProblem extends Error {
   constructor(
-    readonly status: 400 | 404 | 413 | 503,
+    readonly status: 400 | 404 | 413 | 429 | 503,
     readonly code: ApiErrorCode,
     message: string,
   ) {
@@ -27,6 +27,8 @@ export const badRequest = (message: string) => new ApiProblem(400, "bad_request"
 export const notFound = (message: string) => new ApiProblem(404, "not_found", message);
 export const unavailable = (message: string) => new ApiProblem(503, "unavailable", message);
 export const payloadTooLarge = (message: string) => new ApiProblem(413, "payload_too_large", message);
+export const tooManyRequests = (message: string = "Too many requests. Please wait a moment.") =>
+  new ApiProblem(429, "too_many_requests", message);
 
 function errorResponse(status: number, code: ApiErrorCode, message: string, requestId: string): Response {
   const body: ApiError = { error: { code, message, requestId } };

@@ -1,7 +1,8 @@
 import { buildPlanResponse, parsePlanRequest, planResponseSchema, PLAN_BODY_MAX_BYTES } from "@/domain/api/plan";
 import { isCompleteSnapshot } from "@/domain/api/schemas";
 import { planTrip } from "@/domain/planner/plan";
-import { badRequest, CACHE, notFound, publicPost, readJsonBody, unavailable } from "@/server/api/http";
+import { badRequest, CACHE, notFound, publicPost, readJsonBody, tooManyRequests, unavailable } from "@/server/api/http";
+import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
 import { NetworkIncomplete, planNetwork } from "@/server/repos/network-cache";
 import { getPublishedRevision, getSnapshot } from "@/server/repos/network-repo";
 
@@ -15,6 +16,12 @@ export function POST(request: Request) {
     if (!parsed.ok) throw badRequest(parsed.message);
 
     const { snapshot, network } = await withDb(async (db) => {
+      // Spec §7.8 follow-up: rate limit planning requests (30/min, 600/day)
+      const allowedMin = await checkRateLimit(db, request, RATE_LIMITS.planPerMinute);
+      if (!allowedMin) throw tooManyRequests("Plan rate limit exceeded (max 30 requests per minute).");
+      const allowedDay = await checkRateLimit(db, request, RATE_LIMITS.planPerDay);
+      if (!allowedDay) throw tooManyRequests("Daily plan rate limit exceeded (max 600 requests per day).");
+
       const revision = await getPublishedRevision(db);
       const snapshot = revision ? await getSnapshot(db, revision.revisionId) : null;
       if (!snapshot) return { snapshot: null, network: null };

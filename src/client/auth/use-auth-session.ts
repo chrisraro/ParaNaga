@@ -25,8 +25,27 @@ export function useAuthSession() {
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    let mounted = true;
+    void (async () => {
+      try {
+        const res = await fetch("/api/v1/me");
+        if (!mounted) return;
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+        const data = await res.json();
+        if (mounted) setUser(data.user ?? null);
+      } catch {
+        if (mounted) setUser(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const signOut = useCallback(async () => {
     try {
