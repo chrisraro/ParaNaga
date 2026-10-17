@@ -17,7 +17,7 @@
 import "./trip.css";
 
 import Link from "next/link";
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { ViewTransition, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLines } from "@/client/network/use-lines";
 import { WALK_GRAPH_DOWNLOAD_LABEL, useWalkGraphDownload } from "@/client/network/use-walk-graph";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
@@ -491,14 +491,16 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
 
   return (
     <section className="pn-trip pn-trip-detail" aria-labelledby="pn-trip-detail-title" data-testid="trip-detail">
-      <div className="pn-trip-detail__bar">
-        <button type="button" className="pn-trip-back" aria-label="Back to trip options" onClick={onBack}>
-          <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-            <path d="M10 2L2 10l8 8" />
-          </svg>
-        </button>
-        <Link href={SOURCES_HREF} className="pn-trip-detail__sources" aria-label="Sources and credits">Sources</Link>
-      </div>
+      <ViewTransition name="pn-trip-ends">
+        <div className="pn-trip-detail__bar">
+          <button type="button" className="pn-trip-back" aria-label="Back to trip options" onClick={onBack}>
+            <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+              <path d="M10 2L2 10l8 8" />
+            </svg>
+          </button>
+          <Link href={SOURCES_HREF} className="pn-trip-detail__sources" aria-label="Sources and credits">Sources</Link>
+        </div>
+      </ViewTransition>
       <div className="pn-trip-detail__header" data-testid="trip-detail-header">
         <h2 id="pn-trip-detail-title" ref={headingRef} tabIndex={-1} className="pn-trip-detail__title">
           {optionTitle(option)}

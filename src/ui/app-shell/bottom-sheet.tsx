@@ -278,3 +278,76 @@ export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null) 
     };
   }, [list, drag]);
 }
+
+/**
+ * Header drag surface: dragging anywhere on the sheet's header area (past the 6 px slop) captures
+ * the pointer and moves the sheet through `sheet.drag`, while a plain tap on a control inside the
+ * header never captures the pointer and lets its click fire normally.
+ */
+export function useHeaderDrag(sheet: SheetControl, header: HTMLElement | null, selector?: string) {
+  const { drag } = sheet;
+  const heightRef = useRef(sheet.height);
+  useLayoutEffect(() => {
+    heightRef.current = sheet.height;
+  });
+  useEffect(() => {
+    if (!header) return undefined;
+    let pointer: number | null = null;
+    let captured = false;
+    const onDown = (e: globalThis.PointerEvent) => {
+      if (pointer !== null || heightRef.current === null || (e.pointerType === "mouse" && e.button !== 0)) return;
+      if (selector && !(e.target instanceof Element && e.target.closest(selector))) return;
+      pointer = e.pointerId;
+      captured = false;
+      drag.start(e.clientY, e.timeStamp);
+    };
+    const onMove = (e: globalThis.PointerEvent) => {
+      if (pointer !== e.pointerId) return;
+      const moved = drag.move(e.clientY, e.timeStamp);
+      if (moved && !captured) {
+        captured = true;
+        try {
+          header.setPointerCapture(e.pointerId);
+        } catch {
+          // Synthetic events in tests may not register a pointerId.
+        }
+      }
+    };
+    const onUp = (e: globalThis.PointerEvent) => {
+      if (pointer !== e.pointerId) return;
+      pointer = null;
+      const wasDrag = drag.end(e.clientY, e.timeStamp);
+      captured = false;
+      if (wasDrag) {
+        header.addEventListener(
+          "click",
+          (ev) => {
+            ev.stopPropagation();
+            ev.preventDefault();
+          },
+          { capture: true, once: true },
+        );
+      }
+    };
+    const onCancel = (e: globalThis.PointerEvent) => {
+      if (pointer !== e.pointerId) return;
+      pointer = null;
+      captured = false;
+      drag.cancel();
+    };
+    header.addEventListener("pointerdown", onDown);
+    header.addEventListener("pointermove", onMove);
+    header.addEventListener("pointerup", onUp);
+    header.addEventListener("pointercancel", onCancel);
+    header.addEventListener("lostpointercapture", onCancel);
+    return () => {
+      if (captured) drag.cancel();
+      header.removeEventListener("pointerdown", onDown);
+      header.removeEventListener("pointermove", onMove);
+      header.removeEventListener("pointerup", onUp);
+      header.removeEventListener("pointercancel", onCancel);
+      header.removeEventListener("lostpointercapture", onCancel);
+    };
+  }, [header, drag, selector]);
+}
+

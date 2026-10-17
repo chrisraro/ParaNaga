@@ -224,6 +224,11 @@
 .pn-sheet[data-grow] {
   transition: transform var(--pn-dur-slow) var(--pn-ease-snap);
 }
+@starting-style {
+  .pn-sheet {
+    transform: translateY(100%);
+  }
+}
 /* Grabber: full-width 44px target (min touch size); the visible pill is 36x5. */
 .pn-grabber {
   flex: none;
@@ -246,6 +251,16 @@
   height: 5px;
   border-radius: 3px;
   background: var(--pn-grabber);
+}
+
+.pn-sheet__head {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .pn-sheet__rest {

@@ -404,3 +404,113 @@
 .pn-guide__save-text strong {
   font-size: 16px;
 }
+
+/* Top instruction banner and bottom strip (home redesign T6). */
+.pn-guide-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  animation: pn-guide-banner-in var(--pn-dur, 220ms) var(--pn-ease, ease-out) both;
+}
+@keyframes pn-guide-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pn-guide-banner__card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring), 0 8px 24px var(--pn-shadow);
+  color: var(--pn-label);
+}
+.pn-guide-banner__icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-guide-banner__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pn-guide-banner__title {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.pn-guide-banner__sub {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.35;
+}
+.pn-guide-banner__recenter {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring), 0 4px 12px var(--pn-shadow);
+  color: var(--pn-accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pn-guide-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 22px 22px 0 0;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring), 0 -4px 20px var(--pn-shadow);
+  color: var(--pn-label);
+}
+.pn-guide-strip__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pn-guide-strip__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pn-guide-strip__step {
+  font-size: 15px;
+  font-weight: 700;
+}
+.pn-guide-strip__time {
+  color: var(--pn-label2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.pn-guide-strip__steps {
+  min-height: 44px;
+  padding: 0 14px;
+}
+.pn-guide-strip__primary {
+  min-height: 52px;
+}
+

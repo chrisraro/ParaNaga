@@ -5,31 +5,16 @@
 // passes in. The sheet engine (detents, drag, hand-off) is app-shell/bottom-sheet.tsx.
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { ViewTransition, useEffect, useState, type ReactNode } from "react";
 import { savePlacePrefill } from "@/domain/saved/saved";
 import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
-import { SheetGrabber, TINY_SHEET, sheetGrows, useScrollHandoff, type SheetControl } from "@/ui/app-shell/bottom-sheet";
+import { SheetGrabber, TINY_SHEET, sheetGrows, useHeaderDrag, useScrollHandoff, type SheetControl } from "@/ui/app-shell/bottom-sheet";
 import { SheetFooterContext } from "@/ui/app-shell/sheet-bar";
 import { SavePlaceButton } from "@/ui/saved/save-place-button";
+import { TripEndsCard, endpointRowMainId } from "./trip-ends-card";
 
-const PLACEHOLDER: Record<EndpointWhich, string> = { start: "Choose start", destination: "Where to?" };
-const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Destination" };
+export { endpointRowMainId };
 
-function StartIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" focusable="false">
-      <circle cx="7" cy="7" r="5" fill="currentColor" />
-    </svg>
-  );
-}
-function DestinationIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M12 22s-7-6.6-7-12a7 7 0 0 1 14 0c0 5.4-7 12-7 12z" fill="currentColor" />
-      <circle cx="12" cy="10" r="2.6" fill="#FFFFFF" />
-    </svg>
-  );
-}
 function LocateIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -64,46 +49,6 @@ function SaveEnd({ endpoint }: { endpoint: Endpoint }) {
       source={endpoint.place ?? "pinned"}
       testId="endpoint-save-place"
     />
-  );
-}
-
-/** DOM id of an endpoint row's main button, so the screen can move focus to it. */
-export function endpointRowMainId(which: EndpointWhich): string {
-  return `pn-endpoint-${which}-main`;
-}
-
-type RowProps = {
-  which: EndpointWhich;
-  endpoint: Endpoint | null;
-  focused: boolean;
-  sub?: string | undefined;
-  onFocus: (which: EndpointWhich) => void;
-  onClear: (which: EndpointWhich) => void;
-};
-
-function EndpointRow({ which, endpoint, focused, sub, onFocus, onClear }: RowProps) {
-  return (
-    <div className={focused ? "pn-endpoint pn-endpoint--focused" : "pn-endpoint"} data-testid={`endpoint-${which}`}>
-      <button type="button" id={endpointRowMainId(which)} className="pn-endpoint__main" aria-pressed={focused} onClick={() => onFocus(which)}>
-        <span className={`pn-endpoint__icon pn-endpoint__icon--${which}`}>
-          {which === "start" ? <StartIcon /> : <DestinationIcon />}
-        </span>
-        <span className="pn-endpoint__text">
-          <span className="sr-only">{NAME[which]}: </span>
-          <span className={endpoint ? "pn-endpoint__value" : "pn-endpoint__value pn-endpoint__value--empty"}>
-            {endpoint ? endpoint.label : PLACEHOLDER[which]}
-          </span>
-          {sub ? <span className="pn-endpoint__sub">{sub}</span> : null}
-        </span>
-      </button>
-      {endpoint ? (
-        <button type="button" className="pn-icon-btn" aria-label={`Clear ${NAME[which].toLowerCase()}`} onClick={() => onClear(which)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-          </svg>
-        </button>
-      ) : null}
-    </div>
   );
 }
 
@@ -145,7 +90,9 @@ export function EndpointSheet({
 }: Props) {
   const { attach, snap, offset } = sheet;
   const [list, setList] = useState<HTMLDivElement | null>(null);
+  const [header, setHeader] = useState<HTMLDivElement | null>(null);
   useScrollHandoff(sheet, list);
+  useHeaderDrag(sheet, header ?? list, header ? undefined : '[data-testid="trip-detail-header"], [data-testid="guidance-header"]');
   // Tiny peek: only the grabber shows; the rows and the footer lie under the tab bar.
   const tinyPeek = snap === 0 && sheet.height !== null && sheet.height < TINY_SHEET;
   // Growing: the padding that stands for the off-screen part shrinks with the lift, not 360 ms
@@ -196,24 +143,21 @@ export function EndpointSheet({
       <SheetFooterContext.Provider value={footer}>
       <div ref={setList} className="pn-sheet__content" inert={tinyPeek}>
         {detailOpen ? null : (
-        <div className="pn-endpoints">
-          <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onRowTap} onClear={onClear} />
-          <div className="pn-endpoints__sep" />
-          <EndpointRow which="destination" endpoint={endpoints.destination} focused={focused === "destination"} sub={destinationSub} onFocus={onRowTap} onClear={onClear} />
-          <button
-            type="button"
-            className="pn-icon-btn pn-swap"
-            aria-label="Swap start and destination"
-            disabled={!endpoints.start && !endpoints.destination}
-            onClick={onSwap}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M8 4v16M8 4L4.5 7.5M8 4l3.5 3.5M16 20V4M16 20l-3.5-3.5M16 20l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
+          <div ref={setHeader} className="pn-sheet__head" data-testid="sheet-header">
+            <ViewTransition name="pn-trip-ends">
+              <TripEndsCard
+                endpoints={endpoints}
+                focused={focused}
+                startSub={startSub}
+                destinationSub={destinationSub}
+                onFocus={onRowTap}
+                onClear={onClear}
+                onSwap={onSwap}
+              />
+            </ViewTransition>
+            {summary}
+          </div>
         )}
-        {detailOpen ? null : summary}
 
         {/* Everything below the always-visible rows. At the peek snap it sits under the screen edge
             (and the tab bar), so it is inert (not focusable); at half, focusing something that is

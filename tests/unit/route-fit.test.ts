@@ -26,6 +26,15 @@ describe("routeFitPadding", () => {
     expect(Number.isFinite(p.bottom)).toBe(true);
     expect(700 - p.top - p.bottom).toBeGreaterThanOrEqual(ROUTE_FIT_MIN_VISIBLE);
   });
+  it("accepts a larger topInset (e.g. under a top card) and still preserves the minimum visible strip", () => {
+    const p = routeFitPadding(200, 700, 180);
+    expect(p.top).toBe(180);
+    expect(p.bottom).toBe(200 + ROUTE_FIT_SHEET_GAP);
+    const cramped = routeFitPadding(500, 700, 220);
+    expect(cramped.top).toBe(220);
+    expect(700 - cramped.top - cramped.bottom).toBeGreaterThanOrEqual(ROUTE_FIT_MIN_VISIBLE);
+    expect(routeFitPadding(100, 700, 40).top).toBe(ROUTE_FIT_PAD_TOP);
+  });
 });
 
 describe("routeFitPoints", () => {
