@@ -26,6 +26,12 @@ export const HALF_VISIBLE = 444;
  */
 export const MAP_MIN_SHARE = 0.25;
 /**
+ * The map's control stack (layers, locate, zoom) ends 221 px from the screen top (naga-map.css);
+ * half leaves 8 px more, so on a short phone the sheet never covers a control (WCAG 2.5.8 target
+ * size). The sheet starts 26 px down (--pn-sheet-top), so this is 229 - 26 in sheet height.
+ */
+export const MAP_CONTROLS_CLEAR = 203;
+/**
  * Below this sheet height (a viewport of about 300 px: 400 % zoom, a small phone on its side) the
  * peek is the grabber alone over the tab bar (the content is inert there), and the tab bar steps
  * aside at half and full so the content keeps its room.
@@ -51,7 +57,10 @@ const GRABBER_LABEL: Record<Snap, string> = {
 export function offsetFor(snap: Snap, height: number, clearance = 0, peek = PEEK_VISIBLE): number {
   if (snap === 2) return 0;
   if (snap === 0 && height < TINY_SHEET) return Math.max(0, height - GRABBER_VISIBLE - clearance);
-  const visible = Math.min(snap === 0 ? peek + clearance : HALF_VISIBLE, height * (1 - MAP_MIN_SHARE));
+  // Below ~417 px the controls cannot be cleared without a sheet shorter than its peek: those keep half.
+  // Never below the peek (options peek + tab bar can exceed the cap on 440-600 px screens).
+  const half = height - MAP_CONTROLS_CLEAR >= PEEK_VISIBLE ? Math.max(Math.min(HALF_VISIBLE, height - MAP_CONTROLS_CLEAR), peek + clearance) : HALF_VISIBLE;
+  const visible = Math.min(snap === 0 ? peek + clearance : half, height * (1 - MAP_MIN_SHARE));
   return Math.max(0, Math.round(height - visible));
 }
 
@@ -411,10 +420,17 @@ export function EndpointSheet({
             // sheet, so this only catches a control left under the tab bar (or, at peek, below the
             // edge), and keyboard focus then lifts the sheet. The footer is always inside the
             // visible sheet: focus there never lifts it.
-            if (snap !== 2 && !e.target.closest(".pn-sheet-footer") && e.target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) {
-              if (snap === 0) sheet.setSnap(1);
-              else if (!detailOpen || e.target.matches(":focus-visible")) sheet.setSnap(2);
-            }
+            // Measured a frame later: Safari fires focus before it scrolls the control into view,
+            // so a control that the scroll is about to bring on screen must not lift the sheet.
+            const target = e.target;
+            if (snap === 2 || target.closest(".pn-sheet-footer")) return;
+            requestAnimationFrame(() => {
+              if (!target.isConnected || document.activeElement !== target) return;
+              if (target.getBoundingClientRect().bottom > window.innerHeight - sheet.clearance) {
+                if (snap === 0) sheet.setSnap(1);
+                else if (!detailOpen || target.matches(":focus-visible")) sheet.setSnap(2);
+              }
+            });
           }}
         >
         {children}

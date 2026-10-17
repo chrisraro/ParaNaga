@@ -42,13 +42,28 @@ describe("short and zoomed screens (WCAG 1.4.10)", () => {
     expect(154 - offsetFor(0, 154, 60, PEEK_OPTIONS_VISIBLE)).toBe(44 + 60);
     expect(154 - offsetFor(0, 154, 0, PEEK_OPTIONS_VISIBLE)).toBe(44);
   });
-  it("keeps the upright phone detents (peek 214 / options 276 + tab bar, half 444) from 640 px up", () => {
-    expect(614 - offsetFor(0, 614, 90, PEEK_OPTIONS_VISIBLE)).toBe(PEEK_OPTIONS_VISIBLE + 90);
-    expect(614 - offsetFor(1, 614)).toBe(HALF_VISIBLE);
+  it("keeps the upright phone detents (peek 214 / options 276 + tab bar, half 444) from 673 px up", () => {
+    expect(647 - offsetFor(0, 647, 90, PEEK_OPTIONS_VISIBLE)).toBe(PEEK_OPTIONS_VISIBLE + 90);
+    expect(647 - offsetFor(1, 647)).toBe(HALF_VISIBLE);
+  });
+  it("on a shorter phone half stops short of the map controls (they end 229 px from the top)", () => {
+    for (const vh of [664, 640, 568]) expect(vh - 26 - offsetFor(1, vh - 26)).toBeLessThanOrEqual(vh - 229);
+    expect(664 - 26 - offsetFor(1, 664 - 26)).toBe(664 - 229);
   });
   it("ends the map just under the clamped peek sheet's top (186 px upright)", () => {
     expect(mapInsetFor(null)).toBe(PEEK_VISIBLE - 28);
     expect(mapInsetFor(813)).toBe(PEEK_VISIBLE - 28);
     expect(mapInsetFor(154)).toBe(Math.round(154 * (1 - MAP_MIN_SHARE) - 28));
+  });
+  it("orders the snaps tiny <= peek <= half <= full on every screen height (sheet height = viewport - 26)", () => {
+    for (const [peek, clearance] of [[PEEK_VISIBLE, 0], [PEEK_VISIBLE, 90], [PEEK_OPTIONS_VISIBLE, 60], [PEEK_OPTIONS_VISIBLE, 90]] as const) {
+      const heights = [...Array.from({ length: 29 }, (_, i) => 440 + i * 16), 640, 664, 568, 360, 300];
+      for (const vh of heights) {
+        const h = vh - 26;
+        const shown = (snap: 0 | 1 | 2) => h - offsetFor(snap, h, clearance, peek);
+        expect(shown(1), `half >= peek at ${vh} (${peek}+${clearance})`).toBeGreaterThanOrEqual(shown(0));
+        expect(shown(2)).toBeGreaterThanOrEqual(shown(1));
+      }
+    }
   });
 });

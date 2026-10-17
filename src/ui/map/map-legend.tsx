@@ -12,7 +12,7 @@
 
 import "@/ui/modes/modes.css";
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import L from "leaflet";
 import { MODE_DISPLAY_NAMES, resolveVisualKey, type RouteMode, type VisualKey } from "@/domain/modes/modes";
 import {
@@ -196,15 +196,23 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
     L.DomEvent.disableScrollPropagation(el);
   }, []);
 
-  if (entries.length === 0 && !showStops && extras.length === 0) return null;
-
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Escape" && open) {
-      event.stopPropagation();
+  // Document level while open: Safari leaves focus on BODY after a click, so a handler on the
+  // legend itself never sees Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      // A modal sheet or dialog above the map owns this Escape; so does any handler that ran first.
+      if (event.key !== "Escape" || event.defaultPrevented || document.querySelector('[aria-modal="true"], dialog[open]')) return;
+      event.preventDefault(); // handled: the panel underneath must not also go back
       setOpen(false);
-      buttonRef.current?.focus();
-    }
-  };
+      const active = document.activeElement;
+      if (!active || active === document.body || containerRef.current?.contains(active)) buttonRef.current?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  if (entries.length === 0 && !showStops && extras.length === 0) return null;
 
   return (
     <div
@@ -212,7 +220,6 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
       className="pn-map-legend"
       data-testid="map-legend"
       data-surface={surface}
-      onKeyDown={onKeyDown}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
     >

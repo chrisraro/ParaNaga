@@ -14,13 +14,14 @@
 import "../modes/modes.css";
 
 import Link from "next/link";
-import { useEffect, useId, useMemo, useRef, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
 import type { Line, SnapshotTerminal } from "@/domain/api/schemas";
 import { modeName, type RouteMode } from "@/domain/modes/fleet";
 import type { VisualKey } from "@/domain/modes/modes";
 import { terminalLocationText } from "@/domain/places/explore";
 import { terminalMatchesModes, terminalModesPhrase } from "@/domain/places/terminals";
 import type { LayersPref } from "@/domain/prefs/prefs";
+import { cycleTab, captureOpener } from "@/ui/kit/opener";
 import { Switch } from "@/ui/kit/switch";
 import { ModeChip } from "@/ui/modes/mode-chip";
 import { ModeIcon } from "@/ui/modes/mode-icon";
@@ -100,8 +101,6 @@ export function distinctRoutesFromLines(lines: readonly Line[]): DistinctMapRout
   return [...byCode.values()];
 }
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 export const LINES_NOT_LOADED = "Route lines aren't loaded on this device." as const;
 
 type Props = {
@@ -131,13 +130,17 @@ export function LayersSheet({
   useEffect(() => {
     if (!open) return;
     // Whatever opened the sheet (the Layers button) gets focus back when it closes.
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const opener = captureOpener();
     closeBtnRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
       if (event.key === "Escape") {
+        event.preventDefault();
         event.stopPropagation();
         onClose();
+        return;
       }
+      cycleTab(event, dialogRef.current);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
@@ -145,23 +148,6 @@ export function LayersSheet({
       if (opener?.isConnected) opener.focus();
     };
   }, [open, onClose]);
-
-  // Modal: Tab and Shift+Tab cycle within the sheet, never into the map behind it.
-  const trapTab = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (event.key !== "Tab" || !dialogRef.current) return;
-    const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
-    if (focusable.length === 0) return;
-    const first = focusable[0]!;
-    const last = focusable[focusable.length - 1]!;
-    const active = document.activeElement;
-    if (event.shiftKey && (active === first || !dialogRef.current.contains(active))) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && (active === last || !dialogRef.current.contains(active))) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
 
   const mapRoutes = useMemo(() => distinctRoutesFromLines(tracedLines), [tracedLines]);
   const terminalList = useMemo(() => listTerminals(terminals, layers), [terminals, layers]);
@@ -182,7 +168,6 @@ export function LayersSheet({
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        onKeyDown={trapTab}
         aria-labelledby={titleId}
         className="pn-layers-sheet"
         data-testid="layers-sheet"
