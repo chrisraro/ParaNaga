@@ -43,7 +43,7 @@ describe("via groups: the Del Rosario corridor", () => {
     expect(group.routes.map((r) => [r.routeCode, r.via])).toEqual([["R2", "Magsaysay"], ["R3", "Roxas (Diversion)"], ["R4", "Panganiban"]]);
   });
 
-  it("9 Plaza Rizal to Del Rosario: R2, R3 and R4 are each shown with their via; the tricycle is Recommended; 6 or fewer", () => {
+  it("9 Plaza Rizal to Del Rosario: R2, R3 and R4 are each shown with their via; the cheapest jeepney is Recommended; 6 or fewer", () => {
     const p = plan(PLAZA_RIZAL, DEL_ROSARIO);
     const shown = vias(p);
     expect(shown.map((o) => rideCodes(o))).toEqual(expect.arrayContaining([["R2"], ["R3"], ["R4"]]));
@@ -54,10 +54,11 @@ describe("via groups: the Del Rosario corridor", () => {
     expect(via.R4).toEqual({ group: "VG-CENTRO-DELROSARIO", routeCode: "R4", label: "Panganiban", note: null });
     expect(p.options.length).toBeLessThanOrEqual(MAX_OPTIONS);
     expect(recommended(p)).toHaveLength(1);
-    expect(recommended(p)[0]!.mode).toBe("tricycle");
-    // Jeepneys stay ordered by score, before the tricycle.
-    const scores = jeeps(p).map((o) => o.score);
-    expect([...scores].sort((a, b) => a - b)).toEqual(scores);
+    expect(recommended(p)[0]!.mode).toBe("jeepney");
+    expect(p.options[0]!.labels).toContain("Recommended");
+    // Jeepneys stay ordered by cheapest fare then score, before the tricycle.
+    const fares = jeeps(p).map((o) => o.fare.minCentavos ?? 0);
+    expect([...fares].sort((a, b) => a - b)).toEqual(fares);
     expect(p.options.map((o) => o.mode).at(-1)).toBe("tricycle");
   });
 

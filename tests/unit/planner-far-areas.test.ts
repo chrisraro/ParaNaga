@@ -138,10 +138,12 @@ describe("far areas: zone membership and the far note", () => {
     assertSpecialFallback(tricycle(p)!);
   });
 
-  it("10 Plaza Rizal → SM City: not far, tricycle Recommended, no far note", () => {
+  it("10 Plaza Rizal → SM City: not far, cheapest jeepney Recommended, tricycle unlabelled, no far note", () => {
     const p = plan(PLAZA_RIZAL, SM_CITY);
     expect(p.farNote).toBeUndefined();
-    expect(tricycle(p)!.labels).toEqual(["Recommended"]);
+    expect(p.options[0]!.mode).toBe("jeepney");
+    expect(p.options[0]!.labels).toContain("Recommended");
+    expect(tricycle(p)!.labels).toEqual([]);
     expect(recommended(p)).toHaveLength(1);
   });
 
