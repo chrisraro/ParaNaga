@@ -109,6 +109,16 @@ describe("the access card", () => {
     expect(screen.getByTestId("trip-detail-header").textContent).toContain("From ₱33");
   });
 
+  it("an unnamed board point after the tricycle reads as the loading point, never the rider's start (audit 2026-10-18)", () => {
+    const data = load(ACCESS_PLAN);
+    const ends = { start: { label: "Plaza Rizal", lat: 13.605, lng: 123.187 }, destination: { label: "Pacol", lat: 13.6597, lng: 123.2512 } };
+    render(<TripDetail data={data} option={data.plan.options[0]!} onBack={noop} etaModel={ETA_MODEL} ends={ends as never} />);
+    const steps = within(screen.getByRole("list", { name: "Trip steps" })).getAllByRole("listitem").map((s) => s.textContent ?? "");
+    const board = steps.find((s) => s.includes("Get on near"))!;
+    expect(board).toContain("Get on near Jeepney station to Pacol");
+    expect(board).not.toContain("Plaza Rizal");
+  });
+
   it("the map names the loading point where the tricycle drops off", () => {
     const hl = highlightsFor(load(ACCESS_PLAN), ACCESS_PLAN.plan.options[0]!.id);
     expect(hl[0]).toMatchObject({ role: "alight", label: "Jeepney station to Pacol" });
