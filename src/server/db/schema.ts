@@ -47,6 +47,21 @@ export const preference = core.table("preference", {
   historyEnabled: boolean("history_enabled").notNull(),
 });
 
+export const mediaObject = core.table("media_object", {
+  id: uuid("id").primaryKey(),
+  bucket: text("bucket").notNull(),
+  objectKey: text("object_key").notNull(),
+  mime: text("mime"),
+  bytes: bigint("bytes", { mode: "number" }),
+  expectedBytes: bigint("expected_bytes", { mode: "number" }).notNull(),
+  sha256: text("sha256"),
+  ownerId: text("owner_id").notNull(),
+  purpose: text("purpose").$type<"community_photo" | "correction_evidence" | "stop_photo" | "complaint_evidence">().notNull(),
+  status: text("status").$type<"slot" | "verified" | "rejected" | "deleted">().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+});
+
 export const savedPlace = core.table("saved_place", {
   id: uuid("id").primaryKey(),
   userId: text("user_id").notNull(),

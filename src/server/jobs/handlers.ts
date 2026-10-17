@@ -27,4 +27,18 @@ export function registerDefaultJobHandlers(): void {
   registerJobHandler("expire_disruptions", async () => {
     return { success: true };
   });
+
+  // Sweep unconfirmed quarantine slots older than 1 hour (spec §3.9, §3.10)
+  registerJobHandler("sweep_orphan_media", async () => {
+    const requestId = safeRequestId();
+    await withRequestContext({ userId: null, requestId }, async (db) => {
+      const orphans = await db.execute<{ id: string; bucket: string; object_key: string }>(sql`
+        select id, bucket, object_key from core.find_orphan_media_slots(interval '1 hour')
+      `);
+      for (const row of orphans.rows) {
+        await db.execute(sql`select core.reject_media(${row.id}::uuid)`);
+      }
+    });
+    return { success: true };
+  });
 }
