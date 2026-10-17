@@ -69,6 +69,28 @@ export async function guardedGoogleCall<T>(opts: {
   return { status: "ok", value };
 }
 
+const ERROR_BODY_CAP = 4096;
+const scrub = (text: string) => text.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").replace(/key=[^&\s"']*/gi, "key=[redacted]");
+const str = (v: unknown, max = 120): string | undefined => (typeof v === "string" ? scrub(v).slice(0, max) : undefined);
+
+/** Safe, allow-listed fields from Google's error envelope (status, code, reasons, short scrubbed message). Never throws. */
+async function errorReason(response: Response): Promise<Record<string, unknown>> {
+  try {
+    const text = (await response.text()).slice(0, ERROR_BODY_CAP);
+    const error = (JSON.parse(text) as { error?: Record<string, unknown> }).error ?? {};
+    const details = Array.isArray(error.details) ? (error.details as Array<Record<string, unknown>>) : [];
+    const reasons = details
+      .flatMap((d) => {
+        const meta = d?.metadata as Record<string, unknown> | undefined;
+        return [str(d?.reason), str(d?.domain), str(meta?.service)];
+      })
+      .filter((r): r is string => Boolean(r));
+    return { googleStatus: str(error.status), googleCode: typeof error.code === "number" ? error.code : undefined, reasons: [...new Set(reasons)], message: str(error.message, 200) };
+  } catch {
+    return {};
+  }
+}
+
 async function google(url: string, key: string, fieldMask: string, init: RequestInit = {}): Promise<unknown> {
   try {
     const response = await fetch(url, {
@@ -79,7 +101,7 @@ async function google(url: string, key: string, fieldMask: string, init: Request
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!response.ok) {
-      console.error(JSON.stringify({ event: "google_places_error", status: response.status }));
+      console.error(JSON.stringify({ event: "google_places_error", status: response.status, ...(await errorReason(response)) }));
       return null;
     }
     return (await response.json()) as unknown;
