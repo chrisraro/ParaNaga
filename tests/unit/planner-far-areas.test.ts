@@ -8,7 +8,9 @@ import { isInsideNaga } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
 import { RULE_EVIDENCE } from "@/domain/import/modes-seed";
 import { FAR_AREAS, FAR_EVIDENCE, zoneOf } from "@/domain/planner/far-areas";
-import { FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan } from "@/domain/planner/plan";
+import {
+  ACCESS_TRICYCLE_MIN_WALK_M, FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan,
+} from "@/domain/planner/plan";
 import { buildPlanResponse, planResponseSchema } from "@/domain/api/plan";
 import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
 import { realStreets } from "../fixtures/real-streets";
@@ -34,6 +36,11 @@ const NEAR_T14 = { lat: 13.6314016, lng: 123.1967731 };
 const recommended = (p: TripPlan) => p.options.filter((o) => o.labels.includes("Recommended"));
 const rideCodes = (o: PlanOption) => o.legs.flatMap((l) => (l.kind === "ride" ? [l.routeCode] : []));
 const tricycle = (p: TripPlan) => p.options.find((o) => o.mode === "tricycle");
+const access = (p: TripPlan) => p.options.find((o) => o.id.startsWith("tri>"));
+/** Mabolo barangay anchor: its best Pacol jeepney walks 311 m to the first ride (no access option). */
+const MABOLO = { lat: 13.6145058, lng: 123.1826654 };
+/** City proper south of Centro: no jeepney to Pacol or Cararayan within the walk caps. */
+const SOUTH = { lat: 13.609, lng: 123.183 };
 const farNote = (zone: string, dir = "to") => `Local report: tricycles ${dir} ${zone} charge special-trip fares, so none is suggested.`;
 
 describe("far areas: zone membership and the far note", () => {
@@ -189,6 +196,108 @@ describe("far areas: zone membership and the far note", () => {
         }
       }),
       { seed: 20261018, numRuns: 120 },
+    );
+  }, 120_000);
+});
+
+describe("far areas: the access option (tricycle to the jeepney loading point, T4)", () => {
+  const T10 = snap.terminals.find((t) => t.code === "T10")!;
+  const T11 = snap.terminals.find((t) => t.code === "T11")!;
+
+  const assertAccess = (o: PlanOption, routes: string[]) => {
+    expect(o.legs.map((l) => l.kind)).toEqual(["tricycle", "walk", "ride", "walk"]);
+    expect(o).toMatchObject({ mode: "jeepney", rides: 1 });
+    const [tri, walk, ride] = o.legs;
+    if (tri?.kind !== "tricycle" || walk?.kind !== "walk" || ride?.kind !== "ride") throw new Error("legs");
+    expect(zoneOf(tri.to, FAR_AREAS)).toBeNull();
+    expect(walk.from).toMatchObject({ lat: tri.to.lat, lng: tri.to.lng });
+    expect(routes).toContain(ride.routeCode);
+    expect(o.id).toBe(`tri>${ride.variantId}@${Math.round(ride.boardMeasureM / 10) * 10}-${Math.round(ride.alightMeasureM / 10) * 10}`);
+    expect(tri.fare).toMatchObject({ status: "minimum", minCentavos: 1500 });
+    expect(tri.notes.some((n) => n.startsWith("Minimum fare ₱15"))).toBe(true);
+    expect(o.fare.minCentavos).toBeGreaterThan(1500);
+  };
+
+  it("5 a city point over 600 m from the R6/R7 paths → Pacol: one access option via T10 or T11, no point-to-point tricycle", () => {
+    const p = plan(SOUTH, PACOL);
+    expect(ACCESS_TRICYCLE_MIN_WALK_M).toBe(600);
+    expect(p.options.filter((o) => o.id.startsWith("tri>"))).toHaveLength(1);
+    const a = access(p)!;
+    assertAccess(a, ["R6", "R7"]);
+    expect([T10.name, T11.name]).toContain(a.legs[0]!.kind === "tricycle" && a.legs[0]!.to.name);
+    expect(tricycle(p)).toBeUndefined();
+    expect(() => planResponseSchema.parse(buildPlanResponse(snap, p, lines))).not.toThrow();
+    expect(a.fare).toMatchObject({ status: "minimum", maxCentavos: null });
+    const modes = p.options.map((o) => (o.id.startsWith("tri>") ? "access" : o.mode));
+    expect(modes.indexOf("access")).toBeGreaterThan(modes.lastIndexOf("jeepney"));
+    expect(recommended(p)).toHaveLength(1);
+    if (p.options.some((o) => o.mode === "jeepney" && o !== a)) expect(a.labels).toEqual([]);
+    else expect(a.labels).toEqual(["Recommended"]);
+  });
+
+  it("5 a city point → Cararayan: the access option boards R1 where it starts (route plan); the only jeepney-family option is Recommended", () => {
+    const p = plan(SOUTH, CARARAYAN);
+    const a = access(p)!;
+    assertAccess(a, ["R1"]);
+    expect(a.legs[0]!.kind === "tricycle" && a.legs[0]!.to.name).toBe("where R1 starts (route plan)");
+    expect(a.legs[1]).toMatchObject({ kind: "walk", estimateMeters: 0 });
+    expect(p.jeepneyReason).toBeNull();
+    expect(a.labels).toEqual(["Recommended"]);
+    expect(p.options.some((o) => o.mode === "walk")).toBe(false);
+  });
+
+  it("6 city points whose zone jeepney walks 600 m or less to board → Pacol: no access option", () => {
+    for (const o of [PLAZA_RIZAL, MABOLO]) {
+      const p = plan(o, PACOL);
+      const zoneBest = p.options.find((x) => x.mode === "jeepney" && ["R6", "R7"].includes(rideCodes(x).at(-1)!))!;
+      expect(zoneBest.legs[0]!.kind === "walk" && zoneBest.legs[0]!.estimateMeters).toBeLessThanOrEqual(600);
+      expect(access(p)).toBeUndefined();
+    }
+  });
+
+  it("no access option when the origin is far or the destination is not", () => {
+    expect(access(plan(PACOL, SOUTH))).toBeUndefined();
+    expect(access(plan(SOUTH, SM_CITY))).toBeUndefined();
+    expect(access(plan(CARARAYAN, PACOL))).toBeUndefined();
+  });
+
+  it("12 a snapshot without T10/T11 (or with T10 off its path): no access via them, no crash", () => {
+    const bare = { ...snap, terminals: snap.terminals.filter((t) => t.code !== "T10" && t.code !== "T11") };
+    expect(() => plan(SOUTH, PACOL, bare)).not.toThrow();
+    expect(access(plan(SOUTH, PACOL, bare))).toBeUndefined();
+    const moved = { ...snap, terminals: snap.terminals.map((t) => (t.code === "T10" ? { ...t, lat: t.lat! - 0.003 } : t)) };
+    const a = access(plan(SOUTH, PACOL, moved));
+    if (a) expect(a.legs[0]!.kind === "tricycle" && a.legs[0]!.to.name).not.toBe(T10.name);
+  });
+
+  it("13 offline without a street graph: the access tricycle says 'Street route not available', walks are ×1.3", () => {
+    const p = plan(SOUTH, PACOL, snap, { lines, streets: null });
+    const a = access(p)!;
+    assertAccess(a, ["R6", "R7"]);
+    expect(a.legs[0]).toMatchObject({ kind: "tricycle", basis: "unavailable", distanceMeters: null });
+    expect(a.legs[0]!.kind === "tricycle" && a.legs[0]!.notes).toContain("Street route not available");
+    for (const l of a.legs) if (l.kind === "walk") expect(l.basis).toBe("straight_x1_3");
+  });
+
+  it("property: every access tricycle leg ends in the city proper; ≤ 6 options; ≤ 1 Recommended; at most one access option", () => {
+    const city = fc.record({ lat: fc.double({ min: 13.6, max: 13.67, noNaN: true }), lng: fc.double({ min: 123.17, max: 123.32, noNaN: true }) });
+    const farEnd = fc.constantFrom(PACOL, PANICUASON, CARARAYAN, near(PACOL, 300, -400), near(CARARAYAN, -200, 300));
+    fc.assert(
+      fc.property(city, farEnd, (o, d) => {
+        fc.pre(isInsideNaga(o));
+        const p = plan(o, d);
+        expect(p.options.length).toBeLessThanOrEqual(6);
+        expect(recommended(p).length).toBeLessThanOrEqual(1);
+        const as = p.options.filter((x) => x.id.startsWith("tri>"));
+        expect(as.length).toBeLessThanOrEqual(1);
+        for (const a of as) {
+          expect(zoneOf(o, FAR_AREAS)).toBeNull();
+          const t = a.legs[0]!;
+          if (t.kind !== "tricycle") throw new Error("an access option starts with a tricycle");
+          expect(zoneOf(t.to, FAR_AREAS)).toBeNull();
+        }
+      }),
+      { seed: 20261019, numRuns: 60 },
     );
   }, 120_000);
 });

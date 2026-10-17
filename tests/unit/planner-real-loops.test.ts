@@ -39,12 +39,19 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   const noneRecommended = (farO || farD) && !p.options.some((o) => o.mode === "jeepney");
   expect(p.options.filter((o) => o.labels.includes("Recommended"))).toHaveLength(noneRecommended ? 0 : 1);
   for (const o of p.options.filter((x: PlanOption) => x.mode === "jeepney")) {
-    const legs = o.legs;
+    // An access option (Increment F, T4) starts with a tricycle to the loading point, which is in the city proper.
+    const tri = o.id.startsWith("tri>") ? o.legs[0]! : null;
+    if (tri) {
+      if (tri.kind !== "tricycle") throw new Error("an access option starts with a tricycle");
+      expect(tri.from).toMatchObject(origin);
+      expect(zoneOf(tri.to, FAR_AREAS)).toBeNull();
+    }
+    const legs = tri ? o.legs.slice(1) : o.legs;
     legs.forEach((l, i) => expect(l.kind).toBe(i % 2 === 0 ? "walk" : "ride"));
     const first = legs[0]!;
     const last = legs.at(-1)!;
     if (first.kind !== "walk" || last.kind !== "walk") throw new Error("must start and end walking");
-    expect(first.from).toMatchObject(origin);
+    if (!tri) expect(first.from).toMatchObject(origin);
     expect(last.to).toMatchObject(destination);
     const walks = legs.filter((l) => l.kind === "walk");
     walks.forEach((w, i) => expect(w.estimateMeters).toBeLessThanOrEqual(
