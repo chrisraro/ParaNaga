@@ -164,8 +164,8 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
   await expect(detail.getByTestId("leg-fare")).toHaveText(/Loop A\s*Estimate ₱14$/);
   await expect(detail).not.toContainText(/Corrections|from reported fare rules|matrix not verified/);
-  // Only two links: the Sources link in the top bar and the fare basis.
-  await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated"]);
+  // Three links: Sources (top bar), the fare basis, and Report a correction.
+  await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated", "Report a correction"]);
 
   // Route screens show only the route: no stop icons (owner ruling 2026-10-17); the routes overview
   // is not drawn while a trip is shown.
