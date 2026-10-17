@@ -144,7 +144,7 @@ export function optionTitle(option: { rides: number; walkEstimateMeters: number;
   }
   const rides = option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode ?? "", l.routeName ?? "")).join(" + ");
   // The access option (Increment F): a tricycle to the jeep's loading point first.
-  return option.legs[0]?.kind === "tricycle" ? `Tricycle + Jeep ${rides}` : rides;
+  return option.legs[0]?.kind === "tricycle" ? `Tricycle, then Jeep ${rides}` : rides;
 }
 
 /** "Loop A" from a name like "Centro–Magsaysay Loop A"; otherwise the public route code. */

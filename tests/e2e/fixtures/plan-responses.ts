@@ -525,7 +525,7 @@ export const VIA_PLAN = {
   ],
 };
 
-const FAR_NOTE_PACOL = "Local report: tricycles to Pacol charge special-trip fares, so none is suggested.";
+const FAR_NOTE_PACOL = "Local report: tricycles to Pacol charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.";
 const PACOL_TERMINAL = { kind: "point", lat: 13.6209809, lng: 123.1846467, stopId: null, name: "Jeepney station to Pacol" };
 const SOUTH = place("origin", 13.605, 123.187);
 const PACOL = place("destination", 13.6575, 123.2475);
@@ -580,7 +580,7 @@ const SPECIAL_NOTES = [
   "Tricycles serve their franchise zone; a long trip may need a change (Ord 2020-113)",
 ];
 const specialOption = () => ({
-  id: "tricycle", mode: "tricycle", labels: [] as string[],
+  id: "tricycle", mode: "tricycle", labels: [] as string[], specialTrip: true,
   legs: [{
     kind: "tricycle", from: place("origin", 13.6262, 123.1912), to: PACOL, distanceMeters: 4200,
     path: encodePolyline([{ lat: 13.6262, lng: 123.1912 }, { lat: 13.6291, lng: 123.2150 }, { lat: 13.6575, lng: 123.2475 }]), basis: "street_graph", notes: SPECIAL_NOTES, ruleCodes: [],
@@ -612,7 +612,7 @@ export const SPECIAL_TRIP_PLAN = {
       specialOption(),
     ],
     notes: ["Unverified route — confirm with the driver"],
-    farNote: "Local report: tricycles to Cararayan and San Isidro charge special-trip fares, so none is suggested.",
+    farNote: "Local report: tricycles to Cararayan and San Isidro charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.",
   },
   stops: [],
   variants: [{ variantId: R1_OUT, routeCode: "R1", routeName: "Centro–Cararayan", isCircular: false, loopDirection: null }],

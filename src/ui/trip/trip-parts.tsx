@@ -105,8 +105,8 @@ export function LoopChip({
  * Why no tricycle is suggested near a far area, as a quiet note with its evidence label ("Local report": it is
  * what riders report, not an ordinance). Null when the plan has no note.
  */
-export function FarNote({ note }: { note: string | null }) {
-  const v = farNoteView(note);
+export function FarNote({ note, options = [] }: { note: string | null; options?: Parameters<typeof farNoteView>[1] }) {
+  const v = farNoteView(note, options);
   if (!v) return null;
   return (
     <p className="pn-trip-farnote" data-testid="far-note">

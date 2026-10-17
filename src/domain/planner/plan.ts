@@ -163,6 +163,8 @@ export type PlanOption = {
   evidence: "provisional";
   /** Present only on a one-ride option of a route in a via group where 2+ of its routes serve the trip. Absent otherwise. */
   via?: PlanVia;
+  /** A special-trip tricycle at a far end (fare not fixed). Absent otherwise. */
+  specialTrip?: true;
 };
 
 /** The planner emits only outside_city and same_place; the others remain for older saved bodies. */
@@ -493,6 +495,7 @@ function tricycleOption(
   return {
     id: "tricycle", mode: "tricycle", labels: recommended ? ["Recommended"] : [], legs: [leg], rides: 0, walkMeters: 0, walkEstimateMeters: 0,
     rideMeters: 0, score: 0, fare: { minCentavos: fare.minCentavos, maxCentavos: null, status: fare.status, completeness: "estimate" }, evidence: "provisional",
+    ...(special && { specialTrip: true as const }),
   };
 }
 
@@ -704,6 +707,6 @@ export function planTrip(
   return {
     revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: direct.m, jeepneyReason: access ? null : jeep.reason,
     options: options.slice(0, MAX_OPTIONS), notes,
-    ...(farZone && { farNote: `Local report: tricycles ${destinationZone ? "to" : "from"} ${farZone.name} charge special-trip fares, so none is suggested.` }),
+    ...(farZone && { farNote: `Local report: tricycles ${destinationZone ? "to" : "from"} ${farZone.name} charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.` }),
   };
 }

@@ -198,6 +198,8 @@ export const planOptionSchema = z.object({
   evidence: z.literal("provisional"),
   /** Increment F (T5): which via of a shared corridor this one-ride option takes; absent in older bodies and off the corridor. */
   via: z.object({ group: z.string(), routeCode: z.string(), label: z.string(), note: z.string().nullable() }).optional(),
+  /** Increment F: a special-trip tricycle (fare not fixed); absent in older bodies and on every other option. */
+  specialTrip: z.literal(true).optional(),
 }).transform((o) => ({ ...o, mode: o.mode ?? legMode(o.legs.map((l) => l.kind)) }))
   .refine((o) => o.mode === legMode(o.legs.map((l) => l.kind)), { message: "the mode is the one the legs travel" });
 // On the wire a walk leg's `path` is the encoded street path (string | null). The client replaces it

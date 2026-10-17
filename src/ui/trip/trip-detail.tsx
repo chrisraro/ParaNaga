@@ -530,7 +530,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           {option.via?.note ? <> · {option.via.note}</> : null}
         </p>
       ) : null}
-      <FarNote note={data.plan.farNote} />
+      <FarNote note={data.plan.farNote} options={[option]} />
       {rides.length > 0 ? <UnverifiedBadge /> : null}
       {notes.serviceWindow ? <ServiceWindowNote note={notes.serviceWindow} /> : null}
       {note ? (

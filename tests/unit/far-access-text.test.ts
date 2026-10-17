@@ -28,15 +28,21 @@ const [r2, r3] = parse(VIA_PLAN).plan.options;
 const mixedJeepney = parse(SPECIAL_TRIP_PLAN).plan.options[0]!;
 
 describe("option kinds", () => {
+  it("the special-trip flag survives the schema", () => {
+    expect(special.specialTrip).toBe(true);
+    expect(access.specialTrip).toBeUndefined();
+  });
+
   it("tells the access option, the special trip and a plain jeepney apart", () => {
     expect([isAccessOption(access), isSpecialTrip(access)]).toEqual([true, false]);
     expect([isAccessOption(special), isSpecialTrip(special)]).toEqual([false, true]);
     expect([isAccessOption(mixedJeepney), isSpecialTrip(mixedJeepney)]).toEqual([false, false]);
   });
 
-  it("an ordinary tricycle (the city proper) is not a special trip", () => {
-    const o: PlanOptionDto = { ...special, legs: special.legs.map((l) => (l.kind === "tricycle" ? { ...l, notes: ["Tricycle time not estimated"] } : l)) };
-    expect(isSpecialTrip(o)).toBe(false);
+  it("an ordinary tricycle (the city proper) is not a special trip; an old body without the flag parses", () => {
+    const { specialTrip: _flag, ...o } = special;
+    void _flag;
+    expect(isSpecialTrip(o as PlanOptionDto)).toBe(false);
     expect(specialFareText(o)).toBeNull();
   });
 });
@@ -66,15 +72,17 @@ describe("fare texts", () => {
 
 describe("titles and notes", () => {
   it("the access option is 'Tricycle + Jeep R6' with the real route code", () => {
-    expect(optionTitle(access)).toBe("Tricycle + Jeep R6");
+    expect(optionTitle(access)).toBe("Tricycle, then Jeep R6");
     expect(optionTitle(r2!)).toBe("R2");
   });
 
   it("splits the far note into its evidence label and a capitalised sentence", () => {
-    expect(farNoteView("Local report: tricycles to Pacol charge special-trip fares, so none is suggested.")).toEqual({
-      label: "Local report",
-      text: "Tricycles to Pacol charge special-trip fares, so none is suggested.",
-    });
+    const base = "Local report: tricycles to Pacol charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.";
+    const text = "Tricycles to Pacol charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.";
+    expect(farNoteView(base)).toEqual({ label: "Local report", text });
+    expect(farNoteView(base, [mixedJeepney])!.text).toBe(text);
+    expect(farNoteView(base, [mixedJeepney, special])!.text).toBe(`${text} A special-trip tricycle is listed below only for riders who still want one. Agree the fare with the driver.`);
+    expect(farNoteView(base, [access])!.text).toBe(`${text} The tricycle option below only takes you to the jeepney.`);
     expect(farNoteView("Something else")).toEqual({ label: null, text: "Something else" });
     expect(farNoteView(null)).toBeNull();
   });
@@ -82,7 +90,7 @@ describe("titles and notes", () => {
   it("the special-trip card lines come from the planner notes, in order", () => {
     const leg = special.legs[0]!;
     if (leg.kind !== "tricycle") throw new Error("tricycle");
-    expect(streetCardView(leg).specialNotes).toEqual(["Special trip · fare not fixed · confirm with the driver", "From Balatas Tricycle Terminal: local report, unconfirmed"]);
+    expect(streetCardView(leg).specialNotes).toEqual(["Special trip · fare not fixed", "From Balatas Tricycle Terminal: local report, unconfirmed"]);
   });
 });
 

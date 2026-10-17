@@ -71,8 +71,8 @@ describe("the access card", () => {
   it("names the tricycle and the jeep, says why, and prices from the sum with no maximum", () => {
     const card = access();
     expect(card.dataset.mode).toBe("jeepney");
-    expect(card.querySelector("strong")!.textContent).toBe("Tricycle + Jeep R6");
-    expect(screen.getByTestId("access-line").textContent).toBe("If you'd rather not walk to the jeep");
+    expect(card.querySelector("strong")!.textContent).toBe("Tricycle, then Jeep R6");
+    expect(screen.getByTestId("access-line").textContent).toBe("Tricycle to Jeepney station to Pacol, then ride R6. For when you'd rather not walk.");
     expect(screen.getByTestId("access-tricycle").textContent).toBe("Tricycle min ₱15 · confirm with the driver");
     expect(screen.getByTestId("fare-chip").textContent).toBe("From ₱33");
     expect(card.textContent).not.toMatch(/Est\.Estimate ₱|₱33–|Minimum fare/);
@@ -89,7 +89,7 @@ describe("the access card", () => {
   it("the peek of a plan whose only option is the access one names the whole option", () => {
     render(<OptionsPeek data={load(ACCESS_PLAN)} expanded={false} listShown={false} onToggle={noop} etaModel={ETA_MODEL} />);
     const best = screen.getByTestId("options-best").textContent ?? "";
-    expect(best).toContain("Tricycle + Jeep R6");
+    expect(best).toContain("Tricycle, then Jeep R6");
     expect(best).toContain("From ₱33");
     expect(best).not.toContain("Time not estimated");
   });
@@ -97,7 +97,7 @@ describe("the access card", () => {
   it("the detail has the tricycle step to the loading point, the fare rows and the total", () => {
     const data = load(ACCESS_PLAN);
     render(<TripDetail data={data} option={data.plan.options[0]!} onBack={noop} etaModel={ETA_MODEL} />);
-    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Tricycle + Jeep R6");
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Tricycle, then Jeep R6");
     const steps = within(screen.getByRole("list", { name: "Trip steps" })).getAllByRole("listitem");
     expect(steps[0]!.textContent).toContain("Take a tricycle to Jeepney station to Pacol");
     expect(steps[0]!.textContent).toContain("Minimum fare ₱15 (Ordinance 2024-002)");
@@ -136,7 +136,7 @@ describe("the special-trip card", () => {
     const card = special();
     expect(card.className).not.toContain("primary");
     const lines = within(card).getAllByTestId("street-special").map((l) => l.textContent);
-    expect(lines).toEqual(["Special trip · fare not fixed · confirm with the driver", "From Balatas Tricycle Terminal: local report, unconfirmed"]);
+    expect(lines).toEqual(["Special trip · fare not fixed", "From Balatas Tricycle Terminal: local report, unconfirmed"]);
     expect(within(card).getByTestId("fare-chip").textContent).toBe("Fare not fixed");
     expect(card.textContent).toContain("Time not estimated");
     expect(card.textContent).not.toMatch(/₱|Est\.|Minimum fare|Fare n\/a|unavailable/);
@@ -155,7 +155,11 @@ describe("the far note", () => {
   it("sits above the cards with its evidence label and reads as a sentence", () => {
     render(<TripOptions data={load(SPECIAL_TRIP_PLAN)} onOpen={noop} etaModel={ETA_MODEL} />);
     const note = screen.getByTestId("far-note");
-    expect(note.textContent).toBe("Local report: Tricycles to Cararayan and San Isidro charge special-trip fares, so none is suggested.");
+    expect(note.textContent).toBe(
+      "Local report: " +
+        "Tricycles to Cararayan and San Isidro charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal. " +
+        "A special-trip tricycle is listed below only for riders who still want one. Agree the fare with the driver.",
+    );
     expect(note.querySelector(".pn-trip-farnote__label")!.textContent).toBe("Local report");
     expect(note.compareDocumentPosition(screen.getByRole("list")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
@@ -164,6 +168,8 @@ describe("the far note", () => {
     const data = load(ACCESS_PLAN);
     render(<TripDetail data={data} option={data.plan.options[0]!} onBack={noop} etaModel={ETA_MODEL} />);
     expect(screen.getByTestId("far-note").textContent).toContain("Tricycles to Pacol");
+    expect(screen.getByTestId("far-note").textContent).toContain("The tricycle option below only takes you to the jeepney.");
+    expect(screen.getByTestId("far-note").textContent).not.toContain("special-trip tricycle is listed");
     cleanup();
     render(<TripOptions data={load(VIA_PLAN)} onOpen={noop} etaModel={ETA_MODEL} />);
     expect(screen.queryByTestId("far-note")).toBeNull();

@@ -51,18 +51,20 @@ const access = (p: TripPlan) => p.options.find((o) => o.id.startsWith("tri>"));
 const MABOLO = { lat: 13.6145058, lng: 123.1826654 };
 /** City proper south of Centro: no jeepney to Pacol or Cararayan within the walk caps. */
 const SOUTH = { lat: 13.609, lng: 123.183 };
-const farNote = (zone: string, dir = "to") => `Local report: tricycles ${dir} ${zone} charge special-trip fares, so none is suggested.`;
+// The base note grew from 16 words to a documented limit of 32 (the UI adds one short sentence per tricycle card shown).
+const FAR_NOTE_MAX_WORDS = 32; // base note, "Cararayan and San Isidro" is the longest at 31
+const farNote = (zone: string, dir = "to") => `Local report: tricycles ${dir} ${zone} charge special-trip fares that are not fixed, so we do not recommend one for the whole trip. Take the jeepney from the terminal.`;
 
 describe("far areas: zone membership and the far note", () => {
   it("far-areas evidence levels equal the modes seed's", () => {
     expect(FAR_EVIDENCE).toEqual(RULE_EVIDENCE);
   });
 
-  it("the far note is 16 words or fewer for every zone", () => {
+  it("the far note is 32 words or fewer for every zone", () => {
     for (const z of FAR_AREAS.farZones) {
-      expect(farNote(z.name).split(/\s+/).length).toBeLessThanOrEqual(16);
+      expect(farNote(z.name).split(/\s+/).length).toBeLessThanOrEqual(FAR_NOTE_MAX_WORDS);
       // 14 words for one- and three-word zones; "Cararayan and San Isidro" makes it 15 (the plan's limit is 16).
-      expect(farNote(z.name, "from").split(/\s+/).length).toBeLessThanOrEqual(16);
+      expect(farNote(z.name, "from").split(/\s+/).length).toBeLessThanOrEqual(FAR_NOTE_MAX_WORDS);
     }
   });
 
@@ -98,6 +100,8 @@ describe("far areas: zone membership and the far note", () => {
     expect(rideCodes(recommended(p)[0]!)).toContain("R1");
     const t = tricycle(p)!;
     expect(t.labels).toEqual([]);
+    expect(t.specialTrip).toBe(true); // the structured flag the UI reads
+    expect(p.options.filter((o) => o.specialTrip)).toHaveLength(1);
     expect(t.fare).toEqual({ minCentavos: null, maxCentavos: null, status: "unavailable", completeness: "estimate" });
     const leg = t.legs[0]!;
     if (leg.kind !== "tricycle") throw new Error("tricycle leg");

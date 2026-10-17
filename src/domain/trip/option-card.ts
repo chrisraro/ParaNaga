@@ -6,7 +6,7 @@
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "../api/plan";
 import type { ServiceWindowNote } from "../eta/service-window";
 import { FLAGGED_PATH_NOTE } from "../planner/notes";
-import { fareChipText, formatDistance } from "./present";
+import { fareChipText, formatDistance, routeChipLabel } from "./present";
 import type { OptionNotesView, RideNoteView } from "./option-notes";
 
 /** The first Recommended option, or -1: exactly one card is drawn as the primary one. */
@@ -43,13 +43,17 @@ export const TIME_NOT_ESTIMATED = "Time not estimated";
 /** Increment F. The access option rides a jeepney after a tricycle to its loading point: legs [tricycle, walk, ride, walk]. */
 export const isAccessOption = (o: Pick<PlanOptionDto, "rides" | "legs">) => o.rides > 0 && o.legs[0]?.kind === "tricycle";
 
-const SPECIAL_TRIP = /^Special trip/;
-/** A tricycle into (or out of) a far zone: the planner marks it with the "Special trip · fare not fixed" note. */
-export const isSpecialTrip = (o: Pick<PlanOptionDto, "mode" | "legs">) =>
-  o.mode === "tricycle" && o.legs.some((l) => l.kind === "tricycle" && l.notes.some((n) => SPECIAL_TRIP.test(n)));
+/** A tricycle into (or out of) a far zone, flagged by the planner (fare not fixed). */
+export const isSpecialTrip = (o: { specialTrip?: true }) => o.specialTrip === true;
 
 export const FARE_NOT_FIXED = "Fare not fixed";
-export const ACCESS_LINE = "If you'd rather not walk to the jeep";
+/** "Tricycle to {loading point}, then ride R6. For when you'd rather not walk." */
+export function accessLine(o: Pick<PlanOptionDto, "legs">): string {
+  const tri = o.legs.find((l): l is TricycleLegDto => l.kind === "tricycle");
+  const ride = o.legs.find((l) => l.kind === "ride");
+  const code = ride?.kind === "ride" ? routeChipLabel(ride.routeCode, ride.routeName) : "the jeepney";
+  return `Tricycle to ${tri?.to.name ?? "the jeepney"}, then ride ${code}. For when you'd rather not walk.`;
+}
 const peso = (centavos: number) => `₱${Math.round(centavos / 100)}`;
 
 /** "via Magsaysay" (the chip of a jeepney that shares a corridor with other vias), or null. */
@@ -59,7 +63,7 @@ export const viaChipText = (o: Pick<PlanOptionDto, "via">) => (o.via ? `via ${o.
  * The fare chip of an access or special-trip option: "From ₱29" (ride minimum + the ₱15 tricycle minimum; there is no
  * maximum, so never a range) or "Fare not fixed"; null for every other option (their own text applies).
  */
-export function specialFareText(o: Pick<PlanOptionDto, "mode" | "rides" | "legs" | "fare">): string | null {
+export function specialFareText(o: Pick<PlanOptionDto, "specialTrip" | "rides" | "legs" | "fare">): string | null {
   if (isSpecialTrip(o)) return FARE_NOT_FIXED;
   if (isAccessOption(o) && o.fare.status === "minimum" && o.fare.minCentavos !== null) return `From ${peso(o.fare.minCentavos)}`;
   return null;
@@ -72,12 +76,18 @@ export function accessTricycleChip(o: Pick<PlanOptionDto, "legs">): string {
 }
 
 const FAR_NOTE_PREFIX = /^Local report:\s*/;
-/** The far note split into its evidence label and the sentence: "Local report" + "Tricycles to Pacol charge special-trip fares, so none is suggested." */
-export function farNoteView(note: string | null): { label: string | null; text: string } | null {
+export const FAR_NOTE_SPECIAL = "A special-trip tricycle is listed below only for riders who still want one. Agree the fare with the driver.";
+export const FAR_NOTE_ACCESS = "The tricycle option below only takes you to the jeepney.";
+/**
+ * The far note as shown: its evidence label ("Local report") and the sentence, with a line added for each tricycle card
+ * the list really has (a special trip, the access option), so the note never contradicts a card.
+ */
+export function farNoteView(note: string | null, options: readonly Pick<PlanOptionDto, "specialTrip" | "rides" | "legs">[] = []): { label: string | null; text: string } | null {
   if (!note) return null;
-  if (!FAR_NOTE_PREFIX.test(note)) return { label: null, text: note };
+  const extra = [options.some(isSpecialTrip) ? FAR_NOTE_SPECIAL : null, options.some(isAccessOption) ? FAR_NOTE_ACCESS : null].filter((x) => x !== null);
   const rest = note.replace(FAR_NOTE_PREFIX, "");
-  return { label: "Local report", text: rest.charAt(0).toUpperCase() + rest.slice(1) };
+  const base = FAR_NOTE_PREFIX.test(note) ? rest.charAt(0).toUpperCase() + rest.slice(1) : note;
+  return { label: FAR_NOTE_PREFIX.test(note) ? "Local report" : null, text: [base, ...extra].join(" ") };
 }
 
 export type StreetCardView = {
@@ -91,7 +101,7 @@ export type StreetCardView = {
   restrictionNote: string | null;
   /** Padyak: "Area per city ordinance · approximate boundary · service not confirmed today". */
   areaNote: string | null;
-  /** A special trip (far zone): "Special trip · fare not fixed · confirm with the driver" and the terminal line, which replace the fare note. */
+  /** A special trip (far zone): "Special trip · fare not fixed" and the terminal line, which replace the fare note (the detail keeps "confirm with the driver"). */
   specialNotes: string[];
 };
 
@@ -110,7 +120,7 @@ export function streetCardView(leg: TricycleLegDto | PadyakLegDto): StreetCardVi
     timeText: TIME_NOT_ESTIMATED,
     restrictionNote: leg.notes.find((n) => RESTRICTION.test(n)) ?? null,
     areaNote: leg.notes.find((n) => AREA.test(n)) ?? null,
-    specialNotes: leg.notes.filter((n) => SPECIAL_LINES.test(n)),
+    specialNotes: leg.notes.filter((n) => SPECIAL_LINES.test(n)).map((n) => n.replace(/ · confirm with the driver$/, "")),
   };
 }
 

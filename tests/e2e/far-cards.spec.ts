@@ -64,8 +64,8 @@ test("Del Rosario: each route shows its via; R2 keeps the unconfirmed Francia li
 test("Pacol from the south: the access card, its detail and guidance (the tricycle step does not end the trip)", async ({ page }) => {
   await open(page, ACCESS_PLAN);
   const card = page.getByTestId("trip-option").first();
-  await expect(card).toContainText("Tricycle + Jeep R6");
-  await expect(card.getByTestId("access-line")).toHaveText("If you'd rather not walk to the jeep");
+  await expect(card).toContainText("Tricycle, then Jeep R6");
+  await expect(card.getByTestId("access-line")).toHaveText("Tricycle to Jeepney station to Pacol, then ride R6. For when you'd rather not walk.");
   await expect(card.getByTestId("access-tricycle")).toHaveText("Tricycle min ₱15 · confirm with the driver");
   await expect(card.getByTestId("fare-chip")).toHaveText("From ₱33");
   await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
@@ -84,6 +84,8 @@ test("Pacol from the south: the access card, its detail and guidance (the tricyc
   await expect(guide).toHaveAttribute("data-screen", "street_ride");
   await page.getByTestId("trip-sheet").getByRole("button", { name: "I got off the tricycle", exact: true }).click();
   await expect(guide).toHaveAttribute("data-screen", "walk");
+  // Focus follows the step: the new step's heading takes it (the tapped button is gone).
+  await expect(page.locator("#pn-guide-title")).toBeFocused();
 });
 
 test("Cararayan from near the Balatas terminal: R1 first, the special-trip tricycle after it, the far note above", async ({ page }) => {
@@ -94,7 +96,7 @@ test("Cararayan from near the Balatas terminal: R1 first, the special-trip tricy
   const special = cards.nth(1);
   await expect(special).not.toContainText("Recommended");
   await expect(special.getByTestId("street-special")).toHaveText([
-    "Special trip · fare not fixed · confirm with the driver",
+    "Special trip · fare not fixed",
     "From Balatas Tricycle Terminal: local report, unconfirmed",
   ]);
   await expect(special.getByTestId("fare-chip")).toHaveText("Fare not fixed");

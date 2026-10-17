@@ -13,7 +13,7 @@ import { Fragment, useMemo } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
-import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, recommendedIndex, specialFareText, streetCardView, viaChipText } from "@/domain/trip/option-card";
+import { accessLine, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, recommendedIndex, specialFareText, streetCardView, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
@@ -192,7 +192,7 @@ function OptionCard({
           <>
             <span className="sr-only">. </span>
             <span className="pn-trip-card__street" data-testid="access-line">
-              {ACCESS_LINE}
+              {accessLine(option)}
             </span>
             <span className="pn-trip-card__street pn-trip-card__street--fare" data-testid="access-tricycle">
               {accessTricycleChip(option)}
@@ -244,7 +244,7 @@ export function TripOptions({ data, refreshing = false, onOpen, etaModel, routes
         Trip options
       </h2>
       {refreshing ? <p className="pn-trip__refreshing">Updating…</p> : null}
-      <FarNote note={data.plan.farNote} />
+      <FarNote note={data.plan.farNote} options={data.plan.options} />
       <ul id={OPTIONS_LIST_ID} className="pn-trip-list">
         {data.plan.options.map((option, i) => (
           <OptionCard key={option.id} option={option} onOpen={onOpen} index={i} primary={i === primary} etaModel={etaModel} reason={reason} now={now} routes={routes} />

@@ -16,7 +16,7 @@ const CARD_WORDS_TWO_RIDES = 20;
 const CARD_WORDS_STREET = 32;
 /** Increment F: a via chip adds two words; the access card carries a tricycle fare line besides the jeepney card. */
 const CARD_WORDS_ONE_RIDE_VIA = 18;
-const CARD_WORDS_ACCESS = 32;
+const CARD_WORDS_ACCESS = 44;
 const cardBudget = async (card: Locator, jeepney: number) => {
   const mode = await card.getAttribute("data-mode");
   if (mode === "tricycle" || mode === "padyak") return CARD_WORDS_STREET;
