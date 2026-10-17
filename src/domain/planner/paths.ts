@@ -46,7 +46,8 @@ export type PathVariant = Omit<PlanningLine, "encoded"> & {
   samples: PathSample[];
 };
 
-export type Approach = { measureM: number; point: LatLng; distM: number };
+/** `run`: the run's samples in path order (approaches() only); the planner picks the shortest street walk among them. */
+export type Approach = { measureM: number; point: LatLng; distM: number; run?: PathSample[] };
 
 /** Graph walk metres to/from an approach point (snap legs included), or null when unreachable. */
 export type WalkLength = (a: Approach) => number | null;
@@ -121,8 +122,9 @@ function projectRun(v: PathVariant, [first, last]: [number, number], p: LatLng):
 
 /** Every approach of the path to `p` (samples within `radiusM` straight-line), by measure. */
 export function approaches(v: PathVariant, p: LatLng, radiusM = APPROACH_RADIUS_M): Approach[] {
+  const n = v.samples.length;
   return runs(v, (s) => haversineMeters(s, p) <= radiusM)
-    .map((r) => projectRun(v, r, p))
+    .map((r) => ({ ...projectRun(v, r, p), run: Array.from({ length: r[1] - r[0] + 1 }, (_, k) => v.samples[(r[0] + k) % n]!) }))
     .sort((x, y) => x.measureM - y.measureM);
 }
 

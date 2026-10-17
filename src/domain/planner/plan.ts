@@ -58,6 +58,8 @@ export const STRAIGHT_WALK_FACTOR = 1.3;
 export const RIDE_WEIGHT = 0.25;
 export const TRANSFER_PENALTY_M = 600;
 const WALK_RADIUS_M = 1500;
+/** Approach-run search step (samples of 25 m) when the projection's walk is over the cap. */
+const RUN_STRIDE = 4;
 
 export type Place = { kind: "origin" | "destination" | "stop" | "point"; lat: number; lng: number; stopId: string | null; name: string | null };
 
@@ -213,10 +215,28 @@ function dominates(a: Cand, b: Cand): boolean {
 function search(net: PlanningNetwork, g: WalkGraph | null, origin: LatLng, destination: LatLng, directM: number) {
   const access = walker(g, origin, WALK_RADIUS_M, MAX_ACCESS_WALK_GRAPH_M);
   const egress = walker(g, destination, WALK_RADIUS_M, MAX_ACCESS_WALK_GRAPH_M);
+  // Each approach boards or alights at its straight-line projection. When that walk is over the cap or
+  // unreachable (a campus or a river between), it falls back to the run sample with the shortest walk
+  // (prod regression: the loops' nearest points to the Ateneo centroid are 820+ m around the campus).
   const ends = (p: LatLng, w: Walker) =>
-    net.variants.map((v) => approaches(v, p).flatMap((a) => {
+    net.variants.map((v) => approaches(v, p).flatMap(({ run, ...a }) => {
+      let best: { a: Approach; walk: Walk } | null = null;
       const walk = w(a.point);
-      return walk ? [{ a: { ...a, measureM: round1(a.measureM) }, walk }] : [];
+      if (walk) best = { a, walk };
+      else if (run) {
+        // Every 4th sample (100 m), then the samples around the best one.
+        let bestK = -1;
+        const tryAt = (k: number) => {
+          const s = run[k];
+          const sw = s ? w(s) : null;
+          if (s && sw && (!best || sw.m < best.walk.m)) [best, bestK] = [{ a: { measureM: s.m, point: { lat: s.lat, lng: s.lng }, distM: haversineMeters(s, p) }, walk: sw }, k];
+        };
+        for (let k = 0; k < run.length; k += RUN_STRIDE) tryAt(k);
+        tryAt(run.length - 1);
+        const coarse = bestK;
+        if (coarse >= 0) for (let k = coarse - RUN_STRIDE + 1; k < coarse + RUN_STRIDE; k++) if (k !== coarse) tryAt(k);
+      }
+      return best ? [{ a: { ...best.a, measureM: round1(best.a.measureM) }, walk: best.walk }] : [];
     }));
   const boards = ends(origin, access);
   const alights = ends(destination, egress);
