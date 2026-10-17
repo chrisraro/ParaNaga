@@ -8,6 +8,10 @@ import {
   type ModerationFlags,
 } from "@/domain/moderation/policy";
 import { serverEnv } from "@/server/env";
+import { withRequestContext } from "@/server/db/context";
+import { takeToken } from "@/server/ratelimit/rate-limiter";
+import { safeRequestId } from "@/server/request-id";
+import { createHash } from "node:crypto";
 
 // Jev decisions adapter (spec §3.8). Never throws: every failure becomes
 // { status: "unavailable", reason } so callers keep content pending.
@@ -28,7 +32,7 @@ const WireResponse = z
   })
   .strict();
 
-/** Per-day request counter. The in-memory version is per-instance only; a Postgres-backed one is a follow-up. */
+/** Per-day request counter. Production uses the Postgres-backed one (shared by every instance). */
 export interface JevBudget {
   /** Atomically takes one request for the day; false when the cap is reached. */
   tryConsume(day: string, cap: number): Promise<boolean>;
@@ -79,7 +83,25 @@ export type ClassifyInput = { kind: ContentKind; text: string; flags: Moderation
 
 const unavailable = (reason: JevUnavailableReason): JevOutcome => ({ status: "unavailable", reason });
 
-const defaultBudget = createInMemoryBudget();
+/**
+ * The daily cap shared by every serverless instance: one ops.take_token bucket per UTC day (the
+ * 86 400 s window is aligned to the epoch day). A database error answers false, so Jev is skipped
+ * and the content stays pending: the spend cap fails closed.
+ */
+export function createPostgresBudget(): JevBudget {
+  return {
+    async tryConsume(day, cap) {
+      try {
+        const key = createHash("sha256").update(`jev:day|${day}`).digest("hex");
+        return await withRequestContext({ userId: null, requestId: safeRequestId() }, (db) => takeToken(db, key, 86_400, cap));
+      } catch {
+        return false;
+      }
+    },
+  };
+}
+
+const defaultBudget = createPostgresBudget();
 
 export function createJevClient(deps: JevDeps = {}) {
   const budget = deps.budget ?? defaultBudget;
