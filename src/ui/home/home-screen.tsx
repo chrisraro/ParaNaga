@@ -272,8 +272,10 @@ export function HomeScreen() {
   // here directly (same value as attributionBottom below). During the drag the value goes on the
   // followers themselves, not on the root: a custom property on the root re-styles the whole map.
   const homeRef = useRef<HTMLElement>(null);
+  // A best-option line that wraps (a long jeepney summary on a narrow phone) grows the peek by its overflow.
+  const [peekExtra, setPeekExtra] = useState(0);
   const [follow] = useState(createSheetFollow);
-  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE + PEEK_NOTE_VISIBLE * peekNotes.length : PEEK_VISIBLE, (visible, height, dragging) =>
+  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE + PEEK_NOTE_VISIBLE * peekNotes.length + peekExtra : PEEK_VISIBLE, (visible, height, dragging) =>
     follow(homeRef.current, `${Math.round(Math.max(0, visible - mapInsetFor(height)))}px`, dragging),
   );
   // Where focus goes once the results render: the results heading, or an option card.
@@ -1085,7 +1087,7 @@ export function HomeScreen() {
           detailOpen={tripDetailOpen || guiding}
           summary={
             optionsListed && planData ? (
-              <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} listShown={sheet.snap !== 0} notes={peekNotes} onToggle={handleToggleOptions} />
+              <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} listShown={sheet.snap !== 0} notes={peekNotes} onToggle={handleToggleOptions} onExtraHeight={setPeekExtra} />
             ) : null
           }
         >

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { planResponseSchema } from "@/domain/api/plan";
 import { offlinePlanChip } from "@/domain/pwa/offline-copy";
 import { UndoButton } from "@/ui/guidance/guidance-parts";
@@ -26,6 +26,20 @@ describe("OptionsPeek", () => {
     expect(screen.getByTestId("options-toggle").getAttribute("aria-expanded")).toBe("false");
     rerender(<OptionsPeek data={data} expanded={false} listShown onToggle={noop} />);
     expect(screen.getByTestId("options-toggle").getAttribute("aria-expanded")).toBe("true");
+  });
+});
+
+describe("OptionsPeek reports how far a wrapped best-option line overflows its 44 px row (audit 2026-10-18)", () => {
+  it("a 3-line summary (78 px) asks for 34 px more peek, so 'All options' stays on screen; a one-line one for none", () => {
+    const tall = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ height: 78 } as DOMRect);
+    const onExtraHeight = vi.fn();
+    render(<OptionsPeek data={data} expanded={false} listShown={false} onToggle={noop} onExtraHeight={onExtraHeight} />);
+    expect(onExtraHeight).toHaveBeenLastCalledWith(34);
+    cleanup();
+    tall.mockReturnValue({ height: 44 } as DOMRect);
+    render(<OptionsPeek data={data} expanded={false} listShown={false} onToggle={noop} onExtraHeight={onExtraHeight} />);
+    expect(onExtraHeight).toHaveBeenLastCalledWith(0);
+    tall.mockRestore();
   });
 });
 

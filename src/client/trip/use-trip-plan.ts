@@ -19,7 +19,8 @@ import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
 import { enrichPlan, type EnrichedPlanResponse, type WalkGraphStatus } from "@/domain/trip/enrich";
 import { isGpsRefinement, shouldReplan, type PlanEnd, type PlanPair } from "@/domain/trip/replan";
 
-export type PlanErrorKind = "offline" | "server" | "invalid";
+/** busy: rate limited (429), retry later; invalid: a rejected request (400) that fails the same way again. */
+export type PlanErrorKind = "offline" | "server" | "invalid" | "busy";
 export type PlannedOnPhone = false | "offline" | "unreachable";
 
 export type TripPlanState =
@@ -73,6 +74,8 @@ async function requestPlan(pair: PlanPair, signal: AbortSignal): Promise<Outcome
     return { status: "error", kind: navigator.onLine === false ? "offline" : "server" };
   }
   if (response.status >= 500 || response.status === 404) return { status: "error", kind: "server" };
+  // Rate limited: the trip is fine, a retry in a minute can succeed.
+  if (response.status === 429) return { status: "error", kind: "busy" };
   if (!response.ok) return { status: "error", kind: "invalid" };
   const parsed = planResponseSchema.safeParse(await response.json().catch(() => null));
   return parsed.success ? { status: "ready", data: parsed.data, offline: false } : { status: "error", kind: "server" };
