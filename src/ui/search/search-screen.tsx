@@ -20,7 +20,7 @@ import "@/ui/kit/styles";
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useId, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
 import { useRecentSearches, useSavedPlaces } from "@/client/saved/use-saved";
 import { useSearchIndex } from "@/client/search/use-search-index";
 import { putSavedPlace, recordRecentSearch } from "@/client/storage/db";
@@ -337,16 +337,22 @@ export function SearchScreen() {
   // read once per opening, then dropped from this history entry, so coming back here later does
   // not prefill the old label over what the user typed (no request is made).
   const [opening, setOpening] = useState(() => ({ n: 0, query: readHashQuery() }));
-  useEffect(() => {
+  // A layout effect, so a re-show and a hide both land before anything is painted. On show it picks
+  // up a new fragment; on hide the body is replaced, so the next opening is already fresh when it
+  // appears (never the old query for a moment, which a rider's first keystrokes would then lose).
+  useLayoutEffect(() => {
     const query = readHashQuery();
     // Counting openings is the point of this effect (Activity re-show), not derived state.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpening((o) => ({ n: o.n + 1, query }));
-    if (!window.location.hash) return;
+    setOpening((o) => (o.query === query ? o : { n: o.n + 1, query }));
+    if (!window.location.hash) return () => setOpening((o) => ({ n: o.n + 1, query: "" }));
     // Deferred and cancelled on cleanup, so the effect is idempotent: a Strict Mode re-run (or an
     // Activity re-show right away) still reads the same fragment before it is dropped.
     const t = window.setTimeout(() => window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search), 0);
-    return () => window.clearTimeout(t);
+    return () => {
+      window.clearTimeout(t);
+      setOpening((o) => ({ n: o.n + 1, query: "" }));
+    };
   }, []);
   return (
     <div ref={root} className="pn-detail pn-search" data-testid="search-screen">

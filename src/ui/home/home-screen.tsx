@@ -20,7 +20,7 @@
 
 import "./home-screen.css";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useEffectEvent, useMemo, useReducer, useRef, useState } from "react";
 import { useGeolocation } from "@/client/geo/use-geolocation";
 import { useStopsInView } from "@/client/map/use-stops-in-view";
@@ -609,6 +609,10 @@ export function HomeScreen() {
   // another screen starts while that screen still covers the map: focus moves once it closes.
   const confirmRef = useRef<HTMLButtonElement>(null);
   const covered = frame?.panelOpen ?? false;
+  // Search lists the same stops itself, so Home steps aside only for it. Any other panel (a stop's)
+  // leaves the list mounted, so focus can return to the link that opened it.
+  const onSearchRoute = usePathname() === "/app/search";
+  const searchCovers = covered && onSearchRoute;
   useEffect(() => {
     if (covered) return undefined;
     if (!picking) {
@@ -1154,7 +1158,7 @@ export function HomeScreen() {
       )}
 
       {/* The list alternative to the stop pins: out of sight on the map, and listed visibly in Search. */}
-      {!picking && !guiding && !tripDetailOpen && !covered ? (
+      {!picking && !guiding && !tripDetailOpen && !searchCovers ? (
         <div className="pn-home__nearby">
           <NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />
         </div>

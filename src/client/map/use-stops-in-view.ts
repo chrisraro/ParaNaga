@@ -24,7 +24,9 @@ export type StopsInView = {
   truncated: boolean;
 };
 
-const IDLE: StopsInView = { stops: [], status: "idle", truncated: false };
+/** One shared empty list: a fresh `[]` per render would change an effect dependency on every render. */
+const NO_STOPS: readonly StopPin[] = [];
+const IDLE: StopsInView = { stops: NO_STOPS, status: "idle", truncated: false };
 
 /**
  * `view` must be referentially stable between map moves (e.g. React state set from `moveend`): a
@@ -55,5 +57,5 @@ export function useStopsInView(view: Bounds | null, enabled = true): StopsInView
 
   if (!enabled || key === null) return IDLE;
   if (inView) return { stops: inView.stops, status: "ready", truncated: inView.truncated };
-  return { stops: [], status: failed ? "error" : "loading", truncated: false };
+  return { stops: NO_STOPS, status: failed ? "error" : "loading", truncated: false };
 }

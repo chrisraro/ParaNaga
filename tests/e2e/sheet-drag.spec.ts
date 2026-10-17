@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { openTripSheet } from "./fixtures/options";
+import { openTripSheet, sheetSettled } from "./fixtures/options";
 
 // The shared sheet drag (app-shell/sheet-drag.ts): real pointer drags on the handle, the settle,
 // reduced motion, and the per-move main-thread cost. Phone-only (the map lives behind the gate).
@@ -22,6 +22,8 @@ async function openApp(page: Page) {
   await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
   await expect(page.getByTestId("home-search")).toBeVisible();
   await openTripSheet(page);
+  // The sheet slides up on entry (a starting style): measure its detents once it has come to rest.
+  await sheetSettled(page);
 }
 
 /** Drag the handle by `dy` px in `steps` moves, releasing after `pause` ms (a pause is not a fling). */
@@ -140,12 +142,13 @@ test.describe("scroll hand-off (touch)", () => {
   test("pulling the list down from its top at full drags the sheet and lands on a lower detent", async ({ page }) => {
     await atFull(page);
     const fullTop = await top(page);
-    const list = (await sheet(page).locator(".pn-sheet__content").boundingBox())!;
+    // The list body below the header (a touch on the header is the header drag, covered elsewhere).
+    const list = (await sheet(page).locator(".pn-sheet__rest").boundingBox())!;
     const x = list.x + list.width / 2;
     const cdp = await page.context().newCDPSession(page);
-    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: list.y + 100 }] });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: list.y + 20 }] });
     for (let i = 1; i <= 10; i++) {
-      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: list.y + 100 + i * 30 }] });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: list.y + 20 + i * 30 }] });
       await page.waitForTimeout(16);
     }
     await expect(sheet(page)).toHaveClass(/pn-sheet--dragging/);

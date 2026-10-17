@@ -323,7 +323,7 @@ async function expectLegendAndLineAboveSheet(page: Page) {
   expect(legend.y + legend.height).toBeLessThanOrEqual(sheetTop + 1);
 }
 
-async function expectLegendListsWalkWithoutStops(page: Page, notice?: string) {
+async function expectLegendListsWalkWithoutStops(page: Page, notice?: string, bareMap = false) {
   const button = page.getByTestId("map-legend-button");
   await expect(button).toBeVisible();
   await button.click();
@@ -331,8 +331,9 @@ async function expectLegendListsWalkWithoutStops(page: Page, notice?: string) {
   const panel = page.getByTestId("map-legend-panel");
   await expect(panel).toContainText("Walk");
   await expect(panel).toContainText("Dotted: approximate walking path");
-  // Route screens draw no stop pins, so the legend has no stop entry.
-  await expect(panel).not.toContainText("Mapped stop, not verified");
+  // Route screens draw no stop pins, so the legend has no stop entry; the bare map still shows them.
+  if (bareMap) await expect(panel).toContainText("Mapped stop, not verified");
+  else await expect(panel).not.toContainText("Mapped stop, not verified");
   await expect(panel).toContainText("Lines are approximate paths, not verified route shapes.");
   if (notice) await expect(page.getByTestId("map-legend-notice")).toHaveText(notice);
   else await expect(page.getByTestId("map-legend-notice")).toHaveCount(0);
@@ -527,7 +528,7 @@ test("the overview lines and the legend stay while a point is being chosen on th
   await chooseOnMapVia(page);
   await expect(page.getByRole("button", { name: "Set destination here" })).toBeVisible();
   await expect(page.locator("path.pn-line--route").first()).toBeAttached();
-  await expectLegendListsWalkWithoutStops(page);
+  await expectLegendListsWalkWithoutStops(page, undefined, true);
 });
 
 test("the legend and the walking line still show when the route lines are not loaded (404)", async ({ page }) => {
@@ -536,7 +537,7 @@ test("the legend and the walking line still show when the route lines are not lo
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
   );
   await openApp(page);
-  await expectLegendListsWalkWithoutStops(page);
+  await expectLegendListsWalkWithoutStops(page, undefined, true);
 
   await pinBoth(page);
   await chooseOption(page);
