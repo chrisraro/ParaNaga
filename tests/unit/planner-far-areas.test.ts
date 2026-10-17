@@ -34,7 +34,7 @@ const NEAR_T14 = { lat: 13.6314016, lng: 123.1967731 };
 const recommended = (p: TripPlan) => p.options.filter((o) => o.labels.includes("Recommended"));
 const rideCodes = (o: PlanOption) => o.legs.flatMap((l) => (l.kind === "ride" ? [l.routeCode] : []));
 const tricycle = (p: TripPlan) => p.options.find((o) => o.mode === "tricycle");
-const farNote = (zone: string) => `Local report: tricycles to ${zone} charge special-trip fares, so none is suggested.`;
+const farNote = (zone: string, dir = "to") => `Local report: tricycles ${dir} ${zone} charge special-trip fares, so none is suggested.`;
 
 describe("far areas: zone membership and the far note", () => {
   it("far-areas evidence levels equal the modes seed's", () => {
@@ -42,7 +42,11 @@ describe("far areas: zone membership and the far note", () => {
   });
 
   it("the far note is 16 words or fewer for every zone", () => {
-    for (const z of FAR_AREAS.farZones) expect(farNote(z.name).split(/\s+/).length).toBeLessThanOrEqual(16);
+    for (const z of FAR_AREAS.farZones) {
+      expect(farNote(z.name).split(/\s+/).length).toBeLessThanOrEqual(16);
+      // 14 words for one- and three-word zones; "Cararayan and San Isidro" makes it 15 (the plan's limit is 16).
+      expect(farNote(z.name, "from").split(/\s+/).length).toBeLessThanOrEqual(16);
+    }
   });
 
   it("1 Plaza Rizal → Pacol: an R6/R7 jeepney is Recommended, no tricycle, far note", () => {
@@ -93,7 +97,12 @@ describe("far areas: zone membership and the far note", () => {
     expect(recommended(p)).toHaveLength(1);
     expect(rideCodes(recommended(p)[0]!)).toContain("R1");
     expect(tricycle(p)).toBeUndefined();
-    expect(p.farNote).toBe(farNote("Cararayan and San Isidro"));
+    expect(p.farNote).toBe(farNote("Cararayan and San Isidro", "from"));
+  });
+
+  it("far note: both ends far names the destination zone ('to')", () => {
+    expect(plan(CARARAYAN, PACOL).farNote).toBe(farNote("Pacol"));
+    expect(plan(PACOL, CARARAYAN).farNote).toBe(farNote("Cararayan and San Isidro"));
   });
 
   it("8 Pacol → a point in Pacol 900 m away: no tricycle; a jeepney Recommended, else an unlabelled walk card", () => {
