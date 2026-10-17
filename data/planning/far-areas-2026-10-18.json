@@ -46,14 +46,16 @@
       "name": "Cararayan",
       "place": "village",
       "lat": 13.6288288,
-      "lng": 123.2406424
+      "lng": 123.2406424,
+      "radiusM": 1500
     },
     {
       "osmNodeId": 12717296954,
       "name": "Carolina",
       "place": "village",
       "lat": 13.6643348,
-      "lng": 123.2908614
+      "lng": 123.2908614,
+      "radiusM": 3000
     },
     {
       "osmNodeId": 12717296949,
@@ -123,14 +125,16 @@
       "name": "Pacol",
       "place": "village",
       "lat": 13.6595434,
-      "lng": 123.2511904
+      "lng": 123.2511904,
+      "radiusM": 3000
     },
     {
       "osmNodeId": 11112006649,
       "name": "Panicuason",
       "place": "village",
       "lat": 13.6632922,
-      "lng": 123.3179196
+      "lng": 123.3179196,
+      "radiusM": 4500
     },
     {
       "osmNodeId": 12717296940,
@@ -165,7 +169,8 @@
       "name": "San Isidro",
       "place": "village",
       "lat": 13.6323904,
-      "lng": 123.2695351
+      "lng": 123.2695351,
+      "radiusM": 1800
     },
     {
       "osmNodeId": 12717296936,
@@ -208,6 +213,7 @@
         "R1"
       ],
       "radiusM": 1500,
+      "note": "Per-anchor radiusM values are provisional (owner reviews them with pnpm data:far-zone-places): rural barangays extend several km from the village centre; Cararayan stays tighter because city-proper places (Ateneo JHS, Metro Naga Sports Complex) lie about 2 km from it.",
       "evidence": "owner_report_unverified",
       "sourceCodes": [
         "U03"
@@ -224,6 +230,7 @@
         "R7"
       ],
       "radiusM": 1500,
+      "note": "Per-anchor radiusM values are provisional (owner reviews them with pnpm data:far-zone-places): rural barangays extend several km from the village centre; Cararayan stays tighter because city-proper places (Ateneo JHS, Metro Naga Sports Complex) lie about 2 km from it.",
       "evidence": "owner_report_unverified",
       "sourceCodes": [
         "U03"
@@ -240,6 +247,7 @@
         "R7"
       ],
       "radiusM": 1500,
+      "note": "Per-anchor radiusM values are provisional (owner reviews them with pnpm data:far-zone-places): rural barangays extend several km from the village centre; Cararayan stays tighter because city-proper places (Ateneo JHS, Metro Naga Sports Complex) lie about 2 km from it.",
       "evidence": "owner_report_unverified",
       "sourceCodes": [
         "U03"

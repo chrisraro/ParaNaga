@@ -7,7 +7,7 @@ import { haversineMeters } from "@/domain/geo/geometry";
 import { isInsideNaga } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
 import { RULE_EVIDENCE } from "@/domain/import/modes-seed";
-import { FAR_AREAS, FAR_EVIDENCE, FAR_ZONE_RADIUS_M, zoneOf } from "@/domain/planner/far-areas";
+import { anchorRadiusM, FAR_AREAS, FAR_EVIDENCE, FAR_ZONE_RADIUS_M, zoneOf } from "@/domain/planner/far-areas";
 import {
   ACCESS_TRICYCLE_MIN_WALK_M, accessTricycleOk, accessWanted, FAR_END_APPROACH_RADIUS_M, FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan,
 } from "@/domain/planner/plan";
@@ -456,11 +456,70 @@ describe("far zones have a radius around their anchors (review I5)", () => {
 
   it("zoneOf honours a zone's radiusM and defaults to FAR_ZONE_RADIUS_M", () => {
     const anchor = { lat: 13.6595434, lng: 123.2511904 };
-    const base = { ...FAR_AREAS, farZones: FAR_AREAS.farZones.map((z) => ({ ...z, radiusM: undefined })) };
+    const anchors = FAR_AREAS.barangayAnchors.map((x) => ({ ...x, radiusM: undefined }));
+    const base = { ...FAR_AREAS, barangayAnchors: anchors, farZones: FAR_AREAS.farZones.map((z) => ({ ...z, radiusM: undefined })) };
     expect(zoneOf(near(anchor, 0, -1400), base)).toBe("FZ02");
     expect(zoneOf(near(anchor, 0, -1600), base)).toBeNull();
-    const tight = { ...FAR_AREAS, farZones: FAR_AREAS.farZones.map((z) => ({ ...z, radiusM: 500 })) };
+    const tight = { ...FAR_AREAS, barangayAnchors: anchors, farZones: FAR_AREAS.farZones.map((z) => ({ ...z, radiusM: 500 })) };
     expect(zoneOf(near(anchor, 0, -450), tight)).toBe("FZ02");
     expect(zoneOf(near(anchor, 0, -550), tight)).toBeNull();
+  });
+});
+
+describe("far zones: per-anchor radius (controller ruling on I5)", () => {
+  const anchorNamed = (n: string) => FAR_AREAS.barangayAnchors.find((a) => a.name === n)!;
+  const dist = (p: LatLng, n: string) => Math.round(haversineMeters(p, anchorNamed(n)));
+
+  it("anchors carry their provisional radius: Cararayan 1500, San Isidro 1800, Pacol 3000, Carolina 3000, Panicuason 4500", () => {
+    const radii = Object.fromEntries(FAR_AREAS.farZones.flatMap((z) => z.nodeIds.map((id) => {
+      const a = FAR_AREAS.barangayAnchors.find((x) => x.osmNodeId === id)!;
+      return [a.name, anchorRadiusM(a, z)];
+    })));
+    expect(radii).toEqual({ Cararayan: 1500, "San Isidro": 1800, Pacol: 3000, Carolina: 3000, Panicuason: 4500 });
+    for (const z of FAR_AREAS.farZones) expect(z.note).toMatch(/provisional/);
+  });
+
+  it.each([
+    ["Pacol Elementary School", { lat: 13.6514709, lng: 123.232118 }, "Pacol", 2248],
+    ["Pacol Barangay Chapel", { lat: 13.6510262, lng: 123.2332406 }, "Pacol", 2158],
+  ])("%s is far (FZ02), %s anchor %i m away; no point-to-point tricycle from Plaza Rizal", (_n, p, anchor, m) => {
+    expect(dist(p, anchor)).toBe(m);
+    expect(zoneOf(p, FAR_AREAS)).toBe("FZ02");
+    expect(tricycle(plan(PLAZA_RIZAL, p))?.labels ?? []).not.toContain("Recommended");
+  });
+
+  it.each([
+    ["Morada-Ramos Elementary School", { lat: 13.6527245, lng: 123.2775449 }, 1933],
+    ["Fazenda de Esperanca (Farm of Hope)", { lat: 13.651721, lng: 123.2785213 }, 1935],
+  ])("%s (Carolina, %i m from its anchor) is far (FZ03)", (_n, p, m) => {
+    expect(dist(p, "Carolina")).toBe(m);
+    expect(zoneOf(p, FAR_AREAS)).toBe("FZ03");
+  });
+
+  it("a place 2.3 km from the Panicuason anchor is far (FZ03)", () => {
+    expect(zoneOf(near(PANICUASON, 0, -2300), FAR_AREAS)).toBe("FZ03");
+  });
+
+  it.each([
+    ["Ateneo de Naga University Junior High School", { lat: 13.6464862, lng: 123.233849 }, 2096],
+    ["Metro Naga Sports Complex", { lat: 13.6470607, lng: 123.2367197 }, 2071],
+    ["Naga City Children's Home", { lat: 13.6467006, lng: 123.2359422 }, 2051],
+    ["Paseo de San Ignacio", { lat: 13.6449607, lng: 123.2358314 }, 1868],
+  ])("%s stays non-far (nearest anchor Cararayan, %i m, radius 1500)", (_n, p, m) => {
+    expect(dist(p, "Cararayan")).toBe(m);
+    expect(zoneOf(p, FAR_AREAS)).toBeNull();
+  });
+
+  it("Camella Heights stays far (FZ01, about 300 m from Cararayan)", () => {
+    const p = { lat: 13.6263, lng: 123.2417 };
+    expect(dist(p, "Cararayan")).toBeLessThan(400);
+    expect(zoneOf(p, FAR_AREAS)).toBe("FZ01");
+  });
+
+  it("an anchor radius overrides the zone radius", () => {
+    const pacol = anchorNamed("Pacol");
+    const data = { ...FAR_AREAS, barangayAnchors: FAR_AREAS.barangayAnchors.map((a) => (a === pacol ? { ...a, radiusM: 500 } : a)) };
+    expect(zoneOf(near(pacol, 0, -450), data)).toBe("FZ02");
+    expect(zoneOf(near(pacol, 0, -550), data)).toBeNull();
   });
 });
