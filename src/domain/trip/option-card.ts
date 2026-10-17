@@ -14,6 +14,18 @@ export function recommendedIndex(options: readonly Pick<PlanOptionDto, "labels">
   return options.findIndex((o) => o.labels.includes("Recommended"));
 }
 
+/**
+ * The option drawn as the map preview: the Recommended one; with none Recommended (a far trip without a jeepney),
+ * the first non-walk option, else none (-1). Never a long unlabelled walk.
+ */
+export function previewIndex(options: readonly Pick<PlanOptionDto, "labels" | "mode">[]): number {
+  const r = recommendedIndex(options);
+  return r >= 0 ? r : options.findIndex((o) => o.mode !== "walk");
+}
+
+/** The peek line when nothing is Recommended: how many options there are, never "Best option". */
+export const optionsCountText = (n: number) => `${n} ${n === 1 ? "option" : "options"}`;
+
 const JEEPNEY_REASON: Record<NonNullable<PlanResponse["plan"]["jeepneyReason"]>, string> = {
   no_path_near_origin: "No jeepney route passes near your start",
   no_path_near_destination: "No jeepney route passes near your destination",

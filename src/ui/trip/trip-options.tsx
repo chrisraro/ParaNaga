@@ -13,7 +13,7 @@ import { Fragment, useMemo } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
-import { cardRouteNotes, jeepneyReasonText, recommendedIndex, streetCardView } from "@/domain/trip/option-card";
+import { cardRouteNotes, jeepneyReasonText, optionsCountText, recommendedIndex, streetCardView } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
@@ -255,14 +255,19 @@ export function OptionsPeek({
   onToggle: () => void;
 }) {
   // The Recommended option (the tricycle at 500 m or more), not the first card: what is read out must match the list.
-  const best = data.plan.options[Math.max(0, recommendedIndex(data.plan.options))];
+  // With nothing Recommended (a far trip without a jeepney) there is no best option: the peek counts the options.
+  const best = data.plan.options[recommendedIndex(data.plan.options)];
   const bestStreet = best?.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
   const walkLengths = useMemo(() => extractWalkLengths(best?.legs ?? []), [best]);
   const { estimate } = useOptionEta(best, walkLengths, etaModel);
-  if (!best) return null;
+  if (data.plan.options.length === 0) return null;
   return (
     <div className="pn-peek" data-testid="options-peek">
-      {expanded ? null : (
+      {expanded ? null : !best ? (
+      <p className="pn-peek__best" data-testid="options-count">
+        {optionsCountText(data.plan.options.length)}
+      </p>
+      ) : (
       <p className="pn-peek__best" data-testid="options-best">
         <span className="sr-only">Best option: </span>
         <span>
