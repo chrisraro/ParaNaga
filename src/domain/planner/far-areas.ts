@@ -1,0 +1,96 @@
+// Far-area data (Increment F): barangay anchors, far zones, route boarding links, Del Rosario via groups and
+// tricycle terminals. Reviewed JSON (data/planning/far-areas-2026-10-18.json), validated here; pure.
+import { z } from "zod";
+import { RULE_EVIDENCE } from "../import/modes-seed";
+import { haversineMeters } from "../geo/geometry";
+import type { LatLng } from "../geo/types";
+
+// Source codes are shape-checked only: U03 and later RT codes are added to the modes seed by a later task,
+// so the loader must not cross-check them against the seed.
+const sourceCode = z.string().regex(/^(U|R[TLPH])[0-9]{2}$/);
+const evidence = z.enum(RULE_EVIDENCE);
+const routeCode = z.string().regex(/^R[0-9]+(-[A-Z])?$/);
+const terminalCode = z.string().regex(/^T[0-9]{2}$/);
+const zoneCode = z.string().regex(/^FZ[0-9]{2}$/);
+const osmNodeId = z.number().int().positive();
+
+const FarAreasSchema = z.strictObject({
+  header: z.strictObject({
+    schemaVersion: z.literal(1),
+    preparedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    roadSnapshot: z.string().min(1),
+    reviewer: z.string().min(1),
+  }),
+  barangayAnchors: z.array(
+    z.strictObject({
+      osmNodeId,
+      name: z.string().min(1),
+      place: z.enum(["village", "quarter"]),
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+    }),
+  ),
+  farZones: z.array(
+    z.strictObject({
+      code: zoneCode,
+      name: z.string().min(1),
+      nodeIds: z.array(osmNodeId).min(1),
+      routes: z.array(routeCode).min(1),
+      evidence,
+      sourceCodes: z.array(sourceCode).min(1),
+    }),
+  ),
+  routeBoarding: z.array(
+    z.strictObject({
+      routeCode,
+      boarding: z.union([z.strictObject({ terminalCode }), z.strictObject({ pathStart: z.literal("outbound") })]),
+      /** Measured by the data test: is the terminal within 100 m of the route path? The planner ignores a false link. */
+      pathLinkOk: z.boolean().optional(),
+      note: z.string().optional(),
+    }),
+  ),
+  viaGroups: z.array(
+    z.strictObject({
+      code: z.string().min(1),
+      routes: z
+        .array(z.strictObject({ routeCode, via: z.string().min(1), aliasNote: z.string().optional() }))
+        .min(2),
+      evidence,
+      sourceCodes: z.array(sourceCode).min(1),
+      note: z.string().optional(),
+    }),
+  ),
+  tricycleTerminals: z.array(
+    z.strictObject({
+      terminalCode,
+      todas: z.array(z.string()),
+      serves: z
+        .array(z.union([z.strictObject({ farZone: zoneCode }), z.strictObject({ terminalCode }), z.strictObject({ place: z.string().min(1) })]))
+        .min(1),
+      nearestJeepTerminal: terminalCode.nullable(),
+      evidence,
+      sourceCodes: z.array(sourceCode).min(1),
+    }),
+  ),
+});
+
+export type FarAreas = z.infer<typeof FarAreasSchema>;
+export type FarZone = FarAreas["farZones"][number];
+export type RouteBoarding = FarAreas["routeBoarding"][number];
+export type ViaGroup = FarAreas["viaGroups"][number];
+export type TricycleTerminal = FarAreas["tricycleTerminals"][number];
+
+/** Parses the far-areas JSON; throws a ZodError on any unknown or malformed field. */
+export function parseFarAreas(raw: unknown): FarAreas {
+  return FarAreasSchema.parse(raw);
+}
+
+/** The far zone code of the barangay anchor nearest to `point`, or null when that anchor is in no far zone. */
+export function zoneOf(point: LatLng, data: FarAreas): string | null {
+  let best: { id: number; d: number } | null = null;
+  for (const a of data.barangayAnchors) {
+    const d = haversineMeters(point, a);
+    if (best === null || d < best.d) best = { id: a.osmNodeId, d };
+  }
+  return best === null ? null : (data.farZones.find((z) => z.nodeIds.includes(best.id))?.code ?? null);
+}
