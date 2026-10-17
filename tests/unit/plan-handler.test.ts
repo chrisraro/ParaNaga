@@ -19,11 +19,17 @@ const repo = vi.hoisted(() => ({
 }));
 
 vi.mock("@/server/db/context", () => ({
-  withRequestContext: async (_ctx: unknown, fn: (db: unknown) => Promise<unknown>) => {
+  withRequestContext: async (_ctx: unknown, fn: (db: unknown) => Promise<unknown>, options?: { readOnly?: boolean }) => {
     repo.calls += 1;
     if (repo.fail) throw new Error("connection to postgres at 13.6233869,123.1846726 failed");
-    // The rate limiter's ops.take_token call: always within limit in these tests.
-    return fn({ execute: async () => ({ rows: [{ ok: true }] }) });
+    // The rate limiter's ops.take_token call writes a counter row: always within limit in these tests, but
+    // Postgres refuses it inside a read-only transaction, so the mock does too (this was a production 500).
+    return fn({
+      execute: async () => {
+        if (options?.readOnly) throw new Error("cannot execute INSERT in a read-only transaction");
+        return { rows: [{ ok: true }] };
+      },
+    });
   },
 }));
 vi.mock("@/server/repos/network-repo", () => ({
