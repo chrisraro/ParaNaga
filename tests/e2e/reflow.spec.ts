@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page, type Route } from "@playwright/test";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { sheetSettled } from "./fixtures/options";
+import { openTripSheet, pinTrip, sheetSettled } from "./fixtures/options";
 
 // Short, zoomed and landscape screens (WCAG 1.4.10 Reflow, 1.4.4 Resize text, 1.3.4 Orientation):
 // the home sheet's peek, options at full, a trip option's detail and a guidance step at 320x568,
@@ -24,28 +24,10 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
 });
 
-async function drag(page: Page, dx: number, dy: number) {
-  const box = (await mapEl(page).boundingBox())!;
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x + dx / 2, y + dy / 2, { steps: 4 });
-  await page.mouse.move(x + dx, y + dy, { steps: 4 });
-  await page.mouse.up();
-}
-
 async function planTrip(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-  await chooseOnMap.click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap.click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  await drag(page, -120, 80);
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
   await expect(page.getByTestId("options-toggle")).toBeVisible();
 }
 
@@ -209,9 +191,10 @@ test("on a short screen the tab bar is compact: icons only, the names stay", asy
 });
 
 test("at 400 % zoom (320x180) the tab bar steps aside at half and full and returns at peek", async ({ page }) => {
-  // The bare map: planning and detail hide the bar whatever the height.
+  // A destination brings the sheet up; one end alone is still the map, so the bar shows at peek.
   await page.goto("/app");
-  await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
+  await expect(mapEl(page)).toHaveAttribute("data-zoom", /[0-9]/);
+  await openTripSheet(page);
   await page.setViewportSize({ width: 320, height: 180 });
   const tab = page.getByTestId("tab-bar");
   await expect(sheet(page)).toHaveAttribute("data-snap", "1");

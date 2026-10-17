@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { chooseOnMapVia, openTripSheet, pinTrip, useLocationFromSearch } from "./fixtures/options";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
@@ -32,7 +33,7 @@ const mapEl = (page: Page) => page.getByTestId("naga-map");
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function readView(page: Page) {
@@ -129,7 +130,10 @@ async function panTo(page: Page, target: { lat: number; lng: number }) {
 
 async function pin(page: Page, which: "start" | "destination") {
   await chooseOnMap(page).click();
-  await page.getByRole("button", { name: which === "start" ? "Set start here" : "Set destination here" }).click();
+  const confirm = page.getByRole("button", { name: which === "start" ? "Set start here" : "Set destination here" });
+  // A GPS start recentres the map on itself: step away so the pin is not on top of it.
+  if ((await confirm.getAttribute("aria-disabled")) === "true") await drag(page, -120, 80);
+  await confirm.click();
   await expect(rowMain(page, which)).toContainText("Pinned location");
 }
 
@@ -180,7 +184,7 @@ test.describe("geolocation inside Naga", () => {
     // BISCAST is not the default centre, so a recentre is observable.
     const before = await readView(page);
     expect(Math.abs(before.lng - BISCAST.longitude)).toBeGreaterThan(0.004);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
 
     await expect(page.getByTestId("accuracy-pill")).toContainText("± 15 m");
     await expect(row(page, "start")).toContainText("Your location");
@@ -206,24 +210,25 @@ test.describe("geolocation inside Naga", () => {
       .toBe(true);
     expect(await spy.watchCalls()).toBeGreaterThan(0);
     await expect.poll(spy.clearCalls).toBeGreaterThan(0);
-    await expect(row(page, "start")).not.toContainText("Your location");
+    // Locating only recentres: no trip end is set, so there is still no sheet.
+    await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
   });
 
   test("a coarse fix inside Naga is never the start; pinning is offered", async ({ page, context }) => {
     await context.setGeolocation({ ...BISCAST, accuracy: 250 });
     await openApp(page);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
 
     await expect(page.getByTestId("location-status")).toContainText("Location too rough (± 250 m)");
     await expect(page.getByRole("button", { name: "Choose start on map" })).toBeVisible();
-    await expect(rowMain(page, "start")).toContainText("Choose start");
-    await expect(row(page, "start")).not.toContainText("Your location");
+    // Never the start: no end is set, so the map stays bare.
+    await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
   });
 
   test("a precise fix arriving while the user places the start pin does not take over", async ({ page, context }) => {
     await context.setGeolocation({ ...BISCAST, accuracy: 250 });
     await openApp(page);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
     await expect(page.getByTestId("location-status")).toContainText("Location too rough");
     // The rough fix recentres the map (0.8 s fly-to); let it land before the pick reads the view.
     await expect.poll(async () => (await readView(page)).lng).toBeCloseTo(BISCAST.longitude, 4);
@@ -242,14 +247,14 @@ test.describe("geolocation inside Naga", () => {
     const after = await readView(page);
     expect(after.lat).toBeCloseTo(before.lat, 5);
     await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(rowMain(page, "start")).toContainText("Choose start");
-    await expect(row(page, "start")).not.toContainText("Your location");
+    await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
+    await expect(page.getByTestId("home-search")).toBeFocused();
   });
 
   test("approximate fix shows the accuracy chip", async ({ page, context }) => {
     await context.setGeolocation({ ...PLAZA_RIZAL, accuracy: 60 });
     await openApp(page);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
 
     await expect(page.getByTestId("location-status").locator(".pn-chip")).toHaveText("± 60 m");
     await expect(page.getByTestId("accuracy-pill")).toContainText("± 60 m");
@@ -259,7 +264,7 @@ test.describe("geolocation inside Naga", () => {
     const spy = await installWatchSpy(page);
 
     await openApp(page);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
     await expect(page.getByTestId("accuracy-pill")).toBeVisible();
     expect(await spy.watchCalls()).toBeGreaterThan(0); // the spy really wraps the app's watch
 
@@ -282,7 +287,7 @@ test.describe("geolocation inside Naga", () => {
   test("clearing the GPS destination after a swap stops the watch", async ({ page }) => {
     const spy = await installWatchSpy(page);
     await openApp(page);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
     await expect(page.getByTestId("accuracy-pill")).toBeVisible();
     expect(await spy.watchCalls()).toBeGreaterThan(0);
     expect(await spy.clearCalls()).toBe(0);
@@ -291,7 +296,7 @@ test.describe("geolocation inside Naga", () => {
     await expect(rowMain(page, "destination")).toContainText("Your location");
     await page.getByRole("button", { name: "Clear destination", exact: true }).click();
 
-    await expect(row(page, "destination")).toContainText("Where to?");
+    await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
     await expect(page.getByTestId("accuracy-pill")).toBeHidden();
     await expect.poll(spy.clearCalls).toBeGreaterThan(0);
   });
@@ -299,7 +304,7 @@ test.describe("geolocation inside Naga", () => {
   test("Clear trip stops the watch", async ({ page }) => {
     const spy = await installWatchSpy(page);
     await openApp(page);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
     await expect(page.getByTestId("accuracy-pill")).toBeVisible();
     expect(await spy.watchCalls()).toBeGreaterThan(0);
     await pin(page, "destination");
@@ -308,7 +313,7 @@ test.describe("geolocation inside Naga", () => {
     await page.getByRole("button", { name: "Clear trip" }).click();
 
     await expect(page.getByTestId("accuracy-pill")).toBeHidden();
-    await expect(rowMain(page, "start")).toContainText("Choose start");
+    await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
     await expect.poll(spy.clearCalls).toBeGreaterThan(0);
   });
 });
@@ -320,13 +325,12 @@ test.describe("geolocation outside Naga", () => {
     const spy = await installWatchSpy(page);
     await openApp(page);
     const before = await readView(page);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
 
     const status = page.getByTestId("location-status");
     await expect(status).toContainText("You're outside Naga City");
     await expect(page.getByRole("button", { name: "Choose start on map" })).toBeVisible();
-    await expect(rowMain(page, "start")).toContainText("Choose start");
-    await expect(row(page, "start")).not.toContainText("Your location");
+    await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
     await expect(page.getByTestId("accuracy-pill")).toBeHidden();
 
     const after = await readView(page);
@@ -344,10 +348,10 @@ test.describe("geolocation outside Naga", () => {
 test.describe("geolocation denied", () => {
   test("denied copy shows and pinning still works", async ({ page }) => {
     await openApp(page);
-    await useLocation(page).click();
+    await useLocationFromSearch(page);
 
     await expect(page.getByTestId("location-status")).toContainText("Location off. Pin your start on the map.");
-    await chooseOnMap(page).click();
+    await page.getByRole("button", { name: "Choose start on map" }).click();
     await expect(page.getByRole("region", { name: "Choose start on map" })).toBeVisible();
     await page.getByRole("button", { name: "Set start here" }).click();
     await expect(rowMain(page, "start")).toContainText("Pinned location");
@@ -360,14 +364,7 @@ test.describe("pinning without GPS", () => {
     const pathsBefore = await overlayPaths(page).count();
     expect(pathsBefore).toBeGreaterThan(0); // boundary outline + mask
 
-    await pin(page, "start");
-
-    // Destination is offered next; pan so the two pins differ.
-    await chooseOnMap(page).click();
-    const view = await readView(page);
-    await drag(page, -120, 80);
-    await expect.poll(async () => (await readView(page)).lng).not.toBe(view.lng);
-    await page.getByRole("button", { name: "Set destination here" }).click();
+    await pinTrip(page);
 
     await expect(page.getByTestId("no-provisional-route")).toContainText("Only Loops A and B for now.");
     await expect(page.getByRole("heading", { name: "No provisional route connects these points yet" })).toBeVisible();
@@ -418,12 +415,12 @@ test.describe("crosshair outside the city", () => {
     // centre cannot reach the city's edge. At 16 the north-west corner is reachable.
     await page.getByRole("button", { name: "Zoom in" }).click();
     await expect(mapEl(page)).toHaveAttribute("data-zoom", "16");
-    await chooseOnMap(page).click();
+    await chooseOnMapVia(page, "destination");
     await panTo(page, OUTSIDE_POLYGON);
     expectInsideMaxBounds(await readView(page));
 
     await expect(page.getByTestId("pick-outside-hint")).toHaveText("Pin must be in Naga City");
-    const confirm = page.getByRole("button", { name: "Set start here" });
+    const confirm = page.getByRole("button", { name: "Set destination here" });
     await expect(confirm).toHaveAttribute("aria-disabled", "true");
 
     // The announcer holds a known message (the pin prompt); the forced click must leave it alone.
@@ -431,12 +428,12 @@ test.describe("crosshair outside the city", () => {
     await expect(announcer).toHaveText("Move the map to place the pin.");
     await confirm.click({ force: true });
     // Still picking, nothing was set, and nothing was announced as set.
-    await expect(page.getByRole("region", { name: "Choose start on map" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Choose destination on map" })).toBeVisible();
     await expect(announcer).toHaveText("Move the map to place the pin.");
     await expect(announcer).not.toContainText("set:");
 
     await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(rowMain(page, "start")).toContainText("Choose start");
+    await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
   });
 });
 
@@ -444,30 +441,31 @@ test.describe("focus and sheet behaviour", () => {
   test("confirm and cancel return focus to the endpoint row; Escape works from the map", async ({ page }) => {
     await openApp(page);
 
-    // Confirm start -> focus on the start row.
-    await chooseOnMap(page).click();
-    await expect(page.getByRole("button", { name: "Set start here" })).toBeFocused();
-    await page.getByRole("button", { name: "Set start here" }).click();
-    await expect(rowMain(page, "start")).toBeFocused();
-
-    // Cancel destination via the button -> focus on the destination row.
-    await chooseOnMap(page).click();
-    await page.getByRole("button", { name: "Cancel" }).click();
+    // Confirm the destination (from Search) -> focus on the destination row.
+    await chooseOnMapVia(page, "destination");
+    await expect(page.getByRole("button", { name: "Set destination here" })).toBeFocused();
+    await page.getByRole("button", { name: "Set destination here" }).click();
     await expect(rowMain(page, "destination")).toBeFocused();
-    await expect(row(page, "destination")).toContainText("Where to?");
+
+    // Cancel the start via the button -> focus on the start row.
+    await chooseOnMapVia(page, "start");
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(rowMain(page, "start")).toBeFocused();
+    await expect(row(page, "start")).toContainText("Choose start");
 
     // Escape with focus outside the pick panel (on the page body) cancels too.
-    await chooseOnMap(page).click();
-    await expect(page.getByRole("region", { name: "Choose destination on map" })).toBeVisible();
+    await chooseOnMapVia(page, "start");
+    await expect(page.getByRole("region", { name: "Choose start on map" })).toBeVisible();
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("region", { name: "Choose destination on map" })).toBeHidden();
-    await expect(rowMain(page, "destination")).toBeFocused();
+    await expect(page.getByRole("region", { name: "Choose start on map" })).toBeHidden();
+    await expect(rowMain(page, "start")).toBeFocused();
     await expect(page.getByTestId("home-announcer")).toHaveText("Pin cancelled");
   });
 
   test("the peek snap makes the options inert; tapping a row lifts the sheet to half", async ({ page }) => {
     await openApp(page);
+    await openTripSheet(page);
     const sheet = page.getByTestId("trip-sheet");
     const rest = sheet.locator(".pn-sheet__rest");
     const isInert = () => rest.evaluate((el) => (el as HTMLElement).inert);
@@ -488,11 +486,10 @@ test.describe("focus and sheet behaviour", () => {
     // Set both endpoints so swap and both clear buttons exist, then collapse to peek.
     await page.keyboard.press("ArrowDown");
     await snapIs("1");
-    await pin(page, "start");
-    // Move away first: a destination on top of the start is refused (same place).
+    // Move away first: a start on top of the destination is refused (same place).
     await drag(page, -120, 80);
     await settled(page);
-    await pin(page, "destination");
+    await pin(page, "start");
     await grabber.focus();
     await page.keyboard.press("ArrowDown");
     await snapIs("0");
@@ -530,7 +527,9 @@ test.describe("focus and sheet behaviour", () => {
     }
     expect([...visited].some((n) => n.includes("Swap start and destination"))).toBe(true);
 
-    // Fix B: tapping a row at peek expands to half and its options become usable.
+    // Fix B: tapping a row at peek expands to half and its options become usable. (Tabbing ended in
+    // the stops list, which is shown while it has focus; a tap elsewhere would have closed it.)
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await rowMain(page, "destination").click();
     await expect(sheet).toHaveAttribute("data-snap", "1");
     expect(await isInert()).toBe(false);

@@ -15,6 +15,7 @@ import "./explore.css";
 import "../modes/modes.css";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { photoForPlace } from "@/domain/media/photos";
 import {
@@ -46,6 +47,7 @@ import {
   leadStatusText,
   mappedStopsAZ,
   pinPlaceSub,
+  parseExploreCategory,
   placesInCategory,
   routeDirectoryGroups,
   routeEvidenceBadge,
@@ -71,6 +73,8 @@ type HeadingRef = RefObject<HTMLHeadingElement | null>;
 
 export function ExploreScreen() {
   const state = useSearchIndex();
+  // The Home chips link here with ?c=<category>: that chip is the one selected.
+  const requested = parseExploreCategory(useSearchParams().get("c"));
   const directoryHeading = useRef<HTMLHeadingElement>(null);
   if (state.status === "loading") {
     return (
@@ -96,10 +100,10 @@ export function ExploreScreen() {
       </div>
     );
   }
-  return <ExploreView index={state.index} morePlaces={state.morePlaces} onRetry={state.retry} />;
+  return <ExploreView index={state.index} morePlaces={state.morePlaces} onRetry={state.retry} requested={requested} />;
 }
 
-export function ExploreView({ index, morePlaces = "ready", onRetry }: { index: SearchIndex; morePlaces?: MorePlacesState; onRetry?: () => void }) {
+export function ExploreView({ index, morePlaces = "ready", onRetry, requested = null }: { index: SearchIndex; morePlaces?: MorePlacesState; onRetry?: () => void; requested?: ExploreCategoryId | null }) {
   const directoryHeading = useRef<HTMLHeadingElement>(null);
   return (
     <div className="pn-explore">
@@ -116,7 +120,7 @@ export function ExploreView({ index, morePlaces = "ready", onRetry }: { index: S
       >
         Jump to directory
       </a>
-      <PlacesByCategory places={index.osmPlaces} morePlaces={morePlaces} onRetry={onRetry} />
+      <PlacesByCategory places={index.osmPlaces} morePlaces={morePlaces} onRetry={onRetry} requested={requested} />
       <Directory index={index} headingRef={directoryHeading} />
     </div>
   );
@@ -141,9 +145,15 @@ function useOnCommute(): (place: SearchOsmPlace) => void {
   }, []);
 }
 
-function PlacesByCategory({ places, morePlaces, onRetry }: { places: readonly SearchOsmPlace[]; morePlaces: MorePlacesState; onRetry?: () => void }) {
+function PlacesByCategory({ places, morePlaces, onRetry, requested }: { places: readonly SearchOsmPlace[]; morePlaces: MorePlacesState; onRetry?: () => void; requested: ExploreCategoryId | null }) {
   const uid = useId();
-  const [cat, setCat] = useState<ExploreCategoryId>("all");
+  const [cat, setCat] = useState<ExploreCategoryId>(requested ?? "all");
+  // The tab page stays mounted: a new ?c= (another Home chip) selects its chip while it is shown.
+  const [seenRequest, setSeenRequest] = useState(requested);
+  if (requested !== seenRequest) {
+    setSeenRequest(requested);
+    if (requested) setCat(requested);
+  }
   const [reveal, setReveal] = useState<{ cat: ExploreCategoryId; n: number } | null>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const cardList = useRef<HTMLUListElement>(null);

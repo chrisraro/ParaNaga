@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { PageFrame } from "@/ui/app-shell/page-frame";
 import { ExploreScreen } from "@/ui/explore/explore-screen";
 
@@ -30,7 +31,9 @@ export default function ExplorePage() {
       header={<p className="pn-explore__intro">Places in Naga, and how to get there.</p>}
       testId="explore-page"
     >
-      <ExploreScreen />
+      <Suspense fallback={null}>
+        <ExploreScreen />
+      </Suspense>
     </PageFrame>
   );
 }

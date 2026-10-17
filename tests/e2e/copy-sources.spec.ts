@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { ACCESS_PLAN, PROVISIONAL_PLAN, SPECIAL_TRIP_PLAN, TWO_RIDE_PLAN, VIA_PLAN } from "./fixtures/plan-responses";
 import { SEARCH_INDEX, SOURCES, STOP_A1, routeNetwork } from "./fixtures/network";
-import { chooseOption, expandOptions } from "./fixtures/options";
+import { chooseOption, expandOptions, pinTrip } from "./fixtures/options";
 
 // U3: concise copy with word budgets, and every source, credit and revision on one screen,
 // Sources and credits. Working screens carry no "Source", "Retrieved", "S0x", "OpenStreetMap" or
@@ -63,27 +63,13 @@ const workingText = (loc: Locator) =>
 const FORBIDDEN = /Source|Retrieved|\bS0\d|OpenStreetMap|[Rr]evision|Mapped candidate · not yet verified|My Maps|snapshot|Corrections|Verification opens/;
 
 async function pinBoth(page: Page) {
-  const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-  await chooseOnMap.click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap.click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  const box = (await mapEl(page).boundingBox())!;
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x - 60, y + 40, { steps: 4 });
-  await page.mouse.move(x - 120, y + 80, { steps: 4 });
-  await page.mouse.up();
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
 }
 
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 test("word budgets: an option card, the trip detail header and the first guidance step stay short", async ({ page }) => {
@@ -225,6 +211,8 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
 }
 
 test("a two-ride option card stays within 20 words and keeps the caution", async ({ page }) => {
+  // Off-peak Manila by day: after the last trips the cards add a "Last trips may already have left" line.
+  await page.clock.setFixedTime(new Date("2026-10-16T09:30:00+08:00"));
   await page.route("**/api/v1/plan", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(TWO_RIDE_PLAN) }),
   );
@@ -242,6 +230,7 @@ test("a two-ride option card stays within 20 words and keeps the caution", async
 
 for (const [name, plan] of [["via", VIA_PLAN], ["access", ACCESS_PLAN], ["special-trip", SPECIAL_TRIP_PLAN]] as const) {
   test(`the ${name} plan cards stay within their word budgets and keep the caution`, async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-16T09:30:00+08:00"));
     await page.route("**/api/v1/plan", (route) =>
       route.fulfill({ status: 200, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(plan) }),
     );

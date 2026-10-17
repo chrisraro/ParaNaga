@@ -816,3 +816,167 @@ a.pn-option {
   flex: none;
   color: var(--pn-label2);
 }
+
+/* ---- Map-first Home (data-screen="home"): no sheet, a full-bleed map, floating chrome. ---- */
+.pn-home-top {
+  position: absolute;
+  top: var(--naga-map-controls-top);
+  left: 0;
+  right: 0;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.pn-home-top > * {
+  pointer-events: auto;
+}
+.pn-home-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  margin: 0 12px;
+  padding: 0 20px;
+  border-radius: 26px;
+  background: var(--pn-surface);
+  box-shadow:
+    0 2px 6px -1px var(--pn-shadow),
+    0 8px 24px -8px var(--pn-shadow);
+  color: var(--pn-label2);
+  font-size: 17px;
+  text-decoration: none;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-home-search:active,
+.pn-home-chip:active {
+  transform: scale(0.98);
+}
+.pn-home-search svg {
+  flex: none;
+  color: var(--pn-accent);
+}
+.pn-home-chips {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0 12px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* Saved places arrive after the first paint, in front of the categories: keep the row at its start. */
+  overflow-anchor: none;
+  /* A pill's 4 px hit-area slack above and below, inside the scroller (it clips what overflows). */
+  overscroll-behavior-x: contain;
+}
+.pn-home-chips::-webkit-scrollbar {
+  display: none;
+}
+.pn-home-chips > li {
+  flex: none;
+  padding: 4px 0;
+}
+.pn-home-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  max-width: 220px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--pn-surface);
+  box-shadow:
+    0 1px 2px var(--pn-shadow),
+    0 2px 5px -1px var(--pn-shadow);
+  color: var(--pn-label);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+/* 44 px hit area around the 36 px chip. */
+.pn-home-chip::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+.pn-home-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pn-home-chip--saved svg {
+  flex: none;
+  color: var(--pn-accent);
+}
+.pn-home a.pn-home-search:focus-visible,
+.pn-home a.pn-home-chip:focus-visible,
+.pn-home button.pn-home-chip:focus-visible {
+  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline-offset: 2px;
+}
+@media (forced-colors: active) {
+  .pn-home-search,
+  .pn-home-chip {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* The map's controls re-stack: layers under the chips, locate and zoom at the bottom right, the
+   accuracy chip above Legend at the bottom left. --pn-home-bottom is the tab bar's clearance. */
+.pn-home[data-screen="home"] .pn-map .pn-map-layers {
+  top: calc(var(--naga-map-controls-top) + 112px);
+}
+.pn-home[data-screen="home"] .pn-map .pn-map-locate {
+  top: auto;
+  bottom: calc(var(--pn-home-bottom, 0px) + 28px);
+}
+.pn-home[data-screen="home"] .pn-map .pn-map-zoom {
+  top: auto;
+  bottom: calc(var(--pn-home-bottom, 0px) + 88px);
+}
+.pn-home[data-screen="home"] .pn-pill {
+  top: auto;
+  left: 12px;
+  bottom: calc(var(--pn-home-bottom, 0px) + 84px);
+}
+
+/* A location problem (denied, outside Naga) has no sheet to sit in: a card under the chips. */
+.pn-home__status {
+  position: absolute;
+  top: calc(var(--naga-map-controls-top) + 112px);
+  left: 12px;
+  right: 76px;
+  z-index: 12;
+}
+
+/* Nearby stops: the non-map list of the stop pins. Out of sight until it takes focus (a screen
+   reader reads it in place); then it is a card over the bottom of the map. */
+.pn-home__nearby:not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.pn-home__nearby:focus-within {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--pn-home-bottom, 0px) + 16px);
+  z-index: 30;
+  max-height: 45dvh;
+  overflow-y: auto;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+  box-shadow:
+    0 2px 6px -1px var(--pn-shadow),
+    0 8px 24px -8px var(--pn-shadow);
+}
