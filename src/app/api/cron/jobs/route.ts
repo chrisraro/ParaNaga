@@ -1,10 +1,19 @@
 import "server-only";
+import { timingSafeEqual } from "node:crypto";
 import { serverEnv } from "@/server/env";
 import { safeRequestId } from "@/server/request-id";
 import { runJobBatch } from "@/server/jobs/worker";
 import { registerDefaultJobHandlers } from "@/server/jobs/handlers";
 
-export const dynamic = "force-dynamic";
+/**
+ * Compares two secrets in constant time. A query-string secret is never accepted: URLs end up in logs.
+ */
+function secretMatches(provided: string | null, expected: string | undefined): boolean {
+  if (!provided || !expected) return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 /**
  * Background job runner endpoint called by Vercel Cron or Neon scheduled trigger.
@@ -14,13 +23,11 @@ export async function GET(request: Request): Promise<Response> {
   const requestId = safeRequestId(request.headers.get("x-vercel-id") ?? request.headers.get("x-request-id"));
   const env = serverEnv();
 
-  // Validate CRON_SECRET
+  // Validate CRON_SECRET (Authorization header only)
   const authHeader = request.headers.get("authorization");
-  const providedSecret = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice(7).trim()
-    : new URL(request.url).searchParams.get("secret");
+  const providedSecret = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
 
-  if (!env.CRON_SECRET || providedSecret !== env.CRON_SECRET) {
+  if (!secretMatches(providedSecret, env.CRON_SECRET)) {
     return Response.json(
       { error: { code: "unauthorized", message: "Invalid or missing cron secret.", requestId } },
       { status: 401, headers: { "X-Request-Id": requestId } },

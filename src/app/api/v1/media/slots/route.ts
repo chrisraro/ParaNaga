@@ -4,7 +4,6 @@ import { safeRequestId } from "@/server/request-id";
 import { createMediaSlotPayloadSchema, createMediaSlotResponseSchema } from "@/domain/media/schemas";
 import { createMediaSlot } from "@/server/media/service";
 
-export const dynamic = "force-dynamic";
 
 /**
  * Commuters and contributors request a presigned quarantine upload slot.

@@ -4,7 +4,6 @@ import { safeRequestId } from "@/server/request-id";
 import { confirmMediaPayloadSchema, confirmMediaResponseSchema } from "@/domain/media/schemas";
 import { confirmMediaSlot } from "@/server/media/service";
 
-export const dynamic = "force-dynamic";
 
 /**
  * Commuter confirms uploaded media slot by slot ID (never by key).
