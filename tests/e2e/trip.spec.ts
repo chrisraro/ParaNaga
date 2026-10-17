@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_SHORTER_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { chooseOption, chooseOnMapVia, expandOptions, openTripSheet, pinTrip } from "./fixtures/options";
+import { chooseOption, chooseOnMapVia, expandOptions, openTripSheet, pinTrip, sheetSettled } from "./fixtures/options";
 
 // Trip options and trip detail (Task 6). POST /api/v1/plan is intercepted with fixtures
 // (allowed in tests only), so nothing here needs a database. Tiles are aborted.
@@ -70,7 +70,7 @@ test("trip options show the unverified badge, estimate chips and honest time est
   await expect(options.getByRole("heading", { name: "Trip options" })).toBeVisible();
   const cards = options.getByTestId("trip-option");
   await expect(cards).toHaveCount(3);
-  // Two jeepney cards, then the Recommended tricycle (a trip of 500 m or more has no walk card).
+  // Two jeepney cards, then the tricycle (a trip of 500 m or more has no walk card); the first jeepney is Recommended.
   await expect(cards.evaluateAll((els) => els.map((el) => el.getAttribute("data-mode")))).resolves.toEqual(["jeepney", "jeepney", "tricycle"]);
   for (const card of await options.locator('[data-mode="jeepney"]').all()) {
     // A card is minimal: the caution chip (the full badge is in the detail), the route, an estimated range.
@@ -81,21 +81,21 @@ test("trip options show the unverified badge, estimate chips and honest time est
     await expect(card.locator('abbr[title="Estimate"]').first()).toHaveText("Est.Estimate");
   }
   await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱14");
-  await expect(cards.nth(0)).toContainText("Fewest transfers");
+  await expect(cards.nth(0)).toContainText("Recommended");
   await expect(cards.nth(0)).toContainText("No transfers");
   // Leg-by-leg text, distances, the vehicle chip and the footers are not on the card.
   await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|clockwise|Walk ≈|Jeepney/);
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱16–₱18");
-  // The tricycle card: Recommended, the minimum fare, no minutes, no driver badge (it is not a jeepney ride).
-  await expect(cards.nth(2)).toContainText("Recommended");
+  // The tricycle card: not Recommended, the minimum fare, no minutes, no driver badge (it is not a jeepney ride).
+  await expect(cards.nth(2)).not.toContainText("Recommended");
   await expect(cards.nth(2).getByTestId("fare-chip")).toHaveText("Minimum fare ₱15");
   await expect(cards.nth(2).getByTestId("trip-option-time")).toHaveText("Time not estimated");
   await expect(cards.nth(2).getByTestId("card-unverified")).toHaveCount(0);
   await expect(page.locator(".pn-trip-card--primary")).toHaveCount(1);
 
   // Accessible names carry the label, the caution and the fare estimate, with the full word.
-  await expect(page.getByRole("button", { name: /Fewest transfers.*Unverified route.*Loop A.*Estimate ₱14(?!–)/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Recommended.*Unverified route.*Loop A.*Estimate ₱14(?!–)/ })).toBeVisible();
 
   await expect(options).not.toContainText(/Walking distances|revision|Source/);
   await expect(page.getByText("Verified route", { exact: true })).toHaveCount(0);
@@ -167,11 +167,10 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   // Only two links: the Sources link in the top bar and the fare basis.
   await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated"]);
 
-  // Boarding and getting-off stops are DOM markers above the trip's own lines (Task 12); the
-  // routes overview is not drawn while a trip is shown.
-  await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
-  await expect(page.getByRole("img", { name: "Board at Plaza Rizal (A1)" })).toBeAttached();
-  await expect(page.getByRole("img", { name: "Get off at Avenue Square (A5)" })).toBeAttached();
+  // Route screens show only the route: no stop icons (owner ruling 2026-10-17); the routes overview
+  // is not drawn while a trip is shown.
+  await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
+  await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
   await expect(page.locator(".leaflet-overlay-pane path.pn-line--ride").first()).toBeAttached();
   await expect(page.locator(".leaflet-overlay-pane path.pn-line--route")).toHaveCount(0);
   await expect(page.locator(".leaflet-overlay-pane polyline")).toHaveCount(0);
@@ -257,20 +256,21 @@ for (const colorScheme of ["light", "dark"] as const) {
   }
 }
 
-test("opening and closing a trip detail keeps exactly one stop-pin canvas", async ({ page }) => {
+test("route screens hide the stop pins; the bare map brings them back on one canvas", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
-  await pinBoth(page);
   const canvases = page.locator(".leaflet-overlay-pane canvas");
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
-  await expect(canvases).toHaveCount(1);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
   for (let i = 0; i < 2; i++) {
     await chooseOption(page);
     await expect(page.getByTestId("trip-detail")).toBeVisible();
     await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
     await page.getByRole("button", { name: "Back to trip options" }).click();
     await expect(page.getByTestId("trip-detail")).toHaveCount(0);
-    await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
+    await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
   }
   await expect(canvases).toHaveCount(1);
 });
@@ -458,7 +458,7 @@ test.describe("GPS refinement while results are shown", () => {
     await expect(detail).toBeVisible();
     await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);
-    await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
+    await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
   });
 
   test("a refinement under 25 m does not replan", async ({ page, context }) => {
@@ -507,15 +507,16 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   const sheet = page.getByTestId("trip-sheet");
   const toggle = page.getByTestId("options-toggle");
   await expect(sheet).toHaveAttribute("data-snap", "0");
-  // The Recommended option is the tricycle here (500 m or more), so that is what the peek reads, with no minutes and no wait.
-  await expect(page.getByTestId("options-best")).toContainText(/Tricycle.*Time not estimated.*Minimum fare ₱15/);
-  await expect(page.getByTestId("options-best")).not.toContainText(/waiting|Loop A/);
+  // The Recommended option is the cheapest jeepney here, so the peek reads it as an estimated range, never exact.
+  await expect(page.getByTestId("options-best")).toContainText(/Loop A.*Est.*\d+–\d+ min \+ waiting \(unknown\).*Est.*₱14/);
+  await expect(page.getByTestId("options-best")).not.toContainText("Tricycle");
   await expect(toggle).toHaveText("All options");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
-  // A tricycle is not a jeepney ride: no unverified-route chip at the peek.
-  await expect(page.getByTestId("options-best-unverified")).toHaveCount(0);
+  // A jeepney is an unverified route: the chip shows at the peek.
+  await expect(page.getByTestId("options-best-unverified")).toBeVisible();
   await expect(toggle).toHaveAttribute("aria-controls", "pn-trip-options-list");
   // Both rows, the summary and the toggle are inside the visible sheet, targets >= 44 px.
+  await sheetSettled(page);
   const vh = page.viewportSize()!.height;
   for (const el of [toggle, page.getByTestId("options-best"), page.getByTestId("endpoint-destination")]) {
     const box = (await el.boundingBox())!;

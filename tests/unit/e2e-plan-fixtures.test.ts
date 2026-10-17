@@ -24,13 +24,21 @@ describe("e2e plan fixtures", () => {
     });
   }
 
-  it("keeps the 500 m rule: no walk card at 500 m and above, the tricycle Recommended", () => {
+  it("keeps the 500 m rule: no walk card at 500 m and above; the cheapest jeepney Recommended, the tricycle only without one", () => {
     for (const [, plan] of PLANS) {
       const parsed = planResponseSchema.parse(plan);
       const d = parsed.plan.directWalkEstimateMeters;
       if (parsed.plan.options.length === 0 || d === null || d < 500 || parsed.plan.farNote) continue;
       expect(parsed.plan.options.some((o) => o.mode === "walk")).toBe(false);
-      expect(parsed.plan.options.find((o) => o.mode === "tricycle")!.labels).toContain("Recommended");
+      const jeeps = parsed.plan.options.filter((o) => o.mode === "jeepney");
+      if (jeeps.length > 0) {
+        expect(jeeps[0]!.labels).toContain("Recommended");
+        const fare = (o: (typeof jeeps)[number]) => o.fare.minCentavos ?? Infinity;
+        expect(jeeps.every((o) => fare(o) >= fare(jeeps[0]!))).toBe(true);
+        expect(parsed.plan.options.find((o) => o.mode === "tricycle")!.labels).not.toContain("Recommended");
+      } else {
+        expect(parsed.plan.options.find((o) => o.mode === "tricycle")!.labels).toContain("Recommended");
+      }
     }
   });
 });

@@ -30,17 +30,13 @@ describe("OptionsPeek", () => {
 });
 
 describe("OptionsPeek names the Recommended option, not the first card", () => {
-  it("a trip of 1.26 km: the tricycle is Recommended, so the peek reads the tricycle", () => {
+  it("a trip of 1.26 km: the cheapest jeepney is Recommended, so the peek reads that jeepney, not the tricycle", () => {
     const plan = planResponseSchema.parse(TRICYCLE_RECOMMENDED_PLAN);
     expect(plan.plan.options[0]!.mode).toBe("jeepney");
     render(<OptionsPeek data={plan} expanded={false} listShown={false} onToggle={noop} />);
     const best = screen.getByTestId("options-best").textContent ?? "";
-    expect(best).toContain("Tricycle");
-    expect(best).not.toContain("Loop");
-    expect(best).toContain("Time not estimated");
-    expect(best).not.toContain("waiting");
-    // A tricycle is not a jeepney ride: no unverified-route chip.
-    expect(screen.queryByTestId("options-best-unverified")).toBeNull();
+    expect(best).not.toContain("Tricycle");
+    expect(screen.getByTestId("options-best-unverified").textContent).toBe("Unverified route");
   });
 
   it("under 500 m with a jeepney passing the destination: the peek reads that jeepney, not the walk card", () => {

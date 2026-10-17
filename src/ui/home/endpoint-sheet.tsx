@@ -91,8 +91,9 @@ export function EndpointSheet({
   const { attach, snap, offset } = sheet;
   const [list, setList] = useState<HTMLDivElement | null>(null);
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
-  useScrollHandoff(sheet, list);
-  useHeaderDrag(sheet, header ?? list, header ? undefined : '[data-testid="trip-detail-header"], [data-testid="guidance-header"]');
+  const detailHeaders = '[data-testid="trip-detail-header"], [data-testid="guidance-header"]';
+  useScrollHandoff(sheet, list, `.pn-sheet__head, ${detailHeaders}`);
+  useHeaderDrag(sheet, header ?? list, header ? undefined : detailHeaders);
   // Tiny peek: only the grabber shows; the rows and the footer lie under the tab bar.
   const tinyPeek = snap === 0 && sheet.height !== null && sheet.height < TINY_SHEET;
   // Growing: the padding that stands for the off-screen part shrinks with the lift, not 360 ms

@@ -323,7 +323,7 @@ async function expectLegendAndLineAboveSheet(page: Page) {
   expect(legend.y + legend.height).toBeLessThanOrEqual(sheetTop + 1);
 }
 
-async function expectLegendListsWalkAndStops(page: Page, notice?: string) {
+async function expectLegendListsWalkWithoutStops(page: Page, notice?: string, bareMap = false) {
   const button = page.getByTestId("map-legend-button");
   await expect(button).toBeVisible();
   await button.click();
@@ -331,7 +331,9 @@ async function expectLegendListsWalkAndStops(page: Page, notice?: string) {
   const panel = page.getByTestId("map-legend-panel");
   await expect(panel).toContainText("Walk");
   await expect(panel).toContainText("Dotted: approximate walking path");
-  await expect(panel).toContainText("Mapped stop, not verified");
+  // Route screens draw no stop pins, so the legend has no stop entry; the bare map still shows them.
+  if (bareMap) await expect(panel).toContainText("Mapped stop, not verified");
+  else await expect(panel).not.toContainText("Mapped stop, not verified");
   await expect(panel).toContainText("Lines are approximate paths, not verified route shapes.");
   if (notice) await expect(page.getByTestId("map-legend-notice")).toHaveText(notice);
   else await expect(page.getByTestId("map-legend-notice")).toHaveCount(0);
@@ -340,7 +342,7 @@ async function expectLegendListsWalkAndStops(page: Page, notice?: string) {
   await expect(panel).toBeHidden();
 }
 
-test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop pins and the legend", async ({ page }) => {
+test("guidance keeps the trip lines (walk dotted, ride solid) and the legend, without stop pins", async ({ page }) => {
   await page.route("**/api/v1/plan", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
   );
@@ -359,8 +361,9 @@ test("guidance keeps the trip lines (walk dotted, ride solid), the ride's stop p
   await expect(walk.first()).toBeAttached({ timeout: 15000 });
   await expect(walk.first()).toHaveAttribute("stroke-dasharray", /.+/);
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
-  await expect(page.getByTestId("home-screen").getByTestId("naga-map")).not.toHaveAttribute("data-stop-pins", "0");
-  await expectLegendListsWalkAndStops(page);
+  // Route screens show only the route: no stop pins (owner ruling 2026-10-17).
+  await expect(page.getByTestId("home-screen").getByTestId("naga-map")).toHaveAttribute("data-stop-pins", "0");
+  await expectLegendListsWalkWithoutStops(page);
   await page.getByTestId("map-legend-button").click();
   const a11y = await new AxeBuilder({ page })
     .include('[data-testid="naga-map"]')
@@ -402,7 +405,7 @@ test("after choosing From and To the recommended option's lines are previewed ab
   await expect(walk.first()).toHaveAttribute("stroke-dasharray", /.+/);
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.locator("path.pn-line--route")).toHaveCount(0);
-  await expectLegendListsWalkAndStops(page);
+  await expectLegendListsWalkWithoutStops(page);
   await page.getByTestId("map-legend-button").click();
   await legendOpen(page, true);
   await expect(page.getByTestId("map-legend-panel")).toContainText(/jeepney/i);
@@ -525,7 +528,7 @@ test("the overview lines and the legend stay while a point is being chosen on th
   await chooseOnMapVia(page);
   await expect(page.getByRole("button", { name: "Set destination here" })).toBeVisible();
   await expect(page.locator("path.pn-line--route").first()).toBeAttached();
-  await expectLegendListsWalkAndStops(page);
+  await expectLegendListsWalkWithoutStops(page, undefined, true);
 });
 
 test("the legend and the walking line still show when the route lines are not loaded (404)", async ({ page }) => {
@@ -534,7 +537,7 @@ test("the legend and the walking line still show when the route lines are not lo
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
   );
   await openApp(page);
-  await expectLegendListsWalkAndStops(page);
+  await expectLegendListsWalkWithoutStops(page, undefined, true);
 
   await pinBoth(page);
   await chooseOption(page);
@@ -542,7 +545,7 @@ test("the legend and the walking line still show when the route lines are not lo
   await peekSheet(page);
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached({ timeout: 15000 });
   await expect(page.locator("path.pn-line--ride")).toHaveCount(0); // never an invented path
-  await expectLegendListsWalkAndStops(page, "Route lines for this trip didn't load.");
+  await expectLegendListsWalkWithoutStops(page, "Route lines for this trip didn't load.");
 });
 
 // Keyboard focus is never left below the screen edge (the content scrolls inside the visible sheet;

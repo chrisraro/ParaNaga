@@ -186,11 +186,11 @@ test("A special trip alone (no jeepney): unlabelled, 'Fare not fixed', never Rec
   await expectAxeBothSchemes(page);
 });
 
-test("A city trip is unchanged: the tricycle is Recommended from 500 m, no far note", async ({ page }) => {
+test("A city trip has no far note: the jeepney is Recommended from 500 m", async ({ page }) => {
   await open(page, PROVISIONAL_PLAN);
   const recommended = page.getByTestId("trip-option").filter({ hasText: "Recommended" });
   await expect(recommended).toHaveCount(1);
-  await expect(recommended).toHaveAttribute("data-mode", "tricycle");
+  await expect(recommended).toHaveAttribute("data-mode", "jeepney");
   await expect(page.getByTestId("far-note")).toHaveCount(0);
   await expect(page.getByTestId("street-special")).toHaveCount(0);
   await expectAxeBothSchemes(page);
