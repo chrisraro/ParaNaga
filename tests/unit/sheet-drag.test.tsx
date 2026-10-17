@@ -5,7 +5,7 @@
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { SheetGrabber, offsetFor, useScrollHandoff, useSheet, type Snap } from "@/ui/app-shell/bottom-sheet";
+import { SheetGrabber, offsetFor, useHeaderDrag, useScrollHandoff, useSheet, type Snap } from "@/ui/app-shell/bottom-sheet";
 import { settleDuration } from "@/ui/app-shell/sheet-physics";
 import { createSheetDrag, type DragHost } from "@/ui/app-shell/sheet-drag";
 
@@ -485,3 +485,54 @@ describe("useScrollHandoff", () => {
     expect(sheetEl.classList.contains("pn-sheet--dragging")).toBe(false);
   });
 });
+
+function HeaderProbe({ onTap, onSnap }: { onTap: () => void; onSnap: (s: Snap) => void }) {
+  const sheet = useSheet(0);
+  const [header, setHeader] = useState<HTMLDivElement | null>(null);
+  useHeaderDrag(sheet, header);
+  onSnap(sheet.snap);
+  return (
+    <section ref={sheet.attach} data-testid="sheet" data-snap={sheet.snap}>
+      <div ref={setHeader} data-testid="header">
+        <button type="button" onClick={onTap}>
+          All options
+        </button>
+      </div>
+    </section>
+  );
+}
+
+describe("useHeaderDrag", () => {
+  it("drags the sheet when moving past the 6 px slop and suppresses the synthetic click", () => {
+    vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => H });
+    const onTap = vi.fn();
+    const onSnap = vi.fn();
+    const view = render(<HeaderProbe onTap={onTap} onSnap={onSnap} />);
+    const header = view.getByTestId("header");
+    const btn = view.getByRole("button", { name: "All options" });
+    fireEvent.pointerDown(btn, { pointerId: 1, clientY: 600, pointerType: "touch" });
+    fireEvent.pointerMove(header, { pointerId: 1, clientY: 350, pointerType: "touch" });
+    runFrames();
+    expect(view.getByTestId("sheet").classList.contains("pn-sheet--dragging")).toBe(true);
+    fireEvent.pointerUp(header, { pointerId: 1, clientY: 350, pointerType: "touch" });
+    fireEvent.click(btn);
+    expect(onTap).not.toHaveBeenCalled();
+    expect(onSnap).toHaveBeenLastCalledWith(1);
+  });
+
+  it("lets a plain tap inside the header fire the button's click without dragging", () => {
+    vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+    Object.defineProperty(HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => H });
+    const onTap = vi.fn();
+    const onSnap = vi.fn();
+    const view = render(<HeaderProbe onTap={onTap} onSnap={onSnap} />);
+    const btn = view.getByRole("button", { name: "All options" });
+    fireEvent.pointerDown(btn, { pointerId: 1, clientY: 600, pointerType: "touch" });
+    fireEvent.pointerUp(btn, { pointerId: 1, clientY: 602, pointerType: "touch" });
+    fireEvent.click(btn);
+    expect(onTap).toHaveBeenCalledTimes(1);
+    expect(onSnap).toHaveBeenLastCalledWith(0);
+  });
+});
+
