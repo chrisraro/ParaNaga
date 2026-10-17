@@ -54,6 +54,7 @@ import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
 import { PEEK_NOTE_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, TINY_SHEET, mapInsetFor, useSheet, type Snap } from "@/ui/app-shell/bottom-sheet";
 import { EndpointSheet, endpointRowMainId } from "./endpoint-sheet";
+import { HomeSearchBar } from "./home-search-bar";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
   LocationStatus,
@@ -235,6 +236,9 @@ export function HomeScreen() {
 
   const ready = isReadyToPlan(endpoints);
   const picking = endpoints.picking;
+  // A trip is being set up once either end is set; until then Home is the bare map (no sheet).
+  const tripStarted = ready || endpoints.start !== null || endpoints.destination !== null;
+  const atHome = !picking && !guiding && !tripStarted;
   // While placing a pin: the crosshair is within SAME_PLACE_M of the other end.
   const otherEnd = picking ? endpoints[picking === "start" ? "destination" : "start"] : null;
   const pickSamePlace = otherEnd !== null && center.inside && haversineMeters(center.point, otherEnd.point) <= SAME_PLACE_M;
@@ -642,11 +646,13 @@ export function HomeScreen() {
   // The map ends mapInset above the screen bottom (just under the peek sheet's top, 186 px on a
   // phone held upright), so its centre (recentre target, crosshair) is never hidden behind the
   // sheet. The attribution rides the sheet's top edge, measured from the map's bottom.
-  const mapInset = mapInsetFor(sheet.height);
-  const attributionBottom = Math.max(0, (picking ? pickHeight : sheet.visible) - mapInset);
+  const mapInset = atHome ? 0 : mapInsetFor(sheet.height);
+  const homeBottom = frame?.tabBarClearance ?? 0;
+  const attributionBottom = atHome ? homeBottom : Math.max(0, (picking ? pickHeight : sheet.visible) - mapInset);
   const rootStyle = {
     ["--naga-map-attribution-bottom" as string]: `${Math.round(attributionBottom)}px`,
     ["--pn-map-inset" as string]: `${mapInset}px`,
+    ["--pn-home-bottom" as string]: `${homeBottom}px`,
   };
 
   const pins = guiding
@@ -866,7 +872,17 @@ export function HomeScreen() {
   // the content at half and full, so it steps aside there; collapsing to peek brings it back.
   const flags = { picking: picking !== null, ready, detail: tripDetailOpen, guiding };
   const screen = screenState(flags);
-  const tinySheet = sheet.height !== null && sheet.height < TINY_SHEET && sheet.snap > 0;
+  const tinySheet = !atHome && sheet.height !== null && sheet.height < TINY_SHEET && sheet.snap > 0;
+  // The sheet is not mounted on the bare map: it comes back at half, whatever detent it was left at.
+  if (atHome && sheet.snap !== 1) sheet.setSnap(1);
+  // Leaving the sheet or a pin for the bare map (Clear trip, a cleared end, a cancelled pin) puts focus on the search bar.
+  const searchRef = useRef<HTMLAnchorElement>(null);
+  const wasAtHome = useRef(atHome);
+  useEffect(() => {
+    const was = wasAtHome.current;
+    wasAtHome.current = atHome;
+    if (atHome && !was && !covered) searchRef.current?.focus({ preventScroll: true });
+  }, [atHome, covered]);
   useHideTabBar(tabBarHidden(screen) || tinySheet);
 
   // One step out of the current screen: guidance (asks first), detail, directions. Escape and the
@@ -932,11 +948,11 @@ export function HomeScreen() {
   });
 
   return (
-    <main ref={homeRef} className="pn-home" style={rootStyle} data-testid="home-screen">
+    <main ref={homeRef} className="pn-home" style={rootStyle} data-screen={screen} data-testid="home-screen">
       <h1 className="sr-only" tabIndex={-1} data-home-heading="">
         ParaNaga trip planner
       </h1>
-      <div className="pn-home__map" inert={sheet.snap === 2 && picking === null}>
+      <div className="pn-home__map" inert={!atHome && sheet.snap === 2 && picking === null}>
         <NagaMap
           userFix={guiding ? (guidance.location.watching ? guidance.location.fix : null) : userFix}
           userStale={guiding ? false : (assessment?.stale ?? false)}
@@ -1031,6 +1047,15 @@ export function HomeScreen() {
             Cancel
           </button>
         </section>
+      ) : atHome ? (
+        <>
+          <HomeSearchBar searchRef={searchRef} />
+          {showStatus && statusCopy ? (
+            <div className="pn-home__status">
+              <LocationStatus copy={statusCopy} onPickStart={() => (statusCopy.kind === "approximate" ? handleMoveStartPin() : handleChooseOnMap("start"))} />
+            </div>
+          ) : null}
+        </>
       ) : (
         <EndpointSheet
           sheet={sheet}
@@ -1050,7 +1075,6 @@ export function HomeScreen() {
               <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} listShown={sheet.snap !== 0} notes={peekNotes} onToggle={handleToggleOptions} />
             ) : null
           }
-          after={<NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />}
         >
           {guiding ? (
             <Guidance guidance={guidance} covered={covered} onEnd={guidanceActions.end} onDone={guidanceActions.done} onReplan={guidanceActions.replan} />
@@ -1119,6 +1143,13 @@ export function HomeScreen() {
           ) : null}
         </EndpointSheet>
       )}
+
+      {/* The list alternative to the stop pins: out of sight, shown when it takes focus (Search will list it). */}
+      {!picking && !guiding && !tripDetailOpen ? (
+        <div className="pn-home__nearby">
+          <NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />
+        </div>
+      ) : null}
 
       <p className="sr-only" aria-live="polite" data-testid="home-announcer">
         {announcement}

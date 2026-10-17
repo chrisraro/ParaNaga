@@ -124,8 +124,6 @@ type Props = {
   children?: ReactNode;
   /** Trip detail is open: the sheet shows only `children` (no endpoint rows or options). */
   detailOpen?: boolean;
-  /** Below the endpoint options (the "Nearby stops" list). Hidden while trip detail is open. */
-  after?: ReactNode;
   /** Always operable, even at the peek snap (outside the inert part): the best-option summary and its toggle. */
   summary?: ReactNode;
 };
@@ -143,7 +141,6 @@ export function EndpointSheet({
   onChooseOnMap,
   children,
   detailOpen = false,
-  after,
   summary,
 }: Props) {
   const { attach, snap, offset } = sheet;
@@ -274,7 +271,6 @@ export function EndpointSheet({
             {endpoints[focused] ? <SaveEnd endpoint={endpoints[focused]} /> : null}
           </div>
         ) : null}
-        {detailOpen ? null : after}
         </div>
         {/* Last in the scroller but positioned on the sheet (it is not scrolled); on short screens
             (home-screen.css) it is in flow at the end of the content instead. */}

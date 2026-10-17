@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
+import { chooseOnMapVia } from "./fixtures/options";
 import { ALL_ROUTES, ROUTE_R8A, SNAPSHOT, STOP_A1, STOPS_ALL, routeNetwork } from "./fixtures/network";
 
 // Stop pins on the map, Stop detail and Route detail (Task 7). The network API is answered with
@@ -22,7 +23,7 @@ test.beforeEach(async ({ page }) => {
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 /** Screen position of a lat/lng from the map's reported centre and zoom (Web Mercator). */
@@ -139,12 +140,12 @@ test("pins ignore taps while a start or destination pin is being placed", async 
   await routeNetwork(page);
   await openApp(page);
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await chooseOnMapVia(page);
   const a1 = await screenPoint(page, STOP_A1.stop.lat, STOP_A1.stop.lng);
   await page.mouse.click(a1.x, a1.y);
   await page.waitForTimeout(300);
   await expect(page).toHaveURL(/\/app$/);
-  await expect(page.getByRole("button", { name: "Set start here" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Set destination here" })).toBeVisible();
 });
 
 test("route R8-A: 30 provisional stops in pin order, the trial notice and an estimate fare", async ({ page }) => {
@@ -323,7 +324,8 @@ test.describe("Show on map history", () => {
   test("from a Nearby stops link it goes back in history too", async ({ page }) => {
     await routeNetwork(page);
     await openApp(page);
-    await page.getByTestId("nearby-stops").getByRole("link").first().click();
+    await page.getByTestId("nearby-stops").getByRole("link").first().focus();
+    await page.keyboard.press("Enter");
     await expect(page).toHaveURL(new RegExp(`/app/stops/${A1_ID}$`));
     await showOnMap(page).click();
     await expect(page).toHaveURL(/\/app$/);

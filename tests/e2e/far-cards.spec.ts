@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { routeNetwork } from "./fixtures/network";
-import { chooseOption, expandOptions } from "./fixtures/options";
+import { chooseOption, expandOptions, pinTrip } from "./fixtures/options";
 import {
   ACCESS_NEXT_TO_WALK_PLAN, ACCESS_PLAN, FAR_JEEP_CARARAYAN_PLAN, FAR_JEEP_PACOL_PLAN, FAR_JEEP_PANICUASON_PLAN, FRANCIA_NOTE, PROVISIONAL_PLAN, SPECIAL_ONLY_PLAN,
   SPECIAL_TRIP_PLAN, VIA_PLAN,
@@ -23,20 +23,7 @@ async function open(page: Page, plan: unknown, expand = true) {
   await page.clock.setFixedTime(new Date("2026-10-16T09:30:00+08:00"));
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  const box = (await mapEl(page).boundingBox())!;
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x - 60, y + 40, { steps: 4 });
-  await page.mouse.move(x - 120, y + 80, { steps: 4 });
-  await page.mouse.up();
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
   if (expand) await expandOptions(page);
 }
 

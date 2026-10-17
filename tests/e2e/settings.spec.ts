@@ -52,7 +52,7 @@ async function openSettings(page: Page) {
 async function openHome(page: Page) {
   await page.goto("/app");
   await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function setStoredPrefs(page: Page, prefs: Record<string, unknown>) {
@@ -230,7 +230,7 @@ test.describe("phone", () => {
     await expect(page.getByRole("switch", { name: "Low-data mode" })).toHaveAttribute("aria-checked", "true");
     tileRequests = [];
     await tabBar(page).getByRole("link", { name: "Map", exact: true }).click();
-    await expect(page.getByTestId("trip-sheet")).toBeVisible();
+    await expect(page.getByTestId("home-search")).toBeVisible();
     await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
     await expect(page.getByTestId("map-low-data-notice")).toBeVisible();
     await expect(page.locator(".leaflet-tile-pane .leaflet-layer")).toHaveCount(0);

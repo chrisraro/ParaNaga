@@ -87,7 +87,7 @@ test.describe("phone", () => {
 
       test(`moving among Map, Explore, Saved, More and Search never shows a blank or white frame (${scheme})`, async ({ page }) => {
         await page.goto("/app");
-        await expect(page.getByTestId("trip-sheet")).toBeVisible();
+        await expect(page.getByTestId("home-search")).toBeVisible();
         await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
         await startSampler(page);
         await tour(page);

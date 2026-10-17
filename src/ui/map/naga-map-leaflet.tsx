@@ -118,6 +118,22 @@ function TripStopMarker({ stop }: { stop: HighlightStop }) {
   return <Marker position={[stop.lat, stop.lng]} icon={icon} interactive={false} keyboard={false} zIndexOffset={200} />;
 }
 
+/**
+ * Leaflet only watches the window. The container also changes size when the home sheet comes and
+ * goes (the map is full-bleed on the bare map), so the map is told: its centre, the crosshair and
+ * the route fit all read the container's size.
+ */
+function ResizeSync() {
+  const map = useMap();
+  useEffect(() => {
+    if (typeof ResizeObserver !== "function") return undefined;
+    const observer = new ResizeObserver(() => map.invalidateSize({ animate: false }));
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 /** Fits the highlighted stops, pins, and trip lines (or explicit fitBoundsCoords) into view whenever they change. */
 function FitHighlights({
   stops,
@@ -520,6 +536,7 @@ export default function NagaMapLeaflet({
         ) : null}
         {placeMarker ? <PlaceMarker point={placeMarker.point} label={placeMarker.label} /> : null}
         {highlightStops?.map((stop) => <TripStopMarker key={`${stop.role}:${stop.id}`} stop={stop} />)}
+        <ResizeSync />
         <FitHighlights
           stops={highlightStops}
           pins={pins}

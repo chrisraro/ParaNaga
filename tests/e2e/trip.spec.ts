@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_SHORTER_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { chooseOption, expandOptions } from "./fixtures/options";
+import { chooseOption, chooseOnMapVia, expandOptions, openTripSheet, pinTrip } from "./fixtures/options";
 
 // Trip options and trip detail (Task 6). POST /api/v1/plan is intercepted with fixtures
 // (allowed in tests only), so nothing here needs a database. Tiles are aborted.
@@ -41,7 +41,7 @@ test.beforeEach(async ({ page }) => {
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 async function drag(page: Page, dx: number, dy: number) {
@@ -58,14 +58,7 @@ async function drag(page: Page, dx: number, dy: number) {
 
 /** Pins the start at the default centre and the destination a little north-east of it. */
 async function pinBoth(page: Page) {
-  const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-  await chooseOnMap.click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap.click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  await drag(page, -120, 80);
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
 }
 
 test("trip options show the unverified badge, estimate chips and honest time estimates", async ({ page }) => {
@@ -352,8 +345,11 @@ test("offline shows the offline state; retry works once back online", async ({ p
   let offline = true;
   await interceptPlan(page, (route) => (offline ? route.abort("internetdisconnected") : fulfill(route, PROVISIONAL_PLAN)));
   await openApp(page);
+  await openTripSheet(page);
   await context.setOffline(true);
-  await pinBoth(page);
+  await chooseOnMapVia(page, "start");
+  await drag(page, 120, -80);
+  await page.getByRole("button", { name: "Set start here" }).click();
 
   const error = page.getByTestId("trip-error");
   await expect(error).toContainText("You're offline");
@@ -423,13 +419,11 @@ test.describe("GPS refinement while results are shown", () => {
 
   async function gpsStartAndPinDestination(page: Page) {
     await openApp(page);
+    await chooseOnMapVia(page, "destination");
+    await drag(page, -120, 80);
+    await page.getByRole("button", { name: "Set destination here" }).click();
     await page.getByRole("button", { name: "Use current location" }).click();
     await expect(page.getByTestId("endpoint-start")).toContainText("Your location");
-    await page.getByRole("button", { name: "Choose on map", exact: true }).click();
-    const before = await mapEl(page).getAttribute("data-center-lng");
-    await drag(page, -120, 80);
-    await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-    await page.getByRole("button", { name: "Set destination here" }).click();
   }
 
   test("the open detail stays open when the replan still has the option", async ({ page, context }) => {

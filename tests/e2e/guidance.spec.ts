@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type BrowserContext, type Page, type Route } from "@playwright/test";
 import { LOOP_A_PINS, PROVISIONAL_PLAN, TWO_RIDE_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
-import { chooseOption, sheetSettled } from "./fixtures/options";
+import { chooseOption, pinTrip, sheetSettled } from "./fixtures/options";
 
 // Guidance (Increment A, Task 10): Walk, Ride, Transfer and Arrive in the home sheet. POST
 // /api/v1/plan is intercepted with fixtures; tiles are aborted; every test checks for CSP
@@ -97,31 +97,12 @@ async function grantLocation(context: BrowserContext) {
 async function openApp(page: Page) {
   await page.goto("/app");
   await expect(mapEl(page)).toHaveAttribute("data-zoom", /\d/);
-  await expect(page.getByTestId("trip-sheet")).toBeVisible();
-}
-
-async function drag(page: Page, dx: number, dy: number) {
-  const box = await mapEl(page).boundingBox();
-  if (!box) throw new Error("map has no box");
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x + dx / 2, y + dy / 2, { steps: 4 });
-  await page.mouse.move(x + dx, y + dy, { steps: 4 });
-  await page.mouse.up();
+  await expect(page.getByTestId("home-search")).toBeVisible();
 }
 
 /** Pins both ends, opens the first option and taps "Start trip". */
 async function startGuidance(page: Page) {
-  const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-  await chooseOnMap.click();
-  await page.getByRole("button", { name: "Set start here" }).click();
-  await chooseOnMap.click();
-  const before = await mapEl(page).getAttribute("data-center-lng");
-  await drag(page, -120, 80);
-  await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-  await page.getByRole("button", { name: "Set destination here" }).click();
+  await pinTrip(page);
   await chooseOption(page);
   await expect(page.getByTestId("trip-detail")).toBeVisible();
   await page.getByTestId("trip-start").click();
@@ -244,7 +225,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
 
   await page.getByTestId("trip-sheet").getByRole("button", { name: "Done" }).click();
   await expect(guide(page)).toHaveCount(0);
-  await expect(page.getByTestId("endpoint-start")).toContainText("Choose start");
+  await expect(page.getByTestId("trip-sheet")).toHaveCount(0);
   await expect(tabBar(page)).toBeVisible();
   expect(await page.evaluate((k) => window.sessionStorage.getItem(k), SESSION_KEY)).toBeNull();
   expect((await geoStub(page)).watches).toBe(0);
@@ -523,14 +504,7 @@ for (const [width, height] of [
     };
 
     // Detail: pin both, choose the first option (half), "Start trip" is already on screen.
-    const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-    await chooseOnMap.click();
-    await page.getByRole("button", { name: "Set start here" }).click();
-    await chooseOnMap.click();
-    const before = await mapEl(page).getAttribute("data-center-lng");
-    await drag(page, -120, 80);
-    await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-    await page.getByRole("button", { name: "Set destination here" }).click();
+    await pinTrip(page);
     await chooseOption(page);
     await expect(page.getByTestId("trip-detail")).toBeVisible();
     await inside("trip-start", page.getByTestId("trip-start"));
@@ -557,14 +531,7 @@ for (const [width, height] of [
     await grantLocation(context);
     await stubGeolocation(page);
     await openApp(page);
-    const chooseOnMap = page.getByRole("button", { name: "Choose on map", exact: true });
-    await chooseOnMap.click();
-    await page.getByRole("button", { name: "Set start here" }).click();
-    await chooseOnMap.click();
-    const before = await mapEl(page).getAttribute("data-center-lng");
-    await drag(page, -120, 80);
-    await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
-    await page.getByRole("button", { name: "Set destination here" }).click();
+    await pinTrip(page);
     await chooseOption(page);
     await expect(page.getByTestId("trip-detail")).toBeVisible();
 
