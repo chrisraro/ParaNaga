@@ -22,7 +22,8 @@ vi.mock("@/server/db/context", () => ({
   withRequestContext: async (_ctx: unknown, fn: (db: unknown) => Promise<unknown>) => {
     repo.calls += 1;
     if (repo.fail) throw new Error("connection to postgres at 13.6233869,123.1846726 failed");
-    return fn({});
+    // The rate limiter's ops.take_token call: always within limit in these tests.
+    return fn({ execute: async () => ({ rows: [{ ok: true }] }) });
   },
 }));
 vi.mock("@/server/repos/network-repo", () => ({
