@@ -471,3 +471,30 @@ export const etaParamVersion = transit.table("eta_param_version", {
   contentHash: text("content_hash").notNull(),
   isSynthetic: boolean("is_synthetic").notNull(),
 });
+
+// ---------------------------------------------------------------- ops (0000, 0014)
+
+export const ops = pgSchema("ops");
+
+export const job = ops.table("job", {
+  id: uuid("id").primaryKey(),
+  kind: text("kind").notNull(),
+  payload: jsonb("payload").notNull(),
+  idempotencyKey: text("idempotency_key").notNull(),
+  status: text("status").$type<"queued" | "running" | "retry" | "done" | "dead">().notNull(),
+  attempts: integer("attempts").notNull(),
+  maxAttempts: integer("max_attempts").notNull(),
+  runAfter: timestamp("run_after", { withTimezone: true }).notNull(),
+  lockedUntil: timestamp("locked_until", { withTimezone: true }),
+  lockedBy: text("locked_by"),
+  lastErrorCode: text("last_error_code"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+});
+
+export const rateLimitBucket = ops.table("rate_limit_bucket", {
+  keyHash: text("key_hash").notNull(),
+  windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+  count: integer("count").notNull(),
+});
+
