@@ -215,9 +215,11 @@ export function SheetGrabber({ sheet }: { sheet: SheetControl }) {
  * Scroll hand-off: at full, a touch that pulls the list down while it is already at its top
  * becomes a sheet drag (touch events, not pointer events: the first cancelable touchmove has to be
  * stopped before the browser starts its own pan, which would cancel the pointer). Anything else
- * scrolls the list as usual. Mouse and pen never hand off.
+ * scrolls the list as usual. Mouse and pen never hand off. A touch that starts on `dragSurface` (a
+ * header the header drag already moves the sheet from) is not handed off: two controllers must
+ * never drive the same finger.
  */
-export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null) {
+export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null, dragSurface?: string) {
   const { drag } = sheet;
   const snapRef = useRef(sheet.snap);
   useLayoutEffect(() => {
@@ -231,7 +233,8 @@ export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null) 
     const onStart = (e: TouchEvent) => {
       // A second finger while the hand-off drag is live ends it: settle back to the detent it left.
       if (engaged) drag.cancel();
-      tracking = e.touches.length === 1 && snapRef.current === 2 && list.scrollTop <= 0;
+      const onSurface = dragSurface !== undefined && e.target instanceof Element && e.target.closest(dragSurface) !== null;
+      tracking = e.touches.length === 1 && snapRef.current === 2 && list.scrollTop <= 0 && !onSurface;
       engaged = false;
       startY = e.touches[0]?.clientY ?? 0;
     };
@@ -276,7 +279,7 @@ export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null) 
       list.removeEventListener("touchend", onEnd);
       list.removeEventListener("touchcancel", onEnd);
     };
-  }, [list, drag]);
+  }, [list, drag, dragSurface]);
 }
 
 /**
