@@ -91,11 +91,13 @@ describe("planTrip on the real network (Lines, street graph v2, 10:00 Manila)", 
   it.each([
     ["Del Rosario", { lat: 13.6173903, lng: 123.2375487 }, "R2"],
     ["City Hall (J. Miranda Ave)", { lat: 13.6261, lng: 123.1987 }, "R8-A"],
-  ])("Plaza Rizal → %s rides %s (former stop planner: unplannable or Loops only); tricycle Recommended last", (_name, d, route) => {
+  ])("Plaza Rizal → %s rides %s (former stop planner: unplannable or Loops only); cheapest jeepney Recommended first, tricycle last", (_name, d, route) => {
     const p = plan(PLAZA_RIZAL, d);
     assertWellFormed(p, PLAZA_RIZAL, d);
     expect(p.options.some((o) => o.legs.some((l) => l.kind === "ride" && l.routeCode === route))).toBe(true);
-    expect(p.options.find((o) => o.mode === "tricycle")!.labels).toEqual(["Recommended"]);
+    expect(p.options[0]!.mode).toBe("jeepney");
+    expect(p.options[0]!.labels).toContain("Recommended");
+    expect(p.options.find((o) => o.mode === "tricycle")!.labels).toEqual([]);
   });
 
   it("Plaza Rizal → Ateneo de Naga centroid keeps a jeepney: the drop-off is the run point with the shortest street walk (prod regression)", () => {
@@ -177,5 +179,6 @@ const REGRESSION_BASELINE = {
   // ride legs (160 trips) now carry notes; with notes stripped the digest is still d0930a3e….
   // Re-recorded for the approach-run walk fallback (Ateneo fix): 22 trips change; 5 gain a jeepney
   // (4 were no_path_near_origin, 1 walk_shorter), 17 get other or more jeepney options (+13 options).
-  digest: "2ae78fae75983d8a7aa63ff66e5814680049dfc39e540812adf88371bfa293cc",
+  // Re-recorded for cheapest jeepney Recommended first at >= 500 m.
+  digest: "bdefab1e0a2f68042f033f3c1b2ab0fcccf58c73d68c30aeccf8b2ab34bb8017",
 };

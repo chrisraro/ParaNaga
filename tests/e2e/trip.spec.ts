@@ -167,11 +167,10 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   // Only two links: the Sources link in the top bar and the fare basis.
   await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated"]);
 
-  // Boarding and getting-off stops are DOM markers above the trip's own lines (Task 12); the
-  // routes overview is not drawn while a trip is shown.
-  await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
-  await expect(page.getByRole("img", { name: "Board at Plaza Rizal (A1)" })).toBeAttached();
-  await expect(page.getByRole("img", { name: "Get off at Avenue Square (A5)" })).toBeAttached();
+  // Route screens show only the route: no stop icons (owner ruling 2026-10-17); the routes overview
+  // is not drawn while a trip is shown.
+  await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
+  await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
   await expect(page.locator(".leaflet-overlay-pane path.pn-line--ride").first()).toBeAttached();
   await expect(page.locator(".leaflet-overlay-pane path.pn-line--route")).toHaveCount(0);
   await expect(page.locator(".leaflet-overlay-pane polyline")).toHaveCount(0);
@@ -257,20 +256,21 @@ for (const colorScheme of ["light", "dark"] as const) {
   }
 }
 
-test("opening and closing a trip detail keeps exactly one stop-pin canvas", async ({ page }) => {
+test("route screens hide the stop pins; the bare map brings them back on one canvas", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
-  await pinBoth(page);
   const canvases = page.locator(".leaflet-overlay-pane canvas");
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
-  await expect(canvases).toHaveCount(1);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-option").first()).toBeVisible();
+  await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
   for (let i = 0; i < 2; i++) {
     await chooseOption(page);
     await expect(page.getByTestId("trip-detail")).toBeVisible();
     await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
     await page.getByRole("button", { name: "Back to trip options" }).click();
     await expect(page.getByTestId("trip-detail")).toHaveCount(0);
-    await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
+    await expect(mapEl(page)).toHaveAttribute("data-stop-pins", "0");
   }
   await expect(canvases).toHaveCount(1);
 });
@@ -458,7 +458,7 @@ test.describe("GPS refinement while results are shown", () => {
     await expect(detail).toBeVisible();
     await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);
-    await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(2);
+    await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
   });
 
   test("a refinement under 25 m does not replan", async ({ page, context }) => {
