@@ -171,16 +171,26 @@ function SamePlaceNotice({ which, onChooseOnMap }: { which: EndpointWhich; onCho
 }
 
 const ATTRIBUTION_VAR = "--naga-map-attribution-bottom";
-/** The map chrome that sits on the sheet's edge (naga-map.css, modes.css): everything that reads ATTRIBUTION_VAR. */
-const SHEET_FOLLOWERS = ".pn-attribution, .pn-map-notice, .pn-map-legend, .pn-route-overview-card";
 
-function followSheet(root: HTMLElement | null, value: string, dragging: boolean) {
-  if (!root) return;
-  if (!dragging) root.style.setProperty(ATTRIBUTION_VAR, value);
-  for (const el of root.querySelectorAll<HTMLElement>(SHEET_FOLLOWERS)) {
-    if (dragging) el.style.setProperty(ATTRIBUTION_VAR, value);
-    else el.style.removeProperty(ATTRIBUTION_VAR);
-  }
+/**
+ * Map chrome that rides the sheet's edge reads ATTRIBUTION_VAR in CSS and carries
+ * data-sheet-follower (tests/unit/sheet-followers.test.ts fails if a consumer lacks it). While the
+ * sheet is dragged the value goes on those elements, found once per drag; the root gets it when
+ * the settle starts (so followers that mount mid-drag just inherit the final value).
+ */
+function createSheetFollow() {
+  let followers: HTMLElement[] | null = null;
+  return (root: HTMLElement | null, value: string, dragging: boolean) => {
+    if (!root) return;
+    if (dragging) {
+      followers ??= [...root.querySelectorAll<HTMLElement>("[data-sheet-follower]")];
+      for (const el of followers) el.style.setProperty(ATTRIBUTION_VAR, value);
+      return;
+    }
+    root.style.setProperty(ATTRIBUTION_VAR, value);
+    for (const el of followers ?? []) el.style.removeProperty(ATTRIBUTION_VAR);
+    followers = null;
+  };
 }
 
 export function HomeScreen() {
@@ -252,8 +262,9 @@ export function HomeScreen() {
   // here directly (same value as attributionBottom below). During the drag the value goes on the
   // followers themselves, not on the root: a custom property on the root re-styles the whole map.
   const homeRef = useRef<HTMLElement>(null);
+  const [follow] = useState(createSheetFollow);
   const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE + PEEK_NOTE_VISIBLE * peekNotes.length : PEEK_VISIBLE, (visible, height, dragging) =>
-    followSheet(homeRef.current, `${Math.round(Math.max(0, visible - mapInsetFor(height)))}px`, dragging),
+    follow(homeRef.current, `${Math.round(Math.max(0, visible - mapInsetFor(height)))}px`, dragging),
   );
   // Where focus goes once the results render: the results heading, or an option card.
   const [focusTarget, setFocusTarget] = useState<{ kind: "results" } | { kind: "option"; id: string } | null>(null);

@@ -5,7 +5,7 @@ import { routeNetwork } from "./fixtures/network";
 // The shared sheet drag (app-shell/sheet-drag.ts): real pointer drags on the handle, the settle,
 // reduced motion, and the per-move main-thread cost. Phone-only (the map lives behind the gate).
 
-test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate");
+test.skip(({ isMobile, browserName }) => !isMobile && browserName === "chromium", "The map lives behind the phone-only gate");
 
 test.beforeEach(async ({ page }) => {
   await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (route) => route.abort());
@@ -107,4 +107,66 @@ test("a pointer move costs the main thread well under 4 ms (no React render, no 
   console.info(`sheet drag cost: ${perMove.toFixed(3)} ms per move (script ${((after.script - before.script) * 1000 / moves).toFixed(3)}, layout ${((after.layout - before.layout) * 1000 / moves).toFixed(3)}, style ${((after.style - before.style) * 1000 / moves).toFixed(3)}), ${layoutsPerMove.toFixed(2)} layouts per move`);
   expect(perMove).toBeLessThan(4);
   expect(layoutsPerMove).toBeLessThan(1);
+});
+
+// Scroll hand-off: real touch input through CDP (Chromium only; WebKit and Firefox have no CDP
+// touch, so those engines get the handle and tap paths above).
+test.describe("scroll hand-off (touch)", () => {
+  test.skip(({ browserName }) => browserName !== "chromium", "CDP touch input is Chromium only");
+
+  async function touchDrag(page: Page, x: number, from: number, to: number, opts: { steps?: number; stepMs?: number; holdMs?: number } = {}) {
+    const { steps = 12, stepMs = 16, holdMs = 160 } = opts;
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: from }] });
+    for (let i = 1; i <= steps; i++) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: from + ((to - from) * i) / steps }] });
+      await page.waitForTimeout(stepMs);
+    }
+    await page.waitForTimeout(holdMs); // a pause before release is not a fling
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  }
+
+  async function atFull(page: Page) {
+    await openApp(page);
+    await sheet(page).locator(".pn-grabber").focus();
+    await page.keyboard.press("ArrowUp");
+    await expect(sheet(page)).toHaveAttribute("data-snap", "2");
+    await expect.poll(async () => await top(page)).toBeLessThan(60);
+  }
+
+  test("pulling the list down from its top at full drags the sheet and lands on a lower detent", async ({ page }) => {
+    await atFull(page);
+    const fullTop = await top(page);
+    const list = (await sheet(page).locator(".pn-sheet__content").boundingBox())!;
+    const x = list.x + list.width / 2;
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: list.y + 100 }] });
+    for (let i = 1; i <= 10; i++) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: list.y + 100 + i * 30 }] });
+      await page.waitForTimeout(16);
+    }
+    await expect(sheet(page)).toHaveClass(/pn-sheet--dragging/);
+    expect((await top(page)) - fullTop).toBeGreaterThan(150);
+    await page.waitForTimeout(160);
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect(sheet(page)).not.toHaveAttribute("data-snap", "2");
+    await expect(sheet(page)).not.toHaveClass(/pn-sheet--(dragging|settling)/);
+  });
+
+  test("a list that is scrolled, or pulled up, still scrolls natively and never moves the sheet", async ({ page }) => {
+    await atFull(page);
+    const content = sheet(page).locator(".pn-sheet__content");
+    const metrics = await content.evaluate((el) => ({ over: el.scrollHeight - el.clientHeight }));
+    test.skip(metrics.over < 40, "the full sheet has nothing to scroll on this fixture");
+    const box = (await content.boundingBox())!;
+    const x = box.x + box.width / 2;
+    await touchDrag(page, x, box.y + box.height * 0.6, box.y + 40); // finger up: the list scrolls down
+    await expect.poll(() => content.evaluate((el) => el.scrollTop)).toBeGreaterThan(20);
+    await expect(sheet(page)).toHaveAttribute("data-snap", "2");
+    const scrolled = await content.evaluate((el) => el.scrollTop);
+    await touchDrag(page, x, box.y + 60, box.y + 160); // finger down, list not at its top: scrolls back
+    await expect.poll(() => content.evaluate((el) => el.scrollTop)).toBeLessThan(scrolled);
+    await expect(sheet(page)).toHaveAttribute("data-snap", "2");
+    expect(await top(page)).toBeLessThan(60);
+  });
 });

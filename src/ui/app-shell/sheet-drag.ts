@@ -39,6 +39,8 @@ export type SheetDrag = {
   /** Returns true when the gesture was a drag (the click that follows it is not a tap). */
   end: (y: number, t: number) => boolean;
   cancel: () => void;
+  /** The sheet went away or is being replaced: stop everything and clear all overrides. */
+  dispose: () => void;
 };
 
 type Gesture = { startY: number; base: number; lastY: number; lastT: number; v: number; moved: boolean; resume: boolean };
@@ -52,6 +54,27 @@ export function createSheetDrag(host: DragHost): SheetDrag {
   let footer: HTMLElement | null = null;
   let footerPinned = false;
   let settling: { animations: Animation[] } | null = null;
+  let handBack = 0;
+
+  /** Drops all gesture state (nothing left on screen to settle). */
+  const reset = () => {
+    g = null;
+    applied = null;
+    pending = null;
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+  };
+
+  /** Removes every override a drag or settle put on the sheet (the sheet is gone, or no longer measurable). */
+  const clearDom = () => {
+    const el = host.el();
+    reset();
+    if (!el) return;
+    el.classList.remove("pn-sheet--dragging", "pn-sheet--settling");
+    el.style.removeProperty("transform");
+    el.style.removeProperty("padding-bottom");
+    footer?.style.removeProperty("transform");
+  };
 
   const flush = () => {
     if (frame) cancelAnimationFrame(frame);
@@ -85,6 +108,7 @@ export function createSheetDrag(host: DragHost): SheetDrag {
   const begin = () => {
     const el = host.el();
     if (!el) return;
+    cancelAnimationFrame(handBack);
     el.classList.add("pn-sheet--dragging");
     el.classList.remove("pn-sheet--settling");
     el.style.paddingBottom = "0px";
@@ -105,14 +129,18 @@ export function createSheetDrag(host: DragHost): SheetDrag {
     el.style.removeProperty("padding-bottom");
     footer?.style.removeProperty("transform");
     // The transition stays off for one more frame, so the hand-back is not itself animated.
-    requestAnimationFrame(() => el.classList.remove("pn-sheet--settling"));
+    handBack = requestAnimationFrame(() => el.classList.remove("pn-sheet--settling"));
   };
 
   const settleTo = (target: Snap, v: number) => {
     flush();
     const el = host.el();
     const offsets = host.offsets();
-    if (!el || !offsets) return;
+    if (!el || !offsets) {
+      clearDom();
+      return;
+    }
+    cancelAnimationFrame(handBack);
     const from = visualOffset();
     const to = offsets[target];
     el.classList.remove("pn-sheet--dragging");
@@ -147,8 +175,16 @@ export function createSheetDrag(host: DragHost): SheetDrag {
     return true;
   };
 
+  const cancel = () => {
+    const gesture = g;
+    g = null;
+    if (gesture?.moved || gesture?.resume) settleTo(host.snap(), 0);
+  };
+
   return {
     start(y, t) {
+      // A gesture still live (a lost pointerup): settle it first, never leave it stranded.
+      if (g) cancel();
       const resume = interrupt();
       g = { startY: y, base: visualOffset(), lastY: y, lastT: t, v: 0, moved: false, resume };
     },
@@ -172,7 +208,11 @@ export function createSheetDrag(host: DragHost): SheetDrag {
       const gesture = g;
       g = null;
       const offsets = host.offsets();
-      if (!gesture || !offsets) return false;
+      if (!gesture) return false;
+      if (!offsets) {
+        clearDom();
+        return false;
+      }
       if (!gesture.moved) {
         // A tap on a sheet that was still settling: let it land where it was heading.
         if (gesture.resume) settleTo(host.snap(), 0);
@@ -183,10 +223,12 @@ export function createSheetDrag(host: DragHost): SheetDrag {
       settleTo(nearestDetent(offsets, rest, v), v);
       return true;
     },
-    cancel() {
-      const gesture = g;
-      g = null;
-      if (gesture?.moved || gesture?.resume) settleTo(host.snap(), 0);
+    cancel,
+    dispose() {
+      cancelAnimationFrame(handBack);
+      for (const a of settling?.animations ?? []) a.cancel();
+      settling = null;
+      clearDom();
     },
   };
 }

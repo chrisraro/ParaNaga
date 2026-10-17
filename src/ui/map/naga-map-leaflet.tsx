@@ -579,9 +579,9 @@ export default function NagaMapLeaflet({
       />
 
       {notice === "unavailable" ? (
-        <p className="pn-map-notice" {...noticePresence}>Map background unavailable</p>
+        <p className="pn-map-notice" data-sheet-follower="" {...noticePresence}>Map background unavailable</p>
       ) : notice === "lowData" ? (
-        <p className="pn-map-notice pn-map-notice--action" data-testid="map-low-data-notice" {...noticePresence}>
+        <p className="pn-map-notice pn-map-notice--action" data-sheet-follower="" data-testid="map-low-data-notice" {...noticePresence}>
           <span>Map background off (low-data mode)</span>
           <button type="button" className="pn-map-notice__btn" onClick={() => setBackgroundOnce(true)}>
             Show background once
@@ -589,7 +589,7 @@ export default function NagaMapLeaflet({
         </p>
       ) : null}
 
-      <div className="pn-attribution">
+      <div className="pn-attribution" data-sheet-follower="">
         <a href={LEAFLET_URL} target="_blank" rel="noopener noreferrer">
           Leaflet
         </a>

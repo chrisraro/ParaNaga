@@ -53,6 +53,18 @@ describe("nearestDetent", () => {
   });
 });
 
+describe("nearestDetent: position versus velocity at the half/full boundary", () => {
+  const offsets: [number, number, number] = [586, 356, 0]; // the half-full midpoint is 178
+  it("position alone decides when the release is slow", () => {
+    expect(nearestDetent(offsets, 190, 0)).toBe(1);
+    expect(nearestDetent(offsets, 170, 0)).toBe(2);
+  });
+  it("velocity alone tips the same position across the boundary", () => {
+    expect(nearestDetent(offsets, 190, -0.1)).toBe(2); // 190 - 20 = 170
+    expect(nearestDetent(offsets, 170, 0.1)).toBe(1); // 170 + 20 = 190
+  });
+});
+
 describe("settleDuration", () => {
   it("clamps to 180..360 ms", () => {
     expect(settleDuration(0, 0)).toBe(180);

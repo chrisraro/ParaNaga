@@ -111,18 +111,6 @@ export function useSheet(initial: Snap = 1, clearance = 0, peek = PEEK_VISIBLE, 
     latest.current = { snap, height, clearance, peek, onFrame };
   });
 
-  const attach = useCallback((el: HTMLElement | null) => {
-    element.current = el;
-    if (!el) return undefined;
-    setHeight(el.offsetHeight);
-    const observer = new ResizeObserver(() => setHeight(el.offsetHeight));
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      if (element.current === el) element.current = null;
-    };
-  }, []);
-
   // The controller is created once; its host callbacks read the refs only when a gesture runs, never while rendering.
   // eslint-disable-next-line react-hooks/refs
   const [drag] = useState(() =>
@@ -140,6 +128,19 @@ export function useSheet(initial: Snap = 1, clearance = 0, peek = PEEK_VISIBLE, 
     }),
   );
 
+  const attach = useCallback((el: HTMLElement | null) => {
+    element.current = el;
+    if (!el) return undefined;
+    setHeight(el.offsetHeight);
+    const observer = new ResizeObserver(() => setHeight(el.offsetHeight));
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      drag.dispose();
+      if (element.current === el) element.current = null;
+    };
+  }, [drag]);
+
   const offset = height === null ? null : offsetFor(snap, height, clearance, peek);
   const visible = height === null || offset === null ? HALF_VISIBLE : height - offset;
   return { snap, setSnap, height, offset, visible, attach, clearance, peek, drag };
@@ -155,6 +156,8 @@ export function SheetGrabber({ sheet }: { sheet: SheetControl }) {
   const suppressClick = useRef(false);
 
   const onPointerDown = (e: PointerEvent<HTMLButtonElement>) => {
+    // A second finger while a drag is live is ignored; the first one keeps the gesture.
+    if (pointer.current !== null) return;
     suppressClick.current = false;
     if (sheet.height === null || (e.pointerType === "mouse" && e.button !== 0)) return;
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -170,7 +173,8 @@ export function SheetGrabber({ sheet }: { sheet: SheetControl }) {
     pointer.current = null;
     suppressClick.current = drag.end(e.clientY, e.timeStamp);
   };
-  const onPointerCancel = () => {
+  const onPointerCancel = (e: PointerEvent<HTMLButtonElement>) => {
+    if (pointer.current !== e.pointerId) return;
     pointer.current = null;
     drag.cancel();
   };
@@ -200,6 +204,7 @@ export function SheetGrabber({ sheet }: { sheet: SheetControl }) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
+      onLostPointerCapture={onPointerCancel}
       onClick={onClick}
       onKeyDown={onKeyDown}
     />
@@ -224,6 +229,8 @@ export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null) 
     let tracking = false;
     let engaged = false;
     const onStart = (e: TouchEvent) => {
+      // A second finger while the hand-off drag is live ends it: settle back to the detent it left.
+      if (engaged) drag.cancel();
       tracking = e.touches.length === 1 && snapRef.current === 2 && list.scrollTop <= 0;
       engaged = false;
       startY = e.touches[0]?.clientY ?? 0;
@@ -238,6 +245,11 @@ export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null) 
           return;
         }
         if (dy <= 6) return;
+        // Not cancelable: the browser's own pan already began; let the list scroll, never move both.
+        if (!e.cancelable) {
+          tracking = false;
+          return;
+        }
         engaged = true;
         drag.start(startY, e.timeStamp);
       }
@@ -258,6 +270,7 @@ export function useScrollHandoff(sheet: SheetControl, list: HTMLElement | null) 
     list.addEventListener("touchend", onEnd);
     list.addEventListener("touchcancel", onEnd);
     return () => {
+      if (engaged) drag.cancel();
       list.removeEventListener("touchstart", onStart);
       list.removeEventListener("touchmove", onMove);
       list.removeEventListener("touchend", onEnd);
