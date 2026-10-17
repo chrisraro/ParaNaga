@@ -75,6 +75,19 @@ describe("planTrip on the real network (Lines, street graph v2, 10:00 Manila)", 
     expect(p.options.find((o) => o.mode === "tricycle")!.labels).toEqual(["Recommended"]);
   });
 
+  it("Plaza Rizal → Ateneo de Naga centroid keeps a jeepney: the drop-off is the run point with the shortest street walk (prod regression)", () => {
+    // Production revision d093494a (its Lines and street graph equal these fixtures) offered only a
+    // tricycle: the straight-line nearest points of the loops to the campus centroid are 820+ m
+    // around the campus by street, while USI/Ateneo Ave along the same runs is under 750 m.
+    const ATENEO = { lat: 13.6309527, lng: 123.1845589 };
+    const p = plan(PLAZA_RIZAL, ATENEO);
+    assertWellFormed(p, PLAZA_RIZAL, ATENEO);
+    expect(p.jeepneyReason).toBeNull();
+    const o = p.options.find((x) => x.mode === "jeepney")!;
+    const egress = o.legs.at(-1)!;
+    expect(egress.kind === "walk" ? egress.estimateMeters : Infinity).toBeLessThanOrEqual(750);
+  });
+
   it("property: options are well formed on seeded trips across the city", () => {
     const point = fc.record({ lat: fc.double({ min: 13.6, max: 13.67, noNaN: true }), lng: fc.double({ min: 123.17, max: 123.32, noNaN: true }) });
     fc.assert(
@@ -135,9 +148,11 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  */
 const REGRESSION_BASELINE = {
-  options: 525,
-  byMode: { jeepney: 307, tricycle: 200, padyak: 8, walk: 10 },
+  options: 538,
+  byMode: { jeepney: 320, tricycle: 200, padyak: 8, walk: 10 },
   // Re-recorded after 3d2ea38: the fixture snapshot gained the reviewed route notes, so 254 of 417
   // ride legs (160 trips) now carry notes; with notes stripped the digest is still d0930a3e….
-  digest: "28368f6d4414c7f5beed538bfd3cbf0a866e12b130830b942488fc57ebeeba85",
+  // Re-recorded for the approach-run walk fallback (Ateneo fix): 22 trips change; 5 gain a jeepney
+  // (4 were no_path_near_origin, 1 walk_shorter), 17 get other or more jeepney options (+13 options).
+  digest: "2ae78fae75983d8a7aa63ff66e5814680049dfc39e540812adf88371bfa293cc",
 };
