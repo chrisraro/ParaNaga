@@ -17,6 +17,7 @@
 import "./trip.css";
 
 import Link from "next/link";
+import { ReportLink } from "@/ui/report/report-link";
 import { ViewTransition, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLines } from "@/client/network/use-lines";
 import { WALK_GRAPH_DOWNLOAD_LABEL, useWalkGraphDownload } from "@/client/network/use-walk-graph";
@@ -614,6 +615,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           </>
         )}
       </section>
+      {rides.length > 0 ? <ReportLink entityType="fare" entityId={rides[0]!.routeCode} entityLabel={routeChipLabel(rides[0]!.routeCode, rides[0]!.routeName)} /> : null}
       {ends ? (
         <div className="pn-trip-actions__check">
           <input id={`${shareId}-exact`} type="checkbox" checked={exactPoints} onChange={(e) => setExactPoints(e.target.checked)} data-testid="trip-share-exact" />

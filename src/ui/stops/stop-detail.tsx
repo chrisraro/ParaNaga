@@ -8,6 +8,7 @@
 import "@/ui/kit/styles";
 
 import Link from "next/link";
+import { ReportLink } from "@/ui/report/report-link";
 import { photoForStopSource } from "@/domain/media/photos";
 import { ReferencePhoto } from "@/ui/places/reference-photo";
 import { StopStreetView } from "@/ui/street-view/stop-street-view";
@@ -200,6 +201,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
           </div>
         </dl>
         {referencePhoto ? <ReferencePhoto photo={referencePhoto} stop /> : null}
+        <ReportLink entityType="stop" entityId={stop.id} entityLabel={stopDisplayName(stop.name, stop.source.code)} />
         <StopStreetView key={stop.id} lat={stop.lat} lng={stop.lng} name={stopDisplayName(stop.name, stop.source.code)} />
 
       </main>

@@ -35,7 +35,7 @@
 | Candidate pins (badged) | R | R | R | R | R | R | R |
 | Approved community posts | R | R | R | R | R | R | R |
 | Saved places/trips, preferences | — | W own | W own | W own | W own | W own | W own |
-| Submit corrections | — | — | W | W | W | W | W |
+| Submit corrections | — | W | W | W | W | W | W |
 | Post / comment / react / report content | — | W (limits) | W | W | W | W | W |
 | Submit driver complaint; view own | — | W own | W own | W own | W own | W own | W own |
 | Community moderation queue, appeals | — | — | — | — | M | — | M |

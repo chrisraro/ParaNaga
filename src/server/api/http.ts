@@ -14,7 +14,7 @@ export const CACHE = {
 
 export class ApiProblem extends Error {
   constructor(
-    readonly status: 400 | 404 | 413 | 429 | 503,
+    readonly status: 400 | 401 | 403 | 404 | 413 | 429 | 503,
     readonly code: ApiErrorCode,
     message: string,
   ) {
@@ -24,6 +24,8 @@ export class ApiProblem extends Error {
 }
 
 export const badRequest = (message: string) => new ApiProblem(400, "bad_request", message);
+export const unauthorized = (message: string = "Sign in to continue.") => new ApiProblem(401, "unauthorized", message);
+export const forbidden = (message: string = "You are not allowed to do this.") => new ApiProblem(403, "forbidden", message);
 export const notFound = (message: string) => new ApiProblem(404, "not_found", message);
 export const unavailable = (message: string) => new ApiProblem(503, "unavailable", message);
 export const payloadTooLarge = (message: string) => new ApiProblem(413, "payload_too_large", message);
@@ -94,6 +96,28 @@ async function handle(request: Request, route: string, respond: (ctx: RunContext
       requestId,
       error: error instanceof Error ? error.name : "unknown",
     }));
+    return errorResponse(500, "internal", "Something went wrong.", requestId);
+  }
+}
+
+/**
+ * A signed-in endpoint (account data, writes): request id, the error envelope and no-store are
+ * handled here; `run` calls authorize() first and opens its own request context. An
+ * AuthorizationError from authorize() becomes 401 (no session) or 403 (not allowed).
+ */
+export async function authedRoute(request: Request, route: string, run: (requestId: string) => Promise<Response>): Promise<Response> {
+  const requestId = safeRequestId(request.headers.get("x-vercel-id") ?? request.headers.get("x-request-id"));
+  try {
+    return await run(requestId);
+  } catch (error) {
+    if (error instanceof ApiProblem) return errorResponse(error.status, error.code, error.message, requestId);
+    if (error instanceof Error && error.name === "AuthorizationError") {
+      const unauthenticated = (error as { reason?: string }).reason === "unauthenticated";
+      return unauthenticated
+        ? errorResponse(401, "unauthorized", "Sign in to continue.", requestId)
+        : errorResponse(403, "forbidden", "You are not allowed to do this.", requestId);
+    }
+    console.error(JSON.stringify({ event: "api_error", route, requestId, error: error instanceof Error ? error.name : "unknown" }));
     return errorResponse(500, "internal", "Something went wrong.", requestId);
   }
 }

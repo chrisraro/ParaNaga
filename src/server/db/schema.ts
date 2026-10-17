@@ -513,3 +513,42 @@ export const rateLimitBucket = ops.table("rate_limit_bucket", {
   count: integer("count").notNull(),
 });
 
+
+// ---------------------------------------------------------------- community (0016)
+export const community = pgSchema("community");
+
+export const correction = community.table("correction", {
+  id: uuid("id").primaryKey(),
+  authorId: text("author_id").notNull(),
+  clientRequestId: uuid("client_request_id").notNull(),
+  entityType: text("entity_type").$type<"stop" | "route" | "fare" | "trip">().notNull(),
+  entityId: text("entity_id").notNull(),
+  entityLabel: text("entity_label"),
+  entityRevisionId: uuid("entity_revision_id"),
+  kind: text("kind").notNull(),
+  description: text("description").notNull(),
+  proposed: jsonb("proposed").notNull(),
+  observedAt: timestamp("observed_at", { withTimezone: true }).notNull(),
+  locationAccuracyM: numeric("location_accuracy_m"),
+  mediaIds: uuid("media_ids").array().notNull(),
+  status: text("status").notNull(),
+  moderationReason: text("moderation_reason"),
+  duplicateOf: uuid("duplicate_of"),
+  reviewerNote: text("reviewer_note"),
+  incorporatedRevisionId: uuid("incorporated_revision_id"),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+export const correctionEvent = community.table("correction_event", {
+  id: uuid("id").primaryKey(),
+  correctionId: uuid("correction_id").notNull(),
+  fromStatus: text("from_status"),
+  toStatus: text("to_status").notNull(),
+  actorId: text("actor_id"),
+  actorRole: text("actor_role"),
+  reasonCode: text("reason_code"),
+  note: text("note"),
+  at: timestamp("at", { withTimezone: true }).notNull(),
+});
