@@ -4,9 +4,18 @@
 // panels and the tab pages.
 
 import { createContext, useContext, useLayoutEffect, useState } from "react";
+import type { StopPin } from "@/domain/api/schemas";
 import type { LatLng } from "@/domain/geo/types";
 import type { SavedPlaceSource } from "@/domain/saved/saved";
 import type { EndpointWhich } from "@/domain/trip/endpoints";
+
+/** Stop pins in the current map view, published by the home screen for Search ("Stops near the map"). */
+export type NearbyStopsState = {
+  stops: readonly StopPin[];
+  center: LatLng;
+  status: "idle" | "loading" | "ready" | "error";
+  truncated: boolean;
+};
 
 /** A request to centre the home map on a point ("Show on map"); `n` makes each request new. */
 export type MapFocus = { point: LatLng; n: number };
@@ -62,6 +71,8 @@ export type AppFrameValue = {
    * endpoints, re-plans on the current data and shows the saved option (or what changed).
    */
   requestTrip: (savedTripId: string) => void;
+  nearbyStops?: NearbyStopsState;
+  setNearbyStops?: (state: NearbyStopsState) => void;
 };
 
 export const AppFrameContext = createContext<AppFrameValue | null>(null);

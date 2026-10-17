@@ -670,6 +670,15 @@ export function HomeScreen() {
   const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
   const tripDetailOpen = ready && (openOption !== null || stored !== null);
   const stopsInView = useStopsInView(viewBounds, !tripDetailOpen && !guiding);
+  const setNearbyStops = frame?.setNearbyStops;
+  useEffect(() => {
+    setNearbyStops?.({
+      stops: stopsInView.stops,
+      center: center.point,
+      status: stopsInView.status,
+      truncated: stopsInView.truncated,
+    });
+  }, [setNearbyStops, stopsInView.stops, stopsInView.status, stopsInView.truncated, center.point]);
   const markHomeNavigation = frame?.markHomeNavigation;
   const handleStopSelect = useCallback(
     (id: string) => {
@@ -1144,8 +1153,8 @@ export function HomeScreen() {
         </EndpointSheet>
       )}
 
-      {/* The list alternative to the stop pins: out of sight, shown when it takes focus (Search will list it). */}
-      {!picking && !guiding && !tripDetailOpen ? (
+      {/* The list alternative to the stop pins: out of sight on the map, and listed visibly in Search. */}
+      {!picking && !guiding && !tripDetailOpen && !covered ? (
         <div className="pn-home__nearby">
           <NearbyStops onOpen={markHomeNavigation} stops={stopsInView.stops} center={center.point} status={stopsInView.status} truncated={stopsInView.truncated} />
         </div>

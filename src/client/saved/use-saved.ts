@@ -8,8 +8,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { loadSnapshot, useSnapshot } from "@/client/network/use-snapshot";
-import { StorageUnavailableError, listHistory, listSavedPlaces, listSavedTrips, subscribeDeviceStore, type ListResult } from "@/client/storage/db";
+import { StorageUnavailableError, listHistory, listRecentSearches, listSavedPlaces, listSavedTrips, subscribeDeviceStore, type ListResult } from "@/client/storage/db";
 import { revalidateSavedTrip, type HistoryEntry, type SavedPlace, type SavedTrip, type SavedTripStatus } from "@/domain/saved/saved";
+import type { RecentSearchEntry } from "@/domain/search/recents";
 
 /** `error.unavailable`: no storage on this phone (blocked, private mode), not a read failure. */
 export type DeviceList<T> =
@@ -49,6 +50,28 @@ export const useSavedTrips = (): DeviceList<SavedTrip> => useDeviceList(listSave
 export const useSavedPlaces = (): DeviceList<SavedPlace> => useDeviceList(listSavedPlaces);
 /** Read only while `enabled` (history on): with history off the store is never opened for it. */
 export const useHistoryList = (enabled: boolean): DeviceList<HistoryEntry> => useDeviceList(() => listHistory(), enabled);
+
+export function useRecentSearches(): RecentSearchEntry[] {
+  const [entries, setEntries] = useState<RecentSearchEntry[]>([]);
+  useEffect(() => {
+    let live = true;
+    const read = () => {
+      listRecentSearches().then(
+        (next) => {
+          if (live) setEntries(next);
+        },
+        () => undefined,
+      );
+    };
+    read();
+    const off = subscribeDeviceStore(read);
+    return () => {
+      live = false;
+      off();
+    };
+  }, []);
+  return entries;
+}
 
 // ---------------------------------------------------------------- revalidation
 

@@ -6,7 +6,7 @@
 // layers stay in the Layers button.
 
 import Link from "next/link";
-import type { Ref } from "react";
+import { ViewTransition, type Ref } from "react";
 import { useIsOffline } from "@/client/pwa/connectivity";
 import { useSavedPlaces } from "@/client/saved/use-saved";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
@@ -37,10 +37,12 @@ export function HomeSearchBar({ searchRef }: { searchRef: Ref<HTMLAnchorElement>
   const chips = homeChips(saved.status === "ready" ? saved.records : []);
   return (
     <div className="pn-home-top">
-      <Anchor ref={searchRef} href="/app/search?for=destination" className="pn-home-search" aria-label="Search. Where to?" data-testid="home-search">
-        <SearchIcon />
-        <span>Where to?</span>
-      </Anchor>
+      <ViewTransition name="pn-search-field">
+        <Anchor ref={searchRef} href="/app/search?for=destination" className="pn-home-search" aria-label="Search. Where to?" data-testid="home-search">
+          <SearchIcon />
+          <span>Where to?</span>
+        </Anchor>
+      </ViewTransition>
       <ul className="pn-home-chips" aria-label="Browse places" data-testid="home-chips">
         {chips.map((chip) => (
           <li key={`${chip.kind}-${chip.id}`}>
