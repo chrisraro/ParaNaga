@@ -86,10 +86,11 @@ test.describe("phone", () => {
   test("the Settings screen shows its sections with the exact copy", async ({ page }) => {
     await openSettings(page);
     await expect(page.getByTestId("settings-account")).toHaveText(
-      "No account neededSaved trips and places stay on this phone.",
+      "No account neededSaved trips and places stay on this phone.Sign in",
     );
-    // The account card is static, not a link.
-    await expect(page.getByTestId("settings-account").locator("a")).toHaveCount(0);
+    // The account card offers one optional link, to the sign-in screen.
+    await expect(page.getByTestId("settings-account").locator("a")).toHaveCount(1);
+    await expect(page.getByTestId("settings-sign-in")).toHaveAttribute("href", "/app/sign-in");
     await expect(page.getByTestId("more-page").getByRole("heading", { level: 2 })).toHaveText(["General", "Display and data", "Location", "Data on this device", "App", "About"]);
     // Install: only what the browser offers. Headless Chromium has made no install offer, so the
     // row is text pointing to the browser menu, never a button that does nothing.
