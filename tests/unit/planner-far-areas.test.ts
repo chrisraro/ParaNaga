@@ -9,7 +9,7 @@ import type { LatLng } from "@/domain/geo/types";
 import { RULE_EVIDENCE } from "@/domain/import/modes-seed";
 import { FAR_AREAS, FAR_EVIDENCE, zoneOf } from "@/domain/planner/far-areas";
 import {
-  ACCESS_TRICYCLE_MIN_WALK_M, FAR_END_APPROACH_RADIUS_M, FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan,
+  ACCESS_TRICYCLE_MIN_WALK_M, accessTricycleOk, accessWanted, FAR_END_APPROACH_RADIUS_M, FAR_END_WALK_CAP_M, planTrip, SPECIAL_TRIP_TERMINAL_WALK_M, type PlanOption, type TripPlan,
 } from "@/domain/planner/plan";
 import { buildPlanResponse, planResponseSchema } from "@/domain/api/plan";
 import { routeStreet } from "@/domain/walk/walk-graph";
@@ -246,8 +246,9 @@ describe("far areas: the access option (tricycle to the jeepney loading point, T
     const modes = p.options.map((o) => (o.id.startsWith("tri>") ? "access" : o.mode));
     expect(modes.indexOf("access")).toBeGreaterThan(modes.lastIndexOf("jeepney"));
     expect(recommended(p)).toHaveLength(1);
-    if (p.options.some((o) => o.mode === "jeepney" && o !== a)) expect(a.labels).toEqual([]);
-    else expect(a.labels).toEqual(["Recommended"]);
+    // SOUTH has no other jeepney option: the access option is the Recommended one (ruling e).
+    expect(p.options.filter((o) => o.mode === "jeepney")).toEqual([a]);
+    expect(a.labels).toEqual(["Recommended"]);
   });
 
   it("5 Pacol access boards R6 outbound at T10 when T10's tricycle street route is shorter than T11's; Panicuason boards R7 at T11", () => {
@@ -301,8 +302,12 @@ describe("far areas: the access option (tricycle to the jeepney loading point, T
     expect(() => plan(SOUTH, PACOL, bare)).not.toThrow();
     expect(access(plan(SOUTH, PACOL, bare))).toBeUndefined();
     const moved = { ...snap, terminals: snap.terminals.map((t) => (t.code === "T10" ? { ...t, lat: t.lat! - 0.003 } : t)) };
-    const a = access(plan(SOUTH, PACOL, moved));
-    if (a) expect(a.legs[0]!.kind === "tricycle" && a.legs[0]!.to.name).not.toBe(T10.name);
+    // From a point whose shortest tricycle goes to T10, moving T10 330 m off R6 sends the access option to T11 (R7).
+    const o = { lat: 13.605, lng: 123.187 };
+    expect(access(plan(o, PACOL))!.legs[0]).toMatchObject({ kind: "tricycle", to: { name: T10.name } });
+    const a = access(plan(o, PACOL, moved))!;
+    assertAccess(a, ["R7"]);
+    expect(a.legs[0]).toMatchObject({ kind: "tricycle", to: { name: T11.name } });
   });
 
   it("13 offline without a street graph: the access tricycle says 'Street route not available', walks are ×1.3", () => {
@@ -383,5 +388,46 @@ describe("far areas: access W is the shortest first walk among the jeepney optio
     const p = plan(o, d);
     expect(Math.min(...firstWalks(p))).toBeLessThanOrEqual(600);
     expect(access(p)).toBeUndefined();
+  });
+});
+
+describe("far areas: pinned owner branch and boundaries (review I4)", () => {
+  const access = (p: TripPlan) => p.options.find((o) => o.id.startsWith("tri>"));
+
+  it("(13.612, 123.185) → Pacol: the jeepneys walk over 600 m to board; the access option is shown next to them, unlabelled", () => {
+    const p = plan({ lat: 13.612, lng: 123.185 }, PACOL);
+    const jeeps = p.options.filter((o) => o.mode === "jeepney" && !o.id.startsWith("tri>"));
+    expect(jeeps.length).toBeGreaterThan(0);
+    for (const j of jeeps) expect(j.legs[0]!.kind === "walk" && j.legs[0]!.estimateMeters).toBeGreaterThan(600);
+    expect(recommended(p)[0]).toBe(jeeps[0]);
+    const a = access(p)!;
+    expect(a.labels).toEqual([]);
+    expect(a.legs.map((l) => l.kind)).toEqual(["tricycle", "walk", "ride", "walk"]);
+    expect(p.options.indexOf(a)).toBe(p.options.indexOf(jeeps.at(-1)!) + 1);
+  });
+
+  it("access thresholds at 600 m: shortest first walk 599/600 → no access, 601 → access; tricycle 600 → dropped, 601 → kept", () => {
+    expect(accessWanted([599, 900])).toBe(false);
+    expect(accessWanted([600])).toBe(false);
+    expect(accessWanted([601, 700])).toBe(true);
+    expect(accessWanted([])).toBe(true);
+    expect(accessTricycleOk(600)).toBe(false);
+    expect(accessTricycleOk(601)).toBe(true);
+  });
+
+  it("special trip at the 300 m limit (offline ×1.3): about 290 m from T14 keeps it, about 311 m does not", () => {
+    const t = snap.terminals.find((x) => x.code === "T14")!;
+    const T14 = { lat: t.lat!, lng: t.lng! };
+    const off = { lines, streets: null };
+    const at = (northM: number) => near(T14, 0, -northM);
+    const walk = (p: LatLng) => Math.round(haversineMeters(p, T14) * 1.3);
+    expect(walk(at(222))).toBeLessThanOrEqual(300);
+    expect(walk(at(222))).toBeGreaterThanOrEqual(285);
+    expect(walk(at(238))).toBeGreaterThan(300);
+    expect(walk(at(238))).toBeLessThanOrEqual(315);
+    const inside = tricycle(plan(at(222), CARARAYAN, snap, off));
+    expect(inside?.legs[0]?.kind === "tricycle" && inside.legs[0].notes).toContain("From Balatas Tricycle Terminal: local report, unconfirmed");
+    const outside = tricycle(plan(at(238), CARARAYAN, snap, off));
+    expect(outside).toBeUndefined();
   });
 });

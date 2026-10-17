@@ -81,6 +81,10 @@ export const FAR_END_APPROACH_RADIUS_M = 1150;
 export const SPECIAL_TRIP_TERMINAL_WALK_M = 300;
 /** Access option (Increment F, T4): offered when the best zone jeepney's walk to its boarding point is over this, or there is none. */
 export const ACCESS_TRICYCLE_MIN_WALK_M = 600;
+/** Review I3: offer access when no jeepney option is shown or the shortest first walk among them is over 600 m. */
+export const accessWanted = (firstWalksM: readonly number[]) => Math.min(...firstWalksM) > ACCESS_TRICYCLE_MIN_WALK_M;
+/** Review I3: an access tricycle of 600 m or less is no better than walking to the loading point. */
+export const accessTricycleOk = (tricycleM: number) => tricycleM > ACCESS_TRICYCLE_MIN_WALK_M;
 const WALK_RADIUS_M = 1500;
 /** Approach-run search step (samples of 25 m) when the projection's walk is over the cap. */
 const RUN_STRIDE = 4;
@@ -596,7 +600,7 @@ function accessOption(
     if (!best || triM < best.triM) best = { lp, c, triM, route };
   }
   // A tricycle of ACCESS_TRICYCLE_MIN_WALK_M or less is no better than walking to the loading point.
-  if (!best || best.triM <= ACCESS_TRICYCLE_MIN_WALK_M) return null;
+  if (!best || !accessTricycleOk(best.triM)) return null;
   const at: Place = { kind: "point", lat: best.lp.lat, lng: best.lp.lng, stopId: null, name: best.lp.name };
   const jeep = jeepneyOption(best.c, [], net, g, snapshot, best.lp, destination);
   const tri = tricycleLeg(g, snapshot, origin, best.lp, now, best.route, null, at);
@@ -640,8 +644,7 @@ export function planTrip(
   const jeep = search(net, g, origin, destination, direct.m, cap(originZone), cap(destinationZone), originZone !== null, destinationZone !== null);
   // Access option (review I3 ruling): destination far, origin not; W = the shortest first walk among the jeepney
   // options shown (any route, transfers included); offered when there is none or W > ACCESS_TRICYCLE_MIN_WALK_M.
-  const firstWalkM = Math.min(...jeep.options.map((x) => x.c.walks[0]!.m));
-  const access = destinationZone && originZone === null && firstWalkM > ACCESS_TRICYCLE_MIN_WALK_M
+  const access = destinationZone && originZone === null && accessWanted(jeep.options.map((x) => x.c.walks[0]!.m))
     ? accessOption(net, g, snapshot, origin, destination, now, destinationZone, jeep.alights, direct.m)
     : null;
   const options: PlanOption[] = [];
