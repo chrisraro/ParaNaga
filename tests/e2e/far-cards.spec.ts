@@ -195,3 +195,17 @@ test("A city trip has no far note: the jeepney is Recommended from 500 m", async
   await expect(page.getByTestId("street-special")).toHaveCount(0);
   await expectAxeBothSchemes(page);
 });
+
+test("a long best-option line wraps at the peek on a narrow phone and 'All options' stays on screen (audit 2026-10-18)", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await open(page, ACCESS_PLAN, false);
+  const toggle = page.getByTestId("options-toggle");
+  await expect(page.getByTestId("options-best")).toBeVisible();
+  await page.getByTestId("trip-sheet").evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  const line = (await page.getByTestId("options-best").boundingBox())!;
+  expect(line.height).toBeGreaterThan(44); // the access summary wraps at 320 px
+  const box = (await toggle.boundingBox())!;
+  expect(box.y + box.height).toBeLessThanOrEqual(700);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+});

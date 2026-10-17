@@ -9,7 +9,7 @@
 
 import "./trip.css";
 
-import { Fragment, useMemo } from "react";
+import { Fragment, useLayoutEffect, useMemo, useRef } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
@@ -27,6 +27,8 @@ export function optionDomId(optionId: string): string {
 
 export const OPTIONS_LIST_ID = "pn-trip-options-list";
 export const OPTIONS_TOGGLE_ID = "pn-options-toggle";
+/** The best-option line's own row at the peek (min-height in home-screen.css); a wrapped line is taller. */
+export const PEEK_BEST_ROW = 44;
 
 export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: PlanLookups }) {
   // A walk of a few metres (start or end at the stop itself) is not a step.
@@ -279,6 +281,7 @@ export function OptionsPeek({
   listShown,
   notes = [],
   onToggle,
+  onExtraHeight,
 }: {
   data: PlanResponse;
   etaModel?: EtaModel | null;
@@ -289,6 +292,8 @@ export function OptionsPeek({
   /** Staleness lines (offline plan, changed since saved), shown at the peek where the list is inert. */
   notes?: readonly string[];
   onToggle: () => void;
+  /** How many px the best-option line is taller than its row (it wraps on a narrow phone): the peek grows by that, so "All options" stays on screen. */
+  onExtraHeight?: (px: number) => void;
 }) {
   // The Recommended option (the tricycle at 500 m or more), not the first card: what is read out must match the list.
   // With nothing Recommended (a far trip without a jeepney) there is no best option: the peek counts the options.
@@ -296,15 +301,26 @@ export function OptionsPeek({
   const bestStreet = best && !isAccessOption(best) ? best.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak") : undefined;
   const walkLengths = useMemo(() => extractWalkLengths(best?.legs ?? []), [best]);
   const { estimate } = useOptionEta(best, walkLengths, etaModel);
+  const lineRef = useRef<HTMLParagraphElement>(null);
+  useLayoutEffect(() => {
+    if (!onExtraHeight) return undefined;
+    const el = lineRef.current;
+    const report = () => onExtraHeight(el ? Math.max(0, Math.ceil(el.getBoundingClientRect().height) - PEEK_BEST_ROW) : 0);
+    report();
+    if (!el || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(report);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onExtraHeight, expanded, best]);
   if (data.plan.options.length === 0) return null;
   return (
     <div className="pn-peek" data-testid="options-peek">
       {expanded ? null : !best ? (
-      <p className="pn-peek__best" data-testid="options-count">
+      <p ref={lineRef} className="pn-peek__best" data-testid="options-count">
         {optionsCountText(data.plan.options.length)}
       </p>
       ) : (
-      <p className="pn-peek__best" data-testid="options-best">
+      <p ref={lineRef} className="pn-peek__best" data-testid="options-best">
         <span className="sr-only">Best option: </span>
         <span>
           {optionTitle(best)}
