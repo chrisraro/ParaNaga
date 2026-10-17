@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   numeric,
+  smallint,
   pgSchema,
   text,
   timestamp,
@@ -551,4 +552,85 @@ export const correctionEvent = community.table("correction_event", {
   reasonCode: text("reason_code"),
   note: text("note"),
   at: timestamp("at", { withTimezone: true }).notNull(),
+});
+
+// ---------------------------------------------------------------- community hub (0017)
+export const communityPost = community.table("post", {
+  id: uuid("id").primaryKey(),
+  seq: bigint("seq", { mode: "number" }).notNull(),
+  authorId: text("author_id").notNull(),
+  clientRequestId: uuid("client_request_id").notNull(),
+  topic: text("topic").$type<"commute_tips" | "first_time" | "route_stop_feedback">().notNull(),
+  routeCode: text("route_code"),
+  label: text("label").$type<"community" | "official_notice" | "incorporated_change">().notNull(),
+  publishedVersionId: uuid("published_version_id"),
+  helpfulCount: integer("helpful_count").notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+export const communityPostVersion = community.table("post_version", {
+  id: uuid("id").primaryKey(),
+  postId: uuid("post_id").notNull(),
+  n: integer("n").notNull(),
+  authorId: text("author_id").notNull(),
+  clientRequestId: uuid("client_request_id"),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  tags: text("tags").array().notNull(),
+  moderationStatus: text("moderation_status").$type<"pending" | "published" | "rejected" | "human_review" | "superseded">().notNull(),
+  moderationReason: text("moderation_reason"),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull(),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+});
+
+export const communityComment = community.table("comment", {
+  id: uuid("id").primaryKey(),
+  postId: uuid("post_id").notNull(),
+  parentCommentId: uuid("parent_comment_id"),
+  depth: smallint("depth").notNull(),
+  authorId: text("author_id").notNull(),
+  clientRequestId: uuid("client_request_id").notNull(),
+  body: text("body").notNull(),
+  moderationStatus: text("moderation_status").$type<"pending" | "published" | "rejected" | "human_review">().notNull(),
+  moderationReason: text("moderation_reason"),
+  helpfulCount: integer("helpful_count").notNull(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+});
+
+export const communityReaction = community.table("reaction", {
+  userId: text("user_id").notNull(),
+  targetType: text("target_type").$type<"post" | "comment">().notNull(),
+  targetId: uuid("target_id").notNull(),
+  kind: text("kind").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
+export const communityBookmark = community.table("bookmark", {
+  userId: text("user_id").notNull(),
+  postId: uuid("post_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
+export const communityUserBlock = community.table("user_block", {
+  id: uuid("id").primaryKey(),
+  blockerId: text("blocker_id").notNull(),
+  blockedId: text("blocked_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
+export const communityContentReport = community.table("content_report", {
+  id: uuid("id").primaryKey(),
+  reporterId: text("reporter_id").notNull(),
+  targetType: text("target_type").$type<"post" | "comment">().notNull(),
+  targetId: uuid("target_id").notNull(),
+  reason: text("reason").notNull(),
+  note: text("note"),
+  status: text("status").$type<"open" | "actioned" | "dismissed">().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  resolvedBy: text("resolved_by"),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
 });
