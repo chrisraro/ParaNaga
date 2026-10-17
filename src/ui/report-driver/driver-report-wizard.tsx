@@ -270,8 +270,11 @@ export function DriverReportWizard() {
             ))}
           </ul>
         </section>
-        <Link href="/app/mynaga" className="pn-btn pn-btn--primary pn-report__action" data-testid="driver-mynaga">
+        <Link href={`/app/mynaga?report=${receipt.id}`} className="pn-btn pn-btn--primary pn-report__action" data-testid="driver-mynaga">
           Continue in MyNaga
+        </Link>
+        <Link href="/app/reports" className="pn-btn pn-btn--secondary pn-report__action" data-testid="driver-my-reports">
+          See my reports
         </Link>
         <Link href="/app" className="pn-btn pn-btn--secondary pn-report__action">
           Back to the map

@@ -227,7 +227,7 @@ test("signed in: capture, retake, details, review and a private receipt; the cam
   await expect(heading(page, "Report sent privately")).toBeFocused();
   await expect(page.getByTestId("driver-reference")).toHaveText("PN-7KQ4-2M");
   await expect(page.getByTestId("driver-receipt")).toContainText("Received");
-  await expect(page.getByTestId("driver-mynaga")).toHaveAttribute("href", "/app/mynaga");
+  await expect(page.getByTestId("driver-mynaga")).toHaveAttribute("href", "/app/mynaga?report=6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a99");
   await expect(page.getByTestId("driver-receipt")).not.toContainText(/\b(ETA|live|arriving|e-jeep\w*)\b/i);
 
   expect(uploads).toEqual(["slot:complaint_evidence:image/jpeg", "put:PUT", "confirm"]);

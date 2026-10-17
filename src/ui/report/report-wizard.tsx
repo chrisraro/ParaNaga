@@ -188,6 +188,9 @@ export function ReportWizard() {
           Status: {sent.status}
         </p>
         <p className="pn-report__body">A person will review it. Nothing on the map, routes or fares changes until that review is done and the data is republished.</p>
+        <Link href="/app/reports" className="pn-btn pn-btn--secondary pn-report__action" data-testid="report-my-reports">
+          See my reports
+        </Link>
         <Link href="/app" className="pn-btn pn-btn--primary pn-report__action">
           Back to the map
         </Link>

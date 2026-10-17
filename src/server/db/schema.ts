@@ -705,3 +705,14 @@ export const evidenceAccess = priv.table("evidence_access", {
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   requestId: text("request_id"),
 });
+
+// ---------------------------------------------------------------- priv.external_handoff (0019, task B9)
+// What the reporter says they did in the official MyNaga app. Self-reported; written only by
+// priv.set_mynaga_handoff (definer); readable only by the reporter.
+export const externalHandoff = priv.table("external_handoff", {
+  complaintId: uuid("complaint_id").primaryKey(),
+  target: text("target").$type<"mynaga">().notNull(),
+  submittedExternallyAt: timestamp("submitted_externally_at", { withTimezone: true }),
+  selfReportedReference: text("self_reported_reference"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
