@@ -289,8 +289,8 @@ test.describe("phone", () => {
     await page.goto("/");
     for (const [link, heading] of [
       ["How it works", /in three steps/],
-      ["Features", /Built for the street/],
-      ["Our data", /rather say/],
+      ["Ways to ride", /Every way to get there/],
+      ["Our data", /What we know/],
       ["FAQ", /^Questions$/],
     ] as const) {
       await page.getByRole("button", { name: "Open menu" }).click();
@@ -314,7 +314,8 @@ test("F-04 the landing and the gate promise nothing that does not ship", async (
   for (const claim of [/English and Filipino/i, /verified trip/i, /exact curb/i, /buzz/i, /stop countdown/i, /Search a place/i, /Exact ·/]) {
     expect(text, String(claim)).not.toMatch(claim);
   }
-  await expect(page.getByText("Coming soon").first()).toBeVisible();
+  // Provisional data is said up front, in the hero.
+  await expect(page.getByText("Routes and times are provisional and fares are estimates.", { exact: false }).first()).toBeVisible();
 });
 
 test.describe("desktop", () => {
@@ -371,10 +372,9 @@ test("F-14 robots.txt allows the site and keeps crawlers out of the API and admi
 });
 
 test("F-17 the landing page has one main landmark and no moderate-or-worse axe issues", async ({ page }) => {
+  // Settled, still page: reduced motion (tests/e2e/landing.spec.ts covers the moving page).
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await page.waitForFunction(() =>
-    document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),
-  );
   await expect(page.getByRole("main")).toHaveCount(1);
   const results = await new AxeBuilder({ page }).analyze();
   const issues = results.violations.filter((v) => v.impact !== "minor");

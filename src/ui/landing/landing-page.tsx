@@ -1,251 +1,650 @@
 import Link from "next/link";
+import { preload } from "react-dom";
+import type { CSSProperties, ReactNode } from "react";
+import { attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { RouteNMark, Wordmark } from "@/ui/brand/route-n-mark";
-import { HowItWorks } from "@/ui/landing/how-it-works";
-import { HomePreview, PhoneFrame } from "@/ui/landing/phone-screens";
+import { DeviceFrame, Shot } from "@/ui/landing/device-frame";
+import { HERO_LINES } from "@/ui/landing/hero-lines";
+import {
+  COMMUNITY,
+  FAQ,
+  FAR,
+  HERO,
+  HOW,
+  MODES,
+  OFFLINE,
+  PROMISE,
+  ROUTES,
+  SCREEN_ALT,
+  SHOT_H,
+  SHOT_W,
+  SHOWCASE,
+  THEMES,
+} from "@/ui/landing/landing-content";
+import { LandingMotion } from "@/ui/landing/landing-motion";
+import { AppQr } from "@/ui/landing/qr-code";
 import { SiteHeader } from "@/ui/landing/site-header";
+import { ThemeCompare } from "@/ui/landing/theme-compare";
+import "@/ui/landing/landing.css";
 
-// Marketing landing page (design canvas: W1 · Landing page). Copy rules (spec §6.5):
-// never "live", "official" or "guaranteed"; no invented counts, ratings or testimonials.
-// Honest about what ships: trips are provisional (Loops A and B, unverified pins, fare
-// estimates); features still being built say "Coming soon" and are never promised as done.
-//
-// Audit F-23: in production, Chrome may warn that /app CSS chunks were "preloaded but not used".
-// Those <link rel=preload as=style> tags are added by Next's prefetch of the <Link href="/app">
-// links below (framework behaviour, it makes opening the app fast), not by this page.
+// Marketing landing page. Persuade, but only with what ships: every screen is a capture of the
+// running app (public/landing, scripts/capture-landing.ts) and every claim comes from the app
+// (landing-content.ts, held to the copy rules by tests/unit/landing-copy.test.ts).
+// Server component; the client islands are the header menu, the motion observer, the light/dark
+// slider and the QR code.
 
-const ROUTES: [string, string][] = [
-  ["San Felipe", "#2F6FE4"], ["Pacol", "#7B4FD6"], ["Del Rosario · Magsaysay", "#0D827D"], ["Del Rosario · Roxas", "#B25E15"],
-  ["Del Rosario · Panganiban", "#976E09"], ["Carolina–Panicuason", "#2C854C"], ["San Isidro · Cararayan", "#C94177"], ["Magsaysay Loops A–D", "#3E4C6B"],
-];
-
-const QUESTIONS = [
-  { title: "Where do I wait?", body: "The mapped stop to walk to, and where its pin comes from. Curb sides aren't surveyed yet, and we say so.", icon: "M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12zM12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", tone: "bg-teal-soft text-teal-ink" },
-  { title: "What do I ride?", body: "The route and its direction. Signboard text shows once it's verified; until then, confirm with the driver.", icon: "M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9H4zM4 11h16M7 19l-1 2M17 19l1 2M7.5 15.5h.01M16.5 15.5h.01", tone: "bg-[#E0E9FB] text-[#1F4FB0]" },
-  { title: "Where do I transfer?", body: "Where to get off, how far to walk and which loop to board next, with every distance marked as an estimate.", icon: "M7 4v10M7 14l-3-3M7 14l3-3M17 20V10M17 10l-3 3M17 10l3 3", tone: "bg-fill text-navy" },
-  { title: "When do I say Para?", body: "Your trip steps name the stop to get off at, so you know when to call it.", icon: "M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0", tone: "bg-coral-soft text-coral-ink" },
-];
-
-const FEATURES = [
-  { title: "No account needed", soon: false, body: "Plan as a guest. Signing in to keep saved places is coming soon.", icon: "M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" },
-  { title: "Readable outdoors", soon: false, body: "High contrast, large type and big buttons that work one-handed in the sun.", icon: "M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M6.3 17.7l1.4-1.4M16.3 7.7l1.4-1.4M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" },
-  { title: "Honest about unknowns", soon: false, body: "Unverified routes, estimated fares and unsurveyed stops are labelled as such, every time.", icon: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM12 8v5M12 16h.01" },
-  { title: "Works without signal", soon: true, body: "Saved trips and places that open offline, so a dead zone never strands you.", icon: "M6 3h12v18l-6-4.5L6 21z" },
-  { title: "Place search", soon: true, body: "Type a landmark, barangay or stop instead of pinning it on the map.", icon: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-3.5-3.5" },
-  { title: "Corrections and driver reports", soon: true, body: "Spot a moved stop or a problem on the road? Report it, privately when it's about a driver.", icon: "M8 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14.5c2.3.7 4 2.9 4 5.5" },
-];
-
-const FAQ = [
-  ["Is ParaNaga free?", "Yes. Planning trips and exploring routes is free and works without an account."],
-  ["Why does it only open on phones?", "ParaNaga is a street companion: it uses your location, the map and big tap targets while you walk and ride. On a computer we show a QR code so you can open it on your phone instead."],
-  ["Do I need to install anything?", "No. It runs in your phone's browser. You can add it to your home screen for one-tap access. Offline saved trips are coming soon."],
-  ["Can I trust the routes?", "Not blindly, yet. Trips are planned on mapped Loop A and B stops that haven't been checked on the street, so every ride says \u201cUnverified route \u2014 confirm with the driver\u201d, and fares are estimates from reported fare rules."],
-  ["Does it show where the jeepney is right now?", "No. ParaNaga does not track vehicles. It shows mapped routes and stops with fare estimates, and tells you clearly when something is not yet verified."],
-  ["Is this the City Government's app?", "No. ParaNaga is independent and not affiliated with the City Government of Naga. For official complaints, contact the City directly."],
-];
-
-function Icon({ d, size = 24 }: { d: string; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d={d} />
-    </svg>
-  );
-}
+const d = (i: number) => ({ "--d": i }) as CSSProperties;
 
 function Arrow() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M3 8h10M9 4l4 4-4 4" />
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 9h12M10 4l5 5-5 5" />
     </svg>
   );
 }
 
-function PhoneIcon({ size = 16 }: { size?: number }) {
+function Tick() {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
-      <rect x="7" y="2" width="10" height="20" rx="2.5" /><path d="M11 18h2" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 12.5l4.5 4.5L19 7.5" />
     </svg>
   );
 }
 
-const sectionTitle = "font-extrabold tracking-[-0.035em] leading-[1.04] text-[clamp(32px,4.4vw,52px)]";
-const ctaPrimary =
-  "inline-flex items-center gap-2.5 rounded-full bg-teal-bright font-bold text-on-teal-bright shadow-[0_12px_32px_rgba(43,181,174,0.35)] transition-transform active:scale-[0.97]";
-
-export function LandingPage() {
+function Icon({ d: path }: { d: string }) {
   return (
-    <div className="overflow-x-clip bg-canvas text-navy">
-      <SiteHeader />
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d={path} />
+    </svg>
+  );
+}
 
-      {/* One <main> landmark for everything between the header and the footer (axe: landmark-one-main, region). */}
-      <main>
-      <section id="top" aria-labelledby="hero-h" className="relative scroll-mt-16 overflow-hidden bg-navy text-white" style={{ background: "radial-gradient(1200px 600px at 85% 10%, #1d3870 0%, rgba(29,56,112,0) 60%), #0f1e3d" }}>
-        <svg viewBox="0 0 1440 760" preserveAspectRatio="xMidYMid slice" aria-hidden className="absolute inset-0 size-full opacity-55">
-          <path className="route-draw animate-draw" d="M-40 640 C 240 600 300 420 520 420 S 820 560 1000 440 S 1300 200 1500 240" fill="none" stroke="#2BB5AE" strokeWidth="3" strokeLinecap="round" />
-          <path className="route-draw animate-draw [animation-delay:0.7s]" d="M-40 300 C 200 340 380 200 600 260 S 980 420 1180 300 S 1400 120 1500 140" fill="none" stroke="#F26B5B" strokeWidth="3" strokeLinecap="round" />
-          <circle cx="520" cy="420" r="7" fill="#0F1E3D" stroke="#fff" strokeWidth="3" />
-          <circle cx="1000" cy="440" r="7" fill="#0F1E3D" stroke="#fff" strokeWidth="3" />
-          <circle cx="600" cy="260" r="7" fill="#0F1E3D" stroke="#fff" strokeWidth="3" />
-        </svg>
-        <div className="relative mx-auto flex max-w-[1180px] flex-wrap items-end gap-12 px-4 pt-14 md:px-8 md:pt-28">
-          <div className="flex min-w-0 flex-[1_1_460px] flex-col gap-5 pb-10 md:pb-28">
-            <span className="inline-flex h-8 animate-rise items-center gap-2 self-start rounded-full bg-white/10 px-3.5 text-[13px] font-semibold text-white/90 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)]">
-              <span className="size-2 rounded-full bg-teal-bright" />Now on the web · Naga City, Camarines Sur
-            </span>
-            <h1 id="hero-h" className="animate-rise text-[clamp(44px,7vw,84px)] font-extrabold leading-[0.98] tracking-[-0.045em] [animation-delay:0.12s]">
-              Know your ride.<br /><span className="text-teal-bright">Find your way.</span>
-            </h1>
-            <p className="max-w-[520px] animate-rise text-[clamp(17px,1.6vw,20px)] leading-normal text-white/80 [animation-delay:0.24s]">
-              Where to wait, which jeepney to take, where to transfer and when to say <strong className="text-coral-bright">Para!</strong> ParaNaga turns Naga&apos;s mapped jeepney loops into step-by-step provisional trips, starting with Loops A and B.
-            </p>
-            <div className="flex animate-rise flex-wrap items-center gap-3 [animation-delay:0.36s]">
-              <Link href="/app" className={`${ctaPrimary} h-14 px-6 text-[17px]`}>Open ParaNaga<Arrow /></Link>
-              <a href="#how" className="inline-flex h-14 items-center rounded-full bg-white/10 px-5 text-[17px] font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.2)] transition-transform active:scale-[0.97]">See how it works</a>
+const ICON = {
+  jeep: "M5 17V7a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v10M5 12h14M7.5 20v-3M16.5 20v-3M8 15h.01M16 15h.01M3 10h2M19 10h2",
+  trike: "M5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM8 16h8M13 16V8h4l3 5M13 8H8L5.5 13.5",
+  padyak: "M5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM5.5 16 9 9h5l4.5 7M9 9 8 6H6M14 9l-2 7",
+  walk: "M13 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM10 22l2-7 3 3v4M7 12l3-5 4 1 2 4M12 15l-2-4",
+};
+
+/** The real trip lines over the hero capture: a mask draws them in, in trip order. */
+function RouteOverlay({ theme }: { theme: "light" | "dark" }) {
+  const lines = HERO_LINES[theme];
+  const id = `pnl-route-${theme}`;
+  return (
+    <svg className={`pnl-route pnl-route--${theme}`} viewBox="0 0 412 915" aria-hidden>
+      <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="412" height="915">
+        {lines
+          .filter((l) => l.kind === "casing")
+          .map((l, i) => (
+            <polyline
+              key={i}
+              className="pnl-route__mask"
+              points={l.points}
+              pathLength={1}
+              fill="none"
+              stroke="#fff"
+              strokeWidth={l.width + 6}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ "--step": l.step } as CSSProperties}
+            />
+          ))}
+      </mask>
+      <g mask={`url(#${id})`} fill="none" strokeLinecap="round" strokeLinejoin="round">
+        {lines.map((l, i) => (
+          <polyline key={i} points={l.points} stroke={l.color} strokeWidth={l.width} strokeDasharray={l.dash ?? undefined} />
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+function Hero() {
+  preload("/landing/hero-light.webp", { as: "image", fetchPriority: "high", media: "(prefers-color-scheme: light)" });
+  preload("/landing/hero-dark.webp", { as: "image", fetchPriority: "high", media: "(prefers-color-scheme: dark)" });
+  return (
+    <section id="top" aria-labelledby="hero-h" className="pnl-hero">
+      <span className="pnl-hero__grid" aria-hidden />
+      <span className="pnl-hero__glow" aria-hidden />
+      <span className="pnl-hero__glow pnl-hero__glow--coral" aria-hidden />
+      <div className="pnl-wrap">
+        <h1 id="hero-h">
+          <span className="pnl-in" style={d(0)}>{HERO.title[0]}</span>
+          <span className="pnl-in" style={d(1)}>
+            {HERO.title[1]} <em>Para!</em>
+          </span>
+        </h1>
+        <div className="pnl-hero__row">
+          <div className="pnl-hero__copy">
+            <p className="pnl-lede pnl-in" style={d(2)}>{HERO.lede}</p>
+            <div className="pnl-hero__actions pnl-in" style={d(3)}>
+              <Link href="/app" className="pnl-btn pnl-btn--bright">
+                Open the app
+                <Arrow />
+              </Link>
+              <a href="#how" className="pnl-btn pnl-btn--ghost">
+                See how it works
+              </a>
             </div>
-            <p className="flex animate-rise items-center gap-2 text-sm text-white/70 [animation-delay:0.36s]"><PhoneIcon />Made for your phone. Free, and no account needed.</p>
+            <p className="pnl-hero__note pnl-in" style={d(4)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7.5v5.5M12 16.5h.01" />
+              </svg>
+              {HERO.note}
+            </p>
           </div>
-          <div className="mx-auto flex flex-[0_1_340px] justify-center">
-            <PhoneFrame width={312} bottomless className="animate-float">
-              <HomePreview />
-            </PhoneFrame>
+          <div className="pnl-stage">
+            <div className="pnl-stage__back">
+              <div className="pnl-stage__parallax-back">
+                <DeviceFrame>
+                  <Shot screen="options" decorative />
+                </DeviceFrame>
+              </div>
+            </div>
+            <div className="pnl-stage__front">
+              <div className="pnl-stage__parallax-front">
+                <div className="pnl-in" style={d(2)}>
+                  <DeviceFrame>
+                    <picture>
+                      <source media="(prefers-color-scheme: dark)" srcSet="/landing/hero-dark.webp" />
+                      <img src="/landing/hero-light.webp" width={SHOT_W} height={SHOT_H} alt={SCREEN_ALT.hero} fetchPriority="high" decoding="async" />
+                    </picture>
+                    <RouteOverlay theme="light" />
+                    <RouteOverlay theme="dark" />
+                  </DeviceFrame>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
-
-      <div aria-label="Routes in the network" className="overflow-hidden bg-navy-deep py-3.5">
-        <ul className="flex w-max animate-marquee gap-3">
-          {[...ROUTES, ...ROUTES].map(([name, color], i) => (
-            <li key={i} aria-hidden={i >= ROUTES.length} className="inline-flex h-[30px] items-center whitespace-nowrap rounded-lg px-3 text-[13px] font-bold text-white" style={{ background: color }}>{name}</li>
-          ))}
-        </ul>
       </div>
+    </section>
+  );
+}
 
-      <section aria-labelledby="q-h" className="mx-auto max-w-[1180px] px-4 pt-16 md:px-8 md:pt-28">
-        <div className="mb-9 flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
-          <h2 id="q-h" className={`max-w-[640px] ${sectionTitle}`}>Four questions every commuter asks. Here&apos;s what we can answer today.</h2>
-          <p className="max-w-[380px] text-[17px] leading-relaxed text-ink-2">New to Naga, visiting for Peñafrancia, or just trying a new route: you shouldn&apos;t have to ask three strangers which jeepney to take.</p>
+function RouteBand() {
+  const list = (hidden: boolean) => (
+    <ul aria-hidden={hidden || undefined}>
+      {ROUTES.map((r, i) => (
+        <li key={i}>
+          <span className={r.letter ? "pnl-letter" : "pnl-letter pnl-letter--none"} aria-hidden>
+            {r.letter ?? "·"}
+          </span>
+          {r.letter ? `${r.letter} ${r.title}` : r.title}
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <section aria-label="Jeepney routes ParaNaga plans with" className="pnl-band">
+      <div className="pnl-band__track">
+        {list(false)}
+        {list(true)}
+      </div>
+    </section>
+  );
+}
+
+function How() {
+  return (
+    <section id="how" aria-labelledby="how-h" className="pnl-section">
+      <div className="pnl-wrap pnl-how">
+        <div className="pnl-how__intro">
+          <h2 id="how-h" className="pnl-h2 pnl-reveal">
+            From &ldquo;Where to?&rdquo; to &ldquo;Para!&rdquo; in three steps.
+          </h2>
+          <p className="pnl-lede pnl-reveal" style={d(1)}>
+            New to Naga, here for Peñafrancia, or trying a new route: you should not have to ask three strangers which jeepney to take.
+          </p>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
-          {QUESTIONS.map((q) => (
-            <article key={q.title} className="flex flex-col gap-3.5 rounded-3xl bg-white p-6 shadow-[0_1px_2px_rgba(15,30,61,0.06)] transition-[transform,box-shadow] duration-500 ease-sheet hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(15,30,61,0.12)]">
-              <span className={`flex size-12 items-center justify-center rounded-[14px] ${q.tone}`}><Icon d={q.icon} /></span>
-              <h3 className="text-[21px] font-bold tracking-tight">{q.title}</h3>
-              <p className="text-[15px] leading-relaxed text-ink-2">{q.body}</p>
-            </article>
+        <div className="pnl-how__steps">
+          <svg className="pnl-how__path" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden>
+            <path className="pnl-how__line" d="M0 12 C 20 2, 30 22, 50 12 S 80 2, 100 12" pathLength={1} fill="none" stroke="var(--pnl-accent)" strokeWidth="2" strokeDasharray="1 1" vectorEffect="non-scaling-stroke" />
+          </svg>
+          <ol className="pnl-how__list">
+          {HOW.map((s, i) => (
+            <li key={s.title} className="pnl-how__step pnl-reveal" style={d(i)}>
+              <span className="pnl-how__dot" aria-hidden>
+                {i + 1}
+              </span>
+              <h3>{s.title}</h3>
+              <p className="pnl-body">{s.body}</p>
+            </li>
           ))}
+          </ol>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      <HowItWorks />
+function Showcase() {
+  return (
+    <section aria-labelledby="show-h" className="pnl-section" style={{ paddingTop: 0 }}>
+      <div className="pnl-wrap pnl-show">
+        <h2 id="show-h" className="pnl-h2 pnl-reveal">
+          The real app, screen by screen.
+        </h2>
+        <div className="pnl-show__grid">
+          <div className="pnl-show__pin">
+            <DeviceFrame className="pnl-show__device" label="ParaNaga screens">
+              <div className="pnl-show__screens">
+                {SHOWCASE.map((s, i) => (
+                  <div key={s.screen} className="pnl-show__screen" data-pnl-screen={i} data-on={i === 0}>
+                    <Shot screen={s.screen} />
+                  </div>
+                ))}
+              </div>
+            </DeviceFrame>
+            <div className="pnl-show__rail" aria-hidden>
+              {SHOWCASE.map((s, i) => (
+                <span key={s.screen} data-pnl-rail={i} data-on={i === 0} />
+              ))}
+            </div>
+          </div>
+          <ol className="pnl-show__steps">
+            {SHOWCASE.map((s, i) => (
+              <li key={s.screen} className="pnl-show__step" data-pnl-step={i}>
+                <h3 className="pnl-reveal">{s.title}</h3>
+                <p className="pnl-body pnl-reveal" style={d(1)}>
+                  {s.body}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+  );
+}
 
-      <section id="features" aria-labelledby="feat-h" className="mx-auto scroll-mt-20 max-w-[1180px] px-4 pt-16 md:px-8 md:pt-28">
-        <h2 id="feat-h" className={`mb-8 max-w-[720px] ${sectionTitle}`}>Built for the street, not the office.</h2>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] gap-4">
-          <article className="flex min-h-[360px] flex-col gap-4 rounded-[28px] bg-navy p-7 text-white sm:row-span-2">
-            <span className="text-[44px] font-extrabold tracking-[-0.04em] text-coral-bright">Para!</span>
-            <h3 className="text-2xl font-bold tracking-tight">Know where to get off</h3>
-            <p className="leading-relaxed text-white/75">Each trip lists the stops you ride past and names the one to get off at. Say Para! to the driver as you near it.</p>
-            <div aria-hidden className="mt-auto flex items-center gap-2">
-              <span className="size-3 rounded-full bg-teal-bright" />
-              <span className="h-1 flex-1 rounded bg-[linear-gradient(90deg,#2bb5ae_0_62%,rgba(255,255,255,0.18)_62%_100%)]" />
-              <span className="size-4 rounded-full bg-coral-bright shadow-[0_0_0_6px_rgba(255,138,122,0.2)]" />
+function Ride() {
+  return (
+    <section id="ride" aria-labelledby="ride-h" className="pnl-section" style={{ paddingTop: 0 }}>
+      <div className="pnl-wrap" style={{ display: "grid", gap: "clamp(32px, 4vw, 56px)" }}>
+        <div style={{ display: "grid", gap: 20 }}>
+          <h2 id="ride-h" className="pnl-h2 pnl-reveal">
+            Every way to get there, named the way Naga does.
+          </h2>
+          <p className="pnl-lede pnl-reveal" style={d(1)}>
+            Trips mix jeepneys, tricycles, padyaks and walking. Times and fares are estimates, shown as ranges.
+          </p>
+        </div>
+        <div className="pnl-bento">
+          <article className="pnl-card pnl-bento__jeep pnl-reveal">
+            <span className="pnl-card__icon">
+              <Icon d={ICON.jeep} />
+            </span>
+            <h3>{MODES.jeepney.title}</h3>
+            <p className="pnl-body">{MODES.jeepney.body}</p>
+            <ul className="pnl-routes" aria-label="Route names">
+              {ROUTES.map((r, i) => (
+                <li key={i}>
+                  <span className={r.letter ? "pnl-letter" : "pnl-letter pnl-letter--none"} aria-hidden>
+                    {r.letter ?? "·"}
+                  </span>
+                  {r.letter ? (
+                    <span>
+                      <span className="sr-only">{r.letter} </span>
+                      {r.title}
+                    </span>
+                  ) : (
+                    r.title
+                  )}
+                </li>
+              ))}
+            </ul>
+          </article>
+          <article className="pnl-card pnl-bento__trike pnl-reveal" style={d(1)}>
+            <span className="pnl-card__icon">
+              <Icon d={ICON.trike} />
+            </span>
+            <h3>{MODES.tricycle.title}</h3>
+            <p className="pnl-body">{MODES.tricycle.body}</p>
+            <div className="pnl-chips">
+              <span className="pnl-chip pnl-chip--dashed">Minimum fare ₱15</span>
+              <span className="pnl-chip pnl-chip--dashed">Time not estimated</span>
             </div>
           </article>
-          {FEATURES.map((f) => (
-            <article key={f.title} className="flex items-start gap-4 rounded-3xl bg-white p-6 shadow-[0_1px_2px_rgba(15,30,61,0.06)]">
-              <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${f.soon ? "bg-fill text-ink-2" : "bg-teal-soft text-teal-ink"}`}><Icon d={f.icon} size={22} /></span>
-              <span className="flex flex-col gap-1.5">
-                <h3 className="text-lg font-bold tracking-tight">{f.title}</h3>
-                {f.soon ? <span className="self-start rounded-full bg-fill px-2.5 py-0.5 text-[13px] font-semibold text-ink-2">Coming soon</span> : null}
-                <span className="text-[15px] leading-normal text-ink-2">{f.body}</span>
-              </span>
-            </article>
+          <article className="pnl-card pnl-reveal" style={d(2)}>
+            <span className="pnl-card__icon">
+              <Icon d={ICON.padyak} />
+            </span>
+            <h3>{MODES.padyak.title}</h3>
+            <p className="pnl-body">{MODES.padyak.body}</p>
+          </article>
+          <article className="pnl-card pnl-reveal" style={d(3)}>
+            <span className="pnl-card__icon">
+              <Icon d={ICON.walk} />
+            </span>
+            <h3>{MODES.walk.title}</h3>
+            <p className="pnl-body">{MODES.walk.body}</p>
+          </article>
+          <article className="pnl-card pnl-bento__wide pnl-reveal">
+            <div className="pnl-anywhere">
+              <div style={{ display: "grid", gap: 12 }}>
+                <h3>{MODES.anywhere.title}</h3>
+                <p className="pnl-body">{MODES.anywhere.body}</p>
+                <span className="pnl-chip pnl-chip--warn">Tell the driver &lsquo;para&rsquo; &middot; stop not marked</span>
+              </div>
+              <svg viewBox="0 0 520 120" aria-hidden>
+                <path d="M10 80 C 120 80, 150 30, 260 40 S 420 90, 510 50" fill="none" stroke="#ffffff" strokeWidth="14" strokeLinecap="round" />
+                <path className="pnl-how__line" d="M10 80 C 120 80, 150 30, 260 40 S 420 90, 510 50" pathLength={1} fill="none" stroke="#b45309" strokeWidth="8" strokeLinecap="round" strokeDasharray="1 1" />
+                <circle cx="10" cy="80" r="9" fill="#0b7a75" stroke="#fff" strokeWidth="4" />
+                <circle cx="510" cy="50" r="9" fill="#c73a2f" stroke="#fff" strokeWidth="4" />
+                <g fill="#ffffff" stroke="#0f1e3d" strokeWidth="3">
+                  <circle cx="150" cy="52" r="7" />
+                  <circle cx="330" cy="58" r="7" />
+                </g>
+              </svg>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Split({ device, children, flip = false, id, labelledBy }: { device: ReactNode; children: ReactNode; flip?: boolean; id?: string; labelledBy: string }) {
+  return (
+    <section id={id} aria-labelledby={labelledBy} className="pnl-section" style={{ paddingTop: 0 }}>
+      <div className={`pnl-wrap pnl-split ${flip ? "pnl-split--flip" : ""}`}>
+        <div className="pnl-split__device pnl-reveal">{device}</div>
+        <div className="pnl-split__copy">{children}</div>
+      </div>
+    </section>
+  );
+}
+
+function Far() {
+  return (
+    <Split
+      labelledBy="far-h"
+      device={
+        <DeviceFrame>
+          <Shot screen="far" />
+        </DeviceFrame>
+      }
+    >
+      <h2 id="far-h" className="pnl-h2 pnl-reveal">
+        {FAR.title}
+      </h2>
+      <div className="pnl-places pnl-reveal" style={d(1)}>
+        <span>Cararayan</span>
+        <span>San Isidro</span>
+        <span>Pacol</span>
+        <span>Carolina</span>
+        <span>Panicuason</span>
+      </div>
+      <p className="pnl-lede pnl-reveal" style={d(1)}>
+        {FAR.body}
+      </p>
+      <ul className="pnl-ticks">
+        {FAR.points.map((p, i) => (
+          <li key={p} className="pnl-reveal" style={d(i + 2)}>
+            <Tick />
+            {p}
+          </li>
+        ))}
+      </ul>
+    </Split>
+  );
+}
+
+function Offline() {
+  return (
+    <section aria-labelledby="offline-h" className="pnl-section" style={{ paddingTop: 0 }}>
+      <div className="pnl-wrap pnl-offline">
+        <div style={{ display: "grid", gap: 22 }}>
+          <div className="pnl-signal pnl-reveal" aria-hidden>
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
+          <h2 id="offline-h" className="pnl-h2 pnl-reveal">
+            {OFFLINE.title}
+          </h2>
+          <p className="pnl-lede pnl-reveal" style={d(1)}>
+            {OFFLINE.body}
+          </p>
+        </div>
+        <div className="pnl-install">
+          {OFFLINE.install.map((g, i) => (
+            <div key={g.device} className="pnl-card pnl-reveal" style={d(i)}>
+              <h3>{g.device}</h3>
+              <ol>
+                {g.steps.map((s) => (
+                  <li key={s} className="pnl-body">
+                    {s}
+                  </li>
+                ))}
+              </ol>
+            </div>
           ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      <section id="data" aria-labelledby="data-h" className="mx-auto scroll-mt-20 max-w-[1180px] px-4 pt-16 md:px-8 md:pt-28">
-        <div className="flex flex-wrap gap-10 rounded-[32px] bg-white p-7 shadow-[0_1px_2px_rgba(15,30,61,0.06)] md:p-14">
-          <div className="flex min-w-0 flex-[1_1_380px] flex-col gap-4">
-            <span className="font-mono text-[13px] font-semibold uppercase tracking-[0.08em] text-teal">Honest data</span>
-            <h2 id="data-h" className="text-[clamp(30px,4vw,46px)] font-extrabold leading-[1.05] tracking-[-0.035em]">We&apos;d rather say &ldquo;not sure yet&rdquo; than send you the wrong way.</h2>
-            <p className="text-[17px] leading-relaxed text-ink-2">Every stop and route carries a badge. Nothing is verified on the street yet, so for now trips use mapped Loop A and B stops, and every ride says &ldquo;Unverified route &mdash; confirm with the driver&rdquo;. Fares are estimates and say so. Coverage grows street by street.</p>
+function Themes() {
+  return (
+    <section aria-labelledby="themes-h" className="pnl-section" style={{ paddingTop: 0 }}>
+      <div className="pnl-wrap pnl-compare">
+        <div style={{ display: "grid", gap: 22 }}>
+          <h2 id="themes-h" className="pnl-h2 pnl-reveal">
+            {THEMES.title}
+          </h2>
+          <p className="pnl-lede pnl-reveal" style={d(1)}>
+            {THEMES.body}
+          </p>
+        </div>
+        <div style={{ display: "grid", gap: 20 }}>
+          <ThemeCompare />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Community() {
+  return (
+    <Split
+      flip
+      labelledBy="community-h"
+      device={
+        <DeviceFrame>
+          <Shot screen="report" />
+        </DeviceFrame>
+      }
+    >
+      <h2 id="community-h" className="pnl-h2 pnl-reveal">
+        {COMMUNITY.title}
+      </h2>
+      <ul className="pnl-list">
+        {COMMUNITY.items.map((item, i) => (
+          <li key={item.title} className="pnl-reveal" style={d(i % 3)}>
+            <strong>{item.title}</strong>
+            <span className="pnl-body">{item.body}</span>
+          </li>
+        ))}
+      </ul>
+    </Split>
+  );
+}
+
+function Honesty() {
+  return (
+    <section id="honest" aria-labelledby="honest-h" className="pnl-section pnl-promise">
+      <div className="pnl-wrap">
+        <h2 id="honest-h" className="pnl-h2 pnl-reveal">
+          {PROMISE.title}
+        </h2>
+        <div className="pnl-facts">
+          {PROMISE.facts.map((f, i) => (
+            <div key={f.title} className="pnl-reveal" style={d(i % 2)}>
+              <h3>{f.title}</h3>
+              <p className="pnl-body">{f.body}</p>
+            </div>
+          ))}
+        </div>
+        <div className="pnl-privacy">
+          <div style={{ display: "grid", gap: 12, alignContent: "start" }}>
+            <h3 className="pnl-reveal" style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
+              Your trips are yours.
+            </h3>
+            <p className="pnl-body pnl-reveal">
+              Where the data comes from and who holds the rights: <Link href="/app/help/sources">Sources and credits</Link>.
+            </p>
           </div>
-          <ul className="flex flex-[1_1_340px] flex-col gap-3">
-            <li className="flex items-start gap-3.5 rounded-[18px] bg-canvas p-4">
-              <span className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full bg-teal-soft px-2.5 text-[13px] font-bold text-teal-ink">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12l5 5L20 7" /></svg>Verified
-              </span>
-              <span className="text-[15px] leading-normal text-ink-2">Checked against field evidence. None yet: this badge appears as stops are surveyed.</span>
-            </li>
-            <li className="flex items-start gap-3.5 rounded-[18px] bg-canvas p-4">
-              <span className="inline-flex h-[26px] shrink-0 items-center gap-1.5 rounded-full px-2 text-[13px] font-bold text-gold-ink shadow-[inset_0_0_0_1.5px_#e8a317]">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" aria-hidden><circle cx="12" cy="12" r="8" /></svg>Mapped candidate
-              </span>
-              <span className="text-[15px] leading-normal text-ink-2">From public maps, not yet checked. Used for provisional trips, always badged.</span>
-            </li>
-            <li className="flex items-start gap-3.5 rounded-[18px] bg-canvas p-4">
-              <span className="inline-flex h-7 shrink-0 items-center rounded-full bg-fill px-2.5 text-[13px] font-bold text-ink-2">Documented only</span>
-              <span className="text-[15px] leading-normal text-ink-2">Named in documents with no mapped location yet.</span>
-            </li>
+          <ul>
+            {PROMISE.privacy.map((p, i) => (
+              <li key={p} className="pnl-reveal" style={d(i % 2)}>
+                <Tick />
+                {p}
+              </li>
+            ))}
           </ul>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      <section aria-labelledby="mobile-h" className="mx-auto max-w-[1180px] px-4 pt-16 md:px-8 md:pt-28">
-        <div className="flex flex-wrap items-center gap-7 rounded-[32px] bg-[linear-gradient(135deg,#e3f2f1,#ffffff_60%)] p-7 shadow-[inset_0_0_0_1px_rgba(11,122,117,0.18)] md:p-12">
-          <span className="flex size-[72px] shrink-0 items-center justify-center rounded-[22px] bg-teal text-white"><PhoneIcon size={34} /></span>
-          <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-2">
-            <h2 id="mobile-h" className="text-[clamp(24px,3vw,32px)] font-extrabold tracking-[-0.03em]">Best on your phone, by design.</h2>
-            <p className="leading-relaxed text-ink-2">ParaNaga guides you on the street, using your location and big tap targets. The app opens only on phones and small tablets. On a computer, we&apos;ll show a QR code so you can continue on your phone in a second.</p>
+function OnYourPhone() {
+  return (
+    <section aria-labelledby="phone-h" className="pnl-section">
+      <div className="pnl-wrap">
+        <div className="pnl-phone pnl-reveal">
+          <div className="pnl-phone__qr">
+            <AppQr />
           </div>
-          <Link href="/app" className="inline-flex h-[52px] items-center rounded-full bg-teal px-5 font-bold text-white transition-transform active:scale-[0.97]">Open on my phone</Link>
+          <div style={{ display: "grid", gap: 14, justifyItems: "start" }}>
+            <h2 id="phone-h" className="pnl-h2" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)" }}>
+              Made for the phone in your hand.
+            </h2>
+            <p className="pnl-body pnl-phone__desk">
+              The app guides you on the street with your location, the map and big tap targets, so it opens on phones and small tablets. Point your phone&apos;s camera at the code to continue there.
+            </p>
+            <p className="pnl-body pnl-phone__touch">It runs in your browser. Add it to your home screen and it opens like an app, even offline.</p>
+            <Link href="/app" className="pnl-btn pnl-btn--solid">
+              Open the app
+              <Arrow />
+            </Link>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      <section id="faq" aria-labelledby="faq-h" className="mx-auto scroll-mt-20 max-w-[860px] px-4 pt-16 md:px-8 md:pt-28">
-        <h2 id="faq-h" className="mb-6 text-[clamp(32px,4.4vw,48px)] font-extrabold tracking-[-0.035em]">Questions</h2>
-        <div className="rounded-3xl bg-white px-6 py-1 shadow-[0_1px_2px_rgba(15,30,61,0.06)]">
-          {FAQ.map(([q, a], i) => (
-            <details key={q} open={i === 0} className="group border-b border-navy/8 last:border-b-0">
-              <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-3.5 text-[17px] font-semibold [&::-webkit-details-marker]:hidden">
+function Faq() {
+  return (
+    <section id="faq" aria-labelledby="faq-h" className="pnl-section" style={{ paddingTop: 0 }}>
+      <div className="pnl-wrap pnl-faq">
+        <h2 id="faq-h" className="pnl-h2">
+          Questions
+        </h2>
+        <div>
+          {FAQ.map(([q, a]) => (
+            <details key={q}>
+              <summary>
                 {q}
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden className="shrink-0 transition-transform duration-300 ease-sheet group-open:rotate-180">
-                  <path d="M3 5l4 4 4-4" />
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+                  <path d="M8 3v10M3 8h10" />
                 </svg>
               </summary>
-              <p className="pb-5 leading-relaxed text-ink-2">{a}</p>
+              <p className="pnl-body">{a}</p>
             </details>
           ))}
         </div>
-      </section>
+      </div>
+    </section>
+  );
+}
 
-      <section aria-labelledby="cta-h" className="px-4 py-16 md:px-8 md:py-28">
-        <div className="mx-auto flex max-w-[1180px] flex-col items-center gap-5 rounded-[36px] px-6 py-12 text-center text-white md:px-16 md:py-22" style={{ background: "radial-gradient(800px 400px at 80% 0%, #1d3870, rgba(29,56,112,0) 70%), #0f1e3d" }}>
+function Closing() {
+  return (
+    <section aria-labelledby="cta-h" style={{ paddingBottom: "var(--pnl-section)" }}>
+      <div className="pnl-wrap">
+        <div className="pnl-cta pnl-reveal">
+          <span className="pnl-hero__glow" aria-hidden />
           <RouteNMark size={64} />
-          <h2 id="cta-h" className="text-[clamp(34px,5vw,60px)] font-extrabold leading-[1.02] tracking-[-0.04em]">Your next ride starts here.</h2>
-          <p className="max-w-[520px] text-lg leading-normal text-white/80">Open ParaNaga on your phone&apos;s browser. Add it to your home screen and it works like an app.</p>
-          <Link href="/app" className={`${ctaPrimary} h-[58px] px-7 text-lg`}>Open ParaNaga<Arrow /></Link>
-          <span className="text-sm text-white/60">Best on mobile · Free · No account needed</span>
+          <h2 id="cta-h">Your next ride starts here.</h2>
+          <p className="pnl-lede" style={{ color: "var(--pnl-night-ink2)" }}>
+            Free, in your phone&apos;s browser. No account needed.
+          </p>
+          <Link href="/app" className="pnl-btn pnl-btn--bright">
+            Open the app
+            <Arrow />
+          </Link>
         </div>
-      </section>
-      </main>
+      </div>
+    </section>
+  );
+}
 
-      <footer className="border-t border-navy/8 bg-white">
-        <div className="mx-auto flex max-w-[1180px] flex-wrap justify-between gap-x-12 gap-y-7 px-4 py-10 md:px-8">
-          <div className="flex max-w-[460px] flex-[1_1_320px] flex-col gap-2.5">
-            <Wordmark className="text-[22px]" />
-            <p className="text-[13px] leading-relaxed text-ink-3">ParaNaga is an independent project. It is not affiliated with, endorsed by or an official channel of the City Government of Naga. Route and fare information may be incomplete; always confirm with the driver. Map data © OpenStreetMap contributors.</p>
-          </div>
-          <nav aria-label="Footer" className="flex flex-wrap gap-10 text-sm">
-            <div className="flex flex-col gap-2.5">
-              <strong className="text-[13px] text-ink-3">Product</strong>
-              <Link href="/app">Open the app</Link>
-              <a href="#how">How it works</a>
-              <a href="#data">About our data</a>
-            </div>
-          </nav>
+function Footer() {
+  const tiles = attributionParts(currentTileConfig().attribution);
+  return (
+    <footer className="pnl-footer">
+      <div className="pnl-wrap pnl-footer__inner">
+        <div style={{ display: "grid", gap: 12 }}>
+          <Wordmark className="text-[22px]" />
+          <p>
+            ParaNaga is an independent project. It is not affiliated with, endorsed by or an official channel of the City Government of Naga. Routes, times and fares may be incomplete: always confirm
+            with the driver.
+          </p>
+          <p>
+            Screens on this page are captures of the app, with map data &copy;{" "}
+            <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>. Map in the app:{" "}
+            {tiles.map((p, i) =>
+              p.href ? (
+                <a key={i} href={p.href}>
+                  {p.text}
+                </a>
+              ) : (
+                <span key={i}>{p.text}</span>
+              ),
+            )}
+            .
+          </p>
         </div>
-      </footer>
+        <nav aria-label="Footer">
+          <Link href="/app">Open the app</Link>
+          <a href="#how">How it works</a>
+          <a href="#honest">Our data</a>
+          <Link href="/app/help/sources">Sources and credits</Link>
+          <Link href="/app/help">Help</Link>
+        </nav>
+      </div>
+    </footer>
+  );
+}
+
+export function LandingPage() {
+  return (
+    <div className="pnl">
+      <SiteHeader />
+      <main>
+        <Hero />
+        <RouteBand />
+        <How />
+        <Showcase />
+        <Ride />
+        <Far />
+        <Offline />
+        <Themes />
+        <Community />
+        <Honesty />
+        <OnYourPhone />
+        <Faq />
+        <Closing />
+      </main>
+      <Footer />
+      <LandingMotion />
     </div>
   );
 }

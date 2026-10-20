@@ -22,6 +22,7 @@
     "data:far-zone-places": "tsx scripts/far-zone-places.ts",
     "data:preview-paths": "tsx scripts/preview-route-paths.ts",
     "data:preview-road-rules": "tsx scripts/preview-road-rules.ts",
+    "capture:landing": "tsx scripts/capture-landing.ts",
     "check:boundaries": "tsx scripts/check-boundaries.ts",
     "check:bundle-secrets": "tsx scripts/check-bundle-secrets.ts",
     "verify": "pnpm typecheck && pnpm lint && pnpm check:boundaries && pnpm test && pnpm build && pnpm check:bundle-secrets"
