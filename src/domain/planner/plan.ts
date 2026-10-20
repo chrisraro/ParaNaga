@@ -43,7 +43,8 @@
 // Each ride carries `display` (route-display.ts); the plain tricycle carries the published tricycle terminals near its ends.
 // Far drop-offs (owner 2026-10-20, non-far destination): a jeepney route not already the last ride of a shown option, with
 // a candidate (past the guard and must-save-walking) dropping off over JEEP_NEAR_DROP_M (centre: PASSES_DESTINATION_M)
-// and within JEEP_FAR_DROP_MAX_M, is appended after the padyak, unlabelled, never Recommended; jeepneyReason is then null.
+// and within JEEP_FAR_DROP_MAX_M, is appended after the padyak (at most JEEP_FAR_DROP_MAX_EXTRA, distinct drop-off points),
+// unlabelled, never Recommended; jeepneyReason is then null.
 // Via groups (T5, far-areas viaGroups): when 2+ routes of one group have a one-ride candidate (after must-save-walking),
 // the jeepney block is the Pareto picks plus the best candidate of each such route, each carrying `via` (data for a
 // chip), within MAX_OPTIONS minus the walk, access, tricycle and padyak options. Trim: non-via extras (worst score
@@ -107,6 +108,10 @@ export const JEEP_DETOUR_SLACK_M = 300;
 export const JEEP_NEAR_DROP_M = 300;
 /** The farthest drop-off (straight-line metres) such an extra jeepney may have. Owner-tunable. */
 export const JEEP_FAR_DROP_MAX_M = 400;
+/** At most this many far drop-off jeepneys are added to one trip (controller 2026-10-20). */
+export const JEEP_FAR_DROP_MAX_EXTRA = 2;
+/** A far drop-off within this many metres of one already shown or added is the same spot, skipped. */
+export const JEEP_FAR_DROP_DISTINCT_M = 50;
 const WALK_RADIUS_M = 1500;
 /** Approach-run search step (samples of 25 m) when the projection's walk is over the cap. */
 const RUN_STRIDE = 4;
@@ -763,6 +768,15 @@ export function planTrip(
     .sort((a, b) => a.hops.length - b.hops.length || dropOf(a) - dropOf(b) || compare(a, b))
     .filter((c, i, xs) => xs.findIndex((y) => lastRoute(y) === lastRoute(c)) === i)
     .sort((a, b) => dropOf(a) - dropOf(b) || compare(a, b))
+    // Distinct drop-off points (loops sharing a street drop off at one spot), at most JEEP_FAR_DROP_MAX_EXTRA.
+    .reduce<{ kept: Cand[]; spots: LatLng[] }>((acc, c) => {
+      const at = c.hops.at(-1)!.alight.point;
+      if (acc.kept.length < JEEP_FAR_DROP_MAX_EXTRA && !acc.spots.some((s) => haversineMeters(s, at) <= JEEP_FAR_DROP_DISTINCT_M)) {
+        acc.kept.push(c);
+        acc.spots.push(at);
+      }
+      return acc;
+    }, { kept: [], spots: jeepBuilt.map((x) => x.c.hops.at(-1)!.alight.point) }).kept
     .map((c) => jeepneyOption(c, [], net, g, snapshot, origin, destination));
   // The cheapest jeepney is the one that may be Recommended (T7); under 500 m only when it passes the destination
   // (audit 2026-10-18: checking a different option than the one labelled recommended a ride that does not).

@@ -31,7 +31,9 @@ the tricycle is the top option; tricycle options name the terminal or TODA.
    planner takes its candidate (fewest rides, then nearest drop-off) whose last drop-off is over the near limit
    (`JEEP_NEAR_DROP_M` 300 m; in the city centre `PASSES_DESTINATION_M` 100 m) and at most `JEEP_FAR_DROP_MAX_M`
    (400 m) straight-line from the destination. The candidate has already passed the detour guard and must-save-walking.
-   It is appended after the tricycle and padyak, nearest drop-off first, with no label, never Recommended; its walk
+   It is appended after the tricycle and padyak, nearest drop-off first, at most `JEEP_FAR_DROP_MAX_EXTRA` (2) per
+   trip, skipping one whose drop-off is within `JEEP_FAR_DROP_DISTINCT_M` (50 m) of a drop-off already shown or added
+   (loops sharing a street drop off at one spot), with no label, never Recommended; its walk
    after the drop-off is the usual last walk leg. `jeepneyReason` is null when one is shown. The planner's own picks
    are unchanged (a picked option dropping off 300 m or more away keeps its place and may stay Recommended, e.g.
    Plaza Rizal → Ateneo, about 400 m from the campus centroid). One-Recommended exception: if a far drop-off option
@@ -50,6 +52,8 @@ the tricycle is the top option; tricycle options name the terminal or TODA.
 | `PASSES_DESTINATION_M` | 100 m (existing) | `src/domain/planner/plan.ts` |
 | `JEEP_NEAR_DROP_M` | 300 m (far drop-off starts above it, outside the centre) | `src/domain/planner/plan.ts` (owner-tunable) |
 | `JEEP_FAR_DROP_MAX_M` | 400 m (farthest far drop-off offered) | `src/domain/planner/plan.ts` (owner-tunable) |
+| `JEEP_FAR_DROP_MAX_EXTRA` | 2 far drop-off options per trip at most | `src/domain/planner/plan.ts` (controller decision) |
+| `JEEP_FAR_DROP_DISTINCT_M` | 50 m (same drop-off spot) | `src/domain/planner/plan.ts` |
 | centro anchor radii | 200–600 m per anchor | `data/planning/centro-2026-10-20.json` |
 | tricycle terminal match | 600 m (existing `TRICYCLE_TERMINAL_MAX_M`) | `src/domain/trip/tricycle-hint.ts` |
 
@@ -116,10 +120,10 @@ to Pacol: the only jeepney rides in to Centro and out again, so now a special-tr
 Two offline e2e tests planned Plaza Rizal to SM City Naga (now a city-centre trip, tricycle only) to exercise cached
 ride lines; they now plan Plaza Rizal to a fixture place past the centre and open the jeepney card.
 
-Far drop-offs (rule 3, branch `feat/far-drop`): 128 of the 200 trips are unchanged. 72 gain 164 far drop-off jeepney
-options (1 to 5 each, drop-offs 102 to 400 m). Every earlier option is byte-identical, Recommended changes on 0 trips,
-and no option is trimmed. 12 city-centre trips that had no jeepney (reason "centro") now list jeepneys after the
-tricycle. Jeepney options: 250 → 414.
+Far drop-offs (rule 3, branch `feat/far-drop`, capped at 2 distinct spots per trip): 138 of the 200 trips are
+unchanged. 62 gain 84 far drop-off jeepney options (1 or 2 each, drop-offs 102 to 400 m). Every earlier option is
+byte-identical, Recommended changes on 0 trips, and no option is trimmed. 12 city-centre trips that had no jeepney
+(reason "centro") now list jeepneys after the tricycle. Jeepney options: 250 → 334.
 
 ## Tests
 

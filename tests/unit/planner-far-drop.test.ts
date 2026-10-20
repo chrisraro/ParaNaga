@@ -11,7 +11,7 @@ import type { LatLng } from "@/domain/geo/types";
 import { inCentro } from "@/domain/planner/centro";
 import { FAR_AREAS, zoneOf } from "@/domain/planner/far-areas";
 import {
-  JEEP_DETOUR_SLACK_M, JEEP_FAR_DROP_MAX_M, JEEP_MAX_DETOUR, JEEP_NEAR_DROP_M, PASSES_DESTINATION_M, planTrip, UNVERIFIED_ROUTE_BADGE, type PlanOption, type TripPlan,
+  JEEP_DETOUR_SLACK_M, JEEP_FAR_DROP_DISTINCT_M, JEEP_FAR_DROP_MAX_EXTRA, JEEP_FAR_DROP_MAX_M, JEEP_MAX_DETOUR, JEEP_NEAR_DROP_M, PASSES_DESTINATION_M, planTrip, UNVERIFIED_ROUTE_BADGE, type PlanOption, type TripPlan,
 } from "@/domain/planner/plan";
 import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
 import { realStreets } from "../fixtures/real-streets";
@@ -37,15 +37,27 @@ const afterStreet = (p: TripPlan) => {
   return p.options.filter((x, i) => x.mode === "jeepney" && i > last && last >= 0);
 };
 
+/** At most JEEP_FAR_DROP_MAX_EXTRA far drop-offs, each at its own spot (over 50 m from every other drop-off shown). */
+const expectCappedAndDistinct = (p: TripPlan) => {
+  const extra = afterStreet(p);
+  expect(extra.length).toBeLessThanOrEqual(JEEP_FAR_DROP_MAX_EXTRA);
+  const all = jeepneys(p).filter((j) => !j.id.startsWith("tri>"));
+  for (const j of extra) {
+    for (const k of all) if (k !== j) expect(haversineMeters(lastRide(j).alight, lastRide(k).alight)).toBeGreaterThan(JEEP_FAR_DROP_DISTINCT_M);
+  }
+};
+
 describe("far drop-off jeepney (JEEP_NEAR_DROP_M, JEEP_FAR_DROP_MAX_M)", () => {
   it("constants: near 300 m, offered up to 400 m (owner-tunable)", () => {
     expect(JEEP_NEAR_DROP_M).toBe(300);
     expect(JEEP_FAR_DROP_MAX_M).toBe(400);
+    expect(JEEP_FAR_DROP_MAX_EXTRA).toBe(2);
+    expect(JEEP_FAR_DROP_DISTINCT_M).toBe(50);
   });
 
   it("other routes dropping off 300–400 m away are offered after the Recommended jeepney and the tricycle, not Recommended", () => {
-    const o = { lat: 13.6178965, lng: 123.2227801 };
-    const d = { lat: 13.624256, lng: 123.2068474 };
+    const o = { lat: 13.6194594, lng: 123.2382769 };
+    const d = { lat: 13.6299791, lng: 123.1858234 };
     const p = plan(o, d);
     const extra = afterStreet(p);
     expect(extra.length).toBeGreaterThan(0);
@@ -64,6 +76,16 @@ describe("far drop-off jeepney (JEEP_NEAR_DROP_M, JEEP_FAR_DROP_MAX_M)", () => {
       expect(walk.kind === "walk" && walk.to.kind === "destination" && walk.estimateMeters >= JEEP_NEAR_DROP_M).toBe(true);
     }
     expect(new Set(extra.map((j) => lastRide(j).routeCode)).size).toBe(extra.length);
+    expectCappedAndDistinct(p);
+  });
+
+  it("a far drop-off at the spot of a shown jeepney's drop-off (loops sharing a street) is not added again", () => {
+    // The Recommended jeepney drops off 338 m away; other loops drop off at the same spot.
+    const o = { lat: 13.6178965, lng: 123.2227801 };
+    const d = { lat: 13.624256, lng: 123.2068474 };
+    const p = plan(o, d);
+    expect(jeepneys(p).length).toBeGreaterThan(0);
+    expect(afterStreet(p)).toHaveLength(0);
   });
 
   it("city centre: jeepneys dropping off 100–400 m away are offered after the Recommended tricycle (formerly none)", () => {
@@ -82,6 +104,10 @@ describe("far drop-off jeepney (JEEP_NEAR_DROP_M, JEEP_FAR_DROP_MAX_M)", () => {
     }
     expect(p.jeepneyReason).toBeNull();
     expect(p.notes[0]).toBe(UNVERIFIED_ROUTE_BADGE);
+    // Five routes drop off 327–398 m away (loops sharing streets): two distinct spots are kept, nearest first.
+    expect(jeepneys(p)).toHaveLength(2);
+    expect(dropM(jeepneys(p)[0]!, d)).toBeLessThanOrEqual(dropM(jeepneys(p)[1]!, d));
+    expectCappedAndDistinct(p);
   });
 
   it("a drop-off over 400 m is still not offered (city centre: no jeepney, calm centre reason)", () => {
@@ -133,6 +159,7 @@ describe("far drop-off jeepney (JEEP_NEAR_DROP_M, JEEP_FAR_DROP_MAX_M)", () => {
           expect(j.rideMeters).toBeLessThanOrEqual(JEEP_MAX_DETOUR * haversineMeters(o, d) + JEEP_DETOUR_SLACK_M);
           expect(j.walkMeters).toBeLessThan(p.directWalkEstimateMeters!);
         }
+        expectCappedAndDistinct(p);
         planResponseSchema.parse(buildPlanResponse(snap, p, lines));
       }),
       { seed: 20261020, numRuns: 150 },
