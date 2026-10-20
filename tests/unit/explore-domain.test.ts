@@ -96,12 +96,11 @@ describe("Explore directory", () => {
     expect(pinPlaceSub({ pins: [pin(null), pin("Other layer")] })).toBe("2 pins");
   });
 
-  it("routes: grouped by group number, the 11 routes of the plan, then the two tricycle feeders", () => {
+  it("routes: grouped by group number, only the 11 active services of Ordinance 2025-070 (no tricycle feeder codes)", () => {
     const groups = routeDirectoryGroups(routes);
-    expect(groups.map((g) => g.title)).toEqual(["Group 1", "Group 2", "Group 3", "Group 4", "Group 5", "Group 6", "Group 7", "Group 8", "Other routes"]);
-    expect(groups.flatMap((g) => g.routes)).toHaveLength(13);
-    expect(groups.at(-2)!.routes.map((r) => r.code)).toEqual(["R8-A", "R8-B", "R8-C", "R8-D"]);
-    expect(groups.at(-1)!.routes.map((r) => r.code)).toEqual(["TRI-VISTODA", "TRI-DECALANGON"]); // code length, then code
+    expect(groups.map((g) => g.title)).toEqual(["Group 1", "Group 2", "Group 3", "Group 4", "Group 5", "Group 6", "Group 7", "Group 8"]);
+    expect(groups.flatMap((g) => g.routes)).toHaveLength(11);
+    expect(groups.at(-1)!.routes.map((r) => r.code)).toEqual(["R8-A", "R8-B", "R8-C", "R8-D"]);
     const r1 = routes.groups[0]!.routes[0]!;
     expect(routeDirectoryGroups({ groups: [{ groupNumber: null, routes: [r1] }] })).toEqual([{ title: "Other routes", routes: [r1] }]);
   });

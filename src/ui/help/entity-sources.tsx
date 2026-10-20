@@ -24,6 +24,7 @@ import { stopDisplayName } from "@/domain/trip/present";
 import { osmObjectUrl, osmSnapshotDate, terminalEvidenceLabel } from "@/domain/places/place-detail";
 import { isRouteMode } from "@/domain/places/terminals";
 import { modeName } from "@/domain/modes/fleet";
+import { routeLabel } from "@/domain/planner/route-display";
 
 /** A source value in quotes, verbatim; "empty" and "none" keep an empty string and a missing value apart. */
 function quoted(value: string | null): string {
@@ -93,7 +94,7 @@ function RouteSources({ data }: { data: RouteDetail }) {
   return (
     <section className="pn-section" aria-labelledby="entity-sources-title" data-testid="entity-sources">
       <h2 id="entity-sources-title" className="pn-section__title">
-        This route: {route.name}
+        This route: {routeLabel(route.code, route.name)}
       </h2>
       {route.additionalSourceStructures.length > 0 ? (
         <p className="pn-footnote">

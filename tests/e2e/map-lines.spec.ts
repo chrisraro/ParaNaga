@@ -157,11 +157,11 @@ test("route overview lines draw on the home map and the Tricycle filter leaves o
   await expect(sheet.getByText(/historical/i)).toHaveCount(0);
 
   const routesList = page.getByTestId("layers-routes-list");
-  await expect(routesList).toContainText("Centro–San Isidro");
+  await expect(routesList).toContainText("Centro-Cararayan-San Isidro");
 
   await page.getByTestId("mode-filter-tricycle").click();
-  await expect(routesList.getByRole("link")).toHaveCount(1);
-  await expect(routesList).toContainText("Test tricycle feeder");
+  // The Routes list names only the 11 active jeepney services: a tricycle feeder line is drawn but not listed.
+  await expect(routesList.getByRole("link")).toHaveCount(0);
   await expect(page.getByTestId("layers-terminals-list")).toContainText("Balatas Tricycle Terminal");
 
   const drawn = page.locator("path.pn-line--route");

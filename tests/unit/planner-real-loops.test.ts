@@ -220,5 +220,6 @@ const REGRESSION_BASELINE = {
   // (over 50 m from every shown drop-off): 138 trips unchanged; 62 gain 84 far drop-off jeepney options (1–2 each,
   // drop-offs 102–400 m; 12 city-centre trips lose reason "centro"), appended after the tricycle/padyak, every earlier
   // option byte-identical; Recommended changed on 0 trips; none trimmed.
-  digest: "88ebf556fcfb00cfabc56d174eb2cd6c33ea5f618f5c47019a9453326bf863fa",
+  // Also re-recorded for the route tally 2026-10-20 (ride display letters/titles only).
+  digest: "532227b0afc8bbd57e15314208a83cad1b00e008e062abf6f3715d873a55f392",
 };

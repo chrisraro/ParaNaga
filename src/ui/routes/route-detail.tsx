@@ -21,7 +21,8 @@ import {
   streetNote,
   vehicleTile,
 } from "@/domain/network/present";
-import { directionText, routeChipLabel, stopLabel } from "@/domain/trip/present";
+import { routeChipText, routeLabel, routeProvenance } from "@/domain/planner/route-display";
+import { directionText, stopLabel } from "@/domain/trip/present";
 import {
   CandidateRing,
   ChevronRight,
@@ -98,6 +99,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const linesState = useLines(data.revision.revisionId);
   const { lines } = linesState;
 
+  const provenance = routeProvenance(route.code);
   const group = routeGroupText(route.groupNumber, route.modeCode);
   const fare = routeFareTile(fareEvidence.rules);
   const vehicle = vehicleTile(route.modeCode);
@@ -147,12 +149,18 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
       <main className="pn-detail__main pn-detail-in" style={{ gap: 12 }}>
         <div className="pn-detail__stack">
           <div className="pn-detail__row">
-            <LoopChip leg={{ routeCode: route.code, routeName: route.name }} icon={isCircuit ? "loop" : "line"} />
-            <span className="pn-detail__caption">{[routeChipLabel(route.code, route.name) === route.code ? null : route.code, group].filter(Boolean).join(" · ")}</span>
+            <LoopChip leg={{ routeCode: route.code, routeName: route.name }} icon={isCircuit ? "loop" : "line"} short />
+            <span className="pn-detail__caption">{[routeChipText(route.code) === route.code ? null : route.code, group].filter(Boolean).join(" · ")}</span>
           </div>
           <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
-            {route.name}
+            {routeLabel(route.code, route.name)}
           </h1>
+          {provenance ? (
+            <p className="pn-detail__caption" data-testid="route-provenance">
+              {provenance.plan}
+              {provenance.letter ? ` · ${provenance.letter}` : ""}
+            </p>
+          ) : null}
           <div className="pn-detail__row">
             <span className="pn-badge pn-badge--evidence" data-testid="route-evidence">
               {provisional ? <PinsIcon /> : <DocIcon />}

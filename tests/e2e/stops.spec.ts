@@ -4,6 +4,7 @@ import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { chooseOnMapVia } from "./fixtures/options";
 import { showMapLayers } from "./fixtures/layers";
 import { ALL_ROUTES, ROUTE_R8A, SNAPSHOT, STOP_A1, STOPS_ALL, routeNetwork } from "./fixtures/network";
+import { routeLabel } from "../../src/domain/planner/route-display";
 
 // Stop pins on the map, Stop detail and Route detail (Task 7). The network API is answered with
 // REAL responses captured from a throwaway Neon branch (fixtures/network); tiles are aborted.
@@ -89,7 +90,7 @@ test("tapping a pin opens the stop with exactly the source pin's layer, coordina
   const serving = detail.getByTestId("serving-routes");
   await expect(serving.getByRole("link")).toHaveCount(1);
   await expect(serving).toContainText("Loop A");
-  await expect(serving).toContainText("Centro–Magsaysay Loop A");
+  await expect(serving).toContainText("A Centro-Magsaysay Loop A (clockwise)");
   await expect(serving).toContainText("Stop 1 · clockwise (from pin order)");
   await expect(serving).toContainText("Unverified");
   await expect(detail).toContainText("Not surveyed");
@@ -157,7 +158,7 @@ test("route R8-A: 30 provisional stops in pin order, the trial notice and an est
   await expect(page).toHaveURL(/\/app\/routes\/R8-A$/);
 
   const route = page.getByTestId("route-detail");
-  await expect(route.getByRole("heading", { level: 1, name: "Centro–Magsaysay Loop A" })).toBeFocused();
+  await expect(route.getByRole("heading", { level: 1, name: "A Centro-Magsaysay Loop A (clockwise)" })).toBeFocused();
   await expect(route).toContainText("Loop A");
   await expect(route).toContainText("Group 8 · jeepney");
   await expect(route.getByTestId("route-evidence")).toHaveText("Provisional stops");
@@ -194,7 +195,7 @@ test("route R3 shows its two street structures separately", async ({ page }) => 
   await routeNetwork(page);
   await page.goto("/app/routes/R3");
   const route = page.getByTestId("route-detail");
-  await expect(route.getByRole("heading", { level: 1, name: "Centro–Del Rosario via Roxas Avenue" })).toBeVisible();
+  await expect(route.getByRole("heading", { level: 1, name: "F Centro-Del Rosario via Roxas Ave (Diversion)" })).toBeVisible();
   await expect(route.getByTestId("route-evidence")).toHaveText("Documented only");
   await expect(route.getByTestId("route-partial")).toContainText("Street order from the plan.");
   await expect(route.getByTestId("street-order").getByRole("listitem")).toHaveCount(14);
@@ -269,7 +270,7 @@ test.describe("dark mode", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Plaza Rizal" })).toBeVisible();
     await expectAxeClean(page);
     await page.goto("/app/routes/R8-A");
-    await expect(page.getByRole("heading", { level: 1, name: "Centro–Magsaysay Loop A" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "A Centro-Magsaysay Loop A (clockwise)" })).toBeVisible();
     await expectAxeClean(page);
   });
 });
@@ -282,7 +283,7 @@ for (const fixture of ALL_ROUTES) {
     await routeNetwork(page);
     await page.goto(`/app/routes/${code}`);
     const route = page.getByTestId("route-detail");
-    await expect(route.getByRole("heading", { level: 1, name })).toBeVisible();
+    await expect(route.getByRole("heading", { level: 1, name: routeLabel(code, name), exact: true })).toBeVisible();
     await expect(route.locator(".pn-loop-chip")).toHaveCount(1);
     await expect(route.getByTestId("route-evidence")).toHaveText(hasProvisionalStops ? "Provisional stops" : "Documented only");
     await expect(route.getByTestId("fare-tile")).toContainText("₱14–₱17");

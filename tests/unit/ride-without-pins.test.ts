@@ -53,7 +53,7 @@ describe("a real R1 ride has no pins", () => {
 
   it("share text names the board and alight points", () => {
     const text = shareText({ start: { label: "Plaza Rizal", point: PLAZA_RIZAL }, destination: { label: "San Isidro", point: SAN_ISIDRO }, option, stops: data.stops, variants: data.variants, revisionLabel: "x" });
-    expect(text).toMatch(/Board R1 near /);
+    expect(text).toMatch(/Board Centro-Cararayan-San Isidro near /);
     expect(text).toMatch(/Ride along the approximate path. Get off near San Isidro · tell the driver .para. · stop not marked/);
     expect(text).not.toMatch(/Ride 0 stops|undefined/);
   });

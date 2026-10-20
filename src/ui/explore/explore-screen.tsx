@@ -67,6 +67,7 @@ import { ModeIcon } from "@/ui/modes/mode-icon";
 import { modeName, type RouteMode } from "@/domain/modes/fleet";
 import { terminalKindLabel, terminalMatchesModes, terminalRouteModes } from "@/domain/places/terminals";
 import { Segmented } from "@/ui/kit/segmented";
+import { routeLabel } from "@/domain/planner/route-display";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
 type HeadingRef = RefObject<HTMLHeadingElement | null>;
@@ -432,8 +433,8 @@ function Routes() {
                 <ListCell
                   key={r.code}
                   href={`/app/routes/${encodeURIComponent(r.code)}`}
-                  title={r.name}
-                  lead={<LoopChip leg={{ routeCode: r.code, routeName: r.name }} icon="line" />}
+                  title={routeLabel(r.code, r.name)}
+                  lead={<LoopChip leg={{ routeCode: r.code, routeName: r.name }} icon="line" short />}
                   badges={
                     <>
                       <StatusBadge variant={routeEvidenceBadge(r)} />

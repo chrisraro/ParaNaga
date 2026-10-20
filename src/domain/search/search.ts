@@ -17,6 +17,7 @@ import type { SavedPlaceSource } from "../saved/saved";
 import type { SearchIndex } from "../api/schemas";
 import type { LatLng } from "../geo/types";
 import type { OsmPlaceCategory } from "../places/osm-categories";
+import { isActiveRoute, routeLabel, routeSearchNames } from "../planner/route-display";
 import { OSM_CATEGORY_LABEL } from "../places/osm-categories";
 import { pinPlaceEndpointLabel, pinPlacePoint } from "../places/place-detail";
 import { compactText, foldText, isCodeLikeQuery, tokenize } from "./normalize";
@@ -307,11 +308,12 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
     const loops = [...new Set(p.pins.flatMap((x) => (x.layer ? [loopName(x.layer)] : [])))].sort();
     add({ kind: "pin", key: p.key, title: p.label, loops, point: pinPlacePoint(p), ...best([p.label, ...p.spellings]) });
   }
-  for (const r of index.routes) {
-    const title = `${r.code} ${r.name}`;
-    const named = best([r.code, r.name, title]);
-    // A stop-sign letter ("E") or sign name finds its route as strongly as the code; "Route E" too.
-    const aliasHit = r.aliases.map((a) => ({ a, m: best([a, `Route ${a}`]) })).sort((x, y) => y.m.score - x.m.score)[0];
+  for (const r of index.routes.filter((x) => isActiveRoute(x.code))) {
+    // The row reads like the Routes list: letter + title (the published name still finds it).
+    const title = routeLabel(r.code, r.name);
+    const named = best([r.code, r.name, title, `${r.code} ${r.name}`]);
+    // A stop-sign letter ("E") or sign name finds its route as strongly as the code; "Route E", "Route 4", "Loop C" too.
+    const aliasHit = [...r.aliases, ...routeSearchNames(r.code)].map((a) => ({ a, m: best([a, `Route ${a}`]) })).sort((x, y) => y.m.score - x.m.score)[0];
     const byAlias = aliasHit !== undefined && aliasHit.m.score > named.score;
     const own = byAlias ? aliasHit.m : named;
     const street = r.streets.find((s) => hits(s)) ?? null;
