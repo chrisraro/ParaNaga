@@ -153,10 +153,11 @@ for (const mode of ["dark", "high contrast"] as const) {
 test("route detail names the letter and title, the ordinance route and where the letter comes from", async ({ page }) => {
   const title = page.getByTestId("route-detail").getByRole("heading", { level: 1 });
   await page.goto("/app/routes/R3");
-  await expect(title).toHaveText("F Centro-Del Rosario via Roxas Ave (Diversion)");
-  await expect(page.getByTestId("route-provenance")).toHaveText(/Route 3 of the City of Naga route plan, Ordinance 2025-070 · 28 units authorised · Letter inferred from the signboard order, not yet confirmed/);
-  await page.goto("/app/routes/R2");
-  await expect(page.getByTestId("route-provenance")).toContainText("Letter seen on the signboard");
+  await expect(title).toHaveText("Centro-Del Rosario via Roxas Ave (Diversion)");
+  await expect(page.getByTestId("route-provenance")).toHaveText(/Route 3 of the City of Naga route plan, Ordinance 2025-070 · 28 units authorised/);
+  await page.goto("/app/routes/R8-A");
+  await expect(title).toHaveText("A Centro-Magsaysay Loop A (clockwise)");
+  await expect(page.getByTestId("route-provenance")).toContainText("Letter A of the Loop Service in the ordinance");
   await page.goto("/app/routes/R1");
   await expect(title).toHaveText("Centro-Cararayan-San Isidro");
   const r1 = await page.getByTestId("route-provenance").textContent();

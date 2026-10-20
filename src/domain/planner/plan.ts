@@ -678,6 +678,28 @@ function accessOption(
 
 const validPoint = (p: LatLng) => Number.isFinite(p.lat) && Number.isFinite(p.lng) && isInsideNaga(p);
 
+/**
+ * Loop pairs (Loops A & B; Loops C & D): opposite-direction loops running clockwise and
+ * counterclockwise on shared streets. When both directions have a valid one-ride candidate,
+ * both are offered so the commuter can choose their desired roadside or direction.
+ */
+function activeLoopPartners(net: PlanningNetwork, cands: Cand[]): Set<Cand> {
+  const reps = new Set<Cand>();
+  const PAIRS: readonly [string, string][] = [
+    ["R8-A", "R8-B"],
+    ["R8-C", "R8-D"],
+  ];
+  for (const [r1, r2] of PAIRS) {
+    const c1 = cands.filter((c) => c.hops.length === 1 && net.variants[c.hops[0]!.v]!.routeCode === r1).sort(compare)[0];
+    const c2 = cands.filter((c) => c.hops.length === 1 && net.variants[c.hops[0]!.v]!.routeCode === r2).sort(compare)[0];
+    if (c1 && c2) {
+      reps.add(c1);
+      reps.add(c2);
+    }
+  }
+  return reps;
+}
+
 export function planTrip(
   snapshot: PlannerSnapshot,
   network: PlannerNetwork,
@@ -733,14 +755,16 @@ export function planTrip(
   // best-score option is never trimmed; non-via extras go first (worst score first), then vias; a label on a dropped
   // option is dropped with it, never moved.
   const vias = activeVias(net, jeep.cands, viaGroups, [nearestAnchorId(origin, FAR_AREAS), nearestAnchorId(destination, FAR_AREAS)]);
+  const loopPartners = activeLoopPartners(net, jeep.cands);
+  const extraReps = new Set<Cand>([...vias.reps, ...loopPartners]);
   let block = jeep.options;
-  if (vias.reps.size > 0) {
+  if (extraReps.size > 0) {
     const budget = Math.max(1, MAX_OPTIONS - (walkShown ? 1 : 0) - (access ? 1 : 0) - (farZone === null || special ? 1 : 0) - (padyak ? 1 : 0));
-    const pool = [...jeep.options, ...[...vias.reps].filter((c) => !jeep.options.some((x) => x.c === c)).map((c) => ({ c, labels: [] as PlanLabel[] }))];
+    const pool = [...jeep.options, ...[...extraReps].filter((c) => !jeep.options.some((x) => x.c === c)).map((c) => ({ c, labels: [] as PlanLabel[] }))];
     const worstFirst = (a: (typeof pool)[number], b: (typeof pool)[number]) => compare(b.c, a.c);
     const top = pool.reduce((m, x) => (compare(x.c, m.c) < 0 ? x : m));
     const droppable = pool.filter((x) => x !== top);
-    const trimOrder = [...droppable.filter((x) => !vias.reps.has(x.c)).sort(worstFirst), ...droppable.filter((x) => vias.reps.has(x.c)).sort(worstFirst)];
+    const trimOrder = [...droppable.filter((x) => !extraReps.has(x.c)).sort(worstFirst), ...droppable.filter((x) => extraReps.has(x.c)).sort(worstFirst)];
     const dropped = new Set(trimOrder.slice(0, Math.max(0, pool.length - budget)));
     block = pool.filter((x) => !dropped.has(x)).sort((a, b) => compare(a.c, b.c));
   }

@@ -202,6 +202,7 @@ function createSheetFollow() {
 
 export function HomeScreen() {
   const frame = useAppFrame();
+  const router = useRouter();
   const geo = useGeolocation();
   const home = useHomeGuidance();
   const { guidance, guiding, pickPrompt, setPickPrompt } = home;
@@ -227,6 +228,18 @@ export function HomeScreen() {
   const [samePlaceRefused, setSamePlaceRefused] = useState<EndpointWhich | null>(null);
   // The tab bar floats over the sheet's bottom edge (measured; 0 while it is hidden).
   const [pickHeight, pickRef] = useMeasuredHeight();
+
+  useEffect(() => {
+    frame?.setEndpoints?.({
+      start: endpoints.start ? { point: endpoints.start.point, label: endpoints.start.label, ...(endpoints.start.place ? { place: endpoints.start.place } : {}) } : null,
+      destination: endpoints.destination ? { point: endpoints.destination.point, label: endpoints.destination.label, ...(endpoints.destination.place ? { place: endpoints.destination.place } : {}) } : null,
+    });
+  }, [endpoints.start, endpoints.destination, frame]);
+
+  const handleRowClick = useCallback((which: EndpointWhich) => {
+    setFocused(which);
+    router.push(`/app/search?for=${which}`);
+  }, [router]);
 
   const bumpRecenter = (target: LatLng | null = null, label = "the start pin") => {
     setRecenterTarget(target);
@@ -672,7 +685,6 @@ export function HomeScreen() {
 
   // Mapped stop pins: shown while exploring and while placing a pin (not tappable then); hidden
   // while a trip detail highlights its own stops. A tap opens the stop panel over the map.
-  const router = useRouter();
   const [viewBounds, setViewBounds] = useState<Bounds | null>(null);
   const tripDetailOpen = ready && (openOption !== null || stored !== null);
   const stopsInView = useStopsInView(viewBounds, !tripDetailOpen && !guiding);
@@ -1092,7 +1104,7 @@ export function HomeScreen() {
           startSub={startSub}
           destinationSub={destinationSub}
           // Activating a row always shows its options (a first tap on the highlighted row must not hide them).
-          onFocus={setFocused}
+          onFocus={handleRowClick}
           onClear={handleClear}
           onSwap={handleSwap}
           onUseCurrentLocation={() => handleUseCurrentLocation()}

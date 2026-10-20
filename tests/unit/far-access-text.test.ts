@@ -76,8 +76,8 @@ describe("fare texts", () => {
 
 describe("titles and notes", () => {
   it("the access option is 'Tricycle, then Jeep' with the ride's letter and title", () => {
-    expect(optionTitle(access)).toBe("Tricycle, then Jeep I Centro-Pacol");
-    expect(optionTitle(r2!)).toBe("E Centro-Del Rosario via Magsaysay Ave");
+    expect(optionTitle(access)).toBe("Tricycle, then Jeep Centro-Pacol");
+    expect(optionTitle(r2!)).toBe("Centro-Del Rosario via Magsaysay Ave");
   });
 
   it("splits the far note into its evidence label and a capitalised sentence", () => {

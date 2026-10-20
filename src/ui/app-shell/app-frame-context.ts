@@ -73,6 +73,8 @@ export type AppFrameValue = {
   requestTrip: (savedTripId: string) => void;
   nearbyStops?: NearbyStopsState;
   setNearbyStops?: (state: NearbyStopsState) => void;
+  endpoints?: { start: RequestedEndpoint | null; destination: RequestedEndpoint | null };
+  setEndpoints?: (endpoints: { start: RequestedEndpoint | null; destination: RequestedEndpoint | null }) => void;
 };
 
 export const AppFrameContext = createContext<AppFrameValue | null>(null);

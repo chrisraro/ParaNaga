@@ -74,7 +74,7 @@ export const SHOWCASE: readonly { screen: Screen; title: string; body: string }[
 export const MODES = {
   jeepney: {
     title: "Jeepneys, by sign letter and route title",
-    body: "Like the signboard: E Centro-Del Rosario via Magsaysay Ave. A route with no known letter shows its title alone, never a guessed letter, and each route page says where its letter comes from.",
+    body: "Like the signboard: Loop A Centro-Magsaysay or Centro-Del Rosario via Magsaysay Ave. A route with no known letter shows its title alone, never a guessed letter, and each route page says where its letter comes from.",
   },
   tricycle: {
     title: "Tricycles, with the terminal",

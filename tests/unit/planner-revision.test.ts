@@ -125,9 +125,9 @@ describe("route display (letter + title)", () => {
     for (const l of lines.lines) expect(ROUTE_DISPLAY[l.routeCode], l.routeCode).toBeDefined();
   });
 
-  it("the letter tally A-J: loops A-D, then R2-R7 as E-J (F, G inferred); R1 has none", () => {
+  it("the letter tally: loops A-D have letters; R1-R7 have none", () => {
     expect(Object.fromEntries(Object.entries(ROUTE_DISPLAY).map(([k, v]) => [k, v.letter]))).toEqual({
-      R1: null, R2: "E", R3: "F", R4: "G", R5: "H", R6: "I", R7: "J", "R8-A": "A", "R8-B": "B", "R8-C": "C", "R8-D": "D",
+      R1: null, R2: null, R3: null, R4: null, R5: null, R6: null, R7: null, "R8-A": "A", "R8-B": "B", "R8-C": "C", "R8-D": "D",
     });
     expect(routeDisplay("R9", "Centro–Somewhere")).toEqual({ letter: null, title: "Centro–Somewhere", unverified: true });
   });
@@ -139,22 +139,23 @@ describe("route display (letter + title)", () => {
     for (const r of rides) if (r.kind === "ride") expect(r.display).toEqual(routeDisplay(r.routeCode, r.routeName));
     const parsed = planResponseSchema.parse(buildPlanResponse(snap, p, lines));
     const r2 = parsed.plan.options.flatMap((o) => o.legs).find((l) => l.kind === "ride" && l.routeCode === "R2");
-    expect(r2 && r2.kind === "ride" ? r2.display : null).toEqual({ letter: "E", title: "Centro-Del Rosario via Magsaysay Ave", unverified: true });
+    expect(r2 && r2.kind === "ride" ? r2.display : null).toEqual({ letter: null, title: "Centro-Del Rosario via Magsaysay Ave", unverified: true });
   });
 
   it("the helpers: label, chip, provenance and the active list; no special code is an active route", () => {
-    expect(routeLabel("R2", "x")).toBe("E Centro-Del Rosario via Magsaysay Ave");
+    expect(routeLabel("R2", "x")).toBe("Centro-Del Rosario via Magsaysay Ave");
     expect(routeLabel("R1", "x")).toBe("Centro-Cararayan-San Isidro");
+    expect(routeLabel("R8-A", "x")).toBe("A Centro-Magsaysay Loop A (clockwise)");
     expect(routeLabel("TRI-VISTODA", "VISTODA trimobile")).toBe("VISTODA trimobile");
-    expect(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8-A", "R8-B", "R8-C", "R8-D"].map(routeChipText)).toEqual(["R1", "Route E", "Route F", "Route G", "Route H", "Route I", "Route J", "Loop A", "Loop B", "Loop C", "Loop D"]);
+    expect(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8-A", "R8-B", "R8-C", "R8-D"].map(routeChipText)).toEqual(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "Loop A", "Loop B", "Loop C", "Loop D"]);
     expect(Object.keys(ROUTE_DISPLAY)).toHaveLength(11);
     expect(isActiveRoute("R4") && isActiveRoute("R8-D")).toBe(true);
     for (const code of ["TRI-VISTODA", "TRI-DECALANGON", "R9", "toString"]) expect(isActiveRoute(code), code).toBe(false);
     const units = (c: string) => ROUTE_DISPLAY[c]!.authorisedUnits;
     expect(["R1", "R2", "R3", "R4", "R5", "R6", "R7"].reduce((n, c) => n + units(c), 0) + units("R8-A")).toBe(282);
-    expect(routeProvenance("R2")).toEqual({ plan: "Route 2 of the City of Naga route plan, Ordinance 2025-070 · 22 units authorised", letter: "Letter seen on the signboard" });
-    expect(routeProvenance("R3")!.letter).toBe("Letter inferred from the signboard order, not yet confirmed");
-    expect(routeProvenance("R4")!.letter).toBe("Letter inferred from the signboard order, not yet confirmed");
+    expect(routeProvenance("R2")).toEqual({ plan: "Route 2 of the City of Naga route plan, Ordinance 2025-070 · 22 units authorised", letter: null });
+    expect(routeProvenance("R3")!.letter).toBeNull();
+    expect(routeProvenance("R4")!.letter).toBeNull();
     expect(routeProvenance("R1")!.letter).toBeNull();
     expect(routeProvenance("R8-C")!.plan).toContain("71 units shared by Loops A-D");
     expect(routeProvenance("R8-B")!.letter).toBe("Letter seen on the signboard");

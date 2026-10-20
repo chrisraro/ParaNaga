@@ -90,9 +90,9 @@ describe("searchIndex: routes by letter, number, loop and street (route tally 20
     return r && r.kind === "route" ? r.code : null;
   };
   it.each([
-    ["E", "R2"], ["F", "R3"], ["G", "R4"], ["H", "R5"], ["I", "R6"], ["J", "R7"],
     ["A", "R8-A"], ["B", "R8-B"], ["C", "R8-C"], ["D", "R8-D"],
-    ["Route 4", "R4"], ["Route G", "R4"], ["Loop C", "R8-C"], ["Panganiban", "R4"], ["San Felipe", "R5"], ["Cararayan", "R1"], ["Route 1", "R1"],
+    ["Route 1", "R1"], ["Route 2", "R2"], ["Route 3", "R3"], ["Route 4", "R4"], ["Route 5", "R5"], ["Route 6", "R6"], ["Route 7", "R7"],
+    ["Loop C", "R8-C"], ["Panganiban", "R4"], ["San Felipe", "R5"], ["Cararayan", "R1"], ["Pacol", "R6"], ["Panicuason", "R7"],
   ])("%s finds %s first", (q, code) => {
     expect(first(q)).toBe(code);
   });

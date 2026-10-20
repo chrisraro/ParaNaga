@@ -40,6 +40,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const [mapFocus, setMapFocus] = useState<MapFocus | null>(null);
   const [endpointRequest, setEndpointRequest] = useState<EndpointRequest | null>(null);
   const [tripRequest, setTripRequest] = useState<TripRequest | null>(null);
+  const [endpoints, setEndpoints] = useState<{ start: RequestedEndpoint | null; destination: RequestedEndpoint | null }>({ start: null, destination: null });
   const [nearbyStops, setNearbyStops] = useState<NearbyStopsState>({
     stops: [],
     center: NAGA_DEFAULT_CENTER,
@@ -81,6 +82,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
 
   const requestEndpoint = useCallback((which: EndpointWhich, endpoint: RequestedEndpoint) => {
     const copy: RequestedEndpoint = { point: { ...endpoint.point }, label: endpoint.label, ...(endpoint.place ? { place: endpoint.place } : {}) };
+    setEndpoints((prev) => ({ ...prev, [which]: copy }));
     setEndpointRequest((prev) => ({ kind: "set", which, endpoint: copy, n: (prev?.n ?? 0) + 1 }));
   }, []);
   const requestPick = useCallback((which: EndpointWhich) => {
@@ -144,7 +146,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
       nearbyStops,
       setNearbyStops,
     }),
-    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick, requestGps, tripRequest, requestTrip, nearbyStops],
+    [openPanel, markHomeNavigation, isHomeNavigation, mapFocus, showOnMap, hideTabBar, tabBarVisible, tabBarClearance, open, endpointRequest, requestEndpoint, requestPick, requestGps, tripRequest, requestTrip, nearbyStops, endpoints],
   );
 
   return (
