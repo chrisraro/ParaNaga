@@ -130,9 +130,11 @@ test('"Diversion": the corner first, old names footnoted, OSM attributed; a rout
   await expect(page.getByTestId("search-legacy-note")).toHaveText("Old route names are historical hints, not current routes.");
   await expect(page.getByTestId("search-group-legacy")).toContainText("Historical name (1993) · not matched to a current route · S28");
   await expect(page.getByTestId("search-osm-attribution")).toHaveCount(0); // the credit is on Sources and credits
-  await expect(page.getByTestId("search-group-routes")).toHaveCount(0);
+  // The corner is a place first; the route that runs along it (Route 3, via Roxas Ave (Diversion)) is listed after.
+  await expect(page.getByTestId("search-group-routes")).toContainText("Roxas Ave (Diversion)");
 
   await searchBox(page).fill("r8a");
+  await expect(page.getByTestId("search-result-route").first()).toContainText("Loop A");
   await page.getByTestId("search-result-route").first().click();
   await expect(page).toHaveURL(/\/app\/routes\/R8-A$/);
   await expect(page.getByRole("heading", { level: 1, name: "A Centro-Magsaysay Loop A (clockwise)" })).toBeVisible();
@@ -190,8 +192,8 @@ test('"Show all" moves focus to the first row it revealed', async ({ page }) => 
   await searchBox(page).fill("Centro");
   const routes = page.getByTestId("search-group-routes");
   await expect(routes.locator("li")).toHaveCount(5);
-  await routes.getByRole("button", { name: "Show all 12" }).click();
-  await expect(routes.locator("li")).toHaveCount(12);
+  await routes.getByRole("button", { name: "Show all 11" }).click();
+  await expect(routes.locator("li")).toHaveCount(11);
   await expect(routes.locator("li").nth(5).locator("a")).toBeFocused();
 });
 
