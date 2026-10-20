@@ -135,20 +135,29 @@ export function transfersText(rides: number): string {
 }
 
 /** What an option is called on its card and detail: "Loop A" ("Loop A + R4" with a transfer), or "Walk ≈ 230 m". */
-export function optionTitle(option: { rides: number; walkEstimateMeters: number; legs: readonly { kind: string; routeCode?: string; routeName?: string }[] }): string {
+export function optionTitle(option: { rides: number; walkEstimateMeters: number; legs: readonly { kind: string; routeCode?: string; routeName?: string; display?: RideDisplay | null }[] }): string {
   if (option.rides === 0) {
     // A tricycle or padyak option has no ride leg: it is named for its mode, not as a walk.
     const street = option.legs.find((l) => l.kind === "tricycle" || l.kind === "padyak");
     if (street) return street.kind === "tricycle" ? "Tricycle" : "Padyak";
     return `Walk ${formatDistance(option.walkEstimateMeters)}`;
   }
-  const rides = option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode ?? "", l.routeName ?? "")).join(" + ");
+  const rides = option.legs.filter((l) => l.kind === "ride").map((l) => routeChipLabel(l.routeCode ?? "", l.routeName ?? "", l.display)).join(" + ");
   // The access option (Increment F): a tricycle to the jeep's loading point first.
   return option.legs[0]?.kind === "tricycle" ? `Tricycle, then Jeep ${rides}` : rides;
 }
 
-/** "Loop A" from a name like "Centro–Magsaysay Loop A"; otherwise the public route code. */
-export function routeChipLabel(routeCode: string, routeName: string): string {
+export type RideDisplay = { letter: string | null; title: string };
+
+/** "E Centro-Del Rosario via Magsaysay Ave" (sign letter + title) or just the title when no letter is confirmed. */
+export const rideDisplayText = (d: RideDisplay) => (d.letter ? `${d.letter} ${d.title}` : d.title);
+
+/**
+ * How a jeepney ride is named: its display (letter + title) when the plan carries one; otherwise "Loop A" from a
+ * name like "Centro–Magsaysay Loop A", or the public route code (older plan bodies, route lists).
+ */
+export function routeChipLabel(routeCode: string, routeName: string, display?: RideDisplay | null): string {
+  if (display) return rideDisplayText(display);
   const loop = /\bLoop\s+([A-Z])\b/.exec(routeName);
   return loop ? `Loop ${loop[1]}` : routeCode;
 }

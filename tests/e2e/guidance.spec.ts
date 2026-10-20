@@ -171,14 +171,14 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(page.getByTestId("guidance-proposal")).toContainText("Close to Plaza Rizal (A1).");
 
   await tap(page, "I'm at the stop");
-  await expect(heading(page)).toHaveText("Wait for Loop A at Plaza Rizal (A1)");
+  await expect(heading(page)).toHaveText("Wait for A Centro-Magsaysay Loop at Plaza Rizal (A1)");
   await expect(guide(page)).toContainText("Signboard unverified.");
-  await tap(page, "I boarded Loop A");
+  await tap(page, "I boarded A Centro-Magsaysay Loop");
 
   // Ride: the rail follows the fixes in pin order.
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 2 of 3 · Ride");
   await expect(page.getByTestId("guidance-ride-time")).toHaveText(/^≈ [0-9]+–[0-9]+ min left \(estimate\)$/);
-  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop A");
+  await expect(page.getByTestId("guidance-ride-route")).toHaveText("A Centro-Magsaysay Loop");
   await expect(page.getByTestId("ride-progress")).not.toContainText("boarded");
   await expectHonest(page);
   await emit(page, A2);
@@ -234,7 +234,7 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
 });
 
 // Time left from the snapshot's model (Task 14 fix): the band follows the clock, over the rest of
-// the trip. PROVISIONAL_PLAN's Loop A ride is 1,240 m along the approximate path.
+// the trip. PROVISIONAL_PLAN's A Centro-Magsaysay Loop ride is 1,240 m along the approximate path.
 for (const [clock, ride] of [["09:30", RIDE_LEFT_OFFPEAK], ["07:10", RIDE_LEFT_PEAK]] as const) {
   test(`after "I boarded", the time left uses the model's ${clock === "07:10" ? "peak" : "off-peak"} band (${clock} Manila)`, async ({ page }) => {
     await page.clock.setFixedTime(new Date(`2026-10-16T${clock}:00+08:00`));
@@ -244,7 +244,7 @@ for (const [clock, ride] of [["09:30", RIDE_LEFT_OFFPEAK], ["07:10", RIDE_LEFT_P
     await startGuidance(page);
     await expect(page.getByTestId("guidance-time")).toHaveText(/^≈ [0-9]+–[0-9]+ min \(estimate\)$/);
     await tap(page, "I'm at the stop");
-    await tap(page, "I boarded Loop A");
+    await tap(page, "I boarded A Centro-Magsaysay Loop");
     await expect(page.getByTestId("guidance-ride-time")).toHaveText(ride);
     await expectHonest(page);
   });
@@ -265,7 +265,7 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expectAxeClean(page);
 
   await tap(page, "I'm at the stop");
-  await tap(page, "I boarded Loop A");
+  await tap(page, "I boarded A Centro-Magsaysay Loop");
   await expect(heading(page)).toHaveText("Ride to Magsaysay Junction (A3)");
   await expect(page.getByTestId("ride-count")).toHaveText("2 stops after Plaza Rizal (A1)");
   await expect(page.getByTestId("guidance-keep-open")).toHaveText("Keep this screen open.");
@@ -287,15 +287,15 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expectHonest(page);
   await expectAxeClean(page);
   await tap(page, "I'm at the stop");
-  await expect(guide(page)).toContainText("Signboard unverified. Ask the driver: “Loop B?”");
-  await tap(page, "I boarded Loop B");
+  await expect(guide(page)).toContainText("Signboard unverified. Ask the driver: “B Centro-Magsaysay Loop?”");
+  await tap(page, "I boarded B Centro-Magsaysay Loop");
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 4 of 5 · Ride");
-  await expect(page.getByTestId("guidance-ride-route")).toHaveText("Loop B");
+  await expect(page.getByTestId("guidance-ride-route")).toHaveText("B Centro-Magsaysay Loop");
   await tap(page, "I got off");
   await tap(page, "I've arrived");
   await expect(heading(page)).toHaveText("You've arrived");
-  await expect(page.getByTestId("arrive-summary")).toContainText("Loop A");
-  await expect(page.getByTestId("arrive-summary")).toContainText("Loop B");
+  await expect(page.getByTestId("arrive-summary")).toContainText("A Centro-Magsaysay Loop");
+  await expect(page.getByTestId("arrive-summary")).toContainText("B Centro-Magsaysay Loop");
   await page.getByTestId("trip-sheet").getByRole("button", { name: "Done" }).click();
   await expect(guide(page)).toHaveCount(0);
   expect((await geoStub(page)).calls).toBe(1);
@@ -307,7 +307,7 @@ test("Report it in MyNaga opens the handoff, and closing it returns to the runni
   await openApp(page);
   await startGuidance(page);
   await tap(page, "I'm at the stop");
-  await tap(page, "I boarded Loop A");
+  await tap(page, "I boarded A Centro-Magsaysay Loop");
   const rideTitle = await heading(page).textContent();
   const stepLabel = await page.getByTestId("guidance-step-label").textContent();
 
@@ -344,16 +344,16 @@ test("Undo last step goes back one confirmation; after Arrive it never restarts 
   await expect(page.getByTestId("guidance-undo")).toHaveCount(0);
 
   await tap(page, "I'm at the stop");
-  await tap(page, "I boarded Loop A");
+  await tap(page, "I boarded A Centro-Magsaysay Loop");
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 2 of 3 · Ride");
   await page.getByTestId("guidance-undo").click();
-  await expect(heading(page)).toHaveText("Wait for Loop A at Plaza Rizal (A1)");
+  await expect(heading(page)).toHaveText("Wait for A Centro-Magsaysay Loop at Plaza Rizal (A1)");
   await expect(heading(page)).toBeFocused();
   await page.getByTestId("guidance-undo").click();
   await expect(heading(page)).toHaveText("Walk to Plaza Rizal (A1)");
   await expect(page.getByTestId("guidance-undo")).toHaveCount(0);
 
-  await tap(page, "I boarded Loop A");
+  await tap(page, "I boarded A Centro-Magsaysay Loop");
   await tap(page, "I got off");
   await tap(page, "I've arrived");
   expect((await geoStub(page)).watches).toBe(0);
@@ -373,12 +373,12 @@ test("a reload resumes the step with location off; End guidance puts the trip ba
   await openApp(page);
   await startGuidance(page);
   await tap(page, "I'm at the stop");
-  await expect(heading(page)).toHaveText("Wait for Loop A at Plaza Rizal (A1)");
+  await expect(heading(page)).toHaveText("Wait for A Centro-Magsaysay Loop at Plaza Rizal (A1)");
   expect(await page.evaluate((k) => window.sessionStorage.getItem(k), SESSION_KEY)).not.toBeNull();
 
   await page.reload();
   await expect(guide(page)).toBeVisible();
-  await expect(heading(page)).toHaveText("Wait for Loop A at Plaza Rizal (A1)");
+  await expect(heading(page)).toHaveText("Wait for A Centro-Magsaysay Loop at Plaza Rizal (A1)");
   await expect(page.getByTestId("guidance-accuracy")).toHaveCount(0);
   await expect(tabBar(page)).toBeHidden();
 
@@ -413,7 +413,7 @@ test("missed stop with a fresh fix plans again from there", async ({ page, conte
   await openApp(page);
   await startGuidance(page);
   await tap(page, "I'm at the stop");
-  await tap(page, "I boarded Loop A");
+  await tap(page, "I boarded A Centro-Magsaysay Loop");
   await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 1 });
   await emit(page, A2);
   await expect(page.getByTestId("ride-count")).toHaveText("1 of 4 stops");
@@ -438,7 +438,7 @@ test("missed stop without any fix opens pick mode: Choose where you are on the m
   await stubGeolocation(page);
   await openApp(page);
   await startGuidance(page);
-  await tap(page, "I boarded Loop A");
+  await tap(page, "I boarded A Centro-Magsaysay Loop");
   await tap(page, "I missed my stop");
   await page.getByTestId("guidance-replan").click();
   await expect(page.locator(".pn-pick__title")).toHaveText("Choose where you are on the map");
@@ -458,14 +458,14 @@ for (const colorScheme of ["light", "dark"] as const) {
       await startGuidance(page);
       await expectAxeClean(page); // Walk
       await tap(page, "I'm at the stop");
-      await tap(page, "I boarded Loop A");
+      await tap(page, "I boarded A Centro-Magsaysay Loop");
       await expectAxeClean(page); // Ride
       await tap(page, "My stop is next");
       await expect(page.getByTestId("para-alert")).toBeVisible();
       await expectAxeClean(page); // Ride + Para
       await tap(page, "I got off");
       await expectAxeClean(page); // Transfer
-      await tap(page, "I boarded Loop B");
+      await tap(page, "I boarded B Centro-Magsaysay Loop");
       await tap(page, "I missed my stop");
       await expectAxeClean(page); // Missed
       await page.getByTestId("guidance-undo").click();

@@ -16,12 +16,13 @@ const CARD_WORDS_TWO_RIDES = 20;
 const CARD_WORDS_STREET = 32;
 /** Increment F: a via chip adds two words; the access card carries a tricycle fare line besides the jeepney card. */
 const CARD_WORDS_ONE_RIDE_VIA = 18;
-const CARD_WORDS_ACCESS = 31;
+const CARD_WORDS_ACCESS = 32; // 31 + 1: the title is now "Tricycle, then Jeep I Centro-Pacol" (letter + title) instead of "… Jeep R6"
 const cardBudget = async (card: Locator, jeepney: number) => {
   const mode = await card.getAttribute("data-mode");
   if (mode === "tricycle" || mode === "padyak") return CARD_WORDS_STREET;
   if ((await card.getByTestId("access-line").count()) > 0) return CARD_WORDS_ACCESS;
-  if ((await card.getByTestId("card-via").count()) > 0) return CARD_WORDS_ONE_RIDE_VIA;
+  // A Del Rosario title carries its street ("… via Roxas Ave (Diversion)"): the words the via chip used to add, now in the title.
+  if ((await card.getByTestId("card-via").count()) > 0 || /\svia\s/.test((await card.locator("strong").first().textContent()) ?? "")) return CARD_WORDS_ONE_RIDE_VIA;
   return jeepney;
 };
 const DETAIL_HEADER_WORDS = 16;
@@ -110,7 +111,7 @@ test("working screens carry no source, retrieval, revision or attribution text",
   expect(await workingText(guide)).not.toMatch(FORBIDDEN);
   const sheet = page.getByTestId("trip-sheet");
   await sheet.getByRole("button", { name: "I'm at the stop", exact: true }).click();
-  await sheet.getByRole("button", { name: "I boarded Loop A", exact: true }).click();
+  await sheet.getByRole("button", { name: "I boarded A Centro-Magsaysay Loop", exact: true }).click();
   await expect(guide.getByTestId("guidance-ride")).toBeVisible();
   expect(await workingText(guide)).not.toMatch(FORBIDDEN);
 

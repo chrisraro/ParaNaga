@@ -112,7 +112,7 @@ describe("Saved → Trips", () => {
     await waitFor(() => expect(tripCard.textContent).toMatch(/Estimate \d+–\d+ min \+ waiting \(unknown\) · Estimate ₱14 · data from 16 Oct 2026/));
     expect(tripCard.textContent).not.toContain("Time not available");
     expect(tripCard.textContent).toContain("Saved 16 Oct 2026");
-    expect(tripCard.textContent).toContain("Loop A");
+    expect(tripCard.textContent).toContain("A Centro-Magsaysay Loop");
     await waitFor(() => expect(urls).toContain("/api/v1/network/head"));
     expect(tripCard.textContent).not.toContain("Changed since saved");
     // No coordinates go anywhere: the only requests are the head and the snapshot of its revision.

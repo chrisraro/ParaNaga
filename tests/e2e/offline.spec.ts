@@ -195,7 +195,7 @@ test("Low-data mode: street paths download only on the tap, then stay stored (Ta
   await download.click();
   await expect(detail.locator("[data-path=street]").first()).toBeAttached();
   await expect(detail.getByTestId("walk-graph-offer")).toHaveCount(0);
-  await expect(detail.getByRole("heading", { name: "Loop A" })).toBeFocused();
+  await expect(detail.getByRole("heading", { name: "A Centro-Magsaysay Loop" })).toBeFocused();
   expect(calls.walkGraphs).toEqual([SNAPSHOT.revision.revisionId]);
   await expect
     .poll(async () => (await cacheEntries(page)).some((e) => e.url.endsWith(`/api/v1/network/walk-graph/${SNAPSHOT.revision.revisionId}`)))

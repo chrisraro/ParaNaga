@@ -111,7 +111,7 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
     variantId: leg.variantId,
     routeCode: leg.routeCode,
     routeName: leg.routeName,
-    routeChip: routeChipLabel(leg.routeCode, leg.routeName),
+    routeChip: routeChipLabel(leg.routeCode, leg.routeName, leg.display),
     loopDirection: directions.get(leg.variantId) ?? null,
   });
 

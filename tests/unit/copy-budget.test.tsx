@@ -27,7 +27,7 @@ vi.mock("@/client/saved/use-saved-trip-toggle", () => ({
 export const CARD_WORDS_STREET = 32; // a tricycle or padyak card with its street rule
 export const CARD_WORDS_ONE_RIDE = 16; // a two-word plan label is shown
 export const CARD_WORDS_ONE_RIDE_VIA = 18; // a via chip ("via Roxas (Diversion)") is added
-export const CARD_WORDS_ACCESS = 31; // the real minimum: Recommended 1 + caution 2 + title 4 + time with its tricycle tail 9 + line 6 + tricycle fare chip 7 + From fare 2
+export const CARD_WORDS_ACCESS = 32; // the real minimum: Recommended 1 + caution 2 + title 5 (letter + route title: "Tricycle, then Jeep I Centro-Pacol") + time with its tricycle tail 9 + line 6 + tricycle fare chip 7 + From fare 2
 export const CARD_WORDS_TWO_RIDES = 20; // the route is "Loop A + Loop B"
 export const DETAIL_HEADER_WORDS = 16;
 export const GUIDANCE_WALK_WORDS = 22;
@@ -83,7 +83,7 @@ describe("copy budgets", () => {
   it("a via card adds only its chip: at most 18 words", () => {
     const data = enrichPlan(VIA_PLAN as unknown as PlanResponse, null, { walkGraphStatus: "skipped" });
     render(<TripOptions data={data} onOpen={() => undefined} etaModel={ETA_MODEL} />);
-    const vias = screen.getAllByTestId("trip-option").filter((c) => c.querySelector('[data-testid="card-via"]'));
+    const vias = screen.getAllByTestId("trip-option").filter((c) => c.dataset.mode === "jeepney");
     expect(vias).toHaveLength(3);
     for (const card of vias) expect(visibleWords(card)).toBeLessThanOrEqual(CARD_WORDS_ONE_RIDE_VIA);
   });
@@ -105,7 +105,7 @@ describe("copy budgets", () => {
   it("a two-ride option card shows at most 20 words and keeps the caution", () => {
     const data = enrichPlan(TWO_RIDE_PLAN as unknown as PlanResponse, null, { walkGraphStatus: "skipped" });
     render(<TripOptions data={data} onOpen={() => undefined} etaModel={ETA_MODEL} />);
-    const card = screen.getAllByTestId("trip-option").find((c) => c.textContent?.includes("Loop A + "));
+    const card = screen.getAllByTestId("trip-option").find((c) => c.textContent?.includes(" + "));
     expect(card, "a two-ride card").toBeTruthy();
     expect(visibleWords(card!)).toBeLessThanOrEqual(CARD_WORDS_TWO_RIDES);
     expect(card!.textContent).toContain("Unverified route");

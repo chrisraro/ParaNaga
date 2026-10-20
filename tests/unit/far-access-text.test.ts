@@ -49,8 +49,12 @@ describe("option kinds", () => {
 
 describe("via chip", () => {
   it("is 'via {label}' from the option, nothing without a via", () => {
-    expect(viaChipText(r2!)).toBe("via Magsaysay");
-    expect(viaChipText(r3!)).toBe("via Roxas (Diversion)");
+    const bare = (o: PlanOptionDto) => ({ ...o, legs: o.legs.map((l) => (l.kind === "ride" ? { ...l, display: null } : l)) });
+    expect(viaChipText(bare(r2!))).toBe("via Magsaysay");
+    expect(viaChipText(bare(r3!))).toBe("via Roxas (Diversion)");
+    // The title already names the street: no second mention.
+    expect(viaChipText(r2!)).toBeNull();
+    expect(viaChipText(r3!)).toBeNull();
     expect(viaChipText(mixedJeepney)).toBeNull();
   });
 });
@@ -71,9 +75,9 @@ describe("fare texts", () => {
 });
 
 describe("titles and notes", () => {
-  it("the access option is 'Tricycle + Jeep R6' with the real route code", () => {
-    expect(optionTitle(access)).toBe("Tricycle, then Jeep R6");
-    expect(optionTitle(r2!)).toBe("R2");
+  it("the access option is 'Tricycle, then Jeep' with the ride's letter and title", () => {
+    expect(optionTitle(access)).toBe("Tricycle, then Jeep I Centro-Pacol");
+    expect(optionTitle(r2!)).toBe("E Centro-Del Rosario via Magsaysay Ave");
   });
 
   it("splits the far note into its evidence label and a capitalised sentence", () => {

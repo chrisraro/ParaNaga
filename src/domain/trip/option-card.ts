@@ -54,7 +54,30 @@ export const ACCESS_LINE = "For when you'd rather not walk.";
 const peso = (centavos: number) => `₱${Math.round(centavos / 100)}`;
 
 /** "via Magsaysay" (the chip of a jeepney that shares a corridor with other vias), or null. */
-export const viaChipText = (o: Pick<PlanOptionDto, "via">) => (o.via ? `via ${o.via.label}` : null);
+export function viaChipText(o: Pick<PlanOptionDto, "via"> & { legs?: readonly { kind: string; display?: { title: string } | null }[] }): string | null {
+  if (!o.via) return null;
+  // The title already names the street ("… via Magsaysay Ave", "… via Roxas Ave (Diversion)"): the chip would say it twice.
+  const label = o.via.label.replace(/\s*\(.*\)/, "").toLowerCase();
+  return o.legs?.some((l) => l.kind === "ride" && l.display?.title.toLowerCase().includes(label)) ? null : `via ${o.via.label}`;
+}
+
+type PlanTerminals = { tricycleTerminals?: PlanOptionDto["tricycleTerminals"] };
+
+/** The detail lines for the published tricycle terminals near each end: "Tricycle terminal: X, about 60 m from your start", and "TODA: …" only when names are on file. */
+export function tricycleTerminalLines(o: PlanTerminals): { key: string; text: string; toda: string | null }[] {
+  return (o.tricycleTerminals ?? []).map((t) => ({
+    key: `${t.side}-${t.code}`,
+    text: `Tricycle terminal: ${t.name}, about ${Math.max(10, Math.round(t.distanceM / 10) * 10)} m from your ${t.side === "origin" ? "start" : "destination"}`,
+    toda: t.todas.length > 0 ? `TODA: ${t.todas.join(", ")}` : null,
+  }));
+}
+
+/** The card forms: "Terminal: X, Y" and "TODA: …" (null when there is nothing to say). */
+export function tricycleTerminalCardLines(o: PlanTerminals): { terminal: string | null; toda: string | null } {
+  const ts = o.tricycleTerminals ?? [];
+  const todas = ts.flatMap((t) => t.todas);
+  return { terminal: ts.length > 0 ? `Terminal: ${[...new Set(ts.map((t) => t.name))].join(", ")}` : null, toda: todas.length > 0 ? `TODA: ${[...new Set(todas)].join(", ")}` : null };
+}
 
 /**
  * The fare chip of an access or special-trip option: "From ₱29" (ride minimum + the ₱15 tricycle minimum; there is no

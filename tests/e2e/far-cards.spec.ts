@@ -57,20 +57,22 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
 });
 
-test("Del Rosario: each route shows its via; R2 keeps the unconfirmed Francia line in the detail", async ({ page }) => {
+test("Del Rosario: each route names its via in its title; R2 keeps the unconfirmed Francia line in the detail", async ({ page }) => {
   await open(page, VIA_PLAN);
-  await expect(page.getByTestId("card-via")).toHaveText(["via Magsaysay", "via Roxas (Diversion)", "via Panganiban"]);
+  // The title already says the street, so no second "via" chip.
+  await expect(page.getByTestId("card-via")).toHaveCount(0);
+  await expect(page.getByTestId("trip-option").locator("strong")).toContainText(["E Centro-Del Rosario via Magsaysay Ave", "via Roxas Ave (Diversion)", "via Panganiban Drive"]);
   await expectAxeBothSchemes(page);
   await shoot(page, "via-chips");
   await chooseOption(page, 0);
-  await expect(page.getByTestId("detail-via")).toHaveText(`via Magsaysay · ${FRANCIA_NOTE}`);
-  await expect(page.getByTestId("trip-detail").getByRole("heading", { level: 2 })).toHaveText("R2");
+  await expect(page.getByTestId("detail-via")).toHaveText(FRANCIA_NOTE);
+  await expect(page.getByTestId("trip-detail").getByRole("heading", { level: 2 })).toHaveText("E Centro-Del Rosario via Magsaysay Ave");
 });
 
 test("Pacol from the south: the access card, its detail and guidance (the tricycle step does not end the trip)", async ({ page }) => {
   await open(page, ACCESS_PLAN);
   const card = page.getByTestId("trip-option").first();
-  await expect(card).toContainText("Tricycle, then Jeep R6");
+  await expect(card).toContainText("Tricycle, then Jeep I Centro-Pacol");
   await expect(card.getByTestId("access-line")).toHaveText("For when you'd rather not walk.");
   await expect(card.getByTestId("access-tricycle")).toHaveText("Tricycle min ₱15 · confirm with the driver");
   await expect(card.getByTestId("fare-chip")).toHaveText("From ₱33");
@@ -117,9 +119,9 @@ test("Cararayan from near the Balatas terminal: R1 first, the special-trip tricy
 });
 
 const FAR_JEEP_PLANS = [
-  ["Pacol", FAR_JEEP_PACOL_PLAN, "R6"],
-  ["Panicuason", FAR_JEEP_PANICUASON_PLAN, "R7"],
-  ["Cararayan", FAR_JEEP_CARARAYAN_PLAN, "R1"],
+  ["Pacol", FAR_JEEP_PACOL_PLAN, "I Centro-Pacol"],
+  ["Panicuason", FAR_JEEP_PANICUASON_PLAN, "J Centro-Carolina-Panicuason"],
+  ["Cararayan", FAR_JEEP_CARARAYAN_PLAN, "Centro-Cararayan-San Isidro"],
 ] as const;
 
 for (const [zone, plan, code] of FAR_JEEP_PLANS) {
@@ -147,7 +149,7 @@ test("Pacol from the south with a walk option: walk, jeepney, access in order; g
   await expect(cards.nth(0)).not.toContainText("Recommended");
   await expect(cards.nth(1)).not.toContainText("Recommended");
   await expect(cards.nth(1)).not.toContainText("Tricycle, then Jeep");
-  await expect(cards.nth(2)).toContainText("Tricycle, then Jeep R6");
+  await expect(cards.nth(2)).toContainText("Tricycle, then Jeep I Centro-Pacol");
   await expect(cards.nth(2)).not.toContainText("Recommended");
   await expect(cards.nth(2).getByTestId("access-tricycle")).not.toContainText(/\d+\s*(min|minutes)\b/);
   await expectAxeBothSchemes(page);

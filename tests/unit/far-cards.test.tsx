@@ -37,12 +37,12 @@ const noop = () => undefined;
 const cards = () => screen.getAllByTestId("trip-option");
 
 describe("jeepney cards with a via", () => {
-  it("each Del Rosario route shows its via chip; R2 keeps the Francia line for the detail", () => {
+  it("each Del Rosario route names its via in its title, so no second chip; R2 keeps the Francia line for the detail", () => {
     render(<TripOptions data={load(VIA_PLAN)} onOpen={noop} etaModel={ETA_MODEL} />);
-    const chips = screen.getAllByTestId("card-via").map((c) => c.textContent);
-    expect(chips).toEqual(["via Magsaysay", "via Roxas (Diversion)", "via Panganiban"]);
+    expect(screen.queryAllByTestId("card-via")).toHaveLength(0);
+    const titles = cards().filter((c) => c.dataset.mode === "jeepney").map((c) => c.querySelector("strong")!.textContent);
+    expect(titles).toEqual(["E Centro-Del Rosario via Magsaysay Ave", "Centro-Del Rosario via Roxas Ave (Diversion)", "Centro-Del Rosario via Panganiban Drive"]);
     for (const card of cards().filter((c) => c.dataset.mode === "jeepney")) {
-      expect(within(card).getByTestId("card-via")).toBeTruthy();
       expect(card.textContent).toContain("Unverified route");
       expect(card.textContent).not.toContain("Francia");
     }
@@ -54,11 +54,11 @@ describe("jeepney cards with a via", () => {
     const show = (i: number) => {
       cleanup();
       render(<TripDetail data={data} option={data.plan.options[i]!} onBack={noop} etaModel={ETA_MODEL} />);
-      return screen.getByTestId("detail-via").textContent;
+      return screen.queryByTestId("detail-via")?.textContent ?? null;
     };
-    expect(show(0)).toBe(`via Magsaysay · ${FRANCIA_NOTE}`);
-    expect(show(1)).toBe("via Roxas (Diversion)");
-    expect(show(2)).toBe("via Panganiban");
+    expect(show(0)).toBe(FRANCIA_NOTE);
+    expect(show(1)).toBeNull();
+    expect(show(2)).toBeNull();
   });
 });
 
@@ -71,7 +71,7 @@ describe("the access card", () => {
   it("names the tricycle and the jeep, says why, and prices from the sum with no maximum", () => {
     const card = access();
     expect(card.dataset.mode).toBe("jeepney");
-    expect(card.querySelector("strong")!.textContent).toBe("Tricycle, then Jeep R6");
+    expect(card.querySelector("strong")!.textContent).toBe("Tricycle, then Jeep I Centro-Pacol");
     expect(screen.getByTestId("access-line").textContent).toBe("For when you'd rather not walk.");
     expect(screen.getByTestId("access-tricycle").textContent).toBe("Tricycle min ₱15 · confirm with the driver");
     expect(screen.getByTestId("fare-chip").textContent).toBe("From ₱33");
@@ -89,7 +89,7 @@ describe("the access card", () => {
   it("the peek of a plan whose only option is the access one names the whole option", () => {
     render(<OptionsPeek data={load(ACCESS_PLAN)} expanded={false} listShown={false} onToggle={noop} etaModel={ETA_MODEL} />);
     const best = screen.getByTestId("options-best").textContent ?? "";
-    expect(best).toContain("Tricycle, then Jeep R6");
+    expect(best).toContain("Tricycle, then Jeep I Centro-Pacol");
     expect(best).toContain("From ₱33");
     expect(best).not.toContain("Time not estimated");
   });
@@ -97,14 +97,14 @@ describe("the access card", () => {
   it("the detail has the tricycle step to the loading point, the fare rows and the total", () => {
     const data = load(ACCESS_PLAN);
     render(<TripDetail data={data} option={data.plan.options[0]!} onBack={noop} etaModel={ETA_MODEL} />);
-    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Tricycle, then Jeep R6");
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe("Tricycle, then Jeep I Centro-Pacol");
     const steps = within(screen.getByRole("list", { name: "Trip steps" })).getAllByRole("listitem");
     expect(steps[0]!.textContent).toContain("Take a tricycle to Jeepney station to Pacol");
     expect(steps[0]!.textContent).toContain("Minimum fare ₱15 (Ordinance 2024-002)");
     expect(steps[0]!.textContent).toContain("Tricycle time not estimated");
     const rows = screen.getAllByTestId("leg-fare").map((r) => r.textContent);
     expect(rows[0]).toBe("TricycleMinimum fare ₱15 · confirm with the driver");
-    expect(rows[1]).toMatch(/^R6/);
+    expect(rows[1]).toMatch(/^I Centro-Pacol/);
     expect(screen.getByRole("region", { name: "Fare estimate" }).textContent).toContain("TotalFrom ₱33");
     expect(screen.getByTestId("trip-detail-header").textContent).toContain("From ₱33");
   });

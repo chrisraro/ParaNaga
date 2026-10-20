@@ -81,7 +81,7 @@ export function LoopChip({
   direction,
   icon = "loop",
 }: {
-  leg: Pick<RideLegDto, "routeCode" | "routeName">;
+  leg: Pick<RideLegDto, "routeCode" | "routeName"> & { display?: RideLegDto["display"] };
   direction?: LoopDirection | null;
   icon?: "loop" | "line";
 }) {
@@ -94,7 +94,7 @@ export function LoopChip({
             <path d={icon === "loop" ? "M20 12a8 8 0 1 1-3-6.2M20 4v5h-5" : "M5 12h14M13 6l6 6-6 6"} />
           </svg>
         </span>
-        {routeChipLabel(leg.routeCode, leg.routeName)}
+        {routeChipLabel(leg.routeCode, leg.routeName, leg.display)}
       </span>
       {dir ? <span className="pn-loop__dir">{dir}</span> : null}
     </span>

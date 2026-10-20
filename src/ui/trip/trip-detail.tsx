@@ -27,7 +27,7 @@ import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
 import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
 import { formatLeg } from "@/domain/eta/format";
-import { FARE_NOT_FIXED, isAccessOption, isSpecialTrip, specialFareText, streetCardView, viaChipText } from "@/domain/trip/option-card";
+import { FARE_NOT_FIXED, isAccessOption, isSpecialTrip, specialFareText, streetCardView, tricycleTerminalLines, viaChipText } from "@/domain/trip/option-card";
 import { optionNotesView, type OptionNotesView } from "@/domain/trip/option-notes";
 import { rideEnds } from "@/domain/trip/ride-ends";
 import { nearestTricycleTerminal } from "@/domain/trip/tricycle-hint";
@@ -108,7 +108,7 @@ function Marker({ kind }: { kind: "origin" | "board" | "alight" | "destination" 
 type Step = { key: string; marker: Parameters<typeof Marker>[0]["kind"]; rail: "walk" | "ride" | null; body: ReactNode };
 
 /** What the steps need besides the plan: how the person named the ends, the notes and the terminals. */
-type StepContext = { start: string; destination: string; notes: OptionNotesView; terminals: NetworkSnapshot["terminals"] | null; showOnMap: ((point: LatLng) => void) | null };
+type StepContext = { start: string; destination: string; notes: OptionNotesView; terminals: NetworkSnapshot["terminals"] | null; planTerminals?: PlanOptionDto["tricycleTerminals"]; showOnMap: ((point: LatLng) => void) | null };
 
 function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideLegDto) => RideTrace, ctx: StepContext, estimate?: EtaEstimate | null): Step[] {
   const out: Step[] = [];
@@ -191,7 +191,7 @@ function rideSteps(
   const boardName = boardNamed ? lookups.stopName(board.id, board.name) : here;
   const alightName = alightNamed ? lookups.stopName(alight.id, alight.name) : isLastRide ? alight.name : "the transfer point";
   const rideNotes = ctx.notes.rides.find((r) => r.legIndex === i)?.notes ?? [];
-  const route = routeChipLabel(leg.routeCode, leg.routeName);
+  const route = routeChipLabel(leg.routeCode, leg.routeName, leg.display);
   const dir = directionText(lookups.direction(leg.variantId), "short");
   const count = ends.pinned ? ends.stops.length - 1 : null;
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
@@ -313,7 +313,13 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
                 {n}
               </p>
             ))}
-            {terminal ? (
+            {tricycleTerminalLines({ tricycleTerminals: ctx.planTerminals }).map((t) => (
+              <p key={t.key} className="pn-tl__sub" data-testid="tricycle-terminal">
+                {t.text}
+                {t.toda ? <span data-testid="tricycle-toda"> · {t.toda}</span> : null}
+              </p>
+            ))}
+            {terminal && !ctx.planTerminals ? (
               <p className="pn-tl__sub" data-testid="tricycle-terminal">
                 Nearest tricycle terminal: {terminal.name}, about {Math.round(terminal.distanceM / 10) * 10} m
                 {ctx.showOnMap ? (
@@ -471,7 +477,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
   const now = useMinuteTicker();
   const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
-  const stepContext: StepContext = { start: ends?.start.label || "your start", destination: ends?.destination.label || "your destination", notes, terminals, showOnMap: frame ? frame.showOnMap : null };
+  const stepContext: StepContext = { start: ends?.start.label || "your start", destination: ends?.destination.label || "your destination", notes, terminals, planTerminals: option.tricycleTerminals, showOnMap: frame ? frame.showOnMap : null };
   const noMinutes = estimate !== null && !estimate.legs.some((l) => l.estimated);
   const streets = option.legs.filter((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
   const access = isAccessOption(option);
@@ -529,10 +535,11 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
         ) : null}
         {ends ? <TripActions data={data} option={option} ends={ends} exactPoints={exactPoints} etaModel={etaModel} walkLengths={walkLengths} /> : null}
       </div>
-      {via ? (
+      {via || option.via?.note ? (
         <p className="pn-trip-detail__via" data-testid="detail-via">
           {via}
-          {option.via?.note ? <> · {option.via.note}</> : null}
+          {via && option.via?.note ? " · " : null}
+          {option.via?.note}
         </p>
       ) : null}
       <FarNote note={data.plan.farNote} options={[option]} />
@@ -600,7 +607,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
               : null}
             {rides.map((leg, i) => (
               <p key={i} className="pn-fares__row" data-testid="leg-fare">
-                <span>{routeChipLabel(leg.routeCode, leg.routeName)}</span>
+                <span>{routeChipLabel(leg.routeCode, leg.routeName, leg.display)}</span>
                 <span>{fareChipText(leg.fare)}</span>
               </p>
             ))}
@@ -617,7 +624,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
           </>
         )}
       </section>
-      {rides.length > 0 ? <ReportLink entityType="fare" entityId={rides[0]!.routeCode} entityLabel={routeChipLabel(rides[0]!.routeCode, rides[0]!.routeName)} /> : null}
+      {rides.length > 0 ? <ReportLink entityType="fare" entityId={rides[0]!.routeCode} entityLabel={routeChipLabel(rides[0]!.routeCode, rides[0]!.routeName, rides[0]!.display)} /> : null}
       {ends ? (
         <div className="pn-trip-actions__check">
           <input id={`${shareId}-exact`} type="checkbox" checked={exactPoints} onChange={(e) => setExactPoints(e.target.checked)} data-testid="trip-share-exact" />

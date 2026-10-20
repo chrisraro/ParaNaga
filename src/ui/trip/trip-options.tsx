@@ -13,7 +13,7 @@ import { Fragment, useLayoutEffect, useMemo, useRef } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
-import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, recommendedIndex, specialFareText, streetCardView, viaChipText } from "@/domain/trip/option-card";
+import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
@@ -134,6 +134,7 @@ function OptionCard({
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
   const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
   const routeNotes = cardRouteNotes(notes);
+  const terminalLines = tricycleTerminalCardLines(option);
 
   return (
     <li className="pn-trip-li" style={{ ["--i" as string]: Math.min(index, 5) }}>
@@ -188,6 +189,11 @@ function OptionCard({
           <>
             <span className="sr-only">. </span>
             <StreetLines leg={street} />
+            {[terminalLines.terminal, terminalLines.toda].map((t, k) => t ? (
+              <span key={k} className="pn-trip-card__street" data-testid={k === 0 ? "card-terminal" : "card-toda"}>
+                {t}
+              </span>
+            ) : null)}
           </>
         ) : null}
         {access ? (

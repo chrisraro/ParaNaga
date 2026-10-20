@@ -213,7 +213,7 @@ export function buildTripLinesData(
     }
     if (leg.kind !== "ride") return;
 
-    announcedParts.push(routeChipLabel(leg.routeCode, leg.routeName));
+    announcedParts.push(routeChipLabel(leg.routeCode, leg.routeName, leg.display));
     if (leg.distanceBasis !== "approximate_path" || leg.boardMeasureM === null || leg.alightMeasureM === null) {
       return;
     }
