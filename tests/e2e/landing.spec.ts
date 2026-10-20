@@ -28,6 +28,9 @@ test("every call to action opens the app, and the credits link to Sources and cr
   await expect(page.getByRole("link", { name: "See how it works" })).toHaveAttribute("href", "#how");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Para!");
   await expect(page.getByRole("contentinfo")).toContainText("OpenStreetMap contributors");
+  // The hero capture (the LCP candidate) is preloaded at high priority, one per colour scheme.
+  await expect(page.locator('head link[rel="preload"][as="image"][href="/landing/hero-light.webp"]')).toHaveCount(1);
+  await expect(page.locator('head link[rel="preload"][as="image"][href="/landing/hero-dark.webp"]')).toHaveCount(1);
 });
 
 test("captures are real images with alt text and fixed dimensions", async ({ page }) => {
@@ -89,18 +92,19 @@ test("reduced motion: nothing animates and everything is visible", async ({ page
 
 test("looping motion pauses while the tab is hidden", async ({ page }) => {
   await page.goto("/");
-  await page.evaluate(() => {
-    Object.defineProperty(document, "hidden", { configurable: true, get: () => true });
-    document.dispatchEvent(new Event("visibilitychange"));
-  });
+  await page.evaluate(() => Object.defineProperty(document, "hidden", { configurable: true, get: () => true }));
+  // Retried until the page has hydrated and its listener has seen the event.
+  await expect
+    .poll(() => page.evaluate(() => (document.dispatchEvent(new Event("visibilitychange")), document.documentElement.hasAttribute("data-pnl-hidden"))))
+    .toBe(true);
   const loops = await page.evaluate(() =>
     document
       .getAnimations()
       .filter((a) => a.effect?.getTiming().iterations === Infinity)
-      .map((a) => a.playState),
+      .map((a) => `${(a as CSSAnimation).animationName}:${a.playState}`),
   );
   expect(loops.length).toBeGreaterThan(0);
-  for (const state of loops) expect(state).toBe("paused");
+  for (const state of loops) expect(state).toMatch(/:paused$/);
 });
 
 test("no sideways scroll at 320, 375, 768 and 1280 px", async ({ page }) => {

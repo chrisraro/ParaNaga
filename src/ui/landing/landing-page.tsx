@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { preload } from "react-dom";
 import type { CSSProperties, ReactNode } from "react";
 import { attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { RouteNMark, Wordmark } from "@/ui/brand/route-n-mark";
@@ -100,11 +99,11 @@ function RouteOverlay({ theme }: { theme: "light" | "dark" }) {
 }
 
 function Hero() {
-  preload("/landing/hero-light.webp", { as: "image", fetchPriority: "high", media: "(prefers-color-scheme: light)" });
-  preload("/landing/hero-dark.webp", { as: "image", fetchPriority: "high", media: "(prefers-color-scheme: dark)" });
   return (
     <section id="top" aria-labelledby="hero-h" className="pnl-hero">
-      <span className="pnl-hero__grid" aria-hidden />
+      {/* The LCP candidate: React hoists these into <head>, one per colour scheme. */}
+      <link rel="preload" as="image" href="/landing/hero-light.webp" media="(prefers-color-scheme: light)" fetchPriority="high" />
+      <link rel="preload" as="image" href="/landing/hero-dark.webp" media="(prefers-color-scheme: dark)" fetchPriority="high" />
       <span className="pnl-hero__glow" aria-hidden />
       <span className="pnl-hero__glow pnl-hero__glow--coral" aria-hidden />
       <div className="pnl-wrap">
@@ -496,7 +495,10 @@ function Honesty() {
               Your trips are yours.
             </h3>
             <p className="pnl-body pnl-reveal">
-              Where the data comes from and who holds the rights: <Link href="/app/help/sources">Sources and credits</Link>.
+              Where the data comes from and who holds the rights: <Link href="/app/help/sources" className="pnl-night-link">
+                Sources and credits
+              </Link>
+              .
             </p>
           </div>
           <ul>

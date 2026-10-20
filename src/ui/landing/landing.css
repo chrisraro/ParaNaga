@@ -408,19 +408,6 @@
   width: min(760px, 110vw);
   background: radial-gradient(closest-side, rgba(242, 107, 91, 0.2), rgba(242, 107, 91, 0) 70%);
 }
-/* The street grid of the map, faint, under the hero (the subject's own surface). */
-.pnl-hero__grid {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  opacity: 0.5;
-  background-image:
-    linear-gradient(rgba(242, 245, 250, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(242, 245, 250, 0.045) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(ellipse 80% 70% at 70% 30%, #000, transparent 75%);
-  pointer-events: none;
-}
 .pnl-hero h1 {
   font-size: clamp(2.5rem, 5vw, 5rem);
   line-height: 0.98;
@@ -1092,8 +1079,11 @@
 .pnl-promise .pnl-lede {
   color: var(--pnl-night-ink2);
 }
-.pnl-promise a:not([class]) {
+.pnl-night-link {
   color: #5fd4cd;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
 }
 .pnl-facts {
   display: grid;
@@ -1463,8 +1453,7 @@
   .pnl-band li {
     border: 1px solid CanvasText;
   }
-  .pnl-hero__glow,
-  .pnl-hero__grid {
+  .pnl-hero__glow {
     display: none;
   }
   .pnl-letter,
