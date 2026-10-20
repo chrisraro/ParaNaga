@@ -108,6 +108,11 @@ type Props = {
   onClose: () => void;
   layers: LayersPref;
   onUpdateLayers: (patch: Partial<LayersPref>) => void;
+  /** Routes and Stops are drawn only while on (the home map starts with both off). */
+  routesOn: boolean;
+  onRoutesChange: (on: boolean) => void;
+  stopsOn: boolean;
+  onStopsChange: (on: boolean) => void;
   tracedLines: readonly Line[];
   /** False when route lines were not loaded (low-data, offline, or not published): say so. */
   linesLoaded?: boolean;
@@ -119,6 +124,10 @@ export function LayersSheet({
   onClose,
   layers,
   onUpdateLayers,
+  routesOn,
+  onRoutesChange,
+  stopsOn,
+  onStopsChange,
   tracedLines,
   linesLoaded = true,
   terminals = null,
@@ -190,7 +199,8 @@ export function LayersSheet({
 
         <div className="pn-layers-sheet__body">
           <div className="pn-layers-switches" role="group" aria-label="Layer visibility">
-            <Switch label="Routes" checked={layers.routes} onChange={(routes) => onUpdateLayers({ routes })} testId="layer-switch-routes" />
+            <Switch label="Routes" checked={routesOn} onChange={onRoutesChange} testId="layer-switch-routes" />
+            <Switch label="Stops" checked={stopsOn} onChange={onStopsChange} testId="layer-switch-stops" />
             <Switch label="Terminals" checked={layers.terminals} onChange={(terminals) => onUpdateLayers({ terminals })} testId="layer-switch-terminals" />
           </div>
 
@@ -233,7 +243,9 @@ export function LayersSheet({
             <h3 id={`${titleId}-routes-list`} className="pn-layers-section-title">
               Routes on the map ({mapRoutes.length})
             </h3>
-            {!linesLoaded ? (
+            {!routesOn ? (
+              <p className="pn-layers-empty">Routes are switched off.</p>
+            ) : !linesLoaded ? (
               <p className="pn-layers-empty" data-testid="layers-lines-not-loaded">
                 {LINES_NOT_LOADED}
               </p>

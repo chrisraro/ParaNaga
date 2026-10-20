@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { showMapLayers } from "./fixtures/layers";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
 
@@ -207,7 +208,8 @@ test.describe("phone", () => {
     await expect(page.getByTestId("naga-map")).toHaveAttribute("data-zoom", /\d/);
     const lowData = page.getByTestId("map-low-data-notice");
     await expect(lowData).toHaveText("Map background off (low-data mode)Show background once");
-    // Pins still show.
+    // Pins still show once asked for.
+    await showMapLayers(page, "Stops");
     await expect(page.getByTestId("naga-map")).not.toHaveAttribute("data-stop-pins", "0");
     await expect(page.locator(".pn-attribution")).toContainText("Map data © OpenStreetMap contributors");
     await expect(page.locator(".leaflet-tile-pane .leaflet-layer")).toHaveCount(0);

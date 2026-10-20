@@ -157,7 +157,7 @@ test.describe("phone", () => {
     if (!bar) return Infinity;
     const chrome = withRows
       ? [rowMain(page, "start"), rowMain(page, "destination"), page.locator(".pn-attribution")]
-      : [page.locator(".pn-attribution"), page.getByTestId("map-legend-button"), page.getByRole("button", { name: "Center on my location" }), page.getByRole("button", { name: "Zoom out" })];
+      : [page.locator(".pn-attribution"), page.getByRole("button", { name: "Layers" }), page.getByRole("button", { name: "Center on my location" }), page.getByRole("button", { name: "Zoom out" })];
     const boxes = await Promise.all(chrome.map((l) => l.boundingBox()));
     return Math.max(...boxes.map((b) => (b ? b.y + b.height - bar.y : Infinity)));
   }

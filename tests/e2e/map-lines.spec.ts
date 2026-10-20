@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { LINES, routeNetwork } from "./fixtures/network";
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { chooseOnMapVia, chooseOption, pinTrip } from "./fixtures/options";
+import { showMapLayers } from "./fixtures/layers";
 
 test.skip(({ isMobile }) => !isMobile, "The map lives behind the phone-only gate");
 
@@ -125,6 +126,7 @@ async function routeLinesWithTricycle(page: Page) {
 }
 
 async function openLayers(page: Page) {
+  await showMapLayers(page, "Routes");
   await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
   const layersBtn = page.getByRole("button", { name: "Layers" });
   await expect(layersBtn).toBeVisible();
@@ -139,6 +141,7 @@ test("the Layers button still opens the sheet, with an honest line, when route l
   await openApp(page);
   const layersBtn = page.getByRole("button", { name: "Layers" });
   await expect(layersBtn).toBeVisible();
+  await showMapLayers(page, "Routes");
   await layersBtn.click();
   await expect(page.getByTestId("layers-sheet")).toBeVisible();
   await expect(page.getByTestId("layers-lines-not-loaded")).toHaveText("Route lines aren't loaded on this device.");
@@ -150,7 +153,7 @@ test("route overview lines draw on the home map and the Tricycle filter leaves o
   const { sheet } = await openLayers(page);
   await expect(sheet.getByRole("heading", { name: "Map layers" })).toBeVisible();
   // D16's historical switch is gone (no historical route is published).
-  await expect(sheet.getByRole("switch")).toHaveCount(2);
+  await expect(sheet.getByRole("switch")).toHaveCount(3);
   await expect(sheet.getByText(/historical/i)).toHaveCount(0);
 
   const routesList = page.getByTestId("layers-routes-list");
@@ -201,6 +204,7 @@ test("the Layers sheet traps focus and returns it to the Layers button", async (
 test("the legend draws its swatches on the same surface as the lines, and explains dashed sections", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await openApp(page);
+  await showMapLayers(page, "Routes");
   await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
   const legend = page.getByTestId("map-legend");
   await expect(legend).toBeAttached();
@@ -225,6 +229,7 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
     }
     await openApp(page);
     if (mode === "high contrast") await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
+    await showMapLayers(page, "Routes");
     await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
     await page.getByTestId("map-legend-button").click();
     await expect(page.getByTestId("map-legend-panel")).toBeVisible();
@@ -253,6 +258,7 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
 
 test("tapping an overview line opens SelectedRouteCard with route details link", async ({ page }) => {
   await openApp(page);
+  await showMapLayers(page, "Routes");
 
   // Tap an overview line where nothing (a terminal marker, a pin, the sheet) is drawn over it: a
   // point along the path whose topmost element is a route line.
@@ -524,6 +530,7 @@ test("scrolling a sheet element into view never shifts the map, so the legend st
 
 test("the overview lines and the legend stay while a point is being chosen on the map", async ({ page }) => {
   await openApp(page);
+  await showMapLayers(page, "Routes", "Stops");
   await expect(page.locator("path.pn-line--route").first()).toBeAttached({ timeout: 15000 });
   await chooseOnMapVia(page);
   await expect(page.getByRole("button", { name: "Set destination here" })).toBeVisible();
@@ -537,6 +544,7 @@ test("the legend and the walking line still show when the route lines are not lo
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
   );
   await openApp(page);
+  await showMapLayers(page, "Routes", "Stops");
   await expectLegendListsWalkWithoutStops(page, undefined, true);
 
   await pinBoth(page);

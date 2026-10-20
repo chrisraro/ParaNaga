@@ -3,6 +3,7 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 import { LEAST_WALKING_ONLY_PLAN, NO_ROUTE_PLAN, PROVISIONAL_PLAN, WALK_SHORTER_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
 import { chooseOption, chooseOnMapVia, expandOptions, openTripSheet, pinTrip, sheetSettled } from "./fixtures/options";
+import { showMapLayers } from "./fixtures/layers";
 
 // Trip options and trip detail (Task 6). POST /api/v1/plan is intercepted with fixtures
 // (allowed in tests only), so nothing here needs a database. Tiles are aborted.
@@ -260,6 +261,7 @@ test("route screens hide the stop pins; the bare map brings them back on one can
   await interceptPlan(page, (route) => fulfill(route, PROVISIONAL_PLAN));
   await openApp(page);
   const canvases = page.locator(".leaflet-overlay-pane canvas");
+  await showMapLayers(page, "Stops");
   await expect.poll(() => mapEl(page).getAttribute("data-stop-pins").then(Number)).toBeGreaterThan(0);
   await pinBoth(page);
   await expect(page.getByTestId("trip-option").first()).toBeVisible();
@@ -278,6 +280,7 @@ test("route screens hide the stop pins; the bare map brings them back on one can
 test("no coverage keeps a clear message", async ({ page }) => {
   await interceptPlan(page, (route) => fulfill(route, NO_ROUTE_PLAN));
   await openApp(page);
+  await showMapLayers(page, "Routes");
   await expect(page.locator(".leaflet-overlay-pane path.pn-line--route").first()).toBeAttached();
   const pathsBefore = await overlayPaths(page).count();
   await pinBoth(page);
