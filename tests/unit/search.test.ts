@@ -31,7 +31,7 @@ describe("searchIndex: the brief's queries", () => {
     const groups = searchIndex(index, "Diversion", off);
     expect(first(groups)).toMatchObject({ kind: "pin", title: "Cor. Diversion Rd. & Fraternidad St." });
     expect(titles(group(groups, "legacy"))).toContain("Concepcion via Panganiban/diversion");
-    for (const r of group(groups, "routes")?.results ?? []) expect(r.title).not.toMatch(/diversion/i);
+    for (const r of group(groups, "routes")?.results ?? []) expect(r.title).not.toMatch(/diversion route/i);
   });
 
   it('"Centro": terminal T05 "Centro loading cluster" and every route named "Centro–…"', () => {
@@ -84,10 +84,28 @@ describe("searchIndex: the brief's queries", () => {
   });
 });
 
+describe("searchIndex: routes by letter, number, loop and street (route tally 2026-10-20)", () => {
+  const first = (q: string) => {
+    const r = group(searchIndex(index, q, off), "routes")?.results[0];
+    return r && r.kind === "route" ? r.code : null;
+  };
+  it.each([
+    ["E", "R2"], ["F", "R3"], ["G", "R4"], ["H", "R5"], ["I", "R6"], ["J", "R7"],
+    ["A", "R8-A"], ["B", "R8-B"], ["C", "R8-C"], ["D", "R8-D"],
+    ["Route 4", "R4"], ["Route G", "R4"], ["Loop C", "R8-C"], ["Panganiban", "R4"], ["San Felipe", "R5"], ["Cararayan", "R1"], ["Route 1", "R1"],
+  ])("%s finds %s first", (q, code) => {
+    expect(first(q)).toBe(code);
+  });
+  it("lists only the active services, never a feeder code", () => {
+    const codes = group(searchIndex(index, "Centro", off), "routes")!.results.map((r) => (r.kind === "route" ? r.code : ""));
+    expect(codes.some((c) => c.startsWith("TRI-"))).toBe(false);
+  });
+});
+
 describe("searchIndex: route codes", () => {
   it.each(["R8-A", "R8A", "r8a", "8a", "r8 a"])("%s finds R8-A", (q) => {
     const routes = group(searchIndex(index, q, off), "routes")!.results;
-    expect(routes[0]).toMatchObject({ kind: "route", code: "R8-A", title: "R8-A Centro–Magsaysay Loop A", evidence: "provisional" });
+    expect(routes[0]).toMatchObject({ kind: "route", code: "R8-A", title: "A Centro-Magsaysay Loop A (clockwise)", evidence: "provisional" });
   });
 
   it("documentary routes carry the documented evidence", () => {
@@ -130,7 +148,7 @@ describe("searchIndex: ranking", () => {
 
   it("keeps every match in its group; the screen shows the first GROUP_LIMIT", () => {
     expect(GROUP_LIMIT).toBe(5);
-    expect(group(searchIndex(index, "Centro", off), "routes")!.results.length).toBe(12); // 11 LPTRP routes + the VISTODA feeder
+    expect(group(searchIndex(index, "Centro", off), "routes")!.results.length).toBe(11); // the 11 active services; the VISTODA feeder is not an active jeepney route
   });
 
   it("searches saved places first among equals and lists them in the Saved group", () => {

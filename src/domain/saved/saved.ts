@@ -365,9 +365,10 @@ export function shareText(
     const ends = rideEnds(leg, i === lastRide ? input.destination.label : undefined);
     if (!ends) continue;
     const { board, alight } = ends;
-    const dir = directionText(direction(leg.variantId), "long");
+    const chip = routeChipLabel(leg.routeCode, leg.routeName, leg.display);
+    const dir = directionText(direction(leg.variantId), "long", chip);
     const count = ends.stops.length - 1;
-    steps.push(`Board ${routeChipLabel(leg.routeCode, leg.routeName)} ${ends.pinned ? "at" : "near"} ${name(board.id, board.name)}${dir ? `, direction ${dir}` : ""}`);
+    steps.push(`Board ${chip} ${ends.pinned ? "at" : "near"} ${name(board.id, board.name)}${dir ? `, direction ${dir}` : ""}`);
     steps.push(ends.pinned
       ? `Ride ${count} ${count === 1 ? "stop" : "stops"}, get off at ${name(alight.id, alight.name)}. Say "Para!" to the driver.`
       : `Ride along the approximate path. ${freeAlightText(name(alight.id, alight.name))}`);

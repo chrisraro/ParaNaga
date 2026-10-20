@@ -205,5 +205,7 @@ const REGRESSION_BASELINE = {
   // terminal gain `tricycleTerminals`; 96 of 200 trips change otherwise, each checked against the previous planner:
   // 62 by the detour guard (a jeepney over 2 × the straight line + 300 m dropped, 70 jeepney options fewer in all),
   // 18 by the city-centre rule (tricycle Recommended and first) and 16 by both. None unexplained.
-  digest: "5d21552d006f3ee4dc4ef5c175428973f1ba2086a7aa0385abdf3056512dd3a0",
+  // Re-recorded for the route tally 2026-10-20: only the ride `display` changes (letters F-H, loop titles with their
+  // direction); option counts and modes above are unchanged.
+  digest: "bbfdb1edef184289c826604c23bf29e42bb400053fd667dc046889e57adadbab",
 };

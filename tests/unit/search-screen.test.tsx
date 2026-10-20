@@ -140,8 +140,8 @@ describe("SearchScreen", () => {
     await type("Centro");
     const routes = screen.getByTestId("search-group-routes");
     expect(routes.querySelectorAll("li")).toHaveLength(5);
-    fireEvent.click(screen.getByRole("button", { name: "Show all 12" }));
-    expect(screen.getByTestId("search-group-routes").querySelectorAll("li")).toHaveLength(12);
+    fireEvent.click(screen.getByRole("button", { name: "Show all 11" }));
+    expect(screen.getByTestId("search-group-routes").querySelectorAll("li")).toHaveLength(11);
   });
 
   it("finds a cafe from the lazy places chunk, from OpenStreetMap, never verified; a failed chunk is said plainly", async () => {
@@ -338,7 +338,7 @@ describe("SearchScreen", () => {
     renderSearch();
     await ready();
     await type("Centro");
-    fireEvent.click(screen.getByRole("button", { name: "Show all 12" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show all 11" }));
     const rows = screen.getByTestId("search-group-routes").querySelectorAll("li > *");
     expect(document.activeElement).toBe(rows[5]);
   });

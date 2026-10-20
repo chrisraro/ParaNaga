@@ -85,7 +85,7 @@ test("trip options show the unverified badge, estimate chips and honest time est
   await expect(cards.nth(0)).toContainText("Recommended");
   await expect(cards.nth(0)).toContainText("No transfers");
   // Leg-by-leg text, distances, the vehicle chip and the footers are not on the card.
-  await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|clockwise|Walk ≈|Jeepney/);
+  await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|Walk ≈|Jeepney/);
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱16–₱18");
   // The tricycle card: not Recommended, the minimum fare, no minutes, no driver badge (it is not a jeepney ride).
@@ -154,7 +154,7 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps).toHaveCount(4);
   await expect(steps.nth(0)).toContainText("Walk ≈ 230 m to Plaza Rizal (A1)");
   await expect(steps.nth(0)).toContainText("path not verified");
-  await expect(steps.nth(1)).toContainText("Board A Centro-Magsaysay Loop (clockwise) at Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("Board A Centro-Magsaysay Loop A (clockwise) at Plaza Rizal (A1)");
   await expect(steps.nth(1)).toContainText("4 stops");
   await expect(steps.nth(1)).not.toContainText(/Signboard|1.2 km/);
   await expect(steps.nth(1)).toContainText("Approximate path, not a verified route shape");
@@ -163,7 +163,7 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps.nth(2)).toContainText("Say “Para!” near here");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
-  await expect(detail.getByTestId("leg-fare")).toHaveText(/A Centro-Magsaysay Loop\s*Estimate ₱14$/);
+  await expect(detail.getByTestId("leg-fare")).toHaveText(/A Centro-Magsaysay Loop A \(clockwise\)\s*Estimate ₱14$/);
   await expect(detail).not.toContainText(/Corrections|from reported fare rules|matrix not verified/);
   // Three links: Sources (top bar), the fare basis, and Report a correction.
   await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated", "Report a correction"]);

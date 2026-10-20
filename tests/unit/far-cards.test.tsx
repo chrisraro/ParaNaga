@@ -41,7 +41,7 @@ describe("jeepney cards with a via", () => {
     render(<TripOptions data={load(VIA_PLAN)} onOpen={noop} etaModel={ETA_MODEL} />);
     expect(screen.queryAllByTestId("card-via")).toHaveLength(0);
     const titles = cards().filter((c) => c.dataset.mode === "jeepney").map((c) => c.querySelector("strong")!.textContent);
-    expect(titles).toEqual(["E Centro-Del Rosario via Magsaysay Ave", "Centro-Del Rosario via Roxas Ave (Diversion)", "Centro-Del Rosario via Panganiban Drive"]);
+    expect(titles).toEqual(["E Centro-Del Rosario via Magsaysay Ave", "F Centro-Del Rosario via Roxas Ave (Diversion)", "G Centro-Del Rosario via Panganiban Drive"]);
     for (const card of cards().filter((c) => c.dataset.mode === "jeepney")) {
       expect(card.textContent).toContain("Unverified route");
       expect(card.textContent).not.toContain("Francia");

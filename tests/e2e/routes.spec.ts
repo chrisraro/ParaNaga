@@ -149,3 +149,17 @@ for (const mode of ["dark", "high contrast"] as const) {
     expect(serious, serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`).join(", ")).toEqual([]);
   });
 }
+
+test("route detail names the letter and title, the ordinance route and where the letter comes from", async ({ page }) => {
+  const title = page.getByTestId("route-detail").getByRole("heading", { level: 1 });
+  await page.goto("/app/routes/R3");
+  await expect(title).toHaveText("F Centro-Del Rosario via Roxas Ave (Diversion)");
+  await expect(page.getByTestId("route-provenance")).toHaveText(/Route 3 of the City of Naga route plan, Ordinance 2025-070 · 28 units authorised · Letter inferred from the signboard order, not yet confirmed/);
+  await page.goto("/app/routes/R2");
+  await expect(page.getByTestId("route-provenance")).toContainText("Letter seen on the signboard");
+  await page.goto("/app/routes/R1");
+  await expect(title).toHaveText("Centro-Cararayan-San Isidro");
+  const r1 = await page.getByTestId("route-provenance").textContent();
+  expect(r1).toContain("Route 1 of the City of Naga route plan");
+  expect(r1).not.toMatch(/Letter/);
+});

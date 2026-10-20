@@ -5,6 +5,7 @@
 // Honesty: an OSM bus station is a place, never a ParaNaga terminal or stop (global constraints).
 // No photos, hours or entrances exist; the screen says so.
 import type { RouteList, RouteSummary, SearchIndex, SearchOsmPlace, SearchPinPlace } from "../api/schemas";
+import { isActiveRoute } from "../planner/route-display";
 import type { OsmPlaceCategory } from "./osm-categories";
 
 // ------------------------------------------------------------------ categories
@@ -112,8 +113,10 @@ export type RouteDirectoryGroup = { title: string; routes: RouteSummary[] };
 
 /** The route list by group number ("Group 8"), in the API's order; routes without one last. */
 export function routeDirectoryGroups(list: Pick<RouteList, "groups">): RouteDirectoryGroup[] {
-  const numbered = list.groups.filter((g) => g.groupNumber !== null && g.routes.length > 0);
-  const other = list.groups.filter((g) => g.groupNumber === null).flatMap((g) => g.routes);
+  // Only the 11 active services of Ordinance 2025-070 are listed as routes (no special trips, no feeder codes).
+  const active = list.groups.map((g) => ({ ...g, routes: g.routes.filter((r) => isActiveRoute(r.code)) }));
+  const numbered = active.filter((g) => g.groupNumber !== null && g.routes.length > 0);
+  const other = active.filter((g) => g.groupNumber === null).flatMap((g) => g.routes);
   const out = numbered.map((g) => ({ title: `Group ${g.groupNumber}`, routes: g.routes }));
   if (other.length > 0) out.push({ title: "Other routes", routes: other });
   return out;
