@@ -12,12 +12,9 @@ test("home page loads with security headers", async ({ page }) => {
 });
 
 test("home page has no serious accessibility violations", async ({ page }) => {
+  // Axe reads computed colors: measure the settled page (reduced motion: nothing mid-fade).
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  // Axe reads computed colors; let entrance fades finish so it measures the settled page,
-  // not text halfway through an opacity transition. Looping animations are transform-only.
-  await page.waitForFunction(() =>
-    document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),
-  );
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
   const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(serious, serious.map((v) => v.id).join(", ")).toEqual([]);

@@ -1,32 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useSyncExternalStore } from "react";
-import { encode } from "uqr";
+import { useState } from "react";
 import { AppIconTile, Wordmark } from "@/ui/brand/route-n-mark";
-import { HomePreview, PhoneFrame } from "@/ui/landing/phone-screens";
+import { DeviceFrame, Shot } from "@/ui/landing/device-frame";
+import { QrCode, useAppUrl } from "@/ui/landing/qr-code";
+import "@/ui/landing/landing.css";
 
 // Shown instead of the app when /app opens on a screen wider than a phone or small
 // tablet (design canvas: W2 · Open on your phone). The QR encodes this page's own URL,
-// so whoever scans it lands on /app on their phone.
-
-const noop = () => () => {};
-function useAppUrl() {
-  return useSyncExternalStore(noop, () => `${window.location.origin}/app`, () => "");
-}
-
-function QrCode({ value }: { value: string }) {
-  const qr = useMemo(() => (value ? encode(value, { ecc: "M", border: 0 }) : null), [value]);
-  if (!qr) return <div className="size-[168px] rounded-lg bg-fill" />;
-  const n = qr.size;
-  let d = "";
-  qr.data.forEach((row, y) => row.forEach((on, x) => { if (on) d += `M${x} ${y}h1v1h-1z`; }));
-  return (
-    <svg width="168" height="168" viewBox={`0 0 ${n} ${n}`} shapeRendering="crispEdges" role="img" aria-label={`QR code that opens ${value}`}>
-      <path d={d} fill="#0f1e3d" />
-    </svg>
-  );
-}
+// so whoever scans it lands on /app on their phone. The phone shows a real capture of the app's
+// home screen (public/landing, scripts/capture-landing.ts).
 
 export function LargeScreenGate() {
   const appUrl = useAppUrl();
@@ -55,9 +39,11 @@ export function LargeScreenGate() {
       </header>
 
       <main className="mx-auto flex w-full max-w-[1180px] flex-1 flex-wrap items-center justify-center gap-[clamp(32px,6vw,88px)] px-4 pb-14 pt-6 md:px-8 md:pt-14">
-        <PhoneFrame width={280} className="animate-rise">
-          <HomePreview />
-        </PhoneFrame>
+        <div className="w-[280px] shrink-0 animate-rise">
+          <DeviceFrame>
+            <Shot screen="home" eager />
+          </DeviceFrame>
+        </div>
 
         <section aria-labelledby="gate-h" className="flex min-w-0 max-w-[540px] flex-[1_1_420px] flex-col gap-5">
           <span className="inline-flex h-8 animate-rise items-center gap-2 self-start rounded-full bg-white/10 px-3.5 text-[13px] font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.16)]">
