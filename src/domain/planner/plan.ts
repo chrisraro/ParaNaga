@@ -41,6 +41,10 @@
 // ends inside → jeepneys only when they drop off within PASSES_DESTINATION_M, never Recommended; the tricycle is
 // Recommended (≥ 500 m; the walk keeps it under 500 m) and listed first; no jeepney left → jeepneyReason "centro".
 // Each ride carries `display` (route-display.ts); the plain tricycle carries the published tricycle terminals near its ends.
+// Far drop-offs (owner 2026-10-20, non-far destination): a jeepney route not already the last ride of a shown option, with
+// a candidate (past the guard and must-save-walking) dropping off over JEEP_NEAR_DROP_M (centre: PASSES_DESTINATION_M)
+// and within JEEP_FAR_DROP_MAX_M, is appended after the padyak (at most JEEP_FAR_DROP_MAX_EXTRA, distinct drop-off points),
+// unlabelled, never Recommended; jeepneyReason is then null.
 // Via groups (T5, far-areas viaGroups): when 2+ routes of one group have a one-ride candidate (after must-save-walking),
 // the jeepney block is the Pareto picks plus the best candidate of each such route, each carrying `via` (data for a
 // chip), within MAX_OPTIONS minus the walk, access, tricycle and padyak options. Trim: non-via extras (worst score
@@ -99,6 +103,15 @@ export const accessTricycleOk = (tricycleM: number) => tricycleM > ACCESS_TRICYC
 export const JEEP_MAX_DETOUR = 2.0;
 /** Slack added to the detour limit so short trips can still ride a block or two around. */
 export const JEEP_DETOUR_SLACK_M = 300;
+/** Owner 2026-10-20: a jeepney not otherwise shown whose last drop-off is farther than this (straight-line) from the
+ * destination, up to JEEP_FAR_DROP_MAX_M, is still offered, after the others (city centre: PASSES_DESTINATION_M). */
+export const JEEP_NEAR_DROP_M = 300;
+/** The farthest drop-off (straight-line metres) such an extra jeepney may have. Owner-tunable. */
+export const JEEP_FAR_DROP_MAX_M = 400;
+/** At most this many far drop-off jeepneys are added to one trip (controller 2026-10-20). */
+export const JEEP_FAR_DROP_MAX_EXTRA = 2;
+/** A far drop-off within this many metres of one already shown or added is the same spot, skipped. */
+export const JEEP_FAR_DROP_DISTINCT_M = 50;
 const WALK_RADIUS_M = 1500;
 /** Approach-run search step (samples of 25 m) when the projection's walk is over the cap. */
 const RUN_STRIDE = 4;
@@ -742,6 +755,29 @@ export function planTrip(
   jeepBuilt.sort((a, b) => fareMin(a.option) - fareMin(b.option) || a.option.score - b.option.score);
   // City centre: a jeepney stays only when it drops off at the destination; it is never Recommended there.
   if (centro) jeepBuilt = jeepBuilt.filter((x) => x.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M);
+  // Far drop-offs (owner 2026-10-20, non-far destination): for each jeepney route not already the last ride of a shown
+  // option, its candidate (fewest rides, then nearest drop-off) whose drop-off is over the near limit and within
+  // JEEP_FAR_DROP_MAX_M, already past the detour guard and must-save-walking. Listed last, never Recommended (one
+  // exception below). Drop-offs nearer than the limit are the planner's own picks, unchanged.
+  const dropOf = (c: Cand) => c.hops.at(-1)!.alight.distM;
+  const lastRoute = (c: Cand) => net.variants[c.hops.at(-1)!.v]!.routeCode;
+  const nearM = centro ? PASSES_DESTINATION_M : JEEP_NEAR_DROP_M;
+  const shownRoutes = new Set(jeepBuilt.map((x) => lastRoute(x.c)));
+  const farDrops = (destinationZone ? [] : jeep.cands)
+    .filter((c) => dropOf(c) > nearM && dropOf(c) <= JEEP_FAR_DROP_MAX_M && !shownRoutes.has(lastRoute(c)))
+    .sort((a, b) => a.hops.length - b.hops.length || dropOf(a) - dropOf(b) || compare(a, b))
+    .filter((c, i, xs) => xs.findIndex((y) => lastRoute(y) === lastRoute(c)) === i)
+    .sort((a, b) => dropOf(a) - dropOf(b) || compare(a, b))
+    // Distinct drop-off points (loops sharing a street drop off at one spot), at most JEEP_FAR_DROP_MAX_EXTRA.
+    .reduce<{ kept: Cand[]; spots: LatLng[] }>((acc, c) => {
+      const at = c.hops.at(-1)!.alight.point;
+      if (acc.kept.length < JEEP_FAR_DROP_MAX_EXTRA && !acc.spots.some((s) => haversineMeters(s, at) <= JEEP_FAR_DROP_DISTINCT_M)) {
+        acc.kept.push(c);
+        acc.spots.push(at);
+      }
+      return acc;
+    }, { kept: [], spots: jeepBuilt.map((x) => x.c.hops.at(-1)!.alight.point) }).kept
+    .map((c) => jeepneyOption(c, [], net, g, snapshot, origin, destination));
   // The cheapest jeepney is the one that may be Recommended (T7); under 500 m only when it passes the destination
   // (audit 2026-10-18: checking a different option than the one labelled recommended a ride that does not).
   const cheapest = jeepBuilt[0];
@@ -759,14 +795,19 @@ export function planTrip(
   if (jeepRecommended && cheapest) cheapest.option.labels.unshift("Recommended");
   options.push(...jeepBuilt.map((x) => x.option));
   if (access) options.push(access);
-  if (jeepBuilt.length > 0 || access) notes.unshift(UNVERIFIED_ROUTE_BADGE);
+  if (jeepBuilt.length > 0 || farDrops.length > 0 || access) notes.unshift(UNVERIFIED_ROUTE_BADGE);
   if (farZone === null) options.push(tricycleOption(g, snapshot, origin, destination, now, !short && !jeepRecommended));
   else if (special) options.push(tricycleOption(g, snapshot, origin, destination, now, false, special));
   if (padyak) options.push(padyak);
+  options.push(...farDrops);
+  // One-Recommended exception: should a far drop-off jeepney be left with no other option able to carry Recommended
+  // (a far start: no walk card, no plain tricycle, a special trip never Recommended), the first one carries it.
+  // Unreachable today (a far drop-off is added only beside a shown jeepney, a walk or a plain tricycle); kept as a guard.
+  if (farDrops.length > 0 && !options.some((x) => x.labels.includes("Recommended"))) farDrops[0]!.labels.unshift("Recommended");
   // City centre: the Recommended tricycle is the top option, listed first.
   const tri = centro ? options.findIndex((x) => x.id === "tricycle" && x.labels.includes("Recommended")) : -1;
   if (tri > 0) options.unshift(...options.splice(tri, 1));
-  const jeepneyReason: JeepneyReason | null = access || jeepBuilt.length > 0 ? null : (jeep.reason ?? "centro");
+  const jeepneyReason: JeepneyReason | null = access || jeepBuilt.length > 0 || farDrops.length > 0 ? null : (jeep.reason ?? "centro");
 
   return {
     revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: direct.m, jeepneyReason,

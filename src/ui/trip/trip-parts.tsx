@@ -4,6 +4,7 @@
 
 import type { PlanResponse, RideLegDto } from "@/domain/api/plan";
 import { FARE_NOT_FIXED, farNoteView } from "@/domain/trip/option-card";
+import { routeChipText } from "@/domain/planner/route-display";
 import { directionText, fareChipText, fareRangeText, routeChipLabel, stopLabel, type LoopDirection } from "@/domain/trip/present";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ModeIcon } from "@/ui/modes/mode-icon";
@@ -80,12 +81,16 @@ export function LoopChip({
   leg,
   direction,
   icon = "loop",
+  short = false,
 }: {
   leg: Pick<RideLegDto, "routeCode" | "routeName"> & { display?: RideLegDto["display"] };
   direction?: LoopDirection | null;
   icon?: "loop" | "line";
+  /** In a route list the chip is the short "Route E" / "Loop C" / "R1"; the title beside it carries the full name. */
+  short?: boolean;
 }) {
-  const dir = directionText(direction ?? null, "short");
+  const text = short ? routeChipText(leg.routeCode) : routeChipLabel(leg.routeCode, leg.routeName, leg.display);
+  const dir = directionText(direction ?? null, "short", text);
   return (
     <span className="pn-loop">
       <span className="pn-loop-chip">
@@ -94,7 +99,7 @@ export function LoopChip({
             <path d={icon === "loop" ? "M20 12a8 8 0 1 1-3-6.2M20 4v5h-5" : "M5 12h14M13 6l6 6-6 6"} />
           </svg>
         </span>
-        {routeChipLabel(leg.routeCode, leg.routeName, leg.display)}
+        {text}
       </span>
       {dir ? <span className="pn-loop__dir">{dir}</span> : null}
     </span>

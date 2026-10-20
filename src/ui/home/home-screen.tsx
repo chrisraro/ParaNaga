@@ -49,10 +49,10 @@ import { Guidance } from "@/ui/guidance/guidance";
 import { NagaMap, type HighlightStop } from "@/ui/map/naga-map";
 import { TripDetail, type TripEnds } from "@/ui/trip/trip-detail";
 import { previewIndex } from "@/domain/trip/option-card";
-import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId } from "@/ui/trip/trip-options";
+import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId, peekOptionDomId, peekOptions } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
-import { PEEK_NOTE_VISIBLE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, TINY_SHEET, mapInsetFor, useSheet, type Snap } from "@/ui/app-shell/bottom-sheet";
+import { PEEK_NOTE_VISIBLE, PEEK_VISIBLE, peekOptionsVisible, TINY_SHEET, mapInsetFor, useSheet, type Snap } from "@/ui/app-shell/bottom-sheet";
 import { EndpointSheet, endpointRowMainId } from "./endpoint-sheet";
 import { HomeSearchBar } from "./home-search-bar";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
@@ -272,10 +272,10 @@ export function HomeScreen() {
   // here directly (same value as attributionBottom below). During the drag the value goes on the
   // followers themselves, not on the root: a custom property on the root re-styles the whole map.
   const homeRef = useRef<HTMLElement>(null);
-  // A best-option line that wraps (a long jeepney summary on a narrow phone) grows the peek by its overflow.
-  const [peekExtra, setPeekExtra] = useState(0);
+  // The peek's option cards have a fixed height: the peek is known from how many there are (one or two), never measured.
+  const peekRows = optionsListed ? peekOptions(planData.plan.options).length : 0;
   const [follow] = useState(createSheetFollow);
-  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? PEEK_OPTIONS_VISIBLE + PEEK_NOTE_VISIBLE * peekNotes.length + peekExtra : PEEK_VISIBLE, (visible, height, dragging) =>
+  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? peekOptionsVisible(peekRows) + PEEK_NOTE_VISIBLE * peekNotes.length : PEEK_VISIBLE, (visible, height, dragging) =>
     follow(homeRef.current, `${Math.round(Math.max(0, visible - mapInsetFor(height)))}px`, dragging),
   );
   // Where focus goes once the results render: the results heading, or an option card.
@@ -572,8 +572,8 @@ export function HomeScreen() {
       focusTarget.kind === "option"
         ? document.getElementById(optionDomId(focusTarget.id))
         : document.querySelector<HTMLElement>("[data-results-heading]");
-    // The list rests below the screen edge at peek (inert): focus the toggle that opens it.
-    if (!el || el.closest("[inert]")) el = document.getElementById(OPTIONS_TOGGLE_ID) ?? el;
+    // The list rests below the screen edge at peek (inert): focus that option's peek card, else the toggle that opens it.
+    if (!el || el.closest("[inert]")) el = (focusTarget.kind === "option" ? document.getElementById(peekOptionDomId(focusTarget.id)) : null) ?? document.getElementById(OPTIONS_TOGGLE_ID) ?? el;
     if (!el) return;
     el.focus();
     focusDone.current = focusTarget;
@@ -1100,7 +1100,7 @@ export function HomeScreen() {
           detailOpen={tripDetailOpen || guiding}
           summary={
             optionsListed && planData ? (
-              <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} listShown={sheet.snap !== 0} notes={peekNotes} onToggle={handleToggleOptions} onExtraHeight={setPeekExtra} />
+              <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} listShown={sheet.snap !== 0} notes={peekNotes} onToggle={handleToggleOptions} onOpen={handleOpenOption} />
             ) : null
           }
         >

@@ -28,8 +28,9 @@ export function ringDirection(points: readonly LatLng[]): LoopDirection | null {
 }
 
 /** "clockwise" (short) or "clockwise (from pin order)" (long); never presented as verified. */
-export function directionText(direction: LoopDirection | null, form: "short" | "long"): string | null {
-  if (!direction) return null;
+export function directionText(direction: LoopDirection | null, form: "short" | "long", label?: string): string | null {
+  // A loop's display title already says its direction ("… Loop C (clockwise)"): never say it twice.
+  if (!direction || label?.includes(direction)) return null;
   return form === "long" ? `${direction} (from pin order)` : direction;
 }
 

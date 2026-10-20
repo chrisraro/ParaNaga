@@ -350,19 +350,75 @@
   flex-direction: column;
   gap: 2px;
 }
-.pn-peek__best {
+/* The option cards: a fixed height (--pn-peek-row, PEEK_ROW in bottom-sheet.tsx) of three 16 px
+   lines, cut with an ellipsis rather than wrapped, so the peek never grows over the route. */
+.pn-peek__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pn-peek-row-gap, 4px);
+}
+.pn-peek-row {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: var(--pn-peek-row, 56px);
+  padding: 3px 12px;
+  overflow: hidden;
+  border: 1px solid var(--pn-ring);
+  border-radius: 14px;
+  background: var(--pn-surface);
+  color: var(--pn-label);
+  font: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+.pn-peek-row--best {
+  border: 2px solid var(--pn-accent);
+  padding: 2px 11px;
+}
+.pn-peek-row__line {
   display: flex;
   align-items: center;
-  min-height: 44px;
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.3;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pn-peek-row__text {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pn-peek-row__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 700;
+}
+.pn-peek-row__mark {
+  flex: none;
+  color: var(--pn-teal-soft-text);
+  font-weight: 700;
+}
+/* Landscape and zoomed phones: one card, so the route keeps the strip of map above the sheet. */
+@media (max-height: 480px) {
+  .pn-peek-row:nth-child(n + 2) {
+    display: none;
+  }
 }
 .pn-peek__chip {
   display: inline-block;
-  margin-left: 8px;
-  padding: 2px 10px;
+  flex: none;
+  padding: 0 6px;
   border-radius: 999px;
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);

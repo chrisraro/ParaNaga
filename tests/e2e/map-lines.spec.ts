@@ -157,11 +157,11 @@ test("route overview lines draw on the home map and the Tricycle filter leaves o
   await expect(sheet.getByText(/historical/i)).toHaveCount(0);
 
   const routesList = page.getByTestId("layers-routes-list");
-  await expect(routesList).toContainText("Centro–San Isidro");
+  await expect(routesList).toContainText("Centro-Cararayan-San Isidro");
 
   await page.getByTestId("mode-filter-tricycle").click();
-  await expect(routesList.getByRole("link")).toHaveCount(1);
-  await expect(routesList).toContainText("Test tricycle feeder");
+  // The Routes list names only the 11 active jeepney services: a tricycle feeder line is drawn but not listed.
+  await expect(routesList.getByRole("link")).toHaveCount(0);
   await expect(page.getByTestId("layers-terminals-list")).toContainText("Balatas Tricycle Terminal");
 
   const drawn = page.locator("path.pn-line--route");
@@ -657,6 +657,55 @@ test("a lift applies the sheet padding at once (data-grow); a drop to peek delay
   await expect(sheet).toHaveAttribute("data-snap", "0");
   await expect(sheet).not.toHaveAttribute("data-grow", /.*/);
   expect(await delayed()).toEqual(["transform", "padding-bottom"]);
+});
+
+// Owner 2026-10-20: the peek cards the jeepney and the tricycle without covering the trip. The map
+// fit pads by the sheet's visible height, which is the fixed two-card peek (peekOptionsVisible(2)).
+test("375x812: with both peek cards, the previewed route and both pins sit fully above the sheet", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  const sheet = page.getByTestId("trip-sheet");
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(page.getByTestId("options-best")).toBeVisible();
+  await expect(page.getByTestId("options-alt")).toBeVisible();
+  await expect(page.locator("path.pn-line--ride").first()).toBeAttached({ timeout: 15_000 });
+  await sheet.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  await mapSettled(page);
+  const measure = async () => {
+    const sheetTop = (await sheet.boundingBox())!.y;
+    const boxes = [];
+    for (const el of await page.locator("path.pn-line--ride, path.pn-line--walk, .pn-marker").all()) {
+      const b = await el.boundingBox();
+      if (b) boxes.push(b);
+    }
+    const bottom = Math.max(...boxes.map((b) => b.y + b.height));
+    const top = Math.min(...boxes.map((b) => b.y));
+    return { sheetTop, top, bottom, pins: await page.locator(".pn-marker").count() };
+  };
+  await expect.poll(async () => {
+    const m = await measure();
+    return m.pins === 2 && m.top >= 0 && m.bottom <= m.sheetTop;
+  }, { timeout: 10_000 }).toBe(true);
+  const m = await measure();
+  console.log(`[peek2] 375x812 sheet top ${m.sheetTop.toFixed(1)} px; route+pins box ${m.top.toFixed(1)}-${m.bottom.toFixed(1)} px; clearance ${(m.sheetTop - m.bottom).toFixed(1)} px`);
+  // The sheet does not grow at peek: the height is fixed, not measured.
+  await expect(sheet).not.toHaveAttribute("data-grow", /.*/);
+});
+
+test("landscape 812x375: the peek shows one option card, so the route keeps the map strip", async ({ page }) => {
+  await page.setViewportSize({ width: 812, height: 375 });
+  await page.route("**/api/v1/plan", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(PROVISIONAL_PLAN) }),
+  );
+  await openApp(page);
+  await pinBoth(page);
+  await expect(page.getByTestId("trip-sheet")).toHaveAttribute("data-snap", "0");
+  await expect(page.getByTestId("options-best")).toBeAttached();
+  await expect(page.getByTestId("options-alt")).toBeHidden();
 });
 
 test("the map is inert under the full sheet, so Tab skips its hidden controls", async ({ page }) => {

@@ -41,7 +41,7 @@ describe("jeepney cards with a via", () => {
     render(<TripOptions data={load(VIA_PLAN)} onOpen={noop} etaModel={ETA_MODEL} />);
     expect(screen.queryAllByTestId("card-via")).toHaveLength(0);
     const titles = cards().filter((c) => c.dataset.mode === "jeepney").map((c) => c.querySelector("strong")!.textContent);
-    expect(titles).toEqual(["E Centro-Del Rosario via Magsaysay Ave", "Centro-Del Rosario via Roxas Ave (Diversion)", "Centro-Del Rosario via Panganiban Drive"]);
+    expect(titles).toEqual(["E Centro-Del Rosario via Magsaysay Ave", "F Centro-Del Rosario via Roxas Ave (Diversion)", "G Centro-Del Rosario via Panganiban Drive"]);
     for (const card of cards().filter((c) => c.dataset.mode === "jeepney")) {
       expect(card.textContent).toContain("Unverified route");
       expect(card.textContent).not.toContain("Francia");
@@ -87,7 +87,7 @@ describe("the access card", () => {
   });
 
   it("the peek of a plan whose only option is the access one names the whole option", () => {
-    render(<OptionsPeek data={load(ACCESS_PLAN)} expanded={false} listShown={false} onToggle={noop} etaModel={ETA_MODEL} />);
+    render(<OptionsPeek data={load(ACCESS_PLAN)} expanded={false} listShown={false} onToggle={noop} onOpen={noop} etaModel={ETA_MODEL} />);
     const best = screen.getByTestId("options-best").textContent ?? "";
     expect(best).toContain("Tricycle, then Jeep I Centro-Pacol");
     expect(best).toContain("From ₱33");
@@ -193,7 +193,7 @@ describe("nothing Recommended", () => {
     expect(cards()[0]!.className).not.toContain("primary");
     expect(screen.getByTestId("jeepney-reason").textContent).toBe("No jeepney route passes near your destination");
     cleanup();
-    render(<OptionsPeek data={data} expanded={false} listShown={false} onToggle={noop} etaModel={ETA_MODEL} />);
+    render(<OptionsPeek data={data} expanded={false} listShown={false} onToggle={noop} onOpen={noop} etaModel={ETA_MODEL} />);
     expect(screen.getByTestId("options-count").textContent).toBe("1 option");
     expect(screen.queryByTestId("options-best")).toBeNull();
   });
@@ -201,7 +201,7 @@ describe("nothing Recommended", () => {
   it("two options and none Recommended read '2 options', not a best option", () => {
     const base = load(SPECIAL_TRIP_PLAN);
     const none = { ...base, plan: { ...base.plan, options: base.plan.options.map((o) => ({ ...o, labels: [] })) } };
-    render(<OptionsPeek data={none} expanded={false} listShown={false} onToggle={noop} etaModel={ETA_MODEL} />);
+    render(<OptionsPeek data={none} expanded={false} listShown={false} onToggle={noop} onOpen={noop} etaModel={ETA_MODEL} />);
     expect(screen.getByTestId("options-count").textContent).toBe("2 options");
   });
 });

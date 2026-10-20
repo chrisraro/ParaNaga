@@ -253,7 +253,7 @@ function rideRemainingTime(trip: GuidanceTrip, step: RideStep, ride: RideState, 
 }
 
 function nextRideInfo(ride: RideRef) {
-  return { chip: ride.routeChip, routeName: ride.routeName, direction: directionText(ride.loopDirection, "short"), badge: UNVERIFIED_ROUTE_BADGE };
+  return { chip: ride.routeChip, routeName: ride.routeName, direction: directionText(ride.loopDirection, "short", ride.routeChip), badge: UNVERIFIED_ROUTE_BADGE };
 }
 
 function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, total: number, fix: LocationFix | null, now: number): WalkView {

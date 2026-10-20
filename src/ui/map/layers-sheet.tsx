@@ -24,6 +24,7 @@ import type { LayersPref } from "@/domain/prefs/prefs";
 import { cycleTab, captureOpener } from "@/ui/kit/opener";
 import { Switch } from "@/ui/kit/switch";
 import { ModeChip } from "@/ui/modes/mode-chip";
+import { isActiveRoute, routeLabel } from "@/domain/planner/route-display";
 import { ModeIcon } from "@/ui/modes/mode-icon";
 import { lineNotes, type LineNotes } from "./line-rules";
 import { LineNotesView } from "./line-notes-view";
@@ -79,6 +80,7 @@ export type DistinctMapRoute = {
 export function distinctRoutesFromLines(lines: readonly Line[]): DistinctMapRoute[] {
   const byCode = new Map<string, DistinctMapRoute>();
   for (const line of lines) {
+    if (!isActiveRoute(line.routeCode)) continue;
     const notes = lineNotes(line);
     const seen = byCode.get(line.routeCode);
     if (seen) {
@@ -90,7 +92,7 @@ export function distinctRoutesFromLines(lines: readonly Line[]): DistinctMapRout
     }
     byCode.set(line.routeCode, {
       routeCode: line.routeCode,
-      routeName: line.routeName,
+      routeName: routeLabel(line.routeCode, line.routeName),
       mode: line.mode,
       colourKey: line.colourKey,
       chipText: line.fleet.chip,

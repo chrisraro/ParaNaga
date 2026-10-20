@@ -11,7 +11,7 @@ import type { LatLng } from "@/domain/geo/types";
 import { inCentro } from "@/domain/planner/centro";
 import { FAR_AREAS, zoneOf } from "@/domain/planner/far-areas";
 import { fareClasses, legFareEstimate } from "@/domain/planner/fares";
-import { JEEP_DETOUR_SLACK_M, JEEP_MAX_DETOUR, planningNetwork, planTrip, type OptionMode, type PlanOption, type TripPlan } from "@/domain/planner/plan";
+import { JEEP_DETOUR_SLACK_M, JEEP_FAR_DROP_MAX_M, JEEP_MAX_DETOUR, JEEP_NEAR_DROP_M, PASSES_DESTINATION_M, planningNetwork, planTrip, type OptionMode, type PlanOption, type TripPlan } from "@/domain/planner/plan";
 import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
 import { realLoopsSnapshot } from "../fixtures/real-loops";
 import { realStreets } from "../fixtures/real-streets";
@@ -35,7 +35,18 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   const rest = centro && p.options[0]?.mode === "tricycle" ? p.options.slice(1) : p.options;
   if (rest !== p.options) expect(p.options[0]!.labels).toContain("Recommended");
   if (centro) expect(p.options.filter((o) => o.mode === "jeepney" && o.labels.includes("Recommended"))).toHaveLength(0);
-  const idx = rest.map((o) => ORDER.indexOf(o.mode));
+  // Owner 2026-10-20: far drop-off jeepneys (over 300 m, city centre 100 m, up to 400 m) come after the tricycle and padyak.
+  const street = Math.max(...rest.map((o, i) => (o.mode === "tricycle" || o.mode === "padyak" ? i : -1)));
+  const farDrops = street < 0 ? [] : rest.slice(street + 1);
+  for (const o of farDrops) {
+    expect(o.mode).toBe("jeepney");
+    expect(o.labels).toEqual([]);
+    const last = o.legs.filter((l) => l.kind === "ride").at(-1)!;
+    if (last.kind !== "ride") throw new Error("a ride");
+    expect(haversineMeters(last.alight, destination)).toBeGreaterThan((centro ? PASSES_DESTINATION_M : JEEP_NEAR_DROP_M) - 0.5);
+    expect(haversineMeters(last.alight, destination)).toBeLessThanOrEqual(JEEP_FAR_DROP_MAX_M + 0.5);
+  }
+  const idx = rest.slice(0, rest.length - farDrops.length).map((o) => ORDER.indexOf(o.mode));
   expect([...idx].sort((a, b) => a - b)).toEqual(idx);
   expect(new Set(p.options.map((o) => o.id)).size).toBe(p.options.length);
   expect((p.jeepneyReason === null) === p.options.some((o) => o.mode === "jeepney")).toBe(true);
@@ -194,8 +205,8 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  */
 const REGRESSION_BASELINE = {
-  options: 468,
-  byMode: { jeepney: 250, tricycle: 200, padyak: 8, walk: 10 },
+  options: 552,
+  byMode: { jeepney: 334, tricycle: 200, padyak: 8, walk: 10 },
   // Re-recorded after 3d2ea38: the fixture snapshot gained the reviewed route notes, so 254 of 417
   // ride legs (160 trips) now carry notes; with notes stripped the digest is still d0930a3e….
   // Re-recorded for the approach-run walk fallback (Ateneo fix): 22 trips change; 5 gain a jeepney
@@ -205,5 +216,10 @@ const REGRESSION_BASELINE = {
   // terminal gain `tricycleTerminals`; 96 of 200 trips change otherwise, each checked against the previous planner:
   // 62 by the detour guard (a jeepney over 2 × the straight line + 300 m dropped, 70 jeepney options fewer in all),
   // 18 by the city-centre rule (tricycle Recommended and first) and 16 by both. None unexplained.
-  digest: "5d21552d006f3ee4dc4ef5c175428973f1ba2086a7aa0385abdf3056512dd3a0",
+  // Re-recorded for far drop-offs (owner 2026-10-20; was 5d21552d…, 468 options), at most 2 per trip at distinct spots
+  // (over 50 m from every shown drop-off): 138 trips unchanged; 62 gain 84 far drop-off jeepney options (1–2 each,
+  // drop-offs 102–400 m; 12 city-centre trips lose reason "centro"), appended after the tricycle/padyak, every earlier
+  // option byte-identical; Recommended changed on 0 trips; none trimmed.
+  // Also re-recorded for the route tally 2026-10-20 (ride display letters/titles only).
+  digest: "532227b0afc8bbd57e15314208a83cad1b00e008e062abf6f3715d873a55f392",
 };

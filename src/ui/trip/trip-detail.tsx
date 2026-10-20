@@ -192,7 +192,7 @@ function rideSteps(
   const alightName = alightNamed ? lookups.stopName(alight.id, alight.name) : isLastRide ? alight.name : "the transfer point";
   const rideNotes = ctx.notes.rides.find((r) => r.legIndex === i)?.notes ?? [];
   const route = routeChipLabel(leg.routeCode, leg.routeName, leg.display);
-  const dir = directionText(lookups.direction(leg.variantId), "short");
+  const dir = directionText(lookups.direction(leg.variantId), "short", route);
   const count = ends.pinned ? ends.stops.length - 1 : null;
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
   const etaLeg = estimate?.legs[i];

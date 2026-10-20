@@ -85,7 +85,7 @@ test("trip options show the unverified badge, estimate chips and honest time est
   await expect(cards.nth(0)).toContainText("Recommended");
   await expect(cards.nth(0)).toContainText("No transfers");
   // Leg-by-leg text, distances, the vehicle chip and the footers are not on the card.
-  await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|clockwise|Walk ≈|Jeepney/);
+  await expect(cards.nth(0)).not.toContainText(/≈ 230 m|≈ 1.2 km|Walk ≈|Jeepney/);
   await expect(cards.nth(1)).toContainText("Least walking");
   await expect(cards.nth(1).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱16–₱18");
   // The tricycle card: not Recommended, the minimum fare, no minutes, no driver badge (it is not a jeepney ride).
@@ -154,7 +154,7 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps).toHaveCount(4);
   await expect(steps.nth(0)).toContainText("Walk ≈ 230 m to Plaza Rizal (A1)");
   await expect(steps.nth(0)).toContainText("path not verified");
-  await expect(steps.nth(1)).toContainText("Board A Centro-Magsaysay Loop (clockwise) at Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("Board A Centro-Magsaysay Loop A (clockwise) at Plaza Rizal (A1)");
   await expect(steps.nth(1)).toContainText("4 stops");
   await expect(steps.nth(1)).not.toContainText(/Signboard|1.2 km/);
   await expect(steps.nth(1)).toContainText("Approximate path, not a verified route shape");
@@ -163,7 +163,7 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps.nth(2)).toContainText("Say “Para!” near here");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
-  await expect(detail.getByTestId("leg-fare")).toHaveText(/A Centro-Magsaysay Loop\s*Estimate ₱14$/);
+  await expect(detail.getByTestId("leg-fare")).toHaveText(/A Centro-Magsaysay Loop A \(clockwise\)\s*Estimate ₱14$/);
   await expect(detail).not.toContainText(/Corrections|from reported fare rules|matrix not verified/);
   // Three links: Sources (top bar), the fare basis, and Report a correction.
   await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated", "Report a correction"]);
@@ -513,15 +513,20 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   // The Recommended option is the cheapest jeepney here, so the peek reads it as an estimated range, never exact.
   await expect(page.getByTestId("options-best")).toContainText(/A Centro-Magsaysay Loop.*Est.*\d+–\d+ min \+ waiting \(unknown\).*Est.*₱14/);
   await expect(page.getByTestId("options-best")).not.toContainText("Tricycle");
+  await expect(page.getByTestId("options-best")).toContainText("Recommended");
+  // The tricycle sits beside it in its own card: a fare, never minutes.
+  const alt = page.getByTestId("options-alt");
+  await expect(alt).toHaveAttribute("data-mode", "tricycle");
+  await expect(alt).not.toContainText(/\bmin\b|Time not estimated|Recommended/);
   await expect(toggle).toHaveText("All options");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   // A jeepney is an unverified route: the chip shows at the peek.
   await expect(page.getByTestId("options-best-unverified")).toBeVisible();
   await expect(toggle).toHaveAttribute("aria-controls", "pn-trip-options-list");
-  // Both rows, the summary and the toggle are inside the visible sheet, targets >= 44 px.
+  // Both rows, both option cards and the toggle are inside the visible sheet, targets >= 44 px.
   await sheetSettled(page);
   const vh = page.viewportSize()!.height;
-  for (const el of [toggle, page.getByTestId("options-best"), page.getByTestId("endpoint-destination")]) {
+  for (const el of [toggle, page.getByTestId("options-best"), alt, page.getByTestId("endpoint-destination")]) {
     const box = (await el.boundingBox())!;
     expect(box.y + box.height).toBeLessThanOrEqual(vh);
     expect(box.height).toBeGreaterThanOrEqual(44 - 1);
@@ -550,6 +555,14 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByTestId("options-best")).toBeVisible();
+
+  // A peek card opens that option like a list card; Back returns to the peek with focus on that card.
+  await alt.click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await expect(page.getByTestId("trip-detail-header")).toContainText("Tricycle");
+  await page.getByRole("button", { name: "Back to trip options" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(alt).toBeFocused();
 });
 
 test("a re-plan of the same ends keeps the detent the rider chose; new ends return to peek", async ({ page }) => {

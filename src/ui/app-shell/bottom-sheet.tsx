@@ -14,8 +14,18 @@ import { createSheetDrag, type SheetDrag } from "./sheet-drag";
 export type Snap = 0 | 1 | 2;
 
 export const PEEK_VISIBLE = 214;
-/** Peek while trip options are listed: rows + best-option summary + "All options" (two 44 px rows). */
-export const PEEK_OPTIONS_VISIBLE = 276;
+/**
+ * One option card at the peek (OptionsPeek): three 16 px lines (route, time, fare + chip) in a
+ * fixed-height card, so the peek never grows with a long route title (it is cut with an ellipsis).
+ */
+export const PEEK_ROW = 56;
+export const PEEK_ROW_GAP = 4;
+/** The peek's own rows around the option cards: start / destination and "All options". */
+const PEEK_OPTIONS_BASE = 232;
+/** Peek while trip options are listed, with `rows` option cards (one or two). */
+export const peekOptionsVisible = (rows: number) => PEEK_OPTIONS_BASE + rows * PEEK_ROW + Math.max(0, rows - 1) * PEEK_ROW_GAP;
+/** The usual options peek: the top jeepney and the tricycle side by side in two cards. */
+export const PEEK_OPTIONS_VISIBLE = peekOptionsVisible(2);
 /** One staleness line (offline plan, changed since saved) under the best option at the peek snap. */
 export const PEEK_NOTE_VISIBLE = 24;
 export const HALF_VISIBLE = 444;

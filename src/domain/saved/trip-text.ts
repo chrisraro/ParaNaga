@@ -28,7 +28,7 @@ export function savedTripSteps(trip: SavedTrip): string[] {
         if (!step.pinned) {
           return `Ride ${step.ride.routeChip} along the approximate path from ${step.board.label}. ${freeAlightText(step.alight.label)}. ${UNVERIFIED_ROUTE_BADGE}.`;
         }
-        const direction = directionText(step.ride.loopDirection, "short");
+        const direction = directionText(step.ride.loopDirection, "short", step.ride.routeChip);
         const stops = step.stopsToRide === 1 ? "1 stop" : `${step.stopsToRide} stops`;
         return `Ride ${step.ride.routeChip}${direction ? `, ${direction}` : ""}, from ${step.board.label} to ${step.alight.label}: ${stops} by pin order. ${UNVERIFIED_ROUTE_BADGE}.`;
       }
