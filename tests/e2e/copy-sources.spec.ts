@@ -203,6 +203,9 @@ for (const mode of ["light", "dark", "high contrast"] as const) {
 
     await openApp(page);
     await pinBoth(page);
+    // The peek's two option cards (jeepney and tricycle), before the list opens.
+    await expect(page.getByTestId("options-alt")).toBeVisible();
+    await axe('[data-testid="options-peek"]');
     await expandOptions(page);
     await axe('[data-testid="trip-sheet"]');
     await chooseOption(page);

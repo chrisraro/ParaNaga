@@ -513,15 +513,20 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   // The Recommended option is the cheapest jeepney here, so the peek reads it as an estimated range, never exact.
   await expect(page.getByTestId("options-best")).toContainText(/A Centro-Magsaysay Loop.*Est.*\d+–\d+ min \+ waiting \(unknown\).*Est.*₱14/);
   await expect(page.getByTestId("options-best")).not.toContainText("Tricycle");
+  await expect(page.getByTestId("options-best")).toContainText("Recommended");
+  // The tricycle sits beside it in its own card: a fare, never minutes.
+  const alt = page.getByTestId("options-alt");
+  await expect(alt).toHaveAttribute("data-mode", "tricycle");
+  await expect(alt).not.toContainText(/\bmin\b|Time not estimated|Recommended/);
   await expect(toggle).toHaveText("All options");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   // A jeepney is an unverified route: the chip shows at the peek.
   await expect(page.getByTestId("options-best-unverified")).toBeVisible();
   await expect(toggle).toHaveAttribute("aria-controls", "pn-trip-options-list");
-  // Both rows, the summary and the toggle are inside the visible sheet, targets >= 44 px.
+  // Both rows, both option cards and the toggle are inside the visible sheet, targets >= 44 px.
   await sheetSettled(page);
   const vh = page.viewportSize()!.height;
-  for (const el of [toggle, page.getByTestId("options-best"), page.getByTestId("endpoint-destination")]) {
+  for (const el of [toggle, page.getByTestId("options-best"), alt, page.getByTestId("endpoint-destination")]) {
     const box = (await el.boundingBox())!;
     expect(box.y + box.height).toBeLessThanOrEqual(vh);
     expect(box.height).toBeGreaterThanOrEqual(44 - 1);
@@ -550,6 +555,14 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   await expect(toggle).toBeFocused();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByTestId("options-best")).toBeVisible();
+
+  // A peek card opens that option like a list card; Back returns to the peek with focus on that card.
+  await alt.click();
+  await expect(page.getByTestId("trip-detail")).toBeVisible();
+  await expect(page.getByTestId("trip-detail-header")).toContainText("Tricycle");
+  await page.getByRole("button", { name: "Back to trip options" }).click();
+  await expect(sheet).toHaveAttribute("data-snap", "0");
+  await expect(alt).toBeFocused();
 });
 
 test("a re-plan of the same ends keeps the detent the rider chose; new ends return to peek", async ({ page }) => {

@@ -9,11 +9,12 @@
 
 import "./trip.css";
 
-import { Fragment, useLayoutEffect, useMemo, useRef } from "react";
+import { Fragment, useMemo } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
-import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
+import { PEEK_ROW, PEEK_ROW_GAP } from "@/ui/app-shell/bottom-sheet";
+import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, previewIndex, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
@@ -27,8 +28,6 @@ export function optionDomId(optionId: string): string {
 
 export const OPTIONS_LIST_ID = "pn-trip-options-list";
 export const OPTIONS_TOGGLE_ID = "pn-options-toggle";
-/** The best-option line's own row at the peek (min-height in home-screen.css); a wrapped line is taller. */
-export const PEEK_BEST_ROW = 44;
 
 export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: PlanLookups }) {
   // A walk of a few metres (start or end at the stop itself) is not a step.
@@ -275,10 +274,80 @@ export function TripOptions({ data, refreshing = false, onOpen, etaModel, routes
   );
 }
 
+const isStreetMode = (o: PlanOptionDto) => o.mode === "tricycle" || o.mode === "padyak";
+
 /**
- * Peek of the sheet once From and To are set: one line for the best option (route, time range,
- * fare, a caution chip for a ride) and the toggle "All options" that lifts the sheet to full with
- * every option (aria-expanded while the list is visible, the chevron turns at full). The summary hides at full: the list is there.
+ * The (at most two) options carded at the peek: the Recommended one (else the map preview's), then
+ * the other mode: the tricycle beside a jeepney, the top jeepney beside a tricycle; after a walk or a
+ * special trip, the next option. One card when the plan has only one mode.
+ */
+export function peekOptions(options: readonly PlanOptionDto[]): PlanOptionDto[] {
+  const first = options[previewIndex(options)] ?? options[0];
+  if (!first) return [];
+  const second =
+    first.mode === "walk" || isSpecialTrip(first)
+      ? options.find((o) => o !== first)
+      : isStreetMode(first)
+        ? options.find((o) => o.mode === "jeepney")
+        : options.find(isStreetMode);
+  return second ? [first, second] : [first];
+}
+
+export const peekOptionDomId = (optionId: string) => `${optionDomId(optionId)}-peek`;
+
+/** One compact card at the peek: route (cut with an ellipsis if long), the time for a jeepney or a walk (never for a tricycle), the fare and the caution chip. */
+function PeekOption({ option, best, etaModel, onOpen }: { option: PlanOptionDto; best: boolean; etaModel?: EtaModel | null; onOpen: (id: string) => void }) {
+  const street = !isAccessOption(option) && isStreetMode(option);
+  const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
+  const { estimate } = useOptionEta(option, walkLengths, etaModel);
+  return (
+    <button
+      type="button"
+      id={peekOptionDomId(option.id)}
+      className={best ? "pn-peek-row pn-peek-row--best" : "pn-peek-row"}
+      data-testid={best ? "options-best" : "options-alt"}
+      data-mode={option.mode}
+      onClick={() => onOpen(option.id)}
+    >
+      <span className="pn-peek-row__line">
+        <span className="pn-peek-row__title">{optionTitle(option)}</span>
+        {best ? (
+          <>
+            <span className="sr-only">. </span>
+            <span className="pn-peek-row__mark">Recommended</span>
+          </>
+        ) : null}
+      </span>
+      {street ? null : (
+        <>
+          <span className="sr-only">. </span>
+          <EtaTotalText estimate={estimate} className="pn-peek-row__text" short />
+        </>
+      )}
+      <span className="sr-only">. </span>
+      <span className="pn-peek-row__line">
+        <span>
+          <FareShort fare={option.fare} text={specialFareText(option)} />
+        </span>
+        {option.rides > 0 ? (
+          <>
+            <span className="sr-only">. </span>
+            <span className="pn-peek__chip" data-testid={best ? "options-best-unverified" : "options-alt-unverified"}>
+              {UNVERIFIED_CHIP}
+            </span>
+          </>
+        ) : null}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * Peek of the sheet once From and To are set: one compact card for each of the top two options
+ * (peekOptions: the jeepney and the tricycle), each opening its detail like a list card, and the
+ * toggle "All options" that lifts the sheet to full with every option (aria-expanded while the list
+ * is visible, the chevron turns at full). The cards hide at full: the list is there. The cards have
+ * a fixed height (PEEK_ROW), so the peek height is known before render and never grows.
  */
 export function OptionsPeek({
   data,
@@ -287,60 +356,32 @@ export function OptionsPeek({
   listShown,
   notes = [],
   onToggle,
-  onExtraHeight,
+  onOpen,
 }: {
   data: PlanResponse;
   etaModel?: EtaModel | null;
-  /** Full: the list is all there is, so the best-option line is hidden. */
+  /** Full: the list is all there is, so the cards are hidden. */
   expanded: boolean;
   /** The list is visible (half or full): the toggle reads as expanded. */
   listShown: boolean;
   /** Staleness lines (offline plan, changed since saved), shown at the peek where the list is inert. */
   notes?: readonly string[];
   onToggle: () => void;
-  /** How many px the best-option line is taller than its row (it wraps on a narrow phone): the peek grows by that, so "All options" stays on screen. */
-  onExtraHeight?: (px: number) => void;
+  onOpen: (optionId: string) => void;
 }) {
-  // The Recommended option (the tricycle at 500 m or more), not the first card: what is read out must match the list.
-  // With nothing Recommended (a far trip without a jeepney) there is no best option: the peek counts the options.
+  // The Recommended option (the jeepney from 500 m), not the first card: what is read out must match the list.
+  // With nothing Recommended (a far trip without a jeepney) no card is marked and the toggle counts the options.
   const best = data.plan.options[recommendedIndex(data.plan.options)];
-  const bestStreet = best && !isAccessOption(best) ? best.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak") : undefined;
-  const walkLengths = useMemo(() => extractWalkLengths(best?.legs ?? []), [best]);
-  const { estimate } = useOptionEta(best, walkLengths, etaModel);
-  const lineRef = useRef<HTMLParagraphElement>(null);
-  useLayoutEffect(() => {
-    if (!onExtraHeight) return undefined;
-    const el = lineRef.current;
-    const report = () => onExtraHeight(el ? Math.max(0, Math.ceil(el.getBoundingClientRect().height) - PEEK_BEST_ROW) : 0);
-    report();
-    if (!el || typeof ResizeObserver === "undefined") return undefined;
-    const observer = new ResizeObserver(report);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [onExtraHeight, expanded, best]);
+  const shown = peekOptions(data.plan.options);
   if (data.plan.options.length === 0) return null;
   return (
-    <div className="pn-peek" data-testid="options-peek">
-      {expanded ? null : !best ? (
-      <p ref={lineRef} className="pn-peek__best" data-testid="options-count">
-        {optionsCountText(data.plan.options.length)}
-      </p>
-      ) : (
-      <p ref={lineRef} className="pn-peek__best" data-testid="options-best">
-        <span className="sr-only">Best option: </span>
-        <span>
-          {optionTitle(best)}
-          <span aria-hidden="true"> · </span>
-          {bestStreet ? streetCardView(bestStreet).timeText : <EtaTotalText estimate={estimate} short />}
-          <span aria-hidden="true"> · </span>
-          <FareShort fare={best.fare} text={specialFareText(best)} />
-        </span>
-        {best.rides > 0 ? (
-          <span className="pn-peek__chip" data-testid="options-best-unverified">
-            {UNVERIFIED_CHIP}
-          </span>
-        ) : null}
-      </p>
+    <div className="pn-peek" data-testid="options-peek" style={{ ["--pn-peek-row" as string]: `${PEEK_ROW}px`, ["--pn-peek-row-gap" as string]: `${PEEK_ROW_GAP}px` }}>
+      {expanded ? null : (
+        <div className="pn-peek__rows">
+          {shown.map((o) => (
+            <PeekOption key={o.id} option={o} best={o === best} etaModel={etaModel} onOpen={onOpen} />
+          ))}
+        </div>
       )}
       {listShown
         ? null
@@ -358,7 +399,13 @@ export function OptionsPeek({
         onClick={onToggle}
         data-testid="options-toggle"
       >
-        All options
+        {best ? (
+          "All options"
+        ) : (
+          <span>
+            All options (<span data-testid="options-count">{optionsCountText(data.plan.options.length)}</span>)
+          </span>
+        )}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d="M6 15l6-6 6 6" />
         </svg>

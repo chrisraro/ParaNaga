@@ -198,16 +198,35 @@ test("A city trip has no far note: the jeepney is Recommended from 500 m", async
   await expectAxeBothSchemes(page);
 });
 
-test("a long best-option line wraps at the peek on a narrow phone and 'All options' stays on screen (audit 2026-10-18)", async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 700 });
-  await open(page, ACCESS_PLAN, false);
-  const toggle = page.getByTestId("options-toggle");
-  await expect(page.getByTestId("options-best")).toBeVisible();
-  await page.getByTestId("trip-sheet").evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
-  const line = (await page.getByTestId("options-best").boundingBox())!;
-  expect(line.height).toBeGreaterThan(44); // the access summary wraps at 320 px
-  const box = (await toggle.boundingBox())!;
-  expect(box.y + box.height).toBeLessThanOrEqual(700);
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
-});
+// Owner 2026-10-20: the peek cards the jeepney and the tricycle. The cards have a fixed height
+// (PEEK_ROW, 56 px): a long title is cut with an ellipsis instead of wrapping, so the peek never
+// grows (the audit 2026-10-18 grow-by-overflow is gone) and "All options" stays on screen.
+for (const [name, plan] of [["access", ACCESS_PLAN], ["Del Rosario via", VIA_PLAN]] as const) {
+  test(`peek cards keep their fixed height at 320-412 px with the longest titles (${name})`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    await open(page, plan, false);
+    const toggle = page.getByTestId("options-toggle");
+    const cards = page.locator(".pn-peek-row");
+    await expect(cards.first()).toBeVisible();
+    for (const width of [320, 360, 375, 412]) {
+      await page.setViewportSize({ width, height: 700 });
+      await page.getByTestId("trip-sheet").evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+      for (const card of await cards.all()) {
+        const m = await card.evaluate((el) => ({
+          h: el.getBoundingClientRect().height,
+          // Every text node is at least 13 px, and no line wraps (each line is one 16 px line box).
+          minFont: Math.min(...[...el.querySelectorAll("*")].filter((n) => n.textContent && !n.closest(".sr-only")).map((n) => parseFloat(getComputedStyle(n).fontSize))),
+          lines: [...el.children].filter((c) => !c.classList.contains("sr-only")).map((c) => c.getBoundingClientRect().height),
+        }));
+        expect(m.h, `${width}px`).toBe(56);
+        expect(m.minFont).toBeGreaterThanOrEqual(13);
+        for (const lh of m.lines) expect(lh, `${width}px line`).toBeLessThanOrEqual(20);
+      }
+      const box = (await toggle.boundingBox())!;
+      expect(box.y + box.height, `${width}px toggle`).toBeLessThanOrEqual(700);
+    }
+    await expect(page.getByTestId("trip-sheet")).not.toHaveAttribute("data-grow", /.*/);
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  });
+}
