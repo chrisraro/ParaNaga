@@ -23,10 +23,12 @@ const PLAZA_RIZAL = { lat: 13.6233869, lng: 123.1846726 };
 const SM_CITY = { lat: 13.6210765, lng: 123.1904389 };
 /** The Del Rosario barangay node. */
 const DEL_ROSARIO = { lat: 13.6173903, lng: 123.2375487 };
-/** Only R3 and R4 reach this short trip. */
-const TWO_VIA: [LatLng, LatLng] = [{ lat: 13.617, lng: 123.235 }, { lat: 13.62, lng: 123.231 }];
-/** A walk-card trip: R4 and R4>R2 are the Pareto picks; with every route a via, the budget is 3. */
-const TRIM: [LatLng, LatLng] = [{ lat: 13.621, lng: 123.2002 }, { lat: 13.622, lng: 123.2012 }];
+/** Only R3 and R4 reach this trip along the Maharlika Highway east of Del Rosario (moved for the 2026-10-20 detour
+ * guard: the former 540 m trip rode R3/R4 most of the way round their circuits). */
+const TWO_VIA: [LatLng, LatLng] = [{ lat: 13.6165, lng: 123.226 }, { lat: 13.618, lng: 123.242 }];
+/** A walk-card trip with two jeepneys, one a two-ride "Least walking" extra; with every route a via, the budget is 3
+ * (moved for the 2026-10-20 detour guard: the former trip's R4 and R4>R2 rides roamed past it). */
+const TRIM: [LatLng, LatLng] = [{ lat: 13.6324, lng: 123.1984 }, { lat: 13.6294, lng: 123.1994 }];
 /** R1 and R8-D reach this trip; none of R2-R4 does. */
 const R1_R8D: [LatLng, LatLng] = [{ lat: 13.62, lng: 123.19 }, { lat: 13.63, lng: 123.2 }];
 
@@ -147,6 +149,7 @@ describe("via groups: data-driven, budget and trim order", () => {
     expect(base.options.map((x) => x.mode)).toEqual(["walk", "jeepney", "jeepney", "tricycle", "padyak"]);
     const baseExtra = jeeps(base).find((x) => rideCodes(x).length === 2)!; // R4>R2, a non-via extra holding "Least walking"
     expect(baseExtra.labels).toContain("Least walking");
+    expect(recommended(base)).toHaveLength(1);
     const p = plan(o, d, [everyRouteAVia]);
     expect(p.options.length).toBeLessThanOrEqual(MAX_OPTIONS);
     const block = jeeps(p);
@@ -160,7 +163,7 @@ describe("via groups: data-driven, budget and trim order", () => {
     // Vias are kept by score, ordered by score.
     expect(block.map((x) => x.score)).toEqual([...block.map((x) => x.score)].sort((a, b) => a - b));
     expect(recommended(p)).toHaveLength(1);
-    expect(recommended(p)[0]!.mode).toBe("walk");
+    expect(recommended(p)[0]!.mode).toBe(recommended(base)[0]!.mode);
   });
 
   it("with every route a via, plans stay within budget, keep the best-score option and Recommended, and never move a label", () => {

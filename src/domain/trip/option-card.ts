@@ -31,6 +31,8 @@ const JEEPNEY_REASON: Record<NonNullable<PlanResponse["plan"]["jeepneyReason"]>,
   no_path_near_destination: "No jeepney route passes near your destination",
   walk_shorter: "Walking is shorter than any jeepney ride",
   no_route: "No jeepney route connects these places",
+  roundabout: "Jeepney routes here go the long way around",
+  centro: "In the city centre, a tricycle takes you there directly",
 };
 
 /** The one line above the tricycle card when the plan has no jeepney option. */

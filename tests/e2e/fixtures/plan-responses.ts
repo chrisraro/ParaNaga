@@ -8,6 +8,7 @@
 //                    (Recommended only with no jeepney), then padyak;
 //   under 500 m      the walk card is Recommended, or the best jeepney when it passes within 100 m.
 import { encodePolyline } from "../../../src/domain/geo/polyline";
+import { routeDisplay } from "../../../src/domain/planner/route-display";
 import { parseWalkGraph, routeWalk } from "../../../src/domain/walk/walk-graph";
 import snapshot from "./network/snapshot.json" with { type: "json" };
 import walkGraphJson from "./network/walk-graph.json" with { type: "json" };
@@ -117,6 +118,7 @@ const rideLeg = (r: RideInit) => ({
   board: r.board, alight: r.alight, stops: r.stops, distanceMeters: r.distanceMeters, approximate: true,
   boardingVerified: false, pathVerified: false, fare: r.fare, mode: "jeepney", fleet: r.fleet,
   ...(r.untraced ? straightLine : alongPath(r.board.measureM, r.alight.measureM)), stopMeasuresM: null, notes: r.notes ?? [],
+  display: routeDisplay(r.routeCode, r.routeName),
 });
 
 /** The planner's tricycle notes (plan.ts tricycleOption): the rule line, the fare line and the honest copy. */

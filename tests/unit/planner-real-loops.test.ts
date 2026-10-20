@@ -8,9 +8,10 @@ import { haversineMeters } from "@/domain/geo/geometry";
 import { projectOnLine } from "@/domain/geo/measure";
 import { isInsideNaga } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
+import { inCentro } from "@/domain/planner/centro";
 import { FAR_AREAS, zoneOf } from "@/domain/planner/far-areas";
 import { fareClasses, legFareEstimate } from "@/domain/planner/fares";
-import { planningNetwork, planTrip, type OptionMode, type PlanOption, type TripPlan } from "@/domain/planner/plan";
+import { JEEP_DETOUR_SLACK_M, JEEP_MAX_DETOUR, planningNetwork, planTrip, type OptionMode, type PlanOption, type TripPlan } from "@/domain/planner/plan";
 import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
 import { realLoopsSnapshot } from "../fixtures/real-loops";
 import { realStreets } from "../fixtures/real-streets";
@@ -29,7 +30,12 @@ const ORDER: OptionMode[] = ["walk", "jeepney", "tricycle", "padyak"];
 function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   if (p.coverage === "none") return;
   expect(p.options.length).toBeLessThanOrEqual(6);
-  const idx = p.options.map((o) => ORDER.indexOf(o.mode));
+  // Revision 2026-10-20: inside the city centre the Recommended tricycle is listed first; the rest keep the order.
+  const centro = inCentro(origin) && inCentro(destination) && zoneOf(origin, FAR_AREAS) === null && zoneOf(destination, FAR_AREAS) === null;
+  const rest = centro && p.options[0]?.mode === "tricycle" ? p.options.slice(1) : p.options;
+  if (rest !== p.options) expect(p.options[0]!.labels).toContain("Recommended");
+  if (centro) expect(p.options.filter((o) => o.mode === "jeepney" && o.labels.includes("Recommended"))).toHaveLength(0);
+  const idx = rest.map((o) => ORDER.indexOf(o.mode));
   expect([...idx].sort((a, b) => a - b)).toEqual(idx);
   expect(new Set(p.options.map((o) => o.id)).size).toBe(p.options.length);
   expect((p.jeepneyReason === null) === p.options.some((o) => o.mode === "jeepney")).toBe(true);
@@ -64,6 +70,8 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
     expect(o.walkMeters).toBe(walks.reduce((s, w) => s + w.estimateMeters, 0));
     expect(o.walkMeters).toBeLessThan(p.directWalkEstimateMeters!);
     expect(o.rides).toBeLessThanOrEqual(2);
+    // Detour guard: no jeepney loops or roams past the trip (access options ride from their loading point).
+    if (!tri) expect(o.rideMeters).toBeLessThanOrEqual(JEEP_MAX_DETOUR * haversineMeters(origin, destination) + JEEP_DETOUR_SLACK_M);
     for (const r of legs) {
       if (r.kind !== "ride") continue;
       const v = planningNetwork(snap, lines).variants.find((x) => x.variantId === r.variantId)!;
@@ -186,12 +194,16 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  */
 const REGRESSION_BASELINE = {
-  options: 538,
-  byMode: { jeepney: 320, tricycle: 200, padyak: 8, walk: 10 },
+  options: 468,
+  byMode: { jeepney: 250, tricycle: 200, padyak: 8, walk: 10 },
   // Re-recorded after 3d2ea38: the fixture snapshot gained the reviewed route notes, so 254 of 417
   // ride legs (160 trips) now carry notes; with notes stripped the digest is still d0930a3e….
   // Re-recorded for the approach-run walk fallback (Ateneo fix): 22 trips change; 5 gain a jeepney
   // (4 were no_path_near_origin, 1 walk_shorter), 17 get other or more jeepney options (+13 options).
-  // Re-recorded for cheapest jeepney Recommended first at >= 500 m.
-  digest: "bdefab1e0a2f68042f033f3c1b2ab0fcccf58c73d68c30aeccf8b2ab34bb8017",
+  // Re-recorded for cheapest jeepney Recommended first at >= 500 m (bdefab1e…).
+  // Re-recorded for the planner revision 2026-10-20: every ride gains `display`, tricycles near a published tricycle
+  // terminal gain `tricycleTerminals`; 96 of 200 trips change otherwise, each checked against the previous planner:
+  // 62 by the detour guard (a jeepney over 2 × the straight line + 300 m dropped, 70 jeepney options fewer in all),
+  // 18 by the city-centre rule (tricycle Recommended and first) and 16 by both. None unexplained.
+  digest: "5d21552d006f3ee4dc4ef5c175428973f1ba2086a7aa0385abdf3056512dd3a0",
 };

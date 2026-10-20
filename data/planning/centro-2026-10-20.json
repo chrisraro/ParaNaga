@@ -1,0 +1,23 @@
+{
+  "header": {
+    "schemaVersion": 1,
+    "preparedOn": "2026-10-20",
+    "placesSnapshot": "naga-places-2026-10-15.osm.json, naga-places-2026-10-16.osm.json",
+    "reviewer": "owner review pending (planner revision 2026-10-20)",
+    "rule": "A trip whose two ends are both within radiusM of an anchor is a city-centre trip: the tricycle is Recommended and listed first; a jeepney is offered only when it is direct and drops off within 100 m of the destination. Coordinates are copied from the OSM places snapshots (way centroids or nodes), never invented. Radii are provisional and owner-tunable."
+  },
+  "anchors": [
+    { "code": "C01", "name": "Plaza Rizal (Centro)", "lat": 13.6233581, "lng": 123.1848802, "radiusM": 600, "source": "OSM way 201276956 (leisure=park), naga-places-2026-10-15/16" },
+    { "code": "C02", "name": "Bicol Central Station (central bus terminal)", "lat": 13.6192359, "lng": 123.1897426, "radiusM": 300, "source": "OSM way 293702439 (bus_station); terminal T01" },
+    { "code": "C03", "name": "UV-Express Southbound Terminal (van terminal)", "lat": 13.6187773, "lng": 123.1935127, "radiusM": 250, "source": "OSM node 4545731190 (bus_station); seed CT-UV-SOUTHBOUND-OSM" },
+    { "code": "C04", "name": "LCC Naga Transport Station (Integrated Southbound Terminal)", "lat": 13.6189669, "lng": 123.1782111, "radiusM": 300, "source": "OSM way 23670386 (bus_station); terminal T03" },
+    { "code": "C05", "name": "SM City Naga", "lat": 13.6210765, "lng": 123.1904389, "radiusM": 300, "source": "OSM way 175408605 (shop=mall)" },
+    { "code": "C06", "name": "Robinsons Place Naga", "lat": 13.61448, "lng": 123.192814, "radiusM": 300, "source": "OSM way 515672435 (shop=mall)" },
+    { "code": "C07", "name": "LCC Mall Naga", "lat": 13.6190197, "lng": 123.1797857, "radiusM": 250, "source": "OSM way 23665048 (shop=mall)" },
+    { "code": "C08", "name": "Naga City People's Mall", "lat": 13.6210781, "lng": 123.183745, "radiusM": 250, "source": "OSM way 23674855 (amenity=marketplace)" },
+    { "code": "C09", "name": "WinWin Mall", "lat": 13.6150999, "lng": 123.1895972, "radiusM": 200, "source": "OSM way 833125840 (shop=mall)" },
+    { "code": "C10", "name": "Yashano Mall Naga", "lat": 13.6157368, "lng": 123.1948488, "radiusM": 200, "source": "OSM way 835699893 (naga-places-2026-10-16)" },
+    { "code": "C11", "name": "Metro Gaisano", "lat": 13.6218468, "lng": 123.1984815, "radiusM": 200, "source": "OSM relation 11521639 (shop=mall)" },
+    { "code": "C12", "name": "Avenue Plaza", "lat": 13.6323011, "lng": 123.1962343, "radiusM": 200, "source": "OSM node 6982064017 (shop=mall)" }
+  ]
+}

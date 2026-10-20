@@ -65,6 +65,8 @@ export const ride = (stops: Pin[], variant: number, routeCode: string, routeName
   boardMeasureM: null as number | null,
   alightMeasureM: null as number | null,
   stopMeasuresM: null as number[] | null,
+  /** A body from before the 2026-10-20 revision: no route display. */
+  display: null as { letter: string | null; title: string; unverified: boolean } | null,
 });
 
 export const ORIGIN = { lat: BASE.lat - 0.001, lng: BASE.lng };

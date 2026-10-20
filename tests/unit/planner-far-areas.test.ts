@@ -122,8 +122,12 @@ describe("far areas: zone membership and the far note", () => {
   });
 
   it("far note: both ends far names the destination zone ('to')", () => {
-    expect(plan(CARARAYAN, PACOL).farNote).toBe(farNote("Pacol"));
-    expect(plan(PACOL, CARARAYAN).farNote).toBe(farNote("Cararayan and San Isidro"));
+    // Revision 2026-10-20: the only jeepney between two far zones rides in to Centro and out again (2 rides, about
+    // 4 × the trip), so the detour guard drops it and the note says the special-trip fare is not fixed.
+    const a = plan(CARARAYAN, PACOL);
+    expect(a.farNote).toBe("Local report: tricycles to Pacol charge special-trip fares that are not fixed.");
+    expect(a.jeepneyReason).toBe("roundabout");
+    expect(plan(PACOL, CARARAYAN).farNote).toBe("Local report: tricycles to Cararayan and San Isidro charge special-trip fares that are not fixed.");
   });
 
   it("8 Pacol → a point in Pacol 900 m away (no jeepney): ONE unlabelled special-trip tricycle, no long walk card, nothing Recommended", () => {
@@ -138,12 +142,11 @@ describe("far areas: zone membership and the far note", () => {
     assertSpecialFallback(tricycle(p)!);
   });
 
-  it("10 Plaza Rizal → SM City: not far, cheapest jeepney Recommended, tricycle unlabelled, no far note", () => {
+  it("10 Plaza Rizal → SM City: not far, a city-centre trip (revision 2026-10-20): the tricycle is Recommended and first, no far note", () => {
     const p = plan(PLAZA_RIZAL, SM_CITY);
     expect(p.farNote).toBeUndefined();
-    expect(p.options[0]!.mode).toBe("jeepney");
+    expect(p.options[0]!.mode).toBe("tricycle");
     expect(p.options[0]!.labels).toContain("Recommended");
-    expect(tricycle(p)!.labels).toEqual([]);
     expect(recommended(p)).toHaveLength(1);
   });
 

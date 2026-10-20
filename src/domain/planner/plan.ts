@@ -35,6 +35,12 @@
 // to its first boarding point (or there is none): tricycle (over 600 m) to the zone's loading point, walk, one ride, walk; id
 // "tri>{ride id}", after the jeepneys; Recommended only when there is no other jeepney option.
 // Non-far trips are unchanged.
+// Planner revision 2026-10-20 (owner): a jeepney candidate is kept only when its ride metres are at most
+// JEEP_MAX_DETOUR × the straight-line trip + JEEP_DETOUR_SLACK_M (no loops, no roaming), before Pareto, vias and labels;
+// with none left jeepneyReason is "roundabout" and the no-jeepney rules apply unchanged. City centre (centro.ts): both
+// ends inside → jeepneys only when they drop off within PASSES_DESTINATION_M, never Recommended; the tricycle is
+// Recommended (≥ 500 m; the walk keeps it under 500 m) and listed first; no jeepney left → jeepneyReason "centro".
+// Each ride carries `display` (route-display.ts); the plain tricycle carries the published tricycle terminals near its ends.
 // Via groups (T5, far-areas viaGroups): when 2+ routes of one group have a one-ride candidate (after must-save-walking),
 // the jeepney block is the Pareto picks plus the best candidate of each such route, each carrying `via` (data for a
 // chip), within MAX_OPTIONS minus the walk, access, tricycle and padyak options. Trim: non-via extras (worst score
@@ -55,6 +61,9 @@ import { boundedDistances, padyakAreas, routeStreet, snapWalk, type StreetRoute,
 import {
   fareClasses, legFareEstimate, padyakFare, sumFares, tricycleFare, type LegFare, type PadyakFare, type TricycleFare, type TripFare,
 } from "./fares";
+import { inCentro } from "./centro";
+import { routeDisplay, type RouteDisplay } from "./route-display";
+import { nearestTricycleTerminal } from "../trip/tricycle-hint";
 import { FAR_AREAS, locatedTerminals, nearestAnchorId, ROUTE_BOARDING_LINK_M, zoneOf, type FarZone, type LocatedTerminal, type ViaGroup } from "./far-areas";
 import { buildPlanningNetwork, type PlanningNetwork } from "./graph";
 import { PLAN_LABELS, SAME_PLACE_M, UNVERIFIED_ROUTE_BADGE, type PlanLabel } from "./labels";
@@ -86,6 +95,10 @@ export const ACCESS_TRICYCLE_MIN_WALK_M = 600;
 export const accessWanted = (firstWalksM: readonly number[]) => Math.min(...firstWalksM) > ACCESS_TRICYCLE_MIN_WALK_M;
 /** Review I3: an access tricycle of 600 m or less is no better than walking to the loading point. */
 export const accessTricycleOk = (tricycleM: number) => tricycleM > ACCESS_TRICYCLE_MIN_WALK_M;
+/** Revision 2026-10-20: a jeepney is offered only when its ride is at most this × the straight-line trip (+ slack). Owner-tunable. */
+export const JEEP_MAX_DETOUR = 2.0;
+/** Slack added to the detour limit so short trips can still ride a block or two around. */
+export const JEEP_DETOUR_SLACK_M = 300;
 const WALK_RADIUS_M = 1500;
 /** Approach-run search step (samples of 25 m) when the projection's walk is over the cap. */
 const RUN_STRIDE = 4;
@@ -134,6 +147,8 @@ export type RideLeg = {
   alightMeasureM: number;
   /** Route notes (near ones first) and the flagged-path note. */
   notes: string[];
+  /** The sign letter (null when not confirmed) and the "Centro-…" title (route-display.ts). */
+  display: RouteDisplay;
 };
 
 /** street_graph: routed; straight_line: no street route found ("Route not confirmed"); unavailable: no graph. */
@@ -166,12 +181,19 @@ export type PlanOption = {
   via?: PlanVia;
   /** A special-trip tricycle at a far end (fare not fixed). Absent otherwise. */
   specialTrip?: true;
+  /** Plain tricycle only: the published tricycle terminal nearest each end (within 600 m). Absent when none. */
+  tricycleTerminals?: TricycleTerminalRef[];
+};
+
+/** A published tricycle terminal near a trip end. `todas`: the TODA names on file (far-areas data), never invented. */
+export type TricycleTerminalRef = {
+  side: "origin" | "destination"; code: string; name: string; distanceM: number; todas: string[]; source: string;
 };
 
 /** The planner emits only outside_city and same_place; the others remain for older saved bodies. */
 export type NoCoverageReason =
   | "outside_city" | "same_place" | "no_stop_near_origin" | "no_stop_near_destination" | "walk_shorter" | "no_route";
-export type JeepneyReason = "no_path_near_origin" | "no_path_near_destination" | "walk_shorter" | "no_route";
+export type JeepneyReason = "no_path_near_origin" | "no_path_near_destination" | "walk_shorter" | "no_route" | "roundabout" | "centro";
 
 export type PlannerNetwork = { lines: { lines: readonly PlanningLine[] } | null; streets: WalkGraph | null };
 
@@ -192,7 +214,7 @@ export type TripPlan = {
 
 type PlannerSnapshot = Pick<NetworkSnapshot, "revision" | "stops" | "variants" | "fareRules"> & Partial<Pick<NetworkSnapshot, "routes">> & {
   /** Published terminals; only those with a coordinate are used (far-area tricycle terminals). */
-  terminals?: readonly { code: string; name: string; lat: number | null; lng: number | null }[];
+  terminals?: readonly { code: string; name: string; lat: number | null; lng: number | null; modes?: readonly string[] }[];
 };
 
 // ---------------------------------------------------------------- planning network memo
@@ -256,7 +278,7 @@ function dominates(a: Cand, b: Cand): boolean {
 
 function search(
   net: PlanningNetwork, g: WalkGraph | null, origin: LatLng, destination: LatLng, directM: number, accessCapM: number, egressCapM: number,
-  originFar = false, destinationFar = false,
+  originFar = false, destinationFar = false, maxRideM = Number.POSITIVE_INFINITY,
 ) {
   const access = walker(g, origin, WALK_RADIUS_M, accessCapM);
   const egress = walker(g, destination, WALK_RADIUS_M, egressCapM);
@@ -299,6 +321,7 @@ function search(
 
   const best = new Map<string, Cand>();
   let walkShorter = false;
+  let roundabout = false;
   const consider = (hops: Hop[], walks: Walk[]) => {
     const walkM = walks.reduce((s, w) => s + w.m, 0);
     if (walkM >= directM) {
@@ -306,6 +329,11 @@ function search(
       return;
     }
     const rideM = hops.reduce((s, h) => s + h.rideM, 0);
+    // Detour guard (revision 2026-10-20): a ride that loops or roams far past the trip is never offered.
+    if (rideM > maxRideM) {
+      roundabout = true;
+      return;
+    }
     const score = walkM + RIDE_WEIGHT * rideM + TRANSFER_PENALTY_M * (hops.length - 1);
     const id = hops.map((h) => `${net.variants[h.v]!.variantId}@${round10(h.board.measureM)}-${round10(h.alight.measureM)}`).join(">");
     const seq = hops.map((h) => net.variants[h.v]!.variantId).join(">");
@@ -355,7 +383,7 @@ function search(
   const reason: JeepneyReason | null = options.length > 0 ? null
     : !boards.some((b) => b.length > 0) ? "no_path_near_origin"
       : !alights.some((a) => a.length > 0) ? "no_path_near_destination"
-        : walkShorter ? "walk_shorter" : "no_route";
+        : roundabout ? "roundabout" : walkShorter ? "walk_shorter" : "no_route";
   return { options, reason, alights, cands };
 }
 
@@ -419,6 +447,7 @@ function jeepneyOption(
       fare: legFareEstimate(h.rideM, snapshot.fareRules, { classes: fareClasses(fleet.colourKey), reports: route?.fareReports ?? [] }),
       mode: v.mode, fleet, distanceBasis: "approximate_path", boardMeasureM: board.measureM, alightMeasureM: alight.measureM,
       notes: rideNotes(route?.notes ?? [], [board, alight, destination], v.status === "flagged"),
+      display: routeDisplay(v.routeCode, v.routeName),
     };
     legs.push(leg);
     rides.push(leg);
@@ -493,11 +522,29 @@ function tricycleOption(
   const route = g ? routeStreet(g, origin, destination, { mode: "tricycle", now }) : null;
   const leg = tricycleLeg(g, snapshot, origin, destination, now, route, special);
   const fare = leg.fare;
+  const terminals = special ? [] : tricycleTerminals(snapshot, origin, destination);
   return {
     id: "tricycle", mode: "tricycle", labels: recommended ? ["Recommended"] : [], legs: [leg], rides: 0, walkMeters: 0, walkEstimateMeters: 0,
     rideMeters: 0, score: 0, fare: { minCentavos: fare.minCentavos, maxCentavos: null, status: fare.status, completeness: "estimate" }, evidence: "provisional",
     ...(special && { specialTrip: true as const }),
+    ...(terminals.length > 0 && { tricycleTerminals: terminals }),
   };
+}
+
+/** The published tricycle terminal nearest each end (tricycle-hint.ts, 600 m), once per terminal, with its TODAs on file. */
+function tricycleTerminals(snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng): TricycleTerminalRef[] {
+  const terminals = (snapshot.terminals ?? []).map((t) => ({ ...t, modes: [...(t.modes ?? [])] }));
+  const out: TricycleTerminalRef[] = [];
+  for (const [side, p] of [["origin", origin], ["destination", destination]] as const) {
+    const t = nearestTricycleTerminal(p, p, terminals);
+    if (!t || out.some((x) => x.code === t.code)) continue;
+    const todas = FAR_AREAS.tricycleTerminals.find((x) => x.terminalCode === t.code)?.todas ?? [];
+    out.push({
+      side, code: t.code, name: t.name, distanceM: t.distanceM, todas: [...todas],
+      source: todas.length > 0 ? "Published terminal list; TODA names from local reports, unconfirmed" : "Published terminal list; no TODA name on file",
+    });
+  }
+  return out;
 }
 
 function padyakOption(g: WalkGraph | null, snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng, now: Date): PlanOption | null {
@@ -645,7 +692,10 @@ export function planTrip(
   const farZone = destinationZone ?? originZone;
   const net = planningNetwork(snapshot, network.lines);
   const cap = (z: FarZone | null) => (z ? FAR_END_WALK_CAP_M : MAX_ACCESS_WALK_GRAPH_M);
-  const jeep = search(net, g, origin, destination, direct.m, cap(originZone), cap(destinationZone), originZone !== null, destinationZone !== null);
+  const maxRideM = JEEP_MAX_DETOUR * haversineMeters(origin, destination) + JEEP_DETOUR_SLACK_M;
+  const jeep = search(net, g, origin, destination, direct.m, cap(originZone), cap(destinationZone), originZone !== null, destinationZone !== null, maxRideM);
+  // City centre (revision 2026-10-20): both ends inside the centre anchors (never a far trip).
+  const centro = farZone === null && inCentro(origin) && inCentro(destination);
   // Access option (review I3 ruling): destination far, origin not; W = the shortest first walk among the jeepney
   // options shown (any route, transfers included); offered when there is none or W > ACCESS_TRICYCLE_MIN_WALK_M.
   const access = destinationZone && originZone === null && accessWanted(jeep.options.map((x) => x.c.walks[0]!.m))
@@ -681,7 +731,7 @@ export function planTrip(
     const dropped = new Set(trimOrder.slice(0, Math.max(0, pool.length - budget)));
     block = pool.filter((x) => !dropped.has(x)).sort((a, b) => compare(a.c, b.c));
   }
-  const jeepBuilt: { option: PlanOption; c: Cand }[] = [];
+  let jeepBuilt: { option: PlanOption; c: Cand }[] = [];
   for (const { c, labels } of block) {
     const o1 = jeepneyOption(c, [...labels], net, g, snapshot, origin, destination);
     // Only the best candidate of a via route carries the chip (a second variant of the same route does not).
@@ -690,10 +740,12 @@ export function planTrip(
   }
   const fareMin = (opt: PlanOption) => opt.fare.minCentavos ?? Number.POSITIVE_INFINITY;
   jeepBuilt.sort((a, b) => fareMin(a.option) - fareMin(b.option) || a.option.score - b.option.score);
+  // City centre: a jeepney stays only when it drops off at the destination; it is never Recommended there.
+  if (centro) jeepBuilt = jeepBuilt.filter((x) => x.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M);
   // The cheapest jeepney is the one that may be Recommended (T7); under 500 m only when it passes the destination
   // (audit 2026-10-18: checking a different option than the one labelled recommended a ride that does not).
   const cheapest = jeepBuilt[0];
-  const jeepRecommended = cheapest !== undefined && (!short || cheapest.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M);
+  const jeepRecommended = !centro && cheapest !== undefined && (!short || cheapest.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M);
   if (walkShown) {
     options.push({
       id: "walk", mode: "walk", labels: jeepRecommended ? [] : ["Recommended"], legs: [walkLeg(g, o, d, direct, directRoute ?? undefined)], rides: 0,
@@ -707,13 +759,17 @@ export function planTrip(
   if (jeepRecommended && cheapest) cheapest.option.labels.unshift("Recommended");
   options.push(...jeepBuilt.map((x) => x.option));
   if (access) options.push(access);
-  if (jeep.options.length > 0 || access) notes.unshift(UNVERIFIED_ROUTE_BADGE);
+  if (jeepBuilt.length > 0 || access) notes.unshift(UNVERIFIED_ROUTE_BADGE);
   if (farZone === null) options.push(tricycleOption(g, snapshot, origin, destination, now, !short && !jeepRecommended));
   else if (special) options.push(tricycleOption(g, snapshot, origin, destination, now, false, special));
   if (padyak) options.push(padyak);
+  // City centre: the Recommended tricycle is the top option, listed first.
+  const tri = centro ? options.findIndex((x) => x.id === "tricycle" && x.labels.includes("Recommended")) : -1;
+  if (tri > 0) options.unshift(...options.splice(tri, 1));
+  const jeepneyReason: JeepneyReason | null = access || jeepBuilt.length > 0 ? null : (jeep.reason ?? "centro");
 
   return {
-    revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: direct.m, jeepneyReason: access ? null : jeep.reason,
+    revisionId, coverage: "provisional", reason: null, directWalkEstimateMeters: direct.m, jeepneyReason,
     options: options.slice(0, MAX_OPTIONS), notes,
     // "Point you to the jeepney terminal" only when a jeepney (or access) option is shown; the special-trip fallback says no more.
     ...(farZone && { farNote: `Local report: tricycles ${destinationZone ? "to" : "from"} ${farZone.name} charge special-trip fares${jeep.options.length > 0 || access ? ", so we point you to the jeepney terminal instead" : " that are not fixed"}.` }),

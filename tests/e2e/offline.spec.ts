@@ -240,7 +240,7 @@ test("offline: a trip is re-planned on the phone from the cached snapshot, with 
 
 test("offline after one online trip: overview, ride lines and street walk paths draw from the cache; no plan is stored (Task 15)", async ({ page, context }) => {
   await firstVisit(page);
-  await setEnds(page);
+  await setEnds(page, true);
   await chooseOption(page);
   // Online: the walk graph is fetched the first time a trip is shown, and the worker keeps it.
   await expect(page.getByTestId("trip-detail").locator("[data-path=street]").first()).toBeAttached();
@@ -256,9 +256,8 @@ test("offline after one online trip: overview, ride lines and street walk paths 
   await expect(page.getByTestId("guidance")).toBeVisible();
   await endGuidance(page);
   await expect(page.getByTestId("trip-option").first()).toBeVisible();
-  // The Recommended option is the tricycle in this fixture, and its leg carries no street path, so the
-  // preview draws no jeepney ride line; the stored lines are exercised by opening the jeepney option below.
-  await chooseOption(page);
+  // Opening the jeepney option draws its ride line from the stored lines.
+  await chooseOption(page, await jeepneyIndex(page));
   await expect(page.locator("path.pn-line--ride").first()).toBeAttached();
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
   // Street paths, not straight lines: the walk graph came from the cache.
@@ -278,7 +277,7 @@ test("offline before the walk graph was ever stored: walks are straight dotted l
   // The walk graph never arrives online (so it is never stored).
   await context.route(/\/api\/v1\/network\/walk-graph\//, (route) => route.abort("connectionfailed"));
   await firstVisit(page);
-  await setEnds(page);
+  await setEnds(page, true);
   await chooseOption(page);
   await page.getByTestId("trip-start").click();
   await expect(page.getByTestId("guidance")).toBeVisible();
@@ -286,11 +285,17 @@ test("offline before the walk graph was ever stored: walks are straight dotted l
   await page.reload();
   await expect(page.getByTestId("guidance")).toBeVisible();
   await endGuidance(page);
-  await chooseOption(page);
+  await chooseOption(page, await jeepneyIndex(page));
   await expect(page.locator("path.pn-line--walk").first()).toBeAttached();
   await expect(page.getByTestId("trip-detail")).toContainText("Street paths need a connection the first time.");
   expect((await cacheEntries(page)).some((e) => e.url.includes("/api/v1/network/walk-graph/"))).toBe(false);
 });
+
+/** The first jeepney card (the tricycle or a walk may come first). */
+async function jeepneyIndex(page: Page): Promise<number> {
+  await expect(page.locator('[data-testid="trip-option"][data-mode="jeepney"]').first()).toBeAttached();
+  return page.getByTestId("trip-option").evaluateAll((els) => els.findIndex((e) => e.getAttribute("data-mode") === "jeepney"));
+}
 
 async function endGuidance(page: Page) {
   await page.getByRole("button", { name: "End guidance" }).click();
@@ -511,10 +516,12 @@ for (const colorScheme of ["light", "dark"] as const) {
 const searchBox = (page: Page) => page.getByRole("searchbox", { name: "Search places, stops and routes" });
 
 /** Plaza Rizal → SM City Naga through Search, inside the app (the home frame keeps the trip). */
-async function setEnds(page: Page) {
+/** Plaza Rizal to SM City Naga by default. `outsideCentro`: to a place past the city centre, where a jeepney is still
+ * offered (Plaza Rizal to SM is a city-centre trip: tricycle only since the 2026-10-20 revision). */
+async function setEnds(page: Page, outsideCentro = false) {
   await openSearch(page);
-  await searchBox(page).fill("SM City");
-  await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
+  await searchBox(page).fill(outsideCentro ? "Notice Board" : "SM City");
+  await page.getByTestId("search-result-osm").filter({ hasText: outsideCentro ? "Synthetic Notice Board" : "SM City Naga" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await openSearch(page, "start");
   await searchBox(page).fill("plaza rizal");

@@ -16,6 +16,10 @@
 // `basis`, and `tricycle`/`padyak` legs join walk and ride. Options carry a `mode`, labels may be
 // empty, the plan has a `jeepneyReason`. Every new field has a default, so format-1 bodies (saved,
 // cached) still parse.
+//
+// Revision 2026-10-20 (additive, defaults keep older bodies parsing): a ride's `display` ({ letter, title, unverified }:
+// the sign letter when confirmed, else null, and the "Centro-…" title), a plain tricycle's `tricycleTerminals`, and the
+// jeepneyReasons "roundabout" (every jeepney loops or roams) and "centro" (city-centre trip, no jeepney drops off there).
 import { z } from "zod";
 import { isInsideNaga } from "../geo/naga";
 import { encodePolyline } from "../geo/polyline";
@@ -122,6 +126,8 @@ const rideLegSchema = z.object({
   stopMeasuresM: z.array(z.number().min(0)).nullable().default(null),
   /** Route notes (near ones first) and the flagged-path note. */
   notes: z.array(z.string()).default(() => []),
+  /** Revision 2026-10-20: sign letter (null when not confirmed) and "Centro-…" title; null in older bodies. */
+  display: z.object({ letter: z.string().min(1).max(2).nullable(), title: z.string().min(1), unverified: z.boolean() }).nullable().default(null),
 }).refine(
   (l) => (l.distanceBasis === "approximate_path") === (l.boardMeasureM !== null && l.alightMeasureM !== null)
     && (l.boardMeasureM === null) === (l.alightMeasureM === null),
@@ -200,6 +206,10 @@ export const planOptionSchema = z.object({
   via: z.object({ group: z.string(), routeCode: z.string(), label: z.string(), note: z.string().nullable() }).optional(),
   /** Increment F: a special-trip tricycle (fare not fixed); absent in older bodies and on every other option. */
   specialTrip: z.literal(true).optional(),
+  /** Revision 2026-10-20: plain tricycle only, the published tricycle terminal near each end; absent when none and in older bodies. */
+  tricycleTerminals: z.array(z.object({
+    side: z.enum(["origin", "destination"]), code: z.string(), name: z.string(), distanceM: meters, todas: z.array(z.string()), source: z.string(),
+  })).min(1).optional(),
 }).transform((o) => ({ ...o, mode: o.mode ?? legMode(o.legs.map((l) => l.kind)) }))
   .refine((o) => o.mode === legMode(o.legs.map((l) => l.kind)), { message: "the mode is the one the legs travel" });
 // On the wire a walk leg's `path` is the encoded street path (string | null). The client replaces it
@@ -236,7 +246,7 @@ export const planResponseSchema = z.object({
     reason: z.enum(["outside_city", "same_place", "no_stop_near_origin", "no_stop_near_destination", "walk_shorter", "no_route"]).nullable(),
     directWalkEstimateMeters: meters.nullable(),
     /** Why there is no jeepney option; null when there is one (and in older bodies). */
-    jeepneyReason: z.enum(["no_path_near_origin", "no_path_near_destination", "walk_shorter", "no_route"]).nullable().default(null),
+    jeepneyReason: z.enum(["no_path_near_origin", "no_path_near_destination", "walk_shorter", "no_route", "roundabout", "centro"]).nullable().default(null),
     options: z.array(planOptionSchema).max(6),
     notes: z.array(z.string()),
     /** Increment F: why no tricycle is suggested when an end is in a far zone; null otherwise and in older bodies. */
