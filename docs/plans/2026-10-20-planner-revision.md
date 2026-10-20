@@ -25,7 +25,19 @@ the tricycle is the top option; tricycle options name the terminal or TODA.
    - at 500 m or more the tricycle is Recommended and listed first; under 500 m the walk keeps Recommended (owner
      walk rule unchanged);
    - with no jeepney left, `jeepneyReason` is `"centro"` ("In the city centre, a tricycle takes you there directly").
-3. Unchanged: exactly one Recommended (except the legal far/no-jeepney case); far zones (no plain tricycle,
+3. **Far drop-offs** (owner, 2026-10-20: "When showing trip option for some destination that may have 300 to 400
+   meters away from a jeepney usual route and nearest drop, suggest it anyway, but it was not the top option.").
+   Destination not in a far zone. For each jeepney route that is not already the last ride of a shown option, the
+   planner takes its candidate (fewest rides, then nearest drop-off) whose last drop-off is over the near limit
+   (`JEEP_NEAR_DROP_M` 300 m; in the city centre `PASSES_DESTINATION_M` 100 m) and at most `JEEP_FAR_DROP_MAX_M`
+   (400 m) straight-line from the destination. The candidate has already passed the detour guard and must-save-walking.
+   It is appended after the tricycle and padyak, nearest drop-off first, with no label, never Recommended; its walk
+   after the drop-off is the usual last walk leg. `jeepneyReason` is null when one is shown. The planner's own picks
+   are unchanged (a picked option dropping off 300 m or more away keeps its place and may stay Recommended, e.g.
+   Plaza Rizal → Ateneo, about 400 m from the campus centroid). One-Recommended exception: if a far drop-off option
+   were the only one able to carry Recommended, the first one would; today it cannot happen, because a far drop-off
+   is only added beside a shown jeepney, a walk card or a plain tricycle. The planner keeps that line as a guard.
+4. Unchanged: exactly one Recommended (except the legal far/no-jeepney case); far zones (no plain tricycle,
    special-trip card, jeepney via the terminal); the cheapest surviving jeepney is Recommended from 500 m outside
    the centre; tricycle and padyak never in minutes; "Unverified route"; no e-jeepney; modern jeeps on R4 and R7 only.
 
@@ -36,6 +48,8 @@ the tricycle is the top option; tricycle options name the terminal or TODA.
 | `JEEP_MAX_DETOUR` | 2.0 | `src/domain/planner/plan.ts` (owner-tunable; Jev certainty 0.23, leaning high, controller decision) |
 | `JEEP_DETOUR_SLACK_M` | 300 m | `src/domain/planner/plan.ts` |
 | `PASSES_DESTINATION_M` | 100 m (existing) | `src/domain/planner/plan.ts` |
+| `JEEP_NEAR_DROP_M` | 300 m (far drop-off starts above it, outside the centre) | `src/domain/planner/plan.ts` (owner-tunable) |
+| `JEEP_FAR_DROP_MAX_M` | 400 m (farthest far drop-off offered) | `src/domain/planner/plan.ts` (owner-tunable) |
 | centro anchor radii | 200–600 m per anchor | `data/planning/centro-2026-10-20.json` |
 | tricycle terminal match | 600 m (existing `TRICYCLE_TERMINAL_MAX_M`) | `src/domain/trip/tricycle-hint.ts` |
 
@@ -101,6 +115,11 @@ guard: two via-group test trips (the old ones rode R3/R4 around their circuits) 
 to Pacol: the only jeepney rides in to Centro and out again, so now a special-trip card, reason "roundabout").
 Two offline e2e tests planned Plaza Rizal to SM City Naga (now a city-centre trip, tricycle only) to exercise cached
 ride lines; they now plan Plaza Rizal to a fixture place past the centre and open the jeepney card.
+
+Far drop-offs (rule 3, branch `feat/far-drop`): 128 of the 200 trips are unchanged. 72 gain 164 far drop-off jeepney
+options (1 to 5 each, drop-offs 102 to 400 m). Every earlier option is byte-identical, Recommended changes on 0 trips,
+and no option is trimmed. 12 city-centre trips that had no jeepney (reason "centro") now list jeepneys after the
+tricycle. Jeepney options: 250 → 414.
 
 ## Tests
 
