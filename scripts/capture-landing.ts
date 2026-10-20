@@ -166,6 +166,11 @@ async function main() {
     await page.getByTestId("options-toggle").click();
     await sheetSettled(page);
     await page.waitForTimeout(500);
+    // Opening the list can leave it scrolled a little: show it from its top.
+    await page.getByTestId("trip-sheet").evaluate((el) => {
+      for (const n of [el, ...el.querySelectorAll("*")]) if (n.scrollTop) n.scrollTop = 0;
+    });
+    await page.waitForTimeout(300);
     await save(page, `far-${theme}`);
 
     // Report a correction (the first step of the wizard; nothing is sent).
