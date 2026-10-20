@@ -5,7 +5,7 @@ import { buildPlanResponse, planResponseSchema } from "@/domain/api/plan";
 import { haversineMeters } from "@/domain/geo/geometry";
 import type { LatLng } from "@/domain/geo/types";
 import { CENTRO, inCentro } from "@/domain/planner/centro";
-import { JEEP_DETOUR_SLACK_M, JEEP_MAX_DETOUR, planTrip, type TripPlan } from "@/domain/planner/plan";
+import { JEEP_DETOUR_SLACK_M, JEEP_FAR_DROP_MAX_M, JEEP_MAX_DETOUR, planTrip, type TripPlan } from "@/domain/planner/plan";
 import { ROUTE_DISPLAY, routeDisplay } from "@/domain/planner/route-display";
 import { realLines, realLinesSnapshot } from "../fixtures/real-lines";
 import { realStreets } from "../fixtures/real-streets";
@@ -95,7 +95,7 @@ describe("city centre (CENTRO anchors)", () => {
     ["Integrated Southbound Terminal (LCC) → SM City Naga", "C04", "C05"],
     ["SM City Naga → Robinsons Place Naga", "C05", "C06"],
     ["Robinsons Place Naga → Plaza Rizal", "C06", "C01"],
-  ])("%s: the tricycle is Recommended and listed first; a jeepney only when direct and dropping off within 100 m", (_n, a, b) => {
+  ])("%s: the tricycle is Recommended and listed first; a jeepney only when direct and dropping off within 100 m (400 m, owner 2026-10-20, never Recommended)", (_n, a, b) => {
     const o = anchor(a);
     const d = anchor(b);
     const p = plan(o, d);
@@ -107,7 +107,8 @@ describe("city centre (CENTRO anchors)", () => {
     for (const j of jeepneys(p)) {
       const last = j.legs.filter((l) => l.kind === "ride").at(-1)!;
       if (last.kind !== "ride") throw new Error("a ride");
-      expect(haversineMeters(last.alight, d)).toBeLessThanOrEqual(100);
+      expect(haversineMeters(last.alight, d)).toBeLessThanOrEqual(j.labels.length === 0 ? JEEP_FAR_DROP_MAX_M : 100);
+      expect(j.labels).not.toContain("Recommended");
     }
     expect((p.jeepneyReason === null) === (jeepneys(p).length > 0)).toBe(true);
   });
