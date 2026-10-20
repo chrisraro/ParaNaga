@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- pre-encoded WebP captures, see device-frame.tsx. */
 
 import { useState, type CSSProperties } from "react";
-import { SHOT_H, SHOT_W } from "@/ui/landing/landing-content";
+import { SHOT_H, SHOT_W } from "@/ui/landing/shot-size";
 
 /** The same home screen in light and dark, split by a slider (a native range input). */
 export function ThemeCompare() {

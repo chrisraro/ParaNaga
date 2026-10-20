@@ -1,40 +1,28 @@
 // Landing page copy and facts, kept in one place so tests/unit/landing-copy.test.ts can hold them to
 // the app's copy rules (docs/spec/06-screens.md §6.5): no live, ETA or arriving wording, nothing
 // called verified that is not, no e-jeepneys, estimates as ranges, tricycles and padyaks never
-// timed. Every fact here comes from the app itself (src/domain/planner/route-display.ts, the help
-// articles, docs/spec/01-product.md); nothing is invented.
+// timed. Every fact here comes from the app itself (route names straight from
+// src/domain/planner/route-display.ts, the help articles, docs/spec/01-product.md); nothing is invented.
 
-/** The route groups as the planner names them: sign letter (only where a source gives one) + title. */
-export const ROUTES: readonly { letter: string | null; title: string }[] = [
-  { letter: null, title: "Centro-Cararayan-San Isidro" },
-  { letter: "E", title: "Centro-Del Rosario via Magsaysay Ave" },
-  { letter: null, title: "Centro-Del Rosario via Roxas Ave (Diversion)" },
-  { letter: null, title: "Centro-Del Rosario via Panganiban Drive" },
-  { letter: null, title: "Centro-Francia-San Felipe" },
-  { letter: "I", title: "Centro-Pacol" },
-  { letter: "J", title: "Centro-Carolina-Panicuason" },
-  { letter: "A", title: "Centro-Magsaysay Loop" },
-  { letter: "B", title: "Centro-Magsaysay Loop" },
-  { letter: "C", title: "Centro-Bagumbayan-Magsaysay-Roxas Loop" },
-  { letter: "D", title: "Centro-Francia-Magsaysay-Diversion" },
-];
+import { ROUTE_DISPLAY } from "@/domain/planner/route-display";
 
-// The captures are 412 x 915 CSS px (Pixel 7 emulation) at 2x.
-export const SHOT_W = 824;
-export const SHOT_H = 1830;
+/** The routes exactly as the app names them (sign letter where one is known, then the title). */
+export const ROUTES: readonly { letter: string | null; title: string }[] = Object.values(ROUTE_DISPLAY).map(({ letter, title }) => ({ letter, title }));
+
+export { SHOT_H, SHOT_W } from "@/ui/landing/shot-size";
 
 export type Screen = "home" | "search" | "directions" | "options" | "detail" | "saved" | "far" | "report" | "hero";
 
 /** What each capture shows, for its alt text (public/landing/<screen>-<theme>.webp). */
 export const SCREEN_ALT: Record<Screen, string> = {
-  hero: "ParaNaga on a phone: a street map of Naga City with a trip from Plaza Rizal to Ateneo de Naga University, the C Centro-Bagumbayan-Magsaysay-Roxas Loop, an estimated fare of ₱14 and an Unverified route badge.",
+  hero: "ParaNaga on a phone: a street map of Naga City with a trip from Plaza Rizal to Ateneo de Naga University and two options under it: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, marked Unverified route, and a tricycle at a minimum fare of ₱15.",
   home: "ParaNaga's home screen: a street map of central Naga City with a Where to? bar, chips for Food & drink, Schools, Health and Markets & malls, terminal pins and a tab bar.",
   search: "Search for Ateneo: places from OpenStreetMap such as Ateneo de Naga University, and a mapped stop on Loops C and D marked Mapped candidate.",
-  directions: "Directions from Plaza Rizal to Ateneo de Naga University: a walk and a jeepney ride drawn on the map, with the C Loop, an estimated 14 to 23 minutes plus waiting, and an estimated fare of ₱14.",
-  options: "Trip options: Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop with an estimated fare of ₱14, and a tricycle card with a minimum fare of ₱15 and Time not estimated.",
-  detail: "Trip details for the C Loop: estimated 14 to 23 minutes plus waiting, estimated fare ₱14, peak-hour note, Save and Share buttons and a Start trip button.",
+  directions: "Directions from Plaza Rizal to Ateneo de Naga University: a walk and a jeepney ride drawn on the map, and two option cards: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, and a tricycle at a minimum fare of ₱15.",
+  options: "All trip options: Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise) with an estimated fare of ₱14, and a tricycle card with Time not estimated, the restricted roads it avoids and a minimum fare of ₱15.",
+  detail: "Trip details for C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise): the walk and ride on the map, estimated 14 to 23 minutes plus waiting, estimated fare ₱14, a peak-hour note and a Start trip button.",
   saved: "Saved screen: a trip from Plaza Rizal to Ateneo de Naga University marked Available offline, with its walk, ride and estimated fare.",
-  far: "Trip options to Pacol: a Local report note that tricycles to Pacol charge special-trip fares, and a Recommended J Centro-Carolina-Panicuason jeepney with an estimated fare of ₱18 to ₱25.",
+  far: "Trip options to Pacol: a Local report note that tricycles to Pacol charge special-trip fares, a Recommended J Centro-Carolina-Panicuason jeepney with an estimated fare of ₱18 to ₱25, and a Least walking option that changes from Loop C to J.",
   report: "Report a correction, step 1 of 3: choices such as Wrong curb side, Stop moved or removed and Fare mismatch.",
 };
 
@@ -64,7 +52,7 @@ export const SHOWCASE: readonly { screen: Screen; title: string; body: string }[
   {
     screen: "directions",
     title: "See the ride on the street map.",
-    body: "Plaza Rizal to Ateneo de Naga University: the walk, the jeepney and where it runs, with an estimated fare and an Unverified route badge.",
+    body: "Plaza Rizal to Ateneo de Naga University: the walk and the jeepney drawn on the street map, and the two best options right under it, the Recommended jeepney and a tricycle.",
   },
   {
     screen: "options",
@@ -86,7 +74,7 @@ export const SHOWCASE: readonly { screen: Screen; title: string; body: string }[
 export const MODES = {
   jeepney: {
     title: "Jeepneys, by sign letter and route title",
-    body: "Like the signboard: E Centro-Del Rosario via Magsaysay Ave. Routes without a sourced sign letter show their title only.",
+    body: "Like the signboard: E Centro-Del Rosario via Magsaysay Ave. A route with no known letter shows its title alone, never a guessed letter, and each route page says where its letter comes from.",
   },
   tricycle: {
     title: "Tricycles, with the terminal",

@@ -62,7 +62,8 @@ describe("landing copy", () => {
 
   it("names jeepney routes by sign letter only where the app has one", () => {
     expect(ROUTES).toHaveLength(11);
-    expect(ROUTES.filter((r) => r.letter).map((r) => r.letter)).toEqual(["E", "I", "J", "A", "B", "C", "D"]);
+    expect(ROUTES.filter((r) => r.letter).map((r) => r.letter)).toEqual(["E", "F", "G", "H", "I", "J", "A", "B", "C", "D"]);
+    expect(ROUTES[0]).toEqual({ letter: null, title: "Centro-Cararayan-San Isidro" });
     expect(MODES.jeepney.body).toContain("E Centro-Del Rosario via Magsaysay Ave");
   });
 
