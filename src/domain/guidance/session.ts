@@ -79,8 +79,8 @@ export function startSession(trip: GuidanceTrip, now: number): GuidanceSession {
   return { v: GUIDANCE_SESSION_FORMAT, trip: { ...trip, option: toWireOption(trip.option) }, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null, nearDestination: false };
 }
 
-export function sessionSteps(session: GuidanceSession, copy?: Dict["guidance"]): GuidanceStep[] {
-  return guidanceSteps(session.trip, copy);
+export function sessionSteps(session: GuidanceSession, copy?: Dict["guidance"], shared?: Pick<Dict, "trip" | "geo">): GuidanceStep[] {
+  return guidanceSteps(session.trip, copy, shared);
 }
 
 export function currentStep(session: GuidanceSession): GuidanceStep {

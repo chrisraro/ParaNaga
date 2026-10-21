@@ -9,13 +9,9 @@ import type { PlanLegDto } from "../api/plan";
 import type { RouteNote } from "../api/schemas";
 import { optionServiceWindowNote, type ServiceWindowNote } from "../eta/service-window";
 import { FLAGGED_PATH_NOTE } from "../planner/notes";
+import { en, type Dict } from "@/i18n/dict";
 
-export const EVIDENCE_LABEL: Readonly<Record<RouteNote["evidence"], string>> = {
-  official: "Ordinance or city record",
-  news: "News report",
-  community: "Community-sourced",
-  owner_report_unverified: "Local report · unverified",
-};
+export const EVIDENCE_LABEL: Readonly<Record<RouteNote["evidence"], string>> = en.trip.evidence;
 
 export type RideNoteView = {
   text: string;
@@ -35,18 +31,18 @@ export type OptionNotesView = {
 
 type RouteNotes = { routeCode: string; notes: readonly RouteNote[] };
 
-export function noteView(text: string, records: readonly RouteNote[]): RideNoteView {
+export function noteView(text: string, records: readonly RouteNote[], copy: Dict["trip"] = en.trip): RideNoteView {
   const r = records.find((n) => n.text === text);
   if (!r) return { text, evidence: null, evidenceLabel: null, sourceCodes: [], unverified: text !== FLAGGED_PATH_NOTE };
-  return { text, evidence: r.evidence, evidenceLabel: EVIDENCE_LABEL[r.evidence], sourceCodes: [...r.sourceCodes], unverified: r.evidence === "owner_report_unverified" };
+  return { text, evidence: r.evidence, evidenceLabel: copy.evidence[r.evidence], sourceCodes: [...r.sourceCodes], unverified: r.evidence === "owner_report_unverified" };
 }
 
-export function optionNotesView(option: { legs: readonly PlanLegDto[] }, routes: readonly RouteNotes[] | null | undefined, now: Date): OptionNotesView {
+export function optionNotesView(option: { legs: readonly PlanLegDto[] }, routes: readonly RouteNotes[] | null | undefined, now: Date, copy: Pick<Dict, "trip" | "eta"> = en): OptionNotesView {
   const rides = option.legs.flatMap((leg, legIndex) => {
     const texts: readonly string[] = leg.kind === "ride" ? (leg.notes ?? []) : []; // bodies from before Increment E have no notes
     if (leg.kind !== "ride" || texts.length === 0) return [];
     const records = routes?.find((r) => r.routeCode === leg.routeCode)?.notes ?? [];
-    return [{ legIndex, routeCode: leg.routeCode, notes: texts.map((t) => noteView(t, records)) }];
+    return [{ legIndex, routeCode: leg.routeCode, notes: texts.map((t) => noteView(t, records, copy.trip)) }];
   });
-  return { serviceWindow: optionServiceWindowNote(option, now), rides };
+  return { serviceWindow: optionServiceWindowNote(option, now, copy.eta), rides };
 }

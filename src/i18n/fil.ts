@@ -15,4 +15,11 @@ export const fil: Dict = {
   },
   // TODO(i18n T9): pending draft + Jev check; English until then (every key is in PENDING_T9 in the guard test).
   guidance: en.guidance,
+  // TODO(i18n T9): same for these areas (every key is in PENDING_T9 in the guard test).
+  geo: en.geo,
+  eta: en.eta,
+  trip: en.trip,
+  home: en.home,
+  shell: en.shell,
+  kit: en.kit,
 };

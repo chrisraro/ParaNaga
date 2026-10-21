@@ -4,6 +4,8 @@
 
 import type { GeolocationState } from "@/client/geo/use-geolocation";
 import type { FixAssessment } from "@/domain/geo/location-fix";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 
 export type LocationStatusKind =
   | "requesting"
@@ -30,19 +32,17 @@ export type LocationStatusCopy = {
   actionLabel?: string;
 };
 
-const PIN_LATER = "Pin your start on the map.";
-
 /** "± 25 m": accuracy rounded to whole metres. */
-export function formatAccuracy(metres: number): string {
-  return `± ${Math.round(metres)} m`;
+export function formatAccuracy(metres: number, copy: Dict["geo"] = en.geo): string {
+  return copy.accuracy(Math.round(metres));
 }
 
 /** "last fix 45 s ago" / "last fix 2 min ago": the age of the fix an endpoint was set from. */
-export function formatFixAge(ageMs: number): string {
+export function formatFixAge(ageMs: number, copy: Dict["home"] = en.home): string {
   const s = Math.round(Math.max(0, ageMs) / 1000);
-  if (s < 5) return "last fix just now";
-  if (s < 60) return `last fix ${s} s ago`;
-  return `last fix ${Math.round(s / 60)} min ago`;
+  if (s < 5) return copy.fixJustNow;
+  if (s < 60) return copy.fixSeconds(s);
+  return copy.fixMinutes(Math.round(s / 60));
 }
 
 const known = (metres: number | null): metres is number => metres !== null && Number.isFinite(metres);
@@ -57,7 +57,9 @@ export function locationStatusCopy(
    * is not moving gets no new fixes), so it must not flip back to "Finding your location…".
    */
   { gpsEndpointSet = false }: { gpsEndpointSet?: boolean } = {},
+  t: Pick<Dict, "home" | "geo"> = en,
 ): LocationStatusCopy | null {
+  const home = t.home;
   switch (state) {
     case "idle":
       return null;
@@ -65,8 +67,8 @@ export function locationStatusCopy(
       return {
         kind: "denied",
         tone: "error",
-        title: `Location off. ${PIN_LATER}`,
-        detail: "Allow location in browser settings.",
+        title: home.locationOff(home.pinLater),
+        detail: home.locationOffDetail,
         action: "pick_start",
       };
     case "unavailable":
@@ -74,21 +76,21 @@ export function locationStatusCopy(
       return {
         kind: state,
         tone: "warn",
-        title: `No location now. Pin your start.`,
+        title: home.noLocation,
         action: "pick_start",
       };
     case "unsupported":
       return {
         kind: "unsupported",
         tone: "warn",
-        title: "This browser can't share location. Pin your start.",
+        title: home.unsupported,
         action: "pick_start",
       };
     case "insecure":
       return {
         kind: "insecure",
         tone: "warn",
-        title: "Location needs https. Pin your start.",
+        title: home.insecure,
         action: "pick_start",
       };
     case "requesting":
@@ -97,33 +99,33 @@ export function locationStatusCopy(
   }
 
   if (state === "requesting" || assessment === null || (assessment.stale && !gpsEndpointSet)) {
-    return { kind: "requesting", tone: "neutral", title: "Finding your location…" };
+    return { kind: "requesting", tone: "neutral", title: home.finding };
   }
   // Outside the city the fix is never the start, whatever its accuracy.
   if (!assessment.insideCity) {
     return {
       kind: "outside_city",
       tone: "info",
-      title: "You're outside Naga City. Pin a start in Naga.",
+      title: home.outsideNaga,
       action: "pick_start",
     };
   }
   if (assessment.quality === "coarse") {
-    const rough = known(accuracy) ? `Location too rough (${formatAccuracy(accuracy)}).` : "Location too rough.";
-    return { kind: "coarse", tone: "warn", title: `${rough} Pin your start on the map.`, action: "pick_start" };
+    const rough = known(accuracy) ? home.tooRoughAt(formatAccuracy(accuracy, t.geo)) : home.tooRough;
+    return { kind: "coarse", tone: "warn", title: home.pinStartOnMap(rough), action: "pick_start" };
   }
-  const detail = known(accuracy) ? { detail: formatAccuracy(accuracy) } : {};
+  const detail = known(accuracy) ? { detail: formatAccuracy(accuracy, t.geo) } : {};
   if (assessment.quality === "approximate") {
     return {
       kind: "approximate",
       tone: "warn",
-      title: "Location approximate. Check the pin.",
+      title: home.approximate,
       ...detail,
       action: "pick_start",
-      actionLabel: "Move start pin",
+      actionLabel: home.moveStartPin,
     };
   }
-  return { kind: "precise", tone: "ok", title: "You are here", ...detail };
+  return { kind: "precise", tone: "ok", title: home.youAreHere, ...detail };
 }
 
 type Props = {
@@ -133,6 +135,7 @@ type Props = {
 
 /** The status card in the sheet. Announcements go through the home screen's live region. */
 export function LocationStatus({ copy, onPickStart }: Props) {
+  const home = useT().home;
   return (
     <div className={`pn-status pn-status--${copy.tone}`} data-testid="location-status" data-kind={copy.kind}>
       <svg className="pn-status__icon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -152,7 +155,7 @@ export function LocationStatus({ copy, onPickStart }: Props) {
         ) : null}
         {copy.action === "pick_start" ? (
           <button type="button" className="pn-status__action" onClick={onPickStart}>
-            {copy.actionLabel ?? "Choose start on map"}
+            {copy.actionLabel ?? home.chooseStartOnMap}
           </button>
         ) : null}
       </div>

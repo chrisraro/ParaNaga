@@ -24,12 +24,10 @@
 // notes, "… time not estimated", and "I've arrived" (needs location when it is the last step).
 import { en, type Dict } from "@/i18n/dict";
 import { STALE_MS, type LocationFix } from "../geo/location-fix";
-import { COMPASS_WORDS } from "../geo/bearing";
 import { decodePolyline } from "../geo/polyline";
-import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance, freeAlightText } from "../trip/present";
 import { estimateOption, type EtaLeg, type EtaOptionInput } from "../eta/eta";
-import { TIME_NOT_AVAILABLE, formatLeg, formatRemaining } from "../eta/format";
+import { formatLeg, formatRemaining } from "../eta/format";
 import { ARRIVE_NEAR_M, paraSuggested, pathRideProgress, usableFix, walkProgress, type PathRideProgress, type WalkProgress } from "./progress";
 import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
 import {
@@ -47,6 +45,8 @@ import {
 /** The English guidance copy (tests compare against it); screens pass the reader's `t.guidance`. */
 export const GUIDANCE_COPY = en.guidance;
 export type GuidanceCopy = Dict["guidance"];
+/** The shared dictionary areas guidance text is built from (trip, time and distance wording); English by default. */
+export type SharedCopy = Pick<Dict, "trip" | "eta" | "geo">;
 
 export type GuidanceAction = { event: Exclude<GuidanceEvent["type"], "fix">; label: string; kind: "primary" | "secondary" };
 export type LiveMessage = { politeness: "polite" | "assertive"; text: string };
@@ -174,11 +174,11 @@ function locationNote(fix: LocationFix | null, now: number, copy: GuidanceCopy):
 const spokenDistance = (progress: WalkProgress, place: string, copy: GuidanceCopy) =>
   progress.distanceMeters < 10 ? copy.liveUnder10(place) : copy.liveAbout(progress.distanceMeters, place);
 
-function distanceLine(progress: WalkProgress | null, estimateMeters: number, negligible: boolean, copy: GuidanceCopy): string | null {
+function distanceLine(progress: WalkProgress | null, estimateMeters: number, negligible: boolean, copy: GuidanceCopy, shared: SharedCopy): string | null {
   if (progress) {
     return copy.straightLine(progress.distanceMeters < 10 ? copy.gpsUnder10 : copy.gpsMeters(progress.distanceMeters));
   }
-  return negligible ? null : formatDistance(estimateMeters);
+  return negligible ? null : formatDistance(estimateMeters, shared.geo);
 }
 
 // ---- time left (Task 14): the snapshot's model through the eta domain, never a hand-set speed.
@@ -200,15 +200,15 @@ function currentLegEstimate(trip: GuidanceTrip, legIndex: number, current: Curre
   return res.ok ? res.estimate.legs[0]! : null;
 }
 
-function walkRemainingTime(trip: GuidanceTrip, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, progress: WalkProgress | null, now: number): string | null {
+function walkRemainingTime(trip: GuidanceTrip, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, progress: WalkProgress | null, now: number, shared: SharedCopy): string | null {
   if (step.negligible || step.legIndex === null) return null;
   if (progress && progress.distanceMeters < 15) return null;
-  if (!trip.etaModel || !(now > 0)) return TIME_NOT_AVAILABLE;
+  if (!trip.etaModel || !(now > 0)) return shared.eta.timeNotAvailable;
   const current: CurrentLeg = { kind: "walk", estimateMeters: progress ? Math.round(progress.distanceMeters * 1.3) : step.estimateMeters };
   const length = progress ? null : (trip.walkLengths?.[step.legIndex] ?? null);
   const leg = currentLegEstimate(trip, step.legIndex, current, length, now);
-  if (!leg || leg.lowMin === null || leg.highMin === null) return TIME_NOT_AVAILABLE;
-  return formatRemaining({ lowMin: leg.lowMin, highMin: leg.highMin }, "trip");
+  if (!leg || leg.lowMin === null || leg.highMin === null) return shared.eta.timeNotAvailable;
+  return formatRemaining({ lowMin: leg.lowMin, highMin: leg.highMin }, "trip", shared.eta);
 }
 
 /** The ride still ahead: measure(alight) − measure(last passed stop), else split by stop count. */
@@ -220,31 +220,31 @@ function rideMetersLeft(step: RideStep, passedIndex: number): { meters: number; 
   return { meters: (step.distanceMeters * (alightIndex - passedIndex)) / step.stopsToRide, byStopCount: true };
 }
 
-function rideRemainingTime(trip: GuidanceTrip, step: RideStep, ride: RideState, now: number, copy: GuidanceCopy): string | null {
+function rideRemainingTime(trip: GuidanceTrip, step: RideStep, ride: RideState, now: number, copy: GuidanceCopy, shared: SharedCopy): string | null {
   const alightIndex = step.stops.length - 1;
   if (alightIndex - ride.passedIndex <= 0) return null;
-  if (!trip.etaModel || !(now > 0)) return TIME_NOT_AVAILABLE;
+  if (!trip.etaModel || !(now > 0)) return shared.eta.timeNotAvailable;
   const { meters, byStopCount } = rideMetersLeft(step, ride.passedIndex);
   const current: CurrentLeg = { kind: "ride", mode: step.mode, distanceMeters: meters, distanceBasis: step.distanceBasis };
   const leg = currentLegEstimate(trip, step.legIndex, current, null, now);
-  if (!leg) return TIME_NOT_AVAILABLE;
-  if (leg.lowMin === null || leg.highMin === null) return formatLeg(leg);
-  const text = formatRemaining({ lowMin: leg.lowMin, highMin: leg.highMin }, "riding");
+  if (!leg) return shared.eta.timeNotAvailable;
+  if (leg.lowMin === null || leg.highMin === null) return formatLeg(leg, shared.eta);
+  const text = formatRemaining({ lowMin: leg.lowMin, highMin: leg.highMin }, "riding", shared.eta);
   return byStopCount ? `${text} · ${copy.byStopCount}` : text;
 }
 
-function nextRideInfo(ride: RideRef) {
-  return { chip: ride.routeChip, routeName: ride.routeName, direction: directionText(ride.loopDirection, "short", ride.routeChip), badge: UNVERIFIED_ROUTE_BADGE };
+function nextRideInfo(ride: RideRef, shared: SharedCopy) {
+  return { chip: ride.routeChip, routeName: ride.routeName, direction: directionText(ride.loopDirection, "short", ride.routeChip, shared.trip), badge: shared.trip.unverifiedBadge };
 }
 
-function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, total: number, fix: LocationFix | null, now: number, copy: GuidanceCopy): WalkView {
+function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, total: number, fix: LocationFix | null, now: number, copy: GuidanceCopy, shared: SharedCopy): WalkView {
   const toDestination = step.kind === "walk_to_destination";
   // A pinned destination is saved as "Near <stop>" (pinnedEndName); inside a sentence it reads "your pin near <stop>".
   const targetName = toDestination ? step.target.name.replace(/^Near ([^]*)$/, (_, stop: string) => copy.pinNear(stop)) : step.target.label;
   const progress = walkProgress(step.target, fix, now);
-  const distanceText = distanceLine(progress, step.estimateMeters, step.negligible, copy);
-  const remainingTime = walkRemainingTime(session.trip, step, progress, now);
-  const directionTextValue = progress?.bearing ? COMPASS_WORDS[progress.bearing] : null;
+  const distanceText = distanceLine(progress, step.estimateMeters, step.negligible, copy, shared);
+  const remainingTime = walkRemainingTime(session.trip, step, progress, now, shared);
+  const directionTextValue = progress?.bearing ? shared.geo.compass[progress.bearing] : null;
 
   let title: string;
   let subtitle: string | null = null;
@@ -286,7 +286,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
       ];
     }
     notes = at ? [copy.boardingSideUnknown(), copy.signboardUnknown(chip)] : [copy.boardingSideUnknown()];
-    nextRide = nextRideInfo(step.nextRide);
+    nextRide = nextRideInfo(step.nextRide, shared);
     const board: GuidanceAction = { event: "boarded", label: copy.boarded(chip), kind: at ? "primary" : "secondary" };
     actions = at ? [board, END] : [{ event: "atStop", label: copy.atStop, kind: "primary" }, board, END];
     if (!at && progress?.nearTarget) proposal = copy.closeTo(step.target.label, copy.atStop);
@@ -323,7 +323,7 @@ function pathProgress(trip: GuidanceTrip, step: RideStep, fix: LocationFix | nul
   return pathRideProgress(decodePolyline(path.encoded), path.isCircuit, m[0]!, m[m.length - 1]!, fix, now);
 }
 
-function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number, fix: LocationFix | null, now: number, copy: GuidanceCopy): RideView {
+function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number, fix: LocationFix | null, now: number, copy: GuidanceCopy, shared: SharedCopy): RideView {
   const alightIndex = step.stops.length - 1;
   // A GPS-backed count only while GPS still supports it (countLost: the jeepney is past the window).
   const gps = ride.gpsSeen && !ride.countLost;
@@ -331,7 +331,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
   const stopsRemaining = Math.max(0, alightIndex - ride.passedIndex);
   const alight = step.alight.label;
   const chip = step.ride.routeChip;
-  const remainingTime = rideRemainingTime(session.trip, step, ride, now, copy);
+  const remainingTime = rideRemainingTime(session.trip, step, ride, now, copy, shared);
   const onPath = pathProgress(session.trip, step, fix, now);
 
   let title: string;
@@ -362,8 +362,8 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
     stepLabel: stepLabel(step.index, total, "ride", copy),
     title,
     subtitle: chip,
-    badge: UNVERIFIED_ROUTE_BADGE,
-    alightText: step.pinned ? (title === copy.rideTo(alight) ? null : copy.getOff(alight)) : freeAlightText(alight),
+    badge: shared.trip.unverifiedBadge,
+    alightText: step.pinned ? (title === copy.rideTo(alight) ? null : copy.getOff(alight)) : freeAlightText(alight, shared.trip),
     countText: !step.pinned
       ? onPath?.offPath
         ? copy.offPath
@@ -398,7 +398,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
   };
 }
 
-function arriveView(session: GuidanceSession, steps: GuidanceStep[], copy: GuidanceCopy): ArriveView {
+function arriveView(session: GuidanceSession, steps: GuidanceStep[], copy: GuidanceCopy, shared: SharedCopy): ArriveView {
   const option = session.trip.option;
   const last = steps.at(-1);
   const named = (last?.kind === "walk_to_destination" || last?.kind === "street_ride") && last.target.name !== copy.unnamedDestination ? last.target.name : null;
@@ -409,12 +409,12 @@ function arriveView(session: GuidanceSession, steps: GuidanceStep[], copy: Guida
     title,
     body: copy.arrivedBody(named),
     summary: {
-      walkText: copy.walkSummary(formatDistance(option.walkEstimateMeters)),
+      walkText: copy.walkSummary(formatDistance(option.walkEstimateMeters, shared.geo)),
       rides: steps.flatMap((s) =>
         s.kind === "ride" ? [{ chip: s.ride.routeChip, stopsText: s.pinned ? copy.stopsCount(s.stopsToRide) : copy.alongThePath }]
         : s.kind === "street_ride" ? [{ chip: copy[s.mode], stopsText: copy.alongStreets }]
         : []),
-      fareText: fareChipText(option.fare),
+      fareText: fareChipText(option.fare, shared.trip),
     },
     actions: [{ event: "end", label: copy.done, kind: "primary" }],
     undo: undoAction(session, copy),
@@ -423,8 +423,8 @@ function arriveView(session: GuidanceSession, steps: GuidanceStep[], copy: Guida
   };
 }
 
-/** `copy`: the reader's `t.guidance` (English by default). */
-export function guidanceView(session: GuidanceSession, fix: LocationFix | null, now: number, copy: GuidanceCopy = en.guidance): GuidanceView {
+/** `copy`: the reader's `t.guidance`; `shared`: their `t` for the trip, time and distance wording (English by default). */
+export function guidanceView(session: GuidanceSession, fix: LocationFix | null, now: number, copy: GuidanceCopy = en.guidance, shared: SharedCopy = en): GuidanceView {
   if (session.status === "ended") return { screen: "ended", usesLocation: false };
   if (session.status === "missed_stop" || session.status === "got_off_early") {
     // Got off early reuses the missed-stop screen: re-plan from here, or Undo.
@@ -441,13 +441,13 @@ export function guidanceView(session: GuidanceSession, fix: LocationFix | null, 
       live: { politeness: "polite", text: title },
     };
   }
-  const steps = sessionSteps(session, copy);
-  if (session.status === "arrived") return arriveView(session, steps, copy);
+  const steps = sessionSteps(session, copy, shared);
+  if (session.status === "arrived") return arriveView(session, steps, copy, shared);
   const step = steps[session.stepIndex];
   if (!step) return { screen: "ended", usesLocation: false }; // a malformed option with no steps
-  if (step.kind === "ride") return rideView(session, session.ride!, step, steps.length, fix, now, copy);
+  if (step.kind === "ride") return rideView(session, session.ride!, step, steps.length, fix, now, copy, shared);
   if (step.kind === "street_ride") return streetView(session, step, steps.length, copy);
-  return walkView(session, step, steps.length, fix, now, copy);
+  return walkView(session, step, steps.length, fix, now, copy, shared);
 }
 
 function streetView(session: GuidanceSession, step: StreetRideStep, total: number, copy: GuidanceCopy): StreetRideView {

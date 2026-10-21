@@ -1,6 +1,7 @@
 // "How times are estimated": the basis rows, built from the revision's time-estimate model (J3,
 // D8–D11). Each row names its sources and which ends are assumptions. Pure.
 import type { EtaModel, EtaParam } from "../api/schemas";
+import { en, type Dict } from "@/i18n/dict";
 import type { EtaParamKey } from "./params";
 
 export type BasisRowKey = "walk" | "jeepney_offpeak" | "jeepney_peak" | "peak_windows" | "waiting" | "traffic";
@@ -21,8 +22,8 @@ const CITATION: Readonly<Record<string, string>> = {
   N29: "Puerto Princesa study 2025",
 };
 
-export const WAITING_ROW = "Waiting: unknown — no published schedules or headways for Naga";
-export const TRAFFIC_ROW = "Based on typical speeds. ParaNaga uses no traffic service.";
+export const WAITING_ROW = en.eta.waitingRow;
+export const TRAFFIC_ROW = en.eta.trafficRow;
 
 const cite = (codes: readonly string[]) => codes.map((c) => (CITATION[c] ? `${CITATION[c]}, ${c}` : c)).join("; ");
 const num = (n: number) => String(Math.round(n * 100) / 100);
@@ -30,14 +31,14 @@ const band = (p: EtaParam) => (p.low === p.high ? `${num(p.low!)}` : `${num(p.lo
 const notes = (...ps: EtaParam[]) => ps.flatMap((p) => (p.isAssumption && p.assumptionNote ? [p.assumptionNote] : []));
 
 /** Basis of a speed band: its sources, or which end is the assumption when the band is mixed (A2). */
-function speedBasis(p: EtaParam): string {
+function speedBasis(p: EtaParam, copy: Dict["eta"]): string {
   if (!p.isAssumption) return `(${cite(p.sourceCodes)})`;
-  if (p.sourceCodes.length === 0) return "(ParaNaga assumption)";
-  return `(upper from ${p.sourceCodes.join(", ")}; lower is a ParaNaga assumption)`;
+  if (p.sourceCodes.length === 0) return copy.speedAssumption;
+  return copy.speedMixed(p.sourceCodes.join(", "));
 }
 
 /** The six rows, in display order. Expects a model that passed the estimator's checks. */
-export function basisRows(model: EtaModel): BasisRow[] {
+export function basisRows(model: EtaModel, copy: Dict["eta"] = en.eta): BasisRow[] {
   const get = (k: EtaParamKey) => {
     const p = model.params.find((x) => x.key === k);
     if (!p) throw new Error(`time-estimate model has no ${k}`);
@@ -50,26 +51,26 @@ export function basisRows(model: EtaModel): BasisRow[] {
   const windows = get("peak_windows");
 
   const slowPct = Math.round((slow.high! / slow.low! - 1) * 100);
-  const slowBasis = slow.isAssumption ? "ParaNaga assumption" : cite(slow.sourceCodes);
+  const slowBasis = slow.isAssumption ? copy.assumption : cite(slow.sourceCodes);
   const windowList = (windows.windows ?? []).map((w) => `${w.start}–${w.end}`).join(", ");
-  const everyDay = windows.days === "every_day" ? `, applied every day${windows.isAssumption ? " (no day-of-week data)" : ""}` : "";
+  const everyDay = windows.days === "every_day" ? (windows.isAssumption ? copy.everyDayNoData : copy.everyDay) : "";
 
   return [
     {
       key: "walk",
-      text: `Walking: ${band(walk)} km/h (${cite(walk.sourceCodes)}); up to ${slowPct}% slower for crossings (${slowBasis})`,
+      text: copy.rowWalk(band(walk), cite(walk.sourceCodes), slowPct, slowBasis),
       sourceCodes: [...walk.sourceCodes, ...slow.sourceCodes],
       assumptions: notes(walk, slow),
     },
-    { key: "jeepney_offpeak", text: `Jeepney off-peak: ${band(off)} km/h ${speedBasis(off)}`, sourceCodes: [...off.sourceCodes], assumptions: notes(off) },
-    { key: "jeepney_peak", text: `Jeepney peak: ${band(peak)} km/h ${speedBasis(peak)}`, sourceCodes: [...peak.sourceCodes], assumptions: notes(peak) },
+    { key: "jeepney_offpeak", text: copy.rowOffpeak(band(off), speedBasis(off, copy)), sourceCodes: [...off.sourceCodes], assumptions: notes(off) },
+    { key: "jeepney_peak", text: copy.rowPeak(band(peak), speedBasis(peak, copy)), sourceCodes: [...peak.sourceCodes], assumptions: notes(peak) },
     {
       key: "peak_windows",
-      text: `Peak windows: ${windowList} (${cite(windows.sourceCodes)})${everyDay}`,
+      text: copy.rowWindows(windowList, cite(windows.sourceCodes), everyDay),
       sourceCodes: [...windows.sourceCodes],
       assumptions: notes(windows),
     },
-    { key: "waiting", text: WAITING_ROW, sourceCodes: [], assumptions: [] },
-    { key: "traffic", text: TRAFFIC_ROW, sourceCodes: [], assumptions: [] },
+    { key: "waiting", text: copy.waitingRow, sourceCodes: [], assumptions: [] },
+    { key: "traffic", text: copy.trafficRow, sourceCodes: [], assumptions: [] },
   ];
 }

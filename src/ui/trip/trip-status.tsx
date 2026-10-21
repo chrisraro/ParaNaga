@@ -6,31 +6,35 @@ import "./trip.css";
 
 import type { PlanErrorKind } from "@/client/trip/use-trip-plan";
 import type { PlanResponse } from "@/domain/api/plan";
+import type { Dict } from "@/i18n/dict";
 import { noCoverageCopy } from "@/domain/trip/present";
+import { useT } from "@/i18n/provider";
 
 export function TripLoading() {
+  const t = useT().trip;
   return (
     // Announced through the home announcer (a live region that is always mounted).
     <section className="pn-trip-state" aria-busy="true" data-testid="trip-loading">
       <svg className="pn-trip-state__spinner" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="42 60" strokeLinecap="round" />
       </svg>
-      <p>Finding routes…</p>
+      <p>{t.finding}</p>
     </section>
   );
 }
 
-const ERROR_COPY: Record<PlanErrorKind, { title: string; detail: string }> = {
-  offline: { title: "You're offline", detail: "Connect to plan a trip." },
-  server: { title: "Couldn't load options", detail: "Something went wrong." },
-  invalid: { title: "Couldn't plan this trip", detail: "Both points must be in Naga City." },
-  busy: { title: "Too many trip searches right now", detail: "Wait a minute, then try again." },
-};
+const errorCopy = (t: Dict["trip"]): Record<PlanErrorKind, { title: string; detail: string }> => ({
+  offline: { title: t.offline, detail: t.offlineDetail },
+  server: { title: t.serverError, detail: t.serverDetail },
+  invalid: { title: t.invalid, detail: t.invalidDetail },
+  busy: { title: t.busy, detail: t.busyDetail },
+});
 
 type ErrorProps = { kind: PlanErrorKind; onRetry: () => void; onChangeEndpoints: () => void };
 
 export function TripError({ kind, onRetry, onChangeEndpoints }: ErrorProps) {
-  const copy = ERROR_COPY[kind];
+  const t = useT().trip;
+  const copy = errorCopy(t)[kind];
   // A rejected request (400) fails the same way again: offer to change the points instead.
   const invalid = kind === "invalid";
   return (
@@ -41,7 +45,7 @@ export function TripError({ kind, onRetry, onChangeEndpoints }: ErrorProps) {
         </h2>
         <p>{copy.detail}</p>
         <button type="button" className="pn-trip-retry" onClick={invalid ? onChangeEndpoints : onRetry}>
-          {invalid ? "Change start or destination" : "Try again"}
+          {invalid ? t.changeEnds : t.tryAgain}
         </button>
       </div>
     </section>
@@ -49,7 +53,8 @@ export function TripError({ kind, onRetry, onChangeEndpoints }: ErrorProps) {
 }
 
 export function TripNoCoverage({ data }: { data: PlanResponse }) {
-  const copy = noCoverageCopy(data.plan.reason, data.plan.directWalkEstimateMeters);
+  const t = useT();
+  const copy = noCoverageCopy(data.plan.reason, data.plan.directWalkEstimateMeters, t.trip, t.geo);
   return (
     <section className="pn-honest" aria-labelledby="pn-no-route-title" data-testid="no-provisional-route">
       <span className="pn-honest__icon" aria-hidden="true">

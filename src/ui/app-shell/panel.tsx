@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, type MouseEvent, type RefObject } from "react";
+import { useT } from "@/i18n/provider";
 import { cameFromInsideApp } from "./app-frame-context";
 
 export function BackIcon() {
@@ -48,13 +49,14 @@ export function useEscapeToClose(panel: RefObject<HTMLElement | null>) {
  */
 export function BackButton() {
   const router = useRouter();
+  const t = useT();
   const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !cameFromInsideApp()) return;
     e.preventDefault();
     router.back();
   };
   return (
-    <Link href="/app" aria-label="Back" className="pn-detail__round" onClick={onClick} data-testid="detail-back">
+    <Link href="/app" aria-label={t.shell.back} className="pn-detail__round" onClick={onClick} data-testid="detail-back">
       <BackIcon />
     </Link>
   );

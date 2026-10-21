@@ -90,7 +90,7 @@ test("tapping a pin opens the stop with exactly the source pin's layer, coordina
   const serving = detail.getByTestId("serving-routes");
   await expect(serving.getByRole("link")).toHaveCount(1);
   await expect(serving).toContainText("Loop A");
-  await expect(serving).toContainText("A Centro-Magsaysay Loop A (clockwise)");
+  await expect(serving).toContainText("Centro-Magsaysay Loop A (clockwise)");
   await expect(serving).toContainText("Stop 1 · clockwise (from pin order)");
   await expect(serving).toContainText("Unverified");
   await expect(detail).toContainText("Not surveyed");
@@ -158,7 +158,7 @@ test("route R8-A: 30 provisional stops in pin order, the trial notice and an est
   await expect(page).toHaveURL(/\/app\/routes\/R8-A$/);
 
   const route = page.getByTestId("route-detail");
-  await expect(route.getByRole("heading", { level: 1, name: "A Centro-Magsaysay Loop A (clockwise)" })).toBeFocused();
+  await expect(route.getByRole("heading", { level: 1, name: "Centro-Magsaysay Loop A (clockwise)" })).toBeFocused();
   await expect(route).toContainText("Loop A");
   await expect(route).toContainText("Group 8 · jeepney");
   await expect(route.getByTestId("route-evidence")).toHaveText("Provisional stops");
@@ -270,7 +270,7 @@ test.describe("dark mode", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Plaza Rizal" })).toBeVisible();
     await expectAxeClean(page);
     await page.goto("/app/routes/R8-A");
-    await expect(page.getByRole("heading", { level: 1, name: "A Centro-Magsaysay Loop A (clockwise)" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Centro-Magsaysay Loop A (clockwise)" })).toBeVisible();
     await expectAxeClean(page);
   });
 });

@@ -78,7 +78,7 @@ test("trip options show the unverified badge, estimate chips and honest time est
     await expect(card.getByTestId("card-unverified")).toHaveText("Unverified route");
     await expect(card.getByTestId("unverified-badge")).toHaveCount(0);
     await expect(card).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
-    await expect(card).toContainText("A Centro-Magsaysay Loop");
+    await expect(card).toContainText("Centro-Magsaysay Loop A (clockwise)");
     await expect(card.locator('abbr[title="Estimate"]').first()).toHaveText("Est.Estimate");
   }
   await expect(cards.nth(0).getByTestId("fare-chip")).toHaveText("Est.Estimate ₱14");
@@ -96,7 +96,7 @@ test("trip options show the unverified badge, estimate chips and honest time est
   await expect(page.locator(".pn-trip-card--primary")).toHaveCount(1);
 
   // Accessible names carry the label, the caution and the fare estimate, with the full word.
-  await expect(page.getByRole("button", { name: /Recommended.*Unverified route.*A Centro-Magsaysay Loop.*Estimate ₱14(?!–)/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Recommended.*Unverified route.*Centro-Magsaysay Loop.*Estimate ₱14(?!–)/ })).toBeVisible();
 
   await expect(options).not.toContainText(/Walking distances|revision|Source/);
   await expect(page.getByText("Verified route", { exact: true })).toHaveCount(0);
@@ -145,7 +145,7 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
 
   await chooseOption(page);
   const detail = page.getByTestId("trip-detail");
-  await expect(detail.getByRole("heading", { name: "A Centro-Magsaysay Loop" })).toBeFocused();
+  await expect(detail.getByRole("heading", { name: "Centro-Magsaysay Loop A (clockwise)" })).toBeFocused();
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
   await expect(detail).toContainText(/Estimate \d+–\d+ min \+ waiting \(unknown\)/);
@@ -154,16 +154,16 @@ test("trip detail lists the legs, highlights stops as markers above the trip lin
   await expect(steps).toHaveCount(4);
   await expect(steps.nth(0)).toContainText("Walk ≈ 230 m to Plaza Rizal (A1)");
   await expect(steps.nth(0)).toContainText("path not verified");
-  await expect(steps.nth(1)).toContainText("Board A Centro-Magsaysay Loop A (clockwise) at Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("Board Centro-Magsaysay Loop A (clockwise) at Plaza Rizal (A1)");
   await expect(steps.nth(1)).toContainText("4 stops");
-  await expect(steps.nth(1)).not.toContainText(/Signboard|1.2 km/);
+  await expect(steps.nth(1)).not.toContainText(/Signboard unverified|1.2 km/);
   await expect(steps.nth(1)).toContainText("Approximate path, not a verified route shape");
   await expect(steps).not.toContainText(["Mapped candidate"]);
   await expect(steps.nth(2)).toContainText("Get off at Avenue Square (A5)");
   await expect(steps.nth(2)).toContainText("Say “Para!” near here");
   await expect(steps.nth(2)).not.toContainText(/buzz/i);
   await expect(steps.nth(3)).toContainText("Walk ≈ 120 m to your destination");
-  await expect(detail.getByTestId("leg-fare")).toHaveText(/A Centro-Magsaysay Loop A \(clockwise\)\s*Estimate ₱14$/);
+  await expect(detail.getByTestId("leg-fare")).toHaveText(/Centro-Magsaysay Loop A \(clockwise\)\s*Estimate ₱14$/);
   await expect(detail).not.toContainText(/Corrections|from reported fare rules|matrix not verified/);
   // Three links: Sources (top bar), the fare basis, and Report a correction.
   await expect(detail.getByRole("link")).toHaveText(["Sources", "How fares are estimated", "Report a correction"]);
@@ -376,7 +376,7 @@ test("moving a pin by hand never shows the previous trip's options while the new
 
   gated = true;
   await page.getByTestId("endpoint-destination").locator(".pn-endpoint__main").click();
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await page.getByTestId("search-screen").getByRole("button", { name: "Choose on map", exact: true }).click();
   const before = await mapEl(page).getAttribute("data-center-lng");
   await drag(page, 40, 0);
   await expect.poll(() => mapEl(page).getAttribute("data-center-lng")).not.toBe(before);
@@ -402,7 +402,7 @@ test("a pending focus move is dropped when an endpoint is cleared", async ({ pag
 
   // Clear the destination while the retry is pending, then set it again.
   await page.getByRole("button", { name: "Clear destination", exact: true }).click();
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await chooseOnMapVia(page, "destination");
   await page.getByRole("button", { name: "Set destination here" }).click();
 
   await expect(page.getByTestId("trip-option")).toHaveCount(3);
@@ -453,13 +453,13 @@ test.describe("GPS refinement while results are shown", () => {
 
     // In flight: the detail stays, its heading keeps focus, and no loading state replaces it.
     await expect(detail).toBeVisible();
-    await expect(detail.getByRole("heading", { name: "A Centro-Magsaysay Loop" })).toBeFocused();
+    await expect(detail.getByRole("heading", { name: "Centro-Magsaysay Loop A (clockwise)" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);
     release();
 
     // Settled: still open and focused.
     await expect(detail).toBeVisible();
-    await expect(detail.getByRole("heading", { name: "A Centro-Magsaysay Loop" })).toBeFocused();
+    await expect(detail.getByRole("heading", { name: "Centro-Magsaysay Loop A (clockwise)" })).toBeFocused();
     await expect(page.getByTestId("trip-loading")).toHaveCount(0);
     await expect(page.locator(".leaflet-marker-pane .pn-trip-stop")).toHaveCount(0);
   });
@@ -511,7 +511,7 @@ test("options peek: best-option summary and a labelled toggle; full lists every 
   const toggle = page.getByTestId("options-toggle");
   await expect(sheet).toHaveAttribute("data-snap", "0");
   // The Recommended option is the cheapest jeepney here, so the peek reads it as an estimated range, never exact.
-  await expect(page.getByTestId("options-best")).toContainText(/A Centro-Magsaysay Loop.*Est.*\d+–\d+ min \+ waiting \(unknown\).*Est.*₱14/);
+  await expect(page.getByTestId("options-best")).toContainText(/Centro-Magsaysay Loop.*Est.*\d+–\d+ min \+ waiting \(unknown\).*Est.*₱14/);
   await expect(page.getByTestId("options-best")).not.toContainText("Tricycle");
   await expect(page.getByTestId("options-best")).toContainText("Recommended");
   // The tricycle sits beside it in its own card: a fare, never minutes.
@@ -590,7 +590,7 @@ test("the list leaving and returning for the same ends (a cancelled pick) keeps 
   await page.getByTestId("options-toggle").click();
   await expect(sheet).toHaveAttribute("data-snap", "2");
   await page.getByTestId("endpoint-start").locator(".pn-endpoint__main").click();
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await page.getByTestId("search-screen").getByRole("button", { name: "Choose on map", exact: true }).click();
   await page.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByTestId("options-toggle")).toBeVisible();
   await expect(sheet).toHaveAttribute("data-snap", "2");

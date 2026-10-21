@@ -956,9 +956,9 @@ abbr.pn-est {
   gap: 4px;
   padding: 2px 9px;
   border-radius: 999px;
-  background: var(--pn-surface2, rgba(11, 122, 117, 0.08));
-  border: 1px solid var(--pn-accent-border, rgba(11, 122, 117, 0.25));
-  color: var(--pn-accent-text, #0b7a75);
+  background: var(--pn-teal-soft-bg);
+  border: 1px solid transparent;
+  color: var(--pn-teal-soft-text);
   font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;

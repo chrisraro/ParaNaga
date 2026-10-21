@@ -111,7 +111,7 @@ test("working screens carry no source, retrieval, revision or attribution text",
   expect(await workingText(guide)).not.toMatch(FORBIDDEN);
   const sheet = page.getByTestId("trip-sheet");
   await sheet.getByRole("button", { name: "I'm at the stop", exact: true }).click();
-  await sheet.getByRole("button", { name: "I boarded A Centro-Magsaysay Loop", exact: true }).click();
+  await sheet.getByRole("button", { name: "I boarded Centro-Magsaysay Loop A (clockwise)", exact: true }).click();
   await expect(guide.getByTestId("guidance-ride")).toBeVisible();
   expect(await workingText(guide)).not.toMatch(FORBIDDEN);
 

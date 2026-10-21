@@ -8,6 +8,7 @@
 
 import "./styles";
 import { captureOpener } from "./opener";
+import { useT } from "@/i18n/provider";
 
 import { useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from "react";
 
@@ -24,7 +25,8 @@ type Props = {
   testId?: string;
 };
 
-export function ConfirmDialog({ open, title, children, confirmLabel, cancelLabel = "Cancel", tone = "default", onConfirm, onCancel, testId }: Props) {
+export function ConfirmDialog({ open, title, children, confirmLabel, cancelLabel, tone = "default", onConfirm, onCancel, testId }: Props) {
+  const t = useT();
   const dialog = useRef<HTMLDialogElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
   const returnFocus = useRef<Element | null>(null);
@@ -89,7 +91,7 @@ export function ConfirmDialog({ open, title, children, confirmLabel, cancelLabel
           {confirmLabel}
         </button>
         <button ref={cancel} type="button" className="pn-btn pn-btn--secondary" onClick={onCancel}>
-          {cancelLabel}
+          {cancelLabel ?? t.kit.cancel}
         </button>
       </div>
     </dialog>

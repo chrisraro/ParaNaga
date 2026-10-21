@@ -137,7 +137,7 @@ test('"Diversion": the corner first, old names footnoted, OSM attributed; a rout
   await expect(page.getByTestId("search-result-route").first()).toContainText("Loop A");
   await page.getByTestId("search-result-route").first().click();
   await expect(page).toHaveURL(/\/app\/routes\/R8-A$/);
-  await expect(page.getByRole("heading", { level: 1, name: "A Centro-Magsaysay Loop A (clockwise)" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Centro-Magsaysay Loop A (clockwise)" })).toBeVisible();
 });
 
 test("no match, regional connections, and a barangay opens its place detail", async ({ page }) => {
