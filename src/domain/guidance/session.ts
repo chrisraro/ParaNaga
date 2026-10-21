@@ -1,11 +1,15 @@
 // The guidance session: where the person is in the step list, as a reducer. Pure.
 //
 // Every change that matters is a confirmation by the person: "I'm at the stop" (atStop),
-// "I boarded …" (boarded), "My stop is next" (nextStopIsMine, the manual advance), "I said Para"
-// (paraAcknowledged, only once Para is suggested), "I got off" (gotOff), "I missed my stop"
-// (missedStop), "I've arrived" (arrived), "End guidance" / "Done" (end) and "Back" (back: undoes
-// the last confirmation, for a mis-tap on a moving jeepney). A location fix only moves the ride's stop count
-// (progress.ts) and is ignored when imprecise or stale; it never changes the step or the status.
+// "I boarded …" (boarded), "I said Para" (paraAcknowledged, only once Para is suggested), "I got off"
+// (gotOff, only once Para is suggested by GPS: at the alighting stop), "I got off early" (gotOffEarly,
+// otherwise: guidance stops for a re-plan, like "I missed my stop" / missedStop), "I've arrived"
+// (arrived), "End guidance" / "Done" (end) and "Back" (back: undoes the last confirmation, for a
+// mis-tap on a moving jeepney). There is no manual stop advance (owner, 2026-10-22). A location fix
+// moves the ride's stop count (progress.ts) and, on the step that ends at the destination (the last
+// walk, or a tricycle / padyak that is the last step), latches `nearDestination` once a usable fix is
+// within ARRIVE_NEAR_M of it: "I've arrived" is ignored until then. A fix is ignored when imprecise or
+// stale; it never changes the step or the status.
 // An event that does not apply to the current step or status is ignored: the same object comes
 // back, so callers can compare by reference.
 //
@@ -16,7 +20,8 @@ import { z } from "zod";
 import { planOptionSchema, toWireOption } from "../api/plan";
 import { etaModelSchema } from "../api/schemas";
 import type { LocationFix } from "../geo/location-fix";
-import { CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, rideProgress, usableFix, type RideMemory } from "./progress";
+import { haversineMeters } from "../geo/geometry";
+import { ARRIVE_NEAR_M, CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, rideProgress, usableFix, type RideMemory } from "./progress";
 import { guidanceSteps, type GuidanceStep, type GuidanceTrip } from "./steps";
 
 /** 2: street rides and `trip.ridePaths` (Increment E). Format-1 sessions still read (migrated to 2 on parse);
@@ -27,13 +32,11 @@ export const GUIDANCE_SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 /** sessionStorage key (same "paranaga." prefix as the other device keys). */
 export const GUIDANCE_SESSION_KEY = "paranaga.guidance";
 
-export type GuidanceStatus = "active" | "missed_stop" | "arrived" | "ended";
+export type GuidanceStatus = "active" | "missed_stop" | "got_off_early" | "arrived" | "ended";
 
 export type RideState = RideMemory & {
   /** A usable fix arrived during this ride (so the stop count is from GPS, not just the plan). */
   gpsSeen: boolean;
-  /** The person said their stop is next (manual advance). */
-  stopIsNext: boolean;
   paraAcknowledged: boolean;
 };
 
@@ -52,25 +55,27 @@ export type GuidanceSession = {
    * (a mis-tap one stop early must not restart the count); cleared on the next boarding.
    */
   lastRide: RideState | null;
+  /** On the step that ends at the destination: a usable fix was within ARRIVE_NEAR_M of it (latches). */
+  nearDestination: boolean;
 };
 
 export type GuidanceEvent =
   | { type: "atStop" }
   | { type: "boarded" }
-  | { type: "nextStopIsMine" }
   | { type: "paraAcknowledged" }
   | { type: "gotOff" }
+  | { type: "gotOffEarly" }
   | { type: "missedStop" }
   | { type: "arrived" }
   | { type: "end" }
   | { type: "back" }
   | { type: "fix"; fix: LocationFix; now: number };
 
-const NEW_RIDE: RideState = { ...NEW_RIDE_MEMORY, gpsSeen: false, stopIsNext: false, paraAcknowledged: false };
+const NEW_RIDE: RideState = { ...NEW_RIDE_MEMORY, gpsSeen: false, paraAcknowledged: false };
 
 /** The first step is walk_to_board, walk_to_destination or a street_ride (guidanceSteps), never a ride. */
 export function startSession(trip: GuidanceTrip, now: number): GuidanceSession {
-  return { v: GUIDANCE_SESSION_FORMAT, trip: { ...trip, option: toWireOption(trip.option) }, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null };
+  return { v: GUIDANCE_SESSION_FORMAT, trip: { ...trip, option: toWireOption(trip.option) }, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null, nearDestination: false };
 }
 
 export function sessionSteps(session: GuidanceSession): GuidanceStep[] {
@@ -86,12 +91,12 @@ function nextStep(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSess
   const stepIndex = session.stepIndex + 1;
   const step = steps[stepIndex];
   if (!step) return session;
-  return { ...session, stepIndex, atStop: false, ride: step.kind === "ride" ? NEW_RIDE : null };
+  return { ...session, stepIndex, atStop: false, ride: step.kind === "ride" ? NEW_RIDE : null, nearDestination: false };
 }
 
 /**
- * Undo the last confirmation: arrived → back on the last walk; missed stop → back on the ride;
- * at the stop → not yet; Para said → not yet; "my stop is next" → not yet; boarded → back at the
+ * Undo the last confirmation: arrived → back on the last step (still near); missed stop or got off
+ * early → back on the ride; at the stop → not yet; Para said → not yet; boarded → back at the
  * boarding stop; got off → back on the ride. A ride re-entered this way gets its memory back
  * exactly as it was left (`lastRide`). Nothing to undo on the first step before any tap, or once
  * ended.
@@ -99,22 +104,23 @@ function nextStep(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSess
 function back(session: GuidanceSession, steps: GuidanceStep[]): GuidanceSession {
   if (session.status === "ended") return session;
   if (session.status === "arrived") return { ...session, status: "active" };
-  if (session.status === "missed_stop") return { ...session, status: "active", ride: session.lastRide ?? NEW_RIDE, lastRide: null };
+  if (session.status === "missed_stop" || session.status === "got_off_early") return { ...session, status: "active", ride: session.lastRide ?? NEW_RIDE, lastRide: null };
   const step = steps[session.stepIndex]!;
   if (session.atStop) return { ...session, atStop: false };
   if (step.kind === "ride" && session.ride) {
     if (session.ride.paraAcknowledged) return { ...session, ride: { ...session.ride, paraAcknowledged: false } };
-    if (session.ride.stopIsNext) return { ...session, ride: { ...session.ride, stopIsNext: false } };
     return { ...session, stepIndex: session.stepIndex - 1, atStop: true, ride: null };
   }
   if (session.stepIndex === 0) return session;
   // The step before may be a tricycle ride (the access option): only a ride step carries ride memory.
   const ride = steps[session.stepIndex - 1]?.kind === "ride" ? session.lastRide ?? NEW_RIDE : null;
-  return { ...session, stepIndex: session.stepIndex - 1, atStop: false, ride, lastRide: null };
+  return { ...session, stepIndex: session.stepIndex - 1, atStop: false, ride, lastRide: null, nearDestination: false };
 }
 
 /** The steps that end at the destination: "I've arrived" applies there. */
 const endsTrip = (step: GuidanceStep) => step.kind === "walk_to_destination" || step.kind === "street_ride";
+/** The step that ends at the destination and is the last one (not the access tricycle): arriving needs location. */
+const finalStep = (step: GuidanceStep, steps: GuidanceStep[]) => endsTrip(step) && step.index === steps.length - 1;
 
 export function reduceSession(session: GuidanceSession, event: GuidanceEvent): GuidanceSession {
   if (event.type === "end") return session.status === "ended" ? session : { ...session, status: "ended", ride: null, lastRide: null };
@@ -131,19 +137,23 @@ export function reduceSession(session: GuidanceSession, event: GuidanceEvent): G
       return boarding && !session.atStop ? { ...session, atStop: true } : session;
     case "boarded":
       return boarding ? { ...nextStep(session, steps), lastRide: null } : session;
-    case "nextStopIsMine":
-      return ride && !paraSuggested(ride) && !ride.paraAcknowledged ? { ...session, ride: { ...ride, stopIsNext: true } } : session;
     case "paraAcknowledged":
       return ride && paraSuggested(ride) && !ride.paraAcknowledged ? { ...session, ride: { ...ride, paraAcknowledged: true } } : session;
     case "gotOff":
-      return ride ? { ...nextStep(session, steps), lastRide: ride } : session;
+      return ride && paraSuggested(ride) ? { ...nextStep(session, steps), lastRide: ride } : session;
+    case "gotOffEarly":
+      return ride && !paraSuggested(ride) ? { ...session, status: "got_off_early", ride: null, lastRide: ride } : session;
     case "missedStop":
       return ride ? { ...session, status: "missed_stop", ride: null, lastRide: ride } : session;
     case "arrived":
       // A tricycle that is not the last step (the access option) ends at its loading point: on to the walk.
       if (step.kind === "street_ride" && session.stepIndex < steps.length - 1) return nextStep(session, steps);
-      return endsTrip(step) ? { ...session, status: "arrived" } : session;
+      return endsTrip(step) && session.nearDestination ? { ...session, status: "arrived" } : session;
     case "fix": {
+      if (finalStep(step, steps) && "target" in step) {
+        const near = !session.nearDestination && usableFix(event.fix, event.now) && haversineMeters(event.fix, step.target) <= ARRIVE_NEAR_M;
+        return near ? { ...session, nearDestination: true } : session;
+      }
       if (!ride || step.kind !== "ride" || !usableFix(event.fix, event.now)) return session;
       const p = rideProgress(step.stops, ride, event.fix, event.now);
       const memory: RideMemory = {
@@ -179,7 +189,8 @@ const rideSchema = z.strictObject({
   alightNear: z.boolean(),
   nearStopBefore: z.boolean(),
   gpsSeen: z.boolean(),
-  stopIsNext: z.boolean(),
+  /** Read from sessions stored before 2026-10-22 (the manual "My stop is next"), then dropped. */
+  stopIsNext: z.boolean().optional(),
   paraAcknowledged: z.boolean(),
 });
 
@@ -187,12 +198,21 @@ const sessionSchema = z.strictObject({
   v: z.union([z.literal(1), z.literal(GUIDANCE_SESSION_FORMAT)]),
   trip: tripSchema,
   startedAt: z.number().int().nonnegative(),
-  status: z.enum(["active", "missed_stop", "arrived", "ended"]),
+  status: z.enum(["active", "missed_stop", "got_off_early", "arrived", "ended"]),
   stepIndex: z.number().int().nonnegative(),
   atStop: z.boolean(),
   ride: rideSchema.nullable(),
   lastRide: rideSchema.nullable(),
+  nearDestination: z.boolean().optional(),
 });
+
+/** A ride stored before 2026-10-22: drop `stopIsNext`, and a Para it alone allowed (GPS never suggested it). */
+function migrateRide(ride: z.infer<typeof rideSchema> | null): RideState | null {
+  if (!ride || ride.stopIsNext === undefined) return ride as RideState | null;
+  const rest = { ...ride };
+  delete rest.stopIsNext;
+  return { ...rest, paraAcknowledged: rest.paraAcknowledged && paraSuggested(rest) };
+}
 
 /** The session's own invariants (a hand-edited or stale record must not crash the screens). */
 function consistent(s: GuidanceSession): boolean {
@@ -215,11 +235,13 @@ function consistent(s: GuidanceSession): boolean {
   if (s.lastRide) {
     // Kept only off a ride: on the step after it, or on the ride itself after "I missed my stop".
     if (s.status === "ended" || onRide) return false;
-    if (!fits(s.lastRide, s.status === "missed_stop" ? step : steps[s.stepIndex - 1])) return false;
+    const offRide = s.status === "missed_stop" || s.status === "got_off_early";
+    if (!fits(s.lastRide, offRide ? step : steps[s.stepIndex - 1])) return false;
   }
   if (s.atStop && step.kind !== "walk_to_board" && step.kind !== "transfer") return false;
-  if (s.status === "arrived" && !endsTrip(step)) return false;
-  if (s.status === "missed_stop" && step.kind !== "ride") return false;
+  if (s.status === "arrived" && !(endsTrip(step) && s.nearDestination)) return false;
+  if (s.nearDestination && !finalStep(step, steps)) return false;
+  if ((s.status === "missed_stop" || s.status === "got_off_early") && step.kind !== "ride") return false;
   return true;
 }
 
@@ -238,7 +260,8 @@ export function parseSession(raw: string | null, now: number): GuidanceSession |
   }
   const parsed = sessionSchema.safeParse(json);
   if (!parsed.success) return null;
-  const session = { ...parsed.data, v: GUIDANCE_SESSION_FORMAT } as GuidanceSession;
+  const d = parsed.data;
+  const session: GuidanceSession = { ...d, v: GUIDANCE_SESSION_FORMAT, ride: migrateRide(d.ride), lastRide: migrateRide(d.lastRide), nearDestination: d.nearDestination ?? false };
   if (session.startedAt > now + CLOCK_SKEW_MS || now - session.startedAt > GUIDANCE_SESSION_MAX_AGE_MS) return null;
   return consistent(session) ? session : null;
 }

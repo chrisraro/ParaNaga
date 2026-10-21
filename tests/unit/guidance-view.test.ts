@@ -16,8 +16,15 @@ import { encodePolyline } from "@/domain/geo/polyline";
 
 const NOW = 1_000_000;
 const tap = (type: Exclude<GuidanceEvent["type"], "fix">): GuidanceEvent => ({ type }) as GuidanceEvent;
-const run = (s: GuidanceSession, ...types: Exclude<GuidanceEvent["type"], "fix">[]) => types.map(tap).reduce(reduceSession, s);
 const fixEvent = (fix: LocationFix): GuidanceEvent => ({ type: "fix", fix, now: NOW });
+const run = (s: GuidanceSession, ...events: (Exclude<GuidanceEvent["type"], "fix"> | GuidanceEvent)[]) =>
+  events.map((e) => (typeof e === "string" ? tap(e) : e)).reduce(reduceSession, s);
+/** GPS along a ride to its alighting stop (Para), then "I got off": the only way off a ride to the next step. */
+const offAt = (pins: readonly { lat: number; lng: number }[]): GuidanceEvent[] => [...pins.slice(1).map((p) => fixEvent(fixAt(p, 10, NOW))), tap("gotOff")];
+const OFF_A = offAt(LOOP_A);
+const OFF_B = offAt(LOOP_B);
+/** A fix at the destination: "I've arrived" applies. */
+const NEAR = fixEvent(fixAt(DEST, 10, NOW));
 const labels = (v: GuidanceView) => ("actions" in v ? v.actions.map((a) => `${a.kind}:${a.event}:${a.label}`) : []);
 
 describe("Walk (walk_to_board)", () => {
@@ -161,7 +168,8 @@ describe("Ride", () => {
     expect(v.countNote).toBe(GUIDANCE_COPY.stopsByPinOrder);
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "ahead", "ahead", "ahead", "ahead", "alight"]);
     expect(v.para).toBeNull();
-    expect(labels(v)).toEqual(["secondary:nextStopIsMine:My stop is next", "secondary:gotOff:I got off", "secondary:missedStop:I missed my stop", "secondary:end:End guidance"]);
+    expect(labels(v)).toEqual(["secondary:gotOffEarly:I got off early", "secondary:missedStop:I missed my stop", "secondary:end:End guidance"]);
+    expect(v.headsUp).toBeNull();
     expect(v.remainingTime).toBe("≈ 4–6 min left (estimate)");
     expect(v.reportDriver).toBe(true);
   });
@@ -174,6 +182,46 @@ describe("Ride", () => {
     expect(v.stops.map((x) => x.state)).toEqual(["boarded", "passed", "passed", "ahead", "ahead", "alight"]);
     expect(v.remainingTime).toBe(`≈ 2–4 min left (estimate) · ${BY_STOP_COUNT}`);
     expect(v.para).toBeNull();
+    expect(v.headsUp).toBe("3 stops to Naga Cathedral. Get ready.");
+  });
+
+  it("heads-up at 3 and again at 2 stops left (GPS count): a line and one alert each, then Para", () => {
+    const at = (i: number) => fixEvent(fixAt(LOOP_A[i]!, 10, NOW));
+    const view = (s: GuidanceSession) => {
+      const v = guidanceView(s, null, NOW);
+      if (v.screen !== "ride") throw new Error(v.screen);
+      return v;
+    };
+    const one = view(run(boarded, at(1)));
+    expect(one.headsUp).toBeNull();
+    expect(one.attention).toBeNull();
+    const three = view(run(boarded, at(1), at(2)));
+    expect(three.headsUp).toBe("3 stops to Naga Cathedral. Get ready.");
+    expect(three.attention).toEqual({ key: "ride:1:ready:3", title: "3 stops to Naga Cathedral. Get ready.", body: GUIDANCE_COPY.paraBody("Naga Cathedral") });
+    expect(three.live).toEqual({ politeness: "polite", text: "3 stops to Naga Cathedral. Get ready." });
+    const two = view(run(boarded, at(1), at(2), at(3)));
+    expect(two.headsUp).toBe("2 stops to Naga Cathedral. Get ready.");
+    expect(two.attention?.key).toBe("ride:1:ready:2");
+    const para = view(run(boarded, at(1), at(2), at(3), at(4)));
+    expect(para.headsUp).toBeNull();
+    expect(para.attention?.key).toBe("ride:1:para");
+    // Without GPS, or with the count lost, no heads-up.
+    expect(view(run(boarded, at(1), at(4))).headsUp).toBeNull();
+  });
+
+  it("'I got off early' (not near the alighting stop) opens the re-plan screen, with Undo", () => {
+    const v = guidanceView(run(boarded, "gotOffEarly"), null, NOW);
+    expect(v).toEqual({
+      screen: "missed",
+      title: "Got off early?",
+      body: "Plan again from where you are.",
+      replan: true,
+      usesLocation: false,
+      actions: [{ event: "end", label: "End guidance", kind: "primary" }],
+      undo: { event: "back", label: "Undo", kind: "secondary" },
+      live: { politeness: "polite", text: "Got off early?" },
+    });
+    expect(guidanceView(run(boarded, "gotOffEarly", "back"), null, NOW)).toEqual(guidanceView(boarded, null, NOW));
   });
 
   it("a fix far ahead in pin order (a jump to the stop before alighting) shows nothing", () => {
@@ -198,9 +246,10 @@ describe("Ride", () => {
     expect(labels(acked)[0]).toBe("primary:gotOff:I got off");
   });
 
-  it("or when the person says their stop is next (manual advance)", () => {
-    const v = guidanceView(reduceSession(boarded, tap("nextStopIsMine")), null, NOW);
-    expect(v.screen === "ride" && v.para?.title).toBe("Para! Next stop is yours");
+  it("no manual advance: without GPS there is never Para, and no 'My stop is next'", () => {
+    const v = guidanceView(boarded, null, NOW);
+    expect(v.screen === "ride" && v.para).toBeNull();
+    expect(strings(v).join(" ")).not.toMatch(/My stop is next/);
   });
 
   it("a two-stop ride: pin order alone (no fix, or a fix far away) shows no Para", () => {
@@ -254,7 +303,7 @@ describe("Ride", () => {
 });
 
 describe("Transfer", () => {
-  const s = run(startSession(tripOf(twoRides()), NOW), "boarded", "gotOff");
+  const s = run(startSession(tripOf(twoRides()), NOW), "boarded", ...OFF_A);
 
   it("from the alighting stop to the next boarding stop, with a checklist", () => {
     const v = guidanceView(s, null, NOW);
@@ -275,18 +324,29 @@ describe("Transfer", () => {
   });
 
   it("a change at the same spot says so; a 0 m change between two different stops names the target", () => {
-    const v = guidanceView(run(startSession(tripOf(twoRides(8)), NOW), "boarded", "gotOff"), null, NOW);
+    const v = guidanceView(run(startSession(tripOf(twoRides(8)), NOW), "boarded", ...OFF_A), null, NOW);
     expect(v.screen === "walk" && v.title).toBe("Change to Loop B at Del Rosario");
     const opt = twoRides();
     const noWalk = { ...opt, legs: opt.legs.filter((_, i) => i !== 2) };
-    const w = guidanceView(run(startSession(tripOf(noWalk), NOW), "boarded", "gotOff"), null, NOW);
+    const w = guidanceView(run(startSession(tripOf(noWalk), NOW), "boarded", ...OFF_A), null, NOW);
     expect(w.screen === "walk" && w.title).toBe("Change to Loop B at Del Rosario");
   });
 });
 
 describe("Walk to destination and Arrive", () => {
+  it("far from the destination (or without location) there is no 'I've arrived', only a note", () => {
+    const s = run(startSession(tripOf(oneRide()), NOW), "boarded", ...OFF_A);
+    const v = guidanceView(s, null, NOW);
+    if (v.screen !== "walk") throw new Error(v.screen);
+    expect(v.notes).toEqual([GUIDANCE_COPY.entranceUnknown, "“I've arrived” shows when you are within 100 m of SM City Naga."]);
+    expect(labels(v)).toEqual(["secondary:end:End guidance"]);
+    const far = { lat: DEST.lat - 0.0012, lng: DEST.lng }; // ≈ 133 m
+    const w = guidanceView(run(s, fixEvent(fixAt(far, 10, NOW))), fixAt(far, 10, NOW), NOW);
+    expect(labels(w)).toEqual(["secondary:end:End guidance"]);
+  });
+
   it("the last walk proposes arrival near the destination; the person confirms", () => {
-    const s = run(startSession(tripOf(oneRide()), NOW), "boarded", "gotOff");
+    const s = run(startSession(tripOf(oneRide()), NOW), "boarded", ...OFF_A, NEAR);
     const v = guidanceView(s, fixAt(DEST, 10, NOW), NOW);
     if (v.screen !== "walk") throw new Error(v.screen);
     expect(v.stepLabel).toBe("Step 3 of 3 · Walk");
@@ -297,7 +357,7 @@ describe("Walk to destination and Arrive", () => {
   });
 
   it("Arrive: trip complete, location off, an estimate summary with no time", () => {
-    const s = run(startSession(tripOf(twoRides()), NOW), "boarded", "gotOff", "boarded", "gotOff", "arrived");
+    const s = run(startSession(tripOf(twoRides()), NOW), "boarded", ...OFF_A, "boarded", ...OFF_B, NEAR, "arrived");
     const v = guidanceView(s, fixAt(DEST, 5, NOW), NOW);
     if (v.screen !== "arrive") throw new Error(v.screen);
     expect(v.stepLabel).toBe("Step 5 of 5");
@@ -317,7 +377,7 @@ describe("Walk to destination and Arrive", () => {
   });
 
   it("Arrive without a destination name starts with a sentence", () => {
-    const s = run(startSession(tripOf(walkOnly(), null), NOW), "arrived");
+    const s = run(startSession(tripOf(walkOnly(), null), NOW), NEAR, "arrived");
     const v = guidanceView(s, null, NOW);
     expect(v.screen === "arrive" && v.body).toBe("You're at your destination. Location use stopped.");
   });
@@ -377,7 +437,7 @@ function strings(value: unknown): string[] {
 }
 
 const eventArb: fc.Arbitrary<GuidanceEvent> = fc.oneof(
-  { arbitrary: fc.constantFrom(...(["atStop", "boarded", "nextStopIsMine", "paraAcknowledged", "gotOff", "missedStop", "arrived", "end", "back"] as const)).map(tap), weight: 3 },
+  { arbitrary: fc.constantFrom(...(["atStop", "boarded", "paraAcknowledged", "gotOff", "gotOffEarly", "missedStop", "arrived", "end", "back"] as const)).map(tap), weight: 3 },
   // Exactly at a pin, precise: lets rides progress in order.
   { arbitrary: fc.integer({ min: 0, max: 10 }).map((i) => fixEvent(fixAt([...LOOP_A, ...LOOP_B][i]!, 8, NOW))), weight: 4 },
   { arbitrary: fc
@@ -412,9 +472,8 @@ describe("view properties (fixed seeds)", () => {
     );
   });
 
-  it("Para appears only after a manual advance, or a dispatched precise fix on this ride within 300 m of the alighting pin in pin order, or within 120 m of a stop ≥ max(1, alight − 1)", () => {
+  it("Para appears only after a dispatched precise fix on this ride within 300 m of the alighting pin in pin order, or within 120 m of a stop ≥ max(1, alight − 1)", () => {
     let shownCount = 0;
-    let gpsShownCount = 0;
     fc.assert(
       fc.property(optionArb, fc.array(eventArb, { maxLength: 40 }), fixArb, (option, events, fix) => {
         let s = startSession(tripOf(option), NOW);
@@ -422,7 +481,8 @@ describe("view properties (fixed seeds)", () => {
         // Board first (ignored on a walk-only trip) so the sequence exercises rides.
         for (const e of [tap("boarded"), ...events]) {
           const next = reduceSession(s, e);
-          if (next.stepIndex !== s.stepIndex || (s.ride === null && next.ride !== null)) justified = false;
+          // A fresh ride (boarded) starts unjustified; Undo back onto a ride restores it as it was (lastRide).
+          if (e.type === "boarded" && next !== s) justified = false;
           const step = currentStep(next);
           if (e.type === "fix" && next.ride && step.kind === "ride" && preciseFix(e.fix, e.now)) {
             const alight = step.stops.length - 1;
@@ -436,14 +496,12 @@ describe("view properties (fixed seeds)", () => {
         const shown = v.screen === "ride" && v.para !== null;
         if (!shown) return true;
         shownCount += 1;
-        if (!s.ride!.stopIsNext) gpsShownCount += 1;
-        return s.status === "active" && (s.ride!.stopIsNext || justified);
+        return s.status === "active" && justified;
       }),
       { seed: 516, numRuns: 2000 },
     );
     // The property must actually exercise Para.
-    expect(shownCount).toBeGreaterThan(25);
-    expect(gpsShownCount).toBeGreaterThan(5);
+    expect(shownCount).toBeGreaterThan(5);
   });
 
   it("the assertive announcement is used for Para only", () => {
@@ -471,15 +529,20 @@ describe("street ride (tricycle / padyak)", () => {
       title: "Take a tricycle to SM City Naga",
       instruction: "about 1.5 km along streets · minimum fare ₱15 · confirm with the driver",
       remainingTime: "Tricycle time not estimated",
-      usesLocation: false,
+      usesLocation: true,
     });
     expect(v.notes).toContain("Tricycle time not estimated");
+    expect(v.notes.at(-1)).toBe("“I've arrived” shows when you are within 100 m of SM City Naga.");
     expect(v.instruction).not.toContain(v.title);
-    expect(labels(v)).toEqual(["primary:arrived:I've arrived", "secondary:end:End guidance"]);
-    const done = guidanceView(run(s, "arrived"), null, NOW);
+    expect(labels(v)).toEqual(["secondary:end:End guidance"]);
+    const near = guidanceView(run(s, NEAR), null, NOW);
+    expect(labels(near)).toEqual(["primary:arrived:I've arrived", "secondary:end:End guidance"]);
+    expect(near.screen === "street_ride" && near.notes).not.toContain("“I've arrived” shows when you are within 100 m of SM City Naga.");
+    expect(run(s, "arrived")).toBe(s); // far away: ignored
+    const done = guidanceView(run(s, NEAR, "arrived"), null, NOW);
     expect(done.screen).toBe("arrive");
     if (done.screen === "arrive") expect(done.summary).toEqual({ walkText: "≈ 0 m walk", rides: [{ chip: "Tricycle", stopsText: "along streets" }], fareText: "Minimum fare ₱15" });
-    expect(guidanceView(run(s, "arrived", "back"), null, NOW).screen).toBe("street_ride");
+    expect(guidanceView(run(s, NEAR, "arrived", "back"), null, NOW).screen).toBe("street_ride");
   });
 
   it("a route that is not confirmed or not available keeps its state in the instruction, without repeating the title", () => {

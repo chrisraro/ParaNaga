@@ -94,6 +94,7 @@ Each screen lists purpose, key content, primary actions, and its required states
 ### S7 Ride mode
 - Big "I boarded" → progress bar along shape, next stop, stops remaining, "Get off at {stop} — {landmark}". Approaching alert (≤ 400 m / 1 stop) with vibration+sound if permitted.
 - Actions: "I got off", "I missed my stop", **Report a driver** (coral, secondary).
+- Owner change 2026-10-22: no manual "My stop is next"; "I got off" only once GPS puts the rider at the drop-off (else "I got off early", which re-plans like a missed stop); a "get ready" line and alert at 3 and 2 stops left; "I've arrived" only within 100 m of the destination.
 - Off-route: after hysteresis, sheet "You seem off route — [Replan] [I'm fine]".
 
 ### S8 Transfer

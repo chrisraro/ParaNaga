@@ -1,7 +1,9 @@
 "use client";
 
 // Ride step (artboard Ride). The progress rail counts stops by provisional pin order: with GPS it
-// moves on its own (the session's `fix` events), without GPS the person says "My stop is next".
+// moves on its own (the session's `fix` events); with that count, 3 and 2 stops before the alighting
+// stop show a "get ready" line. "I got off" shows only once GPS puts the rider at the alighting stop
+// (Para); otherwise "I got off early" re-plans (no manual stop advance).
 // The artboard's "On route" pill, "driver signalled" and "beside the … entrance" have no data
 // behind them and are not shown. "Para! Next stop is yours" is the one assertive announcement
 // (role="alert"). Beyond the card, the phone vibrates and (if the rider allowed notifications from
@@ -71,7 +73,13 @@ export function RideStep({ view, onSend, location, headingRef, alertKey }: StepP
         </p>
       ) : null}
 
-      <LocationOffer location={location} manual={view.actions.find((a) => a.event === "nextStopIsMine")?.label ?? "I got off"} />
+      {view.headsUp ? (
+        <p className="pn-guide__card pn-guide__card--near" data-testid="ride-heads-up">
+          {view.headsUp}
+        </p>
+      ) : null}
+
+      <LocationOffer location={location} />
       <KeepOpen text={view.keepOpen} />
       <GuidanceButtons actions={view.actions} onSend={onSend} />
       <UndoButton undo={view.undo} onSend={onSend} />

@@ -57,7 +57,7 @@ describe("GuidanceBanner and GuidanceStrip (T6)", () => {
     fireEvent.click(screen.getByTestId("guidance-steps-toggle"));
     expect(onSteps).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByTestId("guidance-strip-primary"));
-    expect(onAction).toHaveBeenCalledWith({ type: "nextStopIsMine" });
+    expect(onAction).toHaveBeenCalledWith({ type: "gotOffEarly" });
     fireEvent.click(screen.getByTestId("guidance-strip-end"));
     expect(onEnd).toHaveBeenCalledTimes(1);
   });

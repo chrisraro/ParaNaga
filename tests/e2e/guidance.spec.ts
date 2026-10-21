@@ -13,6 +13,13 @@ import { chooseOption, pinTrip, sheetSettled } from "./fixtures/options";
 test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
 
 const { A1, A2, A3, A4 } = LOOP_A_PINS;
+/** The fixtures' destination (PROVISIONAL_PLAN, TWO_RIDE_PLAN): "I've arrived" shows within 100 m of it. */
+const DEST = { lat: 13.6305, lng: 123.1912 };
+/** TWO_RIDE_PLAN's Loop B pins B2 (the stop before alighting) and the A ride's middle pin. */
+const B2 = { lat: 13.6287, lng: 123.1902 };
+const ARRIVE_NOTE = /“I've arrived” shows when you are within 100 m of /;
+/** A step button by name (the action bar sits in the trip sheet, outside the guidance element). */
+const button = (page: Page, name: string) => page.getByTestId("trip-sheet").getByRole("button", { name, exact: true });
 const mapEl = (page: Page) => page.getByTestId("home-screen").getByTestId("naga-map");
 const tabBar = (page: Page) => page.getByRole("navigation", { name: "Main" });
 const guide = (page: Page) => page.getByTestId("guidance");
@@ -181,14 +188,21 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(page.getByTestId("guidance-ride-route")).toHaveText("Centro-Magsaysay Loop A (clockwise)");
   await expect(page.getByTestId("ride-progress")).not.toContainText("boarded");
   await expectHonest(page);
+  // No manual advance: before Para the only way off is "I got off early" (a re-plan).
+  await expect(button(page, "My stop is next")).toHaveCount(0);
+  await expect(button(page, "I got off")).toHaveCount(0);
+  await expect(button(page, "I got off early")).toBeVisible();
   await emit(page, A2);
   await expect(page.getByTestId("ride-count")).toHaveText("1 of 4 stops");
   await expect(heading(page)).toHaveText("3 stops to go");
+  await expect(page.getByTestId("ride-heads-up")).toHaveText("3 stops to Avenue Square (A5). Get ready.");
   await expect(page.getByTestId("ride-rail").locator('[data-state="passed"]')).toHaveCount(1);
   await expect(page.getByTestId("para-alert")).toHaveCount(0);
   await emit(page, A3);
   await expect(page.getByTestId("ride-count")).toHaveText("2 of 4 stops");
+  await expect(page.getByTestId("ride-heads-up")).toHaveText("2 stops to Avenue Square (A5). Get ready.");
   await emit(page, A4);
+  await expect(page.getByTestId("ride-heads-up")).toHaveCount(0);
   const alert = page.getByRole("alert").filter({ hasText: "Para! Next stop is yours" });
   await expect(alert).toHaveCount(1);
   await expect(alert).toContainText("Get off at Avenue Square (A5).");
@@ -204,6 +218,11 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   // Last walk, then Arrive: watch and wake lock stopped.
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 3 of 3 · Walk");
   await expect(heading(page)).toHaveText(/^Walk to your pin near \S/);
+  // "I've arrived" only near the destination.
+  await expect(guide(page)).toContainText(ARRIVE_NOTE);
+  await expect(button(page, "I've arrived")).toHaveCount(0);
+  await emit(page, DEST);
+  await expect(guide(page)).not.toContainText(ARRIVE_NOTE);
   await tap(page, "I've arrived");
   await expect(heading(page)).toHaveText("You've arrived");
   await expect(page.getByTestId("arrive-body")).toHaveText(/^Near .+\. Location use stopped\.$/);
@@ -250,7 +269,7 @@ for (const [clock, ride] of [["09:30", RIDE_LEFT_OFFPEAK], ["07:10", RIDE_LEFT_P
   });
 }
 
-test("two rides, location denied: every step completes by buttons (Transfer included)", async ({ page }) => {
+test("two rides, location denied: boarding by buttons; off a ride only 'I got off early' (re-plan, Undo)", async ({ page }) => {
   await page.route("**/api/v1/plan", (route) => fulfill(route, TWO_RIDE_PLAN));
   await stubGeolocation(page, "deny");
   await openApp(page);
@@ -270,7 +289,30 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expect(page.getByTestId("ride-count")).toHaveText("2 stops after Plaza Rizal (A1)");
   await expect(page.getByTestId("guidance-keep-open")).toHaveText("Keep this screen open.");
   await expect(guide(page)).not.toContainText("Stop alerts work only");
-  await tap(page, "My stop is next");
+  await expect(button(page, "My stop is next")).toHaveCount(0);
+  await expect(button(page, "I got off")).toHaveCount(0);
+  await expect(page.getByTestId("guidance-location-off")).toHaveText("Location off.");
+  await tap(page, "I got off early");
+  await expect(heading(page)).toHaveText("Got off early?");
+  await expect(guide(page)).toContainText("Plan again from where you are.");
+  await expect(page.getByTestId("guidance-replan")).toHaveText("Re-plan from here");
+  await expectAxeClean(page);
+  await page.getByTestId("guidance-undo").click();
+  await expect(heading(page)).toHaveText("Ride to Magsaysay Junction (A3)");
+  await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 2 of 5 · Ride");
+  expect((await geoStub(page)).calls).toBe(1);
+});
+
+test("two rides with GPS: Transfer with its checklist, then 'I've arrived' only near the destination", async ({ page, context }) => {
+  await page.route("**/api/v1/plan", (route) => fulfill(route, TWO_RIDE_PLAN));
+  await grantLocation(context);
+  await stubGeolocation(page);
+  await openApp(page);
+  await startGuidance(page);
+  await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 1 });
+  await tap(page, "I'm at the stop");
+  await tap(page, "I boarded Centro-Magsaysay Loop A (clockwise)");
+  await emit(page, A2);
   await expect(page.getByRole("alert").filter({ hasText: "Para! Next stop is yours" })).toHaveCount(1);
   await tap(page, "I said “Para”");
   await tap(page, "I got off");
@@ -283,7 +325,6 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await expect(checklist).toHaveCount(3);
   await expect(checklist.nth(0)).toContainText("Got off at Magsaysay Junction (A3)");
   await expect(checklist.nth(1)).toHaveAttribute("aria-current", "step");
-  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 200 m");
   await expectHonest(page);
   await expectAxeClean(page);
   await tap(page, "I'm at the stop");
@@ -291,14 +332,17 @@ test("two rides, location denied: every step completes by buttons (Transfer incl
   await tap(page, "I boarded Centro-Magsaysay Loop B (counterclockwise)");
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 4 of 5 · Ride");
   await expect(page.getByTestId("guidance-ride-route")).toHaveText("Centro-Magsaysay Loop B (counterclockwise)");
+  await emit(page, B2);
   await tap(page, "I got off");
+  await expect(guide(page)).toContainText(ARRIVE_NOTE);
+  await emit(page, DEST);
   await tap(page, "I've arrived");
   await expect(heading(page)).toHaveText("You've arrived");
   await expect(page.getByTestId("arrive-summary")).toContainText("Centro-Magsaysay Loop A (clockwise)");
   await expect(page.getByTestId("arrive-summary")).toContainText("Centro-Magsaysay Loop B (counterclockwise)");
   await page.getByTestId("trip-sheet").getByRole("button", { name: "Done" }).click();
   await expect(guide(page)).toHaveCount(0);
-  expect((await geoStub(page)).calls).toBe(1);
+  expect((await geoStub(page)).watches).toBe(0);
 });
 
 test("Report it in MyNaga opens the handoff, and closing it returns to the running ride", async ({ page }) => {
@@ -354,7 +398,9 @@ test("Undo last step goes back one confirmation; after Arrive it never restarts 
   await expect(page.getByTestId("guidance-undo")).toHaveCount(0);
 
   await tap(page, "I boarded Centro-Magsaysay Loop A (clockwise)");
+  for (const p of [A2, A3, A4]) await emit(page, p);
   await tap(page, "I got off");
+  await emit(page, DEST);
   await tap(page, "I've arrived");
   expect((await geoStub(page)).watches).toBe(0);
   await expect(page.getByTestId("guidance-undo")).toHaveText("Undo");
@@ -451,8 +497,9 @@ for (const colorScheme of ["light", "dark"] as const) {
   test.describe(`axe (${colorScheme})`, () => {
     test.use({ colorScheme });
 
-    test(`each guidance step has no serious or critical violations (${colorScheme})`, async ({ page }) => {
+    test(`each guidance step has no serious or critical violations (${colorScheme})`, async ({ page, context }) => {
       await page.route("**/api/v1/plan", (route) => fulfill(route, TWO_RIDE_PLAN));
+      await grantLocation(context);
       await stubGeolocation(page);
       await openApp(page);
       await startGuidance(page);
@@ -460,7 +507,8 @@ for (const colorScheme of ["light", "dark"] as const) {
       await tap(page, "I'm at the stop");
       await tap(page, "I boarded Centro-Magsaysay Loop A (clockwise)");
       await expectAxeClean(page); // Ride
-      await tap(page, "My stop is next");
+      await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 1 });
+      await emit(page, A2);
       await expect(page.getByTestId("para-alert")).toBeVisible();
       await expectAxeClean(page); // Ride + Para
       await tap(page, "I got off");
@@ -469,7 +517,16 @@ for (const colorScheme of ["light", "dark"] as const) {
       await tap(page, "I missed my stop");
       await expectAxeClean(page); // Missed
       await page.getByTestId("guidance-undo").click();
+      await tap(page, "I got off early");
+      await expectAxeClean(page); // Got off early
+      await page.getByTestId("guidance-undo").click();
+      // Leaving the ride stopped location; Undo never restarts it on its own.
+      await page.getByTestId("guidance-use-location").click();
+      await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 2 });
+      await emit(page, B2);
       await tap(page, "I got off");
+      await expectAxeClean(page); // Last walk, "I've arrived" note
+      await emit(page, DEST);
       await tap(page, "I've arrived");
       await expectAxeClean(page); // Arrive
     });

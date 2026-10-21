@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlanOptionDto } from "@/domain/api/plan";
 import { GUIDANCE_SESSION_KEY, parseSession } from "@/domain/guidance/session";
 import type { SavedTrip } from "@/domain/saved/saved";
-import { LOOP_A, oneRide, tripOf } from "./guidance-fixtures";
+import { DEST, LOOP_A, oneRide, tripOf } from "./guidance-fixtures";
 
 const recordTrip = vi.fn(async () => true);
 vi.mock("@/client/history/trip-history", () => ({ recordTrip: (...args: unknown[]) => recordTrip(...(args as [])) }));
@@ -144,7 +144,10 @@ describe("useGuidanceSession", () => {
     expect(requestLock).toHaveBeenCalledWith("screen");
     act(() => result.current.enableLocation());
     act(() => result.current.send({ type: "boarded" }));
+    // GPS to the alighting stop ("I got off" needs it), then near the destination ("I've arrived" needs it).
+    for (const p of LOOP_A.slice(1)) act(() => success!(position(p)));
     act(() => result.current.send({ type: "gotOff" }));
+    act(() => success!(position(DEST)));
     act(() => result.current.send({ type: "arrived" }));
     expect(clearWatch).toHaveBeenCalledWith(1);
     expect(release).toHaveBeenCalled();
@@ -173,7 +176,10 @@ describe("useGuidanceSession", () => {
     await flush();
     act(() => result.current.enableLocation());
     act(() => result.current.send({ type: "boarded" }));
+    // GPS to the alighting stop ("I got off" needs it), then near the destination ("I've arrived" needs it).
+    for (const p of LOOP_A.slice(1)) act(() => success!(position(p)));
     act(() => result.current.send({ type: "gotOff" }));
+    act(() => success!(position(DEST)));
     expect(clearWatch).not.toHaveBeenCalled();
     act(() => result.current.send({ type: "arrived" }));
     expect(clearsAtArrive).toBe(1);

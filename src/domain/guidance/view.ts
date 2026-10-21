@@ -7,9 +7,13 @@
 // text or entrance, because none of them exists in the data; the artboards' versions of those lines
 // are replaced by a plain "not mapped / not on file" note with a next step. "Para! Next stop is
 // yours" is a suggestion shown only on a ride the person confirmed boarding, by the single rule
-// `paraSuggested` (progress.ts): they said their stop is next, or a precise (<= 30 m) fix put them,
-// in pin order, at the stop before the alighting pin or within 300 m of it; it is the only
-// assertive announcement. The ride screen reads the session only: every usable fix must be
+// `paraSuggested` (progress.ts): a precise (<= 30 m) fix put them, in pin order, at the stop before
+// the alighting pin or within 300 m of it; it is the only assertive announcement. There is no manual
+// stop advance: "I got off" shows only then, otherwise "I got off early" (a re-plan, like a missed
+// stop). With a GPS count, 3 and 2 stops before the alighting stop show a "get ready" line and alert
+// once each. "I've arrived" (the last walk, or a tricycle / padyak that is the last step) shows only
+// once the session saw a usable fix within ARRIVE_NEAR_M of the destination (`nearDestination`);
+// until then a note says so. The ride screen reads the session only: every usable fix must be
 // dispatched to the session as a `fix` event (so progress survives a reload); the `fix` argument
 // here feeds the walk screens. GPS proposes ("Close to …"), the person
 // confirms with the buttons, whose events the session reducer applies.
@@ -17,7 +21,7 @@
 // "About {m} m of riding left (approximate)" from the fix projected on the path (stateless, so it
 // reads the `fix` argument), "Get ready…" within 300 m, and an off-path note instead of progress more
 // than 100 m away. A tricycle or padyak trip is one `street_ride` screen: the step, the planner's
-// notes, "… time not estimated", and "I've arrived"; it never uses the location.
+// notes, "… time not estimated", and "I've arrived" (needs location when it is the last step).
 import { STALE_MS, type LocationFix } from "../geo/location-fix";
 import { COMPASS_WORDS } from "../geo/bearing";
 import { decodePolyline } from "../geo/polyline";
@@ -25,7 +29,7 @@ import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { directionText, fareChipText, formatDistance, freeAlightText } from "../trip/present";
 import { estimateOption, type EtaLeg, type EtaOptionInput } from "../eta/eta";
 import { TIME_NOT_AVAILABLE, formatLeg, formatRemaining } from "../eta/format";
-import { paraSuggested, pathRideProgress, usableFix, walkProgress, type PathRideProgress, type WalkProgress } from "./progress";
+import { ARRIVE_NEAR_M, paraSuggested, pathRideProgress, usableFix, walkProgress, type PathRideProgress, type WalkProgress } from "./progress";
 import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
 import {
   UNNAMED_DESTINATION,
@@ -47,9 +51,9 @@ export const GUIDANCE_COPY = {
   boarded: (chip: string) => `I boarded ${chip}`,
   arrived: "I've arrived",
   gotOffTricycle: "I got off the tricycle",
-  nextStopIsMine: "My stop is next",
   paraAck: "I said “Para”",
   gotOff: "I got off",
+  gotOffEarly: "I got off early",
   missedStop: "I missed my stop",
   done: "Done",
   boardingSideUnknown: () => "Ask where it stops.",
@@ -62,6 +66,8 @@ export const GUIDANCE_COPY = {
   offPath: "Your location is away from the approximate path. The jeepney may use another street; watch for your stop.",
   metresLeft: (m: number) => `About ${Math.round(m / 10) * 10} m of riding left (approximate)`,
   getReady: (place: string) => `Get ready to get off near ${place}`,
+  headsUp: (n: number, stop: string) => `${n} stops to ${stop}. Get ready.`,
+  arriveNear: (destination: string) => `“I've arrived” shows when you are within ${ARRIVE_NEAR_M} m of ${destination}.`,
   stopsByPinOrder: "Approximate; watch for your stop.",
   paraTitle: "Para! Next stop is yours",
   paraBody: (stop: string) => `Get off at ${stop}. Say “Para” to the driver when you see it.`,
@@ -73,6 +79,8 @@ export const GUIDANCE_COPY = {
   undo: "Undo",
   missedTitle: "Missed your stop?",
   missedBody: "Get off when the jeepney next stops, then plan again from where you are.",
+  earlyTitle: "Got off early?",
+  earlyBody: "Plan again from where you are.",
 } as const;
 
 export type GuidanceAction = { event: Exclude<GuidanceEvent["type"], "fix">; label: string; kind: "primary" | "secondary" };
@@ -118,6 +126,8 @@ export type RideView = {
   remainingTime: string | null;
   stops: { label: string; state: "boarded" | "passed" | "ahead" | "alight" }[];
   para: { title: string; body: string; acknowledged: boolean } | null;
+  /** "3 stops to Y. Get ready." at 3 and 2 stops left (GPS count, pinned ride); else null. */
+  headsUp: string | null;
   /** Show the Report-a-driver entry (MyNaga, decision D9). */
   reportDriver: true;
   keepOpen: string;
@@ -169,7 +179,8 @@ export type StreetRideView = {
   actions: GuidanceAction[];
   undo: GuidanceAction | null;
   live: LiveMessage;
-  usesLocation: false;
+  /** The last step: "I've arrived" waits for a fix near the destination. */
+  usesLocation: boolean;
 };
 
 export type GuidanceView = WalkView | RideView | ArriveView | MissedView | EndedView | StreetRideView;
@@ -284,9 +295,10 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
         ? `Your destination is at ${step.from.label}`
         : `You're at ${targetName}`
       : `Walk to ${targetName}`;
-    notes = [GUIDANCE_COPY.entranceUnknown];
-    actions = [{ event: "arrived", label: GUIDANCE_COPY.arrived, kind: "primary" }, END];
-    if (progress?.nearTarget) proposal = `Close to ${targetName}. Tap “${GUIDANCE_COPY.arrived}”.`;
+    const near = session.nearDestination;
+    notes = near ? [GUIDANCE_COPY.entranceUnknown] : [GUIDANCE_COPY.entranceUnknown, GUIDANCE_COPY.arriveNear(targetName)];
+    actions = near ? [{ event: "arrived", label: GUIDANCE_COPY.arrived, kind: "primary" }, END] : [END];
+    if (near && progress?.nearTarget) proposal = `Close to ${targetName}. Tap “${GUIDANCE_COPY.arrived}”.`;
   } else {
     const chip = step.nextRide.routeChip;
     const at = session.atStop;
@@ -374,7 +386,8 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
     ? [gotOff("primary"), missed, END]
     : suggested
       ? [{ event: "paraAcknowledged", label: GUIDANCE_COPY.paraAck, kind: "primary" }, gotOff("secondary"), missed, END]
-      : [{ event: "nextStopIsMine", label: GUIDANCE_COPY.nextStopIsMine, kind: "secondary" }, gotOff("secondary"), missed, END];
+      : [{ event: "gotOffEarly", label: GUIDANCE_COPY.gotOffEarly, kind: "secondary" }, missed, END];
+  const headsUp = gps && step.pinned && !suggested && (stopsRemaining === 3 || stopsRemaining === 2) ? GUIDANCE_COPY.headsUp(stopsRemaining, alight) : null;
 
   return {
     screen: "ride",
@@ -399,15 +412,18 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
       state: i === 0 ? "boarded" : i === alightIndex ? "alight" : gps && i <= ride.passedIndex ? "passed" : "ahead",
     })),
     para,
+    headsUp,
     reportDriver: true,
     keepOpen: GUIDANCE_COPY.keepOpen,
     actions,
     undo: undoAction(session),
-    live: para && !para.acknowledged ? { politeness: "assertive", text: GUIDANCE_COPY.paraTitle } : { politeness: "polite", text: title },
+    live: para && !para.acknowledged ? { politeness: "assertive", text: GUIDANCE_COPY.paraTitle } : { politeness: "polite", text: headsUp ?? title },
     attention:
       para && !para.acknowledged
         ? { key: `ride:${step.index}:para`, title: para.title, body: para.body }
-        : !para && onPath && !onPath.offPath && onPath.getReady
+        : headsUp
+          ? { key: `ride:${step.index}:ready:${stopsRemaining}`, title: headsUp, body: GUIDANCE_COPY.paraBody(alight) }
+          : !para && onPath && !onPath.offPath && onPath.getReady
           ? { key: `ride:${step.index}:ready`, title: GUIDANCE_COPY.getReady(alight), body: GUIDANCE_COPY.paraBody(alight) }
           : null,
     usesLocation: true,
@@ -441,16 +457,19 @@ function arriveView(session: GuidanceSession, steps: GuidanceStep[]): ArriveView
 
 export function guidanceView(session: GuidanceSession, fix: LocationFix | null, now: number): GuidanceView {
   if (session.status === "ended") return { screen: "ended", usesLocation: false };
-  if (session.status === "missed_stop") {
+  if (session.status === "missed_stop" || session.status === "got_off_early") {
+    // Got off early reuses the missed-stop screen: re-plan from here, or Undo.
+    const early = session.status === "got_off_early";
+    const title = early ? GUIDANCE_COPY.earlyTitle : GUIDANCE_COPY.missedTitle;
     return {
       screen: "missed",
-      title: GUIDANCE_COPY.missedTitle,
-      body: GUIDANCE_COPY.missedBody,
+      title,
+      body: early ? GUIDANCE_COPY.earlyBody : GUIDANCE_COPY.missedBody,
       replan: true,
       usesLocation: false,
       actions: [{ event: "end", label: GUIDANCE_COPY.endGuidance, kind: "primary" }],
       undo: undoAction(session),
-      live: { politeness: "polite", text: GUIDANCE_COPY.missedTitle },
+      live: { politeness: "polite", text: title },
     };
   }
   const steps = sessionSteps(session);
@@ -466,6 +485,7 @@ const modeTitle = (mode: StreetRideStep["mode"]) => (mode === "tricycle" ? "Tric
 
 function streetView(session: GuidanceSession, step: StreetRideStep, total: number): StreetRideView {
   const title = `Take a ${step.mode} to ${step.target.name}`;
+  const last = step.index === total - 1;
   return {
     screen: "street_ride",
     mode: step.mode,
@@ -473,13 +493,13 @@ function streetView(session: GuidanceSession, step: StreetRideStep, total: numbe
     title,
     // The title already says "Take a … to …": the instruction is the rest (distance, route state, fare).
     instruction: step.text.startsWith(`${title} · `) ? step.text.slice(title.length + 3) : step.text,
-    notes: step.notes,
+    notes: last && !session.nearDestination ? [...step.notes, GUIDANCE_COPY.arriveNear(step.target.name)] : step.notes,
     remainingTime: `${modeTitle(step.mode)} time not estimated`,
     keepOpen: GUIDANCE_COPY.keepOpen,
     // Not the last step (the access option): the tricycle only takes the rider to the jeep, so the trip goes on.
-    actions: [{ event: "arrived", label: step.index < total - 1 ? GUIDANCE_COPY.gotOffTricycle : GUIDANCE_COPY.arrived, kind: "primary" }, END],
+    actions: !last ? [{ event: "arrived", label: GUIDANCE_COPY.gotOffTricycle, kind: "primary" }, END] : session.nearDestination ? [{ event: "arrived", label: GUIDANCE_COPY.arrived, kind: "primary" }, END] : [END],
     undo: undoAction(session),
     live: { politeness: "polite", text: title },
-    usesLocation: false,
+    usesLocation: last,
   };
 }
