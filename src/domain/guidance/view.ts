@@ -263,7 +263,8 @@ function nextRideInfo(ride: RideRef) {
 
 function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep | WalkToDestinationStep, total: number, fix: LocationFix | null, now: number): WalkView {
   const toDestination = step.kind === "walk_to_destination";
-  const targetName = toDestination ? step.target.name : step.target.label;
+  // A pinned destination is saved as "Near <stop>" (pinnedEndName); inside a sentence it reads "your pin near <stop>".
+  const targetName = toDestination ? step.target.name.replace(/^Near /, "your pin near ") : step.target.label;
   const progress = walkProgress(step.target, fix, now);
   const distanceText = distanceLine(progress, step.estimateMeters, step.negligible);
   const remainingTime = walkRemainingTime(session.trip, step, progress, now);
@@ -330,7 +331,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     actions,
     undo: undoAction(session),
     live: { politeness: "polite", text: proposal ?? (progress ? `${spokenMeters(progress)} to ${targetName}, straight line` : title) },
-    attention: toDestination && progress?.nearTarget && proposal ? { key: `walk:${step.index}:near`, title: `You're near ${targetName}`, body: proposal } : null,
+    attention: toDestination && progress?.nearTarget && proposal ? { key: `walk:${step.index}:near`, title: `Almost at ${targetName}`, body: proposal } : null,
     usesLocation: true,
   };
 }

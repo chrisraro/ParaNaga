@@ -203,10 +203,10 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
 
   // Last walk, then Arrive: watch and wake lock stopped.
   await expect(page.getByTestId("guidance-step-label")).toHaveText("Step 3 of 3 · Walk");
-  await expect(heading(page)).toHaveText("Walk to Pinned location");
+  await expect(heading(page)).toHaveText(/^Walk to your pin near \S/);
   await tap(page, "I've arrived");
   await expect(heading(page)).toHaveText("You've arrived");
-  await expect(page.getByTestId("arrive-body")).toHaveText("Pinned location. Location use stopped.");
+  await expect(page.getByTestId("arrive-body")).toHaveText(/^Near .+\. Location use stopped\.$/);
   expect((await geoStub(page)).watches).toBe(0);
   await expect(page.getByTestId("guidance-accuracy")).toHaveCount(0);
   await expect(page.getByTestId("arrive-summary")).toContainText("≈ 350 m walk");
@@ -359,7 +359,7 @@ test("Undo last step goes back one confirmation; after Arrive it never restarts 
   expect((await geoStub(page)).watches).toBe(0);
   await expect(page.getByTestId("guidance-undo")).toHaveText("Undo");
   await page.getByTestId("guidance-undo").click();
-  await expect(heading(page)).toHaveText("Walk to Pinned location");
+  await expect(heading(page)).toHaveText(/^Walk to your pin near \S/);
   // Location stays off until tapped again.
   expect(await geoStub(page)).toEqual({ watches: 0, calls: 1 });
   await expect(page.getByTestId("guidance-use-location")).toBeVisible();
@@ -396,7 +396,7 @@ test("a reload resumes the step with location off; End guidance puts the trip ba
   await dialog.getByRole("button", { name: "End guidance" }).click();
   await expect(guide(page)).toHaveCount(0);
   await expect(page.getByTestId("trip-option")).toHaveCount(3);
-  await expect(page.getByTestId("endpoint-destination")).toContainText("Pinned location");
+  await expect(page.getByTestId("endpoint-destination")).toContainText(/Near \S/);
   // The trip is back in the options (directions): the tab bar returns with the map, not before.
   await expect(tabBar(page)).toBeHidden();
   expect(await page.evaluate((k) => window.sessionStorage.getItem(k), SESSION_KEY)).toBeNull();
@@ -427,7 +427,7 @@ test("missed stop with a fresh fix plans again from there", async ({ page, conte
   await page.getByTestId("guidance-replan").click();
   await expect(guide(page)).toHaveCount(0);
   await expect(page.getByTestId("endpoint-start")).toContainText("Your location");
-  await expect(page.getByTestId("endpoint-destination")).toContainText("Pinned location");
+  await expect(page.getByTestId("endpoint-destination")).toContainText(/Near \S/);
   await expect.poll(() => calls.length).toBeGreaterThan(before);
   expect(calls.at(-1)).toMatchObject({ origin: { lat: A2.lat, lng: A2.lng } });
   await expect(page.getByTestId("trip-option").first()).toBeVisible();
@@ -443,7 +443,7 @@ test("missed stop without any fix opens pick mode: Choose where you are on the m
   await page.getByTestId("guidance-replan").click();
   await expect(page.locator(".pn-pick__title")).toHaveText("Choose where you are on the map");
   await page.getByRole("button", { name: "Set start here" }).click();
-  await expect(page.getByTestId("endpoint-destination")).toContainText("Pinned location");
+  await expect(page.getByTestId("endpoint-destination")).toContainText(/Near \S/);
   await expect(page.getByTestId("trip-option").first()).toBeVisible();
 });
 
