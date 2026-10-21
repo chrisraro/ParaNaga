@@ -15,6 +15,7 @@
 import type { PadyakLegDto, PlanOptionDto, RideLegDto, TricycleLegDto, WalkLegDto } from "../api/plan";
 import type { EtaModel } from "../api/schemas";
 import { rideEnds } from "../trip/ride-ends";
+import { en, type Dict } from "@/i18n/dict";
 import { isNegligibleWalk, routeChipLabel, stopLabel, streetRideText, type LoopDirection } from "../trip/present";
 
 /** What a guidance session is built from: the option plus the plan's stop codes and loop directions. */
@@ -87,8 +88,6 @@ export type StreetRideStep = {
 export type GuidanceStep = WalkToBoardStep | RideStep | TransferStep | WalkToDestinationStep | StreetRideStep;
 export type GuidanceStepKind = GuidanceStep["kind"];
 
-export const UNNAMED_DESTINATION = "your destination";
-
 const NO_WALK: WalkFields = { estimateMeters: 0, distanceMeters: 0, negligible: true, legIndex: null };
 
 function walkFields(walk: { leg: WalkLegDto; index: number } | null): WalkFields {
@@ -97,7 +96,8 @@ function walkFields(walk: { leg: WalkLegDto; index: number } | null): WalkFields
   return { estimateMeters: leg.estimateMeters, distanceMeters: leg.distanceMeters, negligible: isNegligibleWalk(leg), legIndex: index };
 }
 
-export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
+/** `copy` names an unnamed destination or tricycle end (English by default). */
+export function guidanceSteps(trip: GuidanceTrip, copy: Dict["guidance"] = en.guidance): GuidanceStep[] {
   const codes = new Map(trip.stops.map((s) => [s.id, s.code]));
   const directions = new Map(trip.variants.map((v) => [v.variantId, v.loopDirection]));
   const stopRef = (s: { id: string; name: string; lat: number; lng: number }): StopRef => ({
@@ -117,7 +117,7 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
 
   const legs = trip.option.legs;
   const steps: GuidanceStep[] = [];
-  const destinationName = trip.destinationLabel?.trim() || UNNAMED_DESTINATION;
+  const destinationName = trip.destinationLabel?.trim() || copy.unnamedDestination;
   let pendingWalk: { leg: WalkLegDto; index: number } | null = null;
   let lastAlight: StopRef | null = null;
   let street: StreetRideStep | null = null;
@@ -130,7 +130,7 @@ export function guidanceSteps(trip: GuidanceTrip): GuidanceStep[] {
     }
     if (leg.kind === "tricycle" || leg.kind === "padyak") {
       // Not the last leg (the access option): the tricycle ends at its named loading point, not at the destination.
-      street = streetStep(leg, legIndex, steps.length, legIndex === legs.length - 1 ? destinationName : leg.to.name ?? "the jeepney", legIndex < legs.length - 1);
+      street = streetStep(leg, legIndex, steps.length, legIndex === legs.length - 1 ? destinationName : leg.to.name ?? copy.theJeepney, legIndex < legs.length - 1);
       steps.push(street);
       pendingWalk = null;
       continue;

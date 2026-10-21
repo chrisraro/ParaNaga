@@ -4,7 +4,8 @@
 // count, and next-leg hint from the pure GuidanceView model (`src/domain/guidance/view.ts`).
 // Not a live region (§3.4): the guidance polite announcer and assertive Para alert already speak.
 
-import type { GuidanceView } from "@/domain/guidance/view";
+import type { GuidanceCopy, GuidanceView } from "@/domain/guidance/view";
+import { useT } from "@/i18n/provider";
 
 type ShownView = Exclude<GuidanceView, { screen: "ended" }>;
 
@@ -39,7 +40,7 @@ function StepIcon({ view }: { view: ShownView }) {
   );
 }
 
-function bannerSubline(view: ShownView): string | null {
+function bannerSubline(view: ShownView, g: GuidanceCopy): string | null {
   if (view.screen === "walk") {
     const parts: string[] = [];
     if (view.distanceText) {
@@ -47,7 +48,7 @@ function bannerSubline(view: ShownView): string | null {
     }
     if (view.nextRide) {
       const dir = view.nextRide.direction ? ` (${view.nextRide.direction})` : "";
-      parts.push(`Then ride ${view.nextRide.chip}${dir}`);
+      parts.push(`${g.thenRide(view.nextRide.chip)}${dir}`);
     }
     return parts.length > 0 ? parts.join(" · ") : view.subtitle;
   }
@@ -61,8 +62,9 @@ function bannerSubline(view: ShownView): string | null {
 }
 
 export function GuidanceBanner({ view, panned = false, onRecenter }: Props) {
+  const g = useT().guidance;
   if (!view || view.screen === "ended") return null;
-  const subline = bannerSubline(view);
+  const subline = bannerSubline(view, g);
   return (
     <div className="pn-guide-banner" data-testid="guidance-banner" data-screen={view.screen}>
       <div className="pn-guide-banner__card">
@@ -87,7 +89,7 @@ export function GuidanceBanner({ view, panned = false, onRecenter }: Props) {
           onClick={onRecenter}
           data-testid="guidance-recenter"
         >
-          Re-center
+          {g.recenter}
         </button>
       ) : null}
     </div>

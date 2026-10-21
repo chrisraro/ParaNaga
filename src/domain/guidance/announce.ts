@@ -12,7 +12,8 @@
 // So after the first proposal no two announcements are ever closer than ANNOUNCE_MS. The
 // assertive "Para! Next stop is yours" never goes through here: it is its own role="alert".
 
-import type { GuidanceView } from "./view";
+import { en } from "@/i18n/dict";
+import type { GuidanceCopy, GuidanceView } from "./view";
 
 export const ANNOUNCE_MS = 15_000;
 /** Kept for the brief's wording: distance updates at most every 15 s. */
@@ -31,13 +32,15 @@ export type Announcer = {
   proposalSaid: boolean;
 };
 
-const DISTANCE = /^(?:About (\d+)|Under 10) m to (.+), straight line$/;
+const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const PLACE = "\u0001";
+const METRES = 987_654_321;
 
-/** The metres of a straight-line walk distance line (0 for "Under 10 m"), else null. */
-export function walkDistanceOf(text: string): number | null {
-  const m = DISTANCE.exec(text);
-  if (!m) return null;
-  return m[1] === undefined ? 0 : Number(m[1]);
+/** The metres of a straight-line walk distance line in `copy`'s language (0 for "Under 10 m"), else null. */
+export function walkDistanceOf(text: string, copy: GuidanceCopy = en.guidance): number | null {
+  const about = new RegExp(`^${escape(copy.liveAbout(METRES, PLACE)).replace(String(METRES), "(\\d+)").replace(PLACE, ".+")}$`).exec(text);
+  if (about) return Number(about[1]);
+  return new RegExp(`^${escape(copy.liveUnder10(PLACE)).replace(PLACE, ".+")}$`).test(text) ? 0 : null;
 }
 
 /** What kind of polite change a view's live text is. */
@@ -46,19 +49,19 @@ export function liveKind(view: GuidanceView): LiveKind {
   const text = view.live.text;
   if (view.screen === "walk") {
     if (text === view.title) return "fallback";
-    if (text.startsWith("Close to")) return "proposal";
-    if (walkDistanceOf(text) !== null) return "distance";
+    if (text === view.proposal) return "proposal";
+    return "distance";
   }
   return "change";
 }
 
 /** A new step (focus moved to its heading): `text` was read through the heading, so only recorded. */
-export function resetAnnouncer(text: string | null, now: number): Announcer {
-  return { at: now, text, distance: text === null ? null : walkDistanceOf(text), proposalSaid: false };
+export function resetAnnouncer(text: string | null, now: number, copy: GuidanceCopy = en.guidance): Announcer {
+  return { at: now, text, distance: text === null ? null : walkDistanceOf(text, copy), proposalSaid: false };
 }
 
 /** The announcer after `text`, and what to say now (null: stay quiet). */
-export function nextPolite(state: Announcer, text: string, kind: LiveKind, now: number): { state: Announcer; say: string | null } {
+export function nextPolite(state: Announcer, text: string, kind: LiveKind, now: number, copy: GuidanceCopy = en.guidance): { state: Announcer; say: string | null } {
   const quiet = { state, say: null };
   if (text === state.text || kind === "fallback") return quiet;
   if (kind === "proposal") {
@@ -67,7 +70,7 @@ export function nextPolite(state: Announcer, text: string, kind: LiveKind, now: 
   }
   if (now - state.at < ANNOUNCE_MS) return quiet;
   if (kind === "distance") {
-    const meters = walkDistanceOf(text)!;
+    const meters = walkDistanceOf(text, copy)!;
     if (state.distance !== null && Math.abs(meters - state.distance) < DISTANCE_ANNOUNCE_M) return quiet;
     return { state: { ...state, at: now, text, distance: meters }, say: text };
   }

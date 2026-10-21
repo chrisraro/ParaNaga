@@ -12,12 +12,37 @@ import { BIKOL_ENABLED } from "@/i18n/locales";
 type Leaf = string | ((...args: never[]) => string);
 type Tree = { readonly [key: string]: Leaf | Tree | undefined };
 
+/** Guidance keys still English in `fil` until the T9 draft + Jev check fills them (strings and message functions). */
+const PENDING_T9 = [
+  "keepOpen", "endGuidance", "atStop", "boarded", "arrived", "gotOffTricycle", "paraAck", "gotOff", "gotOffEarly", "missedStop",
+  "done", "boardingSideUnknown", "signboardUnknown", "entranceUnknown", "locationApproximate", "locationStale", "locationImprecise",
+  "noMarkedStops", "offPath", "metresLeft", "getReady", "headsUp", "arriveNear", "stopsByPinOrder", "paraTitle", "paraBody",
+  "paraAckTitle", "paraAckBody", "stopIsNext", "arrivedTitle", "arrivedBody", "undo", "missedTitle", "missedBody", "earlyTitle",
+  "earlyBody", "stepLabel", "arriveStepLabel", "stepWalk", "stepRide", "stepTransfer", "tricycle", "padyak", "unnamedDestination",
+  "theJeepney", "pinNear", "destinationAt", "youreAt", "walkTo", "waitFor", "changeAt", "changeTo", "startAt", "gotOffAt", "closeTo",
+  "almostAt", "gpsUnder10", "gpsMeters", "straightLine", "liveAbout", "liveUnder10", "stopsCount", "toGo", "rideTo", "getOff",
+  "alongPathTo", "passedOf", "countAfter", "byStopCount", "reportDriver", "walkSummary", "alongThePath", "alongStreets", "saved",
+  "saveTrip", "worksOffline", "saveUnavailable", "streetTitle", "streetTime", "useLocation", "findingLocation", "locationOff",
+  "locationOffTap", "noLocation", "noLocationTap", "undoLabel", "transferSteps", "checkDone", "gpsAccuracy", "endConfirmTitle",
+  "endConfirmBody", "keepGoing", "replan", "thenRide", "recenter", "steps",
+].map((key) => `guidance.${key}`);
+
 /** Filipino strings allowed to equal the English, with the reason. */
 const SAME_AS_EN: Record<string, string> = {
   "app.name": "brand",
   "acknowledgments.community": "pending verbatim-reviewed translation (T13)",
   "acknowledgments.driverReport": "pending verbatim-reviewed translation (T13)",
+  ...Object.fromEntries(PENDING_T9.map((key) => [key, "pending T9 draft"])),
 };
+
+/** Buttons and chips (§1.7 #6): a translation may be at most 1.35 × the English length. */
+const SHORT = [
+  "guidance.endGuidance", "guidance.atStop", "guidance.boarded", "guidance.arrived", "guidance.gotOffTricycle", "guidance.paraAck",
+  "guidance.gotOff", "guidance.gotOffEarly", "guidance.missedStop", "guidance.done", "guidance.undo", "guidance.stepLabel",
+  "guidance.useLocation", "guidance.reportDriver", "guidance.keepGoing", "guidance.replan", "guidance.saveTrip", "guidance.saved",
+  "guidance.recenter", "guidance.steps",
+];
+const SHORT_FACTOR = 1.35;
 
 /** §6.5 per locale: no live/ETA/arrival/guarantee/official or e-jeep claims. bcl list comes from the reviewer. */
 const BANNED: Record<"en" | "fil" | "bcl", RegExp[]> = {
@@ -58,12 +83,25 @@ function droppedPlaceholders(tree: Tree): string[] {
   });
 }
 
-/** Keys whose text is exactly the English one and not allow-listed. */
+/** Keys whose text (or message function) is exactly the English one and not allow-listed. */
 function untranslated(source: Tree, other: Tree, allow: Record<string, string>): string[] {
   const english = new Map(leaves(source));
   return leaves(other)
-    .filter(([key, leaf]) => typeof leaf === "string" && leaf === english.get(key) && !(key in allow))
+    .filter(([key, leaf]) => leaf === english.get(key) && !(key in allow))
     .map(([key]) => key);
+}
+
+/** A leaf as text: a message function is called with short sentinels. */
+const sample = (leaf: Leaf) => (typeof leaf === "string" ? leaf : (leaf as (...args: unknown[]) => string)(...Array.from({ length: leaf.length }, () => "X")));
+
+/** `short` keys whose translation is longer than SHORT_FACTOR × the English. */
+function tooLong(source: Tree, other: Tree, short: string[]): string[] {
+  const english = new Map(leaves(source));
+  const translated = new Map(leaves(other));
+  return short.filter((key) => {
+    const leaf = translated.get(key);
+    return leaf !== undefined && sample(leaf).length > SHORT_FACTOR * sample(english.get(key)!).length;
+  });
 }
 
 function bannedHits(tree: Tree, patterns: RegExp[]): string[] {
@@ -96,7 +134,7 @@ describe("Filipino completeness", () => {
   it("is enforced by the type (a missing key does not compile)", () => {
     // @ts-expect-error: `acknowledgments` is missing, so this is not a Dict.
     const broken: Dict = { app: { name: "ParaNaga", tagline: "x" } };
-    expect(missingKeys(EN, broken as Tree)).toEqual(["acknowledgments.community", "acknowledgments.driverReport"]);
+    expect(missingKeys(EN, broken as Tree)).toEqual(leaves(EN).map(([key]) => key).filter((key) => !key.startsWith("app.")));
   });
 
   it("has every English key", () => {
@@ -118,6 +156,20 @@ describe("not just English", () => {
     const english = new Map(leaves(EN));
     const filipino = new Map(leaves(FIL));
     for (const key of Object.keys(SAME_AS_EN)) expect(filipino.get(key), key).toBe(english.get(key));
+  });
+});
+
+describe("length budget for buttons and chips", () => {
+  it("flags a button that grew past the budget", () => {
+    const long = { guidance: { ...fil.guidance, done: "Tapos na ang lahat ng hakbang" } };
+    expect(tooLong(EN, long as Tree, ["guidance.done"])).toEqual(["guidance.done"]);
+  });
+
+  it("every short key is a real key and fits in every locale", () => {
+    const english = new Map(leaves(EN));
+    for (const key of SHORT) expect(english.has(key), key).toBe(true);
+    expect(tooLong(EN, FIL, SHORT)).toEqual([]);
+    expect(tooLong(EN, BCL, SHORT)).toEqual([]);
   });
 });
 

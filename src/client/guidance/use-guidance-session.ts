@@ -22,6 +22,7 @@ import { startSession, type GuidanceEvent, type GuidanceSession } from "@/domain
 import type { GuidanceTrip } from "@/domain/guidance/steps";
 import { guidanceView, type GuidanceView } from "@/domain/guidance/view";
 import type { SavedTrip } from "@/domain/saved/saved";
+import { useT } from "@/i18n/provider";
 import { askNotificationPermission, useAttention } from "./attention";
 import {
   applyGuidanceEvent,
@@ -70,6 +71,7 @@ async function locationAllowed(): Promise<boolean> {
 }
 
 export function useGuidanceSession(): UseGuidanceSession {
+  const t = useT();
   const snapshot = useSyncExternalStore(subscribeGuidance, getGuidanceSnapshot, getGuidanceServerSnapshot);
   const session = snapshot?.session ?? null;
   const active = session?.status === "active";
@@ -195,7 +197,7 @@ export function useGuidanceSession(): UseGuidanceSession {
 
   const watching = geo.state === "watching";
   const fix = watching ? geo.fix : null;
-  const view = session ? guidanceView(session, fix, now) : null;
+  const view = session ? guidanceView(session, fix, now, t.guidance) : null;
   useAttention(view, session?.startedAt ?? null);
   return {
     session,

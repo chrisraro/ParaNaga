@@ -22,6 +22,7 @@ import type { UseGuidanceSession, GuidanceTap } from "@/client/guidance/use-guid
 import { liveKind, nextPolite, resetAnnouncer, type Announcer } from "@/domain/guidance/announce";
 import { assessFix } from "@/domain/geo/location-fix";
 import type { GuidanceView, MissedView } from "@/domain/guidance/view";
+import { useT } from "@/i18n/provider";
 import { SheetBar } from "@/ui/app-shell/sheet-bar";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { formatAccuracy } from "@/ui/home/location-status";
@@ -31,10 +32,6 @@ import { RideStep } from "./ride-step";
 import { StreetRideStep } from "./street-ride-step";
 import { TransferStep } from "./transfer-step";
 import { WalkStep } from "./walk-step";
-
-export const END_CONFIRM_TITLE = "End guidance?";
-export const END_CONFIRM_BODY = "Your trip stays in the options.";
-export const REPLAN = "Re-plan from here";
 
 type Props = {
   guidance: UseGuidanceSession;
@@ -54,6 +51,7 @@ const stepKeyOf = (view: ShownView, stepIndex: number) => `${view.screen}:${step
 const actionsKeyOf = (view: ShownView) => view.actions.map((a) => a.event).join(",") + (view.undo ? ",back" : "");
 
 function MissedStep({ view, onSend, onReplan, headingRef }: { view: MissedView; onSend: (e: GuidanceTap) => void; onReplan: () => void; headingRef: RefObject<HTMLHeadingElement | null> }) {
+  const g = useT().guidance;
   return (
     <section className="pn-guide__step" aria-labelledby="pn-guide-title" data-testid="guidance-missed">
       <h2 id="pn-guide-title" ref={headingRef} tabIndex={-1} className="pn-guide__title">
@@ -62,7 +60,7 @@ function MissedStep({ view, onSend, onReplan, headingRef }: { view: MissedView; 
       <p className="pn-guide__body">{view.body}</p>
       <SheetBar className="pn-guide__actions">
         <button type="button" className="pn-btn pn-btn--primary" onClick={onReplan} data-testid="guidance-replan">
-          {REPLAN}
+          {g.replan}
         </button>
       </SheetBar>
       <UndoButton undo={view.undo} onSend={onSend} />
@@ -72,6 +70,7 @@ function MissedStep({ view, onSend, onReplan, headingRef }: { view: MissedView; 
 
 function Header({ view, location, now, onEnd }: { view: ShownView; location: UseGuidanceSession["location"]; now: number; onEnd: () => void }) {
   const [confirming, setConfirming] = useState(false);
+  const g = useT().guidance;
   const stepLabel = view.screen === "missed" ? null : view.stepLabel;
   // Only a fix that is still fresh is shown; an old one (hidden page, timeouts) is not "± N m" now.
   const assessment = location.watching && location.fix ? assessFix(location.fix, now) : null;
@@ -79,7 +78,7 @@ function Header({ view, location, now, onEnd }: { view: ShownView; location: Use
   return (
     <div className="pn-guide-head" data-testid="guidance-header">
       {view.screen !== "arrive" ? (
-        <button type="button" className="pn-guide-head__end" aria-label="End guidance" onClick={() => setConfirming(true)} data-testid="guidance-end">
+        <button type="button" className="pn-guide-head__end" aria-label={g.endGuidance} onClick={() => setConfirming(true)} data-testid="guidance-end">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" focusable="false">
             <path d="M3 3l10 10M13 3L3 13" />
           </svg>
@@ -101,15 +100,15 @@ function Header({ view, location, now, onEnd }: { view: ShownView; location: Use
           data-testid="guidance-accuracy"
           data-quality={assessment?.quality}
         >
-          <span className="sr-only">GPS accuracy </span>
+          <span className="sr-only">{`${g.gpsAccuracy} `}</span>
           {formatAccuracy(accuracy)}
         </span>
       ) : null}
       <ConfirmDialog
         open={confirming}
-        title={END_CONFIRM_TITLE}
-        confirmLabel="End guidance"
-        cancelLabel="Keep going"
+        title={g.endConfirmTitle}
+        confirmLabel={g.endGuidance}
+        cancelLabel={g.keepGoing}
         onConfirm={() => {
           setConfirming(false);
           onEnd();
@@ -117,7 +116,7 @@ function Header({ view, location, now, onEnd }: { view: ShownView; location: Use
         onCancel={() => setConfirming(false)}
         testId="guidance-end-confirm"
       >
-        <p>{END_CONFIRM_BODY}</p>
+        <p>{g.endConfirmBody}</p>
       </ConfirmDialog>
     </div>
   );
@@ -125,6 +124,7 @@ function Header({ view, location, now, onEnd }: { view: ShownView; location: Use
 
 export function Guidance({ guidance, covered, onEnd, onDone, onReplan }: Props) {
   const { view, session, location, enableLocation, now, card } = guidance;
+  const g = useT().guidance;
   const headingRef = useRef<HTMLHeadingElement>(null);
   const shown = view && view.screen !== "ended" ? view : null;
   const stepKey = shown && session ? stepKeyOf(shown, session.stepIndex) : "";
@@ -142,13 +142,13 @@ export function Guidance({ guidance, covered, onEnd, onDone, onReplan }: Props) 
   // The polite region: reset (only recorded) whenever focus goes to the heading; later changes go
   // through the throttle, and wait while the map is covered.
   const [seenKey, setSeenKey] = useState(focusKey);
-  const [announcer, setAnnouncer] = useState<Announcer>(() => resetAnnouncer(polite, now));
+  const [announcer, setAnnouncer] = useState<Announcer>(() => resetAnnouncer(polite, now, g));
   const [liveText, setLiveText] = useState("");
   if (focusKey !== seenKey) {
     setSeenKey(focusKey);
-    setAnnouncer(resetAnnouncer(polite, now));
+    setAnnouncer(resetAnnouncer(polite, now, g));
   } else if (!covered && polite && shown) {
-    const next = nextPolite(announcer, polite, liveKind(shown), now);
+    const next = nextPolite(announcer, polite, liveKind(shown), now, g);
     if (next.state !== announcer) setAnnouncer(next.state);
     if (next.say) setLiveText(next.say);
   }

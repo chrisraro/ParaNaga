@@ -5,6 +5,7 @@
 
 import type { GuidanceTap } from "@/client/guidance/use-guidance-session";
 import type { GuidanceView } from "@/domain/guidance/view";
+import { useT } from "@/i18n/provider";
 
 type Props = {
   view: GuidanceView | null;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function GuidanceStrip({ view, onEnd, onAction, onSteps }: Props) {
+  const g = useT().guidance;
   if (!view || view.screen === "ended") return null;
   const stepLabel = view.screen === "missed" ? null : view.stepLabel;
   const remaining = "remainingTime" in view ? view.remainingTime : null;
@@ -26,7 +28,7 @@ export function GuidanceStrip({ view, onEnd, onAction, onSteps }: Props) {
           <button
             type="button"
             className="pn-guide-head__end"
-            aria-label="End guidance"
+            aria-label={g.endGuidance}
             onClick={onEnd}
             data-testid="guidance-strip-end"
           >
@@ -54,7 +56,7 @@ export function GuidanceStrip({ view, onEnd, onAction, onSteps }: Props) {
             onClick={onSteps}
             data-testid="guidance-steps-toggle"
           >
-            Steps
+            {g.steps}
           </button>
         ) : null}
       </div>

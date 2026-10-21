@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useSavedTripToggle } from "@/client/saved/use-saved-trip-toggle";
 import type { ArriveView } from "@/domain/guidance/view";
 import type { SavedTrip } from "@/domain/saved/saved";
+import { useT } from "@/i18n/provider";
 import { SheetBar } from "@/ui/app-shell/sheet-bar";
 import { RouteChip, UndoButton, type StepProps } from "./guidance-parts";
 
@@ -20,6 +21,7 @@ function SaveTripRow({ card }: { card: SavedTrip }) {
     setStatus,
   );
   const saved = kind === "saved";
+  const g = useT().guidance;
 
   return (
     <div className="pn-guide__save">
@@ -35,11 +37,11 @@ function SaveTripRow({ card }: { card: SavedTrip }) {
           <path d="M6 3h12v18l-6-4.5L6 21z" />
         </svg>
         <span className="pn-guide__save-text">
-          <strong>{saved ? "Saved" : "Save this trip"}</strong>
-          {saved ? <span>Works offline</span> : null}
+          <strong>{saved ? g.saved : g.saveTrip}</strong>
+          {saved ? <span>{g.worksOffline}</span> : null}
         </span>
       </button>
-      {unavailable ? <p className="pn-guide__note">Saving isn’t available on this phone.</p> : null}
+      {unavailable ? <p className="pn-guide__note">{g.saveUnavailable}</p> : null}
       <p className="pn-guide__note" aria-live="polite" data-testid="arrive-save-status">
         {status}
       </p>

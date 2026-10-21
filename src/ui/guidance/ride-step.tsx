@@ -12,11 +12,11 @@
 
 import Link from "next/link";
 import type { RideView } from "@/domain/guidance/view";
+import { useT } from "@/i18n/provider";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { UnverifiedBadge } from "@/ui/trip/trip-parts";
 import { GuidanceButtons, KeepOpen, LocationOffer, UndoButton, type StepProps } from "./guidance-parts";
 
-export const REPORT_DRIVER = "Report a driver";
 const MYNAGA_PATH = "/app/mynaga";
 
 function Rail({ stops }: { stops: RideView["stops"] }) {
@@ -32,6 +32,7 @@ function Rail({ stops }: { stops: RideView["stops"] }) {
 
 export function RideStep({ view, onSend, location, headingRef, alertKey }: StepProps<RideView> & { alertKey: string }) {
   const frame = useAppFrame();
+  const g = useT().guidance;
   return (
     <section className="pn-guide__step" aria-labelledby="pn-guide-title" data-testid="guidance-ride">
       <h2 id="pn-guide-title" ref={headingRef} tabIndex={-1} className="pn-guide__title">
@@ -86,7 +87,7 @@ export function RideStep({ view, onSend, location, headingRef, alertKey }: StepP
       {/* Marked as opened from the home screen (like a stop pin), so closing MyNaga goes back in
           history to the running guidance instead of pushing a new /app entry. */}
       <Link href={MYNAGA_PATH} className="pn-text-btn pn-guide__report" onClick={() => frame?.markHomeNavigation(MYNAGA_PATH)} data-testid="guidance-report-driver">
-        {REPORT_DRIVER}
+        {g.reportDriver}
       </Link>
     </section>
   );

@@ -8,6 +8,7 @@ import type { RefObject } from "react";
 import type { GeolocationState } from "@/client/geo/use-geolocation";
 import type { GuidanceTap } from "@/client/guidance/use-guidance-session";
 import type { GuidanceAction } from "@/domain/guidance/view";
+import { useT } from "@/i18n/provider";
 import { SheetBar } from "@/ui/app-shell/sheet-bar";
 
 export type LocationUi = { state: GeolocationState; watching: boolean; onEnable: () => void };
@@ -19,8 +20,6 @@ export type StepProps<V> = {
   /** Heading ref: focus moves here when the step (or its buttons) change. */
   headingRef: RefObject<HTMLHeadingElement | null>;
 };
-
-export const USE_LOCATION = "Use my location";
 
 /** The step's own buttons (End lives in the header, so it is left out here). */
 export function GuidanceButtons({ actions, onSend }: { actions: readonly GuidanceAction[]; onSend: (event: GuidanceTap) => void }) {
@@ -45,9 +44,10 @@ export function GuidanceButtons({ actions, onSend }: { actions: readonly Guidanc
 
 /** "Undo last step" (view.undo): undoes the last confirmation only. */
 export function UndoButton({ undo, onSend }: { undo: GuidanceAction | null; onSend: (event: GuidanceTap) => void }) {
+  const g = useT().guidance;
   if (!undo) return null;
   return (
-    <button type="button" className="pn-text-btn pn-guide__undo" aria-label="Undo last step" onClick={() => onSend({ type: "back" })} data-testid="guidance-undo">
+    <button type="button" className="pn-text-btn pn-guide__undo" aria-label={g.undoLabel} onClick={() => onSend({ type: "back" })} data-testid="guidance-undo">
       {undo.label}
     </button>
   );
@@ -92,25 +92,26 @@ export function GuidanceNotes({ notes }: { notes: readonly string[] }) {
  */
 export function LocationOffer({ location, manual }: { location: LocationUi; manual?: string }) {
   const { state, watching, onEnable } = location;
+  const g = useT().guidance;
   if (watching) return null;
   if (state === "requesting") {
     return (
       <p className="pn-guide__loc" role="status">
-        Finding your location…
+        {g.findingLocation}
       </p>
     );
   }
   if (state === "denied" || state === "unsupported" || state === "insecure") {
     return (
       <p className="pn-guide__loc pn-guide__loc--off" data-testid="guidance-location-off">
-        {manual ? `Location off. Tap “${manual}” when there.` : "Location off."}
+        {manual ? g.locationOffTap(manual) : g.locationOff}
       </p>
     );
   }
   if (state === "unavailable" || state === "timeout") {
     return (
       <p className="pn-guide__loc pn-guide__loc--off" data-testid="guidance-location-off">
-        {manual ? `No location now. Tap “${manual}” when there.` : "No location now."}
+        {manual ? g.noLocationTap(manual) : g.noLocation}
       </p>
     );
   }
@@ -119,7 +120,7 @@ export function LocationOffer({ location, manual }: { location: LocationUi; manu
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M21 3L3 10.5l7.5 2.9L13.4 21z" fill="currentColor" />
       </svg>
-      {USE_LOCATION}
+      {g.useLocation}
     </button>
   );
 }

@@ -9,16 +9,11 @@
 
 import { UnverifiedBadge } from "@/ui/trip/trip-parts";
 import type { WalkView } from "@/domain/guidance/view";
-import { GUIDANCE_COPY } from "@/domain/guidance/view";
+import { useT } from "@/i18n/provider";
 import { GuidanceButtons, GuidanceNotes, LocationOffer, UndoButton, type StepProps } from "./guidance-parts";
 
-/** The view's GPS proposal ("You look close to …"), shown as well as announced. */
-export function proposalOf(view: WalkView): string | null {
-  return view.live.text.startsWith("Close to") ? view.live.text : null;
-}
-
 export function WalkDistance({ view }: { view: WalkView }) {
-  const proposal = proposalOf(view);
+  const proposal = view.proposal;
   return (
     <>
       {view.remainingTime ? (
@@ -52,7 +47,8 @@ export function NextRide() {
 }
 
 export function WalkStep({ view, onSend, location, headingRef }: StepProps<WalkView>) {
-  const manual = view.stepKind === "walk_to_destination" ? undefined : GUIDANCE_COPY.atStop;
+  const g = useT().guidance;
+  const manual = view.stepKind === "walk_to_destination" ? undefined : g.atStop;
   return (
     <section className="pn-guide__step" aria-labelledby="pn-guide-title" data-testid="guidance-walk">
       <h2 id="pn-guide-title" ref={headingRef} tabIndex={-1} className="pn-guide__title">

@@ -22,6 +22,7 @@ import { etaModelSchema } from "../api/schemas";
 import type { LocationFix } from "../geo/location-fix";
 import { haversineMeters } from "../geo/geometry";
 import { ARRIVE_NEAR_M, CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, rideProgress, usableFix, type RideMemory } from "./progress";
+import type { Dict } from "@/i18n/dict";
 import { guidanceSteps, type GuidanceStep, type GuidanceTrip } from "./steps";
 
 /** 2: street rides and `trip.ridePaths` (Increment E). Format-1 sessions still read (migrated to 2 on parse);
@@ -78,8 +79,8 @@ export function startSession(trip: GuidanceTrip, now: number): GuidanceSession {
   return { v: GUIDANCE_SESSION_FORMAT, trip: { ...trip, option: toWireOption(trip.option) }, startedAt: now, status: "active", stepIndex: 0, atStop: false, ride: null, lastRide: null, nearDestination: false };
 }
 
-export function sessionSteps(session: GuidanceSession): GuidanceStep[] {
-  return guidanceSteps(session.trip);
+export function sessionSteps(session: GuidanceSession, copy?: Dict["guidance"]): GuidanceStep[] {
+  return guidanceSteps(session.trip, copy);
 }
 
 export function currentStep(session: GuidanceSession): GuidanceStep {
