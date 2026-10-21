@@ -450,8 +450,14 @@ function jeepneyOption(
     const passed = (m: number) => (v.isCircuit ? (((m - board.measureM) % v.lengthM) + v.lengthM) % v.lengthM : m - board.measureM);
     // The pins the board and alight points are named after (within 100 m along, either side) are the ride's ends,
     // so the rail starts where the rider boards (field test 2026-10-21: a dropped boarding pin froze the count).
-    const stops = (net.pins.get(v.variantId) ?? [])
-      .map((p) => ({ p, d: p.stopId === board.stopId ? 0 : p.stopId === alight.stopId ? h.rideM : passed(p.measureM) }))
+    // A stop a loop visits twice has two pins: only the one nearest the point is the end.
+    const pins = net.pins.get(v.variantId) ?? [];
+    const gap = (m: number, at: number) => (v.isCircuit ? Math.min(Math.abs(m - at), v.lengthM - Math.abs(m - at)) : Math.abs(m - at));
+    const endPin = (id: string | null, at: number) => pins.filter((p) => p.stopId === id).sort((x, y) => gap(x.measureM, at) - gap(y.measureM, at))[0];
+    const boardPin = endPin(board.stopId, board.measureM);
+    const alightPin = endPin(alight.stopId, alight.measureM);
+    const stops = pins
+      .map((p) => ({ p, d: p === boardPin ? 0 : p === alightPin ? h.rideM : passed(p.measureM) }))
       .filter((x) => x.d >= 0 && x.d <= h.rideM)
       .sort((x, y) => x.d - y.d)
       .flatMap((x) => stopsById.get(x.p.stopId) ?? []);

@@ -64,6 +64,11 @@ function rideWithGps(code: string, origin: LatLng, destination: LatLng, seed: nu
     expect(memory.passedIndex).toBeGreaterThanOrEqual(before);
     // Every pin the jeepney is 100 m past has been counted (the boarding pin, within 100 m of the board point, is index 0).
     expect(memory.passedIndex, at).toBeGreaterThanOrEqual(pins.filter((d) => d > 100 && d <= x - 100).length);
+    // Never ahead: a stop counts from 120 m before it (+ noise), never across an out-and-back spur (Loop B STI → S&R → ALDP).
+    expect(memory.passedIndex, at).toBeLessThanOrEqual(pins.filter((d, i) => i > 0 && d <= x + 250).length);
+    // Para only at the stop before alighting or near the alighting pin.
+    const alight = pins.length - 1;
+    if (memory.alightNear || memory.nearStopBefore) expect(x, at).toBeGreaterThanOrEqual(Math.min(pins[alight - 1]! - 160, pins[alight]! - 360));
   }
   expect(memory).toMatchObject({ passedIndex: leg.stops.length - 1, countLost: false });
   return leg;
@@ -71,11 +76,30 @@ function rideWithGps(code: string, origin: LatLng, destination: LatLng, seed: nu
 
 describe("GPS stop count on the real loops (field test 2026-10-21)", () => {
   it("Loop B counterclockwise: board by Peñafrancia/Magsaysay, alight at Robinsons (B11); the count moves past BISCAST", () => {
-    const leg = rideWithGps("R8-B", { lat: 13.6329, lng: 123.1941 }, { lat: 13.615, lng: 123.1928 }, 20261021);
+    let leg = null;
+    for (let seed = 20261021; seed < 20261021 + 8; seed++) leg = rideWithGps("R8-B", { lat: 13.6329, lng: 123.1941 }, { lat: 13.615, lng: 123.1928 }, seed);
     expect(leg).not.toBeNull();
     expect(leg!.stops.map((s) => s.name)).toEqual(expect.arrayContaining(["Cor. Peñafrancia Ave & Magsaysay Ave", "BISCAST", "Robinsons Mall/Banko Central ng Pilipinas"]));
     expect(leg!.stops[0]!.name).toBe("Cor. Peñafrancia Ave & Magsaysay Ave");
     expect(leg!.stops.at(-1)!.name).toBe("Robinsons Mall/Banko Central ng Pilipinas");
+  });
+
+  it("a stop a loop visits twice: only its pin nearest the board / alight point is the ride's end", () => {
+    // Loop B with B26 (boarding) listed again at B20's place and B11 (alighting) again at B18's place.
+    const sv = snap.variants.find((x) => x.routeCode === "R8-B")!;
+    const ids = [...sv.stopIds];
+    const [b26, b11] = [ids[25]!, ids[10]!];
+    ids[19] = b26;
+    ids[17] = b11;
+    const twice = { ...snap, variants: snap.variants.map((x) => (x === sv ? { ...x, stopIds: ids } : x)) };
+    const leg = planTrip(twice, NET, { lat: 13.6329, lng: 123.1941 }, { lat: 13.615, lng: 123.1928 }, TEN)
+      .options.flatMap((o) => o.legs).find((l) => l.kind === "ride" && l.variantId === sv.variantId);
+    if (!leg || leg.kind !== "ride") throw new Error("a Loop B ride");
+    const got = leg.stops.map((s) => s.id);
+    expect(got[0]).toBe(b26);
+    expect(got.at(-1)).toBe(b11);
+    expect(got.filter((id) => id === b26 || id === b11)).toHaveLength(2);
+    expect(got).toHaveLength(17);
   });
 
   it.each(["R8-A", "R8-B"])("%s: boarding 40 m past a pin and riding ~8 pins, the count follows the pins passed", (code) => {

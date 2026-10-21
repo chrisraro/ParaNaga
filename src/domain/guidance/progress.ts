@@ -14,7 +14,10 @@
 //    stops), only to a stop within 120 m of the fix, and only if that stop is (within 10 m) the
 //    nearest of ALL the ride's stops: on a circuit whose return street runs beside the outbound
 //    one, or a full circle whose alighting pin sits by the boarding pin, a stop further along the
-//    order never wins. The index never decreases.
+//    order never wins. It must also be far enough from the last counted stop p: p+1 counts once the
+//    fix is further from p than (p → p+1) − 60 m, and p+2 (skipping p+1) once further than p → p+1, so an
+//    out-and-back spur (Loop B: STI → S&R → ALDP, ALDP on the spur road) never counts ALDP on the way
+//    out. The index never decreases.
 //  - After a GPS gap the jeepney may be past the window. A usable fix whose nearest stop lies
 //    beyond the window while it is more than 120 m from every window stop sets `countLost`: the
 //    view then drops to the no-GPS copy and Para is manual only. The count resyncs (jumps ahead,
@@ -24,7 +27,8 @@
 //    earlier stops, is never a resync target). Any in-window or current-stop match also clears it.
 //  - Para (the only assertive output, decision A) needs a PRECISE fix (≤ PRECISE_M = 30 m):
 //    `alightNear` when such a fix is within 300 m of the alighting pin while pin order agrees
-//    (passed index ≥ alighting index − 2); `nearStopBefore` when such a fix matches, in order, a
+//    (passed index ≥ alighting index − 1: a parallel return street brings the pin within 300 m with
+//    stops still to go, Loops A/B on Magsaysay); `nearStopBefore` when such a fix matches, in order, a
 //    stop with index ≥ max(1, alighting index − 1). Both latch once set (pin order cannot go back).
 //    `paraSuggested` is the one rule the view and the session both use.
 // The stop count has no off-route detection (pins are not a shape) and no time estimate anywhere.
@@ -131,8 +135,14 @@ export function rideProgress(stops: readonly LatLng[], memory: RideMemory, fix: 
   let countLost = current.countLost;
   let pendingIndex: number | null = null;
   let matched = -1;
+  // Order needs distance from the last counted stop p (an out-and-back spur passes the same pins twice: Loop B
+  // STI → S&R → ALDP, ALDP on the spur road 230 m from STI): p+1 counts only once the fix is within 60 m of p's
+  // distance to it, and skipping p+1 only once the fix is further from p than p+1 is.
+  const p = current.passedIndex;
+  const toNext = haversineMeters(stops[p]!, stops[Math.min(p + 1, alightIndex)]!);
+  const leftP = (i: number) => distances[p]! > toNext - (i === p + 1 ? STOP_PASS_RADIUS_M / 2 : 0);
   for (let i = current.passedIndex + 1; i <= windowEnd; i++) {
-    if (matches(i)) {
+    if (matches(i) && leftP(i)) {
       passedIndex = i;
       matched = i;
       break;
@@ -170,7 +180,9 @@ export function rideProgress(stops: readonly LatLng[], memory: RideMemory, fix: 
 
   let { alightNear, nearStopBefore } = current;
   if (preciseFix(fix, now) && !countLost) {
-    if (passedIndex >= alightIndex - 2 && distances[alightIndex]! <= ALIGHT_NEAR_M) alightNear = true;
+    // Only once the stop before alighting is counted: a loop's parallel return street brings the alighting pin
+    // within 300 m in a straight line while stops are still to go (Loops A/B on Magsaysay).
+    if (passedIndex >= alightIndex - 1 && distances[alightIndex]! <= ALIGHT_NEAR_M) alightNear = true;
     if (matched >= Math.max(1, alightIndex - 1)) nearStopBefore = true;
   }
   return summarize(stops, { passedIndex, countLost, pendingIndex, alightNear, nearStopBefore }, true);

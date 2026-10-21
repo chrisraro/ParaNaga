@@ -210,12 +210,13 @@ describe("Para paths, each in isolation", () => {
 
   it("path 2: a precise fix within 300 m of the alighting pin while pin order agrees (not near any later stop)", () => {
     const beyond = { lat: STOPS[5]!.lat + 0.0023, lng: STOPS[5]!.lng }; // ≈ 255 m past the alighting pin
-    const p = rideProgress(STOPS, mem(3), fixAt(beyond, 10), NOW);
-    expect(p).toMatchObject({ passedIndex: 3, alightNear: true, nearStopBefore: false });
-    // The same fix out of order (only 1 stop passed) proves nothing.
-    expect(rideProgress(STOPS, mem(1), fixAt(beyond, 10), NOW)).toMatchObject({ alightNear: false, nearStopBefore: false });
+    const p = rideProgress(STOPS, mem(4), fixAt(beyond, 10), NOW);
+    expect(p).toMatchObject({ passedIndex: 4, alightNear: true, nearStopBefore: false });
+    // The same fix with the stop before alighting not yet counted proves nothing (field test 2026-10-21: a loop's
+    // parallel return street brings the alighting pin within 300 m while stops are still to go).
+    expect(rideProgress(STOPS, mem(3), fixAt(beyond, 10), NOW)).toMatchObject({ alightNear: false, nearStopBefore: false });
     // And a 40 m fix proves nothing (polite only).
-    expect(rideProgress(STOPS, mem(3), fixAt(beyond, 40), NOW)).toMatchObject({ alightNear: false });
+    expect(rideProgress(STOPS, mem(4), fixAt(beyond, 40), NOW)).toMatchObject({ alightNear: false });
   });
 
   it("path 3: a precise fix at the stop before alighting, in order, further than 300 m from the alighting pin", () => {
@@ -345,7 +346,7 @@ describe("ride progress properties", () => {
           const next = rideProgress(stops, m, fix, NOW);
           const precise = preciseFix(fix, NOW);
           if (next.alightNear && !m.alightNear) {
-            if (!precise || haversineMeters(fix, stops[alight]!) > ALIGHT_NEAR_M || next.passedIndex < alight - 2) return false;
+            if (!precise || haversineMeters(fix, stops[alight]!) > ALIGHT_NEAR_M || next.passedIndex < alight - 1) return false;
           }
           if (next.nearStopBefore && !m.nearStopBefore) {
             const near = stops.some((s, k) => k >= Math.max(1, alight - 1) && haversineMeters(fix, s) <= STOP_PASS_RADIUS_M);
