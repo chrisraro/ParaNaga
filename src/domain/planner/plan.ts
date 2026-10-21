@@ -448,8 +448,10 @@ function jeepneyOption(
     const route = routes.get(v.routeId);
     const fleet = route ? route.fleet : fleetSummary([], v.mode);
     const passed = (m: number) => (v.isCircuit ? (((m - board.measureM) % v.lengthM) + v.lengthM) % v.lengthM : m - board.measureM);
+    // The pins the board and alight points are named after (within 100 m along, either side) are the ride's ends,
+    // so the rail starts where the rider boards (field test 2026-10-21: a dropped boarding pin froze the count).
     const stops = (net.pins.get(v.variantId) ?? [])
-      .map((p) => ({ p, d: passed(p.measureM) }))
+      .map((p) => ({ p, d: p.stopId === board.stopId ? 0 : p.stopId === alight.stopId ? h.rideM : passed(p.measureM) }))
       .filter((x) => x.d >= 0 && x.d <= h.rideM)
       .sort((x, y) => x.d - y.d)
       .flatMap((x) => stopsById.get(x.p.stopId) ?? []);

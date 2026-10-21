@@ -7,7 +7,9 @@
 //  - Walk (polite outputs, ≤ 50 m): straight-line metres to the target (rounded to 10 m),
 //    `nearTarget` within max(30 m, accuracy), and an 8-point bearing from 40 m out. No path, curb
 //    or crossing exists.
-//  - Ride: stops are counted strictly along the leg's provisional pin order. Per fix the passed
+//  - Ride: stops are counted strictly along the leg's provisional pin order. Index 0 is the pin the
+//    rider boards at (the planner keeps the pin its board point is named after, even when that pin sits
+//    a little before the board point; field test 2026-10-21), so the first stop passed counts. Per fix the passed
 //    index may move only into the window passedIndex+1 … passedIndex+2 (one missed fix between
 //    stops), only to a stop within 120 m of the fix, and only if that stop is (within 10 m) the
 //    nearest of ALL the ride's stops: on a circuit whose return street runs beside the outbound
