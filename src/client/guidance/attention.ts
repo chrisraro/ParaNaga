@@ -1,6 +1,7 @@
 // Vibration and a system notification for the moments the rider must not miss (say "Para", get
-// ready, near the destination). `newAttention` is pure: one alert per transition, and a new step
-// has a new key, so a later ride can alert again. Notification permission is only ever asked from
+// ready, near the destination). `newAttention` is pure: each alert key fires once per trip (GPS
+// wobbling in and out of "near" never buzzes twice), and a new step has a new key, so a later ride
+// can alert again. Notification permission is only ever asked from
 // a tap (`askNotificationPermission`); without it only the vibration (where supported) fires.
 
 import { useEffect, useRef } from "react";
@@ -8,11 +9,10 @@ import type { Attention, GuidanceView } from "@/domain/guidance/view";
 
 export const ATTENTION_TAG = "paranaga-guidance";
 
-/** The alert to fire for prev -> next, or null when there is none or it already fired. */
-export function newAttention(prev: GuidanceView | null, next: GuidanceView | null): Attention | null {
-  const of = (v: GuidanceView | null) => (v && (v.screen === "ride" || v.screen === "walk") ? v.attention : null);
-  const a = of(next);
-  return a && a.key !== of(prev)?.key ? a : null;
+/** The view's alert, or null when there is none or its key already fired this trip. */
+export function newAttention(fired: ReadonlySet<string>, view: GuidanceView | null): Attention | null {
+  const a = view && (view.screen === "ride" || view.screen === "walk") ? view.attention : null;
+  return a && !fired.has(a.key) ? a : null;
 }
 
 /** From a tap only: asks once, when the choice has not been made. */
@@ -36,12 +36,14 @@ export function fireAttention(a: Attention): void {
   if (typeof Notification !== "undefined" && Notification.permission === "granted") void notify(a).catch(() => undefined);
 }
 
-/** Fires once per new alert in the view (not per render or fix). */
-export function useAttention(view: GuidanceView | null): void {
-  const prev = useRef<GuidanceView | null>(null);
+/** Fires each alert once per trip (`tripId`: the session's start time); not per render or fix. */
+export function useAttention(view: GuidanceView | null, tripId: number | null): void {
+  const fired = useRef<{ tripId: number | null; keys: Set<string> }>({ tripId: null, keys: new Set() });
   useEffect(() => {
-    const a = newAttention(prev.current, view);
-    prev.current = view;
-    if (a) fireAttention(a);
-  }, [view]);
+    if (fired.current.tripId !== tripId) fired.current = { tripId, keys: new Set() };
+    const a = newAttention(fired.current.keys, view);
+    if (!a) return;
+    fired.current.keys.add(a.key);
+    fireAttention(a);
+  }, [view, tripId]);
 }
