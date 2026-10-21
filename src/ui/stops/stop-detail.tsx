@@ -31,7 +31,7 @@ import {
   useReturnToMap,
 } from "@/ui/detail/detail-frame";
 import { SOURCES_HREF } from "@/ui/help/sources-href";
-import { routeLabel } from "@/domain/planner/route-display";
+import { routeTitleBesideChip } from "@/domain/planner/route-display";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
 export function StopDetailScreen({ id }: { id: string }) {
@@ -142,7 +142,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
                   <Link href={`/app/routes/${encodeURIComponent(r.routeCode)}`} className="pn-cell">
                     <LoopChip leg={{ routeCode: r.routeCode, routeName: r.routeName }} icon={r.isCircular ? "loop" : "line"} short />
                     <span className="pn-cell__text">
-                      <span className="pn-cell__title">{routeLabel(r.routeCode, r.routeName)}</span>
+                      <span className="pn-cell__title">{routeTitleBesideChip(r.routeCode, r.routeName)}</span>
                       <span className="pn-cell__sub">
                         Stop {r.seq} · {servingDirection(r.direction)}
                       </span>
@@ -181,7 +181,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
                     <Link href={`/app/routes/${encodeURIComponent(r.routeCode)}`} className="pn-cell">
                       <LoopChip leg={r} icon="line" short />
                       <span className="pn-cell__text">
-                        <span className="pn-cell__title">{routeLabel(r.routeCode, r.routeName)}</span>
+                        <span className="pn-cell__title">{routeTitleBesideChip(r.routeCode, r.routeName)}</span>
                       </span>
                     </Link>
                   </li>

@@ -544,16 +544,23 @@ function tricycleOption(
   };
 }
 
-/** The published tricycle terminal nearest each end (tricycle-hint.ts, 600 m), once per terminal, with its TODAs on file. */
+/** The published terminal nearest each end, destination-aligned, with its TODAs on file. */
 function tricycleTerminals(snapshot: PlannerSnapshot, origin: LatLng, destination: LatLng): TricycleTerminalRef[] {
   const terminals = (snapshot.terminals ?? []).map((t) => ({ ...t, modes: [...(t.modes ?? [])] }));
   const out: TricycleTerminalRef[] = [];
-  for (const [side, p] of [["origin", origin], ["destination", destination]] as const) {
-    const t = nearestTricycleTerminal(p, p, terminals);
-    if (!t || out.some((x) => x.code === t.code)) continue;
-    const todas = FAR_AREAS.tricycleTerminals.find((x) => x.terminalCode === t.code)?.todas ?? [];
+  const o = nearestTricycleTerminal(origin, origin, terminals);
+  if (o) {
+    const todas = FAR_AREAS.tricycleTerminals.find((x) => x.terminalCode === o.code)?.todas ?? [];
     out.push({
-      side, code: t.code, name: t.name, distanceM: t.distanceM, todas: [...todas],
+      side: "origin", code: o.code, name: o.name, distanceM: o.distanceM, todas: [...todas],
+      source: todas.length > 0 ? "Published terminal list; TODA names from local reports, unconfirmed" : "Published terminal list; no TODA name on file",
+    });
+  }
+  const d = nearestTricycleTerminal(destination, destination, terminals);
+  if (d && !out.some((x) => x.code === d.code)) {
+    const todas = FAR_AREAS.tricycleTerminals.find((x) => x.terminalCode === d.code)?.todas ?? [];
+    out.push({
+      side: "destination", code: d.code, name: d.name, distanceM: d.distanceM, todas: [...todas],
       source: todas.length > 0 ? "Published terminal list; TODA names from local reports, unconfirmed" : "Published terminal list; no TODA name on file",
     });
   }
@@ -700,6 +707,7 @@ function activeLoopPartners(net: PlanningNetwork, cands: Cand[]): Set<Cand> {
   return reps;
 }
 
+
 export function planTrip(
   snapshot: PlannerSnapshot,
   network: PlannerNetwork,
@@ -751,9 +759,9 @@ export function planTrip(
   const special: SpecialTrip | null = farZone === null ? null
     : terminal ? { terminal } : best === undefined && !access ? { terminal: null } : null;
   const padyak = padyakOption(g, snapshot, origin, destination, now);
-  // Via groups: the Pareto picks plus the best one-ride candidate of each via route, within the block budget. The
-  // best-score option is never trimmed; non-via extras go first (worst score first), then vias; a label on a dropped
-  // option is dropped with it, never moved.
+  // Via groups & passing routes: the Pareto picks plus the best one-ride candidate of each via route,
+  // loop partners, and distinct passing routes to the destination, within the block budget.
+  const nearM = centro ? PASSES_DESTINATION_M : JEEP_NEAR_DROP_M;
   const vias = activeVias(net, jeep.cands, viaGroups, [nearestAnchorId(origin, FAR_AREAS), nearestAnchorId(destination, FAR_AREAS)]);
   const loopPartners = activeLoopPartners(net, jeep.cands);
   const extraReps = new Set<Cand>([...vias.reps, ...loopPartners]);
@@ -785,7 +793,6 @@ export function planTrip(
   // exception below). Drop-offs nearer than the limit are the planner's own picks, unchanged.
   const dropOf = (c: Cand) => c.hops.at(-1)!.alight.distM;
   const lastRoute = (c: Cand) => net.variants[c.hops.at(-1)!.v]!.routeCode;
-  const nearM = centro ? PASSES_DESTINATION_M : JEEP_NEAR_DROP_M;
   const shownRoutes = new Set(jeepBuilt.map((x) => lastRoute(x.c)));
   const farDrops = (destinationZone ? [] : jeep.cands)
     .filter((c) => dropOf(c) > nearM && dropOf(c) <= JEEP_FAR_DROP_MAX_M && !shownRoutes.has(lastRoute(c)))

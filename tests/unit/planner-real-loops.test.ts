@@ -207,19 +207,5 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
 const REGRESSION_BASELINE = {
   options: 613,
   byMode: { jeepney: 395, tricycle: 200, padyak: 8, walk: 10 },
-  // Re-recorded after 3d2ea38: the fixture snapshot gained the reviewed route notes, so 254 of 417
-  // ride legs (160 trips) now carry notes; with notes stripped the digest is still d0930a3e….
-  // Re-recorded for the approach-run walk fallback (Ateneo fix): 22 trips change; 5 gain a jeepney
-  // (4 were no_path_near_origin, 1 walk_shorter), 17 get other or more jeepney options (+13 options).
-  // Re-recorded for cheapest jeepney Recommended first at >= 500 m (bdefab1e…).
-  // Re-recorded for the planner revision 2026-10-20: every ride gains `display`, tricycles near a published tricycle
-  // terminal gain `tricycleTerminals`; 96 of 200 trips change otherwise, each checked against the previous planner:
-  // 62 by the detour guard (a jeepney over 2 × the straight line + 300 m dropped, 70 jeepney options fewer in all),
-  // 18 by the city-centre rule (tricycle Recommended and first) and 16 by both. None unexplained.
-  // Re-recorded for far drop-offs (owner 2026-10-20; was 5d21552d…, 468 options), at most 2 per trip at distinct spots
-  // (over 50 m from every shown drop-off): 138 trips unchanged; 62 gain 84 far drop-off jeepney options (1–2 each,
-  // drop-offs 102–400 m; 12 city-centre trips lose reason "centro"), appended after the tricycle/padyak, every earlier
-  // option byte-identical; Recommended changed on 0 trips; none trimmed.
-  // Also re-recorded for the route tally 2026-10-20 (ride display letters/titles only).
   digest: "e897f944d8ca92a01e322123a4519a238b4db3d394452675566bb3385636c71a",
 };

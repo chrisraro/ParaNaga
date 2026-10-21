@@ -8,6 +8,7 @@ import type { LatLng } from "../geo/types";
 import { modeName, type FleetSummary, type RouteMode } from "../modes/fleet";
 import { MAX_ACCESS_WALK_M } from "../planner/labels";
 import type { NoCoverageReason } from "../planner/plan";
+import { formatRouteLabel } from "../planner/route-display";
 
 export type LoopDirection = "clockwise" | "counterclockwise";
 
@@ -150,8 +151,8 @@ export function optionTitle(option: { rides: number; walkEstimateMeters: number;
 
 export type RideDisplay = { letter: string | null; title: string };
 
-/** "E Centro-Del Rosario via Magsaysay Ave" (sign letter + title) or just the title when no letter is confirmed. */
-export const rideDisplayText = (d: RideDisplay) => (d.letter ? `${d.letter} ${d.title}` : d.title);
+/** "Loop A · Centro-Magsaysay (clockwise)" or "E Centro-…" (the letter said once), or just the title when no letter is confirmed. */
+export const rideDisplayText = (d: RideDisplay) => formatRouteLabel(d.letter, d.title);
 
 /**
  * How a jeepney ride is named: its display (letter + title) when the plan carries one; otherwise "Loop A" from a

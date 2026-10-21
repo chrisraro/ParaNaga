@@ -188,11 +188,22 @@ function OptionCard({
           <>
             <span className="sr-only">. </span>
             <StreetLines leg={street} />
-            {[terminalLines.terminal, terminalLines.toda].map((t, k) => t ? (
-              <span key={k} className="pn-trip-card__street" data-testid={k === 0 ? "card-terminal" : "card-toda"}>
-                {t}
+            {terminalLines.terminal ? (
+              <span className="pn-trip-card__terminal-box" data-testid="card-terminal-box">
+                <span className="pn-trip-card__street pn-trip-card__terminal" data-testid="card-terminal">
+                  <svg className="pn-terminal-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 8v4l3 2" />
+                  </svg>
+                  {terminalLines.terminal}
+                </span>
+                {terminalLines.toda ? (
+                  <span className="pn-trip-card__street pn-trip-card__toda" data-testid="card-toda">
+                    {terminalLines.toda}
+                  </span>
+                ) : null}
               </span>
-            ) : null)}
+            ) : null}
           </>
         ) : null}
         {access ? (

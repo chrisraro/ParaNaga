@@ -105,7 +105,7 @@ describe("searchIndex: routes by letter, number, loop and street (route tally 20
 describe("searchIndex: route codes", () => {
   it.each(["R8-A", "R8A", "r8a", "8a", "r8 a"])("%s finds R8-A", (q) => {
     const routes = group(searchIndex(index, q, off), "routes")!.results;
-    expect(routes[0]).toMatchObject({ kind: "route", code: "R8-A", title: "A Centro-Magsaysay Loop A (clockwise)", evidence: "provisional" });
+    expect(routes[0]).toMatchObject({ kind: "route", code: "R8-A", title: "Centro-Magsaysay Loop A (clockwise)", evidence: "provisional" });
   });
 
   it("documentary routes carry the documented evidence", () => {

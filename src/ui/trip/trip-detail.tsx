@@ -314,9 +314,13 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
               </p>
             ))}
             {tricycleTerminalLines({ tricycleTerminals: ctx.planTerminals }).map((t) => (
-              <p key={t.key} className="pn-tl__sub" data-testid="tricycle-terminal">
-                {t.text}
-                {t.toda ? <span data-testid="tricycle-toda"> · {t.toda}</span> : null}
+              <p key={t.key} className="pn-tl__sub pn-tl__terminal-highlight" data-testid="tricycle-terminal">
+                <svg className="pn-terminal-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ display: "inline-block", verticalAlign: "-2px", marginRight: "6px" }}>
+                  <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <strong>{t.text}</strong>
+                {t.toda ? <span className="pn-tl__toda-line" data-testid="tricycle-toda"><br />{t.toda}</span> : null}
               </p>
             ))}
             {terminal && !ctx.planTerminals ? (

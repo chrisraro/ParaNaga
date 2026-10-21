@@ -145,7 +145,7 @@ describe("route display (letter + title)", () => {
   it("the helpers: label, chip, provenance and the active list; no special code is an active route", () => {
     expect(routeLabel("R2", "x")).toBe("Centro-Del Rosario via Magsaysay Ave");
     expect(routeLabel("R1", "x")).toBe("Centro-Cararayan-San Isidro");
-    expect(routeLabel("R8-A", "x")).toBe("A Centro-Magsaysay Loop A (clockwise)");
+    expect(routeLabel("R8-A", "x")).toBe("Centro-Magsaysay Loop A (clockwise)");
     expect(routeLabel("TRI-VISTODA", "VISTODA trimobile")).toBe("VISTODA trimobile");
     expect(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8-A", "R8-B", "R8-C", "R8-D"].map(routeChipText)).toEqual(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "Loop A", "Loop B", "Loop C", "Loop D"]);
     expect(Object.keys(ROUTE_DISPLAY)).toHaveLength(11);

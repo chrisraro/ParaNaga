@@ -48,10 +48,28 @@ export function routeDisplay(routeCode: string, routeName: string): RouteDisplay
   return e ? { letter: e.letter, title: e.title, unverified: e.unverified } : { letter: null, title: routeName, unverified: true };
 }
 
-/** "E Centro-Del Rosario via Magsaysay Ave"; just the title when there is no letter (R1, unknown codes). */
+/**
+ * One label from a letter and a title, without redundant letters for loops (owner 2026-10-21:
+ * "A Centro-Magsaysay Loop A" had redundant A). Loops already name "Loop A" in their title,
+ * so they are returned as-is (e.g. "Centro-Magsaysay Loop A (clockwise)").
+ * Other lettered routes prepend their letter (e.g. "E Centro-Del Rosario via Magsaysay Ave").
+ */
+export function formatRouteLabel(letter: string | null, title: string): string {
+  if (!letter) return title;
+  if (new RegExp(`\\bLoop\\s+${letter}\\b`, "i").test(title)) return title;
+  return `${letter} ${title}`;
+}
+
+/** The title with its "Loop A" removed, for a list row whose chip already says "Loop A". */
+export function routeTitleBesideChip(routeCode: string, routeName: string): string {
+  const d = routeDisplay(routeCode, routeName);
+  return d.letter ? d.title.replace(new RegExp(`\\s*\\bLoop\\s+${d.letter}\\b`), "").trim() : d.title;
+}
+
+/** "Loop A · Centro-Magsaysay (clockwise)"; "E Centro-…" for a lettered line route; just the title with no letter (R1, unknown codes). */
 export function routeLabel(routeCode: string, routeName: string): string {
   const d = routeDisplay(routeCode, routeName);
-  return d.letter ? `${d.letter} ${d.title}` : d.title;
+  return formatRouteLabel(d.letter, d.title);
 }
 
 /** The short chip of a route in a list: "Loop C", "Route E", or the code ("R1") with no letter. */

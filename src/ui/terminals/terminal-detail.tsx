@@ -41,7 +41,7 @@ import { Segmented } from "@/ui/kit/segmented";
 import { NagaMap } from "@/ui/map/naga-map";
 import { ModeChip } from "@/ui/modes/mode-chip";
 import { SOURCES_HREF } from "@/ui/help/sources-href";
-import { routeLabel } from "@/domain/planner/route-display";
+import { routeTitleBesideChip } from "@/domain/planner/route-display";
 import { LoopChip } from "@/ui/trip/trip-parts";
 
 const TITLE = "Terminal";
@@ -115,7 +115,7 @@ function RoutesPanel({ data }: { data: TerminalDetail }) {
                 <Link href={`/app/routes/${encodeURIComponent(r.routeCode)}`} className="pn-cell" data-testid={`terminal-route-${r.basis}`}>
                   <LoopChip leg={{ routeCode: r.routeCode, routeName: r.routeName }} icon="line" short />
                   <span className="pn-cell__text">
-                    <span className="pn-cell__title">{routeLabel(r.routeCode, r.routeName)}</span>
+                    <span className="pn-cell__title">{routeTitleBesideChip(r.routeCode, r.routeName)}</span>
                     <span className="pn-cell__sub">{terminalRouteSub(r.basis)}</span>
                     {r.basis === "trial" ? <StatusBadge variant="trial" /> : null}
                   </span>

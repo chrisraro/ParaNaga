@@ -1,0 +1,110 @@
+$ tsx scripts/far-zone-places.ts
+
+FZ01 Cararayan and San Isidro (radius per anchor: Cararayan 1500 m, San Isidro 1800 m): 18 places inside
+  in   San Isidro Gym — 2 m from San Isidro
+  in   Don Manuel I. Abella Central School — 70 m from Cararayan
+  in   San Isidro Elementary School — 71 m from San Isidro
+  in   Mater Salutis Parish — 74 m from Cararayan
+  in   Naga City Police Station 6 — 110 m from Cararayan
+  in   7-Eleven — 120 m from Cararayan
+  in   San Isidro National High School — 133 m from San Isidro
+  in   The Church of Jesus Christ of Latter-day Saints Cararayan Group (Apetrior Residence) — 152 m from Cararayan
+  in   Pole Barn — 194 m from Cararayan
+  in   Pole Barn — 250 m from Cararayan
+  in   Cararayan National High School — 282 m from Cararayan
+  in   Iglesia ng Dios Kay Kristo Jesus — 447 m from Cararayan
+  in   Church in Naga City — 482 m from Cararayan
+  in   Ponte Cielo Park — 589 m from Cararayan
+  in   Haciendas de Naga — 1379 m from San Isidro
+  in   Cararayan I Pumping Station — 1456 m from Cararayan
+  in   San Rafael Elementary School SPED Center — 1474 m from Cararayan
+  in   Haciendas de Naga — 1629 m from San Isidro
+  out  Paseo de San Ignacio — 1868 m from Cararayan (radius 1500 m); nearest non-far barangay Del Rosario (3071 m)
+  out  Naga City Sports Complex — 2046 m from Cararayan (radius 1500 m); nearest non-far barangay Del Rosario (3262 m)
+  out  Naga City Children's Home — 2051 m from Cararayan (radius 1500 m); nearest non-far barangay Del Rosario (3264 m)
+  out  Metro Naga Sports Complex — 2071 m from Cararayan (radius 1500 m); nearest non-far barangay Del Rosario (3300 m)
+  out  Ateneo de Naga University Junior High School — 2096 m from Cararayan (radius 1500 m); nearest non-far barangay Del Rosario (3260 m)
+
+FZ02 Pacol (radius per anchor: Pacol 3000 m): 47 places inside
+  in   Chic Magnet Grill Station — 12 m from Pacol
+  in   4:55 Store — 19 m from Pacol
+  in   American School of English, Math, and Science — 82 m from Pacol
+  in   Flash Home — 103 m from Pacol
+  in   Jau Cafe — 106 m from Pacol
+  in   CJ's Food Haws — 112 m from Pacol
+  in   Aqua Aid — 131 m from Pacol
+  in   Barangay Pacol Health Center — 132 m from Pacol
+  in   Pacol Barangay Hall — 133 m from Pacol
+  in   Bisaya Store — 177 m from Pacol
+  in   Grand View Store — 193 m from Pacol
+  in   Grandview LRV Pavilion — 222 m from Pacol
+  in   Grandview Elementary School — 229 m from Pacol
+  in   Mary Help of Christian — 301 m from Pacol
+  in   Grand View Elementary School — 325 m from Pacol
+  in   NGS Construction Supply — 344 m from Pacol
+  in   Pacol Satellite Market — 380 m from Pacol
+  in   Naga City Educare - Pacol — 394 m from Pacol
+  in   Jamaica Realty & Marketing Corporation Regional Office — 398 m from Pacol
+  in   J&J Essential+ Pharmacy — 428 m from Pacol
+  in   Nacion Store — 438 m from Pacol
+  in   Zeny's Store — 475 m from Pacol
+  in   Follero's Store — 569 m from Pacol
+  in   Alfredo's Pizza — 578 m from Pacol
+  in   Zabaldica Pritong Manok & Crispy Sisig — 578 m from Pacol
+  in   Zabaldica Loading Station — 584 m from Pacol
+  in   Ama-Tur Store — 604 m from Pacol
+  in   Primus Hotel and Resort — 732 m from Pacol
+  in   Leon Q. Mercado High School — 765 m from Pacol
+  in   Mama Sarah's Lettuce Garden — 1012 m from Pacol
+  in   Arco Diez — 1186 m from Pacol
+  in   Estranghero — 1191 m from Pacol
+  in   Police Station 4 Assistance Center — 1283 m from Pacol
+  in   Mama Nang's Halo-Halo — 1286 m from Pacol
+  in   Km. 10 Al Fresco — 1287 m from Pacol
+  in   Perez Store — 1309 m from Pacol
+  in   Yhanna Motor Shop — 1329 m from Pacol
+  in   Uptown Mart — 1334 m from Pacol
+  in   Litam Enterprise (Petron Gasul) — 1340 m from Pacol
+  in   GasLane — 1604 m from Pacol
+  in   QuickStop — 1614 m from Pacol
+  in   Naga City Police Station 4 — 1754 m from Pacol
+  in   Teodora Moscoso Elementary School — 1899 m from Pacol
+  in   Carolina Unida Evangelical Church — 2156 m from Pacol
+  in   Pacol Barangay Chapel — 2158 m from Pacol
+  in   City Mobile Force Company — 2170 m from Pacol
+  in   Pacol Elementary School — 2248 m from Pacol
+
+FZ03 Carolina and Panicuason (radius per anchor: Carolina 3000 m, Panicuason 4500 m): 33 places inside
+  in   Garcera Bakeshop — 14 m from Carolina
+  in   E.E Caguimbal Construction Supply — 67 m from Carolina
+  in   Panicuason Catholic Church — 80 m from Panicuason
+  in   Iglesia ni Cristo — 92 m from Panicuason
+  in   Panicuason Elementary School — 118 m from Panicuason
+  in   Our Lady of Mount Carmel Parish — 170 m from Carolina
+  in   City Mobile Force Company — 178 m from Carolina
+  in   Carolina Barangay Hall — 192 m from Carolina
+  in   RCJC Water Station - Refilling station — 196 m from Carolina
+  in   Don Bosco Training Center of Naga — 223 m from Carolina
+  in   Malarayat Rural Bank — 309 m from Carolina
+  in   Carolina National High School — 330 m from Carolina
+  in   Carolina Elementary School — 368 m from Carolina
+  in   Family for Christ Church — 489 m from Carolina
+  in   Mountainbliss Water Station — 547 m from Carolina
+  in   Elena B. Madrid — 561 m from Carolina
+  in   Panicuason Seventh Day Adventist Church — 600 m from Panicuason
+  in   Naga View Adventist College — 750 m from Panicuason
+  in   Naga View Adventist College — 770 m from Panicuason
+  in   Peñafrancia Resort — 836 m from Carolina
+  in   Agri campsite & Recreational Center — 909 m from Panicuason
+  in   Carolina United Methodist Church — 978 m from Carolina
+  in   Sulat Resort — 980 m from Panicuason
+  in   Panicuason Hot Springs Resort — 982 m from Panicuason
+  in   Panicuason Hotspring Resort — 1000 m from Panicuason
+  in   Iglesia ni Christo — 1230 m from Carolina
+  in   Km 12 — 1234 m from Carolina
+  in   D'baCkyarD: Take Life & Hide Out — 1314 m from Carolina
+  in   D'baCkyarD: Take Life & Hide Out — 1314 m from Carolina
+  in   Catholic Church — 1358 m from Carolina
+  in   Our Lady of Lourdes Infirmary — 1405 m from Carolina
+  in   Morada-Ramos Elementary School — 1933 m from Carolina
+  in   Fazenda de Esperanca (Farm of Hope) - Naga — 1935 m from Carolina
