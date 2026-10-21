@@ -31,7 +31,7 @@ import { useHistoryList, useSavedPlaces, useSavedTrips, useTripRevalidation } fr
 import { deleteSavedPlace, deleteSavedTrip, putSavedPlace, putSavedTrip, removeUnreadable } from "@/client/storage/db";
 import type { EtaModel } from "@/domain/api/schemas";
 import {
-  historyLine,
+  historyParts,
   manilaDate,
   placeSubText,
   savedTripResponse,
@@ -458,11 +458,17 @@ function HistoryPanel() {
         {history.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty">No trips in history yet.</li>
         ) : (
-          history.records.map((e) => (
-            <li key={e.id} className="pn-cell pn-cell--compact">
-              <span className="pn-cell__title">{historyLine(e)}</span>
-            </li>
-          ))
+          history.records.map((e) => {
+            const { route, date } = historyParts(e);
+            return (
+              <li key={e.id} className="pn-cell pn-cell--compact">
+                <span className="pn-cell__text">
+                  <span className="pn-cell__title">{route}</span>
+                  <span className="pn-cell__sub">{date}</span>
+                </span>
+              </li>
+            );
+          })
         )}
       </ul>
       <Note>Kept 90 days on this phone. Place names only.</Note>
@@ -526,7 +532,13 @@ export function SavedScreen() {
     setSyncStatus(null);
     try {
       const res = await syncSavedItems();
-      setSyncStatus(`Synced with account: ${res.placesUploaded + res.tripsUploaded} sent, ${res.placesDownloaded + res.tripsDownloaded} received.`);
+      const sent = res.placesUploaded + res.tripsUploaded;
+      const received = res.placesDownloaded + res.tripsDownloaded;
+      setSyncStatus(
+        sent === 0 && received === 0
+          ? "Everything is up to date."
+          : `Synced: ${sent} sent to your account, ${received} added to this phone.`,
+      );
     } catch {
       setSyncStatus("Sync failed. Check your network connection.");
     } finally {

@@ -403,9 +403,15 @@ export function cleanPlaceLabel(raw: string): { ok: true; label: string } | { ok
 
 // ---------------------------------------------------------------- history
 
+/** The route and date of a history entry, shown on separate lines (labels only). */
+export function historyParts(entry: HistoryEntry): { route: string; date: string } {
+  return { route: `${entry.from} → ${entry.to}`, date: manilaDate(entry.at) ?? "date unknown" };
+}
+
 /** "Plaza Rizal → SM City Naga · 16 Oct 2026" (labels only). */
 export function historyLine(entry: HistoryEntry): string {
-  return `${entry.from} → ${entry.to} · ${manilaDate(entry.at) ?? "date unknown"}`;
+  const { route, date } = historyParts(entry);
+  return `${route} · ${date}`;
 }
 
 /** Splits history into what stays and the ids older than the retention period. */

@@ -367,8 +367,30 @@
 }
 .pn-guide__summary-ride {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
+}
+/* Long route names wrap inside the pill instead of spilling out of a fixed 26px height. */
+.pn-guide__summary .pn-loop-chip,
+.pn-guide__chip {
+  height: auto;
+  min-height: 26px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 3px 8px 3px 3px;
+  line-height: 1.25;
+  align-items: flex-start;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.pn-guide__summary .pn-loop-chip__icon,
+.pn-guide__chip .pn-loop-chip__icon {
+  flex: none;
+}
+.pn-guide__summary-ride > span:last-child {
+  white-space: nowrap;
 }
 .pn-guide__save {
   display: flex;

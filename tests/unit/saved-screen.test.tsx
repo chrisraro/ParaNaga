@@ -265,7 +265,8 @@ describe("Saved → History", () => {
     updatePrefs({ historyEnabled: true });
     expect(await recordTrip("Plaza Rizal", "SM City Naga")).toBe(true);
     renderSaved("history");
-    expect(await screen.findByText(/^Plaza Rizal → SM City Naga · \d{1,2} [A-Z][a-z]{2} \d{4}$/)).toBeTruthy();
+    expect(await screen.findByText("Plaza Rizal → SM City Naga")).toBeTruthy();
+    expect(screen.getByText(/^\d{1,2} [A-Z][a-z]{2} \d{4}$/)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Clear history" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Clear history" }).at(-1)!);
     await waitFor(async () => expect(await db.countHistory()).toBe(0));
