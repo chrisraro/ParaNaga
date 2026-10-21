@@ -11,7 +11,7 @@ import "./styles";
 
 import { useRef, type CSSProperties, type KeyboardEvent } from "react";
 
-export type SegmentedOption<V extends string> = { value: V; label: string; controls?: string; /** Element id of the tab (a tabpanel's aria-labelledby). */ id?: string };
+export type SegmentedOption<V extends string> = { value: V; label: string; /** Language of the label when it differs from the page (screen readers). */ lang?: string; controls?: string; /** Element id of the tab (a tabpanel's aria-labelledby). */ id?: string };
 
 type Props<V extends string> = {
   options: readonly SegmentedOption<V>[];
@@ -69,6 +69,7 @@ export function Segmented<V extends string>({ options, value, onChange, label, v
             aria-selected={tabs ? on : undefined}
             aria-controls={tabs ? o.controls : undefined}
             tabIndex={on ? 0 : -1}
+            lang={o.lang}
             className="pn-seg__btn"
             onClick={() => choose(i)}
             onKeyDown={onKeyDown}

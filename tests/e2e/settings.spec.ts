@@ -100,7 +100,7 @@ test.describe("phone", () => {
     await expect(install).toContainText("use your browser’s menu");
     await expect(install.getByRole("button")).toHaveCount(0);
     const general = page.getByTestId("settings-general");
-    await expect(general).toContainText("LanguageFilipino planned.English");
+    await expect(general).toContainText("LanguagePhone settingEnglishFilipino");
     await expect(general).toContainText("Fare categoryRegular");
     await expect(page.getByTestId("settings-fare-note")).toHaveText(
       "Discounts aren’t applied: no verified rule yet. Regular fares shown.",

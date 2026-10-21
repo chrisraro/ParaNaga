@@ -2,11 +2,11 @@
 
 // The "More" tab (artboard Settings) inside PageFrame. Everything here is about this phone:
 // preferences live in localStorage (decision D3), nothing is sent anywhere. Rows for things that
-// cannot change yet (language, fare category, reduce motion, location access) are plain text with
+// cannot change yet (fare category, reduce motion, location access) are plain text with
 // a note, never a link or a disabled-looking control (no dead buttons).
 //
 // Differences from the artboard, on purpose: the Sign in card is a static "Accounts arrive later"
-// card (no accounts in this increment); Language is text, not a toggle (English only, D8); Fare
+// card (no accounts in this increment); Language is a Segmented choice (ADR 011); Fare
 // category has no chevron (no verified discount to choose); Location access is a status read with
 // navigator.permissions (no request is made); a "Data on this device" and an "About" group (Help,
 // data revision) follow.
@@ -21,6 +21,8 @@ import { clearDeviceData } from "@/client/device-data";
 import { useLocationPermission } from "@/client/geo/use-location-permission";
 import { clearHistory, hasHistory } from "@/client/history/trip-history";
 import { updatePrefs, usePrefs } from "@/client/prefs/use-prefs";
+import { BIKOL_ENABLED, type Locale } from "@/i18n/locales";
+import { setLocale } from "@/i18n/provider";
 import { locationAccessLabel } from "@/domain/device/location-permission";
 import type { ThemePref } from "@/domain/prefs/prefs";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
@@ -35,6 +37,14 @@ const THEME_OPTIONS: readonly SegmentedOption<ThemePref>[] = [
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
   { value: "system", label: "System" },
+];
+
+type LanguageChoice = Locale | "phone";
+const LANGUAGE_OPTIONS: readonly SegmentedOption<LanguageChoice>[] = [
+  { value: "phone", label: "Phone setting" },
+  { value: "en", label: "English", lang: "en" },
+  { value: "fil", label: "Filipino", lang: "fil" },
+  ...(BIKOL_ENABLED ? [{ value: "bcl", label: "Bikol", lang: "bcl" } as const] : []),
 ];
 
 export const STATUS = {
@@ -157,7 +167,18 @@ export function MoreScreen() {
 
       <div className="pn-settings__group">
         <ListGroup title="General" testId="settings-general">
-          <ListCell title="Language" trailing="English" sub="Filipino planned." />
+          <li className="pn-settings__appearance">
+            <span className="pn-settings__row-label" aria-hidden="true">
+              Language
+            </span>
+            <Segmented
+              label="Language"
+              options={LANGUAGE_OPTIONS}
+              value={prefs.locale ?? "phone"}
+              onChange={(choice) => setLocale(choice === "phone" ? undefined : choice)}
+              testId="settings-language"
+            />
+          </li>
           <ListCell title="Fare category" trailing="Regular" />
           <li className="pn-settings__appearance">
             <span className="pn-settings__row-label" aria-hidden="true">

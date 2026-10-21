@@ -19,6 +19,18 @@ async function scrollThrough(page: Page) {
   }
 }
 
+test("the header language toggle persists across a reload and sets the page language", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  const toggle = page.locator("#mobile-menu").getByRole("group", { name: "Language" });
+  await expect(toggle.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
+  await toggle.getByRole("button", { name: "Filipino" }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "fil");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "fil");
+  await expect(page.getByRole("group", { name: "Language" }).last().getByRole("button", { name: "Filipino" })).toHaveAttribute("aria-pressed", "true");
+});
+
 test("every call to action opens the app, and the credits link to Sources and credits", async ({ page }) => {
   await page.goto("/");
   const open = page.getByRole("link", { name: /^Open the app/ });

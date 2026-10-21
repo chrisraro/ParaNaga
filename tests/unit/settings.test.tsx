@@ -117,11 +117,22 @@ describe("clearDeviceData when a store fails", () => {
 });
 
 describe("More screen", () => {
+  it("language row saves a choice and goes back to the phone's language", () => {
+    render(<MoreScreen />);
+    expect(screen.getAllByRole("radio", { name: /Phone setting|English|Filipino/ }).map((r) => r.textContent)).toEqual(["Phone setting", "English", "Filipino"]);
+    expect(screen.getByRole("radio", { name: "Phone setting" }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(screen.getByRole("radio", { name: "Filipino" }));
+    expect(readPrefs().locale).toBe("fil");
+    expect(screen.getByRole("radio", { name: "Filipino" }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(screen.getByRole("radio", { name: "Phone setting" }));
+    expect(readPrefs().locale).toBeUndefined();
+  });
+
   it("shows the exact copy and the Sources and credits row", async () => {
     render(<MoreScreen />);
     expect(screen.getByText("No account needed")).toBeTruthy();
     expect(screen.getByText("Saved trips and places stay on this phone.")).toBeTruthy();
-    expect(screen.getByText("Filipino planned.")).toBeTruthy();
+    expect(screen.getByRole("radiogroup", { name: "Language" })).toBeTruthy();
     expect(screen.getByRole("radiogroup", { name: "Appearance" })).toBeTruthy();
     expect(screen.getByRole("switch", { name: "Low-data mode" })).toBeTruthy();
     expect(screen.getByRole("switch", { name: "High contrast" })).toBeTruthy();

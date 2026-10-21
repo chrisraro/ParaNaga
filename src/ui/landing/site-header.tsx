@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { setLocale, useLocale } from "@/i18n/provider";
 import { AppIconTile, Wordmark } from "@/ui/brand/route-n-mark";
 
 export const SECTIONS = [
@@ -10,6 +11,20 @@ export const SECTIONS = [
   { href: "#honest", label: "Our data" },
   { href: "#faq", label: "FAQ" },
 ];
+
+/** EN | FIL: writes the same pref as More, so the app opens in the language picked here. */
+function LanguageToggle({ className }: { className: string }) {
+  const locale = useLocale();
+  return (
+    <div role="group" aria-label="Language" className={className}>
+      {([["en", "EN", "English"], ["fil", "FIL", "Filipino"]] as const).map(([code, text, name]) => (
+        <button key={code} type="button" lang={code} aria-label={name} aria-pressed={locale === code} onClick={() => setLocale(code)}>
+          {text}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 /** Floating pill header; on small screens the sections open in a sheet under it (never shifts the page). */
 export function SiteHeader() {
@@ -36,6 +51,7 @@ export function SiteHeader() {
             </a>
           ))}
         </div>
+        <LanguageToggle className="pnl-header__lang pnl-header__lang--bar" />
         <Link href="/app" className="pnl-btn pnl-btn--bright pnl-header__cta">
           Open the app
         </Link>
@@ -54,6 +70,7 @@ export function SiteHeader() {
       </nav>
       <div id="mobile-menu" className="pnl-header__sheet" data-open={open} inert={!open}>
         <div>
+          <LanguageToggle className="pnl-header__lang pnl-header__lang--sheet" />
           {SECTIONS.map((s) => (
             <a key={s.href} href={s.href} onClick={() => setOpen(false)}>
               {s.label}
