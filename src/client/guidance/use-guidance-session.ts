@@ -22,6 +22,7 @@ import { startSession, type GuidanceEvent, type GuidanceSession } from "@/domain
 import type { GuidanceTrip } from "@/domain/guidance/steps";
 import { guidanceView, type GuidanceView } from "@/domain/guidance/view";
 import type { SavedTrip } from "@/domain/saved/saved";
+import { askNotificationPermission, useAttention } from "./attention";
 import {
   applyGuidanceEvent,
   beginGuidance,
@@ -162,6 +163,7 @@ export function useGuidanceSession(): UseGuidanceSession {
   const start = useCallback(
     (trip: GuidanceTrip, card: SavedTrip) => {
       const at = Date.now();
+      askNotificationPermission();
       setNow(at);
       beginGuidance(startSession(trip, at), card);
       void recordTrip(card.start.label, card.destination.label).catch(() => undefined);
@@ -187,12 +189,14 @@ export function useGuidanceSession(): UseGuidanceSession {
 
   const enableLocation = useCallback(() => {
     if (getGuidanceSnapshot()?.session.status !== "active") return;
+    askNotificationPermission();
     geoStart();
   }, [geoStart]);
 
   const watching = geo.state === "watching";
   const fix = watching ? geo.fix : null;
   const view = session ? guidanceView(session, fix, now) : null;
+  useAttention(view);
   return {
     session,
     card: snapshot?.card ?? null,

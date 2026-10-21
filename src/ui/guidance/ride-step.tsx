@@ -4,7 +4,9 @@
 // moves on its own (the session's `fix` events), without GPS the person says "My stop is next".
 // The artboard's "On route" pill, "driver signalled" and "beside the … entrance" have no data
 // behind them and are not shown. "Para! Next stop is yours" is the one assertive announcement
-// (role="alert"): no sound, no vibration, no promise. "Report a driver" points to MyNaga (D9).
+// (role="alert"). Beyond the card, the phone vibrates and (if the rider allowed notifications from
+// a tap) shows a system notification, also with the screen off (src/client/guidance/attention.ts).
+// No promise either way. "Report a driver" points to MyNaga (D9).
 
 import Link from "next/link";
 import type { RideView } from "@/domain/guidance/view";
