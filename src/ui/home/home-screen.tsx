@@ -27,14 +27,14 @@ import { useStopsInView } from "@/client/map/use-stops-in-view";
 import { useTripPlan } from "@/client/trip/use-trip-plan";
 import { offlinePlanChip, offlinePlanNote } from "@/domain/pwa/offline-copy";
 import type { PlanResponse } from "@/domain/api/plan";
-import type { StopPin } from "@/domain/api/schemas";
+import type { StopPin, StopSummary } from "@/domain/api/schemas";
 import { haversineMeters } from "@/domain/geo/geometry";
 import { assessFix, type LocationFix } from "@/domain/geo/location-fix";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import type { Bounds, LatLng } from "@/domain/geo/types";
 import type { Endpoint } from "@/domain/trip/endpoints";
 import { SAME_PLACE_M } from "@/domain/planner/labels";
-import type { SavedPlaceSource, SavedTrip } from "@/domain/saved/saved";
+import { pinnedEndName, type SavedPlaceSource, type SavedTrip } from "@/domain/saved/saved";
 import { SAME_PLACE_TITLE, planAnnouncement } from "@/domain/trip/present";
 import {
   endpointLabel,
@@ -122,10 +122,10 @@ export function highlightsFor(data: PlanResponse, optionId: string): HighlightSt
   });
 }
 
-/** A trip end as saved or shared: a GPS fix becomes a fixed point ("Pinned location"). */
-function endFor(endpoint: Endpoint): TripEnds["start"] {
+/** A trip end as saved or shared: a GPS fix or map pin is named after the nearest stop ("Near X", else "Pinned location"). */
+function endFor(endpoint: Endpoint, stops: readonly StopSummary[]): TripEnds["start"] {
   return {
-    label: endpoint.source === "gps" ? "Pinned location" : endpoint.label,
+    label: endpoint.source === "search" ? endpoint.label : pinnedEndName(endpoint.point, stops),
     point: { ...endpoint.point },
     ...(endpoint.place ? { place: endpoint.place } : {}),
   };
@@ -714,6 +714,7 @@ export function HomeScreen() {
   const prefs = usePrefs();
   const layers = prefs.layers;
   const snapshotState = useSnapshot(true);
+  const snapshotStops = snapshotState.snapshot?.stops ?? [];
   // Trip lines come from the lines of the PLAN's revision (a stored trip's own revision, the
   // guided trip's own revision), never the snapshot's: the legs' variant ids and measures belong to
   // that revision. They stay drawn while the trip is guided (the current leg emphasised).
@@ -1135,10 +1136,10 @@ export function HomeScreen() {
               data={planData}
               option={openOption}
               onBack={handleCloseOption}
-              ends={{ start: endFor(endpoints.start), destination: endFor(endpoints.destination) }}
+              ends={{ start: endFor(endpoints.start, snapshotStops), destination: endFor(endpoints.destination, snapshotStops) }}
               note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline), tone: "warning" } : null)}
               onStart={(walkLengths) =>
-                guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!), destination: endFor(endpoints.destination!) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths, ridePaths: ridePathsFor(openOption, tripRevisionLines) })
+                guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!, snapshotStops), destination: endFor(endpoints.destination!, snapshotStops) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths, ridePaths: ridePathsFor(openOption, tripRevisionLines) })
               }
               etaModel={snapshotState.snapshot?.etaModel}
               routes={snapshotState.snapshot?.routes}
