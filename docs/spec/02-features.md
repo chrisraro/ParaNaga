@@ -78,7 +78,7 @@ Save an itinerary as a self-contained card (text steps, cached landmark photos, 
 Optional. Email OTP / magic link and Google OAuth via Managed Better Auth. Display name only; no legal name shown.
 
 ### F-C2 Settings — P1
-Language (en / fil; bcl when reviewed), fare category (regular / student / senior / PWD / solo parent — with mode-scoped eligibility shown), accessibility (avoid stairs, max walk, high contrast, reduced motion), theme, low-data, trip history on/off (default **off**), location-permission guidance, offline downloads, install prompt, data export, account deletion.
+Language (en / fil; bcl when native-reviewed; first open follows the phone language, ADR 011), fare category (regular / student / senior / PWD / solo parent — with mode-scoped eligibility shown), accessibility (avoid stairs, max walk, high contrast, reduced motion), theme, low-data, trip history on/off (default **off**), location-permission guidance, offline downloads, install prompt, data export, account deletion.
 
 ## D. Contributions
 

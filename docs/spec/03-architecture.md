@@ -41,7 +41,7 @@ One deployable (Next.js on Vercel) plus managed Neon services. No Redis, separat
 | Forms | React Hook Form + Zod resolvers | Same Zod schemas on the server |
 | Server state | TanStack Query v5 | Query keys include `revisionId` |
 | Map | React-Leaflet + Leaflet raster tiles (ADR 009; supersedes MapLibre GL + `pmtiles`) | Client-only component (`next/dynamic`, `ssr: false`) |
-| i18n | `next-intl` | `en`, `fil`; `bcl` behind a reviewed-translation flag |
+| i18n | In-house typed dictionaries + React context in `src/i18n` (ADR 011; supersedes `next-intl`) | `en` (source), `fil`; `bcl` behind `BIKOL_ENABLED` until native review. Locale is a device preference, no URL prefix |
 | DB | Neon Postgres 17 with `postgis`, `pg_trgm`, `unaccent`, `pgcrypto`, `btree_gist` in schema `extensions` | |
 | ORM / migrations | Drizzle ORM; drizzle-kit generates **SQL files**; PostGIS, RLS and functions hand-written in SQL | Migrations reviewed as SQL |
 | Driver | node-postgres (`pg`) Pool on Vercel Fluid compute, registered with `attachDatabasePool` (`@vercel/functions`), via `drizzle-orm/node-postgres` | Pooled (PgBouncer, transaction mode) endpoint for the app, direct endpoint for migrations. Verify current Neon + Vercel guidance at scaffold; fallback is a per-request `@neondatabase/serverless` Pool created and closed inside the request |
@@ -59,9 +59,9 @@ One deployable (Next.js on Vercel) plus managed Neon services. No Redis, separat
 ```
 paranaga/
 ├─ app/
-│  ├─ [locale]/(public)/            # map, search, explore, stops, routes, trips, community (read)
-│  ├─ [locale]/(account)/           # saved, settings, my submissions, my reports
-│  ├─ [locale]/admin/               # role-gated console
+│  ├─ (public)/                     # map, search, explore, stops, routes, trips, community (read)
+│  ├─ (account)/                    # saved, settings, my submissions, my reports
+│  ├─ admin/                        # role-gated console
 │  ├─ api/v1/                       # route handlers
 │  ├─ api/cron/                     # job drain, disruption expiry, retention purge
 │  └─ manifest.ts · sw.ts
@@ -88,7 +88,7 @@ Dependency rule: `domain` imports nothing from `server` or `client`; `client` im
 
 | Path | Rendering | Caching |
 |---|---|---|
-| `/[locale]` map shell | RSC shell + client map island | Static shell; data via API |
+| `/app` map shell (no locale prefix, ADR 011) | RSC shell + client map island | Static shell; data via API |
 | `GET /api/v1/network/snapshot/:revisionId` | Route handler | `public, s-maxage=31536000, immutable` |
 | `GET /api/v1/network/head` | Route handler | `s-maxage=30`; returns current published revision id |
 | `GET /api/v1/network/search-index/:revisionId` | Route handler | `public, s-maxage=31536000, immutable`; 404 unless the revision is the published one |
@@ -351,6 +351,7 @@ Accepted types: JPEG, PNG, WebP. HEIC is converted to JPEG **on the client** (ca
 | 008 | Image moderation by humans until a vision adapter is chosen | Third-party vision API | not asked | Adopted; the brief forbids sending images to Jev |
 | 009 | React-Leaflet raster tiles instead of MapLibre; MapTiler production tiles | MapLibre GL + PMTiles (ADR 006) | MapTiler tiles p=0.89 → act | Adopted: user decision 2026-10-15 for the map (supersedes the MapLibre row); MapTiler for production tiles, OSM tiles only for dev/test |
 | 010 | Revised reviewed seed under the same date is a new batch, not a refusal | Always rename the seed to a new dated file | owner/controller decision, Increment E Task 4 | Adopted 17 Oct 2026: `writeModes` treats the same date with a different file hash as a revised-seed batch (key `modes-seed:<date>:<sha12>`, revision `modes-<date>.<n>`) and records a second research-conflict register for it. An older date is still refused. Relaxes the earlier rule that a revised seed is a new dated file. |
+| 011 | In-house typed i18n dictionaries; locale stored in device prefs, no `[locale]` URL prefix | `next-intl` with `[locale]` routing + proxy redirect | owner decision 2026-10-22 (plan docs/plans/2026-10-21-i18n-filipino-bikol.md) | Adopted 22 Oct 2026: `en` source of truth, `fil` complete by typecheck, `bcl` hidden until every key is native-approved; first open follows `navigator.languages`, the More choice overrides; missing `bcl` key falls back to `fil` then `en`. Supersedes Increment A D8 "English only" and the `next-intl` / `[locale]` rows above |
 
 Jev's answers are logged as decision evidence; the ADR owner makes the final call — the same relationship the app has with Jev.
 

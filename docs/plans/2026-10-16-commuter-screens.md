@@ -44,7 +44,7 @@ Change these before Task 1 if you disagree:
 - **D5 Explore = OSM places by category + directory.** The Explore artboard's category chips and destination cards are filled from the OpenStreetMap places (no photos: "Photo pending"; "How to commute here" plans to the place's coordinate). Below them, a directory of everything else on file: mapped-pin places, Routes, Terminals, Barangays, Leads.
 - **D6 Service worker = Serwist** (spec §3.2) through its Turbopack integration, plus Next's `experimental.useOffline` for soft navigations. Task 12 starts with a spike; if Serwist's Turbopack integration does not build on Next 16.4.1 with `cacheComponents`, fall back to a hand-written `public/sw.js` with the same allow-list (record the outcome in the task report).
 - **D7 No helpfulness rating** on Arrive in this increment (no backend to receive it); it returns with corrections in Increment B.
-- **D8 English only** (user decision Q3). Settings shows the language as text, not a toggle.
+- **D8 English only** (user decision Q3; superseded 2026-10-22 by ADR 011, see docs/plans/2026-10-21-i18n-filipino-bikol.md). Settings shows the language as text, not a toggle.
 - **D9 Report-a-driver entry points point to MyNaga** (the City's own channel, verified links in the brief §9E) until private driver reports ship in Increment B.
 - **D10 OSM categories.** The import keeps only named features of these categories (OSM tags in Task 3): mall, market, school, college, university, hospital, clinic, place of worship, government office (town hall, government, police, fire station, post office), bus station / terminal, park, plaza / landmark square. Anything else (shops, restaurants, ATMs, unnamed features) is dropped. Adding a category later is a new dated snapshot.
 
