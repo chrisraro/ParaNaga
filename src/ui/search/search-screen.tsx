@@ -38,6 +38,7 @@ import { Note } from "@/ui/kit/note";
 import { Switch } from "@/ui/kit/switch";
 import { SavePlaceDialog } from "@/ui/saved/save-place-dialog";
 import { GoogleSuggestions } from "./google-suggestions";
+import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 
 export const SEARCH_DEBOUNCE_MS = 150;
 const FAILED_COPY = "Search data couldn't load. Try again.";
@@ -301,11 +302,12 @@ function RecentSection({
 
 // ------------------------------------------------------------------ screen
 
-function publishedDate(iso: string | null): string | null {
+function publishedDate(iso: string | null, locale: Locale = DEFAULT_LOCALE): string | null {
   if (!iso) return null;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-GB", { timeZone: "Asia/Manila", day: "numeric", month: "short", year: "numeric" });
+  // English keeps its day-first "16 Oct 2026", like the other "data from" dates.
+  return date.toLocaleDateString(locale === "en" ? "en-GB" : formatLocale(locale), { timeZone: "Asia/Manila", day: "numeric", month: "short", year: "numeric" });
 }
 
 function SkeletonRows() {

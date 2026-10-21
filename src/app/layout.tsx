@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { DocumentPrefs } from "@/ui/theme/document-prefs";
 import { PwaRoot } from "@/ui/pwa/pwa-root";
+import { LocaleProvider } from "@/i18n/provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,8 +34,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    // public/theme-init.js sets data-theme / data-contrast on <html> before the first paint (from
-    // the device preferences), so the attributes differ from the server render on purpose.
+    // public/theme-init.js sets data-theme / data-contrast / lang on <html> before the first paint
+    // (from the device preferences and phone language), so they differ from the server render on purpose.
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
@@ -47,9 +48,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script src="/theme-init.js" />
       </head>
       <body className="min-h-full flex flex-col">
-        <DocumentPrefs />
-        <PwaRoot />
-        {children}
+        <LocaleProvider>
+          <DocumentPrefs />
+          <PwaRoot />
+          {children}
+        </LocaleProvider>
       </body>
     </html>
   );

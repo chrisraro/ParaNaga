@@ -6,6 +6,7 @@
 import type { FareRuleEstimate, StopDetail } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
 import type { LatLng } from "../geo/types";
+import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -19,13 +20,12 @@ export function formatIsoDate(iso: string | null | undefined): string | null {
   return `${day} ${month} ${m[1]}`;
 }
 
-const PUBLISHED_DATE = new Intl.DateTimeFormat("en-PH", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Manila" });
-
 /** A revision's published timestamp as a Naga City calendar date ("Oct 15, 2026"); null if unknown. */
-export function publishedDateText(publishedAt: string | null | undefined): string | null {
+export function publishedDateText(publishedAt: string | null | undefined, locale: Locale = DEFAULT_LOCALE): string | null {
   if (!publishedAt) return null;
   const date = new Date(publishedAt);
-  return Number.isNaN(date.getTime()) ? null : PUBLISHED_DATE.format(date);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(formatLocale(locale), { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Manila" });
 }
 
 /** The newest retrieved date among the stop's source records (ISO dates sort as text). */

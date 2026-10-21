@@ -7,6 +7,7 @@
 import type { RouteList, RouteSummary, SearchIndex, SearchOsmPlace, SearchPinPlace } from "../api/schemas";
 import { isActiveRoute } from "../planner/route-display";
 import type { OsmPlaceCategory } from "./osm-categories";
+import { DEFAULT_LOCALE, formatLocale } from "@/i18n/locales";
 
 // ------------------------------------------------------------------ categories
 
@@ -53,7 +54,8 @@ export function chipOfOsmCategory(category: OsmPlaceCategory): Exclude<ExploreCa
   return (chip?.id ?? "government") as Exclude<ExploreCategoryId, "all">;
 }
 
-const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
+// Names are proper nouns (not translated), so one A–Z order serves every UI language.
+const collator = new Intl.Collator(formatLocale(DEFAULT_LOCALE), { sensitivity: "base", numeric: true });
 
 /** Places of one chip, A–Z by name (ties by key, so the order is stable). */
 export function placesInCategory(places: readonly SearchOsmPlace[], id: ExploreCategoryId): SearchOsmPlace[] {

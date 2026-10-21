@@ -1,5 +1,5 @@
 // Fixed copy for the private driver report (S18). The acknowledgment itself is the brief §9D
-// text in src/i18n/messages.ts (acknowledgments.driverReport); accepting it is recorded in
+// text in src/i18n/en.ts (acknowledgments.driverReport); accepting it is recorded in
 // core.ack (kind 'driver_report_notice'). Bump the version when that text changes.
 
 export const DRIVER_NOTICE_KIND = "driver_report_notice" as const;

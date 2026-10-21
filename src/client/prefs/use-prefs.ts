@@ -3,12 +3,13 @@
 // Device preferences store (decision D3): localStorage "paranaga.prefs", read through the Zod
 // schema in src/domain/prefs (bad data → defaults), shared by every component through
 // useSyncExternalStore, and kept in step with other tabs through the `storage` event. Every change
-// also updates <html data-theme / data-contrast> the same way public/theme-init.js does before the
+// also updates <html data-theme / data-contrast / lang> the same way public/theme-init.js does before the
 // first paint. If storage is unavailable (private mode, blocked) the choice still applies for this
 // visit, in memory.
 
 import { useLayoutEffect, useSyncExternalStore } from "react";
 import { DEFAULT_PREFS, PREFS_STORAGE_KEY, parsePrefs, serializePrefs, type LayersPref, type Prefs } from "@/domain/prefs/prefs";
+import { resolveLocale } from "@/i18n/locales";
 export type { LayersPref, Prefs };
 
 type Listener = () => void;
@@ -52,7 +53,8 @@ function onStorage(event: StorageEvent) {
   notify();
 }
 
-function subscribe(listener: Listener) {
+/** Calls `listener` whenever the preferences change (this tab or another). */
+export function subscribePrefs(listener: Listener) {
   listeners.add(listener);
   if (listeners.size === 1) window.addEventListener("storage", onStorage);
   return () => {
@@ -61,9 +63,10 @@ function subscribe(listener: Listener) {
   };
 }
 
-/** Sets <html data-theme / data-contrast> for these preferences (same rules as theme-init.js). */
+/** Sets <html data-theme / data-contrast / lang> for these preferences (same rules as theme-init.js). */
 export function applyDocumentPrefs(prefs: Prefs): void {
   const root = document.documentElement;
+  root.lang = resolveLocale(prefs.locale, navigator.languages);
   root.setAttribute("data-theme", prefs.theme);
   if (prefs.highContrast) root.setAttribute("data-contrast", "more");
   else root.removeAttribute("data-contrast");
@@ -110,7 +113,7 @@ export function resetPrefs(): void {
 
 /** The preferences, live. The server render (and hydration) sees the defaults. */
 export function usePrefs(): Prefs {
-  return useSyncExternalStore(subscribe, readPrefs, readServerPrefs);
+  return useSyncExternalStore(subscribePrefs, readPrefs, readServerPrefs);
 }
 
 /**

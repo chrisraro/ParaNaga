@@ -2,13 +2,15 @@
 // sent anywhere). localStorage rather than IndexedDB because the theme must be read synchronously
 // before the first paint (public/theme-init.js reads the same key). Pure: parsing only, no I/O.
 //
-// No units setting (metric only, matching the data), no fare-category or language setting
-// (discounts are unverified and there is no reviewed translation, decision D8).
+// No units setting (metric only, matching the data) and no fare-category setting (discounts are
+// unverified). ADR 011 (supersedes D8 "English only") adds `locale`: absent until the user picks a
+// language in More, so the phone's language applies; Bikol is dropped while it is not enabled.
 // Increment D, Task 12 (decision D16): adds `layers` for the map overview and mode filter. D16's
 // "Show historical routes" switch was removed with the e-jeepney route (ruling 2026-10-16): no
 // historical route is published; a stored `historical` key is dropped on parse.
 import { z } from "zod";
 import { ROUTE_MODES, type RouteMode } from "../modes/fleet";
+import { LOCALES, isEnabledLocale, type Locale } from "@/i18n/locales";
 
 export const PREFS_STORAGE_KEY = "paranaga.prefs";
 
@@ -41,6 +43,8 @@ export type Prefs = {
   historyEnabled: boolean;
   /** Map layers and mode filter (D16). */
   layers: LayersPref;
+  /** UI language chosen in More; absent = follow the phone (ADR 011). */
+  locale?: Locale;
 };
 
 export const DEFAULT_PREFS: Readonly<Prefs> = Object.freeze({
@@ -78,6 +82,7 @@ const prefsSchema = z.object({
   lowData: z.boolean().catch(DEFAULT_PREFS.lowData),
   historyEnabled: z.boolean().catch(DEFAULT_PREFS.historyEnabled),
   layers: layersSchema,
+  locale: z.enum(LOCALES).refine(isEnabledLocale).optional().catch(undefined),
 });
 
 function cloneDefaultPrefs(): Prefs {
@@ -98,11 +103,13 @@ export function parsePrefs(raw: string | null): Prefs {
   }
   if (typeof value !== "object" || value === null || Array.isArray(value)) return cloneDefaultPrefs();
   const parsed = prefsSchema.safeParse(value);
-  return parsed.success ? parsed.data : cloneDefaultPrefs();
+  if (!parsed.success) return cloneDefaultPrefs();
+  const { locale, ...prefs } = parsed.data;
+  return locale ? { ...prefs, locale } : prefs;
 }
 
 export function serializePrefs(prefs: Prefs): string {
-  const { theme, highContrast, lowData, historyEnabled, layers = DEFAULT_LAYERS_PREF } = prefs;
+  const { theme, highContrast, lowData, historyEnabled, layers = DEFAULT_LAYERS_PREF, locale } = prefs;
   return JSON.stringify({
     theme,
     highContrast,
@@ -113,5 +120,6 @@ export function serializePrefs(prefs: Prefs): string {
       terminals: layers.terminals,
       modes: [...layers.modes],
     },
+    locale, // dropped by JSON.stringify when absent
   });
 }

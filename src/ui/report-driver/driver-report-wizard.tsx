@@ -37,7 +37,8 @@ import {
   type ComplaintReceipt,
 } from "@/domain/complaints/schemas";
 import { complaintStatusLabel } from "@/domain/complaints/status";
-import { messages } from "@/i18n/messages";
+import { en } from "@/i18n/en";
+import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 import { CameraCapture } from "./camera-capture";
 
 type Step = 1 | 2 | 3 | 4;
@@ -58,7 +59,7 @@ const STEP_TITLES: Record<Step, string> = {
   4: "Review and send",
 };
 const STEPS = 4;
-const ACK_TEXT = messages.en.acknowledgments.driverReport;
+const ACK_TEXT = en.acknowledgments.driverReport;
 
 /** "YYYY-MM-DDTHH:mm" in the phone's local time, for <input type="datetime-local">. */
 function localNow(): string {
@@ -70,9 +71,9 @@ function localToIso(local: string): string | null {
   const t = new Date(local).getTime();
   return Number.isFinite(t) ? new Date(t).toISOString() : null;
 }
-function formatLocal(local: string): string {
+function formatLocal(local: string, locale: Locale = DEFAULT_LOCALE): string {
   const t = new Date(local);
-  return Number.isFinite(t.getTime()) ? t.toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : "";
+  return Number.isFinite(t.getTime()) ? t.toLocaleString(formatLocale(locale), { dateStyle: "medium", timeStyle: "short" }) : "";
 }
 
 export function DriverReportWizard() {

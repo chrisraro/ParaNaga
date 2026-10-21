@@ -14,9 +14,10 @@ import {
 import { LABEL_TEXT, type PostSummary } from "@/domain/community/schemas";
 import { stateLabel, type ContentState } from "@/domain/community/status";
 import { topicLabel } from "@/domain/community/topics";
+import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 
-const DATE = new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" });
-export const formatDate = (iso: string) => DATE.format(new Date(iso));
+export const formatDate = (iso: string, locale: Locale = DEFAULT_LOCALE) =>
+  new Date(iso).toLocaleDateString(formatLocale(locale), { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" });
 
 /** The state of the author's own content. Always text, never colour alone. */
 export function StateBadge({ state }: { state: ContentState }) {

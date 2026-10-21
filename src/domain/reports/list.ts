@@ -2,6 +2,7 @@ import { complaintCategoryLabel, type ComplaintCategory } from "@/domain/complai
 import { complaintStatusLabel, type ComplaintStatus } from "@/domain/complaints/status";
 import { categoryLabel, type CorrectionCategory } from "@/domain/corrections/categories";
 import { statusLabel, type CorrectionStatus } from "@/domain/corrections/status";
+import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 
 // One list for S19 My reports: the caller's corrections (B6) and driver reports (B8), newest
 // first. Pure. No report text goes through here: a list row has a reference or kind label, a
@@ -95,11 +96,11 @@ export const OUTCOME_LABELS: Record<string, string> = {
 };
 export const outcomeLabel = (code: string | null): string | null => (code ? (OUTCOME_LABELS[code] ?? null) : null);
 
-export const manilaDate = (iso: string): string => {
+export const manilaDate = (iso: string, locale: Locale = DEFAULT_LOCALE): string => {
   const t = new Date(iso);
-  return Number.isFinite(t.getTime()) ? t.toLocaleString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }) : "";
+  return Number.isFinite(t.getTime()) ? t.toLocaleString(formatLocale(locale), { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }) : "";
 };
-export const manilaDay = (iso: string): string => {
+export const manilaDay = (iso: string, locale: Locale = DEFAULT_LOCALE): string => {
   const t = new Date(iso);
-  return Number.isFinite(t.getTime()) ? t.toLocaleDateString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium" }) : "";
+  return Number.isFinite(t.getTime()) ? t.toLocaleDateString(formatLocale(locale), { timeZone: "Asia/Manila", dateStyle: "medium" }) : "";
 };
