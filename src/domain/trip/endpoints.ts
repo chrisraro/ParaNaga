@@ -3,6 +3,7 @@ import { isInsideNaga } from "@/domain/geo/naga";
 import { SAME_PLACE_M } from "@/domain/planner/labels";
 import type { LatLng } from "@/domain/geo/types";
 import type { SavedPlaceSource } from "@/domain/saved/saved";
+import { en, type Dict } from "@/i18n/dict";
 
 export type EndpointSource = "gps" | "map" | "search";
 export type EndpointWhich = "start" | "destination";
@@ -36,9 +37,9 @@ export const initialEndpointsState: EndpointsState = {
   error: null,
 };
 
-export function endpointLabel(source: EndpointSource, searchLabel = ""): string {
-  if (source === "gps") return "Your location";
-  if (source === "map") return "Pinned location";
+export function endpointLabel(source: EndpointSource, searchLabel = "", copy: Dict["trip"] = en.trip): string {
+  if (source === "gps") return copy.yourLocation;
+  if (source === "map") return copy.pinnedLocation;
   return searchLabel;
 }
 

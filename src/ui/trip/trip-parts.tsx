@@ -3,9 +3,11 @@
 // always the warning "Unverified route", fares are always estimates.
 
 import type { PlanResponse, RideLegDto } from "@/domain/api/plan";
-import { FARE_NOT_FIXED, farNoteView } from "@/domain/trip/option-card";
+import { farNoteView } from "@/domain/trip/option-card";
 import { routeChipText } from "@/domain/planner/route-display";
 import { directionText, fareChipText, fareRangeText, routeChipLabel, stopLabel, type LoopDirection } from "@/domain/trip/present";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ModeIcon } from "@/ui/modes/mode-icon";
 import { EstAbbr } from "./eta-text";
@@ -44,7 +46,7 @@ export function Chevron() {
 }
 
 /** The caution chip on an option card or the peek (the full badge is in the detail). */
-export const UNVERIFIED_CHIP = "Unverified route";
+export const UNVERIFIED_CHIP = en.trip.unverifiedChip;
 
 /** Warning-style badge (never the teal "Verified route"). */
 export function UnverifiedBadge() {
@@ -58,22 +60,24 @@ type FareLike = { status: string; minCentavos: number | null; maxCentavos: numbe
  * access option ("From ₱33") or a special trip ("Fare not fixed", dashed: there is no fare to give).
  */
 export function FareChip({ fare, short = false, text = null }: { fare: FareLike; short?: boolean; text?: string | null }) {
-  const none = text === null ? !fareRangeText(fare) : text === FARE_NOT_FIXED;
+  const t = useT().trip;
+  const none = text === null ? !fareRangeText(fare) : text === t.fareNotFixed;
   return (
     <span className={none ? "pn-fare-chip pn-fare-chip--none" : "pn-fare-chip"} data-testid="fare-chip">
-      {short ? <FareShort fare={fare} text={text} /> : (text ?? fareChipText(fare))}
+      {short ? <FareShort fare={fare} text={text} /> : (text ?? fareChipText(fare, t))}
     </span>
   );
 }
 
 /** The card form of the fare: "Est. ₱14–₱17", "Fare n/a" or "No fare". */
 export function FareShort({ fare, text = null }: { fare: FareLike; text?: string | null }) {
+  const t = useT().trip;
   if (text) return <>{text}</>;
   const range = fareRangeText(fare);
   // A range is spoken like the time range: "₱14 to ₱17", not a dash.
   if (range) return <><EstAbbr /> {range.includes("–") ? <span role="img" aria-label={range.replace("–", " to ")}>{range}</span> : range}</>;
-  if (fare.status === "minimum" || fare.status === "flat_per_passenger") return <>{fareChipText(fare)}</>;
-  return <>{fare.status === "no_ride" ? "No fare" : "Fare n/a"}</>;
+  if (fare.status === "minimum" || fare.status === "flat_per_passenger") return <>{fareChipText(fare, t)}</>;
+  return <>{fare.status === "no_ride" ? t.fareNone : t.fareNA}</>;
 }
 
 /** Route chip, e.g. "Loop A" with its loop arrow (or an arrow for a line route), optionally followed by the direction. */
@@ -89,8 +93,9 @@ export function LoopChip({
   /** In a route list the chip is the short "Route E" / "Loop C" / "R1"; the title beside it carries the full name. */
   short?: boolean;
 }) {
+  const t = useT().trip;
   const text = short ? routeChipText(leg.routeCode) : routeChipLabel(leg.routeCode, leg.routeName, leg.display);
-  const dir = directionText(direction ?? null, "short", text);
+  const dir = directionText(direction ?? null, "short", text, t);
   return (
     <span className="pn-loop">
       <span className="pn-loop-chip">
@@ -111,7 +116,7 @@ export function LoopChip({
  * what riders report, not an ordinance). Null when the plan has no note.
  */
 export function FarNote({ note, options = [] }: { note: string | null; options?: Parameters<typeof farNoteView>[1] }) {
-  const v = farNoteView(note, options);
+  const v = farNoteView(note, options, useT().trip);
   if (!v) return null;
   return (
     <p className="pn-trip-farnote" data-testid="far-note">
@@ -127,13 +132,13 @@ export type PlanLookups = {
   direction: (variantId: string) => LoopDirection | null;
 };
 
-export function planLookups(data: PlanResponse): PlanLookups {
+export function planLookups(data: PlanResponse, copy: Dict["trip"] = en.trip): PlanLookups {
   const stops = new Map(data.stops.map((s) => [s.id, s]));
   const variants = new Map(data.variants.map((v) => [v.variantId, v]));
   return {
     stopName: (id, fallback) => {
       const s = stops.get(id);
-      return s ? stopLabel(s.name, s.code) : fallback;
+      return s ? stopLabel(s.name, s.code, copy) : fallback;
     },
     direction: (variantId) => variants.get(variantId)?.loopDirection ?? null,
   };

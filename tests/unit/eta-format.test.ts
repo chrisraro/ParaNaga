@@ -155,7 +155,7 @@ describe("honesty (property)", () => {
     fc.assert(
       fc.property(optionArb, depArb, walkLengthsArb, (o, dep, wl) => {
         const e = est(o, dep, wl);
-        const timed = [formatTotal(e.total), ...e.legs.map(formatLeg)];
+        const timed = [formatTotal(e.total), ...e.legs.map((l) => formatLeg(l))];
         const rem = remainingRange(e, 0, "trip");
         if (rem) timed.push(formatRemaining(rem, "trip"), formatRemaining(rem, "riding"));
         const note = formatPeakNote(e.total);

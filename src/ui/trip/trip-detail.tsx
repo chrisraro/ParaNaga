@@ -27,7 +27,9 @@ import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
 import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
 import { formatLeg } from "@/domain/eta/format";
-import { FARE_NOT_FIXED, isAccessOption, isSpecialTrip, specialFareText, streetCardView, tricycleTerminalLines, viaChipText } from "@/domain/trip/option-card";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
+import { isAccessOption, isSpecialTrip, specialFareText, streetCardView, tricycleTerminalLines, viaChipText } from "@/domain/trip/option-card";
 import { getRoadsideAdvice } from "@/domain/planner/roadside";
 import { optionNotesView, type OptionNotesView } from "@/domain/trip/option-notes";
 import { rideEnds } from "@/domain/trip/ride-ends";
@@ -67,13 +69,11 @@ type Props = {
   terminals?: NetworkSnapshot["terminals"] | null;
 };
 
-const CANDIDATE = "Mapped candidate · not yet verified";
-
-function walkTitle(leg: WalkLegDto, lookups: PlanLookups): string {
-  const d = formatDistance(leg.estimateMeters);
-  if (leg.to.kind === "destination") return `Walk ${d} to your destination`;
-  const name = leg.to.stopId ? lookups.stopName(leg.to.stopId, leg.to.name ?? "the stop") : (leg.to.name ?? "the stop");
-  return `Walk ${d} to ${name}`;
+function walkTitle(leg: WalkLegDto, lookups: PlanLookups, t: Dict): string {
+  const d = formatDistance(leg.estimateMeters, t.geo);
+  if (leg.to.kind === "destination") return t.trip.walkToDestination(d);
+  const name = leg.to.stopId ? lookups.stopName(leg.to.stopId, leg.to.name ?? t.trip.theStop) : (leg.to.name ?? t.trip.theStop);
+  return t.trip.walkToPlace(d, name);
 }
 
 function Marker({ kind }: { kind: "origin" | "board" | "alight" | "destination" | "walk" }) {
@@ -109,9 +109,10 @@ function Marker({ kind }: { kind: "origin" | "board" | "alight" | "destination" 
 type Step = { key: string; marker: Parameters<typeof Marker>[0]["kind"]; rail: "walk" | "ride" | null; body: ReactNode };
 
 /** What the steps need besides the plan: how the person named the ends, the notes and the terminals. */
-type StepContext = { start: string; destination: string; notes: OptionNotesView; terminals: NetworkSnapshot["terminals"] | null; planTerminals?: PlanOptionDto["tricycleTerminals"]; showOnMap: ((point: LatLng) => void) | null };
+type StepContext = { t: Dict; start: string; destination: string; notes: OptionNotesView; terminals: NetworkSnapshot["terminals"] | null; planTerminals?: PlanOptionDto["tricycleTerminals"]; showOnMap: ((point: LatLng) => void) | null };
 
 function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideLegDto) => RideTrace, ctx: StepContext, estimate?: EtaEstimate | null): Step[] {
+  const t = ctx.t.trip;
   const out: Step[] = [];
   const last = option.legs.length - 1;
   const lastRide = option.legs.map((l) => l.kind).lastIndexOf("ride");
@@ -123,19 +124,19 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
       // "Start at" step (board here), a transfer one is folded into the next "Board" step, and
       // the last one turns the final step into "Arrive".
       if (i === 0) {
-        const name = leg.to.stopId ? lookups.stopName(leg.to.stopId, leg.to.name ?? "the stop") : (leg.to.name ?? "the stop");
+        const name = leg.to.stopId ? lookups.stopName(leg.to.stopId, leg.to.name ?? t.theStop) : (leg.to.name ?? t.theStop);
         out.push({
           key: `w${i}`,
           marker: "origin",
           rail: "walk",
           body: (
             <>
-              <strong className="pn-tl__title">Start at {name}</strong>
+              <strong className="pn-tl__title">{t.startAt(name)}</strong>
             </>
           ),
         });
       } else if (i === last) {
-        out.push({ key: `w${i}`, marker: "destination", rail: null, body: <strong className="pn-tl__title">You’re there</strong> });
+        out.push({ key: `w${i}`, marker: "destination", rail: null, body: <strong className="pn-tl__title">{t.youreThere}</strong> });
       }
       return;
     }
@@ -150,7 +151,7 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
         rail: final ? null : "walk",
         body: (
           <>
-            <strong className="pn-tl__title">{walkTitle(leg, lookups)}</strong>
+            <strong className="pn-tl__title">{walkTitle(leg, lookups, ctx.t)}</strong>
             <WalkTime leg={etaLeg} path={(leg as { path?: { kind?: string } }).path?.kind === "path" ? "street" : "straight"} />
             {(leg as { path?: { label?: string } }).path?.label === WALK_OFFLINE_LABEL ? <p className="pn-tl__sub">{WALK_PATHS_OFFLINE_NOTE}</p> : null}
           </>
@@ -160,9 +161,9 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
     }
     if (leg.kind === "tricycle" || leg.kind === "padyak") {
       // Not the last leg (the access option): the tricycle ends at its named loading point.
-      out.push(...streetSteps(leg, i, i < last ? { ...ctx, toName: leg.to.name ?? "the jeepney" } : ctx));
+      out.push(...streetSteps(leg, i, i < last ? { ...ctx, toName: leg.to.name ?? t.theJeepney } : ctx));
       // The rider is now at the loading point: an unnamed board point next reads as there, not as the start.
-      if (i < last) here = leg.to.name ?? "the jeepney";
+      if (i < last) here = leg.to.name ?? t.theJeepney;
       return;
     }
     if (leg.kind !== "ride") return;
@@ -170,7 +171,7 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
     here = ride.alightName;
     out.push(...ride.steps);
   });
-  if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">Arrive</strong> });
+  if (last === 0) out.push({ key: "dest", marker: "destination", rail: null, body: <strong className="pn-tl__title">{t.arrive}</strong> });
   return out;
 }
 
@@ -184,17 +185,18 @@ function rideSteps(
   isLastRide: boolean,
   estimate?: EtaEstimate | null,
 ): { steps: Step[]; alightName: string } {
+  const t = ctx.t.trip;
   const ends = rideEnds(leg, isLastRide ? ctx.destination : undefined);
   if (!ends) return { steps: [], alightName: here };
   const { board, alight } = ends;
   const boardNamed = ends.pinned || Boolean(leg.board?.stopId || leg.board?.name);
   const alightNamed = ends.pinned || Boolean(leg.alight?.stopId || leg.alight?.name);
   const boardName = boardNamed ? lookups.stopName(board.id, board.name) : here;
-  const alightName = alightNamed ? lookups.stopName(alight.id, alight.name) : isLastRide ? alight.name : "the transfer point";
+  const alightName = alightNamed ? lookups.stopName(alight.id, alight.name) : isLastRide ? alight.name : t.transferPoint;
   const rideNotes = ctx.notes.rides.find((r) => r.legIndex === i)?.notes ?? [];
   const route = routeChipLabel(leg.routeCode, leg.routeName, leg.display);
-  const dir = directionText(lookups.direction(leg.variantId), "short", route);
-  const roadside = getRoadsideAdvice(leg.routeCode, leg.board, leg.alight);
+  const dir = directionText(lookups.direction(leg.variantId), "short", route, t);
+  const roadside = getRoadsideAdvice(leg.routeCode, leg.board, leg.alight, t.roadside);
   const count = ends.pinned ? ends.stops.length - 1 : null;
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
   const etaLeg = estimate?.legs[i];
@@ -209,14 +211,12 @@ function rideSteps(
         <div className="pn-tl__stack">
           <div>
             {ends.pinned ? (
-              <strong className="pn-tl__title">
-                Board {route}{dir ? ` (${dir})` : ""} at {boardName}
-              </strong>
+              <strong className="pn-tl__title">{dir ? t.boardDir(route, dir, boardName) : t.board(route, boardName)}</strong>
             ) : (
               <>
-                <strong className="pn-tl__title">Get on near {boardName}</strong>
-                <p className="pn-tl__sub pn-tl__sub--gold">{boardNamed ? CANDIDATE : "Stop not marked · confirm with the driver"}</p>
-                {dir ? <p className="pn-tl__sub">Direction: {dir}</p> : null}
+                <strong className="pn-tl__title">{t.getOnNear(boardName)}</strong>
+                <p className="pn-tl__sub pn-tl__sub--gold">{boardNamed ? t.candidate : t.stopNotMarked}</p>
+                {dir ? <p className="pn-tl__sub">{t.directionLine(dir)}</p> : null}
               </>
             )}
             {roadside ? (
@@ -226,7 +226,7 @@ function rideSteps(
                     <circle cx="12" cy="12" r="9" />
                     <path d="M12 8v4l3 2" />
                   </svg>
-                  Roadside advice
+                  {t.roadsideAdvice}
                 </span>
                 <span>{roadside.advice}</span>
               </div>
@@ -240,11 +240,11 @@ function rideSteps(
                 </p>
               ))
             ) : (
-              <p className="pn-tl__sub" data-testid="ride-fleet-class">Vehicle type not confirmed</p>
+              <p className="pn-tl__sub" data-testid="ride-fleet-class">{t.vehicleUnconfirmed}</p>
             )}
           </div>
           <p className="pn-tl__sub">
-            {count === null ? "Ride along the approximate path" : `${count} ${count === 1 ? "stop" : "stops"}`}
+            {count === null ? t.rideAlongPath : t.stops(count)}
           </p>
           {etaLeg ? <LegTime leg={etaLeg} /> : null}
           <p className="pn-tl__sub pn-tl__sub--path-label" data-testid="ride-path-label">
@@ -252,7 +252,7 @@ function rideSteps(
           </p>
           {leg.stops.length > 0 ? (
             <p className="pn-tl__sub" data-testid="ride-passed-stops">
-              Marked stops on the way: {leg.stops.map((s) => lookups.stopName(s.id, s.name)).join(", ")}
+              {t.markedStops(leg.stops.map((s) => lookups.stopName(s.id, s.name)).join(", "))}
             </p>
           ) : null}
           <LineNotesView notes={trace.notes} testIdPrefix="ride" />
@@ -274,19 +274,19 @@ function rideSteps(
         <div className="pn-tl__stack">
           <div>
             {ends.pinned ? (
-              <strong className="pn-tl__title">Get off at {alightName}</strong>
+              <strong className="pn-tl__title">{t.getOffAt(alightName)}</strong>
             ) : (
               <>
-                <strong className="pn-tl__title">Get off near {alightName}</strong>
+                <strong className="pn-tl__title">{t.getOffNear(alightName)}</strong>
                 <p className="pn-tl__sub" data-testid="ride-free-alight">
-                  Tell the driver &lsquo;para&rsquo; · stop not marked
+                  {t.paraFree}
                 </p>
-                {alightNamed ? <p className="pn-tl__sub pn-tl__sub--gold">{CANDIDATE}</p> : null}
+                {alightNamed ? <p className="pn-tl__sub pn-tl__sub--gold">{t.candidate}</p> : null}
               </>
             )}
           </div>
           <div className="pn-para">
-            <span>Say “Para!” near here</span>
+            <span>{t.sayPara}</span>
           </div>
         </div>
       ),
@@ -297,7 +297,8 @@ function rideSteps(
 
 /** A tricycle or padyak step: the destination, how far and on what basis, then the planner notes (rules, fare, "time not estimated"). */
 function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepContext & { toName?: string }): Step[] {
-  const v = streetCardView(leg);
+  const t = ctx.t.trip;
+  const v = streetCardView(leg, t, ctx.t.geo);
   const terminal = leg.kind === "tricycle" ? nearestTricycleTerminal(leg.from, leg.to, ctx.terminals ?? []) : undefined;
   return [
     {
@@ -307,9 +308,7 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
       body: (
         <div className="pn-tl__stack">
           <div>
-            <strong className="pn-tl__title">
-              Take a {leg.kind} to {ctx.toName ?? ctx.destination}
-            </strong>
+            <strong className="pn-tl__title">{t.takeA(t.kind[leg.kind], ctx.toName ?? ctx.destination)}</strong>
             {v.headline ? (
               <p className="pn-tl__sub pn-tl__sub--gold" data-testid="street-state">
                 {v.headline}
@@ -327,30 +326,30 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
                 {n}
               </p>
             ))}
-            {tricycleTerminalLines({ tricycleTerminals: ctx.planTerminals }).map((t) => (
-              <p key={t.key} className="pn-tl__sub pn-tl__terminal-highlight" data-testid="tricycle-terminal">
+            {tricycleTerminalLines({ tricycleTerminals: ctx.planTerminals }, t).map((line) => (
+              <p key={line.key} className="pn-tl__sub pn-tl__terminal-highlight" data-testid="tricycle-terminal">
                 <svg className="pn-terminal-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" style={{ display: "inline-block", verticalAlign: "-2px", marginRight: "6px" }}>
                   <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
                   <circle cx="12" cy="10" r="3" />
                 </svg>
-                <strong>{t.text}</strong>
-                {t.toda ? <span className="pn-tl__toda-line" data-testid="tricycle-toda"><br />{t.toda}</span> : null}
+                <strong>{line.text}</strong>
+                {line.toda ? <span className="pn-tl__toda-line" data-testid="tricycle-toda"><br />{line.toda}</span> : null}
               </p>
             ))}
             {terminal && !ctx.planTerminals ? (
               <p className="pn-tl__sub" data-testid="tricycle-terminal">
-                Nearest tricycle terminal: {terminal.name}, about {Math.round(terminal.distanceM / 10) * 10} m
+                {t.nearestTerminal(terminal.name, Math.round(terminal.distanceM / 10) * 10)}
                 {ctx.showOnMap ? (
                   <>
                     {" "}
                     <button
                       type="button"
                       className="pn-btn pn-btn--secondary"
-                      aria-label={`Show on map: ${terminal.name}`}
+                      aria-label={t.showOnMapFor(terminal.name)}
                       data-testid="tricycle-terminal-show"
                       onClick={() => ctx.showOnMap?.({ lat: terminal.lat, lng: terminal.lng })}
                     >
-                      Show on map
+                      {t.showOnMap}
                     </button>
                   </>
                 ) : null}
@@ -365,7 +364,8 @@ function streetSteps(leg: TricycleLegDto | PadyakLegDto, i: number, ctx: StepCon
 
 /** "≈ 5–7 min walk" (+ " · path not verified" on a walk), the range spoken in words; "Tricycle time not estimated". */
 function LegTime({ leg, note, path }: { leg: EtaLeg; note?: string; path?: "street" | "straight" }) {
-  const text = leg.estimated && note ? `${formatLeg(leg)} · ${note}` : formatLeg(leg);
+  const t = useT();
+  const text = leg.estimated && note ? t.trip.timeNote(formatLeg(leg, t.eta), note) : formatLeg(leg, t.eta);
   return (
     <p className="pn-tl__sub pn-tl__sub--time" data-testid="leg-time" data-path={path}>
       <SpokenRange text={text} range={leg} />
@@ -373,11 +373,10 @@ function LegTime({ leg, note, path }: { leg: EtaLeg; note?: string; path?: "stre
   );
 }
 
-const WALK_NOTE = "path not verified";
-
 /** A walk’s one line: the time with "path not verified" (data-path says street path or straight line), or just that note without an estimate. */
 function WalkTime({ leg, path }: { leg?: EtaLeg; path: "street" | "straight" }) {
-  return leg ? <LegTime leg={leg} note={WALK_NOTE} path={path} /> : <p className="pn-tl__sub" data-path={path}>Path not verified</p>;
+  const t = useT().trip;
+  return leg ? <LegTime leg={leg} note={t.walkNote} path={path} /> : <p className="pn-tl__sub" data-path={path}>{t.pathNotVerified}</p>;
 }
 
 type ShareOutcome = "shared" | "copied" | "cancelled" | "failed";
@@ -400,14 +399,10 @@ async function shareOrCopy(text: string): Promise<ShareOutcome> {
   }
 }
 
-const SHARE_STATUS: Record<ShareOutcome, string> = {
-  shared: "Shared",
-  copied: "Copied",
-  cancelled: "",
-  failed: "Could not share or copy on this phone.",
-};
+const shareStatus = (t: Dict["trip"]): Record<ShareOutcome, string> => ({ shared: t.shared, copied: t.copied, cancelled: "", failed: t.shareFailed });
 
 function TripActions({ data, option, ends, exactPoints, etaModel, walkLengths }: { data: PlanResponse; option: PlanOptionDto; ends: TripEnds; exactPoints: boolean; etaModel: EtaModel | null; walkLengths: (number | null)[] }) {
+  const t = useT().trip;
   const [status, setStatus] = useState("");
   const newCard = () => buildSavedTrip({ id: crypto.randomUUID(), savedAt: new Date().toISOString(), data, option, start: ends.start, destination: ends.destination });
   // Saved on this plan's revision, saved on an older one (offer to update the copy), or not saved.
@@ -423,7 +418,7 @@ function TripActions({ data, option, ends, exactPoints, etaModel, walkLengths }:
       { start: ends.start, destination: ends.destination, option, stops: data.stops, variants: data.variants, revisionLabel: data.revision.label },
       { exactPoints, etaModel, walkLengths },
     );
-    setStatus(SHARE_STATUS[await shareOrCopy(text)]);
+    setStatus(shareStatus(t)[await shareOrCopy(text)]);
   };
 
   return (
@@ -437,32 +432,26 @@ function TripActions({ data, option, ends, exactPoints, etaModel, walkLengths }:
           onClick={() => void toggle()}
           data-testid="trip-save"
           data-state={state}
-          aria-label={state === "saved" ? "Saved, remove from saved trips" : undefined}
+          aria-label={state === "saved" ? t.savedRemove : undefined}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill={state === "none" ? "none" : "currentColor"} stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" aria-hidden="true" focusable="false">
             <path d="M6 3h12v18l-6-4.5L6 21z" />
           </svg>
-          {state === "saved" ? (
-            "Saved"
-          ) : state === "older" ? (
-            "Update saved copy"
-          ) : (
-            "Save"
-          )}
+          {state === "saved" ? t.saved : state === "older" ? t.updateSaved : t.save}
         </button>
         <button type="button" className="pn-trip-action" onClick={() => void share()} data-testid="trip-share">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
             <path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6" />
           </svg>
-          Share
+          {t.share}
         </button>
       </div>
       {match?.kind === "older" ? (
         <p className="pn-trip-actions__status" data-testid="trip-save-older">
-          Saved copy: {manilaDate(match.trip.publishedAt) ?? `revision ${match.trip.revisionLabel}`}
+          {t.savedCopy(manilaDate(match.trip.publishedAt) ?? t.revision(match.trip.revisionLabel))}
         </p>
       ) : null}
-      {unavailable ? <p className="pn-trip-actions__status">Saving isn’t available on this phone.</p> : null}
+      {unavailable ? <p className="pn-trip-actions__status">{t.saveUnavailable}</p> : null}
       <p className="pn-trip-actions__status" aria-live="polite" data-testid="trip-action-status">
         {status}
       </p>
@@ -470,13 +459,14 @@ function TripActions({ data, option, ends, exactPoints, etaModel, walkLengths }:
   );
 }
 
-export const START_TRIP = "Start trip";
+export const START_TRIP = en.trip.startTrip;
 
 export function TripDetail({ data, option, onBack, ends = null, note = null, onStart = null, etaModel = null, routes = null, terminals = null }: Props) {
+  const t = useT();
   const [basisOpen, setBasisOpen] = useState(false);
   const [exactPoints, setExactPoints] = useState(false);
   const shareId = useId();
-  const lookups = planLookups(data);
+  const lookups = planLookups(data, t.trip);
   const headingRef = useRef<HTMLHeadingElement>(null);
   // Focus the heading when an option opens, and again once the map shows (a trip reopened from
   // Saved mounts while the Saved page still covers the home screen, which is inert then).
@@ -494,12 +484,12 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
   const now = useMinuteTicker();
-  const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
-  const stepContext: StepContext = { start: ends?.start.label || "your start", destination: ends?.destination.label || "your destination", notes, terminals, planTerminals: option.tricycleTerminals, showOnMap: frame ? frame.showOnMap : null };
+  const notes = useMemo(() => optionNotesView(option, routes, now, t), [option, routes, now, t]);
+  const stepContext: StepContext = { t, start: ends?.start.label || t.trip.yourStart, destination: ends?.destination.label || t.trip.yourDestination, notes, terminals, planTerminals: option.tricycleTerminals, showOnMap: frame ? frame.showOnMap : null };
   const noMinutes = estimate !== null && !estimate.legs.some((l) => l.estimated);
   const streets = option.legs.filter((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
   const access = isAccessOption(option);
-  const via = viaChipText(option);
+  const via = viaChipText(option, t.trip);
 
   // Walk legs show "Straight line · loading street paths…" until the walk graph arrives: say so politely.
   const loadingPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "straight" && (l as EnrichedWalkLeg).path.label === WALK_LOADING_LABEL);
@@ -507,7 +497,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
   if (loadingPaths && !sawLoadingPaths) setSawLoadingPaths(true);
   // "Updated" only when a street path really arrived; a failed load says nothing.
   const gotStreetPaths = option.legs.some((l) => l.kind === "walk" && (l as Partial<EnrichedWalkLeg>).path?.kind === "path");
-  const pathsStatus = loadingPaths ? "Loading street paths…" : sawLoadingPaths && gotStreetPaths ? "Street paths updated" : "";
+  const pathsStatus = loadingPaths ? t.trip.loadingPaths : sawLoadingPaths && gotStreetPaths ? t.trip.pathsUpdated : "";
   // Low-data opt-in (Task 15 follow-up): the walk graph downloads only on this tap, then stays stored.
   const pathsDownload = useWalkGraphDownload(data.revision.revisionId);
   const downloadPaths = async () => {
@@ -520,26 +510,26 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
     <section className="pn-trip pn-trip-detail" aria-labelledby="pn-trip-detail-title" data-testid="trip-detail">
       <ViewTransition name="pn-trip-ends">
         <div className="pn-trip-detail__bar">
-          <button type="button" className="pn-trip-back" aria-label="Back to trip options" onClick={onBack}>
+          <button type="button" className="pn-trip-back" aria-label={t.trip.backToOptions} onClick={onBack}>
             <svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
               <path d="M10 2L2 10l8 8" />
             </svg>
           </button>
-          <Link href={SOURCES_HREF} className="pn-trip-detail__sources" aria-label="Sources and credits">Sources</Link>
+          <Link href={SOURCES_HREF} className="pn-trip-detail__sources" aria-label={t.trip.sourcesLabel}>{t.trip.sources}</Link>
         </div>
       </ViewTransition>
       <div className="pn-trip-detail__header" data-testid="trip-detail-header">
         <h2 id="pn-trip-detail-title" ref={headingRef} tabIndex={-1} className="pn-trip-detail__title">
-          {optionTitle(option)}
+          {optionTitle(option, t.trip, t.geo)}
         </h2>
         <div className="pn-trip-detail__meta">
           {noMinutes && streets[0] ? (
             // A tricycle or padyak trip with no estimated leg: no minutes and no jeepney wait to report.
-            <span className="pn-trip-detail__time" data-testid="trip-detail-time">{streetCardView(streets[0]).timeText}</span>
+            <span className="pn-trip-detail__time" data-testid="trip-detail-time">{streetCardView(streets[0], t.trip, t.geo).timeText}</span>
           ) : (
             <EtaTotalText estimate={estimate} className={estimate ? "pn-trip-detail__time" : undefined} testId="trip-detail-time" />
           )}
-          <FareChip fare={option.fare} text={specialFareText(option)} />
+          <FareChip fare={option.fare} text={specialFareText(option, t.trip)} />
         </div>
         {estimate?.total.peak ? (
           <p className="pn-trip-detail__peak">
@@ -548,7 +538,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
         ) : null}
         {estimate && !noMinutes ? (
           <button type="button" className="pn-trip-detail__basis-btn" onClick={() => setBasisOpen(true)} data-testid="how-times-estimated-btn">
-            How times are estimated
+            {t.eta.basisTitle}
           </button>
         ) : null}
         {ends ? <TripActions data={data} option={option} ends={ends} exactPoints={exactPoints} etaModel={etaModel} walkLengths={walkLengths} /> : null}
@@ -574,7 +564,7 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       </p>
       {pathsDownload.offer || pathsDownload.failed ? (
         <div className="pn-trip-paths-offer" data-testid="walk-graph-offer">
-          <p className="pn-trip-paths-offer__text">Walks shown as straight lines.</p>
+          <p className="pn-trip-paths-offer__text">{t.trip.straightOffer}</p>
           <button
             type="button"
             className="pn-btn pn-btn--secondary pn-trip-paths-offer__btn"
@@ -582,12 +572,12 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
             onClick={() => void downloadPaths()}
             data-testid="walk-graph-download"
           >
-            {pathsDownload.busy ? "Downloading street paths…" : WALK_GRAPH_DOWNLOAD_LABEL}
+            {pathsDownload.busy ? t.trip.downloading : WALK_GRAPH_DOWNLOAD_LABEL}
           </button>
-          {pathsDownload.failed ? <p className="pn-trip-paths-offer__text" role="alert">Download failed. Try again.</p> : null}
+          {pathsDownload.failed ? <p className="pn-trip-paths-offer__text" role="alert">{t.trip.downloadFailed}</p> : null}
         </div>
       ) : null}
-      <ol className="pn-tl" aria-label="Trip steps">
+      <ol className="pn-tl" aria-label={t.trip.tripSteps}>
         {steps(option, lookups, traceOf, stepContext, estimate).map((step) => (
           <li key={step.key} className="pn-tl__step">
             <div className="pn-tl__rail">
@@ -600,17 +590,17 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       </ol>
 
       <section className="pn-fares" aria-labelledby="pn-fares-title">
-        <h3 id="pn-fares-title">Fare estimate</h3>
+        <h3 id="pn-fares-title">{t.trip.fareEstimateTitle}</h3>
         {rides.length === 0 && streets.length === 0 ? (
           <p className="pn-fares__row">
-            <span>Walking only</span>
-            <span>{fareChipText(option.fare)}</span>
+            <span>{t.trip.walkingOnly}</span>
+            <span>{fareChipText(option.fare, t.trip)}</span>
           </p>
         ) : rides.length === 0 ? (
           streets.map((leg, i) => (
             <p key={i} className="pn-fares__row" data-testid="leg-fare">
-              <span>{leg.kind === "tricycle" ? "Tricycle" : "Padyak"}</span>
-              <span>{isSpecialTrip(option) ? FARE_NOT_FIXED : fareChipText(leg.fare)} · confirm with the driver</span>
+              <span>{t.trip.kindTitle[leg.kind]}</span>
+              <span>{t.trip.confirmDriver(isSpecialTrip(option) ? t.trip.fareNotFixed : fareChipText(leg.fare, t.trip))}</span>
             </p>
           ))
         ) : (
@@ -618,26 +608,26 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
             {access
               ? streets.map((leg, i) => (
                   <p key={`s${i}`} className="pn-fares__row" data-testid="leg-fare">
-                    <span>Tricycle</span>
-                    <span>{fareChipText(leg.fare)} · confirm with the driver</span>
+                    <span>{t.trip.kindTitle.tricycle}</span>
+                    <span>{t.trip.confirmDriver(fareChipText(leg.fare, t.trip))}</span>
                   </p>
                 ))
               : null}
             {rides.map((leg, i) => (
               <p key={i} className="pn-fares__row" data-testid="leg-fare">
                 <span>{routeChipLabel(leg.routeCode, leg.routeName, leg.display)}</span>
-                <span>{fareChipText(leg.fare)}</span>
+                <span>{fareChipText(leg.fare, t.trip)}</span>
               </p>
             ))}
             {rides.length > 1 || access ? (
               <p className="pn-fares__row pn-fares__row--total">
-                <span>Total</span>
-                <span>{specialFareText(option) ?? fareChipText(option.fare)}</span>
+                <span>{t.trip.total}</span>
+                <span>{specialFareText(option, t.trip) ?? fareChipText(option.fare, t.trip)}</span>
               </p>
             ) : null}
             <p className="pn-fares__note">
-              {rides.some((leg) => leg.fare.span === "traditional_to_modern") ? "Range spans traditional and modern. " : ""}No discounts.{" "}
-              <Link href={`${SOURCES_HREF}#fare-basis`}>How fares are estimated</Link>
+              {rides.some((leg) => leg.fare.span === "traditional_to_modern") ? t.trip.spansBoth : ""}{t.trip.noDiscounts}{" "}
+              <Link href={`${SOURCES_HREF}#fare-basis`}>{t.trip.howFares}</Link>
             </p>
           </>
         )}
@@ -646,14 +636,14 @@ export function TripDetail({ data, option, onBack, ends = null, note = null, onS
       {ends ? (
         <div className="pn-trip-actions__check">
           <input id={`${shareId}-exact`} type="checkbox" checked={exactPoints} onChange={(e) => setExactPoints(e.target.checked)} data-testid="trip-share-exact" />
-          <label htmlFor={`${shareId}-exact`}>Include exact points when sharing</label>
+          <label htmlFor={`${shareId}-exact`}>{t.trip.includeExact}</label>
         </div>
       ) : null}
       {onStart ? (
         // In the sheet's footer: pinned to the bottom of the visible sheet at every snap.
         <SheetBar>
           <button type="button" className="pn-btn pn-btn--primary pn-trip-start" onClick={() => onStart(walkLengths)} data-testid="trip-start">
-            {START_TRIP}
+            {t.trip.startTrip}
           </button>
         </SheetBar>
       ) : null}

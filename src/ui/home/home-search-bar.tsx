@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ViewTransition, type Ref } from "react";
 import { useIsOffline } from "@/client/pwa/connectivity";
 import { useSavedPlaces } from "@/client/saved/use-saved";
+import { useT } from "@/i18n/provider";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { homeChips } from "./home-chips";
 
@@ -30,6 +31,7 @@ function BookmarkIcon() {
 }
 
 export function HomeSearchBar({ searchRef }: { searchRef: Ref<HTMLAnchorElement> }) {
+  const home = useT().home;
   const frame = useAppFrame();
   const saved = useSavedPlaces();
   // Offline a soft navigation cannot reach the server: plain links, so the service worker answers (as in the tab bar).
@@ -38,12 +40,12 @@ export function HomeSearchBar({ searchRef }: { searchRef: Ref<HTMLAnchorElement>
   return (
     <div className="pn-home-top">
       <ViewTransition name="pn-search-field">
-        <Anchor ref={searchRef} href="/app/search?for=destination" className="pn-home-search" aria-label="Search. Where to?" data-testid="home-search">
+        <Anchor ref={searchRef} href="/app/search?for=destination" className="pn-home-search" aria-label={home.searchLabel} data-testid="home-search">
           <SearchIcon />
-          <span>Where to?</span>
+          <span>{home.whereTo}</span>
         </Anchor>
       </ViewTransition>
-      <ul className="pn-home-chips" aria-label="Browse places" data-testid="home-chips">
+      <ul className="pn-home-chips" aria-label={home.browsePlaces} data-testid="home-chips">
         {chips.map((chip) => (
           <li key={`${chip.kind}-${chip.id}`}>
             {chip.kind === "saved" ? (

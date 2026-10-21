@@ -2,9 +2,11 @@
 // read as fact; a note whose reviewed record is not on this phone says "Unverified". Spans only, so it
 // may sit inside an option card (a button).
 import type { RideNoteView } from "@/domain/trip/option-notes";
+import { useT } from "@/i18n/provider";
 
 export function RouteNote({ note }: { note: RideNoteView }) {
-  const chip = note.evidenceLabel ?? (note.unverified ? "Unverified" : null);
+  const t = useT().trip;
+  const chip = note.evidenceLabel ?? (note.unverified ? t.unverified : null);
   return (
     <span className="pn-route-note" data-testid="route-note">
       <span>{note.text}</span>

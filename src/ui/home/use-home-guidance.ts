@@ -22,9 +22,9 @@ import { endpointsReducer, initialEndpointsState, type Endpoint, type EndpointWh
 import type { HighlightStop } from "@/ui/map/naga-map";
 import type { TripEnds } from "@/ui/trip/trip-detail";
 import { applyIfAccepted } from "./gps-policy";
+import { useT } from "@/i18n/provider";
+import type { Dict } from "@/i18n/dict";
 
-/** Pick-mode prompt after a missed stop with no recent fix. */
-export const PICK_WHERE_YOU_ARE = "Choose where you are on the map";
 /** A replan starts from the last fix only while it is this fresh. */
 export const REPLAN_FIX_MAX_AGE_MS = 10_000;
 
@@ -54,9 +54,9 @@ export function guidanceActiveLegIndex(session: GuidanceSession): number | null 
  * The stops of the ride the person is on, or is walking to next (boarding, those passed, getting
  * off), as map pins: they stay visible while the planner's pins are hidden. Provisional order.
  */
-export function guidanceStopPins(session: GuidanceSession): StopPin[] {
+export function guidanceStopPins(session: GuidanceSession, t?: Dict): StopPin[] {
   if (session.status !== "active") return [];
-  const steps = guidanceSteps(session.trip);
+  const steps = guidanceSteps(session.trip, t?.guidance, t);
   const step = currentStep(session);
   const ride = step.kind === "ride" ? step : step.kind === "walk_to_destination" ? null : steps[step.index + 1];
   if (!ride || ride.kind !== "ride") return [];
@@ -121,23 +121,26 @@ export type HomeGuidance = {
 const NO_STOP_PINS: readonly StopPin[] = [];
 
 export function useHomeGuidance(): HomeGuidance {
+  const t = useT();
   const guidance = useGuidanceSession();
   const session = guidance.session;
   const [pickPrompt, setPickPrompt] = useState<string | null>(null);
   const highlights = useMemo(() => (session ? guidanceHighlights(session) : undefined), [session]);
-  const stopPins = useMemo(() => (session ? guidanceStopPins(session) : NO_STOP_PINS), [session]);
+  const stopPins = useMemo(() => (session ? guidanceStopPins(session, t) : NO_STOP_PINS), [session, t]);
   const activeLegIndex = session ? guidanceActiveLegIndex(session) : null;
   const trip = session?.trip ?? null;
   const destination = useMemo(() => {
     if (!trip) return null;
-    const last = guidanceSteps(trip).at(-1);
+    const last = guidanceSteps(trip, t.guidance, t).at(-1);
     return last?.kind === "walk_to_destination" ? { lat: last.target.lat, lng: last.target.lng } : null;
-  }, [trip]);
+  }, [trip, t]);
   return { guidance, guiding: session !== null, highlights, stopPins, activeLegIndex, destination, pickPrompt, setPickPrompt };
 }
 
 /** What the guidance actions need from the home screen (its own setters). */
 export type HomeGuidanceContext = {
+  /** The reader's dictionary (announcements). */
+  t: Dict;
   home: HomeGuidance;
   endpoints: EndpointsState;
   dispatch: Dispatch<EndpointsAction>;
@@ -163,7 +166,7 @@ export function homeGuidanceActions(ctx: HomeGuidanceContext) {
     const { trip, card } = guidanceTripFor(data, option, ends, eta);
     guidance.start(trip, card);
     ctx.liftSheet();
-    ctx.announce("Guidance started.");
+    ctx.announce(ctx.t.home.guidanceStarted);
   };
 
   // "End guidance" (confirmed): the trip stays in the options (its ends come back after a reload).
@@ -179,7 +182,7 @@ export function homeGuidanceActions(ctx: HomeGuidanceContext) {
     ctx.dismissStored();
     ctx.setOpenedId(null);
     ctx.focusResults();
-    ctx.announce("Guidance ended. Your trip is in the options.");
+    ctx.announce(ctx.t.home.guidanceEnded);
   };
 
   // Arrive → "Done": clear the trip, back to the map.
@@ -218,13 +221,13 @@ export function homeGuidanceActions(ctx: HomeGuidanceContext) {
         ctx.focusResults();
         ctx.liftSheet();
         ctx.recenter();
-        ctx.announce("Planning again from your location.");
+        ctx.announce(ctx.t.home.replanning);
         return;
       }
     }
-    home.setPickPrompt(PICK_WHERE_YOU_ARE);
+    home.setPickPrompt(ctx.t.home.pickWhereYouAre);
     dispatch({ type: "pick", which: "start" });
-    ctx.announce(`${PICK_WHERE_YOU_ARE}.`);
+    ctx.announce(`${ctx.t.home.pickWhereYouAre}.`);
   };
 
   return { start, end, done, replan };

@@ -4,7 +4,8 @@
 import "./styles";
 
 import type { ReactNode } from "react";
-import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 
 export type BadgeVariant =
   | "verified"
@@ -30,9 +31,8 @@ const ICON_PROPS = {
   focusable: false,
 } as const;
 
-const BADGES: Record<BadgeVariant, { text: string; className: string; icon: ReactNode }> = {
+const BADGES: Record<BadgeVariant, { className: string; icon: ReactNode }> = {
   verified: {
-    text: "Verified",
     className: "pn-badge pn-badge--verified",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={3}>
@@ -41,7 +41,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
     ),
   },
   candidate: {
-    text: "Mapped candidate",
     className: "pn-badge pn-badge--candidate",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={3}>
@@ -50,7 +49,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
     ),
   },
   documented: {
-    text: "Documented only",
     className: "pn-badge pn-badge--evidence",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={2.6}>
@@ -60,7 +58,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
     ),
   },
   trial: {
-    text: "Trial — permanence unconfirmed",
     className: "pn-badge pn-badge--trial",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={2.6}>
@@ -70,7 +67,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
     ),
   },
   "unverified-route": {
-    text: UNVERIFIED_ROUTE_BADGE,
     className: "pn-trip-badge",
     icon: (
       <svg {...ICON_PROPS} width={14} height={14} strokeWidth={2.4}>
@@ -80,7 +76,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
     ),
   },
   "not-surveyed": {
-    text: "Not surveyed",
     className: "pn-badge pn-badge--evidence",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={2.6} strokeDasharray="3 3">
@@ -89,7 +84,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
     ),
   },
   historical: {
-    text: "Historical name — not mapped",
     className: "pn-badge pn-badge--historical",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={2.6}>
@@ -100,7 +94,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
   },
   // Routes whose stop order is provisional (Loops A and B, on unverified mapped pins).
   "provisional-stops": {
-    text: "Provisional stops",
     className: "pn-badge pn-badge--candidate",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={3}>
@@ -111,7 +104,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
   },
   // Source badge on every OpenStreetMap place (with OsmAttribution on the same screen).
   osm: {
-    text: "OpenStreetMap",
     className: "pn-badge pn-badge--evidence",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={2.6}>
@@ -121,7 +113,6 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
     ),
   },
   "approximate-path": {
-    text: "Approximate path",
     className: "pn-badge pn-badge--evidence",
     icon: (
       <svg {...ICON_PROPS} strokeWidth={2.4}>
@@ -131,16 +122,18 @@ const BADGES: Record<BadgeVariant, { text: string; className: string; icon: Reac
   },
 };
 
-export function badgeText(variant: BadgeVariant): string {
-  return BADGES[variant].text;
+/** The badge's wording in `copy`'s language (English by default). */
+export function badgeText(variant: BadgeVariant, copy: Pick<Dict, "trip" | "kit"> = en): string {
+  return variant === "unverified-route" ? copy.trip.unverifiedBadge : copy.kit.badges[variant];
 }
 
 export function StatusBadge({ variant, testId }: { variant: BadgeVariant; testId?: string }) {
   const badge = BADGES[variant];
+  const t = useT();
   return (
     <span className={badge.className} data-variant={variant} data-testid={testId}>
       {badge.icon}
-      {badge.text}
+      {badgeText(variant, t)}
     </span>
   );
 }

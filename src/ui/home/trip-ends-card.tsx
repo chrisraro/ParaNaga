@@ -1,9 +1,7 @@
 "use client";
 
-import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
-
-const PLACEHOLDER: Record<EndpointWhich, string> = { start: "Choose start", destination: "Where to?" };
-const NAME: Record<EndpointWhich, string> = { start: "Start", destination: "Destination" };
+import { endpointLabel, type Endpoint, type EndpointWhich, type EndpointsState } from "@/domain/trip/endpoints";
+import { useT } from "@/i18n/provider";
 
 function StartIcon() {
   return (
@@ -37,6 +35,8 @@ type RowProps = {
 };
 
 function EndpointRow({ which, endpoint, focused, sub, onFocus, onClear }: RowProps) {
+  const t = useT();
+  const home = t.home;
   return (
     <div className={focused ? "pn-endpoint pn-endpoint--focused" : "pn-endpoint"} data-testid={`endpoint-${which}`}>
       <button type="button" id={endpointRowMainId(which)} className="pn-endpoint__main" aria-pressed={focused} onClick={() => onFocus(which)}>
@@ -44,15 +44,15 @@ function EndpointRow({ which, endpoint, focused, sub, onFocus, onClear }: RowPro
           {which === "start" ? <StartIcon /> : <DestinationIcon />}
         </span>
         <span className="pn-endpoint__text">
-          <span className="sr-only">{NAME[which]}: </span>
+          <span className="sr-only">{which === "start" ? home.start : home.destination}: </span>
           <span className={endpoint ? "pn-endpoint__value" : "pn-endpoint__value pn-endpoint__value--empty"}>
-            {endpoint ? endpoint.label : PLACEHOLDER[which]}
+            {endpoint ? endpointLabel(endpoint.source, endpoint.label, t.trip) : which === "start" ? home.chooseStart : home.whereTo}
           </span>
           {sub ? <span className="pn-endpoint__sub">{sub}</span> : null}
         </span>
       </button>
       {endpoint ? (
-        <button type="button" className="pn-icon-btn" aria-label={`Clear ${NAME[which].toLowerCase()}`} onClick={() => onClear(which)}>
+        <button type="button" className="pn-icon-btn" aria-label={which === "start" ? home.clearStart : home.clearDestination} onClick={() => onClear(which)}>
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
           </svg>
@@ -81,6 +81,7 @@ export function TripEndsCard({
   onClear,
   onSwap,
 }: TripEndsCardProps) {
+  const home = useT().home;
   return (
     <div className="pn-endpoints" data-testid="trip-ends">
       <EndpointRow which="start" endpoint={endpoints.start} focused={focused === "start"} sub={startSub} onFocus={onFocus} onClear={onClear} />
@@ -89,7 +90,7 @@ export function TripEndsCard({
       <button
         type="button"
         className="pn-icon-btn pn-swap"
-        aria-label="Swap start and destination"
+        aria-label={home.swap}
         disabled={!endpoints.start && !endpoints.destination}
         onClick={onSwap}
       >

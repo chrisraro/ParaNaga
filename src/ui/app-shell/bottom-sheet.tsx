@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { prefersReducedMotion } from "@/client/map/use-reduced-motion";
+import { useT } from "@/i18n/provider";
 import { createSheetDrag, type SheetDrag } from "./sheet-drag";
 
 export type Snap = 0 | 1 | 2;
@@ -48,12 +49,6 @@ export const MAP_CONTROLS_CLEAR = 203;
 export const TINY_SHEET = 280;
 /** The grabber's own height: all the tiny peek shows above the tab bar. */
 const GRABBER_VISIBLE = 44;
-
-const GRABBER_LABEL: Record<Snap, string> = {
-  0: "Expand sheet to half",
-  1: "Expand sheet to full",
-  2: "Collapse sheet",
-};
 
 /**
  * `clearance`: what the tab bar covers at the bottom of the screen. The peek snap rises by it so
@@ -162,6 +157,8 @@ export function useSheet(initial: Snap = 1, clearance = 0, peek = PEEK_VISIBLE, 
  */
 export function SheetGrabber({ sheet }: { sheet: SheetControl }) {
   const { snap, setSnap, drag } = sheet;
+  const shell = useT().shell;
+  const label = [shell.sheetHalf, shell.sheetFull, shell.sheetCollapse][snap];
   const pointer = useRef<number | null>(null);
   const suppressClick = useRef(false);
 
@@ -209,7 +206,7 @@ export function SheetGrabber({ sheet }: { sheet: SheetControl }) {
     <button
       type="button"
       className="pn-grabber"
-      aria-label={GRABBER_LABEL[snap]}
+      aria-label={label}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

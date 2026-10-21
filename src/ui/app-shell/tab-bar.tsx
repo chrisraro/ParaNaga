@@ -16,15 +16,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLayoutEffect, useRef, type RefObject } from "react";
 import { useIsOffline } from "@/client/pwa/connectivity";
+import { useT } from "@/i18n/provider";
 
-type Tab = { href: string; label: string; icon: string; strokeWidth?: number };
+type Tab = { href: string; id: "map" | "explore" | "saved" | "community" | "more"; icon: string; strokeWidth?: number };
 
 export const TABS: readonly Tab[] = [
-  { href: "/app", label: "Map", icon: "M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" },
-  { href: "/app/explore", label: "Explore", icon: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z" },
-  { href: "/app/saved", label: "Saved", icon: "M6 3h12v18l-6-4.5L6 21z" },
-  { href: "/app/community", label: "Community", icon: "M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 19c0-2.5 2.5-4.5 5.5-4.5s5.5 2 5.5 4.5M14 14.7c.6-.2 1.2-.2 2-.2 2.8 0 5.5 1.8 5.5 4.5" },
-  { href: "/app/more", label: "More", icon: "M5 12h.01M12 12h.01M19 12h.01", strokeWidth: 2.6 },
+  { href: "/app", id: "map", icon: "M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" },
+  { href: "/app/explore", id: "explore", icon: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15.5 8.5l-2 5-5 2 2-5z" },
+  { href: "/app/saved", id: "saved", icon: "M6 3h12v18l-6-4.5L6 21z" },
+  { href: "/app/community", id: "community", icon: "M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2.5 19c0-2.5 2.5-4.5 5.5-4.5s5.5 2 5.5 4.5M14 14.7c.6-.2 1.2-.2 2-.2 2.8 0 5.5 1.8 5.5 4.5" },
+  { href: "/app/more", id: "more", icon: "M5 12h.01M12 12h.01M19 12h.01", strokeWidth: 2.6 },
 ];
 
 /** The tab a path belongs to: "/app" exactly for Map, otherwise the tab's section. */
@@ -58,24 +59,25 @@ export function useBottomClearance(ref: RefObject<HTMLElement | null>, report: (
 
 export function TabBar({ onClearance, returning = false }: { onClearance: (px: number) => void; returning?: boolean }) {
   const current = activeTab(usePathname());
+  const shell = useT().shell;
   const offline = useIsOffline();
   const Anchor = offline ? "a" : Link;
   const nav = useRef<HTMLElement>(null);
   useBottomClearance(nav, onClearance);
   return (
-    <nav ref={nav} aria-label="Main" className="pn-tabbar" data-tabbar="" data-returning={returning ? "" : undefined} data-testid="tab-bar">
+    <nav ref={nav} aria-label={shell.mainNav} className="pn-tabbar" data-tabbar="" data-returning={returning ? "" : undefined} data-testid="tab-bar">
       {TABS.map((tab) => (
         <Anchor
           key={tab.href}
           href={tab.href}
           className="pn-tabbar__tab"
           aria-current={current === tab.href ? "page" : undefined}
-          data-testid={`tab-${tab.label.toLowerCase()}`}
+          data-testid={`tab-${tab.id}`}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab.strokeWidth ?? 2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
             <path d={tab.icon} />
           </svg>
-          <span className="pn-tabbar__label">{tab.label}</span>
+          <span className="pn-tabbar__label">{shell.tabs[tab.id]}</span>
         </Anchor>
       ))}
     </nav>

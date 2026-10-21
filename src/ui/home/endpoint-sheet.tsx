@@ -7,6 +7,7 @@
 import Link from "next/link";
 import { ViewTransition, useEffect, useState, type ReactNode } from "react";
 import { savePlacePrefill } from "@/domain/saved/saved";
+import { useT } from "@/i18n/provider";
 import type { Endpoint, EndpointWhich, EndpointsState } from "@/domain/trip/endpoints";
 import { SheetGrabber, TINY_SHEET, sheetGrows, useHeaderDrag, useScrollHandoff, type SheetControl } from "@/ui/app-shell/bottom-sheet";
 import { SheetFooterContext } from "@/ui/app-shell/sheet-bar";
@@ -88,6 +89,7 @@ export function EndpointSheet({
   detailOpen = false,
   summary,
 }: Props) {
+  const home = useT().home;
   const { attach, snap, offset } = sheet;
   const [list, setList] = useState<HTMLDivElement | null>(null);
   const [header, setHeader] = useState<HTMLDivElement | null>(null);
@@ -133,7 +135,7 @@ export function EndpointSheet({
   return (
     <section
       ref={attach}
-      aria-label="Trip planner"
+      aria-label={home.tripPlanner}
       data-testid="trip-sheet"
       data-snap={snap}
       data-grow={grow ? "" : undefined}
@@ -191,27 +193,27 @@ export function EndpointSheet({
         {focused && !detailOpen ? (
           <div role="group" aria-labelledby="pn-options-title">
             <h2 id="pn-options-title" className="pn-section-title">
-              {focused === "start" ? "Set start" : "Set destination"}
+              {focused === "start" ? home.setStart : home.setDestination}
             </h2>
             {focused === "start" ? (
               <button type="button" className="pn-option" onClick={onUseCurrentLocation}>
                 <span className="pn-option__icon">
                   <LocateIcon />
                 </span>
-                Use current location
+                {home.useCurrentLocation}
               </button>
             ) : null}
             <button type="button" className="pn-option" onClick={() => onChooseOnMap(focused)}>
               <span className="pn-option__icon">
                 <PinIcon />
               </span>
-              Choose on map
+              {home.chooseOnMap}
             </button>
             <Link href={`/app/search?for=${focused}`} className="pn-option" data-testid="endpoint-search">
               <span className="pn-option__icon">
                 <SearchIcon />
               </span>
-              Search places and stops
+              {home.searchPlaces}
             </Link>
             {endpoints[focused] ? <SaveEnd endpoint={endpoints[focused]} /> : null}
           </div>
@@ -219,7 +221,7 @@ export function EndpointSheet({
         </div>
         {/* Last in the scroller but positioned on the sheet (it is not scrolled); on short screens
             (home-screen.css) it is in flow at the end of the content instead. */}
-        <div ref={setFooter} className="pn-sheet-footer" role="group" aria-label="Actions" />
+        <div ref={setFooter} className="pn-sheet-footer" role="group" aria-label={home.actions} />
       </div>
       </SheetFooterContext.Provider>
     </section>

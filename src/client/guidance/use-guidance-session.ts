@@ -197,7 +197,7 @@ export function useGuidanceSession(): UseGuidanceSession {
 
   const watching = geo.state === "watching";
   const fix = watching ? geo.fix : null;
-  const view = session ? guidanceView(session, fix, now, t.guidance) : null;
+  const view = session ? guidanceView(session, fix, now, t.guidance, t) : null;
   useAttention(view, session?.startedAt ?? null);
   return {
     session,

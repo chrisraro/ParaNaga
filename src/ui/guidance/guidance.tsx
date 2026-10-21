@@ -70,7 +70,8 @@ function MissedStep({ view, onSend, onReplan, headingRef }: { view: MissedView; 
 
 function Header({ view, location, now, onEnd }: { view: ShownView; location: UseGuidanceSession["location"]; now: number; onEnd: () => void }) {
   const [confirming, setConfirming] = useState(false);
-  const g = useT().guidance;
+  const t = useT();
+  const g = t.guidance;
   const stepLabel = view.screen === "missed" ? null : view.stepLabel;
   // Only a fix that is still fresh is shown; an old one (hidden page, timeouts) is not "± N m" now.
   const assessment = location.watching && location.fix ? assessFix(location.fix, now) : null;
@@ -101,7 +102,7 @@ function Header({ view, location, now, onEnd }: { view: ShownView; location: Use
           data-quality={assessment?.quality}
         >
           <span className="sr-only">{`${g.gpsAccuracy} `}</span>
-          {formatAccuracy(accuracy)}
+          {formatAccuracy(accuracy, t.geo)}
         </span>
       ) : null}
       <ConfirmDialog

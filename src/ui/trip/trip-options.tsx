@@ -13,14 +13,15 @@ import { Fragment, useMemo } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
+import { useT } from "@/i18n/provider";
 import { PEEK_ROW, PEEK_ROW_GAP } from "@/ui/app-shell/bottom-sheet";
-import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionRoadside, optionsCountText, previewIndex, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
+import { accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionRoadside, optionsCountText, previewIndex, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
 import { RouteNote } from "./route-note";
 import { ServiceWindowNote } from "./service-window-note";
-import { Chevron, FareChip, FareShort, FarNote, LoopChip, StreetModeIcon, UNVERIFIED_CHIP, WalkIcon, type PlanLookups } from "./trip-parts";
+import { Chevron, FareChip, FareShort, FarNote, LoopChip, StreetModeIcon, WalkIcon, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
   return `pn-trip-option-${optionId.replace(/[^A-Za-z0-9_-]/g, "_")}`;
@@ -30,6 +31,7 @@ export const OPTIONS_LIST_ID = "pn-trip-options-list";
 export const OPTIONS_TOGGLE_ID = "pn-options-toggle";
 
 export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: PlanLookups }) {
+  const t = useT();
   // A walk of a few metres (start or end at the stop itself) is not a step.
   const legs = option.legs.filter((leg) => !(option.rides > 0 && isNegligibleWalk(leg)));
   return (
@@ -39,28 +41,28 @@ export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: 
           {i > 0 ? (
             <>
               <Chevron />
-              <span className="sr-only">, then </span>
+              <span className="sr-only">{t.trip.thenSr}</span>
             </>
           ) : null}
           {leg.kind === "walk" ? (
             <span className="pn-legstrip__walk">
               <WalkIcon />
-              <span className="sr-only">Walk </span>
-              {formatDistance(leg.estimateMeters)}
+              <span className="sr-only">{t.trip.walkSr}</span>
+              {formatDistance(leg.estimateMeters, t.geo)}
             </span>
           ) : leg.kind !== "ride" ? (
             <span className="pn-legstrip__walk">
               <StreetModeIcon mode={leg.kind} />
               <span>
-                {leg.kind === "tricycle" ? "Tricycle" : "Padyak"}
-                {leg.distanceMeters === null ? "" : ` ${formatDistance(leg.distanceMeters)}`}
+                {t.trip.kindTitle[leg.kind]}
+                {leg.distanceMeters === null ? "" : ` ${formatDistance(leg.distanceMeters, t.geo)}`}
               </span>
             </span>
           ) : (
             <>
-              <span className="sr-only">Ride </span>
+              <span className="sr-only">{t.trip.rideSr}</span>
               <LoopChip leg={leg} direction={lookups.direction(leg.variantId)} />
-              <span className="pn-legstrip__ride">{formatDistance(leg.distanceMeters)}</span>
+              <span className="pn-legstrip__ride">{formatDistance(leg.distanceMeters, t.geo)}</span>
             </>
           )}
         </Fragment>
@@ -70,7 +72,8 @@ export function LegStrip({ option, lookups }: { option: PlanOptionDto; lookups: 
 }
 
 function StreetLines({ leg }: { leg: TricycleLegDto | PadyakLegDto }) {
-  const v = streetCardView(leg);
+  const t = useT();
+  const v = streetCardView(leg, t.trip, t.geo);
   // A special trip carries its own two lines instead of the street rule (the rule stays in the detail).
   const special = v.specialNotes.length > 0;
   return (
@@ -124,17 +127,18 @@ function OptionCard({
   now: Date;
   routes?: NetworkSnapshot["routes"] | null;
 }) {
+  const t = useT();
   // The access option rides a jeepney after its tricycle: it keeps the jeepney card (minutes for the walk and ride only).
   const access = isAccessOption(option);
   const street = access ? undefined : option.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
   const special = isSpecialTrip(option);
-  const via = viaChipText(option);
+  const via = viaChipText(option, t.trip);
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
-  const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
+  const notes = useMemo(() => optionNotesView(option, routes, now, t), [option, routes, now, t]);
   const routeNotes = cardRouteNotes(notes);
-  const terminalLines = tricycleTerminalCardLines(option);
-  const roadside = optionRoadside(option);
+  const terminalLines = tricycleTerminalCardLines(option, t.trip);
+  const roadside = optionRoadside(option, t.trip);
 
   return (
     <li className="pn-trip-li" style={{ ["--i" as string]: Math.min(index, 5) }}>
@@ -176,18 +180,18 @@ function OptionCard({
             <>
               <span className="sr-only">. </span>
               <span className="pn-trip-card__chip" data-testid="card-unverified">
-                {UNVERIFIED_CHIP}
+                {t.trip.unverifiedChip}
               </span>
             </>
           ) : null}
         </span>
         <span className="pn-trip-card__head">
-          <strong>{optionTitle(option)}</strong>
-          {option.rides === 0 && !street ? <span className="pn-trip-card__time">paths not verified</span> : null}
+          <strong>{optionTitle(option, t.trip, t.geo)}</strong>
+          {option.rides === 0 && !street ? <span className="pn-trip-card__time">{t.trip.pathsNotVerified}</span> : null}
           <span className="sr-only">. </span>
           {street ? (
             <span className="pn-trip-card__time" data-testid="trip-option-time">
-              {streetCardView(street).timeText}
+              {streetCardView(street, t.trip, t.geo).timeText}
             </span>
           ) : (
             <EtaTotalText estimate={estimate} className="pn-trip-card__time" testId="trip-option-time" short />
@@ -219,10 +223,10 @@ function OptionCard({
           <>
             <span className="sr-only">. </span>
             <span className="pn-trip-card__street" data-testid="access-line">
-              {ACCESS_LINE}
+              {t.trip.accessLine}
             </span>
             <span className="pn-trip-card__street pn-trip-card__street--fare" data-testid="access-tricycle">
-              {accessTricycleChip(option)}
+              {accessTricycleChip(option, t.trip)}
             </span>
           </>
         ) : null}
@@ -236,12 +240,12 @@ function OptionCard({
         ) : null}
         <span className="sr-only">. </span>
         <span className="pn-trip-card__foot">
-          <FareChip fare={option.fare} short text={specialFareText(option)} />
+          <FareChip fare={option.fare} short text={specialFareText(option, t.trip)} />
           {/* "No transfers" says nothing about a tricycle ride (and the access option changes vehicle by design). */}
           {access || special ? null : (
             <>
               <span className="sr-only">. </span>
-              <span className="pn-trip-card__transfers">{transfersText(option.rides)}</span>
+              <span className="pn-trip-card__transfers">{transfersText(option.rides, t.trip)}</span>
             </>
           )}
         </span>
@@ -261,16 +265,17 @@ type Props = {
 };
 
 export function TripOptions({ data, refreshing = false, onOpen, etaModel, routes = null }: Props) {
+  const t = useT();
   const now = useMinuteTicker();
   const primary = recommendedIndex(data.plan.options);
-  const reason = jeepneyReasonText(data.plan.jeepneyReason);
+  const reason = jeepneyReasonText(data.plan.jeepneyReason, t.trip);
   const extraNotes = data.plan.notes.filter((n) => n !== UNVERIFIED_ROUTE_BADGE);
   return (
     <section className="pn-trip" aria-labelledby="pn-trip-options-title" aria-busy={refreshing || undefined} data-testid="trip-options">
       <h2 id="pn-trip-options-title" className="pn-trip__title" tabIndex={-1} data-results-heading="">
-        Trip options
+        {t.trip.tripOptions}
       </h2>
-      {refreshing ? <p className="pn-trip__refreshing">Updating…</p> : null}
+      {refreshing ? <p className="pn-trip__refreshing">{t.trip.updating}</p> : null}
       <FarNote note={data.plan.farNote} options={data.plan.options} />
       <ul id={OPTIONS_LIST_ID} className="pn-trip-list">
         {data.plan.options.map((option, i) => (
@@ -317,6 +322,7 @@ export const peekOptionDomId = (optionId: string) => `${optionDomId(optionId)}-p
 
 /** One compact card at the peek: route (cut with an ellipsis if long), the time for a jeepney or a walk (never for a tricycle), the fare and the caution chip. */
 function PeekOption({ option, best, etaModel, onOpen }: { option: PlanOptionDto; best: boolean; etaModel?: EtaModel | null; onOpen: (id: string) => void }) {
+  const t = useT();
   const street = !isAccessOption(option) && isStreetMode(option);
   const walkLengths = useMemo(() => extractWalkLengths(option.legs), [option.legs]);
   const { estimate } = useOptionEta(option, walkLengths, etaModel);
@@ -330,11 +336,11 @@ function PeekOption({ option, best, etaModel, onOpen }: { option: PlanOptionDto;
       onClick={() => onOpen(option.id)}
     >
       <span className="pn-peek-row__line">
-        <span className="pn-peek-row__title">{optionTitle(option)}</span>
+        <span className="pn-peek-row__title">{optionTitle(option, t.trip, t.geo)}</span>
         {best ? (
           <>
             <span className="sr-only">. </span>
-            <span className="pn-peek-row__mark">Recommended</span>
+            <span className="pn-peek-row__mark">{t.trip.recommended}</span>
           </>
         ) : null}
       </span>
@@ -347,13 +353,13 @@ function PeekOption({ option, best, etaModel, onOpen }: { option: PlanOptionDto;
       <span className="sr-only">. </span>
       <span className="pn-peek-row__line">
         <span>
-          <FareShort fare={option.fare} text={specialFareText(option)} />
+          <FareShort fare={option.fare} text={specialFareText(option, t.trip)} />
         </span>
         {option.rides > 0 ? (
           <>
             <span className="sr-only">. </span>
             <span className="pn-peek__chip" data-testid={best ? "options-best-unverified" : "options-alt-unverified"}>
-              {UNVERIFIED_CHIP}
+              {t.trip.unverifiedChip}
             </span>
           </>
         ) : null}
@@ -389,6 +395,7 @@ export function OptionsPeek({
   onToggle: () => void;
   onOpen: (optionId: string) => void;
 }) {
+  const t = useT();
   // The Recommended option (the jeepney from 500 m), not the first card: what is read out must match the list.
   // With nothing Recommended (a far trip without a jeepney) no card is marked and the toggle counts the options.
   const best = data.plan.options[recommendedIndex(data.plan.options)];
@@ -420,10 +427,10 @@ export function OptionsPeek({
         data-testid="options-toggle"
       >
         {best ? (
-          "All options"
+          t.trip.allOptions
         ) : (
           <span>
-            All options (<span data-testid="options-count">{optionsCountText(data.plan.options.length)}</span>)
+            {t.trip.allOptionsOpen}<span data-testid="options-count">{optionsCountText(data.plan.options.length, t.trip)}</span>{t.trip.allOptionsClose}
           </span>
         )}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">

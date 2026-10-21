@@ -2,6 +2,7 @@
 // Helps commuters know which side of the street to wait on (e.g. Westbound to Centro vs Eastbound to Diversion),
 // especially on major two-way corridors like Magsaysay Ave, Roxas Ave (Diversion), Peñafrancia Ave, and Centro.
 // Pure and deterministic.
+import { en, type Dict } from "@/i18n/dict";
 
 export type RoadsideHeading = "northbound" | "southbound" | "eastbound" | "westbound" | "terminal";
 
@@ -79,6 +80,7 @@ export function getRoadsideAdvice(
   routeCode: string,
   boardPoint: PointLike | null,
   alightPoint?: PointLike | null,
+  copy: Dict["trip"]["roadside"] = en.trip.roadside,
 ): RoadsideInfo | null {
   if (!boardPoint) return null;
 
@@ -91,8 +93,8 @@ export function getRoadsideAdvice(
     // Loop B and Loop D run Northbound/Westbound toward Peñafrancia & Centro
     if (routeCode === "R8-B" || routeCode === "R8-D") {
       return {
-        chip: "Westbound side · to Centro",
-        advice: "Two-way street: Wait on the North / Westbound side of Magsaysay Ave (facing Peñafrancia & Centro) · Signboard: " + (routeCode === "R8-B" ? "Loop B" : "Loop D"),
+        chip: copy.chipWestCentro,
+        advice: copy.magsaysayWest(routeCode === "R8-B" ? "Loop B" : "Loop D"),
         heading: "westbound",
         corridor,
         isTwoWay: true,
@@ -101,8 +103,8 @@ export function getRoadsideAdvice(
     // Loop A and Loop C run Southbound/Eastbound toward Diversion Road / SM
     if (routeCode === "R8-A" || routeCode === "R8-C") {
       return {
-        chip: "Eastbound side · to Diversion",
-        advice: "Two-way street: Wait on the South / Eastbound side of Magsaysay Ave (facing Diversion Road / SM) · Signboard: " + (routeCode === "R8-A" ? "Loop A" : "Loop C"),
+        chip: copy.chipEastDiversion,
+        advice: copy.magsaysayEast(routeCode === "R8-A" ? "Loop A" : "Loop C"),
         heading: "eastbound",
         corridor,
         isTwoWay: true,
@@ -111,8 +113,8 @@ export function getRoadsideAdvice(
     // R1 / R2 heading to Centro (inbound)
     if (alightPoint && (alightPoint.name?.toLowerCase().includes("centro") || alightPoint.name?.toLowerCase().includes("plaza rizal") || alightPoint.lng < boardPoint.lng)) {
       return {
-        chip: "Westbound side · to Centro",
-        advice: `Two-way street: Wait on the North / Westbound side of Magsaysay Ave (facing Centro) · Signboard: ${routeCode}`,
+        chip: copy.chipWestCentro,
+        advice: copy.magsaysayCentro(routeCode),
         heading: "westbound",
         corridor,
         isTwoWay: true,
@@ -120,8 +122,8 @@ export function getRoadsideAdvice(
     }
     // R1 / R2 heading outbound
     return {
-      chip: "Eastbound side · Outbound",
-      advice: `Two-way street: Wait on the South / Eastbound side of Magsaysay Ave (facing outbound) · Signboard: ${routeCode}`,
+      chip: copy.chipEastOutbound,
+      advice: copy.magsaysayOutbound(routeCode),
       heading: "eastbound",
       corridor,
       isTwoWay: true,
@@ -133,8 +135,8 @@ export function getRoadsideAdvice(
     // Loop B and Loop D run Northbound toward Magsaysay Ave
     if (routeCode === "R8-B" || routeCode === "R8-D") {
       return {
-        chip: "Northbound side · to Magsaysay",
-        advice: "Two-way street: Wait on the East / Northbound side of Roxas Ave (facing Magsaysay Ave) · Signboard: " + (routeCode === "R8-B" ? "Loop B" : "Loop D"),
+        chip: copy.chipNorthMagsaysay,
+        advice: copy.roxasNorth(routeCode === "R8-B" ? "Loop B" : "Loop D"),
         heading: "northbound",
         corridor,
         isTwoWay: true,
@@ -143,8 +145,8 @@ export function getRoadsideAdvice(
     // Loop A and Loop C run Southbound toward Panganiban / Centro
     if (routeCode === "R8-A" || routeCode === "R8-C") {
       return {
-        chip: "Southbound side · to Centro",
-        advice: "Two-way street: Wait on the West / Southbound side of Roxas Ave (facing Panganiban / Centro) · Signboard: " + (routeCode === "R8-A" ? "Loop A" : "Loop C"),
+        chip: copy.chipSouthCentro,
+        advice: copy.roxasSouth(routeCode === "R8-A" ? "Loop A" : "Loop C"),
         heading: "southbound",
         corridor,
         isTwoWay: true,
@@ -154,8 +156,8 @@ export function getRoadsideAdvice(
     if (routeCode === "R3") {
       const inbound = alightPoint && (alightPoint.name?.toLowerCase().includes("centro") || alightPoint.name?.toLowerCase().includes("plaza rizal"));
       return {
-        chip: inbound ? "Southbound side · to Centro" : "Outbound side · to Del Rosario",
-        advice: `Two-way street: Wait on the ${inbound ? "West / Southbound" : "East / Northbound"} side of Roxas Ave · Signboard: Route 3 (Roxas Ave)`,
+        chip: inbound ? copy.chipSouthCentro : copy.chipOutboundDelRosario,
+        advice: copy.roxasR3(inbound ? copy.roxasR3West : copy.roxasR3East),
         heading: inbound ? "southbound" : "northbound",
         corridor,
         isTwoWay: true,
@@ -168,8 +170,8 @@ export function getRoadsideAdvice(
     // Loop A and Loop C run Northbound toward Magsaysay Ave
     if (routeCode === "R8-A" || routeCode === "R8-C") {
       return {
-        chip: "Northbound side · to Magsaysay",
-        advice: "Two-way street: Wait on the East / Northbound side of Peñafrancia Ave (facing Magsaysay Ave) · Signboard: " + (routeCode === "R8-A" ? "Loop A" : "Loop C"),
+        chip: copy.chipNorthMagsaysay,
+        advice: copy.franciaNorth(routeCode === "R8-A" ? "Loop A" : "Loop C"),
         heading: "northbound",
         corridor,
         isTwoWay: true,
@@ -178,8 +180,8 @@ export function getRoadsideAdvice(
     // Loop B and Loop D run Southbound toward Centro / Plaza Rizal
     if (routeCode === "R8-B" || routeCode === "R8-D") {
       return {
-        chip: "Southbound side · to Centro",
-        advice: "Two-way street: Wait on the West / Southbound side of Peñafrancia Ave (facing Plaza Rizal & Centro) · Signboard: " + (routeCode === "R8-B" ? "Loop B" : "Loop D"),
+        chip: copy.chipSouthCentro,
+        advice: copy.franciaSouth(routeCode === "R8-B" ? "Loop B" : "Loop D"),
         heading: "southbound",
         corridor,
         isTwoWay: true,
@@ -189,8 +191,8 @@ export function getRoadsideAdvice(
     if (["R5", "R6", "R7", "R2"].includes(routeCode)) {
       const inbound = alightPoint && (alightPoint.name?.toLowerCase().includes("centro") || alightPoint.name?.toLowerCase().includes("plaza rizal"));
       return {
-        chip: inbound ? "Southbound side · to Centro" : "Northbound side · Outbound",
-        advice: `Two-way street: Wait on the ${inbound ? "West / Southbound (facing Centro)" : "East / Northbound (facing San Felipe/Pacol)"} side of Peñafrancia Ave · Signboard: ${routeCode}`,
+        chip: inbound ? copy.chipSouthCentro : copy.chipNorthOutbound,
+        advice: copy.francia(inbound ? copy.franciaInbound : copy.franciaOutbound, routeCode),
         heading: inbound ? "southbound" : "northbound",
         corridor,
         isTwoWay: true,
@@ -202,8 +204,8 @@ export function getRoadsideAdvice(
   if (corridor === "Bagumbayan") {
     if (routeCode === "R8-C") {
       return {
-        chip: "Northbound side · to Magsaysay",
-        advice: "Wait on the Northbound side of Bagumbayan (facing M.T. Villanueva & Magsaysay) · Signboard: Loop C",
+        chip: copy.chipNorthMagsaysay,
+        advice: copy.bagumbayanNorth,
         heading: "northbound",
         corridor,
         isTwoWay: true,
@@ -211,8 +213,8 @@ export function getRoadsideAdvice(
     }
     if (routeCode === "R8-D") {
       return {
-        chip: "Southbound side · to Centro",
-        advice: "Wait on the Southbound side of Bagumbayan (facing Elias Angeles & Centro) · Signboard: Loop D",
+        chip: copy.chipSouthCentro,
+        advice: copy.bagumbayanSouth,
         heading: "southbound",
         corridor,
         isTwoWay: true,
@@ -224,8 +226,8 @@ export function getRoadsideAdvice(
   if (corridor === "Panganiban Drive") {
     const inbound = alightPoint && (alightPoint.name?.toLowerCase().includes("centro") || alightPoint.name?.toLowerCase().includes("plaza rizal"));
     return {
-      chip: inbound ? "Westbound side · to Centro" : "Eastbound side · to Del Rosario",
-      advice: `Two-way street: Wait on the ${inbound ? "North / Westbound (facing Centro)" : "South / Eastbound (facing Diversion)"} side of Panganiban Dr · Signboard: ${routeCode}`,
+      chip: inbound ? copy.chipWestCentro : copy.chipEastDelRosario,
+      advice: copy.panganiban(inbound ? copy.panganibanInbound : copy.panganibanOutbound, routeCode),
       heading: inbound ? "westbound" : "eastbound",
       corridor,
       isTwoWay: true,
@@ -236,8 +238,8 @@ export function getRoadsideAdvice(
   if (corridor === "Centro") {
     if (routeCode === "R8-A" || routeCode === "R8-C") {
       return {
-        chip: "Centro / Gen. Luna",
-        advice: "Board along Gen. Luna facing North toward Peñafrancia & Magsaysay · Signboard: " + (routeCode === "R8-A" ? "Loop A" : "Loop C"),
+        chip: copy.chipCentroGenLuna,
+        advice: copy.centroNorth(routeCode === "R8-A" ? "Loop A" : "Loop C"),
         heading: "terminal",
         corridor,
         isTwoWay: false,
@@ -245,16 +247,16 @@ export function getRoadsideAdvice(
     }
     if (routeCode === "R8-B" || routeCode === "R8-D") {
       return {
-        chip: "Gen. Luna / Elias Angeles",
-        advice: "Board along Gen. Luna / Elias Angeles facing West toward Biak-na-Bato & Diversion · Signboard: " + (routeCode === "R8-B" ? "Loop B" : "Loop D"),
+        chip: copy.chipGenLunaElias,
+        advice: copy.centroWest(routeCode === "R8-B" ? "Loop B" : "Loop D"),
         heading: "terminal",
         corridor,
         isTwoWay: false,
       };
     }
     return {
-      chip: "Centro terminal / roadside",
-      advice: `Board at Centro terminal area · Signboard: ${routeCode}`,
+      chip: copy.chipCentroTerminal,
+      advice: copy.centroTerminal(routeCode),
       heading: "terminal",
       corridor,
       isTwoWay: false,
@@ -264,8 +266,8 @@ export function getRoadsideAdvice(
   // General fallback for loops or lines
   if (routeCode === "R8-B" || routeCode === "R8-D") {
     return {
-      chip: "Counterclockwise Loop",
-      advice: `Check signboard "${routeCode === "R8-B" ? "Loop B" : "Loop D"}" · Counterclockwise service`,
+      chip: copy.chipCounterclockwise,
+      advice: copy.checkCounterclockwise(routeCode === "R8-B" ? "Loop B" : "Loop D"),
       heading: "westbound",
       corridor,
       isTwoWay,
@@ -273,8 +275,8 @@ export function getRoadsideAdvice(
   }
   if (routeCode === "R8-A" || routeCode === "R8-C") {
     return {
-      chip: "Clockwise Loop",
-      advice: `Check signboard "${routeCode === "R8-A" ? "Loop A" : "Loop C"}" · Clockwise service`,
+      chip: copy.chipClockwise,
+      advice: copy.checkClockwise(routeCode === "R8-A" ? "Loop A" : "Loop C"),
       heading: "eastbound",
       corridor,
       isTwoWay,

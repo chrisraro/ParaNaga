@@ -5,6 +5,7 @@
 // straight line only as "approximate, not a route".
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, RideLegDto, TricycleLegDto } from "../api/plan";
 import type { ServiceWindowNote } from "../eta/service-window";
+import { en, type Dict } from "@/i18n/dict";
 import { FLAGGED_PATH_NOTE } from "../planner/notes";
 import { fareChipText, formatDistance } from "./present";
 import type { OptionNotesView, RideNoteView } from "./option-notes";
@@ -25,23 +26,14 @@ export function previewIndex(options: readonly Pick<PlanOptionDto, "labels" | "m
 }
 
 /** The peek line when nothing is Recommended: how many options there are, never "Best option". */
-export const optionsCountText = (n: number) => `${n} ${n === 1 ? "option" : "options"}`;
-
-const JEEPNEY_REASON: Record<NonNullable<PlanResponse["plan"]["jeepneyReason"]>, string> = {
-  no_path_near_origin: "No jeepney route passes near your start",
-  no_path_near_destination: "No jeepney route passes near your destination",
-  walk_shorter: "Walking is shorter than any jeepney ride",
-  no_route: "No jeepney route connects these places",
-  roundabout: "Jeepney routes here go the long way around",
-  centro: "In the city centre, a tricycle takes you there directly",
-};
+export const optionsCountText = (n: number, copy: Dict["trip"] = en.trip) => copy.optionCount(n);
 
 /** The one line above the tricycle card when the plan has no jeepney option. */
-export function jeepneyReasonText(reason: PlanResponse["plan"]["jeepneyReason"]): string | null {
-  return reason === null ? null : JEEPNEY_REASON[reason];
+export function jeepneyReasonText(reason: PlanResponse["plan"]["jeepneyReason"], copy: Dict["trip"] = en.trip): string | null {
+  return reason === null ? null : copy.jeepneyReason[reason];
 }
 
-export const TIME_NOT_ESTIMATED = "Time not estimated";
+export const TIME_NOT_ESTIMATED = en.trip.timeNotEstimated;
 
 /** Increment F. The access option rides a jeepney after a tricycle to its loading point: legs [tricycle, walk, ride, walk]. */
 export const isAccessOption = (o: Pick<PlanOptionDto, "rides" | "legs">) => o.rides > 0 && o.legs[0]?.kind === "tricycle";
@@ -49,76 +41,76 @@ export const isAccessOption = (o: Pick<PlanOptionDto, "rides" | "legs">) => o.ri
 /** A tricycle into (or out of) a far zone, flagged by the planner (fare not fixed). */
 export const isSpecialTrip = (o: { specialTrip?: true }) => o.specialTrip === true;
 
-export const FARE_NOT_FIXED = "Fare not fixed";
+export const FARE_NOT_FIXED = en.trip.fareNotFixed;
 /** The access card says what the tricycle is for; the title already says tricycle, then the route. */
-export const ACCESS_LINE = "For when you'd rather not walk.";
+export const ACCESS_LINE = en.trip.accessLine;
 const peso = (centavos: number) => `₱${Math.round(centavos / 100)}`;
 
 /** "via Magsaysay" (the chip of a jeepney that shares a corridor with other vias), or null. */
-export function viaChipText(o: Pick<PlanOptionDto, "via"> & { legs?: readonly { kind: string; display?: { title: string } | null }[] }): string | null {
+export function viaChipText(o: Pick<PlanOptionDto, "via"> & { legs?: readonly { kind: string; display?: { title: string } | null }[] }, copy: Dict["trip"] = en.trip): string | null {
   if (!o.via) return null;
   // The title already names the street ("… via Magsaysay Ave", "… via Roxas Ave (Diversion)"): the chip would say it twice.
   const label = o.via.label.replace(/\s*\(.*\)/, "").toLowerCase();
-  return o.legs?.some((l) => l.kind === "ride" && l.display?.title.toLowerCase().includes(label)) ? null : `via ${o.via.label}`;
+  return o.legs?.some((l) => l.kind === "ride" && l.display?.title.toLowerCase().includes(label)) ? null : copy.via(o.via.label);
 }
 
 /**
  * Roadside advice for a jeepney option: tells commuters which side of a two-way street to board on
  * (e.g. Westbound side to Centro vs Eastbound side to Diversion), or null.
  */
-export function optionRoadside(o: Pick<PlanOptionDto, "legs" | "rides" | "via">): RoadsideInfo | null {
+export function optionRoadside(o: Pick<PlanOptionDto, "legs" | "rides" | "via">, copy: Dict["trip"] = en.trip): RoadsideInfo | null {
   if (isAccessOption(o) || o.rides !== 1 || o.via !== undefined) return null;
   const ride = o.legs?.find((l): l is RideLegDto => l.kind === "ride");
   if (!ride || !ride.routeCode) return null;
-  return getRoadsideAdvice(ride.routeCode, ride.board, ride.alight);
+  return getRoadsideAdvice(ride.routeCode, ride.board, ride.alight, copy.roadside);
 }
 
 type PlanTerminals = { tricycleTerminals?: PlanOptionDto["tricycleTerminals"] };
 
 /** The detail lines for the published tricycle terminals near each end: "Tricycle terminal: X, about 60 m from your start", and "TODA: …" only when names are on file. */
-export function tricycleTerminalLines(o: PlanTerminals): { key: string; text: string; toda: string | null }[] {
+export function tricycleTerminalLines(o: PlanTerminals, copy: Dict["trip"] = en.trip): { key: string; text: string; toda: string | null }[] {
   return (o.tricycleTerminals ?? []).map((t) => ({
     key: `${t.side}-${t.code}`,
-    text: `Tricycle terminal: ${t.name}, about ${Math.max(10, Math.round(t.distanceM / 10) * 10)} m from your ${t.side === "origin" ? "start" : "destination"}`,
-    toda: t.todas.length > 0 ? `TODA: ${t.todas.join(", ")}` : null,
+    text: copy.terminalLine(t.name, Math.max(10, Math.round(t.distanceM / 10) * 10), t.side === "origin" ? copy.terminalEndStart : copy.terminalEndDestination),
+    toda: t.todas.length > 0 ? copy.toda(t.todas.join(", ")) : null,
   }));
 }
 
 /** The card forms: "Terminal: X, Y" and "TODA: …" (null when there is nothing to say). */
-export function tricycleTerminalCardLines(o: PlanTerminals): { terminal: string | null; toda: string | null } {
+export function tricycleTerminalCardLines(o: PlanTerminals, copy: Dict["trip"] = en.trip): { terminal: string | null; toda: string | null } {
   const ts = o.tricycleTerminals ?? [];
   const todas = ts.flatMap((t) => t.todas);
-  return { terminal: ts.length > 0 ? `Terminal: ${[...new Set(ts.map((t) => t.name))].join(", ")}` : null, toda: todas.length > 0 ? `TODA: ${[...new Set(todas)].join(", ")}` : null };
+  return { terminal: ts.length > 0 ? copy.terminalCard([...new Set(ts.map((t) => t.name))].join(", ")) : null, toda: todas.length > 0 ? copy.toda([...new Set(todas)].join(", ")) : null };
 }
 
 /**
  * The fare chip of an access or special-trip option: "From ₱29" (ride minimum + the ₱15 tricycle minimum; there is no
  * maximum, so never a range) or "Fare not fixed"; null for every other option (their own text applies).
  */
-export function specialFareText(o: Pick<PlanOptionDto, "specialTrip" | "rides" | "legs" | "fare">): string | null {
-  if (isSpecialTrip(o)) return FARE_NOT_FIXED;
-  if (isAccessOption(o) && o.fare.status === "minimum" && o.fare.minCentavos !== null) return `From ${peso(o.fare.minCentavos)}`;
+export function specialFareText(o: Pick<PlanOptionDto, "specialTrip" | "rides" | "legs" | "fare">, copy: Dict["trip"] = en.trip): string | null {
+  if (isSpecialTrip(o)) return copy.fareNotFixed;
+  if (isAccessOption(o) && o.fare.status === "minimum" && o.fare.minCentavos !== null) return copy.fareFrom(peso(o.fare.minCentavos));
   return null;
 }
 
 /** The tricycle part of an access card: "Tricycle min ₱15 · confirm with the driver". Never minutes. */
-export function accessTricycleChip(o: Pick<PlanOptionDto, "legs">): string {
+export function accessTricycleChip(o: Pick<PlanOptionDto, "legs">, copy: Dict["trip"] = en.trip): string {
   const leg = o.legs.find((l): l is TricycleLegDto => l.kind === "tricycle");
-  return leg && leg.fare.minCentavos !== null ? `Tricycle min ${peso(leg.fare.minCentavos)} · confirm with the driver` : "Tricycle fare not available · confirm with the driver";
+  return leg && leg.fare.minCentavos !== null ? copy.tricycleMin(peso(leg.fare.minCentavos)) : copy.tricycleFareNA;
 }
 
 const FAR_NOTE_PREFIX = /^Local report:\s*/;
-export const FAR_NOTE_SPECIAL = "A special-trip tricycle is listed only if you still want one.";
+export const FAR_NOTE_SPECIAL = en.trip.farNoteSpecial;
 /**
  * The far note as shown: its evidence label ("Local report") and the sentence, with a line added when a special-trip
  * card is listed, so the note never contradicts a card.
  */
-export function farNoteView(note: string | null, options: readonly Pick<PlanOptionDto, "specialTrip" | "rides" | "legs">[] = []): { label: string | null; text: string } | null {
+export function farNoteView(note: string | null, options: readonly Pick<PlanOptionDto, "specialTrip" | "rides" | "legs">[] = [], copy: Dict["trip"] = en.trip): { label: string | null; text: string } | null {
   if (!note) return null;
-  const extra = options.some(isSpecialTrip) ? [FAR_NOTE_SPECIAL] : []; // the access card already says it goes to the jeepney
+  const extra = options.some(isSpecialTrip) ? [copy.farNoteSpecial] : []; // the access card already says it goes to the jeepney
   const rest = note.replace(FAR_NOTE_PREFIX, "");
   const base = FAR_NOTE_PREFIX.test(note) ? rest.charAt(0).toUpperCase() + rest.slice(1) : note;
-  return { label: FAR_NOTE_PREFIX.test(note) ? "Local report" : null, text: [base, ...extra].join(" ") };
+  return { label: FAR_NOTE_PREFIX.test(note) ? copy.localReport : null, text: [base, ...extra].join(" ") };
 }
 
 export type StreetCardView = {
@@ -127,7 +119,7 @@ export type StreetCardView = {
   headline: string | null;
   distanceText: string | null;
   fareText: string;
-  timeText: typeof TIME_NOT_ESTIMATED;
+  timeText: string;
   /** Tricycle: "Avoids the restricted roads we could locate (…)" or "Uses roads tricycles may use only …". */
   restrictionNote: string | null;
   /** Padyak: "Area per city ordinance · approximate boundary · service not confirmed today". */
@@ -140,15 +132,15 @@ const RESTRICTION = /^(Avoids the restricted roads|Uses roads tricycles may use 
 const AREA = /^Area per city ordinance/;
 const SPECIAL_LINES = /^(Special trip|From .*: local report, unconfirmed)/;
 
-export function streetCardView(leg: TricycleLegDto | PadyakLegDto): StreetCardView {
+export function streetCardView(leg: TricycleLegDto | PadyakLegDto, copy: Dict["trip"] = en.trip, geo: Dict["geo"] = en.geo): StreetCardView {
   const d = leg.distanceMeters;
   const state = leg.basis === "street_graph" ? "route" : leg.basis === "straight_line" ? "not_confirmed" : "unavailable";
   return {
     state,
-    headline: state === "not_confirmed" ? "Route not confirmed" : state === "unavailable" ? "Street route not available" : null,
-    distanceText: d === null ? null : state === "route" ? `${formatDistance(d)} along streets` : `${formatDistance(d)} straight line · approximate, not a route`,
-    fareText: fareChipText(leg.fare),
-    timeText: TIME_NOT_ESTIMATED,
+    headline: state === "not_confirmed" ? copy.routeNotConfirmed : state === "unavailable" ? copy.streetUnavailable : null,
+    distanceText: d === null ? null : state === "route" ? copy.alongStreets(formatDistance(d, geo)) : copy.straightApprox(formatDistance(d, geo)),
+    fareText: fareChipText(leg.fare, copy),
+    timeText: copy.timeNotEstimated,
     restrictionNote: leg.notes.find((n) => RESTRICTION.test(n)) ?? null,
     areaNote: leg.notes.find((n) => AREA.test(n)) ?? null,
     specialNotes: leg.notes.filter((n) => SPECIAL_LINES.test(n)).map((n) => n.replace(/ · confirm with the driver$/, "")),
@@ -156,8 +148,8 @@ export function streetCardView(leg: TricycleLegDto | PadyakLegDto): StreetCardVi
 }
 
 /** One short, soft line for a jeepney card; the full warning is in the option detail. */
-export function serviceWindowCardLine(note: ServiceWindowNote): string {
-  return note.state === "last_trips" ? note.lines[0]! : "Outside the usual hours (about 5 am–9 pm) · unconfirmed";
+export function serviceWindowCardLine(note: ServiceWindowNote, copy: Dict["eta"] = en.eta): string {
+  return note.state === "last_trips" ? note.lines[0]! : copy.serviceOutsideCard;
 }
 
 /** At most one note per ride on a card: the first real route note (the long flagged-path caveat stays in the detail). */

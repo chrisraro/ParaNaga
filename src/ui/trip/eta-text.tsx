@@ -13,7 +13,8 @@ import {
   type EtaResult,
   type EtaUnavailableReason,
 } from "@/domain/eta/eta";
-import { TIME_NOT_AVAILABLE, formatPeakNote, formatRange, formatRangeLabel, formatTotal } from "@/domain/eta/format";
+import { formatPeakNote, formatRange, formatRangeLabel, formatTotal } from "@/domain/eta/format";
+import { useT } from "@/i18n/provider";
 import type { EnrichedLeg } from "@/domain/trip/enrich";
 
 /**
@@ -85,7 +86,8 @@ export function useOptionEta(
  * text appears once in the DOM.
  */
 export function SpokenRange({ text, range, className, testId }: { text: string; range: { lowMin: number | null; highMin: number | null } | null; className?: string; testId?: string }) {
-  const shown = range && range.lowMin !== null && range.highMin !== null ? formatRange(range.lowMin, range.highMin) : null;
+  const e = useT().eta;
+  const shown = range && range.lowMin !== null && range.highMin !== null ? formatRange(range.lowMin, range.highMin, e) : null;
   const at = shown === null ? -1 : text.indexOf(shown);
   if (range === null || shown === null || at < 0) {
     return <span className={className} data-testid={testId}>{text}</span>;
@@ -93,7 +95,7 @@ export function SpokenRange({ text, range, className, testId }: { text: string; 
   return (
     <span className={className} data-testid={testId}>
       {text.slice(0, at)}
-      <span role="img" aria-label={formatRangeLabel(range.lowMin!, range.highMin!)}>{shown}</span>
+      <span role="img" aria-label={formatRangeLabel(range.lowMin!, range.highMin!, e)}>{shown}</span>
       {text.slice(at + shown.length)}
     </span>
   );
@@ -101,10 +103,11 @@ export function SpokenRange({ text, range, className, testId }: { text: string; 
 
 /** "Est." for sighted readers; screen readers hear "Estimate" (the accessible name keeps the full word). */
 export function EstAbbr() {
+  const e = useT().eta;
   return (
-    <abbr title="Estimate" className="pn-est">
-      <span aria-hidden="true">Est.</span>
-      <span className="sr-only">Estimate</span>
+    <abbr title={e.estimate} className="pn-est">
+      <span aria-hidden="true">{e.estAbbr}</span>
+      <span className="sr-only">{e.estimate}</span>
     </abbr>
   );
 }
@@ -114,10 +117,12 @@ export function EstAbbr() {
  * the card form: "Est." as an abbreviation, and "(unknown)" without the ride count.
  */
 export function EtaTotalText({ estimate, className, testId, short = false }: { estimate: EtaEstimate | null | undefined; className?: string; testId?: string; short?: boolean }) {
-  if (!estimate) return <span className={className} data-testid={testId}>{TIME_NOT_AVAILABLE}</span>;
-  const full = formatTotal(estimate.total);
-  if (!short || !full.startsWith("Estimate ")) return <SpokenRange text={full} range={estimate.total} className={className} testId={testId} />;
-  const rest = full.slice("Estimate ".length).replace(/\(unknown, \d+ rides\)/, "(unknown)");
+  const e = useT().eta;
+  if (!estimate) return <span className={className} data-testid={testId}>{e.timeNotAvailable}</span>;
+  const full = formatTotal(estimate.total, e);
+  if (!short || !full.startsWith(e.estimatePrefix)) return <SpokenRange text={full} range={estimate.total} className={className} testId={testId} />;
+  // The card form drops the ride count: the same text as for one ride.
+  const rest = formatTotal({ ...estimate.total, rides: Math.min(estimate.total.rides, 1) }, e).slice(e.estimatePrefix.length);
   return (
     <span className={className} data-testid={testId}>
       <EstAbbr /> <SpokenRange text={rest} range={estimate.total} />
@@ -127,7 +132,8 @@ export function EtaTotalText({ estimate, className, testId, short = false }: { e
 
 /** "Peak hours · slower estimate (06:00–08:00)" when the trip uses the peak band (a span: it may sit in a button). */
 export function EtaPeakNote({ estimate, className, testId }: { estimate: EtaEstimate | null | undefined; className?: string; testId?: string }) {
-  const note = estimate ? formatPeakNote(estimate.total) : null;
+  const e = useT().eta;
+  const note = estimate ? formatPeakNote(estimate.total, e) : null;
   if (!note) return null;
   return <span className={className} data-testid={testId}>{note}</span>;
 }

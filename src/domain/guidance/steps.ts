@@ -97,13 +97,13 @@ function walkFields(walk: { leg: WalkLegDto; index: number } | null): WalkFields
 }
 
 /** `copy` names an unnamed destination or tricycle end (English by default). */
-export function guidanceSteps(trip: GuidanceTrip, copy: Dict["guidance"] = en.guidance): GuidanceStep[] {
+export function guidanceSteps(trip: GuidanceTrip, copy: Dict["guidance"] = en.guidance, shared: Pick<Dict, "trip" | "geo"> = en): GuidanceStep[] {
   const codes = new Map(trip.stops.map((s) => [s.id, s.code]));
   const directions = new Map(trip.variants.map((v) => [v.variantId, v.loopDirection]));
   const stopRef = (s: { id: string; name: string; lat: number; lng: number }): StopRef => ({
     stopId: s.id,
     name: s.name,
-    label: stopLabel(s.name, codes.get(s.id) ?? null),
+    label: stopLabel(s.name, codes.get(s.id) ?? null, shared.trip),
     lat: s.lat,
     lng: s.lng,
   });
@@ -130,7 +130,7 @@ export function guidanceSteps(trip: GuidanceTrip, copy: Dict["guidance"] = en.gu
     }
     if (leg.kind === "tricycle" || leg.kind === "padyak") {
       // Not the last leg (the access option): the tricycle ends at its named loading point, not at the destination.
-      street = streetStep(leg, legIndex, steps.length, legIndex === legs.length - 1 ? destinationName : leg.to.name ?? copy.theJeepney, legIndex < legs.length - 1);
+      street = streetStep(leg, legIndex, steps.length, legIndex === legs.length - 1 ? destinationName : leg.to.name ?? copy.theJeepney, legIndex < legs.length - 1, shared.trip);
       steps.push(street);
       pendingWalk = null;
       continue;
@@ -181,7 +181,7 @@ export function guidanceSteps(trip: GuidanceTrip, copy: Dict["guidance"] = en.gu
   return steps;
 }
 
-function streetStep(leg: TricycleLegDto | PadyakLegDto, legIndex: number, index: number, destinationName: string, midTrip: boolean): StreetRideStep {
+function streetStep(leg: TricycleLegDto | PadyakLegDto, legIndex: number, index: number, destinationName: string, midTrip: boolean, copy: Dict["trip"]): StreetRideStep {
   return {
     kind: "street_ride",
     index,
@@ -190,7 +190,7 @@ function streetStep(leg: TricycleLegDto | PadyakLegDto, legIndex: number, index:
     target: { name: destinationName, lat: leg.to.lat, lng: leg.to.lng },
     distanceMeters: leg.distanceMeters,
     basis: leg.basis,
-    text: streetRideText(leg, destinationName, midTrip),
+    text: streetRideText(leg, destinationName, midTrip, copy),
     notes: [...leg.notes],
   };
 }

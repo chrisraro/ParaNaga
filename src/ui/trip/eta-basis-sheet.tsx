@@ -13,11 +13,13 @@ import type { EtaModel } from "@/domain/api/schemas";
 import { basisRows } from "@/domain/eta/basis";
 import { captureOpener, cycleTab } from "@/ui/kit/opener";
 import { ETA_WAITING_NOTE } from "@/ui/help/articles";
+import { en } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 
-export const ETA_BASIS_TITLE = "How times are estimated" as const;
+export const ETA_BASIS_TITLE = en.eta.basisTitle;
 export { ETA_WAITING_NOTE };
 /** Said once, here, instead of under every list of options. */
-export const ETA_WALK_NOTE = "Walking distances are estimates; paths not verified.";
+export const ETA_WALK_NOTE = en.eta.walkNote;
 
 type Props = {
   open: boolean;
@@ -28,7 +30,8 @@ type Props = {
 export function EtaBasisSheet({ open, onClose, model }: Props) {
   const titleId = useId();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
-  const rows = model ? basisRows(model) : [];
+  const e = useT().eta;
+  const rows = model ? basisRows(model, e) : [];
 
   const sheetRef = useRef<HTMLElement>(null);
   // A new onClose each render (the trip detail re-renders every minute) must not re-run the effect.
@@ -72,27 +75,27 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
       >
         <header className="pn-layers-sheet__head">
           <h2 id={titleId} className="pn-layers-sheet__title">
-            {ETA_BASIS_TITLE}
+            {e.basisTitle}
           </h2>
           <button
             ref={closeBtnRef}
             type="button"
             className="pn-layers-sheet__close"
-            aria-label="Close how times are estimated"
+            aria-label={e.basisClose}
             onClick={onClose}
           >
-            Close
+            {e.close}
           </button>
         </header>
 
         {/* Scrollable on small phones: focusable so it scrolls by keyboard (axe scrollable-region-focusable). */}
         <div className="pn-layers-sheet__body" tabIndex={0} role="region" aria-labelledby={titleId} data-testid="eta-basis-body">
           <p className="pn-eta-sheet__lead" data-testid="eta-basis-lead">
-            {ETA_WAITING_NOTE} {ETA_WALK_NOTE}
+            {ETA_WAITING_NOTE} {e.walkNote}
           </p>
 
           {rows.length === 0 ? (
-            <p className="pn-eta-sheet__empty">Time-estimate model not on file for this revision.</p>
+            <p className="pn-eta-sheet__empty">{e.noModel}</p>
           ) : (
             <ul className="pn-eta-sheet__list" data-testid="eta-basis-list">
               {rows.map((row) => (

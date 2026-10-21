@@ -27,12 +27,84 @@ const PENDING_T9 = [
   "endConfirmBody", "keepGoing", "replan", "thenRide", "recenter", "steps",
 ].map((key) => `guidance.${key}`);
 
+/** Keys of the other P1 areas still English in `fil` until the T9 draft + Jev check (area -> leaf keys). */
+const PENDING_P1: Record<string, string[]> = {
+  geo: [
+    "compass.N", "compass.NE", "compass.E", "compass.SE", "compass.S", "compass.SW", "compass.W", "compass.NW", "distanceM",
+    "distanceKm", "accuracy",
+  ],
+  eta: [
+    "timeNotAvailable", "min", "hours", "hoursMin", "rangeMin", "rangeLong", "spokenHours", "spokenMinutes", "spokenBoth",
+    "spokenRangeMin", "spokenRangeLong", "modeName.jeepney", "modeName.tricycle", "modeName.padyak", "modeName.uv_express",
+    "modeName.bus", "modeName.rail", "modesJoin", "notEstimated", "waitingOne", "waitingMany", "noWalking", "estimatePrefix",
+    "walkSuffix", "partialSep", "peakNote", "legWalk", "legRide", "remainingRiding", "remainingTrip", "estAbbr", "estimate",
+    "waitingRow", "trafficRow", "assumption", "speedAssumption", "speedMixed", "rowWalk", "rowOffpeak", "rowPeak", "rowWindows",
+    "everyDay", "everyDayNoData", "serviceHint", "serviceOutside", "serviceEarly", "serviceLastTrips", "serviceOutsideCard",
+    "basisTitle", "basisClose", "close", "walkNote", "noModel",
+  ],
+  trip: [
+    "unverifiedBadge", "unverifiedChip", "unverified", "yourLocation", "pinnedLocation", "direction.clockwise",
+    "direction.counterclockwise", "fromPinOrder", "fareNoRide", "fareMinimum", "farePerPassenger", "fareEstimate", "fareUnavailable",
+    "fareNone", "fareNA", "legFareTraditional", "legFareModern", "legFareMixed", "legFareMixedReports", "legFareDefault",
+    "distanceAlongPath", "distanceStraightLine", "fleetMixed", "fleetMixedAircon", "kind.tricycle", "kind.padyak",
+    "kindTitle.tricycle", "kindTitle.padyak", "streetKm", "streetAlong", "streetStraight", "streetNoRoute", "streetFareNone",
+    "streetFareTricycle", "streetFareTricycleMid", "streetFarePadyak", "streetRide", "freeAlight", "noTransfers", "oneTransfer",
+    "transfers", "walkTitle", "tricycleThenJeep", "unnamedPin", "unnamedStop", "samePlaceTitle", "samePlaceHint", "samePlaceDetail",
+    "onlyLoops", "outsideCity", "noStopOrigin", "noStopDestination", "noRoute", "walkDetail", "walkShorterTitle",
+    "walkShorterDetail", "noRouteNearby", "optionCount", "optionsFound", "unverifiedSentence", "routeShown",
+    "jeepneyReason.no_path_near_origin", "jeepneyReason.no_path_near_destination", "jeepneyReason.walk_shorter",
+    "jeepneyReason.no_route", "jeepneyReason.roundabout", "jeepneyReason.centro", "timeNotEstimated", "fareNotFixed", "accessLine",
+    "fareFrom", "tricycleMin", "tricycleFareNA", "via", "terminalLine", "terminalEndStart", "terminalEndDestination", "toda",
+    "terminalCard", "localReport", "farNoteSpecial", "routeNotConfirmed", "streetUnavailable", "alongStreets", "straightApprox",
+    "evidence.official", "evidence.news", "evidence.community", "evidence.owner_report_unverified", "pathsNotVerified",
+    "tripOptions", "updating", "walkSr", "rideSr", "thenSr", "recommended", "allOptions", "allOptionsOpen", "allOptionsClose",
+    "finding", "offline", "offlineDetail", "serverError", "serverDetail", "invalid", "invalidDetail", "busy", "busyDetail",
+    "changeEnds", "tryAgain", "candidate", "walkToDestination", "walkToPlace", "theStop", "startAt", "youreThere", "arrive",
+    "theJeepney", "transferPoint", "board", "boardDir", "getOnNear", "stopNotMarked", "directionLine", "roadsideAdvice",
+    "vehicleUnconfirmed", "rideAlongPath", "stops", "markedStops", "getOffAt", "getOffNear", "paraFree", "sayPara", "takeA",
+    "nearestTerminal", "showOnMap", "showOnMapFor", "walkNote", "pathNotVerified", "timeNote", "shared", "copied", "shareFailed",
+    "savedRemove", "saved", "updateSaved", "save", "share", "savedCopy", "revision", "saveUnavailable", "startTrip", "backToOptions",
+    "sources", "sourcesLabel", "loadingPaths", "pathsUpdated", "straightOffer", "downloading", "downloadFailed", "tripSteps",
+    "fareEstimateTitle", "walkingOnly", "confirmDriver", "total", "spansBoth", "noDiscounts", "howFares", "includeExact",
+    "yourStart", "yourDestination", "roadside.chipWestCentro", "roadside.chipEastDiversion", "roadside.chipEastOutbound",
+    "roadside.chipNorthMagsaysay", "roadside.chipSouthCentro", "roadside.chipOutboundDelRosario", "roadside.chipNorthOutbound",
+    "roadside.chipEastDelRosario", "roadside.chipCentroGenLuna", "roadside.chipGenLunaElias", "roadside.chipCentroTerminal",
+    "roadside.chipCounterclockwise", "roadside.chipClockwise", "roadside.magsaysayWest", "roadside.magsaysayEast",
+    "roadside.magsaysayCentro", "roadside.magsaysayOutbound", "roadside.roxasNorth", "roadside.roxasSouth", "roadside.roxasR3",
+    "roadside.roxasR3West", "roadside.roxasR3East", "roadside.francia", "roadside.franciaNorth", "roadside.franciaSouth",
+    "roadside.franciaInbound", "roadside.franciaOutbound", "roadside.bagumbayanNorth", "roadside.bagumbayanSouth",
+    "roadside.panganiban", "roadside.panganibanInbound", "roadside.panganibanOutbound", "roadside.centroNorth",
+    "roadside.centroWest", "roadside.centroTerminal", "roadside.checkCounterclockwise", "roadside.checkClockwise",
+  ],
+  home: [
+    "start", "destination", "chooseStart", "whereTo", "clearStart", "clearDestination", "swap", "tripPlanner", "actions",
+    "useCurrentLocation", "chooseOnMap", "searchPlaces", "chooseStartOnMap", "chooseDestinationOnMap", "nearbyStops", "stopsError",
+    "stopsNone", "stopsLoading", "mappedCandidate", "mappedCandidateRoutes", "pinLater", "locationOff", "locationOffDetail",
+    "noLocation", "unsupported", "insecure", "finding", "outsideNaga", "tooRoughAt", "tooRough", "pinStartOnMap", "approximate",
+    "moveStartPin", "youAreHere", "fixJustNow", "fixSeconds", "fixMinutes", "gpsFix", "locationPill", "samePlace", "outsideChoose",
+    "savedGone", "changedSinceSaved", "lookingForRoutes", "movePin", "pinCancelled", "cleared", "allCleared", "swapped", "endSet",
+    "savedTrip", "routesShown", "routesHidden", "stopsShown", "stopsHidden", "moveToStart", "moveToDestination", "pinOutside",
+    "pinMarks", "setStartHere", "setDestinationHere", "cancel", "clearTrip", "theStartPin", "theStop", "guidanceStarted",
+    "guidanceEnded", "replanning", "pickWhereYouAre", "reopenFailed", "reopenChecking", "updated", "reopenOffline", "setStart",
+    "setDestination", "searchLabel", "browsePlaces", "mappedNotVerified", "zoomIn",
+  ],
+  shell: [
+    "mainNav", "tabs.map", "tabs.explore", "tabs.saved", "tabs.community", "tabs.more", "sheetHalf", "sheetFull", "sheetCollapse",
+    "back",
+  ],
+  kit: [
+    "cancel", "badges.verified", "badges.candidate", "badges.documented", "badges.trial", "badges.not-surveyed", "badges.historical",
+    "badges.provisional-stops", "badges.osm", "badges.approximate-path", "osmAttribution",
+  ],
+};
+const PENDING_P1_KEYS = Object.entries(PENDING_P1).flatMap(([area, keys]) => keys.map((key) => `${area}.${key}`));
+
 /** Filipino strings allowed to equal the English, with the reason. */
 const SAME_AS_EN: Record<string, string> = {
   "app.name": "brand",
   "acknowledgments.community": "pending verbatim-reviewed translation (T13)",
   "acknowledgments.driverReport": "pending verbatim-reviewed translation (T13)",
-  ...Object.fromEntries(PENDING_T9.map((key) => [key, "pending T9 draft"])),
+  ...Object.fromEntries([...PENDING_T9, ...PENDING_P1_KEYS].map((key) => [key, "pending T9 draft"])),
 };
 
 /** Buttons and chips (§1.7 #6): a translation may be at most 1.35 × the English length. */
@@ -41,6 +113,20 @@ const SHORT = [
   "guidance.gotOff", "guidance.gotOffEarly", "guidance.missedStop", "guidance.done", "guidance.undo", "guidance.stepLabel",
   "guidance.useLocation", "guidance.reportDriver", "guidance.keepGoing", "guidance.replan", "guidance.saveTrip", "guidance.saved",
   "guidance.recenter", "guidance.steps",
+    "geo.accuracy", "eta.estAbbr", "eta.close", "trip.unverifiedChip", "trip.unverified", "trip.fareNone", "trip.fareNA",
+    "trip.fareFrom", "trip.fareNotFixed", "trip.noTransfers", "trip.oneTransfer", "trip.tryAgain", "trip.changeEnds",
+    "trip.recommended", "trip.allOptions", "trip.save", "trip.saved", "trip.updateSaved", "trip.share", "trip.startTrip",
+    "trip.showOnMap", "trip.kindTitle.tricycle", "trip.kindTitle.padyak", "trip.roadside.chipWestCentro",
+    "trip.roadside.chipEastDiversion", "trip.roadside.chipEastOutbound", "trip.roadside.chipNorthMagsaysay",
+    "trip.roadside.chipSouthCentro", "trip.roadside.chipOutboundDelRosario", "trip.roadside.chipNorthOutbound",
+    "trip.roadside.chipEastDelRosario", "trip.roadside.chipCentroGenLuna", "trip.roadside.chipGenLunaElias",
+    "trip.roadside.chipCentroTerminal", "trip.roadside.chipCounterclockwise", "trip.roadside.chipClockwise", "home.start",
+    "home.destination", "home.chooseStart", "home.whereTo", "home.useCurrentLocation", "home.chooseOnMap", "home.setStartHere",
+    "home.setDestinationHere", "home.cancel", "home.clearTrip", "home.moveStartPin", "home.setStart", "home.setDestination",
+    "home.chooseStartOnMap", "home.chooseDestinationOnMap", "home.clearStart", "home.clearDestination", "shell.tabs.map",
+    "shell.tabs.explore", "shell.tabs.saved", "shell.tabs.community", "shell.tabs.more", "shell.back", "kit.cancel",
+    "kit.badges.verified", "kit.badges.candidate", "kit.badges.documented", "kit.badges.not-surveyed",
+    "kit.badges.provisional-stops", "kit.badges.osm", "kit.badges.approximate-path",
 ];
 const SHORT_FACTOR = 1.35;
 

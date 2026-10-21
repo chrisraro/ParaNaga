@@ -3,6 +3,7 @@
 // sits inside a button); the full form belongs in the option detail.
 import type { ServiceWindowNote as Note } from "@/domain/eta/service-window";
 import { serviceWindowCardLine } from "@/domain/trip/option-card";
+import { useT } from "@/i18n/provider";
 
 function ClockIcon() {
   return (
@@ -14,11 +15,12 @@ function ClockIcon() {
 }
 
 export function ServiceWindowNote({ note, compact = false }: { note: Note; compact?: boolean }) {
+  const e = useT().eta;
   if (compact) {
     return (
       <span className="pn-svc-note pn-svc-note--compact" data-testid="service-window-note" data-state={note.state}>
         <ClockIcon />
-        <span>{serviceWindowCardLine(note)}</span>
+        <span>{serviceWindowCardLine(note, e)}</span>
       </span>
     );
   }

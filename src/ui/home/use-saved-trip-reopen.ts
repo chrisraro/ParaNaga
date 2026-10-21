@@ -16,6 +16,8 @@ import { getSavedTrip } from "@/client/storage/db";
 import type { PlanErrorKind, TripPlanState } from "@/client/trip/use-trip-plan";
 import type { PlanOptionDto, PlanResponse } from "@/domain/api/plan";
 import { enrichOptionWalks } from "@/domain/trip/enrich";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 import { manilaDate, resolveReopen, samePoint, savedTripResponse, type SavedTrip } from "@/domain/saved/saved";
 import type { EndpointsState } from "@/domain/trip/endpoints";
 import { useApplyOnce, type TripRequest } from "@/ui/app-shell/app-frame-context";
@@ -29,14 +31,12 @@ import type { TripEnds, TripNote } from "@/ui/trip/trip-detail";
 type Restored = { card: SavedTrip; phase: "waiting" | "changed" | "done"; dismissed: boolean };
 
 /** The note on a saved option shown as saved: checking, or why the current data is not in. */
-export function storedNote(card: SavedTrip, error: PlanErrorKind | null): TripNote {
-  const date = manilaDate(card.publishedAt) ?? `revision ${card.revisionLabel}`;
-  if (error === "offline") return { text: `Offline: saved ${date}. May have changed.`, tone: "warning" };
-  if (error) return { text: `Couldn't check updates: saved ${date}.`, tone: "warning" };
-  return { text: `Saved ${date}. Checking…`, tone: "info" };
+export function storedNote(card: SavedTrip, error: PlanErrorKind | null, copy: Pick<Dict, "home" | "trip"> = en): TripNote {
+  const date = manilaDate(card.publishedAt) ?? copy.trip.revision(card.revisionLabel);
+  if (error === "offline") return { text: copy.home.reopenOffline(date), tone: "warning" };
+  if (error) return { text: copy.home.reopenFailed(date), tone: "warning" };
+  return { text: copy.home.reopenChecking(date), tone: "info" };
 }
-
-export const REPLANNED_NOTE: TripNote = { text: "Updated", tone: "info" };
 
 type Args = {
   tripRequest: TripRequest | null;
@@ -65,6 +65,7 @@ export type SavedTripReopen = {
 };
 
 export function useSavedTripReopen({ tripRequest, endpoints, plan, ready, onRestore, onMissing, onOpen }: Args): SavedTripReopen {
+  const t = useT();
   const [restored, setRestored] = useState<Restored | null>(null);
   const [note, setNote] = useState<TripNote | null>(null);
 
@@ -87,7 +88,7 @@ export function useSavedTripReopen({ tripRequest, endpoints, plan, ready, onRest
       setRestored({ ...restored, phase: "done" });
       if (!restored.dismissed) {
         onOpen(outcome.optionId);
-        setNote(outcome.kind === "replanned" ? REPLANNED_NOTE : null);
+        setNote(outcome.kind === "replanned" ? { text: t.home.updated, tone: "info" } : null);
       }
     }
   }
@@ -130,7 +131,7 @@ export function useSavedTripReopen({ tripRequest, endpoints, plan, ready, onRest
   const error = plan.status === "error" ? plan.kind : null;
   const stored =
     showStored && card && storedData && storedOption
-      ? { data: storedData, option: storedOption, ends: { start: card.start, destination: card.destination }, note: storedNote(card, error) }
+      ? { data: storedData, option: storedOption, ends: { start: card.start, destination: card.destination }, note: storedNote(card, error, t) }
       : null;
 
   return {
