@@ -107,7 +107,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(card).toContainText("From Pinned location");
   await expect(card.getByRole("heading", { level: 2 })).toHaveText("Pinned location");
   await expect(card).toContainText("Estimate 8–15 min + waiting (unknown) · Estimate ₱14 · data from 16 Oct 2026");
-  await expect(card).toContainText("A Centro-Magsaysay Loop");
+  await expect(card).toContainText("Centro-Magsaysay Loop A (clockwise)");
   await expect(card).not.toContainText("Changed since saved");
 
   // A later visit, then no signal: the card opens from this phone and shows the saved steps,
@@ -140,7 +140,7 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   await expect(detail.getByTestId("unverified-badge")).toHaveText(BADGE);
   const steps = detail.getByRole("list", { name: "Trip steps" }).getByRole("listitem");
   await expect(steps).toHaveCount(4);
-  await expect(steps.nth(1)).toContainText("Board A Centro-Magsaysay Loop (clockwise) at Plaza Rizal (A1)");
+  await expect(steps.nth(1)).toContainText("Board Centro-Magsaysay Loop A (clockwise) at Plaza Rizal (A1)");
   await expect(detail.getByTestId("trip-save")).toHaveAttribute("data-state", "saved");
   await context.setOffline(false);
 });
@@ -155,7 +155,7 @@ test("reopening online re-plans on the current data and opens the same option", 
   await page.getByTestId("saved-trip").getByRole("button", { name: "Open trip" }).click();
   await expect(page).toHaveURL(/\/app$/);
   const detail = page.getByTestId("trip-detail");
-  await expect(detail.getByRole("heading", { name: "A Centro-Magsaysay Loop" })).toBeFocused();
+  await expect(detail.getByRole("heading", { name: "Centro-Magsaysay Loop A (clockwise)" })).toBeFocused();
   // Same revision: the live option, without the "shown as saved" note.
   await expect(detail.getByTestId("trip-reopen-note")).toHaveCount(0);
   await expect(detail.getByTestId("fare-chip")).toHaveText("Estimate ₱14");
@@ -208,7 +208,7 @@ test("Share copies a text-only summary (no coordinates, no links) when the share
   const text = await page.evaluate(() => navigator.clipboard.readText());
   expect(text).toContain("ParaNaga trip: Pinned location to Pinned location");
   expect(text).toContain(BADGE);
-  expect(text).toContain("Board A Centro-Magsaysay Loop at Plaza Rizal (A1)");
+  expect(text).toContain("Board Centro-Magsaysay Loop A (clockwise) at Plaza Rizal (A1)");
   expect(text).toContain("Avenue Square (A5)");
   expect(text).toContain("Fare: Estimate ₱14 · from reported fare rules");
   expect(text).not.toMatch(/\d+\.\d{3,}/);
