@@ -487,7 +487,7 @@ test("the route re-fits on a snap change and a new route, but a user pan stays p
 
   // A new route (the destination moved) re-fits.
   await page.getByTestId("endpoint-destination").locator("button.pn-endpoint__main").click();
-  await page.getByRole("button", { name: "Choose on map", exact: true }).click();
+  await page.getByTestId("search-screen").getByRole("button", { name: "Choose on map", exact: true }).click();
   await drag(page, 100, -60);
   await page.getByRole("button", { name: "Set destination here" }).click();
   await expect(page.getByTestId("trip-option").first()).toBeVisible();

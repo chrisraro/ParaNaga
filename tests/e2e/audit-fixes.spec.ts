@@ -13,7 +13,7 @@ const BISCAST = { latitude: 13.6314651, longitude: 123.1927517 };
 const mapEl = (page: Page) => page.getByTestId("naga-map");
 const row = (page: Page, which: "start" | "destination") => page.getByTestId(`endpoint-${which}`);
 const rowMain = (page: Page, which: "start" | "destination") => row(page, which).locator(".pn-endpoint__main");
-const chooseOnMap = (page: Page) => page.getByRole("button", { name: "Choose on map", exact: true });
+const chooseOnMap = (page: Page) => page.getByTestId("search-screen").getByRole("button", { name: "Choose on map", exact: true });
 
 const fulfill = (route: Route, body: unknown) =>
   route.fulfill({ status: 200, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(body) });

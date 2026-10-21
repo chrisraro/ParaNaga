@@ -77,7 +77,7 @@ async function drag(page: Page, dx: number, dy: number) {
 const row = (page: Page, which: "start" | "destination") => page.getByTestId(`endpoint-${which}`);
 const rowMain = (page: Page, which: "start" | "destination") => row(page, which).locator(".pn-endpoint__main");
 const useLocation = (page: Page) => page.getByRole("button", { name: "Use current location" });
-const chooseOnMap = (page: Page) => page.getByRole("button", { name: "Choose on map", exact: true });
+const chooseOnMap = (page: Page) => page.getByTestId("search-screen").getByRole("button", { name: "Choose on map", exact: true });
 const overlayPaths = (page: Page) => page.locator(".leaflet-overlay-pane path");
 
 async function zoomOutTo(page: Page, target: number) {
