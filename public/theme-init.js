@@ -14,17 +14,18 @@
   var theme = "system";
   var contrast = false;
   var lang = null;
+  var FIL = false; // = FILIPINO_ENABLED in src/i18n/locales.ts
   var BIKOL = false; // = BIKOL_ENABLED in src/i18n/locales.ts (tests/unit/i18n-locale.test.ts)
   function pick(tag) {
     var base = String(tag).toLowerCase().split("-")[0];
-    return base === "fil" || base === "tl" ? "fil" : base === "en" || (base === "bcl" && BIKOL) ? base : null;
+    return (base === "fil" || base === "tl") && FIL ? "fil" : base === "en" || (base === "bcl" && BIKOL) ? base : null;
   }
   try {
     var prefs = JSON.parse(window.localStorage.getItem("paranaga.prefs") || "null");
     if (prefs && typeof prefs === "object") {
       if (prefs.theme === "light" || prefs.theme === "dark") theme = prefs.theme;
       contrast = prefs.highContrast === true;
-      if (prefs.locale === "en" || prefs.locale === "fil" || (prefs.locale === "bcl" && BIKOL)) lang = prefs.locale;
+      if (prefs.locale === "en" || (prefs.locale === "fil" && FIL) || (prefs.locale === "bcl" && BIKOL)) lang = prefs.locale;
     }
   } catch {
     // Storage blocked or malformed JSON: keep the defaults.

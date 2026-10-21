@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { FILIPINO_ENABLED } from "../../src/i18n/locales";
 import { expect, test, type Page } from "@playwright/test";
 import { showMapLayers } from "./fixtures/layers";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
@@ -100,7 +101,7 @@ test.describe("phone", () => {
     await expect(install).toContainText("use your browser’s menu");
     await expect(install.getByRole("button")).toHaveCount(0);
     const general = page.getByTestId("settings-general");
-    await expect(general).toContainText("LanguagePhone settingEnglishFilipino");
+    await expect(general).toContainText(`LanguagePhone settingEnglish${FILIPINO_ENABLED ? "Filipino" : ""}`);
     await expect(general).toContainText("Fare categoryRegular");
     await expect(page.getByTestId("settings-fare-note")).toHaveText(
       "Discounts aren’t applied: no verified rule yet. Regular fares shown.",

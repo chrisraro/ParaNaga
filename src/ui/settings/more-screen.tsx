@@ -21,7 +21,7 @@ import { clearDeviceData } from "@/client/device-data";
 import { useLocationPermission } from "@/client/geo/use-location-permission";
 import { clearHistory, hasHistory } from "@/client/history/trip-history";
 import { updatePrefs, usePrefs } from "@/client/prefs/use-prefs";
-import { BIKOL_ENABLED, type Locale } from "@/i18n/locales";
+import { BIKOL_ENABLED, FILIPINO_ENABLED, type Locale } from "@/i18n/locales";
 import { setLocale } from "@/i18n/provider";
 import { locationAccessLabel } from "@/domain/device/location-permission";
 import type { ThemePref } from "@/domain/prefs/prefs";
@@ -43,7 +43,7 @@ type LanguageChoice = Locale | "phone";
 const LANGUAGE_OPTIONS: readonly SegmentedOption<LanguageChoice>[] = [
   { value: "phone", label: "Phone setting" },
   { value: "en", label: "English", lang: "en" },
-  { value: "fil", label: "Filipino", lang: "fil" },
+  ...(FILIPINO_ENABLED ? [{ value: "fil", label: "Filipino", lang: "fil" } as const] : []),
   ...(BIKOL_ENABLED ? [{ value: "bcl", label: "Bikol", lang: "bcl" } as const] : []),
 ];
 

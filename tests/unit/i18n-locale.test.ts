@@ -6,7 +6,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { DEFAULT_PREFS, PREFS_STORAGE_KEY, parsePrefs, serializePrefs } from "@/domain/prefs/prefs";
 import { applyDocumentPrefs } from "@/client/prefs/use-prefs";
-import { BIKOL_ENABLED, formatLocale, phoneLocale, resolveLocale } from "@/i18n/locales";
+import { BIKOL_ENABLED, FILIPINO_ENABLED, formatLocale, phoneLocale, resolveLocale } from "@/i18n/locales";
 import { en, loadDict, mergeDict, type Dict } from "@/i18n/dict";
 import { fil } from "@/i18n/fil";
 import { publishedDateText } from "@/domain/network/present";
@@ -25,10 +25,11 @@ afterEach(() => {
 
 describe("locale choice", () => {
   it("first open follows the phone: fil/tl → fil, Bikol only when enabled, else English", () => {
-    expect(phoneLocale(["fil-PH"])).toBe("fil");
-    expect(phoneLocale(["tl"])).toBe("fil");
+    const fil = FILIPINO_ENABLED ? "fil" : "en";
+    expect(phoneLocale(["fil-PH"])).toBe(fil);
+    expect(phoneLocale(["tl"])).toBe(fil);
     expect(phoneLocale(["en-US", "fil"])).toBe("en");
-    expect(phoneLocale(["ja", "TL-ph"])).toBe("fil");
+    expect(phoneLocale(["ja", "TL-ph"])).toBe(fil);
     expect(phoneLocale(["ja", "ko"])).toBe("en");
     expect(phoneLocale([])).toBe("en");
     expect(phoneLocale(["bcl", "en"])).toBe(BIKOL_ENABLED ? "bcl" : "en");
@@ -36,8 +37,8 @@ describe("locale choice", () => {
 
   it("a saved choice overrides the phone language", () => {
     expect(resolveLocale("en", ["fil-PH"])).toBe("en");
-    expect(resolveLocale("fil", ["en-US"])).toBe("fil");
-    expect(resolveLocale(undefined, ["fil-PH"])).toBe("fil");
+    expect(resolveLocale("fil", ["en-US"])).toBe(FILIPINO_ENABLED ? "fil" : "en");
+    expect(resolveLocale(undefined, ["fil-PH"])).toBe(FILIPINO_ENABLED ? "fil" : "en");
     if (!BIKOL_ENABLED) expect(resolveLocale("bcl", ["en"])).toBe("en");
   });
 
@@ -50,7 +51,8 @@ describe("prefs locale field", () => {
   it("is absent by default and round-trips when chosen", () => {
     expect(parsePrefs(null).locale).toBeUndefined();
     expect(JSON.parse(serializePrefs(DEFAULT_PREFS))).not.toHaveProperty("locale");
-    expect(parsePrefs(serializePrefs({ ...DEFAULT_PREFS, locale: "fil" }))).toEqual({ ...DEFAULT_PREFS, locale: "fil" });
+    expect(parsePrefs(serializePrefs({ ...DEFAULT_PREFS, locale: "en" }))).toEqual({ ...DEFAULT_PREFS, locale: "en" });
+    expect(parsePrefs(serializePrefs({ ...DEFAULT_PREFS, locale: "fil" })).locale).toBe(FILIPINO_ENABLED ? "fil" : undefined);
   });
 
   it("drops an unknown locale, and Bikol while it is hidden, without touching the other fields", () => {

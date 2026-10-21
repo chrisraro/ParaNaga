@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FILIPINO_ENABLED } from "@/i18n/locales";
 import { setLocale, useLocale } from "@/i18n/provider";
 import { AppIconTile, Wordmark } from "@/ui/brand/route-n-mark";
 
@@ -15,6 +16,7 @@ export const SECTIONS = [
 /** EN | FIL: writes the same pref as More, so the app opens in the language picked here. */
 function LanguageToggle({ className }: { className: string }) {
   const locale = useLocale();
+  if (!FILIPINO_ENABLED) return null;
   return (
     <div role="group" aria-label="Language" className={className}>
       {([["en", "EN", "English"], ["fil", "FIL", "Filipino"]] as const).map(([code, text, name]) => (

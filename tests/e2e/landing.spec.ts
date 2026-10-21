@@ -1,4 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
+import { FILIPINO_ENABLED } from "../../src/i18n/locales";
 import { expect, test, type Page } from "@playwright/test";
 
 // The landing page (/): links into the app, accessibility in both themes, motion that respects
@@ -20,6 +21,7 @@ async function scrollThrough(page: Page) {
 }
 
 test("the header language toggle persists across a reload and sets the page language", async ({ page }) => {
+  test.skip(!FILIPINO_ENABLED, "Filipino is hidden until its review (plan T10)");
   await page.goto("/");
   await page.getByRole("button", { name: "Open menu" }).click();
   const toggle = page.locator("#mobile-menu").getByRole("group", { name: "Language" });

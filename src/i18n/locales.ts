@@ -11,20 +11,23 @@ export const DEFAULT_LOCALE: Locale = "en";
  */
 export const BIKOL_ENABLED: boolean = false;
 
+/** Filipino stays hidden until its strings pass the draft + Jev check and the opus review (plan T10). public/theme-init.js mirrors this flag. */
+export const FILIPINO_ENABLED: boolean = false;
+
 export function isLocale(value: unknown): value is Locale {
   return (LOCALES as readonly unknown[]).includes(value);
 }
 
 /** A locale the user may have (Bikol only once enabled). */
 export function isEnabledLocale(value: unknown): value is Locale {
-  return isLocale(value) && (value !== "bcl" || BIKOL_ENABLED);
+  return isLocale(value) && (value === "en" || (value === "fil" && FILIPINO_ENABLED) || (value === "bcl" && BIKOL_ENABLED));
 }
 
 /** First open: the first phone language we have (fil/tl → fil; bcl once enabled; en), else English. */
 export function phoneLocale(languages: readonly string[]): Locale {
   for (const tag of languages) {
     const base = tag.toLowerCase().split("-")[0];
-    if (base === "fil" || base === "tl") return "fil";
+    if ((base === "fil" || base === "tl") && FILIPINO_ENABLED) return "fil";
     if (base === "en" || (base === "bcl" && BIKOL_ENABLED)) return base;
   }
   return DEFAULT_LOCALE;

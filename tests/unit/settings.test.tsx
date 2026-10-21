@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { FILIPINO_ENABLED } from "@/i18n/locales";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_PREFS, PREFS_STORAGE_KEY } from "@/domain/prefs/prefs";
@@ -119,11 +120,13 @@ describe("clearDeviceData when a store fails", () => {
 describe("More screen", () => {
   it("language row saves a choice and goes back to the phone's language", () => {
     render(<MoreScreen />);
-    expect(screen.getAllByRole("radio", { name: /Phone setting|English|Filipino/ }).map((r) => r.textContent)).toEqual(["Phone setting", "English", "Filipino"]);
+    // Filipino is offered only once FILIPINO_ENABLED (plan T10); English proves the row either way.
+    const pick = FILIPINO_ENABLED ? "Filipino" : "English";
+    expect(screen.getAllByRole("radio", { name: /Phone setting|English|Filipino/ }).map((r) => r.textContent)).toEqual(["Phone setting", "English", ...(FILIPINO_ENABLED ? ["Filipino"] : [])]);
     expect(screen.getByRole("radio", { name: "Phone setting" }).getAttribute("aria-checked")).toBe("true");
-    fireEvent.click(screen.getByRole("radio", { name: "Filipino" }));
-    expect(readPrefs().locale).toBe("fil");
-    expect(screen.getByRole("radio", { name: "Filipino" }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(screen.getByRole("radio", { name: pick }));
+    expect(readPrefs().locale).toBe(FILIPINO_ENABLED ? "fil" : "en");
+    expect(screen.getByRole("radio", { name: pick }).getAttribute("aria-checked")).toBe("true");
     fireEvent.click(screen.getByRole("radio", { name: "Phone setting" }));
     expect(readPrefs().locale).toBeUndefined();
   });
