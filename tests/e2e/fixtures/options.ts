@@ -39,7 +39,7 @@ export async function backToMap(page: Page) {
 }
 
 const homeMap = (page: Page) => page.getByTestId("home-screen").getByTestId("naga-map");
-const chooseOnMapButton = (page: Page) => page.getByRole("button", { name: "Choose on map", exact: true });
+const chooseOnMapButton = (page: Page) => page.getByTestId("search-screen").getByRole("button", { name: "Choose on map", exact: true });
 
 /** Drags the home map by (dx, dy) from its centre, as a finger would, and waits for it to come to rest. */
 export async function panMap(page: Page, dx: number, dy: number) {
