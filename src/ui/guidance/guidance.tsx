@@ -2,7 +2,8 @@
 
 // Guidance inside the home sheet (Task 10): the header (round "End guidance" with a confirmation,
 // "Step i of n · Walk|Ride|Transfer", the GPS accuracy "± N m" while location is in use), then the
-// current step: Walk, Ride (jeepney), Street ride (tricycle or padyak), Transfer, Arrive, or "Missed your stop?". Everything shown comes from
+// current step: Walk, Ride (jeepney), Street ride (tricycle or padyak), Transfer, Arrive, or "Missed your stop?" / "Got off early?"
+// (one re-plan screen). Everything shown comes from
 // the guidance view (src/domain/guidance/view.ts).
 //
 // Accessibility: focus moves to the step's heading when the step or screen changes, after a tap on
@@ -43,7 +44,7 @@ type Props = {
   onEnd: () => void;
   /** Arrive → "Done": clears the trip and returns to the map. */
   onDone: () => void;
-  /** Missed stop → plan again from the current fix, or choose the start on the map. */
+  /** Missed stop / got off early → plan again from the current fix, or choose the start on the map. */
   onReplan: () => void;
 };
 

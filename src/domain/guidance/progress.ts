@@ -20,7 +20,7 @@
 //    out. The index never decreases.
 //  - After a GPS gap the jeepney may be past the window. A usable fix whose nearest stop lies
 //    beyond the window while it is more than 120 m from every window stop sets `countLost`: the
-//    view then drops to the no-GPS copy and Para is manual only. The count resyncs (jumps ahead,
+//    view then drops to the no-GPS copy and there is no Para. The count resyncs (jumps ahead,
 //    clearing `countLost`) only when two CONSECUTIVE usable fixes match stops beyond the window in
 //    strictly increasing pin order, each the nearest of all stops (tie tolerance) and none within
 //    120 m of a stop at or before the window (so a parallel return street, which runs beside
@@ -30,7 +30,7 @@
 //    (passed index ≥ alighting index − 1: a parallel return street brings the pin within 300 m with
 //    stops still to go, Loops A/B on Magsaysay); `nearStopBefore` when such a fix matches, in order, a
 //    stop with index ≥ max(1, alighting index − 1). Both latch once set (pin order cannot go back).
-//    `paraSuggested` is the one rule the view and the session both use.
+//    `paraSuggested` is the one rule the view and the session both use ("I got off" needs it).
 // The stop count has no off-route detection (pins are not a shape) and no time estimate anywhere.
 //  - A ride with a Lines path (pinless rides boarding/alighting at free points, plan E): `pathRideProgress`
 //    projects the fix onto the ride's slice of the path, [board, alight] in path order (wrapping across
@@ -49,6 +49,8 @@ export const NEAR_TARGET_MIN_M = 30;
 export const BEARING_MIN_DISTANCE_M = 40;
 export const STOP_PASS_RADIUS_M = 120;
 export const ALIGHT_NEAR_M = 300;
+/** "I've arrived" needs a usable fix this close (straight line) to the destination (owner, 2026-10-22). */
+export const ARRIVE_NEAR_M = 100;
 /** Stops the passed index may move per fix (allows one missed fix between stops). */
 export const STOP_WINDOW = 2;
 /** A stop counts as "the nearest" when within this much of the nearest stop (near-identical pins). */
@@ -111,9 +113,9 @@ export type RideProgress = RideMemory & {
 
 export const NEW_RIDE_MEMORY: RideMemory = { passedIndex: 0, countLost: false, pendingIndex: null, alightNear: false, nearStopBefore: false };
 
-/** The single Para rule: the person said so, or a precise fix put them there in pin order (count not lost). */
-export function paraSuggested(ride: RideMemory & { stopIsNext: boolean }): boolean {
-  return ride.stopIsNext || (!ride.countLost && (ride.alightNear || ride.nearStopBefore));
+/** The single Para rule: a precise fix put them there in pin order (count not lost). GPS only: no manual advance. */
+export function paraSuggested(ride: RideMemory): boolean {
+  return !ride.countLost && (ride.alightNear || ride.nearStopBefore);
 }
 
 function summarize(stops: readonly LatLng[], memory: RideMemory, fromGps: boolean): RideProgress {

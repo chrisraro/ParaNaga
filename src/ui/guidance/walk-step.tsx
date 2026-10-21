@@ -4,7 +4,8 @@
 // The artboard's "[m] to Plaza Rizal stop", boarding side "toward Centro, beside [landmark]" and
 // the landmark check are replaced by the view's honest copy: a straight-line distance (GPS) or the
 // plan's estimate ("path not verified"), "Boarding side isn't mapped…", and "You look close to …"
-// only as a proposal; the person confirms with "I'm at the stop" / "I've arrived".
+// only as a proposal; the person confirms with "I'm at the stop" / "I've arrived" (shown only once a
+// fix was within 100 m of the destination: view.ts).
 
 import { UnverifiedBadge } from "@/ui/trip/trip-parts";
 import type { WalkView } from "@/domain/guidance/view";
@@ -51,7 +52,7 @@ export function NextRide() {
 }
 
 export function WalkStep({ view, onSend, location, headingRef }: StepProps<WalkView>) {
-  const manual = view.stepKind === "walk_to_destination" ? GUIDANCE_COPY.arrived : GUIDANCE_COPY.atStop;
+  const manual = view.stepKind === "walk_to_destination" ? undefined : GUIDANCE_COPY.atStop;
   return (
     <section className="pn-guide__step" aria-labelledby="pn-guide-title" data-testid="guidance-walk">
       <h2 id="pn-guide-title" ref={headingRef} tabIndex={-1} className="pn-guide__title">

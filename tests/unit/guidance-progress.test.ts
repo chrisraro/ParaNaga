@@ -120,7 +120,7 @@ describe("rideProgress: strictly by pin order", () => {
     const justAfter = { lat: U_LOOP[0]!.lat + 0.0005, lng: U_LOOP[0]!.lng }; // ≈ 55 m after boarding
     const p = rideProgress(U_LOOP, START, fixAt(justAfter, 5), NOW);
     expect(p).toMatchObject({ passedIndex: 0, alightNear: false, nearStopBefore: false, stopsRemaining: alight });
-    expect(paraSuggested({ ...p, stopIsNext: false })).toBe(false);
+    expect(paraSuggested(p)).toBe(false);
   });
 
   it("U-shaped loop: a return-street stop never wins over the outbound stop beside it", () => {
@@ -147,7 +147,7 @@ describe("rideProgress: strictly by pin order", () => {
     for (let i = 1; i <= alight; i++) {
       m = rideProgress(FULL_CIRCLE, m, fixAt(FULL_CIRCLE[i]!, 5), NOW);
       expect(m.passedIndex).toBe(i);
-      expect(paraSuggested({ ...m, stopIsNext: false })).toBe(i >= alight - 1);
+      expect(paraSuggested(m)).toBe(i >= alight - 1);
     }
   });
 });
@@ -161,20 +161,19 @@ describe("after a GPS gap: honest fallback, then resync on two in-order fixes", 
     expect(at1).toMatchObject({ passedIndex: 1, countLost: false });
     const at4 = ride([EIGHT[4]!], EIGHT, at1);
     expect(at4).toMatchObject({ passedIndex: 1, countLost: true, pendingIndex: 4, alightNear: false, nearStopBefore: false });
-    expect(paraSuggested({ ...at4, stopIsNext: false })).toBe(false);
+    expect(paraSuggested(at4)).toBe(false);
     const at5 = ride([EIGHT[5]!], EIGHT, at4);
     expect(at5).toMatchObject({ passedIndex: 5, countLost: false, pendingIndex: null });
     const at6 = ride([EIGHT[6]!], EIGHT, at5);
     expect(at6).toMatchObject({ passedIndex: 6, nearStopBefore: true, alightNear: true });
-    expect(paraSuggested({ ...at6, stopIsNext: false })).toBe(true);
+    expect(paraSuggested(at6)).toBe(true);
     // The reviewer's sequence (1, 4, 5, 6, 7) ends at the alighting stop with Para.
     expect(ride([EIGHT[1]!, EIGHT[4]!, EIGHT[5]!, EIGHT[6]!, EIGHT[7]!])).toMatchObject({ passedIndex: 7, countLost: false, nearStopBefore: true });
   });
 
-  it("while the count is lost, Para from GPS is off (manual only)", () => {
+  it("while the count is lost, Para from GPS is off", () => {
     const lost = { ...START, passedIndex: 1, countLost: true, alightNear: true };
-    expect(paraSuggested({ ...lost, stopIsNext: false })).toBe(false);
-    expect(paraSuggested({ ...lost, stopIsNext: true })).toBe(true);
+    expect(paraSuggested(lost)).toBe(false);
   });
 
   it("no resync on one beyond fix, on a decreasing pair, or on a pair broken by another fix", () => {
@@ -203,9 +202,8 @@ describe("after a GPS gap: honest fallback, then resync on two in-order fixes", 
 });
 
 describe("Para paths, each in isolation", () => {
-  it("path 1: the person says their stop is next (no GPS)", () => {
-    expect(paraSuggested({ ...START, stopIsNext: true })).toBe(true);
-    expect(paraSuggested({ ...START, stopIsNext: false })).toBe(false);
+  it("path 1: no manual advance: without GPS there is no Para", () => {
+    expect(paraSuggested(START)).toBe(false);
   });
 
   it("path 2: a precise fix within 300 m of the alighting pin while pin order agrees (not near any later stop)", () => {
@@ -236,9 +234,9 @@ describe("Para paths, each in isolation", () => {
 
   it("a two-stop ride: pin order alone never suggests Para; a precise fix at the boarding pin (200 m from the alighting pin) does", () => {
     const two = STOPS.slice(0, 2);
-    expect(paraSuggested({ ...rideProgress(two, START, null, NOW), stopIsNext: false })).toBe(false);
-    expect(paraSuggested({ ...rideProgress(two, START, fixAt(two[0]!, 40), NOW), stopIsNext: false })).toBe(false);
-    expect(paraSuggested({ ...rideProgress(two, START, fixAt(two[0]!, 10), NOW), stopIsNext: false })).toBe(true);
+    expect(paraSuggested(rideProgress(two, START, null, NOW))).toBe(false);
+    expect(paraSuggested(rideProgress(two, START, fixAt(two[0]!, 40), NOW))).toBe(false);
+    expect(paraSuggested(rideProgress(two, START, fixAt(two[0]!, 10), NOW))).toBe(true);
   });
 
   it("poor, stale or future fixes change nothing", () => {
@@ -364,7 +362,7 @@ describe("ride progress properties", () => {
     fc.assert(
       fc.property(fc.constantFrom(U_LOOP, FULL_CIRCLE), fc.double({ min: 0, max: 0.0007, noNaN: true }), fc.double({ min: 0, max: 30, noNaN: true }), (stops, d, accuracy) => {
         const p = rideProgress(stops, START, fixAt({ lat: stops[0]!.lat + d, lng: stops[0]!.lng }, accuracy, NOW), NOW);
-        return !paraSuggested({ ...p, stopIsNext: false });
+        return !paraSuggested(p);
       }),
       { seed: 11, numRuns: 300 },
     );

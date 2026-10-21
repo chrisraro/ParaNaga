@@ -173,7 +173,12 @@ describe("guidance for the access option", () => {
   });
 
   it("a plain tricycle trip still ends on 'I've arrived'", () => {
-    const s = startSession({ option: special, stops: [], variants: [], destinationLabel: "Pacol" }, 1_000);
+    const s0 = startSession({ option: special, stops: [], variants: [], destinationLabel: "Pacol" }, 1_000);
+    const step = currentStep(s0);
+    if (step.kind !== "street_ride") throw new Error("street");
+    // "I've arrived" needs a fix near the destination (owner, 2026-10-22).
+    expect(reduceSession(s0, { type: "arrived" })).toBe(s0);
+    const s = reduceSession(s0, { type: "fix", fix: { lat: step.target.lat, lng: step.target.lng, accuracy: 10, timestamp: 1_000 }, now: 1_000 });
     const view = guidanceView(s, null, 1_000);
     if (view.screen !== "street_ride") throw new Error("street screen");
     expect(view.actions[0]!.label).toBe("I've arrived");

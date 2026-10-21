@@ -88,9 +88,9 @@ export function GuidanceNotes({ notes }: { notes: readonly string[] }) {
 
 /**
  * Location for progress: optional, only on a tap, and every step still works by its buttons.
- * `manual` names the button to tap instead.
+ * `manual` names the button to tap instead (none where the step needs location: a ride, arriving).
  */
-export function LocationOffer({ location, manual }: { location: LocationUi; manual: string }) {
+export function LocationOffer({ location, manual }: { location: LocationUi; manual?: string }) {
   const { state, watching, onEnable } = location;
   if (watching) return null;
   if (state === "requesting") {
@@ -103,14 +103,14 @@ export function LocationOffer({ location, manual }: { location: LocationUi; manu
   if (state === "denied" || state === "unsupported" || state === "insecure") {
     return (
       <p className="pn-guide__loc pn-guide__loc--off" data-testid="guidance-location-off">
-        Location off. Tap “{manual}” when there.
+        {manual ? `Location off. Tap “${manual}” when there.` : "Location off."}
       </p>
     );
   }
   if (state === "unavailable" || state === "timeout") {
     return (
       <p className="pn-guide__loc pn-guide__loc--off" data-testid="guidance-location-off">
-        No location now. Tap “{manual}” when there.
+        {manual ? `No location now. Tap “${manual}” when there.` : "No location now."}
       </p>
     );
   }
