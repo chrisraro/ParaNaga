@@ -686,24 +686,44 @@ function accessOption(
 const validPoint = (p: LatLng) => Number.isFinite(p.lat) && Number.isFinite(p.lng) && isInsideNaga(p);
 
 /**
- * Loop pairs (Loops A & B; Loops C & D): opposite-direction loops running clockwise and
- * counterclockwise on shared streets. When both directions have a valid one-ride candidate,
- * both are offered so the commuter can choose their desired roadside or direction.
+ * Loop routes (Loops A, B, C, D): opposite-direction loops running clockwise and
+ * counterclockwise on shared corridors (Magsaysay, Roxas/Diversion, Peñafrancia, Bagumbayan, Centro).
+ * Every valid one-ride loop candidate within the detour guard is offered so commuters can choose
+ * their desired loop or roadside/direction.
  */
-function activeLoopPartners(net: PlanningNetwork, cands: Cand[]): Set<Cand> {
+function activeLoopPartners(net: PlanningNetwork, cands: Cand[], shownJeeps: readonly { c: Cand }[] = []): Set<Cand> {
   const reps = new Set<Cand>();
-  const PAIRS: readonly [string, string][] = [
-    ["R8-A", "R8-B"],
-    ["R8-C", "R8-D"],
-  ];
-  for (const [r1, r2] of PAIRS) {
-    const c1 = cands.filter((c) => c.hops.length === 1 && net.variants[c.hops[0]!.v]!.routeCode === r1).sort(compare)[0];
-    const c2 = cands.filter((c) => c.hops.length === 1 && net.variants[c.hops[0]!.v]!.routeCode === r2).sort(compare)[0];
-    if (c1 && c2) {
-      reps.add(c1);
-      reps.add(c2);
-    }
+  const bestOf = (code: string) =>
+    cands.filter((c) => c.hops.length === 1 && net.variants[c.hops[0]!.v]!.routeCode === code).sort(compare)[0];
+
+  const loopA = bestOf("R8-A");
+  const loopB = bestOf("R8-B");
+  const loopC = bestOf("R8-C");
+  const loopD = bestOf("R8-D");
+
+  const shownCodes = new Set(shownJeeps.map((x) => net.variants[x.c.hops[0]!.v]?.routeCode));
+  const hasShownLoop = ["R8-A", "R8-B", "R8-C", "R8-D"].some((code) => shownCodes.has(code));
+
+  // Loop A (clockwise) and Loop B (counterclockwise): opposite directions on Magsaysay/Diversion/Francia
+  if (loopA && loopB) {
+    reps.add(loopA);
+    reps.add(loopB);
+  } else if (loopB) {
+    reps.add(loopB);
+  } else if (loopA && !hasShownLoop) {
+    reps.add(loopA);
   }
+
+  // Loop C (clockwise via Bagumbayan) and Loop D (counterclockwise via Bagumbayan)
+  if (loopC && loopD) {
+    reps.add(loopC);
+    reps.add(loopD);
+  } else if (loopD) {
+    reps.add(loopD);
+  } else if (loopC && !hasShownLoop && !reps.has(loopA!)) {
+    reps.add(loopC);
+  }
+
   return reps;
 }
 
@@ -763,7 +783,7 @@ export function planTrip(
   // loop partners, and distinct passing routes to the destination, within the block budget.
   const nearM = centro ? PASSES_DESTINATION_M : JEEP_NEAR_DROP_M;
   const vias = activeVias(net, jeep.cands, viaGroups, [nearestAnchorId(origin, FAR_AREAS), nearestAnchorId(destination, FAR_AREAS)]);
-  const loopPartners = activeLoopPartners(net, jeep.cands);
+  const loopPartners = activeLoopPartners(net, jeep.cands, jeep.options);
   const extraReps = new Set<Cand>([...vias.reps, ...loopPartners]);
   let block = jeep.options;
   if (extraReps.size > 0) {

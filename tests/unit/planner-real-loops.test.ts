@@ -205,7 +205,7 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  */
 const REGRESSION_BASELINE = {
-  options: 613,
-  byMode: { jeepney: 395, tricycle: 200, padyak: 8, walk: 10 },
-  digest: "e897f944d8ca92a01e322123a4519a238b4db3d394452675566bb3385636c71a",
+  options: 695,
+  byMode: { jeepney: 477, tricycle: 200, padyak: 8, walk: 10 },
+  digest: "f97336478ce6976cca68b5091c873ae023bac9697bb751ff82b9180a01daa904",
 };

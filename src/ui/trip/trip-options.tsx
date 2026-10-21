@@ -14,7 +14,7 @@ import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { PEEK_ROW, PEEK_ROW_GAP } from "@/ui/app-shell/bottom-sheet";
-import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionsCountText, previewIndex, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
+import { ACCESS_LINE, accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionRoadside, optionsCountText, previewIndex, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
@@ -134,6 +134,7 @@ function OptionCard({
   const notes = useMemo(() => optionNotesView(option, routes, now), [option, routes, now]);
   const routeNotes = cardRouteNotes(notes);
   const terminalLines = tricycleTerminalCardLines(option);
+  const roadside = optionRoadside(option);
 
   return (
     <li className="pn-trip-li" style={{ ["--i" as string]: Math.min(index, 5) }}>
@@ -159,6 +160,14 @@ function OptionCard({
               <span className="sr-only">. </span>
               <span className="pn-trip-card__via" data-testid="card-via">
                 {via}
+              </span>
+            </>
+          ) : null}
+          {roadside ? (
+            <>
+              <span className="sr-only">. </span>
+              <span className="pn-trip-card__roadside" data-testid="card-roadside">
+                {roadside.chip}
               </span>
             </>
           ) : null}

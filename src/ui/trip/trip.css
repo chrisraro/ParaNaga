@@ -948,3 +948,45 @@ abbr.pn-est {
   padding: 0;
   list-style: none;
 }
+
+/* Roadside advice: tell commuters which side of a two-way street to board on. */
+.pn-trip-card__roadside {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--pn-surface2, rgba(11, 122, 117, 0.08));
+  border: 1px solid var(--pn-accent-border, rgba(11, 122, 117, 0.25));
+  color: var(--pn-accent-text, #0b7a75);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pn-tl__roadside {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  margin: 6px 0 8px;
+  border-radius: 8px;
+  background: var(--pn-surface2, rgba(11, 122, 117, 0.08));
+  border-left: 3px solid var(--pn-accent, #0b7a75);
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--pn-label, #1c2226);
+}
+.pn-tl__roadside-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pn-accent, #0b7a75);
+}
+.pn-tl__roadside-chip svg {
+  color: var(--pn-accent, #0b7a75);
+  flex-shrink: 0;
+}

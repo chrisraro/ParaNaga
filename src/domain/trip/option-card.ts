@@ -3,11 +3,12 @@
 // One card per mode: Walk, Jeep (any-point board and alight), Tricycle, Padyak. A tricycle or padyak
 // card never shows minutes; a tricycle with no street route says "Route not confirmed" and draws its
 // straight line only as "approximate, not a route".
-import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "../api/plan";
+import type { PadyakLegDto, PlanOptionDto, PlanResponse, RideLegDto, TricycleLegDto } from "../api/plan";
 import type { ServiceWindowNote } from "../eta/service-window";
 import { FLAGGED_PATH_NOTE } from "../planner/notes";
 import { fareChipText, formatDistance } from "./present";
 import type { OptionNotesView, RideNoteView } from "./option-notes";
+import { getRoadsideAdvice, type RoadsideInfo } from "../planner/roadside";
 
 /** The first Recommended option, or -1: exactly one card is drawn as the primary one. */
 export function recommendedIndex(options: readonly Pick<PlanOptionDto, "labels">[]): number {
@@ -59,6 +60,17 @@ export function viaChipText(o: Pick<PlanOptionDto, "via"> & { legs?: readonly { 
   // The title already names the street ("… via Magsaysay Ave", "… via Roxas Ave (Diversion)"): the chip would say it twice.
   const label = o.via.label.replace(/\s*\(.*\)/, "").toLowerCase();
   return o.legs?.some((l) => l.kind === "ride" && l.display?.title.toLowerCase().includes(label)) ? null : `via ${o.via.label}`;
+}
+
+/**
+ * Roadside advice for a jeepney option: tells commuters which side of a two-way street to board on
+ * (e.g. Westbound side to Centro vs Eastbound side to Diversion), or null.
+ */
+export function optionRoadside(o: Pick<PlanOptionDto, "legs" | "rides" | "via">): RoadsideInfo | null {
+  if (isAccessOption(o) || o.rides !== 1 || o.via !== undefined) return null;
+  const ride = o.legs?.find((l): l is RideLegDto => l.kind === "ride");
+  if (!ride || !ride.routeCode) return null;
+  return getRoadsideAdvice(ride.routeCode, ride.board, ride.alight);
 }
 
 type PlanTerminals = { tricycleTerminals?: PlanOptionDto["tricycleTerminals"] };

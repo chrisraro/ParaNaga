@@ -25,7 +25,7 @@ vi.mock("@/client/saved/use-saved-trip-toggle", () => ({
 }));
 
 export const CARD_WORDS_STREET = 32; // a tricycle or padyak card with its street rule
-export const CARD_WORDS_ONE_RIDE = 18; // a two-word plan label is shown; +2 for the loop letter and direction "C … Loop C (clockwise)" of the route tally 2026-10-20
+export const CARD_WORDS_ONE_RIDE = 22; // a two-word plan label is shown; +2 for the loop letter and direction; +4 for the roadside chip
 export const CARD_WORDS_ONE_RIDE_VIA = 18; // a via chip ("via Roxas (Diversion)") is added
 export const CARD_WORDS_ACCESS = 32; // the real minimum: Recommended 1 + caution 2 + title 5 (letter + route title: "Tricycle, then Jeep I Centro-Pacol") + time with its tricycle tail 9 + line 6 + tricycle fare chip 7 + From fare 2
 export const CARD_WORDS_TWO_RIDES = 22; // the route is "Loop A + Loop B"; +2 for the loop directions of the route tally 2026-10-20

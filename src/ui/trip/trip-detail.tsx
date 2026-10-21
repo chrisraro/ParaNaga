@@ -28,6 +28,7 @@ import { PATH_LABEL } from "@/domain/api/schemas";
 import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
 import { formatLeg } from "@/domain/eta/format";
 import { FARE_NOT_FIXED, isAccessOption, isSpecialTrip, specialFareText, streetCardView, tricycleTerminalLines, viaChipText } from "@/domain/trip/option-card";
+import { getRoadsideAdvice } from "@/domain/planner/roadside";
 import { optionNotesView, type OptionNotesView } from "@/domain/trip/option-notes";
 import { rideEnds } from "@/domain/trip/ride-ends";
 import { nearestTricycleTerminal } from "@/domain/trip/tricycle-hint";
@@ -193,6 +194,7 @@ function rideSteps(
   const rideNotes = ctx.notes.rides.find((r) => r.legIndex === i)?.notes ?? [];
   const route = routeChipLabel(leg.routeCode, leg.routeName, leg.display);
   const dir = directionText(lookups.direction(leg.variantId), "short", route);
+  const roadside = getRoadsideAdvice(leg.routeCode, leg.board, leg.alight);
   const count = ends.pinned ? ends.stops.length - 1 : null;
   const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
   const etaLeg = estimate?.legs[i];
@@ -217,6 +219,18 @@ function rideSteps(
                 {dir ? <p className="pn-tl__sub">Direction: {dir}</p> : null}
               </>
             )}
+            {roadside ? (
+              <div className="pn-tl__roadside" data-testid="ride-roadside">
+                <span className="pn-tl__roadside-chip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 8v4l3 2" />
+                  </svg>
+                  Roadside advice
+                </span>
+                <span>{roadside.advice}</span>
+              </div>
+            ) : null}
             {fleet.classes.length > 0 ? (
               // Each vehicle class with its evidence label and date (not a nested list: the steps are the list).
               fleet.classes.map((c) => (
