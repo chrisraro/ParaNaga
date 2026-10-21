@@ -99,7 +99,7 @@ describe("planTrip: jeepney rides on free points (plan E §A, §D)", () => {
       board: { stopId: STOP_ID.Q2, name: "Synthetic Q2" }, alight: { stopId: STOP_ID.Q3 },
     });
     expect(r.distanceMeters).toBe(Math.round(r.alightMeasureM! - r.boardMeasureM!));
-    expect(r.stops.map((s) => s.id)).toEqual([STOP_ID.Q2]); // named pins passed (Q3 lies 20 m past the alight point)
+    expect(r.stops.map((s) => s.id)).toEqual([STOP_ID.Q2, STOP_ID.Q3]); // the named end pins (Q3, 20 m past the alight point, ends the ride)
     expect(o.id).toBe(`${LINE_VARIANT_ID}@${Math.round(r.boardMeasureM! / 10) * 10}-${Math.round(r.alightMeasureM! / 10) * 10}`);
     expect(r.fare).toMatchObject({ minCentavos: 1400, status: "estimate" });
     const [access, egress] = walkLegs(o);
