@@ -11,6 +11,7 @@ import {
   matchSavedTrip,
   takeCodePoints,
   findSavedPlace,
+  pinnedEndName,
   savePlacePrefill,
   historyEntrySchema,
   historyLine,
@@ -273,6 +274,15 @@ describe("matching saved places", () => {
     expect(savePlacePrefill({ source: "gps", label: "Your location" })).toBe("Pinned location");
     expect(savePlacePrefill({ source: "search", label: "Plaza Rizal (mapped pin)" })).toBe("Plaza Rizal");
     expect(savePlacePrefill({ source: "search", label: "SM City Naga" })).toBe("SM City Naga");
+  });
+
+  it("names a pinned trip end after the nearest stop within 300 m", () => {
+    const stops = [
+      { name: "Far Stop", lat: 13.6234, lng: 123.1866 },
+      { name: "Plaza Rizal", lat: 13.6234, lng: 123.1847 },
+    ];
+    expect(pinnedEndName({ lat: 13.6236, lng: 123.1848 }, stops)).toBe("Near Plaza Rizal");
+    expect(pinnedEndName({ lat: 13.64, lng: 123.2 }, stops)).toBe("Pinned location");
   });
 });
 

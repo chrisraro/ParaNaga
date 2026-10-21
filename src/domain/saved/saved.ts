@@ -13,6 +13,7 @@
 import { z } from "zod";
 import { planOptionSchema, planResponseSchema, toWireOption, type PlanOptionDto, type PlanResponse, type RideLegDto } from "../api/plan";
 import type { NetworkSnapshot } from "../api/schemas";
+import { haversineMeters } from "../geo/geometry";
 import type { LatLng } from "../geo/types";
 import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
@@ -428,6 +429,16 @@ export function samePoint(a: LatLng, b: LatLng): boolean {
 /** The saved place at this point, if any (Save ↔ Saved). */
 export function findSavedPlace<T extends { point: LatLng }>(places: readonly T[], point: LatLng): T | null {
   return places.find((p) => samePoint(p.point, point)) ?? null;
+}
+
+/** A pinned trip end's saved name: "Near <stop>" for the nearest named stop within 300 m, else "Pinned location". */
+export function pinnedEndName(point: LatLng, stops: readonly { name: string; lat: number; lng: number }[]): string {
+  let best: { name: string; d: number } | null = null;
+  for (const s of stops) {
+    const d = haversineMeters(point, s);
+    if (s.name && d <= 300 && (!best || d < best.d)) best = { name: s.name, d };
+  }
+  return best ? `Near ${best.name}` : "Pinned location";
 }
 
 /** Name offered when saving a trip end: its label, or "Pinned location" for a pin or a GPS fix. */
