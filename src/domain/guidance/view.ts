@@ -78,6 +78,9 @@ export const GUIDANCE_COPY = {
 export type GuidanceAction = { event: Exclude<GuidanceEvent["type"], "fix">; label: string; kind: "primary" | "secondary" };
 export type LiveMessage = { politeness: "polite" | "assertive"; text: string };
 
+/** A moment to get the rider's attention (vibration, notification); `key` is unique per step and kind. */
+export type Attention = { key: string; title: string; body: string };
+
 export type WalkView = {
   screen: "walk";
   stepKind: "walk_to_board" | "transfer" | "walk_to_destination";
@@ -98,6 +101,7 @@ export type WalkView = {
   /** Undo the last confirmation (a mis-tap); null when there is nothing to undo. */
   undo: GuidanceAction | null;
   live: LiveMessage;
+  attention: Attention | null;
   usesLocation: true;
 };
 
@@ -121,6 +125,7 @@ export type RideView = {
   /** Undo the last confirmation (a mis-tap); null when there is nothing to undo. */
   undo: GuidanceAction | null;
   live: LiveMessage;
+  attention: Attention | null;
   usesLocation: true;
 };
 
@@ -325,6 +330,7 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
     actions,
     undo: undoAction(session),
     live: { politeness: "polite", text: proposal ?? (progress ? `${spokenMeters(progress)} to ${targetName}, straight line` : title) },
+    attention: toDestination && progress?.nearTarget && proposal ? { key: `walk:${step.index}:near`, title: `You're near ${targetName}`, body: proposal } : null,
     usesLocation: true,
   };
 }
@@ -397,6 +403,12 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
     actions,
     undo: undoAction(session),
     live: para && !para.acknowledged ? { politeness: "assertive", text: GUIDANCE_COPY.paraTitle } : { politeness: "polite", text: title },
+    attention:
+      para && !para.acknowledged
+        ? { key: `ride:${step.index}:para`, title: para.title, body: para.body }
+        : !para && onPath && !onPath.offPath && onPath.getReady
+          ? { key: `ride:${step.index}:ready`, title: GUIDANCE_COPY.getReady(alight), body: GUIDANCE_COPY.paraBody(alight) }
+          : null,
     usesLocation: true,
   };
 }

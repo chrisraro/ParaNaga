@@ -193,4 +193,15 @@ self.addEventListener("message", (event) => {
   }
 });
 
+// A tap on the Para / arrival notification brings the running app forward (or opens it).
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => new URL(w.url).origin === self.location.origin);
+      return open ? open.focus() : self.clients.openWindow("/app");
+    }),
+  );
+});
+
 serwist.addEventListeners();
