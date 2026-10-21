@@ -15,8 +15,15 @@ import { LINES_FORMAT_VERSION } from "../api/lines-format";
 //    lines format version as well as the build; the walk graph too, 2 revisions because of its
 //    size), the published head (NetworkFirst, 2 s), and the
 //    reference reads (StaleWhileRevalidate, 200 entries, 30 days).
+//  - The router's segment prefetches of the static shells (GET with RSC, Next-Router-Prefetch and
+//    Next-Router-Segment-Prefetch): NetworkFirst, keyed by shell path + segment, the core ones
+//    stored at install. With experimental.useOffline a soft navigation whose route is not in the
+//    router's memory waits for the network forever; served from here, Search → pick → back to the
+//    map works offline, also after a cold start. Static prerenders: the same bytes for every query
+//    string and user. Other /app pages' segment prefetches: network, else a plain 503 offline.
 //  - Everything else is network-only and never touches a cache: POST /api/v1/plan (coordinates),
-//    /api/v1/stops?bbox=, /api/auth/**, /api/csp-report, RSC requests, /admin/**, /account/**,
+//    /api/v1/stops?bbox=, /api/auth/**, /api/csp-report, every other RSC request (dynamic
+//    renders, the router's connectivity HEAD, other paths), /admin/**, /account/**,
 //    and every cross-origin request (map tiles are never cached: MapTiler terms, no offline map).
 //  - Private data is excluded explicitly and first (isPrivateRequest): /api/v1/complaints/**,
 //    /api/v1/me/**, /api/v1/media/** and anything in the evidence-private bucket (task B8).
@@ -46,7 +53,7 @@ export const REFERENCE_MAX_AGE_S = 30 * 24 * 60 * 60;
 
 /** Every cache ParaNaga's worker creates starts with this; the build id is appended. */
 export const CACHE_PREFIX = "pn-";
-export const CACHE_KINDS = ["shell", "head", "snapshot", "search-index", "search-places", "lines", "walk-graph", "reference"] as const;
+export const CACHE_KINDS = ["shell", "rsc", "head", "snapshot", "search-index", "search-places", "lines", "walk-graph", "reference"] as const;
 export type CacheKind = (typeof CACHE_KINDS)[number];
 /** The per-revision data caches (CacheFirst; the revision is in the URL). */
 export type RevisionCache = "snapshot" | "search-index" | "search-places" | "lines" | "walk-graph";
@@ -58,6 +65,7 @@ export function revisionsKept(cache: RevisionCache): number {
 
 export type SwRoute =
   | { kind: "shell"; path: ShellPath }
+  | { kind: "rsc-prefetch"; path: ShellPath | null; segment: string }
   | { kind: "navigate" }
   | { kind: "cache-first"; cache: RevisionCache }
   | { kind: "network-first"; cache: "head" }
@@ -110,12 +118,43 @@ export function isRscRequest(info: Pick<SwRequestInfo, "url" | "headers">): bool
   return info.headers.get("RSC") === "1" || info.url.searchParams.has("_rsc") || info.headers.get("Next-Router-Prefetch") === "1";
 }
 
+/**
+ * A segment prefetch (the router's per-segment request) of an /app page, else network-only. Only
+ * a static shell's is stored (`path`): static prerenders, the same for every query string
+ * (?for=start and ?for=destination get the same bytes) and every user, tied to this build (the
+ * cache is too). Any other page's (`path` null) only gets a plain 503 instead of a network error
+ * when offline: a failed prefetch would put the router in its offline state, which holds every
+ * later prefetch and navigation until the connection returns.
+ */
+function rscPrefetchRoute(info: SwRequestInfo): SwRoute {
+  const path = info.url.pathname;
+  const segment = info.headers.get("Next-Router-Segment-Prefetch");
+  if (!segment || info.mode === "navigate" || info.headers.get("Next-Router-Prefetch") !== "1") return NETWORK_ONLY;
+  if (path !== "/app" && !path.startsWith("/app/")) return NETWORK_ONLY;
+  return { kind: "rsc-prefetch", path: shellFor(path), segment };
+}
+
+/** The Cache Storage key of a shell's segment prefetch (not `_rsc`: its hash also names the page it came from). */
+export function rscCacheKey(path: ShellPath, segment: string): string {
+  return `${path}?segment=${encodeURIComponent(segment)}`;
+}
+
+/**
+ * The segment prefetches stored at install (≈ 10 KB each), so the router can reach the core
+ * shells offline even when their prefetches ran before this worker controlled the page (the first
+ * visit). The route tree and the page segment of each static page; its layouts are in every page.
+ */
+export const RSC_WARM_PATHS = ["/app", "/app/search", "/app/saved", "/app/more", "/app/explore", "/app/help", "/app/mynaga", "/app/help/sources"] as const satisfies readonly ShellPath[];
+export function rscWarmSegments(path: ShellPath): string[] {
+  return ["/_tree", `${path}/__PAGE__`];
+}
+
 export function classifyRequest(info: SwRequestInfo): SwRoute {
   if (isPrivateRequest(info.url)) return NETWORK_ONLY; // driver reports, account data, evidence
   if (info.url.origin !== info.origin) return NETWORK_ONLY; // tiles and every other host
   if (info.method !== "GET") return NETWORK_ONLY; // POST /api/v1/plan, Server Actions, reports
   const path = info.url.pathname;
-  if (isRscRequest(info)) return NETWORK_ONLY;
+  if (isRscRequest(info)) return rscPrefetchRoute(info);
   if (info.mode === "navigate") {
     // Auth redirects (/api/auth/** callbacks), admin and account never pass through the worker.
     if (PRIVATE_SECTIONS.test(path) || path.startsWith("/api/")) return NETWORK_ONLY;
@@ -156,11 +195,11 @@ export function outdatedCaches(names: readonly string[], buildId: string): strin
 
 /**
  * What "Clear data on this device" deletes: every cache except the app code itself (Serwist's
- * precache of build assets, and the static shells), so the app still opens offline afterwards
+ * precache of build assets, the static shells and their segment prefetches), so the app still opens offline afterwards
  * but keeps no network data.
  */
 export function cachesToClear(names: readonly string[]): string[] {
-  return names.filter((n) => !n.includes("precache") && !n.startsWith(`${CACHE_PREFIX}shell-`));
+  return names.filter((n) => !n.includes("precache") && !n.startsWith(`${CACHE_PREFIX}shell-`) && !n.startsWith(`${CACHE_PREFIX}rsc-`));
 }
 
 /**

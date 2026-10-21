@@ -43,6 +43,13 @@ function HomeProbe() {
 }
 
 vi.mock("@/ui/home/home-screen", () => ({ HomeScreen: () => <HomeProbe /> }));
+// The frame prefetches the pages the code navigates to (offline soft navigation).
+const prefetched: string[] = [];
+const router = { prefetch: (href: string) => prefetched.push(href) };
+vi.mock("next/navigation", async (original) => ({
+  ...(await original<typeof import("next/navigation")>()),
+  useRouter: () => router,
+}));
 
 // Imported after the mock is registered (vi.mock is hoisted).
 const { AppFrame } = await import("@/ui/app-shell/app-frame");
@@ -75,6 +82,12 @@ afterEach(() => {
 });
 
 describe("AppFrame endpoint channel", () => {
+  it("prefetches the map, Search and Saved, which the code navigates to (so they open offline)", () => {
+    prefetched.length = 0;
+    render(<AppFrame>{null}</AppFrame>);
+    expect(prefetched).toEqual(["/app", "/app/search", "/app/saved"]);
+  });
+
   it("applies a destination request once, as a search endpoint with its label", () => {
     const { rerender } = render(
       <AppFrame>

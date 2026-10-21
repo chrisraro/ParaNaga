@@ -76,7 +76,7 @@ async function sheetIsUp(page: Page) {
 
 /**
  * Opens Search to pick `which` end. The bare map can only start with the destination ("Where to?");
- * once an end is set the sheet's row for `which` offers "Search places and stops".
+ * once an end is set, a tap on the sheet's row for `which` opens Search for that end.
  */
 export async function openSearch(page: Page, which: "start" | "destination" = "destination") {
   if (!(await sheetIsUp(page))) {
@@ -85,7 +85,7 @@ export async function openSearch(page: Page, which: "start" | "destination" = "d
     return;
   }
   await page.getByTestId(`endpoint-${which}`).locator(".pn-endpoint__main").click();
-  await page.getByTestId("endpoint-search").click();
+  await expect(page).toHaveURL(new RegExp(`/app/search\\?for=${which}`));
 }
 
 /**

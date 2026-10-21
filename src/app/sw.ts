@@ -11,7 +11,9 @@
 //  - data caches keyed by revision (in the URL) AND build id (in the cache name), so a deploy that
 //    changes a response shape never reads an old copy; no data is downloaded at install: the page
 //    hands over the copies it fetched before this worker controlled it (STORE_FETCHED_DATA);
-//  - everything else never touches a cache (POST /api/v1/plan, RSC, auth, admin, tiles).
+//  - the router's segment prefetches of those shells: NetworkFirst, stored per shell + segment,
+//    so soft navigations between them work offline (else useOffline holds them until online);
+//  - everything else never touches a cache (POST /api/v1/plan, other RSC, auth, admin, tiles).
 // A new worker waits until the app asks it to take over (the "Reload" card, never mid-guidance).
 import { CacheFirst, ExpirationPlugin, NetworkFirst, Serwist, StaleWhileRevalidate, type PrecacheEntry, type SerwistGlobalConfig, type SerwistPlugin } from "serwist";
 import {
@@ -28,7 +30,11 @@ import {
   REFERENCE_MAX_AGE_S,
   REFERENCE_MAX_ENTRIES,
   revisionsKept,
+  rscCacheKey,
+  RSC_WARM_PATHS,
+  rscWarmSegments,
   SHELL_PATHS,
+  type ShellPath,
   type RevisionCache,
   type SwRoute,
 } from "@/domain/pwa/sw-routes";
@@ -82,21 +88,65 @@ async function offlinePage(): Promise<Response> {
   return (await cachedShell(OFFLINE_PATH)) ?? Response.error();
 }
 
-/** NetworkFirst with a timeout for a static shell; its install-time copy when the network fails. */
-async function shellNavigation(request: Request, path: string): Promise<Response> {
-  // A failed fetch resolves to null (never an unhandled rejection, even after the timeout won).
-  const network = fetch(request).catch(() => null);
+/**
+ * NetworkFirst with a timeout: the network's answer if it comes in time, else the cached copy,
+ * else whatever the network ends up answering (null when it failed).
+ */
+async function networkFirst(network: Promise<Response | null>, cached: () => Promise<Response | undefined>): Promise<Response | null> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<null>((resolve) => {
     timer = setTimeout(() => resolve(null), NAVIGATION_TIMEOUT_S * 1000);
   });
   const first = await Promise.race([network, timeout]);
   clearTimeout(timer);
-  if (first) return first;
-  const cached = await cachedShell(path);
-  if (cached) return cached;
-  // No copy (should not happen after install): wait for the network after all, else /offline.
-  return (await network) ?? offlinePage();
+  return first ?? (await cached()) ?? (await network);
+}
+
+/** A static shell; its install-time copy when the network fails, else /offline. */
+async function shellNavigation(request: Request, path: string): Promise<Response> {
+  // A failed fetch resolves to null (never an unhandled rejection, even after the timeout won).
+  return (await networkFirst(fetch(request).catch(() => null), () => cachedShell(path))) ?? offlinePage();
+}
+
+const isFlight = (response: Response) => isCacheableResponse(response) && (response.headers.get("Content-Type") ?? "").startsWith("text/x-component");
+const rscKey = (path: ShellPath, segment: string) => new URL(rscCacheKey(path, segment), self.location.origin).href;
+/** Stored as a fresh response: served later, it carries the request's own URL, never "redirected". */
+const storeRsc = async (cache: Cache, key: string, response: Response) =>
+  cache.put(key, new Response(await response.arrayBuffer(), { status: response.status, headers: response.headers }));
+
+/**
+ * A segment prefetch of an /app page. A shell's (`path`) is stored when it arrives and served from
+ * the store when the network fails. With nothing stored, a plain 503 (not a network error): the
+ * router just skips that prefetch for a while instead of holding every navigation until online.
+ */
+async function rscPrefetch(request: Request, path: ShellPath | null, segment: string, event: ExtendableEvent | undefined): Promise<Response> {
+  const cache = await caches.open(cacheName("rsc", BUILD_ID));
+  const key = path ? rscKey(path, segment) : null;
+  const network = fetch(request).then(
+    (response) => {
+      if (key && isFlight(response)) event?.waitUntil(storeRsc(cache, key, response.clone()).catch(() => undefined));
+      return response;
+    },
+    () => null,
+  );
+  return (await networkFirst(network, async () => (key ? cache.match(key) : undefined))) ?? new Response(null, { status: 503 });
+}
+
+/**
+ * The core shells' segment prefetches of THIS build, best effort (an install never fails on them).
+ * Fetched without `_rsc`: the server redirects to the URL with the right one.
+ */
+async function cacheRscSegments(): Promise<void> {
+  const cache = await caches.open(cacheName("rsc", BUILD_ID));
+  await Promise.all(
+    RSC_WARM_PATHS.flatMap((path) =>
+      rscWarmSegments(path).map(async (segment) => {
+        const headers = { RSC: "1", "Next-Router-Prefetch": "1", "Next-Router-Segment-Prefetch": segment };
+        const response = await fetch(new Request(path, { headers, cache: "reload" })).catch(() => null);
+        if (response && isFlight(response)) await storeRsc(cache, rscKey(path, segment), response);
+      }),
+    ),
+  ).catch(() => undefined);
 }
 
 async function otherNavigation(request: Request): Promise<Response> {
@@ -126,6 +176,8 @@ const serwist = new Serwist({
         switch (route.kind) {
           case "shell":
             return shellNavigation(request, route.path);
+          case "rsc-prefetch":
+            return rscPrefetch(request, route.path, route.segment, options.event as ExtendableEvent | undefined);
           case "navigate":
             return otherNavigation(request);
           case "cache-first":
@@ -163,8 +215,9 @@ async function cacheShells(): Promise<void> {
 self.addEventListener("install", (event) => {
   // No data is downloaded at install (low-data friendly): the page hands over what it already
   // fetched before this worker controlled it (STORE_FETCHED_DATA below), and everything else is
-  // cached as it is used (the search index on the first search).
-  event.waitUntil(cacheShells());
+  // cached as it is used (the search index on the first search). Only app code: the shells and
+  // their segment prefetches (≈ 160 KB).
+  event.waitUntil(Promise.all([cacheShells(), cacheRscSegments()]));
 });
 
 /** Stores the page's copies of the head / snapshot / search index / lines / walk graph unless one is cached already. */

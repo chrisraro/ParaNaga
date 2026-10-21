@@ -4,6 +4,7 @@ import { SNAPSHOT, STOP_A1, routeNetwork, type NetworkCalls } from "./fixtures/n
 import { PROVISIONAL_PLAN } from "./fixtures/plan-responses";
 import { chooseOption, openSearch } from "./fixtures/options";
 import { showMapLayers } from "./fixtures/layers";
+import { shellFor } from "../../src/domain/pwa/sw-routes";
 
 // The PWA (Task 12) on the production build with the service worker ALLOWED: first visit online,
 // then context.setOffline(true) and cold loads. The API is answered by context routes (they also
@@ -195,7 +196,7 @@ test("Low-data mode: street paths download only on the tap, then stay stored (Ta
   await download.click();
   await expect(detail.locator("[data-path=street]").first()).toBeAttached();
   await expect(detail.getByTestId("walk-graph-offer")).toHaveCount(0);
-  await expect(detail.getByRole("heading", { name: "A Centro-Magsaysay Loop" })).toBeFocused();
+  await expect(detail.getByRole("heading", { name: "Centro-Magsaysay Loop A (clockwise)" })).toBeFocused();
   expect(calls.walkGraphs).toEqual([SNAPSHOT.revision.revisionId]);
   await expect
     .poll(async () => (await cacheEntries(page)).some((e) => e.url.endsWith(`/api/v1/network/walk-graph/${SNAPSHOT.revision.revisionId}`)))
@@ -319,6 +320,8 @@ test("positive control: a lines or walk-graph request made offline IS recorded, 
 
 test("route detail draws its path from the stored lines when the lines endpoint is unreachable (Task 15)", async ({ page, context }) => {
   await firstVisit(page);
+  // The lines load when map lines are shown (the Routes layer is off by default).
+  await showMapLayers(page, "Routes");
   await expect.poll(async () => (await page.evaluate(() => caches.keys())).some((n) => /^pn-lines-f\d+-/.test(n))).toBe(true);
   await context.route(/\/api\/v1\/network\/lines\//, (route) => abortRecorded(route));
   await page.goto("/app/routes/R1");
@@ -341,7 +344,10 @@ test("tap a stop offline: the panel says it opens when back online, the trip sta
   await expect(page.getByTestId("trip-options")).toBeVisible();
 });
 
-test("Cache Storage holds no plan, auth, RSC, admin or private response", async ({ page, context }) => {
+// RSC: only the static shells' segment prefetches are stored (offline soft navigation), in their own
+// cache, keyed by shell + segment. They are build-time prerenders, the same for every user and query
+// string: no personal data. A per-request page (the stop opened below) never is.
+test("Cache Storage holds no plan, auth, admin, private or per-request RSC response", async ({ page, context }) => {
   await firstVisit(page);
   await setEnds(page);
   await expect(page.getByTestId("trip-options")).toBeVisible();
@@ -358,7 +364,11 @@ test("Cache Storage holds no plan, auth, RSC, admin or private response", async 
     expect(url.searchParams.has("_rsc"), e.url).toBe(false);
     expect(url.search.includes("bbox"), e.url).toBe(false);
     expect(e.cacheControl ?? "", e.url).not.toMatch(/private|no-store/);
+    // A segment prefetch only in the RSC cache, only of a static shell.
+    expect(url.searchParams.has("segment"), e.url).toBe(e.cache.startsWith("pn-rsc-"));
+    if (e.cache.startsWith("pn-rsc-")) expect(shellFor(url.pathname), e.url).toBe(url.pathname);
   }
+  expect(entries.some((e) => e.cache.startsWith("pn-rsc-") && new URL(e.url).pathname === "/app/search")).toBe(true);
   const names = [...new Set(entries.map((e) => e.cache))];
   expect(names.some((n) => n.startsWith("pn-snapshot-"))).toBe(true);
   expect(entries.some((e) => e.url.endsWith(`/api/v1/network/snapshot/${SNAPSHOT.revision.revisionId}`))).toBe(true);

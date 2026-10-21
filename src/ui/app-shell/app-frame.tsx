@@ -13,6 +13,7 @@
 // endpoint channel (requestEndpoint / requestPick / requestGps) and requestTrip (reopen a saved trip),
 // each a numbered request applied once.
 
+import { useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
 import { NAGA_DEFAULT_CENTER } from "@/domain/geo/naga";
 import type { LatLng } from "@/domain/geo/types";
@@ -56,6 +57,15 @@ export function AppFrame({ children }: { children: ReactNode }) {
     setEntryPath(window.location.pathname);
     return () => setEntryPath(null);
   }, []);
+
+  // The pages the code navigates to (Search → back to the map, Saved → open a trip). Offline the
+  // links are plain anchors (no prefetch), and a soft navigation to a page the router has not
+  // prefetched waits for the network until it returns (experimental.useOffline); prefetched, it
+  // needs no request. Online the visible links prefetch them anyway; offline the worker answers.
+  const router = useRouter();
+  useEffect(() => {
+    for (const path of ["/app", "/app/search", "/app/saved"]) router.prefetch(path);
+  }, [router]);
 
   const openPanel = useCallback((kind: PanelKind = "detail") => {
     if (!returnFocus.current) returnFocus.current = captureOpener();

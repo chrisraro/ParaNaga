@@ -10,6 +10,9 @@ import {
   isCacheableResponse,
   outdatedCaches,
   revisionsKept,
+  rscCacheKey,
+  RSC_WARM_PATHS,
+  rscWarmSegments,
   shellFor,
   SHELL_PATHS,
   type SwRequestInfo,
@@ -115,12 +118,32 @@ describe("classifyRequest: never cached", () => {
     expect(classifyRequest(req("/api/csp-report", { method: "POST" }))).toEqual({ kind: "network-only" });
   });
 
-  it("RSC requests: ?_rsc= and the RSC / prefetch headers, even for a shell or a data path", () => {
+  it("RSC requests: ?_rsc= and the RSC / prefetch headers, unless a shell's segment prefetch", () => {
     expect(classifyRequest(req("/app/saved?_rsc=abc12"))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req("/app/saved", { headers: { RSC: "1" } }))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req("/app/explore", { headers: { RSC: "1", "Next-Router-Prefetch": "1" } }))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req("/app", { mode: "navigate", headers: { RSC: "1" } }))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req("/api/v1/sources", { headers: { RSC: "1" } }))).toEqual({ kind: "network-only" });
+  });
+
+  it("a static shell's segment prefetch is stored per shell + segment, whatever the query (offline soft navigation)", () => {
+    const seg = (path: string, segment: string, extra: Record<string, string> = {}, init: { method?: string; mode?: string } = {}) =>
+      classifyRequest(req(path, { ...init, headers: { RSC: "1", "Next-Router-Prefetch": "1", "Next-Router-Segment-Prefetch": segment, ...extra } }));
+    expect(seg("/app/search?for=start&_rsc=x1", "/_tree")).toEqual({ kind: "rsc-prefetch", path: "/app/search", segment: "/_tree" });
+    expect(seg("/app?_rsc=x2", "/app/__PAGE__", { "Next-Url": "/app/search" })).toEqual({ kind: "rsc-prefetch", path: "/app", segment: "/app/__PAGE__" });
+    expect(rscCacheKey("/app/search", "/app/search/__PAGE__")).toBe("/app/search?segment=%2Fapp%2Fsearch%2F__PAGE__");
+    // Another /app page's: never stored (path null), only answered with a 503 offline.
+    expect(seg("/app/stops/x?_rsc=x3", "/_tree")).toEqual({ kind: "rsc-prefetch", path: null, segment: "/_tree" });
+    expect(seg("/application?_rsc=x3", "/_tree")).toEqual({ kind: "network-only" });
+    expect(RSC_WARM_PATHS.every((p) => shellFor(p) === p)).toBe(true);
+    expect(rscWarmSegments("/app/search")).toEqual(["/_tree", "/app/search/__PAGE__"]);
+    // Not GET (the router's connectivity HEAD), a document, outside /app, or no segment header: network only.
+    expect(seg("/app/saved?_rsc=x4", "/_tree", {}, { method: "HEAD" })).toEqual({ kind: "network-only" });
+    expect(seg("/app/saved", "/_tree", {}, { mode: "navigate" })).toEqual({ kind: "network-only" });
+    expect(seg("/admin?_rsc=x5", "/_tree")).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req("/app/saved?_rsc=x6", { headers: { RSC: "1", "Next-Router-Segment-Prefetch": "/_tree" } }))).toEqual({ kind: "network-only" });
+    expect(cacheName("rsc", "b1")).toBe("pn-rsc-b1");
+    expect(outdatedCaches(["pn-rsc-b0", "pn-rsc-b1"], "b1")).toEqual(["pn-rsc-b0"]);
   });
 
   it("every cross-origin request, map tiles included", () => {
@@ -169,6 +192,8 @@ describe("cache names", () => {
     const lines = cacheName("lines", "b1");
     const walk = cacheName("walk-graph", "b1");
     expect(cachesToClear(["pn-shell-b1", lines, walk, "serwist-precache-v2-https://x/"])).toEqual([lines, walk]);
+    // The shells' segment prefetches are app code too.
+    expect(cachesToClear(["pn-rsc-b1", "pn-head-b1"])).toEqual(["pn-head-b1"]);
   });
 
   it("reads the build id from the precache manifest, with a stable hash fallback", () => {
