@@ -39,6 +39,8 @@ export const serverEnvSchema = z
     JEV_DAILY_BUDGET_REQUESTS: z.coerce.number().int().min(0).default(5000),
     AUTO_PUBLISH_ENABLED: flag,
     JEV_COMPLAINTS_ENABLED: flag,
+    // Private driver reports (N2). Off until a named complaint reviewer exists; see src/server/flags.ts.
+    DRIVER_REPORTS_ENABLED: flag,
     CRON_SECRET: z.preprocess(emptyToUndefined, z.string().min(32).optional()),
     // Google Places (New) suggestions, server only. On only when the key is set AND the switch is
     // exactly "true"; any other switch value means off (never an env error: a typo turns Places off).

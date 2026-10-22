@@ -381,6 +381,7 @@ JEV_POLICY_VERSION=paranaga-community-v1
 JEV_DAILY_BUDGET_REQUESTS=5000
 AUTO_PUBLISH_ENABLED=false
 JEV_COMPLAINTS_ENABLED=false   # on only after DPIA + OpenRouter zero-retention confirmed
+DRIVER_REPORTS_ENABLED=false   # on only once a named complaint reviewer exists (Q-B4)
 # Map (public)
 # Unset: OSM tiles outside production (dev/test only); no basemap in production.
 # Production (MapTiler): NEXT_PUBLIC_TILE_URL=https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=YOUR_KEY

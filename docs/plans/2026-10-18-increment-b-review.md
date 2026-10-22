@@ -109,7 +109,7 @@ API level:
 1. **Release order:** apply 0016-0020 together. B4 upload confirm is broken on production until 0018's `core.media_object` definer policies land.
 2. **CI `database` job on pull requests:** it is skipped on PRs today, so the five RLS suites first run after merge to master. Consider running it on PRs into master, or run it manually for this stack before merging.
 3. **Step-up OTP:** until it is built, complaint reviewers cannot work, and reporters download originals without step-up. Decide whether to keep reporter downloads open or gate them off until step-up exists.
-4. **Display copies:** spec §5.8 asks for re-encoded WebP (≤1600 px, `sharp`) and review before anything reaches `public-media`. This branch strips metadata but does not re-encode, and unreviewed correction photos still land in `public-media` (not served anywhere yet). Decide: (a) add `sharp` as a direct dependency and re-encode, and/or (b) keep correction evidence out of `public-media` until a reviewer approves it.
+4. **Display copies:** spec §5.8 asks for re-encoded WebP (≤1600 px, `sharp`) and review before anything reaches `public-media`. This branch strips metadata but does not re-encode, and unreviewed correction photos still land in `public-media` (not served anywhere yet). **Update 2026-10-22 (N2):** decided (b): verified uploads of every purpose now stay in the private `evidence-private` bucket (metadata still stripped for non-evidence images); `STORAGE_BUCKET_PUBLIC` is written only by the approval step (N6, not built). Re-encoding to WebP (a) stays open. Decide: (a) add `sharp` as a direct dependency and re-encode, and/or (b) keep correction evidence out of `public-media` until a reviewer approves it.
 5. **Corrections sent to Jev** as `kind: "community"` (masked free text). Confirm this is wanted.
 
 ## Minor backlog
@@ -125,7 +125,7 @@ API level:
 | Minor | `src/server/storage/adapter.ts:127-160` | The presigned PUT signs only `host`, so size and content-type are not enforced at upload. The HEAD check before buffering now limits the impact. | Presigned POST with `content-length-range`, or sign `content-length`/`content-type`. |
 | Minor | `src/server/media/service.ts` | No container parse for complaint videos (spec §5.8). Sniffing reads the first 12 bytes only. | Add an MP4/WebM box parse. Serve with `nosniff` and the right content-type. |
 | Minor | `src/domain/pwa/sw-routes.ts` `PRIVATE_DATA` | `community`, `corrections` and `auth` are protected only by the allow-list default. | Add them to the regex for defence in depth. |
-| Minor | `src/server/community/handlers.ts` (delete post/comment, unblock) | No rate limit on these DELETEs. | `mutationPerMinute`. |
+| Minor | `src/server/community/handlers.ts` (delete post/comment, unblock) | No rate limit on these DELETEs. | **Fixed in N2** (`mutationPerMinute`). |
 | Minor | `src/app/api/cron/jobs/route.ts:24` | `serverEnv()` runs outside the try, so a bad env gives a raw 500. | Move it inside the try. |
 | Minor | `src/server/adapters/jev/client.ts` | `JEV_DECISIONS_URL` accepts `http:`. `maskForAi` covers only emails, phones and plates. | Require https. Widen masking (handles, addresses). |
 | Minor | `src/ui/report/report-wizard.tsx:443`, `src/ui/report-driver/driver-report-wizard.tsx:543`, `src/ui/community/post-composer.tsx:269`, `src/ui/community/post-thread.tsx:508,580` | Field errors are announced (`role=alert`, they name the field) but have no `aria-invalid`/`aria-describedby`. | Link each error to its field. |

@@ -25,7 +25,7 @@ export function StatusChip({ tone, children }: { tone: ReportRow["tone"]; childr
 
 type State = { phase: "loading" } | { phase: "ready"; rows: ReportRow[] } | { phase: "error"; message: string };
 
-export function ReportsScreen() {
+export function ReportsScreen({ driverReports = false }: { driverReports?: boolean }) {
   const { user, loading } = useAuthSession();
   const [state, setState] = useState<State>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -71,8 +71,8 @@ export function ReportsScreen() {
         </p>
       ) : null}
       {state.phase === "error" ? (
-        <div className="pn-report__error" role="alert" data-testid="reports-error">
-          {state.message}
+        <div className="pn-report__error" data-testid="reports-error">
+          <p role="alert">{state.message}</p>
           <button
             type="button"
             className="pn-btn pn-btn--secondary pn-report__action"
@@ -109,7 +109,7 @@ export function ReportsScreen() {
         </ListGroup>
       ) : null}
       <div className="pn-reports__actions">
-        <Link href="/app/report-driver" className="pn-btn pn-btn--secondary pn-report__action">
+        <Link href={driverReports ? "/app/report-driver" : "/app/mynaga"} className="pn-btn pn-btn--secondary pn-report__action">
           Report a driver
         </Link>
       </div>

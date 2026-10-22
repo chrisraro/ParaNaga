@@ -80,16 +80,17 @@ function LocationIcon() {
 }
 
 /** The More tab page: the frame (large title) around the screen. */
-export function MorePage() {
+export function MorePage({ driverReports = false }: { driverReports?: boolean }) {
   const t = useT().settings;
   return (
     <PageFrame title={t.title} testId="more-page">
-      <MoreScreen />
+      <MoreScreen driverReports={driverReports} />
     </PageFrame>
   );
 }
 
-export function MoreScreen() {
+/** `driverReports`: private reports are live (N2); otherwise "Report a driver" opens MyNaga. */
+export function MoreScreen({ driverReports = false }: { driverReports?: boolean }) {
   const t = useT().settings;
   const prefs = usePrefs();
   const permission = useLocationPermission();
@@ -272,7 +273,11 @@ export function MoreScreen() {
 
       <ListGroup title={t.reports} testId="settings-reports">
         <ListCell title={t.myReports} sub={t.myReportsSub} href="/app/reports" testId="settings-my-reports" />
-        <ListCell title={t.reportDriver} sub={t.reportDriverSub} href="/app/report-driver" testId="settings-report-driver" />
+        {driverReports ? (
+          <ListCell title={t.reportDriver} sub={t.reportDriverSub} href="/app/report-driver" testId="settings-report-driver" />
+        ) : (
+          <ListCell title={t.reportDriver} href="/app/mynaga" testId="settings-report-driver" />
+        )}
       </ListGroup>
 
       <ListGroup title={t.about} testId="settings-about">

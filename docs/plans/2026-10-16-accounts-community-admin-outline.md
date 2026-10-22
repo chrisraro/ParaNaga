@@ -120,7 +120,7 @@ Every C task: e2e on the desktop Playwright project with axe (light/dark), integ
 | Q-B1 Sign-in methods | Email one-time code plus Google (passkey and Apple later) | 0.75 |
 | Q-B2 Sync | Signed-in users can opt in to sync saved items; default stays on the device | 0.91 |
 | Q-B3 Jev go-live | Triage community posts only, auto-publish off; never on driver complaints until the privacy impact assessment is done | 0.77 |
-| Q-B4 Driver reports | Launch only after a named complaint reviewer exists; until then hand off to MyNaga | 0.97 |
+| Q-B4 Driver reports | Launch only after a named complaint reviewer exists; until then hand off to MyNaga. Owner confirmed 2026-10-22; gated by `DRIVER_REPORTS_ENABLED` (default false, N2) | 0.97 |
 | Q-B6 Job scheduling | Vercel daily cron plus on-demand processing when an admin opens a queue (Jev abstained at 0.61; controller took the top choice) | 0.61 |
 | Q-C1 Face/plate redaction | Manual redaction by reviewers with in-browser box tools; no external provider | 0.77 |
 | Q-C2 Publishing | Single-reviewer publish while the team is small, with audit log and a configurable switch to two-person | 0.96 |
