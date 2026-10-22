@@ -4,6 +4,7 @@
 // private endpoints; nothing is stored on the phone and nothing is cached (no-store, and the
 // service worker never touches /api/v1/me/**).
 
+import { isStepUpRequiredBody } from "@/domain/auth/step-up";
 import { evidenceUrlResponseSchema, myComplaintsResponseSchema } from "@/domain/complaints/schemas";
 import { myCorrectionsResponseSchema } from "@/domain/corrections/schemas";
 import { mergeReports, type ReportRow } from "@/domain/reports/list";
@@ -64,11 +65,17 @@ export async function loadCorrection(id: string): Promise<Loaded<CorrectionDetai
 }
 
 /** The 60 s signed link to one of the caller's own evidence files (unredacted original). */
-export async function loadEvidenceUrl(complaintId: string, evidenceId: string): Promise<Loaded<string>> {
-  const r = await getJson(`/api/v1/me/complaints/${encodeURIComponent(complaintId)}/evidence/${encodeURIComponent(evidenceId)}`);
-  if (!r) return fail(null);
-  const parsed = evidenceUrlResponseSchema.safeParse(r.body);
-  return parsed.success ? { ok: true, data: parsed.data.url } : fail(r.status);
+export async function loadEvidenceUrl(complaintId: string, evidenceId: string): Promise<Loaded<string> | { ok: false; reason: "step_up" }> {
+  try {
+    const res = await fetch(`/api/v1/me/complaints/${encodeURIComponent(complaintId)}/evidence/${encodeURIComponent(evidenceId)}`, get);
+    const body: unknown = await res.json().catch(() => null);
+    // Originals need a fresh email code first (step-up, N3).
+    if (res.status === 403 && isStepUpRequiredBody(body)) return { ok: false, reason: "step_up" };
+    const parsed = evidenceUrlResponseSchema.safeParse(body);
+    return res.ok && parsed.success ? { ok: true, data: parsed.data.url } : fail(res.status);
+  } catch {
+    return fail(null);
+  }
 }
 
 export async function saveMyNagaSelfReport(complaintId: string, input: MyNagaSelfReport): Promise<Loaded<MyNagaHandoff>> {

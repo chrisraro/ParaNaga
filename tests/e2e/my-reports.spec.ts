@@ -45,8 +45,16 @@ const complaintDetail = (handoff: Handoff) => ({
   },
 });
 
-async function mockApi(page: Page, opts: { signedIn: boolean }) {
-  const state = { handoff: { submitted: false, submittedAt: null, reference: null } as Handoff, posted: [] as unknown[], evidenceCalls: 0 };
+async function mockApi(page: Page, opts: { signedIn: boolean; stepUp?: boolean }) {
+  const state = {
+    handoff: { submitted: false, submittedAt: null, reference: null } as Handoff,
+    posted: [] as unknown[],
+    evidenceCalls: 0,
+    // Step-up (N3): when on, the evidence link answers 403 step_up_required until a right code.
+    verified: !opts.stepUp,
+    codesSent: 0,
+    codesTried: [] as string[],
+  };
   await page.route(TILE_RE, (route) => route.abort());
   await routeNetwork(page);
   const json = (body: unknown, status = 200) => ({ status, contentType: "application/json", headers: PRIVATE_HEADERS, body: JSON.stringify(body) });
@@ -92,7 +100,21 @@ async function mockApi(page: Page, opts: { signedIn: boolean }) {
   );
   await page.route(`**/api/v1/me/complaints/${COMPLAINT_ID}/evidence/${EVIDENCE_ID}`, (route) => {
     state.evidenceCalls += 1;
+    if (!state.verified) {
+      return route.fulfill(json({ error: { code: "step_up_required", message: "Enter a new code from your email to continue.", requestId: "r" } }, 403));
+    }
     return route.fulfill(json({ url: "https://storage.example.net/evidence-private/x.jpg?X-Amz-Expires=60", expiresInSeconds: 60 }));
+  });
+  await page.route("**/api/v1/me/step-up/code", (route) => {
+    state.codesSent += 1;
+    return route.fulfill(json({ sent: true }));
+  });
+  await page.route("**/api/v1/me/step-up", (route) => {
+    const { code } = route.request().postDataJSON() as { code: string };
+    state.codesTried.push(code);
+    if (code !== "123456") return route.fulfill(json({ error: { code: "bad_request", message: "x", requestId: "r" } }, 400));
+    state.verified = true;
+    return route.fulfill(json({ verifiedUntil: "2026-10-22T06:00:00.000Z" }));
   });
   await page.route("https://storage.example.net/**", (route) => route.abort());
   await page.route(`**/api/v1/me/reports/complaint/${COMPLAINT_ID}/mynaga`, async (route) => {
@@ -254,6 +276,32 @@ test("handoff: copy summary, bystander gate on the evidence download, verified l
   await page.getByTestId("handoff-save").click();
   await expect(page.getByTestId("handoff-save-status")).toContainText("not marked as submitted");
   expect(state.posted.at(-1)).toEqual({ submitted: false });
+});
+
+test("step-up: an original download asks for a fresh email code first, then continues", async ({ page }) => {
+  const state = await mockApi(page, { signedIn: true, stepUp: true });
+  await page.goto(`/app/mynaga?report=${COMPLAINT_ID}`);
+  await page.getByTestId("handoff-ack").check();
+  await page.getByTestId("handoff-download-1").click();
+
+  const prompt = page.getByTestId("step-up");
+  await expect(prompt).toContainText("Confirm it's you");
+  await expect(page.getByTestId("handoff-download-status")).not.toContainText("downloading");
+  await page.getByTestId("step-up-send").click();
+  await expect(prompt).toContainText("We sent a code to your email");
+  expect(state.codesSent).toBe(1);
+
+  await page.getByTestId("step-up-code").fill("000000");
+  await page.getByTestId("step-up-verify").click();
+  await expect(page.getByTestId("step-up-error")).toContainText("That code did not work");
+
+  await page.getByTestId("step-up-code").fill("123456");
+  await page.getByTestId("step-up-verify").click();
+  await expect(prompt).toHaveCount(0);
+  await expect(page.getByTestId("handoff-download-status")).toContainText("File 1 is downloading");
+  expect(state.codesTried).toEqual(["000000", "123456"]);
+  expect(state.evidenceCalls).toBe(2);
+  await expectAxeClean(page);
 });
 
 test("a guest on the handoff is asked to sign in; without a report it is the plain guide", async ({ page }) => {

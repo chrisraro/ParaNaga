@@ -26,6 +26,10 @@ export const RATE_LIMITS = {
   mediaSlotPerHour: { prefix: "mslot:hour", windowSeconds: 3600, limit: 30 },
   /** Signed evidence links for the reporter's own files. */
   evidenceUrlPerHour: { prefix: "evidence:hour", windowSeconds: 3600, limit: 60 },
+  /** Step-up codes sent by email (spec 05 §5.6 "Auth OTP send": 5/hour/email). */
+  stepUpSendPerHour: { prefix: "stepup:send:hour", windowSeconds: 3600, limit: 5 },
+  /** Step-up code checks (Neon Auth also stops a code after 3 wrong tries). */
+  stepUpVerifyPerHour: { prefix: "stepup:verify:hour", windowSeconds: 3600, limit: 10 },
 } as const;
 
 /**

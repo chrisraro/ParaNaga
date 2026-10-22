@@ -7536,5 +7536,110 @@
     "en": "Route details",
     "fil": "Detalye ng ruta",
     "reviewed": "opus"
+  },
+  {
+    "key": "stepUp.title",
+    "en": "Confirm it's you",
+    "fil": "Kumpirmahin na ikaw ito",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.body",
+    "en": "Original files need a fresh code. We will email a one-time code to the address you sign in with.",
+    "fil": "Kailangan ng bagong code para sa mga orihinal na file. Magpapadala kami ng one-time code sa email na ginagamit mo sa pag-sign in.",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.send",
+    "en": "Email me a code",
+    "fil": "I-email ang code",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.sending",
+    "en": "Sending…",
+    "fil": "Ipinapadala…",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.sent",
+    "en": "We sent a code to your email. Enter it within a few minutes.",
+    "fil": "Nagpadala kami ng code sa email mo. Ilagay ito sa loob ng ilang minuto.",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.codeLabel",
+    "en": "Code from the email",
+    "fil": "Code mula sa email",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.verify",
+    "en": "Confirm",
+    "fil": "Kumpirmahin",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.verifying",
+    "en": "Checking…",
+    "fil": "Sinusuri…",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.resend",
+    "en": "Send a new code",
+    "fil": "Magpadala ng bagong code",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.cancel",
+    "en": "Cancel",
+    "fil": "Ikansela",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.verified",
+    "en": "Confirmed. This lasts 15 minutes on this device.",
+    "fil": "Nakumpirma. Tatagal ito nang 15 minuto sa device na ito.",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.badCode",
+    "en": "That code did not work. Check it, or ask for a new one.",
+    "fil": "Hindi gumana ang code na iyan. Suriin ito, o humingi ng bago.",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.rateLimited",
+    "en": "Too many tries. Wait a while, then try again.",
+    "fil": "Masyadong maraming subok. Maghintay muna, saka subukan ulit.",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.signedOut",
+    "en": "Sign in again to continue.",
+    "fil": "Mag-sign in ulit para magpatuloy.",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
+  },
+  {
+    "key": "stepUp.failed",
+    "en": "Something went wrong. Try again.",
+    "fil": "May nangyaring mali. Subukan ulit.",
+    "review": true,
+    "note": "N3 step-up prompt (draft by Claude, not yet reviewed). 'code' and 'one-time code' kept as everyday phone wording."
   }
 ]

@@ -12,8 +12,9 @@ import {
   type ComplaintReceipt,
 } from "@/domain/complaints/schemas";
 import { routeComplaint } from "@/domain/complaints/status";
-import { ApiProblem, authedRoute, badRequest, CACHE, notFound, readJsonBody, tooManyRequests } from "@/server/api/http";
+import { ApiProblem, authedRoute, badRequest, CACHE, notFound, readJsonBody, stepUpRequired, tooManyRequests } from "@/server/api/http";
 import { authorize } from "@/server/auth/authorize";
+import { applyStepUp, currentStepUpKey, isStepUpError } from "@/server/auth/step-up";
 import { withRequestContext } from "@/server/db/context";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
 import { driverReportsEnabled } from "@/server/flags";
@@ -170,20 +171,32 @@ export function listMyComplaints(request: Request): Promise<Response> {
 /**
  * GET /api/v1/me/complaints/[id]/evidence/[evidenceId]: a 60 s signed link to one of the caller's
  * own evidence files. Someone else's report, a bad id and a missing file all answer the same 404.
+ * A fresh step-up is required first (403 step_up_required otherwise), before any lookup.
  * The issuance is recorded in priv.evidence_access by the definer function before signing.
  */
 export function getMyEvidenceUrl(request: Request, complaintId: string, evidenceId: string): Promise<Response> {
   return privateRoute(request, "me-complaint-evidence", async (requestId) => {
     const user = await authorize("complaint.submit");
     if (!UUID_RE.test(complaintId) || !UUID_RE.test(evidenceId)) throw notFound("Not found.");
-    const found = await withRequestContext({ userId: user.id, requestId }, async (db) => {
-      if (!(await checkRateLimit(db, request, RATE_LIMITS.evidenceUrlPerHour, user.id))) return "rate_limited" as const;
-      const res = await db.execute<{ bucket: string; object_key: string }>(sql`
-        select bucket, object_key from priv.my_evidence_download(${complaintId}::uuid, ${evidenceId}::uuid)
-      `);
-      return res.rows[0] ?? null;
-    });
+    const stepUpKey = await currentStepUpKey(user.id);
+    let found: { bucket: string; object_key: string } | "rate_limited" | "step_up" | null;
+    try {
+      found = await withRequestContext({ userId: user.id, requestId }, async (db) => {
+        if (!(await checkRateLimit(db, request, RATE_LIMITS.evidenceUrlPerHour, user.id))) return "rate_limited" as const;
+        // Step-up (spec 05 §5.4/§5.8): set app.step_up_at in this same transaction; the definer
+        // function repeats the check (priv.require_step_up) and fails closed.
+        if (!(await applyStepUp(db, stepUpKey))) return "step_up" as const;
+        const res = await db.execute<{ bucket: string; object_key: string }>(sql`
+          select bucket, object_key from priv.my_evidence_download(${complaintId}::uuid, ${evidenceId}::uuid)
+        `);
+        return res.rows[0] ?? null;
+      });
+    } catch (error) {
+      if (isStepUpError(error)) throw stepUpRequired();
+      throw error;
+    }
     if (found === "rate_limited") throw tooManyRequests();
+    if (found === "step_up") throw stepUpRequired();
     if (!found) throw notFound("Not found.");
     const url = await getStorage().createPresignedDownload(found.bucket, found.object_key, EVIDENCE_URL_TTL_S);
     return json(evidenceUrlResponseSchema.parse({ url, expiresInSeconds: EVIDENCE_URL_TTL_S }), requestId);

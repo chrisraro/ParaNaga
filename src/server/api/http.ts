@@ -28,6 +28,8 @@ export class ApiProblem extends Error {
 export const badRequest = (message: string) => new ApiProblem(400, "bad_request", message);
 export const unauthorized = (message: string = "Sign in to continue.") => new ApiProblem(401, "unauthorized", message);
 export const forbidden = (message: string = "You are not allowed to do this.") => new ApiProblem(403, "forbidden", message);
+/** The caller is signed in but must verify a fresh email code first (step-up, spec 05 §5.4). */
+export const stepUpRequired = () => new ApiProblem(403, "step_up_required", "Enter a new code from your email to continue.");
 export const notFound = (message: string) => new ApiProblem(404, "not_found", message);
 export const unavailable = (message: string) => new ApiProblem(503, "unavailable", message);
 export const payloadTooLarge = (message: string) => new ApiProblem(413, "payload_too_large", message);

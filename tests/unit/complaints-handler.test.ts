@@ -22,6 +22,11 @@ const state = vi.hoisted(() => ({
   authorized: [] as string[],
   jev: 0,
   signed: [] as { bucket: string; key: string; ttl: number }[],
+  // Step-up (N3): what core.step_up_apply returns for this session, the Neon Auth session id, and
+  // whether the definer function itself refuses (priv.require_step_up raising 42501).
+  stepUpAt: null as Date | null,
+  sessionId: "sess-1" as string | null,
+  dbRefusesStepUp: false,
 }));
 
 const text = (q: unknown): string =>
@@ -45,6 +50,9 @@ vi.mock("@/server/adapters/jev/client", () => ({
       return { status: "unavailable", reason: "x" };
     },
   }),
+}));
+vi.mock("@/server/auth/session", () => ({
+  getAuthSession: async () => (state.user ? { userId: state.user.id, sessionId: state.sessionId, email: "a@example.com" } : null),
 }));
 vi.mock("@/server/storage/adapter", () => ({
   getStorage: () => ({
@@ -75,8 +83,17 @@ vi.mock("@/server/db/context", () => ({
           if (fail) throw Object.assign(new Error("Failed query"), { cause: fail });
           return { rows: [{ id: COMPLAINT_ID, public_ref: p[1], category: p[2], status: "submitted", submitted_at: "2026-10-18T01:00:00Z" }] };
         }
+        if (t.includes("core.step_up_apply")) {
+          state.calls.push("step-up");
+          return { rows: [{ at: state.stepUpAt }] };
+        }
+        if (t.includes("set_config('app.step_up_at'")) {
+          state.calls.push("step-up-clear");
+          return { rows: [] };
+        }
         if (t.includes("priv.my_evidence_download")) {
           state.calls.push("evidence");
+          if (state.dbRefusesStepUp) throw Object.assign(new Error("Failed query"), { cause: { code: "42501", message: "step-up required" } });
           // The definer function answers only the reporter of that complaint.
           return state.owned.get(String(p[0])) === ctx.userId
             ? { rows: [{ bucket: "evidence-private", object_key: "complaint_evidence/ab/abc.jpg" }] }
@@ -156,6 +173,9 @@ beforeEach(() => {
   state.authorized = [];
   state.jev = 0;
   state.signed = [];
+  state.stepUpAt = new Date(Date.now() - 60_000);
+  state.sessionId = "sess-1";
+  state.dbRefusesStepUp = false;
   logged = [];
   const capture = (...args: unknown[]) => void logged.push(args.map(String).join(" "));
   vi.spyOn(console, "error").mockImplementation(capture);
@@ -298,6 +318,51 @@ describe("GET /api/v1/me/complaints/[id]/evidence/[evidenceId]", () => {
     state.rateLimited = true;
     await expectError(await evidence(), 429, "too_many_requests");
     expect(state.signed).toEqual([]);
+  });
+
+  describe("step-up (N3)", () => {
+    it("without a verification: 403 step_up_required, before any evidence lookup", async () => {
+      state.stepUpAt = null;
+      await expectError(await evidence(), 403, "step_up_required");
+      expect(state.calls).toEqual(["rate", "step-up"]);
+      expect(state.signed).toEqual([]);
+    });
+
+    it("the same answer for someone else's evidence (no existence leak)", async () => {
+      state.stepUpAt = null;
+      state.owned = new Map([[COMPLAINT_ID, "someone-else"]]);
+      await expectError(await evidence(), 403, "step_up_required");
+    });
+
+    it("fresh: sets app.step_up_at first, in the same transaction as the evidence query", async () => {
+      state.stepUpAt = new Date(Date.now() - 14 * 60_000);
+      const res = await evidence();
+      expect(res.status).toBe(200);
+      expect(state.calls).toEqual(["rate", "step-up", "evidence"]);
+      // One transaction (one context): the key passed is a sha256 of the session id, never the id.
+      const apply = state.queries.find((q) => q.text.includes("core.step_up_apply"))!;
+      expect(apply.userId).toBe(OWNER.id);
+      expect(String(apply.params[0])).toMatch(/^[0-9a-f]{64}$/);
+      expect(String(apply.params[0])).not.toContain("sess-1");
+    });
+
+    it("stale (over 15 minutes): step-up required again", async () => {
+      state.stepUpAt = new Date(Date.now() - 16 * 60_000);
+      await expectError(await evidence(), 403, "step_up_required");
+      expect(state.calls).not.toContain("evidence");
+    });
+
+    it("no session id from Neon Auth: never passes, and the setting is cleared", async () => {
+      state.sessionId = null;
+      await expectError(await evidence(), 403, "step_up_required");
+      expect(state.calls).toEqual(["rate", "step-up-clear"]);
+    });
+
+    it("the database gate refusing (priv.require_step_up) also answers step_up_required", async () => {
+      state.dbRefusesStepUp = true;
+      await expectError(await evidence(), 403, "step_up_required");
+      expect(state.signed).toEqual([]);
+    });
   });
 });
 
