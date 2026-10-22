@@ -11,10 +11,11 @@ import { gzipSync } from "node:zlib";
 import pg from "pg";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { apiErrorSchema, searchIndexSchema, sourceListSchema, terminalDetailSchema } from "@/domain/api/schemas";
+import { apiErrorSchema, searchIndexSchema, searchPlacesSchema, sourceListSchema, terminalDetailSchema } from "@/domain/api/schemas";
 import { runInRequestContext } from "@/server/db/run-in-context";
 import { getPool } from "@/server/db/client";
 import { GET as searchIndexGET } from "@/app/api/v1/network/search-index/[revisionId]/route";
+import { GET as searchPlacesGET } from "@/app/api/v1/network/search-places/[revisionId]/route";
 import { GET as snapshotGET } from "@/app/api/v1/network/snapshot/[revisionId]/route";
 import { GET as linesGET } from "@/app/api/v1/network/lines/[revisionId]/route";
 import { GET as terminalGET } from "@/app/api/v1/terminals/[code]/route";
@@ -185,12 +186,18 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     expect(index.studyLabels).toHaveLength(32);
     expect(index.terminals).toHaveLength(16);
     expect(index.routes).toHaveLength(13);
-    // Derived from the revision (every place member is in the index), not a magic number: the core
-    // categories grew in Task 14 and the real snapshot grows with each refresh.
+    // Derived from the revision, not a magic number. Since Task 14 the first-paint index carries only
+    // the core (D10) categories; every other place member is in the lazy search-places chunk, so
+    // together the two hold every place member exactly once.
     const placeMembers = await owner.query<{ n: number }>(
       "select count(*)::int as n from transit.revision_member where revision_id = $1 and entity_kind = 'place'", [revisionId]);
     expect(placeMembers.rows[0]!.n).toBeGreaterThan(0);
-    expect(index.osmPlaces).toHaveLength(placeMembers.rows[0]!.n);
+    const lazy = searchPlacesSchema.parse(
+      await (await searchPlacesGET(get(`/network/search-places/${revisionId}`), ctx({ revisionId }))).json());
+    expect(index.osmPlaces.length).toBeGreaterThan(0);
+    expect(lazy.places.length).toBeGreaterThan(0);
+    expect(index.osmPlaces.length + lazy.places.length).toBe(placeMembers.rows[0]!.n);
+    expect(new Set([...index.osmPlaces, ...lazy.places].map((p) => p.key)).size).toBe(placeMembers.rows[0]!.n);
     expect(index.destinationCategories).toHaveLength(5);
     expect(index.feederLeads).toHaveLength(5);
     expect(index.legacyNames).toHaveLength(6);

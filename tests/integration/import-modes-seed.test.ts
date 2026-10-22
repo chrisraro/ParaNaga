@@ -178,7 +178,10 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
     expect(kinds(after, "stop_point")).toEqual(kinds(previous, "stop_point"));
     // Carried by id: every previous route member is still there; two feeder routes are added.
     expect(kinds(after, "route")).toEqual(expect.arrayContaining(kinds(previous, "route")));
-    expect(kinds(after, "route")).toHaveLength(kinds(previous, "route").length + 2);
+    // A start revision that predates the seed gains the two feeder routes and seven fare rules; once the
+    // start already holds a modes seed (main, after later imports) the same ids are carried, nothing new.
+    const startHasModes = kinds(previous, "route_vehicle_class").length > 0;
+    expect(kinds(after, "route")).toHaveLength(kinds(previous, "route").length + (startHasModes ? 0 : 2));
     expect(kinds(after, "terminal")).toHaveLength(16);
     expect(kinds(after, "route_vehicle_class")).toHaveLength(15);
     expect(kinds(after, "route_cooperative")).toHaveLength(7);
@@ -186,14 +189,16 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
     expect(kinds(after, "route_fare_observation")).toHaveLength(2);
     expect(kinds(after, "regional_service")).toHaveLength(7);
     expect(kinds(after, "route_alias")).toHaveLength(9);
-    expect(kinds(after, "fare_rule")).toHaveLength(kinds(previous, "fare_rule").length + 7);
-    if (result.modes?.outcome === "committed") {
+    expect(kinds(after, "fare_rule")).toHaveLength(kinds(previous, "fare_rule").length + (startHasModes ? 0 : 7));
+    if (result.modes?.outcome === "committed" && !startHasModes) {
       expect(result.modes.counts).toMatchObject({ carried_members: previous.length - 3 - 6, seed_members: after.length - previous.length + 9 });
     }
 
     const revision = await asImport(async (c) => (await c.query(
       "select status, parent_revision_id, content_hash from transit.revision where id = $1", [revisionId])).rows[0]);
-    expect(revision).toMatchObject({ status: "published", parent_revision_id: startRevisionId });
+    expect(revision).toMatchObject({ status: "published" });
+    // Only a revision this run created is a child of the start revision; an earlier import has its own parent.
+    if (result.modes?.outcome === "committed") expect(revision).toMatchObject({ parent_revision_id: startRevisionId });
     // The stops, routes and snapshot read the same ids as before (128 stops on the real data).
     expect(await appRows(sql`select count(*)::int as n from transit.v_published_stops`)).toEqual([{ n: 128 }]);
   });
@@ -268,8 +273,12 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
     ]);
     expect(await appRows(sql`select 1 from ingest.source where code = 'N09'`)).toEqual([]);
     // One register per batch: a revised seed of the same date records its conflicts again.
-    const conflicts = await appRows(sql`select count(distinct refs)::int as n from ingest.conflict where kind = 'research_conflict'`);
-    expect(conflicts).toEqual([{ n: 10 }]);
+    // Every conflict the reviewed seed lists is recorded by the batch that wrote LABEL (the count follows the file).
+    const expectedConflicts = buildImportPlan(files, null, realSeed).modes!.counts.research_conflicts;
+    const conflicts = await asImport(async (c) => (await c.query<{ n: number }>(
+      `select count(distinct k.refs)::int as n from ingest.conflict k join ingest.batch b on b.id = k.batch_id
+        where k.kind = 'research_conflict' and b.counts->>'revision_label' = $1`, [LABEL])).rows);
+    expect(conflicts).toEqual([{ n: expectedConflicts }]);
     // No cooperative chair name is stored: the conflict text only says the names are swapped.
     const cx01 = await appRows(sql`select detail->>'description' as d from ingest.conflict where refs = '{CX01}'`);
     expect(String(cx01[0]?.d)).toMatch(/Names are not stored/);
@@ -291,10 +300,18 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
          from transit.revision_member m join transit.terminal t on t.id = m.entity_id
         where m.revision_id = $1 and m.entity_kind = 'terminal' and t.code = 'T01'`, [revisionId])).rows);
     const modesId = (await revisionIdOf(LABEL))!;
-    expect(await legacy(startRevisionId)).toEqual([{ is_legacy: true, legacy_geog_null: true, version_geog_null: null }]);
+    // The newest real revision that still reads T01 through the legacy row (the start revision on fresh
+    // data; on main, once later imports carry the seed's terminal versions, the last one before it).
+    const oldId = (await owner.query<{ id: string }>(
+      `select r.id from transit.revision r
+         join transit.revision_member m on m.revision_id = r.id and m.entity_kind = 'terminal'
+         join transit.terminal t on t.id = m.entity_id and t.code = 'T01'
+        where not r.is_synthetic and m.version_id = m.entity_id and r.label not like '%-2099-%'
+        order by r.seq desc limit 1`)).rows[0]!.id;
+    expect(await legacy(oldId)).toEqual([{ is_legacy: true, legacy_geog_null: true, version_geog_null: null }]);
     expect(await legacy(modesId)).toEqual([{ is_legacy: false, legacy_geog_null: true, version_geog_null: false }]);
 
-    await publish(startRevisionId);
+    await publish(oldId);
     expect(await appRows(sql`select label from transit.v_published_revision`)).not.toEqual([{ label: LABEL }]);
     expect(await appRows(sql`select lat from transit.v_published_terminals where code = 'T01'`)).toEqual([{ lat: null }]);
     const rerun = await commitImport(ownerUrl!, buildImportPlan(files, null, realSeed));
