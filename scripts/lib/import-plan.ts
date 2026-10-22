@@ -10,10 +10,10 @@ import { sha256Hex } from "../../src/domain/import/hash";
 import {
   buildSnapshot,
   EXPECTED_LAYER_COUNTS,
-  toRawFeatureRow,
+  planRawFeatures,
   withIdentities,
   type IdentifiedStop,
-  type RawFeatureRow,
+  type PlannedRawFeature,
 } from "../../src/domain/import/mapped-stops";
 import { parseOsmPlaces, type OsmDropReason, type OsmPlace, type OsmSnapshotHeader } from "../../src/domain/import/osm-places";
 import { provisionalLoopSequence, type LoopSequenceItem } from "../../src/domain/import/provisional-loops";
@@ -36,6 +36,8 @@ import type { RoadsSnapshot } from "./roads-snapshot";
 export { MODES_DIR, readNewestModesSeed, type ModesFile, type ModesPlan } from "./modes-plan";
 export { readPinnedRoadsSnapshot, ROADS_DIR, type RoadsSnapshot } from "./roads-snapshot";
 export type { LinesPlan } from "./lines-plan";
+// Shared with the admin import screen (src/domain/admin/imports.ts, N5b): one parser path.
+export { planRawFeatures, type PlannedRawFeature } from "../../src/domain/import/mapped-stops";
 
 export const DATA_FILES = [
   "naga_mapped_stops_source.kml",
@@ -61,12 +63,6 @@ export type DocumentRow = {
   /** Only the KML is the source export itself (S40); the rest are research-package files. */
   sourceCode: string | null;
   retrievedOn: string | null;
-};
-
-export type PlannedRawFeature = RawFeatureRow & {
-  coordinatesRaw: string;
-  /** stop_point.name: the verbatim label, or the verbatim code when the label is empty. Never invented. */
-  stopName: string;
 };
 
 export type VariantDirection = "inbound" | "outbound" | "circuit" | "clockwise" | "counterclockwise";
@@ -378,18 +374,6 @@ export function buildImportPlan(
 
 const MODES_SEED_FILES = "data/source/research/naga-modes-seed-*.json";
 
-/** Raw feature rows; a record without verbatim coordinate text is a problem, not a row. */
-export function planRawFeatures(identified: IdentifiedStop[], problems: string[]): PlannedRawFeature[] {
-  const out: PlannedRawFeature[] = [];
-  for (const r of identified) {
-    if (r.coordinatesRaw === null) {
-      problems.push(`${r.sourceLayer}/${r.code}: no verbatim coordinate text`);
-      continue;
-    }
-    out.push({ ...toRawFeatureRow(r), coordinatesRaw: r.coordinatesRaw, stopName: r.label.trim() === "" ? r.code : r.label });
-  }
-  return out;
-}
 
 /**
  * The only public_stop_map fields that may be published (spec 04 §4.7 step 8): the map owner's

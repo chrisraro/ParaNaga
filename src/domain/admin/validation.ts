@@ -20,7 +20,24 @@ export type ValidationFacts = {
   dbCheck: { ok: true } | { ok: false; code: string; message: string };
   /** isSynthetic null: the member's row does not exist. */
   members: { kind: string; code: string; isSynthetic: boolean | null }[];
-  stops: { stopPointId: string; layer: string | null; code: string | null; name: string; lat: number; lng: number }[];
+  /**
+   * Since 0024 (N5b) each stop also carries its status, curb side, the evidence claims linked to
+   * its version, the metres it moved since the parent revision's version (null: same version or
+   * new), and whether a member variant's stop order uses it.
+   */
+  stops: {
+    stopPointId: string;
+    layer: string | null;
+    code: string | null;
+    name: string;
+    lat: number;
+    lng: number;
+    status: string;
+    curbSide: string | null;
+    evidenceClaims: string[];
+    movedM: number | null;
+    inSequence: boolean;
+  }[];
   terminals: { code: string; lat: number; lng: number }[];
   variants: {
     ref: string;
@@ -37,6 +54,12 @@ export type ValidationFacts = {
 
 export type Severity = "error" | "warning";
 
+/**
+ * A stop that moved farther than this between the parent revision and this one is flagged: its
+ * approximate path's stop measure is stale and riders' saved trips point at the old spot.
+ */
+export const STOP_MOVED_FLAG_M = 50;
+
 export const RULES = {
   synthetic: { title: "Synthetic (test) rows", severity: "error" },
   missing_member: { title: "Members whose row is missing", severity: "error" },
@@ -51,6 +74,11 @@ export const RULES = {
   source_code_collision: { title: "Two stops with the same source layer and code", severity: "kind" },
   missing_fare_evidence: { title: "Variant with no fare evidence for its route", severity: "kind" },
   disconnected_shape: { title: "Disconnected path (trace not continuous)", severity: "kind" },
+  // N5b (C3): the stop review data of migration 0024.
+  promoted_without_evidence: { title: "Stop promoted beyond candidate with no evidence linked", severity: "kind" },
+  curb_without_evidence: { title: "Curb side recorded without curb position evidence", severity: "kind" },
+  retired_stop_in_sequence: { title: "Retired stop still in a route's stop order", severity: "error" },
+  stop_moved_far: { title: `Stop moved more than ${STOP_MOVED_FLAG_M} m since the published revision`, severity: "warning" },
 } as const satisfies Record<string, { title: string; severity: Severity | "kind" }>;
 
 export type RuleId = keyof typeof RULES;
@@ -60,7 +88,7 @@ export const DEFERRED_RULES = [
   {
     id: "opposite_direction_boarding",
     title: "Opposite-direction boarding",
-    reason: "Needs curb sides and reviewed directed shapes (C3, C4); no stop has a curb side yet.",
+    reason: "Needs reviewed directed shapes (C4); curb sides can be recorded now (C3) but no shape is reviewed yet.",
   },
   {
     id: "disruption_without_expiry",
@@ -99,6 +127,9 @@ const inBbox = (lat: number, lng: number) =>
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
 type Found = { rule: RuleId; ref: string; message: string };
+
+/** Statuses that claim more than a source pin (spec 04 §4.6). */
+const PROMOTED = new Set(["documentary", "installed", "field_verified", "published"]);
 
 function findings(facts: ValidationFacts): Found[] {
   const out: Found[] = [];
@@ -171,6 +202,22 @@ function findings(facts: ValidationFacts): Found[] {
 
   for (const v of facts.variants) {
     if (!v.hasFareEvidence) out.push({ rule: "missing_fare_evidence", ref: v.ref, message: "No fare rule for the route's mode and no reported fare for the route." });
+  }
+
+  for (const s of facts.stops) {
+    const ref = `stop ${s.layer ?? ""} ${s.code ?? s.name}`.replace(/\s+/g, " ").trim();
+    if (PROMOTED.has(s.status) && s.evidenceClaims.length === 0) {
+      out.push({ rule: "promoted_without_evidence", ref, message: `The stop is ${s.status.replace(/_/g, " ")} but no evidence is linked to it.` });
+    }
+    if (s.curbSide && s.curbSide !== "unknown" && !s.evidenceClaims.includes("curb_position")) {
+      out.push({ rule: "curb_without_evidence", ref, message: `Curb side ${s.curbSide.replace(/_/g, " ")} has no curb position evidence.` });
+    }
+    if (s.status === "retired" && s.inSequence) {
+      out.push({ rule: "retired_stop_in_sequence", ref, message: "A route's stop order still uses this retired stop." });
+    }
+    if (s.movedM !== null && s.movedM > STOP_MOVED_FLAG_M) {
+      out.push({ rule: "stop_moved_far", ref, message: `Moved ${Math.round(s.movedM)} m; check its route's approximate path and the reason given.` });
+    }
   }
   return out;
 }

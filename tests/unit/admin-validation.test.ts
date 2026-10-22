@@ -7,6 +7,8 @@ import { DEFERRED_RULES, ISSUES_PER_RULE, RULES, severityOf, validateRevision, t
 const REV = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a99";
 const STOP_A = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a01";
 const STOP_B = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a02";
+// The stop fields 0024 (N5b) added, at their neutral values.
+const S = { status: "candidate", curbSide: null, evidenceClaims: [] as string[], movedM: null, inSequence: false };
 
 function facts(over: Partial<ValidationFacts> = {}, kind: "provisional" | "verified" = "provisional"): ValidationFacts {
   return {
@@ -17,7 +19,7 @@ function facts(over: Partial<ValidationFacts> = {}, kind: "provisional" | "verif
       { kind: "route", code: "R8-A", isSynthetic: false },
       { kind: "stop_point", code: "Loop Service A A1", isSynthetic: false },
     ],
-    stops: [{ stopPointId: STOP_A, layer: "Loop Service A", code: "A1", name: "Plaza Rizal", lat: 13.6233869, lng: 123.1846726 }],
+    stops: [{ ...S, stopPointId: STOP_A, layer: "Loop Service A", code: "A1", name: "Plaza Rizal", lat: 13.6233869, lng: 123.1846726 }],
     terminals: [{ code: "T01", lat: 13.62, lng: 123.19 }],
     variants: [
       { ref: "R8-A clockwise", kind: "permanent", trialStatus: null, effectiveFrom: null, trialDurationDays: null, evidenceLevel: "provisional", hasFareEvidence: true },
@@ -57,7 +59,7 @@ describe("validateRevision", () => {
 
   it("flags stops and terminals outside the service area", () => {
     const f = facts({
-      stops: [{ stopPointId: STOP_A, layer: "L", code: "A1", name: "n", lat: 14.6, lng: 121.0 }],
+      stops: [{ ...S, stopPointId: STOP_A, layer: "L", code: "A1", name: "n", lat: 14.6, lng: 121.0 }],
       terminals: [{ code: "T99", lat: 13.1, lng: 123.7 }],
     });
     expect(validateRevision(f).issues.map((i) => [i.rule, i.ref])).toEqual([
@@ -98,8 +100,8 @@ describe("validateRevision", () => {
   it("source-code collisions, missing fare evidence and disconnected paths: warnings when provisional, errors when verified", () => {
     const over: Partial<ValidationFacts> = {
       stops: [
-        { stopPointId: STOP_A, layer: "Loop Service C", code: "C12", name: "a", lat: 13.62, lng: 123.18 },
-        { stopPointId: STOP_B, layer: "Loop Service C", code: "C12", name: "b", lat: 13.63, lng: 123.18 },
+        { ...S, stopPointId: STOP_A, layer: "Loop Service C", code: "C12", name: "a", lat: 13.62, lng: 123.18 },
+        { ...S, stopPointId: STOP_B, layer: "Loop Service C", code: "C12", name: "b", lat: 13.63, lng: 123.18 },
       ],
       variants: [{ ref: "R5 inbound", kind: "permanent", trialStatus: null, effectiveFrom: null, trialDurationDays: null, evidenceLevel: "provisional", hasFareEvidence: false }],
     };
@@ -116,12 +118,12 @@ describe("validateRevision", () => {
   });
 
   it("the same stop version listed twice is not a collision", () => {
-    const s = { stopPointId: STOP_A, layer: "L", code: "A1", name: "a", lat: 13.62, lng: 123.18 };
+    const s = { ...S, stopPointId: STOP_A, layer: "L", code: "A1", name: "a", lat: 13.62, lng: 123.18 };
     expect(rules(facts({ stops: [s, { ...s }] }))).toEqual([]);
   });
 
   it("caps the issues per rule but keeps the counts complete", () => {
-    const stops = Array.from({ length: ISSUES_PER_RULE + 5 }, (_, i) => ({ stopPointId: STOP_A, layer: "L", code: `X${i}`, name: "n", lat: 0, lng: 0 }));
+    const stops = Array.from({ length: ISSUES_PER_RULE + 5 }, (_, i) => ({ ...S, stopPointId: STOP_A, layer: "L", code: `X${i}`, name: "n", lat: 0, lng: 0 }));
     const r = validateRevision(facts({ stops }));
     expect(r.issues).toHaveLength(ISSUES_PER_RULE);
     expect(r.errorCount).toBe(ISSUES_PER_RULE + 5);

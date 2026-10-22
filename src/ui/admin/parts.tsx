@@ -48,7 +48,33 @@ export function OkNote({ children, testId }: { children: ReactNode; testId?: str
   );
 }
 
-const dateFmt = new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Manila" });
+/** Text inputs, selects and textareas of the admin forms (N5b). */
+export const inputCls =
+  "w-full rounded-md border border-ink-3 bg-white px-2 py-1.5 text-sm text-navy focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-teal disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-300 dark:bg-navy-deep dark:text-white";
+
+/** A labelled form control: the label wraps the control, so it is its accessible name. */
+export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
+  return (
+    <label className="grid gap-1 text-sm">
+      <span className="font-medium">{label}</span>
+      {children}
+      {hint ? <span className="text-xs text-ink-2 dark:text-slate-300">{hint}</span> : null}
+    </label>
+  );
+}
+
+/** A small status chip (text, never colour alone). */
+export function Chip({ children, tone = "plain" }: { children: ReactNode; tone?: "plain" | "warn" | "ok" }) {
+  const cls =
+    tone === "warn"
+      ? "bg-coral-soft text-coral-ink dark:bg-navy-deep dark:text-coral-bright dark:border dark:border-coral-bright"
+      : tone === "ok"
+        ? "bg-teal-soft text-teal-ink dark:bg-navy-deep dark:text-teal-bright dark:border dark:border-teal-bright"
+        : "bg-fill text-navy dark:bg-navy-raised dark:text-white";
+  return <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${cls}`}>{children}</span>;
+}
+
+const dateFmt =new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Manila" });
 
 /** Manila time, e.g. "Oct 22, 2026, 10:04 AM"; "–" when unknown. */
 export function when(iso: string | null | undefined): string {

@@ -19,6 +19,11 @@ export type AdminNavItem = { href: string; label: string; action: Action | null 
 /** Built screens only. `action` null = any role that may enter. */
 export const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin", label: "Dashboard", action: null },
+  // N5b (C2, C3): edits go into the open draft revision.
+  { href: "/admin/imports", label: "Imports", action: "transit.revision.edit" },
+  { href: "/admin/candidates", label: "Candidate review", action: "transit.revision.edit" },
+  { href: "/admin/stops", label: "Stops & curbs", action: "transit.revision.edit" },
+  { href: "/admin/reconciliation", label: "Reconciliation", action: "transit.revision.edit" },
   { href: "/admin/revisions", label: "Revisions & publication", action: "transit.revision.publish" },
   { href: "/admin/coverage", label: "Coverage audit", action: "transit.revision.edit" },
 ];

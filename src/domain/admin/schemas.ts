@@ -19,7 +19,20 @@ export const validationFactsSchema = z.object({
   ]),
   members: z.array(z.object({ kind: z.string(), code: z.string(), isSynthetic: z.boolean().nullable() })),
   stops: z.array(
-    z.object({ stopPointId: z.uuid(), layer: z.string().nullable(), code: z.string().nullable(), name: z.string(), lat: z.number(), lng: z.number() }),
+    z.object({
+      stopPointId: z.uuid(),
+      layer: z.string().nullable(),
+      code: z.string().nullable(),
+      name: z.string(),
+      lat: z.number(),
+      lng: z.number(),
+      // 0024 (N5b); the defaults read facts of a database still on 0023.
+      status: z.string().default("candidate"),
+      curbSide: z.string().nullable().default(null),
+      evidenceClaims: z.array(z.string()).default([]),
+      movedM: z.coerce.number().nullable().default(null),
+      inSequence: z.boolean().default(false),
+    }),
   ),
   terminals: z.array(z.object({ code: z.string(), lat: z.number(), lng: z.number() })),
   variants: z.array(

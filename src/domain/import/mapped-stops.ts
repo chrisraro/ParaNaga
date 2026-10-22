@@ -356,6 +356,28 @@ export type RawFeatureRow = {
   contentHash: string;
 };
 
+export type PlannedRawFeature = RawFeatureRow & {
+  coordinatesRaw: string;
+  /** stop_point.name: the verbatim label, or the verbatim code when the label is empty. Never invented. */
+  stopName: string;
+};
+
+/**
+ * Raw feature rows; a record without verbatim coordinate text is a problem, not a row. Used by the
+ * CLI importer (scripts/lib/import-plan.ts) and the admin import screen (src/domain/admin/imports.ts).
+ */
+export function planRawFeatures(identified: IdentifiedStop[], problems: string[]): PlannedRawFeature[] {
+  const out: PlannedRawFeature[] = [];
+  for (const r of identified) {
+    if (r.coordinatesRaw === null) {
+      problems.push(`${r.sourceLayer}/${r.code}: no verbatim coordinate text`);
+      continue;
+    }
+    out.push({ ...toRawFeatureRow(r), coordinatesRaw: r.coordinatesRaw, stopName: r.label.trim() === "" ? r.code : r.label });
+  }
+  return out;
+}
+
 export function toRawFeatureRow(record: IdentifiedStop): RawFeatureRow {
   const raw = record.coordinatesRaw;
   if (raw === null) throw new Error(`toRawFeatureRow: ${record.sourceLayer}/${record.code} has no verbatim coordinate text`);

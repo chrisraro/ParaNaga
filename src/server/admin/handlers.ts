@@ -20,6 +20,21 @@ import { withRequestContext, type Db } from "@/server/db/context";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
 import { getPublishedRevision } from "@/server/repos/network-repo";
 import { createDraft, listRevisions, publishRevision, readCoverage, readDashboard, readValidationFacts, recordValidation } from "./repo";
+import { commitPayload, planAdminImport } from "@/domain/admin/imports";
+import {
+  importCommitResultSchema,
+  importCommitSchema,
+  importDryRunSchema,
+  importListSchema,
+  importUploadSchema,
+  reconcilePayloadSchema,
+  reconcileResultSchema,
+  reconciliationSchema,
+  stopActionResultSchema,
+  stopActionSchema,
+  stopListSchema,
+} from "@/domain/admin/stops";
+import { commitImport, readImportBaseline, readImports, readReconciliation, readStops, reconcile, runStopAction } from "./stops-repo";
 
 // /api/v1/admin/** (N5a). Three walls, each on its own: (1) here, per request, the session's roles
 // from core.user_role (no staff role: 404, so the API does not reveal itself); (2) the action's
@@ -43,7 +58,11 @@ export function adminProblem(error: unknown): unknown {
   if (isStepUpError(error)) return stepUpRequired();
   const { code, message } = pgError(error);
   if (code === "42501") return message === "forbidden" ? notFound(NOT_FOUND) : forbidden(capitalize(message));
-  if (code === "22023") return message.startsWith("unknown revision") ? notFound("No such revision.") : badRequest(capitalize(message));
+  if (code === "22023") {
+    if (message.startsWith("unknown revision")) return notFound("No such revision.");
+    if (message === "unknown stop") return notFound("No such stop in the open draft.");
+    return badRequest(capitalize(message));
+  }
   if (code === "55000" || code === "23514") return conflict(capitalize(message));
   return error;
 }
@@ -171,3 +190,103 @@ export const postPublish = (request: Request, params: Promise<{ id: string }>) =
 
 /** POST /api/v1/admin/revisions/:id/rollback {expectedPublishedId}: re-publishes a superseded revision; step-up required. */
 export const postRollback = (request: Request, params: Promise<{ id: string }>) => postPublication(request, params, "rollback");
+
+// ---------------------------------------------------------------- N5b: candidates, stops, reconciliation (C3)
+
+const ACTION_MAX_BYTES = 4096;
+/** JSON-escaped file text: KML quotes and newlines grow it; the text itself is capped at IMPORT_MAX_CHARS. */
+const IMPORT_MAX_BYTES = 3_000_000;
+
+const firstIssue = (error: z.ZodError) => error.issues[0]?.message ?? "The request is not valid.";
+
+async function stopParam(params: Promise<{ id: string }>): Promise<string> {
+  const id = parseUuidParam((await params).id, "id");
+  if (!id.ok) throw notFound("No such stop in the open draft.");
+  return id.value;
+}
+
+/** GET /api/v1/admin/stops: the stop members of the open draft (else the published revision, read-only). */
+export function getStops(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/stops", "transit.revision.edit", async ({ requestId, db }) =>
+    json(stopListSchema, await db(readStops, true), requestId),
+  );
+}
+
+/**
+ * POST /api/v1/admin/stops/:id {action, expectedVersionId, …}: promote, attach evidence, retire,
+ * relocate or edit, each a new stop version in the open draft (409 when the stop changed since the
+ * page loaded, or a rule refuses it).
+ */
+export function postStopAction(request: Request, params: Promise<{ id: string }>): Promise<Response> {
+  return adminRoute(request, "admin/stops/action", "transit.revision.edit", async ({ user, requestId, db }) => {
+    const stopPointId = await stopParam(params);
+    const parsed = stopActionSchema.safeParse(await readJsonBody(request, ACTION_MAX_BYTES));
+    if (!parsed.success) throw badRequest(firstIssue(parsed.error));
+    const versionId = await db(async (d) => ((await limited(d, request, user.id)) ? null : runStopAction(d, stopPointId, parsed.data)));
+    if (!versionId) throw tooManyRequests();
+    return json(stopActionResultSchema, { stopPointId, versionId }, requestId);
+  });
+}
+
+/** GET /api/v1/admin/reconciliation: nearby pairs to decide, pin mismatches (read-only), recent decisions. */
+export function getReconciliation(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/reconciliation", "transit.revision.edit", async ({ requestId, db }) =>
+    json(reconciliationSchema, await db(readReconciliation, true), requestId),
+  );
+}
+
+/** POST /api/v1/admin/reconciliation {a, b, decision, keepStopPointId?, note?}: link or keep separate. */
+export function postReconciliation(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/reconciliation/decide", "transit.revision.edit", async ({ user, requestId, db }) => {
+    const parsed = reconcilePayloadSchema.safeParse(await readJsonBody(request, ACTION_MAX_BYTES));
+    if (!parsed.success) throw badRequest(firstIssue(parsed.error));
+    const r = await db(async (d) => ((await limited(d, request, user.id)) ? null : reconcile(d, parsed.data)));
+    if (!r) throw tooManyRequests();
+    return json(reconcileResultSchema, r, requestId);
+  });
+}
+
+// ---------------------------------------------------------------- N5b: imports (C2)
+
+/** GET /api/v1/admin/imports: the baseline (newest committed My Maps batch) and the batch history. */
+export function getImports(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/imports", "transit.revision.edit", async ({ requestId, db }) =>
+    json(importListSchema, await db(readImports, true), requestId),
+  );
+}
+
+/** POST /api/v1/admin/imports/dry-run {format, fileName, text, retrievedOn}: the diff against the baseline. Writes nothing. */
+export function postImportDryRun(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/imports/dry-run", "transit.revision.edit", async ({ user, requestId, db }) => {
+    const parsed = importUploadSchema.safeParse(await readJsonBody(request, IMPORT_MAX_BYTES));
+    if (!parsed.success) throw badRequest(firstIssue(parsed.error));
+    const baseline = await db(async (d) => ((await limited(d, request, user.id)) ? "rate_limited" : readImportBaseline(d)));
+    if (baseline === "rate_limited") throw tooManyRequests();
+    return json(importDryRunSchema, planAdminImport(parsed.data, baseline).dryRun, requestId);
+  });
+}
+
+/**
+ * POST /api/v1/admin/imports/commit {…upload, expectedBaselineBatchId}: the server plans the file
+ * again (the browser's diff is never used) and commits through ingest.admin_import_commit, which
+ * recomputes the change kinds and writes nothing when nothing changed.
+ */
+export function postImportCommit(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/imports/commit", "transit.revision.edit", async ({ user, requestId, db }) => {
+    const parsed = importCommitSchema.safeParse(await readJsonBody(request, IMPORT_MAX_BYTES));
+    if (!parsed.success) throw badRequest(firstIssue(parsed.error));
+    const { expectedBaselineBatchId, ...upload } = parsed.data;
+    const result = await db(async (d) => {
+      if (await limited(d, request, user.id)) return null;
+      const baseline = await readImportBaseline(d);
+      if (!baseline || baseline.batchId !== expectedBaselineBatchId) {
+        throw conflict("Another import was committed since the dry run; run the dry run again.");
+      }
+      const plan = planAdminImport(upload, baseline);
+      if (!plan.dryRun.canCommit) throw badRequest(`The file has problems; nothing was written. ${plan.dryRun.problems[0] ?? ""}`.trim());
+      return commitImport(d, commitPayload(upload, plan, expectedBaselineBatchId));
+    });
+    if (!result) throw tooManyRequests();
+    return json(importCommitResultSchema, result, requestId, result.outcome === "committed" ? 201 : 200);
+  });
+}

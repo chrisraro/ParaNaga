@@ -127,3 +127,195 @@ describe("0023: the definer can reach every table its functions touch", () => {
     expect(SQL.trimEnd().endsWith("revoke create on schema transit from paranaga_definer;")).toBe(true);
   });
 });
+
+// ================================================================ 0024 (N5b): stops, reconciliation, imports
+
+const SQL24 = strip(readFileSync(path.join(DIR, "0024_admin_stops_imports.sql"), "utf8"));
+const fns24 = [...SQL24.matchAll(/create or replace function ([\w.]+)\(([^)]*)\)([\s\S]*?)\$\$([\s\S]*?)\$\$;/g)].map((m) => ({
+  name: m[1]!,
+  header: m[3]!,
+  body: m[4]!,
+}));
+const fn24 = (name: string) => fns24.find((f) => f.name === name)!;
+const esc = (s: string) => s.replace(/\./g, "\\.");
+const N5B_FNS = [
+  "transit.admin_stops",
+  "transit.admin_promote_stop",
+  "transit.admin_attach_stop_evidence",
+  "transit.admin_retire_stop",
+  "transit.admin_relocate_stop",
+  "transit.admin_edit_stop",
+  "transit.admin_reconciliation",
+  "transit.admin_reconcile",
+  "ingest.admin_import_batches",
+  "ingest.admin_import_baseline",
+  "ingest.admin_import_commit",
+  "transit.admin_validation_facts",
+];
+const N5B_HELPERS = ["transit.admin_open_draft", "transit.admin_draft_stop", "transit.stop_status_rank", "transit.admin_copy_stop_version", "transit.admin_repoint_stop"];
+const STOP_WRITES = ["transit.admin_promote_stop", "transit.admin_attach_stop_evidence", "transit.admin_retire_stop", "transit.admin_relocate_stop", "transit.admin_edit_stop", "transit.admin_reconcile"];
+
+describe("0024: admin definer functions (N5b)", () => {
+  it("defines exactly these SECURITY DEFINER functions; the helpers are invoker-rights", () => {
+    expect(fns24.filter((f) => /security definer/.test(f.header)).map((f) => f.name).sort()).toEqual([...N5B_FNS].sort());
+    expect(fns24.filter((f) => !/security definer/.test(f.header)).map((f) => f.name).sort()).toEqual([...N5B_HELPERS].sort());
+  });
+
+  for (const name of N5B_FNS) {
+    it(`${name}: checks the role in the database, pins search_path, owned by the definer, app-only`, () => {
+      const f = fn24(name);
+      expect(f.body).toContain("transit.admin_assert_staff()");
+      expect(f.header).toMatch(/set search_path = pg_catalog,[\w, ]*pg_temp\s/);
+      expect(SQL24).toMatch(new RegExp(`alter function ${esc(name)}\\([^)]*\\) owner to paranaga_definer;`));
+      expect(SQL24).toMatch(new RegExp(`revoke execute on function ${esc(name)}\\([^)]*\\) from public;`));
+      const grants = [...SQL24.matchAll(new RegExp(`grant execute on function ${esc(name)}\\([^)]*\\) to ([\\w, ]+);`, "g"))].map((m) => m[1]!.trim());
+      expect(grants).toEqual(["paranaga_app"]);
+    });
+  }
+
+  for (const name of N5B_HELPERS) {
+    it(`${name}: owned by the definer, not executable by PUBLIC or the app, search_path pinned`, () => {
+      expect(fn24(name).header).toMatch(/set search_path = pg_catalog,[\w, ]*pg_temp\s/);
+      expect(SQL24).toMatch(new RegExp(`alter function ${esc(name)}\\([^)]*\\) owner to paranaga_definer;`));
+      expect(SQL24).toMatch(new RegExp(`revoke execute on function ${esc(name)}\\([^)]*\\) from public;`));
+      expect(SQL24).not.toMatch(new RegExp(`grant execute on function ${esc(name)}\\(`));
+    });
+  }
+
+  for (const name of STOP_WRITES) {
+    it(`${name}: works on the open draft at the version the page saw, writes a new version and audits`, () => {
+      const b = fn24(name).body;
+      expect(b).toContain("transit.admin_draft_stop(");
+      expect(b).toContain("transit.admin_repoint_stop(");
+      expect(b).toMatch(/perform core\.audit\('stop\.\w+'/);
+      expect(b).not.toMatch(/update transit\.stop_point_version|delete from/);
+    });
+  }
+
+  it("the draft helper locks the open draft and refuses a stale version (55000) or an unknown stop (22023)", () => {
+    expect(fn24("transit.admin_open_draft").body).toMatch(/where r\.status = 'draft' order by r\.seq desc limit 1 for update/);
+    const b = fn24("transit.admin_draft_stop").body;
+    expect(b).toContain("o_version is distinct from p_expected");
+    expect(b).toContain("errcode = '55000'");
+    expect(b).toContain("'unknown stop' using errcode = '22023'");
+  });
+
+  it("promotion checks evidence of the claimed kind before it writes; published is not offered", () => {
+    const b = fn24("transit.admin_promote_stop").body;
+    expect(b).toContain("p_status not in ('documentary', 'installed', 'field_verified')");
+    expect(b.indexOf("l.claim = any (v_need)")).toBeGreaterThan(0);
+    expect(b.indexOf("l.claim = any (v_need)")).toBeLessThan(b.indexOf("transit.admin_copy_stop_version("));
+    expect(b).toContain("when 'documentary' then array['legal_designation']");
+  });
+
+  it("evidence photos are the caller's own verified stop_photo uploads; retire refuses stops in a stop order", () => {
+    expect(fn24("transit.admin_attach_stop_evidence").body).toContain("mo.status = 'verified' and mo.purpose = 'stop_photo' and mo.owner_id = v_user");
+    expect(fn24("transit.admin_retire_stop").body).toContain("change the route''s stops before retiring it");
+    expect(fn24("transit.admin_edit_stop").body).toContain("l.claim = 'curb_position'");
+    expect(fn24("transit.admin_relocate_stop").body).toContain("array['curb_position']");
+  });
+
+  it("repointing keeps publication's invariants: new variant and shape versions follow the new stop version", () => {
+    const b = fn24("transit.admin_repoint_stop").body;
+    for (const s of ["insert into transit.variant_version", "insert into transit.route_stop", "insert into transit.shape_version", "entity_kind = 'variant'", "entity_kind = 'shape'"]) {
+      expect(b, s).toContain(s);
+    }
+  });
+
+  it("the import recomputes the change kinds from the stored hashes and writes nothing when nothing changed (AC-1)", () => {
+    const b = fn24("ingest.admin_import_commit").body;
+    expect(b).toContain("b.content_hash = x.content_hash");
+    expect(b).toContain("(p_plan ->> 'expectedBaselineBatchId')::uuid");
+    const unchanged = b.indexOf("'outcome', 'unchanged'");
+    expect(unchanged).toBeGreaterThan(0);
+    expect(unchanged).toBeLessThan(b.indexOf("insert into"));
+    expect(unchanged).toBeLessThan(b.indexOf("transit.admin_open_draft()"));
+    expect(b).toContain("perform core.audit('import.commit'");
+    expect(b).toContain("pg_advisory_xact_lock(hashtext(v_snapshot))");
+  });
+
+  it("validation facts keep every 0023 key and add the stop review fields", () => {
+    const b = fn24("transit.admin_validation_facts").body;
+    for (const k of ["'members'", "'stops'", "'terminals'", "'variants'", "'routeStops'", "'shapes'", "'dbCheck'", "'membershipHash'", "'status', spv.status", "'evidenceClaims'", "'movedM'", "'inSequence'"]) {
+      expect(b, k).toContain(k);
+    }
+    expect(b).toMatch(/begin\s+perform transit\.publish_revision\(p_revision\);\s+raise exception 'paranaga:dry-run' using errcode = 'P0001';\s+exception/);
+  });
+
+  it("the public stop view reads the versioned name and keeps 0001's columns", () => {
+    expect(SQL24).toMatch(/create or replace view transit\.v_published_stops with \(security_invoker = true\) as\s+select pp\.revision_id, sp\.id as stop_point_id, spv\.id as stop_point_version_id, coalesce\(spv\.name, sp\.name\) as name,/);
+  });
+});
+
+/** Tables a 0024 function body reads (from/join/update) or inserts into. */
+function tables24(body: string): { read: Set<string>; insert: Set<string>; update: Set<string> } {
+  const t = (re: RegExp) => new Set([...body.matchAll(re)].map((m) => m[1]!.toLowerCase()));
+  const S = "((?:transit|core|ingest|ops|priv|community)\\.[a-z_]+)";
+  return {
+    read: t(new RegExp(`\\b(?:from|join)\\s+${S}\\b(?!\\s*\\()`, "gi")),
+    insert: t(new RegExp(`\\binsert into\\s+${S}\\b`, "gi")),
+    update: t(new RegExp(`\\bupdate\\s+${S}\\b`, "gi")),
+  };
+}
+const ALL_SQL = ALL.map((m) => m.sql).join("\n");
+const grantFor = (verb: string, table: string) =>
+  new RegExp(`grant\\s+[\\w\\s,()]*\\b${verb}\\b[\\w\\s,()]*\\bon\\s+(?:[\\w.]+,\\s*)*${esc(table)}\\b[^;]*\\bto\\s+[^;]*paranaga_definer`).test(ALL_SQL) ||
+  (verb === "select" && table.startsWith("transit.") && definerGrant(table));
+const policyFor = (verb: string, table: string) =>
+  ALL.some(
+    (m) =>
+      new RegExp(`create policy \\w+ on ${esc(table)} for (?:${verb}|all) to paranaga_definer`).test(m.sql) ||
+      [...m.sql.matchAll(/do \$\$([\s\S]*?)\$\$;/g)].some((d) => d[1]!.includes(`'${table}'`) && new RegExp(`for (?:${verb}|all) to paranaga_definer`).test(d[1]!)),
+  );
+
+describe("0024: the definer can reach every table its functions touch, and writes only what it must", () => {
+  const all = fns24.map((f) => tables24(f.body));
+  const reads = new Set(all.flatMap((x) => [...x.read]));
+  const inserts = new Set(all.flatMap((x) => [...x.insert]));
+  const updates = new Set(all.flatMap((x) => [...x.update]));
+
+  it("finds the tables (guards against a regex that matches nothing)", () => {
+    for (const t of ["transit.evidence_link", "ingest.raw_feature", "transit.reconciliation_decision"]) expect(reads.has(t), t).toBe(true);
+    for (const t of ["transit.stop_point_version", "transit.evidence", "ingest.batch", "transit.shape_version"]) expect(inserts.has(t), t).toBe(true);
+    expect([...updates].sort()).toEqual(["ingest.batch", "transit.revision_member"]);
+  });
+  for (const t of reads) {
+    it(`${t}: select grant and policy for paranaga_definer`, () => {
+      expect(grantFor("select", t), "grant").toBe(true);
+      expect(policyFor("select", t), "policy").toBe(true);
+    });
+  }
+  for (const t of inserts) {
+    it(`${t}: insert grant and policy for paranaga_definer`, () => {
+      expect(grantFor("insert", t), "grant").toBe(true);
+      expect(policyFor("insert", t), "policy").toBe(true);
+    });
+  }
+  for (const t of updates) {
+    it(`${t}: update grant and policy for paranaga_definer`, () => {
+      expect(grantFor("update", t), "grant").toBe(true);
+      expect(policyFor("update", t), "policy").toBe(true);
+    });
+  }
+
+  it("membership: update of version_id in a draft only; no delete or truncate anywhere", () => {
+    expect(SQL24).toContain("grant update (version_id) on transit.revision_member to paranaga_definer;");
+    expect(SQL24).toMatch(/create policy definer_update_draft on transit\.revision_member for update to paranaga_definer\s+using \(exists \(select 1 from transit\.revision r where r\.id = revision_id and r\.status = 'draft'\)\)\s+with check \(exists/);
+    expect(SQL24).not.toMatch(/grant [^;]*(delete|truncate)[^;]*to paranaga_definer/);
+    expect(SQL24).not.toMatch(/grant [^;]*\bupdate\b[^;]*on transit\.(stop_point_version|variant_version|route_stop|shape_version|stop_point_source|evidence|evidence_link)\b/);
+  });
+
+  it("the new tables have RLS enabled and forced, and no grant to the app", () => {
+    for (const t of ["transit.evidence", "transit.evidence_link", "transit.reconciliation_decision"]) {
+      expect(SQL24, t).toContain(`alter table ${t} enable row level security;`);
+      expect(SQL24, t).toContain(`alter table ${t} force row level security;`);
+      expect(SQL24).not.toMatch(new RegExp(`grant [^;]*on [^;]*${esc(t)}\\b[^;]*to [^;]*paranaga_app`));
+    }
+    expect(SQL24).toContain("check (\n    num_nonnulls(stop_point_version_id, variant_version_id, shape_version_id, fare_rule_version_id, terminal_id) = 1)");
+  });
+
+  it("gives schema CREATE to the definer only for the length of the migration", () => {
+    expect(SQL24.trimStart().startsWith("grant create on schema transit to paranaga_definer;\ngrant create on schema ingest to paranaga_definer;")).toBe(true);
+    expect(SQL24.trimEnd().endsWith("revoke create on schema ingest from paranaga_definer;\nrevoke create on schema transit from paranaga_definer;")).toBe(true);
+  });
+});
