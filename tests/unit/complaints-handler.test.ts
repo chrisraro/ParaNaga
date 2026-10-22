@@ -165,6 +165,17 @@ beforeEach(() => {
 });
 
 describe("POST /api/v1/complaints", () => {
+  it("answers 404 and writes nothing while DRIVER_REPORTS_ENABLED is off (N2)", async () => {
+    vi.stubEnv("DRIVER_REPORTS_ENABLED", "false");
+    try {
+      await expectError(await post(body()), 404, "not_found");
+      expect(state.queries).toEqual([]);
+      expect(state.authorized).toEqual([]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("creates a private report and answers with a PN reference only", async () => {
     const res = await post(body());
     expect(res.status).toBe(201);

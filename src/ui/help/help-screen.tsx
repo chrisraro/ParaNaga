@@ -3,8 +3,8 @@
 // Help (artboard Help; Increment A, Task 11): Help · Safety · About data, opened from More. The
 // section is in the URL (?tab=help|safety|data), changed in place with history.replaceState like
 // Saved. Differences from the artboard, on purpose:
-//  - Help: "Report a correction", the private driver report and "My reports" arrive in Increment
-//    B; "Report a problem with a driver" opens the MyNaga handoff instead (D9).
+//  - Help: "Report a problem with a driver" opens the MyNaga handoff (D9). The private ParaNaga
+//    report link shows only when DRIVER_REPORTS_ENABLED is on (N2).
 //  - Safety: the emergency number is the national 911, as the spec prescribes
 //    (docs/spec/02-features.md:104, "urgent situations show official emergency numbers (911)").
 //    TODO(data task): add a sources-register row for the national Emergency 911 hotline with a
@@ -85,7 +85,7 @@ function HelpPanel() {
   );
 }
 
-function SafetyPanel() {
+function SafetyPanel({ driverReports }: { driverReports: boolean }) {
   return (
     <>
       <div className="pn-help__emergency" data-testid="help-emergency">
@@ -111,9 +111,11 @@ function SafetyPanel() {
           ))}
         </ul>
       </section>
-      <Link href="/app/report-driver" className="pn-help__report" data-testid="help-report-driver-private">
-        Report a driver privately in ParaNaga
-      </Link>
+      {driverReports ? (
+        <Link href="/app/report-driver" className="pn-help__report" data-testid="help-report-driver-private">
+          Report a driver privately in ParaNaga
+        </Link>
+      ) : null}
       <Link href="/app/mynaga" className="pn-help__report" data-testid="help-report-driver">
         Report a driver to the City in MyNaga
       </Link>
@@ -151,9 +153,9 @@ const TAB_OPTIONS: readonly SegmentedOption<HelpTab>[] = [
   { value: "data", label: "About data", id: "pn-help-tab-data", controls: "pn-help-panel" },
 ];
 
-const PANELS: Record<HelpTab, () => ReactNode> = { help: HelpPanel, safety: SafetyPanel, data: DataPanel };
+const PANELS: Record<HelpTab, (props: { driverReports: boolean }) => ReactNode> = { help: HelpPanel, safety: SafetyPanel, data: DataPanel };
 
-export function HelpScreen() {
+export function HelpScreen({ driverReports = false }: { driverReports?: boolean }) {
   const params = useSearchParams();
   const fromUrl = parseHelpTab(params.get("tab"));
   // Kept in step with ?tab= when a navigation changes it (Back from an article); a tap replaces
@@ -172,7 +174,7 @@ export function HelpScreen() {
     <div className="pn-help" data-testid="help-screen">
       <Segmented options={TAB_OPTIONS} value={tab} onChange={choose} label="Help sections" variant="tablist" testId="help-tabs" />
       <div id="pn-help-panel" role="tabpanel" aria-labelledby={`pn-help-tab-${tab}`} className="pn-help__panel" tabIndex={0} data-testid={`help-panel-${tab}`}>
-        {PANELS[tab]()}
+        {PANELS[tab]({ driverReports })}
       </div>
     </div>
   );

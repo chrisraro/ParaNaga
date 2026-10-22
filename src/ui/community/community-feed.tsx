@@ -175,8 +175,8 @@ export function CommunityFeed() {
       </div>
 
       {!loading && result && !result.ok ? (
-        <div className="pn-comm__panel" role="alert" data-testid="community-error">
-          <p className="pn-comm__body">{result.message ?? "Posts could not be loaded."}</p>
+        <div className="pn-comm__panel" data-testid="community-error">
+          <p className="pn-comm__body" role="alert">{result.message ?? "Posts could not be loaded."}</p>
           <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => setReload((n) => n + 1)}>
             Try again
           </button>

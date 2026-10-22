@@ -88,7 +88,9 @@ vi.mock("@/server/db/context", () => ({
 }));
 
 const { GET: FEED, POST: CREATE } = await import("@/app/api/v1/community/posts/route");
-const { PATCH: EDIT } = await import("@/app/api/v1/community/posts/[id]/route");
+const { PATCH: EDIT, DELETE: DELETE_POST } = await import("@/app/api/v1/community/posts/[id]/route");
+const { DELETE: DELETE_COMMENT } = await import("@/app/api/v1/community/comments/[id]/route");
+const { DELETE: UNBLOCK } = await import("@/app/api/v1/community/blocks/[id]/route");
 const { POST: COMMENT } = await import("@/app/api/v1/community/posts/[id]/comments/route");
 const { POST: REACT } = await import("@/app/api/v1/community/reactions/route");
 
@@ -114,6 +116,18 @@ beforeEach(() => {
   state.jev = "ok";
   state.calls = [];
   state.sql = [];
+});
+
+describe("DELETE endpoints are rate limited (N2)", () => {
+  it.each([
+    ["post", DELETE_POST],
+    ["comment", DELETE_COMMENT],
+    ["block", UNBLOCK],
+  ] as const)("answers 429 for a %s delete at the limit, before the database delete", async (_name, fn) => {
+    state.rateLimited = true;
+    await expectError(await send(fn, `/api/v1/community/x/${POST_ID}`, undefined, "DELETE"), 429, "too_many_requests");
+    expect(state.sql.some((q) => q.includes("delete_") || q.includes("unblock"))).toBe(false);
+  });
 });
 
 describe("POST /api/v1/community/posts", () => {

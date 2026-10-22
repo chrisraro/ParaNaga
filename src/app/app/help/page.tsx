@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { driverReportsEnabled } from "@/server/flags";
 import { PageFrame } from "@/ui/app-shell/page-frame";
 import { HelpScreen } from "@/ui/help/help-screen";
 
@@ -14,7 +15,7 @@ export default function HelpPage() {
   return (
     <PageFrame title="Help" back testId="help-page">
       <Suspense fallback={null}>
-        <HelpScreen />
+        <HelpScreen driverReports={driverReportsEnabled()} />
       </Suspense>
     </PageFrame>
   );

@@ -1,12 +1,12 @@
 "use client";
 
-// MyNaga handoff (artboard MyNagaHandoff, informational version; decision D9). ParaNaga has no
-// driver report yet (Increment B), so nothing is prepared, copied, sent or recorded here: the
-// screen says what to have ready and opens one of MyNaga's four verified public entry points
+// MyNaga handoff (artboard MyNagaHandoff, informational version; decision D9). Nothing is
+// prepared, copied, sent or recorded here (private driver reports are separate, behind
+// DRIVER_REPORTS_ENABLED, N2): the screen says what to have ready and opens one of MyNaga's four verified public entry points
 // (src/domain/mynaga/links.ts) in a new tab, exactly as written (no deep link, nothing appended).
 // The store that matches this phone is listed first. Step 3 of the artboard ("Tell us if you
-// submitted it") becomes an unnumbered "After you submit in MyNaga" with a plain note until
-// private reports exist.
+// submitted it") becomes an unnumbered "After you submit in MyNaga" with a plain note about
+// private reports.
 
 import "@/ui/kit/styles";
 import "@/ui/help/help.css";

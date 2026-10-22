@@ -16,6 +16,7 @@ import { ApiProblem, authedRoute, badRequest, CACHE, notFound, readJsonBody, too
 import { authorize } from "@/server/auth/authorize";
 import { withRequestContext } from "@/server/db/context";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
+import { driverReportsEnabled } from "@/server/flags";
 import { getStorage } from "@/server/storage/adapter";
 
 // Private driver reports (S18, F-D4, task B8). Rules that hold for every handler here:
@@ -73,6 +74,7 @@ function pgCode(error: unknown): string | undefined {
  */
 export function createComplaint(request: Request): Promise<Response> {
   return privateRoute(request, "complaints", async (requestId) => {
+    if (!driverReportsEnabled()) throw notFound("Not found.");
     const user = await authorize("complaint.submit");
     const parsed = createComplaintPayloadSchema.safeParse(await readJsonBody(request, BODY_MAX_BYTES));
     if (!parsed.success) throw badRequest("Check the report and try again.");

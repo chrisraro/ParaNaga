@@ -1,8 +1,9 @@
 import { authorize } from "@/server/auth/authorize";
-import { authedRoute, badRequest, CACHE, readJsonBody, tooManyRequests } from "@/server/api/http";
+import { authedRoute, badRequest, notFound, CACHE, readJsonBody, tooManyRequests } from "@/server/api/http";
 import { withRequestContext } from "@/server/db/context";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
 import { createMediaSlotPayloadSchema, createMediaSlotResponseSchema } from "@/domain/media/schemas";
+import { driverReportsEnabled } from "@/server/flags";
 import { createMediaSlot } from "@/server/media/service";
 
 /**
@@ -17,6 +18,9 @@ export function POST(request: Request): Promise<Response> {
     if (!parsed.success) {
       throw badRequest("Invalid media slot payload.");
     }
+
+    // Evidence uploads belong to driver reports (N2): no slot while they are off.
+    if (parsed.data.purpose === "complaint_evidence" && !driverReportsEnabled()) throw notFound("Not found.");
 
     const allowed = await withRequestContext({ userId: user.id, requestId }, async (db) => {
       for (const limit of [RATE_LIMITS.mutationPerMinute, RATE_LIMITS.mediaSlotPerHour]) {

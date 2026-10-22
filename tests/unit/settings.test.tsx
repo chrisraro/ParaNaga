@@ -118,6 +118,14 @@ describe("clearDeviceData when a store fails", () => {
 });
 
 describe("More screen", () => {
+  it("sends Report a driver to MyNaga unless private reports are on (N2)", () => {
+    const { unmount } = render(<MoreScreen />);
+    expect(screen.getByTestId("settings-report-driver").getAttribute("href")).toBe("/app/mynaga");
+    unmount();
+    render(<MoreScreen driverReports />);
+    expect(screen.getByTestId("settings-report-driver").getAttribute("href")).toBe("/app/report-driver");
+  });
+
   it("language row saves a choice and goes back to the phone's language", () => {
     render(<MoreScreen />);
     // Filipino is offered only once FILIPINO_ENABLED (plan T10); English proves the row either way.

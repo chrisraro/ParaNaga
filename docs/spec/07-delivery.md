@@ -184,7 +184,7 @@ Dropped: the McRAPTOR rewrite (the in-process planner stays) and the PMTiles off
 | Code | Increment | Covers |
 |---|---|---|
 | N1 | Docs realignment | Spec and plans match the app on master (this change). |
-| N2 | Gate live-but-unready features | Driver reports behind a flag; correction photos private until approved; rate limits on DELETE endpoints. |
+| N2 | Gate live-but-unready features | **Done (2026-10-22).** Driver reports behind `DRIVER_REPORTS_ENABLED` (default off; `/app/report-driver`, `POST /api/v1/complaints` and complaint-evidence upload slots answer 404; More, Help and My reports point to MyNaga; reading existing own reports stays). Verified uploads stay in the private bucket until approval. Rate limits on the three community DELETE endpoints (no other DELETE routes exist). Commits: see `git log --grep "N2"`. |
 | N3 | Step-up OTP | Fresh OTP for publish/rollback, role changes, complaint unlock (increment-b-review decision, not built). |
 | N4 | Fare and planner rules on the current planner | AC-5, AC-6, AC-7. |
 | N5 | Admin core | C1 shell + dashboard, C8 revisions + coverage, C3 candidates + stops/curbs + reconciliation, C2 imports; AC-8. Migrations renumbered from 0022 (the outline's 0010 to 0014 are taken). |

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { driverReportsEnabled } from "@/server/flags";
 import { PageFrame } from "@/ui/app-shell/page-frame";
 import { ReportsScreen } from "@/ui/reports/reports-screen";
 
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 export default function ReportsPage() {
   return (
     <PageFrame title="My reports" back testId="reports-page">
-      <ReportsScreen />
+      <ReportsScreen driverReports={driverReportsEnabled()} />
     </PageFrame>
   );
 }

@@ -84,7 +84,7 @@ export class MediaConfirmError extends Error {
  *  - HEADs the quarantine object and refuses one over the expected size before reading it
  *  - Sniffs magic bytes and computes SHA-256
  *  - complaint_evidence: copies the original, untouched, to evidence-private
- *  - every other purpose (public-media): images only; EXIF/XMP/GPS stripped before storing
+ *  - every other purpose: images only; EXIF/XMP/GPS stripped, stored in the same private bucket until approved
  *  - Stores under a per-slot key (two uploads of the same bytes never collide on object_key)
  *  - Promotes in the DB, then deletes the quarantine copy (a failed promote keeps the upload)
  */
@@ -140,7 +140,9 @@ export async function confirmMediaSlot(
   if (sniffed.kind === "unknown") throw await reject(true);
 
   const isEvidence = slot.purpose === "complaint_evidence";
-  const destBucket = isEvidence ? env.STORAGE_BUCKET_EVIDENCE : env.STORAGE_BUCKET_PUBLIC;
+  // Nothing is public until a reviewer approves it (N2): every verified upload waits in the private
+  // bucket. STORAGE_BUCKET_PUBLIC is for approved display copies, written by the approval step (N6).
+  const destBucket = env.STORAGE_BUCKET_EVIDENCE;
   const ext = sniffed.mime.split("/")[1] ?? "bin";
   const destKey = `${slot.purpose}/${slot.id}.${ext}`;
 

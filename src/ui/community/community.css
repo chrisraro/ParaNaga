@@ -193,6 +193,7 @@
   color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
 }
 .pn-comm__tag {
+  min-width: 44px;
   min-height: 44px;
   padding: 0 4px;
   border: 0;

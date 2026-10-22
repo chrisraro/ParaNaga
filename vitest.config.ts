@@ -39,7 +39,7 @@ export default defineConfig({
       {
         resolve,
         // The real-data planner tests are heavy: 5 s (the default) times out when the whole suite runs in parallel.
-        test: { name: "unit", include: ["tests/unit/**/*.test.{ts,tsx}"], environment: "node", testTimeout: 30_000 },
+        test: { name: "unit", env: { DRIVER_REPORTS_ENABLED: "true" }, include: ["tests/unit/**/*.test.{ts,tsx}"], environment: "node", testTimeout: 30_000 },
       },
       {
         resolve,

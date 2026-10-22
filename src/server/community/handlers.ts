@@ -169,6 +169,7 @@ export function deletePost(request: Request, rawId: string): Promise<Response> {
     const user = await authorize("community.post");
     const id = parseUuidParam(rawId, "id");
     if (!id.ok) throw badRequest(id.message);
+    if (!(await rateGate(request, user.id, requestId, []))) throw tooManyRequests();
     const done = await guarded(() =>
       withRequestContext({ userId: user.id, requestId }, async (db) => {
         const res = await db.execute<{ done: boolean }>(sql`select community.delete_post(${id.value}::uuid) as done`);
@@ -225,6 +226,7 @@ export function deleteComment(request: Request, rawId: string): Promise<Response
     const user = await authorize("community.post");
     const id = parseUuidParam(rawId, "id");
     if (!id.ok) throw badRequest(id.message);
+    if (!(await rateGate(request, user.id, requestId, []))) throw tooManyRequests();
     const done = await guarded(() =>
       withRequestContext({ userId: user.id, requestId }, async (db) => {
         const res = await db.execute<{ done: boolean }>(sql`select community.delete_comment(${id.value}::uuid) as done`);
@@ -304,6 +306,7 @@ export function unblock(request: Request, rawId: string): Promise<Response> {
     const user = await authorize("community.post");
     const id = parseUuidParam(rawId, "id");
     if (!id.ok) throw badRequest(id.message);
+    if (!(await rateGate(request, user.id, requestId, []))) throw tooManyRequests();
     const done = await guarded(() =>
       withRequestContext({ userId: user.id, requestId }, async (db) => {
         const res = await db.execute<{ done: boolean }>(sql`select community.unblock(${id.value}::uuid) as done`);
