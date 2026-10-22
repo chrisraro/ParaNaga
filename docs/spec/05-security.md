@@ -187,6 +187,8 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Resource-Policy: same-site
 ```
 
+**Status (N8, 2026-10-22):** enforced; the policy as built and why `'unsafe-inline'` stays for scripts and styles is in `next.config.ts` and §7.12 of 07-delivery; kill switch `CSP_REPORT_ONLY=1` (docs/setup.md).
+
 MapLibre sets inline style *attributes*, hence `style-src-attr 'unsafe-inline'`; if it also needs inline `<style>` elements, fall back to `style-src 'self' 'unsafe-inline'` and record why. No inline scripts. A nonce forces dynamic rendering in Next.js, which conflicts with the static caching in §3.4 — so public pages use a hash/`'self'`-only script policy and nonces are used only on dynamic (account/admin) routes; verify at scaffold. Run the policy `Report-Only` on preview for a week, then enforce. Test MapLibre workers (`blob:`), PMTiles range requests and Serwist under the policy. `camera` is requested only on the driver-report route and `geolocation` only on user tap; the header allows `self` so those routes work.
 
 ## 5.11 Secrets and infrastructure
