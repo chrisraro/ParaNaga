@@ -4194,11 +4194,12 @@
   },
   {
     "key": "settings.locationNote",
-    "en": "Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.",
-    "fil": "Sa device na ito lang ginagamit, kapag pinindot mo ang “Gamitin ang lokasyon ko” o sinimulan ang gabay. Baguhin ito sa settings ng browser o ng phone.",
-    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)",
+    "en": "Used when you tap “Use current location” or start guidance. To plan a trip it is sent to ParaNaga, never stored or logged. Change it in your browser or phone settings.",
+    "fil": "Ginagamit kapag pinindot mo ang “Gamitin ang lokasyon ko” o sinimulan ang gabay. Para magplano ng biyahe, ipinapadala ito sa ParaNaga pero hindi itinatago o inililista. Baguhin ito sa settings ng browser o ng phone.",
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review.",
     "reviewed": "opus",
-    "t15": "checked"
+    "t15": "checked",
+    "review": true
   },
   {
     "key": "settings.dataTitle",
@@ -7041,11 +7042,12 @@
   },
   {
     "key": "search.googleFooter",
-    "en": "{0}. Google receives what you typed. ParaNaga keeps Google's answer up to 24 hours under a one-way hash, with no typed text and no IP address.",
-    "fil": "{0}. Natatanggap ng Google ang na-type mo. Itinatago ng ParaNaga ang sagot ng Google nang hanggang 24 oras, naka-one-way hash; hindi nito itinatago ang na-type mo o ang IP address mo.",
-    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | message function; {0},{1}.. are the arguments in order | T12 review: was '{0}. Natatanggap ng Google ang tinipa mo. Itinatago ng ParaNaga ang sagot ng Google nang hanggang 24 oras sa ilalim ng one-way hash, walang tinipang teksto at walang IP address.'. Privacy: 'sa ilalim ng one-way hash, walang tinipang teksto' was a calque and the 'no typed text' clause could attach to Google's answer; now says plainly that ParaNaga does not keep what you typed or your IP.",
+    "en": "{0}. Google receives what you typed. ParaNaga keeps Google's suggestions up to 24 hours, and the location of a place you pick up to 30 days, under a one-way hash, with no typed text and no IP address.",
+    "fil": "{0}. Natatanggap ng Google ang na-type mo. Itinatago ng ParaNaga ang mga mungkahi ng Google nang hanggang 24 oras, at ang lokasyon ng lugar na pinili mo nang hanggang 30 araw, naka-one-way hash; hindi nito itinatago ang na-type mo o ang IP address mo.",
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | message function; {0},{1}.. are the arguments in order | T12 review: was '{0}. Natatanggap ng Google ang tinipa mo. Itinatago ng ParaNaga ang sagot ng Google nang hanggang 24 oras sa ilalim ng one-way hash, walang tinipang teksto at walang IP address.'. Privacy: 'sa ilalim ng one-way hash, walang tinipang teksto' was a calque and the 'no typed text' clause could attach to Google's answer; now says plainly that ParaNaga does not keep what you typed or your IP. | N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review.",
     "reviewed": "opus",
-    "t15": "checked"
+    "t15": "checked",
+    "review": true
   },
   {
     "key": "search.googleMore",
@@ -9622,17 +9624,21 @@
   },
   {
     "key": "landing.promise.privacy.location",
-    "en": "Your location is used only on this device.",
-    "fil": "Sa device na ito lang ginagamit ang lokasyon mo.",
+    "en": "Your location is sent only to plan a trip (never stored) or with a report you choose to send.",
+    "fil": "Ipinapadala lang ang lokasyon mo para magplano ng biyahe (hindi ito itinatago) o kasama ng ulat na pinili mong ipadala.",
     "reviewed": "opus",
-    "t15": "checked"
+    "t15": "checked",
+    "review": true,
+    "note": "N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review."
   },
   {
     "key": "landing.promise.privacy.account",
-    "en": "An account is optional. Everything works as a guest.",
-    "fil": "Opsyonal ang account. Gumagana ang lahat bilang guest.",
+    "en": "An account is optional. Planning, the map and saved trips work as a guest.",
+    "fil": "Opsyonal ang account. Gumagana bilang guest ang pagplano, ang mapa at ang mga naka-save na biyahe.",
     "reviewed": "opus",
-    "t15": "checked"
+    "t15": "checked",
+    "review": true,
+    "note": "N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review."
   },
   {
     "key": "landing.phone.title",
@@ -11495,10 +11501,10 @@
   },
   {
     "key": "driverReport.explainer.p3",
-    "en": "A ParaNaga reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer.",
-    "fil": "Babasahin ito ng isang reviewer ng ParaNaga. Nasa pribadong storage ang mga larawan at video, at ikaw at ang reviewer na iyon lang ang makakakita.",
+    "en": "A ParaNaga reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer. A closed report and its files are deleted 365 days after it was closed, unless it is under a legal hold.",
+    "fil": "Babasahin ito ng isang reviewer ng ParaNaga. Nasa pribadong storage ang mga larawan at video, at ikaw at ang reviewer na iyon lang ang makakakita. Binubura ang saradong ulat at ang mga file nito 365 araw matapos itong isara, maliban kung may legal hold.",
     "review": true,
-    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage.",
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage. | N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -13968,10 +13974,12 @@
   },
   {
     "key": "auth.body",
-    "en": "Everything in ParaNaga works as a guest, and your saved trips stay on this phone. Signing in lets you contribute community posts, report corrections, and sync your data.",
-    "fil": "Gumagana ang lahat sa ParaNaga kahit guest ka, at nananatili sa phone na ito ang mga naka-save mong biyahe. Kapag nag-sign in ka, puwede kang mag-post sa Komunidad, mag-ulat ng pagwawasto, at i-sync ang data mo.",
+    "en": "Planning, the map and saved trips work as a guest, and your saved trips stay on this phone unless you sync them. Signing in lets you contribute community posts, report corrections, and sync your data.",
+    "fil": "Gumagana kahit guest ka ang pagplano, ang mapa at ang mga naka-save na biyahe, at nananatili sa phone na ito ang mga naka-save mong biyahe maliban kung i-sync mo. Kapag nag-sign in ka, puwede kang mag-post sa Komunidad, mag-ulat ng pagwawasto, at i-sync ang data mo.",
     "reviewed": "opus",
-    "t15": "checked"
+    "t15": "checked",
+    "review": true,
+    "note": "N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review."
   },
   {
     "key": "auth.emailLabel",

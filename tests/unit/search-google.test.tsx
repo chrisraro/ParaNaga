@@ -138,7 +138,7 @@ describe("Search: Google suggestions", () => {
     expect(row.textContent).not.toContain("Verified");
     const footnote = screen.getByTestId("search-google-attribution").textContent;
     expect(footnote).toBe(
-      "Suggestions from Google Maps. Google receives what you typed. ParaNaga keeps Google's answer up to 24 hours under a one-way hash, with no typed text and no IP address.",
+      "Suggestions from Google Maps. Google receives what you typed. ParaNaga keeps Google's suggestions up to 24 hours, and the location of a place you pick up to 30 days, under a one-way hash, with no typed text and no IP address.",
     );
   });
 

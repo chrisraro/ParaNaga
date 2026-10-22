@@ -32,7 +32,7 @@ describe("SignInScreen (S21)", () => {
   it("renders explanation that account is optional and saved trips stay on phone", () => {
     render(<SignInScreen />);
     expect(screen.getByText("An account is optional.")).toBeTruthy();
-    expect(screen.getByText(/Everything in ParaNaga works as a guest, and your saved trips stay on this phone./)).toBeTruthy();
+    expect(screen.getByText(/Planning, the map and saved trips work as a guest, and your saved trips stay on this phone unless you sync them./)).toBeTruthy();
     expect(screen.getByRole("button", { name: "Continue with Email" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Continue with Google" })).toBeTruthy();
   });

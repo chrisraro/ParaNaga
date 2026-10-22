@@ -124,7 +124,7 @@ test.describe("phone", () => {
     }
     await expect(page.getByTestId("settings-display")).toContainText("Reduce motionFollows your device setting");
     await expect(page.getByTestId("settings-location")).toContainText("Location access");
-    await expect(page.getByText("Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.")).toBeVisible();
+    await expect(page.getByText("Used when you tap “Use current location” or start guidance. To plan a trip it is sent to ParaNaga, never stored or logged. Change it in your browser or phone settings.")).toBeVisible();
     await expect(page.getByTestId("settings-sources")).toHaveText("Sources and credits");
     await expect(page.getByTestId("settings-data-revision")).toHaveCount(0);
     // Help (Task 11) opens from the About group.
