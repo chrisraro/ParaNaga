@@ -12,7 +12,7 @@ export function getPool(): Pool {
   if (!pool) {
     pool = new Pool({
       connectionString: requireEnv("PARANAGA_DATABASE_URL"),
-      max: 5,
+      max: 10, // the pooled endpoint takes far more; 5 starved concurrent plans (N8 load test)
       idleTimeoutMillis: 5_000,
       connectionTimeoutMillis: 5_000,
     });

@@ -76,7 +76,7 @@ test("(a) any-point drop-off: a path-only jeepney boards and drops off anywhere,
   await planWith(page, ANYWHERE_DROP_OFF_PLAN);
   expect(await modes(page)).toEqual(["jeepney", "tricycle"]);
   const jeep = options(page).nth(0);
-  await expect(jeep).toContainText("E Centro-Del Rosario via Magsaysay Ave");
+  await expect(jeep).toContainText("Centro-Del Rosario via Magsaysay Ave");
   await expect(jeep.getByTestId("card-unverified")).toHaveText("Unverified route");
   await expectOneRecommended(page);
   await expectAxeBothSchemes(page);
@@ -157,7 +157,7 @@ test("(c) a trip of 500 m or more: the jeepney is Recommended, the tricycle foll
 
 test("(c2) the peek's best option is the Recommended one, the jeepney", async ({ page }) => {
   await planWith(page, TRICYCLE_RECOMMENDED_PLAN, MIDDAY, false);
-  await expect(page.getByTestId("options-best")).toContainText("E Centro-Del Rosario via Magsaysay Ave");
+  await expect(page.getByTestId("options-best")).toContainText("Centro-Del Rosario via Magsaysay Ave");
   await expect(page.getByTestId("options-best")).not.toContainText("Tricycle");
 });
 

@@ -56,11 +56,8 @@ export function getRateLimitKey(
   const env = serverEnv();
   const salt = env.NEON_AUTH_COOKIE_SECRET ?? "paranaga-guest-ratelimit-salt";
   const ip = ipAddress(request) ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
-  const ua = request.headers.get("user-agent") ?? "";
-  // Simplify user-agent to coarse family to avoid high cardinality / bypass while staying privacy-preserving
-  const uaFamily = ua.slice(0, 32);
-
-  const raw = `${prefix}|guest|${ip}|${uaFamily}|${salt}`;
+  // IP only: a user-agent in the key would let a guest reset their limit by changing it.
+  const raw = `${prefix}|guest|${ip}|${salt}`;
   return createHash("sha256").update(raw).digest("hex");
 }
 
