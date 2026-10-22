@@ -2,8 +2,7 @@ import "@/ui/detail/detail.css";
 
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { DetailPanel } from "@/ui/detail/detail-frame";
-import { SearchScreen } from "@/ui/search/search-screen";
+import { SearchFallback, SearchScreen } from "@/ui/search/search-screen";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -17,16 +16,7 @@ export const metadata: Metadata = {
 // offline text would be wrong here (Search works offline from the stored index).
 export default function SearchPage() {
   return (
-    <Suspense
-      fallback={
-        <DetailPanel title="Search" testId="search-fallback">
-          <div className="pn-detail__state" role="status" aria-label="Loading search">
-            <div className="pn-skeleton" style={{ width: "100%", height: 44 }} />
-            <div className="pn-skeleton" style={{ width: "70%" }} />
-          </div>
-        </DetailPanel>
-      }
-    >
+    <Suspense fallback={<SearchFallback />}>
       <SearchScreen />
     </Suspense>
   );

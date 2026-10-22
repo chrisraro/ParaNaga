@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 // See src/app/app/stops/[id]/page.tsx: the code is runtime data, read inside Suspense.
 export default function RoutePage({ params }: PageProps<"/app/routes/[code]">) {
   return (
-    <Suspense fallback={<DetailLoading title="Route" />}>
+    <Suspense fallback={<DetailLoading what="route" />}>
       <RouteFromParams params={params} />
     </Suspense>
   );

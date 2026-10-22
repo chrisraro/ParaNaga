@@ -19,6 +19,7 @@ import type { LatLng } from "../geo/types";
 import type { OsmPlaceCategory } from "../places/osm-categories";
 import { isActiveRoute, routeLabel, routeSearchNames } from "../planner/route-display";
 import { OSM_CATEGORY_LABEL } from "../places/osm-categories";
+import { en, type Dict } from "@/i18n/dict";
 import { pinPlaceEndpointLabel, pinPlacePoint } from "../places/place-detail";
 import { compactText, foldText, isCodeLikeQuery, tokenize } from "./normalize";
 
@@ -95,16 +96,7 @@ const GROUP_OF: Record<SearchResultKind, SearchGroupId> = {
 /** Display order of the groups (brief and artboard): fixed, whatever the scores. */
 export const GROUP_ORDER: readonly SearchGroupId[] = ["saved", "places", "routes", "terminals", "barangays", "study", "legacy", "regional"];
 
-export const GROUP_TITLE: Record<SearchGroupId, string> = {
-  saved: "Saved",
-  places: "Places",
-  routes: "Routes",
-  terminals: "Terminals",
-  barangays: "Barangays",
-  study: "Stop labels from the 2025 route study",
-  legacy: "Old route names",
-  regional: "Regional destinations",
-};
+export const GROUP_TITLE: Record<SearchGroupId, string> = en.search.group;
 
 // ------------------------------------------------------------------ text scoring
 
@@ -194,55 +186,46 @@ function bestOf(query: Query, texts: readonly string[], cache: FoldCache, fuzzy 
 // ------------------------------------------------------------------ copy helpers
 
 /** "Loop Service A" → "Loop A"; any other layer verbatim. */
-export function loopName(layer: string): string {
+export function loopName(layer: string, copy: Dict["search"] = en.search): string {
   const m = /^Loop Service ([A-Z])$/.exec(layer.trim());
-  return m ? `Loop ${m[1]}` : layer;
+  return m ? copy.loop(m[1]!) : layer;
 }
 
-const REGIONAL_CATEGORY: Record<string, string> = {
-  northbound: "Northbound",
-  south_suburbs: "South suburbs",
-  north_suburb: "North suburb",
-  southbound: "Southbound",
-  eastbound: "Eastbound",
-};
-
 /** "south_suburbs" → "South suburbs"; unknown categories are spelled out the same way. */
-export function regionalCategoryLabel(category: string): string {
-  const known = REGIONAL_CATEGORY[category];
+export function regionalCategoryLabel(category: string, copy: Dict["search"] = en.search): string {
+  const known = Object.hasOwn(copy.regionalCategory, category) ? copy.regionalCategory[category as keyof typeof copy.regionalCategory] : null;
   if (known) return known;
   const words = category.replace(/_/g, " ").trim();
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 /** The second line of a result row (exact copy from the task brief). */
-export function resultSubtitle(result: SearchResult): string {
+export function resultSubtitle(result: SearchResult, copy: Pick<Dict, "search" | "places"> = en): string {
+  const s = copy.search;
   switch (result.kind) {
     case "saved":
-      return "Saved place";
+      return s.subSaved;
     case "osm":
-      return `${OSM_CATEGORY_LABEL[result.category]} · from OpenStreetMap`;
+      return s.subOsm(copy.places.category[result.category]);
     case "pin":
-      return `Mapped stop · ${result.loops.length > 0 ? `${result.loops.join(", ")} · ` : ""}candidate`;
+      return s.subPin(result.loops.join(", "));
     case "route":
-      if (result.matchedAlias) return `Also called ${result.matchedAlias}`;
-      return result.matchedStreet ? `Legal route plan lists ${result.matchedStreet}` : "";
+      if (result.matchedAlias) return s.subAlsoCalled(result.matchedAlias);
+      return result.matchedStreet ? s.subLegalStreet(result.matchedStreet) : "";
     case "terminal":
-      return `Terminal · ${result.locationText ? `${result.locationText} · ` : ""}location not mapped`;
+      return s.subTerminal(result.locationText ?? "");
     case "barangay":
-      return "Barangay · not surveyed";
+      return s.subBarangay;
     case "study": {
       const where = [result.routeCode, result.direction].filter((x): x is string => !!x).join(" ");
-      return `${where ? `${where} · ` : ""}label only, no location`;
+      return s.subStudy(where);
     }
     case "legacy":
-      return `Historical name (${result.year}) · not matched to a current route · ${result.sourceCode}`;
-    case "regional": {
-      const from = result.terminalName ? ` from ${result.terminalName}` : "";
-      return `${regionalCategoryLabel(result.category)} destinations${from} · services not verified`;
-    }
+      return s.subLegacy(result.year, result.sourceCode);
+    case "regional":
+      return s.subRegional(regionalCategoryLabel(result.category, s), result.terminalName ?? "");
     case "feeder":
-      return "Feeder service lead · not verified";
+      return s.subFeeder;
   }
 }
 
@@ -373,13 +356,13 @@ export type GroupView = {
  * everything ("Show all N"), except a large Places group (Naga has thousands of named places),
  * which reveals PLACES_STEP more at a time until the rest fits in one step.
  */
-export function groupView(group: SearchGroup, shown: number = GROUP_LIMIT): GroupView {
+export function groupView(group: SearchGroup, shown: number = GROUP_LIMIT, copy: Dict["search"] = en.search): GroupView {
   const total = group.results.length;
   const rows = group.results.slice(0, shown);
   const hidden = total - rows.length;
   if (hidden <= 0) return { rows, label: null, next: total };
-  if (group.id === "places" && hidden > PLACES_STEP) return { rows, label: `Show ${PLACES_STEP} more`, next: rows.length + PLACES_STEP };
-  return { rows, label: `Show all ${total}`, next: total };
+  if (group.id === "places" && hidden > PLACES_STEP) return { rows, label: copy.showMore(PLACES_STEP), next: rows.length + PLACES_STEP };
+  return { rows, label: copy.showAll(total), next: total };
 }
 
 export function countResults(groups: readonly SearchGroup[]): number {

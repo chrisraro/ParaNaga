@@ -31,6 +31,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import { Suspense } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { useSearchIndex, type MorePlacesState } from "@/client/search/use-search-index";
 import { routeListSchema, type SearchIndex, type SearchOsmPlace } from "@/domain/api/schemas";
@@ -38,7 +39,6 @@ import {
   CARD_LIMIT,
   DIRECTORY_SEGMENTS,
   EXPLORE_CATEGORIES,
-  RAIL_STATUS_TEXT,
   terminalLocationText,
   barangaysAZ,
   chipOfOsmCategory,
@@ -55,7 +55,6 @@ import {
   type DirectorySegment,
   type ExploreCategoryId,
 } from "@/domain/places/explore";
-import { OSM_CATEGORY_LABEL } from "@/domain/places/osm-categories";
 import { barangayHref, osmPlaceHref, pinPlaceHref, terminalHref } from "@/domain/places/place-detail";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { useReturnToMap } from "@/ui/detail/detail-frame";
@@ -64,22 +63,50 @@ import { ListCell, ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { ModeChip } from "@/ui/modes/mode-chip";
 import { ModeIcon } from "@/ui/modes/mode-icon";
-import { modeName, type RouteMode } from "@/domain/modes/fleet";
+import type { RouteMode } from "@/domain/modes/fleet";
 import { terminalKindLabel, terminalMatchesModes, terminalRouteModes } from "@/domain/places/terminals";
 import { Segmented } from "@/ui/kit/segmented";
 import { routeTitleBesideChip } from "@/domain/planner/route-display";
 import { LoopChip } from "@/ui/trip/trip-parts";
+import { useT } from "@/i18n/provider";
+import { PageFrame } from "@/ui/app-shell/page-frame";
 
 type HeadingRef = RefObject<HTMLHeadingElement | null>;
 
+function SearchAction() {
+  const t = useT().explore;
+  return (
+    <Link href="/app/search" aria-label={t.searchLabel} className="pn-detail__round" data-testid="explore-search">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true" focusable="false">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M20 20l-3.5-3.5" />
+      </svg>
+    </Link>
+  );
+}
+
+/** The Explore tab page: the frame with its title, intro and search action, around the screen. */
+export function ExplorePage() {
+  const t = useT().explore;
+  return (
+    <PageFrame title={t.title} action={<SearchAction />} header={<p className="pn-explore__intro">{t.intro}</p>} testId="explore-page">
+      <Suspense fallback={null}>
+        <ExploreScreen />
+      </Suspense>
+    </PageFrame>
+  );
+}
+
 export function ExploreScreen() {
+  const tt = useT();
+  const t = tt.explore;
   const state = useSearchIndex();
   // The Home chips link here with ?c=<category>: that chip is the one selected.
   const requested = parseExploreCategory(useSearchParams().get("c"));
   const directoryHeading = useRef<HTMLHeadingElement>(null);
   if (state.status === "loading") {
     return (
-      <div className="pn-detail__stack" role="status" aria-label="Loading places" data-testid="explore-loading">
+      <div className="pn-detail__stack" role="status" aria-label={t.loadingPlaces} data-testid="explore-loading">
         <div className="pn-skeleton" style={{ width: "70%", height: 36 }} />
         <div className="pn-skeleton" style={{ height: 220 }} />
       </div>
@@ -91,10 +118,10 @@ export function ExploreScreen() {
       <div className="pn-explore">
         <div className="pn-detail__stack" data-testid="explore-error">
           <p role="alert" className="pn-footnote">
-            {state.problem === "offline" ? "You're offline. Try again." : "Couldn't load places. Try again."}
+            {state.problem === "offline" ? t.offlineRetry : t.loadFailed}
           </p>
           <button type="button" className="pn-detail__retry" onClick={state.retry}>
-            Try again
+            {tt.trip.tryAgain}
           </button>
         </div>
         <Directory index={null} headingRef={directoryHeading} />
@@ -105,6 +132,7 @@ export function ExploreScreen() {
 }
 
 export function ExploreView({ index, morePlaces = "ready", onRetry, requested = null }: { index: SearchIndex; morePlaces?: MorePlacesState; onRetry?: () => void; requested?: ExploreCategoryId | null }) {
+  const t = useT().explore;
   const directoryHeading = useRef<HTMLHeadingElement>(null);
   return (
     <div className="pn-explore">
@@ -119,7 +147,7 @@ export function ExploreView({ index, morePlaces = "ready", onRetry, requested = 
         }}
         data-testid="explore-jump"
       >
-        Jump to directory
+        {t.jump}
       </a>
       <PlacesByCategory places={index.osmPlaces} morePlaces={morePlaces} onRetry={onRetry} requested={requested} />
       <Directory index={index} headingRef={directoryHeading} />
@@ -147,6 +175,8 @@ function useOnCommute(): (place: SearchOsmPlace) => void {
 }
 
 function PlacesByCategory({ places, morePlaces, onRetry, requested }: { places: readonly SearchOsmPlace[]; morePlaces: MorePlacesState; onRetry?: () => void; requested: ExploreCategoryId | null }) {
+  const tt = useT();
+  const t = tt.explore;
   const uid = useId();
   const [cat, setCat] = useState<ExploreCategoryId>(requested ?? "all");
   // The tab page stays mounted: a new ?c= (another Home chip) selects its chip while it is shown.
@@ -163,7 +193,7 @@ function PlacesByCategory({ places, morePlaces, onRetry, requested }: { places: 
   const list = useMemo(() => placesInCategory(places, cat), [places, cat]);
   const shownCount = reveal?.cat === cat ? reveal.n : CARD_LIMIT;
   const shown = list.slice(0, shownCount);
-  const more = list.length > CARD_LIMIT ? showMoreCards(list.length, shownCount) : null;
+  const more = list.length > CARD_LIMIT ? showMoreCards(list.length, shownCount, t) : null;
   const active = Math.max(0, EXPLORE_CATEGORIES.findIndex((c) => c.id === cat));
   const tabId = (id: ExploreCategoryId) => `${uid}-cat-${id}`;
   const panelId = `${uid}-cards`;
@@ -196,7 +226,7 @@ function PlacesByCategory({ places, morePlaces, onRetry, requested }: { places: 
 
   return (
     <>
-      <div role="tablist" aria-label="Categories" className="pn-explore__chips" data-testid="explore-categories">
+      <div role="tablist" aria-label={t.categoriesLabel} className="pn-explore__chips" data-testid="explore-categories">
         {EXPLORE_CATEGORIES.map((c, i) => {
           const on = c.id === cat;
           return (
@@ -216,7 +246,7 @@ function PlacesByCategory({ places, morePlaces, onRetry, requested }: { places: 
               onKeyDown={onKeyDown}
               data-testid={`explore-chip-${c.id}`}
             >
-              {c.label}
+              {t.category[c.id].label}
             </button>
           );
         })}
@@ -225,16 +255,16 @@ function PlacesByCategory({ places, morePlaces, onRetry, requested }: { places: 
         {list.length === 0 && morePlaces !== "ready" ? (
           // Task 14: shops, restaurants and the rest are a lazy chunk; never say "none on file" before it arrived.
           <p className="pn-explore__empty" role={morePlaces === "loading" ? "status" : undefined} data-testid="explore-more-pending">
-            {morePlaces === "loading" ? "Loading more places…" : "Could not load these places. "}
+            {morePlaces === "loading" ? t.loadingMore : t.couldNotLoadThese}
             {morePlaces === "failed" && onRetry ? (
               <button type="button" className="pn-detail__retry" onClick={onRetry}>
-                Try again
+                {tt.trip.tryAgain}
               </button>
             ) : null}
           </p>
         ) : list.length === 0 ? (
           <p className="pn-explore__empty" data-testid="explore-empty">
-            {emptyCategoryText(cat)}
+            {emptyCategoryText(cat, t)}
           </p>
         ) : (
           <ul ref={cardList} className="pn-explore__cards">
@@ -286,11 +316,12 @@ function CommuteIcon() {
 }
 
 const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchOsmPlace; onCommute: (place: SearchOsmPlace) => void }) {
+  const t = useT();
   const photo = photoForPlace(place.key);
   const [photoFailed, setPhotoFailed] = useState(false);
   const chip = chipOfOsmCategory(place.category);
   const href = osmPlaceHref(place.key);
-  const kind = OSM_CATEGORY_LABEL[place.category];
+  const kind = t.places.category[place.category];
   return (
     <li className="pn-explore__card" data-testid="explore-card" data-category={place.category}>
       <div className={`pn-explore__tile pn-explore__tile--${chip}`}>
@@ -300,7 +331,7 @@ const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchO
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d={ICON_PATH[chip]} />
         </svg>
-        <span className="pn-explore__photo">Photo pending</span>
+        <span className="pn-explore__photo">{t.explore.photoPending}</span>
         </>}
       </div>
       <div className="pn-explore__body">
@@ -316,17 +347,17 @@ const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchO
             )}
           </h2>
           <p className="pn-explore__kind">{kind}</p>
-          {photo ? <Link className="pn-explore__credit" href={`/app/help/sources#${photo.id}`}>Photo credit</Link> : null}
+          {photo ? <Link className="pn-explore__credit" href={`/app/help/sources#${photo.id}`}>{t.explore.photoCredit}</Link> : null}
         </div>
         <button
           type="button"
           className="pn-explore__commute"
-          aria-label={`How to commute here: ${place.name}`}
+          aria-label={t.explore.commuteFor(place.name)}
           onClick={() => onCommute(place)}
           data-testid="explore-commute"
         >
           <CommuteIcon />
-          How to commute here
+          {t.explore.commute}
         </button>
       </div>
     </li>
@@ -336,13 +367,16 @@ const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchO
 // ------------------------------------------------------------------ directory
 
 function Directory({ index, headingRef }: { index: SearchIndex | null; headingRef: HeadingRef }) {
+  const t = useT().explore;
   const uid = useId();
   const [chosen, setSegment] = useState<DirectorySegment>("stops");
   // Without the search index only the routes (their own API) can be listed.
   const segment: DirectorySegment = index ? chosen : "routes";
   const panelId = `${uid}-dir`;
+  const segmentLabel = { stops: t.segmentStops, routes: t.segmentRoutes, terminals: t.segmentTerminals, barangays: t.segmentBarangays, leads: t.segmentLeads } as const;
   const options = DIRECTORY_SEGMENTS.filter((s) => index !== null || s.value === "routes").map((s) => ({
     ...s,
+    label: segmentLabel[s.value],
     controls: panelId,
     id: `${uid}-seg-${s.value}`,
   }));
@@ -351,9 +385,9 @@ function Directory({ index, headingRef }: { index: SearchIndex | null; headingRe
   return (
     <section id="explore-directory" className="pn-section pn-explore__directory" aria-labelledby={`${uid}-title`} data-testid="explore-directory">
       <h2 ref={headingRef} id={`${uid}-title`} tabIndex={-1} className="pn-explore__directory-title">
-        Directory
+        {t.directory}
       </h2>
-      {tabs ? <Segmented options={options} value={segment} onChange={setSegment} label="Directory sections" variant="tablist" testId="explore-segments" /> : null}
+      {tabs ? <Segmented options={options} value={segment} onChange={setSegment} label={t.directorySections} variant="tablist" testId="explore-segments" /> : null}
       <div
         id={panelId}
         role={tabs ? "tabpanel" : undefined}
@@ -380,26 +414,29 @@ function Count({ children }: { children: ReactNode }) {
 }
 
 function MappedStops({ index }: { index: SearchIndex }) {
+  const t = useT().explore;
   const list = useMemo(() => mappedStopsAZ(index.pinPlaces), [index.pinPlaces]);
   return (
     <>
-      <Count>{`${list.length} mapped-pin places, A–Z`}</Count>
-      <ul className="pn-group" aria-label="Mapped stops" data-testid="explore-stops">
+      <Count>{t.mappedCount(list.length)}</Count>
+      <ul className="pn-group" aria-label={t.mappedLabel} data-testid="explore-stops">
         {list.map((p) => (
-          <ListCell key={p.key} href={pinPlaceHref(p.key)} title={p.label} sub={pinPlaceSub(p)} badges={<StatusBadge variant="candidate" />} />
+          <ListCell key={p.key} href={pinPlaceHref(p.key)} title={p.label} sub={pinPlaceSub(p, t)} badges={<StatusBadge variant="candidate" />} />
         ))}
       </ul>
-      <Note>Pins within 60 m with one name are one row.</Note>
+      <Note>{t.pinsNote}</Note>
     </>
   );
 }
 
 function Routes() {
+  const tt = useT();
+  const t = tt.explore;
   const resource = useNetworkResource("/api/v1/routes", routeListSchema);
   const uid = useId();
   if (resource.status === "loading") {
     return (
-      <div className="pn-detail__stack" role="status" aria-label="Loading routes" data-testid="explore-routes-loading">
+      <div className="pn-detail__stack" role="status" aria-label={t.loadingRoutes} data-testid="explore-routes-loading">
         <div className="pn-skeleton" style={{ height: 180 }} />
       </div>
     );
@@ -409,19 +446,19 @@ function Routes() {
     return (
       <div className="pn-detail__stack" data-testid="explore-routes-error">
         <p role="alert" className="pn-footnote">
-          {offline ? "You're offline. Try again." : "Could not load the routes. Try again."}
+          {offline ? t.offlineRetry : t.routesFailed}
         </p>
         <button type="button" className="pn-detail__retry" onClick={resource.retry}>
-          Try again
+          {tt.trip.tryAgain}
         </button>
       </div>
     );
   }
-  const groups = routeDirectoryGroups(resource.data);
+  const groups = routeDirectoryGroups(resource.data, t);
   const total = groups.reduce((n, g) => n + g.routes.length, 0);
   return (
     <>
-      <Count>{`${total} routes of the approved plan`}</Count>
+      <Count>{t.routesCount(total)}</Count>
       <div className="pn-explore__route-groups" data-testid="explore-routes">
         {groups.map((g, gi) => (
           <section key={g.title} className="pn-section" aria-labelledby={`${uid}-g${gi}`}>
@@ -448,7 +485,7 @@ function Routes() {
           </section>
         ))}
       </div>
-      <Note>Street order from the route plan. Shapes and stops unverified.</Note>
+      <Note>{t.routesNote}</Note>
     </>
   );
 }
@@ -457,14 +494,16 @@ const TERMINAL_FILTER_MODES: readonly RouteMode[] = ["jeepney", "tricycle", "uv_
 
 /** Terminals directory (Task 13): mode filter, mode chips, kind, and whether a location is mapped. */
 function Terminals({ index }: { index: SearchIndex }) {
+  const tt = useT();
+  const t = tt.explore;
   const [modes, setModes] = useState<RouteMode[]>([]);
-  const list = index.terminals.filter((t) => terminalMatchesModes(t, modes));
+  const list = index.terminals.filter((term) => terminalMatchesModes(term, modes));
   const toggle = (mode: RouteMode) => setModes((prev) => (prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]));
   return (
     <>
-      <div className="pn-explore__mode-filter" role="group" aria-label="Filter terminals by mode" data-testid="explore-terminal-filter">
+      <div className="pn-explore__mode-filter" role="group" aria-label={t.filterTerminals} data-testid="explore-terminal-filter">
         <button type="button" className={modes.length === 0 ? "pn-mode-filter-chip pn-mode-filter-chip--on" : "pn-mode-filter-chip"} aria-pressed={modes.length === 0} onClick={() => setModes([])}>
-          All
+          {t.all}
         </button>
         {TERMINAL_FILTER_MODES.map((mode) => (
           <button
@@ -476,22 +515,22 @@ function Terminals({ index }: { index: SearchIndex }) {
             data-testid={`explore-terminal-filter-${mode}`}
           >
             <ModeIcon mode={mode} size={16} />
-            <span>{modeName(mode)}</span>
+            <span>{tt.modes.name[mode]}</span>
           </button>
         ))}
       </div>
-      <Count>{`${list.length} terminals`}</Count>
-      <ul className="pn-group" aria-label="Terminals" data-testid="explore-terminals">
-        {list.map((t) => (
+      <Count>{t.terminalsCount(list.length)}</Count>
+      <ul className="pn-group" aria-label={t.terminalsLabel} data-testid="explore-terminals">
+        {list.map((term) => (
           <ListCell
-            key={t.code}
-            href={terminalHref(t.code)}
-            title={t.name}
-            sub={[terminalKindLabel(t.kind), terminalLocationText(t.location !== null)].filter(Boolean).join(" · ")}
+            key={term.code}
+            href={terminalHref(term.code)}
+            title={term.name}
+            sub={[terminalKindLabel(term.kind, tt.terminals), terminalLocationText(term.location !== null, tt.terminals)].filter(Boolean).join(" · ")}
             badges={
               <span className="pn-explore__terminal-modes">
-                {terminalRouteModes(t.modes).map((m) => (
-                  <ModeChip key={m} mode={m} label={modeName(m)} compact />
+                {terminalRouteModes(term.modes).map((m) => (
+                  <ModeChip key={m} mode={m} label={tt.modes.name[m]} compact />
                 ))}
               </span>
             }
@@ -504,11 +543,12 @@ function Terminals({ index }: { index: SearchIndex }) {
 }
 
 function Barangays({ index }: { index: SearchIndex }) {
+  const t = useT().explore;
   const list = useMemo(() => barangaysAZ(index.barangays), [index.barangays]);
   return (
     <>
-      <Count>{`${list.length} barangays, A–Z`}</Count>
-      <ul className="pn-group" aria-label="Barangays" data-testid="explore-barangays">
+      <Count>{t.barangaysCount(list.length)}</Count>
+      <ul className="pn-group" aria-label={t.barangaysLabel} data-testid="explore-barangays">
         {list.map((b) => (
           <ListCell key={b.key} href={barangayHref(b.key)} title={b.name} badges={<StatusBadge variant="not-surveyed" />} />
         ))}
@@ -518,17 +558,18 @@ function Barangays({ index }: { index: SearchIndex }) {
 }
 
 function Leads({ index }: { index: SearchIndex }) {
+  const t = useT().explore;
   const leads = feederLeadsByCode(index.feederLeads);
   return (
     <>
-      <Count>{`${leads.length} feeder leads`}</Count>
-      <ul className="pn-group" aria-label="Feeder leads" data-testid="explore-leads">
+      <Count>{t.leadsCount(leads.length)}</Count>
+      <ul className="pn-group" aria-label={t.leadsLabel} data-testid="explore-leads">
         {leads.map((l) => (
-          <ListCell key={l.code} title={l.name} sub={leadStatusText(l.status)} />
+          <ListCell key={l.code} title={l.name} sub={leadStatusText(l.status, t)} />
         ))}
       </ul>
       <p className="pn-explore__rail" data-testid="explore-rail">
-        {RAIL_STATUS_TEXT}
+        {t.railStatus}
       </p>
     </>
   );

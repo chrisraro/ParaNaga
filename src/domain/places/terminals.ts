@@ -3,7 +3,8 @@
 // a coordinate is community data from OpenStreetMap (ODbL) and never an entrance; regional fares
 // are estimates ("operator prices may differ"); a terminal without a coordinate is listed, never
 // drawn, as "Location not mapped".
-import { ROUTE_MODES, modeName, type RouteMode } from "../modes/fleet";
+import { en, type Dict } from "@/i18n/dict";
+import { ROUTE_MODES, type RouteMode } from "../modes/fleet";
 
 /** At most this many terminals are drawn as DOM markers; more fall back to one canvas layer. */
 export const TERMINAL_DOM_MARKER_LIMIT = 16;
@@ -22,27 +23,20 @@ export function terminalRouteModes(modes: readonly string[]): RouteMode[] {
 }
 
 /** ["bus", "uv_express"] → "Bus and UV Express"; three or more → "A, B and C". */
-export function terminalModesPhrase(modes: readonly string[]): string {
-  const names = terminalRouteModes(modes).map(modeName);
-  if (names.length <= 1) return names[0] ?? "Transport";
-  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+export function terminalModesPhrase(modes: readonly string[], copy: Pick<Dict, "terminals" | "modes"> = en): string {
+  const names = terminalRouteModes(modes).map((m) => copy.modes.name[m]);
+  if (names.length <= 1) return names[0] ?? copy.terminals.modesTransport;
+  return copy.terminals.modesAnd(names.slice(0, -1).join(", "), names[names.length - 1]!);
 }
 
 /** The marker's accessible name: "{name}, {modes} terminal, community-mapped location". */
-export function terminalMarkerName(t: { name: string; modes: readonly string[] }): string {
-  return `${t.name}, ${terminalModesPhrase(t.modes)} terminal, community-mapped location`;
+export function terminalMarkerName(t: { name: string; modes: readonly string[] }, copy: Pick<Dict, "terminals" | "modes"> = en): string {
+  return copy.terminals.markerName(t.name, terminalModesPhrase(t.modes, copy));
 }
 
-const KIND_LABEL: Record<string, string> = {
-  terminal: "Terminal",
-  loading_point: "Loading point",
-  waiting_area: "Waiting area",
-  station: "Station",
-};
-
 /** "Loading point", "Waiting area" …; null for a legacy row without a kind. */
-export function terminalKindLabel(kind: string | null): string | null {
-  return kind ? (KIND_LABEL[kind] ?? null) : null;
+export function terminalKindLabel(kind: string | null, copy: Dict["terminals"] = en.terminals): string | null {
+  return kind && Object.hasOwn(copy.kind, kind) ? copy.kind[kind as keyof typeof copy.kind] : null;
 }
 
 /** Mode filter shared by the map layer, the Layers sheet list and Explore: empty means all. */
@@ -64,8 +58,8 @@ export function terminalOsmLocationText(c: TerminalCoordinateInfo): string {
 }
 
 /** The trip end that "Directions to here" sets: the coordinate is a map point, never an entrance. */
-export function terminalDirectionsLabel(name: string): string {
-  return `${name} (map point, entrance not mapped)`;
+export function terminalDirectionsLabel(name: string, copy: Dict["terminals"] = en.terminals): string {
+  return copy.directionsLabel(name);
 }
 
 export type RegionalServiceInput = {
@@ -87,12 +81,12 @@ function formatKm(km: number): string {
  *   "≈ {km} km by the community-mapped route · {fare estimate}" or "Distance not on file · {rates}".
  * The estimate text always ends with "operator prices may differ" (src/domain/fares/regional.ts).
  */
-export function regionalServiceRow(s: RegionalServiceInput): { title: string; detail: string } {
-  const title = s.operators.length > 0 ? `${s.destination} · ${s.operators.join(", ")}` : `${s.destination} · operator not on file`;
+export function regionalServiceRow(s: RegionalServiceInput, copy: Dict["terminals"] = en.terminals): { title: string; detail: string } {
+  const title = s.operators.length > 0 ? `${s.destination} · ${s.operators.join(", ")}` : copy.regionalOperatorMissing(s.destination);
   const detail =
     s.distanceKm === null
-      ? `Distance not on file · ${s.fareEstimate.text.replace(NO_DISTANCE_SEGMENT, "")}`
-      : `≈ ${formatKm(s.distanceKm)} km by the community-mapped route · ${s.fareEstimate.text}`;
+      ? copy.regionalNoDistance(s.fareEstimate.text.replace(NO_DISTANCE_SEGMENT, ""))
+      : copy.regionalDistance(formatKm(s.distanceKm), s.fareEstimate.text);
   return { title, detail };
 }
 
@@ -141,6 +135,6 @@ export function groupScreenPoints(points: readonly ScreenPoint[], spacing = TERM
 }
 
 /** A group marker's accessible name: activating it zooms in until its terminals separate. */
-export function terminalGroupName(members: readonly { name: string }[]): string {
-  return `${members.length} terminals close together: ${members.map((m) => m.name).join("; ")}. Select to see each one`;
+export function terminalGroupName(members: readonly { name: string }[], copy: Dict["terminals"] = en.terminals): string {
+  return copy.groupName(members.length, members.map((m) => m.name).join("; "));
 }

@@ -9,6 +9,7 @@ import "./saved.css";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { captureOpener } from "@/ui/kit/opener";
+import { useT } from "@/i18n/provider";
 import { PLACE_LABEL_MAX, cleanPlaceLabel, takeCodePoints } from "@/domain/saved/saved";
 
 type Props = {
@@ -22,7 +23,9 @@ type Props = {
   testId?: string;
 };
 
-export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Save", onSave, onCancel, testId }: Props) {
+export function SavePlaceDialog({ open, title, initialLabel, confirmLabel, onSave, onCancel, testId }: Props) {
+  const tt = useT();
+  const t = tt.saved;
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const returnFocus = useRef<Element | null>(null);
@@ -76,7 +79,7 @@ export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Sav
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (busy) return;
-    const cleaned = cleanPlaceLabel(value);
+    const cleaned = cleanPlaceLabel(value, t);
     if (!cleaned.ok) {
       setError(cleaned.message);
       input.current?.focus();
@@ -87,7 +90,7 @@ export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Sav
       () => setBusy(false),
       () => {
         setBusy(false);
-        setError("Couldn't save on this phone. Try again.");
+        setError(t.saveFailed);
       },
     );
   };
@@ -109,7 +112,7 @@ export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Sav
           {title}
         </h2>
         <label htmlFor={`${id}-name`} className="pn-saved-dialog__label">
-          Name
+          {t.nameLabel}
         </label>
         <input
           ref={input}
@@ -128,7 +131,7 @@ export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Sav
           }}
         />
         <p id={`${id}-hint`} className="pn-saved-dialog__hint">
-          Up to {PLACE_LABEL_MAX} characters. Kept on this phone only.
+          {t.dialogHint(PLACE_LABEL_MAX)}
         </p>
         {error ? (
           <p id={`${id}-error`} className="pn-saved-dialog__error" role="alert">
@@ -137,10 +140,10 @@ export function SavePlaceDialog({ open, title, initialLabel, confirmLabel = "Sav
         ) : null}
         <div className="pn-dialog__actions">
           <button type="submit" className="pn-btn pn-btn--primary" aria-disabled={busy ? true : undefined}>
-            {confirmLabel}
+            {confirmLabel ?? t.save}
           </button>
           <button type="button" className="pn-btn pn-btn--secondary" onClick={onCancel}>
-            Cancel
+            {tt.kit.cancel}
           </button>
         </div>
       </form>

@@ -3,6 +3,7 @@
 
 import { EXPLORE_CATEGORIES, type ExploreCategoryId } from "@/domain/places/explore";
 import type { SavedPlace } from "@/domain/saved/saved";
+import { en, type Dict } from "@/i18n/dict";
 
 /** Category chips shown on Home, in order. Route and terminal layers stay in the Layers button. */
 export const HOME_CATEGORY_IDS: readonly ExploreCategoryId[] = ["food", "schools", "health", "markets", "government", "terminals"];
@@ -13,11 +14,11 @@ export type HomeChip =
   | { kind: "saved"; id: string; label: string; place: Pick<SavedPlace, "id" | "label" | "point" | "source"> }
   | { kind: "category"; id: ExploreCategoryId; label: string; href: string };
 
-export function homeChips(saved: readonly Pick<SavedPlace, "id" | "label" | "point" | "source">[]): HomeChip[] {
+export function homeChips(saved: readonly Pick<SavedPlace, "id" | "label" | "point" | "source">[], copy: Dict["explore"] = en.explore): HomeChip[] {
   const savedChips = saved.slice(0, MAX_SAVED_CHIPS).map((place): HomeChip => ({ kind: "saved", id: place.id, label: place.label, place }));
   const categories = HOME_CATEGORY_IDS.flatMap((id): HomeChip[] => {
     const category = EXPLORE_CATEGORIES.find((c) => c.id === id);
-    return category ? [{ kind: "category", id, label: category.label, href: `/app/explore?c=${id}` }] : [];
+    return category ? [{ kind: "category", id, label: copy.category[category.id].label, href: `/app/explore?c=${id}` }] : [];
   });
   return [...savedChips, ...categories];
 }

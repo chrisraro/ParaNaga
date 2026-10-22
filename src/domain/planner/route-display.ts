@@ -11,6 +11,8 @@
 // (CX12): no letter, never a guess.
 // `unverified` is false only for the loops A, C, D (the ordinance names them); the rest rest on one owner photo or the tally.
 
+import { en, type Dict } from "@/i18n/dict";
+
 export type RouteDisplay = { letter: string | null; title: string; unverified: boolean };
 
 /** Where a letter comes from: shown honestly on the route detail. */
@@ -90,16 +92,16 @@ export function routeSearchNames(routeCode: string): string[] {
 }
 
 /** The honest provenance lines of a route detail: ordinance, authorised units, and where the letter comes from. */
-export function routeProvenance(routeCode: string): { plan: string; letter: string | null } | null {
+export function routeProvenance(routeCode: string, copy: Dict["routes"] = en.routes): { plan: string; letter: string | null } | null {
   const e = ROUTE_DISPLAY[routeCode];
   if (!e) return null;
-  const units = e.unitsShared ? `${e.authorisedUnits} units shared by Loops A-D` : `${e.authorisedUnits} units`;
+  const units = e.unitsShared ? copy.provenanceUnitsShared(e.authorisedUnits) : copy.provenanceUnits(e.authorisedUnits);
   const letter =
-    e.letterEvidence === "sign" ? "Letter seen on the signboard"
-    : e.letterEvidence === "inferred" ? "Letter inferred from the signboard order, not yet confirmed"
-    : e.letterEvidence === "ordinance" ? `Letter ${e.letter} of the Loop Service in the ordinance`
+    e.letterEvidence === "sign" ? copy.letterSign
+    : e.letterEvidence === "inferred" ? copy.letterInferred
+    : e.letterEvidence === "ordinance" ? copy.letterOrdinance(e.letter ?? "")
     : null;
-  return { plan: `Route ${e.routeNumber} of the City of Naga route plan, Ordinance 2025-070 · ${units} authorised`, letter };
+  return { plan: copy.provenancePlan(e.routeNumber, units), letter };
 }
 
 /** An active jeepney route: one of the 11 services (R1-R7, Loops A-D) of Ordinance 2025-070. Nothing else is listed as one. */

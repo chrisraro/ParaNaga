@@ -4,6 +4,7 @@
 // layers slot (48 px) then locate. Stack B (top 176): zoom capsule.
 // Rendered outside the Leaflet container so map gestures never swallow taps.
 import type { Ref } from "react";
+import { useT } from "@/i18n/provider";
 
 type Props = {
   canZoomIn: boolean;
@@ -24,6 +25,7 @@ export function MapControls({
   onOpenLayers,
   layersButtonRef,
 }: Props) {
+  const t = useT().map;
   return (
     <>
       {onOpenLayers ? (
@@ -32,7 +34,7 @@ export function MapControls({
             ref={layersButtonRef}
             type="button"
             className="pn-ctl pn-ctl--layers"
-            aria-label="Layers"
+            aria-label={t.layers}
             onClick={onOpenLayers}
             data-testid="map-layers-btn"
           >
@@ -49,7 +51,7 @@ export function MapControls({
           <button
             type="button"
             className="pn-ctl pn-ctl--locate"
-            aria-label="Center on my location"
+            aria-label={t.centerOnMe}
             onClick={onLocate}
           >
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -58,12 +60,12 @@ export function MapControls({
           </button>
         </div>
       ) : null}
-      <div className="pn-glass pn-capsule pn-map-zoom" role="group" aria-label="Zoom">
+      <div className="pn-glass pn-capsule pn-map-zoom" role="group" aria-label={t.zoom}>
         {/* aria-disabled (not `disabled`) keeps keyboard focus on the button at the zoom limit. */}
         <button
           type="button"
           className="pn-ctl pn-ctl--zoom"
-          aria-label="Zoom in"
+          aria-label={t.zoomIn}
           aria-disabled={canZoomIn ? undefined : true}
           onClick={canZoomIn ? onZoomIn : undefined}
         >
@@ -75,7 +77,7 @@ export function MapControls({
         <button
           type="button"
           className="pn-ctl pn-ctl--zoom"
-          aria-label="Zoom out"
+          aria-label={t.zoomOut}
           aria-disabled={canZoomOut ? undefined : true}
           onClick={canZoomOut ? onZoomOut : undefined}
         >

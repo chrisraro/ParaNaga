@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 // terminal comes from GET /api/v1/terminals/:code in the browser (404 → the not-found panel).
 export default function TerminalPage({ params }: PageProps<"/app/terminals/[code]">) {
   return (
-    <Suspense fallback={<DetailLoading title="Terminal" />}>
+    <Suspense fallback={<DetailLoading what="terminal" />}>
       <TerminalFromParams params={params} />
     </Suspense>
   );

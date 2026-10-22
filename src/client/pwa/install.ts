@@ -6,6 +6,7 @@
 // installed app (display-mode: standalone) says "Installed". Nothing is ever prompted unasked.
 
 import { useSyncExternalStore } from "react";
+import { en, type Dict } from "@/i18n/dict";
 
 /** Chromium's install prompt event (not in the DOM typings). */
 type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
@@ -54,9 +55,9 @@ export function isIos(userAgent: string, maxTouchPoints: number): boolean {
 }
 
 /** "On iPhone: …" / "On iPad: …" (Share, then “Add to Home Screen”). */
-export function iosInstallText(userAgent: string): string {
-  const device = /iPhone|iPod/.test(userAgent) ? "iPhone" : "iPad";
-  return `On ${device}: tap Share, then “Add to Home Screen”.`;
+export function iosInstallText(userAgent: string, copy: Dict["pwa"] = en.pwa): string {
+  const device = /iPhone|iPod/.test(userAgent) ? copy.iphone : copy.ipad;
+  return copy.installIos(device);
 }
 
 export function installState(): InstallState {

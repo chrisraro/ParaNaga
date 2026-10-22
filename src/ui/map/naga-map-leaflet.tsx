@@ -29,6 +29,7 @@ import type { Bounds, LatLng } from "@/domain/geo/types";
 import { mapSurface as computeMapSurface } from "@/domain/modes/palette";
 import { MapControls } from "./map-controls";
 import { ROUTE_FIT_DURATION_S, ROUTE_FIT_EASE_LINEARITY, ROUTE_FIT_MAX_ZOOM, routeFitKey, routeFitPadding } from "./route-fit";
+import { useT } from "@/i18n/provider";
 import { MapLegend } from "./map-legend";
 import { legendVisualKeys } from "./map-layer-policy";
 import { RouteLinesLayer, collectRouteLegendItems, linesHaveOnewayCaution } from "./route-lines-layer";
@@ -76,7 +77,7 @@ function escapeHtml(text: string): string {
   return text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-function pinIcon(kind: "start" | "destination", label = kind === "start" ? "Start point" : "Destination"): L.DivIcon {
+function pinIcon(kind: "start" | "destination", label: string): L.DivIcon {
   return L.divIcon({
     className: "pn-marker",
     html: `<svg width="30" height="30" viewBox="0 0 30 30" role="img" aria-label="${escapeHtml(label)}"><circle class="pn-pin pn-pin--${kind}" cx="15" cy="15" r="12" stroke-width="3" /><circle cx="15" cy="15" r="5" fill="#FFFFFF" /></svg>`,
@@ -84,9 +85,6 @@ function pinIcon(kind: "start" | "destination", label = kind === "start" ? "Star
     iconAnchor: [15, 15],
   });
 }
-
-const START_ICON = pinIcon("start");
-const DESTINATION_ICON = pinIcon("destination");
 
 /** A place's own marker (place detail): destination style, named after the place. */
 function PlaceMarker({ point, label }: { point: LatLng; label: string }) {
@@ -223,6 +221,7 @@ type SyncProps = {
 /** Lives inside <MapContainer>: reports the view and handles recenter requests. */
 function MapViewSync({ recenterSignal, userFix, target, targetLabel, onView, onAnnounce }: SyncProps) {
   const map = useMap();
+  const t = useT().map;
 
   const report = useEffectEvent(() => {
     const center = map.getCenter();
@@ -259,8 +258,8 @@ function MapViewSync({ recenterSignal, userFix, target, targetLabel, onView, onA
     // Under reduced motion the fly-to becomes a jump (map design brief §3, Motion rules).
     if (prefersReducedMotion()) map.setView(center, zoom, { animate: false });
     else map.flyTo(center, zoom, { duration: 0.8 });
-    const where = target ? targetLabel : "your location";
-    onAnnounce(onUser ? `Map centered on ${where}` : "Map centered on Naga City center");
+    const where = target ? targetLabel : t.yourLocation;
+    onAnnounce(onUser ? t.centeredOn(where) : t.centeredNaga);
   });
 
   // Starts at 0 (the screens' initial signal), not the current value: a recentre requested before
@@ -313,7 +312,7 @@ export default function NagaMapLeaflet({
   onCenterChange,
   recenterSignal,
   recenterTarget,
-  recenterTargetLabel = "the start pin",
+  recenterTargetLabel,
   onLocate,
   onOpenLayers,
   layersButtonRef,
@@ -335,8 +334,12 @@ export default function NagaMapLeaflet({
   className,
   initialView,
   placeMarker,
-  label = "Map of Naga City",
+  label,
 }: NagaMapProps) {
+  const t = useT().map;
+  const mapLabel = label ?? t.mapOfNaga;
+  const startIcon = useMemo(() => pinIcon("start", t.startPoint), [t]);
+  const destinationIcon = useMemo(() => pinIcon("destination", t.destination), [t]);
   const reducedMotion = useReducedMotion();
   const [tiles] = useState(currentTileConfig);
   // Low-data mode (Settings): no tile layer, so no tile is requested, until the user asks for the
@@ -386,7 +389,7 @@ export default function NagaMapLeaflet({
     if (target === current) return; // at the limit: the button is aria-disabled
 
     map.setZoom(target, { animate: !prefersReducedMotion() });
-    setAnnouncement(`Zoom level ${target}`);
+    setAnnouncement(t.zoomLevel(target));
   };
 
   const zoom = view?.zoom ?? NAGA_DEFAULT_ZOOM;
@@ -428,7 +431,7 @@ export default function NagaMapLeaflet({
       tabIndex={-1}
       data-testid="naga-map"
       role="region"
-      aria-label={label}
+      aria-label={mapLabel}
       data-center-lat={view ? view.lat.toFixed(6) : undefined}
       data-center-lng={view ? view.lng.toFixed(6) : undefined}
       data-zoom={view ? String(view.zoom) : undefined}
@@ -496,7 +499,7 @@ export default function NagaMapLeaflet({
         {pins?.start ? (
           <Marker
             position={[pins.start.lat, pins.start.lng]}
-            icon={START_ICON}
+            icon={startIcon}
             interactive={false}
             keyboard={false}
           />
@@ -504,7 +507,7 @@ export default function NagaMapLeaflet({
         {pins?.destination ? (
           <Marker
             position={[pins.destination.lat, pins.destination.lng]}
-            icon={DESTINATION_ICON}
+            icon={destinationIcon}
             interactive={false}
             keyboard={false}
           />
@@ -526,7 +529,7 @@ export default function NagaMapLeaflet({
           recenterSignal={recenterSignal}
           userFix={userFix}
           target={recenterTarget}
-          targetLabel={recenterTargetLabel}
+          targetLabel={recenterTargetLabel ?? t.startPin}
           onView={handleView}
           onAnnounce={setAnnouncement}
         />
@@ -571,12 +574,12 @@ export default function NagaMapLeaflet({
       />
 
       {notice === "unavailable" ? (
-        <p className="pn-map-notice" data-sheet-follower="" {...noticePresence}>Map background unavailable</p>
+        <p className="pn-map-notice" data-sheet-follower="" {...noticePresence}>{t.backgroundUnavailable}</p>
       ) : notice === "lowData" ? (
         <p className="pn-map-notice pn-map-notice--action" data-sheet-follower="" data-testid="map-low-data-notice" {...noticePresence}>
-          <span>Map background off (low-data mode)</span>
+          <span>{t.backgroundOff}</span>
           <button type="button" className="pn-map-notice__btn" onClick={() => setBackgroundOnce(true)}>
-            Show background once
+            {t.showBackgroundOnce}
           </button>
         </p>
       ) : null}
@@ -587,7 +590,7 @@ export default function NagaMapLeaflet({
         </a>
         <span aria-hidden="true">|</span>
         <span>
-          {tileUrl === null ? "Map data " : null}
+          {tileUrl === null ? t.mapData : null}
           {attribution.map((part, i) =>
             part.href ? (
               <a key={i} href={part.href} target="_blank" rel="noopener noreferrer">

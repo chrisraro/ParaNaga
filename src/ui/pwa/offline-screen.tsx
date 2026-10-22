@@ -17,8 +17,10 @@ import { offlineDataLine } from "@/domain/pwa/offline-copy";
 import type { EtaModel } from "@/domain/api/schemas";
 import { tripCardMeta, type SavedTrip, type SnapshotMeta } from "@/domain/saved/saved";
 import { savedTripSteps } from "@/domain/saved/trip-text";
+import { useT } from "@/i18n/provider";
 
 function DataLine() {
+  const t = useT().pwa;
   // undefined: not read yet.
   const [meta, setMeta] = useState<SnapshotMeta | null | undefined>(undefined);
   useEffect(() => {
@@ -31,7 +33,7 @@ function DataLine() {
       live = false;
     };
   }, []);
-  return <p data-testid="offline-data-date">{meta === undefined ? "Checking the data on this phone…" : offlineDataLine(meta?.publishedAt, meta !== null)}</p>;
+  return <p data-testid="offline-data-date">{meta === undefined ? t.pageChecking : offlineDataLine(meta?.publishedAt, meta !== null, t)}</p>;
 }
 
 function OfflineTripMeta({ trip, etaModel }: { trip: SavedTrip; etaModel: EtaModel | null }) {
@@ -40,21 +42,22 @@ function OfflineTripMeta({ trip, etaModel }: { trip: SavedTrip; etaModel: EtaMod
 }
 
 function SavedTrips() {
+  const t = useT();
   const trips = useSavedTrips();
   // The cached snapshot's time model (the service worker answers offline); none: "Time not available".
   const snapshot = useSnapshot(true).snapshot;
-  if (trips.status === "loading") return <p>Reading saved trips…</p>;
-  if (trips.status === "error") return <p>{trips.unavailable ? "Saved trips are not available: storage on this phone is blocked." : "Saved trips could not be read."}</p>;
-  if (trips.records.length === 0) return <p>No saved trips on this phone.</p>;
+  if (trips.status === "loading") return <p>{t.pwa.pageReading}</p>;
+  if (trips.status === "error") return <p>{trips.unavailable ? t.pwa.pageStorageBlocked : t.pwa.pageReadFailed}</p>;
+  if (trips.records.length === 0) return <p>{t.pwa.pageNoTrips}</p>;
   return (
     <ul className="pn-offline__trips" data-testid="offline-trips">
       {trips.records.map((trip) => (
         <li key={trip.id}>
           <details className="pn-offline__trip" data-testid="offline-trip">
             <summary>
-              <span className="pn-offline__trip-to">To {trip.destination.label}</span>
-              <span className="pn-offline__trip-from">From {trip.start.label}</span>
-              <span className="pn-offline__trip-hint">Show the steps</span>
+              <span className="pn-offline__trip-to">{t.pwa.pageTripTo(trip.destination.label)}</span>
+              <span className="pn-offline__trip-from">{t.pwa.pageTripFrom(trip.start.label)}</span>
+              <span className="pn-offline__trip-hint">{t.pwa.pageShowSteps}</span>
             </summary>
             <ol className="pn-offline__steps">
               {savedTripSteps(trip).map((step, i) => (
@@ -71,17 +74,18 @@ function SavedTrips() {
 }
 
 export function OfflineScreen() {
+  const t = useT().pwa;
   return (
     <main className="pn-pwa pn-offline" data-testid="offline-page">
       <div className="pn-offline__inner">
-        <h1>You&apos;re offline</h1>
+        <h1>{t.pageTitle}</h1>
         <DataLine />
-        <p>This page needs a connection. These open without one:</p>
-        <nav className="pn-offline__links" aria-label="Open offline">
-          <a href="/app">Open the map</a>
-          <a href="/app/saved">Saved</a>
+        <p>{t.pageNeedsConnection}</p>
+        <nav className="pn-offline__links" aria-label={t.pageLinksLabel}>
+          <a href="/app">{t.pageOpenMap}</a>
+          <a href="/app/saved">{t.pageSaved}</a>
         </nav>
-        <h2>Saved trips</h2>
+        <h2>{t.pageSavedTrips}</h2>
         <SavedTrips />
       </div>
     </main>

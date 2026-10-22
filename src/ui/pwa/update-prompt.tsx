@@ -12,11 +12,14 @@ import { useEffect, useSyncExternalStore } from "react";
 import { getGuidanceServerSnapshot, getGuidanceSnapshot, subscribeGuidance } from "@/client/guidance/guidance-store";
 import { applyUpdate, checkForUpdate, postponeUpdate, useUpdateCard } from "@/client/pwa/register-sw";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
+import { en } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 import { usePresence } from "@/ui/app-shell/presence";
 
-export const UPDATE_TEXT = "A new version of ParaNaga is ready.";
+export const UPDATE_TEXT = en.pwa.updateText;
 
 export function UpdatePrompt() {
+  const t = useT().pwa;
   const ready = useUpdateCard();
   const guiding = useSyncExternalStore(subscribeGuidance, getGuidanceSnapshot, getGuidanceServerSnapshot) !== null;
 
@@ -36,17 +39,17 @@ export function UpdatePrompt() {
     <div className="pn-pwa" role="status" data-testid="update-status">
       {show ? (
         <div className="pn-update" data-testid="update-prompt" style={clearance > 0 ? { bottom: clearance + 12 } : undefined} {...presence}>
-          <p>{UPDATE_TEXT}</p>
+          <p>{t.updateText}</p>
           <button
             type="button"
             onClick={() => {
               if (getGuidanceSnapshot() === null) applyUpdate();
             }}
           >
-            Reload
+            {t.reload}
           </button>
           <button type="button" className="pn-update__later" onClick={postponeUpdate}>
-            Later
+            {t.later}
           </button>
         </div>
       ) : null}

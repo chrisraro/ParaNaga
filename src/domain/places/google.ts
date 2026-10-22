@@ -8,6 +8,7 @@
 // is `location` only (Essentials); the name comes from the suggestion, because `displayName` would
 // make it Place Details Pro ($17.00 per 1,000).
 import { z } from "zod";
+import { en } from "@/i18n/dict";
 import { NAGA_BOUNDS } from "../geo/naga";
 import type { LatLng } from "../geo/types";
 
@@ -48,8 +49,8 @@ export const NAGA_RECTANGLE = {
   high: { latitude: NAGA_BOUNDS.north, longitude: NAGA_BOUNDS.east },
 } as const;
 
-export const GOOGLE_SUGGESTION_LABEL = "Google suggestion · not verified";
-export const GOOGLE_ATTRIBUTION = "Suggestions from Google Maps";
+export const GOOGLE_SUGGESTION_LABEL = en.search.googleSuggestion;
+export const GOOGLE_ATTRIBUTION = en.search.googleAttribution;
 
 /** NFKC, trimmed, inner spaces collapsed, lower case: the cache key and what Google is sent. */
 export function normalizeGoogleQuery(raw: string): string {

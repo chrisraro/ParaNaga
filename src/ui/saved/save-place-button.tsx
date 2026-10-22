@@ -7,6 +7,7 @@
 // the device.
 
 import { useState } from "react";
+import { useT } from "@/i18n/provider";
 import { deleteSavedPlace, putSavedPlace } from "@/client/storage/db";
 import { useSavedPlaces } from "@/client/saved/use-saved";
 import type { LatLng } from "@/domain/geo/types";
@@ -32,6 +33,7 @@ function BookmarkIcon({ filled }: { filled: boolean }) {
 }
 
 export function SavePlaceButton({ label, point, source, variant = "button", testId = "save-place" }: Props) {
+  const t = useT().saved;
   const places = useSavedPlaces();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [status, setStatus] = useState("");
@@ -47,25 +49,25 @@ export function SavePlaceButton({ label, point, source, variant = "button", test
       return;
     }
     deleteSavedPlace(saved.id).then(
-      () => setStatus(`Removed “${saved.label}” from saved places.`),
-      () => setStatus("Could not change saved places on this phone."),
+      () => setStatus(t.removedFromSaved(saved.label)),
+      () => setStatus(t.changeFailed),
     );
   };
 
   const save = async (name: string) => {
     await putSavedPlace({ id: crypto.randomUUID(), label: name, point: { lat: point.lat, lng: point.lng }, source, savedAt: new Date().toISOString() });
     setDialogOpen(false);
-    setStatus(`Saved “${name}” on this phone.`);
+    setStatus(t.savedAsName(name));
   };
 
   const className = variant === "option" ? "pn-option" : saved ? "pn-trip-action pn-trip-action--on" : "pn-trip-action";
-  const text = saved ? (variant === "option" ? `Saved as “${saved.label}”` : "Saved") : variant === "option" ? "Save this place" : "Save place";
+  const text = saved ? (variant === "option" ? t.savedAsLabel(saved.label) : t.savedState) : variant === "option" ? t.saveThisPlace : t.savePlace;
   // The name starts with the visible text and says what a tap does now.
-  const name = saved ? `${text}, remove from saved places` : undefined;
+  const name = saved ? t.removeSuffix(text) : undefined;
   return (
     <>
       {unavailable ? (
-        <p className="pn-note-plain">Saving places needs storage on this phone, which is not available.</p>
+        <p className="pn-note-plain">{t.storageUnavailable}</p>
       ) : (
         <button type="button" className={className} aria-disabled={loading ? true : undefined} onClick={onClick} data-testid={testId} data-state={saved ? "saved" : "none"} aria-label={name}>
           {variant === "option" ? (
@@ -83,7 +85,7 @@ export function SavePlaceButton({ label, point, source, variant = "button", test
       </p>
       <SavePlaceDialog
         open={dialogOpen}
-        title="Save place"
+        title={t.savePlace}
         initialLabel={takeCodePoints(label, PLACE_LABEL_MAX)}
         onSave={save}
         onCancel={() => setDialogOpen(false)}

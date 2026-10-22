@@ -2,7 +2,7 @@
 // ("jeep", "tricycle"; owner decision 2026-10-22). Strings identical to English must be listed in
 // SAME_AS_EN (tests/unit/i18n-guards.test.ts). Draft pending the Jev check; every translated key is
 // in docs/i18n/ledger-fil.json (uncertain ones carry "review": true).
-import type { Dict } from "./dict";
+import { en, type Dict } from "./dict";
 
 export const fil: Dict = {
   app: { name: "ParaNaga", tagline: "Alamin ang sasakyan mo. Hanapin ang daan mo." },
@@ -499,4 +499,16 @@ export const fil: Dict = {
     },
     osmAttribution: "© OpenStreetMap contributors (ODbL)",
   },
+  pwa: en.pwa,
+  settings: en.settings,
+  detail: en.detail,
+  stops: en.stops,
+  routes: en.routes,
+  modes: en.modes,
+  places: en.places,
+  terminals: en.terminals,
+  search: en.search,
+  explore: en.explore,
+  saved: en.saved,
+  map: en.map,
 };

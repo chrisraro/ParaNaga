@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 // See src/app/app/places/osm/[type]/[id]/page.tsx: params read inside Suspense, place from the cached index.
 export default function BarangayPage({ params }: PageProps<"/app/places/barangay/[key]">) {
   return (
-    <Suspense fallback={<DetailLoading title="Place" />}>
+    <Suspense fallback={<DetailLoading what="place" />}>
       <PlaceFromParams params={params} />
     </Suspense>
   );

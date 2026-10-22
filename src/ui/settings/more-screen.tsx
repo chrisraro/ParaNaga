@@ -22,7 +22,8 @@ import { useLocationPermission } from "@/client/geo/use-location-permission";
 import { clearHistory, hasHistory } from "@/client/history/trip-history";
 import { updatePrefs, usePrefs } from "@/client/prefs/use-prefs";
 import { BIKOL_ENABLED, FILIPINO_ENABLED, type Locale } from "@/i18n/locales";
-import { setLocale } from "@/i18n/provider";
+import { en, type Dict } from "@/i18n/dict";
+import { setLocale, useT } from "@/i18n/provider";
 import { locationAccessLabel } from "@/domain/device/location-permission";
 import type { ThemePref } from "@/domain/prefs/prefs";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
@@ -32,30 +33,32 @@ import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { Segmented, type SegmentedOption } from "@/ui/kit/segmented";
 import { Switch } from "@/ui/kit/switch";
+import { PageFrame } from "@/ui/app-shell/page-frame";
 
-const THEME_OPTIONS: readonly SegmentedOption<ThemePref>[] = [
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-  { value: "system", label: "System" },
+const themeOptions = (t: Dict["settings"]): readonly SegmentedOption<ThemePref>[] => [
+  { value: "light", label: t.themeLight },
+  { value: "dark", label: t.themeDark },
+  { value: "system", label: t.themeSystem },
 ];
 
+// Language names are shown in their own language, so they are not dictionary keys.
 type LanguageChoice = Locale | "phone";
-const LANGUAGE_OPTIONS: readonly SegmentedOption<LanguageChoice>[] = [
-  { value: "phone", label: "Phone setting" },
+const languageOptions = (t: Dict["settings"]): readonly SegmentedOption<LanguageChoice>[] => [
+  { value: "phone", label: t.languagePhone },
   { value: "en", label: "English", lang: "en" },
   ...(FILIPINO_ENABLED ? [{ value: "fil", label: "Filipino", lang: "fil" } as const] : []),
   ...(BIKOL_ENABLED ? [{ value: "bcl", label: "Bikol", lang: "bcl" } as const] : []),
 ];
 
 export const STATUS = {
-  cleared: "Data on this phone removed. Settings are back to their defaults.",
-  clearFailed: "Some data could not be removed. Try again.",
-  historyDeleted: "Trip history on this phone deleted.",
-  historyDeleteFailed: "The trip history could not be deleted. Try again.",
+  cleared: en.settings.cleared,
+  clearFailed: en.settings.clearFailed,
+  historyDeleted: en.settings.historyDeleted,
+  historyDeleteFailed: en.settings.historyDeleteFailed,
 } as const;
 
-export const CLEAR_DATA_QUESTION = "Remove saved trips, saved places, trip history and settings from this phone?";
-export const DELETE_HISTORY_QUESTION = "Also delete the history on this phone?";
+export const CLEAR_DATA_QUESTION = en.settings.clearQuestion;
+export const DELETE_HISTORY_QUESTION = en.settings.deleteHistoryQuestion;
 
 function AccountIcon() {
   return (
@@ -76,7 +79,18 @@ function LocationIcon() {
   );
 }
 
+/** The More tab page: the frame (large title) around the screen. */
+export function MorePage() {
+  const t = useT().settings;
+  return (
+    <PageFrame title={t.title} testId="more-page">
+      <MoreScreen />
+    </PageFrame>
+  );
+}
+
 export function MoreScreen() {
+  const t = useT().settings;
   const prefs = usePrefs();
   const permission = useLocationPermission();
   const [confirmClear, setConfirmClear] = useState(false);
@@ -114,9 +128,9 @@ export function MoreScreen() {
     setStatus("");
     try {
       await clearDeviceData();
-      setStatus(STATUS.cleared);
+      setStatus(t.cleared);
     } catch {
-      setStatus(STATUS.clearFailed);
+      setStatus(t.clearFailed);
     }
   };
 
@@ -125,9 +139,9 @@ export function MoreScreen() {
     setStatus("");
     try {
       await clearHistory();
-      setStatus(STATUS.historyDeleted);
+      setStatus(t.historyDeleted);
     } catch {
-      setStatus(STATUS.historyDeleteFailed);
+      setStatus(t.historyDeleteFailed);
     }
   };
 
@@ -141,8 +155,8 @@ export function MoreScreen() {
             <AccountIcon />
           </span>
           <span className="pn-settings__account-text">
-            <strong>{user ? user.name : "No account needed"}</strong>
-            <span>{user ? `Signed in · ${user.roles.join(", ") || "commuter"}` : "Saved trips and places stay on this phone."}</span>
+            <strong>{user ? user.name : t.noAccount}</strong>
+            <span>{user ? t.signedIn(user.roles.join(", ") || t.roleCommuter) : t.staysOnPhone}</span>
           </span>
         </div>
         {user ? (
@@ -152,7 +166,7 @@ export function MoreScreen() {
             onClick={signOut}
             data-testid="settings-sign-out"
           >
-            Sign out
+            {t.signOut}
           </button>
         ) : (
           <Link
@@ -160,33 +174,33 @@ export function MoreScreen() {
             className="pn-settings__account-action"
             data-testid="settings-sign-in"
           >
-            Sign in
+            {t.signIn}
           </Link>
         )}
       </div>
 
       <div className="pn-settings__group">
-        <ListGroup title="General" testId="settings-general">
+        <ListGroup title={t.general} testId="settings-general">
           <li className="pn-settings__appearance">
             <span className="pn-settings__row-label" aria-hidden="true">
-              Language
+              {t.language}
             </span>
             <Segmented
-              label="Language"
-              options={LANGUAGE_OPTIONS}
+              label={t.language}
+              options={languageOptions(t)}
               value={prefs.locale ?? "phone"}
               onChange={(choice) => setLocale(choice === "phone" ? undefined : choice)}
               testId="settings-language"
             />
           </li>
-          <ListCell title="Fare category" trailing="Regular" />
+          <ListCell title={t.fareCategory} trailing={t.fareRegular} />
           <li className="pn-settings__appearance">
             <span className="pn-settings__row-label" aria-hidden="true">
-              Appearance
+              {t.appearance}
             </span>
             <Segmented
-              label="Appearance"
-              options={THEME_OPTIONS}
+              label={t.appearance}
+              options={themeOptions(t)}
               value={prefs.theme}
               onChange={(theme) => change({ theme })}
               testId="settings-appearance"
@@ -194,15 +208,15 @@ export function MoreScreen() {
           </li>
         </ListGroup>
         <Note testId="settings-fare-note">
-          Discounts aren’t applied: no verified rule yet. Regular fares shown.
+          {t.discountsNote}
         </Note>
       </div>
 
-      <ListGroup title="Display and data" testId="settings-display">
+      <ListGroup title={t.display} testId="settings-display">
         <li>
           <Switch
-            label="Low-data mode"
-            hint="Hide the map background; pins and trip steps still show"
+            label={t.lowData}
+            hint={t.lowDataHint}
             checked={prefs.lowData}
             onChange={(lowData) => change({ lowData })}
             testId="settings-low-data"
@@ -210,8 +224,8 @@ export function MoreScreen() {
         </li>
         <li>
           <Switch
-            label="High contrast"
-            hint="Stronger text and borders"
+            label={t.highContrast}
+            hint={t.highContrastHint}
             checked={prefs.highContrast}
             onChange={(highContrast) => change({ highContrast })}
             testId="settings-high-contrast"
@@ -219,35 +233,35 @@ export function MoreScreen() {
         </li>
         <li>
           <Switch
-            label="Trip history"
-            hint="Off by default, kept on this device"
+            label={t.history}
+            hint={t.historyHint}
             checked={prefs.historyEnabled}
             onChange={onHistoryChange}
             testId="settings-history"
           />
         </li>
-        <ListCell title="Reduce motion" trailing="Follows your device setting" />
+        <ListCell title={t.reduceMotion} trailing={t.reduceMotionValue} />
       </ListGroup>
 
       <div className="pn-settings__group">
-        <ListGroup title="Location" testId="settings-location">
+        <ListGroup title={t.location} testId="settings-location">
           <ListCell
             icon={<LocationIcon />}
-            title="Location access"
-            trailing={<span data-testid="settings-location-status">{permission === null ? "Checking…" : locationAccessLabel(permission)}</span>}
+            title={t.locationAccess}
+            trailing={<span data-testid="settings-location-status">{permission === null ? t.checking : locationAccessLabel(permission, t)}</span>}
           />
         </ListGroup>
         <Note>
-          Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.
+          {t.locationNote}
         </Note>
       </div>
 
       <section className="pn-section" aria-labelledby="settings-data-title">
         <h2 id="settings-data-title" className="pn-section__title">
-          Data on this device
+          {t.dataTitle}
         </h2>
         <button type="button" className="pn-btn pn-btn--danger" onClick={() => setConfirmClear(true)} data-testid="settings-clear-data">
-          Clear data on this device
+          {t.clearData}
         </button>
         <p className="pn-note-plain" role="status" data-testid="settings-status">
           {status}
@@ -256,20 +270,20 @@ export function MoreScreen() {
 
       <InstallRow />
 
-      <ListGroup title="Reports" testId="settings-reports">
-        <ListCell title="My reports" sub="Corrections and driver reports you sent" href="/app/reports" testId="settings-my-reports" />
-        <ListCell title="Report a driver" sub="Private, never published" href="/app/report-driver" testId="settings-report-driver" />
+      <ListGroup title={t.reports} testId="settings-reports">
+        <ListCell title={t.myReports} sub={t.myReportsSub} href="/app/reports" testId="settings-my-reports" />
+        <ListCell title={t.reportDriver} sub={t.reportDriverSub} href="/app/report-driver" testId="settings-report-driver" />
       </ListGroup>
 
-      <ListGroup title="About" testId="settings-about">
-        <ListCell title="Help" sub="Safety and how trips work" href="/app/help" testId="settings-help" />
-        <ListCell title="Sources and credits" href={SOURCES_HREF} testId="settings-sources" />
+      <ListGroup title={t.about} testId="settings-about">
+        <ListCell title={t.help} sub={t.helpSub} href="/app/help" testId="settings-help" />
+        <ListCell title={t.sources} href={SOURCES_HREF} testId="settings-sources" />
       </ListGroup>
 
       <ConfirmDialog
         open={confirmClear}
-        title={CLEAR_DATA_QUESTION}
-        confirmLabel="Remove"
+        title={t.clearQuestion}
+        confirmLabel={t.remove}
         tone="danger"
         onConfirm={() => void onClear()}
         onCancel={() => setConfirmClear(false)}
@@ -277,9 +291,9 @@ export function MoreScreen() {
       />
       <ConfirmDialog
         open={askDeleteHistory}
-        title={DELETE_HISTORY_QUESTION}
-        confirmLabel="Delete"
-        cancelLabel="Keep"
+        title={t.deleteHistoryQuestion}
+        confirmLabel={t.delete}
+        cancelLabel={t.keep}
         tone="danger"
         onConfirm={() => void onDeleteHistory()}
         onCancel={() => setAskDeleteHistory(false)}

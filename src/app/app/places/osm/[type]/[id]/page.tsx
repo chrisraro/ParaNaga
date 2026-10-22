@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 // the client (the place is read from the cached index in the browser, like Search).
 export default function OsmPlacePage({ params }: PageProps<"/app/places/osm/[type]/[id]">) {
   return (
-    <Suspense fallback={<DetailLoading title="Place" />}>
+    <Suspense fallback={<DetailLoading what="place" />}>
       <PlaceFromParams params={params} />
     </Suspense>
   );

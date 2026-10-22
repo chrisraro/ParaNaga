@@ -31,6 +31,7 @@ import { queryFromHash } from "@/domain/places/place-detail";
 import { actionFor, noticeFor, parseSearchPurpose, type SearchAction, type SearchPurpose } from "@/domain/search/select";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
 import { useEscapeToClose } from "@/ui/app-shell/panel";
+import { DetailPanel } from "@/ui/detail/detail-frame";
 import { NearbyStops } from "@/ui/home/nearby-stops";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ListChevron } from "@/ui/kit/list";
@@ -39,11 +40,22 @@ import { Switch } from "@/ui/kit/switch";
 import { SavePlaceDialog } from "@/ui/saved/save-place-dialog";
 import { GoogleSuggestions } from "./google-suggestions";
 import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
+import { useT } from "@/i18n/provider";
 
 export const SEARCH_DEBOUNCE_MS = 150;
-const FAILED_COPY = "Search data couldn't load. Try again.";
-const EMPTY_COPY = "No match. Try a place, stop, street or route.";
-const REGIONAL_NOTE = "Includes regional terminals. Services not verified.";
+
+/** The Suspense fallback of the search page: a panel with a header and a skeleton. */
+export function SearchFallback() {
+  const t = useT();
+  return (
+    <DetailPanel title={t.search.title} testId="search-fallback">
+      <div className="pn-detail__state" role="status" aria-label={t.search.loadingScreen}>
+        <div className="pn-skeleton" style={{ width: "100%", height: 44 }} />
+        <div className="pn-skeleton" style={{ width: "70%" }} />
+      </div>
+    </DetailPanel>
+  );
+}
 
 // ------------------------------------------------------------------ icons
 
@@ -139,8 +151,9 @@ function resultKey(result: SearchResult): string {
 // ------------------------------------------------------------------ rows
 
 function ResultRow({ result, purpose, onSelect }: { result: SearchResult; purpose: SearchPurpose | null; onSelect: (r: SearchResult) => void }) {
+  const t = useT();
   const action = actionFor(result, purpose);
-  const sub = resultSubtitle(result);
+  const sub = resultSubtitle(result, t);
   const badge = resultBadge(result);
   const body = (
     <>
@@ -199,12 +212,13 @@ function ResultGroup({
   onSelect: (r: SearchResult) => void;
 }) {
   const id = useId();
-  const view = groupView(group, shownRows);
+  const t = useT().search;
+  const view = groupView(group, shownRows, t);
   const shown = view.rows;
   return (
     <section className="pn-section" aria-labelledby={id} data-testid={`search-group-${group.id}`}>
       <h2 id={id} className="pn-section__title">
-        {group.title}
+        {t.group[group.id]}
       </h2>
       <ul className="pn-group">
         {shown.map((r) => (
@@ -216,7 +230,7 @@ function ResultGroup({
           {view.label}
         </button>
       ) : null}
-      {group.id === "legacy" ? <Note testId="search-legacy-note">Old route names are historical hints, not current routes.</Note> : null}
+      {group.id === "legacy" ? <Note testId="search-legacy-note">{t.legacyNote}</Note> : null}
     </section>
   );
 }
@@ -234,7 +248,9 @@ function NoticeCard({
   onSet: (which: "start" | "destination", endpoint: { point: { lat: number; lng: number }; label: string; place?: SavedPlaceSource }) => void;
   onClose: () => void;
 }) {
-  const notice = noticeFor(result, purpose);
+  const tt = useT();
+  const t = tt.search;
+  const notice = noticeFor(result, purpose, tt);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [result]);
   const id = useId();
@@ -247,15 +263,15 @@ function NoticeCard({
       {notice.endpoint ? (
         <div className="pn-search__notice-actions">
           <button type="button" className="pn-btn pn-btn--secondary" onClick={() => onSet("start", notice.endpoint!)}>
-            Set as start
+            {t.setStart}
           </button>
           <button type="button" className="pn-btn pn-btn--secondary" onClick={() => onSet("destination", notice.endpoint!)}>
-            Set as destination
+            {t.setDestination}
           </button>
         </div>
       ) : null}
       <button type="button" className="pn-text-btn" onClick={onClose}>
-        Close
+        {t.close}
       </button>
     </section>
   );
@@ -269,11 +285,12 @@ function RecentSection({
   onSelect: (entry: RecentSearchEntry) => void;
 }) {
   const id = useId();
+  const t = useT().search;
   if (entries.length === 0) return null;
   return (
     <section className="pn-section" aria-labelledby={id} data-testid="search-recent">
       <h2 id={id} className="pn-section__title">
-        Recent
+        {t.recent}
       </h2>
       <ul className="pn-group">
         {entries.map((entry) => (
@@ -311,8 +328,9 @@ function publishedDate(iso: string | null, locale: Locale = DEFAULT_LOCALE): str
 }
 
 function SkeletonRows() {
+  const t = useT().search;
   return (
-    <div className="pn-search__skeleton" role="status" aria-label="Loading search data" data-testid="search-loading">
+    <div className="pn-search__skeleton" role="status" aria-label={t.loadingData} data-testid="search-loading">
       {[70, 55, 80].map((w) => (
         <div key={w} className="pn-search__skeleton-row">
           <span className="pn-skeleton pn-search__skeleton-icon" />
@@ -375,6 +393,8 @@ function SearchBody({
   initialQuery: string;
 }) {
   const frame = useAppFrame();
+  const tt = useT();
+  const t = tt.search;
   const pathname = usePathname();
   const isSearchRoute = pathname === "/app/search";
   const router = useRouter();
@@ -452,7 +472,7 @@ function SearchBody({
   };
   const onSelect = (result: SearchResult) => {
     const action = actionFor(result, purpose);
-    if (action.type === "endpoint") setEnd(action.which, action.endpoint, { key: resultKey(result), subtitle: resultSubtitle(result) });
+    if (action.type === "endpoint") setEnd(action.which, action.endpoint, { key: resultKey(result), subtitle: resultSubtitle(result, tt) });
     else if (action.type === "save") {
       // Never save the same point twice; wait for the saved places before deciding.
       if (savedPlaces.status === "loading") return;
@@ -482,26 +502,26 @@ function SearchBody({
     else router.push("/app/saved?tab=places");
   };
 
-  const liveText = !hasQuery || !index ? "" : total === 1 ? "1 result" : `${total} results`;
+  const liveText = !hasQuery || !index ? "" : total === 1 ? t.resultOne : t.resultMany(total);
   const date = index ? publishedDate(index.revision.publishedAt) : null;
   const nearby = frame?.nearbyStops;
 
   return (
     <div ref={body}>
-      <h1 className="sr-only">Search</h1>
+      <h1 className="sr-only">{t.title}</h1>
       <header className="pn-search__header">
         <ViewTransition name="pn-search-field">
           <div className="pn-search__field">
             <SearchGlyph />
             <label htmlFor="pn-search-q" className="sr-only">
-              Search places, stops and routes
+              {t.inputLabel}
             </label>
             <input
               ref={input}
               id="pn-search-q"
               type="search"
               className="pn-search__input"
-              placeholder="Place, stop or route"
+              placeholder={t.placeholder}
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -513,7 +533,7 @@ function SearchBody({
               <button
                 type="button"
                 className="pn-search__clear"
-                aria-label="Clear search"
+                aria-label={t.clear}
                 onClick={() => {
                   setQuery("");
                   input.current?.focus();
@@ -527,12 +547,12 @@ function SearchBody({
           </div>
         </ViewTransition>
         <button type="button" className="pn-search__cancel" onClick={goBack}>
-          Cancel
+          {t.cancel}
         </button>
       </header>
 
       <main className="pn-search__main">
-        <ul className="pn-group" aria-label="Search options">
+        <ul className="pn-group" aria-label={t.options}>
           {/* Decision (Task 5): "Use current location" is offered for the start only, like the
               home sheet: GPS sets the start, never the destination. */}
           {purpose === "start" ? (
@@ -548,7 +568,7 @@ function SearchBody({
                 <span className="pn-search__option-icon">
                   <LocateGlyph />
                 </span>
-                <span className="pn-cell__title">Use current location</span>
+                <span className="pn-cell__title">{t.useCurrent}</span>
               </button>
             </li>
           ) : null}
@@ -565,52 +585,52 @@ function SearchBody({
                 <span className="pn-search__option-icon">
                   <PinGlyph />
                 </span>
-                <span className="pn-cell__title">Choose on map</span>
+                <span className="pn-cell__title">{t.chooseOnMap}</span>
               </button>
             </li>
           ) : null}
           <li>
-            <Switch label="Include regional connections" checked={regional} onChange={setRegional} testId="search-regional" />
+            <Switch label={t.includeRegional} checked={regional} onChange={setRegional} testId="search-regional" />
           </li>
         </ul>
-        {regional ? <Note testId="search-regional-note">{REGIONAL_NOTE}</Note> : null}
+        {regional ? <Note testId="search-regional-note">{t.regionalNote}</Note> : null}
         {purpose === "save" ? (
-          <Note testId="search-save-note">Pick a place to save.</Note>
+          <Note testId="search-save-note">{t.savePick}</Note>
         ) : null}
 
         {indexState.status === "loading" ? <SkeletonRows /> : null}
         {indexState.status === "error" ? (
           <div className="pn-search__error" data-testid="search-error">
-            <p>{indexState.problem === "offline" ? "Search needs a connection the first time. Try again." : FAILED_COPY}</p>
+            <p>{indexState.problem === "offline" ? t.needsConnection : t.failed}</p>
             <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
-              Try again
+              {tt.trip.tryAgain}
             </button>
           </div>
         ) : null}
         {indexState.status === "ready" && indexState.problem === "offline" ? (
           <Note icon testId="search-offline">
-            Offline · data from {date ?? `revision ${indexState.index.revision.label}`}
+            {t.offlineData(date ?? t.revisionOf(indexState.index.revision.label))}
           </Note>
         ) : null}
         {indexState.status === "ready" && indexState.problem === "failed" ? (
           <div className="pn-search__error" data-testid="search-failed">
-            <p>{FAILED_COPY}</p>
+            <p>{t.failed}</p>
             <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
-              Try again
+              {tt.trip.tryAgain}
             </button>
           </div>
         ) : null}
 
         {alreadySaved && alreadySaved.query === debounced ? (
           <p className="pn-search__already" role="status" data-testid="search-already-saved">
-            Already saved as “{alreadySaved.label}”.
+            {t.alreadySavedAs(alreadySaved.label)}
           </p>
         ) : null}
         {openNotice ? (
           <NoticeCard
             result={openNotice}
             purpose={purpose}
-            onSet={(which, endpoint) => setEnd(which, endpoint, { key: resultKey(openNotice), subtitle: resultSubtitle(openNotice) })}
+            onSet={(which, endpoint) => setEnd(which, endpoint, { key: resultKey(openNotice), subtitle: resultSubtitle(openNotice, tt) })}
             onClose={() => {
               pendingFocus.current = resultKey(openNotice);
               setNotice(null);
@@ -622,7 +642,7 @@ function SearchBody({
         {!hasQuery && isSearchRoute && nearby ? (
           <div data-testid="search-nearby">
             <NearbyStops
-              title="Stops near the map"
+              title={t.nearbyTitle}
               stops={nearby.stops}
               center={nearby.center}
               status={nearby.status}
@@ -635,19 +655,19 @@ function SearchBody({
         {/* Task 14: shops, restaurants and the rest arrive as a lazy chunk after the index. */}
         {index && hasQuery && total === 0 && morePlaces === "loading" ? (
           <p className="pn-search__empty" role="status" data-testid="search-more-loading">
-            Loading more places…
+            {t.loadingMore}
           </p>
         ) : null}
         {index && hasQuery && total === 0 && morePlaces !== "loading" ? (
           <p className="pn-search__empty" data-testid="search-empty">
-            {EMPTY_COPY}
+            {t.empty}
           </p>
         ) : null}
         {index && hasQuery && morePlaces === "failed" ? (
           <div className="pn-search__error" data-testid="search-more-failed">
-            <p>Shops, restaurants and other places could not load, so they are missing from these results.</p>
+            <p>{t.moreFailed}</p>
             <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
-              Try again
+              {tt.trip.tryAgain}
             </button>
           </div>
         ) : null}
@@ -683,7 +703,7 @@ function SearchBody({
       </p>
       <SavePlaceDialog
         open={saving !== null}
-        title="Save place"
+        title={t.saveDialogTitle}
         initialLabel={saving?.label ?? ""}
         onSave={savePlace}
         onCancel={() => setSaving(null)}

@@ -15,6 +15,7 @@ import { planOptionSchema, planResponseSchema, toWireOption, type PlanOptionDto,
 import type { NetworkSnapshot } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
 import type { LatLng } from "../geo/types";
+import { en, type Dict } from "@/i18n/dict";
 import { formatIsoDate } from "../network/present";
 import { UNVERIFIED_ROUTE_BADGE } from "../planner/labels";
 import { isAccessOption, specialFareText } from "../trip/option-card";
@@ -22,7 +23,7 @@ import { rideEnds } from "../trip/ride-ends";
 import { directionText, fareChipText, formatDistance, freeAlightText, isNegligibleWalk, legFareText, routeChipLabel, stopLabel, streetRideText } from "../trip/present";
 import type { EtaModel } from "../api/schemas";
 import { estimateOption } from "../eta/eta";
-import { TIME_NOT_AVAILABLE, formatTotal } from "../eta/format";
+import { formatTotal } from "../eta/format";
 
 /** Saved-place names: at most 40 characters, counted in code points (an emoji is one). */
 export const PLACE_LABEL_MAX = 40;
@@ -238,9 +239,10 @@ export function savedEstimateText(
   model: EtaModel | null | undefined,
   departure: Date = new Date(),
   walkLengths: ReadonlyArray<number | null | undefined> = [],
+  copy: Dict["eta"] = en.eta,
 ): string {
   const res = estimateOption(option, walkLengths, model, departure);
-  return res.ok ? formatTotal(res.estimate.total) : TIME_NOT_AVAILABLE;
+  return res.ok ? formatTotal(res.estimate.total, copy) : copy.timeNotAvailable;
 }
 
 /** "{estimate text} · {fare chip} · data from {date}" (the estimate from the cached snapshot's model). */
@@ -249,11 +251,12 @@ export function tripCardMeta(
   model: EtaModel | null | undefined,
   departure: Date = new Date(),
   walkLengths: ReadonlyArray<number | null | undefined> = [],
+  copy: Dict = en,
 ): string {
   const date = manilaDate(card.publishedAt);
-  const dataFrom = `data from ${date ?? `revision ${card.revisionLabel}`}`;
-  const fare = specialFareText(card.option) ?? fareChipText(card.option.fare);
-  return `${savedEstimateText(card.option, model, departure, walkLengths)} · ${fare} · ${dataFrom}`;
+  const dataFrom = copy.saved.dataFrom(date ?? copy.saved.revision(card.revisionLabel));
+  const fare = specialFareText(card.option, copy.trip) ?? fareChipText(card.option.fare, copy.trip);
+  return `${savedEstimateText(card.option, model, departure, walkLengths, copy.eta)} · ${fare} · ${dataFrom}`;
 }
 
 /** Is `run` a consecutive stretch of `ring` (wrapping around a circular variant)? */
@@ -387,26 +390,24 @@ export function shareText(
 
 // ---------------------------------------------------------------- saved places
 
-const PLACE_SOURCE_TEXT: Record<SavedPlaceSource, string> = { osm: "OpenStreetMap", pin: "Mapped pin", pinned: "Pinned location", google: "Google suggestion, not verified" };
-
-export function placeSubText(source: SavedPlaceSource): string {
-  return `Saved place · ${PLACE_SOURCE_TEXT[source]}`;
+export function placeSubText(source: SavedPlaceSource, copy: Dict["saved"] = en.saved): string {
+  return copy.placeSub(copy.placeSource[source]);
 }
 
-export const PLACE_LABEL_ERROR = `Enter a name of 1 to ${PLACE_LABEL_MAX} characters.`;
+export const PLACE_LABEL_ERROR = en.saved.labelError(PLACE_LABEL_MAX);
 
 /** Plain text: control characters removed, spaces collapsed, 1–40 characters. */
-export function cleanPlaceLabel(raw: string): { ok: true; label: string } | { ok: false; message: string } {
+export function cleanPlaceLabel(raw: string, copy: Dict["saved"] = en.saved): { ok: true; label: string } | { ok: false; message: string } {
   const label = raw.replace(/\p{Cc}/gu, (c) => (/\s/.test(c) ? " " : "")).replace(/\s+/g, " ").trim();
-  if (label.length < 1 || codePointLength(label) > PLACE_LABEL_MAX) return { ok: false, message: PLACE_LABEL_ERROR };
+  if (label.length < 1 || codePointLength(label) > PLACE_LABEL_MAX) return { ok: false, message: copy.labelError(PLACE_LABEL_MAX) };
   return { ok: true, label };
 }
 
 // ---------------------------------------------------------------- history
 
 /** The route and date of a history entry, shown on separate lines (labels only). */
-export function historyParts(entry: HistoryEntry): { route: string; date: string } {
-  return { route: `${entry.from} → ${entry.to}`, date: manilaDate(entry.at) ?? "date unknown" };
+export function historyParts(entry: HistoryEntry, copy: Dict["saved"] = en.saved): { route: string; date: string } {
+  return { route: `${entry.from} → ${entry.to}`, date: manilaDate(entry.at) ?? copy.dateUnknown };
 }
 
 /** "Plaza Rizal → SM City Naga · 16 Oct 2026" (labels only). */

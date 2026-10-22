@@ -3,7 +3,7 @@
 // detail), or show an honest notice where no screen exists (a saved place, a regional category
 // without a terminal). Pure: the search screen turns the action into navigation, an endpoint
 // request or the save dialog.
-import { OSM_CATEGORY_LABEL } from "../places/osm-categories";
+import { en, type Dict } from "@/i18n/dict";
 import { barangayHref, osmPlaceHref, pinPlaceHref, studyLabelHref, terminalHref } from "../places/place-detail";
 import type { LatLng } from "../geo/types";
 import type { SavedPlaceSource } from "../saved/saved";
@@ -73,39 +73,39 @@ export type SearchNotice = {
   osm: boolean;
 };
 
-const NOT_A_TRIP_END = "so it cannot be a trip start or destination";
-
 /** The facts shown when a result has no screen to open (see actionFor); never "opens soon" copy. */
-export function noticeFor(result: SearchResult, purpose: SearchPurpose | null): SearchNotice {
+export function noticeFor(result: SearchResult, purpose: SearchPurpose | null, copy: Pick<Dict, "search" | "places"> = en): SearchNotice {
+  const s = copy.search;
+  const notTripEnd = s.notTripEnd;
   const endpoint = purpose === "save" ? null : endpointForResult(result);
   switch (result.kind) {
     case "osm":
       return {
         title: result.title,
-        body: `${OSM_CATEGORY_LABEL[result.category]}. Location from OpenStreetMap — entrance not mapped.`,
+        body: s.noticeOsm(copy.places.category[result.category]),
         endpoint,
         osm: true,
       };
     case "pin":
       return {
         title: result.title,
-        body: `Mapped stop candidate${result.loops.length > 0 ? ` (${result.loops.join(", ")})` : ""}, not verified for navigation. Trips from mapped pins are unverified.`,
+        body: s.noticePin(result.loops.join(", ")),
         endpoint,
         osm: false,
       };
     case "saved":
-      return { title: result.title, body: purpose === "save" ? "Already saved on this phone." : "Saved place on this phone.", endpoint, osm: false };
+      return { title: result.title, body: purpose === "save" ? s.noticeAlreadySaved : s.noticeSaved, endpoint, osm: false };
     case "terminal":
       return {
         title: result.title,
-        body: `Terminal${result.locationText ? ` · ${result.locationText}` : ""}. Its location is not mapped, ${NOT_A_TRIP_END}.`,
+        body: s.noticeTerminal(result.locationText ?? "", notTripEnd),
         endpoint: null,
         osm: false,
       };
     case "barangay":
       return {
         title: result.title,
-        body: `Barangay · not surveyed. No boundary or centre is on file, ${NOT_A_TRIP_END}.`,
+        body: s.noticeBarangay(notTripEnd),
         endpoint: null,
         osm: false,
       };
@@ -113,7 +113,7 @@ export function noticeFor(result: SearchResult, purpose: SearchPurpose | null): 
       const where = [result.routeCode, result.direction].filter((x): x is string => !!x).join(" ");
       return {
         title: result.title,
-        body: `A stop label from the 2025 route study${where ? ` (${where})` : ""}. It has no location on file, ${NOT_A_TRIP_END}.`,
+        body: s.noticeStudy(where, notTripEnd),
         endpoint: null,
         osm: false,
       };
@@ -121,7 +121,7 @@ export function noticeFor(result: SearchResult, purpose: SearchPurpose | null): 
     case "regional":
       return {
         title: result.title,
-        body: `${regionalCategoryLabel(result.category)} destinations are listed${result.terminalName ? ` for ${result.terminalName}` : ""}. Individual services are not verified${result.terminalName ? ", and the terminal's location is not mapped" : ""}.`,
+        body: s.noticeRegional(regionalCategoryLabel(result.category, s), result.terminalName ?? ""),
         endpoint: null,
         osm: false,
       };

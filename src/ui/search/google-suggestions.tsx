@@ -11,10 +11,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { fetchGoogleSuggestions, resolveGooglePlace } from "@/client/places/google-places";
 import type { LatLng } from "@/domain/geo/types";
 import {
-  GOOGLE_ATTRIBUTION,
   GOOGLE_DEBOUNCE_MS,
   GOOGLE_QUERY_MIN,
-  GOOGLE_SUGGESTION_LABEL,
   normalizeGoogleQuery,
   shouldAskGoogle,
   type GoogleSuggestion,
@@ -22,6 +20,7 @@ import {
 } from "@/domain/places/google";
 import type { SearchPurpose } from "@/domain/search/select";
 import { Note } from "@/ui/kit/note";
+import { useT } from "@/i18n/provider";
 
 type Endpoint = { point: LatLng; label: string; place: "google" };
 
@@ -36,18 +35,10 @@ type Props = {
   onSave: (place: { label: string; point: LatLng; source: "google" }) => void;
 };
 
-const NOTE: Record<"capped" | "rate_limited", string> = {
-  capped: "No more Google suggestions today. Showing OpenStreetMap results only.",
-  rate_limited: "Google suggestions are paused for a few minutes. Showing OpenStreetMap results only.",
-};
-const PICK_PROBLEM = {
-  outside: "That place is outside Naga City, so it can't be used here.",
-  capped: NOTE.capped,
-  rate_limited: NOTE.rate_limited,
-  unavailable: "Couldn't get that place's location. Try again.",
-} as const;
-
 export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoint, onSave }: Props) {
+  const t = useT().search;
+  const NOTE = { capped: t.googleCapped, rate_limited: t.googleRateLimited } as const;
+  const PICK_PROBLEM = { outside: t.googleOutside, capped: NOTE.capped, rate_limited: NOTE.rate_limited, unavailable: t.googleUnavailable } as const;
   const id = useId();
   const token = useRef<string>(crypto.randomUUID());
   const [off, setOff] = useState(false);
@@ -81,7 +72,7 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
   if (!wanted) {
     return ready ? (
       <button type="button" className="pn-text-btn pn-search__more" onClick={() => setTapped(q)}>
-        Search more places
+        {t.googleMore}
       </button>
     ) : null;
   }
@@ -109,7 +100,7 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
   return (
     <section className="pn-section" aria-labelledby={id} data-testid="search-google">
       <h2 id={id} className="pn-section__title">
-        More places from Google
+        {t.googleHeading}
       </h2>
       <ul className="pn-group">
         {response.suggestions.map((s) => (
@@ -118,7 +109,7 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
               <span className="pn-cell__text">
                 <span className="pn-cell__title">{s.title}</span>
                 {s.subtitle ? <span className="pn-cell__sub">{s.subtitle}</span> : null}
-                <span className="pn-badge pn-badge--evidence">{GOOGLE_SUGGESTION_LABEL}</span>
+                <span className="pn-badge pn-badge--evidence">{t.googleSuggestion}</span>
               </span>
             </button>
           </li>
@@ -126,21 +117,21 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
       </ul>
       {shownPick ? (
         <div className="pn-card pn-search__notice" role="status" data-testid="search-google-pick">
-          <p className="pn-card__text">{shownPick.problem ?? `${shownPick.title}: location from a Google suggestion, not verified.`}</p>
+          <p className="pn-card__text">{shownPick.problem ?? t.googlePicked(shownPick.title)}</p>
           {shownPick.endpoint ? (
             <div className="pn-search__notice-actions">
               <button type="button" className="pn-btn pn-btn--secondary" onClick={() => onEndpoint("start", shownPick.endpoint!)}>
-                Set as start
+                {t.setStart}
               </button>
               <button type="button" className="pn-btn pn-btn--secondary" onClick={() => onEndpoint("destination", shownPick.endpoint!)}>
-                Set as destination
+                {t.setDestination}
               </button>
             </div>
           ) : null}
         </div>
       ) : null}
       <p className="pn-footnote" data-testid="search-google-attribution">
-        {GOOGLE_ATTRIBUTION}. Google receives what you typed. ParaNaga keeps Google&apos;s answer up to 24 hours under a one-way hash, with no typed text and no IP address.
+        {t.googleFooter(t.googleAttribution)}
       </p>
     </section>
   );
