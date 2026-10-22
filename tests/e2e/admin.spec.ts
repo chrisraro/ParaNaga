@@ -934,7 +934,7 @@ test("providers, jobs and the audit log: yes/no only, no diagnostic without a ke
   const s = await mockN7Api(page);
   await page.goto("/admin/providers");
   await expect(page.getByTestId("jev-key-present")).toHaveText("No");
-  await expect(page.getByTestId("jev-diagnostic-blocked")).toContainText("OPENROUTER_API_KEY is not set");
+  await expect(page.getByTestId("jev-diagnostic-blocked")).toContainText("The OpenRouter API key is not set");
   await expect(page.getByTestId("jev-diagnostic-run")).toHaveCount(0);
   expect(s.diagnostics).toBe(0);
   await page.goto("/admin/jobs");

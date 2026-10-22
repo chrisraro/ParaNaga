@@ -49,7 +49,7 @@ describe("users and roles", () => {
 
 describe("Jev diagnostic gate", () => {
   it("never runs without the key or while Jev is off", () => {
-    expect(diagnosticBlocker({ keyPresent: false, enabled: false, whyDisabled: "x" })).toMatch(/OPENROUTER_API_KEY/);
+    expect(diagnosticBlocker({ keyPresent: false, enabled: false, whyDisabled: "x" })).toMatch(/OpenRouter API key is not set/);
     expect(diagnosticBlocker({ keyPresent: true, enabled: false, whyDisabled: "Budget is 0." })).toBe("Budget is 0.");
     expect(diagnosticBlocker({ keyPresent: true, enabled: true, whyDisabled: null })).toBeNull();
   });

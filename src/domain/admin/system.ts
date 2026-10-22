@@ -125,7 +125,7 @@ export const DIAGNOSTIC_TEXT = "Diagnostic check: the jeepney to Centro left the
 
 /** Why the diagnostic does not run; null when it may. */
 export function diagnosticBlocker(j: Pick<JevStatus, "keyPresent" | "enabled" | "whyDisabled">): string | null {
-  if (!j.keyPresent) return "OPENROUTER_API_KEY is not set on the server, so no Decisions call is made; posts stay pending for a person.";
+  if (!j.keyPresent) return "The OpenRouter API key is not set on the server, so no Decisions call is made; posts stay pending for a person.";
   if (!j.enabled) return j.whyDisabled ?? "Jev is switched off.";
   return null;
 }
