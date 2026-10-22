@@ -37,7 +37,14 @@ const ownerUrl = process.env.TEST_OWNER_DATABASE_URL;
 const appUrl = process.env.TEST_APP_DATABASE_URL;
 const runtimeUrl = process.env.PARANAGA_DATABASE_URL;
 
-const LABEL = "anywhere-alight-2026-10-16";
+/**
+ * The base label of the real road import. A database that holds earlier imports of the same date (main
+ * does, after in-place seed edits) has it as "<base>.N", so the actual label is taken from the import
+ * result in the first import test; this is only the fallback for tests that run before it.
+ */
+const BASE = "anywhere-alight-2026-10-16";
+const LABEL_PATTERN = new RegExp(`^${BASE}(\\.\\d+)?$`);
+let LABEL = BASE;
 /** The Increment D road revision a database that already holds the earlier import still has (graph format v1). */
 const OLD_LABEL = "modes-lines-2026-10-16";
 const TABLES = [
@@ -178,13 +185,14 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     const plan = realPlan();
     expect(plan.problems).toEqual([]);
     const previous = await members(startRevisionId);
-    const existedBefore = (await revisionIdOf(LABEL)) !== undefined;
+    const existedBefore = (await owner.query("select 1 from transit.revision where label like $1", [`${BASE}%`])).rowCount! > 0;
     const result = await commitImport(ownerUrl!, plan);
     expect(result.modes).toMatchObject({ outcome: "unchanged" });
     // Fresh data commits it; a branch of main (the import is in production) already holds it and
     // reports "unchanged", and publishing it undoes the rollback done in beforeAll.
     expect(result.lines?.outcome).toBe(existedBefore ? "unchanged" : "committed");
-    expect(result.lines).toMatchObject({ revisionLabel: LABEL });
+    expect(result.lines).toMatchObject({ revisionLabel: expect.stringMatching(LABEL_PATTERN) });
+    LABEL = (result.lines as { revisionLabel: string }).revisionLabel;
     linesRevisionId = (await revisionIdOf(LABEL))!;
     if (result.lines?.outcome === "unchanged") {
       expect(result.lines).toMatchObject({ publishedIncludesBatch: false });
@@ -516,14 +524,17 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     const result = await commitImport(ownerUrl!, plan);
     expect(result.places).toMatchObject({ outcome: "committed", revisionLabel: "osm-places-2099-01-03" });
     expect(result.modes).toMatchObject({ outcome: "unchanged" });
-    expect(result.lines).toMatchObject({ outcome: "committed", revisionLabel: `${LABEL}.2` });
-    expect(await appRows(sql`select label from transit.v_published_revision`)).toEqual([{ label: `${LABEL}.2` }]);
+    // A new revision after every earlier one of this base label, whatever suffix the database has reached.
+    const next = (result.lines as { revisionLabel: string }).revisionLabel;
+    expect(result.lines).toMatchObject({ outcome: "committed", revisionLabel: expect.stringMatching(LABEL_PATTERN) });
+    expect(next).not.toBe(LABEL);
+    expect(await appRows(sql`select label from transit.v_published_revision`)).toEqual([{ label: next }]);
     // Same variants and road snapshot: the shapes are reused (same rows), carried into the new revision.
-    const id = (await revisionIdOf(`${LABEL}.2`))!;
+    const id = (await revisionIdOf(next))!;
     const shapes = (list: Member[]) => list.filter((m) => m.entity_kind === "shape");
     expect(shapes(await members(id))).toEqual(shapes(await members(linesRevisionId)));
     const again = await commitImport(ownerUrl!, buildImportPlan(files, places, seed, roads));
-    expect(again.lines).toMatchObject({ outcome: "unchanged", revisionLabel: `${LABEL}.2` });
+    expect(again.lines).toMatchObject({ outcome: "unchanged", revisionLabel: next });
   });
 
   it("a newer modes seed that changes a feeder variant publishes: its shape follows the new variant version", async () => {
@@ -536,8 +547,8 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     expect(plan.problems).toEqual([]);
     const result = await commitImport(ownerUrl!, plan);
     expect(result.modes).toMatchObject({ outcome: "committed", revisionLabel: "modes-2026-10-17" });
-    expect(result.lines).toMatchObject({ outcome: "committed", revisionLabel: `${LABEL}.3` });
-    const id = (await revisionIdOf(`${LABEL}.3`))!;
+    expect(result.lines).toMatchObject({ outcome: "committed", revisionLabel: expect.stringMatching(LABEL_PATTERN) });
+    const id = (await revisionIdOf((result.lines as { revisionLabel: string }).revisionLabel))!;
     const feeder = await asImport(async (c) => (await c.query(
       `select vv.anchors->1->>'name' as anchor, sv.trace_status
          from transit.revision_member vm

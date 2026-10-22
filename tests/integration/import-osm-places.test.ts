@@ -9,7 +9,7 @@
 // may have left a throwaway revision published): the newest real osm-places-* revision (on a
 // branch of main: osm-places-2026-10-15), else the transit import's revision. It is published
 // explicitly before the tests and again afterwards. Assertions on carried-forward data compare
-// with what that revision holds (128 stops and 11 routes on the real data).
+// with what that revision holds (128 stops on the real data, and every route it holds).
 import { readFileSync } from "node:fs";
 import pg from "pg";
 import { sql } from "drizzle-orm";
@@ -182,7 +182,7 @@ describe.skipIf(!ownerUrl || !appUrl)("OpenStreetMap places import (Neon branch)
     const stops = await appRows(sql`select count(*)::int as n from transit.v_published_stops`);
     expect(stops).toEqual([{ n: 128 }]);
     const routes = await appRows(sql`select count(*)::int as n from transit.v_published_routes`);
-    expect(routes).toEqual([{ n: 11 }]);
+    expect(routes).toEqual([{ n: previousTransit.filter((m) => m.entity_kind === "route").length }]);
   });
 
   it("records OSM provenance: source, document, batch and raw features", async () => {
