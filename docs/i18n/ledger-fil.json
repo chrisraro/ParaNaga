@@ -1,0 +1,2615 @@
+[
+  {
+    "key": "guidance.keepOpen",
+    "en": "Keep this screen open.",
+    "fil": "Iwanang bukas ang screen na ito."
+  },
+  {
+    "key": "guidance.endGuidance",
+    "en": "End guidance",
+    "fil": "Itigil ang gabay"
+  },
+  {
+    "key": "guidance.atStop",
+    "en": "I'm at the stop",
+    "fil": "Nasa hintuan na ako"
+  },
+  {
+    "key": "guidance.boarded",
+    "en": "I boarded {0}",
+    "fil": "Nakasakay sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | 'Nakasakay sa X' (riding X) for the length budget.",
+    "review": true
+  },
+  {
+    "key": "guidance.arrived",
+    "en": "I've arrived",
+    "fil": "Nandito na ako",
+    "review": true,
+    "note": "'Nandito na ako' (I'm here) instead of 'dumating'/'nakarating' for the length budget and to avoid arrival claims."
+  },
+  {
+    "key": "guidance.gotOffTricycle",
+    "en": "I got off the tricycle",
+    "fil": "Bumaba na ako sa tricycle"
+  },
+  {
+    "key": "guidance.paraAck",
+    "en": "I said “Para”",
+    "fil": "Sinabi ko “Para”",
+    "review": true,
+    "note": "Shortened to fit; 'Sinabi ko “Para”'."
+  },
+  {
+    "key": "guidance.gotOff",
+    "en": "I got off",
+    "fil": "Bumaba ako"
+  },
+  {
+    "key": "guidance.gotOffEarly",
+    "en": "I got off early",
+    "fil": "Maaga akong bumaba"
+  },
+  {
+    "key": "guidance.missedStop",
+    "en": "I missed my stop",
+    "fil": "Lampas na ako",
+    "review": true,
+    "note": "Short button: 'Lampas na ako' (I've gone past). Check it reads as missed stop."
+  },
+  {
+    "key": "guidance.done",
+    "en": "Done",
+    "fil": "Tapos"
+  },
+  {
+    "key": "guidance.boardingSideUnknown",
+    "en": "Ask where it stops.",
+    "fil": "Itanong kung saan humihinto.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.signboardUnknown",
+    "en": "Signboard unverified. Ask the driver: “{0}?”",
+    "fil": "Hindi pa kumpirmado ang signboard. Itanong sa driver: “{0}?”",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.entranceUnknown",
+    "en": "Entrance not mapped.",
+    "fil": "Wala pa sa mapa ang pasukan."
+  },
+  {
+    "key": "guidance.locationApproximate",
+    "en": "Location too rough (± {0} m): distance hidden.",
+    "fil": "Masyadong malabo ang lokasyon (± {0} m): nakatago ang layo.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.locationStale",
+    "en": "Location is stale: distance hidden.",
+    "fil": "Luma na ang lokasyon: nakatago ang layo.",
+    "review": true,
+    "note": "Safety-critical location-lost wording."
+  },
+  {
+    "key": "guidance.locationImprecise",
+    "en": "Location too rough: distance hidden.",
+    "fil": "Masyadong malabo ang lokasyon: nakatago ang layo.",
+    "review": true,
+    "note": "Safety-critical location-lost wording."
+  },
+  {
+    "key": "guidance.noMarkedStops",
+    "en": "This route has no marked stops. Watch for your stop, and tell the driver “para” when you are near.",
+    "fil": "Walang markadong hintuan ang rutang ito. Bantayan ang hintuan mo, at sabihin sa driver ang “para” kapag malapit ka na.",
+    "review": true,
+    "note": "Safety-critical."
+  },
+  {
+    "key": "guidance.offPath",
+    "en": "Your location is away from the approximate path. The jeepney may use another street; watch for your stop.",
+    "fil": "Malayo ang lokasyon mo sa tinatayang daan. Baka ibang kalye ang daanan ng jeep; bantayan ang hintuan mo.",
+    "review": true,
+    "note": "Safety-critical."
+  },
+  {
+    "key": "guidance.metresLeft",
+    "en": "About {0} m of riding left (approximate)",
+    "fil": "Mga {0} m pa ang sakay (tantiya)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.getReady",
+    "en": "Get ready to get off near {0}",
+    "fil": "Humanda nang bumaba malapit sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.headsUp",
+    "en": "{0} stops to {1}. Get ready.",
+    "fil": "{0} hintuan pa hanggang {1}. Humanda.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.arriveNear",
+    "en": "“I've arrived” shows when you are within {1} m of {0}.",
+    "fil": "Lalabas ang “Nandito na ako” kapag {1} m o mas malapit ka na sa {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.stopsByPinOrder",
+    "en": "Approximate; watch for your stop.",
+    "fil": "Tantiya lang; bantayan ang hintuan mo."
+  },
+  {
+    "key": "guidance.paraTitle",
+    "en": "Para! Next stop is yours",
+    "fil": "Para! Susunod na ang hintuan mo",
+    "review": true,
+    "note": "Safety-critical."
+  },
+  {
+    "key": "guidance.paraBody",
+    "en": "Get off at {0}. Say “Para” to the driver when you see it.",
+    "fil": "Bumaba sa {0}. Sabihin sa driver ang “Para” kapag nakita mo na ito.",
+    "note": "message function; {0},{1}.. are the arguments in order | Safety-critical.",
+    "review": true
+  },
+  {
+    "key": "guidance.paraAckTitle",
+    "en": "Getting off at the next stop",
+    "fil": "Bababa sa susunod na hintuan"
+  },
+  {
+    "key": "guidance.paraAckBody",
+    "en": "Step off when the jeepney stops at {0}, then tap “I got off”.",
+    "fil": "Bumaba kapag huminto ang jeep sa {0}, tapos pindutin ang “Bumaba ako”.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.stopIsNext",
+    "en": "Your stop is next",
+    "fil": "Susunod na ang hintuan mo"
+  },
+  {
+    "key": "guidance.arrivedTitle",
+    "en": "You've arrived",
+    "fil": "Nakarating ka na"
+  },
+  {
+    "key": "guidance.arrivedBody",
+    "en": "{0}. Location use stopped.",
+    "fil": "{0}. Itinigil na ang paggamit ng lokasyon.",
+    "note": "message function; {0},{1}.. are the arguments in order | Safety-critical arrival text; Jev check.",
+    "review": true
+  },
+  {
+    "key": "guidance.undo",
+    "en": "Undo",
+    "fil": "Bawi",
+    "review": true,
+    "note": "'Bawi' fits the length budget; alternative 'Undo' is common Taglish."
+  },
+  {
+    "key": "guidance.missedTitle",
+    "en": "Missed your stop?",
+    "fil": "Nalampasan mo ang hintuan mo?"
+  },
+  {
+    "key": "guidance.missedBody",
+    "en": "Get off when the jeepney next stops, then plan again from where you are.",
+    "fil": "Bumaba kapag huminto ulit ang jeep, tapos magplano ulit mula sa kinalalagyan mo.",
+    "review": true,
+    "note": "Safety-critical."
+  },
+  {
+    "key": "guidance.earlyTitle",
+    "en": "Got off early?",
+    "fil": "Maaga kang bumaba?"
+  },
+  {
+    "key": "guidance.earlyBody",
+    "en": "Plan again from where you are.",
+    "fil": "Magplano ulit mula sa kinalalagyan mo."
+  },
+  {
+    "key": "guidance.stepLabel",
+    "en": "Step {0} of {1} · {2}",
+    "fil": "Hakbang {0} ng {1} · {2}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.arriveStepLabel",
+    "en": "Step {0} of {1}",
+    "fil": "Hakbang {0} ng {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.stepWalk",
+    "en": "Walk",
+    "fil": "Lakad"
+  },
+  {
+    "key": "guidance.stepRide",
+    "en": "Ride",
+    "fil": "Sakay"
+  },
+  {
+    "key": "guidance.stepTransfer",
+    "en": "Transfer",
+    "fil": "Lipat"
+  },
+  {
+    "key": "guidance.tricycle",
+    "en": "Tricycle",
+    "fil": "Tricycle"
+  },
+  {
+    "key": "guidance.padyak",
+    "en": "Padyak",
+    "fil": "Padyak"
+  },
+  {
+    "key": "guidance.unnamedDestination",
+    "en": "your destination",
+    "fil": "pupuntahan mo"
+  },
+  {
+    "key": "guidance.theJeepney",
+    "en": "the jeepney",
+    "fil": "ang jeep"
+  },
+  {
+    "key": "guidance.pinNear",
+    "en": "your pin near {0}",
+    "fil": "ang pin mo malapit sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.destinationAt",
+    "en": "Your destination is at {0}",
+    "fil": "Nasa {0} ang pupuntahan mo",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.youreAt",
+    "en": "You're at {0}",
+    "fil": "Nasa {0} ka",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.walkTo",
+    "en": "Walk to {0}",
+    "fil": "Maglakad papuntang {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.waitFor",
+    "en": "Wait for {0} at {1}",
+    "fil": "Hintayin ang {0} sa {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.changeAt",
+    "en": "Change at {0}",
+    "fil": "Lumipat sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.changeTo",
+    "en": "Change to {0} at {1}",
+    "fil": "Lumipat sa {0} sa {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.startAt",
+    "en": "Start at {0}",
+    "fil": "Simula sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.gotOffAt",
+    "en": "Got off at {0}",
+    "fil": "Bumaba sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.closeTo",
+    "en": "Close to {0}. Tap “{1}”.",
+    "fil": "Malapit ka na sa {0}. Pindutin ang “{1}”.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.almostAt",
+    "en": "Almost at {0}",
+    "fil": "Malapit na sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.gpsUnder10",
+    "en": "Under 10 m",
+    "fil": "Wala pang 10 m"
+  },
+  {
+    "key": "guidance.gpsMeters",
+    "en": "≈ {0} m",
+    "fil": "≈ {0} m",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.straightLine",
+    "en": "{0} · straight-line",
+    "fil": "{0} · tuwid na linya",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.liveAbout",
+    "en": "About {0} m to {1}, straight line",
+    "fil": "Mga {0} m papuntang {1}, tuwid na linya",
+    "note": "message function; {0},{1}.. are the arguments in order | Spoken string; 'Mga N m' marks it as approximate.",
+    "review": true
+  },
+  {
+    "key": "guidance.liveUnder10",
+    "en": "Under 10 m to {0}, straight line",
+    "fil": "Wala pang 10 m papuntang {0}, tuwid na linya",
+    "note": "message function; {0},{1}.. are the arguments in order | Spoken string.",
+    "review": true
+  },
+  {
+    "key": "guidance.stopsCount",
+    "en": "{0} stops",
+    "fil": "{0} hintuan",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.toGo",
+    "en": "{0} to go",
+    "fil": "{0} pa",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.rideTo",
+    "en": "Ride to {0}",
+    "fil": "Sumakay hanggang {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.getOff",
+    "en": "Get off · {0}",
+    "fil": "Bumaba · {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.alongPathTo",
+    "en": "Ride along the approximate path to {0}",
+    "fil": "Sumakay sa tinatayang daan papuntang {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.passedOf",
+    "en": "{0} of {1}",
+    "fil": "{0} sa {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.countAfter",
+    "en": "{0} after {1}",
+    "fil": "{0} pagkatapos ng {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.byStopCount",
+    "en": "split by stop count",
+    "fil": "hinati ayon sa dami ng hintuan"
+  },
+  {
+    "key": "guidance.reportDriver",
+    "en": "Report a driver",
+    "fil": "I-report ang driver"
+  },
+  {
+    "key": "guidance.walkSummary",
+    "en": "{0} walk",
+    "fil": "{0} na lakad",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.alongThePath",
+    "en": "along the path",
+    "fil": "sa daan"
+  },
+  {
+    "key": "guidance.alongStreets",
+    "en": "along streets",
+    "fil": "sa mga kalye"
+  },
+  {
+    "key": "guidance.saved",
+    "en": "Saved",
+    "fil": "Saved",
+    "review": true,
+    "note": "Left as 'Saved' (budget 6 chars; 'Naka-save' is 9)."
+  },
+  {
+    "key": "guidance.saveTrip",
+    "en": "Save this trip",
+    "fil": "I-save ang biyahe"
+  },
+  {
+    "key": "guidance.worksOffline",
+    "en": "Works offline",
+    "fil": "Gumagana kahit offline"
+  },
+  {
+    "key": "guidance.saveUnavailable",
+    "en": "Saving isn’t available on this phone.",
+    "fil": "Hindi puwedeng mag-save sa phone na ito."
+  },
+  {
+    "key": "guidance.streetTitle",
+    "en": "Take a {0} to {1}",
+    "fil": "Sumakay ng {0} papuntang {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.streetTime",
+    "en": "{0} time not estimated",
+    "fil": "Walang tantiya sa oras ng {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.useLocation",
+    "en": "Use my location",
+    "fil": "Lokasyon ko",
+    "review": true,
+    "note": "Shortened to 'Lokasyon ko' for the length budget."
+  },
+  {
+    "key": "guidance.findingLocation",
+    "en": "Finding your location…",
+    "fil": "Hinahanap ang lokasyon mo…"
+  },
+  {
+    "key": "guidance.locationOff",
+    "en": "Location off.",
+    "fil": "Naka-off ang lokasyon."
+  },
+  {
+    "key": "guidance.locationOffTap",
+    "en": "Location off. Tap “{0}” when there.",
+    "fil": "Naka-off ang lokasyon. Pindutin ang “{0}” kapag nandoon ka na.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.noLocation",
+    "en": "No location now.",
+    "fil": "Walang lokasyon ngayon.",
+    "review": true,
+    "note": "Location-lost wording."
+  },
+  {
+    "key": "guidance.noLocationTap",
+    "en": "No location now. Tap “{0}” when there.",
+    "fil": "Walang lokasyon ngayon. Pindutin ang “{0}” kapag nandoon ka na.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "guidance.undoLabel",
+    "en": "Undo last step",
+    "fil": "Bawiin ang huling hakbang"
+  },
+  {
+    "key": "guidance.transferSteps",
+    "en": "Transfer steps",
+    "fil": "Mga hakbang sa paglipat"
+  },
+  {
+    "key": "guidance.checkDone",
+    "en": "(done)",
+    "fil": "(tapos na)"
+  },
+  {
+    "key": "guidance.gpsAccuracy",
+    "en": "GPS accuracy",
+    "fil": "Linaw ng GPS"
+  },
+  {
+    "key": "guidance.endConfirmTitle",
+    "en": "End guidance?",
+    "fil": "Itigil ang gabay?"
+  },
+  {
+    "key": "guidance.endConfirmBody",
+    "en": "Your trip stays in the options.",
+    "fil": "Mananatili ang biyahe mo sa mga opsyon."
+  },
+  {
+    "key": "guidance.keepGoing",
+    "en": "Keep going",
+    "fil": "Ituloy"
+  },
+  {
+    "key": "guidance.replan",
+    "en": "Re-plan from here",
+    "fil": "Plano ulit mula rito"
+  },
+  {
+    "key": "guidance.thenRide",
+    "en": "Then ride {0}",
+    "fil": "Pagkatapos, sumakay sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | Chip is a route name, so 'sumakay sa X'.",
+    "review": true
+  },
+  {
+    "key": "guidance.recenter",
+    "en": "Re-center",
+    "fil": "Sentro"
+  },
+  {
+    "key": "guidance.steps",
+    "en": "Steps",
+    "fil": "Steps",
+    "review": true,
+    "note": "Left as 'Steps' (budget 6 chars; 'Hakbang' is 7)."
+  },
+  {
+    "key": "geo.compass.N",
+    "en": "north",
+    "fil": "hilaga",
+    "review": true,
+    "note": "Compass words in everyday Tagalog; commuters may prefer 'north' etc."
+  },
+  {
+    "key": "geo.compass.NE",
+    "en": "northeast",
+    "fil": "hilagang-silangan"
+  },
+  {
+    "key": "geo.compass.E",
+    "en": "east",
+    "fil": "silangan"
+  },
+  {
+    "key": "geo.compass.SE",
+    "en": "southeast",
+    "fil": "timog-silangan"
+  },
+  {
+    "key": "geo.compass.S",
+    "en": "south",
+    "fil": "timog"
+  },
+  {
+    "key": "geo.compass.SW",
+    "en": "southwest",
+    "fil": "timog-kanluran"
+  },
+  {
+    "key": "geo.compass.W",
+    "en": "west",
+    "fil": "kanluran"
+  },
+  {
+    "key": "geo.compass.NW",
+    "en": "northwest",
+    "fil": "hilagang-kanluran"
+  },
+  {
+    "key": "geo.distanceM",
+    "en": "≈ {0} m",
+    "fil": "≈ {0} m",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "geo.distanceKm",
+    "en": "≈ {0} km",
+    "fil": "≈ {0} km",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "geo.accuracy",
+    "en": "± {0} m",
+    "fil": "± {0} m",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.timeNotAvailable",
+    "en": "Time not available",
+    "fil": "Walang tantiyang oras"
+  },
+  {
+    "key": "eta.min",
+    "en": "{0} min",
+    "fil": "{0} min",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.hours",
+    "en": "{0} h",
+    "fil": "{0} oras",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.hoursMin",
+    "en": "{0} h {1} min",
+    "fil": "{0} oras {1} min",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.rangeMin",
+    "en": "{0}–{1} min",
+    "fil": "{0}–{1} min",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.rangeLong",
+    "en": "{0} – {1}",
+    "fil": "{0} – {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.spokenHours",
+    "en": "{0} hours",
+    "fil": "{0} oras",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.spokenMinutes",
+    "en": "{0} minutes",
+    "fil": "{0} minuto",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.spokenBoth",
+    "en": "{0} {1}",
+    "fil": "{0} at {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.spokenRangeMin",
+    "en": "{0} to {1} minutes",
+    "fil": "{0} hanggang {1} minuto",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.spokenRangeLong",
+    "en": "{0} to {1}",
+    "fil": "{0} hanggang {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.modeName.jeepney",
+    "en": "jeepney",
+    "fil": "jeep"
+  },
+  {
+    "key": "eta.modeName.tricycle",
+    "en": "tricycle",
+    "fil": "tricycle"
+  },
+  {
+    "key": "eta.modeName.padyak",
+    "en": "padyak",
+    "fil": "padyak"
+  },
+  {
+    "key": "eta.modeName.uv_express",
+    "en": "UV Express",
+    "fil": "UV Express"
+  },
+  {
+    "key": "eta.modeName.bus",
+    "en": "bus",
+    "fil": "bus"
+  },
+  {
+    "key": "eta.modeName.rail",
+    "en": "train",
+    "fil": "tren"
+  },
+  {
+    "key": "eta.modesJoin",
+    "en": " and ",
+    "fil": " at "
+  },
+  {
+    "key": "eta.notEstimated",
+    "en": "{0} time not estimated",
+    "fil": "Walang tantiya sa oras ng {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.waitingOne",
+    "en": " + waiting (unknown)",
+    "fil": " + paghihintay (hindi alam)"
+  },
+  {
+    "key": "eta.waitingMany",
+    "en": " + waiting (unknown, {0} rides)",
+    "fil": " + paghihintay (hindi alam, {0} sakay)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.noWalking",
+    "en": "No walking",
+    "fil": "Walang lakad"
+  },
+  {
+    "key": "eta.estimatePrefix",
+    "en": "Estimate ",
+    "fil": "Tantiya "
+  },
+  {
+    "key": "eta.walkSuffix",
+    "en": " walk",
+    "fil": " na lakad"
+  },
+  {
+    "key": "eta.partialSep",
+    "en": " · {0}",
+    "fil": " · {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.peakNote",
+    "en": "Peak hours: slower ({0})",
+    "fil": "Rush hour: mas mabagal ({0})",
+    "note": "message function; {0},{1}.. are the arguments in order | 'Rush hour' used for peak hours.",
+    "review": true
+  },
+  {
+    "key": "eta.legWalk",
+    "en": "≈ {0} walk",
+    "fil": "≈ {0} na lakad",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.legRide",
+    "en": "≈ {0} ride",
+    "fil": "≈ {0} na sakay",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.remainingRiding",
+    "en": "≈ {0} left (estimate)",
+    "fil": "≈ {0} pa (tantiya)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.remainingTrip",
+    "en": "≈ {0} (estimate)",
+    "fil": "≈ {0} (tantiya)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.estAbbr",
+    "en": "Est.",
+    "fil": "Tant."
+  },
+  {
+    "key": "eta.estimate",
+    "en": "Estimate",
+    "fil": "Tantiya"
+  },
+  {
+    "key": "eta.waitingRow",
+    "en": "Waiting: unknown — no published schedules or headways for Naga",
+    "fil": "Paghihintay: hindi alam — walang nakalathalang iskedyul o headway para sa Naga",
+    "review": true,
+    "note": "'headway' left as English; no everyday Filipino word."
+  },
+  {
+    "key": "eta.trafficRow",
+    "en": "Based on typical speeds. ParaNaga uses no traffic service.",
+    "fil": "Batay sa karaniwang bilis. Hindi gumagamit ng traffic service ang ParaNaga."
+  },
+  {
+    "key": "eta.assumption",
+    "en": "ParaNaga assumption",
+    "fil": "Palagay ng ParaNaga"
+  },
+  {
+    "key": "eta.speedAssumption",
+    "en": "(ParaNaga assumption)",
+    "fil": "(palagay ng ParaNaga)"
+  },
+  {
+    "key": "eta.speedMixed",
+    "en": "(upper from {0}; lower is a ParaNaga assumption)",
+    "fil": "(ang mataas ay mula sa {0}; palagay ng ParaNaga ang mababa)",
+    "note": "message function; {0},{1}.. are the arguments in order | Technical basis row.",
+    "review": true
+  },
+  {
+    "key": "eta.rowWalk",
+    "en": "Walking: {0} km/h ({1}); up to {2}% slower for crossings ({3})",
+    "fil": "Lakad: {0} km/h ({1}); hanggang {2}% na mas mabagal dahil sa pagtawid ({3})",
+    "note": "message function; {0},{1}.. are the arguments in order | Technical basis row.",
+    "review": true
+  },
+  {
+    "key": "eta.rowOffpeak",
+    "en": "Jeepney off-peak: {0} km/h {1}",
+    "fil": "Jeep, hindi rush hour: {0} km/h {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.rowPeak",
+    "en": "Jeepney peak: {0} km/h {1}",
+    "fil": "Jeep, rush hour: {0} km/h {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.rowWindows",
+    "en": "Peak windows: {0} ({1}){2}",
+    "fil": "Oras ng rush hour: {0} ({1}){2}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "eta.everyDay",
+    "en": ", applied every day",
+    "fil": ", araw-araw ang gamit"
+  },
+  {
+    "key": "eta.everyDayNoData",
+    "en": ", applied every day (no day-of-week data)",
+    "fil": ", araw-araw ang gamit (walang datos ng araw ng linggo)"
+  },
+  {
+    "key": "eta.serviceHint",
+    "en": "Usually runs about 5:00-21:00 · unconfirmed",
+    "fil": "Karaniwang tumatakbo mga 5:00-21:00 · hindi pa kumpirmado"
+  },
+  {
+    "key": "eta.serviceOutside",
+    "en": "This ride starts outside the usual hours (about 5 am–9 pm, unconfirmed). A jeepney may not be running. Check with the driver or terminal.",
+    "fil": "Nagsisimula ang sakay na ito sa labas ng karaniwang oras (mga 5 am–9 pm, hindi pa kumpirmado). Baka walang jeep na tumatakbo. Itanong sa driver o sa terminal."
+  },
+  {
+    "key": "eta.serviceEarly",
+    "en": "Some jeepneys reportedly start before 5 am.",
+    "fil": "May mga jeep daw na umaalis bago mag-5 am.",
+    "review": true,
+    "note": "Hearsay marked with 'daw'."
+  },
+  {
+    "key": "eta.serviceLastTrips",
+    "en": "Last trips may already have left (unconfirmed).",
+    "fil": "Baka nakaalis na ang huling biyahe (hindi pa kumpirmado)."
+  },
+  {
+    "key": "eta.serviceOutsideCard",
+    "en": "Outside the usual hours (about 5 am–9 pm) · unconfirmed",
+    "fil": "Labas sa karaniwang oras (mga 5 am–9 pm) · hindi pa kumpirmado"
+  },
+  {
+    "key": "eta.basisTitle",
+    "en": "How times are estimated",
+    "fil": "Paano tinatantiya ang oras"
+  },
+  {
+    "key": "eta.basisClose",
+    "en": "Close how times are estimated",
+    "fil": "Isara ang paliwanag kung paano tinatantiya ang oras"
+  },
+  {
+    "key": "eta.close",
+    "en": "Close",
+    "fil": "Isara"
+  },
+  {
+    "key": "eta.walkNote",
+    "en": "Walking distances are estimates; paths not verified.",
+    "fil": "Tantiya lang ang layo ng lakad; hindi pa napatunayan ang mga daan."
+  },
+  {
+    "key": "eta.noModel",
+    "en": "Time-estimate model not on file for this revision.",
+    "fil": "Wala pang modelo ng tantiya sa oras para sa bersyong ito."
+  },
+  {
+    "key": "trip.unverifiedBadge",
+    "en": "Unverified route — confirm with the driver",
+    "fil": "Di pa kumpirmadong ruta — itanong sa driver",
+    "review": true,
+    "note": "Fixed-style honesty badge; Jev check."
+  },
+  {
+    "key": "trip.unverifiedChip",
+    "en": "Unverified route",
+    "fil": "Di pa kumpirmado",
+    "review": true,
+    "note": "Shortened for the length budget (drops 'route')."
+  },
+  {
+    "key": "trip.unverified",
+    "en": "Unverified",
+    "fil": "Di-kumpirmado",
+    "review": true,
+    "note": "Shortened for the length budget."
+  },
+  {
+    "key": "trip.yourLocation",
+    "en": "Your location",
+    "fil": "Lokasyon mo"
+  },
+  {
+    "key": "trip.pinnedLocation",
+    "en": "Pinned location",
+    "fil": "Na-pin na lokasyon"
+  },
+  {
+    "key": "trip.direction.clockwise",
+    "en": "clockwise",
+    "fil": "clockwise",
+    "review": true,
+    "note": "Left in English (Taglish)."
+  },
+  {
+    "key": "trip.direction.counterclockwise",
+    "en": "counterclockwise",
+    "fil": "counterclockwise",
+    "review": true,
+    "note": "Left in English (Taglish)."
+  },
+  {
+    "key": "trip.fromPinOrder",
+    "en": "{0} (from pin order)",
+    "fil": "{0} (batay sa ayos ng mga pin)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.fareNoRide",
+    "en": "No fare (walk)",
+    "fil": "Walang pasahe (lakad)"
+  },
+  {
+    "key": "trip.fareMinimum",
+    "en": "Minimum fare {0}",
+    "fil": "Minimum na pasahe {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.farePerPassenger",
+    "en": "{0} per passenger",
+    "fil": "{0} bawat pasahero",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.fareEstimate",
+    "en": "Estimate {0}",
+    "fil": "Tantiya {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.fareUnavailable",
+    "en": "Fare estimate unavailable",
+    "fil": "Walang tantiya sa pasahe"
+  },
+  {
+    "key": "trip.fareNone",
+    "en": "No fare",
+    "fil": "Libre",
+    "review": true,
+    "note": "'Libre' (free) for a walking leg; could read as a free ride. Alternative 'Walang bayad' exceeds the budget."
+  },
+  {
+    "key": "trip.fareNA",
+    "en": "Fare n/a",
+    "fil": "Pasahe n/a",
+    "review": true,
+    "note": "Abbreviation 'n/a' kept."
+  },
+  {
+    "key": "trip.legFareTraditional",
+    "en": "{0} · traditional jeepney rate · from reported fare rules · matrix not verified",
+    "fil": "{0} · singil ng traditional jeep · batay sa mga naiulat na patakaran sa pasahe · hindi pa napatunayan ang matrix",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.legFareModern",
+    "en": "{0} · modern jeepney rate · from reported fare rules · matrix not verified",
+    "fil": "{0} · singil ng modern jeep · batay sa mga naiulat na patakaran sa pasahe · hindi pa napatunayan ang matrix",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.legFareMixed",
+    "en": "{0} · traditional to modern rate{1} · matrix not verified",
+    "fil": "{0} · singil mula traditional hanggang modern{1} · hindi pa napatunayan ang matrix",
+    "note": "message function; {0},{1}.. are the arguments in order | Fare wording 'singil'.",
+    "review": true
+  },
+  {
+    "key": "trip.legFareMixedReports",
+    "en": " · from the national fare rule and riders' reports",
+    "fil": " · batay sa pambansang patakaran at sa ulat ng mga pasahero"
+  },
+  {
+    "key": "trip.legFareDefault",
+    "en": "{0} · from reported fare rules · matrix not verified",
+    "fil": "{0} · batay sa mga naiulat na patakaran sa pasahe · hindi pa napatunayan ang matrix",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.distanceAlongPath",
+    "en": "{0} along the approximate path",
+    "fil": "{0} sa tinatayang daan",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.distanceStraightLine",
+    "en": "{0} stop to stop (straight line)",
+    "fil": "{0} hintuan hanggang hintuan (tuwid na linya)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.fleetMixed",
+    "en": "{0} · traditional and modern",
+    "fil": "{0} · traditional at modern",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.fleetMixedAircon",
+    "en": "{0} · traditional and modern (air-conditioned)",
+    "fil": "{0} · traditional at modern (may aircon)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.kind.tricycle",
+    "en": "tricycle",
+    "fil": "tricycle"
+  },
+  {
+    "key": "trip.kind.padyak",
+    "en": "padyak",
+    "fil": "padyak"
+  },
+  {
+    "key": "trip.kindTitle.tricycle",
+    "en": "Tricycle",
+    "fil": "Tricycle"
+  },
+  {
+    "key": "trip.kindTitle.padyak",
+    "en": "Padyak",
+    "fil": "Padyak"
+  },
+  {
+    "key": "trip.streetKm",
+    "en": "about {0} km",
+    "fil": "mga {0} km",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.streetAlong",
+    "en": "{0} along streets",
+    "fil": "{0} sa mga kalye",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.streetStraight",
+    "en": "{0} in a straight line, route not confirmed",
+    "fil": "{0} sa tuwid na linya, hindi pa kumpirmado ang ruta",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.streetNoRoute",
+    "en": "street route not available",
+    "fil": "walang available na ruta sa kalye"
+  },
+  {
+    "key": "trip.streetFareNone",
+    "en": "fare not available",
+    "fil": "walang available na pasahe"
+  },
+  {
+    "key": "trip.streetFareTricycle",
+    "en": "minimum fare {0}",
+    "fil": "minimum na pasahe {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.streetFareTricycleMid",
+    "en": "minimum fare {0} (Ordinance 2024-002)",
+    "fil": "minimum na pasahe {0} (Ordinance 2024-002)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.streetFarePadyak",
+    "en": "{0} per passenger",
+    "fil": "{0} bawat pasahero",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.streetRide",
+    "en": "Take a {0} to {1} · {2} · {3} · confirm with the driver",
+    "fil": "Sumakay ng {0} papuntang {1} · {2} · {3} · kumpirmahin sa driver",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.freeAlight",
+    "en": "Get off near {0} · tell the driver 'para' · stop not marked",
+    "fil": "Bumaba malapit sa {0} · sabihin sa driver ang 'para' · walang markang hintuan",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.noTransfers",
+    "en": "No transfers",
+    "fil": "Walang lipat",
+    "review": true,
+    "note": "'lipat' for transfer is street usage; confirm."
+  },
+  {
+    "key": "trip.oneTransfer",
+    "en": "1 transfer",
+    "fil": "1 lipat",
+    "review": true,
+    "note": "'lipat' for transfer."
+  },
+  {
+    "key": "trip.transfers",
+    "en": "{0} transfers",
+    "fil": "{0} lipat",
+    "note": "message function; {0},{1}.. are the arguments in order | 'lipat' for transfer.",
+    "review": true
+  },
+  {
+    "key": "trip.walkTitle",
+    "en": "Walk {0}",
+    "fil": "Lakad {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.tricycleThenJeep",
+    "en": "Tricycle, then Jeep {0}",
+    "fil": "Tricycle, tapos Jeep {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.unnamedPin",
+    "en": "Unnamed pin {0}",
+    "fil": "Pin na walang pangalan {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.unnamedStop",
+    "en": "Unnamed stop",
+    "fil": "Hintuang walang pangalan"
+  },
+  {
+    "key": "trip.samePlaceTitle",
+    "en": "Start and destination are the same place",
+    "fil": "Pareho ang simula at ang pupuntahan"
+  },
+  {
+    "key": "trip.samePlaceHint",
+    "en": "Move the pin.",
+    "fil": "Ilipat ang pin."
+  },
+  {
+    "key": "trip.samePlaceDetail",
+    "en": "Move the destination pin away from your start to plan a trip.",
+    "fil": "Ilayo ang pin ng pupuntahan sa simula para makapagplano ng biyahe."
+  },
+  {
+    "key": "trip.onlyLoops",
+    "en": "Only Loops A and B for now.",
+    "fil": "Loop A at B pa lang sa ngayon."
+  },
+  {
+    "key": "trip.outsideCity",
+    "en": "Both points need to be inside Naga City",
+    "fil": "Dapat nasa loob ng Naga City ang dalawang punto"
+  },
+  {
+    "key": "trip.noStopOrigin",
+    "en": "No mapped stop within {0} m of your start",
+    "fil": "Walang naka-map na hintuan sa loob ng {0} m mula sa simula mo",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.noStopDestination",
+    "en": "No mapped stop within {0} m of your destination",
+    "fil": "Walang naka-map na hintuan sa loob ng {0} m mula sa pupuntahan mo",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.noRoute",
+    "en": "No provisional route connects these points yet",
+    "fil": "Wala pang pansamantalang rutang nag-uugnay sa mga puntong ito"
+  },
+  {
+    "key": "trip.walkDetail",
+    "en": "Walk {0} (estimate, path not verified). Only Loops A and B for now.",
+    "fil": "Lakad {0} (tantiya, hindi pa napatunayan ang daan). Loop A at B pa lang sa ngayon.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.walkShorterTitle",
+    "en": "Walking ({0}) is shorter than any ride we can suggest.",
+    "fil": "Mas maikli ang lakad ({0}) kaysa sa anumang sakay na maimumungkahi namin.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.walkShorterDetail",
+    "en": "Estimate, path not verified. Only Loops A and B for now.",
+    "fil": "Tantiya, hindi pa napatunayan ang daan. Loop A at B pa lang sa ngayon."
+  },
+  {
+    "key": "trip.noRouteNearby",
+    "en": "No provisional route nearby yet",
+    "fil": "Wala pang pansamantalang ruta sa malapit"
+  },
+  {
+    "key": "trip.optionCount",
+    "en": "{0} options",
+    "fil": "{0} opsyon",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.optionsFound",
+    "en": "{0} found.",
+    "fil": "{0} ang nahanap.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.unverifiedSentence",
+    "en": " Unverified.",
+    "fil": " Di pa kumpirmado."
+  },
+  {
+    "key": "trip.routeShown",
+    "en": " Route shown.",
+    "fil": " Ipinakita ang ruta."
+  },
+  {
+    "key": "trip.jeepneyReason.no_path_near_origin",
+    "en": "No jeepney route passes near your start",
+    "fil": "Walang rutang jeep na dumadaan malapit sa simula mo"
+  },
+  {
+    "key": "trip.jeepneyReason.no_path_near_destination",
+    "en": "No jeepney route passes near your destination",
+    "fil": "Walang rutang jeep na dumadaan malapit sa pupuntahan mo"
+  },
+  {
+    "key": "trip.jeepneyReason.walk_shorter",
+    "en": "Walking is shorter than any jeepney ride",
+    "fil": "Mas maikli ang lakad kaysa sa anumang sakay ng jeep"
+  },
+  {
+    "key": "trip.jeepneyReason.no_route",
+    "en": "No jeepney route connects these places",
+    "fil": "Walang rutang jeep na nag-uugnay sa mga lugar na ito"
+  },
+  {
+    "key": "trip.jeepneyReason.roundabout",
+    "en": "Jeepney routes here go the long way around",
+    "fil": "Paikot ang mga rutang jeep dito"
+  },
+  {
+    "key": "trip.jeepneyReason.centro",
+    "en": "In the city centre, a tricycle takes you there directly",
+    "fil": "Sa sentro ng lungsod, diretso ka na ng tricycle"
+  },
+  {
+    "key": "trip.timeNotEstimated",
+    "en": "Time not estimated",
+    "fil": "Walang tantiya sa oras"
+  },
+  {
+    "key": "trip.fareNotFixed",
+    "en": "Fare not fixed",
+    "fil": "Pasahe: di tiyak",
+    "review": true,
+    "note": "Shortened for the length budget."
+  },
+  {
+    "key": "trip.accessLine",
+    "en": "For when you'd rather not walk.",
+    "fil": "Kung ayaw mo nang maglakad."
+  },
+  {
+    "key": "trip.fareFrom",
+    "en": "From {0}",
+    "fil": "Mula {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.tricycleMin",
+    "en": "Tricycle min {0} · confirm with the driver",
+    "fil": "Tricycle, minimum {0} · kumpirmahin sa driver",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.tricycleFareNA",
+    "en": "Tricycle fare not available · confirm with the driver",
+    "fil": "Walang available na pasahe ng tricycle · kumpirmahin sa driver"
+  },
+  {
+    "key": "trip.via",
+    "en": "via {0}",
+    "fil": "via {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.terminalLine",
+    "en": "Tricycle terminal: {0}, about {1} m from your {2}",
+    "fil": "Terminal ng tricycle: {0}, mga {1} m mula sa {2}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.terminalEndStart",
+    "en": "start",
+    "fil": "simula mo"
+  },
+  {
+    "key": "trip.terminalEndDestination",
+    "en": "destination",
+    "fil": "pupuntahan mo"
+  },
+  {
+    "key": "trip.toda",
+    "en": "TODA: {0}",
+    "fil": "TODA: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.terminalCard",
+    "en": "Terminal: {0}",
+    "fil": "Terminal: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.localReport",
+    "en": "Local report",
+    "fil": "Ulat ng taga-rito",
+    "review": true,
+    "note": "'taga-rito' (local)."
+  },
+  {
+    "key": "trip.farNoteSpecial",
+    "en": "A special-trip tricycle is listed only if you still want one.",
+    "fil": "Naka-lista lang ang special-trip na tricycle kung gusto mo pa rin."
+  },
+  {
+    "key": "trip.routeNotConfirmed",
+    "en": "Route not confirmed",
+    "fil": "Hindi pa kumpirmado ang ruta"
+  },
+  {
+    "key": "trip.streetUnavailable",
+    "en": "Street route not available",
+    "fil": "Walang available na ruta sa kalye"
+  },
+  {
+    "key": "trip.alongStreets",
+    "en": "{0} along streets",
+    "fil": "{0} sa mga kalye",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.straightApprox",
+    "en": "{0} straight line · approximate, not a route",
+    "fil": "{0} tuwid na linya · tinatayang lang, hindi ruta",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.evidence.official",
+    "en": "Ordinance or city record",
+    "fil": "Ordinansa o rekord ng lungsod",
+    "review": true,
+    "note": "Avoids 'opisyal' (banned)."
+  },
+  {
+    "key": "trip.evidence.news",
+    "en": "News report",
+    "fil": "Balita"
+  },
+  {
+    "key": "trip.evidence.community",
+    "en": "Community-sourced",
+    "fil": "Galing sa komunidad"
+  },
+  {
+    "key": "trip.evidence.owner_report_unverified",
+    "en": "Local report · unverified",
+    "fil": "Ulat ng taga-rito · di pa kumpirmado"
+  },
+  {
+    "key": "trip.pathsNotVerified",
+    "en": "paths not verified",
+    "fil": "hindi pa napatunayan ang mga daan"
+  },
+  {
+    "key": "trip.tripOptions",
+    "en": "Trip options",
+    "fil": "Mga opsyon sa biyahe"
+  },
+  {
+    "key": "trip.updating",
+    "en": "Updating…",
+    "fil": "Ina-update…"
+  },
+  {
+    "key": "trip.walkSr",
+    "en": "Walk ",
+    "fil": "Lakad "
+  },
+  {
+    "key": "trip.rideSr",
+    "en": "Ride ",
+    "fil": "Sakay "
+  },
+  {
+    "key": "trip.thenSr",
+    "en": ", then ",
+    "fil": ", tapos "
+  },
+  {
+    "key": "trip.recommended",
+    "en": "Recommended",
+    "fil": "Inirerekomenda"
+  },
+  {
+    "key": "trip.allOptions",
+    "en": "All options",
+    "fil": "Mga opsyon",
+    "review": true,
+    "note": "'Mga opsyon' (drops 'all') for the length budget; the open label keeps 'Lahat ng opsyon'."
+  },
+  {
+    "key": "trip.allOptionsOpen",
+    "en": "All options (",
+    "fil": "Lahat ng opsyon ("
+  },
+  {
+    "key": "trip.allOptionsClose",
+    "en": ")",
+    "fil": ")"
+  },
+  {
+    "key": "trip.finding",
+    "en": "Finding routes…",
+    "fil": "Naghahanap ng ruta…"
+  },
+  {
+    "key": "trip.offline",
+    "en": "You're offline",
+    "fil": "Offline ka"
+  },
+  {
+    "key": "trip.offlineDetail",
+    "en": "Connect to plan a trip.",
+    "fil": "Kumonekta para makapagplano ng biyahe."
+  },
+  {
+    "key": "trip.serverError",
+    "en": "Couldn't load options",
+    "fil": "Hindi ma-load ang mga opsyon"
+  },
+  {
+    "key": "trip.serverDetail",
+    "en": "Something went wrong.",
+    "fil": "May nangyaring problema."
+  },
+  {
+    "key": "trip.invalid",
+    "en": "Couldn't plan this trip",
+    "fil": "Hindi mapaplano ang biyaheng ito"
+  },
+  {
+    "key": "trip.invalidDetail",
+    "en": "Both points must be in Naga City.",
+    "fil": "Dapat nasa Naga City ang dalawang punto."
+  },
+  {
+    "key": "trip.busy",
+    "en": "Too many trip searches right now",
+    "fil": "Maraming naghahanap ng biyahe ngayon"
+  },
+  {
+    "key": "trip.busyDetail",
+    "en": "Wait a minute, then try again.",
+    "fil": "Maghintay ng isang minuto, tapos subukan ulit."
+  },
+  {
+    "key": "trip.changeEnds",
+    "en": "Change start or destination",
+    "fil": "Palitan ang start o destinasyon"
+  },
+  {
+    "key": "trip.tryAgain",
+    "en": "Try again",
+    "fil": "Subukan ulit"
+  },
+  {
+    "key": "trip.candidate",
+    "en": "Mapped candidate · not yet verified",
+    "fil": "Nasa mapa · di pa kumpirmado"
+  },
+  {
+    "key": "trip.walkToDestination",
+    "en": "Walk {0} to your destination",
+    "fil": "Lakad {0} papunta sa pupuntahan mo",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.walkToPlace",
+    "en": "Walk {0} to {1}",
+    "fil": "Lakad {0} papuntang {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.theStop",
+    "en": "the stop",
+    "fil": "ang hintuan"
+  },
+  {
+    "key": "trip.startAt",
+    "en": "Start at {0}",
+    "fil": "Simula sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.youreThere",
+    "en": "You’re there",
+    "fil": "Nandito ka na"
+  },
+  {
+    "key": "trip.arrive",
+    "en": "Arrive",
+    "fil": "Pagdating"
+  },
+  {
+    "key": "trip.theJeepney",
+    "en": "the jeepney",
+    "fil": "ang jeep"
+  },
+  {
+    "key": "trip.transferPoint",
+    "en": "the transfer point",
+    "fil": "ang lipatan"
+  },
+  {
+    "key": "trip.board",
+    "en": "Board {0} at {1}",
+    "fil": "Sumakay sa {0} sa {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.boardDir",
+    "en": "Board {0} ({1}) at {2}",
+    "fil": "Sumakay sa {0} ({1}) sa {2}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.getOnNear",
+    "en": "Get on near {0}",
+    "fil": "Sumakay malapit sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.stopNotMarked",
+    "en": "Stop not marked · confirm with the driver",
+    "fil": "Walang markang hintuan · kumpirmahin sa driver"
+  },
+  {
+    "key": "trip.directionLine",
+    "en": "Direction: {0}",
+    "fil": "Direksyon: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadsideAdvice",
+    "en": "Roadside advice",
+    "fil": "Payo sa gilid ng kalsada"
+  },
+  {
+    "key": "trip.vehicleUnconfirmed",
+    "en": "Vehicle type not confirmed",
+    "fil": "Hindi pa kumpirmado ang uri ng sasakyan"
+  },
+  {
+    "key": "trip.rideAlongPath",
+    "en": "Ride along the approximate path",
+    "fil": "Sumakay sa tinatayang daan"
+  },
+  {
+    "key": "trip.stops",
+    "en": "{0} stops",
+    "fil": "{0} hintuan",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.markedStops",
+    "en": "Marked stops on the way: {0}",
+    "fil": "Mga markadong hintuan sa daan: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.getOffAt",
+    "en": "Get off at {0}",
+    "fil": "Bumaba sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.getOffNear",
+    "en": "Get off near {0}",
+    "fil": "Bumaba malapit sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.paraFree",
+    "en": "Tell the driver ‘para’ · stop not marked",
+    "fil": "Sabihin sa driver ang ‘para’ · walang markang hintuan"
+  },
+  {
+    "key": "trip.sayPara",
+    "en": "Say “Para!” near here",
+    "fil": "Sabihin ang “Para!” dito sa malapit"
+  },
+  {
+    "key": "trip.takeA",
+    "en": "Take a {0} to {1}",
+    "fil": "Sumakay ng {0} papuntang {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.nearestTerminal",
+    "en": "Nearest tricycle terminal: {0}, about {1} m",
+    "fil": "Pinakamalapit na terminal ng tricycle: {0}, mga {1} m",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.showOnMap",
+    "en": "Show on map",
+    "fil": "Sa mapa",
+    "review": true,
+    "note": "'Sa mapa' for the length budget (full 'Ipakita sa mapa' is 1 char over)."
+  },
+  {
+    "key": "trip.showOnMapFor",
+    "en": "Show on map: {0}",
+    "fil": "Ipakita sa mapa: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.walkNote",
+    "en": "path not verified",
+    "fil": "hindi pa napatunayan ang daan"
+  },
+  {
+    "key": "trip.pathNotVerified",
+    "en": "Path not verified",
+    "fil": "Hindi pa napatunayan ang daan"
+  },
+  {
+    "key": "trip.timeNote",
+    "en": "{0} · {1}",
+    "fil": "{0} · {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.shared",
+    "en": "Shared",
+    "fil": "Naibahagi"
+  },
+  {
+    "key": "trip.copied",
+    "en": "Copied",
+    "fil": "Nakopya"
+  },
+  {
+    "key": "trip.shareFailed",
+    "en": "Could not share or copy on this phone.",
+    "fil": "Hindi makapag-share o makakopya sa phone na ito."
+  },
+  {
+    "key": "trip.savedRemove",
+    "en": "Saved, remove from saved trips",
+    "fil": "Naka-save; alisin sa mga naka-save na biyahe"
+  },
+  {
+    "key": "trip.saved",
+    "en": "Saved",
+    "fil": "Saved",
+    "review": true,
+    "note": "Left as 'Saved' (budget 6 chars)."
+  },
+  {
+    "key": "trip.updateSaved",
+    "en": "Update saved copy",
+    "fil": "I-update ang naka-save"
+  },
+  {
+    "key": "trip.save",
+    "en": "Save",
+    "fil": "Save",
+    "review": true,
+    "note": "Left as 'Save' (budget 5 chars)."
+  },
+  {
+    "key": "trip.share",
+    "en": "Share",
+    "fil": "Share",
+    "review": true,
+    "note": "Left as 'Share' (budget 6 chars; 'Ibahagi' is 7)."
+  },
+  {
+    "key": "trip.savedCopy",
+    "en": "Saved copy: {0}",
+    "fil": "Naka-save na kopya: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.revision",
+    "en": "revision {0}",
+    "fil": "bersyon {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.saveUnavailable",
+    "en": "Saving isn’t available on this phone.",
+    "fil": "Hindi puwedeng mag-save sa phone na ito."
+  },
+  {
+    "key": "trip.startTrip",
+    "en": "Start trip",
+    "fil": "Simulan",
+    "review": true,
+    "note": "'Simulan' for the length budget."
+  },
+  {
+    "key": "trip.backToOptions",
+    "en": "Back to trip options",
+    "fil": "Bumalik sa mga opsyon sa biyahe"
+  },
+  {
+    "key": "trip.sources",
+    "en": "Sources",
+    "fil": "Mga source"
+  },
+  {
+    "key": "trip.sourcesLabel",
+    "en": "Sources and credits",
+    "fil": "Mga source at pasasalamat"
+  },
+  {
+    "key": "trip.loadingPaths",
+    "en": "Loading street paths…",
+    "fil": "Nilo-load ang mga daan sa kalye…"
+  },
+  {
+    "key": "trip.pathsUpdated",
+    "en": "Street paths updated",
+    "fil": "Na-update ang mga daan sa kalye"
+  },
+  {
+    "key": "trip.straightOffer",
+    "en": "Walks shown as straight lines.",
+    "fil": "Tuwid na linya ang pagpapakita ng mga lakad."
+  },
+  {
+    "key": "trip.downloading",
+    "en": "Downloading street paths…",
+    "fil": "Dina-download ang mga daan sa kalye…"
+  },
+  {
+    "key": "trip.downloadFailed",
+    "en": "Download failed. Try again.",
+    "fil": "Hindi na-download. Subukan ulit."
+  },
+  {
+    "key": "trip.tripSteps",
+    "en": "Trip steps",
+    "fil": "Mga hakbang sa biyahe"
+  },
+  {
+    "key": "trip.fareEstimateTitle",
+    "en": "Fare estimate",
+    "fil": "Tantiya sa pasahe"
+  },
+  {
+    "key": "trip.walkingOnly",
+    "en": "Walking only",
+    "fil": "Lakad lang"
+  },
+  {
+    "key": "trip.confirmDriver",
+    "en": "{0} · confirm with the driver",
+    "fil": "{0} · kumpirmahin sa driver",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.total",
+    "en": "Total",
+    "fil": "Kabuuan"
+  },
+  {
+    "key": "trip.spansBoth",
+    "en": "Range spans traditional and modern. ",
+    "fil": "Sakop ng saklaw ang traditional at modern. "
+  },
+  {
+    "key": "trip.noDiscounts",
+    "en": "No discounts.",
+    "fil": "Walang kasamang diskwento."
+  },
+  {
+    "key": "trip.howFares",
+    "en": "How fares are estimated",
+    "fil": "Paano tinatantiya ang pasahe"
+  },
+  {
+    "key": "trip.includeExact",
+    "en": "Include exact points when sharing",
+    "fil": "Isama ang eksaktong lokasyon sa pag-share"
+  },
+  {
+    "key": "trip.yourStart",
+    "en": "your start",
+    "fil": "simula mo"
+  },
+  {
+    "key": "trip.yourDestination",
+    "en": "your destination",
+    "fil": "pupuntahan mo"
+  },
+  {
+    "key": "trip.roadside.chipWestCentro",
+    "en": "Westbound side · to Centro",
+    "fil": "Gilid pa-kanluran · pa-Centro",
+    "review": true,
+    "note": "'Gilid pa-kanluran' for 'westbound side'; check phrasing with riders."
+  },
+  {
+    "key": "trip.roadside.chipEastDiversion",
+    "en": "Eastbound side · to Diversion",
+    "fil": "Gilid pa-silangan · pa-Diversion"
+  },
+  {
+    "key": "trip.roadside.chipEastOutbound",
+    "en": "Eastbound side · Outbound",
+    "fil": "Gilid pa-silangan · Palabas"
+  },
+  {
+    "key": "trip.roadside.chipNorthMagsaysay",
+    "en": "Northbound side · to Magsaysay",
+    "fil": "Gilid pa-hilaga · pa-Magsaysay"
+  },
+  {
+    "key": "trip.roadside.chipSouthCentro",
+    "en": "Southbound side · to Centro",
+    "fil": "Gilid pa-timog · pa-Centro"
+  },
+  {
+    "key": "trip.roadside.chipOutboundDelRosario",
+    "en": "Outbound side · to Del Rosario",
+    "fil": "Gilid palabas · pa-Del Rosario"
+  },
+  {
+    "key": "trip.roadside.chipNorthOutbound",
+    "en": "Northbound side · Outbound",
+    "fil": "Gilid pa-hilaga · Palabas"
+  },
+  {
+    "key": "trip.roadside.chipEastDelRosario",
+    "en": "Eastbound side · to Del Rosario",
+    "fil": "Gilid pa-silangan · pa-Del Rosario"
+  },
+  {
+    "key": "trip.roadside.chipCentroGenLuna",
+    "en": "Centro / Gen. Luna",
+    "fil": "Centro / Gen. Luna"
+  },
+  {
+    "key": "trip.roadside.chipGenLunaElias",
+    "en": "Gen. Luna / Elias Angeles",
+    "fil": "Gen. Luna / Elias Angeles"
+  },
+  {
+    "key": "trip.roadside.chipCentroTerminal",
+    "en": "Centro terminal / roadside",
+    "fil": "Terminal ng Centro / tabing-daan"
+  },
+  {
+    "key": "trip.roadside.chipCounterclockwise",
+    "en": "Counterclockwise Loop",
+    "fil": "Counterclockwise na Loop",
+    "review": true,
+    "note": "Taglish."
+  },
+  {
+    "key": "trip.roadside.chipClockwise",
+    "en": "Clockwise Loop",
+    "fil": "Clockwise na Loop",
+    "review": true,
+    "note": "Taglish."
+  },
+  {
+    "key": "trip.roadside.magsaysayWest",
+    "en": "Two-way street: Wait on the North / Westbound side of Magsaysay Ave (facing Peñafrancia & Centro) · Signboard: {0}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Hilaga / Pa-kanluran ng Magsaysay Ave (nakaharap sa Peñafrancia at Centro) · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant (which side to wait on).",
+    "review": true
+  },
+  {
+    "key": "trip.roadside.magsaysayEast",
+    "en": "Two-way street: Wait on the South / Eastbound side of Magsaysay Ave (facing Diversion Road / SM) · Signboard: {0}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Timog / Pa-silangan ng Magsaysay Ave (nakaharap sa Diversion Road / SM) · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
+    "review": true
+  },
+  {
+    "key": "trip.roadside.magsaysayCentro",
+    "en": "Two-way street: Wait on the North / Westbound side of Magsaysay Ave (facing Centro) · Signboard: {0}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Hilaga / Pa-kanluran ng Magsaysay Ave (nakaharap sa Centro) · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
+    "review": true
+  },
+  {
+    "key": "trip.roadside.magsaysayOutbound",
+    "en": "Two-way street: Wait on the South / Eastbound side of Magsaysay Ave (facing outbound) · Signboard: {0}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Timog / Pa-silangan ng Magsaysay Ave (nakaharap palabas) · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
+    "review": true
+  },
+  {
+    "key": "trip.roadside.roxasNorth",
+    "en": "Two-way street: Wait on the East / Northbound side of Roxas Ave (facing Magsaysay Ave) · Signboard: {0}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Silangan / Pa-hilaga ng Roxas Ave (nakaharap sa Magsaysay Ave) · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
+    "review": true
+  },
+  {
+    "key": "trip.roadside.roxasSouth",
+    "en": "Two-way street: Wait on the West / Southbound side of Roxas Ave (facing Panganiban / Centro) · Signboard: {0}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Kanluran / Pa-timog ng Roxas Ave (nakaharap sa Panganiban / Centro) · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
+    "review": true
+  },
+  {
+    "key": "trip.roadside.roxasR3",
+    "en": "Two-way street: Wait on the {0} side of Roxas Ave · Signboard: Route 3 (Roxas Ave)",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na {0} ng Roxas Ave · Signboard: Route 3 (Roxas Ave)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.roxasR3West",
+    "en": "West / Southbound",
+    "fil": "Kanluran / Pa-timog"
+  },
+  {
+    "key": "trip.roadside.roxasR3East",
+    "en": "East / Northbound",
+    "fil": "Silangan / Pa-hilaga"
+  },
+  {
+    "key": "trip.roadside.francia",
+    "en": "Two-way street: Wait on the {0} side of Peñafrancia Ave · Signboard: {1}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na {0} ng Peñafrancia Ave · Signboard: {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.franciaNorth",
+    "en": "Two-way street: Wait on the East / Northbound side of Peñafrancia Ave (facing Magsaysay Ave) · Signboard: {0}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Silangan / Pa-hilaga ng Peñafrancia Ave (nakaharap sa Magsaysay Ave) · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.franciaSouth",
+    "en": "Two-way street: Wait on the West / Southbound side of Peñafrancia Ave (facing Plaza Rizal & Centro) · Signboard: {0}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Kanluran / Pa-timog ng Peñafrancia Ave (nakaharap sa Plaza Rizal at Centro) · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.franciaInbound",
+    "en": "West / Southbound (facing Centro)",
+    "fil": "Kanluran / Pa-timog (nakaharap sa Centro)"
+  },
+  {
+    "key": "trip.roadside.franciaOutbound",
+    "en": "East / Northbound (facing San Felipe/Pacol)",
+    "fil": "Silangan / Pa-hilaga (nakaharap sa San Felipe/Pacol)"
+  },
+  {
+    "key": "trip.roadside.bagumbayanNorth",
+    "en": "Wait on the Northbound side of Bagumbayan (facing M.T. Villanueva & Magsaysay) · Signboard: Loop C",
+    "fil": "Maghintay sa gilid na pa-hilaga ng Bagumbayan (nakaharap sa M.T. Villanueva at Magsaysay) · Signboard: Loop C"
+  },
+  {
+    "key": "trip.roadside.bagumbayanSouth",
+    "en": "Wait on the Southbound side of Bagumbayan (facing Elias Angeles & Centro) · Signboard: Loop D",
+    "fil": "Maghintay sa gilid na pa-timog ng Bagumbayan (nakaharap sa Elias Angeles at Centro) · Signboard: Loop D"
+  },
+  {
+    "key": "trip.roadside.panganiban",
+    "en": "Two-way street: Wait on the {0} side of Panganiban Dr · Signboard: {1}",
+    "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na {0} ng Panganiban Dr · Signboard: {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.panganibanInbound",
+    "en": "North / Westbound (facing Centro)",
+    "fil": "Hilaga / Pa-kanluran (nakaharap sa Centro)"
+  },
+  {
+    "key": "trip.roadside.panganibanOutbound",
+    "en": "South / Eastbound (facing Diversion)",
+    "fil": "Timog / Pa-silangan (nakaharap sa Diversion)"
+  },
+  {
+    "key": "trip.roadside.centroNorth",
+    "en": "Board along Gen. Luna facing North toward Peñafrancia & Magsaysay · Signboard: {0}",
+    "fil": "Sumakay sa tabi ng Gen. Luna na nakaharap sa Hilaga papuntang Peñafrancia at Magsaysay · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.centroWest",
+    "en": "Board along Gen. Luna / Elias Angeles facing West toward Biak-na-Bato & Diversion · Signboard: {0}",
+    "fil": "Sumakay sa tabi ng Gen. Luna / Elias Angeles na nakaharap sa Kanluran papuntang Biak-na-Bato at Diversion · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.centroTerminal",
+    "en": "Board at Centro terminal area · Signboard: {0}",
+    "fil": "Sumakay sa bahagi ng Centro terminal · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.checkCounterclockwise",
+    "en": "Check signboard \"{0}\" · Counterclockwise service",
+    "fil": "Tingnan ang signboard \"{0}\" · Counterclockwise na biyahe",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "trip.roadside.checkClockwise",
+    "en": "Check signboard \"{0}\" · Clockwise service",
+    "fil": "Tingnan ang signboard \"{0}\" · Clockwise na biyahe",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.start",
+    "en": "Start",
+    "fil": "Simula"
+  },
+  {
+    "key": "home.destination",
+    "en": "Destination",
+    "fil": "Pupuntahan",
+    "review": true,
+    "note": "'Pupuntahan' (where you're going) rather than 'Destinasyon'."
+  },
+  {
+    "key": "home.chooseStart",
+    "en": "Choose start",
+    "fil": "Pumili ng simula"
+  },
+  {
+    "key": "home.whereTo",
+    "en": "Where to?",
+    "fil": "Saan punta?",
+    "review": true,
+    "note": "'Saan punta?' for the length budget."
+  },
+  {
+    "key": "home.clearStart",
+    "en": "Clear start",
+    "fil": "Burahin simula"
+  },
+  {
+    "key": "home.clearDestination",
+    "en": "Clear destination",
+    "fil": "Burahin pupuntahan"
+  },
+  {
+    "key": "home.swap",
+    "en": "Swap start and destination",
+    "fil": "Palitan ang simula at pupuntahan"
+  },
+  {
+    "key": "home.tripPlanner",
+    "en": "Trip planner",
+    "fil": "Tagaplano ng biyahe"
+  },
+  {
+    "key": "home.actions",
+    "en": "Actions",
+    "fil": "Mga aksyon"
+  },
+  {
+    "key": "home.useCurrentLocation",
+    "en": "Use current location",
+    "fil": "Gamitin ang lokasyon ko"
+  },
+  {
+    "key": "home.chooseOnMap",
+    "en": "Choose on map",
+    "fil": "Pumili sa mapa"
+  },
+  {
+    "key": "home.searchPlaces",
+    "en": "Search places and stops",
+    "fil": "Maghanap ng lugar at hintuan"
+  },
+  {
+    "key": "home.chooseStartOnMap",
+    "en": "Choose start on map",
+    "fil": "Pumili ng simula sa mapa"
+  },
+  {
+    "key": "home.chooseDestinationOnMap",
+    "en": "Choose destination on map",
+    "fil": "Pumili ng pupuntahan sa mapa"
+  },
+  {
+    "key": "home.nearbyStops",
+    "en": "Nearby stops",
+    "fil": "Mga malapit na hintuan"
+  },
+  {
+    "key": "home.stopsError",
+    "en": "Couldn't load stops. Move the map.",
+    "fil": "Hindi ma-load ang mga hintuan. Igalaw ang mapa."
+  },
+  {
+    "key": "home.stopsNone",
+    "en": "No stops here.",
+    "fil": "Walang hintuan dito."
+  },
+  {
+    "key": "home.stopsLoading",
+    "en": "Loading stops…",
+    "fil": "Nilo-load ang mga hintuan…"
+  },
+  {
+    "key": "home.mappedCandidate",
+    "en": "Mapped candidate",
+    "fil": "Nasa mapa · di pa kumpirmado"
+  },
+  {
+    "key": "home.mappedCandidateRoutes",
+    "en": "Mapped candidate · {0}",
+    "fil": "Nasa mapa · di pa kumpirmado · {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.pinLater",
+    "en": "Pin your start on the map.",
+    "fil": "I-pin ang simula mo sa mapa."
+  },
+  {
+    "key": "home.locationOff",
+    "en": "Location off. {0}",
+    "fil": "Naka-off ang lokasyon. {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.locationOffDetail",
+    "en": "Allow location in browser settings.",
+    "fil": "Payagan ang lokasyon sa settings ng browser."
+  },
+  {
+    "key": "home.noLocation",
+    "en": "No location now. Pin your start.",
+    "fil": "Walang lokasyon ngayon. I-pin ang simula mo."
+  },
+  {
+    "key": "home.unsupported",
+    "en": "This browser can't share location. Pin your start.",
+    "fil": "Hindi nakakapagbigay ng lokasyon ang browser na ito. I-pin ang simula mo."
+  },
+  {
+    "key": "home.insecure",
+    "en": "Location needs https. Pin your start.",
+    "fil": "Kailangan ng https para sa lokasyon. I-pin ang simula mo."
+  },
+  {
+    "key": "home.finding",
+    "en": "Finding your location…",
+    "fil": "Hinahanap ang lokasyon mo…"
+  },
+  {
+    "key": "home.outsideNaga",
+    "en": "You're outside Naga City. Pin a start in Naga.",
+    "fil": "Nasa labas ka ng Naga City. Mag-pin ng simula sa Naga."
+  },
+  {
+    "key": "home.tooRoughAt",
+    "en": "Location too rough ({0}).",
+    "fil": "Masyadong malabo ang lokasyon ({0}).",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.tooRough",
+    "en": "Location too rough.",
+    "fil": "Masyadong malabo ang lokasyon."
+  },
+  {
+    "key": "home.pinStartOnMap",
+    "en": "{0} Pin your start on the map.",
+    "fil": "{0} I-pin ang simula mo sa mapa.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.approximate",
+    "en": "Location approximate. Check the pin.",
+    "fil": "Tinatayang lokasyon lang. Tingnan ang pin."
+  },
+  {
+    "key": "home.moveStartPin",
+    "en": "Move start pin",
+    "fil": "Ilipat ang pin",
+    "review": true,
+    "note": "'Ilipat ang pin' (drops 'start') for the length budget."
+  },
+  {
+    "key": "home.youAreHere",
+    "en": "You are here",
+    "fil": "Nandito ka"
+  },
+  {
+    "key": "home.fixJustNow",
+    "en": "last fix just now",
+    "fil": "huling fix: ngayon lang",
+    "review": true,
+    "note": "GPS 'fix' left in English."
+  },
+  {
+    "key": "home.fixSeconds",
+    "en": "last fix {0} s ago",
+    "fil": "huling fix: {0} s na ang nakalipas",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.fixMinutes",
+    "en": "last fix {0} min ago",
+    "fil": "huling fix: {0} min na ang nakalipas",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.gpsFix",
+    "en": "GPS {0}",
+    "fil": "GPS {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.locationPill",
+    "en": "Location {0}",
+    "fil": "Lokasyon {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.samePlace",
+    "en": "{0}. {1}",
+    "fil": "{0}. {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.outsideChoose",
+    "en": "Outside Naga City. Choose a point inside.",
+    "fil": "Labas ng Naga City. Pumili ng punto sa loob."
+  },
+  {
+    "key": "home.savedGone",
+    "en": "That saved trip is no longer on this phone.",
+    "fil": "Wala na sa phone na ito ang naka-save na biyaheng iyon."
+  },
+  {
+    "key": "home.changedSinceSaved",
+    "en": "Changed since saved",
+    "fil": "May nagbago mula nang i-save"
+  },
+  {
+    "key": "home.lookingForRoutes",
+    "en": "Looking for routes…",
+    "fil": "Naghahanap ng ruta…"
+  },
+  {
+    "key": "home.movePin",
+    "en": "Move the map to place the pin.",
+    "fil": "Igalaw ang mapa para mailagay ang pin."
+  },
+  {
+    "key": "home.pinCancelled",
+    "en": "Pin cancelled",
+    "fil": "Kinansela ang pin"
+  },
+  {
+    "key": "home.cleared",
+    "en": "{0} cleared",
+    "fil": "Binura ang {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.allCleared",
+    "en": "Start and destination cleared",
+    "fil": "Binura ang simula at pupuntahan"
+  },
+  {
+    "key": "home.swapped",
+    "en": "Start and destination swapped",
+    "fil": "Pinalitan ang simula at pupuntahan"
+  },
+  {
+    "key": "home.endSet",
+    "en": "{0} set: {1}",
+    "fil": "{0} na ngayon: {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.savedTrip",
+    "en": "Saved trip: {0} to {1}.",
+    "fil": "Naka-save na biyahe: {0} papuntang {1}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.routesShown",
+    "en": "Routes shown on the map",
+    "fil": "Ipinakita ang mga ruta sa mapa"
+  },
+  {
+    "key": "home.routesHidden",
+    "en": "Routes hidden",
+    "fil": "Tinago ang mga ruta"
+  },
+  {
+    "key": "home.stopsShown",
+    "en": "Stops shown on the map",
+    "fil": "Ipinakita ang mga hintuan sa mapa"
+  },
+  {
+    "key": "home.stopsHidden",
+    "en": "Stops hidden",
+    "fil": "Tinago ang mga hintuan"
+  },
+  {
+    "key": "home.moveToStart",
+    "en": "Move the map to your start",
+    "fil": "Igalaw ang mapa sa simula mo"
+  },
+  {
+    "key": "home.moveToDestination",
+    "en": "Move the map to your destination",
+    "fil": "Igalaw ang mapa sa pupuntahan mo"
+  },
+  {
+    "key": "home.pinOutside",
+    "en": "Pin must be in Naga City",
+    "fil": "Dapat nasa Naga City ang pin"
+  },
+  {
+    "key": "home.pinMarks",
+    "en": "The pin marks the centre of the map.",
+    "fil": "Ang pin ay nasa gitna ng mapa."
+  },
+  {
+    "key": "home.setStartHere",
+    "en": "Set start here",
+    "fil": "Dito ang simula"
+  },
+  {
+    "key": "home.setDestinationHere",
+    "en": "Set destination here",
+    "fil": "Dito ang pupuntahan"
+  },
+  {
+    "key": "home.cancel",
+    "en": "Cancel",
+    "fil": "Ikansela",
+    "review": true,
+    "note": "'Ikansela'."
+  },
+  {
+    "key": "home.clearTrip",
+    "en": "Clear trip",
+    "fil": "Burahin",
+    "review": true,
+    "note": "'Burahin' alone for the length budget."
+  },
+  {
+    "key": "home.theStartPin",
+    "en": "the start pin",
+    "fil": "ang pin ng simula"
+  },
+  {
+    "key": "home.theStop",
+    "en": "the stop",
+    "fil": "ang hintuan"
+  },
+  {
+    "key": "home.guidanceStarted",
+    "en": "Guidance started.",
+    "fil": "Nagsimula na ang gabay."
+  },
+  {
+    "key": "home.guidanceEnded",
+    "en": "Guidance ended. Your trip is in the options.",
+    "fil": "Natapos na ang gabay. Nasa mga opsyon ang biyahe mo."
+  },
+  {
+    "key": "home.replanning",
+    "en": "Planning again from your location.",
+    "fil": "Nagpaplano ulit mula sa lokasyon mo."
+  },
+  {
+    "key": "home.pickWhereYouAre",
+    "en": "Choose where you are on the map",
+    "fil": "Piliin sa mapa kung nasaan ka"
+  },
+  {
+    "key": "home.reopenFailed",
+    "en": "Couldn't check updates: saved {0}.",
+    "fil": "Hindi ma-check ang mga update: naka-save noong {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.reopenChecking",
+    "en": "Saved {0}. Checking…",
+    "fil": "Naka-save noong {0}. Chine-check…",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.updated",
+    "en": "Updated",
+    "fil": "Na-update"
+  },
+  {
+    "key": "home.reopenOffline",
+    "en": "Offline: saved {0}. May have changed.",
+    "fil": "Offline: naka-save noong {0}. Baka may nagbago na.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "home.setStart",
+    "en": "Set start",
+    "fil": "Simula rito",
+    "review": true,
+    "note": "'Simula rito' for the length budget."
+  },
+  {
+    "key": "home.setDestination",
+    "en": "Set destination",
+    "fil": "Pupuntahan rito",
+    "review": true,
+    "note": "'Pupuntahan rito' for the length budget."
+  },
+  {
+    "key": "home.searchLabel",
+    "en": "Search. Where to?",
+    "fil": "Hanapin. Saan punta?"
+  },
+  {
+    "key": "home.browsePlaces",
+    "en": "Browse places",
+    "fil": "Mag-browse ng lugar"
+  },
+  {
+    "key": "home.mappedNotVerified",
+    "en": "Mapped, not verified.",
+    "fil": "Nasa mapa, di pa kumpirmado."
+  },
+  {
+    "key": "home.zoomIn",
+    "en": "Zoom in to see every pin in this area.",
+    "fil": "I-zoom in para makita ang lahat ng pin dito."
+  },
+  {
+    "key": "shell.mainNav",
+    "en": "Main",
+    "fil": "Pangunahin"
+  },
+  {
+    "key": "shell.tabs.map",
+    "en": "Map",
+    "fil": "Mapa"
+  },
+  {
+    "key": "shell.tabs.explore",
+    "en": "Explore",
+    "fil": "Tuklasin",
+    "review": true,
+    "note": "'Tuklasin'."
+  },
+  {
+    "key": "shell.tabs.saved",
+    "en": "Saved",
+    "fil": "Saved"
+  },
+  {
+    "key": "shell.tabs.community",
+    "en": "Community",
+    "fil": "Komunidad"
+  },
+  {
+    "key": "shell.tabs.more",
+    "en": "More",
+    "fil": "Menu",
+    "review": true,
+    "note": "'Menu' because 'Iba pa' is over the budget."
+  },
+  {
+    "key": "shell.sheetHalf",
+    "en": "Expand sheet to half",
+    "fil": "Palakihin ang sheet hanggang kalahati"
+  },
+  {
+    "key": "shell.sheetFull",
+    "en": "Expand sheet to full",
+    "fil": "Palakihin ang sheet nang buo"
+  },
+  {
+    "key": "shell.sheetCollapse",
+    "en": "Collapse sheet",
+    "fil": "Paliitin ang sheet"
+  },
+  {
+    "key": "shell.back",
+    "en": "Back",
+    "fil": "Balik"
+  },
+  {
+    "key": "kit.cancel",
+    "en": "Cancel",
+    "fil": "Ikansela",
+    "review": true,
+    "note": "'Ikansela'."
+  },
+  {
+    "key": "kit.badges.verified",
+    "en": "Verified",
+    "fil": "Kumpirmado"
+  },
+  {
+    "key": "kit.badges.candidate",
+    "en": "Mapped candidate",
+    "fil": "Kandidatong nasa mapa",
+    "review": true,
+    "note": "Shortened for the length budget."
+  },
+  {
+    "key": "kit.badges.documented",
+    "en": "Documented only",
+    "fil": "Nakatala lang"
+  },
+  {
+    "key": "kit.badges.trial",
+    "en": "Trial — permanence unconfirmed",
+    "fil": "Pansubok — di pa tiyak kung mananatili",
+    "review": true,
+    "note": "Check meaning of 'Pansubok'."
+  },
+  {
+    "key": "kit.badges.not-surveyed",
+    "en": "Not surveyed",
+    "fil": "Hindi pa nasuri"
+  },
+  {
+    "key": "kit.badges.historical",
+    "en": "Historical name — not mapped",
+    "fil": "Lumang pangalan — wala sa mapa"
+  },
+  {
+    "key": "kit.badges.provisional-stops",
+    "en": "Provisional stops",
+    "fil": "Pansamantalang hintuan"
+  },
+  {
+    "key": "kit.badges.osm",
+    "en": "OpenStreetMap",
+    "fil": "OpenStreetMap"
+  },
+  {
+    "key": "kit.badges.approximate-path",
+    "en": "Approximate path",
+    "fil": "Tinatayang daan"
+  },
+  {
+    "key": "kit.osmAttribution",
+    "en": "© OpenStreetMap contributors (ODbL)",
+    "fil": "© OpenStreetMap contributors (ODbL)"
+  }
+]
