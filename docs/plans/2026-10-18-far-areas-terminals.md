@@ -1,5 +1,7 @@
 # Plan: far areas, jeepney terminals, tricycle access and Del Rosario vias (Increment F)
 
+Status (2026-10-22): finished (owner questions open; far-zone list review pending).
+
 Date 2026-10-18. Branch `feat/far-areas-terminals` (worktree `.worktrees/far-areas`, from origin/master e71763c). Read AGENTS.md: Next 16 has breaking changes; this plan touches only `src/domain/**`, `src/ui/**`, data and tests. Earlier plans apply unless named here: `2026-10-17-anywhere-alight.md` section B and its rulings, tricycle copy honesty ruling, E-J5. Planner-subagent output saved by the controller; its probabilities were its own estimates (Jev was unavailable to it); the controller ran Jev on F1 and F3 (below).
 
 ## Owner requests (verbatim, binding)

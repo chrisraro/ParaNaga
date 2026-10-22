@@ -1,3 +1,4 @@
+Status (2026-10-22): finished; generated output of scripts/far-zone-places.ts for the far-areas-terminals plan (list review by the owner pending).
 $ tsx scripts/far-zone-places.ts
 
 FZ01 Cararayan and San Isidro (radius per anchor: Cararayan 1500 m, San Isidro 1800 m): 18 places inside

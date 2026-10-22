@@ -1,5 +1,7 @@
 # Routes update: stop-sign letters for the Naga PUJ routes (2026-10-18)
 
+Status (2026-10-22): superseded by 2026-10-20-route-tally.md (its inferred letters were later removed).
+
 Branch `feat/routes-update` (worktree `.worktrees/routes-update`, from origin/master cf97f2b). Data and
 import code only, plus search and one route-detail caption. No migration and no new stop points. The
 planner is unchanged, and the 200-trip regression digest passes without re-recording.

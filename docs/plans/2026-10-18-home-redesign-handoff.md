@@ -1,5 +1,7 @@
 # Home redesign: handoff for T4 to T8 (map-first Home, Google-Maps-style flow)
 
+Status (2026-10-22): finished; the Working rules section describes the retired PR/CI workflow (see the note there).
+
 Written 2026-10-18 by the Claude session that built T1 to T3. Read this file first, then docs/plans/2026-10-18-home-map-first.md (the approved design, sections 3 to 7) and open docs/design/home-map-first-mock.html in a browser (clickable mock of the six screens). The owner approved the design and its three defaults.
 
 ## Owner request and decisions (binding)
@@ -18,6 +20,9 @@ Owner: "The modal sheet design bothers me ... remove that modal sheet on homepag
 - T8 FINAL REVIEW: design, accessibility and performance against the mock: run `impeccable detect` on the changed UI if the tool is available, check 375x812 and landscape 812x375 in light and dark, a drag trace under 4 ms per frame (also at 4x CPU throttle), a sweep for forbidden wording (grep for ETA, arriving, live, e-jeep), WebKit and Firefox runs of the sheet specs. Critical and Important findings get a fix; Minor goes to a backlog note.
 
 ## Working rules
+
+> Stale since 2026-10-20: CI is retired. Work is pushed straight to `master` (no PRs, no auto-merge, no CI gate, no full e2e on every PR). Check locally with `pnpm typecheck`, unit tests and only the affected Playwright specs; run the security scripts by hand. The speed-mode, branch/PR and "CI runs the full e2e suite" lines below describe the old workflow; the code, accessibility and copy rules still apply. See docs/spec/07-delivery.md section 7.1.
+
 - Speed mode (owner, 2026-10-17): one PR per task; no separate review step for T4 to T7; CI is the gate; enable auto-merge (squash) as soon as the PR is open; one thorough review at T8 only. Still fix Critical/Important findings. Stack tasks if useful (open the next branch from the previous PR branch and retarget after the squash merge).
 - Branch/PR: repo chrisraro/ParaNaga, base master, squash merges. Create a worktree per task: `git worktree add .worktrees/<name> -b feat/<name> origin/master`, then `pnpm install --frozen-lockfile` INSIDE it (a real install; Turbopack rejects node_modules junctions; Windows long-path errors can leave stray folders: ignore them). Commit with a message ending `Co-Authored-By: <your model name>`; PR bodies end with the generated-with line used in earlier PRs. Never force-push. Never `git add -f` anything under .superpowers/.
 - Checks before opening a PR (from the root of your worktree): `pnpm typecheck`, `pnpm lint` (scope: `pnpm exec eslint src tests scripts`; build output dirs create thousands of false hits), `pnpm check:boundaries`, `pnpm test` (vitest unit), `pnpm build` and `pnpm check:bundle-secrets` for UI-heavy tasks, then Playwright: `PORT=<free port> pnpm exec playwright test --project=mobile tests/e2e/<spec>`; the config builds and starts its own server on PORT (and PORT+1 for the no-tiles project) from a fresh `.next-e2e` build. Each agent uses its own PORT. STALE SERVERS CAUSE FALSE FAILURES: before a run, check the port is free; afterwards stop ONLY the process IDs you started (never kill by process name: a name-based kill once stopped an unrelated app). CI runs the full e2e suite (mobile, desktop, no-tiles) on every PR (about 13 minutes); the `verify` job gating the merge also runs typecheck, lint, boundaries, unit tests, build, bundle-secrets. Vercel builds a preview per PR.

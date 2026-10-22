@@ -1,5 +1,7 @@
 # Trip planner and travel options audit (2026-10-18)
 
+Status (2026-10-22): finished.
+
 Base: `fix/plan-handler-ratelimit-mock` (master plus PR #40). Branch: `fix/planner-audit`.
 
 ## How the bugs were found

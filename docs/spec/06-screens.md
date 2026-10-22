@@ -63,7 +63,7 @@ Each screen lists purpose, key content, primary actions, and its required states
 - States: L skeleton sheet + map placeholder; E (no verified stops nearby) "No verified stops within 500 m — see mapped candidates"; P "Location off — set your starting point" with search/map-pick; O cached snapshot + date, tiles may be missing (shows list-only fallback); G accuracy circle + "Location approximate (±80 m)"; D banner "Verified coverage: Loops A–D only".
 
 ### S2 Search
-- Grouped results: Places, Stops, Routes, Barangays, Saved. Alias disambiguation ("Diversion → Diversion Road (Concepcion) · Diversion jeepney route (legacy)").
+- Opened directly by a tap on the From or To row (`/app/search?for=start|destination`; `for=save` from Saved). Empty query shows Recent searches (last 8, on the phone only). Grouped results (`src/domain/search/search.ts`): Saved, Places, Routes, Terminals, Barangays, plus study and legacy/regional entries. Below the on-device results, "More places from Google" suggestions appear only when fewer than 3 local results or after "Search more places"; rows are "Google suggestion · not verified", Google is asked through our server (no query logged, answer kept 24 h under a one-way hash), and a pick resolves to a point on our map. Alias disambiguation ("Diversion → Diversion Road (Concepcion) · Diversion jeepney route (legacy)").
 - Toggle: "Include regional connections".
 - Actions: pick, map-pick, use current location.
 - States: E "No match in Naga — try a landmark or barangay"; O searches cached landmarks only, labelled.
@@ -92,9 +92,11 @@ Each screen lists purpose, key content, primary actions, and its required states
 - States: P falls back to step list with "I'm at the stop" button; G landmark check, no side assertion.
 
 ### S7 Ride mode
-- Big "I boarded" → progress bar along shape, next stop, stops remaining, "Get off at {stop} — {landmark}". Approaching alert (≤ 400 m / 1 stop) with vibration+sound if permitted.
-- Actions: "I got off", "I missed my stop", **Report a driver** (coral, secondary).
-- Owner change 2026-10-22: no manual "My stop is next"; "I got off" only once GPS puts the rider at the drop-off (else "I got off early", which re-plans like a missed stop); a "get ready" line and alert at 3 and 2 stops left; "I've arrived" only within 100 m of the destination.
+- Big "I boarded" → progress along the shape, next stop, stops remaining (`2 of 8 stops`), "Get off at {stop} — {landmark}". There is no manual "my stop is next": the count moves only when GPS fixes pass the ride's pins (`src/domain/guidance/progress.ts`, a pin counts within `STOP_PASS_RADIUS_M` 120 m; without a usable fix the count does not move).
+- Heads-up at 3 and 2 stops before the alighting stop: a "get ready" line plus vibration and a notification (`src/client/guidance/attention.ts`, each alert once per trip; permission asked from a tap). Para is suggested near the alighting stop (vibration and notification too).
+- Actions: "I got off" (only once GPS puts the rider at the alighting stop), otherwise "I got off early", which stops guidance and re-plans from here (commit 47c8d24); "I missed my stop" (re-plan); **Report a driver** (coral, secondary).
+- Arrival: "I've arrived" is accepted only within `ARRIVE_NEAR_M` 100 m of the destination; the screen says "“I've arrived” shows when you are within 100 m of {destination}."
+- A pinned trip end reads "your pin near {stop}" in guidance sentences.
 - Off-route: after hysteresis, sheet "You seem off route — [Replan] [I'm fine]".
 
 ### S8 Transfer
@@ -137,7 +139,7 @@ Each screen lists purpose, key content, primary actions, and its required states
 - Offline trip card: text-first, works without tiles.
 
 ### S15 Settings
-- Language, fare category (with per-mode eligibility table), accessibility, theme, low-data, history toggle, location help, offline downloads (area + size), install app, privacy (export, delete account), about data & sources.
+- Language, fare category (with per-mode eligibility table), accessibility, theme, low-data, history toggle, location help, install app, privacy (export, delete account), about data & sources.
 
 ### S16 Report a correction (wizard)
 1. What's wrong (type list) → 2. Entity preview (prefilled with revision) → 3. Similar submissions ("Add my evidence to this") → 4. Proposed change with before/after preview → 5. When observed, fare category/kind, shared/exclusive → 6. Optional location + photos → 7. Review + AI-processing disclosure → Submit → status page.

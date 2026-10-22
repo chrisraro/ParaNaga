@@ -1,5 +1,7 @@
 # Plan: commuter screens without new user content (Increment A)
 
+Status (2026-10-22): finished.
+
 Date: 2026-10-16 · Branch: new branch from `feat/data-and-planner` after it merges (suggested `feat/commuter-screens`).
 Spec: `docs/spec/02-features.md` (F-A3 search, F-A4 explore, F-A5 terminals, F-B3–F-B7 guidance and saved trips, F-C2 settings), `03-architecture.md` (§3.4 request paths, §3.11 PWA and offline), `06-screens.md` (S2, S3, S6–S9, S11, S13–S15, S20, S22, §6.5 copy rules, §6.6 accessibility), `07-delivery.md` §7.8.
 Design artboards (layout, tokens, dark variants): `.superpowers/sdd/design-all/project/` — `Search`, `PlaceDetail`, `TerminalDetail`, `Walk`, `Ride`, `Transfer`, `Arrive`, `Saved`, `Settings`, `Help`, `MyNagaHandoff`, `Explore`, `Components`, and the tab bar in `.superpowers/sdd/design/Home.dc.html`. Read the markup and the `t` token objects; where an artboard shows a placeholder (`[m]`, `[landmark]`, `[hours]`, `[min]`, `[₱ fare]`, `[SIGNBOARD TEXT]`, `[hotline]`) use the copy given in this plan instead.

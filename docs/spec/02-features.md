@@ -49,6 +49,13 @@ Each option holds legs, known fare + completeness, walk metres, transfers, confi
 - AC: the planner rejects wrong-direction, prohibited, disconnected and unavailable boarding [AC-5].
 - Increment E: riders get on and off anywhere along a route path (free points, "stop not marked"); walking is recommended only under 500 m; a tricycle option follows the jeepney options and is Recommended from 500 m; a padyak option appears inside a documented padyak area; every plan with options has exactly one Recommended option (so up to 6 options, labels may be empty). Tricycle and padyak options carry no minutes; tricycle routing avoids the restricted roads that could be located; jeepney service hours are a soft "unconfirmed" hint.
 
+- Planner rules in force (owner 2026-10-20 and 2026-10-21; `src/domain/planner/`):
+  - Detour guard: a jeepney ride that loops or roams past `JEEP_MAX_DETOUR` (2.0 × the straight-line trip + 300 m) is never offered (`plan.ts`).
+  - City-centre tricycle rule: with both ends inside the Centro area (`centro.ts`), jeepneys are offered only when they drop off within `PASSES_DESTINATION_M` of the destination and are never Recommended; the tricycle is Recommended (from 500 m) and listed first; with no jeepney left the reason is `centro`.
+  - Far drop-offs: for a non-far destination, up to 2 extra jeepney options that drop the rider near, at distinct spots, are listed after the other options (commits fe7f64f, 6200803). Far zones (`far-areas.ts`) get no point-to-point tricycle (flagged special trip, never Recommended, fare not fixed); the rider is sent via the jeepney terminal, with a tricycle access option only when the walk to the first boarding point exceeds `ACCESS_TRICYCLE_MIN_WALK_M` (600 m).
+  - Two-way roadside suggestions (`roadside.ts`): a chip and advice on the boarding step say which side of a two-way corridor (Magsaysay Ave, Roxas Ave/Diversion, Peñafrancia Ave, Centro) to wait on, e.g. "Westbound side · to Centro".
+  - TODA terminals and corridors (`toda-terminals.ts`): reviewed tricycle terminals (for example Evangelista St in Plaza Rizal for Ateneo, Bagumbayan-Queborac; Plaza Rizal East for SM City Naga) with their destinations and a fare-policy note; `findTodaRoute` suggests the terminal for a pair of ends.
+
 ### F-B2 Trip detail — P1
 The primary action (Start trip, guidance step buttons) sits in a sheet footer visible at every snap. A "Sources" link opens the trip's source records on the Sources and credits screen.
 Ordered legs: walk → board → ride → alight → transfer → … → arrive. Per ride leg: route name, signboard text, vehicle class, boarding stop code + landmark + photo, "toward" cue, alighting point, leg fare breakdown, source freshness. Walk legs show a path only if reviewed or routed by a pedestrian-profile provider; otherwise distance + "path not verified".
@@ -59,17 +66,20 @@ Foreground `watchPosition`, heading, accuracy circle, distance to curb, boarding
 - Rules: never say "you're on the wrong side" without reviewed curb + road evidence and accuracy below half the road width.
 
 ### F-B4 Ride mode — P1
-"I boarded" → progress along the reviewed shape, next stop, approaching-alighting reminder (sound/vibration if permitted, foreground only), "I got off". Off-route detection with hysteresis (≥ 3 consecutive fixes > 60 m off-shape with accuracy < 30 m) before offering a reroute; missed-stop recovery offers walking back or the next alighting point.
+"I boarded" → progress along the shape, next stop, stops remaining, "I got off". There is no manual "my stop is next": the stop count moves only when GPS fixes pass the ride's pins (`src/domain/guidance/progress.ts`, `STOP_PASS_RADIUS_M` 120 m).
+- Heads-up at 3 and 2 stops before the alighting stop (vibration + notification where permitted, foreground only; `src/client/guidance/attention.ts`); Para is suggested near the stop and also vibrates and notifies. Each alert fires once per trip.
+- "I got off" shows only when GPS puts the rider at the alighting stop; otherwise "I got off early", which stops guidance and re-plans from here (commit 47c8d24). "I missed my stop" also re-plans.
+- Off-route detection with hysteresis (≥ 3 consecutive fixes > 60 m off-shape with accuracy < 30 m) before offering a reroute.
 - Visible: "Report a driver" action; a banner explaining that alerts only work while the app is open.
 
 ### F-B5 Transfer mode — P1
 Alighting curb → approved crossing / terminal entrance → next boarding curb; next vehicle's signboard and direction.
 
 ### F-B6 Arrival — P1
-Last-mile walk to the destination entrance (not the centroid). On finish, stop all watchers and clear active-trip state.
+Last-mile walk to the destination entrance (not the centroid). "I've arrived" is accepted only within `ARRIVE_NEAR_M` 100 m of the destination (a usable GPS fix latches it); a pinned destination reads "your pin near {stop}". On finish, stop all watchers and clear active-trip state.
 
 ### F-B7 Saved trips and offline cards — P1
-Save an itinerary as a self-contained card (text steps, cached landmark photos, fares, revision, saved date). Before starting a saved trip, recheck it against the current revision and disruptions; show "Route changed since you saved this" when it did.
+A trip end set by a map pin or GPS is named "Near {nearest stop}" within 300 m, else "Pinned location" (`pinnedEndName`, commit 039022d). Save an itinerary as a self-contained card (text steps, cached landmark photos, fares, revision, saved date). Before starting a saved trip, recheck it against the current revision and disruptions; show "Route changed since you saved this" when it did.
 - AC: an offline card works with no tiles and no network, and shows snapshot date and a stale-fare warning [AC-9].
 
 ## C. Accounts and settings
@@ -78,7 +88,7 @@ Save an itinerary as a self-contained card (text steps, cached landmark photos, 
 Optional. Email OTP / magic link and Google OAuth via Managed Better Auth. Display name only; no legal name shown.
 
 ### F-C2 Settings — P1
-Language (en / fil; bcl when native-reviewed; first open follows the phone language, ADR 011), fare category (regular / student / senior / PWD / solo parent — with mode-scoped eligibility shown), accessibility (avoid stairs, max walk, high contrast, reduced motion), theme, low-data, trip history on/off (default **off**), location-permission guidance, offline downloads, install prompt, data export, account deletion.
+Language (en / fil live via `FILIPINO_ENABLED`; bcl hidden behind `BIKOL_ENABLED` until native-reviewed; first open follows the phone language, ADR 011), fare category (regular / student / senior / PWD / solo parent — with mode-scoped eligibility shown), accessibility (avoid stairs, max walk, high contrast, reduced motion), theme, low-data, trip history on/off (default **off**), location-permission guidance, install prompt, data export, account deletion.
 
 ## D. Contributions
 

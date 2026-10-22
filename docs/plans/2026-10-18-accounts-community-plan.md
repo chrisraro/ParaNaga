@@ -1,5 +1,7 @@
 # Increment B: Accounts, Community, and Reporting — Implementation Plan
 
+Status (2026-10-22): finished except B4 (WebP re-encode of uploads).
+
 Date: 2026-10-18  
 Base Branch: `master`  
 Specs: `docs/spec/02-features.md`, `docs/spec/03-architecture.md`, `docs/spec/04-data-model.md`, `docs/spec/05-security.md`, `docs/spec/06-screens.md`, `docs/plans/2026-10-16-accounts-community-admin-outline.md`

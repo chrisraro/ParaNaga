@@ -1,5 +1,7 @@
 # Increment E2: all-places search and in-app Street View (user request 2026-10-17)
 
+Status (2026-10-22): finished (owner questions open).
+
 Runs after Increment E Task 4 lands, in its own worktree off feat/anywhere-alight. Same workflow: Jev tiers, ECC reviewers, ponytail, caveman chat.
 
 ## User requirements

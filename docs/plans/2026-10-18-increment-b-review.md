@@ -1,5 +1,7 @@
 # Increment B: final review (Task B10)
 
+Status (2026-10-22): partial. Owner decisions 1 to 5 (below) are still open; step-up OTP is not built (docs/spec/07-delivery.md N3).
+
 Date: 2026-10-18. Branch `feat/b10-hardening` on top of the stack: #40, then #41 (B5), #42 (B6, 0016), #43 (B7, 0017), #44 (B8, 0018), #45 (B9, 0019).
 Scope: B1-B9, migrations 0013-0019. Fixes ship as small commits on this branch, with one new migration (`0020_increment_b_hardening.sql`). Migrations 0016-0019 are left unchanged so their checksums stay stable.
 

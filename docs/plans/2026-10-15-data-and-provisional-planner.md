@@ -1,5 +1,7 @@
 # Plan: all research data in Neon + provisional loop planner (increment 1B + 3P)
 
+Status (2026-10-22): finished (data import and the Loop A/B provisional planner are on master; later planner work is in the E, F and planner-revision plans).
+
 Date: 2026-10-15 · Branch: `feat/data-and-planner` (from master `9c61839`)
 Spec: `docs/spec/04-data-model.md` (§4.3 ingest, §4.4 transit, §4.6 states, §4.7 import), `03-architecture.md` (§3.5 RLS, §3.6 planner, §3.7 fares), `02-features.md` (F-A5 stops, F-A6 routes, F-B1/F-B2 trip options/detail).
 Design artboards (exact layout/copy/tokens): `.superpowers/sdd/design/` — `TripOptions`, `TripDetail`, `StopDetail`, `RouteDetail`, `Home`, `Components`, `Foundations` (`.dc.html`; read the markup + the `t` token objects). Map design brief: `.superpowers/sdd/map-design-brief.md`.

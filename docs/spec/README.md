@@ -27,7 +27,7 @@ The original brief assumed Supabase. This spec maps every Supabase responsibilit
 | Background jobs | — | **Postgres job table (`FOR UPDATE SKIP LOCKED`) + Vercel Cron + `after()`** | No extra infra until load proves it |
 | Planner | — | **In-process TypeScript planner** over a revision snapshot | Deterministic, unit-testable, city-scale graph |
 | Moderation | Jev via OpenRouter | **Jev Decisions API**, pinned build, + app-owned policy function | Per brief §9C |
-| Tiles | Configurable provider | **Protomaps PMTiles extract of Naga (OSM, ODbL)** hosted by us; adapter for MapTiler etc. | Offline download is permitted because we own the extract |
+| Tiles | Configurable provider | **React-Leaflet raster tiles, MapTiler in production (ADR 009; PMTiles superseded)** | No offline tile download; tiles are never cached |
 
 Jev was used to stress-test five of these choices; its typed answers are logged in the [ADR log](03-architecture.md#313-architecture-decision-records).
 

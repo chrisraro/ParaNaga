@@ -8,25 +8,28 @@ Each increment follows the same loop:
 2. **Decide** — where a choice is genuinely open, ask Jev typed `choice`/`noul` questions over a bounded state; record answers in the ADR table; humans make the final call when Jev abstains or returns `review`.
 3. **Build test-first** — `ecc:tdd-workflow` for domain modules (planner, fares, guidance, moderation policy, import).
 4. **Review** — `ecc:typescript-reviewer`, `ecc:react-reviewer`, `ecc:database-reviewer` (migrations/RLS), `ecc:security-reviewer` (anything touching auth, uploads, `priv`, Jev).
-5. **Verify** — `ecc:verification-loop` / `ecc:quality-gate`: typecheck, lint, unit, integration (Neon branch), build, e2e smoke, axe; visual check on mobile + desktop (`ecc:browser-qa`).
+5. **Verify** — locally (CI was retired 2026-10-20): `pnpm typecheck`, unit tests, and only the Playwright specs the change affects (no full local e2e suite); `pnpm build` and the security scripts (bundle secret scan, RLS coverage, dependency audit) when the change touches the UI bundle or the database; integration on a throwaway Neon branch when a migration changes; visual check on mobile + desktop (`ecc:browser-qa`).
 6. **Gate** — readiness report updated (§7.6).
 
-Neon: one long-lived `production` branch (protected), `dev` branch from a seed-only parent, and a disposable branch per PR/CI run.
+Delivery since 2026-10-20: work is pushed straight to `master` (no PRs, no CI); Vercel builds the deployment. Neon: one long-lived `production` branch (protected), `dev` branch from a seed-only parent, and a disposable branch per integration run.
 
 ## 7.2 Increments
 
-| # | Increment | Contents | Exit criteria |
-|---|---|---|---|
-| 0 | **Foundation** | Next.js scaffold, strict TS, Tailwind tokens, i18n skeleton, ESLint boundaries, Vitest/Playwright, CI, env schema, Neon project `paranaga` + PostGIS, roles `paranaga_owner/app/definer`, base migrations (schemas, `core`, `ops`, audit), Managed Better Auth, bootstrap-admin | CI green; sign-in works on preview; RLS-coverage check in CI |
-| 1 | **Vertical slice: import → DB → map → stop detail → admin review** | `ingest` + `transit` candidate tables, `import-naga.ts` (dry-run/commit/diff/conflicts), `v_candidate_pins`, map with 128 pins (GeoJSON layer), stop detail with source layer/code/description/coords, admin import screen, candidate review (promote/attach evidence/retire), draft revision + publish/rollback skeleton | AC-1, AC-2, AC-4 (explore), AC-8 (partial) pass |
-| 2 | **Search, routes, explore** | Landmarks/aliases/barangays, trigram search, route catalogue from seed (legal text, trials, aliases), terminals, Explore cards, fare evidence display (no exact fares) | Search "Centro"/"Diversion" behave per F-A3 |
-| 3 | **Planner + fare engine (domain)** | Graph builder, McRAPTOR search, Pareto/ranking, guidance (curb side, GPS confidence), fare engine with centavos, synthetic fixture network under `tests/fixtures/synthetic` | AC-5, AC-6, AC-7 unit/property tests pass; fixtures cannot be published (test) |
-| 4 | **Commuter trip experience** | Plan API, trip options/detail, walk/ride/transfer/arrive modes, saved trips, honest "no coverage" state against real data | E2E: manual origin plan with fixtures; real data shows no-coverage state correctly |
-| 5 | **Admin stewardship** | Shape editor, curbs, reconciliation, terminals, fares/matrices/conflicts, service windows, disruptions (expiry job), coverage audit, full publication validation, cache + saved-trip invalidation | AC-8 full; validation catches every rule in F-E list |
-| 6 | **Corrections + community + Jev** | Correction wizard and states, community hub, uploads (quarantine → derivatives), job queue, Jev adapter + fixtures, policy function, moderation queues, appeals, overrides, Jev admin panel + diagnostic | AC-11, AC-12, AC-13, AC-16 |
-| 7 | **Driver reports + MyNaga** | Camera capture, fallbacks, private storage, review console, evidence access audit, statuses, retention job, handoff flow | AC-14, AC-15 |
-| 8 | **PWA + offline** | Serwist, snapshot caching by revision, offline cards, PMTiles area download, cache-leak tests | AC-9 |
-| 9 | **Hardening + launch prep** | CSP enforce, rate limits tuned, load test planner, a11y audit, security review, privacy docs, readiness report | AC-10, checklist §5.13 |
+Status as of 2026-10-22. Lettered work (A to F, E2, plus unnumbered passes) is the delivered slice, with its plan in `docs/plans/`; N-codes are in §7.11.
+
+| # | Increment | Contents | Exit criteria | Status |
+|---|---|---|---|---|
+| 0 | **Foundation** | Next.js scaffold, strict TS, Tailwind tokens, i18n skeleton, ESLint boundaries, Vitest/Playwright, env schema, Neon project `paranaga` + PostGIS, roles `paranaga_owner/app/definer`, base migrations (schemas, `core`, `ops`, audit), Managed Better Auth, bootstrap-admin | Local typecheck, unit tests and affected e2e green; sign-in works on a preview; RLS-coverage check script passes (CI retired 2026-10-20) | Done. Migrations 0001 to 0021 exist. |
+| 1 | **Vertical slice: import → DB → map → stop detail → admin review** | `ingest` + `transit` candidate tables, `import-naga.ts`, `v_candidate_pins`, map with 128 pins, stop detail, admin import screen, candidate review, draft revision + publish/rollback skeleton | AC-1, AC-2, AC-4 (explore), AC-8 (partial) pass | Partial. Import, map, stop detail done (data-and-provisional-planner, maps-core). Admin import, candidate review, publish/rollback screens not built (N5). |
+| 2 | **Search, routes, explore** | Landmarks/aliases/barangays, trigram search, route catalogue, terminals, Explore cards, fare evidence display (no exact fares) | Search "Centro"/"Diversion" behave per F-A3 | Done (A commuter-screens, D modes-lines-eta, E2 places-streetview, route-tally). |
+| 3 | **Planner + fare engine (domain)** | Graph builder, Pareto/ranking, guidance, fare engine with centavos, synthetic fixtures (McRAPTOR search dropped) | AC-5, AC-6, AC-7 unit/property tests pass | Partial. In-process planner delivered across the provisional planner, D, E anywhere-alight, F far-areas, planner-audit and planner-revision. The McRAPTOR rewrite is dropped. Exact fares and the AC-5/6/7 rules on the current planner are open (N4). |
+| 4 | **Commuter trip experience** | Plan API, trip options/detail, walk/ride/transfer/arrive modes, saved trips, honest "no coverage" state | E2E: plan with fixtures; real data shows no-coverage state correctly | Done (A, D, E, F, home-map-first and home redesign, guidance rules of 2026-10-22). |
+| 5 | **Admin stewardship** | Shape editor, curbs, reconciliation, terminals, fares/matrices/conflicts, service windows, disruptions, coverage audit, publication validation, cache + saved-trip invalidation | AC-8 full | Not started (Increment C; N5; C4 to C7 deferred until field data). |
+| 6 | **Corrections + community + Jev** | Correction wizard and states, community hub, uploads, job queue, Jev adapter, policy function, moderation queues, appeals, overrides, Jev admin panel | AC-11, AC-12, AC-13, AC-16 | Partial. Commuter side, jobs, Jev and policy built (B, accounts-community-plan; B4 WebP re-encode open). Moderation and corrections admin queues not built (N6). |
+| 7 | **Driver reports + MyNaga** | Camera capture, fallbacks, private storage, review console, evidence access audit, statuses, retention job, handoff flow | AC-14, AC-15 | Partial. Reporter flow, private storage and handoff built (B, migrations 0018 and 0019). Complaint review console not built (N7); live-but-unready pieces are gated in N2. |
+| 8 | **PWA + offline** | Serwist, snapshot caching by revision, offline cards, cache-leak tests (PMTiles area download dropped) | AC-9 | Mostly done (A, D, commit 4c16434: shells and segment prefetches work offline). Signed-in Cache Storage e2e open (N8). |
+| 9 | **Hardening + launch prep** | CSP enforce, rate limits tuned, load test planner, a11y audit, security review, privacy docs, readiness report | AC-10, checklist §5.13 | Not started (N8). Plan-endpoint rate limit and the Increment B review (B10) are done. |
+| - | **Internationalisation** (not numbered) | In-house dictionaries (ADR 011), Filipino live, Bikol hidden | Guard tests pass | In progress (docs/plans/2026-10-21-i18n-filipino-bikol.md; G1 done, T11 running). |
 
 ## 7.3 Test strategy
 
@@ -37,8 +40,8 @@ Neon: one long-lived `production` branch (protected), `dev` branch from a seed-o
 | Integration | Vitest against a Neon branch | Migrations, RLS per role (guest/commuter/moderator/complaint reviewer/admin sessions), definer functions, job queue leasing, publication transaction/rollback, rate limits |
 | E2E | Playwright (mobile + desktop projects) | Explore pins, manual-origin plan, no-coverage state, correction flow, community post → pending, driver report with camera denied → upload fallback, MyNaga handoff, offline card, admin import/review/publish |
 | Accessibility | `@axe-core/playwright` | Every screen, light/dark |
-| Security | CI scripts | Bundle secret scan, RLS coverage, gitleaks, dependency audit, SW cache contents |
-| Live (opt-in) | `pnpm jev:smoke` | One synthetic Decisions call with the owner's key; never in CI |
+| Security | Local scripts, run by hand | Bundle secret scan, RLS coverage, gitleaks, dependency audit, SW cache contents |
+| Live (opt-in) | `pnpm jev:smoke` | One synthetic Decisions call with the owner's key; never in automated runs |
 
 Synthetic fixtures: `tests/fixtures/synthetic/*` with obviously fake names ("Fixture Loop X", coordinates offset into a test bbox) and `is_synthetic=true`. A test asserts publication refuses them.
 
@@ -55,7 +58,7 @@ Synthetic fixtures: `tests/fixtures/synthetic/*` with obviously fake names ("Fix
 | 7 | Low GPS accuracy → landmark check | Guidance unit tests + e2e with mocked geolocation |
 | 8 | Admin reviews candidate, attaches evidence, publishes, retires/relocates | E2E admin flow + integration publication |
 | 9 | Offline saved instructions usable, show freshness; no private cache leak | E2E offline mode + Cache Storage inspection |
-| 10 | Tests, types, build pass; visual review | CI + `ecc:browser-qa` screenshots |
+| 10 | Tests, types, build pass; visual review | Local typecheck, unit tests, build + `ecc:browser-qa` screenshots |
 | 11 | Approved publish; spam/threat rejected; unclear/failure pending; edits re-reviewed | Policy unit matrix + integration with Jev fixtures |
 | 12 | Criticism vs threats distinguished; appeals/overrides audited | Labelled sample eval + integration audit rows |
 | 13 | Corrections don't change data until review + publication; price conflicts traceable | Integration |
@@ -97,7 +100,7 @@ Field kit: `field_survey_template.csv` (45 columns) imports through the survey m
 - [ ] Provision Managed Better Auth; add Google OAuth client; set trusted domains.
 - [ ] Create storage buckets `public-media`, `quarantine`, `evidence-private`.
 - [ ] Add `OPENROUTER_API_KEY` to Vercel env (server-only) — never paste it into chat.
-- [ ] Decide tile hosting: PMTiles extract for the Naga region (OSM, ODbL attribution) in `public-media` or a CDN.
+- [x] Tile hosting: MapTiler raster tiles in production (ADR 009); the PMTiles extract was dropped.
 - [ ] Legal: privacy notice, terms, AI-processing disclosure, DPO contact; trademark/domain check for "ParaNaga".
 - [ ] Reviewer recruitment: at least one transport-data reviewer and one complaint reviewer who are not the same person as the community moderator.
 
@@ -106,12 +109,12 @@ Field kit: `field_survey_template.csv` (45 columns) imports through the survey m
 **Delivered**
 
 - All Data_Sets imported with provenance and conflicts; published revision `provisional-loops-2026-10-15`.
-- Loops A and B planner, public API (`/api/v1/network`, `/stops`, `/routes`, `/plan`), and trip, stop and route screens.
+- Loops A and B planner (since extended to every route, see §7.2), public API (`/api/v1/network`, `/stops`, `/routes`, `/plan`), and trip, stop and route screens.
 
 **User decisions**
 
-- Provisional loops on unverified pins, always badged "Unverified route"; no exact fares; no drawn path.
-- Only Loops A and B are sequenced. Walks are capped at 600 m to or from a stop and 400 m between rides (straight-line); walking distances are straight-line x 1.3 estimates.
+- Provisional loops on unverified pins, always badged "Unverified route"; no exact fares. (Updated 2026-10-22: approximate OSM-traced paths are drawn and planned for all routes R1 to R7 and Loops A to D, labelled approximate.)
+- Only Loops A and B have a stop sequence; Loops C and D are stop-unsequenced (`src/domain/import/provisional-loops.ts` returns null, because any order would be invented). Walks are capped at 600 m to or from a stop and 400 m between rides (straight-line); walking distances are straight-line x 1.3 estimates.
 - Ride rule "must save walking": a ride option is kept only when its total walking is less than walking the whole way; a ride never goes more than one full loop circuit.
 - Fare wording: "from reported fare rules · matrix not verified".
 
@@ -119,18 +122,18 @@ Field kit: `field_survey_template.csv` (45 columns) imports through the survey m
 
 - No directed shapes, reviewed stop sequences, curb sides or boarding points (§7.5 items 1-3).
 - No terminal coordinates and no exact fares (§7.5 items 4-5).
-- Loops C and D stop order unknown; route alias mapping unresolved.
+- Loops C and D stop order unknown (see above). Route letters: only A to D come from the ordinance; the inferred E to J were removed (route-tally plan).
 - No changed-data importer, so corrections need a new tool before any re-import.
 
 **Follow-ups**
 
-- Snapshot caching by revision and a rate limit on `/api/v1/plan`, before any public announcement.
+- Done: snapshot caching by revision (CacheFirst, §3.11) and a rate limit on `/api/v1/plan` (30/min, 600/day).
 - Import-time check that pin-order ring direction matches the documented loop direction.
 - A reader role that owns the views, with base-table SELECT revoked from `paranaga_app`; `check-rls` coverage of views.
 - Update policy for `ingest.batch.counts` (only while `status = 'running'`).
 - Reword "(from pin order)" direction text to the documented direction.
 - Home map: bbox query strings reach platform access logs (read pins from the immutable snapshot or snap coarser); add `stale-while-revalidate` to list caching.
-- Landing page mockup shows "Exact · [₱ fare]"; remove or reword.
+- Done: landing page rebuilt on current master (commit a500a5e).
 
 ## 7.10 Readiness: modes, lines and time estimates (16 Oct 2026)
 
@@ -173,3 +176,26 @@ Branch `feat/modes-lines-eta` (Increment D). Not production-ready; see "Still mi
 **Not production-ready because** §7.5 items 1 to 3 and 5 still block verified routing and exact fares, headways are unknown, and the source-rights items above are open.
 
 **Owner and controller steps to publish**: `pnpm db:import --dry-run`, a Neon backup branch of `main`, `pnpm db:import --commit`, verify the published revision `modes-lines-{date}` and the API on a preview deployment. Refresh the road snapshot by the procedure in `docs/setup.md`.
+
+## 7.11 Next increments (2026-10-22)
+
+Dropped: the McRAPTOR rewrite (the in-process planner stays) and the PMTiles offline download (ADR 009). Deferred until field data: C4 routes + shape editor, C5 terminals, C6 fares, C7 service windows + disruptions.
+
+| Code | Increment | Covers |
+|---|---|---|
+| N1 | Docs realignment | Spec and plans match the app on master (this change). |
+| N2 | Gate live-but-unready features | Driver reports behind a flag; correction photos private until approved; rate limits on DELETE endpoints. |
+| N3 | Step-up OTP | Fresh OTP for publish/rollback, role changes, complaint unlock (increment-b-review decision, not built). |
+| N4 | Fare and planner rules on the current planner | AC-5, AC-6, AC-7. |
+| N5 | Admin core | C1 shell + dashboard, C8 revisions + coverage, C3 candidates + stops/curbs + reconciliation, C2 imports; AC-8. Migrations renumbered from 0022 (the outline's 0010 to 0014 are taken). |
+| N6 | Corrections + moderation queues | C9, C10; AC-11, AC-12, AC-13. |
+| N7 | Complaint review + system screens | C11, C12; AC-14, AC-16. |
+| N8 | Hardening + launch prep | CSP enforce, planner load test, signed-in Cache Storage e2e, readiness report (§7.6); AC-9, AC-10. |
+
+### Blocked on owner/field data
+
+- Everything in §7.5: directed shapes, ordered stop sequences with curbs, curb evidence, walk network, fare matrices, service windows, Eastbound trial status, latest PSO stop register.
+- Loops C and D stop order; letters F and G (routes 3 and 4) and the R1 letter (route-tally plan).
+- Headways, TODA zone map and tricycle speeds, fleet registry, PNR timetable (§7.10).
+- Source-rights items S33, S34, S39, S40 (§7.10).
+- Credentials: `OPENROUTER_API_KEY` (moderation stays pending without it), Neon Auth/Google OAuth setup, `NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY` and Google Places keys (§7.7); legal notices and reviewer recruitment (§7.7).

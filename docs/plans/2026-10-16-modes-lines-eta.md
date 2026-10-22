@@ -1,5 +1,7 @@
 # Plan: all modes, terminals, map lines and time estimates (Increment D)
 
+Status (2026-10-22): finished (owner questions and field-data items open, see docs/spec/07-delivery.md section 7.10).
+
 Date: 2026-10-16 · Branch: `feat/modes-lines-eta` (worktree `.worktrees/modes-lines-eta`, from master `e77c081`, which holds increments 1–A: data import, provisional Loop A/B planner, commuter screens, OSM places, guidance, offline PWA).
 Research: `.superpowers/research/naga-transport-research-2026-10.md` (sources N01–N41, Jev scores, including the section "Modernized jeepneys: Del Rosario and Pacol–Carolina–Panicuason") and `.superpowers/research/naga-transport-candidates-2026-10.json` (routes, terminals, fares, ETA inputs, cooperatives, claim tests).
 Spec: `docs/spec/02-features.md` (F-A1 map layers, F-A5 terminals, F-A6 routes and shapes, F-B1/F-B2 trip options and detail, F-B3 guidance), `03-architecture.md` (§3.4 request paths, §3.6 planner, §3.7 fares, §3.11 PWA), `04-data-model.md` (`shape_version`, `terminal`, `fare_rule`), `06-screens.md` (S1, S4, S5, S6–S9, S11, S12, §6.5 copy rules, §6.6 accessibility).

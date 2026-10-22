@@ -1,5 +1,7 @@
 # Sitewide translation: Filipino, then Bikol-Naga (plan)
 
+Status (2026-10-22): in progress (G1 Filipino on is done; T11 running; Bikol hidden until native review).
+
 Date: 2026-10-21 · Status: PLAN ONLY (no app code changed) · Supersedes: Increment A **D8 "English only"**
 (docs/plans/2026-10-16-commuter-screens.md) and the `next-intl` / `[locale]` rows in docs/spec/03-architecture.md
 (lines 44, 62–64, 91). Spec intent kept: docs/spec/01-product.md §7 "Bilingual from day one … reviewed Bikol (`bcl`)",

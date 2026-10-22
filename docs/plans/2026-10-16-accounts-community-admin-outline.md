@@ -1,5 +1,7 @@
 # Outline: accounts, contributions and community (Increment B) and the admin console (Increment C)
 
+Status (2026-10-22): partial. The Increment B half is superseded by 2026-10-18-accounts-community-plan.md; the Increment C half (admin console) is not started and its migrations are renumbered from 0022 (the repo has 0001 to 0021); see docs/spec/07-delivery.md section 7.11 (N5 to N7).
+
 Date: 2026-10-16 · Status: outline, to be expanded into task-by-task plans (format of `docs/plans/2026-10-15-data-and-provisional-planner.md`) once the open questions at the end are answered.
 Depends on: Increment A (`docs/plans/2026-10-16-commuter-screens.md`) — UI kit, tab bar, device storage, service worker allow-list.
 Spec: `02-features.md` (F-C1, F-D1–F-D5, F-E1–F-E17), `03-architecture.md` (§3.5 RLS, §3.8 Jev pipeline, §3.9 storage, §3.10 jobs), `04-data-model.md` (§4.2 core, §4.5 community, §4.6 state machines, §4.8 priv, §4.9 ops), `05-security.md` (all), `06-screens.md` (S16–S21, A1–A21), `07-delivery.md` increments 5–7.
@@ -62,13 +64,15 @@ Shell: `/admin` (desktop-first, responsive to tablet; the `PhoneOnlyGate` does n
 
 ### Schema migrations for C
 
+Renumbered 2026-10-22: the repo already has migrations 0001 to 0021 (Increment B and hardening took 0010 to 0021), so C starts at 0022. Re-check the number before writing each file.
+
 | Migration | Contents |
 |---|---|
-| `0010_transit_evidence.sql` | `transit.evidence`, `transit.evidence_link` (one nullable FK per target, `num_nonnulls = 1`, claim/target compatibility), photo redaction metadata (`media_object` link, boxes, `redaction_reviewed_by`). |
-| `0011_transit_geometry.sql` | `transit.shape_version` (LineString, `length_m`, `evidence_kind` legal_plan_trace/gps_ride_log/surveyed, reviewer), `transit.stop_area`, curb fields already on `stop_point_version` + `road_segment_ref`, `transit.walk_edge`, `transit.barrier`, `transit.reconciliation_decision` (group, rule, distance, link/keep_separate, note, reviewer). |
-| `0012_transit_terminals_service.sql` | `terminal_version` (location evidence, compound polygon), `terminal_entrance`, `terminal_bay` + route assignment, terminal hours with evidence; `transit.service_window` (day type weekday/saturday/sunday_holiday, first/last seen, dispatch model, headway range, confidence); `transit.disruption` (`active tstzrange` with `CHECK (NOT upper_inf(active))`, title en/fil/bcl, scopes, replacement note, evidence); `expire_disruptions` job. |
-| `0013_transit_fares.sql` | `transit.discount_rule` (mode scope, categories, rounding), `transit.fare_matrix_row`, fare conflict resolution fields, `EXCLUDE` overlap backstop on verified versions. |
-| `0014_ops_admin.sql` | Indexes and read views for queues (corrections, moderation, appeals, complaints, jobs, audit filters), `ops.provider_health` writer, alerting hooks (rate-watch of complaint opens: > 30/day/reviewer). |
+| `0022_transit_evidence.sql` | `transit.evidence`, `transit.evidence_link` (one nullable FK per target, `num_nonnulls = 1`, claim/target compatibility), photo redaction metadata (`media_object` link, boxes, `redaction_reviewed_by`). |
+| `0023_transit_geometry.sql` | `transit.shape_version` (LineString, `length_m`, `evidence_kind` legal_plan_trace/gps_ride_log/surveyed, reviewer), `transit.stop_area`, curb fields already on `stop_point_version` + `road_segment_ref`, `transit.walk_edge`, `transit.barrier`, `transit.reconciliation_decision` (group, rule, distance, link/keep_separate, note, reviewer). |
+| `0024_transit_terminals_service.sql` | `terminal_version` (location evidence, compound polygon), `terminal_entrance`, `terminal_bay` + route assignment, terminal hours with evidence; `transit.service_window` (day type weekday/saturday/sunday_holiday, first/last seen, dispatch model, headway range, confidence); `transit.disruption` (`active tstzrange` with `CHECK (NOT upper_inf(active))`, title en/fil/bcl, scopes, replacement note, evidence); `expire_disruptions` job. |
+| `0025_transit_fares.sql` | `transit.discount_rule` (mode scope, categories, rounding), `transit.fare_matrix_row`, fare conflict resolution fields, `EXCLUDE` overlap backstop on verified versions. |
+| `0026_ops_admin.sql` | Indexes and read views for queues (corrections, moderation, appeals, complaints, jobs, audit filters), `ops.provider_health` writer, alerting hooks (rate-watch of complaint opens: > 30/day/reviewer). |
 
 ### Screen groups → tasks, tables, permissions
 

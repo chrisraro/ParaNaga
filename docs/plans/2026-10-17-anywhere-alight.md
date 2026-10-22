@@ -1,5 +1,7 @@
 # Plan: anywhere-alight planner, tricycle and padyak options, route coverage (Increment E)
 
+Status (2026-10-22): finished (owner questions open).
+
 Date: 2026-10-17 · Branch: `feat/anywhere-alight` (worktree `.worktrees/anyalight`, from master `1828324`, which is production and holds Increments 1–D: data import, provisional Loop A/B planner, commuter screens, places, guidance, offline PWA, modes, approximate route paths, walk graph, time estimates).
 Research (all in `.superpowers/research/`): `tricycle-restrictions-2026-10.md` (T01–T24), `loops-and-routes-2026-10.md` (L01–L19), `padyak-2026-10.md` (P01–P22), `jeepney-hours-2026-10.md` (H01–H21), `naga-transport-research-2026-10.md` (N01–N41), each with its candidates JSON. Code map: `.superpowers/sdd/planner-map.md` (10 change points). Binding rules: `.superpowers/sdd/global-constraints.md` (its last section, "User decisions 2026-10-16", overrides the rest).
 Spec: `docs/spec/03-architecture.md` (§3.4 request paths, §3.6 planner, §3.7 fares, §3.11 PWA), `04-data-model.md`, `06-screens.md` (S4–S9, §6.5 copy rules, §6.6 accessibility).

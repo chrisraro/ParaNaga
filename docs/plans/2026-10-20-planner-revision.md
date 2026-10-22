@@ -1,5 +1,7 @@
 # Trip planner revision (2026-10-20)
 
+Status (2026-10-22): finished (extended by the TODA terminals and two-way roadside suggestions: src/domain/planner/toda-terminals.ts, roadside.ts).
+
 Branch `feat/planner-rev` (worktree `.worktrees/planner-rev`, from origin/master e5b32d4). Domain code, one data file
 and tests. No migration, no new dependency, no UI component change (a second agent renders the new fields).
 

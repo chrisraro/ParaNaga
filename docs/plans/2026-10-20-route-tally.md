@@ -1,5 +1,7 @@
 # Route tally: letters A-J for the 11 active jeepney services (2026-10-20)
 
+Status (2026-10-22): stale letters. The inferred letters E to J for R2 to R7 were removed (commits 695b027, dc6c0f5; src/domain/planner/route-display.ts now has letter null for R1 to R7).
+
 Owner's request: show the current, official routes in sync and accurate everywhere, with the Rationalized routes
 tallied to the letters A, B, C, D, E, F, G, H, I, J. The static table is `src/domain/planner/route-display.ts`;
 every list, search result, route detail, Layers list and stop/terminal "routes serving" list reads it through
@@ -13,6 +15,8 @@ every list, search result, route detail, Layers list and stop/terminal "routes s
 | Resolution No. 2025-172 | Apr 22, 2025 (earlier) | history only: the 90-day dry run added J. Miranda Ave to Loops C and D. The later ordinance lists C and D without it, so the app follows the ordinance |
 | Resolution No. 2025-735 | earlier | history: 30-day dry run of Loops A and B adding the Eastbound Terminal |
 | Ordinance 2001-040 (Magsaysay Loop Service A/B); 1998 amendment (Loops C, D) | older | history |
+
+**Update 2026-10-22.** The letters E to J for R2 to R7 in the table below were removed from the app (commits 695b027, dc6c0f5): `src/domain/planner/route-display.ts` now has `letter: null` for R1 to R7, titles stay, and only Loops A to D keep their ordinance letters. Loop labels drop a redundant letter ("Centro-Magsaysay Loop A (clockwise)"). The table, evidence column and "How the app says it" below record the 2026-10-20 state and are historical.
 
 ## The tally
 

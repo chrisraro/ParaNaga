@@ -7,7 +7,7 @@
                 │ Next.js RSC + client islands · React-Leaflet · TanStack Query    │
                 │ Service worker (Serwist) · IndexedDB (saved cards, snapshots)  │
                 └───────────────┬───────────────────────────────┬───────────────┘
-                                │ HTTPS (same origin)           │ PMTiles range requests
+                                │ HTTPS (same origin)           │ map tile requests    
                 ┌───────────────▼────────────── Vercel ─────────┴───────────────┐
                 │ Next.js App Router                                             │
                 │  ├─ Server Components (public pages, cached by revision)       │
@@ -313,8 +313,8 @@ Accepted types: JPEG, PNG, WebP. HEIC is converted to JPEG **on the client** (ca
 - Runtime caches (public, allow-listed):
   - `network/snapshot/:revisionId` → CacheFirst (immutable).
   - Public stop/route JSON → StaleWhileRevalidate.
-  - PMTiles ranges → CacheFirst **only** for areas the user chose to download.
-- Runtime caching is an **allow-list of public paths** only (`/api/v1/network/*`, `/api/v1/stops`, public route/stop JSON, tiles, static assets). Everything else is network-only, including navigations to the `(account)` and `admin` groups, Server Action POSTs, RSC requests (`?_rsc=` / `RSC` header), `/api/v1/me/*`, `/api/v1/reports/*`, and any `Cache-Control: private` response. An e2e test inspects Cache Storage after an authenticated session.
+  - Map tiles are never cached and there is no offline tile download (ADR 009; the PMTiles download was dropped).
+- Runtime caching is an **allow-list of public paths** only (`/api/v1/network/*`, `/api/v1/stops`, public route/stop JSON, tiles, static assets). Everything else is network-only, including navigations to the `(account)` and `admin` groups, Server Action POSTs, other RSC requests (`?_rsc=` / `RSC` header), `/api/v1/me/*`, `/api/v1/reports/*`, and any `Cache-Control: private` response. An e2e test inspects Cache Storage after an authenticated session.
 - Increment D additions (allow-listed, query-free paths only; any query string, POST or other origin is network-only):
   - `network/search-index/:revisionId` → CacheFirst, last 3 revisions kept.
   - `network/lines/:revisionId` → CacheFirst (`pn-lines-f<format>-<build>`), last 3 revisions kept.
@@ -324,6 +324,7 @@ Accepted types: JPEG, PNG, WebP. HEIC is converted to JPEG **on the client** (ca
   - A stored copy that no longer validates is dropped from the data caches and refetched once with `cache: "no-cache"`; if still invalid the screen shows its error state.
   - Low-data mode or Data Saver never downloads the walk graph on its own (a visible opt-in offers it in trip detail); a copy already stored is used. Offline with no stored graph, walks are drawn as straight dotted lines with "Street paths need a connection the first time."
   - Terminals, routes and modes come from the cached snapshot and search index; "Clear data" removes lines and the walk graph with the other data caches.
+- Soft navigation offline (commit 4c16434, `src/domain/pwa/sw-routes.ts`): the router's segment prefetches of the static shells (GET with RSC, `Next-Router-Prefetch`, `Next-Router-Segment-Prefetch`) are cached in `pn-rsc-*` (NetworkFirst, keyed by shell path + segment, the core ones warmed at install), so Search → pick → back to the map works offline, also after a cold start. All other RSC requests stay network-only.
 - IndexedDB: `savedCards`, `snapshotMeta { revisionId, publishedAt }`, `prefs`, `reportDrafts`. On sign-out, account-linked IndexedDB stores **and** any non-public Cache Storage entries are cleared.
 - On reconnect, compare `snapshotMeta` with `/network/head`; if changed, refetch and flag saved cards whose legs changed.
 - Offline banner: "Offline — data from {date}. Fares may have changed."
@@ -346,7 +347,7 @@ Accepted types: JPEG, PNG, WebP. HEIC is converted to JPEG **on the client** (ca
 | 003 | Postgres job table + Vercel Cron | QStash, Inngest | `pg_queue_cron` p=0.95 → act | Adopted |
 | 004 | Neon Object Storage behind `StoragePort` | Vercel Blob, R2 | `neon_storage` p=0.73 → review | Adopted with adapter; R2 fallback documented |
 | 005 | Neon Managed Better Auth | Auth.js, Clerk | 0.48 Neon / 0.50 Auth.js → abstain | Human call: Neon Auth — same platform, branches with the DB; roles kept in our tables so the provider stays replaceable |
-| 006 | Self-hosted Protomaps PMTiles (OSM) | MapTiler, Stadia | not asked | Adopted: offline download legally possible, predictable cost; `TileProvider` keeps MapTiler as an option |
+| 006 | Self-hosted Protomaps PMTiles (OSM) | MapTiler, Stadia | not asked | **Superseded by ADR 009** (was: adopted: offline download legally possible, predictable cost; `TileProvider` keeps MapTiler as an option) |
 | 007 | No Neon Data API; server-only DB access | Data API + JWT RLS | not asked | Adopted: smaller attack surface |
 | 008 | Image moderation by humans until a vision adapter is chosen | Third-party vision API | not asked | Adopted; the brief forbids sending images to Jev |
 | 009 | React-Leaflet raster tiles instead of MapLibre; MapTiler production tiles | MapLibre GL + PMTiles (ADR 006) | MapTiler tiles p=0.89 → act | Adopted: user decision 2026-10-15 for the map (supersedes the MapLibre row); MapTiler for production tiles, OSM tiles only for dev/test |

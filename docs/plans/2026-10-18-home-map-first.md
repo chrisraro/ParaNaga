@@ -1,5 +1,7 @@
 # Map-first home (no default sheet): design and plan
 
+Status (2026-10-22): finished (design approved and built; see the handoff note).
+
 Date: 2026-10-18 · Branch: `feat/home-map-first` (from `origin/master` 31dcb3b) · Status: design, awaiting owner review
 Mock: `docs/design/home-map-first-mock.html` (a design mock, not the product). Working notes: `.superpowers/sdd/home-notes.md`.
 
