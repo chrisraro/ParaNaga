@@ -1,3 +1,5 @@
+import "server-only";
+
 // Feature gates read straight from the environment (same rule as the `flag` in env.ts: only the
 // exact string "true" turns a gate on). Read per call so API routes follow the deployed value.
 // Static pages evaluate it when they are built, so changing it needs a redeploy.

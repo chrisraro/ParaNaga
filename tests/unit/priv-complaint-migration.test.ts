@@ -187,10 +187,5 @@ describe("0018: core.media_object definer access stays narrow", () => {
   });
 });
 
-// TODO(step-up): the fresh-OTP step-up flow (spec §5.4) is not built yet. Until it is, nothing
-// sets app.step_up_at and every reviewer function fails closed (pinned above). Fill these in
-// when the flow lands, in tests/integration/priv-complaint-rls.test.ts.
-describe("step-up (not built yet)", () => {
-  it.todo("a complaint reviewer can open the queue and evidence within 15 minutes of a verified OTP");
-  it.todo("a reporter downloading their own ORIGINAL evidence also needs step-up (spec §5.8)");
-});
+// Step-up itself (the record that fills app.step_up_at, and the reporter's original download gate)
+// is migration 0022 (N3): tests/unit/step-up-migration.test.ts and tests/integration/step-up-rls.test.ts.

@@ -1,6 +1,6 @@
 # Increment B: final review (Task B10)
 
-Status (2026-10-22): partial. Owner decisions 1 to 5 (below) are still open; step-up OTP is not built (docs/spec/07-delivery.md N3).
+Status (2026-10-22): partial. Owner decisions 1, 2, 4 (a) and 5 (below) are still open. Step-up OTP is built (N3, migration `0022_step_up.sql`, not yet applied); decision 3 is resolved by it.
 
 Date: 2026-10-18. Branch `feat/b10-hardening` on top of the stack: #40, then #41 (B5), #42 (B6, 0016), #43 (B7, 0017), #44 (B8, 0018), #45 (B9, 0019).
 Scope: B1-B9, migrations 0013-0019. Fixes ship as small commits on this branch, with one new migration (`0020_increment_b_hardening.sql`). Migrations 0016-0019 are left unchanged so their checksums stay stable.
@@ -96,7 +96,7 @@ API level:
 
 | Item | Decision |
 |---|---|
-| Step-up for the reporter's own evidence download, and for reviewer functions | **Recorded, not built.** The reviewer functions call `priv.require_step_up()`, which fails closed: nothing sets `app.step_up_at`, so the complaint reviewer flow is unusable until the OTP step-up exists. The reporter's own original download has **no** step-up yet (spec 05 §5.8 asks for one; TODO in 0018 `my_evidence_download`). Build the step-up as one task: verify a fresh OTP, then `set_config('app.step_up_at', …, true)` in the same transaction. |
+| Step-up for the reporter's own evidence download, and for reviewer functions | **Recorded, not built.** The reviewer functions call `priv.require_step_up()`, which fails closed: nothing sets `app.step_up_at`, so the complaint reviewer flow is unusable until the OTP step-up exists. The reporter's own original download has **no** step-up yet (spec 05 §5.8 asks for one; TODO in 0018 `my_evidence_download`). Build the step-up as one task: verify a fresh OTP, then `set_config('app.step_up_at', …, true)` in the same transaction. **Update 2026-10-22: built (N3, `0022_step_up.sql`).** `core.step_up_apply` sets the value from the server's per-session record; `my_evidence_download` now requires it. |
 | Jev wire format | **Recorded.** No real recorded Jev response exists in the repo (only mocks in `tests/unit/jev-client.test.ts`), so no fixture test was added. `WireResponse` is `.strict()`, so any extra field turns every answer into `malformed`. That is safe, because content stays pending, but Jev would be silently useless. Record one real response before relying on it. |
 | In-memory Jev budget per instance | **fixed** (Important). The default budget is now one `ops.take_token` bucket per UTC day, shared by all instances, and it fails closed. |
 | CSP connect-src for object-storage uploads | **fixed.** `connect-src` adds `new URL(STORAGE_ENDPOINT).origin` when set (spec §5.10 lists the storage host). The policy is still Report-Only. |
@@ -108,7 +108,7 @@ API level:
 
 1. **Release order:** apply 0016-0020 together. B4 upload confirm is broken on production until 0018's `core.media_object` definer policies land.
 2. **CI `database` job on pull requests:** it is skipped on PRs today, so the five RLS suites first run after merge to master. Consider running it on PRs into master, or run it manually for this stack before merging.
-3. **Step-up OTP:** until it is built, complaint reviewers cannot work, and reporters download originals without step-up. Decide whether to keep reporter downloads open or gate them off until step-up exists.
+3. **Step-up OTP:** until it is built, complaint reviewers cannot work, and reporters download originals without step-up. Decide whether to keep reporter downloads open or gate them off until step-up exists. **Resolved 2026-10-22 (N3):** step-up is built; reporter originals and the reviewer functions require it once 0022 is applied.
 4. **Display copies:** spec §5.8 asks for re-encoded WebP (≤1600 px, `sharp`) and review before anything reaches `public-media`. This branch strips metadata but does not re-encode, and unreviewed correction photos still land in `public-media` (not served anywhere yet). **Update 2026-10-22 (N2):** decided (b): verified uploads of every purpose now stay in the private `evidence-private` bucket (metadata still stripped for non-evidence images); `STORAGE_BUCKET_PUBLIC` is written only by the approval step (N6, not built). Re-encoding to WebP (a) stays open. Decide: (a) add `sharp` as a direct dependency and re-encode, and/or (b) keep correction evidence out of `public-media` until a reviewer approves it.
 5. **Corrections sent to Jev** as `kind: "community"` (masked free text). Confirm this is wanted.
 

@@ -21,6 +21,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { loadComplaint, loadEvidenceUrl, saveMyNagaSelfReport } from "@/client/reports/api";
 import { buildMyNagaSummary } from "@/domain/mynaga/summary";
+import { useT } from "@/i18n/provider";
+import { StepUpPrompt } from "@/ui/auth/step-up-prompt";
 import { MYNAGA_REFERENCE_MAX, type ComplaintDetail } from "@/domain/reports/schemas";
 
 export const BYSTANDER_WARNING = {
@@ -77,6 +79,8 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
   const [ack, setAck] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [stepUpFor, setStepUpFor] = useState<{ evidenceId: string; n: number } | null>(null);
+  const stepUpText = useT().stepUp;
   const summary = buildMyNagaSummary(c);
 
   const onCopy = async () => {
@@ -91,8 +95,14 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
   const onDownload = async (evidenceId: string, n: number) => {
     setBusy(evidenceId);
     setNote("");
+    setStepUpFor(null);
     const r = await loadEvidenceUrl(c.id, evidenceId);
     setBusy(null);
+    if (!r.ok && r.reason === "step_up") {
+      // Originals need a fresh email code (N3); the download continues once it is confirmed.
+      setStepUpFor({ evidenceId, n });
+      return;
+    }
     if (!r.ok) {
       setNote(r.reason === "rate_limited" ? r.message : `File ${n} could not be prepared. Try again.`);
       return;
@@ -143,6 +153,17 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
               {busy === e.id ? "Preparing…" : `Download file ${i + 1} (original)`}
             </button>
           ))}
+          {stepUpFor ? (
+            <StepUpPrompt
+              onCancel={() => setStepUpFor(null)}
+              onVerified={() => {
+                const pending = stepUpFor;
+                setStepUpFor(null);
+                setNote(stepUpText.verified);
+                void onDownload(pending.evidenceId, pending.n);
+              }}
+            />
+          ) : null}
           <p className="pn-reports__note" role="status" data-testid="handoff-download-status">
             {note}
           </p>

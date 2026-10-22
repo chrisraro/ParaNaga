@@ -1217,4 +1217,22 @@ export const en = {
     approxPath: "Approximate path, not a verified route shape",
     routeDetails: "Route details",
   },
+  // Step-up (N3, src/ui/auth/step-up-prompt.tsx): a fresh email code before opening originals.
+  stepUp: {
+    title: "Confirm it's you",
+    body: "Original files need a fresh code. We will email a one-time code to the address you sign in with.",
+    send: "Email me a code",
+    sending: "Sending…",
+    sent: "We sent a code to your email. Enter it within a few minutes.",
+    codeLabel: "Code from the email",
+    verify: "Confirm",
+    verifying: "Checking…",
+    resend: "Send a new code",
+    cancel: "Cancel",
+    verified: "Confirmed. This lasts 15 minutes on this device.",
+    badCode: "That code did not work. Check it, or ask for a new one.",
+    rateLimited: "Too many tries. Wait a while, then try again.",
+    signedOut: "Sign in again to continue.",
+    failed: "Something went wrong. Try again.",
+  },
 } as const;

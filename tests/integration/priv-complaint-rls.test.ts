@@ -104,7 +104,12 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on priv.complaint (Neon branch)", () 
         expect(await pgError(rows(null, sql`select * from priv.my_evidence_download(${complaintId}::uuid, ${evidenceId}::uuid)`)), name).toBe("28000");
         continue;
       }
-      const got = await rows(userId, sql`select * from priv.my_evidence_download(${complaintId}::uuid, ${evidenceId}::uuid)`);
+      // Since 0022 the download needs a fresh step-up (the real flow is in step-up-rls.test.ts).
+      expect(await pgError(rows(userId, sql`select * from priv.my_evidence_download(${complaintId}::uuid, ${evidenceId}::uuid)`)), name).toBe("42501");
+      const got = await as(userId, async (db) => {
+        await db.execute(sql`select set_config('app.step_up_at', now()::text, true)`);
+        return (await db.execute(sql`select * from priv.my_evidence_download(${complaintId}::uuid, ${evidenceId}::uuid)`)).rows;
+      });
       expect(got, name).toHaveLength(sees ? 1 : 0);
     }
     // Nobody reads the access log through the app role.
@@ -158,7 +163,7 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on priv.complaint (Neon branch)", () 
   });
 
   it("a reviewer with a fresh step-up sees the queue without reporter ids", async () => {
-    // TODO(step-up): replace the manual setting with the real OTP flow once it exists.
+    // The setting by hand tests the gate alone; the record that fills it is step-up-rls.test.ts.
     const queue = await as(reviewer, async (db) => {
       await db.execute(sql`select set_config('app.step_up_at', now()::text, true)`);
       return (await db.execute(sql`select * from priv.review_queue(100)`)).rows;

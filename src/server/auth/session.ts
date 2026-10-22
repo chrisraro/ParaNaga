@@ -16,6 +16,25 @@ export const requestId = cache(async (): Promise<string> => {
   return safeRequestId(h.get("x-vercel-id") ?? h.get("x-request-id"));
 });
 
+/** The Neon Auth session behind this request (validated server-side): ids and email, no roles. */
+export type AuthSession = { userId: string; sessionId: string | null; email: string | null };
+
+/** Neon Auth's session for this request, memoized per request; null for guests. Used by step-up. */
+export const getAuthSession = cache(async (): Promise<AuthSession | null> => {
+  const auth = neonAuth();
+  if (!auth) return null;
+  const { data } = await auth.getSession();
+  const user = data?.user;
+  if (!user?.id) return null;
+  const sessionId: unknown = data?.session?.id;
+  const email: unknown = user.email;
+  return {
+    userId: user.id,
+    sessionId: typeof sessionId === "string" && sessionId ? sessionId : null,
+    email: typeof email === "string" && email ? email : null,
+  };
+});
+
 /**
  * Session + roles for this request, memoized per request.
  * Roles always come from core.user_role, never from auth metadata (spec §5.4).

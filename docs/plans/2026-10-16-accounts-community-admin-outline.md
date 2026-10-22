@@ -64,7 +64,7 @@ Shell: `/admin` (desktop-first, responsive to tablet; the `PhoneOnlyGate` does n
 
 ### Schema migrations for C
 
-Renumbered 2026-10-22: the repo already has migrations 0001 to 0021 (Increment B and hardening took 0010 to 0021), so C starts at 0022. Re-check the number before writing each file.
+Renumbered 2026-10-22: the repo already has migrations 0001 to 0021 (Increment B and hardening took 0010 to 0021), so C starts at 0022. Update (N3): 0022 is now `0022_step_up.sql`, so C starts at 0023 and every number below shifts by one. Re-check the number before writing each file.
 
 | Migration | Contents |
 |---|---|
