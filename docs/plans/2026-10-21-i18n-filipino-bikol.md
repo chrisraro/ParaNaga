@@ -393,3 +393,7 @@ ships without a named native Naga speaker's sign-off on every key; the code enfo
 3. First open follows the phone language (`navigator.languages`: fil/tl → Filipino, bcl → Bikol once enabled, else English); the choice in More overrides it.
 4. Review: Filipino ships after the draft + Jev check; Bikol stays hidden until volunteer native Naga speakers are recruited and sign off.
 5. Separate `/fil` landing page: deferred (no decision yet).
+
+## G1 passed (2026-10-22)
+
+T10: opus review (all 468 rows `reviewed: "opus"`, 11 keys left `review: true` for a native Naga speaker: missedStop, useLocation, eta.estAbbr, the eight roadside chips). Owner waived the human walk-through for P1 (volunteers later), so `FILIPINO_ENABLED` is on. P2+ screens stay English until T11-T12.

@@ -14,7 +14,7 @@
   var theme = "system";
   var contrast = false;
   var lang = null;
-  var FIL = false; // = FILIPINO_ENABLED in src/i18n/locales.ts
+  var FIL = true; // = FILIPINO_ENABLED in src/i18n/locales.ts
   var BIKOL = false; // = BIKOL_ENABLED in src/i18n/locales.ts (tests/unit/i18n-locale.test.ts)
   function pick(tag) {
     var base = String(tag).toLowerCase().split("-")[0];

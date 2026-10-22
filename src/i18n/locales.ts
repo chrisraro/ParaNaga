@@ -12,7 +12,7 @@ export const DEFAULT_LOCALE: Locale = "en";
 export const BIKOL_ENABLED: boolean = false;
 
 /** Filipino stays hidden until its strings pass the draft + Jev check and the opus review (plan T10). public/theme-init.js mirrors this flag. */
-export const FILIPINO_ENABLED: boolean = false;
+export const FILIPINO_ENABLED: boolean = true;
 
 export function isLocale(value: unknown): value is Locale {
   return (LOCALES as readonly unknown[]).includes(value);

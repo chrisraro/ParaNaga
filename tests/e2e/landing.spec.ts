@@ -23,8 +23,10 @@ async function scrollThrough(page: Page) {
 test("the header language toggle persists across a reload and sets the page language", async ({ page }) => {
   test.skip(!FILIPINO_ENABLED, "Filipino is hidden until its review (plan T10)");
   await page.goto("/");
-  await page.getByRole("button", { name: "Open menu" }).click();
-  const toggle = page.locator("#mobile-menu").getByRole("group", { name: "Language" });
+  // Phones reach the toggle through the menu; wider screens show it in the header.
+  const menu = page.getByRole("button", { name: "Open menu" });
+  if (await menu.isVisible()) await menu.click();
+  const toggle = page.getByRole("group", { name: "Language" }).filter({ visible: true }).first();
   await expect(toggle.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
   await toggle.getByRole("button", { name: "Filipino" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "fil");
