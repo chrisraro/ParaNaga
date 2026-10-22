@@ -7,7 +7,7 @@
 //   - committed batch for this snapshot with the same document hashes and raw-feature content
 //                                                  -> "unchanged": nothing is written;
 //   - anything else (same snapshot with other files, or a new snapshot of an imported map)
-//                                                  -> refused: the changed-data path is not built yet.
+//                                                  -> refused here: changed data goes through the admin import (N5b, ingest.admin_import_commit).
 //
 // OpenStreetMap places (Task 3, plan.osm) run after the transit part, in the same transaction,
 // under pg_advisory_xact_lock(hashtext(<osm snapshot_version>)):
@@ -122,8 +122,8 @@ async function checkUnchanged(
 ): Promise<TransitOutcome> {
   if (last.snapshot_version !== plan.snapshotVersion || last.counts.documents_sha256 !== plan.documentsHash) {
     throw new ImportRefusedError(
-      `the files differ from the last committed batch (${last.snapshot_version}); importing changed data ` +
-        "(new versions in a new draft revision) is not implemented yet. Nothing was written.",
+      `the files differ from the last committed batch (${last.snapshot_version}); changed data is imported ` +
+        "from the admin console (Imports: dry run, then commit into the open draft revision). Nothing was written.",
     );
   }
   const stored = await c.query<{ source_identity: string; content_hash: string }>(

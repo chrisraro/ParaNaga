@@ -18,6 +18,7 @@ const PRIVATE = { "cache-control": "private, no-store" };
 const PUB = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a11";
 const DRAFT = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a22";
 const OLD = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a33";
+const ADMIN_PATHS = ["/admin", "/admin/revisions", "/admin/coverage", "/admin/imports", "/admin/candidates", "/admin/stops", "/admin/reconciliation"];
 
 test.skip(({ isMobile }) => isMobile, "The admin console is desktop-first");
 
@@ -131,7 +132,7 @@ async function axe(page: Page, testId: string) {
 }
 
 test("signed-out visitors get a 404 status; signed-in non-staff get the ordinary not-found page and no admin call", async ({ page, context }) => {
-  for (const path of ["/admin", "/admin/revisions", "/admin/coverage"]) {
+  for (const path of ADMIN_PATHS) {
     const res = await page.goto(path);
     expect(res?.status(), path).toBe(404);
   }
@@ -142,7 +143,7 @@ test("signed-out visitors get a 404 status; signed-in non-staff get the ordinary
   for (const roles of ["commuter", "commuter,community_moderator,complaint_reviewer,contributor"]) {
     await context.clearCookies();
     await signInAs(context, roles);
-    for (const path of ["/admin", "/admin/revisions", "/admin/coverage"]) {
+    for (const path of ADMIN_PATHS) {
       await page.goto(path);
       // The same page as any unknown URL (Cache Components streams it, so the status stays 200, with noindex).
       await expect(page.getByRole("heading", { level: 1 }), `${roles} ${path}`).toHaveText("Wrong stop.");
@@ -167,7 +168,7 @@ test("the dashboard shows the counts, is private, and passes axe", async ({ page
   await expect(page.getByTestId("open-corrections")).toHaveText("3");
   await expect(page.getByTestId("import-snapshot")).toHaveText("mymaps:naga:2026-10-15");
   await expect(page.getByTestId("admin-roles")).toHaveText("Signed in as admin");
-  await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText(["Dashboard", "Revisions & publication", "Coverage audit"]);
+  await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText(["Dashboard", "Imports", "Candidate review", "Stops & curbs", "Reconciliation", "Revisions & publication", "Coverage audit"]);
   await expect(page.getByTestId("admin-nav").getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
   await axe(page, "dashboard");
 });
@@ -231,5 +232,283 @@ for (const scheme of ["light", "dark"] as const) {
     await page.goto("/admin");
     await expect(page.getByTestId("published-label")).toBeVisible();
     await axe(page, `dashboard-${scheme}`);
+  });
+}
+
+// ================================================================ N5b: candidates, stops, reconciliation, imports
+// The same approach: the shell from the roles cookie, every /api/v1/admin/** call answered here
+// with the production headers. The mock keeps the stops' state and mirrors the database's rules
+// (version check, evidence of the claimed kind, curb evidence, no retiring a stop in a stop order),
+// so the screens are driven through the AC-8 steps: review a candidate, attach evidence, promote,
+// relocate, retire. tests/unit/admin-stops-handlers.test.ts and the integration test cover the real checks.
+
+const ID = (n: number) => `7a2c1c7e-6f0a-4a39-9d62-0d0f5f2a8${String(n).padStart(3, "0")}`;
+
+type MockStop = {
+  stopPointId: string; versionId: string; name: string; aliases: string[]; status: string; layer: string; code: string; labelRaw: string;
+  lat: number; lng: number; curbSide: string | null; boardingAllowed: boolean | null; alightingAllowed: boolean | null; navigationApproved: boolean;
+  editNote: string | null; isSynthetic: boolean; sequences: string[];
+  pins: { layer: string; code: string; label: string; description: string; lat: number; lng: number }[];
+  evidence: { id: string; kind: string; claim: string; note: string | null; observedOn: string | null; sourceCode: string | null; hasMedia: boolean; createdAt: string }[];
+};
+
+function mockStop(n: number, layer: string, code: string, name: string, lat: number, lng: number, over: Partial<MockStop> = {}): MockStop {
+  return {
+    stopPointId: ID(n), versionId: ID(n + 500), name, aliases: [], status: "candidate", layer: `Loop Service ${layer}`, code, labelRaw: name,
+    lat, lng, curbSide: null, boardingAllowed: null, alightingAllowed: null, navigationApproved: false, editNote: null, isSynthetic: false,
+    sequences: [], pins: [{ layer: `Loop Service ${layer}`, code, label: name, description: name, lat, lng }], evidence: [], ...over,
+  };
+}
+
+const REQUIRED: Record<string, string[]> = { documentary: ["legal_designation"], installed: ["sign_installed"], field_verified: ["operating_observed", "curb_position"] };
+
+async function mockStopsApi(page: Page) {
+  const s = {
+    version: 900,
+    stops: [
+      mockStop(1, "A", "A1", "Plaza Rizal", 13.6233869, 123.1846726, { sequences: ["R8-A"] }),
+      mockStop(2, "C", "C5", "Naga Cathedral", 13.6261, 123.1897),
+      mockStop(3, "C", "A1", "Plaza Rizal", 13.6233869, 123.1846726),
+    ],
+    actions: [] as Record<string, unknown>[],
+    decisions: [] as Record<string, unknown>[],
+    pairOpen: true,
+    commits: [] as unknown[],
+  };
+  const json = (body: unknown, status = 200) => ({ status, contentType: "application/json", headers: PRIVATE, body: JSON.stringify(body) });
+  const err = (status: number, code: string, message: string) => json({ error: { code, message, requestId: "e2e" } }, status);
+  const draft = { id: DRAFT, label: "draft-2026-10-22-100000", kind: "provisional", status: "draft" };
+  await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (r) => r.abort());
+  await routeNetwork(page);
+  await page.route("**/api/v1/admin/stops", (r) => r.fulfill(json({ revision: draft, editable: true, stops: s.stops })));
+  await page.route(/\/api\/v1\/admin\/stops\/[^/]+$/, (r) => {
+    const id = r.request().url().split("/").at(-1)!;
+    const body = r.request().postDataJSON() as Record<string, unknown> & { action: string; expectedVersionId: string };
+    s.actions.push({ id, ...body });
+    const stop = s.stops.find((x) => x.stopPointId === id);
+    if (!stop) return r.fulfill(err(404, "not_found", "No such stop in the open draft."));
+    if (stop.versionId !== body.expectedVersionId) return r.fulfill(err(409, "conflict", "This stop changed since the page was loaded; reload and try again."));
+    const claims = new Set(stop.evidence.map((e) => e.claim));
+    switch (body.action) {
+      case "evidence":
+        stop.evidence.push({ id: ID(s.version - 600), kind: String(body.kind), claim: String(body.claim), note: (body.note as string) ?? null, observedOn: null, sourceCode: (body.sourceCode as string) ?? null, hasMedia: false, createdAt: "2026-10-22T02:10:00.000Z" });
+        break;
+      case "promote":
+        if (!REQUIRED[String(body.status)]!.some((c) => claims.has(c))) return r.fulfill(err(409, "conflict", `Promotion to ${body.status} needs evidence first.`));
+        stop.status = String(body.status);
+        break;
+      case "relocate":
+        stop.lat = Number(body.lat);
+        stop.lng = Number(body.lng);
+        stop.editNote = String(body.reason);
+        stop.evidence = stop.evidence.filter((e) => e.claim !== "curb_position");
+        break;
+      case "retire":
+        if (stop.sequences.length) return r.fulfill(err(409, "conflict", `The stop is in the stop order of ${stop.sequences.join(", ")}.`));
+        stop.status = "retired";
+        break;
+      case "edit": {
+        const c = body.changes as Record<string, unknown>;
+        if (("curbSide" in c || "curbLat" in c) && !claims.has("curb_position")) return r.fulfill(err(409, "conflict", "Curb side and curb point need curb position evidence on this stop first."));
+        if (typeof c.name === "string") stop.name = c.name;
+        if (Array.isArray(c.aliases)) stop.aliases = c.aliases as string[];
+        if ("curbSide" in c) stop.curbSide = c.curbSide as string | null;
+        break;
+      }
+    }
+    s.version += 1;
+    stop.versionId = ID(s.version);
+    return r.fulfill(json({ stopPointId: id, versionId: stop.versionId }));
+  });
+  await page.route("**/api/v1/admin/reconciliation", (r) => {
+    if (r.request().method() === "POST") {
+      const body = r.request().postDataJSON() as Record<string, unknown>;
+      s.decisions.push(body);
+      s.pairOpen = false;
+      return r.fulfill(json({ decision: body.decision, keptVersionId: null, retiredVersionId: null }));
+    }
+    const [a, , c] = s.stops;
+    return r.fulfill(
+      json({
+        revision: draft,
+        editable: true,
+        pairs: s.pairOpen
+          ? [{
+              a: { stopPointId: a!.stopPointId, versionId: a!.versionId, name: a!.name, status: a!.status, layer: a!.layer, code: a!.code, lat: a!.lat, lng: a!.lng },
+              b: { stopPointId: c!.stopPointId, versionId: c!.versionId, name: c!.name, status: c!.status, layer: c!.layer, code: c!.code, lat: c!.lat, lng: c!.lng },
+              distanceM: 0,
+              similarNames: true,
+            }]
+          : [],
+        mismatches: [{ stopPointId: ID(2), name: "Naga Cathedral", status: "candidate", pinLayer: "Loop Service C", pinCode: "C5", pinLabel: "Metropolitan Cathedral", distanceM: 22.4, far: true, nameDiffers: true }],
+        decisions: s.pairOpen
+          ? []
+          : [{ id: ID(990), decision: "keep_separate", distanceM: 0, a: "Plaza Rizal", b: "Plaza Rizal", kept: null, note: null, decidedAt: "2026-10-22T02:20:00.000Z" }],
+      }),
+    );
+  });
+  const BASE_BATCH = ID(800);
+  await page.route("**/api/v1/admin/imports", (r) =>
+    r.fulfill(
+      json({
+        baseline: { batchId: BASE_BATCH, snapshotVersion: "mymaps:naga:2026-10-15", mapId: "naga", finishedAt: "2026-10-15T01:02:00.000Z" },
+        batches: [{ id: BASE_BATCH, snapshotVersion: "mymaps:naga:2026-10-15", mode: "commit", status: "committed", startedBy: "import", startedAt: "2026-10-15T01:00:00.000Z", finishedAt: "2026-10-15T01:02:00.000Z", fileName: "naga_mapped_stops_source.kml", changes: { added: 128, changed: 0, unchanged: 0, missing: 0 }, conflicts: 134 }],
+      }),
+    ),
+  );
+  await page.route("**/api/v1/admin/imports/dry-run", (r) => {
+    const body = r.request().postDataJSON() as { text: string; retrievedOn: string; fileName: string };
+    const bad = body.text.includes("BROKEN");
+    return r.fulfill(
+      json({
+        snapshotVersion: `mymaps:naga:${body.retrievedOn}`, mapId: "naga", fileName: body.fileName, sha256: "c".repeat(64), bytes: body.text.length,
+        baseline: { batchId: BASE_BATCH, snapshotVersion: "mymaps:naga:2026-10-15" },
+        counts: { total: bad ? 127 : 128, byLayer: { A: 30, B: 31, C: 34, D: bad ? 32 : 33 }, expectedTotal: 128, expectedByLayer: { A: 30, B: 31, C: 34, D: 33 } },
+        changes: { added: 0, changed: bad ? 0 : 1, unchanged: 127, missing: bad ? 1 : 0 },
+        rows: bad ? [{ kind: "missing", layer: "Loop Service D", code: "D33", label: "Old pin", fromLabel: null, movedM: null }] : [{ kind: "changed", layer: "Loop Service A", code: "A1", label: "Plaza Rizal", fromLabel: null, movedM: 111.2 }],
+        conflicts: [{ kind: "exact_coordinate_shared", meters: null, records: [{ layer: "Loop Service A", code: "A1", label: "Plaza Rizal" }, { layer: "Loop Service C", code: "A1", label: "Plaza Rizal" }] }],
+        problems: bad ? ["The file has 127 pins; 128 are expected.", "Layer D has 32 pins; 33 are expected."] : [],
+        canCommit: !bad,
+      }),
+    );
+  });
+  await page.route("**/api/v1/admin/imports/commit", (r) => {
+    s.commits.push(r.request().postDataJSON());
+    return r.fulfill(json({ outcome: "committed", batchId: ID(801), snapshotVersion: "mymaps:naga:2026-10-20", revisionId: DRAFT, counts: { added: 0, changed: 1, unchanged: 127, missing: 0, new_candidate_stops: 0, new_stop_versions: 1 } }, 201));
+  });
+  return s;
+}
+
+test("candidate review: evidence, promote, relocate and retire in the draft (AC-8 admin steps)", async ({ page, context }) => {
+  await signInAs(context, "commuter,transport_reviewer");
+  const s = await mockStopsApi(page);
+  await page.goto("/admin/candidates");
+  await expect(page).toHaveTitle("Candidate review · Admin · ParaNaga");
+  await expect(page.getByTestId("stops-table")).toContainText("3 of 3 stops in draft-2026-10-22-100000");
+
+  // A stop in a route's stop order cannot be retired from here.
+  await page.getByTestId("stop-Loop Service A-A1").getByRole("button", { name: /Review/ }).click();
+  await expect(page.getByTestId("retire-form")).toContainText("In the stop order of R8-A");
+  await expect(page.getByTestId("retire-go")).toBeDisabled();
+
+  await page.getByTestId("stop-Loop Service C-C5").getByRole("button", { name: /Review/ }).click();
+  await expect(page.getByTestId("stop-panel")).toContainText("Naga Cathedral");
+  // Promotion needs evidence of the claimed kind first.
+  await expect(page.getByTestId("promote-form")).toContainText("Needs evidence for legal designation.");
+  await expect(page.getByTestId("promote-go")).toBeDisabled();
+
+  await page.getByTestId("evidence-source").fill("S12");
+  await page.getByTestId("evidence-note").fill("Ordinance list names the cathedral stop.");
+  await page.getByTestId("evidence-go").click();
+  await expect(page.getByTestId("stops-notice")).toContainText("Evidence for legal designation attached to C5.");
+  await expect(page.getByTestId("stop-evidence")).toContainText("legal designation");
+
+  await expect(page.getByTestId("promote-go")).toBeEnabled();
+  await page.getByTestId("promote-go").click();
+  await expect(page.getByTestId("stops-notice")).toContainText("C5 is now documentary.");
+  await expect(page.getByTestId("stop-status")).toHaveText("documentary");
+
+  await page.getByTestId("relocate-lat").fill("13.6263");
+  await page.getByTestId("relocate-reason").fill("Pin sat in the plaza; the stop is at the curb.");
+  await page.getByTestId("relocate-go").click();
+  await expect(page.getByTestId("stops-notice")).toContainText("C5 moved.");
+  await expect(page.getByTestId("stop-position")).toHaveText("13.626300, 123.189700");
+
+  await page.getByTestId("retire-reason").fill("Duplicate of the cathedral stop on Loop A.");
+  await page.getByTestId("retire-go").click();
+  await expect(page.getByTestId("stops-notice")).toContainText("C5 retired.");
+  await expect(page.getByTestId("stop-status")).toHaveText("retired");
+
+  // Every action sent the version the page was showing (optimistic concurrency).
+  const c5 = s.actions.filter((a) => a.id === ID(2));
+  expect(c5.map((a) => a.action)).toEqual(["evidence", "promote", "relocate", "retire"]);
+  expect(c5[0]!.expectedVersionId).toBe(ID(502));
+  expect(new Set(c5.map((a) => a.expectedVersionId)).size).toBe(4);
+  expect(c5[0]).toMatchObject({ kind: "document", claim: "legal_designation", sourceCode: "S12" });
+});
+
+test("stops and curbs: curb side waits for curb evidence; edits go to the draft", async ({ page, context }) => {
+  await signInAs(context, "commuter,admin");
+  const s = await mockStopsApi(page);
+  await page.goto("/admin/stops");
+  await page.getByTestId("stop-Loop Service C-C5").getByRole("button", { name: /Edit/ }).click();
+  await expect(page.getByTestId("edit-curb-side")).toBeDisabled();
+  await page.getByTestId("evidence-kind").selectOption("field_survey");
+  await page.getByTestId("evidence-claim").selectOption("curb_position");
+  await page.getByTestId("evidence-note").fill("Surveyed 2026-10-20: northbound curb, shelter.");
+  await page.getByTestId("evidence-go").click();
+  await expect(page.getByTestId("stops-notice")).toContainText("curb position");
+  await expect(page.getByTestId("edit-curb-side")).toBeEnabled();
+  await page.getByTestId("edit-name").fill("Naga Metropolitan Cathedral");
+  await page.getByTestId("edit-aliases").fill("Cathedral, Katedral");
+  await page.getByTestId("edit-curb-side").selectOption("right_of_travel");
+  await page.getByTestId("edit-go").click();
+  await expect(page.getByTestId("stops-notice")).toContainText("updated");
+  await expect(page.getByTestId("stop-panel")).toContainText("Naga Metropolitan Cathedral");
+  expect(s.actions.at(-1)).toMatchObject({ action: "edit", changes: { name: "Naga Metropolitan Cathedral", aliases: ["Cathedral", "Katedral"], curbSide: "right_of_travel" } });
+});
+
+test("reconciliation: decide a same-point pair; pin mismatches are listed read-only", async ({ page, context }) => {
+  await signInAs(context, "commuter,transport_reviewer");
+  const s = await mockStopsApi(page);
+  await page.goto("/admin/reconciliation");
+  await expect(page.getByTestId("pairs-table")).toContainText("Same point");
+  await expect(page.getByTestId("mismatches-table")).toContainText("Metropolitan Cathedral");
+  await page.getByTestId("pair-open-A1-A1").click();
+  await page.getByTestId("pair-go-A1-A1").click();
+  await expect(page.getByTestId("reconcile-notice")).toContainText("separate");
+  await expect(page.getByTestId("pairs")).toContainText("Nothing to decide.");
+  await expect(page.getByTestId("decisions")).toContainText("kept separate");
+  expect(s.decisions).toEqual([{ a: { stopPointId: ID(1), expectedVersionId: ID(501) }, b: { stopPointId: ID(3), expectedVersionId: ID(503) }, decision: "keep_separate" }]);
+});
+
+test("imports: dry run shows the diff, counts and conflicts; a count mismatch blocks commit; commit goes to the draft", async ({ page, context }) => {
+  await signInAs(context, "commuter,admin");
+  const s = await mockStopsApi(page);
+  await page.goto("/admin/imports");
+  await expect(page.getByTestId("import-baseline")).toContainText("mymaps:naga:2026-10-15");
+  await expect(page.getByTestId("import-batches")).toContainText("naga_mapped_stops_source.kml");
+
+  await page.getByTestId("import-file").setInputFiles({ name: "naga-broken.kml", mimeType: "application/vnd.google-earth.kml+xml", buffer: Buffer.from("<kml>BROKEN</kml>") });
+  await page.getByTestId("import-date").fill("2026-10-20");
+  await page.getByTestId("import-dry-run").click();
+  await expect(page.getByTestId("import-problems")).toContainText("Layer D has 32 pins; 33 are expected.");
+  await expect(page.getByTestId("import-commit")).toBeDisabled();
+
+  await page.getByTestId("import-file").setInputFiles({ name: "naga.kml", mimeType: "application/vnd.google-earth.kml+xml", buffer: Buffer.from("<kml>ok</kml>") });
+  await page.getByTestId("import-date").fill("2026-10-20");
+  await page.getByTestId("import-dry-run").click();
+  await expect(page.getByTestId("import-changes")).toContainText("1 changed");
+  await expect(page.getByTestId("import-changes")).toContainText("127 unchanged");
+  await expect(page.getByTestId("import-rows")).toContainText("111.2 m");
+  await expect(page.getByTestId("import-conflicts")).toContainText("exact coordinate shared");
+  await expect(page.getByTestId("import-counts")).toContainText("128");
+  await page.getByTestId("import-commit").click();
+  await expect(page.getByTestId("import-commit-result")).toContainText("Committed mymaps:naga:2026-10-20: 0 added, 1 changed, 127 unchanged, 0 missing.");
+  expect(s.commits).toEqual([{ format: "kml", fileName: "naga.kml", text: "<kml>ok</kml>", retrievedOn: "2026-10-20", expectedBaselineBatchId: ID(800) }]);
+});
+
+for (const scheme of ["light", "dark"] as const) {
+  test(`candidates, stops, reconciliation and imports pass axe (${scheme})`, async ({ page, context }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await signInAs(context, "commuter,admin");
+    await mockStopsApi(page);
+    await page.goto("/admin/candidates");
+    await page.getByTestId("stop-Loop Service C-C5").getByRole("button", { name: /Review/ }).click();
+    await expect(page.getByTestId("promote-form")).toBeVisible();
+    await axe(page, `candidates-${scheme}`);
+    await page.goto("/admin/stops");
+    await page.getByTestId("stop-Loop Service A-A1").getByRole("button", { name: /Edit/ }).click();
+    await expect(page.getByTestId("edit-form")).toBeVisible();
+    await axe(page, `stops-${scheme}`);
+    await page.goto("/admin/reconciliation");
+    await page.getByTestId("pair-open-A1-A1").click();
+    await axe(page, `reconciliation-${scheme}`);
+    await page.goto("/admin/imports");
+    await page.getByTestId("import-file").setInputFiles({ name: "naga-broken.kml", mimeType: "application/vnd.google-earth.kml+xml", buffer: Buffer.from("<kml>BROKEN</kml>") });
+    await page.getByTestId("import-date").fill("2026-10-20");
+    await page.getByTestId("import-dry-run").click();
+    await expect(page.getByTestId("import-dry")).toBeVisible();
+    await axe(page, `imports-${scheme}`);
   });
 }

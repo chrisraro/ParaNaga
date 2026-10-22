@@ -34,6 +34,8 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
+const FULL_NAV = ["/admin", "/admin/imports", "/admin/candidates", "/admin/stops", "/admin/reconciliation", "/admin/revisions", "/admin/coverage"];
+
 describe("canEnterAdmin / adminNavFor", () => {
   it("only admins and transport reviewers enter", () => {
     for (const role of ROLES) expect(canEnterAdmin([role]), role).toBe(role === "admin" || role === "transport_reviewer");
@@ -41,8 +43,8 @@ describe("canEnterAdmin / adminNavFor", () => {
   });
 
   it("the nav lists only built screens the roles allow, and nothing for others", () => {
-    expect(adminNavFor(["commuter", "admin"]).map((i) => i.href)).toEqual(["/admin", "/admin/revisions", "/admin/coverage"]);
-    expect(adminNavFor(["transport_reviewer"]).map((i) => i.href)).toEqual(["/admin", "/admin/revisions", "/admin/coverage"]);
+    expect(adminNavFor(["commuter", "admin"]).map((i) => i.href)).toEqual(FULL_NAV);
+    expect(adminNavFor(["transport_reviewer"]).map((i) => i.href)).toEqual(FULL_NAV);
     expect(adminNavFor(["community_moderator", "complaint_reviewer"])).toEqual([]);
   });
 });

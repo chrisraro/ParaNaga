@@ -12,7 +12,20 @@ import {
   revisionListSchema,
   validationReportSchema,
 } from "@/domain/admin/schemas";
+import {
+  importCommitResultSchema,
+  importDryRunSchema,
+  importListSchema,
+  reconcileResultSchema,
+  reconciliationSchema,
+  stopActionResultSchema,
+  stopListSchema,
+  type ImportUpload,
+  type ReconcilePayload,
+  type StopAction,
+} from "@/domain/admin/stops";
 import { apiErrorSchema } from "@/domain/api/schemas";
+import { confirmMediaResponseSchema, createMediaSlotResponseSchema } from "@/domain/media/schemas";
 
 export type AdminFailure = { ok: false; status: number; code: string | null; message: string };
 export type AdminResult<T> = { ok: true; data: T } | AdminFailure;
@@ -48,3 +61,41 @@ export const validate = (id: string) => call(`/api/v1/admin/revisions/${encodeUR
 export const publish = (id: string, mode: "publish" | "rollback", expectedPublishedId: string | null) =>
   call(`/api/v1/admin/revisions/${encodeURIComponent(id)}/${mode}`, publishResultSchema, { expectedPublishedId });
 export const fetchCoverage = () => call("/api/v1/admin/coverage", coverageSchema);
+
+// ---------------------------------------------------------------- N5b: stops, reconciliation, imports
+
+export const fetchStops = () => call("/api/v1/admin/stops", stopListSchema);
+export const stopAction = (stopPointId: string, action: StopAction) =>
+  call(`/api/v1/admin/stops/${encodeURIComponent(stopPointId)}`, stopActionResultSchema, action);
+export const fetchReconciliation = () => call("/api/v1/admin/reconciliation", reconciliationSchema);
+export const decidePair = (payload: ReconcilePayload) => call("/api/v1/admin/reconciliation", reconcileResultSchema, payload);
+export const fetchImports = () => call("/api/v1/admin/imports", importListSchema);
+export const importDryRun = (upload: ImportUpload) => call("/api/v1/admin/imports/dry-run", importDryRunSchema, upload);
+export const importCommit = (upload: ImportUpload, expectedBaselineBatchId: string) =>
+  call("/api/v1/admin/imports/commit", importCommitResultSchema, { ...upload, expectedBaselineBatchId });
+
+const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * A stop photo through the existing upload slots (purpose stop_photo): quarantine, server check,
+ * metadata stripped, stored in the private evidence bucket. Returns the media object id to attach.
+ */
+export async function uploadStopPhoto(file: File): Promise<AdminResult<{ mediaObjectId: string }>> {
+  const fail = (message: string): AdminFailure => ({ ok: false, status: 0, code: null, message });
+  if (!PHOTO_TYPES.includes(file.type)) return fail("Choose a JPEG, PNG or WebP photo.");
+  if (file.size > PHOTO_MAX_BYTES) return fail("The photo is larger than 10 MB.");
+  const slot = await call("/api/v1/media/slots", createMediaSlotResponseSchema, { purpose: "stop_photo", expectedBytes: file.size, mime: file.type });
+  if (!slot.ok) return slot;
+  try {
+    const put = await fetch(slot.data.slot.uploadUrl, { method: "PUT", headers: { "content-type": file.type }, body: file });
+    if (!put.ok) return fail("The photo could not be uploaded. Try again.");
+  } catch {
+    return fail(FAILED);
+  }
+  const confirm = await call("/api/v1/media/confirm", confirmMediaResponseSchema, { slotId: slot.data.slot.id });
+  if (!confirm.ok) return confirm;
+  return confirm.data.media.status === "verified"
+    ? { ok: true, data: { mediaObjectId: confirm.data.media.id } }
+    : fail("The photo was refused (not a readable image).");
+}
