@@ -181,6 +181,16 @@ Adds migrations 0010 (route notes, street graph v2, research source codes), 0011
 
 `GET /api/health` returns only `{ "ok": true }` publicly. With `Authorization: Bearer $CRON_SECRET` it also probes the database and reports which providers are configured (never their values).
 
+## Driver-evidence retention purge (N7)
+
+`/api/cron/retention` deletes closed and withdrawn driver reports once their retention date has passed (closure + 365 days, set when a reviewer closes a report), unless a reviewer put the report on legal hold, and complaint-evidence uploads that no report uses after 30 days. Per report, one transaction deletes the rows (access log, MyNaga handoff, events, evidence rows, the report and its media objects), then the storage objects (originals and redacted copies) with a HEAD check that each is gone, then commits; an object that will not go rolls the rows back and the next run retries. Every purge (`retention.purge`, `retention.purge_upload`) and every run (`retention.run`, counts only) is in the audit log as `system`; the admin Jobs screen lists the last runs.
+
+- Auth: `Authorization: Bearer $CRON_SECRET` only (a query-string secret is refused). The mode is required: `?mode=dry-run` lists and counts and deletes nothing; `?mode=commit` purges. No mode answers 400, so a misconfigured call does nothing.
+- Up to 50 reports and 50 uploads per call; call again while the summary reports work done.
+- It is not scheduled by this repository. Once a day is enough: a Vercel Cron entry (`{ "path": "/api/cron/retention?mode=commit", "schedule": "30 18 * * *" }`, 02:30 Manila) works on Hobby (daily); or a Neon scheduled Function, or any scheduler that can send the header. Run `?mode=dry-run` by hand first:
+  `curl -s -H "Authorization: Bearer $CRON_SECRET" "https://<host>/api/cron/retention?mode=dry-run"`.
+- The database functions only run without a signed-in user (the cron route), so no user request can purge anything.
+
 ## Notes
 
 - Per-minute Vercel Cron needs a paid Vercel plan; on Hobby, increment 6 falls back to a Neon scheduled Function calling the job endpoint.
