@@ -118,6 +118,12 @@ describe("classifyRequest: never cached", () => {
     expect(classifyRequest(req("/api/csp-report", { method: "POST" }))).toEqual({ kind: "network-only" });
   });
 
+  it("the admin API (N5a), whatever its path", () => {
+    for (const path of ["/api/v1/admin", "/api/v1/admin/dashboard", "/api/v1/admin/revisions", `/api/v1/admin/revisions/${REV}/validate`, "/api/v1/admin/coverage"]) {
+      expect(classifyRequest(req(path)), path).toEqual({ kind: "network-only" });
+    }
+  });
+
   it("RSC requests: ?_rsc= and the RSC / prefetch headers, unless a shell's segment prefetch", () => {
     expect(classifyRequest(req("/app/saved?_rsc=abc12"))).toEqual({ kind: "network-only" });
     expect(classifyRequest(req("/app/saved", { headers: { RSC: "1" } }))).toEqual({ kind: "network-only" });

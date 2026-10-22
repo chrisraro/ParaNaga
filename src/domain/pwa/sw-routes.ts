@@ -94,10 +94,10 @@ const REFERENCE = [/^\/api\/v1\/stops\/[^/]+$/, /^\/api\/v1\/routes$/, /^\/api\/
 const PRIVATE_SECTIONS = /^\/(admin|account)(\/|$)/;
 /**
  * Personal and private data (task B8): driver reports, the caller's own account data, media
- * slots and private evidence. Checked before every other rule, so no later allow-list entry can
+ * slots and private evidence, and the admin API (N5a). Checked before every other rule, so no later allow-list entry can
  * ever route one of these into a cache, whatever the method, origin or headers.
  */
-const PRIVATE_DATA = /^\/api\/v1\/(complaints|me|media)(\/|$)/;
+const PRIVATE_DATA = /^\/api\/v1\/(complaints|me|media|admin)(\/|$)/;
 const PRIVATE_BUCKET = /(^|\/)evidence-private(\/|$)/;
 
 /** True for a request the worker must never cache: private API data or private evidence (any origin). */

@@ -35,8 +35,10 @@ export default defineConfig({
     {
       command: `pnpm build && pnpm start --port ${PORT}`,
       // PARANAGA_E2E_SW_VARIANT: test-only, lets offline.spec.ts publish new worker bytes at the
-      // same URL through a cookie (src/app/serwist/[path]/route.ts). Never set for a deployment.
-      env: { DRIVER_REPORTS_ENABLED: "true", NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY: "paranaga-e2e-embed-key", NEXT_DIST_DIR: ".next-e2e", NEXT_PUBLIC_TILE_URL: E2E_TILE_URL, PARANAGA_E2E_SW_VARIANT: "1" },
+      // same URL through a cookie (src/app/serwist/[path]/route.ts). PARANAGA_E2E_ADMIN_SHELL:
+      // test-only, lets admin.spec.ts open the /admin shell with a roles cookie (no Neon Auth here;
+      // the admin API is mocked). Never set either for a deployment (next.config.ts refuses).
+      env: { DRIVER_REPORTS_ENABLED: "true", NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY: "paranaga-e2e-embed-key", NEXT_DIST_DIR: ".next-e2e", NEXT_PUBLIC_TILE_URL: E2E_TILE_URL, PARANAGA_E2E_SW_VARIANT: "1", PARANAGA_E2E_ADMIN_SHELL: "1" },
       url: `http://localhost:${PORT}/api/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,

@@ -16,7 +16,7 @@ export const CACHE = {
 
 export class ApiProblem extends Error {
   constructor(
-    readonly status: 400 | 401 | 403 | 404 | 413 | 429 | 503,
+    readonly status: 400 | 401 | 403 | 404 | 409 | 413 | 429 | 503,
     readonly code: ApiErrorCode,
     message: string,
   ) {
@@ -31,6 +31,8 @@ export const forbidden = (message: string = "You are not allowed to do this.") =
 /** The caller is signed in but must verify a fresh email code first (step-up, spec 05 §5.4). */
 export const stepUpRequired = () => new ApiProblem(403, "step_up_required", "Enter a new code from your email to continue.");
 export const notFound = (message: string) => new ApiProblem(404, "not_found", message);
+/** The request is valid but the resource is not in a state that allows it (e.g. a stale publish). */
+export const conflict = (message: string) => new ApiProblem(409, "conflict", message);
 export const unavailable = (message: string) => new ApiProblem(503, "unavailable", message);
 export const payloadTooLarge = (message: string) => new ApiProblem(413, "payload_too_large", message);
 export const tooManyRequests = (message: string = "Too many requests. Please wait a moment.") =>

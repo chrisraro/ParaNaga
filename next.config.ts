@@ -90,6 +90,15 @@ const nextConfig: NextConfig = {
       { source: "/:path*", headers: securityHeaders },
       // The service worker script: always revalidated, so an update is found on the next visit.
       { source: "/serwist/:path*", headers: [{ key: "Cache-Control", value: "no-cache" }] },
+      // The admin console (N5a): never indexed, no referrer. Headers, not page metadata, so a
+      // non-staff visitor's not-found page carries no admin title.
+      {
+        source: "/admin/:path*",
+        headers: [
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+        ],
+      },
     ];
   },
 };

@@ -1,0 +1,173 @@
+import "server-only";
+import type { z } from "zod";
+import { canEnterAdmin } from "@/domain/admin/access";
+import {
+  adminDashboardSchema,
+  coverageSchema,
+  createDraftResultSchema,
+  publishPayloadSchema,
+  publishResultSchema,
+  revisionListSchema,
+  validationReportSchema,
+} from "@/domain/admin/schemas";
+import { validateRevision } from "@/domain/admin/validation";
+import { parseUuidParam } from "@/domain/api/schemas";
+import { can, type Action } from "@/domain/auth/permissions";
+import { authedRoute, badRequest, CACHE, conflict, forbidden, notFound, readJsonBody, stepUpRequired, tooManyRequests, unavailable } from "@/server/api/http";
+import { getCurrentUser, type CurrentUser } from "@/server/auth/session";
+import { applyStepUp, currentStepUpKey, isStepUpError } from "@/server/auth/step-up";
+import { withRequestContext, type Db } from "@/server/db/context";
+import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
+import { getPublishedRevision } from "@/server/repos/network-repo";
+import { createDraft, listRevisions, publishRevision, readCoverage, readDashboard, readValidationFacts, recordValidation } from "./repo";
+
+// /api/v1/admin/** (N5a). Three walls, each on its own: (1) here, per request, the session's roles
+// from core.user_role (no staff role: 404, so the API does not reveal itself); (2) the action's
+// permission (src/domain/auth/permissions.ts); (3) the database, whose definer functions check the
+// role again and, for publish and rollback, a fresh step-up (priv.require_step_up). Every answer
+// is private, no-store. Writes take a JSON body only (readJsonBody), so a cross-site form cannot post.
+
+const NOT_FOUND = "Not found.";
+const BODY_MAX_BYTES = 512;
+
+type Ctx = { user: CurrentUser; requestId: string; db: <T>(fn: (db: Db) => Promise<T>, readOnly?: boolean) => Promise<T> };
+
+function pgError(error: unknown): { code: string | null; message: string } {
+  const e = error as { code?: unknown; message?: unknown; cause?: { code?: unknown; message?: unknown } } | null;
+  const code = e?.cause?.code ?? e?.code;
+  return { code: typeof code === "string" ? code : null, message: String(e?.cause?.message ?? e?.message ?? "") };
+}
+
+/** Database refusals → API problems; anything else stays a 500. Messages from 0023 are written for staff. */
+export function adminProblem(error: unknown): unknown {
+  if (isStepUpError(error)) return stepUpRequired();
+  const { code, message } = pgError(error);
+  if (code === "42501") return message === "forbidden" ? notFound(NOT_FOUND) : forbidden(capitalize(message));
+  if (code === "22023") return message.startsWith("unknown revision") ? notFound("No such revision.") : badRequest(capitalize(message));
+  if (code === "55000" || code === "23514") return conflict(capitalize(message));
+  return error;
+}
+
+const capitalize = (s: string) => (s ? s[0]!.toUpperCase() + s.slice(1) + (/[.!?]$/.test(s) ? "" : ".") : s);
+
+function adminRoute(request: Request, route: string, action: Action | null, run: (ctx: Ctx) => Promise<Response>): Promise<Response> {
+  return authedRoute(request, route, async (requestId) => {
+    const user = await getCurrentUser();
+    if (!user || !canEnterAdmin(user.roles) || (action && !can(user.roles, action))) throw notFound(NOT_FOUND);
+    const db: Ctx["db"] = (fn, readOnly = false) => withRequestContext({ userId: user.id, requestId }, fn, { readOnly });
+    try {
+      return await run({ user, requestId, db });
+    } catch (error) {
+      throw adminProblem(error);
+    }
+  }).then((res) => {
+    res.headers.set("Cache-Control", CACHE.private);
+    res.headers.set("Referrer-Policy", "no-referrer");
+    res.headers.set("X-Robots-Tag", "noindex");
+    return res;
+  });
+}
+
+const json = <S extends z.ZodType>(schema: S, body: z.input<S>, requestId: string, status = 200) =>
+  Response.json(schema.parse(body), { status, headers: { "X-Request-Id": requestId } });
+
+async function limited(db: Db, request: Request, userId: string): Promise<boolean> {
+  for (const limit of [RATE_LIMITS.mutationPerMinute, RATE_LIMITS.mutationPerHour]) {
+    if (!(await checkRateLimit(db, request, limit, userId))) return true;
+  }
+  return false;
+}
+
+async function revisionParam(params: Promise<{ id: string }>): Promise<string> {
+  const id = parseUuidParam((await params).id, "id");
+  if (!id.ok) throw notFound("No such revision.");
+  return id.value;
+}
+
+// ---------------------------------------------------------------- reads
+
+export function getDashboard(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/dashboard", null, async ({ requestId, db }) =>
+    json(adminDashboardSchema, await db(readDashboard, true), requestId),
+  );
+}
+
+export function getRevisions(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/revisions", "transit.revision.publish", async ({ requestId, db }) =>
+    json(revisionListSchema, await db(listRevisions, true), requestId),
+  );
+}
+
+export function getCoverage(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/coverage", "transit.revision.edit", async ({ requestId, db }) => {
+    const raw = new URL(request.url).searchParams.get("revision");
+    let revisionId: string | null = null;
+    if (raw !== null) {
+      const id = parseUuidParam(raw, "revision");
+      if (!id.ok) throw badRequest(id.message);
+      revisionId = id.value;
+    }
+    return json(coverageSchema, await db((d) => readCoverage(d, revisionId), true), requestId);
+  });
+}
+
+// ---------------------------------------------------------------- writes
+
+/** POST /api/v1/admin/revisions: a new draft that copies the published membership. */
+export function postDraft(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/revisions/create", "transit.revision.edit", async ({ user, requestId, db }) => {
+    await readJsonBody(request, BODY_MAX_BYTES);
+    const id = await db(async (d) => ((await limited(d, request, user.id)) ? null : createDraft(d)));
+    if (!id) throw tooManyRequests();
+    return json(createDraftResultSchema, { revisionId: id }, requestId, 201);
+  });
+}
+
+/**
+ * POST /api/v1/admin/revisions/:id/validate: reads the facts (with the rolled-back publish dry run),
+ * runs every rule (N4's publicationBlockers first) and stores the report, bound to the membership it
+ * was computed on, in one transaction.
+ */
+export function postValidate(request: Request, params: Promise<{ id: string }>): Promise<Response> {
+  return adminRoute(request, "admin/revisions/validate", "transit.revision.publish", async ({ user, requestId, db }) => {
+    const revisionId = await revisionParam(params);
+    await readJsonBody(request, BODY_MAX_BYTES);
+    const result = await db(async (d) => {
+      if (await limited(d, request, user.id)) return null;
+      const facts = await readValidationFacts(d, revisionId);
+      const report = validateRevision(facts);
+      const validatedAt = await recordValidation(d, revisionId, facts.membershipHash, report);
+      return { ...report, validatedAt };
+    });
+    if (!result) throw tooManyRequests();
+    return json(validationReportSchema, result, requestId);
+  });
+}
+
+function postPublication(request: Request, params: Promise<{ id: string }>, mode: "publish" | "rollback"): Promise<Response> {
+  return adminRoute(request, `admin/revisions/${mode}`, "transit.revision.publish", async ({ user, requestId, db }) => {
+    const revisionId = await revisionParam(params);
+    const payload = publishPayloadSchema.safeParse(await readJsonBody(request, BODY_MAX_BYTES));
+    if (!payload.success) throw badRequest("Send the published revision this page was showing (expectedPublishedId).");
+    const key = await currentStepUpKey(user.id);
+    const result = await db(async (d) => {
+      if (await limited(d, request, user.id)) return "rate_limited" as const;
+      // First statement of the protected transaction (N3): sets app.step_up_at from this session's record.
+      if (!(await applyStepUp(d, key))) return "step_up" as const;
+      const { previousRevisionId } = await publishRevision(d, revisionId, payload.data.expectedPublishedId, mode);
+      const head = await getPublishedRevision(d);
+      return { previousRevisionId, head };
+    });
+    if (result === "rate_limited") throw tooManyRequests();
+    if (result === "step_up") throw stepUpRequired();
+    // A synthetic revision is never in the published views: the head would be empty. publish_revision refuses those, so this is a bug.
+    if (!result.head || result.head.revisionId !== revisionId) throw unavailable("The revision was published but the public head could not be read. Reload.");
+    return json(publishResultSchema, { mode, revisionId, previousRevisionId: result.previousRevisionId, head: result.head }, requestId);
+  });
+}
+
+/** POST /api/v1/admin/revisions/:id/publish {expectedPublishedId}: step-up required. */
+export const postPublish = (request: Request, params: Promise<{ id: string }>) => postPublication(request, params, "publish");
+
+/** POST /api/v1/admin/revisions/:id/rollback {expectedPublishedId}: re-publishes a superseded revision; step-up required. */
+export const postRollback = (request: Request, params: Promise<{ id: string }>) => postPublication(request, params, "rollback");
