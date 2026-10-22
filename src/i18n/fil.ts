@@ -32,6 +32,7 @@ export const fil: Dict = {
     locationApproximate: (accuracy: number) => `Masyadong malabo ang lokasyon (± ${accuracy} m): nakatago ang layo.`,
     locationStale: "Hindi na updated ang lokasyon: nakatago ang layo.",
     locationImprecise: "Masyadong malabo ang lokasyon: nakatago ang layo.",
+    checkBeside: (place: string) => `Tiyaking nasa tabi ka ng ${place}.`,
     noMarkedStops: "Walang markadong hintuan ang rutang ito. Bantayan ang hintuan mo, at sabihin sa driver ang “para” kapag malapit ka na.",
     offPath: "Malayo ang lokasyon mo sa tinatayang daan. Baka ibang kalye ang daanan ng jeep; bantayan ang hintuan mo.",
     metresLeft: (m: number) => `Mga ${m} m pa ang sakay (tantiya)`,

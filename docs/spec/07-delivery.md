@@ -22,7 +22,7 @@ Status as of 2026-10-22. Lettered work (A to F, E2, plus unnumbered passes) is t
 | 0 | **Foundation** | Next.js scaffold, strict TS, Tailwind tokens, i18n skeleton, ESLint boundaries, Vitest/Playwright, env schema, Neon project `paranaga` + PostGIS, roles `paranaga_owner/app/definer`, base migrations (schemas, `core`, `ops`, audit), Managed Better Auth, bootstrap-admin | Local typecheck, unit tests and affected e2e green; sign-in works on a preview; RLS-coverage check script passes (CI retired 2026-10-20) | Done. Migrations 0001 to 0021 exist. |
 | 1 | **Vertical slice: import → DB → map → stop detail → admin review** | `ingest` + `transit` candidate tables, `import-naga.ts`, `v_candidate_pins`, map with 128 pins, stop detail, admin import screen, candidate review, draft revision + publish/rollback skeleton | AC-1, AC-2, AC-4 (explore), AC-8 (partial) pass | Partial. Import, map, stop detail done (data-and-provisional-planner, maps-core). Admin import, candidate review, publish/rollback screens not built (N5). |
 | 2 | **Search, routes, explore** | Landmarks/aliases/barangays, trigram search, route catalogue, terminals, Explore cards, fare evidence display (no exact fares) | Search "Centro"/"Diversion" behave per F-A3 | Done (A commuter-screens, D modes-lines-eta, E2 places-streetview, route-tally). |
-| 3 | **Planner + fare engine (domain)** | Graph builder, Pareto/ranking, guidance, fare engine with centavos, synthetic fixtures (McRAPTOR search dropped) | AC-5, AC-6, AC-7 unit/property tests pass | Partial. In-process planner delivered across the provisional planner, D, E anywhere-alight, F far-areas, planner-audit and planner-revision. The McRAPTOR rewrite is dropped. Exact fares and the AC-5/6/7 rules on the current planner are open (N4). |
+| 3 | **Planner + fare engine (domain)** | Graph builder, Pareto/ranking, guidance, fare engine with centavos, synthetic fixtures (McRAPTOR search dropped) | AC-5, AC-6, AC-7 unit/property tests pass | Partial. In-process planner delivered across the provisional planner, D, E anywhere-alight, F far-areas, planner-audit and planner-revision. The McRAPTOR rewrite is dropped. Exact fares stay out (estimates only); the AC-5/6/7 rules are done (N4). |
 | 4 | **Commuter trip experience** | Plan API, trip options/detail, walk/ride/transfer/arrive modes, saved trips, honest "no coverage" state | E2E: plan with fixtures; real data shows no-coverage state correctly | Done (A, D, E, F, home-map-first and home redesign, guidance rules of 2026-10-22). |
 | 5 | **Admin stewardship** | Shape editor, curbs, reconciliation, terminals, fares/matrices/conflicts, service windows, disruptions, coverage audit, publication validation, cache + saved-trip invalidation | AC-8 full | Not started (Increment C; N5; C4 to C7 deferred until field data). |
 | 6 | **Corrections + community + Jev** | Correction wizard and states, community hub, uploads, job queue, Jev adapter, policy function, moderation queues, appeals, overrides, Jev admin panel | AC-11, AC-12, AC-13, AC-16 | Partial. Commuter side, jobs, Jev and policy built (B, accounts-community-plan; B4 WebP re-encode open). Moderation and corrections admin queues not built (N6). |
@@ -43,7 +43,7 @@ Status as of 2026-10-22. Lettered work (A to F, E2, plus unnumbered passes) is t
 | Security | Local scripts, run by hand | Bundle secret scan, RLS coverage, gitleaks, dependency audit, SW cache contents |
 | Live (opt-in) | `pnpm jev:smoke` | One synthetic Decisions call with the owner's key; never in automated runs |
 
-Synthetic fixtures: `tests/fixtures/synthetic/*` with obviously fake names ("Fixture Loop X", coordinates offset into a test bbox) and `is_synthetic=true`. A test asserts publication refuses them.
+Synthetic fixtures: `tests/fixtures/synthetic/*` with obviously fake names ("Fixture Loop X", coordinates offset into a test bbox) and `is_synthetic=true`. A test asserts publication refuses them (`tests/unit/publication.test.ts`; guard in `src/domain/network/publication.ts`).
 
 ## 7.4 Acceptance check mapping
 
@@ -53,9 +53,9 @@ Synthetic fixtures: `tests/fixtures/synthetic/*` with obviously fake names ("Fix
 | 2 | Map selection returns correct pin, description, layer, coords | E2E click pin → panel values match KML |
 | 3 | Backend changes persist and enforce role permissions | Integration RLS matrix + e2e sign-in persistence |
 | 4 | Guests explore without account; manual origin works without GPS | E2E with geolocation denied |
-| 5 | Planner rejects wrong-direction/prohibited/disconnected/unavailable | Unit fixtures, one per rejection reason |
-| 6 | Cheapest handles unknown fares; discount + effective-date tested | Fare + ranking unit/property tests |
-| 7 | Low GPS accuracy → landmark check | Guidance unit tests + e2e with mocked geolocation |
+| 5 | Planner rejects wrong-direction/prohibited/disconnected/unavailable | Unit fixtures, one per rejection reason (`tests/unit/planner-rejections.test.ts`) |
+| 6 | Cheapest handles unknown fares; discount + effective-date tested | Fare + ranking unit/property tests (`tests/unit/fare-rules.test.ts`, `planner-fares.test.ts`) |
+| 7 | Low GPS accuracy → landmark check | Guidance unit tests + e2e with mocked geolocation (`guidance-view.test.ts`; `tests/e2e/guidance.spec.ts` "low GPS accuracy") |
 | 8 | Admin reviews candidate, attaches evidence, publishes, retires/relocates | E2E admin flow + integration publication |
 | 9 | Offline saved instructions usable, show freshness; no private cache leak | E2E offline mode + Cache Storage inspection |
 | 10 | Tests, types, build pass; visual review | Local typecheck, unit tests, build + `ecc:browser-qa` screenshots |
@@ -186,7 +186,7 @@ Dropped: the McRAPTOR rewrite (the in-process planner stays) and the PMTiles off
 | N1 | Docs realignment | Spec and plans match the app on master (this change). |
 | N2 | Gate live-but-unready features | **Done (2026-10-22).** Driver reports behind `DRIVER_REPORTS_ENABLED` (default off; `/app/report-driver`, `POST /api/v1/complaints` and complaint-evidence upload slots answer 404; More, Help and My reports point to MyNaga; reading existing own reports stays). Verified uploads stay in the private bucket until approval. Rate limits on the three community DELETE endpoints (no other DELETE routes exist). Commits: see `git log --grep "N2"`. |
 | N3 | Step-up OTP | Fresh OTP for publish/rollback, role changes, complaint unlock (increment-b-review decision, not built). |
-| N4 | Fare and planner rules on the current planner | AC-5, AC-6, AC-7. |
+| N4 | Fare and planner rules on the current planner | **Done (2026-10-22).** AC-5, AC-6, AC-7 on the current planner (no McRAPTOR). Fares were already integer centavos; added fare rows by effective date (`rulesInForce`, newest in force wins, applied once in `planTrip`), a mode-scoped discount domain (`discountedFare`: exact scope, explicit rounding, never raises a fare, not shown in the UI), shared cheapest ranking (`byCheapest`: unknown after every known fare), the synthetic publication guard (`src/domain/network/publication.ts`; the N5 publish flow must call it) and the landmark check on rough GPS ("Check you're beside {stop}"). |
 | N5 | Admin core | C1 shell + dashboard, C8 revisions + coverage, C3 candidates + stops/curbs + reconciliation, C2 imports; AC-8. Migrations renumbered from 0022 (the outline's 0010 to 0014 are taken). |
 | N6 | Corrections + moderation queues | C9, C10; AC-11, AC-12, AC-13. |
 | N7 | Complaint review + system screens | C11, C12; AC-14, AC-16. |

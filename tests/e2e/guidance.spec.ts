@@ -252,6 +252,31 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(page.getByTestId("saved-trip")).toHaveCount(1);
 });
 
+// AC-7: a mocked low-accuracy fix never becomes a distance; guidance falls back to a landmark/stop check.
+test("low GPS accuracy: no distance or direction, a 'Check you're beside' stop check instead; a good fix restores the distance", async ({ page, context }) => {
+  await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
+  await grantLocation(context);
+  await stubGeolocation(page);
+  await openApp(page);
+  await startGuidance(page);
+  await expect(heading(page)).toHaveText("Walk to Plaza Rizal (A1)");
+  await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 1 });
+
+  await emit(page, { lat: 13.6224, lng: 123.1838 }, 150);
+  await expect(page.getByTestId("guidance-accuracy")).toHaveText("GPS accuracy ± 150 m");
+  await expect(page.getByTestId("guidance-location-note")).toHaveText("Location too rough (± 150 m): distance hidden.");
+  await expect(guide(page)).toContainText("Check you're beside Plaza Rizal (A1).");
+  await expect(page.getByTestId("guidance-distance")).toHaveText("≈ 220 m"); // the plan's estimate, not a GPS reading
+  await expect(page.getByTestId("guidance-distance")).not.toContainText("straight-line");
+  await expect(page.getByTestId("guidance-proposal")).toHaveCount(0);
+  await expectHonest(page);
+
+  await emit(page, { lat: 13.6224, lng: 123.1838 }, 12);
+  await expect(page.getByTestId("guidance-distance")).toHaveText(/^≈ [0-9]+ m · straight-line(, \w+)?$/);
+  await expect(page.getByTestId("guidance-location-note")).toHaveCount(0);
+  await expect(guide(page)).not.toContainText("Check you're beside");
+});
+
 // Time left from the snapshot's model (Task 14 fix): the band follows the clock, over the rest of
 // the trip. PROVISIONAL_PLAN's Centro-Magsaysay Loop A (clockwise) ride is 1,240 m along the approximate path.
 for (const [clock, ride] of [["09:30", RIDE_LEFT_OFFPEAK], ["07:10", RIDE_LEFT_PEAK]] as const) {

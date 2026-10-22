@@ -66,6 +66,24 @@ describe("Walk (walk_to_board)", () => {
     expect(stale.screen === "walk" && stale.locationNote).toBe("Location is stale: distance hidden.");
   });
 
+  it("AC-7: a rough or stale fix swaps the distance for a landmark check of the stop; a good fix or none does not", () => {
+    const check = GUIDANCE_COPY.checkBeside("Plaza Rizal (A1)");
+    expect(check).toBe("Check you're beside Plaza Rizal (A1).");
+    const notesOf = (fix: ReturnType<typeof fixAt> | null) => {
+      const v = guidanceView(s, fix, NOW);
+      if (v.screen !== "walk") throw new Error(v.screen);
+      return v;
+    };
+    for (const fix of [fixAt(BASE, 80, NOW), fixAt(BASE, 51, NOW), fixAt(BASE, 5, NOW - STALE_MS - 1)]) {
+      const v = notesOf(fix);
+      expect(v.notes[0]).toBe(check);
+      expect(v.distanceText).not.toMatch(/straight-line/); // never a GPS distance
+      expect(v.directionText).toBeNull();
+    }
+    expect(notesOf(fixAt(BASE, 12, NOW)).notes).not.toContain(check);
+    expect(notesOf(null).notes).not.toContain(check);
+  });
+
   it("near the stop, GPS only proposes; the person confirms", () => {
     const v = guidanceView(s, fixAt(LOOP_A[0]!, 8, NOW), NOW);
     if (v.screen !== "walk") throw new Error(v.screen);

@@ -28,6 +28,7 @@ export const en = {
     locationApproximate: (accuracy: number) => `Location too rough (± ${accuracy} m): distance hidden.`,
     locationStale: "Location is stale: distance hidden.",
     locationImprecise: "Location too rough: distance hidden.",
+    checkBeside: (place: string) => `Check you're beside ${place}.`,
     noMarkedStops: "This route has no marked stops. Watch for your stop, and tell the driver “para” when you are near.",
     offPath: "Your location is away from the approximate path. The jeepney may use another street; watch for your stop.",
     metresLeft: (m: number) => `About ${m} m of riding left (approximate)`,

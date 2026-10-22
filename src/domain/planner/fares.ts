@@ -221,3 +221,87 @@ export function padyakFare(rules: readonly FareRuleEstimate[]): PadyakFare {
     discountedCentavos: flat === null ? null : (r?.discountedBaseCentavos ?? null), ruleCodes: ["F04"],
   };
 }
+
+// ---------------------------------------------------------------- rules by date, discounts, ranking (N4, AC-6)
+
+/** Manila calendar date (YYYY-MM-DD) of an instant, from the UTC+8 offset (no host time zone). */
+export const manilaDate = (now: Date): string => new Date(now.getTime() + 8 * 3_600_000).toISOString().slice(0, 10);
+
+/**
+ * The fare rules in force on `on` (an ISO date): per code, rows effective on or before `on` (a null
+ * effectiveFrom counts as "always, oldest"); the newest effective row wins. A rule whose every row starts
+ * later is absent, so the leg that needs it is unavailable (unknown), never priced from a future rate.
+ */
+export function rulesInForce(rules: readonly FareRuleEstimate[], on: string): FareRuleEstimate[] {
+  const best = new Map<string, FareRuleEstimate>();
+  for (const r of rules) {
+    if (r.effectiveFrom !== null && r.effectiveFrom > on) continue;
+    const prior = best.get(r.code);
+    if (!prior || (r.effectiveFrom ?? "") > (prior.effectiveFrom ?? "")) best.set(r.code, r);
+  }
+  return [...best.values()];
+}
+
+export const FARE_CATEGORIES = ["regular", "student", "senior", "pwd", "solo_parent"] as const;
+export type FareCategory = (typeof FARE_CATEGORIES)[number];
+export type DiscountRounding = "none" | "nearest_25c" | "nearest_peso" | "ceil_peso";
+
+/** transit.discount_rule (spec 3.7): the mode scope is explicit and never inherited (solo parent is not auto-extended). */
+export type DiscountRule = {
+  category: FareCategory;
+  modeScope: readonly string[];
+  percent: number | null;
+  fixedCentavos: number | null;
+  /** Must be set explicitly; null (unknown) means the discount is not applied. */
+  rounding: DiscountRounding | null;
+  effectiveFrom: string | null;
+  effectiveTo: string | null;
+};
+
+export type DiscountResult = {
+  centavos: number | null;
+  applied: boolean;
+  /** Why the regular fare stands (a notice, not an error); null when applied. */
+  reason: "unknown_fare" | "regular" | "out_of_scope" | "no_rule" | "no_rounding" | "not_in_force" | null;
+};
+
+const ROUND: Record<DiscountRounding, (c: number) => number> = {
+  none: (c) => Math.round(c),
+  nearest_25c: (c) => Math.round(c / 25) * 25,
+  nearest_peso: (c) => Math.round(c / 100) * 100,
+  ceil_peso: (c) => Math.ceil(c / 100) * 100,
+};
+
+/**
+ * A regular fare (centavos) for a rider category on a mode. Unknown stays unknown; a discount applies only when a
+ * rule for exactly that category lists exactly that mode, is in force on `on`, and has an explicit rounding;
+ * otherwise the regular fare stands. The result never exceeds the regular fare. Integer arithmetic only.
+ */
+export function discountedFare(regular: number | null, category: FareCategory, modeCode: string, rules: readonly DiscountRule[], on: string): DiscountResult {
+  if (regular === null) return { centavos: null, applied: false, reason: "unknown_fare" };
+  if (category === "regular") return { centavos: regular, applied: false, reason: "regular" };
+  const mine = rules.filter((r) => r.category === category);
+  if (mine.length === 0) return { centavos: regular, applied: false, reason: "no_rule" };
+  const scoped = mine.filter((r) => r.modeScope.includes(modeCode));
+  if (scoped.length === 0) return { centavos: regular, applied: false, reason: "out_of_scope" };
+  const live = scoped
+    .filter((r) => (r.effectiveFrom === null || r.effectiveFrom <= on) && (r.effectiveTo === null || on < r.effectiveTo))
+    .sort((a, b) => (b.effectiveFrom ?? "").localeCompare(a.effectiveFrom ?? ""))[0];
+  if (!live) return { centavos: regular, applied: false, reason: "not_in_force" };
+  if (live.rounding === null || (live.percent === null && live.fixedCentavos === null)) return { centavos: regular, applied: false, reason: "no_rounding" };
+  const raw = live.fixedCentavos !== null ? live.fixedCentavos : (regular * (100 - live.percent!)) / 100;
+  const centavos = Math.min(regular, Math.max(0, ROUND[live.rounding](raw)));
+  return { centavos, applied: centavos < regular, reason: centavos < regular ? null : "no_rule" };
+}
+
+type Priced = { fare: { minCentavos: number | null }; score: number };
+
+/**
+ * Cheapest-first ordering (AC-6): by lowest fare, an unknown fare after every known one (never 0), then by score.
+ * Estimates of equal amount tie here; no exact fares exist today, so nothing outranks an estimate.
+ */
+export function byCheapest(a: Priced, b: Priced): number {
+  const ka = a.fare.minCentavos ?? Number.POSITIVE_INFINITY;
+  const kb = b.fare.minCentavos ?? Number.POSITIVE_INFINITY;
+  return (ka === kb ? 0 : ka < kb ? -1 : 1) || a.score - b.score;
+}

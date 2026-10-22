@@ -286,6 +286,8 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
       ];
     }
     notes = at ? [copy.boardingSideUnknown(), copy.signboardUnknown(chip)] : [copy.boardingSideUnknown()];
+    // AC-7: a fix too rough to measure a distance falls back to a landmark check (the stop's name) before boarding.
+    if (!at && locationNote(fix, now, copy) !== null) notes.unshift(copy.checkBeside(step.target.label));
     nextRide = nextRideInfo(step.nextRide, shared);
     const board: GuidanceAction = { event: "boarded", label: copy.boarded(chip), kind: at ? "primary" : "secondary" };
     actions = at ? [board, END] : [{ event: "atStop", label: copy.atStop, kind: "primary" }, board, END];

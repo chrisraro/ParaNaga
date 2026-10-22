@@ -63,7 +63,7 @@ import { fleetSummary, type FleetSummary, type RouteMode } from "../modes/fleet"
 import { ruleLifted, type StreetRule } from "../walk/rules";
 import { boundedDistances, padyakAreas, routeStreet, snapWalk, type StreetRoute, type WalkGraph } from "../walk/walk-graph";
 import {
-  fareClasses, legFareEstimate, padyakFare, sumFares, tricycleFare, type LegFare, type PadyakFare, type TricycleFare, type TripFare,
+  byCheapest, fareClasses, legFareEstimate, manilaDate, padyakFare, rulesInForce, sumFares, tricycleFare, type LegFare, type PadyakFare, type TricycleFare, type TripFare,
 } from "./fares";
 import { inCentro } from "./centro";
 import { routeDisplay, type RouteDisplay } from "./route-display";
@@ -737,12 +737,14 @@ function activeLoopPartners(net: PlanningNetwork, cands: Cand[], shownJeeps: rea
 
 
 export function planTrip(
-  snapshot: PlannerSnapshot,
+  snapshotIn: PlannerSnapshot,
   network: PlannerNetwork,
   origin: LatLng,
   destination: LatLng,
   { now, viaGroups = FAR_AREAS.viaGroups }: { now: Date; viaGroups?: readonly ViaGroup[] },
 ): TripPlan {
+  // Fare rows apply only from their effective date; the newest row in force wins (AC-6).
+  const snapshot = { ...snapshotIn, fareRules: rulesInForce(snapshotIn.fareRules, manilaDate(now)) };
   const revisionId = snapshot.revision.revisionId;
   const none = (reason: NoCoverageReason, direct: number | null): TripPlan => ({
     revisionId, coverage: "none", reason, directWalkEstimateMeters: direct, jeepneyReason: null, options: [], notes: [],
@@ -761,7 +763,7 @@ export function planTrip(
   const originZone = farZoneAt(origin);
   const destinationZone = farZoneAt(destination);
   const farZone = destinationZone ?? originZone;
-  const net = planningNetwork(snapshot, network.lines);
+  const net = planningNetwork(snapshotIn, network.lines);
   const cap = (z: FarZone | null) => (z ? FAR_END_WALK_CAP_M : MAX_ACCESS_WALK_GRAPH_M);
   const maxRideM = JEEP_MAX_DETOUR * haversineMeters(origin, destination) + JEEP_DETOUR_SLACK_M;
   const jeep = search(net, g, origin, destination, direct.m, cap(originZone), cap(destinationZone), originZone !== null, destinationZone !== null, maxRideM);
@@ -811,8 +813,7 @@ export function planTrip(
     const via = vias.reps.has(c) ? vias.byRoute.get(net.variants[c.hops[0]!.v]!.routeCode) : undefined;
     jeepBuilt.push({ option: via ? { ...o1, via } : o1, c });
   }
-  const fareMin = (opt: PlanOption) => opt.fare.minCentavos ?? Number.POSITIVE_INFINITY;
-  jeepBuilt.sort((a, b) => fareMin(a.option) - fareMin(b.option) || a.option.score - b.option.score);
+  jeepBuilt.sort((a, b) => byCheapest(a.option, b.option));
   // City centre: a jeepney stays only when it drops off at the destination; it is never Recommended there.
   if (centro) jeepBuilt = jeepBuilt.filter((x) => x.c.hops.at(-1)!.alight.distM <= PASSES_DESTINATION_M);
   // Far drop-offs (owner 2026-10-20, non-far destination): for each jeepney route not already the last ride of a shown

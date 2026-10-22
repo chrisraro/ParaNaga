@@ -130,6 +130,14 @@
     "reviewed": "opus"
   },
   {
+    "key": "guidance.checkBeside",
+    "en": "Check you're beside {0}.",
+    "fil": "Tiyaking nasa tabi ka ng {0}.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N4 (AC-7): shown instead of a distance when GPS is too rough. Native speaker to confirm 'nasa tabi ka ng' reads naturally for a stop or landmark.",
+    "reviewed": "sonnet"
+  },
+  {
     "key": "guidance.noMarkedStops",
     "en": "This route has no marked stops. Watch for your stop, and tell the driver “para” when you are near.",
     "fil": "Walang markadong hintuan ang rutang ito. Bantayan ang hintuan mo, at sabihin sa driver ang “para” kapag malapit ka na.",
