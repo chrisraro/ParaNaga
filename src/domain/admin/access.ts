@@ -4,11 +4,11 @@
 import { can, type Action, type Role } from "@/domain/auth/permissions";
 
 /**
- * Roles that may open the admin console today. Only the transport screens (C1 dashboard, C8
- * revisions) exist, so moderators and complaint reviewers are not let in until their queues are
- * built (N6, N7): no dead links.
+ * Roles that may open the admin console today: the transport screens (N5), corrections review
+ * and community moderation (N6). Complaint reviewers are not let in until their queue is built
+ * (N7): no dead links.
  */
-export const ADMIN_ENTRY_ROLES: readonly Role[] = ["admin", "transport_reviewer"];
+export const ADMIN_ENTRY_ROLES: readonly Role[] = ["admin", "transport_reviewer", "community_moderator"];
 
 export function canEnterAdmin(roles: readonly Role[]): boolean {
   return roles.some((r) => ADMIN_ENTRY_ROLES.includes(r));
@@ -26,6 +26,9 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
   { href: "/admin/reconciliation", label: "Reconciliation", action: "transit.revision.edit" },
   { href: "/admin/revisions", label: "Revisions & publication", action: "transit.revision.publish" },
   { href: "/admin/coverage", label: "Coverage audit", action: "transit.revision.edit" },
+  // N6 (C9, C10).
+  { href: "/admin/corrections", label: "Corrections review", action: "correction.review" },
+  { href: "/admin/moderation", label: "Moderation & appeals", action: "community.moderate" },
 ];
 
 export function adminNavFor(roles: readonly Role[]): AdminNavItem[] {

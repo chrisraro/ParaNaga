@@ -11,6 +11,8 @@ import {
   type CommentDto,
   type FeedQuery,
   type PostSummary,
+  APPEAL_STATES,
+  type AppealState,
 } from "@/domain/community/schemas";
 import { contentState } from "@/domain/community/status";
 import { hideBlocked, nestComments, type ThreadNode } from "@/domain/community/thread";
@@ -139,6 +141,7 @@ type CommentRow = {
   created_at: string | Date;
   helpful_count: number;
   viewer_helpful: boolean | null;
+  appeal: string | null;
 };
 
 type VersionRow = {
@@ -150,7 +153,13 @@ type VersionRow = {
   moderation_status: string;
   submitted_at: string | Date;
   is_live: boolean | null;
+  appeal: string | null;
 };
+
+/** The author's appeal state (their own rows only: RLS on community.appeal). */
+const appealOf = (v: string | null): AppealState | null => ((APPEAL_STATES as readonly string[]).includes(v ?? "") ? (v as AppealState) : null);
+const appealCol = (type: string, id: SQL, viewer: string | null) => sql`(select a.status from community.appeal a
+   where a.target_type = ${type} and a.target_id = ${id} and a.author_id = ${viewer}::text)`;
 
 type CommentNode = ThreadNode<{ id: string; parentId: string | null; depth: number; authorId: string; dto: Omit<CommentDto, "replies" | "parentId" | "depth" | "id"> }>;
 
@@ -178,7 +187,8 @@ export async function fetchThread(db: Db, viewer: string | null, postId: string)
     select c.id, c.parent_comment_id, c.depth, c.author_id, community.handle(c.author_id) as author_handle,
            (c.author_id = ${viewer}::text) as is_own, c.body, c.moderation_status, c.created_at, c.helpful_count,
            exists (select 1 from community.reaction r
-                    where r.user_id = ${viewer}::text and r.target_type = 'comment' and r.target_id = c.id) as viewer_helpful
+                    where r.user_id = ${viewer}::text and r.target_type = 'comment' and r.target_id = c.id) as viewer_helpful,
+           ${appealCol("comment", sql`c.id`, viewer)} as appeal
       from community.comment c
      where c.post_id = ${postId}::uuid and c.deleted_at is null
        and (c.moderation_status = 'published' or c.author_id = ${viewer}::text)
@@ -197,33 +207,47 @@ export async function fetchThread(db: Db, viewer: string | null, postId: string)
       helpfulCount: c.helpful_count,
       viewerHelpful: c.viewer_helpful === true,
       state: contentState(c.moderation_status),
+      appeal: c.is_own === true ? appealOf(c.appeal) : null,
     },
   }));
   const comments = nestComments(hideBlocked(rows, blocked, viewer)).map((n) => toCommentDto(n as CommentNode));
 
-  let versions: { n: number; title: string; state: ReturnType<typeof contentState>; isLive: boolean; submittedAt: string }[] = [];
+  let versions: { id: string; n: number; title: string; state: ReturnType<typeof contentState>; isLive: boolean; submittedAt: string; appeal: AppealState | null }[] = [];
   let editDraft: { title: string; body: string; tags: string[] } | null = null;
   if (isOwn && viewer) {
     const vres = await db.execute<VersionRow>(sql`
       select pv.id, pv.n, pv.title, pv.body, pv.tags, pv.moderation_status, pv.submitted_at,
-             (pv.id = p.published_version_id) as is_live
+             (pv.id = p.published_version_id) as is_live, ${appealCol("post_version", sql`pv.id`, viewer)} as appeal
         from community.post_version pv
         join community.post p on p.id = pv.post_id
        where pv.post_id = ${postId}::uuid and pv.author_id = ${viewer}::text
        order by pv.n desc
     `);
     versions = vres.rows.map((v) => ({
+      id: v.id,
       n: v.n,
       title: v.title,
       state: contentState(v.moderation_status),
       isLive: v.is_live === true,
       submittedAt: iso(v.submitted_at),
+      appeal: appealOf(v.appeal),
     }));
     const latest = vres.rows.find((v) => v.moderation_status !== "superseded");
     if (latest) editDraft = { title: latest.title, body: latest.body, tags: latest.tags ?? [] };
   }
 
-  return { post: { ...toSummary(row), body: row.body, versions, editDraft }, comments };
+  // Photos (N6): published ones for everyone; the author also sees their own pending and rejected
+  // ones, as a state only (the image is served from the public bucket after approval).
+  const photoRes = await db.execute<{ id: string; moderation_status: string; appeal: string | null }>(sql`
+    select ph.id, ph.moderation_status, ${appealCol("photo", sql`ph.id`, viewer)} as appeal
+      from community.post_photo ph
+     where ph.post_id = ${postId}::uuid
+       and (ph.moderation_status = 'published' or ph.author_id = ${viewer}::text)
+     order by ph.position
+  `);
+  const photos = photoRes.rows.map((ph) => ({ id: ph.id, state: contentState(ph.moderation_status), appeal: isOwn ? appealOf(ph.appeal) : null }));
+
+  return { post: { ...toSummary(row), body: row.body, versions, editDraft, photos }, comments };
 }
 
 export async function fetchMe(db: Db, viewer: string) {

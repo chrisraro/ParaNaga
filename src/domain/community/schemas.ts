@@ -17,6 +17,9 @@ export const SEARCH_MAX = 60;
 export const NOTE_MAX = 300;
 export const EXCERPT_CHARS = 180;
 export const FEED_PAGE_SIZE = 20;
+export const MAX_PHOTOS = 3;
+export const APPEAL_NOTE_MIN = 10;
+export const APPEAL_NOTE_MAX = 1000;
 
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
 const clean = (s: string) => !CONTROL_CHARS.test(s);
@@ -58,6 +61,8 @@ export const createPostPayloadSchema = z
     body: text(BODY_MIN, BODY_MAX),
     tags: tagsSchema,
     routeCode: routeCodeSchema.optional(),
+    /** Verified community_photo uploads of the author (N6); each waits for a moderator. */
+    photoIds: z.array(z.string().uuid()).max(MAX_PHOTOS).default([]),
     guidelinesAccepted: z.boolean().default(false),
   })
   .strict();
@@ -95,6 +100,22 @@ export const reportPayloadSchema = z
     note: text(1, NOTE_MAX).optional(),
   })
   .strict();
+
+/** One appeal per decision, by the author of rejected content (N6, C10). */
+export const APPEAL_TARGETS = ["post_version", "comment", "photo"] as const;
+export type AppealTarget = (typeof APPEAL_TARGETS)[number];
+export const appealPayloadSchema = z
+  .object({
+    targetType: z.enum(APPEAL_TARGETS),
+    targetId: z.string().uuid(),
+    note: text(APPEAL_NOTE_MIN, APPEAL_NOTE_MAX),
+  })
+  .strict();
+export type AppealInput = z.input<typeof appealPayloadSchema>;
+export const APPEAL_STATES = ["open", "upheld", "overturned"] as const;
+export type AppealState = (typeof APPEAL_STATES)[number];
+const appealStateSchema = z.enum(APPEAL_STATES).nullable().default(null);
+export const appealResponseSchema = z.object({ appeal: z.object({ id: z.string().uuid(), state: z.literal("open") }) });
 
 export const FEED_SCOPES = ["all", "mine", "saved"] as const;
 export type FeedScope = (typeof FEED_SCOPES)[number];
@@ -155,6 +176,8 @@ export type CommentDto = {
   helpfulCount: number;
   viewerHelpful: boolean;
   state: z.infer<typeof stateSchema>;
+  /** The author's appeal of a rejection; null when none (and always for other people's comments). */
+  appeal: AppealState | null;
   replies: CommentDto[];
 };
 export const commentSchema: z.ZodType<CommentDto> = z.lazy(() =>
@@ -169,17 +192,24 @@ export const commentSchema: z.ZodType<CommentDto> = z.lazy(() =>
     helpfulCount: z.number().int(),
     viewerHelpful: z.boolean(),
     state: stateSchema,
+    appeal: appealStateSchema,
     replies: z.array(commentSchema),
   }),
 );
 
 export const versionEntrySchema = z.object({
+  id: z.string().uuid(),
   n: z.number().int(),
   title: z.string(),
   state: stateSchema,
   isLive: z.boolean(),
   submittedAt: z.string(),
+  appeal: appealStateSchema,
 });
+
+/** A photo of the post: everyone sees published ones; the author also sees their pending and rejected ones (no image). */
+export const postPhotoSchema = z.object({ id: z.string().uuid(), state: stateSchema, appeal: appealStateSchema });
+export type PostPhoto = z.infer<typeof postPhotoSchema>;
 
 export const postDetailSchema = z.object({
   post: postSummarySchema.extend({
@@ -188,6 +218,7 @@ export const postDetailSchema = z.object({
     versions: z.array(versionEntrySchema),
     /** What the editor starts from (the author's latest version); null for everyone else. */
     editDraft: z.object({ title: z.string(), body: z.string(), tags: z.array(z.string()) }).nullable(),
+    photos: z.array(postPhotoSchema).default([]),
   }),
   comments: z.array(commentSchema),
 });

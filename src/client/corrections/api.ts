@@ -48,14 +48,19 @@ export type UploadResult = { ok: true; mediaId: string } | { ok: false; message:
 const UPLOAD_FAILED = M.uploadFailed;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-export async function uploadEvidencePhoto(file: File): Promise<UploadResult> {
+export function uploadEvidencePhoto(file: File): Promise<UploadResult> {
+  return uploadPhoto(file, "correction_evidence");
+}
+
+/** Slot -> PUT to quarantine -> confirm. The verified photo stays private until a person approves it (N6). */
+export async function uploadPhoto(file: File, purpose: "correction_evidence" | "community_photo"): Promise<UploadResult> {
   if (!IMAGE_TYPES.includes(file.type)) return { ok: false, message: M.photoType };
   try {
     const slotRes = await fetch("/api/v1/media/slots", {
       method: "POST",
       headers: json,
       credentials: "same-origin",
-      body: JSON.stringify({ purpose: "correction_evidence", expectedBytes: file.size, mime: file.type }),
+      body: JSON.stringify({ purpose, expectedBytes: file.size, mime: file.type }),
     });
     if (!slotRes.ok) return { ok: false, message: UPLOAD_FAILED };
     const slot = createMediaSlotResponseSchema.parse(await slotRes.json()).slot;

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { CAPTURE_KINDS, complaintReceiptSchema } from "@/domain/complaints/schemas";
 import { COMPLAINT_STATUSES } from "@/domain/complaints/status";
 import { correctionSummarySchema } from "@/domain/corrections/schemas";
+import { REVIEW_REASONS } from "@/domain/corrections/review-reasons";
 import { CORRECTION_STATUSES } from "@/domain/corrections/status";
 
 // My reports (S19) and the MyNaga self-report (S20, F-D5), task B9. Everything here is the
@@ -62,7 +63,8 @@ export const complaintDetailResponseSchema = z.object({ complaint: complaintDeta
 
 export const correctionDetailSchema = correctionSummarySchema.extend({
   description: z.string(),
-  events: z.array(z.object({ status: z.enum(CORRECTION_STATUSES), at: z.string() })),
+  /** reason: a reviewer's templated reason (N6), shown to the reporter in their language. */
+  events: z.array(z.object({ status: z.enum(CORRECTION_STATUSES), at: z.string(), reason: z.enum(REVIEW_REASONS).nullable().default(null) })),
 });
 export type CorrectionDetail = z.infer<typeof correctionDetailSchema>;
 export const correctionDetailResponseSchema = z.object({ correction: correctionDetailSchema });

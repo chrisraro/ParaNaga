@@ -2,7 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { canEnterAdmin } from "@/domain/admin/access";
-import { isRole } from "@/domain/auth/permissions";
+import { can, isRole, type Action } from "@/domain/auth/permissions";
 import { E2E_ADMIN_ROLES_COOKIE, e2eAdminShellEnabled } from "@/domain/pwa/build-guard";
 import { getCurrentUser, type CurrentUser } from "@/server/auth/session";
 
@@ -28,5 +28,15 @@ export async function getStaffUser(): Promise<CurrentUser | null> {
 export async function requireStaffPage(): Promise<CurrentUser> {
   const user = await getStaffUser();
   if (!user) notFound();
+  return user;
+}
+
+/**
+ * For an admin page: the staff user who may take `action` (N6: moderators and transport reviewers
+ * see different screens), or the not-found page. The API behind the page checks again.
+ */
+export async function requireStaffAction(action: Action): Promise<CurrentUser> {
+  const user = await requireStaffPage();
+  if (!can(user.roles, action)) notFound();
   return user;
 }

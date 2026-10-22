@@ -5,6 +5,7 @@
 
 import type { z } from "zod";
 import {
+  appealResponseSchema,
   blockResponseSchema,
   communityMeSchema,
   feedResponseSchema,
@@ -13,6 +14,7 @@ import {
   submitCommentResponseSchema,
   submitPostResponseSchema,
   toggleResponseSchema,
+  type AppealInput,
   type CommunityMe,
   type CreateCommentInput,
   type CreatePostInput,
@@ -31,7 +33,7 @@ import { en } from "@/i18n/dict";
 
 export type ApiResult<T> =
   | { ok: true; data: T }
-  | { ok: false; reason: "signed_out" | "rate_limited" | "invalid" | "not_found" | "failed"; message: string };
+  | { ok: false; reason: "signed_out" | "rate_limited" | "invalid" | "not_found" | "conflict" | "failed"; message: string };
 
 const JSON_HEADERS = { "content-type": "application/json" };
 // English messages from the dictionary; screens show them with translated(message, en.community.api, t.community.api).
@@ -53,6 +55,7 @@ async function request<S extends z.ZodType>(
     if (res.status === 401) return { ok: false, reason: "signed_out", message: M.signedOut };
     if (res.status === 429) return { ok: false, reason: "rate_limited", message: M.rateLimited };
     if (res.status === 404) return { ok: false, reason: "not_found", message: M.notFound };
+    if (res.status === 409) return { ok: false, reason: "conflict", message: FAILED };
     if (res.status === 400 || res.status === 403) {
       const data = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
       return { ok: false, reason: "invalid", message: data?.error?.message ?? M.invalid };
@@ -130,4 +133,9 @@ export function reportPost(targetType: TargetType, targetId: string, reason: Rep
     method: "POST",
     json: { targetType, targetId, reason, ...(note ? { note } : {}) },
   });
+}
+
+/** The author asks for another review of a decision not to publish (N6); "conflict" = already asked. */
+export function submitAppeal(input: AppealInput) {
+  return request("/api/v1/community/appeals", appealResponseSchema, { method: "POST", json: input });
 }

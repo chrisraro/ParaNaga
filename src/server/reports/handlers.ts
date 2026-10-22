@@ -1,5 +1,6 @@
 import "server-only";
 import { sql } from "drizzle-orm";
+import { isReviewReason, type ReviewReason } from "@/domain/corrections/review-reasons";
 import { correctionSummarySchema } from "@/domain/corrections/schemas";
 import {
   complaintDetailResponseSchema,
@@ -117,6 +118,11 @@ type CorrectionRow = {
   description: string;
 };
 
+/** A templated reason from a reviewer's event, or null (any other code is never shown). */
+function reviewerReason(actorRole: string | null, code: string | null): ReviewReason | null {
+  return (actorRole === "transport_reviewer" || actorRole === "admin") && isReviewReason(code) ? code : null;
+}
+
 /** GET /api/v1/me/corrections/[id]: the author's own correction in full. */
 export function getMyCorrection(request: Request, id: string): Promise<Response> {
   return privateRoute(request, "me-correction", async (requestId) => {
@@ -131,8 +137,10 @@ export function getMyCorrection(request: Request, id: string): Promise<Response>
       `);
       const row = main.rows[0];
       if (!row) return null;
-      const events = await db.execute<{ to_status: string; at: string | Date }>(sql`
-        select e.to_status, e.at from community.correction_event e
+      // Reviewer events carry a templated reason the reporter may see (N6); a reviewer's note never
+      // comes back, nor the advisory moderation reason stored on the submission event.
+      const events = await db.execute<{ to_status: string; at: string | Date; reason_code: string | null; actor_role: string | null }>(sql`
+        select e.to_status, e.at, e.reason_code, e.actor_role from community.correction_event e
          where e.correction_id = ${id}::uuid order by e.at
       `);
       return { row, events: events.rows };
@@ -149,7 +157,7 @@ export function getMyCorrection(request: Request, id: string): Promise<Response>
       submittedAt: iso(row.submitted_at),
     });
     const body = correctionDetailResponseSchema.parse({
-      correction: { ...summary, description: row.description, events: found.events.map((e) => ({ status: e.to_status, at: iso(e.at) })) },
+      correction: { ...summary, description: row.description, events: found.events.map((e) => ({ status: e.to_status, at: iso(e.at), reason: reviewerReason(e.actor_role, e.reason_code) })) },
     });
     return json(body, requestId);
   });

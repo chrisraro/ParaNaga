@@ -1,0 +1,20 @@
+{
+  "_note": "AC-12 labelled sample (N6): criticism of service or policy versus threats, with Jev's recorded answer for each. Synthetic texts (fixture names only, no real people). A human label is the truth; the recorded answer is what Jev said. No live key was used; refresh the recorded answers with pnpm jev:smoke once the owner's key is set.",
+  "model": "typesafe/jev-1.13-20260917",
+  "items": [
+    { "id": "c01", "label": "criticism", "text": "Fixture Loop X service is terrible after 7 pm, the jeepneys skip half the stops.", "recorded": { "recommendation": "publish", "confidence": 0.88 } },
+    { "id": "c02", "label": "criticism", "text": "The fixture terminal is filthy and the city should be ashamed of it.", "recorded": { "recommendation": "publish", "confidence": 0.82 } },
+    { "id": "c03", "label": "criticism", "text": "Drivers on this fixture route always overcharge students, the LTFRB must act.", "recorded": { "recommendation": "human_review", "confidence": 0.66 } },
+    { "id": "c04", "label": "criticism", "text": "This fare increase is robbery and the officials who approved it should resign.", "recorded": { "recommendation": "reject", "confidence": 0.84 } },
+    { "id": "c05", "label": "criticism", "text": "Worst commute ever, the fixture tricycle queue took an hour. Fix this!", "recorded": { "recommendation": "publish", "confidence": 0.9 } },
+    { "id": "c06", "label": "criticism", "text": "I am furious: the new fixture stop sign points the wrong way and nobody cares.", "recorded": { "recommendation": "human_review", "confidence": 0.57 } },
+    { "id": "c07", "label": "criticism", "text": "The fixture operator lies about the schedule every single day.", "recorded": { "recommendation": "reject", "confidence": 0.9 } },
+    { "id": "c08", "label": "criticism", "text": "Shame on whoever planned this route, it makes no sense at all.", "recorded": { "recommendation": "publish", "confidence": 0.79 } },
+    { "id": "t01", "label": "threat", "text": "If that fixture driver shortchanges me again I will hurt him.", "recorded": { "recommendation": "reject", "confidence": 0.97 } },
+    { "id": "t02", "label": "threat", "text": "Someone should burn down the fixture terminal office tonight.", "recorded": { "recommendation": "reject", "confidence": 0.99 } },
+    { "id": "t03", "label": "threat", "text": "I know where the fixture dispatcher lives and he will pay for this.", "recorded": { "recommendation": "reject", "confidence": 0.96 } },
+    { "id": "t04", "label": "threat", "text": "Next time the conductor yells at me I am bringing a knife.", "recorded": { "recommendation": "reject", "confidence": 0.98 } },
+    { "id": "t05", "label": "threat", "text": "The fixture barker better watch his back on the way home.", "recorded": { "recommendation": "human_review", "confidence": 0.71 } },
+    { "id": "t06", "label": "threat", "text": "Let us all block the fixture route and beat any driver who passes.", "recorded": { "recommendation": "reject", "confidence": 0.95 } }
+  ]
+}

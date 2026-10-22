@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
   },
 }));
 
-const { getStaffUser, requireStaffPage } = await import("@/server/admin/access");
+const { getStaffUser, requireStaffAction, requireStaffPage } = await import("@/server/admin/access");
 const { proxy } = await import("@/proxy");
 
 beforeEach(() => {
@@ -34,18 +34,20 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-const FULL_NAV = ["/admin", "/admin/imports", "/admin/candidates", "/admin/stops", "/admin/reconciliation", "/admin/revisions", "/admin/coverage"];
+const TRANSIT_NAV = ["/admin", "/admin/imports", "/admin/candidates", "/admin/stops", "/admin/reconciliation", "/admin/revisions", "/admin/coverage"];
+const FULL_NAV = [...TRANSIT_NAV, "/admin/corrections", "/admin/moderation"];
 
 describe("canEnterAdmin / adminNavFor", () => {
-  it("only admins and transport reviewers enter", () => {
-    for (const role of ROLES) expect(canEnterAdmin([role]), role).toBe(role === "admin" || role === "transport_reviewer");
+  it("admins, transport reviewers and (N6) community moderators enter; complaint reviewers not yet (N7)", () => {
+    for (const role of ROLES) expect(canEnterAdmin([role]), role).toBe(role === "admin" || role === "transport_reviewer" || role === "community_moderator");
     expect(canEnterAdmin([])).toBe(false);
   });
 
   it("the nav lists only built screens the roles allow, and nothing for others", () => {
     expect(adminNavFor(["commuter", "admin"]).map((i) => i.href)).toEqual(FULL_NAV);
-    expect(adminNavFor(["transport_reviewer"]).map((i) => i.href)).toEqual(FULL_NAV);
-    expect(adminNavFor(["community_moderator", "complaint_reviewer"])).toEqual([]);
+    expect(adminNavFor(["transport_reviewer"]).map((i) => i.href)).toEqual([...TRANSIT_NAV, "/admin/corrections"]);
+    expect(adminNavFor(["commuter", "community_moderator"]).map((i) => i.href)).toEqual(["/admin", "/admin/moderation"]);
+    expect(adminNavFor(["complaint_reviewer"])).toEqual([]);
   });
 });
 
@@ -53,7 +55,15 @@ describe("server guard", () => {
   it("returns staff and 404s everyone else", async () => {
     state.user = { id: "a", name: "A", roles: ["commuter", "admin"] };
     expect((await getStaffUser())?.id).toBe("a");
-    for (const user of [null, { id: "c", name: "C", roles: ["commuter"] }, { id: "m", name: "M", roles: ["community_moderator"] }, { id: "s", name: "S", roles: [] }]) {
+    state.user = { id: "m", name: "M", roles: ["commuter", "community_moderator"] };
+    expect((await getStaffUser())?.id).toBe("m");
+    // A moderator enters, but the transport screens answer 404 to them (page guard, N6).
+    await expect(requireStaffAction("transit.revision.edit")).rejects.toThrow(/404/);
+    expect((await requireStaffAction("community.moderate")).id).toBe("m");
+    state.user = { id: "t", name: "T", roles: ["commuter", "transport_reviewer"] };
+    await expect(requireStaffAction("community.moderate")).rejects.toThrow(/404/);
+    expect((await requireStaffAction("correction.review")).id).toBe("t");
+    for (const user of [null, { id: "c", name: "C", roles: ["commuter"] }, { id: "k", name: "K", roles: ["complaint_reviewer"] }, { id: "s", name: "S", roles: [] }]) {
       state.user = user;
       expect(await getStaffUser()).toBeNull();
       await expect(requireStaffPage()).rejects.toThrow(/404/);

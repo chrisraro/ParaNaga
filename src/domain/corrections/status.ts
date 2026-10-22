@@ -21,7 +21,8 @@ export const TRANSITIONS: Readonly<Record<CorrectionStatus, readonly CorrectionS
   draft: ["submitted"],
   submitted: ["under_review", "needs_evidence", "duplicate", "rejected"],
   under_review: ["accepted", "rejected", "duplicate", "needs_evidence"],
-  needs_evidence: ["submitted"],
+  // A reviewer resumes (under_review) or closes it; migration 0025 mirrors this.
+  needs_evidence: ["submitted", "under_review", "rejected", "duplicate"],
   accepted: ["incorporated", "superseded"],
   rejected: [],
   duplicate: [],

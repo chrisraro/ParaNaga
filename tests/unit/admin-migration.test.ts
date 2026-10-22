@@ -319,3 +319,162 @@ describe("0024: the definer can reach every table its functions touch, and write
     expect(SQL24.trimEnd().endsWith("revoke create on schema ingest from paranaga_definer;\nrevoke create on schema transit from paranaga_definer;")).toBe(true);
   });
 });
+
+// ================================================================ 0025 (N6): corrections review, moderation, appeals, photos
+
+const SQL25 = strip(readFileSync(path.join(DIR, "0025_review_moderation.sql"), "utf8"));
+const fns25 = [...SQL25.matchAll(/create or replace function ([\w.]+)\(([^)]*)\)([\s\S]*?)\$\$([\s\S]*?)\$\$;/g)].map((m) => ({
+  name: m[1]!,
+  header: m[3]!,
+  body: m[4]!,
+}));
+const fn25 = (name: string) => fns25.find((f) => f.name === name)!;
+const CORRECTION_FNS = ["community.admin_corrections", "community.admin_review_correction"];
+const MODERATION_FNS = ["community.admin_moderation_queue", "community.admin_moderate", "community.admin_resolve_appeal"];
+const COMMUTER_FNS = ["community.record_jev_evidence", "community.add_post_photos", "community.submit_appeal"];
+const APP_FNS_25 = [...CORRECTION_FNS, ...MODERATION_FNS, ...COMMUTER_FNS, "core.admin_review_media"];
+const TRIGGER_FNS_25 = ["community.incorporate_corrections"];
+const HELPERS_25 = ["community.assert_correction_reviewer", "community.assert_moderator", "community.content_target", "community.apply_content_outcome"];
+const grantsOf = (sqlText: string, name: string) =>
+  [...sqlText.matchAll(new RegExp(`grant execute on function ${esc(name)}\\([^)]*\\) to ([\\w, ]+);`, "g"))].map((m) => m[1]!.trim());
+
+describe("0025: definer functions (N6)", () => {
+  it("defines exactly these SECURITY DEFINER functions; the helpers are invoker-rights", () => {
+    expect(fns25.filter((f) => /security definer/.test(f.header)).map((f) => f.name).sort()).toEqual([...APP_FNS_25, ...TRIGGER_FNS_25].sort());
+    expect(fns25.filter((f) => !/security definer/.test(f.header)).map((f) => f.name).sort()).toEqual([...HELPERS_25].sort());
+  });
+
+  for (const name of [...APP_FNS_25, ...TRIGGER_FNS_25, ...HELPERS_25]) {
+    it(`${name}: search_path pinned, owned by the definer, not executable by PUBLIC`, () => {
+      expect(fn25(name).header).toMatch(/set search_path = pg_catalog,[\w, ]*pg_temp\s/);
+      expect(SQL25).toMatch(new RegExp(`alter function ${esc(name)}\\([^)]*\\) owner to paranaga_definer;`));
+      expect(SQL25).toMatch(new RegExp(`revoke execute on function ${esc(name)}\\([^)]*\\) from public;`));
+    });
+  }
+
+  for (const name of APP_FNS_25) {
+    it(`${name}: callable by paranaga_app only`, () => expect(grantsOf(SQL25, name)).toEqual(["paranaga_app"]));
+  }
+  for (const name of [...TRIGGER_FNS_25, ...HELPERS_25]) {
+    it(`${name}: never granted to anyone`, () => expect(grantsOf(SQL25, name)).toEqual([]));
+  }
+
+  it("each staff function checks its role in the database first; commuter functions need a signed-in caller", () => {
+    for (const name of CORRECTION_FNS) expect(fn25(name).body, name).toMatch(/v_user text := community\.assert_correction_reviewer\(\);/);
+    for (const name of MODERATION_FNS) expect(fn25(name).body, name).toMatch(/v_user text := community\.assert_moderator\(\);/);
+    for (const name of COMMUTER_FNS) expect(fn25(name).body, name).toContain("raise exception 'not authenticated' using errcode = '28000'");
+    expect(fn25("community.assert_correction_reviewer").body).toContain("v_user is null or not (core.has_role('transport_reviewer') or core.has_role('admin'))");
+    expect(fn25("community.assert_moderator").body).toContain("v_user is null or not (core.has_role('community_moderator') or core.has_role('admin'))");
+    const media = fn25("core.admin_review_media").body;
+    for (const s of [
+      "m.purpose = 'correction_evidence'",
+      "(core.has_role('transport_reviewer') or core.has_role('admin'))",
+      "m.purpose = 'community_photo'",
+      "(core.has_role('community_moderator') or core.has_role('admin'))",
+      "c.author_id <> v_user",
+      "ph.author_id <> v_user",
+      "perform core.audit('media.review_view'",
+    ]) {
+      expect(media, s).toContain(s);
+    }
+  });
+
+  it("nobody reviews or moderates their own content", () => {
+    expect(fn25("community.admin_corrections").body).toContain("where c.author_id <> v_user");
+    expect(fn25("community.admin_review_correction").body).toContain("if c.author_id = v_user then");
+    expect(fn25("community.admin_moderate").body).toContain("if t.o_author = v_user then");
+    const q = fn25("community.admin_moderation_queue").body;
+    expect(q).toContain("v.author_id <> v_user");
+    expect(q).toContain("c.author_id <> v_user");
+    expect(q).toContain("ph.author_id <> v_user");
+    expect(SQL25).toContain("constraint decision_not_own check (decided_by <> author_id)");
+  });
+
+  it("C9: accept writes into the open draft only (a draft version in no released revision, or a proposal), audits, and never touches transit rows", () => {
+    const b = fn25("community.admin_review_correction").body;
+    for (const s of ["v_draft := transit.admin_open_draft();", "m.revision_id = v_draft and m.version_id = p_draft_version_id", "transit.in_released_revision(p_draft_version_id)", "'kind', 'proposal'", "perform core.audit('correction.review'", "c.status is distinct from p_expected_status"]) {
+      expect(b, s).toContain(s);
+    }
+    expect(b).not.toMatch(/(insert into|update) transit\./);
+  });
+
+  it("C9: only a published draft incorporates its accepted draft changes (the trigger on transit.revision)", () => {
+    const b = fn25("community.incorporate_corrections").body;
+    expect(b).toContain("new.status = 'published' and old.status is distinct from 'published'");
+    expect(b).toContain("c.status = 'accepted' and c.draft_revision_id = new.id and c.draft_change ->> 'kind' = 'draft_version'");
+    expect(SQL25).toMatch(/create trigger revision_incorporates_corrections\s+after update of status on transit\.revision\s+for each row execute function community\.incorporate_corrections\(\);/);
+  });
+
+  it("C10: overrides of Jev need a note (table and function) and are audited as overrides", () => {
+    expect(SQL25).toContain("constraint decision_override_note check (not is_override or btrim(coalesce(note, '')) <> '')");
+    const b = fn25("community.admin_moderate").body;
+    expect(b).toContain("v_override := (j.recommendation = 'publish' and p_outcome = 'rejected') or (j.recommendation = 'reject' and p_outcome = 'published');");
+    expect(b).toContain("if v_override and v_note is null then");
+    expect(b).toContain("case when coalesce(v_override, false) then 'community.override' else 'community.moderate' end");
+    expect(fn25("community.admin_resolve_appeal").body).toContain("v_override := p_outcome = 'overturned' and d.decided_by = 'policy';");
+  });
+
+  it("C10: an appeal goes to a different moderator (CHECK constraint, function and queue), once per item", () => {
+    expect(SQL25).toContain("constraint appeal_other_moderator check (resolved_by is null or (resolved_by <> original_decider and resolved_by <> author_id))");
+    expect(SQL25).toContain("create unique index appeal_target_uq on community.appeal (target_type, target_id);");
+    expect(SQL25).toMatch(/decision_id\s+uuid not null unique references community\.moderation_decision \(id\)/);
+    expect(fn25("community.admin_resolve_appeal").body).toContain("if a.original_decider = v_user then");
+    expect(fn25("community.admin_moderation_queue").body).toContain("a.original_decider <> v_user and a.author_id <> v_user");
+    expect(fn25("community.submit_appeal").body).toContain("t.o_author is distinct from v_user");
+  });
+
+  it("C10: a photo becomes public only through a moderator's approval, which records the public copy", () => {
+    expect(SQL25).toContain("constraint post_photo_public check ((moderation_status = 'published') = (public_bucket is not null and public_key is not null))");
+    expect(fns25.filter((f) => /public_bucket = p_public_bucket/.test(f.body)).map((f) => f.name)).toEqual(["community.apply_content_outcome"]);
+    expect(fn25("community.add_post_photos").body).toContain("m.owner_id = v_user and m.purpose = 'community_photo' and m.status = 'verified'");
+    expect(SQL25).toContain("create policy definer_insert on community.post_photo for insert to paranaga_definer with check (moderation_status = 'pending');");
+  });
+
+  it("the new tables have RLS enabled and forced; Jev evidence and decisions have no app grant", () => {
+    for (const t of ["community.jev_evidence", "community.moderation_decision", "community.appeal", "community.post_photo"]) {
+      expect(SQL25, t).toContain(`alter table ${t} enable row level security;`);
+      expect(SQL25, t).toContain(`alter table ${t} force row level security;`);
+    }
+    for (const t of ["community.jev_evidence", "community.moderation_decision"]) {
+      expect(SQL25).not.toMatch(new RegExp(`grant [^;]*on [^;]*${esc(t)}\\b[^;]*to [^;]*paranaga_app`));
+    }
+    expect(SQL25).toContain("create policy appeal_own_read on community.appeal for select to paranaga_app\n  using (author_id = (select core.current_user_id()));");
+  });
+
+  it("gives schema CREATE to the definer only for the length of the migration; no delete or truncate", () => {
+    expect(SQL25.trimStart().startsWith("grant create on schema community to paranaga_definer;\ngrant create on schema core to paranaga_definer;")).toBe(true);
+    expect(SQL25.trimEnd().endsWith("revoke create on schema core from paranaga_definer;\nrevoke create on schema community from paranaga_definer;")).toBe(true);
+    expect(SQL25).not.toMatch(/grant [^;]*(delete|truncate)[^;]*to paranaga_definer/);
+  });
+});
+
+describe("0025: the definer can reach every table its functions touch", () => {
+  const all = fns25.map((f) => tables24(f.body));
+  const reads = new Set(all.flatMap((x) => [...x.read]));
+  const inserts = new Set(all.flatMap((x) => [...x.insert]));
+  const updates = new Set(all.flatMap((x) => [...x.update]));
+
+  it("finds the tables (guards against a regex that matches nothing)", () => {
+    for (const t of ["community.correction", "community.jev_evidence", "community.appeal", "core.media_object", "transit.fare_rule_version", "transit.evidence_link"]) expect(reads.has(t), t).toBe(true);
+    for (const t of ["community.correction_event", "community.moderation_decision", "community.appeal", "community.post_photo", "community.jev_evidence"]) expect(inserts.has(t), t).toBe(true);
+    expect([...updates].sort()).toEqual(["community.appeal", "community.comment", "community.correction", "community.moderation_decision", "community.post", "community.post_photo", "community.post_version"]);
+  });
+  for (const t of reads) {
+    it(`${t}: select grant and policy for paranaga_definer`, () => {
+      expect(grantFor("select", t), "grant").toBe(true);
+      expect(policyFor("select", t), "policy").toBe(true);
+    });
+  }
+  for (const t of inserts) {
+    it(`${t}: insert grant and policy for paranaga_definer`, () => {
+      expect(grantFor("insert", t), "grant").toBe(true);
+      expect(policyFor("insert", t), "policy").toBe(true);
+    });
+  }
+  for (const t of updates) {
+    it(`${t}: update grant and policy for paranaga_definer`, () => {
+      expect(grantFor("update", t), "grant").toBe(true);
+      expect(policyFor("update", t), "policy").toBe(true);
+    });
+  }
+});

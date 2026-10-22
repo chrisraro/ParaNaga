@@ -45,7 +45,7 @@ import { commitImport, readImportBaseline, readImports, readReconciliation, read
 const NOT_FOUND = "Not found.";
 const BODY_MAX_BYTES = 512;
 
-type Ctx = { user: CurrentUser; requestId: string; db: <T>(fn: (db: Db) => Promise<T>, readOnly?: boolean) => Promise<T> };
+export type Ctx = { user: CurrentUser; requestId: string; db: <T>(fn: (db: Db) => Promise<T>, readOnly?: boolean) => Promise<T> };
 
 function pgError(error: unknown): { code: string | null; message: string } {
   const e = error as { code?: unknown; message?: unknown; cause?: { code?: unknown; message?: unknown } } | null;
@@ -61,6 +61,8 @@ export function adminProblem(error: unknown): unknown {
   if (code === "22023") {
     if (message.startsWith("unknown revision")) return notFound("No such revision.");
     if (message === "unknown stop") return notFound("No such stop in the open draft.");
+    if (message === "unknown correction") return notFound("No such report.");
+    if (message === "unknown item" || message === "unknown appeal") return notFound("No such item; it may have been removed.");
     return badRequest(capitalize(message));
   }
   if (code === "55000" || code === "23514") return conflict(capitalize(message));
@@ -69,7 +71,7 @@ export function adminProblem(error: unknown): unknown {
 
 const capitalize = (s: string) => (s ? s[0]!.toUpperCase() + s.slice(1) + (/[.!?]$/.test(s) ? "" : ".") : s);
 
-function adminRoute(request: Request, route: string, action: Action | null, run: (ctx: Ctx) => Promise<Response>): Promise<Response> {
+export function adminRoute(request: Request, route: string, action: Action | null, run: (ctx: Ctx) => Promise<Response>): Promise<Response> {
   return authedRoute(request, route, async (requestId) => {
     const user = await getCurrentUser();
     if (!user || !canEnterAdmin(user.roles) || (action && !can(user.roles, action))) throw notFound(NOT_FOUND);
@@ -87,10 +89,10 @@ function adminRoute(request: Request, route: string, action: Action | null, run:
   });
 }
 
-const json = <S extends z.ZodType>(schema: S, body: z.input<S>, requestId: string, status = 200) =>
+export const json = <S extends z.ZodType>(schema: S, body: z.input<S>, requestId: string, status = 200) =>
   Response.json(schema.parse(body), { status, headers: { "X-Request-Id": requestId } });
 
-async function limited(db: Db, request: Request, userId: string): Promise<boolean> {
+export async function limited(db: Db, request: Request, userId: string): Promise<boolean> {
   for (const limit of [RATE_LIMITS.mutationPerMinute, RATE_LIMITS.mutationPerHour]) {
     if (!(await checkRateLimit(db, request, limit, userId))) return true;
   }
@@ -106,7 +108,8 @@ async function revisionParam(params: Promise<{ id: string }>): Promise<string> {
 // ---------------------------------------------------------------- reads
 
 export function getDashboard(request: Request): Promise<Response> {
-  return adminRoute(request, "admin/dashboard", null, async ({ requestId, db }) =>
+  // Transport staff only (N6): a moderator's dashboard is the moderation link, with no data call.
+  return adminRoute(request, "admin/dashboard", "transit.revision.edit", async ({ requestId, db }) =>
     json(adminDashboardSchema, await db(readDashboard, true), requestId),
   );
 }
@@ -197,7 +200,7 @@ const ACTION_MAX_BYTES = 4096;
 /** JSON-escaped file text: KML quotes and newlines grow it; the text itself is capped at IMPORT_MAX_CHARS. */
 const IMPORT_MAX_BYTES = 3_000_000;
 
-const firstIssue = (error: z.ZodError) => error.issues[0]?.message ?? "The request is not valid.";
+export const firstIssue = (error: z.ZodError) => error.issues[0]?.message ?? "The request is not valid.";
 
 async function stopParam(params: Promise<{ id: string }>): Promise<string> {
   const id = parseUuidParam((await params).id, "id");

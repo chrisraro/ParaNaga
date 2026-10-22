@@ -1,0 +1,19 @@
+{
+  "_note": "Recorded Jev Decisions answers for the AC-11 policy matrix (N6). Synthetic: no live key was used. Wire format of src/server/adapters/jev/client.ts; model is the pinned dated build.",
+  "model": "typesafe/jev-1.13-20260917",
+  "cases": [
+    { "name": "helpful_tip", "text": "Fixture Loop X: the jeepney waits at the plaza corner for about five minutes in the morning.", "http": 200, "body": { "id": "rec-001", "model": "typesafe/jev-1.13-20260917", "recommendation": "publish", "confidence": 0.93 } },
+    { "name": "spam", "text": "BUY CHEAP LOAD NOW visit fixture-shop.example for 50% off!!!", "http": 200, "body": { "id": "rec-002", "model": "typesafe/jev-1.13-20260917", "recommendation": "reject", "confidence": 0.99 } },
+    { "name": "threat", "text": "If the Fixture Loop X driver shortchanges me again I will hurt him.", "http": 200, "body": { "id": "rec-003", "model": "typesafe/jev-1.13-20260917", "recommendation": "reject", "confidence": 0.97 } },
+    { "name": "unclear", "text": "Something weird happened near the fixture terminal, not sure what.", "http": 200, "body": { "id": "rec-004", "model": "typesafe/jev-1.13-20260917", "recommendation": "human_review", "confidence": 0.58 } },
+    { "name": "low_confidence_reject", "text": "The fixture route is a joke, nobody follows the posted stops.", "http": 200, "body": { "id": "rec-005", "model": "typesafe/jev-1.13-20260917", "recommendation": "reject", "confidence": 0.81 } },
+    { "name": "low_confidence_publish", "text": "Is the fixture tricycle fare the same at night?", "http": 200, "body": { "id": "rec-006", "model": "typesafe/jev-1.13-20260917", "recommendation": "publish", "confidence": 0.62 } },
+    { "name": "server_error", "text": "Fixture text during an outage.", "http": 500, "body": { "error": "internal" } },
+    { "name": "rate_limited", "text": "Fixture text while rate limited.", "http": 429, "body": { "error": "rate_limited" } },
+    { "name": "no_credits", "text": "Fixture text without credits.", "http": 402, "body": { "error": "payment_required" } },
+    { "name": "malformed_extra_field", "text": "Fixture text with a malformed answer.", "http": 200, "body": { "id": "rec-010", "model": "typesafe/jev-1.13-20260917", "recommendation": "publish", "confidence": 0.99, "reason": "looks fine" } },
+    { "name": "missing_answer", "text": "Fixture text with a missing answer.", "http": 200, "body": { "id": "rec-011", "model": "typesafe/jev-1.13-20260917" } },
+    { "name": "out_of_range", "text": "Fixture text with an out-of-range confidence.", "http": 200, "body": { "id": "rec-012", "model": "typesafe/jev-1.13-20260917", "recommendation": "reject", "confidence": 1.4 } },
+    { "name": "other_build", "text": "Fixture text answered by another build.", "http": 200, "body": { "id": "rec-013", "model": "typesafe/jev-1.14-20261014", "recommendation": "publish", "confidence": 0.99 } }
+  ]
+}

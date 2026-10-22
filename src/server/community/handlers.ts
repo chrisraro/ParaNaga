@@ -3,6 +3,8 @@ import { sql } from "drizzle-orm";
 import { parseUuidParam } from "@/domain/api/schemas";
 import { GUIDELINES_KIND, GUIDELINES_VERSION } from "@/domain/community/guidelines";
 import {
+  appealPayloadSchema,
+  appealResponseSchema,
   blockPayloadSchema,
   blockResponseSchema,
   bookmarkPayloadSchema,
@@ -20,8 +22,10 @@ import { contentState } from "@/domain/community/status";
 import { authedRoute, ApiProblem, badRequest, CACHE, notFound, readJsonBody, tooManyRequests } from "@/server/api/http";
 import { authorize } from "@/server/auth/authorize";
 import { withRequestContext, type Db } from "@/server/db/context";
+import { serverEnv } from "@/server/env";
 import { checkRateLimit, RATE_LIMITS, type RateLimitConfig } from "@/server/ratelimit/rate-limiter";
-import { moderateCommunityText } from "./moderate";
+import { getStorage } from "@/server/storage/adapter";
+import { moderateCommunityText, recordJevEvidence } from "./moderate";
 
 const POST_BODY_MAX_BYTES = 16384;
 const SMALL_BODY_MAX_BYTES = 2048;
@@ -52,6 +56,7 @@ async function guarded<T>(run: () => Promise<T>, messages: { invalid?: string } 
 }
 
 const pgTextArray = (values: readonly string[]) => `{${values.join(",")}}`; // tags are [a-z0-9-] only
+const pgUuidArray = (values: readonly string[]) => `{${values.join(",")}}`; // zod-checked uuids
 
 type Gate = "ok" | "rate_limited" | "guidelines_required";
 
@@ -105,16 +110,26 @@ export function createPost(request: Request): Promise<Response> {
     );
 
     const decision = await moderateCommunityText(`${input.title}\n${input.body}`);
-    const row = await guarded(() =>
-      withRequestContext({ userId: user.id, requestId }, async (db) => {
-        const res = await db.execute<PostResultRow>(sql`
-          select * from community.create_post(
-            ${input.clientRequestId}::uuid, ${input.topic}, ${input.title}, ${input.body},
-            ${pgTextArray(input.tags)}::text[], ${input.routeCode ?? null}::text, ${decision.status}, ${decision.reason}
-          )
-        `);
-        return res.rows[0];
-      }),
+    const row = await guarded(
+      () =>
+        withRequestContext({ userId: user.id, requestId }, async (db) => {
+          const res = await db.execute<PostResultRow>(sql`
+            select * from community.create_post(
+              ${input.clientRequestId}::uuid, ${input.topic}, ${input.title}, ${input.body},
+              ${pgTextArray(input.tags)}::text[], ${input.routeCode ?? null}::text, ${decision.status}, ${decision.reason}
+            )
+          `);
+          const created = res.rows[0];
+          if (created) {
+            await recordJevEvidence(db, "post_version", created.version_id, decision.jev);
+            // Photos wait for a moderator (N6); a bad id fails the whole post, so nothing half-saves.
+            if (input.photoIds.length > 0) {
+              await db.execute(sql`select community.add_post_photos(${created.post_id}::uuid, ${pgUuidArray(input.photoIds)}::uuid[])`);
+            }
+          }
+          return created;
+        }),
+      { invalid: "A photo could not be attached. Remove it and try again." },
     );
     if (!row) throw new ApiProblem(503, "unavailable", "The post could not be saved. Try again.");
     const state = contentState(row.status);
@@ -153,7 +168,9 @@ export function editPost(request: Request, rawId: string): Promise<Response> {
             ${pgTextArray(input.tags)}::text[], ${decision.status}, ${decision.reason}
           )
         `);
-        return res.rows[0];
+        const edited = res.rows[0];
+        if (edited) await recordJevEvidence(db, "post_version", edited.version_id, decision.jev);
+        return edited;
       }),
     );
     if (!row) throw new ApiProblem(503, "unavailable", "The edit could not be saved. Try again.");
@@ -210,7 +227,9 @@ export function createComment(request: Request, rawPostId: string): Promise<Resp
               ${input.body}, ${decision.status}, ${decision.reason}
             )
           `);
-          return res.rows[0];
+          const created = res.rows[0];
+          if (created) await recordJevEvidence(db, "comment", created.comment_id, decision.jev);
+          return created;
         }),
       { invalid: "You can reply to a comment, but not to a reply." },
     );
@@ -337,5 +356,80 @@ export function reportContent(request: Request): Promise<Response> {
     );
     // A repeat report is accepted silently: the answer is the same either way.
     return Response.json(okResponseSchema.parse({ ok: true }), { status: 201, headers: noStore(requestId) });
+  });
+}
+
+// ---------------------------------------------------------------- appeals and photos (N6, C10)
+
+/**
+ * POST /api/v1/community/appeals {targetType, targetId, note}: the author appeals a rejection,
+ * once per item. A different moderator than the one who decided resolves it (enforced in the
+ * database); the author sees the outcome on the post.
+ */
+export function submitAppeal(request: Request): Promise<Response> {
+  return authedRoute(request, "community-appeal", async (requestId) => {
+    const user = await authorize("community.post");
+    const parsed = appealPayloadSchema.safeParse(await readJsonBody(request, SMALL_BODY_MAX_BYTES));
+    if (!parsed.success) throw badRequest("Say in a few words why the decision should change.");
+    if (!(await rateGate(request, user.id, requestId, []))) throw tooManyRequests();
+    let id: string | undefined;
+    try {
+      id = await guarded(
+        () =>
+          withRequestContext({ userId: user.id, requestId }, async (db) => {
+            const res = await db.execute<{ id: string }>(sql`
+              select community.submit_appeal(${parsed.data.targetType}, ${parsed.data.targetId}::uuid, ${parsed.data.note}) as id
+            `);
+            return res.rows[0]?.id;
+          }),
+        { invalid: "Only a decision not to publish can be appealed." },
+      );
+    } catch (error) {
+      if (pgCode(error) === "23505") throw new ApiProblem(409, "conflict", "This decision was already appealed.");
+      throw error;
+    }
+    if (!id) throw new ApiProblem(503, "unavailable", "The appeal could not be saved. Try again.");
+    return Response.json(appealResponseSchema.parse({ appeal: { id, state: "open" } }), { status: 201, headers: noStore(requestId) });
+  });
+}
+
+const PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+/**
+ * GET /api/v1/community/photos/:id: an approved photo, read from the PUBLIC bucket only (the copy a
+ * moderator's approval made). Pending and rejected photos are never served here, to anyone.
+ */
+export function getPhoto(request: Request, rawId: string): Promise<Response> {
+  return authedRoute(request, "community-photo", async (requestId) => {
+    const id = parseUuidParam(rawId, "id");
+    if (!id.ok) throw notFound("This photo is not available.");
+    const photo = await withRequestContext(
+      { userId: null, requestId },
+      async (db) => {
+        const res = await db.execute<{ public_bucket: string; public_key: string }>(sql`
+          select ph.public_bucket, ph.public_key from community.post_photo ph
+           where ph.id = ${id.value}::uuid and ph.moderation_status = 'published'
+        `);
+        return res.rows[0];
+      },
+      { readOnly: true },
+    );
+    const env = serverEnv();
+    if (!photo || photo.public_bucket !== env.STORAGE_BUCKET_PUBLIC) throw notFound("This photo is not available.");
+    const storage = getStorage();
+    const [head, bytes] = await Promise.all([
+      storage.headObject(photo.public_bucket, photo.public_key),
+      storage.getObject(photo.public_bucket, photo.public_key),
+    ]);
+    if (!bytes || !head || !PHOTO_TYPES.has(head.mime)) throw notFound("This photo is not available.");
+    return new Response(bytes as BodyInit, {
+      headers: {
+        "Content-Type": head.mime,
+        "Cache-Control": "public, max-age=300, s-maxage=300",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; sandbox",
+        "X-Request-Id": requestId,
+      },
+    });
   });
 }

@@ -24,6 +24,8 @@ import {
   type ReconcilePayload,
   type StopAction,
 } from "@/domain/admin/stops";
+import { correctionQueueSchema, reviewResultSchema, type CorrectionScope, type ReviewPayload } from "@/domain/admin/corrections";
+import { decisionResultSchema, moderationQueueSchema, type ModeratePayload, type ResolveAppealPayload } from "@/domain/admin/moderation";
 import { apiErrorSchema } from "@/domain/api/schemas";
 import { confirmMediaResponseSchema, createMediaSlotResponseSchema } from "@/domain/media/schemas";
 
@@ -73,6 +75,18 @@ export const fetchImports = () => call("/api/v1/admin/imports", importListSchema
 export const importDryRun = (upload: ImportUpload) => call("/api/v1/admin/imports/dry-run", importDryRunSchema, upload);
 export const importCommit = (upload: ImportUpload, expectedBaselineBatchId: string) =>
   call("/api/v1/admin/imports/commit", importCommitResultSchema, { ...upload, expectedBaselineBatchId });
+
+// ---------------------------------------------------------------- N6: corrections review, moderation
+
+export const fetchCorrections = (scope: CorrectionScope) => call(`/api/v1/admin/corrections?scope=${scope}`, correctionQueueSchema);
+export const reviewCorrection = (id: string, payload: ReviewPayload) =>
+  call(`/api/v1/admin/corrections/${encodeURIComponent(id)}`, reviewResultSchema, payload);
+export const fetchModeration = () => call("/api/v1/admin/moderation", moderationQueueSchema);
+export const decideItem = (payload: ModeratePayload) => call("/api/v1/admin/moderation/decisions", decisionResultSchema, payload);
+export const resolveAppeal = (id: string, payload: ResolveAppealPayload) =>
+  call(`/api/v1/admin/moderation/appeals/${encodeURIComponent(id)}`, decisionResultSchema, payload);
+/** A private photo under review, streamed by the server (same origin; each read is audited). */
+export const reviewMediaSrc = (mediaId: string) => `/api/v1/admin/media/${encodeURIComponent(mediaId)}`;
 
 const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
