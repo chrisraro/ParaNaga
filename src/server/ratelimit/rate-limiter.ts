@@ -30,6 +30,10 @@ export const RATE_LIMITS = {
   stepUpSendPerHour: { prefix: "stepup:send:hour", windowSeconds: 3600, limit: 5 },
   /** Step-up code checks (Neon Auth also stops a code after 3 wrong tries). */
   stepUpVerifyPerHour: { prefix: "stepup:verify:hour", windowSeconds: 3600, limit: 10 },
+  /** Admin user lookups by exact email (N7, C12): no enumeration by brute force. */
+  userLookupPerHour: { prefix: "ulookup:hour", windowSeconds: 3600, limit: 30 },
+  /** Live Jev diagnostics (N7, C12): each one is a paid Decisions call. */
+  jevDiagnosticPerHour: { prefix: "jevdiag:hour", windowSeconds: 3600, limit: 6 },
 } as const;
 
 /**

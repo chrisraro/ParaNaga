@@ -264,7 +264,7 @@ const grantFor = (verb: string, table: string) =>
 const policyFor = (verb: string, table: string) =>
   ALL.some(
     (m) =>
-      new RegExp(`create policy \\w+ on ${esc(table)} for (?:${verb}|all) to paranaga_definer`).test(m.sql) ||
+      new RegExp(`create policy \\w+ on ${esc(table)} (?:as permissive )?for (?:${verb}|all) to [\\w, ]*paranaga_definer`).test(m.sql) ||
       [...m.sql.matchAll(/do \$\$([\s\S]*?)\$\$;/g)].some((d) => d[1]!.includes(`'${table}'`) && new RegExp(`for (?:${verb}|all) to paranaga_definer`).test(d[1]!)),
   );
 
@@ -475,6 +475,180 @@ describe("0025: the definer can reach every table its functions touch", () => {
     it(`${t}: update grant and policy for paranaga_definer`, () => {
       expect(grantFor("update", t), "grant").toBe(true);
       expect(policyFor("update", t), "policy").toBe(true);
+    });
+  }
+});
+
+// ================================================================ 0026 (N7): complaint review, retention, roles, audit
+
+const SQL26 = strip(readFileSync(path.join(DIR, "0026_complaint_review_system.sql"), "utf8"));
+const fns26 = [...SQL26.matchAll(/create or replace function ([\w.]+)\(([^)]*)\)([\s\S]*?)\$\$([\s\S]*?)\$\$;/g)].map((m) => ({
+  name: m[1]!,
+  header: m[3]!,
+  body: m[4]!,
+}));
+const fn26 = (name: string) => fns26.find((f) => f.name === name)!;
+const REVIEWER_FNS = ["priv.review_list", "priv.review_complaint", "priv.reviewer_evidence_download", "priv.set_complaint_legal_hold"];
+const RETENTION_FNS = ["priv.retention_due", "priv.retention_purge_complaint", "priv.retention_purge_upload", "priv.retention_record_run"];
+const ROLE_FNS = ["core.admin_find_user", "core.admin_staff", "core.grant_role", "core.revoke_role"];
+const APP_FNS_26 = [...REVIEWER_FNS, ...RETENTION_FNS, ...ROLE_FNS];
+const HELPERS_26 = ["priv.assert_complaint_reviewer", "priv.complaint_purgeable", "priv.upload_purgeable", "priv.assert_system", "core.assert_admin", "core.user_roles_json"];
+
+describe("0026: definer functions (N7)", () => {
+  it("defines exactly these SECURITY DEFINER functions; the helpers are invoker-rights", () => {
+    expect(fns26.filter((f) => /security definer/.test(f.header)).map((f) => f.name).sort()).toEqual([...APP_FNS_26].sort());
+    expect(fns26.filter((f) => !/security definer/.test(f.header)).map((f) => f.name).sort()).toEqual([...HELPERS_26].sort());
+  });
+
+  for (const name of [...APP_FNS_26, ...HELPERS_26]) {
+    it(`${name}: search_path pinned, owned by the definer, not executable by PUBLIC`, () => {
+      expect(fn26(name).header).toMatch(/set search_path = pg_catalog,[\w, ]*pg_temp\s/);
+      expect(SQL26).toMatch(new RegExp(`alter function ${esc(name)}\\([^)]*\\) owner to paranaga_definer;`));
+      expect(SQL26).toMatch(new RegExp(`revoke execute on function ${esc(name)}\\([^)]*\\) from public;`));
+    });
+  }
+  for (const name of APP_FNS_26) it(`${name}: callable by paranaga_app only`, () => expect(grantsOf(SQL26, name)).toEqual(["paranaga_app"]));
+  for (const name of HELPERS_26) it(`${name}: never granted to anyone`, () => expect(grantsOf(SQL26, name)).toEqual([]));
+
+  it("C11: the complaint_reviewer role only (admins are not let in), checked before the step-up, first in every reviewer function", () => {
+    const h = fn26("priv.assert_complaint_reviewer").body;
+    expect(h).toContain("if v_user is null or not core.has_role('complaint_reviewer') then");
+    expect(h.indexOf("core.has_role('complaint_reviewer')")).toBeLessThan(h.indexOf("perform priv.require_step_up();"));
+    for (const name of REVIEWER_FNS) {
+      expect(fn26(name).body, name).toMatch(/^\s*declare\s+v_user(?:_id)? text := priv\.assert_complaint_reviewer\(\);/);
+    }
+    for (const f of fns26.filter((x) => x.name.startsWith("priv."))) {
+      expect(f.body, f.name).not.toMatch(/has_role\('(admin|community_moderator|transport_reviewer)'\)/);
+    }
+  });
+
+  it("C11: never the reviewer's own report; never the reporter's id, an accessor id or a storage key in what the reviewer reads", () => {
+    expect(fn26("priv.review_list").body).toContain("where c.reporter_id <> v_user");
+    expect(fn26("priv.review_complaint").body).toContain("if not found or v_c.reporter_id = v_user then\n    return null;");
+    expect(fn26("priv.reviewer_evidence_download").body).toContain("if v_reporter = v_user_id then");
+    expect(fn26("priv.set_complaint_legal_hold").body).toContain("if not found or v_c.reporter_id = v_user then");
+    for (const name of ["priv.review_list", "priv.review_complaint"]) {
+      expect(fn26(name).body, name).not.toMatch(/'(reporterId|reporter_id|objectKey|object_key|originalKey|redactedKey|accessorId|actorId)'/);
+    }
+    // The list carries no text and no evidence; only the opened (audited) report does.
+    expect(fn26("priv.review_list").body).not.toContain("description");
+    expect(fn26("priv.review_complaint").body).toContain("'description', v_c.description");
+  });
+
+  it("C11: every read and change is audited; evidence issuance is also in priv.evidence_access with a 60-second expiry", () => {
+    expect(fn26("priv.review_list").body).toContain("perform core.audit('complaint.queue.read'");
+    expect(fn26("priv.review_complaint").body).toContain("perform core.audit('complaint.review.open', 'complaint', p_id::text, null);");
+    expect(fn26("priv.review_complaint").body).toContain("perform core.audit('complaint.review.alert'");
+    const ev = fn26("priv.reviewer_evidence_download").body;
+    expect(ev).toContain("now() + interval '60 seconds'");
+    expect(ev).toContain("perform core.audit('complaint.evidence.read'");
+    expect(ev.indexOf("insert into priv.evidence_access")).toBeLessThan(ev.indexOf("return query"));
+    expect(ev).toContain("m.status = 'verified' and m.bucket = 'evidence-private'");
+    expect(fn26("priv.set_complaint_legal_hold").body).toContain("perform core.audit('complaint.legal_hold', 'complaint', p_id::text, jsonb_build_object('hold', p_hold));");
+  });
+
+  it("retention: system callers only, legal hold respected, re-checked under a row lock, rows and media together, audited as system", () => {
+    for (const name of RETENTION_FNS) expect(fn26(name).body, name).toContain("perform priv.assert_system();");
+    expect(fn26("priv.assert_system").body).toContain("if core.current_user_id() is not null then");
+    const due = fn26("priv.complaint_purgeable").body;
+    for (const s of ["c.legal_hold = false", "c.status in ('closed', 'withdrawn')", "coalesce(c.retention_until, coalesce(c.closed_at, c.updated_at) + interval '365 days') <= now()"]) expect(due, s).toContain(s);
+    expect(fn26("priv.retention_due").body).toContain("c0.legal_hold = false");
+    const purge = fn26("priv.retention_purge_complaint").body;
+    const order = ["for update", "priv.complaint_purgeable(p_id)", "delete from priv.evidence_access", "delete from priv.external_handoff", "delete from priv.complaint_event", "delete from priv.complaint_media", "delete from priv.complaint c", "delete from core.media_object", "'system', 'retention.purge'"];
+    const at = order.map((s) => purge.indexOf(s));
+    expect(at.every((i) => i >= 0), JSON.stringify(at)).toBe(true);
+    expect([...at].sort((x, y) => x - y)).toEqual(at);
+    expect(fn26("priv.upload_purgeable").body).toContain("m.created_at < now() - interval '30 days'");
+    expect(fn26("priv.retention_record_run").body).toContain("'system', 'retention.run'");
+  });
+
+  it("retention: deletes granted on exactly the purged tables, each narrowed by a policy to purgeable rows of a system caller", () => {
+    const deletes = [...SQL26.matchAll(/grant delete on ([^;]+) to paranaga_definer;/g)].flatMap((m) => m[1]!.split(",").map((t) => t.trim())).sort();
+    expect(deletes).toEqual(["core.media_object", "priv.complaint", "priv.complaint_event", "priv.complaint_media", "priv.evidence_access", "priv.external_handoff"]);
+    expect(SQL26).toMatch(/create policy complaint_definer_purge on priv\.complaint as restrictive for delete to paranaga_definer\s+using \(core\.current_user_id\(\) is null and priv\.complaint_purgeable\(id\)\);/);
+    for (const t of ["complaint_media", "complaint_event", "evidence_access", "external_handoff"]) {
+      expect(SQL26, t).toMatch(new RegExp(`create policy \\w+ on priv\\.${t} as restrictive for delete to paranaga_definer\\s+using \\(core\\.current_user_id\\(\\) is null and priv\\.complaint_purgeable\\(complaint_id\\)\\);`));
+    }
+    expect(SQL26).toMatch(/create policy media_definer_purge on core\.media_object for delete to paranaga_definer\s+using \(core\.current_user_id\(\) is null and purpose = 'complaint_evidence'/);
+    expect(SQL26).not.toMatch(/grant [^;]*\btruncate\b[^;]*to paranaga_definer/);
+    const before = ALL.filter((m) => m.file < "0026").map((m) => m.sql).join("\n");
+    expect(before).not.toMatch(/grant [^;]*\bdelete\b[^;]*on (?:priv\.\w+|core\.media_object)[^;]*to paranaga_definer/);
+  });
+
+  it("C12: role changes need admin, then a fresh step-up, a reason; never your own roles; never the last admin; audited with the reason", () => {
+    const g = fn26("core.grant_role").body;
+    const r = fn26("core.revoke_role").body;
+    for (const b of [g, r]) {
+      expect(b.indexOf("core.has_role('admin')")).toBeLessThan(b.indexOf("perform priv.require_step_up();"));
+      expect(b.indexOf("core.has_role('admin')")).toBeGreaterThan(-1);
+      expect(b).toContain("char_length(v_reason) < 3 or char_length(v_reason) > 500");
+      expect(b).toContain("perform pg_advisory_xact_lock(hashtext('core.user_role'));");
+      expect(b).toContain("'reason', left(v_reason, 200)");
+    }
+    expect(g).toContain("if p_user = v_actor then\n    raise exception 'admins cannot grant roles to themselves'");
+    expect(g).toContain("p_role = 'commuter' or not exists (select 1 from core.role where code = p_role)");
+    expect(g).toContain("not exists (select 1 from core.profile p where p.user_id = p_user)");
+    expect(r).toContain("if p_user = v_actor then\n    raise exception 'admins cannot change their own roles'");
+    expect(r).toContain("raise exception 'cannot remove the last admin' using errcode = '55000';");
+    expect(r.indexOf("cannot remove the last admin")).toBeLessThan(r.indexOf("update core.user_role"));
+  });
+
+  it("C12: lookup by full email only, through four columns of neon_auth.user, granted only where it exists", () => {
+    const f = fn26("core.admin_find_user").body;
+    expect(f).toMatch(/^\s*declare\s+v_actor text := core\.assert_admin\(\);/);
+    expect(f).toContain("where lower(u.email) = v_email");
+    expect(f).not.toMatch(/\blike\b|ilike|similar to/);
+    expect(f).toContain("perform core.audit('user.lookup', 'user', v_id, jsonb_build_object('found', v_id is not null));");
+    expect(fn26("core.admin_staff").body).toMatch(/^\s*declare\s+v_actor text := core\.assert_admin\(\);/);
+    expect(SQL26).toContain(`execute 'grant select (id, name, email, "emailVerified") on neon_auth."user" to paranaga_definer';`);
+    expect(SQL26).not.toMatch(/neon_auth\.\w*session|grant [^;]*on neon_auth[^;]*to paranaga_app/);
+  });
+
+  it("audit log: staff read their own rows only; still append-only (no update or delete for anyone)", () => {
+    expect(SQL26).toMatch(/create policy audit_read_own_staff on core\.audit_event for select to paranaga_app\s+using \(actor_user_id = \(select core\.current_user_id\(\)\)/);
+    expect(SQL26).not.toMatch(/grant [^;]*\b(update|delete)\b[^;]*on core\.audit_event/);
+    expect(SQL26).not.toMatch(/create policy \w+ on core\.audit_event for (update|delete|all)/);
+  });
+
+  it("gives schema CREATE to the definer only for the length of the migration", () => {
+    expect(SQL26.trimStart().startsWith("grant create on schema priv to paranaga_definer;\ngrant create on schema core to paranaga_definer;")).toBe(true);
+    expect(SQL26.trimEnd().endsWith("revoke create on schema core from paranaga_definer;\nrevoke create on schema priv from paranaga_definer;")).toBe(true);
+  });
+});
+
+describe("0026: the definer can reach every table its functions touch", () => {
+  const all = fns26.map((f) => tables24(f.body));
+  const deletes = new Set(fns26.flatMap((f) => [...f.body.matchAll(/\bdelete from\s+((?:core|priv)\.[a-z_]+)\b/gi)].map((m) => m[1]!.toLowerCase())));
+  const reads = new Set(all.flatMap((x) => [...x.read]));
+  const inserts = new Set(all.flatMap((x) => [...x.insert]));
+  const updates = new Set(all.flatMap((x) => [...x.update]));
+
+  it("finds the tables (guards against a regex that matches nothing)", () => {
+    for (const t of ["priv.complaint", "priv.complaint_media", "priv.evidence_access", "core.audit_event", "core.user_role", "core.profile", "core.media_object"]) expect(reads.has(t), t).toBe(true);
+    expect([...deletes].sort()).toEqual(["core.media_object", "priv.complaint", "priv.complaint_event", "priv.complaint_media", "priv.evidence_access", "priv.external_handoff"]);
+  });
+  for (const t of reads) {
+    it(`${t}: select grant and policy for paranaga_definer`, () => {
+      expect(grantFor("select", t), "grant").toBe(true);
+      expect(policyFor("select", t), "policy").toBe(true);
+    });
+  }
+  for (const t of inserts) {
+    it(`${t}: insert grant and policy for paranaga_definer`, () => {
+      expect(grantFor("insert", t), "grant").toBe(true);
+      expect(policyFor("insert", t), "policy").toBe(true);
+    });
+  }
+  for (const t of updates) {
+    it(`${t}: update grant and policy for paranaga_definer`, () => {
+      expect(grantFor("update", t), "grant").toBe(true);
+      expect(policyFor("update", t), "policy").toBe(true);
+    });
+  }
+  for (const t of deletes) {
+    it(`${t}: delete grant and policy for paranaga_definer`, () => {
+      expect(grantFor("delete", t), "grant").toBe(true);
+      expect(policyFor("delete", t), "policy").toBe(true);
     });
   }
 });

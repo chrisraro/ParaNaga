@@ -26,6 +26,24 @@ import {
 } from "@/domain/admin/stops";
 import { correctionQueueSchema, reviewResultSchema, type CorrectionScope, type ReviewPayload } from "@/domain/admin/corrections";
 import { decisionResultSchema, moderationQueueSchema, type ModeratePayload, type ResolveAppealPayload } from "@/domain/admin/moderation";
+import {
+  complaintActionResultSchema,
+  complaintDetailSchema,
+  complaintListSchema,
+  evidenceLinkSchema,
+  type ComplaintAction,
+  type ComplaintScope,
+} from "@/domain/admin/complaints";
+import {
+  auditPageSchema,
+  diagnosticResultSchema,
+  findUserResultSchema,
+  jobsSchema,
+  providersSchema,
+  roleChangeResultSchema,
+  staffListSchema,
+  type RoleChange,
+} from "@/domain/admin/system";
 import { apiErrorSchema } from "@/domain/api/schemas";
 import { confirmMediaResponseSchema, createMediaSlotResponseSchema } from "@/domain/media/schemas";
 
@@ -113,3 +131,25 @@ export async function uploadStopPhoto(file: File): Promise<AdminResult<{ mediaOb
     ? { ok: true, data: { mediaObjectId: confirm.data.media.id } }
     : fail("The photo was refused (not a readable image).");
 }
+
+// ---------------------------------------------------------------- N7: complaint review (C11), system (C12)
+
+export const fetchComplaints = (scope: ComplaintScope) => call(`/api/v1/admin/complaints?scope=${scope}`, complaintListSchema);
+export const fetchComplaint = (id: string) => call(`/api/v1/admin/complaints/${encodeURIComponent(id)}`, complaintDetailSchema);
+export const complaintAction = (id: string, action: ComplaintAction) =>
+  call(`/api/v1/admin/complaints/${encodeURIComponent(id)}`, complaintActionResultSchema, action);
+/** A 60-second signed download link; the page follows it at once and never stores it. */
+export const evidenceLink = (id: string, evidenceId: string) =>
+  call(`/api/v1/admin/complaints/${encodeURIComponent(id)}/evidence/${encodeURIComponent(evidenceId)}`, evidenceLinkSchema, {});
+
+export const fetchStaff = () => call("/api/v1/admin/users", staffListSchema);
+export const findUser = (email: string) => call("/api/v1/admin/users/lookup", findUserResultSchema, { email });
+export const changeRole = (change: RoleChange) => call("/api/v1/admin/users/roles", roleChangeResultSchema, change);
+export const fetchProviders = () => call("/api/v1/admin/providers", providersSchema);
+export const runJevDiagnostic = () => call("/api/v1/admin/providers/jev-diagnostic", diagnosticResultSchema, {});
+export const fetchJobs = () => call("/api/v1/admin/jobs", jobsSchema);
+export type AuditFilters = Partial<Record<"actor" | "action" | "from" | "to" | "before", string>>;
+export const fetchAudit = (q: AuditFilters) => {
+  const qs = new URLSearchParams(Object.entries(q).filter((e): e is [string, string] => Boolean(e[1]))).toString();
+  return call(`/api/v1/admin/audit${qs ? `?${qs}` : ""}`, auditPageSchema);
+};

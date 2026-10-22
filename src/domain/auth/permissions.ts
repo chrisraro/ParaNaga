@@ -28,6 +28,8 @@ export const ACTIONS = [
   "complaint.evidence.read",
   "roles.grant",
   "ops.jev.diagnose",
+  // N7: jobs list and the live Jev diagnostic (admin only; moderators read provider status).
+  "ops.manage",
   "audit.read",
 ] as const;
 
@@ -64,6 +66,7 @@ const GRANTS: Record<Role, readonly Action[]> = {
     "community.appeal.resolve",
     "roles.grant",
     "ops.jev.diagnose",
+    "ops.manage",
     "audit.read",
   ],
 };

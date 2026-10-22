@@ -40,6 +40,14 @@ describe("permission matrix (spec §5.3)", () => {
     for (const role of ROLES) expect(can([role], "roles.grant")).toBe(role === "admin");
   });
 
+  it("N7: only admins see jobs and run the live Jev diagnostic; moderators and admins read provider status", () => {
+    for (const role of ROLES) {
+      expect(can([role], "ops.manage"), role).toBe(role === "admin");
+      expect(can([role], "ops.jev.diagnose"), role).toBe(role === "admin" || role === "community_moderator");
+      expect(can([role], "complaint.review"), role).toBe(role === "complaint_reviewer");
+    }
+  });
+
   it("nobody reviews their own submission", () => {
     const reviewer = user(["transport_reviewer"], "rev-1");
     expect(decide(reviewer, "correction.review", { ownerId: "rev-1" })).toEqual({

@@ -46,8 +46,11 @@ export class S3StorageAdapter implements StoragePort {
     bucket: string,
     key: string,
     expiresInSeconds: number = 60,
+    options: { attachment?: boolean } = {},
   ): Promise<string> {
-    return this.signUrl("GET", bucket, key, expiresInSeconds);
+    // response-content-disposition is part of the signed query: the object downloads as a file
+    // (spec 05 §5.8, evidence originals), never renders in the browser.
+    return this.signUrl("GET", bucket, key, expiresInSeconds, undefined, options.attachment ? { "response-content-disposition": "attachment" } : {});
   }
 
   async headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null> {
@@ -130,6 +133,7 @@ export class S3StorageAdapter implements StoragePort {
     key: string,
     expiresInSeconds: number,
     _mime?: string,
+    extraQuery: Record<string, string> = {},
   ): string {
     const now = new Date();
     const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, "");
@@ -142,6 +146,7 @@ export class S3StorageAdapter implements StoragePort {
     u.searchParams.set("X-Amz-Date", amzDate);
     u.searchParams.set("X-Amz-Expires", expiresInSeconds.toString());
     u.searchParams.set("X-Amz-SignedHeaders", "host");
+    for (const [k, v] of Object.entries(extraQuery)) u.searchParams.set(k, v);
 
     // Canonical query string must be sorted by key
     const canonicalQuery = Array.from(u.searchParams.entries())
@@ -227,8 +232,9 @@ export class MemoryStorageAdapter implements StoragePort {
     bucket: string,
     key: string,
     _expiresInSeconds: number = 60,
+    options: { attachment?: boolean } = {},
   ): Promise<string> {
-    return `https://storage.local/${bucket}/${key}?download=true`;
+    return `https://storage.local/${bucket}/${key}?download=true${options.attachment ? "&response-content-disposition=attachment" : ""}`;
   }
 
   async headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null> {

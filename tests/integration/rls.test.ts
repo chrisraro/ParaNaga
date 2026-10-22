@@ -25,6 +25,14 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on core (Neon branch)", () => {
   const rows = async (userId: string | null, query: ReturnType<typeof sql>) =>
     as(userId, async (db) => (await db.execute(query)).rows);
 
+  // Since 0026 role changes need a fresh step-up; the setting by hand tests the gate alone (the
+  // record that fills it is step-up-rls.test.ts).
+  const stepped = async (userId: string, query: ReturnType<typeof sql>) =>
+    as(userId, async (db) => {
+      await db.execute(sql`select set_config('app.step_up_at', now()::text, true)`);
+      return (await db.execute(query)).rows;
+    });
+
   // Drizzle wraps Postgres errors ("Failed query: …"); the original is error.cause.
   const pgError = async (promise: Promise<unknown>) => {
     try {
@@ -94,13 +102,15 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on core (Neon branch)", () => {
   });
 
   it("admins cannot grant roles to themselves", async () => {
-    const error = await pgError(rows(admin, sql`select core.grant_role(${admin}, 'complaint_reviewer', 'test')`));
+    const error = await pgError(stepped(admin, sql`select core.grant_role(${admin}, 'complaint_reviewer', 'test')`));
     expect(error.code).toBe("42501");
     expect(error.message).toMatch(/themselves/);
   });
 
-  it("admins can grant a role, and the grant is audited", async () => {
-    await rows(admin, sql`select core.grant_role(${bob}, 'contributor', 'integration test')`);
+  it("admins can grant a role (after a fresh step-up), and the grant is audited", async () => {
+    const noStepUp = await pgError(rows(admin, sql`select core.grant_role(${bob}, 'contributor', 'integration test')`));
+    expect(noStepUp).toEqual({ code: "42501", message: "step-up required" });
+    await stepped(admin, sql`select core.grant_role(${bob}, 'contributor', 'integration test')`);
     const bobRoles = await rows(bob, sql`select role_code from core.user_role order by role_code`);
     expect(bobRoles.map((r) => r.role_code)).toEqual(["commuter", "contributor"]);
     const audit = await rows(
@@ -146,7 +156,7 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on core (Neon branch)", () => {
   });
 
   it("revoked roles are not re-granted on the next sign-in", async () => {
-    await rows(admin, sql`select core.revoke_role(${bob}, 'commuter', 'integration test')`);
+    await stepped(admin, sql`select core.revoke_role(${bob}, 'commuter', 'integration test')`);
     await rows(bob, sql`select core.ensure_commuter('Bob')`);
     const active = await rows(
       bob,

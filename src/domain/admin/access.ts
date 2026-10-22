@@ -4,11 +4,11 @@
 import { can, type Action, type Role } from "@/domain/auth/permissions";
 
 /**
- * Roles that may open the admin console today: the transport screens (N5), corrections review
- * and community moderation (N6). Complaint reviewers are not let in until their queue is built
- * (N7): no dead links.
+ * Roles that may open the admin console: the transport screens (N5), corrections review and
+ * community moderation (N6), complaint review (N7). A complaint reviewer sees the dashboard,
+ * complaint review and their own audit rows only.
  */
-export const ADMIN_ENTRY_ROLES: readonly Role[] = ["admin", "transport_reviewer", "community_moderator"];
+export const ADMIN_ENTRY_ROLES: readonly Role[] = ["admin", "transport_reviewer", "community_moderator", "complaint_reviewer"];
 
 export function canEnterAdmin(roles: readonly Role[]): boolean {
   return roles.some((r) => ADMIN_ENTRY_ROLES.includes(r));
@@ -29,6 +29,13 @@ export const ADMIN_NAV: readonly AdminNavItem[] = [
   // N6 (C9, C10).
   { href: "/admin/corrections", label: "Corrections review", action: "correction.review" },
   { href: "/admin/moderation", label: "Moderation & appeals", action: "community.moderate" },
+  // N7 (C11, C12). Complaint review is the complaint_reviewer role only (admins do not get it).
+  { href: "/admin/complaints", label: "Complaint review", action: "complaint.review" },
+  { href: "/admin/users", label: "Users & roles", action: "roles.grant" },
+  { href: "/admin/providers", label: "Jev & providers", action: "ops.jev.diagnose" },
+  { href: "/admin/jobs", label: "Jobs", action: "ops.manage" },
+  // Admins read every row; other staff their own actions (spec 05 §5.3).
+  { href: "/admin/audit", label: "Audit log", action: null },
 ];
 
 export function adminNavFor(roles: readonly Role[]): AdminNavItem[] {

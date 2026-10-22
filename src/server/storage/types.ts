@@ -31,6 +31,7 @@ export interface StoragePort {
     bucket: string,
     key: string,
     expiresInSeconds?: number,
+    options?: { attachment?: boolean },
   ): Promise<string>;
 
   /**

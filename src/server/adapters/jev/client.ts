@@ -88,11 +88,16 @@ const unavailable = (reason: JevUnavailableReason): JevOutcome => ({ status: "un
  * 86 400 s window is aligned to the epoch day). A database error answers false, so Jev is skipped
  * and the content stays pending: the spend cap fails closed.
  */
+/** The ops.rate_limit_bucket key of a UTC day's Jev budget (also read by the admin panel, N7). */
+export function jevBudgetKey(day: string): string {
+  return createHash("sha256").update(`jev:day|${day}`).digest("hex");
+}
+
 export function createPostgresBudget(): JevBudget {
   return {
     async tryConsume(day, cap) {
       try {
-        const key = createHash("sha256").update(`jev:day|${day}`).digest("hex");
+        const key = jevBudgetKey(day);
         return await withRequestContext({ userId: null, requestId: safeRequestId() }, (db) => takeToken(db, key, 86_400, cap));
       } catch {
         return false;

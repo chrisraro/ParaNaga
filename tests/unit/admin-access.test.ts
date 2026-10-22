@@ -35,19 +35,23 @@ afterEach(() => {
 });
 
 const TRANSIT_NAV = ["/admin", "/admin/imports", "/admin/candidates", "/admin/stops", "/admin/reconciliation", "/admin/revisions", "/admin/coverage"];
-const FULL_NAV = [...TRANSIT_NAV, "/admin/corrections", "/admin/moderation"];
+const SYSTEM_NAV = ["/admin/users", "/admin/providers", "/admin/jobs", "/admin/audit"];
+const FULL_NAV = [...TRANSIT_NAV, "/admin/corrections", "/admin/moderation", ...SYSTEM_NAV];
 
 describe("canEnterAdmin / adminNavFor", () => {
-  it("admins, transport reviewers and (N6) community moderators enter; complaint reviewers not yet (N7)", () => {
-    for (const role of ROLES) expect(canEnterAdmin([role]), role).toBe(role === "admin" || role === "transport_reviewer" || role === "community_moderator");
+  it("admins, transport reviewers, community moderators (N6) and complaint reviewers (N7) enter; commuters and contributors never", () => {
+    for (const role of ROLES) expect(canEnterAdmin([role]), role).toBe(role !== "commuter" && role !== "contributor");
     expect(canEnterAdmin([])).toBe(false);
   });
 
   it("the nav lists only built screens the roles allow, and nothing for others", () => {
+    // Admins never get complaint review (break-glass is a separate flow, not built).
     expect(adminNavFor(["commuter", "admin"]).map((i) => i.href)).toEqual(FULL_NAV);
-    expect(adminNavFor(["transport_reviewer"]).map((i) => i.href)).toEqual([...TRANSIT_NAV, "/admin/corrections"]);
-    expect(adminNavFor(["commuter", "community_moderator"]).map((i) => i.href)).toEqual(["/admin", "/admin/moderation"]);
-    expect(adminNavFor(["complaint_reviewer"])).toEqual([]);
+    expect(adminNavFor(["transport_reviewer"]).map((i) => i.href)).toEqual([...TRANSIT_NAV, "/admin/corrections", "/admin/audit"]);
+    expect(adminNavFor(["commuter", "community_moderator"]).map((i) => i.href)).toEqual(["/admin", "/admin/moderation", "/admin/providers", "/admin/audit"]);
+    expect(adminNavFor(["commuter", "complaint_reviewer"]).map((i) => i.href)).toEqual(["/admin", "/admin/complaints", "/admin/audit"]);
+    expect(adminNavFor(["commuter", "complaint_reviewer", "admin"]).map((i) => i.href)).toContain("/admin/complaints");
+    expect(adminNavFor(["commuter", "contributor"])).toEqual([]);
   });
 });
 
@@ -63,7 +67,18 @@ describe("server guard", () => {
     state.user = { id: "t", name: "T", roles: ["commuter", "transport_reviewer"] };
     await expect(requireStaffAction("community.moderate")).rejects.toThrow(/404/);
     expect((await requireStaffAction("correction.review")).id).toBe("t");
-    for (const user of [null, { id: "c", name: "C", roles: ["commuter"] }, { id: "k", name: "K", roles: ["complaint_reviewer"] }, { id: "s", name: "S", roles: [] }]) {
+    await expect(requireStaffAction("complaint.review")).rejects.toThrow(/404/);
+    // N7: a complaint reviewer enters for complaint review only; an admin never reaches it.
+    state.user = { id: "k", name: "K", roles: ["commuter", "complaint_reviewer"] };
+    expect((await requireStaffAction("complaint.review")).id).toBe("k");
+    for (const action of ["transit.revision.edit", "community.moderate", "correction.review", "roles.grant", "ops.jev.diagnose", "ops.manage"] as const) {
+      await expect(requireStaffAction(action), action).rejects.toThrow(/404/);
+    }
+    state.user = { id: "a", name: "A", roles: ["commuter", "admin"] };
+    await expect(requireStaffAction("complaint.review")).rejects.toThrow(/404/);
+    state.user = { id: "m", name: "M", roles: ["commuter", "community_moderator"] };
+    await expect(requireStaffAction("complaint.review")).rejects.toThrow(/404/);
+    for (const user of [null, { id: "c", name: "C", roles: ["commuter"] }, { id: "x", name: "X", roles: ["commuter", "contributor"] }, { id: "s", name: "S", roles: [] }]) {
       state.user = user;
       expect(await getStaffUser()).toBeNull();
       await expect(requireStaffPage()).rejects.toThrow(/404/);

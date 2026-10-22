@@ -119,7 +119,10 @@ const IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
  * (core.admin_review_media); the object never leaves the private bucket and no URL to it is issued.
  */
 export function getReviewMedia(request: Request, params: Promise<{ id: string }>): Promise<Response> {
-  return adminRoute(request, "admin/media", null, async ({ requestId, db }) => {
+  return adminRoute(request, "admin/media", null, async ({ user, requestId, db }) => {
+    // Reviewers of corrections, community photos or stops only (N7: complaint reviewers now enter
+    // /admin, but their evidence goes through 60-second links, never this stream).
+    if (!(["correction.review", "community.moderate", "transit.revision.edit"] as const).some((a) => can(user.roles, a))) throw notFound("Not found.");
     const id = await idParam(params, "Not found.");
     const media = await db((d) => reviewMedia(d, id));
     if (!media || !media.mime || !IMAGE_TYPES.has(media.mime)) throw notFound("Not found.");
