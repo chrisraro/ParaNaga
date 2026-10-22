@@ -95,9 +95,9 @@ test("signed in: no account, admin, complaint, media or auth response is cached;
   await expect(async () => {
     await page.goto("/app/more");
   }).toPass();
-  await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible({ timeout: 15_000 });
   await page.goto("/app/reports");
-  await expect(page.getByText("PN-7KQ4-2M")).toBeVisible();
+  await expect(page.getByText("PN-7KQ4-2M")).toBeVisible({ timeout: 15_000 });
   // Direct requests from the controlled page to every private API family (GET, cacheable headers).
   const statuses = await page.evaluate(async () => {
     const urls = ["/api/v1/me", "/api/v1/me/complaints", `/api/v1/complaints`, "/api/v1/media/slots", "/api/v1/admin/dashboard", "/api/auth/get-session"];

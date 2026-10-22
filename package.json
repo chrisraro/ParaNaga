@@ -25,6 +25,7 @@
     "capture:landing": "tsx scripts/capture-landing.ts",
     "check:boundaries": "tsx scripts/check-boundaries.ts",
     "check:bundle-secrets": "tsx scripts/check-bundle-secrets.ts",
+    "load:plan": "tsx scripts/load-plan.ts",
     "verify": "pnpm typecheck && pnpm lint && pnpm check:boundaries && pnpm test && pnpm build && pnpm check:bundle-secrets"
   },
   "dependencies": {
