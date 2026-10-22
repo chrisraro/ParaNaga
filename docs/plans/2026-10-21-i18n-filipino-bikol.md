@@ -1,6 +1,6 @@
 # Sitewide translation: Filipino, then Bikol-Naga (plan)
 
-Status (2026-10-22): in progress (G1 Filipino on is done; T11 running; Bikol hidden until native review).
+Status (2026-10-22): Filipino complete (G2 passed after T15, see the end); Bikol (B1–B3) not started, hidden until native review.
 
 Date: 2026-10-21 · Status: PLAN ONLY (no app code changed) · Supersedes: Increment A **D8 "English only"**
 (docs/plans/2026-10-16-commuter-screens.md) and the `next-intl` / `[locale]` rows in docs/spec/03-architecture.md
@@ -360,7 +360,7 @@ opus = design/review. Speed-mode rules apply (push to master, local `pnpm typech
 | T12 | P2 Filipino translations | M | sonnet + human | T11 | fil complete for P2 |
 | T13 | P3 extraction + translations (help articles: opus draft; report/report-driver/reports/community/mynaga/auth; acknowledgments verbatim-reviewed) | L | haiku / sonnet / opus | T12 | fil complete; acknowledgments reviewed |
 | T14 | P4 landing extraction + Filipino; decide P5 `/fil` route | M | sonnet | T13 | landing fully fil |
-| T15 | Final Filipino review (opus) across all screens at 200 % text size and pseudo-locale overflow check | M | opus | T14 | `fil` 100 %, no `SAME_AS_EN` surprises |
+| T15 | Final Filipino review (opus) across all screens at 200 % text size and pseudo-locale overflow check | M | opus | T14 | `fil` 100 %, no `SAME_AS_EN` surprises · **done 2026-10-22 (G2 passed)** |
 | B1 | Bikol drafting for all keys (glossary-locked, Naga register) → Jev consistency check → ledger `needs_review` | L | sonnet (+ opus for long-form) | T15 | `bcl` ledger complete as drafts |
 | B2 | **Native Naga Bikol review** of every key (spreadsheet export of ledger; reviewer edits; re-import) | L (human) | human | B1 | ledger 100 % `native_approved` |
 | B3 | Flip `BIKOL_ENABLED`; Bikol gate test green; opus final review; field test with 2–3 Naga commuters | S | opus + human | B2 | Bikol visible in switcher |
@@ -403,3 +403,17 @@ T10: opus review (all 468 rows `reviewed: "opus"`, 11 keys left `review: true` f
 ## T13 done (2026-10-22)
 
 P3 in the dictionary and in Filipino: `forms` (shared form words), `help` (tabs, safety, badges, the five articles), `sources` (Sources and credits headings and controls), `report`, `driverReport`, `reports`, `mynaga`, `community`, `auth` (555 keys; ledger rows `reviewed: "opus"`, 106 `review: true`). Kept English on purpose: `acknowledgments.*` (accepted text is recorded), `sources.verbatim.*` (data basis, licence and attribution notes), and the credits and per-item source records (src/ui/help/source-credits.tsx, entity-sources.tsx, not extracted); a verbatim-reviewed translation is still owed. Server-written error messages and page `metadata` stay English. The admin console is untouched.
+
+## T15 done, G2 passed (2026-10-22)
+
+Final opus review of the whole `fil` dictionary, every commuter screen and the landing page at 200 % text.
+
+- **One term per English term** (applied in fil.ts; each change is in the ledger as "T15 review: was …" with the reason): "not verified / unverified" is always *di pa kumpirmado* (no more *napatunayan* or *Hindi pa kumpirmado*; the budgeted `trip.unverified` keeps *Di-kumpirmado*); *Ordinansa* in Filipino text (verbatim source records stay English); *data* (not *datos*); *opsyon* for trip options (not *pagpipilian*); *papunta sa X* (not *papuntang*); *walang markadong hintuan*; *letra* for signboard letters and *signboard* for the jeepney's (*karatula* stays for stop signs); *bawat* for "per"; *plaka*; *Kumpirmahin sa driver* for "confirm with the driver" (*Itanong* only for "ask"); *katayuan*; *data noong {date}*; *ulat ng taga-rito* for a local report; *larawan* for photo; *pahilaga / patimog / pasilangan / pakanluran* without a hyphen (KWF, as in T12); *Mula sa komunidad*; *I-report … ang driver*; *Opsyonal ang account*.
+- **"Saved" family**: a standalone tab, filter or state label is *Saved* (as `shell.tabs.saved`; community's two added to SAME_AS_EN); inside a phrase it is *naka-save*; the Save button is *I-save* except the budgeted `trip.save`.
+- **"Official"**: *opisyal* stays banned. "Official complaint / notice / channel" is *pormal na …*; City Government is *Pamahalaang Lungsod*; "official routes / timetable" stay *ruta sa ordinansa* / *nakalathalang timetable*.
+- **Leftover English fixed**: the Street View block on stop and place details (new `streetView` keys); the route path label and the trip-detail fleet name (served English, now shown through the dictionary); the planner's option labels "Recommended / Fewest transfers / Least walking" (new `trip.optionLabels`). The English credits block on Sources carries `lang="en"`.
+- **English on purpose**: `acknowledgments.*`, `sources.verbatim.*`, the credits and per-item source records, server-written error messages, page `metadata`, landing alt text naming the English screenshots' labels, the large-screen gate, `not-found`. **Not simple, left**: a pinned saved trip end is stored as "Near <stop>" / "Pinned location" (src/domain/saved/saved.ts `pinnedEndName`; guidance parses the "Near " prefix), so it shows in English; the fix is a display-time translation.
+- **200 % text and overflow** (tests/e2e/fil-overflow.spec.ts, 26 screens; the app has no text-size setting, so px font sizes are doubled and the root is 200 %): segmented controls stack into a column when their box is under 16 em (10 em for two options) and long words break; home category chips lose the 220 px cap (saved-place chips keep it); fare, route and roadside chips wrap only when wider than their row; the trip card foot wraps; detail headers wrap their end group; list-cell trailing values wrap within half the row; the landing h1 breaks a long word. No font was shrunk. Axe: no serious or critical violation on any screen.
+- **Ledger**: every row `reviewed: "opus"` plus `t15: "checked" | "changed" | "added"`; 167 rows keep `review: true` for a native speaker (two new option labels added).
+
+**G2 (Filipino complete): met.** `fil` is 100 % (type-enforced), SAME_AS_EN has no surprises, and no visible English dictionary string is left on the Filipino screens beyond the accepted list above.

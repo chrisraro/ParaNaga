@@ -126,6 +126,7 @@
   box-shadow: 0 1px 3px var(--pn-shadow);
   font-size: 13px;
   font-weight: 600;
+  text-align: center; /* wraps at large text (i18n T15) */
 }
 .pn-terminal__address {
   color: var(--pn-caption);

@@ -273,6 +273,8 @@ export const en = {
     rideSr: "Ride ",
     thenSr: ", then ",
     recommended: "Recommended",
+    // The planner's option labels (server-written English), shown in the current language (T15).
+    optionLabels: { recommended: "Recommended", fewestTransfers: "Fewest transfers", leastWalking: "Least walking" },
     allOptions: "All options",
     allOptionsOpen: "All options (",
     allOptionsClose: ")",
@@ -1234,6 +1236,20 @@ export const en = {
     rateLimited: "Too many tries. Wait a while, then try again.",
     signedOut: "Sign in again to continue.",
     failed: "Something went wrong. Try again.",
+  },
+  // Street View on stop and place details (src/ui/street-view), T15.
+  streetView: {
+    title: "See the surroundings",
+    stopNote: "Street View near this stop—signage and boarding location unverified.",
+    placeNote: "Street View near this place—entrance and signage unverified.",
+    imageryNote: "Imagery may be older or taken from a nearby road.",
+    close: "Close Street View",
+    view: "View surroundings",
+    noViewer: "The in-app viewer is not available in this version of the app. Street View opens in Google Maps instead.",
+    frameTitle: (name: string) => `Google Street View near ${name}`,
+    offline: "Internet is required for Street View. Reconnect and try again.",
+    loadsNote: "Loads Google Maps only when opened. Internet required. If coverage is unavailable or the viewer is blocked, use the external link.",
+    openExternal: "Open Street View in Google Maps",
   },
   // Landing page (/), T14. The captures are English screenshots; their alt text names the labels as shown.
   landing: {

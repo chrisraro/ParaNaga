@@ -52,32 +52,35 @@ export function Segmented<V extends string>({ options, value, onChange, label, v
 
   const style = { "--pn-seg-count": options.length, "--pn-seg-index": index } as CSSProperties;
   return (
-    <div role={variant} aria-label={label} className="pn-seg pn-seg--kit" style={style} data-testid={testId}>
-      <span className="pn-seg__thumb" aria-hidden="true" />
-      {options.map((o, i) => {
-        const on = i === index;
-        return (
-          <button
-            key={o.value}
-            ref={(el) => {
-              buttons.current[i] = el;
-            }}
-            id={o.id}
-            type="button"
-            role={tabs ? "tab" : "radio"}
-            aria-checked={tabs ? undefined : on}
-            aria-selected={tabs ? on : undefined}
-            aria-controls={tabs ? o.controls : undefined}
-            tabIndex={on ? 0 : -1}
-            lang={o.lang}
-            className="pn-seg__btn"
-            onClick={() => choose(i)}
-            onKeyDown={onKeyDown}
-          >
-            {o.label}
-          </button>
-        );
-      })}
+    // The box is the size container: with large text (200 %) a row too narrow for its labels stacks (kit.css).
+    <div className="pn-seg-box">
+      <div role={variant} aria-label={label} className="pn-seg pn-seg--kit" style={style} data-count={options.length} data-testid={testId}>
+        <span className="pn-seg__thumb" aria-hidden="true" />
+        {options.map((o, i) => {
+          const on = i === index;
+          return (
+            <button
+              key={o.value}
+              ref={(el) => {
+                buttons.current[i] = el;
+              }}
+              id={o.id}
+              type="button"
+              role={tabs ? "tab" : "radio"}
+              aria-checked={tabs ? undefined : on}
+              aria-selected={tabs ? on : undefined}
+              aria-controls={tabs ? o.controls : undefined}
+              tabIndex={on ? 0 : -1}
+              lang={o.lang}
+              className="pn-seg__btn"
+              onClick={() => choose(i)}
+              onKeyDown={onKeyDown}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

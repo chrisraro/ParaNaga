@@ -441,6 +441,7 @@
   font-weight: 800;
   letter-spacing: -0.035em;
   max-width: 17ch;
+  overflow-wrap: break-word; /* a long Filipino word at 200 % text breaks instead of overflowing (i18n T15) */
 }
 @media (min-width: 900px) {
   .pnl-hero h1 {

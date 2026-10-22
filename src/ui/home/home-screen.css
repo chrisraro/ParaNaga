@@ -954,7 +954,6 @@ a.pn-option {
   align-items: center;
   gap: 6px;
   height: 36px;
-  max-width: 220px;
   padding: 0 14px;
   border: 0;
   border-radius: 18px;
@@ -976,6 +975,11 @@ a.pn-option {
   content: "";
   position: absolute;
   inset: -4px 0;
+}
+/* A saved place's own name is capped (ellipsis); a category chip shows its whole label in the
+   sideways-scrolling row, also at 200 % text (i18n T15). */
+.pn-home-chip--saved {
+  max-width: 220px;
 }
 .pn-home-chip span {
   overflow: hidden;

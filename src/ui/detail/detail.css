@@ -49,6 +49,7 @@
 
 .pn-detail__header {
   display: flex;
+  flex-wrap: wrap; /* large text (i18n T15): the end group moves under the title instead of off screen */
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -81,6 +82,10 @@
 }
 .pn-detail__header-end {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  margin-left: auto;
   align-items: center;
   gap: 4px;
 }

@@ -115,7 +115,12 @@ button.pn-cell:active {
   margin-top: 4px;
 }
 .pn-cell__trailing {
-  flex: none;
+  /* Never narrower than its text at normal size; a long value (Filipino at 200 % text) wraps
+     within half the row instead of pushing the row off screen (i18n T15). */
+  flex: 0 1 auto;
+  max-width: 50%;
+  text-align: end;
+  overflow-wrap: break-word;
   color: var(--pn-label2);
   font-size: 15px;
 }
@@ -185,6 +190,41 @@ button.pn-cell:active {
 .pn-seg--kit .pn-seg__btn[aria-checked="false"],
 .pn-seg--kit .pn-seg__btn[aria-selected="false"] {
   font-weight: 500;
+}
+/* Large text (i18n T15, 200 %): the box is measured in its own em, so when the text grows the same
+   phone width holds fewer em. A row with too few em for its labels becomes a column (one option
+   per line, equal heights) and the thumb slides down instead of across. Normal text never stacks:
+   a 320 px phone is about 18 em wide at 16 px. */
+.pn-seg-box {
+  container: pn-seg / inline-size;
+}
+@container pn-seg (max-width: 16em) {
+  .pn-seg.pn-seg--kit:not([data-count="2"]) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
+  }
+  .pn-seg--kit:not([data-count="2"]) .pn-seg__thumb {
+    bottom: auto;
+    width: calc(100% - 4px);
+    height: calc((100% - 4px) / var(--pn-seg-count, 2));
+    transform: translateY(calc(var(--pn-seg-index, 0) * 100%));
+  }
+}
+@container pn-seg (max-width: 10em) {
+  .pn-seg.pn-seg--kit[data-count="2"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: 1fr;
+  }
+  .pn-seg--kit[data-count="2"] .pn-seg__thumb {
+    bottom: auto;
+    width: calc(100% - 4px);
+    height: calc((100% - 4px) / 2);
+    transform: translateY(calc(var(--pn-seg-index, 0) * 100%));
+  }
+}
+/* A word longer than its segment breaks instead of spilling out. */
+.pn-seg--kit .pn-seg__btn {
+  overflow-wrap: anywhere;
 }
 
 /* ------------------------------------------------------------------ Switch (51 x 31 track) */

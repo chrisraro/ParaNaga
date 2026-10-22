@@ -10,7 +10,8 @@ import { GOOGLE_ATTRIBUTION, GOOGLE_DAILY_CAP } from "@/domain/places/google";
 export function SourceCredits({ revisionId }: { revisionId?: string }) {
   const tile = currentTileConfig();
   return (
-    <div className="pn-detail__stack" data-testid="source-credits">
+    // Licence and credit records stay English verbatim (i18n T13): marked so screen readers read them as English.
+    <div className="pn-detail__stack" lang="en" data-testid="source-credits">
       <section aria-labelledby="data-licenses">
         <h2 id="data-licenses" className="pn-section__title">Data licenses and map credits</h2>
         <p className="pn-footnote">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>. OSM source data and ParaNaga databases derived from it are available under the <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Open Database License 1.0</a>.</p>

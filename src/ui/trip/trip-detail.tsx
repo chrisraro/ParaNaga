@@ -27,7 +27,7 @@ import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { PATH_LABEL } from "@/domain/api/schemas";
 import type { EtaEstimate, EtaLeg } from "@/domain/eta/eta";
 import { formatLeg } from "@/domain/eta/format";
-import { en, type Dict } from "@/i18n/dict";
+import { en, translated, type Dict } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
 import { isAccessOption, isSpecialTrip, specialFareText, streetCardView, tricycleTerminalLines, viaChipText } from "@/domain/trip/option-card";
 import { getRoadsideAdvice } from "@/domain/planner/roadside";
@@ -197,7 +197,7 @@ function rideSteps(
   const dir = directionText(lookups.direction(leg.variantId), "short", route, t);
   const roadside = getRoadsideAdvice(leg.routeCode, leg.board, leg.alight, t.roadside);
   const count = ends.pinned ? ends.stops.length - 1 : null;
-  const pathLabel = trace.untraced ? ctx.t.map.untracedRide : PATH_LABEL;
+  const pathLabel = trace.untraced ? ctx.t.map.untracedRide : translated(PATH_LABEL, en.map, ctx.t.map);
   const etaLeg = estimate?.legs[i];
   const fleet = leg.fleet;
 
@@ -235,7 +235,7 @@ function rideSteps(
               fleet.classes.map((c) => (
                 <p key={`${c.vehicleClass}-${c.status}`} className="pn-tl__sub" data-testid="ride-fleet-class">
                   {/* An operating class is its name; any other status keeps its evidence ("reported, not confirmed"). */}
-                  {c.status === "operating" ? c.label.split(" · ")[0] : c.label}
+                  {c.status === "operating" ? translated(c.label.split(" · ")[0]!, en.modes.display, ctx.t.modes.display) : c.label}
                 </p>
               ))
             ) : (

@@ -13,6 +13,7 @@ import { Fragment, useMemo } from "react";
 import type { PadyakLegDto, PlanOptionDto, PlanResponse, TricycleLegDto } from "@/domain/api/plan";
 import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
+import { en, translated } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
 import { PEEK_ROW, PEEK_ROW_GAP } from "@/ui/app-shell/bottom-sheet";
 import { accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionRoadside, optionsCountText, previewIndex, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
@@ -157,7 +158,7 @@ function OptionCard({
       >
         <span className="pn-trip-card__top">
           {option.labels[0] ? (
-            <span className={primary ? "pn-trip-card__label pn-trip-card__label--primary" : "pn-trip-card__label"}>{option.labels[0]}</span>
+            <span className={primary ? "pn-trip-card__label pn-trip-card__label--primary" : "pn-trip-card__label"}>{translated(option.labels[0], en.trip.optionLabels, t.trip.optionLabels)}</span>
           ) : null}
           {via ? (
             <>

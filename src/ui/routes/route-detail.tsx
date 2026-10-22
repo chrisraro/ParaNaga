@@ -10,7 +10,7 @@ import { ReportLink } from "@/ui/report/report-link";
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useLines } from "@/client/network/use-lines";
 import { useNetworkResource } from "@/client/network/use-network-resource";
-import { routeDetailSchema, type RouteDetail } from "@/domain/api/schemas";
+import { PATH_LABEL, routeDetailSchema, type RouteDetail } from "@/domain/api/schemas";
 import { decodePolyline } from "@/domain/geo/polyline";
 import { cooperativeLabel } from "@/domain/modes/fleet";
 import {
@@ -125,8 +125,11 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
     [lines, route.code, twoWay, direction],
   );
   const activeNotes = useMemo(() => (activeLine ? lineNotes(activeLine) : null), [activeLine]);
+  // The served label is the fixed English PATH_LABEL: shown in the current language.
   const pathStatus = activeLine
-    ? activeLine.label
+    ? activeLine.label === PATH_LABEL
+      ? tt.map.approxPath
+      : activeLine.label
     : linesState.status === "loading"
       ? t.pathLoading
       : linesState.status === "skipped"

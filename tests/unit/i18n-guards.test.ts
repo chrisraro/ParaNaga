@@ -118,6 +118,10 @@ const SAME_AS_EN: Record<string, string> = {
   "reports.facts.operator": "everyday English loanword",
   "mynaga.panelTitle": "brand",
   "community.postTitle": "everyday English loanword (Taglish 'post')",
+  // T15: one "Saved" family. A standalone tab, filter or state label is "Saved" (as shell.tabs.saved);
+  // inside a phrase it is "naka-save".
+  "community.scopes.saved": "Taglish, tab/button length budget (matches shell.tabs.saved)",
+  "community.saved": "Taglish, tab/button length budget (matches shell.tabs.saved)",
   "auth.emailLabel": "everyday English loanword",
 };
 
