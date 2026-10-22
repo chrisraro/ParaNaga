@@ -12,6 +12,7 @@ export default async function AdminDashboardPage() {
       transit={can(user.roles, "transit.revision.edit")}
       corrections={can(user.roles, "correction.review")}
       moderation={can(user.roles, "community.moderate")}
+      complaints={can(user.roles, "complaint.review")}
     />
   );
 }

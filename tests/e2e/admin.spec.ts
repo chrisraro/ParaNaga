@@ -19,7 +19,8 @@ const PUB = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a11";
 const DRAFT = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a22";
 const OLD = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a33";
 const TRANSIT_PATHS = ["/admin/revisions", "/admin/coverage", "/admin/imports", "/admin/candidates", "/admin/stops", "/admin/reconciliation"];
-const ADMIN_PATHS = ["/admin", ...TRANSIT_PATHS, "/admin/corrections", "/admin/moderation"];
+const SYSTEM_PATHS = ["/admin/users", "/admin/providers", "/admin/jobs", "/admin/audit"];
+const ADMIN_PATHS = ["/admin", ...TRANSIT_PATHS, "/admin/corrections", "/admin/moderation", "/admin/complaints", ...SYSTEM_PATHS];
 
 test.skip(({ isMobile }) => isMobile, "The admin console is desktop-first");
 
@@ -141,7 +142,7 @@ test("signed-out visitors get a 404 status; signed-in non-staff get the ordinary
   page.on("request", (r) => {
     if (r.url().includes("/api/v1/admin")) adminCalls.push(r.url());
   });
-  for (const roles of ["commuter", "commuter,complaint_reviewer,contributor"]) {
+  for (const roles of ["commuter", "commuter,contributor"]) {
     await context.clearCookies();
     await signInAs(context, roles);
     for (const path of ADMIN_PATHS) {
@@ -179,8 +180,13 @@ test("the dashboard shows the counts, is private, and passes axe", async ({ page
     "Coverage audit",
     "Corrections review",
     "Moderation & appeals",
+    "Users & roles",
+    "Jev & providers",
+    "Jobs",
+    "Audit log",
   ]);
   await expect(page.getByTestId("card-moderation")).toBeVisible();
+  await expect(page.getByTestId("card-complaints")).toHaveCount(0); // admins are not complaint reviewers
   await expect(page.getByTestId("admin-nav").getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
   await axe(page, "dashboard");
 });
@@ -627,10 +633,10 @@ test("a moderator sees only the moderation screens; transport staff never see mo
     if (r.url().includes("/api/v1/admin/dashboard")) adminCalls.push(r.url());
   });
   await page.goto("/admin");
-  await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText(["Dashboard", "Moderation & appeals"]);
+  await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText(["Dashboard", "Moderation & appeals", "Jev & providers", "Audit log"]);
   await expect(page.getByTestId("card-moderation")).toBeVisible();
   await expect(page.getByTestId("card-published")).toHaveCount(0);
-  for (const path of [...TRANSIT_PATHS, "/admin/corrections"]) {
+  for (const path of [...TRANSIT_PATHS, "/admin/corrections", "/admin/complaints", "/admin/users", "/admin/jobs"]) {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 }), path).toHaveText("Wrong stop.");
   }
@@ -733,5 +739,240 @@ for (const scheme of ["light", "dark"] as const) {
     await page.getByTestId(`item-post_version-${N6(40)}`).getByLabel("Do not publish").check();
     await expect(page.getByTestId(`override-post_version-${N6(40)}`)).toBeVisible();
     await axe(page, `moderation-${scheme}`);
+  });
+}
+
+// ================================================================ N7: complaint review (C11), users, providers, jobs, audit (C12)
+// Same approach. The mock refuses every complaint call with 403 step_up_required until the step-up
+// code is checked, like the server. tests/unit/admin-complaint-handlers.test.ts,
+// tests/unit/admin-system-handlers.test.ts and tests/integration/complaint-review-system-rls.test.ts
+// cover the real checks (role only, no admins, step-up in the same transaction, own reports
+// hidden, audit, retention, role safeguards).
+
+const N7 = (n: number) => `7c4c1c7e-6f0a-4a39-9d62-0d0f5f2a8${String(n).padStart(3, "0")}`;
+const SIGNED = "https://storage.example/evidence-private/complaint_evidence/e2e.jpg?X-Amz-Expires=60&response-content-disposition=attachment";
+
+async function mockN7Api(page: Page) {
+  const s = { verified: false, actions: [] as unknown[], links: 0, roleChanges: [] as unknown[], diagnostics: 0, auditQueries: [] as string[] };
+  const json = (body: unknown, status = 200) => ({ status, contentType: "application/json", headers: PRIVATE, body: JSON.stringify(body) });
+  const err = (status: number, code: string, message: string) => json({ error: { code, message, requestId: "e2e" } }, status);
+  const stepUp = () => err(403, "step_up_required", "Enter a new code from your email to continue.");
+  await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (r) => r.abort());
+  await routeNetwork(page);
+  await page.route("https://storage.example/**", (r) => r.fulfill({ status: 200, contentType: "image/jpeg", headers: { "content-disposition": "attachment" }, body: PNG }));
+  const list = [
+    { id: N7(1), publicRef: "PN-7KQ4-2M", category: "harassment", status: "submitted", queue: "queue_priority", submittedAt: "2026-10-22T02:00:00.000Z", incidentAt: "2026-10-22T01:00:00.000Z", updatedAt: "2026-10-22T02:00:00.000Z", closedAt: null, outcomeCode: null, legalHold: false, evidenceCount: 1 },
+    { id: N7(2), publicRef: "PN-9WXR-4T", category: "overcharging", status: "under_review", queue: "queue_normal", submittedAt: "2026-10-21T02:00:00.000Z", incidentAt: "2026-10-21T01:00:00.000Z", updatedAt: "2026-10-21T03:00:00.000Z", closedAt: null, outcomeCode: null, legalHold: true, evidenceCount: 0 },
+  ];
+  const detail = {
+    ...list[0], description: "The driver shouted at me and refused to give change.", retentionUntil: null, operator: "Fixture Transport Coop", plate: "ABC 1234", bodyNumber: "17",
+    location: { source: "gps", text: null, accuracyM: 12, lat: 13.6234, lng: 123.1847 },
+    evidence: [{ id: N7(10), captureKind: "in_app_camera", capturedAt: "2026-10-22T01:00:00.000Z", receivedAt: "2026-10-22T02:00:00.000Z", mime: "image/jpeg", bytes: 204800, sha256: "a".repeat(64), available: true }],
+    events: [{ from: null, to: "submitted", actorRole: "reporter", mine: false, visibility: "reporter", outcomeCode: null, note: null, at: "2026-10-22T02:00:00.000Z" }],
+    access: [],
+  };
+  await page.route(/\/api\/v1\/admin\/complaints(\?.*)?$/, (r) => (s.verified ? r.fulfill(json({ scope: new URL(r.request().url()).searchParams.get("scope") ?? "open", complaints: list })) : r.fulfill(stepUp())));
+  await page.route(/\/api\/v1\/admin\/complaints\/[^/]+$/, (r) => {
+    if (!s.verified) return r.fulfill(stepUp());
+    if (r.request().method() === "POST") {
+      s.actions.push(r.request().postDataJSON());
+      return r.fulfill(json({ ok: true }));
+    }
+    return r.fulfill(json(detail));
+  });
+  await page.route(/\/api\/v1\/admin\/complaints\/[^/]+\/evidence\/[^/]+$/, (r) => {
+    if (!s.verified) return r.fulfill(stepUp());
+    s.links += 1;
+    return r.fulfill(json({ url: SIGNED, expiresInSeconds: 60 }));
+  });
+  await page.route("**/api/v1/me/step-up/code", (r) => r.fulfill(json({ sent: true })));
+  await page.route("**/api/v1/me/step-up", (r) => {
+    s.verified = true;
+    return r.fulfill(json({ verifiedUntil: "2026-10-22T02:20:00.000Z" }));
+  });
+
+  const role = (r: string, reason = "test seed") => ({ role: r, active: true, grantedAt: "2026-10-01T00:00:00.000Z", grantedBy: "Owner", revokedAt: null, reason });
+  const staff = [
+    { userId: "u-me", name: "Me", email: "me@example.com", self: true, suspended: false, roles: [role("commuter"), role("admin", "initial admin bootstrap")] },
+    { userId: "u-ana", name: "Ana", email: "ana@example.com", self: false, suspended: false, roles: [role("commuter"), role("transport_reviewer")] },
+  ];
+  await page.route("**/api/v1/admin/users", (r) => r.fulfill(json({ staff })));
+  await page.route("**/api/v1/admin/users/lookup", (r) => {
+    const email = (r.request().postDataJSON() as { email: string }).email;
+    return r.fulfill(json({ user: email === "ben@example.com" ? { userId: "u-ben", name: "Ben", email, emailVerified: true, hasProfile: true, self: false, suspended: false, roles: [role("commuter")] } : null }));
+  });
+  await page.route("**/api/v1/admin/users/roles", (r) => {
+    if (!s.verified) return r.fulfill(stepUp());
+    s.roleChanges.push(r.request().postDataJSON());
+    return r.fulfill(json({ ok: true }));
+  });
+  await page.route("**/api/v1/admin/providers", (r) =>
+    r.fulfill(
+      json({
+        jev: {
+          keyPresent: false, enabled: false, modelId: "typesafe/jev-1.13-20260917", modelPinned: true, decisionsHost: "openrouter.ai", policyVersion: "paranaga-community-v1",
+          timeoutMs: 10000, dailyBudget: 5000, usedToday: 0, autoPublish: false, complaints: false, health: null,
+          whyDisabled: "No OPENROUTER_API_KEY on the server: every post stays pending for a person.",
+        },
+        providers: [
+          { id: "database", label: "Database (paranaga_app)", configured: true, enabled: true, detail: "Runtime connection; row-level security applies." },
+          { id: "cron", label: "Cron secret", configured: false, enabled: false, detail: "Protects /api/cron/jobs and /api/cron/retention." },
+        ],
+        flags: [{ key: "auto_publish", enabled: false, updatedAt: null }],
+        canRunDiagnostic: true,
+      }),
+    ),
+  );
+  await page.route("**/api/v1/admin/providers/jev-diagnostic", (r) => {
+    s.diagnostics += 1;
+    return r.fulfill(json({ ran: false, status: "skipped", reason: "x", recommendation: null, confidence: null, ms: null }));
+  });
+  await page.route("**/api/v1/admin/jobs", (r) =>
+    r.fulfill(
+      json({
+        counts: [{ status: "done", count: 12 }, { status: "dead", count: 1 }],
+        jobs: [{ id: N7(30), kind: "moderate_submission", status: "dead", attempts: 5, maxAttempts: 5, runAfter: "2026-10-22T02:00:00.000Z", lastErrorCode: "HANDLER_FAILED", createdAt: "2026-10-22T01:00:00.000Z", finishedAt: "2026-10-22T02:00:00.000Z" }],
+        retention: [{ at: "2026-10-22T00:00:00.000Z", dryRun: true, complaints: 2, uploads: 1, objects: 3, failed: 0 }],
+      }),
+    ),
+  );
+  await page.route(/\/api\/v1\/admin\/audit(\?.*)?$/, (r) => {
+    const u = new URL(r.request().url());
+    s.auditQueries.push(u.search);
+    const before = u.searchParams.get("before");
+    const row = (n: number) => ({ id: N7(100 + n), at: "2026-10-22T02:00:00.000Z", actorUserId: "u-me", actorName: "Me", actorRole: "admin", action: "role.grant", entityType: "user", entityId: "u-ana", after: { role: "transport_reviewer", reason: "Field lead" }, requestId: `req-${n}` });
+    return r.fulfill(json({ scope: "all", rows: before ? [row(2)] : [row(1)], next: before ? null : `1792634400123456|${N7(101)}` }));
+  });
+  return s;
+}
+
+test("complaint reviewers: their own nav only; admins, moderators and transport staff never reach complaint review", async ({ page, context }) => {
+  await signInAs(context, "commuter,complaint_reviewer");
+  const s = await mockN7Api(page);
+  await page.goto("/admin");
+  await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText(["Dashboard", "Complaint review", "Audit log"]);
+  await expect(page.getByTestId("card-complaints")).toBeVisible();
+  for (const path of [...TRANSIT_PATHS, "/admin/corrections", "/admin/moderation", "/admin/users", "/admin/providers", "/admin/jobs"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 }), path).toHaveText("Wrong stop.");
+  }
+  for (const roles of ["commuter,admin", "commuter,community_moderator", "commuter,transport_reviewer"]) {
+    await context.clearCookies();
+    await signInAs(context, roles);
+    await page.goto("/admin/complaints");
+    await expect(page.getByRole("heading", { level: 1 }), roles).toHaveText("Wrong stop.");
+  }
+  expect(s.links).toBe(0);
+});
+
+test("complaint review: step-up first, list without text, open, a 60-second download, a neutral close", async ({ page, context }) => {
+  await signInAs(context, "commuter,complaint_reviewer");
+  const s = await mockN7Api(page);
+  await page.goto("/admin/complaints");
+  await expect(page).toHaveTitle("Complaint review · Admin · ParaNaga");
+  await expect(page.getByTestId("admin-step-up")).toBeVisible();
+  await expect(page.getByTestId("complaints-table")).toHaveCount(0);
+  await page.getByTestId("admin-step-up-send").click();
+  await page.getByTestId("admin-step-up-code").fill("123456");
+  await page.getByTestId("admin-step-up-verify").click();
+
+  const table = page.getByTestId("complaints-table");
+  await expect(table).toContainText("PN-7KQ4-2M");
+  await expect(table).toContainText("Priority");
+  await expect(table).toContainText("Legal hold");
+  await expect(table).not.toContainText("shouted"); // no text in the list
+
+  await page.getByTestId(`complaint-open-${N7(1)}`).click();
+  const detail = page.getByTestId("complaint-detail");
+  await expect(page.getByTestId("complaint-description")).toHaveText("The driver shouted at me and refused to give change.");
+  await expect(detail).toContainText("Plate ABC 1234");
+  await expect(detail.getByRole("img")).toHaveCount(0); // never a preview
+  await page.getByTestId(`evidence-download-${N7(10)}`).click();
+  await expect(page.getByTestId("evidence-note")).toContainText("works for 60 seconds and this download is logged");
+  expect(s.links).toBe(1);
+  await expect(page).toHaveURL(/\/admin\/complaints$/);
+
+  await page.getByTestId("complaint-to").selectOption("closed");
+  await page.getByTestId("complaint-submit").click();
+  await expect(page.getByTestId("complaint-form-error")).toContainText("Choose an outcome");
+  await page.getByTestId("complaint-outcome").selectOption("insufficient_detail");
+  await page.getByTestId("complaint-note").fill("We could not identify the vehicle.");
+  await page.getByTestId("complaint-note-reporter").check();
+  await page.getByTestId("complaint-submit").click();
+  await expect(page.getByTestId("complaint-notice")).toContainText("PN-7KQ4-2M is now closed.");
+  expect(s.actions).toEqual([{ action: "status", to: "closed", outcomeCode: "insufficient_detail", note: "We could not identify the vehicle.", visibility: "reporter" }]);
+});
+
+test("users and roles: exact email lookup, a reasoned grant after step-up, no controls on your own row", async ({ page, context }) => {
+  await signInAs(context, "commuter,admin");
+  const s = await mockN7Api(page);
+  await page.goto("/admin/users");
+  await expect(page.getByTestId("user-u-me")).toContainText("You cannot change your own roles");
+  await expect(page.getByTestId("user-u-me").getByRole("button")).toHaveCount(0);
+  await page.getByTestId("users-email").fill("nobody@example.com");
+  await page.getByTestId("users-find").click();
+  await expect(page.getByTestId("users-lookup")).toContainText("No account uses that address");
+  await page.getByTestId("users-email").fill("ben@example.com");
+  await page.getByTestId("users-find").click();
+  const ben = page.getByTestId("users-lookup").getByTestId("user-u-ben");
+  await ben.getByTestId("grant-role-u-ben").selectOption("complaint_reviewer");
+  await ben.getByTestId("grant-u-ben").click();
+  await expect(ben.getByTestId("user-error-u-ben")).toContainText("Give a reason");
+  await ben.getByTestId("reason-u-ben").fill("Named by the owner as complaint reviewer.");
+  await ben.getByTestId("grant-u-ben").click();
+  await expect(page.getByTestId("admin-step-up")).toBeVisible();
+  expect(s.roleChanges).toEqual([]);
+  await page.getByTestId("admin-step-up-send").click();
+  await page.getByTestId("admin-step-up-code").fill("123456");
+  await page.getByTestId("admin-step-up-verify").click();
+  await expect(page.getByTestId("users-notice")).toContainText("Granted Complaint reviewer to Ben.");
+  expect(s.roleChanges).toEqual([{ userId: "u-ben", role: "complaint_reviewer", change: "grant", reason: "Named by the owner as complaint reviewer." }]);
+});
+
+test("providers, jobs and the audit log: yes/no only, no diagnostic without a key, older pages by cursor", async ({ page, context }) => {
+  await signInAs(context, "commuter,admin");
+  const s = await mockN7Api(page);
+  await page.goto("/admin/providers");
+  await expect(page.getByTestId("jev-key-present")).toHaveText("No");
+  await expect(page.getByTestId("jev-diagnostic-blocked")).toContainText("OPENROUTER_API_KEY is not set");
+  await expect(page.getByTestId("jev-diagnostic-run")).toHaveCount(0);
+  expect(s.diagnostics).toBe(0);
+  await page.goto("/admin/jobs");
+  await expect(page.getByTestId("jobs-count-dead")).toHaveText("1");
+  await expect(page.getByTestId("jobs-retention")).toContainText("dry run, would purge 2 reports");
+  await page.goto("/admin/audit");
+  await expect(page.getByTestId("audit-table")).toContainText("req-1");
+  await page.getByTestId("audit-action").fill("role.*");
+  await page.getByTestId("audit-apply").click();
+  await expect(page.getByTestId("audit-table")).toContainText("req-1");
+  await page.getByTestId("audit-older").click();
+  await expect(page.getByTestId("audit-table")).toContainText("req-2");
+  expect(s.auditQueries).toContain("?action=role.*");
+  expect(s.auditQueries.at(-1)).toContain("before=");
+  await expect(page.getByTestId("audit-older")).toBeDisabled();
+});
+
+for (const scheme of ["light", "dark"] as const) {
+  test(`complaint review and system screens pass axe (${scheme})`, async ({ page, context }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await signInAs(context, "commuter,complaint_reviewer");
+    await mockN7Api(page);
+    await page.goto("/admin/complaints");
+    await expect(page.getByTestId("admin-step-up")).toBeVisible();
+    await axe(page, `complaints-stepup-${scheme}`);
+    await page.getByTestId("admin-step-up-send").click();
+    await page.getByTestId("admin-step-up-code").fill("123456");
+    await page.getByTestId("admin-step-up-verify").click();
+    await page.getByTestId(`complaint-open-${N7(1)}`).click();
+    await expect(page.getByTestId("complaint-detail")).toBeVisible();
+    await axe(page, `complaints-${scheme}`);
+
+    await context.clearCookies();
+    await signInAs(context, "commuter,admin");
+    for (const [path, id] of [["/admin/users", "users-staff"], ["/admin/providers", "providers-jev"], ["/admin/jobs", "jobs-list"], ["/admin/audit", "audit-table"]] as const) {
+      await page.goto(path);
+      await expect(page.getByTestId(id)).toBeVisible();
+      await axe(page, `${path}-${scheme}`);
+    }
   });
 }

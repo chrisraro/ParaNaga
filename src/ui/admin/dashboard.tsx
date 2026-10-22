@@ -10,7 +10,17 @@ const linkCls = "font-medium text-teal-ink underline dark:text-teal-bright";
 
 // A1 Dashboard (N5a, C1): read-only counts that exist in the database today. Transport staff see
 // the data counts; a moderator only the moderation queue (N6), whose data endpoint is theirs.
-export function AdminDashboard({ transit, corrections, moderation }: { transit: boolean; corrections: boolean; moderation: boolean }) {
+export function AdminDashboard({
+  transit,
+  corrections,
+  moderation,
+  complaints = false,
+}: {
+  transit: boolean;
+  corrections: boolean;
+  moderation: boolean;
+  complaints?: boolean;
+}) {
   const [state, setState] = useState<AdminResult<Dashboard> | null>(null);
   useEffect(() => {
     if (!transit) return;
@@ -25,6 +35,16 @@ export function AdminDashboard({ transit, corrections, moderation }: { transit: 
     <div data-testid="admin-dashboard">
       <PageTitle lead="What is published, what is waiting, and the last import. Counts only; nothing here changes data.">Dashboard</PageTitle>
       <div className="grid gap-4">
+        {complaints ? (
+          <Panel title="Driver reports" testId="card-complaints">
+            <Muted>Private driver reports waiting for review. Opening them needs a fresh code, and every read is logged.</Muted>
+            <p className="mt-3 text-sm">
+              <Link href="/admin/complaints" prefetch={false} className={linkCls}>
+                Complaint review
+              </Link>
+            </p>
+          </Panel>
+        ) : null}
         {moderation ? (
           <Panel title="Community moderation" testId="card-moderation">
             <Muted>Posts, comments and photos waiting for a person, and appeals to decide.</Muted>
