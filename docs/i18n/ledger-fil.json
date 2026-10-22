@@ -26,7 +26,13 @@
     "en": "I've arrived",
     "fil": "Nandito na ako",
     "review": true,
-    "note": "'Nandito na ako' (I'm here) instead of 'dumating'/'nakarating' for the length budget and to avoid arrival claims."
+    "note": "'Nandito na ako' (I'm here) instead of 'dumating'/'nakarating' for the length budget and to avoid arrival claims.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.97,
+      "decision": "act",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.gotOffTricycle",
@@ -55,7 +61,13 @@
     "en": "I missed my stop",
     "fil": "Lampas na ako",
     "review": true,
-    "note": "Short button: 'Lampas na ako' (I've gone past). Check it reads as missed stop."
+    "note": "Short button: 'Lampas na ako' (I've gone past). Check it reads as missed stop.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.95,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.done",
@@ -90,7 +102,13 @@
     "en": "Location is stale: distance hidden.",
     "fil": "Luma na ang lokasyon: nakatago ang layo.",
     "review": true,
-    "note": "Safety-critical location-lost wording."
+    "note": "Safety-critical location-lost wording.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.86,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.locationImprecise",
@@ -104,14 +122,26 @@
     "en": "This route has no marked stops. Watch for your stop, and tell the driver “para” when you are near.",
     "fil": "Walang markadong hintuan ang rutang ito. Bantayan ang hintuan mo, at sabihin sa driver ang “para” kapag malapit ka na.",
     "review": true,
-    "note": "Safety-critical."
+    "note": "Safety-critical.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.9,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.offPath",
     "en": "Your location is away from the approximate path. The jeepney may use another street; watch for your stop.",
     "fil": "Malayo ang lokasyon mo sa tinatayang daan. Baka ibang kalye ang daanan ng jeep; bantayan ang hintuan mo.",
     "review": true,
-    "note": "Safety-critical."
+    "note": "Safety-critical.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.84,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.metresLeft",
@@ -147,14 +177,26 @@
     "en": "Para! Next stop is yours",
     "fil": "Para! Susunod na ang hintuan mo",
     "review": true,
-    "note": "Safety-critical."
+    "note": "Safety-critical.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.83,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.paraBody",
     "en": "Get off at {0}. Say “Para” to the driver when you see it.",
     "fil": "Bumaba sa {0}. Sabihin sa driver ang “Para” kapag nakita mo na ito.",
     "note": "message function; {0},{1}.. are the arguments in order | Safety-critical.",
-    "review": true
+    "review": true,
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.9,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.paraAckTitle",
@@ -189,7 +231,13 @@
     "en": "Undo",
     "fil": "Bawi",
     "review": true,
-    "note": "'Bawi' fits the length budget; alternative 'Undo' is common Taglish."
+    "note": "'Bawi' fits the length budget; alternative 'Undo' is common Taglish.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.61,
+      "decision": "abstain",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.missedTitle",
@@ -201,7 +249,13 @@
     "en": "Get off when the jeepney next stops, then plan again from where you are.",
     "fil": "Bumaba kapag huminto ulit ang jeep, tapos magplano ulit mula sa kinalalagyan mo.",
     "review": true,
-    "note": "Safety-critical."
+    "note": "Safety-critical.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.88,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "guidance.earlyTitle",
@@ -914,7 +968,13 @@
     "en": "Unverified route — confirm with the driver",
     "fil": "Di pa kumpirmadong ruta — itanong sa driver",
     "review": true,
-    "note": "Fixed-style honesty badge; Jev check."
+    "note": "Fixed-style honesty badge; Jev check.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.83,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "trip.unverifiedChip",
@@ -993,7 +1053,13 @@
     "en": "No fare",
     "fil": "Libre",
     "review": true,
-    "note": "'Libre' (free) for a walking leg; could read as a free ride. Alternative 'Walang bayad' exceeds the budget."
+    "note": "Shown only for walk-only trips (no ride), so \"Libre\" is true; Jev reads it as \"free\" out of context. Keep for native review.",
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.18,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "trip.fareNA",
@@ -1969,7 +2035,13 @@
     "en": "Two-way street: Wait on the West / Southbound side of Roxas Ave (facing Panganiban / Centro) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Kanluran / Pa-timog ng Roxas Ave (nakaharap sa Panganiban / Centro) · Signboard: {0}",
     "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
-    "review": true
+    "review": true,
+    "jev": {
+      "model": "jev-1.14-20261014",
+      "p": 0.85,
+      "decision": "review",
+      "act_above": 0.9
+    }
   },
   {
     "key": "trip.roadside.roxasR3",
