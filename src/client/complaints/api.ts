@@ -10,13 +10,16 @@ import {
   type CreateComplaintInput,
 } from "@/domain/complaints/schemas";
 import { confirmMediaResponseSchema, createMediaSlotResponseSchema, MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from "@/domain/media/schemas";
+import { en, type Dict } from "@/i18n/dict";
+
+// English messages from the dictionary; screens show them with translated(message, en.driverReport.api, t.driverReport.api).
+const M = en.driverReport.api;
 
 export type SubmitComplaintResult =
   | { ok: true; complaint: ComplaintReceipt }
   | { ok: false; reason: "signed_out" | "rate_limited" | "invalid" | "failed"; message: string };
 
 const json = { "content-type": "application/json" };
-const KEPT = "Your answers are kept on this screen. Try again.";
 
 export async function submitComplaint(input: CreateComplaintInput): Promise<SubmitComplaintResult> {
   try {
@@ -27,18 +30,18 @@ export async function submitComplaint(input: CreateComplaintInput): Promise<Subm
       cache: "no-store",
       body: JSON.stringify(input),
     });
-    if (res.status === 401) return { ok: false, reason: "signed_out", message: "Sign in to send this report." };
-    if (res.status === 429) return { ok: false, reason: "rate_limited", message: "You have sent several reports today. Try again tomorrow." };
+    if (res.status === 401) return { ok: false, reason: "signed_out", message: M.signedOut };
+    if (res.status === 429) return { ok: false, reason: "rate_limited", message: M.rateLimited };
     if (res.status === 400) {
       const data = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-      return { ok: false, reason: "invalid", message: data?.error?.message ?? "Check the report and try again." };
+      return { ok: false, reason: "invalid", message: data?.error?.message ?? M.invalid };
     }
-    if (!res.ok) return { ok: false, reason: "failed", message: `The report could not be sent. ${KEPT}` };
+    if (!res.ok) return { ok: false, reason: "failed", message: M.failed };
     const parsed = createComplaintResponseSchema.safeParse(await res.json());
-    if (!parsed.success) return { ok: false, reason: "failed", message: `The report could not be sent. ${KEPT}` };
+    if (!parsed.success) return { ok: false, reason: "failed", message: M.failed };
     return { ok: true, complaint: parsed.data.complaint };
   } catch {
-    return { ok: false, reason: "failed", message: `No connection. ${KEPT}` };
+    return { ok: false, reason: "failed", message: M.offline };
   }
 }
 
@@ -52,13 +55,14 @@ export function evidenceType(mime: string): EvidenceType | null {
 }
 
 export type EvidenceUploadResult = { ok: true; mediaId: string } | { ok: false; message: string };
-const UPLOAD_FAILED = "This file could not be uploaded. Try again, remove it, or send the report without it.";
+const UPLOAD_FAILED = M.uploadFailed;
 
-export async function uploadComplaintEvidence(blob: Blob): Promise<EvidenceUploadResult> {
+/** `copy` words the size limit (a message with a number); the other messages are English for translated(). */
+export async function uploadComplaintEvidence(blob: Blob, copy: Dict["driverReport"]["api"] = M): Promise<EvidenceUploadResult> {
   const mime = evidenceType(blob.type);
-  if (!mime) return { ok: false, message: "Use a JPEG, PNG or WebP photo, or an MP4 or WebM video." };
+  if (!mime) return { ok: false, message: M.badType };
   const max = mime.startsWith("video/") ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES;
-  if (blob.size === 0 || blob.size > max) return { ok: false, message: `This file is too large. The limit is ${Math.round(max / 1024 / 1024)} MB.` };
+  if (blob.size === 0 || blob.size > max) return { ok: false, message: copy.tooLarge(Math.round(max / 1024 / 1024)) };
   try {
     const slotRes = await fetch("/api/v1/media/slots", {
       method: "POST",
@@ -80,7 +84,7 @@ export async function uploadComplaintEvidence(blob: Blob): Promise<EvidenceUploa
     });
     if (!confirm.ok) return { ok: false, message: UPLOAD_FAILED };
     const media = confirmMediaResponseSchema.parse(await confirm.json()).media;
-    return media.status === "verified" ? { ok: true, mediaId: media.id } : { ok: false, message: "This file was not accepted. Try another one." };
+    return media.status === "verified" ? { ok: true, mediaId: media.id } : { ok: false, message: M.rejected };
   } catch {
     return { ok: false, message: UPLOAD_FAILED };
   }

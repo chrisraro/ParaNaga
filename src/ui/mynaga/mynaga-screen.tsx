@@ -16,17 +16,13 @@ import { useSyncExternalStore } from "react";
 import { detectPlatform, mynagaLinksFor, type Platform } from "@/domain/mynaga/links";
 import { DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
 import { Note } from "@/ui/kit/note";
+import { en } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 import { ReportHandoff } from "./report-handoff";
 
-export const PREPARE_ITEMS = [
-  "When it happened (date and time)",
-  "Route and direction, if you know them",
-  "Plate or body number, if you saw it",
-  "What happened, in your own words",
-  "Photos you are entitled to share",
-] as const;
-export const LATER_NOTE = "Sent a private report in ParaNaga? Open it from My reports to copy a summary and note your MyNaga reference.";
-export const MYNAGA_FOOTER = "We can't see or confirm what happens in MyNaga.";
+export const PREPARE_ITEMS = Object.values(en.mynaga.prepare);
+export const LATER_NOTE = en.mynaga.later;
+export const MYNAGA_FOOTER = en.mynaga.footer;
 
 const noSubscribe = () => () => undefined;
 const clientPlatform = (): Platform => detectPlatform(navigator.userAgent, navigator.maxTouchPoints ?? 0);
@@ -60,13 +56,15 @@ function StepTitle({ n, id, children }: { n: number; id: string; children: strin
 }
 
 export function MyNagaScreen({ reportId }: { reportId?: string } = {}) {
+  const tt = useT();
+  const t = tt.mynaga;
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const platform = useSyncExternalStore(noSubscribe, clientPlatform, serverPlatform);
   const links = mynagaLinksFor(platform);
   const linksStep = (
     <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-s2">
           <StepTitle n={2} id="pn-mynaga-s2">
-            Open MyNaga and submit there
+            {t.openTitle}
           </StepTitle>
           <ul className="pn-mynaga__links" data-testid="mynaga-links">
             {links.map((link, i) => (
@@ -76,10 +74,10 @@ export function MyNagaScreen({ reportId }: { reportId?: string } = {}) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={`${link.label} (opens in a new tab)`}
+                  aria-label={tt.forms.opensNewTab(t.links[link.id])}
                   data-testid={`mynaga-link-${link.id}`}
                 >
-                  {link.label}
+                  {t.links[link.id]}
                   <ExternalIcon />
                 </a>
               </li>
@@ -89,13 +87,13 @@ export function MyNagaScreen({ reportId }: { reportId?: string } = {}) {
 
  );
   return (
-    <DetailPanel title="MyNaga" testId="mynaga-page">
+    <DetailPanel title={t.panelTitle} testId="mynaga-page">
       <main className="pn-detail__main pn-detail-in">
         <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
-          Report in MyNaga
+          {t.title}
         </h1>
         <Note tone="warning" testId="mynaga-independent">
-          <strong>ParaNaga is independent.</strong> It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.
+          <strong>{t.independentStrong}</strong> {t.independentBody}
         </Note>
 
         {reportId ? (
@@ -104,10 +102,10 @@ export function MyNagaScreen({ reportId }: { reportId?: string } = {}) {
           <>
             <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-s1">
               <StepTitle n={1} id="pn-mynaga-s1">
-                Prepare what you will share
+                {t.prepareTitle}
               </StepTitle>
               <ul className="pn-group" data-testid="mynaga-prepare">
-                {PREPARE_ITEMS.map((item) => (
+                {Object.values(t.prepare).map((item) => (
                   <li key={item} className="pn-mynaga__check">
                     <CheckIcon />
                     <span>{item}</span>
@@ -121,17 +119,17 @@ export function MyNagaScreen({ reportId }: { reportId?: string } = {}) {
             {/* Not a numbered step: the self-report lives on a report's own handoff screen. */}
             <section className="pn-mynaga__step" aria-labelledby="pn-mynaga-after">
               <h2 id="pn-mynaga-after" className="pn-mynaga__step-title">
-                After you submit in MyNaga
+                {t.afterTitle}
               </h2>
-              <Note testId="mynaga-later">{LATER_NOTE}</Note>
+              <Note testId="mynaga-later">{t.later}</Note>
               <Link href="/app/reports" className="pn-mynaga__link" data-testid="mynaga-reports-link">
-                My reports
+                {t.myReports}
               </Link>
             </section>
           </>
         )}
 
-        <Note testId="mynaga-footer">{MYNAGA_FOOTER}</Note>
+        <Note testId="mynaga-footer">{t.footer}</Note>
       </main>
     </DetailPanel>
   );

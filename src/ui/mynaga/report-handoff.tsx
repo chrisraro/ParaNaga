@@ -21,21 +21,17 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { loadComplaint, loadEvidenceUrl, saveMyNagaSelfReport } from "@/client/reports/api";
 import { buildMyNagaSummary } from "@/domain/mynaga/summary";
-import { useT } from "@/i18n/provider";
+import { en, translated } from "@/i18n/dict";
+import { useLocale, useT } from "@/i18n/provider";
 import { StepUpPrompt } from "@/ui/auth/step-up-prompt";
 import { MYNAGA_REFERENCE_MAX, type ComplaintDetail } from "@/domain/reports/schemas";
 
 export const BYSTANDER_WARNING = {
-  title: "Original files only",
-  lines: [
-    "ParaNaga cannot blur faces or plates yet, so the file you download is the original.",
-    "It may show other people's faces and vehicle plates, and it may carry location details.",
-    "Share it only where you choose to, and only what you are comfortable sharing.",
-  ],
-  acknowledge: "I understand the file may show other people and where it was taken.",
+  title: en.mynaga.bystander.title,
+  lines: Object.values(en.mynaga.bystander.lines),
+  acknowledge: en.mynaga.bystander.acknowledge,
 } as const;
-export const SELF_REPORT_NOTE =
-  "ParaNaga does not send anything to MyNaga or City Hall and cannot confirm your report was received. This note is your own: it is saved to your account, shown as self-reported, and never changes the status of your ParaNaga report.";
+export const SELF_REPORT_NOTE = en.mynaga.selfReportNote;
 
 type CopyState = "idle" | "copied" | "manual";
 
@@ -80,8 +76,10 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [stepUpFor, setStepUpFor] = useState<{ evidenceId: string; n: number } | null>(null);
-  const stepUpText = useT().stepUp;
-  const summary = buildMyNagaSummary(c);
+  const tt = useT();
+  const t = tt.mynaga;
+  const stepUpText = tt.stepUp;
+  const summary = buildMyNagaSummary(c, tt, useLocale());
 
   const onCopy = async () => {
     const ok = await copyText(summary, area.current);
@@ -104,42 +102,42 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
       return;
     }
     if (!r.ok) {
-      setNote(r.reason === "rate_limited" ? r.message : `File ${n} could not be prepared. Try again.`);
+      setNote(r.reason === "rate_limited" ? translated(r.message, en.reports.api, tt.reports.api) : t.fileFailed(n));
       return;
     }
     startDownload(r.data);
-    setNote(`File ${n} is downloading. The link worked for 60 seconds only.`);
+    setNote(t.downloading(n));
   };
 
   return (
     <div className="pn-reports__panel" data-testid="handoff-prepare">
       <label htmlFor={`${uid}-summary`} className="pn-report__label">
-        Summary to paste into MyNaga
+        {t.summaryLabel}
       </label>
       <textarea id={`${uid}-summary`} ref={area} className="pn-reports__summary" readOnly value={summary} data-testid="handoff-summary" />
       <div className="pn-reports__actions">
         <button type="button" className="pn-btn pn-btn--primary" onClick={() => void onCopy()} data-testid="handoff-copy">
-          Copy summary
+          {t.copySummary}
         </button>
       </div>
       <p className="pn-reports__note" role="status" data-testid="handoff-copy-status">
-        {copy === "copied" ? "Summary copied. Paste it into MyNaga." : copy === "manual" ? "Copying is not available here. The text is selected: copy it from the box above." : ""}
+        {copy === "copied" ? t.copied : copy === "manual" ? t.copyManual : ""}
       </p>
 
       {c.evidence.length > 0 ? (
         <section className="pn-reports__actions" aria-labelledby={`${uid}-ev`} data-testid="handoff-evidence">
-          <h3 id={`${uid}-ev`}>Your photos and videos</h3>
+          <h3 id={`${uid}-ev`}>{t.mediaTitle}</h3>
           <div className="pn-reports__warn" data-testid="handoff-bystander">
             <p>
-              <strong>{BYSTANDER_WARNING.title}.</strong>
+              <strong>{t.bystander.title}.</strong>
             </p>
-            {BYSTANDER_WARNING.lines.map((l) => (
+            {Object.values(t.bystander.lines).map((l) => (
               <p key={l}>{l}</p>
             ))}
           </div>
           <label className="pn-report__check">
             <input type="checkbox" checked={ack} onChange={(e) => setAck(e.target.checked)} data-testid="handoff-ack" />
-            <span>{BYSTANDER_WARNING.acknowledge}</span>
+            <span>{t.bystander.acknowledge}</span>
           </label>
           {c.evidence.map((e, i) => (
             <button
@@ -150,7 +148,7 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
               onClick={() => void onDownload(e.id, i + 1)}
               data-testid={`handoff-download-${i + 1}`}
             >
-              {busy === e.id ? "Preparing…" : `Download file ${i + 1} (original)`}
+              {busy === e.id ? t.preparing : t.download(i + 1)}
             </button>
           ))}
           {stepUpFor ? (
@@ -174,6 +172,8 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
 }
 
 function SelfReport({ c }: { c: ComplaintDetail }) {
+  const tt = useT();
+  const t = tt.mynaga;
   const uid = useId();
   const [submitted, setSubmitted] = useState(c.handoff.submitted);
   const [reference, setReference] = useState(c.handoff.reference ?? "");
@@ -190,28 +190,28 @@ function SelfReport({ c }: { c: ComplaintDetail }) {
     const r = await saveMyNagaSelfReport(c.id, submitted ? { submitted: true, ...(ref ? { reference: ref } : {}) } : { submitted: false });
     setBusy(false);
     if (!r.ok) {
-      setError(r.message);
+      setError(translated(r.message, en.reports.api, tt.reports.api));
       return;
     }
     setSaved(r.data);
     setSubmitted(r.data.submitted);
     setReference(r.data.reference ?? "");
-    setMessage(r.data.submitted ? "Saved: submitted in MyNaga (self-reported)." : "Saved: not marked as submitted.");
+    setMessage(r.data.submitted ? t.savedSubmitted : t.savedNot);
   };
 
   return (
     <div className="pn-reports__panel" data-testid="handoff-selfreport">
       <p className="pn-reports__note" data-testid="handoff-selfreport-note">
-        {SELF_REPORT_NOTE}
+        {t.selfReportNote}
       </p>
       <label className="pn-report__check">
         <input type="checkbox" checked={submitted} onChange={(e) => setSubmitted(e.target.checked)} data-testid="handoff-submitted" />
-        <span>I submitted it in MyNaga</span>
+        <span>{t.submittedCheck}</span>
       </label>
       {submitted ? (
         <div className="pn-report__field">
           <label htmlFor={`${uid}-ref`} className="pn-report__label">
-            MyNaga reference (optional)
+            {t.referenceLabel}
           </label>
           <input
             id={`${uid}-ref`}
@@ -224,12 +224,12 @@ function SelfReport({ c }: { c: ComplaintDetail }) {
             onChange={(e) => setReference(e.target.value)}
             data-testid="handoff-reference"
           />
-          <span className="pn-report__hint">Up to {MYNAGA_REFERENCE_MAX} characters, as MyNaga shows it. Plain text.</span>
+          <span className="pn-report__hint">{t.referenceHint(MYNAGA_REFERENCE_MAX)}</span>
         </div>
       ) : null}
       <div className="pn-reports__actions">
         <button type="button" className="pn-btn pn-btn--secondary" onClick={() => void onSave()} disabled={busy} data-testid="handoff-save">
-          {busy ? "Saving…" : "Save my note"}
+          {busy ? t.saving : t.saveNote}
         </button>
       </div>
       <p className="pn-reports__note" role="status" data-testid="handoff-save-status">
@@ -241,7 +241,7 @@ function SelfReport({ c }: { c: ComplaintDetail }) {
         </div>
       ) : null}
       <p className="pn-reports__when" data-testid="handoff-saved-state">
-        {saved.submitted ? `Saved as: submitted in MyNaga (self-reported)${saved.reference ? `, reference ${saved.reference}` : ""}.` : "Saved as: not marked as submitted."}
+        {saved.submitted ? (saved.reference ? t.savedAsSubmittedRef(saved.reference) : t.savedAsSubmitted) : t.savedAsNot}
       </p>
     </div>
   );
@@ -251,6 +251,8 @@ type Load = { phase: "loading" } | { phase: "error"; message: string } | { phase
 
 /** Loads the report once; renders the prepare step, the links slot (children) and the self-report. */
 export function ReportHandoff({ id, links }: { id: string; links: React.ReactNode }) {
+  const tt = useT();
+  const t = tt.mynaga;
   const { user, loading } = useAuthSession();
   const [state, setState] = useState<Load>({ phase: "loading" });
   const userId = user?.id ?? null;
@@ -266,22 +268,22 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
     };
   }, [userId, id]);
 
-  if (loading) return <p role="status">Loading…</p>;
+  if (loading) return <p role="status">{tt.forms.loading}</p>;
   if (!user) {
     return (
       <div className="pn-report__signin" data-testid="handoff-signin">
-        <p>Sign in to prepare a summary of your report.</p>
+        <p>{t.signIn}</p>
         <Link href="/app/sign-in" className="pn-btn pn-btn--primary pn-report__action">
-          Sign in
+          {tt.forms.signIn}
         </Link>
       </div>
     );
   }
-  if (state.phase === "loading") return <p role="status">Loading your report…</p>;
+  if (state.phase === "loading") return <p role="status">{t.loadingReport}</p>;
   if (state.phase === "error") {
     return (
       <div className="pn-report__error" role="alert" data-testid="handoff-error">
-        {state.message}
+        {translated(state.message, en.reports.api, tt.reports.api)}
       </div>
     );
   }
@@ -293,10 +295,10 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
           <span className="pn-mynaga__num" aria-hidden="true">
             1
           </span>
-          Prepare what you will share
+          {t.prepareTitle}
         </h2>
         <p className="pn-reports__when" data-testid="handoff-report-ref">
-          Report {c.reference}
+          {t.reportRef(c.reference)}
         </p>
         <PrepareStep c={c} />
       </section>
@@ -306,7 +308,7 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
           <span className="pn-mynaga__num" aria-hidden="true">
             3
           </span>
-          Tell us if you submitted it
+          {t.tellUs}
         </h2>
         <SelfReport c={c} />
       </section>

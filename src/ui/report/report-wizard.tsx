@@ -19,18 +19,12 @@ import { useGeolocation } from "@/client/geo/use-geolocation";
 import {
   categoriesFor,
   categoryLabel,
-  ENTITY_LABELS,
   ENTITY_TYPES,
   isEntityType,
   isCorrectionCategory,
   type CorrectionCategory,
   type EntityType,
 } from "@/domain/corrections/categories";
-import {
-  AI_DISCLOSURE_CHECKBOX,
-  AI_DISCLOSURE_POINTS,
-  AI_DISCLOSURE_TITLE,
-} from "@/domain/corrections/disclosure";
 import { parseReportEntity } from "@/domain/corrections/href";
 import {
   correctionLocationSchema,
@@ -40,18 +34,19 @@ import {
   validateWhatsWrong,
   type CorrectionLocation,
 } from "@/domain/corrections/schemas";
-import { statusLabel } from "@/domain/corrections/status";
+import { statusLabel, type CorrectionStatus } from "@/domain/corrections/status";
+import { en, translated } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 
 type Step = 1 | 2 | 3;
 type Photo = { id: string; name: string };
 
-const STEP_TITLES: Record<Step, string> = {
-  1: "What's wrong",
-  2: "Tell us what you saw",
-  3: "Review and send",
-};
+const STEP_KEYS = { 1: "what", 2: "saw", 3: "review" } as const;
 
 export function ReportWizard() {
+  const tt = useT();
+  const t = tt.report;
+  const form = tt.forms;
   const uid = useId();
   const params = useSearchParams();
   const prefilled = parseReportEntity(params);
@@ -71,7 +66,7 @@ export function ReportWizard() {
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState<{ status: string } | null>(null);
+  const [sent, setSent] = useState<{ status: CorrectionStatus } | null>(null);
   const [requestId] = useState(() => crypto.randomUUID());
   const heading = useRef<HTMLHeadingElement>(null);
   const wantFix = useRef(false);
@@ -86,7 +81,7 @@ export function ReportWizard() {
         setLocation(parsed.data);
         setLocationNote(null);
       } else {
-        setLocationNote("This spot is outside Naga City, so it was not added.");
+        setLocationNote(t.outsideNaga);
       }
       setLocating(false);
       stopGeo.current();
@@ -100,9 +95,9 @@ export function ReportWizard() {
   const shownLocationNote =
     locationNote ??
     (locating && geo.state === "denied"
-      ? "Location is off for ParaNaga. You can still send the report without it."
+      ? t.locationOff
       : locating && geoFailed
-        ? "Your location could not be found. You can still send the report without it."
+        ? t.locationFailed
         : null);
 
 
@@ -119,7 +114,7 @@ export function ReportWizard() {
 
   const entityId = entityText.trim();
   const entityName = prefilled?.entityLabel ?? entityId;
-  const categories = categoriesFor(entityType);
+  const categories = categoriesFor(entityType, t);
 
   const go = (next: Step) => {
     setError(null);
@@ -127,14 +122,14 @@ export function ReportWizard() {
   };
 
   const onNext1 = () => {
-    const problem = validateWhatsWrong(category);
+    const problem = validateWhatsWrong(category, tt);
     if (problem) return setError(problem);
     go(2);
   };
   const onNext2 = () => {
-    if (!entityType) return setError("Choose what this is about.");
-    if (!entityId) return setError("Say which stop, route, fare or trip this is about.");
-    const problem = validateDescription(description);
+    if (!entityType) return setError(t.chooseEntity);
+    if (!entityId) return setError(t.sayWhich);
+    const problem = validateDescription(description, tt);
     if (problem) return setError(problem);
     go(3);
   };
@@ -153,12 +148,12 @@ export function ReportWizard() {
     const result = await uploadEvidencePhoto(file);
     setUploading(false);
     if (result.ok) setPhotos((p) => [...p, { id: result.mediaId, name: file.name.slice(0, 60) }]);
-    else setPhotoNote(result.message);
+    else setPhotoNote(translated(result.message, en.report.api, t.api));
   };
 
   const onSend = async () => {
     if (!user) return;
-    if (!accepted) return setError("Tick the box to confirm you have read how reports are checked.");
+    if (!accepted) return setError(t.tickBox);
     if (!category || !entityType) return;
     setSending(true);
     setError(null);
@@ -174,25 +169,25 @@ export function ReportWizard() {
       aiDisclosureAccepted: true,
     });
     setSending(false);
-    if (result.ok) setSent({ status: statusLabel(result.correction.status) });
-    else setError(result.message);
+    if (result.ok) setSent({ status: result.correction.status });
+    else setError(translated(result.message, en.report.api, t.api));
   };
 
   if (sent) {
     return (
       <div className="pn-report" onKeyDown={onKeyDown} data-testid="report-done">
         <h2 ref={heading} tabIndex={-1} className="pn-report__step">
-          Report sent
+          {t.sentTitle}
         </h2>
         <p className="pn-report__status" role="status">
-          Status: {sent.status}
+          {form.status(statusLabel(sent.status, t))}
         </p>
-        <p className="pn-report__body">A person will review it. Nothing on the map, routes or fares changes until that review is done and the data is republished.</p>
+        <p className="pn-report__body">{t.sentBody}</p>
         <Link href="/app/reports" className="pn-btn pn-btn--secondary pn-report__action" data-testid="report-my-reports">
-          See my reports
+          {form.seeMyReports}
         </Link>
         <Link href="/app" className="pn-btn pn-btn--primary pn-report__action">
-          Back to the map
+          {form.backToMap}
         </Link>
       </div>
     );
@@ -201,16 +196,16 @@ export function ReportWizard() {
   return (
     <div className="pn-report" onKeyDown={onKeyDown} data-testid="report-wizard">
       <p className="pn-report__progress" data-testid="report-progress">
-        Step {step} of 3
+        {form.stepOf(step, 3)}
       </p>
       <h2 ref={heading} tabIndex={-1} className="pn-report__step">
-        {STEP_TITLES[step]}
+        {t.steps[STEP_KEYS[step]]}
       </h2>
 
       {step === 1 ? (
         <fieldset className="pn-report__fieldset">
-          <legend className="pn-report__legend">Pick the closest match</legend>
-          <div className="pn-group" role="radiogroup" aria-label="What is wrong">
+          <legend className="pn-report__legend">{t.pickClosest}</legend>
+          <div className="pn-group" role="radiogroup" aria-label={t.whatIsWrong}>
             {categories.map((c) => (
               <label key={c.value} className="pn-report__option">
                 <input
@@ -237,14 +232,14 @@ export function ReportWizard() {
         <div className="pn-report__form">
           {prefilled ? (
             <p className="pn-report__entity" data-testid="report-entity">
-              <span className="pn-report__chip">{ENTITY_LABELS[prefilled.entityType]}</span>
+              <span className="pn-report__chip">{t.entity[prefilled.entityType]}</span>
               <span>{entityName}</span>
             </p>
           ) : (
             <>
               <div className="pn-report__field">
                 <label htmlFor={`${uid}-etype`} className="pn-report__label">
-                  What is it about?
+                  {t.whatAbout}
                 </label>
                 <select
                   id={`${uid}-etype`}
@@ -256,17 +251,17 @@ export function ReportWizard() {
                     setCategory((c) => (c && isEntityType(v) && !categoriesFor(v).some((x) => x.value === c) ? null : c));
                   }}
                 >
-                  <option value="">Choose one</option>
-                  {ENTITY_TYPES.map((t) => (
-                    <option key={t} value={t}>
-                      {ENTITY_LABELS[t]}
+                  <option value="">{t.chooseOne}</option>
+                  {ENTITY_TYPES.map((e) => (
+                    <option key={e} value={e}>
+                      {t.entity[e]}
                     </option>
                   ))}
                 </select>
               </div>
               <div className="pn-report__field">
                 <label htmlFor={`${uid}-ename`} className="pn-report__label">
-                  Name or code
+                  {t.nameOrCode}
                 </label>
                 <input
                   id={`${uid}-ename`}
@@ -281,12 +276,12 @@ export function ReportWizard() {
           )}
 
           {category && isCorrectionCategory(category) ? (
-            <p className="pn-report__chosen">Problem: {categoryLabel(category)}</p>
+            <p className="pn-report__chosen">{t.problem(categoryLabel(category, t))}</p>
           ) : null}
 
           <div className="pn-report__field">
             <label htmlFor={`${uid}-desc`} className="pn-report__label">
-              What did you see?
+              {t.whatDidYouSee}
             </label>
             <textarea
               id={`${uid}-desc`}
@@ -298,15 +293,15 @@ export function ReportWizard() {
               aria-describedby={`${uid}-count`}
             />
             <span id={`${uid}-count`} className="pn-report__count">
-              {description.trim().length} of {DESCRIPTION_MAX}
+              {form.count(description.trim().length, DESCRIPTION_MAX)}
             </span>
           </div>
 
           <div className="pn-report__field">
-            <span className="pn-report__label">Where you saw it (optional)</span>
+            <span className="pn-report__label">{t.whereOptional}</span>
             {location ? (
               <p className="pn-report__value" data-testid="report-location">
-                Location added, accurate to about {location.accuracyM} m.
+                {form.locationAdded(location.accuracyM)}
               </p>
             ) : null}
             <div className="pn-report__row">
@@ -322,15 +317,15 @@ export function ReportWizard() {
                 disabled={findingLocation}
                 data-testid="report-add-location"
               >
-                {findingLocation ? "Finding your location…" : location ? "Update my location" : "Add my location"}
+                {findingLocation ? form.findingLocation : location ? form.updateLocation : t.addLocation}
               </button>
               {location ? (
                 <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => setLocation(null)}>
-                  Remove location
+                  {form.removeLocation}
                 </button>
               ) : null}
             </div>
-            <p className="pn-report__hint">Your phone asks for permission only when you tap the button.</p>
+            <p className="pn-report__hint">{form.permissionHint}</p>
             {shownLocationNote ? (
               <p className="pn-report__hint" role="status">
                 {shownLocationNote}
@@ -339,7 +334,7 @@ export function ReportWizard() {
           </div>
 
           <div className="pn-report__field">
-            <span className="pn-report__label">Photos (optional)</span>
+            <span className="pn-report__label">{t.photosOptional}</span>
             {photos.length > 0 ? (
               <ul className="pn-report__photos" data-testid="report-photos">
                 {photos.map((p) => (
@@ -349,9 +344,9 @@ export function ReportWizard() {
                       type="button"
                       className="pn-btn pn-btn--secondary pn-report__small"
                       onClick={() => setPhotos((all) => all.filter((x) => x.id !== p.id))}
-                      aria-label={`Remove photo ${p.name}`}
+                      aria-label={t.removePhoto(p.name)}
                     >
-                      Remove
+                      {form.remove}
                     </button>
                   </li>
                 ))}
@@ -371,12 +366,12 @@ export function ReportWizard() {
                   }}
                 />
                 <label htmlFor={`${uid}-photo`} className="pn-btn pn-btn--secondary pn-report__small" aria-disabled={uploading}>
-                  {uploading ? "Uploading…" : "Add a photo"}
+                  {uploading ? t.uploading : t.addPhoto}
                 </label>
               </>
             ) : null}
-            {!user && !loading ? <p className="pn-report__hint">Sign in to attach photos.</p> : null}
-            <p className="pn-report__hint">Up to {MAX_EVIDENCE_PHOTOS} photos. Location data is removed from photos.</p>
+            {!user && !loading ? <p className="pn-report__hint">{t.signInPhotos}</p> : null}
+            <p className="pn-report__hint">{t.photosHint(MAX_EVIDENCE_PHOTOS)}</p>
             {photoNote ? (
               <p className="pn-report__hint" role="status">
                 {photoNote}
@@ -390,49 +385,49 @@ export function ReportWizard() {
         <div className="pn-report__form">
           <dl className="pn-group pn-report__summary" data-testid="report-summary">
             <div className="pn-kv">
-              <dt className="pn-kv__key">{"What's wrong"}</dt>
-              <dd className="pn-kv__value">{category ? categoryLabel(category) : ""}</dd>
+              <dt className="pn-kv__key">{t.summary.whatsWrong}</dt>
+              <dd className="pn-kv__value">{category ? categoryLabel(category, t) : ""}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">About</dt>
+              <dt className="pn-kv__key">{t.summary.about}</dt>
               <dd className="pn-kv__value">
-                {entityType ? ENTITY_LABELS[entityType] : ""} · {entityName}
+                {entityType ? t.entity[entityType] : ""} · {entityName}
               </dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">What you saw</dt>
+              <dt className="pn-kv__key">{t.summary.whatYouSaw}</dt>
               <dd className="pn-kv__value pn-report__wrap">{description.trim()}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">Location</dt>
-              <dd className="pn-kv__value">{location ? `Added, about ${location.accuracyM} m` : "Not added"}</dd>
+              <dt className="pn-kv__key">{t.summary.location}</dt>
+              <dd className="pn-kv__value">{location ? t.locationSummary(location.accuracyM) : form.notAdded}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">Photos</dt>
+              <dt className="pn-kv__key">{t.summary.photos}</dt>
               <dd className="pn-kv__value">{photos.length}</dd>
             </div>
           </dl>
 
           <section className="pn-report__disclosure" aria-labelledby={`${uid}-ai`} data-testid="report-disclosure">
             <h3 id={`${uid}-ai`} className="pn-report__disclosure-title">
-              {AI_DISCLOSURE_TITLE}
+              {t.disclosure.title}
             </h3>
             <ul>
-              {AI_DISCLOSURE_POINTS.map((p) => (
+              {Object.values(t.disclosure.points).map((p) => (
                 <li key={p}>{p}</li>
               ))}
             </ul>
             <label className="pn-report__check">
               <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} data-testid="report-ack" />
-              <span>{AI_DISCLOSURE_CHECKBOX}</span>
+              <span>{t.disclosure.checkbox}</span>
             </label>
           </section>
 
           {!loading && !user ? (
             <div className="pn-report__signin" data-testid="report-signin">
-              <p>Sign in to send this report. An account is only needed to send; everything else works as a guest.</p>
+              <p>{t.signInToSend}</p>
               <Link href="/app/sign-in" className="pn-btn pn-btn--primary pn-report__action">
-                Sign in
+                {form.signIn}
               </Link>
             </div>
           ) : null}
@@ -448,17 +443,17 @@ export function ReportWizard() {
       <div className="pn-report__nav">
         {step > 1 ? (
           <button type="button" className="pn-btn pn-btn--secondary pn-report__action" onClick={() => go((step - 1) as Step)} data-testid="report-back">
-            Back
+            {form.back}
           </button>
         ) : null}
         {step === 1 ? (
           <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext1} data-testid="report-next">
-            Continue
+            {form.continue}
           </button>
         ) : null}
         {step === 2 ? (
           <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext2} data-testid="report-next">
-            Review
+            {form.review}
           </button>
         ) : null}
         {step === 3 && user ? (
@@ -469,7 +464,7 @@ export function ReportWizard() {
             disabled={sending}
             data-testid="report-send"
           >
-            {sending ? "Sending…" : "Send report"}
+            {sending ? form.sending : t.send}
           </button>
         ) : null}
       </div>

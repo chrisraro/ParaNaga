@@ -32,4 +32,19 @@ export async function loadDict(locale: Locale): Promise<Dict> {
   return mergeDict<Dict>(fil, bcl);
 }
 
+/**
+ * A client API's English message (taken from `english`, e.g. en.reports.api) in the current
+ * language: the text under the same key in `current`. Anything else, such as a message written by
+ * the server, is returned as it is. Lets the browser API modules stay copy-free.
+ */
+export function translated<T extends object>(message: string, english: T, current: T): string {
+  for (const [key, value] of Object.entries(english)) {
+    if (value === message) {
+      const local = (current as Record<string, unknown>)[key];
+      return typeof local === "string" ? local : message;
+    }
+  }
+  return message;
+}
+
 export { en };

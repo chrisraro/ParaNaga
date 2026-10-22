@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageFrame } from "@/ui/app-shell/page-frame";
+import { LocalizedPageFrame } from "@/ui/app-shell/localized-page-frame";
 import { CommunityFeed } from "@/ui/community/community-feed";
 
 export const metadata: Metadata = {
@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 // Tab page over the mounted home map. Static shell: posts come from /api/v1/community in the browser.
 export default function CommunityPage() {
   return (
-    <PageFrame title="Community" testId="community-page">
+    <LocalizedPageFrame title="community" testId="community-page">
       <CommunityFeed />
-    </PageFrame>
+    </LocalizedPageFrame>
   );
 }

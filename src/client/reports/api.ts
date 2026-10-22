@@ -17,17 +17,19 @@ import {
   type MyNagaHandoff,
   type MyNagaSelfReport,
 } from "@/domain/reports/schemas";
+import { en, type Dict } from "@/i18n/dict";
 
 export type Loaded<T> = { ok: true; data: T } | { ok: false; reason: "signed_out" | "not_found" | "rate_limited" | "failed"; message: string };
 
 const get = { credentials: "same-origin", cache: "no-store" } as const;
-const FAILED = "This could not be loaded. Check your connection and try again.";
+// English messages from the dictionary; screens show them with translated(message, en.reports.api, t.reports.api).
+const M = en.reports.api;
 
 function fail<T>(status: number | null): Loaded<T> {
-  if (status === 401) return { ok: false, reason: "signed_out", message: "Sign in to see your reports." };
-  if (status === 404) return { ok: false, reason: "not_found", message: "This report was not found." };
-  if (status === 429) return { ok: false, reason: "rate_limited", message: "Too many requests. Wait a moment, then try again." };
-  return { ok: false, reason: "failed", message: FAILED };
+  if (status === 401) return { ok: false, reason: "signed_out", message: M.signedOut };
+  if (status === 404) return { ok: false, reason: "not_found", message: M.notFound };
+  if (status === 429) return { ok: false, reason: "rate_limited", message: M.rateLimited };
+  return { ok: false, reason: "failed", message: M.failed };
 }
 
 async function getJson(url: string): Promise<{ status: number; body: unknown } | null> {
@@ -39,15 +41,15 @@ async function getJson(url: string): Promise<{ status: number; body: unknown } |
   }
 }
 
-/** The merged list is built here from the two existing own-list endpoints (no new server route). */
-export async function loadMyReports(): Promise<Loaded<ReportRow[]>> {
+/** The merged list is built here from the two existing own-list endpoints (no new server route); `copy` words its labels. */
+export async function loadMyReports(copy: Dict = en): Promise<Loaded<ReportRow[]>> {
   const [c, d] = await Promise.all([getJson("/api/v1/me/corrections"), getJson("/api/v1/me/complaints")]);
   if (!c || !d) return fail(null);
   if (c.status === 401 || d.status === 401) return fail(401);
   const corrections = myCorrectionsResponseSchema.safeParse(c.body);
   const complaints = myComplaintsResponseSchema.safeParse(d.body);
   if (!corrections.success || !complaints.success) return fail(c.status === 429 || d.status === 429 ? 429 : null);
-  return { ok: true, data: mergeReports(corrections.data.corrections, complaints.data.complaints) };
+  return { ok: true, data: mergeReports(corrections.data.corrections, complaints.data.complaints, copy) };
 }
 
 export async function loadComplaint(id: string): Promise<Loaded<ComplaintDetail>> {
@@ -87,7 +89,7 @@ export async function saveMyNagaSelfReport(complaintId: string, input: MyNagaSel
       cache: "no-store",
       body: JSON.stringify(input),
     });
-    if (res.status === 400) return { ok: false, reason: "failed", message: "Check the reference. It can be up to 64 characters." };
+    if (res.status === 400) return { ok: false, reason: "failed", message: M.badReference };
     if (!res.ok) return fail(res.status);
     const parsed = myNagaHandoffResponseSchema.safeParse(await res.json());
     return parsed.success ? { ok: true, data: parsed.data.handoff } : fail(null);

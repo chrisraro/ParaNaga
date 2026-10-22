@@ -30,7 +30,8 @@ type Props = {
 export function EtaBasisSheet({ open, onClose, model }: Props) {
   const titleId = useId();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
-  const e = useT().eta;
+  const t = useT();
+  const e = t.eta;
   const rows = model ? basisRows(model, e) : [];
 
   const sheetRef = useRef<HTMLElement>(null);
@@ -91,7 +92,7 @@ export function EtaBasisSheet({ open, onClose, model }: Props) {
         {/* Scrollable on small phones: focusable so it scrolls by keyboard (axe scrollable-region-focusable). */}
         <div className="pn-layers-sheet__body" tabIndex={0} role="region" aria-labelledby={titleId} data-testid="eta-basis-body">
           <p className="pn-eta-sheet__lead" data-testid="eta-basis-lead">
-            {ETA_WAITING_NOTE} {e.walkNote}
+            {t.help.etaWaitingNote} {e.walkNote}
           </p>
 
           {rows.length === 0 ? (

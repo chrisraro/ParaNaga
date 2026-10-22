@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageFrame } from "@/ui/app-shell/page-frame";
+import { LocalizedPageFrame } from "@/ui/app-shell/localized-page-frame";
 import { PostComposer } from "@/ui/community/post-composer";
 
 export const metadata: Metadata = {
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function NewPostPage() {
   return (
-    <PageFrame title="New post" back testId="community-new-page">
+    <LocalizedPageFrame title="communityNew" back testId="community-new-page">
       <PostComposer mode="new" />
-    </PageFrame>
+    </LocalizedPageFrame>
   );
 }

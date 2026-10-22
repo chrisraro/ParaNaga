@@ -399,3 +399,7 @@ ships without a named native Naga speaker's sign-off on every key; the code enfo
 ## G1 passed (2026-10-22)
 
 T10: opus review (all 468 rows `reviewed: "opus"`, 11 keys left `review: true` for a native Naga speaker: missedStop, useLocation, eta.estAbbr, the eight roadside chips). Owner waived the human walk-through for P1 (volunteers later), so `FILIPINO_ENABLED` is on. P2+ screens stay English until T11-T12.
+
+## T13 done (2026-10-22)
+
+P3 in the dictionary and in Filipino: `forms` (shared form words), `help` (tabs, safety, badges, the five articles), `sources` (Sources and credits headings and controls), `report`, `driverReport`, `reports`, `mynaga`, `community`, `auth` (555 keys; ledger rows `reviewed: "opus"`, 106 `review: true`). Kept English on purpose: `acknowledgments.*` (accepted text is recorded), `sources.verbatim.*` (data basis, licence and attribution notes), and the credits and per-item source records (src/ui/help/source-credits.tsx, entity-sources.tsx, not extracted); a verbatim-reviewed translation is still owed. Server-written error messages and page `metadata` stay English. The admin console is untouched.

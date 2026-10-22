@@ -1,5 +1,6 @@
 // What the author sees for a version or comment. Pending is shown honestly as "Awaiting review";
 // nothing here ever says a post is visible before a person (or a confident auto-publish) cleared it.
+import { en, type Dict } from "@/i18n/dict";
 
 export const CONTENT_STATES = ["published", "pending", "rejected"] as const;
 export type ContentState = (typeof CONTENT_STATES)[number];
@@ -11,15 +12,14 @@ export function contentState(moderationStatus: string): ContentState {
   return "pending"; // pending, human_review
 }
 
-export function stateLabel(state: ContentState): string {
-  if (state === "published") return "Published";
-  if (state === "rejected") return "Not published";
-  return "Awaiting review";
+export function stateLabel(state: ContentState, copy: Dict["community"] = en.community): string {
+  return copy.states[state];
 }
 
-export function stateHint(state: ContentState, kind: "post" | "comment" | "edit"): string {
-  if (state === "published") return kind === "edit" ? "Your edit is visible to everyone." : "It is visible to everyone.";
-  if (state === "rejected") return "It did not meet the community guidelines, so others cannot see it.";
-  if (kind === "edit") return "Only you can see this edit. The earlier version stays visible until it is approved.";
-  return "Only you can see it until a person has reviewed it.";
+export function stateHint(state: ContentState, kind: "post" | "comment" | "edit", copy: Dict["community"] = en.community): string {
+  const h = copy.stateHints;
+  if (state === "published") return kind === "edit" ? h.editPublished : h.published;
+  if (state === "rejected") return h.rejected;
+  if (kind === "edit") return h.editPending;
+  return h.pending;
 }

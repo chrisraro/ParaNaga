@@ -22,11 +22,10 @@ import {
   toggleHelpful,
   toggleSaved,
 } from "@/client/community/api";
-import { UNVERIFIED_NOTICE } from "@/domain/community/guidelines";
 import {
   COMMENT_MAX,
   NOTE_MAX,
-  REPORT_REASONS,
+  reportReasonsIn,
   validateComment,
   type CommentDto,
   type PostDetail,
@@ -36,11 +35,18 @@ import {
 import { stateHint, stateLabel } from "@/domain/community/status";
 import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { captureOpener } from "@/ui/kit/opener";
-import { formatDate, GuidelinesAck, PostBadges, SignInPrompt, StateBadge } from "./parts";
+import { en, translated, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
+import { GuidelinesAck, PostBadges, SignInPrompt, StateBadge, useFormatDate } from "./parts";
+
+const apiText = (message: string, current: Dict["community"]["api"]) => translated(message, en.community.api, current);
 
 type Load = { status: "loading" } | { status: "error"; message: string; notFound: boolean } | { status: "ready"; data: PostDetail };
 
 export function PostThread({ id }: { id: string }) {
+  const tt = useT();
+  const t = tt.community;
+  const formatDate = useFormatDate();
   const uid = useId();
   const router = useRouter();
   const { user, loading: authLoading } = useAuthSession();
@@ -87,7 +93,7 @@ export function PostThread({ id }: { id: string }) {
     setNote(null);
     const r = await fn();
     setBusy(null);
-    if (!r.ok) return setNote(r.message);
+    if (!r.ok) return setNote(apiText(r.message, t.api));
     after?.();
   };
 
@@ -117,7 +123,7 @@ export function PostThread({ id }: { id: string }) {
   if (load.status === "loading" || authLoading) {
     return (
       <div className="pn-comm" data-testid="thread-loading">
-        <p className="pn-comm__muted">Loading…</p>
+        <p className="pn-comm__muted">{tt.forms.loading}</p>
       </div>
     );
   }
@@ -125,16 +131,16 @@ export function PostThread({ id }: { id: string }) {
     return (
       <div className="pn-comm" data-testid="thread-error">
         <p className="pn-comm__error" role="alert">
-          {load.notFound ? "This post is not available. It may have been removed." : load.message}
+          {load.notFound ? t.notAvailable : apiText(load.message, t.api)}
         </p>
         <div className="pn-comm__nav">
           {load.notFound ? null : (
             <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={refresh}>
-              Try again
+              {tt.forms.tryAgain}
             </button>
           )}
           <Link href="/app/community" className="pn-btn pn-btn--primary pn-comm__action">
-            Back to community
+            {t.backToCommunity}
           </Link>
         </div>
       </div>
@@ -152,7 +158,7 @@ export function PostThread({ id }: { id: string }) {
           {post.title}
         </h2>
         <div className="pn-comm__meta">
-          <span>{post.isOwn ? "You" : post.authorHandle}</span>
+          <span>{post.isOwn ? t.you : post.authorHandle}</span>
           <span>{formatDate(post.createdAt)}</span>
         </div>
         <p className="pn-comm__body" data-testid="thread-body">
@@ -163,18 +169,18 @@ export function PostThread({ id }: { id: string }) {
         ) : null}
         {post.label === "community" ? (
           <p className="pn-comm__notice" data-testid="thread-disclaimer">
-            {UNVERIFIED_NOTICE}
+            {t.unverifiedNotice}
           </p>
         ) : null}
 
         {post.isOwn && post.state !== "published" ? (
           <p ref={statusRef} tabIndex={-1} className={`pn-comm__status pn-comm__status--${post.state}`} role="status" data-testid="thread-state">
-            {stateLabel(post.state)}. {stateHint(post.state, "post")}
+            {t.stateLine(stateLabel(post.state, t), stateHint(post.state, "post", t))}
           </p>
         ) : null}
         {post.isOwn && post.hasPendingEdit ? (
           <p className="pn-comm__status pn-comm__status--pending" role="status" data-testid="thread-edit-state">
-            Awaiting review. Your edit is not visible yet; the version above is still the one others read.
+            {t.editPendingNote}
           </p>
         ) : null}
 
@@ -194,10 +200,10 @@ export function PostThread({ id }: { id: string }) {
               }
               data-testid="thread-helpful"
             >
-              Helpful ({post.helpfulCount})
+              {t.helpful(post.helpfulCount)}
             </button>
           ) : live ? (
-            <span className="pn-comm__muted">{post.helpfulCount} found this helpful</span>
+            <span className="pn-comm__muted">{t.helpfulCount(post.helpfulCount)}</span>
           ) : null}
           {live && signedIn ? (
             <button
@@ -214,24 +220,24 @@ export function PostThread({ id }: { id: string }) {
               }
               data-testid="thread-bookmark"
             >
-              {post.viewerBookmarked ? "Saved" : "Save"}
+              {post.viewerBookmarked ? t.saved : t.save}
             </button>
           ) : null}
           {post.isOwn ? (
             <>
               <Link href={`/app/community/${post.id}/edit`} className="pn-btn pn-btn--secondary pn-comm__small" data-testid="thread-edit">
-                Edit
+                {t.edit}
               </Link>
               <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" onClick={() => setConfirmDelete({ type: "post", id: post.id })} data-testid="thread-delete">
-                Delete
+                {t.delete}
               </button>
             </>
           ) : live && signedIn ? (
             <details className="pn-comm__more">
-              <summary>More</summary>
+              <summary>{t.more}</summary>
               <div className="pn-comm__row">
                 <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => openReport("post", post.id)} data-testid="thread-report">
-                  Report
+                  {t.report}
                 </button>
                 <button
                   type="button"
@@ -241,7 +247,7 @@ export function PostThread({ id }: { id: string }) {
                   }
                   data-testid="thread-block"
                 >
-                  Block this person
+                  {t.block}
                 </button>
               </div>
             </details>
@@ -258,14 +264,14 @@ export function PostThread({ id }: { id: string }) {
 
         {post.isOwn && post.versions.length > 1 ? (
           <details className="pn-comm__more" data-testid="thread-history">
-            <summary>Edit history ({post.versions.length})</summary>
+            <summary>{t.history(post.versions.length)}</summary>
             <ul className="pn-comm__history">
               {post.versions.map((v) => (
                 <li key={v.n}>
-                  <span>Version {v.n}</span>
+                  <span>{t.version(v.n)}</span>
                   <span>{formatDate(v.submittedAt)}</span>
-                  {v.isLive ? <span className="pn-comm__badge">Visible to everyone</span> : <StateBadge state={v.state} />}
-                  {!v.isLive && v.state === "published" ? <span className="pn-comm__muted">Replaced</span> : null}
+                  {v.isLive ? <span className="pn-comm__badge">{t.visibleToAll}</span> : <StateBadge state={v.state} />}
+                  {!v.isLive && v.state === "published" ? <span className="pn-comm__muted">{t.replaced}</span> : null}
                 </li>
               ))}
             </ul>
@@ -274,9 +280,9 @@ export function PostThread({ id }: { id: string }) {
       </article>
 
       {live ? (
-        <section className="pn-comm__form" aria-label="Comments" data-testid="thread-comments">
-          <h3 className="pn-comm__panel-title">Comments</h3>
-          {comments.length === 0 ? <p className="pn-comm__muted">No comments yet.</p> : null}
+        <section className="pn-comm__form" aria-label={t.commentsLabel} data-testid="thread-comments">
+          <h3 className="pn-comm__panel-title">{t.commentsLabel}</h3>
+          {comments.length === 0 ? <p className="pn-comm__muted">{t.noComments}</p> : null}
           {comments.length > 0 ? (
             <CommentList
               comments={comments}
@@ -315,17 +321,17 @@ export function PostThread({ id }: { id: string }) {
           {commentSent ? (
             <p className={`pn-comm__status pn-comm__status--${commentSent}`} role="status" data-testid="comment-sent">
               {commentSent === "pending"
-                ? "Comment sent. Awaiting review: only you can see it until a person has reviewed it."
+                ? t.commentPending
                 : commentSent === "rejected"
-                  ? "Comment not published. It did not meet the community guidelines."
-                  : "Comment posted."}
+                  ? t.commentRejected
+                  : t.commentPosted}
             </p>
           ) : null}
 
-          {!authLoading && !signedIn ? <SignInPrompt what="comment, mark posts helpful or save them" /> : null}
+          {!authLoading && !signedIn ? <SignInPrompt text={t.signInComment} /> : null}
           {signedIn && replyTo === null ? (
             <div className="pn-comm__panel">
-              <h4 className="pn-comm__panel-title">Add a comment</h4>
+              <h4 className="pn-comm__panel-title">{t.addComment}</h4>
               <CommentComposer
                 postId={post.id}
                 parentId={null}
@@ -342,8 +348,8 @@ export function PostThread({ id }: { id: string }) {
 
       <ConfirmDialog
         open={confirmDelete !== null}
-        title={confirmDelete?.type === "post" ? "Delete this post?" : "Delete this comment?"}
-        confirmLabel="Delete"
+        title={confirmDelete?.type === "post" ? t.deletePost : t.deleteComment}
+        confirmLabel={t.delete}
         tone="danger"
         onCancel={() => setConfirmDelete(null)}
         onConfirm={() => {
@@ -354,7 +360,7 @@ export function PostThread({ id }: { id: string }) {
           else void run("delete", () => removeComment(target.id), refresh);
         }}
       >
-        <p>It is removed for everyone. This cannot be undone.</p>
+        <p>{t.deleteBody}</p>
       </ConfirmDialog>
     </div>
   );
@@ -376,17 +382,19 @@ type ListProps = {
 };
 
 function CommentList(props: ListProps) {
+  const t = useT().community;
+  const formatDate = useFormatDate();
   return (
     <ul className="pn-comm__comments">
       {props.comments.map((c) => (
         <li key={c.id} className="pn-comm__comment" data-testid="comment">
           <div className="pn-comm__meta">
-            <span>{c.isOwn ? "You" : c.authorHandle}</span>
+            <span>{c.isOwn ? t.you : c.authorHandle}</span>
             <span>{formatDate(c.createdAt)}</span>
             <StateBadge state={c.state} />
           </div>
           <p className="pn-comm__body">{c.body}</p>
-          {c.state !== "published" && c.isOwn ? <p className="pn-comm__hint">{stateHint(c.state, "comment")}</p> : null}
+          {c.state !== "published" && c.isOwn ? <p className="pn-comm__hint">{stateHint(c.state, "comment", t)}</p> : null}
           <div className="pn-comm__row">
             {c.state === "published" ? (
               props.signedIn && !c.isOwn ? (
@@ -397,10 +405,10 @@ function CommentList(props: ListProps) {
                   disabled={props.busy === `c-${c.id}`}
                   onClick={() => props.onHelpful(c)}
                 >
-                  Helpful ({c.helpfulCount})
+                  {t.helpful(c.helpfulCount)}
                 </button>
               ) : (
-                <span className="pn-comm__muted">{c.helpfulCount} found this helpful</span>
+                <span className="pn-comm__muted">{t.helpfulCount(c.helpfulCount)}</span>
               )
             ) : null}
             {props.signedIn && c.depth === 1 && c.state === "published" ? (
@@ -411,22 +419,22 @@ function CommentList(props: ListProps) {
                 aria-expanded={props.replyTo === c.id}
                 data-testid="comment-reply"
               >
-                Reply
+                {t.reply}
               </button>
             ) : null}
             {c.isOwn ? (
               <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" onClick={() => props.onDelete(c)}>
-                Delete
+                {t.delete}
               </button>
             ) : props.signedIn && c.state === "published" ? (
               <details className="pn-comm__more">
-                <summary>More</summary>
+                <summary>{t.more}</summary>
                 <div className="pn-comm__row">
                   <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => props.onReport(c)}>
-                    Report
+                    {t.report}
                   </button>
                   <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => props.onBlock(c)}>
-                    Block this person
+                    {t.block}
                   </button>
                 </div>
               </details>
@@ -454,6 +462,8 @@ function CommentComposer({
   onSent: (state: "published" | "pending" | "rejected") => void;
   onCancel?: () => void;
 }) {
+  const tt = useT();
+  const t = tt.community;
   const uid = useId();
   const [text, setText] = useState("");
   const [ack, setAck] = useState(false);
@@ -467,7 +477,7 @@ function CommentComposer({
   }, [parentId]);
 
   const send = async () => {
-    const problem = validateComment(text) ?? (needGuidelines && !ack ? "Tick the box to confirm you have read the guidelines." : null);
+    const problem = validateComment(text, tt) ?? (needGuidelines && !ack ? t.tickGuidelines : null);
     if (problem) return setError(problem);
     setSending(true);
     setError(null);
@@ -478,7 +488,7 @@ function CommentComposer({
       guidelinesAccepted: needGuidelines ? ack : true,
     });
     setSending(false);
-    if (!r.ok) return setError(r.message);
+    if (!r.ok) return setError(apiText(r.message, t.api));
     setText("");
     setRequestId(crypto.randomUUID());
     onSent(r.data.comment.state);
@@ -488,7 +498,7 @@ function CommentComposer({
     <div className="pn-comm__form">
       <div className="pn-comm__field">
         <label htmlFor={`${uid}-c`} className="pn-comm__label">
-          {parentId ? "Your reply" : "Your comment"}
+          {parentId ? t.yourReply : t.yourComment}
         </label>
         <textarea
           ref={field}
@@ -500,7 +510,7 @@ function CommentComposer({
           onChange={(e) => setText(e.target.value)}
         />
         <span className="pn-comm__count">
-          {text.trim().length} of {COMMENT_MAX}
+          {tt.forms.count(text.trim().length, COMMENT_MAX)}
         </span>
       </div>
       {needGuidelines ? <GuidelinesAck id={`${uid}-g`} checked={ack} onChange={setAck} /> : null}
@@ -511,11 +521,11 @@ function CommentComposer({
       ) : null}
       <div className="pn-comm__row">
         <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} disabled={sending} data-testid="comment-send">
-          {sending ? "Sending…" : parentId ? "Send reply" : "Send comment"}
+          {sending ? tt.forms.sending : parentId ? t.sendReply : t.sendComment}
         </button>
         {onCancel ? (
           <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={onCancel}>
-            Cancel
+            {tt.kit.cancel}
           </button>
         ) : null}
       </div>
@@ -524,6 +534,8 @@ function CommentComposer({
 }
 
 function ReportForm({ target, onDone }: { target: { type: TargetType; id: string }; onDone: () => void }) {
+  const tt = useT();
+  const t = tt.community;
   const uid = useId();
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [noteText, setNoteText] = useState("");
@@ -540,30 +552,30 @@ function ReportForm({ target, onDone }: { target: { type: TargetType; id: string
     return (
       <div className="pn-comm__panel" data-testid="report-done">
         <p className="pn-comm__status" role="status">
-          Report sent. A moderator will look at it. Thank you.
+          {t.reportDone}
         </p>
         <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={onDone}>
-          Close
+          {t.close}
         </button>
       </div>
     );
   }
 
   const send = async () => {
-    if (!reason) return setError("Choose a reason.");
+    if (!reason) return setError(t.chooseReason);
     setSending(true);
     setError(null);
     const r = await reportPost(target.type, target.id, reason, noteText.trim() || undefined);
     setSending(false);
     if (r.ok) setDone(true);
-    else setError(r.message);
+    else setError(apiText(r.message, t.api));
   };
 
   return (
     <fieldset className="pn-comm__panel" data-testid="report-form">
-      <legend className="pn-comm__panel-title">Report this {target.type}</legend>
-      <div role="radiogroup" aria-label="Reason">
-        {REPORT_REASONS.map((r, i) => (
+      <legend className="pn-comm__panel-title">{target.type === "post" ? t.reportPost : t.reportComment}</legend>
+      <div role="radiogroup" aria-label={t.reason}>
+        {reportReasonsIn(t).map((r, i) => (
           <label key={r.value} className="pn-comm__option">
             <input ref={i === 0 ? first : undefined} type="radio" name={`${uid}-reason`} value={r.value} checked={reason === r.value} onChange={() => { setReason(r.value); setError(null); }} />
             <span className="pn-comm__option-label">{r.label}</span>
@@ -572,7 +584,7 @@ function ReportForm({ target, onDone }: { target: { type: TargetType; id: string
       </div>
       <div className="pn-comm__field">
         <label htmlFor={`${uid}-note`} className="pn-comm__label">
-          Note (optional)
+          {t.noteLabel}
         </label>
         <textarea id={`${uid}-note`} className="pn-comm__input pn-comm__textarea" rows={2} maxLength={NOTE_MAX} value={noteText} onChange={(e) => setNoteText(e.target.value)} />
       </div>
@@ -583,10 +595,10 @@ function ReportForm({ target, onDone }: { target: { type: TargetType; id: string
       ) : null}
       <div className="pn-comm__row">
         <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} disabled={sending} data-testid="report-send">
-          {sending ? "Sending…" : "Send report"}
+          {sending ? tt.forms.sending : t.sendReport}
         </button>
         <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={onDone}>
-          Cancel
+          {tt.kit.cancel}
         </button>
       </div>
     </fieldset>

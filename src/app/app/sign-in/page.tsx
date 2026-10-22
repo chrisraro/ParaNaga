@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PageFrame } from "@/ui/app-shell/page-frame";
+import { LocalizedPageFrame } from "@/ui/app-shell/localized-page-frame";
 import { SignInScreen } from "@/ui/auth/sign-in-screen";
 
 export const metadata: Metadata = {
@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function SignInPage() {
   return (
-    <PageFrame title="Sign in" back testId="sign-in-page">
+    <LocalizedPageFrame title="signIn" back testId="sign-in-page">
       <SignInScreen />
-    </PageFrame>
+    </LocalizedPageFrame>
   );
 }

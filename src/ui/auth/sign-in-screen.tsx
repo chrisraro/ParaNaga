@@ -6,6 +6,8 @@ import "@/ui/auth/sign-in.css";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getAuthClient } from "@/client/auth/client";
+import type { Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 
 type AuthResult = { error?: { message?: string } | null } | undefined | null;
 
@@ -19,15 +21,17 @@ type AuthClientLike = {
 };
 
 /** Turns the service's technical messages into calm copy; unknown messages fall back to ours. */
-function friendlyAuthError(message: string | undefined, fallback: string): string {
+function friendlyAuthError(message: string | undefined, fallback: string, t: Dict["auth"]): string {
   if (!message) return fallback;
-  if (/invalid origin/i.test(message)) return "Sign-in is not set up for this address yet. You can keep using ParaNaga as a guest.";
-  if (/too many|rate/i.test(message)) return "Too many tries. Please wait a minute and try again.";
-  if (/invalid|expired|otp/i.test(message)) return "That code did not work. Check it, or ask for a new one.";
+  if (/invalid origin/i.test(message)) return t.errOrigin;
+  if (/too many|rate/i.test(message)) return t.errRate;
+  if (/invalid|expired|otp/i.test(message)) return t.errCode;
   return fallback;
 }
 
 export function SignInScreen() {
+  const tt = useT();
+  const t = tt.auth;
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"email" | "otp">("email");
@@ -45,7 +49,7 @@ export function SignInScreen() {
   }, [step]);
 
   const fail = (error: { message?: string } | null | undefined, fallback: string) =>
-    setStatus({ type: "error", message: friendlyAuthError(error?.message, fallback) });
+    setStatus({ type: "error", message: friendlyAuthError(error?.message, fallback, t) });
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,18 +60,18 @@ export function SignInScreen() {
       const client = getAuthClient() as AuthClientLike | null;
       // Never report success unless the service answered without an error.
       if (!client?.emailOtp?.sendVerificationOtp) {
-        fail(null, "Sign-in is not available right now. You can keep using ParaNaga as a guest.");
+        fail(null, t.unavailable);
         return;
       }
       const res = await client.emailOtp.sendVerificationOtp({ email: email.trim(), type: "sign-in" });
       if (!res || res.error) {
-        fail(res?.error, "Could not send the code. Please try again.");
+        fail(res?.error, t.sendFailed);
         return;
       }
-      setStatus({ type: "success", message: `Verification code sent to ${email.trim()}.` });
+      setStatus({ type: "success", message: t.codeSent(email.trim()) });
       setStep("otp");
     } catch {
-      fail(null, "Network error sending the code. Please try again.");
+      fail(null, t.sendNetwork);
     } finally {
       setBusy(false);
     }
@@ -81,18 +85,18 @@ export function SignInScreen() {
     try {
       const client = getAuthClient() as AuthClientLike | null;
       if (!client?.signIn?.emailOtp) {
-        fail(null, "Sign-in is not available right now. You can keep using ParaNaga as a guest.");
+        fail(null, t.unavailable);
         return;
       }
       const res = await client.signIn.emailOtp({ email: email.trim(), otp: otp.trim() });
       if (!res || res.error) {
-        fail(res?.error, "That code did not work. Check it and try again.");
+        fail(res?.error, t.codeFailed);
         return;
       }
-      setStatus({ type: "success", message: "Signed in. Redirecting..." });
+      setStatus({ type: "success", message: t.signedIn });
       window.location.href = "/app/more";
     } catch {
-      fail(null, "Could not verify the code. Please try again.");
+      fail(null, t.verifyFailed);
     } finally {
       setBusy(false);
     }
@@ -104,14 +108,14 @@ export function SignInScreen() {
     try {
       const client = getAuthClient() as AuthClientLike | null;
       if (!client?.signIn?.social) {
-        fail(null, "Google sign-in is not available right now.");
+        fail(null, t.googleUnavailable);
         return;
       }
       // Absolute, so Neon sends the browser back to this site (its host is a trusted origin) and not to its own.
       const res = await client.signIn.social({ provider: "google", callbackURL: `${window.location.origin}/app/more` });
-      if (res?.error) fail(res.error, "Could not start Google sign-in.");
+      if (res?.error) fail(res.error, t.googleFailed);
     } catch {
-      fail(null, "Could not start Google sign-in.");
+      fail(null, t.googleFailed);
     } finally {
       setBusy(false);
     }
@@ -120,9 +124,9 @@ export function SignInScreen() {
   return (
     <div className="pn-signin" data-testid="sign-in-screen">
       <div className="pn-signin__intro">
-        <p className="pn-signin__lead">An account is optional.</p>
+        <p className="pn-signin__lead">{t.lead}</p>
         <p className="pn-signin__body">
-          Everything in ParaNaga works as a guest, and your saved trips stay on this phone. Signing in lets you contribute community posts, report corrections, and sync your data.
+          {t.body}
         </p>
       </div>
 
@@ -137,7 +141,7 @@ export function SignInScreen() {
           <form className="pn-signin__form" onSubmit={handleSendOtp}>
             <div className="pn-signin__field">
               <label htmlFor="signin-email" className="pn-signin__label">
-                Email address
+                {t.emailLabel}
               </label>
               <input
                 id="signin-email"
@@ -158,14 +162,14 @@ export function SignInScreen() {
               disabled={busy || !email.trim()}
               data-testid="send-otp-btn"
             >
-              {busy ? "Sending code..." : "Continue with Email"}
+              {busy ? t.sendingCode : t.continueEmail}
             </button>
           </form>
         ) : (
           <form className="pn-signin__form" onSubmit={handleVerifyOtp}>
             <div className="pn-signin__field">
               <label htmlFor="signin-otp" className="pn-signin__label">
-                One-time code sent to {email}
+                {t.codeLabel(email)}
               </label>
               <input
                 id="signin-otp"
@@ -189,7 +193,7 @@ export function SignInScreen() {
               disabled={busy || !otp.trim()}
               data-testid="verify-otp-btn"
             >
-              {busy ? "Verifying..." : "Verify & Sign in"}
+              {busy ? t.verifying : t.verify}
             </button>
             <button
               type="button"
@@ -201,13 +205,13 @@ export function SignInScreen() {
               }}
               disabled={busy}
             >
-              Use a different email
+              {t.differentEmail}
             </button>
           </form>
         )}
 
         <div className="pn-signin__divider" aria-hidden="true">
-          <span>or</span>
+          <span>{t.or}</span>
         </div>
 
         <button
@@ -235,14 +239,14 @@ export function SignInScreen() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
             />
           </svg>
-          Continue with Google
+          {t.google}
         </button>
       </div>
 
       <p className="pn-signin__guest-note">
-        Want to stay a guest?{" "}
+        {t.guestQuestion}{" "}
         <Link href="/app" className="pn-signin__guest-link">
-          Return to map
+          {t.returnToMap}
         </Link>
       </p>
     </div>
