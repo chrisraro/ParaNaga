@@ -7,7 +7,14 @@ test("home page loads with security headers", async ({ page }) => {
   const headers = response?.headers() ?? {};
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
-  expect(headers["content-security-policy-report-only"]).toContain("frame-ancestors 'none'");
+  // Enforced since N8 (CSP_REPORT_ONLY=1 at build is the kill switch, docs/setup.md).
+  const csp = headers["content-security-policy"] ?? "";
+  expect(headers["content-security-policy-report-only"]).toBeUndefined();
+  for (const directive of ["default-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'", "report-uri /api/csp-report", "report-to csp"]) {
+    expect(csp).toContain(directive);
+  }
+  expect(csp).not.toContain("unsafe-eval");
+  expect(headers["reporting-endpoints"]).toBe('csp="/api/csp-report"');
   expect(headers["x-powered-by"]).toBeUndefined();
 });
 
@@ -30,8 +37,10 @@ test("public health endpoint discloses nothing but liveness", async ({ request }
 });
 
 test("account and admin routes are not reachable signed out", async ({ page }) => {
-  for (const path of ["/account", "/admin"]) {
-    await page.goto(path);
-    expect(new URL(page.url()).pathname).toBe("/");
-  }
+  await page.goto("/account");
+  expect(new URL(page.url()).pathname).toBe("/");
+  // /admin answers a plain 404 to a signed-out visitor, never a redirect that confirms it exists (N5a, src/proxy.ts).
+  const admin = await page.goto("/admin");
+  expect(admin?.status()).toBe(404);
+  expect(new URL(page.url()).pathname).toBe("/admin");
 });

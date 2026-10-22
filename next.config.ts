@@ -6,41 +6,64 @@ import { testOnlyEnvProblem } from "./src/domain/pwa/build-guard";
 const envProblem = testOnlyEnvProblem(process.env);
 if (envProblem) throw new Error(envProblem);
 
-// Baseline headers for every response. The CSP starts in Report-Only mode
-// (docs/spec/05-security.md §5.10) and is enforced once MapLibre, PMTiles and
-// the service worker have been verified under it. The service worker (/serwist/sw.js, Task 12)
-// fetches same-origin only (connect-src 'self') and is a same-origin script (worker-src 'self').
-// Browser uploads PUT straight to the object store with a presigned URL (B4/B6/B8), so that one
-// origin is allowed in connect-src (spec 05 §5.10 lists https://{storage-host}). Not a secret.
-const storageOrigin = (() => {
+// Baseline headers for every response. The CSP is ENFORCED (N8, spec 05 §5.10); CSP_REPORT_ONLY=1
+// at build time is the kill switch back to Report-Only (docs/setup.md "CSP"). Headers are fixed at
+// build, so a change of either needs a redeploy.
+//
+// script-src keeps 'unsafe-inline': Cache Components / Partial Prerendering stream the RSC payload
+// as inline <script> tags in the prerendered shells, and a nonce needs a dynamic render of every
+// page (node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md: "PPR is
+// incompatible with nonce-based CSP"); per-page hashes cannot be known for streamed payloads.
+// No 'unsafe-eval' outside `next dev` (React uses eval there for error stacks). style-src keeps
+// 'unsafe-inline' for Leaflet's and React's inline style attributes.
+// The service worker (/serwist/sw.js, Task 12) fetches same-origin only (connect-src 'self'; it
+// never handles cross-origin requests, src/domain/pwa/sw-routes.ts) and is a same-origin script
+// (worker-src 'self'). Browser uploads PUT straight to the object store with a presigned URL
+// (B4/B6/B8), so that one origin is allowed in connect-src. Map tiles are <img> loads from the
+// configured tile host only (NEXT_PUBLIC_TILE_URL; the public OSM server outside production, as
+// src/client/map/tile-config.ts). Street View is a Google Maps Embed iframe. Not secrets.
+const originOf = (value: string | undefined) => {
   try {
-    return process.env.STORAGE_ENDPOINT ? new URL(process.env.STORAGE_ENDPOINT).origin : "";
+    if (!value) return "";
+    // A {s} subdomain template (a., b., c.) becomes a host wildcard; other {z}/{x}/{y} sit in the path.
+    const origin = new URL(value.replace(/\{s\}/g, "pn-sub").replace(/\{[a-z]\}/g, "0")).origin;
+    return origin.replace("//pn-sub.", "//*.");
   } catch {
     return "";
   }
-})();
+};
+const storageOrigin = originOf(process.env.STORAGE_ENDPOINT);
+const isDev = process.env.NODE_ENV === "development";
+const tileOrigins = [...new Set([originOf(process.env.NEXT_PUBLIC_TILE_URL), process.env.NODE_ENV === "production" ? "" : "https://tile.openstreetmap.org"])].filter(Boolean);
+const cspReportOnly = process.env.CSP_REPORT_ONLY === "1";
 
-const cspReportOnly = [
+const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://tile.openstreetmap.org https://api.maptiler.com",
+  ["img-src 'self' data: blob:", ...tileOrigins].join(" "),
   // Report a driver (task B8): the in-app camera preview and captured clips are local blob: URLs.
   "media-src 'self' blob:",
   storageOrigin ? `connect-src 'self' ${storageOrigin}` : "connect-src 'self'",
-  "frame-src 'self' https://www.google.com/maps/embed/",
+  "frame-src https://www.google.com/maps/embed/",
   "worker-src 'self' blob:",
   "child-src blob:",
   "font-src 'self'",
+  "manifest-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
+  // Vercel serves HTTPS only (HSTS below); `next start` on http://localhost must not be upgraded.
+  ...(process.env.VERCEL ? ["upgrade-insecure-requests"] : []),
   "report-uri /api/csp-report",
+  "report-to csp",
 ].join("; ");
 
 const securityHeaders = [
-  { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
+  { key: cspReportOnly ? "Content-Security-Policy-Report-Only" : "Content-Security-Policy", value: csp },
+  // The Reporting API endpoint named by `report-to csp` (report-uri stays for older browsers).
+  { key: "Reporting-Endpoints", value: 'csp="/api/csp-report"' },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

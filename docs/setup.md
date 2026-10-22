@@ -191,6 +191,25 @@ Adds migrations 0010 (route notes, street graph v2, research source codes), 0011
   `curl -s -H "Authorization: Bearer $CRON_SECRET" "https://<host>/api/cron/retention?mode=dry-run"`.
 - The database functions only run without a signed-in user (the cron route), so no user request can purge anything.
 
+## Content Security Policy (N8)
+
+The CSP is **enforced** (`Content-Security-Policy`, set in `next.config.ts` for every response). Violations are reported to `/api/csp-report` (both `report-uri` and the Reporting API via `Reporting-Endpoints: csp=...`); the route logs one line per violation (`csp_violation`: directive and blocked origin only, at most 5 per batch, 20 reports per minute per sender) in the Vercel runtime logs.
+
+- **Kill switch:** set `CSP_REPORT_ONLY=1` in Vercel (Production) and redeploy. The same policy is then sent as `Content-Security-Policy-Report-Only`, so nothing is blocked and violations are still reported. Headers are fixed at build time, so both turning it on and off need a new deployment. Remove the variable to enforce again.
+- The policy reads three build-time values: `NEXT_PUBLIC_TILE_URL` (its origin goes into `img-src`; a `{s}` subdomain becomes `*.`), `STORAGE_ENDPOINT` (its origin goes into `connect-src` for presigned uploads) and `VERCEL` (adds `upgrade-insecure-requests`). A new tile or storage host needs a redeploy, or images/uploads are blocked.
+- `script-src` and `style-src` keep `'unsafe-inline'`: the prerendered shells (Cache Components / Partial Prerendering) stream inline RSC scripts, and Next 16 cannot put nonces on prerendered pages; there is no `'unsafe-eval'` outside `next dev`.
+- Check after a deploy: `curl -sI https://<host>/app | grep -i content-security-policy`.
+
+## Planner load test (N8)
+
+`scripts/load-plan.ts` (`pnpm load:plan`) sends `POST /api/v1/plan` at several concurrency levels and prints p50/p95/p99, throughput, error rate and 429s. It refuses any host but localhost. Run it against a local production build on a throwaway Neon branch, never production (every request writes a rate-limit row):
+
+```bash
+bash scripts/with-neon-branch.sh bash -c 'pnpm build && (pnpm start --port 3600 & sleep 8; pnpm load:plan -- --base http://localhost:3600 --levels 10,25,50 --requests 300; kill %1)'
+```
+
+Each request carries its own `x-real-ip` from 198.18.0.0/15 so the per-client limit (30/min) does not hide the planner's cost. Results: docs/spec/07-delivery.md §7.12.
+
 ## Notes
 
 - Per-minute Vercel Cron needs a paid Vercel plan; on Hobby, increment 6 falls back to a Neon scheduled Function calling the job endpoint.

@@ -34,6 +34,8 @@ export const RATE_LIMITS = {
   userLookupPerHour: { prefix: "ulookup:hour", windowSeconds: 3600, limit: 30 },
   /** Live Jev diagnostics (N7, C12): each one is a paid Decisions call. */
   jevDiagnosticPerHour: { prefix: "jevdiag:hour", windowSeconds: 3600, limit: 6 },
+  /** CSP violation reports (N8): a log sink, so a page with a broken policy cannot flood the logs. */
+  cspReportPerMinute: { prefix: "csp:min", windowSeconds: 60, limit: 20 },
 } as const;
 
 /**
