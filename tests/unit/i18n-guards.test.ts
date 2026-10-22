@@ -22,6 +22,7 @@ const SAME_AS_EN: Record<string, string> = {
   "guidance.padyak": "everyday word",
   "guidance.saved": "Taglish, button length budget",
   "guidance.steps": "Taglish, button length budget",
+  "guidance.undo": "Taglish, button length budget (T10 review: clearer than 'Bawi'; 'I-undo' is over)",
   "eta.modeName.uv_express": "proper name",
   "eta.modeName.bus": "everyday word",
   "eta.modeName.tricycle": "everyday word",

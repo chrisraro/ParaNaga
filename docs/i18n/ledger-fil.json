@@ -2,2686 +2,3130 @@
   {
     "key": "guidance.keepOpen",
     "en": "Keep this screen open.",
-    "fil": "Iwanang bukas ang screen na ito."
+    "fil": "Iwanang bukas ang screen na ito.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.endGuidance",
     "en": "End guidance",
-    "fil": "Itigil ang gabay"
+    "fil": "Itigil ang gabay",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.atStop",
     "en": "I'm at the stop",
-    "fil": "Nasa hintuan na ako"
+    "fil": "Nasa hintuan na ako",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.boarded",
     "en": "I boarded {0}",
     "fil": "Nakasakay sa {0}",
     "note": "message function; {0},{1}.. are the arguments in order | 'Nakasakay sa X' (riding X) for the length budget.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "guidance.arrived",
     "en": "I've arrived",
     "fil": "Nandito na ako",
-    "review": true,
     "note": "'Nandito na ako' (I'm here) instead of 'dumating'/'nakarating' for the length budget and to avoid arrival claims.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.97,
       "decision": "act",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.gotOffTricycle",
     "en": "I got off the tricycle",
-    "fil": "Bumaba na ako sa tricycle"
+    "fil": "Bumaba na ako sa tricycle",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.paraAck",
     "en": "I said “Para”",
     "fil": "Sinabi ko “Para”",
-    "review": true,
-    "note": "Shortened to fit; 'Sinabi ko “Para”'."
+    "note": "Shortened to fit; 'Sinabi ko “Para”'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.gotOff",
     "en": "I got off",
-    "fil": "Bumaba ako"
+    "fil": "Bumaba ako",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.gotOffEarly",
     "en": "I got off early",
-    "fil": "Maaga akong bumaba"
+    "fil": "Maaga akong bumaba",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.missedStop",
     "en": "I missed my stop",
-    "fil": "Lampas na ako",
+    "fil": "Lampas na sa hintuan",
     "review": true,
-    "note": "Short button: 'Lampas na ako' (I've gone past). Check it reads as missed stop.",
+    "note": "Short button: 'Lampas na ako' (I've gone past). Check it reads as missed stop. | T10 review: was 'Lampas na ako'. | T10: 'Lampas na sa hintuan' (already past the stop) names the stop; native speaker to confirm it reads as 'I missed my stop' at a glance.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.95,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.done",
     "en": "Done",
-    "fil": "Tapos"
+    "fil": "Tapos",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.boardingSideUnknown",
     "en": "Ask where it stops.",
     "fil": "Itanong kung saan humihinto.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.signboardUnknown",
     "en": "Signboard unverified. Ask the driver: “{0}?”",
     "fil": "Hindi pa kumpirmado ang signboard. Itanong sa driver: “{0}?”",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.entranceUnknown",
     "en": "Entrance not mapped.",
-    "fil": "Wala pa sa mapa ang pasukan."
+    "fil": "Wala pa sa mapa ang pasukan.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.locationApproximate",
     "en": "Location too rough (± {0} m): distance hidden.",
     "fil": "Masyadong malabo ang lokasyon (± {0} m): nakatago ang layo.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.locationStale",
     "en": "Location is stale: distance hidden.",
-    "fil": "Luma na ang lokasyon: nakatago ang layo.",
-    "review": true,
-    "note": "Safety-critical location-lost wording.",
+    "fil": "Hindi na updated ang lokasyon: nakatago ang layo.",
+    "note": "Safety-critical location-lost wording. | T10 review: was 'Luma na ang lokasyon: nakatago ang layo.'.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.86,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.locationImprecise",
     "en": "Location too rough: distance hidden.",
     "fil": "Masyadong malabo ang lokasyon: nakatago ang layo.",
-    "review": true,
-    "note": "Safety-critical location-lost wording."
+    "note": "Safety-critical location-lost wording.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.noMarkedStops",
     "en": "This route has no marked stops. Watch for your stop, and tell the driver “para” when you are near.",
     "fil": "Walang markadong hintuan ang rutang ito. Bantayan ang hintuan mo, at sabihin sa driver ang “para” kapag malapit ka na.",
-    "review": true,
     "note": "Safety-critical.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.9,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.offPath",
     "en": "Your location is away from the approximate path. The jeepney may use another street; watch for your stop.",
     "fil": "Malayo ang lokasyon mo sa tinatayang daan. Baka ibang kalye ang daanan ng jeep; bantayan ang hintuan mo.",
-    "review": true,
     "note": "Safety-critical.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.84,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.metresLeft",
     "en": "About {0} m of riding left (approximate)",
     "fil": "Mga {0} m pa ang sakay (tantiya)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.getReady",
     "en": "Get ready to get off near {0}",
-    "fil": "Humanda nang bumaba malapit sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Humandang bumaba malapit sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Humanda nang bumaba malapit sa {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.headsUp",
     "en": "{0} stops to {1}. Get ready.",
     "fil": "{0} hintuan pa hanggang {1}. Humanda.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.arriveNear",
     "en": "“I've arrived” shows when you are within {1} m of {0}.",
     "fil": "Lalabas ang “Nandito na ako” kapag {1} m o mas malapit ka na sa {0}.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.stopsByPinOrder",
     "en": "Approximate; watch for your stop.",
-    "fil": "Tantiya lang; bantayan ang hintuan mo."
+    "fil": "Tantiya lang; bantayan ang hintuan mo.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.paraTitle",
     "en": "Para! Next stop is yours",
     "fil": "Para! Susunod na ang hintuan mo",
-    "review": true,
     "note": "Safety-critical.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.83,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.paraBody",
     "en": "Get off at {0}. Say “Para” to the driver when you see it.",
     "fil": "Bumaba sa {0}. Sabihin sa driver ang “Para” kapag nakita mo na ito.",
     "note": "message function; {0},{1}.. are the arguments in order | Safety-critical.",
-    "review": true,
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.9,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.paraAckTitle",
     "en": "Getting off at the next stop",
-    "fil": "Bababa sa susunod na hintuan"
+    "fil": "Bababa ka sa susunod na hintuan",
+    "note": "T10 review: was 'Bababa sa susunod na hintuan'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.paraAckBody",
     "en": "Step off when the jeepney stops at {0}, then tap “I got off”.",
     "fil": "Bumaba kapag huminto ang jeep sa {0}, tapos pindutin ang “Bumaba ako”.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.stopIsNext",
     "en": "Your stop is next",
-    "fil": "Susunod na ang hintuan mo"
+    "fil": "Susunod na ang hintuan mo",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.arrivedTitle",
     "en": "You've arrived",
-    "fil": "Nakarating ka na"
+    "fil": "Nakarating ka na",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.arrivedBody",
     "en": "{0}. Location use stopped.",
     "fil": "{0}. Itinigil na ang paggamit ng lokasyon.",
     "note": "message function; {0},{1}.. are the arguments in order | Safety-critical arrival text; Jev check.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "guidance.undo",
     "en": "Undo",
-    "fil": "Bawi",
-    "review": true,
-    "note": "'Bawi' fits the length budget; alternative 'Undo' is common Taglish.",
+    "fil": "Undo",
+    "note": "'Bawi' fits the length budget; alternative 'Undo' is common Taglish. | T10 review: was 'Bawi'.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.61,
       "decision": "abstain",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.missedTitle",
     "en": "Missed your stop?",
-    "fil": "Nalampasan mo ang hintuan mo?"
+    "fil": "Nalampasan mo ang hintuan mo?",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.missedBody",
     "en": "Get off when the jeepney next stops, then plan again from where you are.",
-    "fil": "Bumaba kapag huminto ulit ang jeep, tapos magplano ulit mula sa kinalalagyan mo.",
-    "review": true,
-    "note": "Safety-critical.",
+    "fil": "Bumaba kapag huminto ulit ang jeep, tapos magplano ulit mula sa kung nasaan ka.",
+    "note": "Safety-critical. | T10 review: was 'Bumaba kapag huminto ulit ang jeep, tapos magplano ulit mula sa kinalalagyan mo.'.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.88,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "guidance.earlyTitle",
     "en": "Got off early?",
-    "fil": "Maaga kang bumaba?"
+    "fil": "Maaga kang bumaba?",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.earlyBody",
     "en": "Plan again from where you are.",
-    "fil": "Magplano ulit mula sa kinalalagyan mo."
+    "fil": "Magplano ulit mula sa kung nasaan ka.",
+    "note": "T10 review: was 'Magplano ulit mula sa kinalalagyan mo.'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.stepLabel",
     "en": "Step {0} of {1} · {2}",
     "fil": "Hakbang {0} ng {1} · {2}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.arriveStepLabel",
     "en": "Step {0} of {1}",
     "fil": "Hakbang {0} ng {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.stepWalk",
     "en": "Walk",
-    "fil": "Lakad"
+    "fil": "Lakad",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.stepRide",
     "en": "Ride",
-    "fil": "Sakay"
+    "fil": "Sakay",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.stepTransfer",
     "en": "Transfer",
-    "fil": "Lipat"
+    "fil": "Lipat",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.tricycle",
     "en": "Tricycle",
-    "fil": "Tricycle"
+    "fil": "Tricycle",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.padyak",
     "en": "Padyak",
-    "fil": "Padyak"
+    "fil": "Padyak",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.unnamedDestination",
     "en": "your destination",
-    "fil": "pupuntahan mo"
+    "fil": "pupuntahan mo",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.theJeepney",
     "en": "the jeepney",
-    "fil": "ang jeep"
+    "fil": "sakayan ng jeep",
+    "note": "T10 review: was 'ang jeep'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.pinNear",
     "en": "your pin near {0}",
-    "fil": "ang pin mo malapit sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "pin mo malapit sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'ang pin mo malapit sa {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.destinationAt",
     "en": "Your destination is at {0}",
     "fil": "Nasa {0} ang pupuntahan mo",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.youreAt",
     "en": "You're at {0}",
     "fil": "Nasa {0} ka",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.walkTo",
     "en": "Walk to {0}",
-    "fil": "Maglakad papuntang {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Maglakad papunta sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Maglakad papuntang {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.waitFor",
     "en": "Wait for {0} at {1}",
     "fil": "Hintayin ang {0} sa {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.changeAt",
     "en": "Change at {0}",
     "fil": "Lumipat sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.changeTo",
     "en": "Change to {0} at {1}",
     "fil": "Lumipat sa {0} sa {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.startAt",
     "en": "Start at {0}",
-    "fil": "Simula sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Magsimula sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Simula sa {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.gotOffAt",
     "en": "Got off at {0}",
-    "fil": "Bumaba sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Nakababa sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Bumaba sa {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.closeTo",
     "en": "Close to {0}. Tap “{1}”.",
     "fil": "Malapit ka na sa {0}. Pindutin ang “{1}”.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.almostAt",
     "en": "Almost at {0}",
     "fil": "Malapit na sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.gpsUnder10",
     "en": "Under 10 m",
-    "fil": "Wala pang 10 m"
+    "fil": "Wala pang 10 m",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.gpsMeters",
     "en": "≈ {0} m",
     "fil": "≈ {0} m",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.straightLine",
     "en": "{0} · straight-line",
     "fil": "{0} · tuwid na linya",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.liveAbout",
     "en": "About {0} m to {1}, straight line",
-    "fil": "Mga {0} m papuntang {1}, tuwid na linya",
-    "note": "message function; {0},{1}.. are the arguments in order | Spoken string; 'Mga N m' marks it as approximate.",
-    "review": true
+    "fil": "Mga {0} m papunta sa {1}, tuwid na linya",
+    "note": "message function; {0},{1}.. are the arguments in order | Spoken string; 'Mga N m' marks it as approximate. | T10 review: was 'Mga {0} m papuntang {1}, tuwid na linya'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.liveUnder10",
     "en": "Under 10 m to {0}, straight line",
-    "fil": "Wala pang 10 m papuntang {0}, tuwid na linya",
-    "note": "message function; {0},{1}.. are the arguments in order | Spoken string.",
-    "review": true
+    "fil": "Wala pang 10 m papunta sa {0}, tuwid na linya",
+    "note": "message function; {0},{1}.. are the arguments in order | Spoken string. | T10 review: was 'Wala pang 10 m papuntang {0}, tuwid na linya'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.stopsCount",
     "en": "{0} stops",
     "fil": "{0} hintuan",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.toGo",
     "en": "{0} to go",
     "fil": "{0} pa",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.rideTo",
     "en": "Ride to {0}",
     "fil": "Sumakay hanggang {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.getOff",
     "en": "Get off · {0}",
     "fil": "Bumaba · {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.alongPathTo",
     "en": "Ride along the approximate path to {0}",
-    "fil": "Sumakay sa tinatayang daan papuntang {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Sumakay sa tinatayang daan papunta sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Sumakay sa tinatayang daan papuntang {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.passedOf",
     "en": "{0} of {1}",
     "fil": "{0} sa {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.countAfter",
     "en": "{0} after {1}",
     "fil": "{0} pagkatapos ng {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.byStopCount",
     "en": "split by stop count",
-    "fil": "hinati ayon sa dami ng hintuan"
+    "fil": "hinati ayon sa dami ng hintuan",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.reportDriver",
     "en": "Report a driver",
-    "fil": "I-report ang driver"
+    "fil": "I-report ang driver",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.walkSummary",
     "en": "{0} walk",
     "fil": "{0} na lakad",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.alongThePath",
     "en": "along the path",
-    "fil": "sa daan"
+    "fil": "sa daan",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.alongStreets",
     "en": "along streets",
-    "fil": "sa mga kalye"
+    "fil": "sa mga kalye",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.saved",
     "en": "Saved",
     "fil": "Saved",
-    "review": true,
-    "note": "Left as 'Saved' (budget 6 chars; 'Naka-save' is 9)."
+    "note": "Left as 'Saved' (budget 6 chars; 'Naka-save' is 9).",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.saveTrip",
     "en": "Save this trip",
-    "fil": "I-save ang biyahe"
+    "fil": "I-save ang biyahe",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.worksOffline",
     "en": "Works offline",
-    "fil": "Gumagana kahit offline"
+    "fil": "Gumagana kahit offline",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.saveUnavailable",
     "en": "Saving isn’t available on this phone.",
-    "fil": "Hindi puwedeng mag-save sa phone na ito."
+    "fil": "Hindi puwedeng mag-save sa phone na ito.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.streetTitle",
     "en": "Take a {0} to {1}",
-    "fil": "Sumakay ng {0} papuntang {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Sumakay ng {0} papunta sa {1}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Sumakay ng {0} papuntang {1}'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.streetTime",
     "en": "{0} time not estimated",
     "fil": "Walang tantiya sa oras ng {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.useLocation",
     "en": "Use my location",
     "fil": "Lokasyon ko",
     "review": true,
-    "note": "Shortened to 'Lokasyon ko' for the length budget."
+    "note": "Shortened to 'Lokasyon ko' for the length budget. | T10: button reads 'Lokasyon ko' (my location); 'Gamitin ang lokasyon ko' is over the budget. Native speaker to confirm it reads as an action.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.findingLocation",
     "en": "Finding your location…",
-    "fil": "Hinahanap ang lokasyon mo…"
+    "fil": "Hinahanap ang lokasyon mo…",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.locationOff",
     "en": "Location off.",
-    "fil": "Naka-off ang lokasyon."
+    "fil": "Naka-off ang lokasyon.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.locationOffTap",
     "en": "Location off. Tap “{0}” when there.",
     "fil": "Naka-off ang lokasyon. Pindutin ang “{0}” kapag nandoon ka na.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.noLocation",
     "en": "No location now.",
     "fil": "Walang lokasyon ngayon.",
-    "review": true,
-    "note": "Location-lost wording."
+    "note": "Location-lost wording.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.noLocationTap",
     "en": "No location now. Tap “{0}” when there.",
     "fil": "Walang lokasyon ngayon. Pindutin ang “{0}” kapag nandoon ka na.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.undoLabel",
     "en": "Undo last step",
-    "fil": "Bawiin ang huling hakbang"
+    "fil": "I-undo ang huling hakbang",
+    "note": "T10 review: was 'Bawiin ang huling hakbang'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.transferSteps",
     "en": "Transfer steps",
-    "fil": "Mga hakbang sa paglipat"
+    "fil": "Mga hakbang sa paglipat",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.checkDone",
     "en": "(done)",
-    "fil": "(tapos na)"
+    "fil": "(tapos na)",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.gpsAccuracy",
     "en": "GPS accuracy",
-    "fil": "Linaw ng GPS"
+    "fil": "Linaw ng GPS",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.endConfirmTitle",
     "en": "End guidance?",
-    "fil": "Itigil ang gabay?"
+    "fil": "Itigil ang gabay?",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.endConfirmBody",
     "en": "Your trip stays in the options.",
-    "fil": "Mananatili ang biyahe mo sa mga opsyon."
+    "fil": "Mananatili ang biyahe mo sa mga opsyon.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.keepGoing",
     "en": "Keep going",
-    "fil": "Ituloy"
+    "fil": "Ituloy",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.replan",
     "en": "Re-plan from here",
-    "fil": "Plano ulit mula rito"
+    "fil": "Magplano ulit dito",
+    "note": "T10 review: was 'Plano ulit mula rito'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.thenRide",
     "en": "Then ride {0}",
     "fil": "Pagkatapos, sumakay sa {0}",
     "note": "message function; {0},{1}.. are the arguments in order | Chip is a route name, so 'sumakay sa X'.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "guidance.recenter",
     "en": "Re-center",
-    "fil": "Sentro"
+    "fil": "I-center",
+    "note": "T10 review: was 'Sentro'.",
+    "reviewed": "opus"
   },
   {
     "key": "guidance.steps",
     "en": "Steps",
     "fil": "Steps",
-    "review": true,
-    "note": "Left as 'Steps' (budget 6 chars; 'Hakbang' is 7)."
+    "note": "Left as 'Steps' (budget 6 chars; 'Hakbang' is 7).",
+    "reviewed": "opus"
   },
   {
     "key": "geo.compass.N",
     "en": "north",
     "fil": "hilaga",
-    "review": true,
-    "note": "Compass words in everyday Tagalog; commuters may prefer 'north' etc."
+    "note": "Compass words in everyday Tagalog; commuters may prefer 'north' etc.",
+    "reviewed": "opus"
   },
   {
     "key": "geo.compass.NE",
     "en": "northeast",
-    "fil": "hilagang-silangan"
+    "fil": "hilagang-silangan",
+    "reviewed": "opus"
   },
   {
     "key": "geo.compass.E",
     "en": "east",
-    "fil": "silangan"
+    "fil": "silangan",
+    "reviewed": "opus"
   },
   {
     "key": "geo.compass.SE",
     "en": "southeast",
-    "fil": "timog-silangan"
+    "fil": "timog-silangan",
+    "reviewed": "opus"
   },
   {
     "key": "geo.compass.S",
     "en": "south",
-    "fil": "timog"
+    "fil": "timog",
+    "reviewed": "opus"
   },
   {
     "key": "geo.compass.SW",
     "en": "southwest",
-    "fil": "timog-kanluran"
+    "fil": "timog-kanluran",
+    "reviewed": "opus"
   },
   {
     "key": "geo.compass.W",
     "en": "west",
-    "fil": "kanluran"
+    "fil": "kanluran",
+    "reviewed": "opus"
   },
   {
     "key": "geo.compass.NW",
     "en": "northwest",
-    "fil": "hilagang-kanluran"
+    "fil": "hilagang-kanluran",
+    "reviewed": "opus"
   },
   {
     "key": "geo.distanceM",
     "en": "≈ {0} m",
     "fil": "≈ {0} m",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "geo.distanceKm",
     "en": "≈ {0} km",
     "fil": "≈ {0} km",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "geo.accuracy",
     "en": "± {0} m",
     "fil": "± {0} m",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.timeNotAvailable",
     "en": "Time not available",
-    "fil": "Walang tantiyang oras"
+    "fil": "Walang tantiyang oras",
+    "reviewed": "opus"
   },
   {
     "key": "eta.min",
     "en": "{0} min",
     "fil": "{0} min",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.hours",
     "en": "{0} h",
     "fil": "{0} oras",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.hoursMin",
     "en": "{0} h {1} min",
     "fil": "{0} oras {1} min",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.rangeMin",
     "en": "{0}–{1} min",
     "fil": "{0}–{1} min",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.rangeLong",
     "en": "{0} – {1}",
     "fil": "{0} – {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.spokenHours",
     "en": "{0} hours",
     "fil": "{0} oras",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.spokenMinutes",
     "en": "{0} minutes",
     "fil": "{0} minuto",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.spokenBoth",
     "en": "{0} {1}",
     "fil": "{0} at {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.spokenRangeMin",
     "en": "{0} to {1} minutes",
     "fil": "{0} hanggang {1} minuto",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.spokenRangeLong",
     "en": "{0} to {1}",
     "fil": "{0} hanggang {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.modeName.jeepney",
     "en": "jeepney",
-    "fil": "jeep"
+    "fil": "jeep",
+    "reviewed": "opus"
   },
   {
     "key": "eta.modeName.tricycle",
     "en": "tricycle",
-    "fil": "tricycle"
+    "fil": "tricycle",
+    "reviewed": "opus"
   },
   {
     "key": "eta.modeName.padyak",
     "en": "padyak",
-    "fil": "padyak"
+    "fil": "padyak",
+    "reviewed": "opus"
   },
   {
     "key": "eta.modeName.uv_express",
     "en": "UV Express",
-    "fil": "UV Express"
+    "fil": "UV Express",
+    "reviewed": "opus"
   },
   {
     "key": "eta.modeName.bus",
     "en": "bus",
-    "fil": "bus"
+    "fil": "bus",
+    "reviewed": "opus"
   },
   {
     "key": "eta.modeName.rail",
     "en": "train",
-    "fil": "tren"
+    "fil": "tren",
+    "reviewed": "opus"
   },
   {
     "key": "eta.modesJoin",
     "en": " and ",
-    "fil": " at "
+    "fil": " at ",
+    "reviewed": "opus"
   },
   {
     "key": "eta.notEstimated",
     "en": "{0} time not estimated",
     "fil": "Walang tantiya sa oras ng {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.waitingOne",
     "en": " + waiting (unknown)",
-    "fil": " + paghihintay (hindi alam)"
+    "fil": " + paghihintay (hindi alam)",
+    "reviewed": "opus"
   },
   {
     "key": "eta.waitingMany",
     "en": " + waiting (unknown, {0} rides)",
     "fil": " + paghihintay (hindi alam, {0} sakay)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.noWalking",
     "en": "No walking",
-    "fil": "Walang lakad"
+    "fil": "Walang lakad",
+    "reviewed": "opus"
   },
   {
     "key": "eta.estimatePrefix",
     "en": "Estimate ",
-    "fil": "Tantiya "
+    "fil": "Tantiya ",
+    "reviewed": "opus"
   },
   {
     "key": "eta.walkSuffix",
     "en": " walk",
-    "fil": " na lakad"
+    "fil": " na lakad",
+    "reviewed": "opus"
   },
   {
     "key": "eta.partialSep",
     "en": " · {0}",
     "fil": " · {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.peakNote",
     "en": "Peak hours: slower ({0})",
     "fil": "Rush hour: mas mabagal ({0})",
     "note": "message function; {0},{1}.. are the arguments in order | 'Rush hour' used for peak hours.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "eta.legWalk",
     "en": "≈ {0} walk",
     "fil": "≈ {0} na lakad",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.legRide",
     "en": "≈ {0} ride",
     "fil": "≈ {0} na sakay",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.remainingRiding",
     "en": "≈ {0} left (estimate)",
     "fil": "≈ {0} pa (tantiya)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.remainingTrip",
     "en": "≈ {0} (estimate)",
     "fil": "≈ {0} (tantiya)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.estAbbr",
     "en": "Est.",
-    "fil": "Tant."
+    "fil": "Tant.",
+    "reviewed": "opus",
+    "review": true,
+    "note": "T10: 'Tant.' (Tantiya) is not a common abbreviation; the <abbr> title and screen-reader text give 'Tantiya'. Native speaker to confirm riders read it as 'estimate'."
   },
   {
     "key": "eta.estimate",
     "en": "Estimate",
-    "fil": "Tantiya"
+    "fil": "Tantiya",
+    "reviewed": "opus"
   },
   {
     "key": "eta.waitingRow",
     "en": "Waiting: unknown — no published schedules or headways for Naga",
     "fil": "Paghihintay: hindi alam — walang nakalathalang iskedyul o headway para sa Naga",
-    "review": true,
-    "note": "'headway' left as English; no everyday Filipino word."
+    "note": "'headway' left as English; no everyday Filipino word.",
+    "reviewed": "opus"
   },
   {
     "key": "eta.trafficRow",
     "en": "Based on typical speeds. ParaNaga uses no traffic service.",
-    "fil": "Batay sa karaniwang bilis. Hindi gumagamit ng traffic service ang ParaNaga."
+    "fil": "Batay sa karaniwang bilis. Hindi gumagamit ng traffic service ang ParaNaga.",
+    "reviewed": "opus"
   },
   {
     "key": "eta.assumption",
     "en": "ParaNaga assumption",
-    "fil": "Palagay ng ParaNaga"
+    "fil": "Palagay ng ParaNaga",
+    "reviewed": "opus"
   },
   {
     "key": "eta.speedAssumption",
     "en": "(ParaNaga assumption)",
-    "fil": "(palagay ng ParaNaga)"
+    "fil": "(palagay ng ParaNaga)",
+    "reviewed": "opus"
   },
   {
     "key": "eta.speedMixed",
     "en": "(upper from {0}; lower is a ParaNaga assumption)",
     "fil": "(ang mataas ay mula sa {0}; palagay ng ParaNaga ang mababa)",
     "note": "message function; {0},{1}.. are the arguments in order | Technical basis row.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "eta.rowWalk",
     "en": "Walking: {0} km/h ({1}); up to {2}% slower for crossings ({3})",
     "fil": "Lakad: {0} km/h ({1}); hanggang {2}% na mas mabagal dahil sa pagtawid ({3})",
     "note": "message function; {0},{1}.. are the arguments in order | Technical basis row.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "eta.rowOffpeak",
     "en": "Jeepney off-peak: {0} km/h {1}",
     "fil": "Jeep, hindi rush hour: {0} km/h {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.rowPeak",
     "en": "Jeepney peak: {0} km/h {1}",
     "fil": "Jeep, rush hour: {0} km/h {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.rowWindows",
     "en": "Peak windows: {0} ({1}){2}",
     "fil": "Oras ng rush hour: {0} ({1}){2}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "eta.everyDay",
     "en": ", applied every day",
-    "fil": ", araw-araw ang gamit"
+    "fil": ", ginagamit araw-araw",
+    "note": "T10 review: was ', araw-araw ang gamit'.",
+    "reviewed": "opus"
   },
   {
     "key": "eta.everyDayNoData",
     "en": ", applied every day (no day-of-week data)",
-    "fil": ", araw-araw ang gamit (walang datos ng araw ng linggo)"
+    "fil": ", ginagamit araw-araw (walang datos kada araw ng linggo)",
+    "note": "T10 review: was ', araw-araw ang gamit (walang datos ng araw ng linggo)'.",
+    "reviewed": "opus"
   },
   {
     "key": "eta.serviceHint",
     "en": "Usually runs about 5:00-21:00 · unconfirmed",
-    "fil": "Karaniwang tumatakbo mga 5:00-21:00 · hindi pa kumpirmado"
+    "fil": "Karaniwang tumatakbo mga 5:00-21:00 · hindi pa kumpirmado",
+    "reviewed": "opus"
   },
   {
     "key": "eta.serviceOutside",
     "en": "This ride starts outside the usual hours (about 5 am–9 pm, unconfirmed). A jeepney may not be running. Check with the driver or terminal.",
-    "fil": "Nagsisimula ang sakay na ito sa labas ng karaniwang oras (mga 5 am–9 pm, hindi pa kumpirmado). Baka walang jeep na tumatakbo. Itanong sa driver o sa terminal."
+    "fil": "Nagsisimula ang sakay na ito sa labas ng karaniwang oras (mga 5 am–9 pm, hindi pa kumpirmado). Baka walang jeep na tumatakbo. Itanong sa driver o sa terminal.",
+    "reviewed": "opus"
   },
   {
     "key": "eta.serviceEarly",
     "en": "Some jeepneys reportedly start before 5 am.",
     "fil": "May mga jeep daw na umaalis bago mag-5 am.",
-    "review": true,
-    "note": "Hearsay marked with 'daw'."
+    "note": "Hearsay marked with 'daw'.",
+    "reviewed": "opus"
   },
   {
     "key": "eta.serviceLastTrips",
     "en": "Last trips may already have left (unconfirmed).",
-    "fil": "Baka nakaalis na ang huling biyahe (hindi pa kumpirmado)."
+    "fil": "Baka nakaalis na ang huling biyahe (hindi pa kumpirmado).",
+    "reviewed": "opus"
   },
   {
     "key": "eta.serviceOutsideCard",
     "en": "Outside the usual hours (about 5 am–9 pm) · unconfirmed",
-    "fil": "Labas sa karaniwang oras (mga 5 am–9 pm) · hindi pa kumpirmado"
+    "fil": "Labas sa karaniwang oras (mga 5 am–9 pm) · hindi pa kumpirmado",
+    "reviewed": "opus"
   },
   {
     "key": "eta.basisTitle",
     "en": "How times are estimated",
-    "fil": "Paano tinatantiya ang oras"
+    "fil": "Paano tinatantiya ang oras",
+    "reviewed": "opus"
   },
   {
     "key": "eta.basisClose",
     "en": "Close how times are estimated",
-    "fil": "Isara ang paliwanag kung paano tinatantiya ang oras"
+    "fil": "Isara ang paliwanag kung paano tinatantiya ang oras",
+    "reviewed": "opus"
   },
   {
     "key": "eta.close",
     "en": "Close",
-    "fil": "Isara"
+    "fil": "Isara",
+    "reviewed": "opus"
   },
   {
     "key": "eta.walkNote",
     "en": "Walking distances are estimates; paths not verified.",
-    "fil": "Tantiya lang ang layo ng lakad; hindi pa napatunayan ang mga daan."
+    "fil": "Tantiya lang ang layo ng lakad; hindi pa napatunayan ang mga daan.",
+    "reviewed": "opus"
   },
   {
     "key": "eta.noModel",
     "en": "Time-estimate model not on file for this revision.",
-    "fil": "Wala pang modelo ng tantiya sa oras para sa bersyong ito."
+    "fil": "Wala pang modelo ng tantiya sa oras para sa bersyong ito.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.unverifiedBadge",
     "en": "Unverified route — confirm with the driver",
     "fil": "Di pa kumpirmadong ruta — itanong sa driver",
-    "review": true,
     "note": "Fixed-style honesty badge; Jev check.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.83,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "trip.unverifiedChip",
     "en": "Unverified route",
     "fil": "Di pa kumpirmado",
-    "review": true,
-    "note": "Shortened for the length budget (drops 'route')."
+    "note": "Shortened for the length budget (drops 'route').",
+    "reviewed": "opus"
   },
   {
     "key": "trip.unverified",
     "en": "Unverified",
     "fil": "Di-kumpirmado",
-    "review": true,
-    "note": "Shortened for the length budget."
+    "note": "Shortened for the length budget.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.yourLocation",
     "en": "Your location",
-    "fil": "Lokasyon mo"
+    "fil": "Lokasyon mo",
+    "reviewed": "opus"
   },
   {
     "key": "trip.pinnedLocation",
     "en": "Pinned location",
-    "fil": "Na-pin na lokasyon"
+    "fil": "Na-pin na lokasyon",
+    "reviewed": "opus"
   },
   {
     "key": "trip.direction.clockwise",
     "en": "clockwise",
     "fil": "clockwise",
-    "review": true,
-    "note": "Left in English (Taglish)."
+    "note": "Left in English (Taglish).",
+    "reviewed": "opus"
   },
   {
     "key": "trip.direction.counterclockwise",
     "en": "counterclockwise",
     "fil": "counterclockwise",
-    "review": true,
-    "note": "Left in English (Taglish)."
+    "note": "Left in English (Taglish).",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fromPinOrder",
     "en": "{0} (from pin order)",
     "fil": "{0} (batay sa ayos ng mga pin)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareNoRide",
     "en": "No fare (walk)",
-    "fil": "Walang pasahe (lakad)"
+    "fil": "Walang pasahe (lakad)",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareMinimum",
     "en": "Minimum fare {0}",
     "fil": "Minimum na pasahe {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.farePerPassenger",
     "en": "{0} per passenger",
     "fil": "{0} bawat pasahero",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareEstimate",
     "en": "Estimate {0}",
     "fil": "Tantiya {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareUnavailable",
     "en": "Fare estimate unavailable",
-    "fil": "Walang tantiya sa pasahe"
+    "fil": "Walang tantiya sa pasahe",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareNone",
     "en": "No fare",
     "fil": "Libre",
-    "review": true,
     "note": "Shown only for walk-only trips (no ride), so \"Libre\" is true; Jev reads it as \"free\" out of context. Keep for native review.",
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.18,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareNA",
     "en": "Fare n/a",
     "fil": "Pasahe n/a",
-    "review": true,
-    "note": "Abbreviation 'n/a' kept."
+    "note": "Abbreviation 'n/a' kept.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.legFareTraditional",
     "en": "{0} · traditional jeepney rate · from reported fare rules · matrix not verified",
     "fil": "{0} · singil ng traditional jeep · batay sa mga naiulat na patakaran sa pasahe · hindi pa napatunayan ang matrix",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.legFareModern",
     "en": "{0} · modern jeepney rate · from reported fare rules · matrix not verified",
     "fil": "{0} · singil ng modern jeep · batay sa mga naiulat na patakaran sa pasahe · hindi pa napatunayan ang matrix",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.legFareMixed",
     "en": "{0} · traditional to modern rate{1} · matrix not verified",
     "fil": "{0} · singil mula traditional hanggang modern{1} · hindi pa napatunayan ang matrix",
     "note": "message function; {0},{1}.. are the arguments in order | Fare wording 'singil'.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "trip.legFareMixedReports",
     "en": " · from the national fare rule and riders' reports",
-    "fil": " · batay sa pambansang patakaran at sa ulat ng mga pasahero"
+    "fil": " · batay sa pambansang patakaran at sa ulat ng mga pasahero",
+    "reviewed": "opus"
   },
   {
     "key": "trip.legFareDefault",
     "en": "{0} · from reported fare rules · matrix not verified",
     "fil": "{0} · batay sa mga naiulat na patakaran sa pasahe · hindi pa napatunayan ang matrix",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.distanceAlongPath",
     "en": "{0} along the approximate path",
     "fil": "{0} sa tinatayang daan",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.distanceStraightLine",
     "en": "{0} stop to stop (straight line)",
     "fil": "{0} hintuan hanggang hintuan (tuwid na linya)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fleetMixed",
     "en": "{0} · traditional and modern",
     "fil": "{0} · traditional at modern",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fleetMixedAircon",
     "en": "{0} · traditional and modern (air-conditioned)",
     "fil": "{0} · traditional at modern (may aircon)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.kind.tricycle",
     "en": "tricycle",
-    "fil": "tricycle"
+    "fil": "tricycle",
+    "reviewed": "opus"
   },
   {
     "key": "trip.kind.padyak",
     "en": "padyak",
-    "fil": "padyak"
+    "fil": "padyak",
+    "reviewed": "opus"
   },
   {
     "key": "trip.kindTitle.tricycle",
     "en": "Tricycle",
-    "fil": "Tricycle"
+    "fil": "Tricycle",
+    "reviewed": "opus"
   },
   {
     "key": "trip.kindTitle.padyak",
     "en": "Padyak",
-    "fil": "Padyak"
+    "fil": "Padyak",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetKm",
     "en": "about {0} km",
     "fil": "mga {0} km",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetAlong",
     "en": "{0} along streets",
     "fil": "{0} sa mga kalye",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetStraight",
     "en": "{0} in a straight line, route not confirmed",
     "fil": "{0} sa tuwid na linya, hindi pa kumpirmado ang ruta",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetNoRoute",
     "en": "street route not available",
-    "fil": "walang available na ruta sa kalye"
+    "fil": "walang available na ruta sa kalye",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetFareNone",
     "en": "fare not available",
-    "fil": "walang available na pasahe"
+    "fil": "walang available na pasahe",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetFareTricycle",
     "en": "minimum fare {0}",
     "fil": "minimum na pasahe {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetFareTricycleMid",
     "en": "minimum fare {0} (Ordinance 2024-002)",
     "fil": "minimum na pasahe {0} (Ordinance 2024-002)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetFarePadyak",
     "en": "{0} per passenger",
     "fil": "{0} bawat pasahero",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetRide",
     "en": "Take a {0} to {1} · {2} · {3} · confirm with the driver",
-    "fil": "Sumakay ng {0} papuntang {1} · {2} · {3} · kumpirmahin sa driver",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Sumakay ng {0} papunta sa {1} · {2} · {3} · kumpirmahin sa driver",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Sumakay ng {0} papuntang {1} · {2} · {3} · kumpirmahin sa driver'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.freeAlight",
     "en": "Get off near {0} · tell the driver 'para' · stop not marked",
     "fil": "Bumaba malapit sa {0} · sabihin sa driver ang 'para' · walang markang hintuan",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.noTransfers",
     "en": "No transfers",
     "fil": "Walang lipat",
-    "review": true,
-    "note": "'lipat' for transfer is street usage; confirm."
+    "note": "'lipat' for transfer is street usage; confirm.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.oneTransfer",
     "en": "1 transfer",
     "fil": "1 lipat",
-    "review": true,
-    "note": "'lipat' for transfer."
+    "note": "'lipat' for transfer.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.transfers",
     "en": "{0} transfers",
     "fil": "{0} lipat",
     "note": "message function; {0},{1}.. are the arguments in order | 'lipat' for transfer.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkTitle",
     "en": "Walk {0}",
     "fil": "Lakad {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.tricycleThenJeep",
     "en": "Tricycle, then Jeep {0}",
     "fil": "Tricycle, tapos Jeep {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.unnamedPin",
     "en": "Unnamed pin {0}",
     "fil": "Pin na walang pangalan {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.unnamedStop",
     "en": "Unnamed stop",
-    "fil": "Hintuang walang pangalan"
+    "fil": "Hintuang walang pangalan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.samePlaceTitle",
     "en": "Start and destination are the same place",
-    "fil": "Pareho ang simula at ang pupuntahan"
+    "fil": "Pareho ang simula at ang pupuntahan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.samePlaceHint",
     "en": "Move the pin.",
-    "fil": "Ilipat ang pin."
+    "fil": "Ilipat ang pin.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.samePlaceDetail",
     "en": "Move the destination pin away from your start to plan a trip.",
-    "fil": "Ilayo ang pin ng pupuntahan sa simula para makapagplano ng biyahe."
+    "fil": "Ilayo ang pin ng pupuntahan sa simula para makapagplano ng biyahe.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.onlyLoops",
     "en": "Only Loops A and B for now.",
-    "fil": "Loop A at B pa lang sa ngayon."
+    "fil": "Loop A at B pa lang sa ngayon.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.outsideCity",
     "en": "Both points need to be inside Naga City",
-    "fil": "Dapat nasa loob ng Naga City ang dalawang punto"
+    "fil": "Dapat nasa loob ng Naga City ang dalawang punto",
+    "reviewed": "opus"
   },
   {
     "key": "trip.noStopOrigin",
     "en": "No mapped stop within {0} m of your start",
     "fil": "Walang naka-map na hintuan sa loob ng {0} m mula sa simula mo",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.noStopDestination",
     "en": "No mapped stop within {0} m of your destination",
     "fil": "Walang naka-map na hintuan sa loob ng {0} m mula sa pupuntahan mo",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.noRoute",
     "en": "No provisional route connects these points yet",
-    "fil": "Wala pang pansamantalang rutang nag-uugnay sa mga puntong ito"
+    "fil": "Wala pang pansamantalang rutang nag-uugnay sa mga puntong ito",
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkDetail",
     "en": "Walk {0} (estimate, path not verified). Only Loops A and B for now.",
     "fil": "Lakad {0} (tantiya, hindi pa napatunayan ang daan). Loop A at B pa lang sa ngayon.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkShorterTitle",
     "en": "Walking ({0}) is shorter than any ride we can suggest.",
     "fil": "Mas maikli ang lakad ({0}) kaysa sa anumang sakay na maimumungkahi namin.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkShorterDetail",
     "en": "Estimate, path not verified. Only Loops A and B for now.",
-    "fil": "Tantiya, hindi pa napatunayan ang daan. Loop A at B pa lang sa ngayon."
+    "fil": "Tantiya, hindi pa napatunayan ang daan. Loop A at B pa lang sa ngayon.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.noRouteNearby",
     "en": "No provisional route nearby yet",
-    "fil": "Wala pang pansamantalang ruta sa malapit"
+    "fil": "Wala pang pansamantalang ruta sa malapit",
+    "reviewed": "opus"
   },
   {
     "key": "trip.optionCount",
     "en": "{0} options",
     "fil": "{0} opsyon",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.optionsFound",
     "en": "{0} found.",
     "fil": "{0} ang nahanap.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.unverifiedSentence",
     "en": " Unverified.",
-    "fil": " Di pa kumpirmado."
+    "fil": " Di pa kumpirmado.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.routeShown",
     "en": " Route shown.",
-    "fil": " Ipinakita ang ruta."
+    "fil": " Ipinakita ang ruta.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.jeepneyReason.no_path_near_origin",
     "en": "No jeepney route passes near your start",
-    "fil": "Walang rutang jeep na dumadaan malapit sa simula mo"
+    "fil": "Walang rutang jeep na dumadaan malapit sa simula mo",
+    "reviewed": "opus"
   },
   {
     "key": "trip.jeepneyReason.no_path_near_destination",
     "en": "No jeepney route passes near your destination",
-    "fil": "Walang rutang jeep na dumadaan malapit sa pupuntahan mo"
+    "fil": "Walang rutang jeep na dumadaan malapit sa pupuntahan mo",
+    "reviewed": "opus"
   },
   {
     "key": "trip.jeepneyReason.walk_shorter",
     "en": "Walking is shorter than any jeepney ride",
-    "fil": "Mas maikli ang lakad kaysa sa anumang sakay ng jeep"
+    "fil": "Mas maikli ang lakad kaysa sa anumang sakay ng jeep",
+    "reviewed": "opus"
   },
   {
     "key": "trip.jeepneyReason.no_route",
     "en": "No jeepney route connects these places",
-    "fil": "Walang rutang jeep na nag-uugnay sa mga lugar na ito"
+    "fil": "Walang rutang jeep na nag-uugnay sa mga lugar na ito",
+    "reviewed": "opus"
   },
   {
     "key": "trip.jeepneyReason.roundabout",
     "en": "Jeepney routes here go the long way around",
-    "fil": "Paikot ang mga rutang jeep dito"
+    "fil": "Malayo ang ikot ng mga rutang jeep dito",
+    "note": "T10 review: was 'Paikot ang mga rutang jeep dito'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.jeepneyReason.centro",
     "en": "In the city centre, a tricycle takes you there directly",
-    "fil": "Sa sentro ng lungsod, diretso ka na ng tricycle"
+    "fil": "Sa sentro ng lungsod, diretsong maihahatid ka ng tricycle",
+    "note": "T10 review: was 'Sa sentro ng lungsod, diretso ka na ng tricycle'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.timeNotEstimated",
     "en": "Time not estimated",
-    "fil": "Walang tantiya sa oras"
+    "fil": "Walang tantiya sa oras",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareNotFixed",
     "en": "Fare not fixed",
     "fil": "Pasahe: di tiyak",
-    "review": true,
-    "note": "Shortened for the length budget."
+    "note": "Shortened for the length budget.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.accessLine",
     "en": "For when you'd rather not walk.",
-    "fil": "Kung ayaw mo nang maglakad."
+    "fil": "Kung ayaw mong maglakad.",
+    "note": "T10 review: was 'Kung ayaw mo nang maglakad.'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareFrom",
     "en": "From {0}",
     "fil": "Mula {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.tricycleMin",
     "en": "Tricycle min {0} · confirm with the driver",
     "fil": "Tricycle, minimum {0} · kumpirmahin sa driver",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.tricycleFareNA",
     "en": "Tricycle fare not available · confirm with the driver",
-    "fil": "Walang available na pasahe ng tricycle · kumpirmahin sa driver"
+    "fil": "Walang available na pasahe ng tricycle · kumpirmahin sa driver",
+    "reviewed": "opus"
   },
   {
     "key": "trip.via",
     "en": "via {0}",
     "fil": "via {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.terminalLine",
     "en": "Tricycle terminal: {0}, about {1} m from your {2}",
     "fil": "Terminal ng tricycle: {0}, mga {1} m mula sa {2}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.terminalEndStart",
     "en": "start",
-    "fil": "simula mo"
+    "fil": "simula mo",
+    "reviewed": "opus"
   },
   {
     "key": "trip.terminalEndDestination",
     "en": "destination",
-    "fil": "pupuntahan mo"
+    "fil": "pupuntahan mo",
+    "reviewed": "opus"
   },
   {
     "key": "trip.toda",
     "en": "TODA: {0}",
     "fil": "TODA: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.terminalCard",
     "en": "Terminal: {0}",
     "fil": "Terminal: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.localReport",
     "en": "Local report",
     "fil": "Ulat ng taga-rito",
-    "review": true,
-    "note": "'taga-rito' (local)."
+    "note": "'taga-rito' (local).",
+    "reviewed": "opus"
   },
   {
     "key": "trip.farNoteSpecial",
     "en": "A special-trip tricycle is listed only if you still want one.",
-    "fil": "Naka-lista lang ang special-trip na tricycle kung gusto mo pa rin."
+    "fil": "Nakalista lang ang special-trip na tricycle kung sakaling gusto mo pa rin.",
+    "note": "T10 review: was 'Naka-lista lang ang special-trip na tricycle kung gusto mo pa rin.'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.routeNotConfirmed",
     "en": "Route not confirmed",
-    "fil": "Hindi pa kumpirmado ang ruta"
+    "fil": "Hindi pa kumpirmado ang ruta",
+    "reviewed": "opus"
   },
   {
     "key": "trip.streetUnavailable",
     "en": "Street route not available",
-    "fil": "Walang available na ruta sa kalye"
+    "fil": "Walang available na ruta sa kalye",
+    "reviewed": "opus"
   },
   {
     "key": "trip.alongStreets",
     "en": "{0} along streets",
     "fil": "{0} sa mga kalye",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.straightApprox",
     "en": "{0} straight line · approximate, not a route",
-    "fil": "{0} tuwid na linya · tinatayang lang, hindi ruta",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "{0} tuwid na linya · tantiya lang, hindi ruta",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was '{0} tuwid na linya · tinatayang lang, hindi ruta'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.evidence.official",
     "en": "Ordinance or city record",
     "fil": "Ordinansa o rekord ng lungsod",
-    "review": true,
-    "note": "Avoids 'opisyal' (banned)."
+    "note": "Avoids 'opisyal' (banned).",
+    "reviewed": "opus"
   },
   {
     "key": "trip.evidence.news",
     "en": "News report",
-    "fil": "Balita"
+    "fil": "Balita",
+    "reviewed": "opus"
   },
   {
     "key": "trip.evidence.community",
     "en": "Community-sourced",
-    "fil": "Galing sa komunidad"
+    "fil": "Galing sa komunidad",
+    "reviewed": "opus"
   },
   {
     "key": "trip.evidence.owner_report_unverified",
     "en": "Local report · unverified",
-    "fil": "Ulat ng taga-rito · di pa kumpirmado"
+    "fil": "Ulat ng taga-rito · di pa kumpirmado",
+    "reviewed": "opus"
   },
   {
     "key": "trip.pathsNotVerified",
     "en": "paths not verified",
-    "fil": "hindi pa napatunayan ang mga daan"
+    "fil": "hindi pa napatunayan ang mga daan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.tripOptions",
     "en": "Trip options",
-    "fil": "Mga opsyon sa biyahe"
+    "fil": "Mga opsyon sa biyahe",
+    "reviewed": "opus"
   },
   {
     "key": "trip.updating",
     "en": "Updating…",
-    "fil": "Ina-update…"
+    "fil": "Ina-update…",
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkSr",
     "en": "Walk ",
-    "fil": "Lakad "
+    "fil": "Lakad ",
+    "reviewed": "opus"
   },
   {
     "key": "trip.rideSr",
     "en": "Ride ",
-    "fil": "Sakay "
+    "fil": "Sakay ",
+    "reviewed": "opus"
   },
   {
     "key": "trip.thenSr",
     "en": ", then ",
-    "fil": ", tapos "
+    "fil": ", tapos ",
+    "reviewed": "opus"
   },
   {
     "key": "trip.recommended",
     "en": "Recommended",
-    "fil": "Inirerekomenda"
+    "fil": "Inirerekomenda",
+    "reviewed": "opus"
   },
   {
     "key": "trip.allOptions",
     "en": "All options",
     "fil": "Mga opsyon",
-    "review": true,
-    "note": "'Mga opsyon' (drops 'all') for the length budget; the open label keeps 'Lahat ng opsyon'."
+    "note": "'Mga opsyon' (drops 'all') for the length budget; the open label keeps 'Lahat ng opsyon'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.allOptionsOpen",
     "en": "All options (",
-    "fil": "Lahat ng opsyon ("
+    "fil": "Lahat ng opsyon (",
+    "reviewed": "opus"
   },
   {
     "key": "trip.allOptionsClose",
     "en": ")",
-    "fil": ")"
+    "fil": ")",
+    "reviewed": "opus"
   },
   {
     "key": "trip.finding",
     "en": "Finding routes…",
-    "fil": "Naghahanap ng ruta…"
+    "fil": "Naghahanap ng ruta…",
+    "reviewed": "opus"
   },
   {
     "key": "trip.offline",
     "en": "You're offline",
-    "fil": "Offline ka"
+    "fil": "Offline ka",
+    "reviewed": "opus"
   },
   {
     "key": "trip.offlineDetail",
     "en": "Connect to plan a trip.",
-    "fil": "Kumonekta para makapagplano ng biyahe."
+    "fil": "Kumonekta para makapagplano ng biyahe.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.serverError",
     "en": "Couldn't load options",
-    "fil": "Hindi ma-load ang mga opsyon"
+    "fil": "Hindi ma-load ang mga opsyon",
+    "reviewed": "opus"
   },
   {
     "key": "trip.serverDetail",
     "en": "Something went wrong.",
-    "fil": "May nangyaring problema."
+    "fil": "May nangyaring problema.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.invalid",
     "en": "Couldn't plan this trip",
-    "fil": "Hindi mapaplano ang biyaheng ito"
+    "fil": "Hindi mapaplano ang biyaheng ito",
+    "reviewed": "opus"
   },
   {
     "key": "trip.invalidDetail",
     "en": "Both points must be in Naga City.",
-    "fil": "Dapat nasa Naga City ang dalawang punto."
+    "fil": "Dapat nasa Naga City ang dalawang punto.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.busy",
     "en": "Too many trip searches right now",
-    "fil": "Maraming naghahanap ng biyahe ngayon"
+    "fil": "Maraming naghahanap ng biyahe ngayon",
+    "reviewed": "opus"
   },
   {
     "key": "trip.busyDetail",
     "en": "Wait a minute, then try again.",
-    "fil": "Maghintay ng isang minuto, tapos subukan ulit."
+    "fil": "Maghintay ng isang minuto, tapos subukan ulit.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.changeEnds",
     "en": "Change start or destination",
-    "fil": "Palitan ang start o destinasyon"
+    "fil": "Palitan ang simula o pupuntahan",
+    "note": "T10 review: was 'Palitan ang start o destinasyon'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.tryAgain",
     "en": "Try again",
-    "fil": "Subukan ulit"
+    "fil": "Subukan ulit",
+    "reviewed": "opus"
   },
   {
     "key": "trip.candidate",
     "en": "Mapped candidate · not yet verified",
-    "fil": "Nasa mapa · di pa kumpirmado"
+    "fil": "Nasa mapa · di pa kumpirmado",
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkToDestination",
     "en": "Walk {0} to your destination",
     "fil": "Lakad {0} papunta sa pupuntahan mo",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkToPlace",
     "en": "Walk {0} to {1}",
-    "fil": "Lakad {0} papuntang {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Lakad {0} papunta sa {1}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Lakad {0} papuntang {1}'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.theStop",
     "en": "the stop",
-    "fil": "ang hintuan"
+    "fil": "hintuan",
+    "note": "T10 review: was 'ang hintuan'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.startAt",
     "en": "Start at {0}",
-    "fil": "Simula sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Magsimula sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Simula sa {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.youreThere",
     "en": "You’re there",
-    "fil": "Nandito ka na"
+    "fil": "Nandito ka na",
+    "reviewed": "opus"
   },
   {
     "key": "trip.arrive",
     "en": "Arrive",
-    "fil": "Pagdating"
+    "fil": "Pagdating",
+    "reviewed": "opus"
   },
   {
     "key": "trip.theJeepney",
     "en": "the jeepney",
-    "fil": "ang jeep"
+    "fil": "sakayan ng jeep",
+    "note": "T10 review: was 'ang jeep'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.transferPoint",
     "en": "the transfer point",
-    "fil": "ang lipatan"
+    "fil": "lipatan",
+    "note": "T10 review: was 'ang lipatan'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.board",
     "en": "Board {0} at {1}",
     "fil": "Sumakay sa {0} sa {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.boardDir",
     "en": "Board {0} ({1}) at {2}",
     "fil": "Sumakay sa {0} ({1}) sa {2}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.getOnNear",
     "en": "Get on near {0}",
     "fil": "Sumakay malapit sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.stopNotMarked",
     "en": "Stop not marked · confirm with the driver",
-    "fil": "Walang markang hintuan · kumpirmahin sa driver"
+    "fil": "Walang markang hintuan · kumpirmahin sa driver",
+    "reviewed": "opus"
   },
   {
     "key": "trip.directionLine",
     "en": "Direction: {0}",
     "fil": "Direksyon: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadsideAdvice",
     "en": "Roadside advice",
-    "fil": "Payo sa gilid ng kalsada"
+    "fil": "Saang gilid maghihintay",
+    "note": "T10 review: was 'Payo sa gilid ng kalsada'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.vehicleUnconfirmed",
     "en": "Vehicle type not confirmed",
-    "fil": "Hindi pa kumpirmado ang uri ng sasakyan"
+    "fil": "Hindi pa kumpirmado ang uri ng sasakyan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.rideAlongPath",
     "en": "Ride along the approximate path",
-    "fil": "Sumakay sa tinatayang daan"
+    "fil": "Sumakay sa tinatayang daan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.stops",
     "en": "{0} stops",
     "fil": "{0} hintuan",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.markedStops",
     "en": "Marked stops on the way: {0}",
     "fil": "Mga markadong hintuan sa daan: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.getOffAt",
     "en": "Get off at {0}",
     "fil": "Bumaba sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.getOffNear",
     "en": "Get off near {0}",
     "fil": "Bumaba malapit sa {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.paraFree",
     "en": "Tell the driver ‘para’ · stop not marked",
-    "fil": "Sabihin sa driver ang ‘para’ · walang markang hintuan"
+    "fil": "Sabihin sa driver ang ‘para’ · walang markang hintuan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.sayPara",
     "en": "Say “Para!” near here",
-    "fil": "Sabihin ang “Para!” dito sa malapit"
+    "fil": "Sabihin ang “Para!” malapit dito",
+    "note": "T10 review: was 'Sabihin ang “Para!” dito sa malapit'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.takeA",
     "en": "Take a {0} to {1}",
-    "fil": "Sumakay ng {0} papuntang {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Sumakay ng {0} papunta sa {1}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Sumakay ng {0} papuntang {1}'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.nearestTerminal",
     "en": "Nearest tricycle terminal: {0}, about {1} m",
     "fil": "Pinakamalapit na terminal ng tricycle: {0}, mga {1} m",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.showOnMap",
     "en": "Show on map",
     "fil": "Sa mapa",
-    "review": true,
-    "note": "'Sa mapa' for the length budget (full 'Ipakita sa mapa' is 1 char over)."
+    "note": "'Sa mapa' for the length budget (full 'Ipakita sa mapa' is 1 char over).",
+    "reviewed": "opus"
   },
   {
     "key": "trip.showOnMapFor",
     "en": "Show on map: {0}",
     "fil": "Ipakita sa mapa: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkNote",
     "en": "path not verified",
-    "fil": "hindi pa napatunayan ang daan"
+    "fil": "hindi pa napatunayan ang daan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.pathNotVerified",
     "en": "Path not verified",
-    "fil": "Hindi pa napatunayan ang daan"
+    "fil": "Hindi pa napatunayan ang daan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.timeNote",
     "en": "{0} · {1}",
     "fil": "{0} · {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.shared",
     "en": "Shared",
-    "fil": "Naibahagi"
+    "fil": "Na-share",
+    "note": "T10 review: was 'Naibahagi'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.copied",
     "en": "Copied",
-    "fil": "Nakopya"
+    "fil": "Nakopya",
+    "reviewed": "opus"
   },
   {
     "key": "trip.shareFailed",
     "en": "Could not share or copy on this phone.",
-    "fil": "Hindi makapag-share o makakopya sa phone na ito."
+    "fil": "Hindi makapag-share o makakopya sa phone na ito.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.savedRemove",
     "en": "Saved, remove from saved trips",
-    "fil": "Naka-save; alisin sa mga naka-save na biyahe"
+    "fil": "Naka-save; alisin sa mga naka-save na biyahe",
+    "reviewed": "opus"
   },
   {
     "key": "trip.saved",
     "en": "Saved",
     "fil": "Saved",
-    "review": true,
-    "note": "Left as 'Saved' (budget 6 chars)."
+    "note": "Left as 'Saved' (budget 6 chars).",
+    "reviewed": "opus"
   },
   {
     "key": "trip.updateSaved",
     "en": "Update saved copy",
-    "fil": "I-update ang naka-save"
+    "fil": "I-update ang naka-save",
+    "reviewed": "opus"
   },
   {
     "key": "trip.save",
     "en": "Save",
     "fil": "Save",
-    "review": true,
-    "note": "Left as 'Save' (budget 5 chars)."
+    "note": "Left as 'Save' (budget 5 chars).",
+    "reviewed": "opus"
   },
   {
     "key": "trip.share",
     "en": "Share",
     "fil": "Share",
-    "review": true,
-    "note": "Left as 'Share' (budget 6 chars; 'Ibahagi' is 7)."
+    "note": "Left as 'Share' (budget 6 chars; 'Ibahagi' is 7).",
+    "reviewed": "opus"
   },
   {
     "key": "trip.savedCopy",
     "en": "Saved copy: {0}",
     "fil": "Naka-save na kopya: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.revision",
     "en": "revision {0}",
     "fil": "bersyon {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.saveUnavailable",
     "en": "Saving isn’t available on this phone.",
-    "fil": "Hindi puwedeng mag-save sa phone na ito."
+    "fil": "Hindi puwedeng mag-save sa phone na ito.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.startTrip",
     "en": "Start trip",
     "fil": "Simulan",
-    "review": true,
-    "note": "'Simulan' for the length budget."
+    "note": "'Simulan' for the length budget.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.backToOptions",
     "en": "Back to trip options",
-    "fil": "Bumalik sa mga opsyon sa biyahe"
+    "fil": "Bumalik sa mga opsyon sa biyahe",
+    "reviewed": "opus"
   },
   {
     "key": "trip.sources",
     "en": "Sources",
-    "fil": "Mga source"
+    "fil": "Mga source",
+    "reviewed": "opus"
   },
   {
     "key": "trip.sourcesLabel",
     "en": "Sources and credits",
-    "fil": "Mga source at pasasalamat"
+    "fil": "Mga source at pasasalamat",
+    "reviewed": "opus"
   },
   {
     "key": "trip.loadingPaths",
     "en": "Loading street paths…",
-    "fil": "Nilo-load ang mga daan sa kalye…"
+    "fil": "Nilo-load ang mga daan sa kalye…",
+    "reviewed": "opus"
   },
   {
     "key": "trip.pathsUpdated",
     "en": "Street paths updated",
-    "fil": "Na-update ang mga daan sa kalye"
+    "fil": "Na-update ang mga daan sa kalye",
+    "reviewed": "opus"
   },
   {
     "key": "trip.straightOffer",
     "en": "Walks shown as straight lines.",
-    "fil": "Tuwid na linya ang pagpapakita ng mga lakad."
+    "fil": "Ipinapakita ang mga lakad bilang tuwid na linya.",
+    "note": "T10 review: was 'Tuwid na linya ang pagpapakita ng mga lakad.'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.downloading",
     "en": "Downloading street paths…",
-    "fil": "Dina-download ang mga daan sa kalye…"
+    "fil": "Dina-download ang mga daan sa kalye…",
+    "reviewed": "opus"
   },
   {
     "key": "trip.downloadFailed",
     "en": "Download failed. Try again.",
-    "fil": "Hindi na-download. Subukan ulit."
+    "fil": "Hindi na-download. Subukan ulit.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.tripSteps",
     "en": "Trip steps",
-    "fil": "Mga hakbang sa biyahe"
+    "fil": "Mga hakbang sa biyahe",
+    "reviewed": "opus"
   },
   {
     "key": "trip.fareEstimateTitle",
     "en": "Fare estimate",
-    "fil": "Tantiya sa pasahe"
+    "fil": "Tantiya sa pasahe",
+    "reviewed": "opus"
   },
   {
     "key": "trip.walkingOnly",
     "en": "Walking only",
-    "fil": "Lakad lang"
+    "fil": "Lakad lang",
+    "reviewed": "opus"
   },
   {
     "key": "trip.confirmDriver",
     "en": "{0} · confirm with the driver",
     "fil": "{0} · kumpirmahin sa driver",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.total",
     "en": "Total",
-    "fil": "Kabuuan"
+    "fil": "Kabuuan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.spansBoth",
     "en": "Range spans traditional and modern. ",
-    "fil": "Sakop ng saklaw ang traditional at modern. "
+    "fil": "Saklaw nito ang singil ng traditional at modern. ",
+    "note": "T10 review: was 'Sakop ng saklaw ang traditional at modern. '.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.noDiscounts",
     "en": "No discounts.",
-    "fil": "Walang kasamang diskwento."
+    "fil": "Walang kasamang diskwento.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.howFares",
     "en": "How fares are estimated",
-    "fil": "Paano tinatantiya ang pasahe"
+    "fil": "Paano tinatantiya ang pasahe",
+    "reviewed": "opus"
   },
   {
     "key": "trip.includeExact",
     "en": "Include exact points when sharing",
-    "fil": "Isama ang eksaktong lokasyon sa pag-share"
+    "fil": "Isama ang eksaktong lokasyon sa pag-share",
+    "reviewed": "opus"
   },
   {
     "key": "trip.yourStart",
     "en": "your start",
-    "fil": "simula mo"
+    "fil": "simula mo",
+    "reviewed": "opus"
   },
   {
     "key": "trip.yourDestination",
     "en": "your destination",
-    "fil": "pupuntahan mo"
+    "fil": "pupuntahan mo",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.chipWestCentro",
     "en": "Westbound side · to Centro",
     "fil": "Gilid pa-kanluran · pa-Centro",
     "review": true,
-    "note": "'Gilid pa-kanluran' for 'westbound side'; check phrasing with riders."
+    "note": "'Gilid pa-kanluran' for 'westbound side'; check phrasing with riders. | T10: 'Gilid pa-X' must read as the side where traffic goes X-bound (not the X side of the street); the destination after '·' is the main cue. Native speaker to confirm with riders.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.chipEastDiversion",
     "en": "Eastbound side · to Diversion",
-    "fil": "Gilid pa-silangan · pa-Diversion"
+    "fil": "Gilid pa-silangan · pa-Diversion",
+    "reviewed": "opus",
+    "review": true,
+    "note": "T10: 'Gilid pa-X' must read as the side where traffic goes X-bound (not the X side of the street); the destination after '·' is the main cue. Native speaker to confirm with riders."
   },
   {
     "key": "trip.roadside.chipEastOutbound",
     "en": "Eastbound side · Outbound",
-    "fil": "Gilid pa-silangan · Palabas"
+    "fil": "Gilid pa-silangan · Palabas",
+    "reviewed": "opus",
+    "review": true,
+    "note": "T10: 'Gilid pa-X' must read as the side where traffic goes X-bound (not the X side of the street); the destination after '·' is the main cue. Native speaker to confirm with riders."
   },
   {
     "key": "trip.roadside.chipNorthMagsaysay",
     "en": "Northbound side · to Magsaysay",
-    "fil": "Gilid pa-hilaga · pa-Magsaysay"
+    "fil": "Gilid pa-hilaga · pa-Magsaysay",
+    "reviewed": "opus",
+    "review": true,
+    "note": "T10: 'Gilid pa-X' must read as the side where traffic goes X-bound (not the X side of the street); the destination after '·' is the main cue. Native speaker to confirm with riders."
   },
   {
     "key": "trip.roadside.chipSouthCentro",
     "en": "Southbound side · to Centro",
-    "fil": "Gilid pa-timog · pa-Centro"
+    "fil": "Gilid pa-timog · pa-Centro",
+    "reviewed": "opus",
+    "review": true,
+    "note": "T10: 'Gilid pa-X' must read as the side where traffic goes X-bound (not the X side of the street); the destination after '·' is the main cue. Native speaker to confirm with riders."
   },
   {
     "key": "trip.roadside.chipOutboundDelRosario",
     "en": "Outbound side · to Del Rosario",
-    "fil": "Gilid palabas · pa-Del Rosario"
+    "fil": "Gilid palabas · pa-Del Rosario",
+    "reviewed": "opus",
+    "review": true,
+    "note": "T10: 'Gilid pa-X' must read as the side where traffic goes X-bound (not the X side of the street); the destination after '·' is the main cue. Native speaker to confirm with riders."
   },
   {
     "key": "trip.roadside.chipNorthOutbound",
     "en": "Northbound side · Outbound",
-    "fil": "Gilid pa-hilaga · Palabas"
+    "fil": "Gilid pa-hilaga · Palabas",
+    "reviewed": "opus",
+    "review": true,
+    "note": "T10: 'Gilid pa-X' must read as the side where traffic goes X-bound (not the X side of the street); the destination after '·' is the main cue. Native speaker to confirm with riders."
   },
   {
     "key": "trip.roadside.chipEastDelRosario",
     "en": "Eastbound side · to Del Rosario",
-    "fil": "Gilid pa-silangan · pa-Del Rosario"
+    "fil": "Gilid pa-silangan · pa-Del Rosario",
+    "reviewed": "opus",
+    "review": true,
+    "note": "T10: 'Gilid pa-X' must read as the side where traffic goes X-bound (not the X side of the street); the destination after '·' is the main cue. Native speaker to confirm with riders."
   },
   {
     "key": "trip.roadside.chipCentroGenLuna",
     "en": "Centro / Gen. Luna",
-    "fil": "Centro / Gen. Luna"
+    "fil": "Centro / Gen. Luna",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.chipGenLunaElias",
     "en": "Gen. Luna / Elias Angeles",
-    "fil": "Gen. Luna / Elias Angeles"
+    "fil": "Gen. Luna / Elias Angeles",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.chipCentroTerminal",
     "en": "Centro terminal / roadside",
-    "fil": "Terminal ng Centro / tabing-daan"
+    "fil": "Terminal ng Centro / tabing-daan",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.chipCounterclockwise",
     "en": "Counterclockwise Loop",
     "fil": "Counterclockwise na Loop",
-    "review": true,
-    "note": "Taglish."
+    "note": "Taglish.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.chipClockwise",
     "en": "Clockwise Loop",
     "fil": "Clockwise na Loop",
-    "review": true,
-    "note": "Taglish."
+    "note": "Taglish.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.magsaysayWest",
     "en": "Two-way street: Wait on the North / Westbound side of Magsaysay Ave (facing Peñafrancia & Centro) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Hilaga / Pa-kanluran ng Magsaysay Ave (nakaharap sa Peñafrancia at Centro) · Signboard: {0}",
     "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant (which side to wait on).",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.magsaysayEast",
     "en": "Two-way street: Wait on the South / Eastbound side of Magsaysay Ave (facing Diversion Road / SM) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Timog / Pa-silangan ng Magsaysay Ave (nakaharap sa Diversion Road / SM) · Signboard: {0}",
     "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.magsaysayCentro",
     "en": "Two-way street: Wait on the North / Westbound side of Magsaysay Ave (facing Centro) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Hilaga / Pa-kanluran ng Magsaysay Ave (nakaharap sa Centro) · Signboard: {0}",
     "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.magsaysayOutbound",
     "en": "Two-way street: Wait on the South / Eastbound side of Magsaysay Ave (facing outbound) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Timog / Pa-silangan ng Magsaysay Ave (nakaharap palabas) · Signboard: {0}",
     "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.roxasNorth",
     "en": "Two-way street: Wait on the East / Northbound side of Roxas Ave (facing Magsaysay Ave) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Silangan / Pa-hilaga ng Roxas Ave (nakaharap sa Magsaysay Ave) · Signboard: {0}",
     "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
-    "review": true
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.roxasSouth",
     "en": "Two-way street: Wait on the West / Southbound side of Roxas Ave (facing Panganiban / Centro) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Kanluran / Pa-timog ng Roxas Ave (nakaharap sa Panganiban / Centro) · Signboard: {0}",
     "note": "message function; {0},{1}.. are the arguments in order | Roadside direction wording; safety-relevant.",
-    "review": true,
     "jev": {
       "model": "jev-1.14-20261014",
       "p": 0.85,
       "decision": "review",
       "act_above": 0.9
-    }
+    },
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.roxasR3",
     "en": "Two-way street: Wait on the {0} side of Roxas Ave · Signboard: Route 3 (Roxas Ave)",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na {0} ng Roxas Ave · Signboard: Route 3 (Roxas Ave)",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.roxasR3West",
     "en": "West / Southbound",
-    "fil": "Kanluran / Pa-timog"
+    "fil": "Kanluran / Pa-timog",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.roxasR3East",
     "en": "East / Northbound",
-    "fil": "Silangan / Pa-hilaga"
+    "fil": "Silangan / Pa-hilaga",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.francia",
     "en": "Two-way street: Wait on the {0} side of Peñafrancia Ave · Signboard: {1}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na {0} ng Peñafrancia Ave · Signboard: {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.franciaNorth",
     "en": "Two-way street: Wait on the East / Northbound side of Peñafrancia Ave (facing Magsaysay Ave) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Silangan / Pa-hilaga ng Peñafrancia Ave (nakaharap sa Magsaysay Ave) · Signboard: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.franciaSouth",
     "en": "Two-way street: Wait on the West / Southbound side of Peñafrancia Ave (facing Plaza Rizal & Centro) · Signboard: {0}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na Kanluran / Pa-timog ng Peñafrancia Ave (nakaharap sa Plaza Rizal at Centro) · Signboard: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.franciaInbound",
     "en": "West / Southbound (facing Centro)",
-    "fil": "Kanluran / Pa-timog (nakaharap sa Centro)"
+    "fil": "Kanluran / Pa-timog (nakaharap sa Centro)",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.franciaOutbound",
     "en": "East / Northbound (facing San Felipe/Pacol)",
-    "fil": "Silangan / Pa-hilaga (nakaharap sa San Felipe/Pacol)"
+    "fil": "Silangan / Pa-hilaga (nakaharap sa San Felipe/Pacol)",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.bagumbayanNorth",
     "en": "Wait on the Northbound side of Bagumbayan (facing M.T. Villanueva & Magsaysay) · Signboard: Loop C",
-    "fil": "Maghintay sa gilid na pa-hilaga ng Bagumbayan (nakaharap sa M.T. Villanueva at Magsaysay) · Signboard: Loop C"
+    "fil": "Maghintay sa gilid na pa-hilaga ng Bagumbayan (nakaharap sa M.T. Villanueva at Magsaysay) · Signboard: Loop C",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.bagumbayanSouth",
     "en": "Wait on the Southbound side of Bagumbayan (facing Elias Angeles & Centro) · Signboard: Loop D",
-    "fil": "Maghintay sa gilid na pa-timog ng Bagumbayan (nakaharap sa Elias Angeles at Centro) · Signboard: Loop D"
+    "fil": "Maghintay sa gilid na pa-timog ng Bagumbayan (nakaharap sa Elias Angeles at Centro) · Signboard: Loop D",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.panganiban",
     "en": "Two-way street: Wait on the {0} side of Panganiban Dr · Signboard: {1}",
     "fil": "Dalawang direksyon ang kalye: Maghintay sa gilid na {0} ng Panganiban Dr · Signboard: {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.panganibanInbound",
     "en": "North / Westbound (facing Centro)",
-    "fil": "Hilaga / Pa-kanluran (nakaharap sa Centro)"
+    "fil": "Hilaga / Pa-kanluran (nakaharap sa Centro)",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.panganibanOutbound",
     "en": "South / Eastbound (facing Diversion)",
-    "fil": "Timog / Pa-silangan (nakaharap sa Diversion)"
+    "fil": "Timog / Pa-silangan (nakaharap sa Diversion)",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.centroNorth",
     "en": "Board along Gen. Luna facing North toward Peñafrancia & Magsaysay · Signboard: {0}",
-    "fil": "Sumakay sa tabi ng Gen. Luna na nakaharap sa Hilaga papuntang Peñafrancia at Magsaysay · Signboard: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Sumakay sa Gen. Luna, nakaharap pa-hilaga papunta sa Peñafrancia at Magsaysay · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Sumakay sa tabi ng Gen. Luna na nakaharap sa Hilaga papuntang Peñafrancia at Magsaysay · Signboard: {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.centroWest",
     "en": "Board along Gen. Luna / Elias Angeles facing West toward Biak-na-Bato & Diversion · Signboard: {0}",
-    "fil": "Sumakay sa tabi ng Gen. Luna / Elias Angeles na nakaharap sa Kanluran papuntang Biak-na-Bato at Diversion · Signboard: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Sumakay sa Gen. Luna / Elias Angeles, nakaharap pa-kanluran papunta sa Biak-na-Bato at Diversion · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Sumakay sa tabi ng Gen. Luna / Elias Angeles na nakaharap sa Kanluran papuntang Biak-na-Bato at Diversion · Signboard: {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.centroTerminal",
     "en": "Board at Centro terminal area · Signboard: {0}",
-    "fil": "Sumakay sa bahagi ng Centro terminal · Signboard: {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Sumakay sa may terminal sa Centro · Signboard: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was 'Sumakay sa bahagi ng Centro terminal · Signboard: {0}'.",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.checkCounterclockwise",
     "en": "Check signboard \"{0}\" · Counterclockwise service",
     "fil": "Tingnan ang signboard \"{0}\" · Counterclockwise na biyahe",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "trip.roadside.checkClockwise",
     "en": "Check signboard \"{0}\" · Clockwise service",
     "fil": "Tingnan ang signboard \"{0}\" · Clockwise na biyahe",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.start",
     "en": "Start",
-    "fil": "Simula"
+    "fil": "Simula",
+    "reviewed": "opus"
   },
   {
     "key": "home.destination",
     "en": "Destination",
     "fil": "Pupuntahan",
-    "review": true,
-    "note": "'Pupuntahan' (where you're going) rather than 'Destinasyon'."
+    "note": "'Pupuntahan' (where you're going) rather than 'Destinasyon'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.chooseStart",
     "en": "Choose start",
-    "fil": "Pumili ng simula"
+    "fil": "Pumili ng simula",
+    "reviewed": "opus"
   },
   {
     "key": "home.whereTo",
     "en": "Where to?",
     "fil": "Saan punta?",
-    "review": true,
-    "note": "'Saan punta?' for the length budget."
+    "note": "'Saan punta?' for the length budget.",
+    "reviewed": "opus"
   },
   {
     "key": "home.clearStart",
     "en": "Clear start",
-    "fil": "Burahin simula"
+    "fil": "Burahin simula",
+    "reviewed": "opus"
   },
   {
     "key": "home.clearDestination",
     "en": "Clear destination",
-    "fil": "Burahin pupuntahan"
+    "fil": "Burahin ang pupuntahan",
+    "note": "T10 review: was 'Burahin pupuntahan'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.swap",
     "en": "Swap start and destination",
-    "fil": "Palitan ang simula at pupuntahan"
+    "fil": "Palitan ang simula at pupuntahan",
+    "reviewed": "opus"
   },
   {
     "key": "home.tripPlanner",
     "en": "Trip planner",
-    "fil": "Tagaplano ng biyahe"
+    "fil": "Tagaplano ng biyahe",
+    "reviewed": "opus"
   },
   {
     "key": "home.actions",
     "en": "Actions",
-    "fil": "Mga aksyon"
+    "fil": "Mga aksyon",
+    "reviewed": "opus"
   },
   {
     "key": "home.useCurrentLocation",
     "en": "Use current location",
-    "fil": "Gamitin ang lokasyon ko"
+    "fil": "Gamitin ang lokasyon ko",
+    "reviewed": "opus"
   },
   {
     "key": "home.chooseOnMap",
     "en": "Choose on map",
-    "fil": "Pumili sa mapa"
+    "fil": "Pumili sa mapa",
+    "reviewed": "opus"
   },
   {
     "key": "home.searchPlaces",
     "en": "Search places and stops",
-    "fil": "Maghanap ng lugar at hintuan"
+    "fil": "Maghanap ng lugar at hintuan",
+    "reviewed": "opus"
   },
   {
     "key": "home.chooseStartOnMap",
     "en": "Choose start on map",
-    "fil": "Pumili ng simula sa mapa"
+    "fil": "Pumili ng simula sa mapa",
+    "reviewed": "opus"
   },
   {
     "key": "home.chooseDestinationOnMap",
     "en": "Choose destination on map",
-    "fil": "Pumili ng pupuntahan sa mapa"
+    "fil": "Pumili ng pupuntahan sa mapa",
+    "reviewed": "opus"
   },
   {
     "key": "home.nearbyStops",
     "en": "Nearby stops",
-    "fil": "Mga malapit na hintuan"
+    "fil": "Mga malapit na hintuan",
+    "reviewed": "opus"
   },
   {
     "key": "home.stopsError",
     "en": "Couldn't load stops. Move the map.",
-    "fil": "Hindi ma-load ang mga hintuan. Igalaw ang mapa."
+    "fil": "Hindi ma-load ang mga hintuan. Igalaw ang mapa.",
+    "reviewed": "opus"
   },
   {
     "key": "home.stopsNone",
     "en": "No stops here.",
-    "fil": "Walang hintuan dito."
+    "fil": "Walang hintuan dito.",
+    "reviewed": "opus"
   },
   {
     "key": "home.stopsLoading",
     "en": "Loading stops…",
-    "fil": "Nilo-load ang mga hintuan…"
+    "fil": "Nilo-load ang mga hintuan…",
+    "reviewed": "opus"
   },
   {
     "key": "home.mappedCandidate",
     "en": "Mapped candidate",
-    "fil": "Nasa mapa · di pa kumpirmado"
+    "fil": "Nasa mapa · di pa kumpirmado",
+    "reviewed": "opus"
   },
   {
     "key": "home.mappedCandidateRoutes",
     "en": "Mapped candidate · {0}",
     "fil": "Nasa mapa · di pa kumpirmado · {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.pinLater",
     "en": "Pin your start on the map.",
-    "fil": "I-pin ang simula mo sa mapa."
+    "fil": "I-pin ang simula mo sa mapa.",
+    "reviewed": "opus"
   },
   {
     "key": "home.locationOff",
     "en": "Location off. {0}",
     "fil": "Naka-off ang lokasyon. {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.locationOffDetail",
     "en": "Allow location in browser settings.",
-    "fil": "Payagan ang lokasyon sa settings ng browser."
+    "fil": "Payagan ang lokasyon sa settings ng browser.",
+    "reviewed": "opus"
   },
   {
     "key": "home.noLocation",
     "en": "No location now. Pin your start.",
-    "fil": "Walang lokasyon ngayon. I-pin ang simula mo."
+    "fil": "Walang lokasyon ngayon. I-pin ang simula mo.",
+    "reviewed": "opus"
   },
   {
     "key": "home.unsupported",
     "en": "This browser can't share location. Pin your start.",
-    "fil": "Hindi nakakapagbigay ng lokasyon ang browser na ito. I-pin ang simula mo."
+    "fil": "Hindi nakakapagbigay ng lokasyon ang browser na ito. I-pin ang simula mo.",
+    "reviewed": "opus"
   },
   {
     "key": "home.insecure",
     "en": "Location needs https. Pin your start.",
-    "fil": "Kailangan ng https para sa lokasyon. I-pin ang simula mo."
+    "fil": "Kailangan ng https para sa lokasyon. I-pin ang simula mo.",
+    "reviewed": "opus"
   },
   {
     "key": "home.finding",
     "en": "Finding your location…",
-    "fil": "Hinahanap ang lokasyon mo…"
+    "fil": "Hinahanap ang lokasyon mo…",
+    "reviewed": "opus"
   },
   {
     "key": "home.outsideNaga",
     "en": "You're outside Naga City. Pin a start in Naga.",
-    "fil": "Nasa labas ka ng Naga City. Mag-pin ng simula sa Naga."
+    "fil": "Nasa labas ka ng Naga City. Mag-pin ng simula sa Naga.",
+    "reviewed": "opus"
   },
   {
     "key": "home.tooRoughAt",
     "en": "Location too rough ({0}).",
     "fil": "Masyadong malabo ang lokasyon ({0}).",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.tooRough",
     "en": "Location too rough.",
-    "fil": "Masyadong malabo ang lokasyon."
+    "fil": "Masyadong malabo ang lokasyon.",
+    "reviewed": "opus"
   },
   {
     "key": "home.pinStartOnMap",
     "en": "{0} Pin your start on the map.",
     "fil": "{0} I-pin ang simula mo sa mapa.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.approximate",
     "en": "Location approximate. Check the pin.",
-    "fil": "Tinatayang lokasyon lang. Tingnan ang pin."
+    "fil": "Tinatayang lokasyon lang. Tingnan ang pin.",
+    "reviewed": "opus"
   },
   {
     "key": "home.moveStartPin",
     "en": "Move start pin",
-    "fil": "Ilipat ang pin",
-    "review": true,
-    "note": "'Ilipat ang pin' (drops 'start') for the length budget."
+    "fil": "Ilipat ang simula",
+    "note": "'Ilipat ang pin' (drops 'start') for the length budget. | T10 review: was 'Ilipat ang pin'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.youAreHere",
     "en": "You are here",
-    "fil": "Nandito ka"
+    "fil": "Nandito ka",
+    "reviewed": "opus"
   },
   {
     "key": "home.fixJustNow",
     "en": "last fix just now",
     "fil": "huling fix: ngayon lang",
-    "review": true,
-    "note": "GPS 'fix' left in English."
+    "note": "GPS 'fix' left in English.",
+    "reviewed": "opus"
   },
   {
     "key": "home.fixSeconds",
     "en": "last fix {0} s ago",
     "fil": "huling fix: {0} s na ang nakalipas",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.fixMinutes",
     "en": "last fix {0} min ago",
     "fil": "huling fix: {0} min na ang nakalipas",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.gpsFix",
     "en": "GPS {0}",
     "fil": "GPS {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.locationPill",
     "en": "Location {0}",
     "fil": "Lokasyon {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.samePlace",
     "en": "{0}. {1}",
     "fil": "{0}. {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.outsideChoose",
     "en": "Outside Naga City. Choose a point inside.",
-    "fil": "Labas ng Naga City. Pumili ng punto sa loob."
+    "fil": "Labas ng Naga City. Pumili ng punto sa loob.",
+    "reviewed": "opus"
   },
   {
     "key": "home.savedGone",
     "en": "That saved trip is no longer on this phone.",
-    "fil": "Wala na sa phone na ito ang naka-save na biyaheng iyon."
+    "fil": "Wala na sa phone na ito ang naka-save na biyaheng iyon.",
+    "reviewed": "opus"
   },
   {
     "key": "home.changedSinceSaved",
     "en": "Changed since saved",
-    "fil": "May nagbago mula nang i-save"
+    "fil": "May nagbago mula nang i-save",
+    "reviewed": "opus"
   },
   {
     "key": "home.lookingForRoutes",
     "en": "Looking for routes…",
-    "fil": "Naghahanap ng ruta…"
+    "fil": "Naghahanap ng ruta…",
+    "reviewed": "opus"
   },
   {
     "key": "home.movePin",
     "en": "Move the map to place the pin.",
-    "fil": "Igalaw ang mapa para mailagay ang pin."
+    "fil": "Igalaw ang mapa para mailagay ang pin.",
+    "reviewed": "opus"
   },
   {
     "key": "home.pinCancelled",
     "en": "Pin cancelled",
-    "fil": "Kinansela ang pin"
+    "fil": "Kinansela ang pin",
+    "reviewed": "opus"
   },
   {
     "key": "home.cleared",
     "en": "{0} cleared",
     "fil": "Binura ang {0}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.allCleared",
     "en": "Start and destination cleared",
-    "fil": "Binura ang simula at pupuntahan"
+    "fil": "Binura ang simula at pupuntahan",
+    "reviewed": "opus"
   },
   {
     "key": "home.swapped",
     "en": "Start and destination swapped",
-    "fil": "Pinalitan ang simula at pupuntahan"
+    "fil": "Pinalitan ang simula at pupuntahan",
+    "reviewed": "opus"
   },
   {
     "key": "home.endSet",
     "en": "{0} set: {1}",
-    "fil": "{0} na ngayon: {1}",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "fil": "Itinakda ang {0}: {1}",
+    "note": "message function; {0},{1}.. are the arguments in order | T10 review: was '{0} na ngayon: {1}'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.savedTrip",
     "en": "Saved trip: {0} to {1}.",
     "fil": "Naka-save na biyahe: {0} papuntang {1}.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.routesShown",
     "en": "Routes shown on the map",
-    "fil": "Ipinakita ang mga ruta sa mapa"
+    "fil": "Ipinakita ang mga ruta sa mapa",
+    "reviewed": "opus"
   },
   {
     "key": "home.routesHidden",
     "en": "Routes hidden",
-    "fil": "Tinago ang mga ruta"
+    "fil": "Itinago ang mga ruta",
+    "note": "T10 review: was 'Tinago ang mga ruta'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.stopsShown",
     "en": "Stops shown on the map",
-    "fil": "Ipinakita ang mga hintuan sa mapa"
+    "fil": "Ipinakita ang mga hintuan sa mapa",
+    "reviewed": "opus"
   },
   {
     "key": "home.stopsHidden",
     "en": "Stops hidden",
-    "fil": "Tinago ang mga hintuan"
+    "fil": "Itinago ang mga hintuan",
+    "note": "T10 review: was 'Tinago ang mga hintuan'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.moveToStart",
     "en": "Move the map to your start",
-    "fil": "Igalaw ang mapa sa simula mo"
+    "fil": "Igalaw ang mapa sa simula mo",
+    "reviewed": "opus"
   },
   {
     "key": "home.moveToDestination",
     "en": "Move the map to your destination",
-    "fil": "Igalaw ang mapa sa pupuntahan mo"
+    "fil": "Igalaw ang mapa sa pupuntahan mo",
+    "reviewed": "opus"
   },
   {
     "key": "home.pinOutside",
     "en": "Pin must be in Naga City",
-    "fil": "Dapat nasa Naga City ang pin"
+    "fil": "Dapat nasa Naga City ang pin",
+    "reviewed": "opus"
   },
   {
     "key": "home.pinMarks",
     "en": "The pin marks the centre of the map.",
-    "fil": "Ang pin ay nasa gitna ng mapa."
+    "fil": "Nasa gitna ng mapa ang pin.",
+    "note": "T10 review: was 'Ang pin ay nasa gitna ng mapa.'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.setStartHere",
     "en": "Set start here",
-    "fil": "Dito ang simula"
+    "fil": "Dito ang simula",
+    "reviewed": "opus"
   },
   {
     "key": "home.setDestinationHere",
     "en": "Set destination here",
-    "fil": "Dito ang pupuntahan"
+    "fil": "Dito ang pupuntahan",
+    "reviewed": "opus"
   },
   {
     "key": "home.cancel",
     "en": "Cancel",
     "fil": "Ikansela",
-    "review": true,
-    "note": "'Ikansela'."
+    "note": "'Ikansela'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.clearTrip",
     "en": "Clear trip",
-    "fil": "Burahin",
-    "review": true,
-    "note": "'Burahin' alone for the length budget."
+    "fil": "Burahin lahat",
+    "note": "'Burahin' alone for the length budget. | T10 review: was 'Burahin'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.theStartPin",
     "en": "the start pin",
-    "fil": "ang pin ng simula"
+    "fil": "ang pin ng simula",
+    "reviewed": "opus"
   },
   {
     "key": "home.theStop",
     "en": "the stop",
-    "fil": "ang hintuan"
+    "fil": "ang hintuan",
+    "reviewed": "opus"
   },
   {
     "key": "home.guidanceStarted",
     "en": "Guidance started.",
-    "fil": "Nagsimula na ang gabay."
+    "fil": "Nagsimula na ang gabay.",
+    "reviewed": "opus"
   },
   {
     "key": "home.guidanceEnded",
     "en": "Guidance ended. Your trip is in the options.",
-    "fil": "Natapos na ang gabay. Nasa mga opsyon ang biyahe mo."
+    "fil": "Natapos na ang gabay. Nasa mga opsyon ang biyahe mo.",
+    "reviewed": "opus"
   },
   {
     "key": "home.replanning",
     "en": "Planning again from your location.",
-    "fil": "Nagpaplano ulit mula sa lokasyon mo."
+    "fil": "Nagpaplano ulit mula sa lokasyon mo.",
+    "reviewed": "opus"
   },
   {
     "key": "home.pickWhereYouAre",
     "en": "Choose where you are on the map",
-    "fil": "Piliin sa mapa kung nasaan ka"
+    "fil": "Piliin sa mapa kung nasaan ka",
+    "reviewed": "opus"
   },
   {
     "key": "home.reopenFailed",
     "en": "Couldn't check updates: saved {0}.",
     "fil": "Hindi ma-check ang mga update: naka-save noong {0}.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.reopenChecking",
     "en": "Saved {0}. Checking…",
     "fil": "Naka-save noong {0}. Chine-check…",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.updated",
     "en": "Updated",
-    "fil": "Na-update"
+    "fil": "Na-update",
+    "reviewed": "opus"
   },
   {
     "key": "home.reopenOffline",
     "en": "Offline: saved {0}. May have changed.",
     "fil": "Offline: naka-save noong {0}. Baka may nagbago na.",
-    "note": "message function; {0},{1}.. are the arguments in order"
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
   },
   {
     "key": "home.setStart",
     "en": "Set start",
-    "fil": "Simula rito",
-    "review": true,
-    "note": "'Simula rito' for the length budget."
+    "fil": "Simula mo",
+    "note": "'Simula rito' for the length budget. | T10 review: was 'Simula rito'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.setDestination",
     "en": "Set destination",
-    "fil": "Pupuntahan rito",
-    "review": true,
-    "note": "'Pupuntahan rito' for the length budget."
+    "fil": "Pupuntahan mo",
+    "note": "'Pupuntahan rito' for the length budget. | T10 review: was 'Pupuntahan rito'.",
+    "reviewed": "opus"
   },
   {
     "key": "home.searchLabel",
     "en": "Search. Where to?",
-    "fil": "Hanapin. Saan punta?"
+    "fil": "Hanapin. Saan punta?",
+    "reviewed": "opus"
   },
   {
     "key": "home.browsePlaces",
     "en": "Browse places",
-    "fil": "Mag-browse ng lugar"
+    "fil": "Mag-browse ng lugar",
+    "reviewed": "opus"
   },
   {
     "key": "home.mappedNotVerified",
     "en": "Mapped, not verified.",
-    "fil": "Nasa mapa, di pa kumpirmado."
+    "fil": "Nasa mapa, di pa kumpirmado.",
+    "reviewed": "opus"
   },
   {
     "key": "home.zoomIn",
     "en": "Zoom in to see every pin in this area.",
-    "fil": "I-zoom in para makita ang lahat ng pin dito."
+    "fil": "I-zoom in para makita ang lahat ng pin dito.",
+    "reviewed": "opus"
   },
   {
     "key": "shell.mainNav",
     "en": "Main",
-    "fil": "Pangunahin"
+    "fil": "Pangunahin",
+    "reviewed": "opus"
   },
   {
     "key": "shell.tabs.map",
     "en": "Map",
-    "fil": "Mapa"
+    "fil": "Mapa",
+    "reviewed": "opus"
   },
   {
     "key": "shell.tabs.explore",
     "en": "Explore",
     "fil": "Tuklasin",
-    "review": true,
-    "note": "'Tuklasin'."
+    "note": "'Tuklasin'.",
+    "reviewed": "opus"
   },
   {
     "key": "shell.tabs.saved",
     "en": "Saved",
-    "fil": "Saved"
+    "fil": "Saved",
+    "reviewed": "opus"
   },
   {
     "key": "shell.tabs.community",
     "en": "Community",
-    "fil": "Komunidad"
+    "fil": "Komunidad",
+    "reviewed": "opus"
   },
   {
     "key": "shell.tabs.more",
     "en": "More",
     "fil": "Menu",
-    "review": true,
-    "note": "'Menu' because 'Iba pa' is over the budget."
+    "note": "'Menu' because 'Iba pa' is over the budget.",
+    "reviewed": "opus"
   },
   {
     "key": "shell.sheetHalf",
     "en": "Expand sheet to half",
-    "fil": "Palakihin ang sheet hanggang kalahati"
+    "fil": "Palakihin ang sheet hanggang kalahati",
+    "reviewed": "opus"
   },
   {
     "key": "shell.sheetFull",
     "en": "Expand sheet to full",
-    "fil": "Palakihin ang sheet nang buo"
+    "fil": "Palakihin ang sheet nang buo",
+    "reviewed": "opus"
   },
   {
     "key": "shell.sheetCollapse",
     "en": "Collapse sheet",
-    "fil": "Paliitin ang sheet"
+    "fil": "Paliitin ang sheet",
+    "reviewed": "opus"
   },
   {
     "key": "shell.back",
     "en": "Back",
-    "fil": "Balik"
+    "fil": "Balik",
+    "reviewed": "opus"
   },
   {
     "key": "kit.cancel",
     "en": "Cancel",
     "fil": "Ikansela",
-    "review": true,
-    "note": "'Ikansela'."
+    "note": "'Ikansela'.",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.verified",
     "en": "Verified",
-    "fil": "Kumpirmado"
+    "fil": "Kumpirmado",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.candidate",
     "en": "Mapped candidate",
-    "fil": "Kandidatong nasa mapa",
-    "review": true,
-    "note": "Shortened for the length budget."
+    "fil": "Di pa kumpirmado",
+    "note": "Shortened for the length budget. | T10 review: was 'Kandidatong nasa mapa'.",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.documented",
     "en": "Documented only",
-    "fil": "Nakatala lang"
+    "fil": "Nakatala lang",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.trial",
     "en": "Trial — permanence unconfirmed",
     "fil": "Pansubok — di pa tiyak kung mananatili",
-    "review": true,
-    "note": "Check meaning of 'Pansubok'."
+    "note": "Check meaning of 'Pansubok'.",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.not-surveyed",
     "en": "Not surveyed",
-    "fil": "Hindi pa nasuri"
+    "fil": "Hindi pa nasuri",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.historical",
     "en": "Historical name — not mapped",
-    "fil": "Lumang pangalan — wala sa mapa"
+    "fil": "Lumang pangalan — wala sa mapa",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.provisional-stops",
     "en": "Provisional stops",
-    "fil": "Pansamantalang hintuan"
+    "fil": "Pansamantalang hintuan",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.osm",
     "en": "OpenStreetMap",
-    "fil": "OpenStreetMap"
+    "fil": "OpenStreetMap",
+    "reviewed": "opus"
   },
   {
     "key": "kit.badges.approximate-path",
     "en": "Approximate path",
-    "fil": "Tinatayang daan"
+    "fil": "Tinatayang daan",
+    "reviewed": "opus"
   },
   {
     "key": "kit.osmAttribution",
     "en": "© OpenStreetMap contributors (ODbL)",
-    "fil": "© OpenStreetMap contributors (ODbL)"
+    "fil": "© OpenStreetMap contributors (ODbL)",
+    "reviewed": "opus"
   }
 ]
