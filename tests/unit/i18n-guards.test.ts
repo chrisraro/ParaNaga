@@ -12,15 +12,8 @@ import { BIKOL_ENABLED } from "@/i18n/locales";
 type Leaf = string | ((...args: never[]) => string);
 type Tree = { readonly [key: string]: Leaf | Tree | undefined };
 
-/** Areas extracted in T11: their Filipino is still the English (`fil.<area> = en.<area>`) until the T12 draft + Jev check. */
-const PENDING_T12_AREAS = ["pwa", "settings", "detail", "stops", "routes", "modes", "places", "terminals", "search", "explore", "saved", "map"];
-const PENDING_T12 = leaves(en as Tree)
-  .map(([key]) => key)
-  .filter((key) => PENDING_T12_AREAS.includes(key.split(".")[0]!));
-
 /** Filipino strings allowed to equal the English, with the reason. */
 const SAME_AS_EN: Record<string, string> = {
-  ...Object.fromEntries(PENDING_T12.map((key) => [key, "pending T12 draft"])),
   "app.name": "brand",
   "acknowledgments.community": "pending verbatim-reviewed translation (T13)",
   "acknowledgments.driverReport": "pending verbatim-reviewed translation (T13)",
@@ -49,6 +42,61 @@ const SAME_AS_EN: Record<string, string> = {
   "shell.tabs.saved": "Taglish, tab length budget",
   "kit.badges.osm": "brand",
   "kit.osmAttribution": "legal attribution",
+  // P2 screens (T12).
+  "modes.display.tricycle": "everyday word (Taglish vehicle names)",
+  "modes.display.bus": "everyday word (Taglish vehicle names)",
+  "modes.name.tricycle": "everyday word (Taglish vehicle names)",
+  "modes.name.bus": "everyday word (Taglish vehicle names)",
+  "modes.chip.bus": "everyday word (Taglish vehicle names)",
+  "modes.chip.traditional_puj": "everyday word (Taglish vehicle names)",
+  "modes.chip.tricycle": "everyday word (Taglish vehicle names)",
+  "modes.chip.unconfirmed": "everyday word (Taglish vehicle names)",
+  "terminals.modeLabel.bus": "everyday word (Taglish vehicle names)",
+  "terminals.modeLabel.tricycle": "everyday word (Taglish vehicle names)",
+  "terminals.modeLabel.van": "everyday word (Taglish vehicle names)",
+  "map.announceTricycle": "everyday word (Taglish vehicle names)",
+  "map.announcePadyak": "everyday word (Taglish vehicle names)",
+  "map.chipPadyak": "everyday word (Taglish vehicle names)",
+  "map.legendPadyak": "everyday word (Taglish vehicle names)",
+  "modes.display.uv_express": "proper name",
+  "modes.chip.uv_express": "proper name",
+  "modes.name.uv_express": "proper name",
+  "terminals.modeLabel.uv_express": "proper name",
+  "modes.chip.modern_puj": "Taglish, chip length budget",
+  "modes.chip.mixed_trad_modern": "Taglish, chip length budget",
+  "modes.chip.e_tricycle": "Taglish, chip length budget",
+  "modes.display.e_tricycle": "everyday word (e-tricycle is a product name)",
+  "detail.terminal": "everyday English loanword",
+  "terminals.kind.terminal": "everyday English loanword",
+  "places.barangay": "everyday English loanword",
+  "places.category.atm": "everyday English loanword",
+  "places.category.cafe": "everyday English loanword",
+  "places.category.convenience_store": "everyday English loanword",
+  "places.category.department_store": "everyday English loanword",
+  "places.category.fast_food": "everyday English loanword",
+  "places.category.hotel": "everyday English loanword",
+  "places.category.mall": "everyday English loanword",
+  "places.category.restaurant": "everyday English loanword",
+  "places.category.square": "everyday English loanword",
+  "places.category.supermarket": "everyday English loanword",
+  "map.legend": "everyday English loanword",
+  "map.zoom": "everyday English loanword",
+  "settings.fareRegular": "everyday English loanword",
+  "settings.highContrast": "everyday English loanword",
+  "settings.lowData": "everyday English loanword",
+  "settings.roleCommuter": "everyday English loanword",
+  "settings.title": "everyday English loanword",
+  "saved.title": "Taglish, tab/button length budget (matches shell.tabs.saved)",
+  "saved.savedState": "Taglish, tab/button length budget (matches shell.tabs.saved)",
+  "saved.undo": "Taglish, tab/button length budget (matches shell.tabs.saved)",
+  "search.group.saved": "Taglish, tab/button length budget (matches shell.tabs.saved)",
+  "pwa.pageSaved": "Taglish, tab/button length budget (matches shell.tabs.saved)",
+  "saved.availableOffline": "Taglish, common phone wording",
+  "pwa.installAppRow": "Taglish, common phone wording",
+  "pwa.installGroup": "Taglish, common phone wording",
+  "pwa.ipad": "device name",
+  "pwa.iphone": "device name",
+  "saved.placeSource.osm": "brand",
 };
 
 /** Buttons and chips (§1.7 #6): a translation may be at most 1.35 × the English length. */

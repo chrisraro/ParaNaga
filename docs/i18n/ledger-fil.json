@@ -3127,5 +3127,3805 @@
     "en": "© OpenStreetMap contributors (ODbL)",
     "fil": "© OpenStreetMap contributors (ODbL)",
     "reviewed": "opus"
+  },
+  {
+    "key": "pwa.offlineNoData",
+    "en": "Offline — no transport data saved on this phone yet.",
+    "fil": "Offline — wala pang naka-save na data ng transportasyon sa phone na ito."
+  },
+  {
+    "key": "pwa.offlineFromDate",
+    "en": "Offline — data from {0}. Fares may have changed.",
+    "fil": "Offline — data noong {0}. Baka nagbago na ang pasahe.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.offlineFromVisit",
+    "en": "Offline — data from your last visit. Fares may have changed.",
+    "fil": "Offline — data mula sa huli mong bukas ng app. Baka nagbago na ang pasahe."
+  },
+  {
+    "key": "pwa.dataNone",
+    "en": "No transport data is saved on this phone yet.",
+    "fil": "Wala pang naka-save na data ng transportasyon sa phone na ito."
+  },
+  {
+    "key": "pwa.dataFromDate",
+    "en": "Data from {0}. Fares may have changed.",
+    "fil": "Data noong {0}. Baka nagbago na ang pasahe.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.dataFromVisit",
+    "en": "Data from your last visit. Fares may have changed.",
+    "fil": "Data mula sa huli mong bukas ng app. Baka nagbago na ang pasahe."
+  },
+  {
+    "key": "pwa.planUnreachableDate",
+    "en": "Couldn't reach ParaNaga — planned on this phone with data from {0}. Fares may have changed.",
+    "fil": "Hindi maabot ang ParaNaga — nagplano sa phone na ito gamit ang data noong {0}. Baka nagbago na ang pasahe.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.planUnreachable",
+    "en": "Couldn't reach ParaNaga — planned on this phone with the data it has. Fares may have changed.",
+    "fil": "Hindi maabot ang ParaNaga — nagplano sa phone na ito gamit ang data na mayroon ito. Baka nagbago na ang pasahe."
+  },
+  {
+    "key": "pwa.planOfflineDate",
+    "en": "Planned offline from data of {0}. Fares may have changed.",
+    "fil": "Nagplano nang offline gamit ang data noong {0}. Baka nagbago na ang pasahe.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.planOffline",
+    "en": "Planned offline from the data on this phone. Fares may have changed.",
+    "fil": "Nagplano nang offline gamit ang data sa phone na ito. Baka nagbago na ang pasahe."
+  },
+  {
+    "key": "pwa.chipUnreachable",
+    "en": "Planned on this phone",
+    "fil": "Pinlano sa phone na ito"
+  },
+  {
+    "key": "pwa.chipOffline",
+    "en": "Offline plan",
+    "fil": "Planong offline"
+  },
+  {
+    "key": "pwa.chipDate",
+    "en": "{0}, data of {1}",
+    "fil": "{0}, data noong {1}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.panelOffline",
+    "en": "You're offline · This opens when you're back online.",
+    "fil": "Offline ka · Mabubuksan ito kapag may koneksyon ka na ulit."
+  },
+  {
+    "key": "pwa.walkPathsOffline",
+    "en": "Street paths need a connection the first time.",
+    "fil": "Kailangan ng koneksyon ng mga daan sa kalye sa unang beses."
+  },
+  {
+    "key": "pwa.updateText",
+    "en": "A new version of ParaNaga is ready.",
+    "fil": "May bagong bersyon na ng ParaNaga."
+  },
+  {
+    "key": "pwa.reload",
+    "en": "Reload",
+    "fil": "I-reload"
+  },
+  {
+    "key": "pwa.later",
+    "en": "Later",
+    "fil": "Mamaya na",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "pwa.installGroup",
+    "en": "App",
+    "fil": "App"
+  },
+  {
+    "key": "pwa.installAppRow",
+    "en": "ParaNaga app",
+    "fil": "ParaNaga app"
+  },
+  {
+    "key": "pwa.installed",
+    "en": "Installed",
+    "fil": "Naka-install na"
+  },
+  {
+    "key": "pwa.installTitle",
+    "en": "Install ParaNaga",
+    "fil": "I-install ang ParaNaga"
+  },
+  {
+    "key": "pwa.installSub",
+    "en": "Opens from your home screen, also offline",
+    "fil": "Nabubuksan mula sa home screen, kahit offline"
+  },
+  {
+    "key": "pwa.installOther",
+    "en": "To add ParaNaga to your home screen, use your browser’s menu (Install app or Add to Home screen).",
+    "fil": "Para idagdag ang ParaNaga sa home screen mo, gamitin ang menu ng browser (Install app o Add to Home screen)."
+  },
+  {
+    "key": "pwa.installDismissed",
+    "en": "Not installed. {0}",
+    "fil": "Hindi pa naka-install. {0}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.installChecking",
+    "en": "Checking…",
+    "fil": "Chine-check…"
+  },
+  {
+    "key": "pwa.installIos",
+    "en": "On {0}: tap Share, then “Add to Home Screen”.",
+    "fil": "Sa {0}: pindutin ang Share, tapos “Add to Home Screen”.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.iphone",
+    "en": "iPhone",
+    "fil": "iPhone"
+  },
+  {
+    "key": "pwa.ipad",
+    "en": "iPad",
+    "fil": "iPad"
+  },
+  {
+    "key": "pwa.updateReadyTitle",
+    "en": "Update ready — Reload",
+    "fil": "May update — I-reload"
+  },
+  {
+    "key": "pwa.updateReadySub",
+    "en": "A new version of ParaNaga is ready.",
+    "fil": "May bagong bersyon na ng ParaNaga."
+  },
+  {
+    "key": "pwa.pageTitle",
+    "en": "You're offline",
+    "fil": "Offline ka"
+  },
+  {
+    "key": "pwa.pageChecking",
+    "en": "Checking the data on this phone…",
+    "fil": "Chine-check ang data sa phone na ito…"
+  },
+  {
+    "key": "pwa.pageNeedsConnection",
+    "en": "This page needs a connection. These open without one:",
+    "fil": "Kailangan ng koneksyon ng page na ito. Nabubuksan ang mga ito kahit wala:"
+  },
+  {
+    "key": "pwa.pageLinksLabel",
+    "en": "Open offline",
+    "fil": "Buksan nang offline"
+  },
+  {
+    "key": "pwa.pageOpenMap",
+    "en": "Open the map",
+    "fil": "Buksan ang mapa"
+  },
+  {
+    "key": "pwa.pageSaved",
+    "en": "Saved",
+    "fil": "Saved"
+  },
+  {
+    "key": "pwa.pageSavedTrips",
+    "en": "Saved trips",
+    "fil": "Mga naka-save na biyahe"
+  },
+  {
+    "key": "pwa.pageReading",
+    "en": "Reading saved trips…",
+    "fil": "Binabasa ang mga naka-save na biyahe…"
+  },
+  {
+    "key": "pwa.pageStorageBlocked",
+    "en": "Saved trips are not available: storage on this phone is blocked.",
+    "fil": "Hindi available ang mga naka-save na biyahe: naka-block ang storage ng phone na ito."
+  },
+  {
+    "key": "pwa.pageReadFailed",
+    "en": "Saved trips could not be read.",
+    "fil": "Hindi nabasa ang mga naka-save na biyahe."
+  },
+  {
+    "key": "pwa.pageNoTrips",
+    "en": "No saved trips on this phone.",
+    "fil": "Walang naka-save na biyahe sa phone na ito."
+  },
+  {
+    "key": "pwa.pageTripTo",
+    "en": "To {0}",
+    "fil": "Papunta sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.pageTripFrom",
+    "en": "From {0}",
+    "fil": "Mula sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "pwa.pageShowSteps",
+    "en": "Show the steps",
+    "fil": "Ipakita ang mga hakbang"
+  },
+  {
+    "key": "settings.title",
+    "en": "Settings",
+    "fil": "Settings"
+  },
+  {
+    "key": "settings.noAccount",
+    "en": "No account needed",
+    "fil": "Hindi kailangan ng account"
+  },
+  {
+    "key": "settings.signedIn",
+    "en": "Signed in · {0}",
+    "fil": "Naka-sign in · {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "settings.roleCommuter",
+    "en": "commuter",
+    "fil": "commuter"
+  },
+  {
+    "key": "settings.staysOnPhone",
+    "en": "Saved trips and places stay on this phone.",
+    "fil": "Nananatili sa phone na ito ang mga naka-save na biyahe at lugar.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.signOut",
+    "en": "Sign out",
+    "fil": "Mag-sign out"
+  },
+  {
+    "key": "settings.signIn",
+    "en": "Sign in",
+    "fil": "Mag-sign in"
+  },
+  {
+    "key": "settings.general",
+    "en": "General",
+    "fil": "Pangkalahatan"
+  },
+  {
+    "key": "settings.language",
+    "en": "Language",
+    "fil": "Wika"
+  },
+  {
+    "key": "settings.languagePhone",
+    "en": "Phone setting",
+    "fil": "Setting ng phone"
+  },
+  {
+    "key": "settings.fareCategory",
+    "en": "Fare category",
+    "fil": "Kategorya ng pasahe"
+  },
+  {
+    "key": "settings.fareRegular",
+    "en": "Regular",
+    "fil": "Regular"
+  },
+  {
+    "key": "settings.appearance",
+    "en": "Appearance",
+    "fil": "Itsura"
+  },
+  {
+    "key": "settings.themeLight",
+    "en": "Light",
+    "fil": "Maliwanag"
+  },
+  {
+    "key": "settings.themeDark",
+    "en": "Dark",
+    "fil": "Madilim"
+  },
+  {
+    "key": "settings.themeSystem",
+    "en": "System",
+    "fil": "Ayon sa system"
+  },
+  {
+    "key": "settings.discountsNote",
+    "en": "Discounts aren’t applied: no verified rule yet. Regular fares shown.",
+    "fil": "Hindi pa kasama ang mga diskwento: wala pang kumpirmadong patakaran. Regular na pasahe ang ipinapakita.",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "settings.display",
+    "en": "Display and data",
+    "fil": "Display at data"
+  },
+  {
+    "key": "settings.lowData",
+    "en": "Low-data mode",
+    "fil": "Low-data mode"
+  },
+  {
+    "key": "settings.lowDataHint",
+    "en": "Hide the map background; pins and trip steps still show",
+    "fil": "Itatago ang background ng mapa; makikita pa rin ang mga pin at hakbang ng biyahe"
+  },
+  {
+    "key": "settings.highContrast",
+    "en": "High contrast",
+    "fil": "High contrast"
+  },
+  {
+    "key": "settings.highContrastHint",
+    "en": "Stronger text and borders",
+    "fil": "Mas matingkad na teksto at border"
+  },
+  {
+    "key": "settings.history",
+    "en": "Trip history",
+    "fil": "Kasaysayan ng biyahe"
+  },
+  {
+    "key": "settings.historyHint",
+    "en": "Off by default, kept on this device",
+    "fil": "Naka-off bilang default, nananatili sa device na ito",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.reduceMotion",
+    "en": "Reduce motion",
+    "fil": "Bawasan ang galaw"
+  },
+  {
+    "key": "settings.reduceMotionValue",
+    "en": "Follows your device setting",
+    "fil": "Sumusunod sa setting ng device mo"
+  },
+  {
+    "key": "settings.location",
+    "en": "Location",
+    "fil": "Lokasyon"
+  },
+  {
+    "key": "settings.locationAccess",
+    "en": "Location access",
+    "fil": "Pahintulot sa lokasyon"
+  },
+  {
+    "key": "settings.checking",
+    "en": "Checking…",
+    "fil": "Chine-check…"
+  },
+  {
+    "key": "settings.locationAllowed",
+    "en": "Allowed",
+    "fil": "Pinapayagan"
+  },
+  {
+    "key": "settings.locationAsk",
+    "en": "Ask each time",
+    "fil": "Magtanong tuwing gagamitin"
+  },
+  {
+    "key": "settings.locationBlocked",
+    "en": "Blocked",
+    "fil": "Naka-block"
+  },
+  {
+    "key": "settings.locationUnavailable",
+    "en": "Not available",
+    "fil": "Hindi available"
+  },
+  {
+    "key": "settings.locationNote",
+    "en": "Used only on this device, when you tap “Use current location” or start guidance. Change it in your browser or phone settings.",
+    "fil": "Sa device na ito lang ginagamit, kapag pinindot mo ang “Gamitin ang lokasyon ko” o sinimulan ang gabay. Baguhin ito sa settings ng browser o ng phone.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.dataTitle",
+    "en": "Data on this device",
+    "fil": "Data sa device na ito",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.clearData",
+    "en": "Clear data on this device",
+    "fil": "Burahin ang data sa device na ito",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.cleared",
+    "en": "Data on this phone removed. Settings are back to their defaults.",
+    "fil": "Naalis na ang data sa phone na ito. Bumalik na sa default ang settings.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.clearFailed",
+    "en": "Some data could not be removed. Try again.",
+    "fil": "May data na hindi naalis. Subukan ulit.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.historyDeleted",
+    "en": "Trip history on this phone deleted.",
+    "fil": "Nabura ang kasaysayan ng biyahe sa phone na ito.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.historyDeleteFailed",
+    "en": "The trip history could not be deleted. Try again.",
+    "fil": "Hindi nabura ang kasaysayan ng biyahe. Subukan ulit.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.clearQuestion",
+    "en": "Remove saved trips, saved places, trip history and settings from this phone?",
+    "fil": "Alisin sa phone na ito ang mga naka-save na biyahe, naka-save na lugar, kasaysayan ng biyahe at settings?",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.remove",
+    "en": "Remove",
+    "fil": "Alisin"
+  },
+  {
+    "key": "settings.deleteHistoryQuestion",
+    "en": "Also delete the history on this phone?",
+    "fil": "Burahin din ang kasaysayan sa phone na ito?",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.delete",
+    "en": "Delete",
+    "fil": "Burahin",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.keep",
+    "en": "Keep",
+    "fil": "Panatilihin",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.reports",
+    "en": "Reports",
+    "fil": "Mga ulat"
+  },
+  {
+    "key": "settings.myReports",
+    "en": "My reports",
+    "fil": "Mga ulat ko"
+  },
+  {
+    "key": "settings.myReportsSub",
+    "en": "Corrections and driver reports you sent",
+    "fil": "Mga pagwawasto at ulat sa driver na ipinadala mo"
+  },
+  {
+    "key": "settings.reportDriver",
+    "en": "Report a driver",
+    "fil": "I-report ang driver"
+  },
+  {
+    "key": "settings.reportDriverSub",
+    "en": "Private, never published",
+    "fil": "Pribado, hindi kailanman inilalathala",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "settings.about",
+    "en": "About",
+    "fil": "Tungkol dito"
+  },
+  {
+    "key": "settings.help",
+    "en": "Help",
+    "fil": "Tulong"
+  },
+  {
+    "key": "settings.helpSub",
+    "en": "Safety and how trips work",
+    "fil": "Kaligtasan at paano gumagana ang mga biyahe"
+  },
+  {
+    "key": "settings.sources",
+    "en": "Sources and credits",
+    "fil": "Mga source at pasasalamat"
+  },
+  {
+    "key": "settings.dataRevision",
+    "en": "Data revision",
+    "fil": "Bersyon ng data"
+  },
+  {
+    "key": "settings.revisionChecking",
+    "en": "Checking…",
+    "fil": "Chine-check…"
+  },
+  {
+    "key": "settings.revisionOffline",
+    "en": "Not available offline",
+    "fil": "Hindi available kapag offline"
+  },
+  {
+    "key": "settings.revisionUnavailable",
+    "en": "Not available right now",
+    "fil": "Hindi available ngayon"
+  },
+  {
+    "key": "settings.revisionNoDate",
+    "en": "publication date not recorded",
+    "fil": "hindi naitala ang petsa ng paglalathala"
+  },
+  {
+    "key": "detail.stop",
+    "en": "Stop",
+    "fil": "Hintuan"
+  },
+  {
+    "key": "detail.route",
+    "en": "Route",
+    "fil": "Ruta"
+  },
+  {
+    "key": "detail.place",
+    "en": "Place",
+    "fil": "Lugar"
+  },
+  {
+    "key": "detail.terminal",
+    "en": "Terminal",
+    "fil": "Terminal"
+  },
+  {
+    "key": "detail.sources",
+    "en": "Sources",
+    "fil": "Mga source"
+  },
+  {
+    "key": "detail.sourcesLabel",
+    "en": "Sources and credits",
+    "fil": "Mga source at pasasalamat"
+  },
+  {
+    "key": "detail.loading",
+    "en": "Loading {0}",
+    "fil": "Nilo-load ang {0}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "detail.backToMap",
+    "en": "Back to map",
+    "fil": "Balik sa mapa"
+  },
+  {
+    "key": "detail.offline",
+    "en": "You are offline",
+    "fil": "Offline ka"
+  },
+  {
+    "key": "detail.checkConnection",
+    "en": "Check your connection, then try again.",
+    "fil": "Tingnan ang koneksyon mo, tapos subukan ulit."
+  },
+  {
+    "key": "detail.couldNotLoad",
+    "en": "Could not load this {0}",
+    "fil": "Hindi ma-load ang {0} na ito",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "detail.wentWrong",
+    "en": "Something went wrong on our side. Try again.",
+    "fil": "May nangyaring problema sa amin. Subukan ulit."
+  },
+  {
+    "key": "detail.stopNotFound",
+    "en": "Stop not found",
+    "fil": "Hindi nakita ang hintuan"
+  },
+  {
+    "key": "detail.stopNotFoundCopy",
+    "en": "No published stop has this link. It may have been removed or replaced in a newer data revision.",
+    "fil": "Walang nailathalang hintuan na may ganitong link. Baka inalis o napalitan ito sa mas bagong bersyon ng data."
+  },
+  {
+    "key": "detail.routeNotFound",
+    "en": "Route not found",
+    "fil": "Hindi nakita ang ruta"
+  },
+  {
+    "key": "detail.routeNotFoundCopy",
+    "en": "No published route has this code.",
+    "fil": "Walang nailathalang ruta na may ganitong code."
+  },
+  {
+    "key": "detail.placeNotFound",
+    "en": "Place not found",
+    "fil": "Hindi nakita ang lugar"
+  },
+  {
+    "key": "detail.placeNotFoundCopy",
+    "en": "No place on file has this link. It may have been removed or renamed in a newer data revision.",
+    "fil": "Walang nakatalang lugar na may ganitong link. Baka inalis o pinalitan ng pangalan ito sa mas bagong bersyon ng data."
+  },
+  {
+    "key": "detail.terminalNotFound",
+    "en": "Terminal not found",
+    "fil": "Hindi nakita ang terminal"
+  },
+  {
+    "key": "detail.terminalNotFoundCopy",
+    "en": "No terminal on file has this code.",
+    "fil": "Walang nakatalang terminal na may ganitong code."
+  },
+  {
+    "key": "detail.pageNotFound",
+    "en": "Not found",
+    "fil": "Hindi nakita"
+  },
+  {
+    "key": "detail.pageNotFoundCopy",
+    "en": "There is nothing at this link.",
+    "fil": "Walang laman ang link na ito."
+  },
+  {
+    "key": "detail.notFoundTabTitle",
+    "en": "{0} · ParaNaga",
+    "fil": "{0} · ParaNaga",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "stops.showOnMap",
+    "en": "Show on map",
+    "fil": "Ipakita sa mapa"
+  },
+  {
+    "key": "stops.useThisPin",
+    "en": "Use this pin for a trip",
+    "fil": "Gamitin ang pin na ito sa biyahe"
+  },
+  {
+    "key": "stops.setStart",
+    "en": "Set as start",
+    "fil": "Gawing simula"
+  },
+  {
+    "key": "stops.setDestination",
+    "en": "Set as destination",
+    "fil": "Gawing pupuntahan"
+  },
+  {
+    "key": "stops.tripsUnverified",
+    "en": "Trips from mapped pins are unverified.",
+    "fil": "Di pa kumpirmado ang mga biyaheng galing sa naka-map na pin.",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "stops.notVerifiedNav",
+    "en": "Not verified for navigation.",
+    "fil": "Hindi pa kumpirmado para sa navigation."
+  },
+  {
+    "key": "stops.servingTitle",
+    "en": "Routes serving this stop",
+    "fil": "Mga rutang dumadaan dito"
+  },
+  {
+    "key": "stops.noServingRoutes",
+    "en": "No route's stop order lists this pin yet.",
+    "fil": "Wala pang rutang may ganitong pin sa ayos ng hintuan nito."
+  },
+  {
+    "key": "stops.stopNumber",
+    "en": "Stop {0}",
+    "fil": "Hintuan {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "stops.stopAt",
+    "en": "Stop {0} · {1}",
+    "fil": "Hintuan {0} · {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "stops.verified",
+    "en": "Verified",
+    "fil": "Kumpirmado"
+  },
+  {
+    "key": "stops.unverified",
+    "en": "Unverified",
+    "fil": "Di pa kumpirmado"
+  },
+  {
+    "key": "stops.nearby",
+    "en": "Passing nearby · not confirmed to stop",
+    "fil": "Dumadaan sa malapit · di pa tiyak kung humihinto",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "stops.notSurveyedYet",
+    "en": "Not yet surveyed",
+    "fil": "Hindi pa nasuri"
+  },
+  {
+    "key": "stops.curbSide",
+    "en": "Curb side",
+    "fil": "Gilid ng kalye",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "stops.notSurveyed",
+    "en": "Not surveyed",
+    "fil": "Hindi pa nasuri"
+  },
+  {
+    "key": "stops.sign",
+    "en": "Sign",
+    "fil": "Karatula",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "stops.notVerified",
+    "en": "Not verified",
+    "fil": "Di pa kumpirmado"
+  },
+  {
+    "key": "stops.snapshotSource",
+    "en": "Source: public My Maps snapshot ({0}).",
+    "fil": "Source: public na snapshot ng My Maps ({0}).",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "stops.dateNotRecorded",
+    "en": "date not recorded",
+    "fil": "walang naitalang petsa"
+  },
+  {
+    "key": "stops.status.candidate",
+    "en": "Mapped candidate",
+    "fil": "Nasa mapa · di pa kumpirmado"
+  },
+  {
+    "key": "stops.status.documentary",
+    "en": "Documented only",
+    "fil": "Nakatala lang"
+  },
+  {
+    "key": "stops.status.temporary",
+    "en": "Temporary stop",
+    "fil": "Pansamantalang hintuan"
+  },
+  {
+    "key": "stops.status.relocated",
+    "en": "Relocated",
+    "fil": "Inilipat",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "stops.status.retired",
+    "en": "Retired",
+    "fil": "Tinanggal na",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "stops.status.other",
+    "en": "Not verified for navigation",
+    "fil": "Hindi pa kumpirmado para sa navigation"
+  },
+  {
+    "key": "routes.group",
+    "en": "Group {0}",
+    "fil": "Grupo {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.modeJeepney",
+    "en": "jeepney",
+    "fil": "jeep"
+  },
+  {
+    "key": "routes.vehicleClass",
+    "en": "Class {0}",
+    "fil": "Klase {0}",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.unknown",
+    "en": "Unknown",
+    "fil": "Hindi alam"
+  },
+  {
+    "key": "routes.notObserved",
+    "en": "Not observed",
+    "fil": "Hindi pa naobserbahan"
+  },
+  {
+    "key": "routes.planOnly",
+    "en": "Plan only",
+    "fil": "Nasa plano lang"
+  },
+  {
+    "key": "routes.noFareRule",
+    "en": "No fare rule",
+    "fil": "Walang patakaran sa pasahe"
+  },
+  {
+    "key": "routes.estimate",
+    "en": "Estimate",
+    "fil": "Tantiya"
+  },
+  {
+    "key": "routes.fareDetail",
+    "en": "From reported fare rules · matrix not verified",
+    "fil": "Mula sa mga naiulat na patakaran sa pasahe · hindi pa napatunayan ang matrix"
+  },
+  {
+    "key": "routes.towardCentro",
+    "en": "Toward Centro",
+    "fil": "Papunta sa Centro"
+  },
+  {
+    "key": "routes.toward",
+    "en": "Toward {0}",
+    "fil": "Papunta sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.inbound",
+    "en": "Inbound",
+    "fil": "Papasok",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "routes.outbound",
+    "en": "Outbound",
+    "fil": "Palabas",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "routes.streetStartCircuit",
+    "en": "Start of circuit",
+    "fil": "Simula ng ikot",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "routes.streetStart",
+    "en": "Start",
+    "fil": "Simula"
+  },
+  {
+    "key": "routes.streetEndCircuit",
+    "en": "End of circuit",
+    "fil": "Dulo ng ikot",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "routes.streetEnd",
+    "en": "End",
+    "fil": "Dulo"
+  },
+  {
+    "key": "routes.streetOnPlan",
+    "en": "Street on plan",
+    "fil": "Kalye sa plano"
+  },
+  {
+    "key": "routes.notRunning",
+    "en": " (not jeepneys running)",
+    "fil": " (hindi mga jeep ang tumatakbo)"
+  },
+  {
+    "key": "routes.itsGroup",
+    "en": "its group",
+    "fil": "grupo nito",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "routes.groupLower",
+    "en": "group {0}",
+    "fil": "grupo {0}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.unitsAllocated",
+    "en": "{0} units allocated{1}.",
+    "fil": "{0} unit ang nakalaan{1}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.unitsToGroup",
+    "en": "{0} units allocated to {1} in the plan, no per-route count{2}.",
+    "fil": "{0} unit ang nakalaan sa {1} sa plano, walang bilang kada ruta{2}.",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.unitsUnknown",
+    "en": "Units allocated in the plan: unknown.",
+    "fil": "Bilang ng unit na nakalaan sa plano: hindi alam."
+  },
+  {
+    "key": "routes.sourcesNone",
+    "en": "No sources listed · revision {0}.",
+    "fil": "Walang nakalistang source · bersyon {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.sourcesListed",
+    "en": "Sources {0} · revision {1}.",
+    "fil": "Mga source {0} · bersyon {1}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.trialNotice",
+    "en": "Trial revision: {0}, {1}; {2}.",
+    "fil": "Pansubok na bersyon: {0}, {1}; {2}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.trialAdopted",
+    "en": "adopted {0} for {1} days",
+    "fil": "ipinatupad noong {0} nang {1} araw",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.trialDateUnknown",
+    "en": "adoption date unknown",
+    "fil": "hindi alam ang petsa ng pagpapatupad"
+  },
+  {
+    "key": "routes.trialUnconfirmed",
+    "en": "permanence unconfirmed",
+    "fil": "di pa tiyak kung mananatili",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "routes.provenancePlan",
+    "en": "Route {0} of the City of Naga route plan, Ordinance 2025-070 · {1} authorised",
+    "fil": "Ruta {0} ng plano ng ruta ng Lungsod ng Naga, Ordinance 2025-070 · {1} ang pinayagan",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.provenanceUnits",
+    "en": "{0} units",
+    "fil": "{0} unit",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.provenanceUnitsShared",
+    "en": "{0} units shared by Loops A-D",
+    "fil": "{0} unit na pinagsasaluhan ng Loops A-D",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.letterSign",
+    "en": "Letter seen on the signboard",
+    "fil": "Titik na nakita sa signboard"
+  },
+  {
+    "key": "routes.letterInferred",
+    "en": "Letter inferred from the signboard order, not yet confirmed",
+    "fil": "Titik na hinuha mula sa ayos ng signboard, di pa kumpirmado"
+  },
+  {
+    "key": "routes.letterOrdinance",
+    "en": "Letter {0} of the Loop Service in the ordinance",
+    "fil": "Titik {0} ng Loop Service sa ordinansa",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.alsoSigned",
+    "en": "Also signed {0} · not yet verified",
+    "fil": "Nakasulat din sa signboard ang {0} · di pa kumpirmado",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.signNotVerified",
+    "en": "Signboard not yet verified",
+    "fil": "Di pa kumpirmado ang signboard"
+  },
+  {
+    "key": "routes.partialData",
+    "en": "Partial data.",
+    "fil": "Kulang pa ang data."
+  },
+  {
+    "key": "routes.shapeUnverified",
+    "en": "Shape and stops unverified.",
+    "fil": "Di pa kumpirmado ang hugis at mga hintuan."
+  },
+  {
+    "key": "routes.shapeUnverifiedPlan",
+    "en": "Shape and stops unverified. Street order from the plan.",
+    "fil": "Di pa kumpirmado ang hugis at mga hintuan. Ayos ng kalye mula sa plano."
+  },
+  {
+    "key": "routes.mapOf",
+    "en": "Map of {0}",
+    "fil": "Mapa ng {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.pathLoading",
+    "en": "Loading path…",
+    "fil": "Nilo-load ang daan…"
+  },
+  {
+    "key": "routes.pathLowData",
+    "en": "Path off in low-data mode",
+    "fil": "Naka-off ang daan sa low-data mode"
+  },
+  {
+    "key": "routes.pathNotTraced",
+    "en": "Path not traced",
+    "fil": "Hindi pa naguguhit ang daan",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "routes.pathUnavailable",
+    "en": "Path unavailable",
+    "fil": "Walang available na daan"
+  },
+  {
+    "key": "routes.traceOk",
+    "en": "Trace: ok",
+    "fil": "Pagguhit: ok",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "routes.traceFlagged",
+    "en": "Trace: flagged ({0})",
+    "fil": "Pagguhit: may babala ({0})",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.fare",
+    "en": "Fare",
+    "fil": "Pasahe"
+  },
+  {
+    "key": "routes.service",
+    "en": "Service",
+    "fil": "Serbisyo"
+  },
+  {
+    "key": "routes.vehicle",
+    "en": "Vehicle",
+    "fil": "Sasakyan"
+  },
+  {
+    "key": "routes.fareFootnote",
+    "en": "Fare: {0}.",
+    "fil": "Pasahe: {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.notes",
+    "en": "Notes",
+    "fil": "Mga tala"
+  },
+  {
+    "key": "routes.direction",
+    "en": "Direction",
+    "fil": "Direksyon"
+  },
+  {
+    "key": "routes.streetOrderCircuit",
+    "en": "Street order · circuit",
+    "fil": "Ayos ng kalye · ikot"
+  },
+  {
+    "key": "routes.streetOrder",
+    "en": "Street order",
+    "fil": "Ayos ng kalye"
+  },
+  {
+    "key": "routes.structureSuffix",
+    "en": " · structure 1",
+    "fil": " · istruktura 1"
+  },
+  {
+    "key": "routes.streetOrderOf",
+    "en": "Street order {0}",
+    "fil": "Ayos ng kalye {0}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.streetOrderCircuitLabel",
+    "en": "Street order of the circuit",
+    "fil": "Ayos ng kalye ng ikot"
+  },
+  {
+    "key": "routes.streetOrderNone",
+    "en": "Street order not recorded.",
+    "fil": "Walang naitalang ayos ng kalye."
+  },
+  {
+    "key": "routes.structureTitle",
+    "en": "Street order · structure {0}",
+    "fil": "Ayos ng kalye · istruktura {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.structureLabel",
+    "en": "Street order, structure {0}",
+    "fil": "Ayos ng kalye, istruktura {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.trialPermanence",
+    "en": "Trial · permanence unconfirmed",
+    "fil": "Pansubok · di pa tiyak kung mananatili",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "routes.trialStreets",
+    "en": "Trial street order",
+    "fil": "Pansubok na ayos ng kalye"
+  },
+  {
+    "key": "routes.fleet",
+    "en": "Fleet",
+    "fil": "Mga sasakyan"
+  },
+  {
+    "key": "routes.cooperatives",
+    "en": "Cooperatives",
+    "fil": "Mga kooperatiba"
+  },
+  {
+    "key": "routes.noCooperatives",
+    "en": "No cooperatives on file for this corridor.",
+    "fil": "Walang kooperatibang nakatala para sa daang ito."
+  },
+  {
+    "key": "routes.leadersHidden",
+    "en": "Leaders' names not shown.",
+    "fil": "Hindi ipinapakita ang mga pangalan ng lider."
+  },
+  {
+    "key": "routes.stopsCount",
+    "en": "Stops · {0}",
+    "fil": "Mga hintuan · {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "routes.directionMapped",
+    "en": "{0} · mapped, unverified",
+    "fil": "{0} · nasa mapa, di pa kumpirmado",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "modes.display.traditional_puj",
+    "en": "Traditional jeepney",
+    "fil": "Traditional na jeep"
+  },
+  {
+    "key": "modes.display.modern_puj",
+    "en": "Modern jeepney",
+    "fil": "Modern na jeep"
+  },
+  {
+    "key": "modes.display.mixed_trad_modern",
+    "en": "Traditional and modern jeepneys",
+    "fil": "Traditional at modern na jeep"
+  },
+  {
+    "key": "modes.display.tricycle",
+    "en": "Tricycle",
+    "fil": "Tricycle"
+  },
+  {
+    "key": "modes.display.e_tricycle",
+    "en": "E-tricycle",
+    "fil": "E-tricycle"
+  },
+  {
+    "key": "modes.display.uv_express",
+    "en": "UV Express",
+    "fil": "UV Express"
+  },
+  {
+    "key": "modes.display.bus",
+    "en": "Bus",
+    "fil": "Bus"
+  },
+  {
+    "key": "modes.display.unconfirmed",
+    "en": "Jeepney · type not confirmed",
+    "fil": "Jeep · di pa kumpirmado ang uri"
+  },
+  {
+    "key": "modes.display.walk",
+    "en": "Walk",
+    "fil": "Lakad"
+  },
+  {
+    "key": "modes.display.rail",
+    "en": "Train",
+    "fil": "Tren"
+  },
+  {
+    "key": "modes.chip.traditional_puj",
+    "en": "Jeep",
+    "fil": "Jeep"
+  },
+  {
+    "key": "modes.chip.modern_puj",
+    "en": "Modern",
+    "fil": "Modern"
+  },
+  {
+    "key": "modes.chip.mixed_trad_modern",
+    "en": "Jeep + Modern",
+    "fil": "Jeep + Modern"
+  },
+  {
+    "key": "modes.chip.tricycle",
+    "en": "Trike",
+    "fil": "Trike"
+  },
+  {
+    "key": "modes.chip.e_tricycle",
+    "en": "E-trike",
+    "fil": "E-trike"
+  },
+  {
+    "key": "modes.chip.uv_express",
+    "en": "UV",
+    "fil": "UV"
+  },
+  {
+    "key": "modes.chip.bus",
+    "en": "Bus",
+    "fil": "Bus"
+  },
+  {
+    "key": "modes.chip.unconfirmed",
+    "en": "Jeep ?",
+    "fil": "Jeep ?"
+  },
+  {
+    "key": "modes.chip.walk",
+    "en": "Walk",
+    "fil": "Lakad"
+  },
+  {
+    "key": "modes.chip.rail",
+    "en": "Train",
+    "fil": "Tren"
+  },
+  {
+    "key": "modes.name.jeepney",
+    "en": "Jeepney",
+    "fil": "Jeep"
+  },
+  {
+    "key": "modes.name.tricycle",
+    "en": "Tricycle",
+    "fil": "Tricycle"
+  },
+  {
+    "key": "modes.name.uv_express",
+    "en": "UV Express",
+    "fil": "UV Express"
+  },
+  {
+    "key": "modes.name.bus",
+    "en": "Bus",
+    "fil": "Bus"
+  },
+  {
+    "key": "modes.name.rail",
+    "en": "Train",
+    "fil": "Tren"
+  },
+  {
+    "key": "places.directionsTo",
+    "en": "Directions to here",
+    "fil": "Papunta rito"
+  },
+  {
+    "key": "places.directionsFrom",
+    "en": "Directions from here",
+    "fil": "Mula rito"
+  },
+  {
+    "key": "places.directions",
+    "en": "Directions",
+    "fil": "Direksyon"
+  },
+  {
+    "key": "places.planTo",
+    "en": "Plan trip to {0}",
+    "fil": "Magplano ng biyahe papunta sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.planFrom",
+    "en": "Plan trip from {0}",
+    "fil": "Magplano ng biyahe mula sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.entrance",
+    "en": "Entrance",
+    "fil": "Pasukan"
+  },
+  {
+    "key": "places.entranceOsm",
+    "en": "Not mapped. Trips end at the map point.",
+    "fil": "Wala pa sa mapa. Hanggang sa punto sa mapa ang biyahe."
+  },
+  {
+    "key": "places.entrancePin",
+    "en": "Not mapped. Trips end at the pin.",
+    "fil": "Wala pa sa mapa. Hanggang sa pin ang biyahe."
+  },
+  {
+    "key": "places.alsoKnownAs",
+    "en": "Also known as",
+    "fil": "Kilala rin bilang"
+  },
+  {
+    "key": "places.aboutPlace",
+    "en": "About this place",
+    "fil": "Tungkol sa lugar na ito"
+  },
+  {
+    "key": "places.aboutBarangay",
+    "en": "About this barangay",
+    "fil": "Tungkol sa barangay na ito"
+  },
+  {
+    "key": "places.aboutLabel",
+    "en": "About this label",
+    "fil": "Tungkol sa label na ito"
+  },
+  {
+    "key": "places.nearestStops",
+    "en": "Nearest mapped stops",
+    "fil": "Pinakamalapit na naka-map na hintuan"
+  },
+  {
+    "key": "places.noStopsNear",
+    "en": "No mapped stop within 600 m.",
+    "fil": "Walang naka-map na hintuan sa loob ng 600 m."
+  },
+  {
+    "key": "places.straightLine",
+    "en": "Straight-line, unverified pins.",
+    "fil": "Tuwid na linya, di pa kumpirmadong mga pin."
+  },
+  {
+    "key": "places.photoPending",
+    "en": "Photo pending",
+    "fil": "Wala pang litrato"
+  },
+  {
+    "key": "places.photoPendingSub",
+    "en": "Photos open with community corrections.",
+    "fil": "Lalabas ang mga litrato kapag may mga pagwawasto ng komunidad."
+  },
+  {
+    "key": "places.mapOf",
+    "en": "Map of {0}",
+    "fil": "Mapa ng {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.mapOfPins",
+    "en": "Map of the pins named {0}",
+    "fil": "Mapa ng mga pin na may pangalang {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.mappedStopPins",
+    "en": "Mapped stop · {0} pins",
+    "fil": "Naka-map na hintuan · {0} pin",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.pinNote",
+    "en": "Mapped pin, not verified.",
+    "fil": "Naka-map na pin, di pa kumpirmado."
+  },
+  {
+    "key": "places.pinsWithName",
+    "en": "Pins with this name",
+    "fil": "Mga pin na may ganitong pangalan"
+  },
+  {
+    "key": "places.noCode",
+    "en": "No code",
+    "fil": "Walang code"
+  },
+  {
+    "key": "places.noLayer",
+    "en": "No layer",
+    "fil": "Walang layer"
+  },
+  {
+    "key": "places.onRoute",
+    "en": "On a route",
+    "fil": "Nasa ruta"
+  },
+  {
+    "key": "places.notOnRoute",
+    "en": "Not on a route",
+    "fil": "Wala sa ruta"
+  },
+  {
+    "key": "places.boundary",
+    "en": "Boundary",
+    "fil": "Hangganan"
+  },
+  {
+    "key": "places.notMapped",
+    "en": "Not mapped",
+    "fil": "Wala pa sa mapa"
+  },
+  {
+    "key": "places.barangay",
+    "en": "Barangay",
+    "fil": "Barangay"
+  },
+  {
+    "key": "places.chooseIn",
+    "en": "Choose a point in {0} on the map",
+    "fil": "Pumili ng punto sa {0} sa mapa",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.noLocationPlacePin",
+    "en": "No location. Place the pin yourself.",
+    "fil": "Walang lokasyon. Ilagay mo mismo ang pin."
+  },
+  {
+    "key": "places.route",
+    "en": "Route",
+    "fil": "Ruta"
+  },
+  {
+    "key": "places.location",
+    "en": "Location",
+    "fil": "Lokasyon"
+  },
+  {
+    "key": "places.schematic",
+    "en": "Not mapped (schematic label)",
+    "fil": "Wala sa mapa (label lang)"
+  },
+  {
+    "key": "places.status",
+    "en": "Status",
+    "fil": "Katayuan"
+  },
+  {
+    "key": "places.historical",
+    "en": "Historical label, unverified",
+    "fil": "Lumang label, di pa kumpirmado"
+  },
+  {
+    "key": "places.noLocationStudy",
+    "en": "No location on file, so trips can't start or end here.",
+    "fil": "Walang lokasyong nakatala, kaya hindi puwedeng simulan o tapusin dito ang biyahe."
+  },
+  {
+    "key": "places.searchStops",
+    "en": "Search mapped stops for “{0}”",
+    "fil": "Hanapin ang mga naka-map na hintuan para sa “{0}”",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.mappedPin",
+    "en": "{0} (mapped pin)",
+    "fil": "{0} (naka-map na pin)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.osmSource",
+    "en": "OpenStreetMap, snapshot of {0} · object {1}/{2} v{3}",
+    "fil": "OpenStreetMap, snapshot noong {0} · object {1}/{2} v{3}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.undatedSnapshot",
+    "en": "an undated snapshot",
+    "fil": "isang snapshot na walang petsa"
+  },
+  {
+    "key": "places.studyKind",
+    "en": "Stop label from the 2025 route study ({0})",
+    "fil": "Label ng hintuan mula sa pag-aaral ng ruta noong 2025 ({0})",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.notRecorded",
+    "en": "Not recorded",
+    "fil": "Hindi naitala"
+  },
+  {
+    "key": "places.photoUnavailable",
+    "en": "Photo unavailable on this device.",
+    "fil": "Hindi available ang litrato sa device na ito."
+  },
+  {
+    "key": "places.landmarkPhoto",
+    "en": "Landmark photo, not the stop. ",
+    "fil": "Litrato ng landmark, hindi ng hintuan. ",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "places.photoCredit",
+    "en": "Photo credit",
+    "fil": "Kredito sa litrato"
+  },
+  {
+    "key": "places.captured",
+    "en": " · Captured: {0}. {1}",
+    "fil": " · Kinunan: {0}. {1}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "places.category.mall",
+    "en": "Mall",
+    "fil": "Mall"
+  },
+  {
+    "key": "places.category.market",
+    "en": "Market",
+    "fil": "Palengke"
+  },
+  {
+    "key": "places.category.school",
+    "en": "School",
+    "fil": "Paaralan"
+  },
+  {
+    "key": "places.category.college_university",
+    "en": "College or university",
+    "fil": "Kolehiyo o unibersidad"
+  },
+  {
+    "key": "places.category.hospital_clinic",
+    "en": "Hospital or clinic",
+    "fil": "Ospital o klinika"
+  },
+  {
+    "key": "places.category.place_of_worship",
+    "en": "Place of worship",
+    "fil": "Simbahan o sambahan"
+  },
+  {
+    "key": "places.category.government",
+    "en": "Government office",
+    "fil": "Tanggapan ng gobyerno",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "places.category.bus_terminal",
+    "en": "Bus station",
+    "fil": "Istasyon ng bus"
+  },
+  {
+    "key": "places.category.park",
+    "en": "Park",
+    "fil": "Parke"
+  },
+  {
+    "key": "places.category.square",
+    "en": "Plaza",
+    "fil": "Plaza"
+  },
+  {
+    "key": "places.category.restaurant",
+    "en": "Restaurant",
+    "fil": "Restaurant"
+  },
+  {
+    "key": "places.category.fast_food",
+    "en": "Fast food",
+    "fil": "Fast food"
+  },
+  {
+    "key": "places.category.cafe",
+    "en": "Cafe",
+    "fil": "Cafe"
+  },
+  {
+    "key": "places.category.bar",
+    "en": "Bar or pub",
+    "fil": "Bar o pub"
+  },
+  {
+    "key": "places.category.bakery",
+    "en": "Bakery",
+    "fil": "Panaderya"
+  },
+  {
+    "key": "places.category.supermarket",
+    "en": "Supermarket",
+    "fil": "Supermarket"
+  },
+  {
+    "key": "places.category.convenience_store",
+    "en": "Convenience store",
+    "fil": "Convenience store"
+  },
+  {
+    "key": "places.category.department_store",
+    "en": "Department store",
+    "fil": "Department store"
+  },
+  {
+    "key": "places.category.shop",
+    "en": "Shop",
+    "fil": "Tindahan"
+  },
+  {
+    "key": "places.category.bank",
+    "en": "Bank",
+    "fil": "Bangko"
+  },
+  {
+    "key": "places.category.atm",
+    "en": "ATM",
+    "fil": "ATM"
+  },
+  {
+    "key": "places.category.pharmacy",
+    "en": "Pharmacy",
+    "fil": "Botika"
+  },
+  {
+    "key": "places.category.health_service",
+    "en": "Health service",
+    "fil": "Serbisyong pangkalusugan",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "places.category.fuel",
+    "en": "Gas station",
+    "fil": "Gasolinahan"
+  },
+  {
+    "key": "places.category.hotel",
+    "en": "Hotel",
+    "fil": "Hotel"
+  },
+  {
+    "key": "places.category.lodging",
+    "en": "Guesthouse or lodging",
+    "fil": "Pensyon o tuluyan",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "places.category.museum",
+    "en": "Museum",
+    "fil": "Museo"
+  },
+  {
+    "key": "places.category.attraction",
+    "en": "Attraction",
+    "fil": "Pasyalan",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "places.category.historic",
+    "en": "Historic site",
+    "fil": "Makasaysayang lugar"
+  },
+  {
+    "key": "places.category.library",
+    "en": "Library",
+    "fil": "Aklatan"
+  },
+  {
+    "key": "places.category.sports",
+    "en": "Sports facility",
+    "fil": "Pasilidad pang-sports"
+  },
+  {
+    "key": "places.category.leisure",
+    "en": "Leisure place",
+    "fil": "Lugar ng libangan",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "places.category.office",
+    "en": "Office",
+    "fil": "Opisina"
+  },
+  {
+    "key": "places.category.craft",
+    "en": "Workshop",
+    "fil": "Talyer",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "places.category.building",
+    "en": "Building",
+    "fil": "Gusali"
+  },
+  {
+    "key": "places.category.other_place",
+    "en": "Place",
+    "fil": "Lugar"
+  },
+  {
+    "key": "terminals.regionalTitle",
+    "en": "Regional destinations",
+    "fil": "Mga destinasyon sa rehiyon"
+  },
+  {
+    "key": "terminals.faresEstimates",
+    "en": "Fares are estimates.",
+    "fil": "Tantiya lang ang mga pasahe.",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "terminals.noRoutes",
+    "en": "No route plan names this terminal yet.",
+    "fil": "Wala pang plano ng ruta na may ganitong terminal."
+  },
+  {
+    "key": "terminals.baysNotMapped",
+    "en": "Bays not mapped.",
+    "fil": "Wala pa sa mapa ang mga bay.",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.categoriesTitle",
+    "en": "Destination categories",
+    "fil": "Mga kategorya ng destinasyon"
+  },
+  {
+    "key": "terminals.categoryRow",
+    "en": "{0}: {1} · services not verified",
+    "fil": "{0}: {1} · di pa kumpirmado ang mga serbisyo",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.mapOf",
+    "en": "Map of {0}",
+    "fil": "Mapa ng {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.directionsToHere",
+    "en": "Directions to here",
+    "fil": "Papunta rito"
+  },
+  {
+    "key": "terminals.aboutThis",
+    "en": "About this terminal",
+    "fil": "Tungkol sa terminal na ito"
+  },
+  {
+    "key": "terminals.location",
+    "en": "Location",
+    "fil": "Lokasyon"
+  },
+  {
+    "key": "terminals.mappedPoint",
+    "en": "Mapped point · {0}",
+    "fil": "Punto sa mapa · {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.notMapped",
+    "en": "Location not mapped",
+    "fil": "Wala pa sa mapa ang lokasyon"
+  },
+  {
+    "key": "terminals.osmBadge",
+    "en": "Community-mapped location (OpenStreetMap)",
+    "fil": "Lokasyong mula sa komunidad (OpenStreetMap)"
+  },
+  {
+    "key": "terminals.modes",
+    "en": "Modes",
+    "fil": "Mga sasakyan"
+  },
+  {
+    "key": "terminals.pill",
+    "en": "Community-mapped",
+    "fil": "Mula sa komunidad"
+  },
+  {
+    "key": "terminals.address",
+    "en": "Address: {0}",
+    "fil": "Address: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.sections",
+    "en": "Terminal sections",
+    "fil": "Mga seksyon ng terminal"
+  },
+  {
+    "key": "terminals.tabRoutes",
+    "en": "Routes",
+    "fil": "Mga ruta"
+  },
+  {
+    "key": "terminals.tabEntrances",
+    "en": "Entrances",
+    "fil": "Mga pasukan"
+  },
+  {
+    "key": "terminals.tabHours",
+    "en": "Hours",
+    "fil": "Oras"
+  },
+  {
+    "key": "terminals.entrancesNone",
+    "en": "Entrances not surveyed",
+    "fil": "Hindi pa nasuri ang mga pasukan"
+  },
+  {
+    "key": "terminals.tripsEndAtPoint",
+    "en": "Trips end at the map point.",
+    "fil": "Hanggang sa punto sa mapa ang biyahe."
+  },
+  {
+    "key": "terminals.noLocationTrips",
+    "en": "No location: trips can't end here.",
+    "fil": "Walang lokasyon: hindi puwedeng tapusin dito ang biyahe."
+  },
+  {
+    "key": "terminals.hours",
+    "en": "Hours",
+    "fil": "Oras"
+  },
+  {
+    "key": "terminals.notOnFile",
+    "en": "Not on file",
+    "fil": "Walang tala"
+  },
+  {
+    "key": "terminals.noDirections",
+    "en": "No directions: location not mapped.",
+    "fil": "Walang direksyon: wala pa sa mapa ang lokasyon."
+  },
+  {
+    "key": "terminals.directionsLabel",
+    "en": "{0} (map point, entrance not mapped)",
+    "fil": "{0} (punto sa mapa, wala pa sa mapa ang pasukan)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.modesTransport",
+    "en": "Transport",
+    "fil": "Transportasyon",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.modesAnd",
+    "en": "{0} and {1}",
+    "fil": "{0} at {1}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.markerName",
+    "en": "{0}, {1} terminal, community-mapped location",
+    "fil": "{0}, terminal ng {1}, lokasyong mula sa komunidad",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.groupName",
+    "en": "{0} terminals close together: {1}. Select to see each one",
+    "fil": "{0} terminal na magkakalapit: {1}. Piliin para makita ang bawat isa",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.kind.terminal",
+    "en": "Terminal",
+    "fil": "Terminal"
+  },
+  {
+    "key": "terminals.kind.loading_point",
+    "en": "Loading point",
+    "fil": "Sakayan",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.kind.waiting_area",
+    "en": "Waiting area",
+    "fil": "Hintayan",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.kind.station",
+    "en": "Station",
+    "fil": "Istasyon"
+  },
+  {
+    "key": "terminals.regionalOperatorMissing",
+    "en": "{0} · operator not on file",
+    "fil": "{0} · walang tala ng operator",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.regionalNoDistance",
+    "en": "Distance not on file · {0}",
+    "fil": "Walang tala ng layo · {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.regionalDistance",
+    "en": "≈ {0} km by the community-mapped route · {1}",
+    "fil": "≈ {0} km sa rutang mula sa komunidad · {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "terminals.modeLabel.bus",
+    "en": "Bus",
+    "fil": "Bus"
+  },
+  {
+    "key": "terminals.modeLabel.jeepney",
+    "en": "Jeepney",
+    "fil": "Jeep"
+  },
+  {
+    "key": "terminals.modeLabel.city_jeepney",
+    "en": "City jeepney",
+    "fil": "City jeep"
+  },
+  {
+    "key": "terminals.modeLabel.rail",
+    "en": "Rail",
+    "fil": "Tren"
+  },
+  {
+    "key": "terminals.modeLabel.van",
+    "en": "Van",
+    "fil": "Van"
+  },
+  {
+    "key": "terminals.modeLabel.uv_express",
+    "en": "UV Express",
+    "fil": "UV Express"
+  },
+  {
+    "key": "terminals.modeLabel.tricycle",
+    "en": "Tricycle",
+    "fil": "Tricycle"
+  },
+  {
+    "key": "terminals.evidenceNone",
+    "en": "no evidence on file",
+    "fil": "walang tala ng ebidensya"
+  },
+  {
+    "key": "terminals.evidence.official_address",
+    "en": "city source",
+    "fil": "source ng lungsod"
+  },
+  {
+    "key": "terminals.evidence.official_route_reference",
+    "en": "city route reference",
+    "fil": "reperensya ng ruta ng lungsod",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.evidence.official_historical_franchise",
+    "en": "historical franchise",
+    "fil": "makasaysayang prangkisa",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.evidence.official_street_structure",
+    "en": "legal street list",
+    "fil": "legal na listahan ng kalye",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.evidence.station_exists;entrance_unverified",
+    "en": "station listed, entrance not verified",
+    "fil": "nakalista ang istasyon, di pa kumpirmado ang pasukan"
+  },
+  {
+    "key": "terminals.evidence.community_coordinate_official_address",
+    "en": "city source · location community-mapped",
+    "fil": "source ng lungsod · lokasyong mula sa komunidad"
+  },
+  {
+    "key": "terminals.evidence.community_coordinate_official_historical_franchise",
+    "en": "historical franchise · location community-mapped",
+    "fil": "makasaysayang prangkisa · lokasyong mula sa komunidad"
+  },
+  {
+    "key": "terminals.evidence.community_coordinate_matches_LPTRP_street",
+    "en": "community-mapped, on a legal route plan street",
+    "fil": "mula sa komunidad, nasa kalye ng legal na plano ng ruta",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.evidence.community_coordinate",
+    "en": "community-mapped",
+    "fil": "mula sa komunidad"
+  },
+  {
+    "key": "terminals.evidence.community_only",
+    "en": "community-mapped only",
+    "fil": "mula lang sa komunidad"
+  },
+  {
+    "key": "terminals.evidence.community_only_old",
+    "en": "community-mapped only (older edit)",
+    "fil": "mula lang sa komunidad (mas lumang edit)"
+  },
+  {
+    "key": "terminals.evidence.official_location_text_conflicting_street",
+    "en": "city source, conflicting street",
+    "fil": "source ng lungsod, magkasalungat ang kalye"
+  },
+  {
+    "key": "terminals.evidence.official_text_no_coordinate",
+    "en": "ordinance text · no location on file",
+    "fil": "teksto ng ordinansa · walang lokasyong nakatala"
+  },
+  {
+    "key": "terminals.notPnr",
+    "en": "Not the PNR railway station.",
+    "fil": "Hindi ito ang istasyon ng tren ng PNR.",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "terminals.notBicolCentral",
+    "en": "Not Bicol Central Station (the bus terminal).",
+    "fil": "Hindi ito ang Bicol Central Station (terminal ng bus).",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "terminals.adminLabels",
+    "en": "Northbound/eastbound are administrative labels.",
+    "fil": "Administratibong label lang ang northbound/eastbound.",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "terminals.routeLegal",
+    "en": "Legal route plan",
+    "fil": "Legal na plano ng ruta"
+  },
+  {
+    "key": "terminals.routeTrial",
+    "en": "Nov 2025 trial",
+    "fil": "Pagsubok noong Nob 2025",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "search.title",
+    "en": "Search",
+    "fil": "Hanapin"
+  },
+  {
+    "key": "search.group.saved",
+    "en": "Saved",
+    "fil": "Saved"
+  },
+  {
+    "key": "search.group.places",
+    "en": "Places",
+    "fil": "Mga lugar"
+  },
+  {
+    "key": "search.group.routes",
+    "en": "Routes",
+    "fil": "Mga ruta"
+  },
+  {
+    "key": "search.group.terminals",
+    "en": "Terminals",
+    "fil": "Mga terminal"
+  },
+  {
+    "key": "search.group.barangays",
+    "en": "Barangays",
+    "fil": "Mga barangay"
+  },
+  {
+    "key": "search.group.study",
+    "en": "Stop labels from the 2025 route study",
+    "fil": "Mga label ng hintuan mula sa pag-aaral ng ruta noong 2025"
+  },
+  {
+    "key": "search.group.legacy",
+    "en": "Old route names",
+    "fil": "Mga lumang pangalan ng ruta"
+  },
+  {
+    "key": "search.group.regional",
+    "en": "Regional destinations",
+    "fil": "Mga destinasyon sa rehiyon"
+  },
+  {
+    "key": "search.regionalCategory.northbound",
+    "en": "Northbound",
+    "fil": "Pa-hilaga",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "search.regionalCategory.south_suburbs",
+    "en": "South suburbs",
+    "fil": "Mga suburb sa timog",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "search.regionalCategory.north_suburb",
+    "en": "North suburb",
+    "fil": "Suburb sa hilaga",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "search.regionalCategory.southbound",
+    "en": "Southbound",
+    "fil": "Pa-timog",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "search.regionalCategory.eastbound",
+    "en": "Eastbound",
+    "fil": "Pa-silangan",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "search.loop",
+    "en": "Loop {0}",
+    "fil": "Loop {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subSaved",
+    "en": "Saved place",
+    "fil": "Naka-save na lugar"
+  },
+  {
+    "key": "search.subOsm",
+    "en": "{0} · from OpenStreetMap",
+    "fil": "{0} · mula sa OpenStreetMap",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subPin",
+    "en": "Mapped stop · {0} · candidate",
+    "fil": "Naka-map na hintuan · {0} · di pa kumpirmado",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subAlsoCalled",
+    "en": "Also called {0}",
+    "fil": "Tinatawag ding {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subLegalStreet",
+    "en": "Legal route plan lists {0}",
+    "fil": "Nasa legal na plano ng ruta ang {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subTerminal",
+    "en": "Terminal · {0} · location not mapped",
+    "fil": "Terminal · {0} · wala pa sa mapa ang lokasyon",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subBarangay",
+    "en": "Barangay · not surveyed",
+    "fil": "Barangay · hindi pa nasuri"
+  },
+  {
+    "key": "search.subStudy",
+    "en": "{0} · label only, no location",
+    "fil": "{0} · label lang, walang lokasyon",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subLegacy",
+    "en": "Historical name ({0}) · not matched to a current route · {1}",
+    "fil": "Lumang pangalan ({0}) · hindi tugma sa kasalukuyang ruta · {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subRegional",
+    "en": "{0} destinations from {1} · services not verified",
+    "fil": "Mga destinasyon: {0} mula sa {1} · di pa kumpirmado ang mga serbisyo",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.subFeeder",
+    "en": "Feeder service lead · not verified",
+    "fil": "Lead sa feeder service · di pa kumpirmado",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "search.showMore",
+    "en": "Show {0} more",
+    "fil": "Ipakita ang {0} pa",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.showAll",
+    "en": "Show all {0}",
+    "fil": "Ipakita lahat ng {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.notTripEnd",
+    "en": "so it cannot be a trip start or destination",
+    "fil": "kaya hindi ito puwedeng maging simula o pupuntahan ng biyahe",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "search.noticeOsm",
+    "en": "{0}. Location from OpenStreetMap — entrance not mapped.",
+    "fil": "{0}. Lokasyon mula sa OpenStreetMap — wala pa sa mapa ang pasukan.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.noticePin",
+    "en": "Mapped stop candidate ({0}), not verified for navigation. Trips from mapped pins are unverified.",
+    "fil": "Kandidatong hintuan sa mapa ({0}), hindi pa kumpirmado para sa navigation. Di pa kumpirmado ang mga biyaheng galing sa naka-map na pin.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.noticeAlreadySaved",
+    "en": "Already saved on this phone.",
+    "fil": "Naka-save na sa phone na ito."
+  },
+  {
+    "key": "search.noticeSaved",
+    "en": "Saved place on this phone.",
+    "fil": "Na-save ang lugar sa phone na ito."
+  },
+  {
+    "key": "search.noticeTerminal",
+    "en": "Terminal · {0}. Its location is not mapped, {1}.",
+    "fil": "Terminal · {0}. Wala pa sa mapa ang lokasyon nito, {1}.",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.noticeBarangay",
+    "en": "Barangay · not surveyed. No boundary or centre is on file, {0}.",
+    "fil": "Barangay · hindi pa nasuri. Walang nakatalang hangganan o sentro, {0}.",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.noticeStudy",
+    "en": "A stop label from the 2025 route study ({0}). It has no location on file, {1}.",
+    "fil": "Label ng hintuan mula sa pag-aaral ng ruta noong 2025 ({0}). Walang nakatalang lokasyon, {1}.",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.noticeRegional",
+    "en": "{0} destinations are listed for {1}. Individual services are not verified, and the terminal's location is not mapped.",
+    "fil": "Nakalista ang mga destinasyon ({0}) para sa {1}. Di pa kumpirmado ang bawat serbisyo, at wala pa sa mapa ang lokasyon ng terminal.",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.failed",
+    "en": "Search data couldn't load. Try again.",
+    "fil": "Hindi na-load ang data sa paghahanap. Subukan ulit."
+  },
+  {
+    "key": "search.empty",
+    "en": "No match. Try a place, stop, street or route.",
+    "fil": "Walang tugma. Subukan ang lugar, hintuan, kalye o ruta."
+  },
+  {
+    "key": "search.regionalNote",
+    "en": "Includes regional terminals. Services not verified.",
+    "fil": "Kasama ang mga terminal sa rehiyon. Di pa kumpirmado ang mga serbisyo."
+  },
+  {
+    "key": "search.inputLabel",
+    "en": "Search places, stops and routes",
+    "fil": "Maghanap ng lugar, hintuan at ruta"
+  },
+  {
+    "key": "search.placeholder",
+    "en": "Place, stop or route",
+    "fil": "Lugar, hintuan o ruta"
+  },
+  {
+    "key": "search.clear",
+    "en": "Clear search",
+    "fil": "Burahin ang hinahanap"
+  },
+  {
+    "key": "search.cancel",
+    "en": "Cancel",
+    "fil": "Ikansela"
+  },
+  {
+    "key": "search.options",
+    "en": "Search options",
+    "fil": "Mga opsyon sa paghahanap"
+  },
+  {
+    "key": "search.useCurrent",
+    "en": "Use current location",
+    "fil": "Gamitin ang lokasyon ko"
+  },
+  {
+    "key": "search.chooseOnMap",
+    "en": "Choose on map",
+    "fil": "Pumili sa mapa"
+  },
+  {
+    "key": "search.includeRegional",
+    "en": "Include regional connections",
+    "fil": "Isama ang mga koneksyon sa rehiyon"
+  },
+  {
+    "key": "search.savePick",
+    "en": "Pick a place to save.",
+    "fil": "Pumili ng lugar na ise-save."
+  },
+  {
+    "key": "search.needsConnection",
+    "en": "Search needs a connection the first time. Try again.",
+    "fil": "Kailangan ng koneksyon ng paghahanap sa unang beses. Subukan ulit."
+  },
+  {
+    "key": "search.offlineData",
+    "en": "Offline · data from {0}",
+    "fil": "Offline · data mula sa {0}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.revisionOf",
+    "en": "revision {0}",
+    "fil": "bersyon {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.alreadySavedAs",
+    "en": "Already saved as “{0}”.",
+    "fil": "Naka-save na bilang “{0}”.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.setStart",
+    "en": "Set as start",
+    "fil": "Gawing simula"
+  },
+  {
+    "key": "search.setDestination",
+    "en": "Set as destination",
+    "fil": "Gawing pupuntahan"
+  },
+  {
+    "key": "search.close",
+    "en": "Close",
+    "fil": "Isara"
+  },
+  {
+    "key": "search.recent",
+    "en": "Recent",
+    "fil": "Kamakailan"
+  },
+  {
+    "key": "search.nearbyTitle",
+    "en": "Stops near the map",
+    "fil": "Mga hintuan malapit sa mapa"
+  },
+  {
+    "key": "search.loadingMore",
+    "en": "Loading more places…",
+    "fil": "Nilo-load ang iba pang lugar…"
+  },
+  {
+    "key": "search.moreFailed",
+    "en": "Shops, restaurants and other places could not load, so they are missing from these results.",
+    "fil": "Hindi na-load ang mga tindahan, restaurant at iba pang lugar, kaya wala sila sa mga resultang ito."
+  },
+  {
+    "key": "search.legacyNote",
+    "en": "Old route names are historical hints, not current routes.",
+    "fil": "Mga hint lang mula sa kasaysayan ang mga lumang pangalan ng ruta, hindi mga kasalukuyang ruta."
+  },
+  {
+    "key": "search.loadingData",
+    "en": "Loading search data",
+    "fil": "Nilo-load ang data sa paghahanap"
+  },
+  {
+    "key": "search.loadingScreen",
+    "en": "Loading search",
+    "fil": "Nilo-load ang paghahanap"
+  },
+  {
+    "key": "search.saveDialogTitle",
+    "en": "Save place",
+    "fil": "I-save ang lugar"
+  },
+  {
+    "key": "search.resultOne",
+    "en": "1 result",
+    "fil": "1 resulta"
+  },
+  {
+    "key": "search.resultMany",
+    "en": "{0} results",
+    "fil": "{0} resulta",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.googleSuggestion",
+    "en": "Google suggestion · not verified",
+    "fil": "Mungkahi ng Google · di pa kumpirmado"
+  },
+  {
+    "key": "search.googleAttribution",
+    "en": "Suggestions from Google Maps",
+    "fil": "Mga mungkahi mula sa Google Maps"
+  },
+  {
+    "key": "search.googleFooter",
+    "en": "{0}. Google receives what you typed. ParaNaga keeps Google's answer up to 24 hours under a one-way hash, with no typed text and no IP address.",
+    "fil": "{0}. Natatanggap ng Google ang tinipa mo. Itinatago ng ParaNaga ang sagot ng Google nang hanggang 24 oras sa ilalim ng one-way hash, walang tinipang teksto at walang IP address.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "search.googleMore",
+    "en": "Search more places",
+    "fil": "Maghanap ng iba pang lugar"
+  },
+  {
+    "key": "search.googleHeading",
+    "en": "More places from Google",
+    "fil": "Iba pang lugar mula sa Google"
+  },
+  {
+    "key": "search.googleCapped",
+    "en": "No more Google suggestions today. Showing OpenStreetMap results only.",
+    "fil": "Wala nang mungkahi ng Google ngayong araw. OpenStreetMap lang ang ipinapakita."
+  },
+  {
+    "key": "search.googleRateLimited",
+    "en": "Google suggestions are paused for a few minutes. Showing OpenStreetMap results only.",
+    "fil": "Naka-pause ang mga mungkahi ng Google nang ilang minuto. OpenStreetMap lang ang ipinapakita."
+  },
+  {
+    "key": "search.googleOutside",
+    "en": "That place is outside Naga City, so it can't be used here.",
+    "fil": "Nasa labas ng Naga City ang lugar na iyon, kaya hindi ito magagamit dito."
+  },
+  {
+    "key": "search.googleUnavailable",
+    "en": "Couldn't get that place's location. Try again.",
+    "fil": "Hindi makuha ang lokasyon ng lugar na iyon. Subukan ulit."
+  },
+  {
+    "key": "search.googlePicked",
+    "en": "{0}: location from a Google suggestion, not verified.",
+    "fil": "{0}: lokasyon mula sa mungkahi ng Google, di pa kumpirmado.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.title",
+    "en": "Explore",
+    "fil": "Tuklasin"
+  },
+  {
+    "key": "explore.intro",
+    "en": "Places in Naga, and how to get there.",
+    "fil": "Mga lugar sa Naga, at kung paano pumunta roon."
+  },
+  {
+    "key": "explore.searchLabel",
+    "en": "Search",
+    "fil": "Maghanap"
+  },
+  {
+    "key": "explore.loadingPlaces",
+    "en": "Loading places",
+    "fil": "Nilo-load ang mga lugar"
+  },
+  {
+    "key": "explore.offlineRetry",
+    "en": "You're offline. Try again.",
+    "fil": "Offline ka. Subukan ulit."
+  },
+  {
+    "key": "explore.loadFailed",
+    "en": "Couldn't load places. Try again.",
+    "fil": "Hindi na-load ang mga lugar. Subukan ulit."
+  },
+  {
+    "key": "explore.jump",
+    "en": "Jump to directory",
+    "fil": "Tumalon sa direktoryo"
+  },
+  {
+    "key": "explore.categoriesLabel",
+    "en": "Categories",
+    "fil": "Mga kategorya"
+  },
+  {
+    "key": "explore.category.all.label",
+    "en": "All",
+    "fil": "Lahat"
+  },
+  {
+    "key": "explore.category.all.noun",
+    "en": "places",
+    "fil": "lugar"
+  },
+  {
+    "key": "explore.category.faith.label",
+    "en": "Faith",
+    "fil": "Sambahan"
+  },
+  {
+    "key": "explore.category.faith.noun",
+    "en": "places of worship",
+    "fil": "sambahan"
+  },
+  {
+    "key": "explore.category.schools.label",
+    "en": "Schools",
+    "fil": "Paaralan"
+  },
+  {
+    "key": "explore.category.schools.noun",
+    "en": "schools",
+    "fil": "paaralan"
+  },
+  {
+    "key": "explore.category.markets.label",
+    "en": "Markets & malls",
+    "fil": "Palengke at mall"
+  },
+  {
+    "key": "explore.category.markets.noun",
+    "en": "markets or malls",
+    "fil": "palengke o mall"
+  },
+  {
+    "key": "explore.category.health.label",
+    "en": "Health",
+    "fil": "Kalusugan"
+  },
+  {
+    "key": "explore.category.health.noun",
+    "en": "health places",
+    "fil": "lugar pangkalusugan"
+  },
+  {
+    "key": "explore.category.government.label",
+    "en": "Government",
+    "fil": "Gobyerno"
+  },
+  {
+    "key": "explore.category.government.noun",
+    "en": "government offices",
+    "fil": "tanggapan ng gobyerno"
+  },
+  {
+    "key": "explore.category.parks.label",
+    "en": "Parks & plazas",
+    "fil": "Parke at plaza"
+  },
+  {
+    "key": "explore.category.parks.noun",
+    "en": "parks or plazas",
+    "fil": "parke o plaza"
+  },
+  {
+    "key": "explore.category.terminals.label",
+    "en": "Terminals",
+    "fil": "Terminal"
+  },
+  {
+    "key": "explore.category.terminals.noun",
+    "en": "bus stations",
+    "fil": "istasyon ng bus"
+  },
+  {
+    "key": "explore.category.food.label",
+    "en": "Food & drink",
+    "fil": "Pagkain at inumin"
+  },
+  {
+    "key": "explore.category.food.noun",
+    "en": "places to eat or drink",
+    "fil": "kainan o inuman"
+  },
+  {
+    "key": "explore.category.shops.label",
+    "en": "Shops",
+    "fil": "Tindahan"
+  },
+  {
+    "key": "explore.category.shops.noun",
+    "en": "shops",
+    "fil": "tindahan"
+  },
+  {
+    "key": "explore.category.services.label",
+    "en": "Services",
+    "fil": "Serbisyo"
+  },
+  {
+    "key": "explore.category.services.noun",
+    "en": "services",
+    "fil": "serbisyo"
+  },
+  {
+    "key": "explore.category.stay.label",
+    "en": "Stay",
+    "fil": "Tuluyan"
+  },
+  {
+    "key": "explore.category.stay.noun",
+    "en": "places to stay",
+    "fil": "matutuluyan"
+  },
+  {
+    "key": "explore.category.sights.label",
+    "en": "Sights & sports",
+    "fil": "Pasyalan at sports"
+  },
+  {
+    "key": "explore.category.sights.noun",
+    "en": "sights or sports places",
+    "fil": "pasyalan o lugar ng sports"
+  },
+  {
+    "key": "explore.category.other.label",
+    "en": "Other places",
+    "fil": "Iba pang lugar"
+  },
+  {
+    "key": "explore.category.other.noun",
+    "en": "other places",
+    "fil": "iba pang lugar"
+  },
+  {
+    "key": "explore.emptyCategory",
+    "en": "No {0} on file yet.",
+    "fil": "Wala pang {0} na nakatala.",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.showAll",
+    "en": "Show all {0} places",
+    "fil": "Ipakita lahat ng {0} lugar",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.showMore",
+    "en": "Show {0} more places",
+    "fil": "Ipakita ang {0} pang lugar",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.loadingMore",
+    "en": "Loading more places…",
+    "fil": "Nilo-load ang iba pang lugar…"
+  },
+  {
+    "key": "explore.couldNotLoadThese",
+    "en": "Could not load these places. ",
+    "fil": "Hindi na-load ang mga lugar na ito. ",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "explore.photoPending",
+    "en": "Photo pending",
+    "fil": "Wala pang litrato"
+  },
+  {
+    "key": "explore.photoCredit",
+    "en": "Photo credit",
+    "fil": "Kredito sa litrato"
+  },
+  {
+    "key": "explore.commute",
+    "en": "How to commute here",
+    "fil": "Paano pumunta rito"
+  },
+  {
+    "key": "explore.commuteFor",
+    "en": "How to commute here: {0}",
+    "fil": "Paano pumunta rito: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.directory",
+    "en": "Directory",
+    "fil": "Direktoryo"
+  },
+  {
+    "key": "explore.directorySections",
+    "en": "Directory sections",
+    "fil": "Mga seksyon ng direktoryo"
+  },
+  {
+    "key": "explore.segmentStops",
+    "en": "Mapped stops",
+    "fil": "Mga naka-map na hintuan"
+  },
+  {
+    "key": "explore.segmentRoutes",
+    "en": "Routes",
+    "fil": "Mga ruta"
+  },
+  {
+    "key": "explore.segmentTerminals",
+    "en": "Terminals",
+    "fil": "Mga terminal"
+  },
+  {
+    "key": "explore.segmentBarangays",
+    "en": "Barangays",
+    "fil": "Mga barangay"
+  },
+  {
+    "key": "explore.segmentLeads",
+    "en": "Leads",
+    "fil": "Mga lead",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "explore.mappedCount",
+    "en": "{0} mapped-pin places, A–Z",
+    "fil": "{0} lugar na may naka-map na pin, A–Z",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.mappedLabel",
+    "en": "Mapped stops",
+    "fil": "Mga naka-map na hintuan"
+  },
+  {
+    "key": "explore.pinsNote",
+    "en": "Pins within 60 m with one name are one row.",
+    "fil": "Isang row ang mga pin na iisa ang pangalan sa loob ng 60 m.",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "explore.loadingRoutes",
+    "en": "Loading routes",
+    "fil": "Nilo-load ang mga ruta"
+  },
+  {
+    "key": "explore.routesFailed",
+    "en": "Could not load the routes. Try again.",
+    "fil": "Hindi na-load ang mga ruta. Subukan ulit."
+  },
+  {
+    "key": "explore.routesCount",
+    "en": "{0} routes of the approved plan",
+    "fil": "{0} ruta ng aprubadong plano",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.routesNote",
+    "en": "Street order from the route plan. Shapes and stops unverified.",
+    "fil": "Ayos ng kalye mula sa plano ng ruta. Di pa kumpirmado ang hugis at mga hintuan."
+  },
+  {
+    "key": "explore.groupTitle",
+    "en": "Group {0}",
+    "fil": "Grupo {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.otherRoutes",
+    "en": "Other routes",
+    "fil": "Iba pang ruta"
+  },
+  {
+    "key": "explore.filterTerminals",
+    "en": "Filter terminals by mode",
+    "fil": "I-filter ang mga terminal ayon sa sasakyan"
+  },
+  {
+    "key": "explore.all",
+    "en": "All",
+    "fil": "Lahat"
+  },
+  {
+    "key": "explore.terminalsCount",
+    "en": "{0} terminals",
+    "fil": "{0} terminal",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.terminalsLabel",
+    "en": "Terminals",
+    "fil": "Mga terminal"
+  },
+  {
+    "key": "explore.barangaysCount",
+    "en": "{0} barangays, A–Z",
+    "fil": "{0} barangay, A–Z",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.barangaysLabel",
+    "en": "Barangays",
+    "fil": "Mga barangay"
+  },
+  {
+    "key": "explore.leadsCount",
+    "en": "{0} feeder leads",
+    "fil": "{0} lead sa feeder",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.leadsLabel",
+    "en": "Feeder leads",
+    "fil": "Mga lead sa feeder",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "explore.pinCount",
+    "en": "{0} pins",
+    "fil": "{0} pin",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.pinLoops",
+    "en": "Loop {0}",
+    "fil": "Loop {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.leadUnverified",
+    "en": "Documented, not verified",
+    "fil": "Nakatala, di pa kumpirmado"
+  },
+  {
+    "key": "explore.leadStatus",
+    "en": "Documented · status: {0}",
+    "fil": "Nakatala · status: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.railStatus",
+    "en": "PNR Naga–Lupi Viejo: reported operating. Naga–Legazpi: reported suspended. Verify with PNR.",
+    "fil": "PNR Naga–Lupi Viejo: naiulat na tumatakbo. Naga–Legazpi: naiulat na suspendido. Kumpirmahin sa PNR.",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "explore.railNotInRegister",
+    "en": "{0} (not in register)",
+    "fil": "{0} (wala sa rehistro)",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "explore.placesNote",
+    "en": "Places come from OpenStreetMap. Sourced photos show landmarks; entrances and hours remain unverified. Photo dates and credits are linked on each image.",
+    "fil": "Galing sa OpenStreetMap ang mga lugar. Ipinapakita ng mga litratong may source ang mga landmark; di pa kumpirmado ang mga pasukan at oras. Nakalink sa bawat larawan ang petsa at kredito ng litrato."
+  },
+  {
+    "key": "saved.title",
+    "en": "Saved",
+    "fil": "Saved"
+  },
+  {
+    "key": "saved.tripsIntro",
+    "en": "Saved trips work offline, as text.",
+    "fil": "Gumagana nang offline ang mga naka-save na biyahe, bilang teksto."
+  },
+  {
+    "key": "saved.noTrips",
+    "en": "No saved trips. Open a trip and tap Save.",
+    "fil": "Walang naka-save na biyahe. Magbukas ng biyahe at pindutin ang Save."
+  },
+  {
+    "key": "saved.noPlaces",
+    "en": "No saved places yet.",
+    "fil": "Wala pang naka-save na lugar."
+  },
+  {
+    "key": "saved.newerNote",
+    "en": "Some saved items are from a newer version and can't be shown.",
+    "fil": "May mga naka-save na galing sa mas bagong bersyon kaya hindi maipakita."
+  },
+  {
+    "key": "saved.unreadableNote",
+    "en": "Some saved items are damaged. They stay until you remove them.",
+    "fil": "May mga sirang naka-save. Mananatili ang mga ito hangga't hindi mo inaalis."
+  },
+  {
+    "key": "saved.unavailable",
+    "en": "Saving isn't available (private browsing?).",
+    "fil": "Hindi available ang pag-save (private browsing?)."
+  },
+  {
+    "key": "saved.readError",
+    "en": "{0} could not be read on this phone.",
+    "fil": "Hindi mabasa sa phone na ito ang {0}.",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.whatTrips",
+    "en": "Saved trips",
+    "fil": "mga naka-save na biyahe",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "saved.whatPlaces",
+    "en": "Saved places",
+    "fil": "mga naka-save na lugar",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "saved.whatHistory",
+    "en": "Trip history",
+    "fil": "kasaysayan ng biyahe",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "saved.removedDamagedOne",
+    "en": "Removed 1 damaged item.",
+    "fil": "Naalis ang 1 sirang item."
+  },
+  {
+    "key": "saved.removedDamaged",
+    "en": "Removed {0} damaged items.",
+    "fil": "Naalis ang {0} sirang item.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.removeFailed",
+    "en": "Couldn't remove. Try again.",
+    "fil": "Hindi naalis. Subukan ulit."
+  },
+  {
+    "key": "saved.removeUnreadable",
+    "en": "Remove unreadable items",
+    "fil": "Alisin ang mga hindi mabasang item"
+  },
+  {
+    "key": "saved.removeDamagedOneQ",
+    "en": "Remove 1 damaged item from this phone?",
+    "fil": "Alisin sa phone na ito ang 1 sirang item?",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "saved.removeDamagedQ",
+    "en": "Remove {0} damaged items from this phone?",
+    "fil": "Alisin sa phone na ito ang {0} sirang item?",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.remove",
+    "en": "Remove",
+    "fil": "Alisin"
+  },
+  {
+    "key": "saved.undo",
+    "en": "Undo",
+    "fil": "Undo"
+  },
+  {
+    "key": "saved.undoFailed",
+    "en": "Couldn't undo.",
+    "fil": "Hindi na-undo."
+  },
+  {
+    "key": "saved.loadingTrips",
+    "en": "Loading saved trips",
+    "fil": "Nilo-load ang mga naka-save na biyahe"
+  },
+  {
+    "key": "saved.loadingPlaces",
+    "en": "Loading saved places",
+    "fil": "Nilo-load ang mga naka-save na lugar"
+  },
+  {
+    "key": "saved.loadingHistory",
+    "en": "Loading trip history",
+    "fil": "Nilo-load ang kasaysayan ng biyahe"
+  },
+  {
+    "key": "saved.availableOffline",
+    "en": "Available offline",
+    "fil": "Available offline"
+  },
+  {
+    "key": "saved.changedSince",
+    "en": "Changed since saved",
+    "fil": "May nagbago mula nang i-save"
+  },
+  {
+    "key": "saved.from",
+    "en": "From {0}",
+    "fil": "Mula sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.savedOn",
+    "en": "Saved {0}",
+    "fil": "Naka-save noong {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.onThisPhone",
+    "en": "on this phone",
+    "fil": "sa phone na ito"
+  },
+  {
+    "key": "saved.reviewChanges",
+    "en": "Review changes",
+    "fil": "Tingnan ang mga pagbabago"
+  },
+  {
+    "key": "saved.openTrip",
+    "en": "Open trip",
+    "fil": "Buksan ang biyahe"
+  },
+  {
+    "key": "saved.removeTripFor",
+    "en": "Remove trip to {0}",
+    "fil": "Alisin ang biyahe papunta sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.tripsLabel",
+    "en": "Saved trips",
+    "fil": "Mga naka-save na biyahe"
+  },
+  {
+    "key": "saved.removedTrip",
+    "en": "Removed the trip to {0}.",
+    "fil": "Naalis ang biyahe papunta sa {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.planHere",
+    "en": ": plan a trip to here",
+    "fil": ": magplano ng biyahe papunta rito",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "saved.useAsStart",
+    "en": "Use as start",
+    "fil": "Gawing simula"
+  },
+  {
+    "key": "saved.rename",
+    "en": "Rename",
+    "fil": "Palitan ang pangalan"
+  },
+  {
+    "key": "saved.useAsStartFor",
+    "en": "Use as start: {0}",
+    "fil": "Gawing simula: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.renameFor",
+    "en": "Rename: {0}",
+    "fil": "Palitan ang pangalan: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.removeFor",
+    "en": "Remove: {0}",
+    "fil": "Alisin: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.removedPlace",
+    "en": "Removed {0}.",
+    "fil": "Naalis ang {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.placesTitle",
+    "en": "Saved places",
+    "fil": "Mga naka-save na lugar"
+  },
+  {
+    "key": "saved.addPlace",
+    "en": "Add a place",
+    "fil": "Magdagdag ng lugar"
+  },
+  {
+    "key": "saved.renameTitle",
+    "en": "Rename place",
+    "fil": "Palitan ang pangalan ng lugar"
+  },
+  {
+    "key": "saved.historyOffTitle",
+    "en": "History is off",
+    "fil": "Naka-off ang kasaysayan"
+  },
+  {
+    "key": "saved.historyOffText",
+    "en": "History is off. When on, it stays on this device.",
+    "fil": "Naka-off ang kasaysayan. Kapag in-on, nananatili ito sa device na ito.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "saved.turnOnInMore",
+    "en": "Turn on in More",
+    "fil": "I-on sa Menu"
+  },
+  {
+    "key": "saved.historyTitle",
+    "en": "Trip history",
+    "fil": "Kasaysayan ng biyahe"
+  },
+  {
+    "key": "saved.historyDeleted",
+    "en": "Trip history on this phone deleted.",
+    "fil": "Nabura ang kasaysayan ng biyahe sa phone na ito.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "saved.historyDeleteFailed",
+    "en": "Couldn't delete history. Try again.",
+    "fil": "Hindi nabura ang kasaysayan. Subukan ulit.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "saved.historyEmpty",
+    "en": "No trips in history yet.",
+    "fil": "Wala pang biyahe sa kasaysayan."
+  },
+  {
+    "key": "saved.historyNote",
+    "en": "Kept 90 days on this phone. Place names only.",
+    "fil": "Itinatago nang 90 araw sa phone na ito. Mga pangalan ng lugar lang.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "saved.clearHistory",
+    "en": "Clear history",
+    "fil": "Burahin ang kasaysayan"
+  },
+  {
+    "key": "saved.clearHistoryQ",
+    "en": "Delete the trip history on this phone?",
+    "fil": "Burahin ang kasaysayan ng biyahe sa phone na ito?",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "saved.tabTrips",
+    "en": "Trips",
+    "fil": "Mga biyahe"
+  },
+  {
+    "key": "saved.tabPlaces",
+    "en": "Places",
+    "fil": "Mga lugar"
+  },
+  {
+    "key": "saved.tabHistory",
+    "en": "History",
+    "fil": "Kasaysayan"
+  },
+  {
+    "key": "saved.tabsLabel",
+    "en": "Saved sections",
+    "fil": "Mga seksyon ng Saved"
+  },
+  {
+    "key": "saved.syncTitle",
+    "en": "Account sync",
+    "fil": "Pag-sync ng account"
+  },
+  {
+    "key": "saved.syncHint",
+    "en": "Backup saved trips & places to your account",
+    "fil": "I-backup sa account mo ang mga naka-save na biyahe at lugar",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "saved.syncNow",
+    "en": "Sync now",
+    "fil": "I-sync ngayon"
+  },
+  {
+    "key": "saved.syncing",
+    "en": "Syncing...",
+    "fil": "Nagsi-sync..."
+  },
+  {
+    "key": "saved.upToDate",
+    "en": "Everything is up to date.",
+    "fil": "Updated na ang lahat."
+  },
+  {
+    "key": "saved.synced",
+    "en": "Synced: {0} sent to your account, {1} added to this phone.",
+    "fil": "Na-sync: {0} ang ipinadala sa account mo, {1} ang naidagdag sa phone na ito.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.syncFailed",
+    "en": "Sync failed. Check your network connection.",
+    "fil": "Hindi na-sync. Tingnan ang koneksyon mo."
+  },
+  {
+    "key": "saved.placeSub",
+    "en": "Saved place · {0}",
+    "fil": "Naka-save na lugar · {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.placeSource.osm",
+    "en": "OpenStreetMap",
+    "fil": "OpenStreetMap"
+  },
+  {
+    "key": "saved.placeSource.pin",
+    "en": "Mapped pin",
+    "fil": "Naka-map na pin"
+  },
+  {
+    "key": "saved.placeSource.pinned",
+    "en": "Pinned location",
+    "fil": "Na-pin na lokasyon"
+  },
+  {
+    "key": "saved.placeSource.google",
+    "en": "Google suggestion, not verified",
+    "fil": "Mungkahi ng Google, di pa kumpirmado"
+  },
+  {
+    "key": "saved.dateUnknown",
+    "en": "date unknown",
+    "fil": "hindi alam ang petsa"
+  },
+  {
+    "key": "saved.labelError",
+    "en": "Enter a name of 1 to {0} characters.",
+    "fil": "Maglagay ng pangalang 1 hanggang {0} character.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.dataFrom",
+    "en": "data from {0}",
+    "fil": "data mula sa {0}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.revision",
+    "en": "revision {0}",
+    "fil": "bersyon {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.removedFromSaved",
+    "en": "Removed “{0}” from saved places.",
+    "fil": "Inalis ang “{0}” sa mga naka-save na lugar.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.changeFailed",
+    "en": "Could not change saved places on this phone.",
+    "fil": "Hindi mabago ang mga naka-save na lugar sa phone na ito."
+  },
+  {
+    "key": "saved.savedAsName",
+    "en": "Saved “{0}” on this phone.",
+    "fil": "Na-save ang “{0}” sa phone na ito.",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.savedAsLabel",
+    "en": "Saved as “{0}”",
+    "fil": "Na-save bilang “{0}”",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.saveThisPlace",
+    "en": "Save this place",
+    "fil": "I-save ang lugar na ito"
+  },
+  {
+    "key": "saved.savePlace",
+    "en": "Save place",
+    "fil": "I-save ang lugar"
+  },
+  {
+    "key": "saved.savedState",
+    "en": "Saved",
+    "fil": "Saved"
+  },
+  {
+    "key": "saved.removeSuffix",
+    "en": "{0}, remove from saved places",
+    "fil": "{0}, alisin sa mga naka-save na lugar",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.storageUnavailable",
+    "en": "Saving places needs storage on this phone, which is not available.",
+    "fil": "Kailangan ng storage sa phone na ito para makapag-save ng lugar, pero hindi ito available.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed)"
+  },
+  {
+    "key": "saved.dialogHint",
+    "en": "Up to {0} characters. Kept on this phone only.",
+    "fil": "Hanggang {0} character. Sa phone na ito lang itinatago.",
+    "review": true,
+    "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "saved.saveFailed",
+    "en": "Couldn't save on this phone. Try again.",
+    "fil": "Hindi nai-save sa phone na ito. Subukan ulit."
+  },
+  {
+    "key": "saved.save",
+    "en": "Save",
+    "fil": "I-save"
+  },
+  {
+    "key": "saved.nameLabel",
+    "en": "Name",
+    "fil": "Pangalan"
+  },
+  {
+    "key": "map.layers",
+    "en": "Layers",
+    "fil": "Mga layer"
+  },
+  {
+    "key": "map.centerOnMe",
+    "en": "Center on my location",
+    "fil": "I-center sa lokasyon ko"
+  },
+  {
+    "key": "map.zoom",
+    "en": "Zoom",
+    "fil": "Zoom"
+  },
+  {
+    "key": "map.zoomIn",
+    "en": "Zoom in",
+    "fil": "I-zoom in"
+  },
+  {
+    "key": "map.zoomOut",
+    "en": "Zoom out",
+    "fil": "I-zoom out"
+  },
+  {
+    "key": "map.zoomLevel",
+    "en": "Zoom level {0}",
+    "fil": "Antas ng zoom {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "map.mapOfNaga",
+    "en": "Map of Naga City",
+    "fil": "Mapa ng Naga City"
+  },
+  {
+    "key": "map.startPoint",
+    "en": "Start point",
+    "fil": "Simula"
+  },
+  {
+    "key": "map.destination",
+    "en": "Destination",
+    "fil": "Pupuntahan"
+  },
+  {
+    "key": "map.yourLocation",
+    "en": "your location",
+    "fil": "lokasyon mo",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "map.startPin",
+    "en": "the start pin",
+    "fil": "pin ng simula",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value"
+  },
+  {
+    "key": "map.centeredOn",
+    "en": "Map centered on {0}",
+    "fil": "Naka-center ang mapa sa {0}",
+    "review": true,
+    "note": "T12 draft | built from translated pieces in code: check the sentence reads naturally with every value | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "map.centeredNaga",
+    "en": "Map centered on Naga City center",
+    "fil": "Naka-center ang mapa sa gitna ng Naga City"
+  },
+  {
+    "key": "map.backgroundUnavailable",
+    "en": "Map background unavailable",
+    "fil": "Walang available na background ng mapa"
+  },
+  {
+    "key": "map.backgroundOff",
+    "en": "Map background off (low-data mode)",
+    "fil": "Naka-off ang background ng mapa (low-data mode)"
+  },
+  {
+    "key": "map.showBackgroundOnce",
+    "en": "Show background once",
+    "fil": "Ipakita ang background nang isang beses"
+  },
+  {
+    "key": "map.mapData",
+    "en": "Map data ",
+    "fil": "Data ng mapa "
+  },
+  {
+    "key": "map.legend",
+    "en": "Legend",
+    "fil": "Legend"
+  },
+  {
+    "key": "map.legendPanel",
+    "en": "Map legend",
+    "fil": "Legend ng mapa"
+  },
+  {
+    "key": "map.legendFootnote",
+    "en": "Lines are approximate paths, not verified route shapes.",
+    "fil": "Tinatayang daan ang mga linya, hindi kumpirmadong hugis ng ruta."
+  },
+  {
+    "key": "map.legendWalk",
+    "en": "Dotted: approximate walking path · crossings not checked",
+    "fil": "Tuldok-tuldok: tinatayang daan ng lakad · hindi pa nasuri ang mga tawiran",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "map.legendStop",
+    "en": "Mapped stop, not verified",
+    "fil": "Naka-map na hintuan, di pa kumpirmado"
+  },
+  {
+    "key": "map.legendMixed",
+    "en": "Alternating colours: traditional and modern jeepneys",
+    "fil": "Salitan na kulay: traditional at modern na jeep",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "map.legendPadyak",
+    "en": "Padyak",
+    "fil": "Padyak"
+  },
+  {
+    "key": "map.legendApproxStreet",
+    "en": "Approximate, not a route",
+    "fil": "Tantiya, hindi ruta"
+  },
+  {
+    "key": "map.legendFreePoint",
+    "en": "Board or get off here (stop not marked)",
+    "fil": "Sumakay o bumaba rito (walang markang hintuan)"
+  },
+  {
+    "key": "map.legendDashed",
+    "en": "Dashed section",
+    "fil": "Putol-putol na bahagi",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "map.onewayCaution",
+    "en": "street order conflicts with one-way mapping — confirm on the ground",
+    "fil": "salungat ang ayos ng kalye sa one-way sa mapa — kumpirmahin sa mismong lugar",
+    "review": true,
+    "note": "T12 draft | fare/safety/unverified claim: check it keeps the same strength as English"
+  },
+  {
+    "key": "map.terminalAccess",
+    "en": "terminal access road",
+    "fil": "daan papunta sa terminal",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "map.untracedRide",
+    "en": "Path could not be traced from the street list; stops shown only",
+    "fil": "Hindi nasundan ang daan mula sa listahan ng kalye; mga hintuan lang ang ipinapakita",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm"
+  },
+  {
+    "key": "map.tripLinesMissing",
+    "en": "Route lines for this trip didn't load.",
+    "fil": "Hindi na-load ang mga linya ng ruta para sa biyaheng ito."
+  },
+  {
+    "key": "map.tripLinesOverview",
+    "en": "Route lines for this trip didn't load; showing the route overview.",
+    "fil": "Hindi na-load ang mga linya ng ruta para sa biyaheng ito; ipinapakita ang pangkalahatang tanaw ng ruta."
+  },
+  {
+    "key": "map.chipApproximate",
+    "en": "Approximate",
+    "fil": "Tantiya"
+  },
+  {
+    "key": "map.chipPadyak",
+    "en": "Padyak",
+    "fil": "Padyak"
+  },
+  {
+    "key": "map.streetRoute",
+    "en": "Street route",
+    "fil": "Ruta sa kalye"
+  },
+  {
+    "key": "map.streetRoutePadyak",
+    "en": "Street route (padyak)",
+    "fil": "Ruta sa kalye (padyak)"
+  },
+  {
+    "key": "map.announceWalk",
+    "en": "walk",
+    "fil": "lakad"
+  },
+  {
+    "key": "map.announceTricycle",
+    "en": "Tricycle",
+    "fil": "Tricycle"
+  },
+  {
+    "key": "map.announcePadyak",
+    "en": "Padyak",
+    "fil": "Padyak"
+  },
+  {
+    "key": "map.tripDrawn",
+    "en": "Trip drawn: {0}. Lines are approximate.",
+    "fil": "Naiguhit ang biyahe: {0}. Tinatayang lang ang mga linya.",
+    "review": true,
+    "note": "T12 draft | uncertain term: native Naga speaker to confirm | message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "map.layersTitle",
+    "en": "Map layers",
+    "fil": "Mga layer ng mapa"
+  },
+  {
+    "key": "map.layersCloseLabel",
+    "en": "Close map layers",
+    "fil": "Isara ang mga layer ng mapa"
+  },
+  {
+    "key": "map.layersClose",
+    "en": "Close",
+    "fil": "Isara"
+  },
+  {
+    "key": "map.layerVisibility",
+    "en": "Layer visibility",
+    "fil": "Pagpapakita ng layer"
+  },
+  {
+    "key": "map.switchRoutes",
+    "en": "Routes",
+    "fil": "Mga ruta"
+  },
+  {
+    "key": "map.switchStops",
+    "en": "Stops",
+    "fil": "Mga hintuan"
+  },
+  {
+    "key": "map.switchTerminals",
+    "en": "Terminals",
+    "fil": "Mga terminal"
+  },
+  {
+    "key": "map.filterByMode",
+    "en": "Filter by mode",
+    "fil": "I-filter ayon sa sasakyan"
+  },
+  {
+    "key": "map.filterAll",
+    "en": "All",
+    "fil": "Lahat"
+  },
+  {
+    "key": "map.regionalRoutesNote",
+    "en": "Regional UV Express and bus routes leave the city; see their terminals.",
+    "fil": "Palabas ng lungsod ang mga rutang UV Express at bus sa rehiyon; tingnan ang mga terminal nila."
+  },
+  {
+    "key": "map.routesOnMap",
+    "en": "Routes on the map ({0})",
+    "fil": "Mga ruta sa mapa ({0})",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "map.routesOff",
+    "en": "Routes are switched off.",
+    "fil": "Naka-off ang mga ruta."
+  },
+  {
+    "key": "map.linesNotLoaded",
+    "en": "Route lines aren't loaded on this device.",
+    "fil": "Hindi naka-load sa device na ito ang mga linya ng ruta."
+  },
+  {
+    "key": "map.noRoutesMatch",
+    "en": "No routes match the current filter.",
+    "fil": "Walang rutang tumutugma sa kasalukuyang filter."
+  },
+  {
+    "key": "map.terminalsHeading",
+    "en": "Terminals ({0})",
+    "fil": "Mga terminal ({0})",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "map.noTerminalsMatch",
+    "en": "No terminals match the current filter.",
+    "fil": "Walang terminal na tumutugma sa kasalukuyang filter."
+  },
+  {
+    "key": "map.terminalsOff",
+    "en": "Terminals are switched off.",
+    "fil": "Naka-off ang mga terminal."
+  },
+  {
+    "key": "map.terminalSub",
+    "en": "{0} · {1}",
+    "fil": "{0} · {1}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "map.selectedRoute",
+    "en": "Selected route: {0}",
+    "fil": "Napiling ruta: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order"
+  },
+  {
+    "key": "map.dismissRoute",
+    "en": "Dismiss selected route",
+    "fil": "Alisin ang napiling ruta"
+  },
+  {
+    "key": "map.approxPath",
+    "en": "Approximate path, not a verified route shape",
+    "fil": "Tinatayang daan, hindi kumpirmadong hugis ng ruta"
+  },
+  {
+    "key": "map.routeDetails",
+    "en": "Route details",
+    "fil": "Detalye ng ruta"
   }
 ]
