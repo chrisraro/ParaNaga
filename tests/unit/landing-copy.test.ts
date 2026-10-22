@@ -4,13 +4,20 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { FAQ, HERO, MODES, ROUTES, SCREEN_ALT, SHOWCASE } from "@/ui/landing/landing-content";
+import { en } from "@/i18n/en";
+import { ROUTES, SHOWCASE_SCREENS } from "@/ui/landing/landing-content";
 
+const L = en.landing;
 const DIR = path.resolve("src/ui/landing");
 const FILES = readdirSync(DIR).filter((f) => /\.tsx?$/.test(f) && f !== "hero-lines.ts");
 
+/** Every string in the English landing dictionary (message functions called with a placeholder). */
+const words = (tree: unknown): string[] =>
+  typeof tree === "string" ? [tree] : typeof tree === "function" ? [(tree as (x: number) => string)(50)] : Object.values(tree as object).flatMap(words);
+
 const stripComments = (src: string) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/.*$/gm, "$1");
-const SOURCE = FILES.map((f) => stripComments(readFileSync(path.join(DIR, f), "utf8"))).join("\n");
+// The copy now lives in the dictionary (T14), so the scan covers the code and the English landing copy.
+const SOURCE = [...FILES.map((f) => stripComments(readFileSync(path.join(DIR, f), "utf8"))), ...words(L)].join("\n");
 
 const FORBIDDEN: [string, RegExp][] = [
   ["ETA", /\bETA\b/],
@@ -27,7 +34,7 @@ const FORBIDDEN: [string, RegExp][] = [
 describe("landing copy", () => {
   it("scans the landing source (so the scan is not silently empty)", () => {
     expect(FILES).toEqual(expect.arrayContaining(["landing-page.tsx", "landing-content.ts", "site-header.tsx"]));
-    expect(SOURCE).toContain(HERO.lede);
+    expect(SOURCE).toContain(L.hero.lede);
   });
 
   for (const [name, re] of FORBIDDEN) {
@@ -55,19 +62,19 @@ describe("landing copy", () => {
   });
 
   it("says routes are provisional and fares are estimates, up front", () => {
-    expect(HERO.note).toMatch(/provisional/);
-    expect(HERO.note).toMatch(/estimates/);
-    expect(FAQ.some(([q]) => /where the jeepney is/.test(q))).toBe(true);
+    expect(L.hero.note).toMatch(/provisional/);
+    expect(L.hero.note).toMatch(/estimates/);
+    expect(L.faq.tracking.q).toMatch(/where the jeepney is/);
   });
 
   it("names jeepney routes by sign letter only where the app has one", () => {
     expect(ROUTES).toHaveLength(11);
     expect(ROUTES.filter((r) => r.letter).map((r) => r.letter)).toEqual(["A", "B", "C", "D"]);
     expect(ROUTES[0]).toEqual({ letter: null, title: "Centro-Cararayan-San Isidro" });
-    expect(MODES.jeepney.body).toContain("Centro-Del Rosario via Magsaysay Ave");
+    expect(L.ride.jeepney.body).toContain("Centro-Del Rosario via Magsaysay Ave");
   });
 
   it("describes every capture it shows", () => {
-    for (const s of SHOWCASE) expect(SCREEN_ALT[s.screen].length).toBeGreaterThan(40);
+    for (const screen of SHOWCASE_SCREENS) expect(L.alt[screen].length).toBeGreaterThan(40);
   });
 });

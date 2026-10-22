@@ -7544,5 +7544,729 @@
     "en": "Route details",
     "fil": "Detalye ng ruta",
     "reviewed": "opus"
+  },
+  {
+    "key": "landing.header.sections.how",
+    "en": "How it works",
+    "fil": "Paano gumagana"
+  },
+  {
+    "key": "landing.header.sections.ride",
+    "en": "Ways to ride",
+    "fil": "Mga paraan ng pagsakay",
+    "review": true,
+    "note": "Nav label; 'Mga paraan ng pagsakay' (ways to ride). Check length in the pill header."
+  },
+  {
+    "key": "landing.header.sections.honest",
+    "en": "Our data",
+    "fil": "Aming datos",
+    "review": true,
+    "note": "'Aming datos' (our data): check it reads as the data section of the page."
+  },
+  {
+    "key": "landing.header.sections.faq",
+    "en": "FAQ",
+    "fil": "Mga tanong"
+  },
+  {
+    "key": "landing.header.openApp",
+    "en": "Open the app",
+    "fil": "Buksan ang app"
+  },
+  {
+    "key": "landing.header.openMenu",
+    "en": "Open menu",
+    "fil": "Buksan ang menu"
+  },
+  {
+    "key": "landing.header.closeMenu",
+    "en": "Close menu",
+    "fil": "Isara ang menu"
+  },
+  {
+    "key": "landing.header.mainNav",
+    "en": "Main",
+    "fil": "Pangunahin"
+  },
+  {
+    "key": "landing.header.backToTop",
+    "en": "ParaNaga, back to top",
+    "fil": "ParaNaga, bumalik sa itaas"
+  },
+  {
+    "key": "landing.hero.titleA",
+    "en": "Which jeepney, where to board,",
+    "fil": "Aling jeep, saan sasakay,",
+    "review": true,
+    "note": "Headline wordplay: 'Aling jeep, saan sasakay, at kailan magsasabi ng Para!' Native speaker to confirm it sounds natural, not literal."
+  },
+  {
+    "key": "landing.hero.titleB",
+    "en": "and when to say",
+    "fil": "at kailan magsasabi ng",
+    "review": true,
+    "note": "Continues the headline; must read into the untranslated 'Para!'."
+  },
+  {
+    "key": "landing.hero.lede",
+    "en": "ParaNaga plans trips across Naga City by jeepney, tricycle, padyak and on foot, then guides you step by step. Free in your phone's browser, no account needed.",
+    "fil": "Pinaplano ng ParaNaga ang biyahe mo sa buong Naga City sakay ng jeep, tricycle, padyak at paglalakad, tapos ginagabayan ka hakbang-hakbang. Libre sa browser ng phone mo, walang account na kailangan."
+  },
+  {
+    "key": "landing.hero.seeHow",
+    "en": "See how it works",
+    "fil": "Tingnan kung paano gumagana"
+  },
+  {
+    "key": "landing.hero.note",
+    "en": "Routes and times are provisional and fares are estimates. Confirm with the driver.",
+    "fil": "Pansamantala pa ang mga ruta at oras, at tantiya lang ang pasahe. Kumpirmahin sa driver."
+  },
+  {
+    "key": "landing.routeBandLabel",
+    "en": "Jeepney routes ParaNaga plans with",
+    "fil": "Mga rutang jeep na ginagamit ng ParaNaga sa pagpaplano"
+  },
+  {
+    "key": "landing.how.heading",
+    "en": "From “Where to?” to “Para!” in three steps.",
+    "fil": "Mula “Saan punta?” hanggang “Para!” sa tatlong hakbang.",
+    "review": true,
+    "note": "'Mula Saan punta? hanggang Para!' uses the app's 'Saan punta?' (home.whereTo)."
+  },
+  {
+    "key": "landing.how.lede",
+    "en": "New to Naga, here for Peñafrancia, or trying a new route: you should not have to ask three strangers which jeepney to take.",
+    "fil": "Bago ka sa Naga, nandito para sa Peñafrancia, o sumusubok ng bagong ruta: hindi mo na dapat tanungin ang tatlong estranghero kung anong jeep ang sasakyan.",
+    "review": true,
+    "note": "'tatlong estranghero' (three strangers): confirm tone is friendly, not cold."
+  },
+  {
+    "key": "landing.how.pick.title",
+    "en": "Pick a place",
+    "fil": "Pumili ng lugar"
+  },
+  {
+    "key": "landing.how.pick.body",
+    "en": "Type a school, a market or a barangay, or tap a chip on the map.",
+    "fil": "Mag-type ng paaralan, palengke o barangay, o mag-tap ng chip sa mapa."
+  },
+  {
+    "key": "landing.how.options.title",
+    "en": "See your options",
+    "fil": "Tingnan ang mga pagpipilian"
+  },
+  {
+    "key": "landing.how.options.body",
+    "en": "Jeepney, tricycle, padyak or walking, each with an estimated fare.",
+    "fil": "Jeep, tricycle, padyak o lakad, bawat isa may tantiyang pasahe."
+  },
+  {
+    "key": "landing.how.ride.title",
+    "en": "Ride and say Para",
+    "fil": "Sumakay at magsabi ng Para"
+  },
+  {
+    "key": "landing.how.ride.body",
+    "en": "Follow the steps: where to walk, where to board and where to get off.",
+    "fil": "Sundan ang mga hakbang: saan maglalakad, saan sasakay at saan bababa."
+  },
+  {
+    "key": "landing.showcase.heading",
+    "en": "The real app, screen by screen.",
+    "fil": "Ang totoong app, bawat screen."
+  },
+  {
+    "key": "landing.showcase.deviceLabel",
+    "en": "ParaNaga screens",
+    "fil": "Mga screen ng ParaNaga"
+  },
+  {
+    "key": "landing.showcase.home.title",
+    "en": "Start from the map.",
+    "fil": "Magsimula sa mapa."
+  },
+  {
+    "key": "landing.showcase.home.body",
+    "en": "The map opens on Naga with a floating Where to? bar. Chips go straight to Food & drink, Schools, Health, Markets & malls, Government and Terminals, with your saved places first.",
+    "fil": "Bumubukas ang mapa sa Naga na may lumulutang na bar na Saan punta? Diretso ang mga chip sa Kainan at inumin, Paaralan, Kalusugan, Palengke at mall, Gobyerno at Terminal, at nauuna ang mga naka-save mong lugar."
+  },
+  {
+    "key": "landing.showcase.search.title",
+    "en": "Find any named place.",
+    "fil": "Hanapin ang anumang may pangalang lugar."
+  },
+  {
+    "key": "landing.showcase.search.body",
+    "en": "Search covers every named place in OpenStreetMap, plus stops and routes. When it finds too little, Google suggestions fill in, each labelled not verified.",
+    "fil": "Sakop ng paghahanap ang bawat lugar na may pangalan sa OpenStreetMap, pati mga hintuan at ruta. Kapag kulang ang resulta, dinadagdagan ito ng mga mungkahi ng Google, bawat isa may label na di pa kumpirmado."
+  },
+  {
+    "key": "landing.showcase.directions.title",
+    "en": "See the ride on the street map.",
+    "fil": "Tingnan ang sakay sa mapa ng kalye."
+  },
+  {
+    "key": "landing.showcase.directions.body",
+    "en": "Plaza Rizal to Ateneo de Naga University: the walk and the jeepney drawn on the street map, and the two best options right under it, the Recommended jeepney and a tricycle.",
+    "fil": "Plaza Rizal papunta sa Ateneo de Naga University: ang lakad at ang jeep na iginuhit sa mapa ng kalye, at ang dalawang pinakamainam na pagpipilian sa ilalim nito, ang Inirerekomendang jeep at isang tricycle."
+  },
+  {
+    "key": "landing.showcase.options.title",
+    "en": "Compare every way there.",
+    "fil": "Ihambing ang lahat ng paraan."
+  },
+  {
+    "key": "landing.showcase.options.body",
+    "en": "One option is Recommended. Jeepneys go by sign letter and route title; tricycle cards show the minimum fare and never a time.",
+    "fil": "Isa ang Inirerekomenda. Ang mga jeep ay ayon sa letra sa karatula at pangalan ng ruta; ang mga card ng tricycle ay nagpapakita ng minimum na pasahe at hindi kailanman ng oras."
+  },
+  {
+    "key": "landing.showcase.detail.title",
+    "en": "Follow it step by step.",
+    "fil": "Sundan nang hakbang-hakbang."
+  },
+  {
+    "key": "landing.showcase.detail.body",
+    "en": "Where to walk, where to board and where to say Para. Times are ranges marked as estimates, and waiting time is shown as unknown.",
+    "fil": "Saan maglalakad, saan sasakay at saan magsasabi ng Para. Saklaw ang mga oras na may markang tantiya, at hindi alam ang oras ng paghihintay."
+  },
+  {
+    "key": "landing.showcase.saved.title",
+    "en": "Keep trips on your phone.",
+    "fil": "Itago ang mga biyahe sa phone mo."
+  },
+  {
+    "key": "landing.showcase.saved.body",
+    "en": "Saved trips work offline, as text. Sign in only if you want them backed up to an account.",
+    "fil": "Gumagana nang offline ang mga naka-save na biyahe, bilang teksto. Mag-sign in lang kung gusto mong ma-backup ang mga ito sa account."
+  },
+  {
+    "key": "landing.ride.heading",
+    "en": "Every way to get there, named the way Naga does.",
+    "fil": "Lahat ng paraan papunta roon, sa mga pangalang gamit sa Naga."
+  },
+  {
+    "key": "landing.ride.lede",
+    "en": "Trips mix jeepneys, tricycles, padyaks and walking. Times and fares are estimates, shown as ranges.",
+    "fil": "Pinaghahalo ng mga biyahe ang jeep, tricycle, padyak at paglalakad. Tantiya ang mga oras at pasahe, ipinapakita bilang saklaw."
+  },
+  {
+    "key": "landing.ride.routeNames",
+    "en": "Route names",
+    "fil": "Mga pangalan ng ruta"
+  },
+  {
+    "key": "landing.ride.jeepney.title",
+    "en": "Jeepneys, by sign letter and route title",
+    "fil": "Mga jeep, ayon sa letra sa karatula at pangalan ng ruta"
+  },
+  {
+    "key": "landing.ride.jeepney.body",
+    "en": "Like the signboard: Loop A Centro-Magsaysay or Centro-Del Rosario via Magsaysay Ave. A route with no known letter shows its title alone, never a guessed letter, and each route page says where its letter comes from.",
+    "fil": "Gaya ng signboard: Loop A Centro-Magsaysay o Centro-Del Rosario via Magsaysay Ave. Pangalan lang ang ipinapakita sa rutang walang kilalang letra, hindi kailanman hinulaang letra, at sinasabi ng pahina ng bawat ruta kung saan galing ang letra nito."
+  },
+  {
+    "key": "landing.ride.tricycle.title",
+    "en": "Tricycles, with the terminal",
+    "fil": "Mga tricycle, kasama ang terminal"
+  },
+  {
+    "key": "landing.ride.tricycle.body",
+    "en": "The card names a nearby tricycle terminal and the minimum fare, ₱15 (Ordinance 2024-002). Tricycle time is not estimated, and roads tricycles may not use are flagged.",
+    "fil": "Pinapangalanan ng card ang malapit na terminal ng tricycle at ang minimum na pasahe, ₱15 (Ordinance 2024-002). Hindi tinatantiya ang oras ng tricycle, at minamarkahan ang mga daang bawal sa tricycle.",
+    "review": true,
+    "note": "'Ordinance 2024-002' kept English like trip.streetFareTricycleMid; routes ordinance below uses 'Ordinansa' like routes.provenancePlan. Pick one spelling."
+  },
+  {
+    "key": "landing.ride.tricycle.minFare",
+    "en": "Minimum fare ₱15",
+    "fil": "Minimum na pasahe ₱15"
+  },
+  {
+    "key": "landing.ride.tricycle.noTime",
+    "en": "Time not estimated",
+    "fil": "Walang tantiya sa oras"
+  },
+  {
+    "key": "landing.ride.padyak.title",
+    "en": "Padyak",
+    "fil": "Padyak"
+  },
+  {
+    "key": "landing.ride.padyak.body",
+    "en": "Short local rides at ₱10 per passenger. Never timed.",
+    "fil": "Maiikling lokal na sakay sa ₱10 kada pasahero. Hindi kailanman tinatantiya ang oras."
+  },
+  {
+    "key": "landing.ride.walk.title",
+    "en": "Walking",
+    "fil": "Paglalakad"
+  },
+  {
+    "key": "landing.ride.walk.body",
+    "en": "When walking is the better choice, the app says so, with the distance along streets.",
+    "fil": "Kapag mas mainam ang maglakad, sinasabi iyon ng app, kasama ang layo sa mga kalye."
+  },
+  {
+    "key": "landing.ride.anywhere.title",
+    "en": "Drop off anywhere along the route",
+    "fil": "Bumaba kahit saan sa ruta"
+  },
+  {
+    "key": "landing.ride.anywhere.body",
+    "en": "You can get on and off anywhere along a route. Where there is no marked stop, your steps say to get off near the place and tell the driver “para”.",
+    "fil": "Puwede kang sumakay at bumaba kahit saan sa ruta. Kapag walang markadong hintuan, sasabihin ng mga hakbang na bumaba malapit sa lugar at sabihin sa driver ang “para”.",
+    "review": true,
+    "note": "'bumaba' + 'para' in quotes; confirm commuters say 'sabihin sa driver ang para'."
+  },
+  {
+    "key": "landing.ride.anywhere.chip",
+    "en": "Tell the driver ‘para’ · stop not marked",
+    "fil": "Sabihin sa driver ang ‘para’ · walang markadong hintuan"
+  },
+  {
+    "key": "landing.far.title",
+    "en": "Far barangays, told straight.",
+    "fil": "Mga malalayong barangay, tapat na sinasabi."
+  },
+  {
+    "key": "landing.far.body",
+    "en": "Tricycles to Cararayan and San Isidro, Pacol, and Carolina and Panicuason charge special-trip fares, a local report. So ParaNaga points you to the jeepney and its terminal instead.",
+    "fil": "Special-trip na pasahe ang singil ng mga tricycle papuntang Cararayan at San Isidro, Pacol, at Carolina at Panicuason, ayon sa lokal na ulat. Kaya itinuturo ng ParaNaga ang jeep at ang terminal nito.",
+    "review": true,
+    "note": "'special-trip na pasahe' kept English like trip.farNoteSpecial."
+  },
+  {
+    "key": "landing.far.points.listed",
+    "en": "A special-trip tricycle is listed only if you still want one.",
+    "fil": "Nakalista lang ang special-trip na tricycle kung gusto mo pa rin."
+  },
+  {
+    "key": "landing.far.points.notFixed",
+    "en": "Its fare is marked not fixed: agree it with the driver.",
+    "fil": "May marka ang pasahe nito na di tiyak: pagkasunduan sa driver.",
+    "review": true,
+    "note": "'di tiyak' for 'not fixed' follows trip.fareNotFixed (Pasahe: di tiyak)."
+  },
+  {
+    "key": "landing.far.points.never",
+    "en": "It is never the Recommended option.",
+    "fil": "Hindi ito kailanman ang Inirerekomendang opsyon."
+  },
+  {
+    "key": "landing.offline.title",
+    "en": "Works without signal.",
+    "fil": "Gumagana kahit walang signal."
+  },
+  {
+    "key": "landing.offline.body",
+    "en": "Open ParaNaga once with a connection and the app and the transport data work offline. Saved trips open as text, even in a dead zone.",
+    "fil": "Buksan ang ParaNaga nang isang beses na may koneksyon at gagana nang offline ang app at ang datos ng transportasyon. Nabubuksan bilang teksto ang mga naka-save na biyahe, kahit sa lugar na walang signal."
+  },
+  {
+    "key": "landing.offline.android.device",
+    "en": "Android, Chrome",
+    "fil": "Android, Chrome"
+  },
+  {
+    "key": "landing.offline.android.steps.open",
+    "en": "Open ParaNaga",
+    "fil": "Buksan ang ParaNaga"
+  },
+  {
+    "key": "landing.offline.android.steps.install",
+    "en": "Tap the menu, then Install app or Add to Home screen",
+    "fil": "I-tap ang menu, tapos Install app o Add to Home screen"
+  },
+  {
+    "key": "landing.offline.iphone.device",
+    "en": "iPhone, Safari",
+    "fil": "iPhone, Safari"
+  },
+  {
+    "key": "landing.offline.iphone.steps.open",
+    "en": "Open ParaNaga",
+    "fil": "Buksan ang ParaNaga"
+  },
+  {
+    "key": "landing.offline.iphone.steps.install",
+    "en": "Tap Share, then Add to Home Screen",
+    "fil": "I-tap ang Share, tapos Add to Home Screen"
+  },
+  {
+    "key": "landing.themes.title",
+    "en": "Light, dark and high contrast.",
+    "fil": "Maliwanag, madilim at high contrast."
+  },
+  {
+    "key": "landing.themes.body",
+    "en": "ParaNaga follows your phone, or you pick in Settings. High contrast gives stronger text and borders for reading in bright sun.",
+    "fil": "Sinusunod ng ParaNaga ang phone mo, o ikaw ang pipili sa Settings. Ang high contrast ay may mas matingkad na text at border para mabasa kahit tirik ang araw.",
+    "review": true,
+    "note": "'matingkad' (stronger/brighter) for 'stronger text and borders'; 'tirik ang araw' for bright sun. Confirm."
+  },
+  {
+    "key": "landing.themes.altLight",
+    "en": "ParaNaga's home screen in the light theme: the Naga City street map with the Where to? bar and category chips.",
+    "fil": "Home screen ng ParaNaga sa maliwanag na theme: ang mapa ng kalye ng Naga City na may bar na Where to? at mga chip ng kategorya."
+  },
+  {
+    "key": "landing.themes.altDark",
+    "en": "The same home screen in the dark theme: dark search bar, chips and tab bar over the map.",
+    "fil": "Ang parehong home screen sa madilim na theme: madilim na search bar, mga chip at tab bar sa ibabaw ng mapa."
+  },
+  {
+    "key": "landing.themes.light",
+    "en": "Light",
+    "fil": "Maliwanag"
+  },
+  {
+    "key": "landing.themes.dark",
+    "en": "Dark",
+    "fil": "Madilim"
+  },
+  {
+    "key": "landing.themes.compare",
+    "en": "Compare the light and dark themes",
+    "fil": "Ihambing ang maliwanag at madilim na theme"
+  },
+  {
+    "key": "landing.themes.darkShown",
+    "en": "50% dark shown",
+    "fil": "50% ang madilim na ipinapakita",
+    "review": true,
+    "note": "Slider value text for screen readers."
+  },
+  {
+    "key": "landing.community.title",
+    "en": "Fix the map with other commuters.",
+    "fil": "Ayusin ang mapa kasama ng ibang commuter."
+  },
+  {
+    "key": "landing.community.correction.title",
+    "en": "Report a correction",
+    "fil": "Mag-ulat ng pagwawasto"
+  },
+  {
+    "key": "landing.community.correction.body",
+    "en": "A stop on the wrong curb side, a route that goes another way, a fare that differs. A person reviews it; nothing changes until then.",
+    "fil": "Hintuang nasa maling gilid ng kalye, rutang ibang daan ang tinatahak, pasaheng iba. May taong magsusuri nito; walang magbabago hangga't hindi pa iyon nangyayari.",
+    "review": true,
+    "note": "Long sentence with ellipsis of verbs ('rutang ibang daan ang tinatahak'); confirm it reads naturally."
+  },
+  {
+    "key": "landing.community.driver.title",
+    "en": "Report a driver, privately",
+    "fil": "Mag-ulat ng driver, nang pribado"
+  },
+  {
+    "key": "landing.community.driver.body",
+    "en": "Never published. Only the reviewer sees it. In an emergency, call 911.",
+    "fil": "Hindi kailanman ilalathala. Ang tagasuri lang ang makakakita. Sa emergency, tumawag sa 911.",
+    "review": true,
+    "note": "Privacy-critical: 'Hindi kailanman ilalathala' (never published)."
+  },
+  {
+    "key": "landing.community.mine.title",
+    "en": "My reports",
+    "fil": "Mga ulat ko"
+  },
+  {
+    "key": "landing.community.mine.body",
+    "en": "Your corrections and driver reports in one place. Only you can see them.",
+    "fil": "Ang mga pagwawasto at ulat mo sa driver sa iisang lugar. Ikaw lang ang makakakita."
+  },
+  {
+    "key": "landing.community.myNaga.title",
+    "en": "MyNaga, if you want the City to hear it",
+    "fil": "MyNaga, kung gusto mong marinig ng Lungsod"
+  },
+  {
+    "key": "landing.community.myNaga.body",
+    "en": "ParaNaga can open MyNaga for you, but it sends nothing to MyNaga or City Hall and cannot confirm your report was received.",
+    "fil": "Mabubuksan ng ParaNaga ang MyNaga para sa iyo, pero wala itong ipinapadala sa MyNaga o sa City Hall at hindi nito makukumpirma kung natanggap ang ulat mo.",
+    "review": true,
+    "note": "Privacy-critical: must clearly say nothing is sent to MyNaga or City Hall."
+  },
+  {
+    "key": "landing.community.tips.title",
+    "en": "Community tips",
+    "fil": "Mga tip ng komunidad"
+  },
+  {
+    "key": "landing.community.tips.body",
+    "en": "Questions and tips from Naga commuters, reviewed before others can read them, and not verified by ParaNaga.",
+    "fil": "Mga tanong at tip mula sa mga commuter ng Naga, sinusuri bago mabasa ng iba, at hindi pa kumpirmado ng ParaNaga."
+  },
+  {
+    "key": "landing.promise.title",
+    "en": "What we know, and what we don't.",
+    "fil": "Ang alam namin, at ang hindi pa.",
+    "review": true,
+    "note": "'Ang alam namin, at ang hindi pa.' (what we know, and what we don't yet). The English has no 'yet'; check meaning."
+  },
+  {
+    "key": "landing.promise.routes.title",
+    "en": "The official routes",
+    "fil": "Ang mga ruta sa ordinansa",
+    "review": true,
+    "note": "English says 'official routes'; Filipino avoids 'opisyal' (banned wording) and says 'routes in the ordinance'."
+  },
+  {
+    "key": "landing.promise.routes.body",
+    "en": "Ordinance 2025-070 sets eight route groups: Routes 1 to 7, and Route 8, the Naga Loop Service A to D, with 282 units allocated. That is an allowance, not a count of jeepneys on the road.",
+    "fil": "Itinatakda ng Ordinansa 2025-070 ang walong grupo ng ruta: Ruta 1 hanggang 7, at Ruta 8, ang Naga Loop Service A hanggang D, na may 282 unit na nakalaan. Pahintulot iyon, hindi bilang ng mga jeep na bumibiyahe.",
+    "review": true,
+    "note": "'Pahintulot' (permission) for 'allowance'; confirm it is not read as a permit per jeep."
+  },
+  {
+    "key": "landing.promise.provisional.title",
+    "en": "Provisional, and labelled",
+    "fil": "Pansamantala, at may label"
+  },
+  {
+    "key": "landing.promise.provisional.body",
+    "en": "Routes, stops and times are not verified by ParaNaga yet. Every ride says so and asks you to confirm with the driver.",
+    "fil": "Hindi pa kumpirmado ng ParaNaga ang mga ruta, hintuan at oras. Sinasabi iyon ng bawat sakay at hinihiling na kumpirmahin mo sa driver."
+  },
+  {
+    "key": "landing.promise.fares.title",
+    "en": "Fares are estimates",
+    "fil": "Tantiya ang pasahe"
+  },
+  {
+    "key": "landing.promise.fares.body",
+    "en": "From reported fare rules, shown as ranges. Discounts are not applied yet.",
+    "fil": "Mula sa mga naiulat na patakaran sa pasahe, ipinapakita bilang saklaw. Hindi pa inilalapat ang mga diskwento.",
+    "review": true,
+    "note": "'Hindi pa inilalapat ang mga diskwento' (discounts not applied yet)."
+  },
+  {
+    "key": "landing.promise.tracking.title",
+    "en": "No vehicle tracking",
+    "fil": "Walang pagsubaybay sa sasakyan"
+  },
+  {
+    "key": "landing.promise.tracking.body",
+    "en": "ParaNaga does not track jeepneys, so it never says when one will come.",
+    "fil": "Hindi sinusubaybayan ng ParaNaga ang mga jeep, kaya hindi nito sinasabi kung kailan may jeep.",
+    "review": true,
+    "note": "Avoids 'darating'/'parating' (banned): 'hindi nito sinasabi kung kailan may jeep'. Confirm the meaning (never says when one will come) is clear."
+  },
+  {
+    "key": "landing.promise.privacyTitle",
+    "en": "Your trips are yours.",
+    "fil": "Sa iyo ang mga biyahe mo."
+  },
+  {
+    "key": "landing.promise.sourcesLead",
+    "en": "Where the data comes from and who holds the rights:",
+    "fil": "Kung saan galing ang datos at sino ang may hawak ng karapatan:"
+  },
+  {
+    "key": "landing.promise.sourcesLink",
+    "en": "Sources and credits",
+    "fil": "Mga source at pasasalamat"
+  },
+  {
+    "key": "landing.promise.privacy.ads",
+    "en": "No ads and no analytics.",
+    "fil": "Walang ads at walang analytics."
+  },
+  {
+    "key": "landing.promise.privacy.searches",
+    "en": "Recent searches stay on this phone. Trip history is off by default.",
+    "fil": "Nananatili sa phone na ito ang mga huling hinanap. Naka-off bilang default ang kasaysayan ng biyahe."
+  },
+  {
+    "key": "landing.promise.privacy.location",
+    "en": "Your location is used only on this device.",
+    "fil": "Sa device na ito lang ginagamit ang lokasyon mo."
+  },
+  {
+    "key": "landing.promise.privacy.account",
+    "en": "An account is optional. Everything works as a guest.",
+    "fil": "Opsyonal ang account. Gumagana ang lahat bilang guest."
+  },
+  {
+    "key": "landing.phone.title",
+    "en": "Made for the phone in your hand.",
+    "fil": "Gawa para sa phone na hawak mo."
+  },
+  {
+    "key": "landing.phone.desk",
+    "en": "The app guides you on the street with your location, the map and big tap targets, so it opens on phones and small tablets. Point your phone's camera at the code to continue there.",
+    "fil": "Ginagabayan ka ng app sa kalye gamit ang lokasyon mo, ang mapa at malalaking tap target, kaya bumubukas ito sa mga phone at maliliit na tablet. Itutok ang camera ng phone mo sa code para magpatuloy doon."
+  },
+  {
+    "key": "landing.phone.touch",
+    "en": "It runs in your browser. Add it to your home screen and it opens like an app, even offline.",
+    "fil": "Tumatakbo ito sa browser mo. I-add sa home screen at bubukas ito na parang app, kahit offline."
+  },
+  {
+    "key": "landing.phone.qrLabel",
+    "en": "QR code that opens 50",
+    "fil": "QR code na nagbubukas ng 50"
+  },
+  {
+    "key": "landing.faq.heading",
+    "en": "Questions",
+    "fil": "Mga tanong"
+  },
+  {
+    "key": "landing.faq.free.q",
+    "en": "Is ParaNaga free?",
+    "fil": "Libre ba ang ParaNaga?"
+  },
+  {
+    "key": "landing.faq.free.a",
+    "en": "Yes. Planning trips, saving them and reading the map are free, with no account.",
+    "fil": "Oo. Libre ang pagpaplano ng biyahe, pag-save nito at pagbasa ng mapa, walang account."
+  },
+  {
+    "key": "landing.faq.install.q",
+    "en": "Do I need to install it?",
+    "fil": "Kailangan ba itong i-install?"
+  },
+  {
+    "key": "landing.faq.install.a",
+    "en": "No. It runs in your phone's browser. Add it to your home screen for one-tap access and offline use.",
+    "fil": "Hindi. Tumatakbo ito sa browser ng phone mo. I-add sa home screen para isang tap lang at magamit kahit offline."
+  },
+  {
+    "key": "landing.faq.tracking.q",
+    "en": "Does it show where the jeepney is?",
+    "fil": "Ipinapakita ba nito kung nasaan ang jeep?"
+  },
+  {
+    "key": "landing.faq.tracking.a",
+    "en": "No. ParaNaga does not track vehicles. It shows the routes and the steps, with time and fare estimates as ranges.",
+    "fil": "Hindi. Hindi sinusubaybayan ng ParaNaga ang mga sasakyan. Ipinapakita nito ang mga ruta at hakbang, at tantiya ng oras at pasahe bilang saklaw."
+  },
+  {
+    "key": "landing.faq.trust.q",
+    "en": "Can I trust the routes?",
+    "fil": "Mapagkakatiwalaan ba ang mga ruta?"
+  },
+  {
+    "key": "landing.faq.trust.a",
+    "en": "Treat them as a good start, not the last word. Routes and stops are provisional until checked on the street, and every ride says so. Confirm with the driver.",
+    "fil": "Ituring itong magandang panimula, hindi ang huling salita. Pansamantala ang mga ruta at hintuan hanggang masuri sa kalye, at sinasabi iyon ng bawat sakay. Kumpirmahin sa driver."
+  },
+  {
+    "key": "landing.faq.phonesOnly.q",
+    "en": "Why does the app open only on phones?",
+    "fil": "Bakit sa mga phone lang bumubukas ang app?"
+  },
+  {
+    "key": "landing.faq.phonesOnly.a",
+    "en": "It guides you on the street, with your location, the map and big tap targets. On a computer, scan the code to continue on your phone.",
+    "fil": "Ginagabayan ka nito sa kalye, gamit ang lokasyon mo, ang mapa at malalaking tap target. Sa computer, i-scan ang code para magpatuloy sa phone mo."
+  },
+  {
+    "key": "landing.faq.official.q",
+    "en": "Is this the City Government's app?",
+    "fil": "App ba ito ng Pamahalaang Lungsod?"
+  },
+  {
+    "key": "landing.faq.official.a",
+    "en": "No. ParaNaga is independent and not an official channel of the City Government of Naga.",
+    "fil": "Hindi. Hiwalay ang ParaNaga at hindi ito pinapatakbo ng Pamahalaang Lungsod ng Naga.",
+    "review": true,
+    "note": "Avoids banned 'opisyal': 'hindi ito pinapatakbo ng Pamahalaang Lungsod ng Naga'."
+  },
+  {
+    "key": "landing.closing.title",
+    "en": "Your next ride starts here.",
+    "fil": "Dito magsisimula ang susunod mong biyahe."
+  },
+  {
+    "key": "landing.closing.lede",
+    "en": "Free, in your phone's browser. No account needed.",
+    "fil": "Libre, sa browser ng phone mo. Walang account na kailangan."
+  },
+  {
+    "key": "landing.footer.disclaimer",
+    "en": "ParaNaga is an independent project. It is not affiliated with, endorsed by or an official channel of the City Government of Naga. Routes, times and fares may be incomplete: always confirm with the driver.",
+    "fil": "Hiwalay na proyekto ang ParaNaga. Hindi ito kaanib, inendorso o pinapatakbo ng Pamahalaang Lungsod ng Naga. Maaaring kulang ang mga ruta, oras at pasahe: laging kumpirmahin sa driver.",
+    "review": true,
+    "note": "Avoids banned 'opisyal'. 'kaanib, inendorso o pinapatakbo' for 'affiliated with, endorsed by or an official channel of'. Legal wording: owner to confirm."
+  },
+  {
+    "key": "landing.footer.captures",
+    "en": "Screens on this page are captures of the app, with map data",
+    "fil": "Mga capture ng app ang mga screen sa pahinang ito, may data ng mapa na"
+  },
+  {
+    "key": "landing.footer.osm",
+    "en": "OpenStreetMap contributors",
+    "fil": "OpenStreetMap contributors"
+  },
+  {
+    "key": "landing.footer.mapInApp",
+    "en": ". Map in the app:",
+    "fil": ". Mapa sa app:"
+  },
+  {
+    "key": "landing.footer.label",
+    "en": "Footer",
+    "fil": "Ibaba"
+  },
+  {
+    "key": "landing.footer.sources",
+    "en": "Sources and credits",
+    "fil": "Mga source at pasasalamat"
+  },
+  {
+    "key": "landing.footer.help",
+    "en": "Help",
+    "fil": "Tulong"
+  },
+  {
+    "key": "landing.alt.hero",
+    "en": "ParaNaga on a phone: a street map of Naga City with a trip from Plaza Rizal to Ateneo de Naga University and two options under it: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, marked Unverified route, and a tricycle at a minimum fare of ₱15.",
+    "fil": "ParaNaga sa isang phone: mapa ng kalye ng Naga City na may biyahe mula Plaza Rizal papunta sa Ateneo de Naga University at dalawang pagpipilian sa ilalim nito: ang Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, at ₱14, may markang Unverified route, at isang tricycle na may minimum na pasaheng ₱15."
+  },
+  {
+    "key": "landing.alt.home",
+    "en": "ParaNaga's home screen: a street map of central Naga City with a Where to? bar, chips for Food & drink, Schools, Health and Markets & malls, terminal pins and a tab bar.",
+    "fil": "Home screen ng ParaNaga: mapa ng kalye ng gitnang Naga City na may bar na Where to?, mga chip na Food & drink, Schools, Health at Markets & malls, mga pin ng terminal at tab bar."
+  },
+  {
+    "key": "landing.alt.search",
+    "en": "Search for Ateneo: places from OpenStreetMap such as Ateneo de Naga University, and a mapped stop on Loops C and D marked Mapped candidate.",
+    "fil": "Paghahanap ng Ateneo: mga lugar mula sa OpenStreetMap gaya ng Ateneo de Naga University, at isang hintuang nasa mapa sa Loops C at D na may markang Mapped candidate."
+  },
+  {
+    "key": "landing.alt.directions",
+    "en": "Directions from Plaza Rizal to Ateneo de Naga University: a walk and a jeepney ride drawn on the map, and two option cards: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, and a tricycle at a minimum fare of ₱15.",
+    "fil": "Direksyon mula Plaza Rizal papunta sa Ateneo de Naga University: lakad at sakay sa jeep na iginuhit sa mapa, at dalawang card ng pagpipilian: ang Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, at ₱14, at isang tricycle na may minimum na pasaheng ₱15."
+  },
+  {
+    "key": "landing.alt.options",
+    "en": "All trip options: Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise) with an estimated fare of ₱14, and a tricycle card with Time not estimated, the restricted roads it avoids and a minimum fare of ₱15.",
+    "fil": "Lahat ng pagpipilian sa biyahe: Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise) na may tinatayang pasaheng ₱14, at isang card ng tricycle na may Time not estimated, ang mga bawal na daang iniiwasan nito at minimum na pasaheng ₱15."
+  },
+  {
+    "key": "landing.alt.detail",
+    "en": "Trip details for C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise): the walk and ride on the map, estimated 14 to 23 minutes plus waiting, estimated fare ₱14, a peak-hour note and a Start trip button.",
+    "fil": "Detalye ng biyahe para sa C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise): ang lakad at sakay sa mapa, tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, tinatayang pasaheng ₱14, paalala tungkol sa peak hour at button na Start trip."
+  },
+  {
+    "key": "landing.alt.saved",
+    "en": "Saved screen: a trip from Plaza Rizal to Ateneo de Naga University marked Available offline, with its walk, ride and estimated fare.",
+    "fil": "Screen ng mga naka-save: biyahe mula Plaza Rizal papunta sa Ateneo de Naga University na may markang Available offline, kasama ang lakad, sakay at tinatayang pasahe."
+  },
+  {
+    "key": "landing.alt.far",
+    "en": "Trip options to Pacol: a Local report note that tricycles to Pacol charge special-trip fares, a Recommended J Centro-Carolina-Panicuason jeepney with an estimated fare of ₱18 to ₱25, and a Least walking option that changes from Loop C to J.",
+    "fil": "Mga pagpipilian sa biyahe papuntang Pacol: tala na Local report na special-trip ang singil ng mga tricycle papuntang Pacol, isang Recommended na J Centro-Carolina-Panicuason na jeep na may tinatayang pasaheng ₱18 hanggang ₱25, at opsyong Least walking na nagbabago mula Loop C papuntang J."
+  },
+  {
+    "key": "landing.alt.report",
+    "en": "Report a correction, step 1 of 3: choices such as Wrong curb side, Stop moved or removed and Fare mismatch.",
+    "fil": "Mag-ulat ng pagwawasto, hakbang 1 ng 3: mga pagpipilian gaya ng Wrong curb side, Stop moved or removed at Fare mismatch."
   }
 ]

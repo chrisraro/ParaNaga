@@ -97,6 +97,11 @@ const SAME_AS_EN: Record<string, string> = {
   "pwa.ipad": "device name",
   "pwa.iphone": "device name",
   "saved.placeSource.osm": "brand",
+  // Landing page (T14).
+  "landing.ride.padyak.title": "everyday word (Taglish vehicle names)",
+  "landing.offline.android.device": "device and browser names",
+  "landing.offline.iphone.device": "device and browser names",
+  "landing.footer.osm": "legal attribution (OpenStreetMap contributors)",
 };
 
 /** Buttons and chips (§1.7 #6): a translation may be at most 1.35 × the English length. */

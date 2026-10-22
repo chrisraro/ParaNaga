@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FILIPINO_ENABLED } from "@/i18n/locales";
-import { setLocale, useLocale } from "@/i18n/provider";
+import { setLocale, useLocale, useT } from "@/i18n/provider";
 import { AppIconTile, Wordmark } from "@/ui/brand/route-n-mark";
 
-export const SECTIONS = [
-  { href: "#how", label: "How it works" },
-  { href: "#ride", label: "Ways to ride" },
-  { href: "#honest", label: "Our data" },
-  { href: "#faq", label: "FAQ" },
-];
+const SECTIONS = [
+  { href: "#how", key: "how" },
+  { href: "#ride", key: "ride" },
+  { href: "#honest", key: "honest" },
+  { href: "#faq", key: "faq" },
+] as const;
 
 /** EN | FIL: writes the same pref as More, so the app opens in the language picked here. */
 function LanguageToggle({ className }: { className: string }) {
@@ -30,6 +30,7 @@ function LanguageToggle({ className }: { className: string }) {
 
 /** Floating pill header; on small screens the sections open in a sheet under it (never shifts the page). */
 export function SiteHeader() {
+  const t = useT().landing.header;
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -41,21 +42,21 @@ export function SiteHeader() {
 
   return (
     <header className="pnl-header">
-      <nav aria-label="Main" className="pnl-header__bar">
-        <a href="#top" className="pnl-header__brand" aria-label="ParaNaga, back to top">
+      <nav aria-label={t.mainNav} className="pnl-header__bar">
+        <a href="#top" className="pnl-header__brand" aria-label={t.backToTop}>
           <AppIconTile size={32} />
           <Wordmark className="pnl-header__word text-xl" />
         </a>
         <div className="pnl-header__links">
           {SECTIONS.map((s) => (
             <a key={s.href} href={s.href}>
-              {s.label}
+              {t.sections[s.key]}
             </a>
           ))}
         </div>
         <LanguageToggle className="pnl-header__lang pnl-header__lang--bar" />
         <Link href="/app" className="pnl-btn pnl-btn--bright pnl-header__cta">
-          Open the app
+          {t.openApp}
         </Link>
         <button
           type="button"
@@ -63,7 +64,7 @@ export function SiteHeader() {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls="mobile-menu"
-          aria-label={open ? "Close menu" : "Open menu"}
+          aria-label={open ? t.closeMenu : t.openMenu}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
             {open ? <path d="M4 4l10 10M14 4L4 14" /> : <path d="M3 6h12M3 12h12" />}
@@ -75,7 +76,7 @@ export function SiteHeader() {
           <LanguageToggle className="pnl-header__lang pnl-header__lang--sheet" />
           {SECTIONS.map((s) => (
             <a key={s.href} href={s.href} onClick={() => setOpen(false)}>
-              {s.label}
+              {t.sections[s.key]}
               <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden opacity="0.6">
                 <path d="M1 1l6 6-6 6" />
               </svg>
