@@ -77,7 +77,6 @@ async function drag(page: Page, dx: number, dy: number) {
 const row = (page: Page, which: "start" | "destination") => page.getByTestId(`endpoint-${which}`);
 const rowMain = (page: Page, which: "start" | "destination") => row(page, which).locator(".pn-endpoint__main");
 const useLocation = (page: Page) => page.getByRole("button", { name: "Use current location" });
-const chooseOnMap = (page: Page) => page.getByTestId("search-screen").getByRole("button", { name: "Choose on map", exact: true });
 const overlayPaths = (page: Page) => page.locator(".leaflet-overlay-pane path");
 
 async function zoomOutTo(page: Page, target: number) {
@@ -129,11 +128,18 @@ async function panTo(page: Page, target: { lat: number; lng: number }) {
 }
 
 async function pin(page: Page, which: "start" | "destination") {
-  await chooseOnMap(page).click();
+  await chooseOnMapVia(page, which);
   const confirm = page.getByRole("button", { name: which === "start" ? "Set start here" : "Set destination here" });
-  // A GPS start recentres the map on itself: step away so the pin is not on top of it.
-  if ((await confirm.getAttribute("aria-disabled")) === "true") await drag(page, -120, 80);
-  await confirm.click();
+  // A GPS start recentres the map on itself, sometimes after the picker opens (and again on a late
+  // fix): step away while the pin sits on it, and confirm once it is free.
+  await expect
+    .poll(async () => {
+      if (!(await confirm.isVisible())) return true;
+      if ((await confirm.getAttribute("aria-disabled")) === "true") await drag(page, -120, 80);
+      else await confirm.click({ timeout: 1000 }).catch(() => undefined);
+      return false;
+    })
+    .toBe(true);
   await expect(rowMain(page, which)).toContainText("Pinned location");
 }
 
@@ -276,7 +282,6 @@ test.describe("geolocation inside Naga", () => {
     // Swap: GPS is now the destination. Replace it with a pin: no endpoint needs GPS any more.
     await page.getByRole("button", { name: "Swap start and destination" }).click();
     await expect(rowMain(page, "destination")).toContainText("Your location");
-    await rowMain(page, "destination").click();
     await pin(page, "destination");
 
     await expect(page.getByTestId("accuracy-pill")).toBeHidden();
@@ -463,7 +468,7 @@ test.describe("focus and sheet behaviour", () => {
     await expect(page.getByTestId("home-announcer")).toHaveText("Pin cancelled");
   });
 
-  test("the peek snap makes the options inert; tapping a row lifts the sheet to half", async ({ page }) => {
+  test("the peek snap makes the options inert; tapping a row opens Search", async ({ page }) => {
     await openApp(page);
     await openTripSheet(page);
     const sheet = page.getByTestId("trip-sheet");
@@ -527,34 +532,12 @@ test.describe("focus and sheet behaviour", () => {
     }
     expect([...visited].some((n) => n.includes("Swap start and destination"))).toBe(true);
 
-    // Fix B: tapping a row at peek expands to half and its options become usable. (Tabbing ended in
-    // the stops list, which is shown while it has focus; a tap elsewhere would have closed it.)
+    // Tapping a row at peek opens Search for that end (dc6c0f5), which is where its options live now.
+    // (Tabbing ended in the stops list, which is shown while it has focus; a tap elsewhere would have closed it.)
     await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await rowMain(page, "destination").click();
-    await expect(sheet).toHaveAttribute("data-snap", "1");
-    expect(await isInert()).toBe(false);
-    await expect(page.getByRole("heading", { name: "Set destination" })).toBeVisible();
-    await chooseOnMap(page).focus();
-    await expect(chooseOnMap(page)).toBeFocused();
-    await expect(useLocation(page)).toHaveCount(0);
-
-    // Tapping the start row at peek works the same way.
-    // (Focusing an option below the fold may have lifted the sheet to full, so step down until peek.)
-    await expect
-      .poll(async () => {
-        const snap = await sheet.getAttribute("data-snap");
-        if (snap !== "0") {
-          await grabber.focus();
-          await page.keyboard.press("ArrowDown");
-        }
-        return snap;
-      })
-      .toBe("0");
-    await rowMain(page, "start").click();
-    await expect(sheet).toHaveAttribute("data-snap", "1");
-    await expect(page.getByRole("heading", { name: "Set start" })).toBeVisible();
-    await useLocation(page).focus();
-    await expect(useLocation(page)).toBeFocused();
+    await expect(page).toHaveURL(/\/app\/search\?for=destination/);
+    await expect(page.getByTestId("search-screen")).toBeVisible();
   });
 });
 

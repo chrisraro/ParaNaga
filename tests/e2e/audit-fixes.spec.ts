@@ -1,4 +1,4 @@
-import { expandOptions, openTripSheet, pinTrip, useLocationFromSearch } from "./fixtures/options";
+import { chooseOnMapVia, expandOptions, openTripSheet, pinTrip, useLocationFromSearch } from "./fixtures/options";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Route } from "@playwright/test";
 import { routeNetwork } from "./fixtures/network";
@@ -13,7 +13,6 @@ const BISCAST = { latitude: 13.6314651, longitude: 123.1927517 };
 const mapEl = (page: Page) => page.getByTestId("naga-map");
 const row = (page: Page, which: "start" | "destination") => page.getByTestId(`endpoint-${which}`);
 const rowMain = (page: Page, which: "start" | "destination") => row(page, which).locator(".pn-endpoint__main");
-const chooseOnMap = (page: Page) => page.getByTestId("search-screen").getByRole("button", { name: "Choose on map", exact: true });
 
 const fulfill = (route: Route, body: unknown) =>
   route.fulfill({ status: 200, contentType: "application/json", headers: { "cache-control": "no-store" }, body: JSON.stringify(body) });
@@ -95,11 +94,12 @@ test.describe("phone", () => {
 
       // No new position arrives; only time passes.
       await page.clock.fastForward(45_000);
-      await expect(pill).toContainText("last fix 45 s ago");
+      // The Search round trip adds a few real seconds on top of the 45 s.
+      await expect(pill).toContainText(/last fix (4[5-9]|5\d) s ago/);
       await expect(pill).toHaveAttribute("data-stale", "true");
       await expect(page.getByText("Finding your location…")).toHaveCount(0);
       await expect(rowMain(page, "start")).toContainText("Your location");
-      await expect(rowMain(page, "start")).toContainText("GPS last fix 45 s ago");
+      await expect(rowMain(page, "start")).toContainText(/GPS last fix (4[5-9]|5\d) s ago/);
       // The user dot stays on the map, drawn as stale (no pulse).
       await expect(page.locator(".pn-dot.pn-dot--stale")).toHaveCount(1);
     });
@@ -133,7 +133,7 @@ test.describe("phone", () => {
       });
       await openApp(page);
       await openTripSheet(page);
-      await chooseOnMap(page).click();
+      await chooseOnMapVia(page, "start");
       const confirm = page.getByRole("button", { name: "Set start here" });
       await expect(page.getByTestId("pick-same-place-hint")).toHaveText(
         "Start and destination are the same place. Move the pin.",
@@ -192,13 +192,13 @@ test.describe("phone", () => {
     await expect(page.getByTestId("trip-detail")).not.toContainText("Walk ≈ 0 m");
   });
 
-  test("F-16 tapping the highlighted Start row keeps its options open", async ({ page }) => {
+  test("F-16 tapping the Start row opens Search for the start, with its options", async ({ page }) => {
     await openApp(page);
     await openTripSheet(page);
     await expect(rowMain(page, "start")).toHaveAttribute("aria-pressed", "true");
     await rowMain(page, "start").click();
-    await expect(rowMain(page, "start")).toHaveAttribute("aria-pressed", "true");
-    await expect(page.getByRole("button", { name: "Use current location" })).toBeVisible();
+    await expect(page).toHaveURL(/\/app\/search\?for=start/);
+    await expect(page.getByTestId("search-screen").getByRole("button", { name: "Use current location" })).toBeVisible();
   });
 
   test("F-21 the swap button sits outside the focused row's outline", async ({ page }) => {

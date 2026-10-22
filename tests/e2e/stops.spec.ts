@@ -90,7 +90,7 @@ test("tapping a pin opens the stop with exactly the source pin's layer, coordina
   const serving = detail.getByTestId("serving-routes");
   await expect(serving.getByRole("link")).toHaveCount(1);
   await expect(serving).toContainText("Loop A");
-  await expect(serving).toContainText("Centro-Magsaysay Loop A (clockwise)");
+  await expect(serving).toContainText("Centro-Magsaysay (clockwise)");
   await expect(serving).toContainText("Stop 1 · clockwise (from pin order)");
   await expect(serving).toContainText("Unverified");
   await expect(detail).toContainText("Not surveyed");
@@ -195,7 +195,7 @@ test("route R3 shows its two street structures separately", async ({ page }) => 
   await routeNetwork(page);
   await page.goto("/app/routes/R3");
   const route = page.getByTestId("route-detail");
-  await expect(route.getByRole("heading", { level: 1, name: "F Centro-Del Rosario via Roxas Ave (Diversion)" })).toBeVisible();
+  await expect(route.getByRole("heading", { level: 1, name: "Centro-Del Rosario via Roxas Ave (Diversion)" })).toBeVisible();
   await expect(route.getByTestId("route-evidence")).toHaveText("Documented only");
   await expect(route.getByTestId("route-partial")).toContainText("Street order from the plan.");
   await expect(route.getByTestId("street-order").getByRole("listitem")).toHaveCount(14);

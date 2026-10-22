@@ -10,8 +10,8 @@ import { chooseOption, expandOptions, pinTrip } from "./fixtures/options";
 
 test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
 
-const CARD_WORDS_ONE_RIDE = 16;
-const CARD_WORDS_TWO_RIDES = 20;
+const CARD_WORDS_ONE_RIDE = 22; // +4 for the roadside chip (3ad8bd1), +2 loop letter and direction; mirrors tests/unit/copy-budget.test.tsx
+const CARD_WORDS_TWO_RIDES = 22;
 /** A tricycle or padyak card also carries its street rule (distance, restricted roads or area). */
 const CARD_WORDS_STREET = 32;
 /** Increment F: a via chip adds two words; the access card carries a tricycle fare line besides the jeepney card. */
@@ -25,7 +25,7 @@ const cardBudget = async (card: Locator, jeepney: number) => {
   if ((await card.getByTestId("card-via").count()) > 0 || /\svia\s/.test((await card.locator("strong").first().textContent()) ?? "")) return CARD_WORDS_ONE_RIDE_VIA;
   return jeepney;
 };
-const DETAIL_HEADER_WORDS = 16;
+const DETAIL_HEADER_WORDS = 18; // +2 loop direction in the title; mirrors tests/unit/copy-budget.test.tsx
 const GUIDANCE_WALK_WORDS = 22;
 const SM = SEARCH_INDEX.osmPlaces.find((p) => p.name === "SM City Naga")!;
 const PLAZA = SEARCH_INDEX.pinPlaces.find((p) => p.label === "Plaza Rizal")!;
@@ -169,7 +169,7 @@ test("Sources and credits opens from More > About and from a detail screen link,
 
   await page.goto("/app/routes/R8-A");
   await page.getByTestId("route-detail").getByTestId("detail-sources").click();
-  await expect(page.getByTestId("entity-sources")).toContainText("Centro–Magsaysay Loop A");
+  await expect(page.getByTestId("entity-sources")).toContainText("Centro-Magsaysay Loop A");
   await expect(page.getByTestId("entity-sources")).toContainText("Trial revision");
   await expect(page.getByTestId("entity-sources")).toContainText("Sources S01, S02");
 

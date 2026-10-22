@@ -646,7 +646,9 @@ test("a lift applies the sheet padding at once (data-grow); a drop to peek delay
   await expect(sheet).toHaveAttribute("data-snap", "0");
   const delayed = () => sheet.evaluate((el) => getComputedStyle(el).transitionProperty.split(",").map((p) => p.trim()));
   // Peek -> half: the content must fill the rising sheet, so only the transform is timed.
-  await page.getByTestId("endpoint-destination").locator(".pn-endpoint__main").click();
+  // (A row tap opens Search now, dc6c0f5; the grabber is the way to lift the sheet.)
+  await sheet.locator(".pn-grabber").focus();
+  await page.keyboard.press("ArrowUp");
   await expect(sheet).toHaveAttribute("data-snap", "1");
   await expect(sheet).toHaveAttribute("data-grow", "");
   expect(await delayed()).toEqual(["transform"]);
