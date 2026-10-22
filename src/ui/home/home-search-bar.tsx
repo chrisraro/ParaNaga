@@ -31,12 +31,13 @@ function BookmarkIcon() {
 }
 
 export function HomeSearchBar({ searchRef }: { searchRef: Ref<HTMLAnchorElement> }) {
-  const home = useT().home;
+  const tt = useT();
+  const home = tt.home;
   const frame = useAppFrame();
   const saved = useSavedPlaces();
   // Offline a soft navigation cannot reach the server: plain links, so the service worker answers (as in the tab bar).
   const Anchor = useIsOffline() ? "a" : Link;
-  const chips = homeChips(saved.status === "ready" ? saved.records : []);
+  const chips = homeChips(saved.status === "ready" ? saved.records : [], tt.explore);
   return (
     <div className="pn-home-top">
       <ViewTransition name="pn-search-field">

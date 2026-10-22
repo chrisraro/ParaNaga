@@ -2,20 +2,20 @@
 // navigator.permissions.query (no location request is ever made to fill it). "unsupported" covers
 // a browser without the Permissions API or geolocation, an insecure context and a failed query.
 
+import { en, type Dict } from "@/i18n/dict";
+
 export type LocationPermission = "granted" | "prompt" | "denied" | "unsupported";
 
-export type LocationAccessLabel = "Allowed" | "Ask each time" | "Blocked" | "Not available";
-
-export function locationAccessLabel(state: LocationPermission): LocationAccessLabel {
+export function locationAccessLabel(state: LocationPermission, copy: Dict["settings"] = en.settings): string {
   switch (state) {
     case "granted":
-      return "Allowed";
+      return copy.locationAllowed;
     case "prompt":
-      return "Ask each time";
+      return copy.locationAsk;
     case "denied":
-      return "Blocked";
+      return copy.locationBlocked;
     default:
-      return "Not available";
+      return copy.locationUnavailable;
   }
 }
 

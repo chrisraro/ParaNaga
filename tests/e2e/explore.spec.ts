@@ -162,7 +162,7 @@ test("the directory: each segment lists the right count and its rows open the ri
 
   // Routes: 11, → route detail.
   await segments(page).getByRole("tab", { name: "Routes" }).click();
-  await expect(directory.getByTestId("explore-route")).toHaveCount(13);
+  await expect(directory.getByTestId("explore-route")).toHaveCount(11); // active routes only (97dd3f5)
   await expect(directory.locator('a[href="/app/routes/R8-A"]')).toContainText("Trial — permanence unconfirmed");
   await directory.locator('a[href="/app/routes/R8-A"]').click();
   await expect(page.getByTestId("route-detail")).toBeVisible();
@@ -210,7 +210,7 @@ test("Explore passes axe (light)", async ({ page }) => {
   await openExplore(page);
   await expectAxeClean(page);
   await segments(page).getByRole("tab", { name: "Routes" }).click();
-  await expect(page.getByTestId("explore-route")).toHaveCount(13);
+  await expect(page.getByTestId("explore-route")).toHaveCount(11); // active routes only (97dd3f5)
   await expectAxeClean(page);
 });
 

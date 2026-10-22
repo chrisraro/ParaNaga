@@ -17,14 +17,12 @@ import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { terminalDetailSchema, type TerminalDetail } from "@/domain/api/schemas";
-import { modeName } from "@/domain/modes/fleet";
 import {
   terminalEvidenceLabel,
   terminalModesText,
   terminalNoteSentences,
   terminalRouteSub,
 } from "@/domain/places/place-detail";
-import { TERMINAL_ROW_SUB } from "@/domain/places/explore";
 import {
   isRouteMode,
   regionalServiceRow,
@@ -43,11 +41,12 @@ import { ModeChip } from "@/ui/modes/mode-chip";
 import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { routeTitleBesideChip } from "@/domain/planner/route-display";
 import { LoopChip } from "@/ui/trip/trip-parts";
+import { useT } from "@/i18n/provider";
 
-const TITLE = "Terminal";
 const TERMINAL_ZOOM = 17;
 
 export function TerminalDetailScreen({ code }: { code: string }) {
+  const TITLE = useT().detail.terminal;
   const resource = useNetworkResource(`/api/v1/terminals/${encodeURIComponent(code)}`, terminalDetailSchema);
   if (resource.status === "loading") return <DetailLoading title={TITLE} />;
   if (resource.status === "not_found") return <DetailNotFound what="terminal" />;
@@ -70,16 +69,17 @@ function InfoIcon() {
 
 /** Regional services (UV Express, buses) with their fare estimates; never drawn, never planned. */
 function RegionalServices({ data }: { data: TerminalDetail }) {
+  const t = useT().terminals;
   const uid = useId();
   if (data.regionalServices.length === 0) return null;
   return (
     <section className="pn-section" aria-labelledby={`${uid}-regional`}>
       <h2 id={`${uid}-regional`} className="pn-section__title">
-        Regional destinations
+        {t.regionalTitle}
       </h2>
       <ul className="pn-group" data-testid="terminal-regional">
         {data.regionalServices.map((s) => {
-          const row = regionalServiceRow(s);
+          const row = regionalServiceRow(s, t);
           return (
             <li key={s.code} className="pn-cell" data-testid={`terminal-regional-${s.code}`}>
               <span className="pn-cell__text">
@@ -93,19 +93,21 @@ function RegionalServices({ data }: { data: TerminalDetail }) {
           );
         })}
       </ul>
-      <p className="pn-footnote">Fares are estimates.</p>
+      <p className="pn-footnote">{t.faresEstimates}</p>
     </section>
   );
 }
 
 function RoutesPanel({ data }: { data: TerminalDetail }) {
   const { routes, destinationCategories } = data;
+  const tt = useT();
+  const t = tt.terminals;
   const uid = useId();
   return (
     <>
       {routes.length === 0 ? (
         <p className="pn-cell pn-cell--empty pn-group" data-testid="terminal-no-routes">
-          No route plan names this terminal yet.
+          {t.noRoutes}
         </p>
       ) : (
         <>
@@ -116,7 +118,7 @@ function RoutesPanel({ data }: { data: TerminalDetail }) {
                   <LoopChip leg={{ routeCode: r.routeCode, routeName: r.routeName }} icon="line" short />
                   <span className="pn-cell__text">
                     <span className="pn-cell__title">{routeTitleBesideChip(r.routeCode, r.routeName)}</span>
-                    <span className="pn-cell__sub">{terminalRouteSub(r.basis)}</span>
+                    <span className="pn-cell__sub">{terminalRouteSub(r.basis, t)}</span>
                     {r.basis === "trial" ? <StatusBadge variant="trial" /> : null}
                   </span>
                   <ListChevron />
@@ -124,21 +126,21 @@ function RoutesPanel({ data }: { data: TerminalDetail }) {
               </li>
             ))}
           </ul>
-          <p className="pn-footnote">Bays not mapped.</p>
+          <p className="pn-footnote">{t.baysNotMapped}</p>
         </>
       )}
       <RegionalServices data={data} />
       {destinationCategories.length > 0 ? (
         <section className="pn-section" aria-labelledby={`${uid}-categories`}>
           <h2 id={`${uid}-categories`} className="pn-section__title">
-            Destination categories
+            {t.categoriesTitle}
           </h2>
           <ul className="pn-group" data-testid="terminal-destinations">
             {destinationCategories.map((c) => (
               <li key={c.category} className="pn-cell">
                 <span className="pn-cell__text">
                   <span className="pn-cell__title">
-                    {regionalCategoryLabel(c.category)}: {c.destinations.join(", ")} · services not verified
+                    {t.categoryRow(regionalCategoryLabel(c.category, tt.search), c.destinations.join(", "))}
                   </span>
                 </span>
               </li>
@@ -152,19 +154,21 @@ function RoutesPanel({ data }: { data: TerminalDetail }) {
 
 /** The map preview: centred on the terminal, with its (non-interactive) terminals-layer marker. */
 function TerminalMap({ terminal, point }: { terminal: TerminalInfo; point: Point }) {
+  const t = useT().terminals;
   const terminals = useMemo(
     () => [{ code: terminal.code, name: terminal.name, modes: terminal.modes, lat: point.lat, lng: point.lng }],
     [terminal.code, terminal.name, terminal.modes, point.lat, point.lng],
   );
   return (
     <div className="pn-place__map" data-testid="terminal-map">
-      <NagaMap initialView={{ center: point, zoom: TERMINAL_ZOOM }} terminals={terminals} terminalsInteractive={false} label={`Map of ${terminal.name}`} />
+      <NagaMap initialView={{ center: point, zoom: TERMINAL_ZOOM }} terminals={terminals} terminalsInteractive={false} label={t.mapOf(terminal.name)} />
     </div>
   );
 }
 
 /** "Directions to here": the coordinate becomes the destination, named as a map point. */
 function DirectionsToHere({ name, point }: { name: string; point: Point }) {
+  const t = useT().terminals;
   const frame = useAppFrame();
   const returnToMap = useReturnToMap();
   return (
@@ -173,34 +177,36 @@ function DirectionsToHere({ name, point }: { name: string; point: Point }) {
       className="pn-btn pn-btn--primary pn-place__cta"
       data-testid="terminal-directions"
       onClick={() => {
-        frame?.requestEndpoint("destination", { point: { ...point }, label: terminalDirectionsLabel(name) });
+        frame?.requestEndpoint("destination", { point: { ...point }, label: terminalDirectionsLabel(name, t) });
         returnToMap();
       }}
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
         <path d="M5 12h14M13 6l6 6-6 6" />
       </svg>
-      Directions to here
+      {t.directionsToHere}
     </button>
   );
 }
 
 /** Location (OpenStreetMap provenance) and Modes (chips with per-mode sources) rows. */
 function TerminalFacts({ terminal }: { terminal: TerminalInfo }) {
+  const tt = useT();
+  const t = tt.terminals;
   const modes = terminal.modes.filter(isRouteMode);
   return (
-    <dl className="pn-place__facts" aria-label="About this terminal">
+    <dl className="pn-place__facts" aria-label={t.aboutThis}>
       <div className="pn-place__fact" data-testid="terminal-location">
-        <dt className="pn-place__fact-label">Location</dt>
-        <dd className="pn-place__fact-value">{terminal.coordinate ? `Mapped point${terminal.coordinate.note ? ` · ${terminal.coordinate.note}` : ""}` : "Location not mapped"}</dd>
+        <dt className="pn-place__fact-label">{t.location}</dt>
+        <dd className="pn-place__fact-value">{terminal.coordinate ? t.mappedPoint(terminal.coordinate.note) : t.notMapped}</dd>
       </div>
       {modes.length > 0 ? (
         <div className="pn-place__fact" data-testid="terminal-modes">
-          <dt className="pn-place__fact-label">Modes</dt>
+          <dt className="pn-place__fact-label">{t.modes}</dt>
           <dd className="pn-place__fact-value pn-terminal__modes">
             {modes.map((m) => (
               <span key={m} className="pn-terminal__mode" data-testid={`terminal-mode-${m}`}>
-                <ModeChip mode={m} label={modeName(m)} />
+                <ModeChip mode={m} label={tt.modes.name[m]} />
               </span>
             ))}
           </dd>
@@ -212,25 +218,28 @@ function TerminalFacts({ terminal }: { terminal: TerminalInfo }) {
 
 export function TerminalDetailView({ data }: { data: TerminalDetail }) {
   const { terminal } = data;
+  const tt = useT();
+  const t = tt.terminals;
+  const TITLE = tt.detail.terminal;
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const uid = useId();
   const [tab, setTab] = useState<Tab>("routes");
   const panelId = `${uid}-panel`;
-  const notes = terminalNoteSentences(terminal.code, data.destinationCategories.length > 0);
-  const sub = [terminalKindLabel(terminal.kind), terminalModesText(terminal.modes), terminal.locationText].filter(Boolean).join(" · ");
+  const notes = terminalNoteSentences(terminal.code, data.destinationCategories.length > 0, t);
+  const sub = [terminalKindLabel(terminal.kind, t), terminalModesText(terminal.modes, t), terminal.locationText].filter(Boolean).join(" · ");
   const point = useMemo(
     () => (terminal.lat !== null && terminal.lng !== null ? { lat: terminal.lat, lng: terminal.lng } : null),
     [terminal.lat, terminal.lng],
   );
   const tabs = [
-    { value: "routes", label: "Routes", controls: panelId, id: `${uid}-tab-routes` },
-    { value: "entrances", label: "Entrances", controls: panelId, id: `${uid}-tab-entrances` },
-    { value: "hours", label: "Hours", controls: panelId, id: `${uid}-tab-hours` },
+    { value: "routes", label: t.tabRoutes, controls: panelId, id: `${uid}-tab-routes` },
+    { value: "entrances", label: t.tabEntrances, controls: panelId, id: `${uid}-tab-entrances` },
+    { value: "hours", label: t.tabHours, controls: panelId, id: `${uid}-tab-hours` },
   ] as const;
   const activeTabId = tabs.find((t) => t.value === tab)!.id;
 
   return (
-    <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">{terminal.coordinate !== null ? "Community-mapped" : TERMINAL_ROW_SUB}</span>} sources={`${SOURCES_HREF}?terminal=${terminal.code}`} testId="terminal-detail">
+    <DetailPanel title={TITLE} action={<span className="pn-terminal__pill" data-testid="terminal-pill">{terminal.coordinate !== null ? t.pill : t.notMapped}</span>} sources={`${SOURCES_HREF}?terminal=${terminal.code}`} testId="terminal-detail">
       {point ? <TerminalMap terminal={terminal} point={point} /> : null}
       <main className="pn-detail__main pn-detail-in">
         <div className="pn-place__head">
@@ -245,7 +254,7 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
           <div className="pn-detail__row">
             <StatusBadge variant="documented" />
             <span className="pn-terminal__address" data-testid="terminal-address">
-              Address: {terminalEvidenceLabel(terminal.evidenceStatus)}
+              {t.address(terminalEvidenceLabel(terminal.evidenceStatus, t))}
             </span>
           </div>
         </div>
@@ -267,31 +276,29 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
 
         <TerminalFacts terminal={terminal} />
 
-        <Segmented options={tabs} value={tab} onChange={setTab} label="Terminal sections" variant="tablist" testId="terminal-tabs" />
+        <Segmented options={tabs} value={tab} onChange={setTab} label={t.sections} variant="tablist" testId="terminal-tabs" />
 
         <div id={panelId} role="tabpanel" aria-labelledby={activeTabId} className="pn-terminal__panel" data-testid={`terminal-panel-${tab}`}>
           {tab === "routes" ? <RoutesPanel data={data} /> : null}
           {tab === "entrances" ? (
             <div className="pn-terminal__empty">
-              <p className="pn-terminal__empty-title">Entrances not surveyed</p>
+              <p className="pn-terminal__empty-title">{t.entrancesNone}</p>
               <p className="pn-terminal__empty-text">
-                {point
-                  ? "Trips end at the map point."
-                  : "No location: trips can't end here."}
+                {point ? t.tripsEndAtPoint : t.noLocationTrips}
               </p>
             </div>
           ) : null}
           {tab === "hours" ? (
             <dl className="pn-group pn-terminal__hours" data-testid="terminal-hours">
               <div className="pn-kv">
-                <dt className="pn-kv__key">Hours</dt>
-                <dd className="pn-kv__value">Not on file</dd>
+                <dt className="pn-kv__key">{t.hours}</dt>
+                <dd className="pn-kv__value">{t.notOnFile}</dd>
               </div>
             </dl>
           ) : null}
         </div>
 
-        {point ? null : <Note testId="terminal-directions-note">No directions: location not mapped.</Note>}
+        {point ? null : <Note testId="terminal-directions-note">{t.noDirections}</Note>}
       </main>
     </DetailPanel>
   );

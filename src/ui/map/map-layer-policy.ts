@@ -12,6 +12,7 @@
 // overview lines so the rides are never left undrawn; it never invents a path.
 
 import type { VisualKey } from "@/domain/modes/modes";
+import { en } from "@/i18n/dict";
 
 export type MapScene = "idle" | "picking" | "preview" | "detail" | "guiding";
 
@@ -96,5 +97,5 @@ export function overviewLinesForTrip<T extends { variantId: string }>(lines: rea
   return lines.filter((l) => ids.has(l.variantId));
 }
 
-export const TRIP_LINES_MISSING_NOTE = "Route lines for this trip didn't load." as const;
-export const TRIP_LINES_OVERVIEW_NOTE = "Route lines for this trip didn't load; showing the route overview." as const;
+export const TRIP_LINES_MISSING_NOTE = en.map.tripLinesMissing;
+export const TRIP_LINES_OVERVIEW_NOTE = en.map.tripLinesOverview;

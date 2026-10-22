@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 // browser, like the rest of the app.
 export default function StopPage({ params }: PageProps<"/app/stops/[id]">) {
   return (
-    <Suspense fallback={<DetailLoading title="Stop" />}>
+    <Suspense fallback={<DetailLoading what="stop" />}>
       <StopFromParams params={params} />
     </Suspense>
   );

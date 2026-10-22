@@ -3,22 +3,24 @@
 import "../modes/modes.css";
 
 import { WarnIcon } from "@/ui/detail/detail-frame";
-import { ONEWAY_CAUTION, TERMINAL_ACCESS_NOTE, type LineNotes } from "./line-rules";
+import { useT } from "@/i18n/provider";
+import type { LineNotes } from "./line-rules";
 
 /** The one-way caution and terminal access note for drawn lines (route card, route detail, trip step). */
 export function LineNotesView({ notes, testIdPrefix = "line" }: { notes: LineNotes; testIdPrefix?: string }) {
+  const t = useT().map;
   if (!notes.onewayCaution && !notes.terminalAccess) return null;
   return (
     <>
       {notes.onewayCaution ? (
         <p className="pn-line-note pn-line-note--caution" data-testid={`${testIdPrefix}-oneway-caution`}>
           <WarnIcon size={14} />
-          <span className="pn-line-note__text">{ONEWAY_CAUTION}</span>
+          <span className="pn-line-note__text">{t.onewayCaution}</span>
         </p>
       ) : null}
       {notes.terminalAccess ? (
         <p className="pn-line-note" data-testid={`${testIdPrefix}-terminal-access`}>
-          <span className="pn-line-note__text">{TERMINAL_ACCESS_NOTE}</span>
+          <span className="pn-line-note__text">{t.terminalAccess}</span>
         </p>
       ) : null}
     </>

@@ -8,15 +8,16 @@
 //   visible caution ONEWAY_CAUTION wherever such a section is drawn;
 // - `terminal_access` is drawn normally, with the note TERMINAL_ACCESS_NOTE.
 import type { Line, Lines, UntracedLine } from "@/domain/api/schemas";
+import { en } from "@/i18n/dict";
 import { haversineMeters } from "@/domain/geo/geometry";
 import type { LatLng } from "@/domain/geo/types";
 
 type TraceSegment = Line["segments"][number];
 
-export const ONEWAY_CAUTION = "street order conflicts with one-way mapping — confirm on the ground" as const;
-export const TERMINAL_ACCESS_NOTE = "terminal access road" as const;
+export const ONEWAY_CAUTION = en.map.onewayCaution;
+export const TERMINAL_ACCESS_NOTE = en.map.terminalAccess;
 /** Trip detail, for a ride with no drawn path. */
-export const UNTRACED_RIDE_LABEL = "Path could not be traced from the street list; stops shown only" as const;
+export const UNTRACED_RIDE_LABEL = en.map.untracedRide;
 
 export type SliceOptions = {
   isCircular?: boolean;

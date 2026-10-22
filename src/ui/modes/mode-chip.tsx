@@ -6,9 +6,8 @@
 import "./modes.css";
 
 import type { CSSProperties } from "react";
+import { useT } from "@/i18n/provider";
 import {
-  MAP_CHIP_TEXT,
-  MODE_DISPLAY_NAMES,
   resolveVisualKey,
   type RouteMode,
   type VisualKey,
@@ -25,8 +24,9 @@ export type ModeChipProps = {
 };
 
 export function ModeChip({ mode, label, compact = false, className }: ModeChipProps) {
+  const modes = useT().modes;
   const key = resolveVisualKey(mode);
-  const text = label ?? (compact ? MAP_CHIP_TEXT[key] : MODE_DISPLAY_NAMES[key]);
+  const text = label ?? (compact ? modes.chip[key] : modes.display[key]);
   const style = {
     "--pn-chip-stripe": `var(--pn-mode-${key})`,
   } as CSSProperties;

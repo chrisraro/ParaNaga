@@ -12,8 +12,15 @@ import { BIKOL_ENABLED } from "@/i18n/locales";
 type Leaf = string | ((...args: never[]) => string);
 type Tree = { readonly [key: string]: Leaf | Tree | undefined };
 
+/** Areas extracted in T11: their Filipino is still the English (`fil.<area> = en.<area>`) until the T12 draft + Jev check. */
+const PENDING_T12_AREAS = ["pwa", "settings", "detail", "stops", "routes", "modes", "places", "terminals", "search", "explore", "saved", "map"];
+const PENDING_T12 = leaves(en as Tree)
+  .map(([key]) => key)
+  .filter((key) => PENDING_T12_AREAS.includes(key.split(".")[0]!));
+
 /** Filipino strings allowed to equal the English, with the reason. */
 const SAME_AS_EN: Record<string, string> = {
+  ...Object.fromEntries(PENDING_T12.map((key) => [key, "pending T12 draft"])),
   "app.name": "brand",
   "acknowledgments.community": "pending verbatim-reviewed translation (T13)",
   "acknowledgments.driverReport": "pending verbatim-reviewed translation (T13)",

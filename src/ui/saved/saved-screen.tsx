@@ -20,7 +20,7 @@ import "./saved.css";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { syncSavedItems } from "@/client/saved/sync";
 import { clearHistory } from "@/client/history/trip-history";
@@ -45,21 +45,21 @@ import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { Note } from "@/ui/kit/note";
 import { Segmented, type SegmentedOption } from "@/ui/kit/segmented";
 import { LegStrip } from "@/ui/trip/trip-options";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
+import { PageFrame } from "@/ui/app-shell/page-frame";
 import { planLookups } from "@/ui/trip/trip-parts";
 import { SavePlaceDialog } from "./save-place-dialog";
 
 export type SavedTab = "trips" | "places" | "history";
 const TABS: readonly SavedTab[] = ["trips", "places", "history"];
 
-export const TRIPS_INTRO = "Saved trips work offline, as text.";
-export const NO_TRIPS = "No saved trips. Open a trip and tap Save.";
-export const NO_PLACES = "No saved places yet.";
-const NEWER_NOTE = "Some saved items are from a newer version and can't be shown.";
-const UNREADABLE_NOTE = "Some saved items are damaged. They stay until you remove them.";
-const UNAVAILABLE = "Saving isn't available (private browsing?).";
+export const TRIPS_INTRO = en.saved.tripsIntro;
+export const NO_TRIPS = en.saved.noTrips;
+export const NO_PLACES = en.saved.noPlaces;
 
-function readError(what: string, unavailable: boolean): string {
-  return unavailable ? UNAVAILABLE : `${what} could not be read on this phone.`;
+function readError(what: string, unavailable: boolean, t: Dict["saved"]): string {
+  return unavailable ? t.unavailable : t.readError(what);
 }
 
 export function parseSavedTab(raw: string | null): SavedTab {
@@ -116,6 +116,7 @@ function HistoryIcon() {
  * outlives the notes; after a removal focus goes to that status line, so it is read out.
  */
 function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | "savedPlaces" | "history"; dropped: number; unreadable: number }) {
+  const t = useT().saved;
   const [confirm, setConfirm] = useState(false);
   const [status, setStatus] = useState("");
   const statusRef = useRef<HTMLParagraphElement>(null);
@@ -125,22 +126,22 @@ function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | 
     setStatus("");
     removeUnreadable(store).then(
       (n) => {
-        setStatus(n === 1 ? "Removed 1 damaged item." : `Removed ${n} damaged items.`);
+        setStatus(n === 1 ? t.removedDamagedOne : t.removedDamaged(n));
         statusRef.current?.focus();
       },
-      () => setStatus("Couldn't remove. Try again."),
+      () => setStatus(t.removeFailed),
     );
   };
   return (
     <>
       {dropped > 0 ? (
         <div data-testid="saved-dropped">
-          {newer > 0 ? <Note>{NEWER_NOTE}</Note> : null}
+          {newer > 0 ? <Note>{t.newerNote}</Note> : null}
           {unreadable > 0 ? (
             <>
-              <Note>{UNREADABLE_NOTE}</Note>
+              <Note>{t.unreadableNote}</Note>
               <button type="button" className="pn-text-btn" onClick={() => setConfirm(true)} data-testid="saved-remove-unreadable">
-                Remove unreadable items
+                {t.removeUnreadable}
               </button>
             </>
           ) : null}
@@ -148,8 +149,8 @@ function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | 
       ) : null}
       <ConfirmDialog
         open={confirm && unreadable > 0}
-        title={unreadable === 1 ? "Remove 1 damaged item from this phone?" : `Remove ${unreadable} damaged items from this phone?`}
-        confirmLabel="Remove"
+        title={unreadable === 1 ? t.removeDamagedOneQ : t.removeDamagedQ(unreadable)}
+        confirmLabel={t.remove}
         tone="danger"
         onConfirm={onRemove}
         onCancel={() => setConfirm(false)}
@@ -169,23 +170,25 @@ function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | 
 type Removed = { n: number; text: string; undo: (() => Promise<void>) | null } | null;
 
 function useRemoval() {
+  const t = useT().saved;
   const [removed, setRemoved] = useState<Removed>(null);
   const run = (remove: () => Promise<void>, text: string, undo: () => Promise<void>) => {
     setRemoved(null);
     remove().then(
       () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text, undo })),
-      () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text: "Couldn't remove. Try again.", undo: null })),
+      () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text: t.removeFailed, undo: null })),
     );
   };
   return { removed, run, clear: () => setRemoved(null) };
 }
 
 function UndoBody({ removed, onDone }: { removed: NonNullable<Removed>; onDone: () => void }) {
+  const t = useT().saved;
   const [failed, setFailed] = useState(false);
   const undo = removed.undo;
   return (
     <>
-      <span>{failed ? "Couldn't undo." : removed.text}</span>
+      <span>{failed ? t.undoFailed : removed.text}</span>
       {failed || !undo ? null : (
         <button
           type="button"
@@ -197,7 +200,7 @@ function UndoBody({ removed, onDone }: { removed: NonNullable<Removed>; onDone: 
             )
           }
         >
-          Undo
+          {t.undo}
         </button>
       )}
     </>
@@ -238,6 +241,8 @@ function TripCard({
   const changed = status === "changed";
   const lookups = useMemo(() => planLookups(savedTripResponse(trip)), [trip]);
   const id = useId();
+  const tt = useT();
+  const t = tt.saved;
   const walkLengths = useSavedWalkLengths(trip.option, trip.revisionId);
   return (
     <li>
@@ -245,30 +250,30 @@ function TripCard({
         <div className="pn-saved-card__badges">
           <span className="pn-saved-badge pn-saved-badge--offline">
             <DownloadIcon />
-            Available offline
+            {t.availableOffline}
           </span>
           {changed ? (
             <span className="pn-saved-badge pn-saved-badge--changed" data-testid="saved-trip-changed">
               <WarnIcon />
-              Changed since saved
+              {t.changedSince}
             </span>
           ) : null}
         </div>
         <div>
-          <p className="pn-saved-card__from">From {trip.start.label}</p>
+          <p className="pn-saved-card__from">{t.from(trip.start.label)}</p>
           <h2 id={`${id}-to`} className="pn-saved-card__to">
             {trip.destination.label}
           </h2>
         </div>
         <LegStrip option={trip.option} lookups={lookups} />
-        <p className="pn-saved-card__meta">{tripCardMeta(trip, model, new Date(), walkLengths)}</p>
-        <p className="pn-saved-card__date">Saved {manilaDate(trip.savedAt) ?? "on this phone"}</p>
+        <p className="pn-saved-card__meta">{tripCardMeta(trip, model, new Date(), walkLengths, tt)}</p>
+        <p className="pn-saved-card__date">{t.savedOn(manilaDate(trip.savedAt) ?? t.onThisPhone)}</p>
         <div className="pn-saved-card__actions">
           <button type="button" className={changed ? "pn-saved-cta pn-saved-cta--primary" : "pn-saved-cta"} onClick={onOpen} data-testid="saved-trip-open">
-            {changed ? "Review changes" : "Open trip"}
+            {changed ? t.reviewChanges : t.openTrip}
           </button>
-          <button type="button" className="pn-text-btn pn-saved__remove" onClick={onRemove} aria-label={`Remove trip to ${trip.destination.label}`}>
-            Remove
+          <button type="button" className="pn-text-btn pn-saved__remove" onClick={onRemove} aria-label={t.removeTripFor(trip.destination.label)}>
+            {t.remove}
           </button>
         </div>
       </article>
@@ -277,6 +282,7 @@ function TripCard({
 }
 
 function TripsPanel() {
+  const t = useT().saved;
   const trips = useSavedTrips();
   const frame = useAppFrame();
   const router = useRouter();
@@ -284,27 +290,27 @@ function TripsPanel() {
   const statuses = useTripRevalidation(trips.status === "ready" ? trips.records : null);
   const removal = useRemoval();
 
-  if (trips.status === "loading") return <Loading label="Loading saved trips" />;
-  if (trips.status === "error") return <Note testId="saved-error">{readError("Saved trips", trips.unavailable)}</Note>;
+  if (trips.status === "loading") return <Loading label={t.loadingTrips} />;
+  if (trips.status === "error") return <Note testId="saved-error">{readError(t.whatTrips, trips.unavailable, t)}</Note>;
 
   const open = (trip: SavedTrip) => {
     frame?.requestTrip(trip.id);
     router.push("/app");
   };
   const remove = (trip: SavedTrip) => {
-    removal.run(() => deleteSavedTrip(trip.id), `Removed the trip to ${trip.destination.label}.`, () => putSavedTrip(trip));
+    removal.run(() => deleteSavedTrip(trip.id), t.removedTrip(trip.destination.label), () => putSavedTrip(trip));
   };
 
   return (
     <>
-      <p className="pn-saved__intro">{TRIPS_INTRO}</p>
+      <p className="pn-saved__intro">{t.tripsIntro}</p>
       <SkippedRecords store="savedTrips" dropped={trips.dropped} unreadable={trips.unreadable} />
       {trips.records.length === 0 ? (
         <p className="pn-saved__empty" data-testid="saved-trips-empty">
-          {NO_TRIPS}
+          {t.noTrips}
         </p>
       ) : (
-        <ul className="pn-saved__cards" aria-label="Saved trips">
+        <ul className="pn-saved__cards" aria-label={t.tripsLabel}>
           {trips.records.map((t) => (
             <TripCard
               key={t.id}
@@ -325,6 +331,7 @@ function TripsPanel() {
 // ------------------------------------------------------------------ places
 
 function PlaceRow({ place, onUse, onRename, onRemove }: { place: SavedPlace; onUse: (which: "start" | "destination") => void; onRename: () => void; onRemove: () => void }) {
+  const t = useT().saved;
   return (
     <li className="pn-saved-place" data-testid="saved-place">
       <button type="button" className="pn-cell pn-saved-place__main" onClick={() => onUse("destination")}>
@@ -333,19 +340,19 @@ function PlaceRow({ place, onUse, onRename, onRemove }: { place: SavedPlace; onU
         </span>
         <span className="pn-cell__text">
           <span className="pn-cell__title">{place.label}</span>
-          <span className="pn-cell__sub">{placeSubText(place.source)}</span>
+          <span className="pn-cell__sub">{placeSubText(place.source, t)}</span>
         </span>
-        <span className="sr-only">: plan a trip to here</span>
+        <span className="sr-only">{t.planHere}</span>
       </button>
       <div className="pn-saved-place__actions">
-        <button type="button" className="pn-text-btn" onClick={() => onUse("start")} aria-label={`Use as start: ${place.label}`}>
-          Use as start
+        <button type="button" className="pn-text-btn" onClick={() => onUse("start")} aria-label={t.useAsStartFor(place.label)}>
+          {t.useAsStart}
         </button>
-        <button type="button" className="pn-text-btn" onClick={onRename} aria-label={`Rename: ${place.label}`}>
-          Rename
+        <button type="button" className="pn-text-btn" onClick={onRename} aria-label={t.renameFor(place.label)}>
+          {t.rename}
         </button>
-        <button type="button" className="pn-text-btn" onClick={onRemove} aria-label={`Remove: ${place.label}`}>
-          Remove
+        <button type="button" className="pn-text-btn" onClick={onRemove} aria-label={t.removeFor(place.label)}>
+          {t.remove}
         </button>
       </div>
     </li>
@@ -353,6 +360,7 @@ function PlaceRow({ place, onUse, onRename, onRemove }: { place: SavedPlace; onU
 }
 
 function PlacesPanel() {
+  const t = useT().saved;
   const places = useSavedPlaces();
   const frame = useAppFrame();
   const router = useRouter();
@@ -360,27 +368,27 @@ function PlacesPanel() {
   const removal = useRemoval();
   const titleId = useId();
 
-  if (places.status === "loading") return <Loading label="Loading saved places" />;
-  if (places.status === "error") return <Note testId="saved-error">{readError("Saved places", places.unavailable)}</Note>;
+  if (places.status === "loading") return <Loading label={t.loadingPlaces} />;
+  if (places.status === "error") return <Note testId="saved-error">{readError(t.whatPlaces, places.unavailable, t)}</Note>;
 
   const use = (place: SavedPlace, which: "start" | "destination") => {
     frame?.requestEndpoint(which, { point: { ...place.point }, label: place.label, place: place.source });
     router.push("/app");
   };
   const remove = (place: SavedPlace) => {
-    removal.run(() => deleteSavedPlace(place.id), `Removed ${place.label}.`, () => putSavedPlace(place));
+    removal.run(() => deleteSavedPlace(place.id), t.removedPlace(place.label), () => putSavedPlace(place));
   };
 
   return (
     <section className="pn-section" aria-labelledby={titleId}>
       <h2 id={titleId} className="pn-section__title">
-        Saved places
+        {t.placesTitle}
       </h2>
       <SkippedRecords store="savedPlaces" dropped={places.dropped} unreadable={places.unreadable} />
       <ul className="pn-group" data-testid="saved-places">
         {places.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty" data-testid="saved-places-empty">
-            {NO_PLACES}
+            {t.noPlaces}
           </li>
         ) : (
           places.records.map((p) => (
@@ -390,15 +398,15 @@ function PlacesPanel() {
         <li>
           <Link href="/app/search?for=save" className="pn-cell pn-saved-add" data-testid="saved-add-place">
             <PlusIcon />
-            Add a place
+            {t.addPlace}
           </Link>
         </li>
       </ul>
       <UndoNote removed={removal.removed} onDone={removal.clear} />
       <SavePlaceDialog
         open={renaming !== null}
-        title="Rename place"
-        confirmLabel="Rename"
+        title={t.renameTitle}
+        confirmLabel={t.rename}
         initialLabel={renaming?.label ?? ""}
         onSave={async (label) => {
           if (!renaming) return;
@@ -415,51 +423,53 @@ function PlacesPanel() {
 // ------------------------------------------------------------------ history
 
 function HistoryOff() {
+  const t = useT().saved;
   return (
     <section className="pn-saved-off" aria-labelledby="pn-history-off" data-testid="history-off">
       <span className="pn-saved-off__icon">
         <HistoryIcon />
       </span>
       <h2 id="pn-history-off" className="pn-saved-off__title">
-        History is off
+        {t.historyOffTitle}
       </h2>
-      <p className="pn-saved-off__text">History is off. When on, it stays on this device.</p>
+      <p className="pn-saved-off__text">{t.historyOffText}</p>
       <Link href="/app/more" className="pn-saved-off__link">
-        Turn on in More
+        {t.turnOnInMore}
       </Link>
     </section>
   );
 }
 
 function HistoryPanel() {
+  const t = useT().saved;
   const { historyEnabled } = usePrefs();
   const history = useHistoryList(historyEnabled);
   const [confirm, setConfirm] = useState(false);
   const [status, setStatus] = useState("");
   const titleId = useId();
   if (!historyEnabled) return <HistoryOff />;
-  if (history.status === "loading") return <Loading label="Loading trip history" />;
-  if (history.status === "error") return <Note testId="saved-error">{readError("Trip history", history.unavailable)}</Note>;
+  if (history.status === "loading") return <Loading label={t.loadingHistory} />;
+  if (history.status === "error") return <Note testId="saved-error">{readError(t.whatHistory, history.unavailable, t)}</Note>;
   const onClear = () => {
     setConfirm(false);
     setStatus("");
     clearHistory().then(
-      () => setStatus("Trip history on this phone deleted."),
-      () => setStatus("Couldn't delete history. Try again."),
+      () => setStatus(t.historyDeleted),
+      () => setStatus(t.historyDeleteFailed),
     );
   };
   return (
     <section className="pn-section" aria-labelledby={titleId} data-testid="history-on">
       <h2 id={titleId} className="pn-section__title">
-        Trip history
+        {t.historyTitle}
       </h2>
       <SkippedRecords store="history" dropped={history.dropped} unreadable={history.unreadable} />
       <ul className="pn-group" data-testid="history-list">
         {history.records.length === 0 ? (
-          <li className="pn-cell pn-cell--empty">No trips in history yet.</li>
+          <li className="pn-cell pn-cell--empty">{t.historyEmpty}</li>
         ) : (
           history.records.map((e) => {
-            const { route, date } = historyParts(e);
+            const { route, date } = historyParts(e, t);
             return (
               <li key={e.id} className="pn-cell pn-cell--compact">
                 <span className="pn-cell__text">
@@ -471,10 +481,10 @@ function HistoryPanel() {
           })
         )}
       </ul>
-      <Note>Kept 90 days on this phone. Place names only.</Note>
+      <Note>{t.historyNote}</Note>
       {history.records.length > 0 ? (
         <button type="button" className="pn-btn pn-btn--secondary pn-saved__clear" onClick={() => setConfirm(true)}>
-          Clear history
+          {t.clearHistory}
         </button>
       ) : null}
       <p className="pn-saved__status" aria-live="polite">
@@ -482,8 +492,8 @@ function HistoryPanel() {
       </p>
       <ConfirmDialog
         open={confirm}
-        title="Delete the trip history on this phone?"
-        confirmLabel="Clear history"
+        title={t.clearHistoryQ}
+        confirmLabel={t.clearHistory}
         tone="danger"
         onConfirm={onClear}
         onCancel={() => setConfirm(false)}
@@ -495,10 +505,10 @@ function HistoryPanel() {
 
 // ------------------------------------------------------------------ screen
 
-const TAB_OPTIONS: readonly SegmentedOption<SavedTab>[] = [
-  { value: "trips", label: "Trips", id: "pn-saved-tab-trips", controls: "pn-saved-panel" },
-  { value: "places", label: "Places", id: "pn-saved-tab-places", controls: "pn-saved-panel" },
-  { value: "history", label: "History", id: "pn-saved-tab-history", controls: "pn-saved-panel" },
+const tabOptions = (t: Dict["saved"]): readonly SegmentedOption<SavedTab>[] => [
+  { value: "trips", label: t.tabTrips, id: "pn-saved-tab-trips", controls: "pn-saved-panel" },
+  { value: "places", label: t.tabPlaces, id: "pn-saved-tab-places", controls: "pn-saved-panel" },
+  { value: "history", label: t.tabHistory, id: "pn-saved-tab-history", controls: "pn-saved-panel" },
 ];
 
 const PANELS: Record<SavedTab, () => ReactNode> = {
@@ -507,7 +517,20 @@ const PANELS: Record<SavedTab, () => ReactNode> = {
   history: () => <HistoryPanel />,
 };
 
+/** The Saved tab page: the frame (large title) around the screen. */
+export function SavedPage() {
+  const t = useT().saved;
+  return (
+    <PageFrame title={t.title} testId="saved-page">
+      <Suspense fallback={null}>
+        <SavedScreen />
+      </Suspense>
+    </PageFrame>
+  );
+}
+
 export function SavedScreen() {
+  const t = useT().saved;
   const params = useSearchParams();
   const fromUrl = parseSavedTab(params.get("tab"));
   // The chosen section, kept in step with ?tab= when a navigation changes it (back from Search to
@@ -535,12 +558,10 @@ export function SavedScreen() {
       const sent = res.placesUploaded + res.tripsUploaded;
       const received = res.placesDownloaded + res.tripsDownloaded;
       setSyncStatus(
-        sent === 0 && received === 0
-          ? "Everything is up to date."
-          : `Synced: ${sent} sent to your account, ${received} added to this phone.`,
+        sent === 0 && received === 0 ? t.upToDate : t.synced(sent, received),
       );
     } catch {
-      setSyncStatus("Sync failed. Check your network connection.");
+      setSyncStatus(t.syncFailed);
     } finally {
       setSyncing(false);
     }
@@ -551,8 +572,8 @@ export function SavedScreen() {
       {user && (
         <div className="pn-card pn-saved__sync" data-testid="saved-sync-card">
           <div className="pn-saved__sync-text">
-            <strong>Account sync</strong>
-            <span>{syncStatus || "Backup saved trips & places to your account"}</span>
+            <strong>{t.syncTitle}</strong>
+            <span>{syncStatus || t.syncHint}</span>
           </div>
           <button
             type="button"
@@ -561,11 +582,11 @@ export function SavedScreen() {
             disabled={syncing}
             data-testid="saved-sync-btn"
           >
-            {syncing ? "Syncing..." : "Sync now"}
+            {syncing ? t.syncing : t.syncNow}
           </button>
         </div>
       )}
-      <Segmented options={TAB_OPTIONS} value={tab} onChange={choose} label="Saved sections" variant="tablist" testId="saved-tabs" />
+      <Segmented options={tabOptions(t)} value={tab} onChange={choose} label={t.tabsLabel} variant="tablist" testId="saved-tabs" />
       <div id="pn-saved-panel" role="tabpanel" aria-labelledby={`pn-saved-tab-${tab}`} className="pn-saved__panel" data-testid={`saved-panel-${tab}`}>
         {PANELS[tab]()}
       </div>

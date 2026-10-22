@@ -34,10 +34,9 @@ import { getRoadsideAdvice } from "@/domain/planner/roadside";
 import { optionNotesView, type OptionNotesView } from "@/domain/trip/option-notes";
 import { rideEnds } from "@/domain/trip/ride-ends";
 import { nearestTricycleTerminal } from "@/domain/trip/tricycle-hint";
-import { WALK_PATHS_OFFLINE_NOTE } from "@/domain/pwa/offline-copy";
 import { WALK_LOADING_LABEL, WALK_OFFLINE_LABEL, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { LineNotesView } from "@/ui/map/line-notes-view";
-import { UNTRACED_RIDE_LABEL, rideTrace, type RideTrace } from "@/ui/map/line-rules";
+import { rideTrace, type RideTrace } from "@/ui/map/line-rules";
 import { buildSavedTrip, manilaDate, shareText, type SavedEnd } from "@/domain/saved/saved";
 import { directionText, fareChipText, formatDistance, isNegligibleWalk, optionTitle, routeChipLabel } from "@/domain/trip/present";
 import type { LatLng } from "@/domain/geo/types";
@@ -153,7 +152,7 @@ function steps(option: PlanOptionDto, lookups: PlanLookups, traceOf: (leg: RideL
           <>
             <strong className="pn-tl__title">{walkTitle(leg, lookups, ctx.t)}</strong>
             <WalkTime leg={etaLeg} path={(leg as { path?: { kind?: string } }).path?.kind === "path" ? "street" : "straight"} />
-            {(leg as { path?: { label?: string } }).path?.label === WALK_OFFLINE_LABEL ? <p className="pn-tl__sub">{WALK_PATHS_OFFLINE_NOTE}</p> : null}
+            {(leg as { path?: { label?: string } }).path?.label === WALK_OFFLINE_LABEL ? <p className="pn-tl__sub">{ctx.t.pwa.walkPathsOffline}</p> : null}
           </>
         ),
       });
@@ -198,7 +197,7 @@ function rideSteps(
   const dir = directionText(lookups.direction(leg.variantId), "short", route, t);
   const roadside = getRoadsideAdvice(leg.routeCode, leg.board, leg.alight, t.roadside);
   const count = ends.pinned ? ends.stops.length - 1 : null;
-  const pathLabel = trace.untraced ? UNTRACED_RIDE_LABEL : PATH_LABEL;
+  const pathLabel = trace.untraced ? ctx.t.map.untracedRide : PATH_LABEL;
   const etaLeg = estimate?.legs[i];
   const fleet = leg.fleet;
 

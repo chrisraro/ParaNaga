@@ -14,7 +14,7 @@ import "@/ui/modes/modes.css";
 
 import { useEffect, useId, useRef, useState } from "react";
 import L from "leaflet";
-import { MODE_DISPLAY_NAMES, resolveVisualKey, type RouteMode, type VisualKey } from "@/domain/modes/modes";
+import { resolveVisualKey, type RouteMode, type VisualKey } from "@/domain/modes/modes";
 import {
   APPROX_STREET_DASH_ARRAY,
   PADYAK_DASH_ARRAY,
@@ -25,20 +25,23 @@ import {
   type MapSurface,
 } from "@/domain/modes/palette";
 import { ModeIcon } from "@/ui/modes/mode-icon";
-import { ONEWAY_CAUTION } from "./line-rules";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 
-export const LEGEND_FOOTNOTE = "Lines are approximate paths, not verified route shapes." as const;
-export const LEGEND_WALK_NOTE = "Dotted: approximate walking path · crossings not checked" as const;
-export const LEGEND_STOP_LABEL = "Mapped stop, not verified" as const;
-export const LEGEND_MIXED_NOTE = "Alternating colours: traditional and modern jeepneys" as const;
+export const LEGEND_FOOTNOTE = en.map.legendFootnote;
+export const LEGEND_WALK_NOTE = en.map.legendWalk;
+export const LEGEND_STOP_LABEL = en.map.legendStop;
+export const LEGEND_MIXED_NOTE = en.map.legendMixed;
 
 /** Extra entries a trip can need: padyak (dashed), a straight line that is not a route, a free board or get-off point. */
 export type LegendExtra = "padyak" | "approx_street" | "free_point";
 export const LEGEND_EXTRA_LABEL: Record<LegendExtra, string> = {
-  padyak: "Padyak",
-  approx_street: "Approximate, not a route",
-  free_point: "Board or get off here (stop not marked)",
+  padyak: en.map.legendPadyak,
+  approx_street: en.map.legendApproxStreet,
+  free_point: en.map.legendFreePoint,
 };
+
+const extraLabel = (extra: LegendExtra, m: Dict["map"]) => (extra === "padyak" ? m.legendPadyak : extra === "approx_street" ? m.legendApproxStreet : m.legendFreePoint);
 
 export type LegendEntry =
   | VisualKey
@@ -63,7 +66,7 @@ export type MapLegendProps = {
   extras?: readonly LegendExtra[];
 };
 
-function normalizeItems(items: readonly LegendEntry[]): { key: VisualKey; label: string }[] {
+function normalizeItems(items: readonly LegendEntry[], names: Record<VisualKey, string>): { key: VisualKey; label: string }[] {
   const seen = new Set<VisualKey>();
   const out: { key: VisualKey; label: string }[] = [];
   for (const item of items) {
@@ -71,7 +74,7 @@ function normalizeItems(items: readonly LegendEntry[]): { key: VisualKey; label:
     const key = resolveVisualKey(rawKey);
     if (seen.has(key)) continue;
     seen.add(key);
-    const label = (typeof item === "object" && item.label) ? item.label : MODE_DISPLAY_NAMES[key];
+    const label = (typeof item === "object" && item.label) ? item.label : names[key];
     out.push({ key, label });
   }
   return out;
@@ -187,7 +190,9 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
   const panelId = useId();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const entries = normalizeItems(items);
+  const t = useT();
+  const m = t.map;
+  const entries = normalizeItems(items, t.modes.display);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -229,7 +234,7 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
         </span>
       ) : null}
       {/* Always mounted so closing can fade out; CSS hides it (visibility) once the fade ends. */}
-      <div id={panelId} className="pn-map-legend__panel" data-open={open} role="region" aria-label="Map legend" data-testid="map-legend-panel">
+      <div id={panelId} className="pn-map-legend__panel" data-open={open} role="region" aria-label={m.legendPanel} data-testid="map-legend-panel">
           <ul className="pn-map-legend__list">
             {entries.map(({ key, label }) => (
               <li key={key} className="pn-map-legend__item" data-legend-item={key}>
@@ -238,15 +243,15 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
                   <ModeIcon mode={key} size={18} />
                   <span>{label}</span>
                 </div>
-                {key === "walk" ? <p className="pn-map-legend__note">{LEGEND_WALK_NOTE}</p> : null}
-                {key === "mixed_trad_modern" ? <p className="pn-map-legend__note">{LEGEND_MIXED_NOTE}</p> : null}
+                {key === "walk" ? <p className="pn-map-legend__note">{m.legendWalk}</p> : null}
+                {key === "mixed_trad_modern" ? <p className="pn-map-legend__note">{m.legendMixed}</p> : null}
               </li>
             ))}
             {extras.map((extra) => (
               <li key={extra} className="pn-map-legend__item" data-legend-item={extra}>
                 <div className="pn-map-legend__row">
                   <ExtraSwatch extra={extra} surface={surface} />
-                  <span>{LEGEND_EXTRA_LABEL[extra]}</span>
+                  <span>{extraLabel(extra, m)}</span>
                 </div>
               </li>
             ))}
@@ -254,7 +259,7 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
               <li className="pn-map-legend__item" data-legend-item="stop">
                 <div className="pn-map-legend__row">
                   <StopSwatch />
-                  <span>{LEGEND_STOP_LABEL}</span>
+                  <span>{m.legendStop}</span>
                 </div>
               </li>
             ) : null}
@@ -262,9 +267,9 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
               <li className="pn-map-legend__item" data-legend-item="caution" data-testid="map-legend-caution">
                 <div className="pn-map-legend__row">
                   <CautionSwatch surface={surface} />
-                  <span>Dashed section</span>
+                  <span>{m.legendDashed}</span>
                 </div>
-                <p className="pn-map-legend__note pn-line-note__text">{ONEWAY_CAUTION}</p>
+                <p className="pn-map-legend__note pn-line-note__text">{m.onewayCaution}</p>
               </li>
             ) : null}
           </ul>
@@ -273,7 +278,7 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
               {notice}
             </p>
           ) : null}
-          <p className="pn-map-legend__footnote">{LEGEND_FOOTNOTE}</p>
+          <p className="pn-map-legend__footnote">{m.legendFootnote}</p>
       </div>
       <button
         ref={buttonRef}
@@ -284,7 +289,7 @@ export function MapLegend({ items, defaultOpen = false, surface = "light", annou
         onClick={() => setOpen((prev) => !prev)}
         data-testid="map-legend-button"
       >
-        <span>Legend</span>
+        <span>{m.legend}</span>
       </button>
     </div>
   );

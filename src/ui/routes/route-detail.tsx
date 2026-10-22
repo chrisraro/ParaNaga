@@ -40,18 +40,21 @@ import { lineNotes, routeDirectionPath } from "@/ui/map/line-rules";
 import { NagaMap } from "@/ui/map/naga-map";
 import { SOURCES_HREF } from "@/ui/help/sources-href";
 import { LoopChip } from "@/ui/trip/trip-parts";
+import { useT } from "@/i18n/provider";
 
 const capitalised = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 export function RouteDetailScreen({ code }: { code: string }) {
+  const t = useT().detail;
   const resource = useNetworkResource(`/api/v1/routes/${encodeURIComponent(code)}`, routeDetailSchema);
-  if (resource.status === "loading") return <DetailLoading title="Route" />;
+  if (resource.status === "loading") return <DetailLoading title={t.route} />;
   if (resource.status === "not_found") return <DetailNotFound what="route" />;
-  if (resource.status === "error") return <DetailError title="Route" offline={resource.offline} onRetry={resource.retry} />;
+  if (resource.status === "error") return <DetailError title={t.route} offline={resource.offline} onRetry={resource.retry} />;
   return <RouteDetailView data={resource.data} />;
 }
 
 function StreetList({ streets, circuit, label, testId }: { streets: readonly string[]; circuit: boolean; label: string; testId?: string }) {
+  const t = useT().routes;
   return (
     <ol className="pn-streets" aria-label={label} data-testid={testId}>
       {streets.map((name, i) => (
@@ -61,7 +64,7 @@ function StreetList({ streets, circuit, label, testId }: { streets: readonly str
           </span>
           <span className="pn-street__text">
             <span className="pn-street__name">{name}</span>
-            <span className="pn-street__note">{streetNote(i, streets.length, circuit)}</span>
+            <span className="pn-street__note">{streetNote(i, streets.length, circuit, t)}</span>
           </span>
         </li>
       ))}
@@ -90,6 +93,8 @@ type Direction = "inbound" | "outbound";
 
 export function RouteDetailView({ data }: { data: RouteDetail }) {
   const { route, variants, trials, fareEvidence } = data;
+  const tt = useT();
+  const t = tt.routes;
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const [direction, setDirection] = useState<Direction>("inbound");
   // Ids are per instance: Next keeps a left page mounted (hidden), so two route panels can coexist.
@@ -99,11 +104,11 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const linesState = useLines(data.revision.revisionId);
   const { lines } = linesState;
 
-  const provenance = routeProvenance(route.code);
-  const group = routeGroupText(route.groupNumber, route.modeCode);
-  const fare = routeFareTile(fareEvidence.rules);
-  const vehicle = vehicleTile(route.modeCode);
-  const labels = directionLabels(route.name);
+  const provenance = routeProvenance(route.code, t);
+  const group = routeGroupText(route.groupNumber, route.modeCode, t);
+  const fare = routeFareTile(fareEvidence.rules, t);
+  const vehicle = vehicleTile(route.modeCode, t);
+  const labels = directionLabels(route.name, t);
   const { inbound, outbound, circuit } = route.legalStreets;
   const twoWay = inbound !== null && outbound !== null;
   const shown = twoWay ? (direction === "inbound" ? inbound : outbound) : (circuit ?? inbound ?? outbound);
@@ -123,12 +128,12 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   const pathStatus = activeLine
     ? activeLine.label
     : linesState.status === "loading"
-      ? "Loading path…"
+      ? t.pathLoading
       : linesState.status === "skipped"
-        ? "Path off in low-data mode"
+        ? t.pathLowData
         : linesState.status === "ready"
-          ? (untraced?.message ?? "Path not traced")
-          : "Path unavailable";
+          ? (untraced?.message ?? t.pathNotTraced)
+          : t.pathUnavailable;
 
   const activeCoords = useMemo(() => {
     if (!activeLine) return null;
@@ -145,7 +150,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
   };
 
   return (
-    <DetailPanel title="Route" sources={`${SOURCES_HREF}?route=${encodeURIComponent(route.code)}`} testId="route-detail">
+    <DetailPanel title={tt.detail.route} sources={`${SOURCES_HREF}?route=${encodeURIComponent(route.code)}`} testId="route-detail">
       <main className="pn-detail__main pn-detail-in" style={{ gap: 12 }}>
         <div className="pn-detail__stack">
           <div className="pn-detail__row">
@@ -164,10 +169,10 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           <div className="pn-detail__row">
             <span className="pn-badge pn-badge--evidence" data-testid="route-evidence">
               {provisional ? <PinsIcon /> : <DocIcon />}
-              {provisional ? "Provisional stops" : "Documented only"}
+              {provisional ? tt.kit.badges["provisional-stops"] : tt.kit.badges.documented}
             </span>
             <span className="pn-detail__caption" data-testid="route-signs">
-              {signs.length > 0 ? `Also signed ${signs.join(" · ")} · not yet verified` : "Signboard not yet verified"}
+              {signs.length > 0 ? t.alsoSigned(signs.join(" · ")) : t.signNotVerified}
             </span>
           </div>
         </div>
@@ -175,10 +180,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         <div role="note" className="pn-note pn-note--small" data-testid="route-partial">
           <WarnIcon size={18} />
           <p>
-            <strong>Partial data.</strong>{" "}
-            {provisional
-              ? "Shape and stops unverified."
-              : "Shape and stops unverified. Street order from the plan."}
+            <strong>{t.partialData}</strong>{" "}
+            {provisional ? t.shapeUnverified : t.shapeUnverifiedPlan}
           </p>
         </div>
 
@@ -189,14 +192,14 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
               selectedRouteCode={route.code}
               showRouteChevrons={true}
               fitBoundsCoords={activeCoords}
-              label={`Map of ${route.name}`}
+              label={t.mapOf(route.name)}
             />
           </div>
           <div className="pn-route-map-status" style={{ padding: "8px 12px", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pn-surface, #F8FAFC)" }} data-testid="route-map-status">
             <span data-testid="route-path-status">{pathStatus}</span>
             {activeLine ? (
               <span className="pn-route-map-badge" style={{ fontSize: 11, fontWeight: 600, opacity: 0.8 }} data-testid="route-trace-badge">
-                {activeLine.status === "ok" ? "Trace: ok" : `Trace: flagged (${activeLine.flagReason})`}
+                {activeLine.status === "ok" ? t.traceOk : t.traceFlagged(activeLine.flagReason)}
               </span>
             ) : null}
           </div>
@@ -209,38 +212,38 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
 
         <dl className="pn-tiles">
           <div className="pn-tile" data-testid="fare-tile">
-            <dt>Fare</dt>
+            <dt>{t.fare}</dt>
             <dd>
               <span className="pn-tile__value">{fare.value}</span>
               <span className="pn-tile__note">{fare.note}</span>
             </dd>
           </div>
           <div className="pn-tile">
-            <dt>Service</dt>
+            <dt>{t.service}</dt>
             <dd>
-              <span className="pn-tile__value">Unknown</span>
-              <span className="pn-tile__note">Not observed</span>
+              <span className="pn-tile__value">{t.unknown}</span>
+              <span className="pn-tile__note">{t.notObserved}</span>
             </dd>
           </div>
           <div className="pn-tile">
-            <dt>Vehicle</dt>
+            <dt>{t.vehicle}</dt>
             <dd>
               <span className="pn-tile__value">{vehicle.value}</span>
               <span className="pn-tile__note">{vehicle.note}</span>
             </dd>
           </div>
         </dl>
-        {fare.detail ? <p className="pn-footnote">Fare: {fare.detail}.</p> : null}
+        {fare.detail ? <p className="pn-footnote">{t.fareFootnote(fare.detail)}</p> : null}
 
         {data.notes.length > 0 ? (
           <section className="pn-section" aria-labelledby={`${uid}-notes`} data-testid="route-notes">
             <h2 id={`${uid}-notes`} className="pn-section__title">
-              Notes
+              {t.notes}
             </h2>
             <ul className="pn-route-notes">
               {data.notes.map((n) => (
                 <li key={n.text}>
-                  <RouteNote note={noteView(n.text, data.notes)} />
+                  <RouteNote note={noteView(n.text, data.notes, tt.trip)} />
                 </li>
               ))}
             </ul>
@@ -248,7 +251,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         ) : null}
 
         {twoWay ? (
-          <div role="radiogroup" aria-label="Direction" className="pn-seg">
+          <div role="radiogroup" aria-label={t.direction} className="pn-seg">
             {(["inbound", "outbound"] as const).map((d) => (
               <button
                 key={d}
@@ -272,26 +275,26 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         {shown ? (
           <section className="pn-section" aria-labelledby={`${uid}-streets`}>
             <h2 id={`${uid}-streets`} className="pn-section__title">
-              {isCircuit ? "Street order · circuit" : "Street order"}
-              {structures.length > 0 ? " · structure 1" : ""}
+              {isCircuit ? t.streetOrderCircuit : t.streetOrder}
+              {structures.length > 0 ? t.structureSuffix : ""}
             </h2>
             <StreetList
               streets={shown}
               circuit={isCircuit}
-              label={twoWay ? `Street order ${labels[direction].toLowerCase()}` : "Street order of the circuit"}
+              label={twoWay ? t.streetOrderOf(labels[direction]) : t.streetOrderCircuitLabel}
               testId="street-order"
             />
           </section>
         ) : (
-          <p className="pn-footnote">Street order not recorded.</p>
+          <p className="pn-footnote">{t.streetOrderNone}</p>
         )}
 
         {structures.map((streets, i) => (
           <section key={i} className="pn-section" aria-labelledby={`${uid}-structure-${i}`} data-testid="extra-structure">
             <h2 id={`${uid}-structure-${i}`} className="pn-section__title">
-              Street order · structure {i + 2}
+              {t.structureTitle(i + 2)}
             </h2>
-            <StreetList streets={streets} circuit={false} label={`Street order, structure ${i + 2}`} />
+            <StreetList streets={streets} circuit={false} label={t.structureLabel(i + 2)} />
           </section>
         ))}
 
@@ -299,17 +302,17 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           <section key={trial.variantId} className="pn-section" aria-labelledby={`${uid}-trial-${trial.variantId}`} data-testid="trial-notice">
             <div role="note" className="pn-note pn-note--small">
               <WarnIcon size={18} />
-              <p id={`${uid}-trial-${trial.variantId}`}>Trial · permanence unconfirmed</p>
+              <p id={`${uid}-trial-${trial.variantId}`}>{t.trialPermanence}</p>
             </div>
             {trial.legalStreets.circuit ? (
-              <StreetList streets={trial.legalStreets.circuit} circuit label="Trial street order" />
+              <StreetList streets={trial.legalStreets.circuit} circuit label={t.trialStreets} />
             ) : null}
           </section>
         ))}
 
         <section className="pn-section" aria-labelledby={`${uid}-fleet`} data-testid="route-fleet-section">
           <h2 id={`${uid}-fleet`} className="pn-section__title">
-            Fleet
+            {t.fleet}
           </h2>
           <p className="pn-detail__caption" data-testid="route-fleet-label" style={{ fontWeight: 600, margin: "4px 0 8px" }}>
             {route.fleet.label}
@@ -331,10 +334,10 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
 
         <section className="pn-section" aria-labelledby={`${uid}-cooperatives`} data-testid="route-cooperatives-section">
           <h2 id={`${uid}-cooperatives`} className="pn-section__title">
-            Cooperatives
+            {t.cooperatives}
           </h2>
           {data.cooperatives.length === 0 ? (
-            <p className="pn-footnote">No cooperatives on file for this corridor.</p>
+            <p className="pn-footnote">{t.noCooperatives}</p>
           ) : (
             <ul className="pn-group" style={{ listStyle: "none", padding: 0, margin: 0 }} data-testid="cooperatives-list">
               {data.cooperatives.map((c) => {
@@ -351,17 +354,17 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             </ul>
           )}
           <p className="pn-footnote" style={{ marginTop: 6 }} data-testid="cooperatives-footnote">
-            Leaders&apos; names not shown.
+            {t.leadersHidden}
           </p>
         </section>
 
         {ordered.map((variant) => (
           <section key={variant.variantId} className="pn-section" aria-labelledby={`${uid}-stops-${variant.variantId}`}>
             <h2 id={`${uid}-stops-${variant.variantId}`} className="pn-section__title">
-              Stops · {variant.stops.length}
+              {t.stopsCount(variant.stops.length)}
             </h2>
             {variant.direction === "clockwise" || variant.direction === "counterclockwise" ? (
-              <p className="pn-footnote">{capitalised(directionText(variant.direction, "short")!)} · mapped, unverified</p>
+              <p className="pn-footnote">{t.directionMapped(capitalised(directionText(variant.direction, "short", undefined, tt.trip)!))}</p>
             ) : null}
             <ol className="pn-group" data-testid="route-stops">
               {variant.stops.map((s) => (
@@ -369,8 +372,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
                   <Link href={`/app/stops/${s.id}`} className="pn-cell" style={{ minHeight: 52 }}>
                     <CandidateRing size={26} onRoute />
                     <span className="pn-cell__text">
-                      <span className="pn-cell__title">{stopLabel(s.name, s.source.code)}</span>
-                      <span className="pn-cell__sub pn-cell__sub--gold">Stop {s.seq}</span>
+                      <span className="pn-cell__title">{stopLabel(s.name, s.source.code, tt.trip)}</span>
+                      <span className="pn-cell__sub pn-cell__sub--gold">{tt.stops.stopNumber(s.seq)}</span>
                     </span>
                     <ChevronRight />
                   </Link>
@@ -381,7 +384,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
         ))}
 
         <p className="pn-footnote" data-testid="route-allocation">
-          {allocationText(route)}
+          {allocationText(route, t)}
         </p>
         <ReportLink entityType="route" entityId={route.code} entityLabel={route.name} />
       </main>

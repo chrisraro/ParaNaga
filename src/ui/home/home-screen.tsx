@@ -80,8 +80,6 @@ import { LayersSheet, SelectedRouteCard, distinctRoutesFromLines, filterMapTermi
 import type { MapTerminal } from "@/ui/map/terminals-layer";
 import { collectRouteLegendItems, filterOverviewLines } from "@/ui/map/route-lines-layer";
 import {
-  TRIP_LINES_MISSING_NOTE,
-  TRIP_LINES_OVERVIEW_NOTE,
   legendVisualKeys,
   mapLayerPolicy,
   overviewLinesForTrip,
@@ -286,7 +284,7 @@ export function HomeScreen() {
   // The two staleness notes also show at the peek (the list below is inert there), one line each.
   const peekNotes: string[] = [];
   if (optionsListed && reopen.changed) peekNotes.push(t.home.changedSinceSaved);
-  if (optionsListed && plan.status === "ready" && plan.offline) peekNotes.push(offlinePlanChip(plan.data.revision.publishedAt, plan.offline));
+  if (optionsListed && plan.status === "ready" && plan.offline) peekNotes.push(offlinePlanChip(plan.data.revision.publishedAt, plan.offline, t.pwa));
   // The sheet drags without re-rendering this screen: the map chrome that rides its edge is written
   // here directly (same value as attributionBottom below). During the drag the value goes on the
   // followers themselves, not on the root: a custom property on the root re-styles the whole map.
@@ -755,11 +753,11 @@ export function HomeScreen() {
   const lines = useLines(snapshotState.snapshot?.revision.revisionId ?? null, showRoutes || tripRevisionId !== null).lines;
   const tripOption = guidedTrip ? guidedTrip.option : stored ? stored.option : shownOption;
   const tripLines = useMemo(() => {
-    if (guidedTrip && guidedOption) return buildTripLinesData(guidedOption, guidedTrip.variants, tripRevisionLines);
-    if (stored) return buildTripLinesData(stored.option, stored.data.variants, tripRevisionLines);
-    if (planData && shownOption) return buildTripLinesData(shownOption, planData.variants, tripRevisionLines);
+    if (guidedTrip && guidedOption) return buildTripLinesData(guidedOption, guidedTrip.variants, tripRevisionLines, t);
+    if (stored) return buildTripLinesData(stored.option, stored.data.variants, tripRevisionLines, t);
+    if (planData && shownOption) return buildTripLinesData(shownOption, planData.variants, tripRevisionLines, t);
     return null;
-  }, [guidedTrip, guidedOption, stored, planData, shownOption, tripRevisionLines]);
+  }, [guidedTrip, guidedOption, stored, planData, shownOption, tripRevisionLines, t]);
   // Both ends set, options listed, none open: fit the whole route (ends + the previewed path, or
   // the option's stops while its lines load) above the sheet. An open option fits via its highlights.
   const routeFitCoords = useMemo(() => {
@@ -796,8 +794,8 @@ export function HomeScreen() {
   }, [layerPolicy.overviewLines, layerPolicy.overviewStandIn, lines, showRoutes, layers, rideVariantIds]);
   const legendNotice = layerPolicy.tripLinesMissing
     ? overviewLines.length > 0
-      ? TRIP_LINES_OVERVIEW_NOTE
-      : TRIP_LINES_MISSING_NOTE
+      ? t.map.tripLinesOverview
+      : t.map.tripLinesMissing
     : null;
   const [layersOpen, setLayersOpen] = useState(false);
   const layersBtnRef = useRef<HTMLButtonElement>(null);
@@ -1144,7 +1142,7 @@ export function HomeScreen() {
               option={openOption}
               onBack={handleCloseOption}
               ends={{ start: endFor(endpoints.start, snapshotStops), destination: endFor(endpoints.destination, snapshotStops) }}
-              note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline), tone: "warning" } : null)}
+              note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline, t.pwa), tone: "warning" } : null)}
               onStart={(walkLengths) =>
                 guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!, snapshotStops), destination: endFor(endpoints.destination!, snapshotStops) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths, ridePaths: ridePathsFor(openOption, tripRevisionLines) })
               }
@@ -1161,7 +1159,7 @@ export function HomeScreen() {
               ) : null}
               {plan.status === "ready" && plan.offline ? (
                 <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-offline-note">
-                  {offlinePlanNote(plan.data.revision.publishedAt, plan.offline)}
+                  {offlinePlanNote(plan.data.revision.publishedAt, plan.offline, t.pwa)}
                 </p>
               ) : null}
               {plan.status === "loading" ? <TripLoading /> : null}

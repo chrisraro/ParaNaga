@@ -19,7 +19,9 @@ type TracedLine = Line;
 import { decodePolyline } from "@/domain/geo/polyline";
 import type { LatLng } from "@/domain/geo/types";
 import type { ColourKey } from "@/domain/modes/fleet";
-import { MAP_CHIP_TEXT, type VisualKey } from "@/domain/modes/modes";
+import { type VisualKey } from "@/domain/modes/modes";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 import { APPROX_STREET_DASH_ARRAY, PADYAK_DASH_ARRAY, lineWidths, paletteForSurface, type MapSurface } from "@/domain/modes/palette";
 import { WALK_STRAIGHT_LABEL, type EnrichedPlanOption, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { isNegligibleWalk, routeChipLabel } from "@/domain/trip/present";
@@ -109,7 +111,7 @@ export type TripStreetSegment = {
   label: string;
 };
 
-export const APPROX_STREET_LABEL = "Approximate, not a route";
+export const APPROX_STREET_LABEL = en.map.legendApproxStreet;
 
 export type TripLinesData = {
   walkSegments: TripWalkSegment[];
@@ -138,7 +140,10 @@ export function buildTripLinesData(
   option: PlanOptionDto | EnrichedPlanOption,
   variants: readonly PlanVariantInfo[],
   lines: Lines | null | undefined,
+  copy: Pick<Dict, "map" | "modes"> = en,
 ): TripLinesData {
+  const m = copy.map;
+  const modes = copy.modes;
   const walkSegments: TripWalkSegment[] = [];
   const rideSegments: TripRideSegment[] = [];
   const streetSegments: TripStreetSegment[] = [];
@@ -174,11 +179,11 @@ export function buildTripLinesData(
       });
       allCoords.push(...coords);
       legendSet.add("walk");
-      announcedParts.push("walk");
+      announcedParts.push(m.announceWalk);
       return;
     }
     if (leg.kind === "tricycle" || leg.kind === "padyak") {
-      announcedParts.push(leg.kind === "tricycle" ? "Tricycle" : "Padyak");
+      announcedParts.push(leg.kind === "tricycle" ? m.announceTricycle : m.announcePadyak);
       const routed = leg.basis === "street_graph" && leg.path !== null;
       let coords: LatLng[] | null = null;
       if (routed) {
@@ -202,8 +207,8 @@ export function buildTripLinesData(
         coords,
         approximate,
         midpoint: midpointOnPolyline(coords),
-        chipText: approximate ? "Approximate" : leg.kind === "tricycle" ? MAP_CHIP_TEXT.tricycle : "Padyak",
-        label: approximate ? APPROX_STREET_LABEL : leg.kind === "tricycle" ? "Street route" : "Street route (padyak)",
+        chipText: approximate ? m.chipApproximate : leg.kind === "tricycle" ? modes.chip.tricycle : m.chipPadyak,
+        label: approximate ? m.legendApproxStreet : leg.kind === "tricycle" ? m.streetRoute : m.streetRoutePadyak,
       });
       allCoords.push(...coords);
       if (approximate) legendExtras.add("approx_street");
@@ -241,7 +246,7 @@ export function buildTripLinesData(
     if (notes.onewayCaution) caution = true;
 
     const colourKey = leg.fleet.colourKey;
-    const chipText = MAP_CHIP_TEXT[colourKey];
+    const chipText = modes.chip[colourKey];
     rideSegments.push({
       key: `ride-${idx}-${leg.variantId}`,
       legIndex: idx,
@@ -263,7 +268,7 @@ export function buildTripLinesData(
 
   const announcement =
     announcedParts.length > 0
-      ? `Trip drawn: ${announcedParts.join(", ")}. Lines are approximate.`
+      ? m.tripDrawn(announcedParts.join(", "))
       : "";
 
   return {
@@ -311,6 +316,7 @@ export function legOpacity(activeLegIndex: number | null, legIndex: number): num
 }
 
 export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = null }: Props) {
+  const modes = useT().modes;
   const palette = paletteForSurface(surface);
   const widths = useMemo(() => lineWidths(highContrast), [highContrast]);
   // A current leg with no drawn segment (an undrawn ride, a negligible walk) dims nothing.
@@ -356,7 +362,7 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
           {seg.midpoint ? (
             <Marker
               position={[seg.midpoint.lat, seg.midpoint.lng]}
-              icon={midChipIcon(MAP_CHIP_TEXT.walk, swatch.core, swatch.casing)}
+              icon={midChipIcon(modes.chip.walk, swatch.core, swatch.casing)}
               interactive={false}
               keyboard={false}
               zIndexOffset={-200}
@@ -466,7 +472,7 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
     });
 
     return [...walkEls, ...streetEls, ...rideEls];
-  }, [data, palette, widths, highContrast, current]);
+  }, [data, palette, widths, highContrast, current, modes]);
 
   return <>{elements}</>;
 }

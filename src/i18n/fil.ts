@@ -3,7 +3,7 @@
 // SAME_AS_EN (tests/unit/i18n-guards.test.ts). Reviewed (T10); every translated key is in
 // docs/i18n/ledger-fil.json (keys a native Naga speaker should still confirm carry "review": true).
 // Names passed into messages (theJeepney, theStop, pinNear, ...) carry no article: they follow "sa".
-import type { Dict } from "./dict";
+import { en, type Dict } from "./dict";
 
 export const fil: Dict = {
   app: { name: "ParaNaga", tagline: "Alamin ang sasakyan mo. Hanapin ang daan mo." },
@@ -500,4 +500,16 @@ export const fil: Dict = {
     },
     osmAttribution: "© OpenStreetMap contributors (ODbL)",
   },
+  pwa: en.pwa,
+  settings: en.settings,
+  detail: en.detail,
+  stops: en.stops,
+  routes: en.routes,
+  modes: en.modes,
+  places: en.places,
+  terminals: en.terminals,
+  search: en.search,
+  explore: en.explore,
+  saved: en.saved,
+  map: en.map,
 };

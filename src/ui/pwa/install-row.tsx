@@ -10,23 +10,26 @@ import { useState } from "react";
 import { getGuidanceSnapshot } from "@/client/guidance/guidance-store";
 import { iosInstallText, promptInstall, useInstallState } from "@/client/pwa/install";
 import { applyUpdate, useUpdateReady } from "@/client/pwa/register-sw";
+import { en } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 
-export const OTHER_INSTALL_TEXT = "To add ParaNaga to your home screen, use your browser’s menu (Install app or Add to Home screen).";
+export const OTHER_INSTALL_TEXT = en.pwa.installOther;
 
 export function InstallRow() {
+  const t = useT().pwa;
   const state = useInstallState();
   const updateReady = useUpdateReady();
   const [dismissed, setDismissed] = useState(false);
 
   let cell;
   if (state === "installed") {
-    cell = <ListCell title="ParaNaga app" trailing="Installed" testId="settings-install" />;
+    cell = <ListCell title={t.installAppRow} trailing={t.installed} testId="settings-install" />;
   } else if (state === "prompt") {
     cell = (
       <ListCell
-        title="Install ParaNaga"
-        sub="Opens from your home screen, also offline"
+        title={t.installTitle}
+        sub={t.installSub}
         onClick={() => {
           setDismissed(false);
           promptInstall().then(
@@ -38,26 +41,26 @@ export function InstallRow() {
       />
     );
   } else if (state === "ios") {
-    cell = <ListCell title="Install ParaNaga" sub={iosInstallText(navigator.userAgent)} testId="settings-install" />;
+    cell = <ListCell title={t.installTitle} sub={iosInstallText(navigator.userAgent, t)} testId="settings-install" />;
   } else if (state === "other") {
     cell = (
       <ListCell
-        title="Install ParaNaga"
-        sub={dismissed ? `Not installed. ${OTHER_INSTALL_TEXT}` : OTHER_INSTALL_TEXT}
+        title={t.installTitle}
+        sub={dismissed ? t.installDismissed(t.installOther) : t.installOther}
         testId="settings-install"
       />
     );
   } else {
-    cell = <ListCell title="Install ParaNaga" sub="Checking…" testId="settings-install" />;
+    cell = <ListCell title={t.installTitle} sub={t.installChecking} testId="settings-install" />;
   }
 
   return (
-    <ListGroup title="App" testId="settings-app">
+    <ListGroup title={t.installGroup} testId="settings-app">
       {cell}
       {updateReady ? (
         <ListCell
-          title="Update ready — Reload"
-          sub="A new version of ParaNaga is ready."
+          title={t.updateReadyTitle}
+          sub={t.updateReadySub}
           onClick={() => {
             if (getGuidanceSnapshot() === null) applyUpdate();
           }}

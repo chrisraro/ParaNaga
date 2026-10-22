@@ -104,8 +104,9 @@ test("plan → Save → the card on Saved; offline the card still opens and show
   const card = page.getByTestId("saved-trip");
   await expect(card).toHaveCount(1);
   await expect(card).toContainText("Available offline");
-  await expect(card).toContainText("From Pinned location");
-  await expect(card.getByRole("heading", { level: 2 })).toHaveText("Pinned location");
+  // Pinned ends take the nearest stop's name (039022d).
+  await expect(card).toContainText(/From (Near \S|Pinned location)/);
+  await expect(card.getByRole("heading", { level: 2 })).toHaveText(/^(Near \S.*|Pinned location)$/);
   await expect(card).toContainText("Estimate 8–15 min + waiting (unknown) · Estimate ₱14 · data from 16 Oct 2026");
   await expect(card).toContainText("Centro-Magsaysay Loop A (clockwise)");
   await expect(card).not.toContainText("Changed since saved");
@@ -206,7 +207,7 @@ test("Share copies a text-only summary (no coordinates, no links) when the share
   await page.getByTestId("trip-share").click();
   await expect(page.getByTestId("trip-action-status")).toHaveText("Copied");
   const text = await page.evaluate(() => navigator.clipboard.readText());
-  expect(text).toContain("ParaNaga trip: Pinned location to Pinned location");
+  expect(text).toMatch(/ParaNaga trip: (Near \S.*|Pinned location) to (Near \S.*|Pinned location)/);
   expect(text).toContain(BADGE);
   expect(text).toContain("Board Centro-Magsaysay Loop A (clockwise) at Plaza Rizal (A1)");
   expect(text).toContain("Avenue Square (A5)");

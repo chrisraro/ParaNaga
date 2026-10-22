@@ -28,6 +28,7 @@ import {
   terminalRouteModes,
 } from "@/domain/places/terminals";
 import { prefersReducedMotion } from "@/client/map/use-reduced-motion";
+import { useT } from "@/i18n/provider";
 import { NAGA_MAX_ZOOM } from "@/domain/geo/naga";
 import { ModeIcon } from "@/ui/modes/mode-icon";
 
@@ -134,7 +135,8 @@ function TerminalDomMarker({ members, at, interactive, emphasized, onSelect, onT
     [],
   );
   const group = members.length > 1;
-  const name = group ? terminalGroupName(members) : terminalMarkerName(members[0]!);
+  const t = useT();
+  const name = group ? terminalGroupName(members, t.terminals) : terminalMarkerName(members[0]!, t);
   const codes = useMemo(() => members.map((m) => m.code), [members]);
   const modes = useMemo(() => members.flatMap((m) => m.modes), [members]);
 

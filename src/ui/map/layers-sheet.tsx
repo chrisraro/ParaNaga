@@ -16,7 +16,9 @@ import "../modes/modes.css";
 import Link from "next/link";
 import { useEffect, useId, useMemo, useRef } from "react";
 import type { Line, SnapshotTerminal } from "@/domain/api/schemas";
-import { modeName, type RouteMode } from "@/domain/modes/fleet";
+import type { RouteMode } from "@/domain/modes/fleet";
+import { en } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 import type { VisualKey } from "@/domain/modes/modes";
 import { terminalLocationText } from "@/domain/places/explore";
 import { terminalMatchesModes, terminalModesPhrase } from "@/domain/places/terminals";
@@ -31,16 +33,15 @@ import { LineNotesView } from "./line-notes-view";
 
 export { LineNotesView } from "./line-notes-view";
 
-const MODE_FILTER_ITEMS: readonly { mode: RouteMode; label: string; iconKey: VisualKey }[] = [
-  { mode: "jeepney", label: modeName("jeepney"), iconKey: "traditional_puj" },
-  { mode: "tricycle", label: modeName("tricycle"), iconKey: "tricycle" },
-  { mode: "uv_express", label: modeName("uv_express"), iconKey: "uv_express" },
-  { mode: "bus", label: modeName("bus"), iconKey: "bus" },
-  { mode: "rail", label: modeName("rail"), iconKey: "rail" },
+const MODE_FILTER_ITEMS: readonly { mode: RouteMode; iconKey: VisualKey }[] = [
+  { mode: "jeepney", iconKey: "traditional_puj" },
+  { mode: "tricycle", iconKey: "tricycle" },
+  { mode: "uv_express", iconKey: "uv_express" },
+  { mode: "bus", iconKey: "bus" },
+  { mode: "rail", iconKey: "rail" },
 ];
 
-export const REGIONAL_ROUTES_NOTE =
-  "Regional UV Express and bus routes leave the city; see their terminals." as const;
+export const REGIONAL_ROUTES_NOTE = en.map.regionalRoutesNote;
 
 /**
  * The Layers sheet's list equivalent of the terminals layer: with the Terminals switch on, every
@@ -103,7 +104,7 @@ export function distinctRoutesFromLines(lines: readonly Line[]): DistinctMapRout
   return [...byCode.values()];
 }
 
-export const LINES_NOT_LOADED = "Route lines aren't loaded on this device." as const;
+export const LINES_NOT_LOADED = en.map.linesNotLoaded;
 
 type Props = {
   open: boolean;
@@ -134,6 +135,8 @@ export function LayersSheet({
   linesLoaded = true,
   terminals = null,
 }: Props) {
+  const t = useT();
+  const m = t.map;
   const titleId = useId();
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
@@ -186,28 +189,28 @@ export function LayersSheet({
       >
         <header className="pn-layers-sheet__head">
           <h2 id={titleId} className="pn-layers-sheet__title">
-            Map layers
+            {m.layersTitle}
           </h2>
           <button
             ref={closeBtnRef}
             type="button"
             className="pn-layers-sheet__close"
-            aria-label="Close map layers"
+            aria-label={m.layersCloseLabel}
             onClick={onClose}
           >
-            Close
+            {m.layersClose}
           </button>
         </header>
 
         <div className="pn-layers-sheet__body">
-          <div className="pn-layers-switches" role="group" aria-label="Layer visibility">
-            <Switch label="Routes" checked={routesOn} onChange={onRoutesChange} testId="layer-switch-routes" />
-            <Switch label="Stops" checked={stopsOn} onChange={onStopsChange} testId="layer-switch-stops" />
-            <Switch label="Terminals" checked={layers.terminals} onChange={(terminals) => onUpdateLayers({ terminals })} testId="layer-switch-terminals" />
+          <div className="pn-layers-switches" role="group" aria-label={m.layerVisibility}>
+            <Switch label={m.switchRoutes} checked={routesOn} onChange={onRoutesChange} testId="layer-switch-routes" />
+            <Switch label={m.switchStops} checked={stopsOn} onChange={onStopsChange} testId="layer-switch-stops" />
+            <Switch label={m.switchTerminals} checked={layers.terminals} onChange={(terminals) => onUpdateLayers({ terminals })} testId="layer-switch-terminals" />
           </div>
 
-          <div className="pn-layers-modes" role="group" aria-label="Filter by mode">
-            <span className="pn-layers-section-label">Filter by mode</span>
+          <div className="pn-layers-modes" role="group" aria-label={m.filterByMode}>
+            <span className="pn-layers-section-label">{m.filterByMode}</span>
             <div className="pn-layers-modes__chips">
               <button
                 type="button"
@@ -216,7 +219,7 @@ export function LayersSheet({
                 onClick={() => onUpdateLayers({ modes: [] })}
                 data-testid="mode-filter-all"
               >
-                All
+                {m.filterAll}
               </button>
               {MODE_FILTER_ITEMS.map((item) => {
                 const active = layers.modes.includes(item.mode);
@@ -230,7 +233,7 @@ export function LayersSheet({
                     data-testid={`mode-filter-${item.mode}`}
                   >
                     <ModeIcon mode={item.iconKey} size={16} />
-                    <span>{item.label}</span>
+                    <span>{t.modes.name[item.mode]}</span>
                   </button>
                 );
               })}
@@ -238,21 +241,21 @@ export function LayersSheet({
           </div>
 
           <p className="pn-layers-note" data-testid="layers-regional-note">
-            {REGIONAL_ROUTES_NOTE}
+            {m.regionalRoutesNote}
           </p>
 
           <section className="pn-layers-list-section" aria-labelledby={`${titleId}-routes-list`}>
             <h3 id={`${titleId}-routes-list`} className="pn-layers-section-title">
-              Routes on the map ({mapRoutes.length})
+              {m.routesOnMap(mapRoutes.length)}
             </h3>
             {!routesOn ? (
-              <p className="pn-layers-empty">Routes are switched off.</p>
+              <p className="pn-layers-empty">{m.routesOff}</p>
             ) : !linesLoaded ? (
               <p className="pn-layers-empty" data-testid="layers-lines-not-loaded">
-                {LINES_NOT_LOADED}
+                {m.linesNotLoaded}
               </p>
             ) : mapRoutes.length === 0 ? (
-              <p className="pn-layers-empty">No routes match the current filter.</p>
+              <p className="pn-layers-empty">{m.noRoutesMatch}</p>
             ) : (
               <ul className="pn-layers-list" data-testid="layers-routes-list">
                 {mapRoutes.map((route) => (
@@ -276,10 +279,10 @@ export function LayersSheet({
 
           <section className="pn-layers-list-section" aria-labelledby={`${titleId}-terminals-list`}>
             <h3 id={`${titleId}-terminals-list`} className="pn-layers-section-title">
-              Terminals ({terminalList.length})
+              {m.terminalsHeading(terminalList.length)}
             </h3>
             {terminalList.length === 0 ? (
-              <p className="pn-layers-empty">{layers.terminals ? "No terminals match the current filter." : "Terminals are switched off."}</p>
+              <p className="pn-layers-empty">{layers.terminals ? m.noTerminalsMatch : m.terminalsOff}</p>
             ) : (
               <ul className="pn-layers-list" data-testid="layers-terminals-list">
                 {terminalList.map((terminal) => (
@@ -293,7 +296,7 @@ export function LayersSheet({
                         <strong>{terminal.name}</strong>
                       </span>
                       <span className="pn-layers-list__sub" data-testid="layers-terminal-sub">
-                        {`${terminalModesPhrase(terminal.modes)} · ${terminalLocationText(terminal.lat !== null)}`}
+                        {m.terminalSub(terminalModesPhrase(terminal.modes, t), terminalLocationText(terminal.lat !== null, t.terminals))}
                       </span>
                     </Link>
                   </li>
@@ -314,10 +317,11 @@ export function SelectedRouteCard({
   route: DistinctMapRoute;
   onClose: () => void;
 }) {
+  const m = useT().map;
   return (
     <aside
       className="pn-route-overview-card" data-sheet-follower=""
-      aria-label={`Selected route: ${route.routeName}`}
+      aria-label={m.selectedRoute(route.routeName)}
       data-testid="selected-route-card"
     >
       <div className="pn-route-overview-card__head">
@@ -326,20 +330,20 @@ export function SelectedRouteCard({
         <button
           type="button"
           className="pn-route-overview-card__close"
-          aria-label="Dismiss selected route"
+          aria-label={m.dismissRoute}
           onClick={onClose}
         >
           ×
         </button>
       </div>
       <p className="pn-route-overview-card__fleet">{route.fleetLabel}</p>
-      <p className="pn-route-overview-card__approx">Approximate path, not a verified route shape</p>
+      <p className="pn-route-overview-card__approx">{m.approxPath}</p>
       <LineNotesView notes={route.notes} testIdPrefix="route-card" />
       <Link
         href={`/app/routes/${encodeURIComponent(route.routeCode)}`}
         className="pn-route-overview-card__link"
       >
-        Route details
+        {m.routeDetails}
       </Link>
     </aside>
   );

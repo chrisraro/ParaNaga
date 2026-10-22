@@ -1,50 +1,53 @@
 // Offline copy (spec §3.11, Task 12). Pure. The date is always the published date of the data
 // this phone actually holds (Naga City calendar date), never "today" and never invented: when the
 // phone has no data date, the copy says so.
+import { en, type Dict } from "@/i18n/dict";
 import { publishedDateText } from "../network/present";
 
 /** "Offline — data from Oct 15, 2026. Fares may have changed." (the app frame's banner) */
-export function offlineBannerText(publishedAt: string | null | undefined, hasData: boolean): string {
-  if (!hasData) return "Offline — no transport data saved on this phone yet.";
+export function offlineBannerText(publishedAt: string | null | undefined, hasData: boolean, copy: Dict["pwa"] = en.pwa): string {
+  if (!hasData) return copy.offlineNoData;
   const date = publishedDateText(publishedAt);
-  return date ? `Offline — data from ${date}. Fares may have changed.` : "Offline — data from your last visit. Fares may have changed.";
+  return date ? copy.offlineFromDate(date) : copy.offlineFromVisit;
 }
 
 /** "Data from Oct 15, 2026. Fares may have changed." (the /offline page) */
-export function offlineDataLine(publishedAt: string | null | undefined, hasData: boolean): string {
-  if (!hasData) return "No transport data is saved on this phone yet.";
+export function offlineDataLine(publishedAt: string | null | undefined, hasData: boolean, copy: Dict["pwa"] = en.pwa): string {
+  if (!hasData) return copy.dataNone;
   const date = publishedDateText(publishedAt);
-  return date ? `Data from ${date}. Fares may have changed.` : "Data from your last visit. Fares may have changed.";
+  return date ? copy.dataFromDate(date) : copy.dataFromVisit;
 }
 
 /**
  * The note on a plan made in the browser from the cached snapshot: "offline" when the phone has no
  * connection, "unreachable" when it has one but ParaNaga's server could not be reached.
  */
-export function offlinePlanNote(publishedAt: string | null | undefined, reason: "offline" | "unreachable" = "offline"): string {
+export function offlinePlanNote(
+  publishedAt: string | null | undefined,
+  reason: "offline" | "unreachable" = "offline",
+  copy: Dict["pwa"] = en.pwa,
+): string {
   const date = publishedDateText(publishedAt);
-  if (reason === "unreachable") {
-    return date
-      ? `Couldn't reach ParaNaga — planned on this phone with data from ${date}. Fares may have changed.`
-      : "Couldn't reach ParaNaga — planned on this phone with the data it has. Fares may have changed.";
-  }
-  return date
-    ? `Planned offline from data of ${date}. Fares may have changed.`
-    : "Planned offline from the data on this phone. Fares may have changed.";
+  if (reason === "unreachable") return date ? copy.planUnreachableDate(date) : copy.planUnreachable;
+  return date ? copy.planOfflineDate(date) : copy.planOffline;
 }
 
 /** The same note as one short line, for the sheet's peek: "Offline plan, data of Oct 15, 2026". */
-export function offlinePlanChip(publishedAt: string | null | undefined, reason: "offline" | "unreachable" = "offline"): string {
+export function offlinePlanChip(
+  publishedAt: string | null | undefined,
+  reason: "offline" | "unreachable" = "offline",
+  copy: Dict["pwa"] = en.pwa,
+): string {
   const date = publishedDateText(publishedAt);
-  const base = reason === "unreachable" ? "Planned on this phone" : "Offline plan";
-  return date ? `${base}, data of ${date}` : base;
+  const base = reason === "unreachable" ? copy.chipUnreachable : copy.chipOffline;
+  return date ? copy.chipDate(base, date) : base;
 }
 
 /** A detail panel waiting for the network (useOffline). */
-export const OFFLINE_PANEL_TEXT = "You're offline · This opens when you're back online.";
+export const OFFLINE_PANEL_TEXT = en.pwa.panelOffline;
 
 /**
  * A walk drawn as a straight dotted line because the phone is offline and has never stored the
  * walk graph (Task 15): it is fetched once, the first time a trip is shown online.
  */
-export const WALK_PATHS_OFFLINE_NOTE = "Street paths need a connection the first time.";
+export const WALK_PATHS_OFFLINE_NOTE = en.pwa.walkPathsOffline;

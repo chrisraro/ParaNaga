@@ -9,6 +9,7 @@
 import type { SearchIndex, SearchOsmPlace, SearchPinPlace } from "../api/schemas";
 import { haversineMeters } from "../geo/geometry";
 import type { LatLng } from "../geo/types";
+import { en, type Dict } from "@/i18n/dict";
 import { formatIsoDate } from "../network/present";
 import { OSM_ELEMENT_TYPES, type OsmElementType } from "./osm-categories";
 
@@ -165,9 +166,9 @@ export function osmSnapshotDate(sourceCode: string): string | null {
 }
 
 /** "Source · OpenStreetMap, snapshot of 15 Oct 2026 · object way/123 v4". */
-export function osmSourceText(place: Pick<SearchOsmPlace, "sourceCode" | "osmVersion">, type: OsmElementType, id: string): string {
+export function osmSourceText(place: Pick<SearchOsmPlace, "sourceCode" | "osmVersion">, type: OsmElementType, id: string, copy: Dict["places"] = en.places): string {
   const date = osmSnapshotDate(place.sourceCode);
-  return `OpenStreetMap, snapshot of ${date ?? "an undated snapshot"} · object ${type}/${id} v${place.osmVersion}`;
+  return copy.osmSource(date ?? copy.undatedSnapshot, type, id, place.osmVersion);
 }
 
 /** The element's page on openstreetmap.org (no query string). */
@@ -189,69 +190,41 @@ export function sourceContextText(context: string | null): string | null {
 }
 
 /** "Stop label from the 2025 route study (2025 LPTRP SimEx)". */
-export function studyKindText(context: string | null): string {
-  const text = sourceContextText(context);
-  return `Stop label from the 2025 route study${text ? ` (${text})` : ""}`;
+export function studyKindText(context: string | null, copy: Dict["places"] = en.places): string {
+  return copy.studyKind(sourceContextText(context) ?? "");
 }
 
 /** "R8-A clockwise"; "Not recorded" when neither is on file. */
-export function studyRouteText(routeCode: string | null, direction: string | null): string {
+export function studyRouteText(routeCode: string | null, direction: string | null, copy: Dict["places"] = en.places): string {
   const text = [routeCode, direction].filter((x): x is string => !!x).join(" ");
-  return text || "Not recorded";
+  return text || copy.notRecorded;
 }
 
 // ------------------------------------------------------------------ terminals
 
-const MODE_LABEL: Record<string, string> = {
-  bus: "Bus",
-  jeepney: "Jeepney",
-  city_jeepney: "City jeepney",
-  rail: "Rail",
-  van: "Van",
-  uv_express: "UV Express",
-  tricycle: "Tricycle",
-};
-
 /** ["jeepney", "UV/van"] → "Jeepney, UV/van" (unknown modes verbatim, underscores spelled out). */
-export function terminalModesText(modes: readonly string[]): string {
+export function terminalModesText(modes: readonly string[], copy: Dict["terminals"] = en.terminals): string {
   return modes
-    .map((m) => MODE_LABEL[m] ?? (m.charAt(0).toUpperCase() + m.slice(1)).replace(/_/g, " "))
+    .map((m) => (Object.hasOwn(copy.modeLabel, m) ? copy.modeLabel[m as keyof typeof copy.modeLabel] : (m.charAt(0).toUpperCase() + m.slice(1)).replace(/_/g, " ")))
     .join(", ");
 }
 
-const EVIDENCE_LABEL: Record<string, string> = {
-  official_address: "city source",
-  official_route_reference: "city route reference",
-  official_historical_franchise: "historical franchise",
-  official_street_structure: "legal street list",
-  "station_exists;entrance_unverified": "station listed, entrance not verified",
-  // Terminal versions of the modes seed (2026-10-16): the location is community data (OpenStreetMap).
-  community_coordinate_official_address: "city source · location community-mapped",
-  community_coordinate_official_historical_franchise: "historical franchise · location community-mapped",
-  community_coordinate_matches_LPTRP_street: "community-mapped, on a legal route plan street",
-  community_coordinate: "community-mapped",
-  community_only: "community-mapped only",
-  community_only_old: "community-mapped only (older edit)",
-  official_location_text_conflicting_street: "city source, conflicting street",
-  official_text_no_coordinate: "ordinance text · no location on file",
-};
-
 /** The address evidence ("Address: city source"); unknown statuses are spelled out. */
-export function terminalEvidenceLabel(status: string | null): string {
-  if (!status) return "no evidence on file";
-  return EVIDENCE_LABEL[status] ?? status.replace(/[_;]+/g, " ").trim();
+export function terminalEvidenceLabel(status: string | null, copy: Dict["terminals"] = en.terminals): string {
+  if (!status) return copy.evidenceNone;
+  return Object.hasOwn(copy.evidence, status) ? copy.evidence[status as keyof typeof copy.evidence] : status.replace(/[_;]+/g, " ").trim();
 }
 
 /** The terminal's role=note sentences (confusions on file, and what category labels mean). */
-export function terminalNoteSentences(code: string, hasDestinationCategories: boolean): string[] {
+export function terminalNoteSentences(code: string, hasDestinationCategories: boolean, copy: Dict["terminals"] = en.terminals): string[] {
   const out: string[] = [];
-  if (code === "T01") out.push("Not the PNR railway station.");
-  if (code === "T06") out.push("Not Bicol Central Station (the bus terminal).");
-  if (hasDestinationCategories) out.push("Northbound/eastbound are administrative labels.");
+  if (code === "T01") out.push(copy.notPnr);
+  if (code === "T06") out.push(copy.notBicolCentral);
+  if (hasDestinationCategories) out.push(copy.adminLabels);
   return out;
 }
 
 /** The second line of a route that names the terminal. */
-export function terminalRouteSub(basis: "legal_plan" | "trial"): string {
-  return basis === "trial" ? "Nov 2025 trial" : "Legal route plan";
+export function terminalRouteSub(basis: "legal_plan" | "trial", copy: Dict["terminals"] = en.terminals): string {
+  return basis === "trial" ? copy.routeTrial : copy.routeLegal;
 }
