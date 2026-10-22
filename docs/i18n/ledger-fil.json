@@ -8373,5 +8373,3618 @@
     "key": "landing.alt.report",
     "en": "Report a correction, step 1 of 3: choices such as Wrong curb side, Stop moved or removed and Fare mismatch.",
     "fil": "Mag-ulat ng pagwawasto, hakbang 1 ng 3: mga pagpipilian gaya ng Wrong curb side, Stop moved or removed at Fare mismatch."
+  },
+  {
+    "key": "forms.signIn",
+    "en": "Sign in",
+    "fil": "Mag-sign in",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.back",
+    "en": "Back",
+    "fil": "Balik",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.continue",
+    "en": "Continue",
+    "fil": "Ituloy",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.review",
+    "en": "Review",
+    "fil": "Suriin",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.sending",
+    "en": "Sending…",
+    "fil": "Ipinapadala…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.remove",
+    "en": "Remove",
+    "fil": "Alisin",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.tryAgain",
+    "en": "Try again",
+    "fil": "Subukan ulit",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.loading",
+    "en": "Loading…",
+    "fil": "Nilo-load…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.backToMap",
+    "en": "Back to the map",
+    "fil": "Bumalik sa mapa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.seeMyReports",
+    "en": "See my reports",
+    "fil": "Tingnan ang mga ulat ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.notAdded",
+    "en": "Not added",
+    "fil": "Hindi idinagdag",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.notGiven",
+    "en": "Not given",
+    "fil": "Hindi ibinigay",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.findingLocation",
+    "en": "Finding your location…",
+    "fil": "Hinahanap ang lokasyon mo…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.updateLocation",
+    "en": "Update my location",
+    "fil": "I-update ang lokasyon ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.removeLocation",
+    "en": "Remove location",
+    "fil": "Alisin ang lokasyon",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.permissionHint",
+    "en": "Your phone asks for permission only when you tap the button.",
+    "fil": "Hihingi lang ng pahintulot ang phone mo kapag pinindot mo ang button.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.locationAdded",
+    "en": "Location added, accurate to about {0} m.",
+    "fil": "Naidagdag ang lokasyon (tumpak sa mga {0} m).",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.count",
+    "en": "{0} of {1}",
+    "fil": "{0} sa {1}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.stepOf",
+    "en": "Step {0} of {1}",
+    "fil": "Hakbang {0} ng {1}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.status",
+    "en": "Status: {0}",
+    "fil": "Katayuan: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.minChars",
+    "en": "Write at least {0} characters.",
+    "fil": "Sumulat ng hindi bababa sa {0} na character.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.maxChars",
+    "en": "Keep it under {0} characters.",
+    "fil": "Huwag lumampas sa {0} na character.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "forms.opensNewTab",
+    "en": "{0} (opens in a new tab)",
+    "fil": "{0} (magbubukas sa bagong tab)",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.title",
+    "en": "Help",
+    "fil": "Tulong",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tabs.help",
+    "en": "Help",
+    "fil": "Tulong",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tabs.safety",
+    "en": "Safety",
+    "fil": "Kaligtasan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tabs.data",
+    "en": "About data",
+    "fil": "Tungkol sa data",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tabsLabel",
+    "en": "Help sections",
+    "fil": "Mga seksyon ng Tulong",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.topicsLabel",
+    "en": "Help topics",
+    "fil": "Mga paksa ng tulong",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.reportDriverLink",
+    "en": "Report a problem with a driver",
+    "fil": "Mag-report ng problema sa driver",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.independentNote",
+    "en": "ParaNaga is an independent commuter guide. It is not an official City Government app.",
+    "fil": "Independiyenteng gabay para sa commuter ang ParaNaga. Hindi ito app ng City Government.",
+    "note": "'not an official City Government app' rendered 'Hindi ito app ng City Government' ('opisyal' is banned).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.emergencyStrong",
+    "en": "In an emergency, call 911.",
+    "fil": "Kung emergency, tumawag sa 911.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.emergencyBody",
+    "en": "ParaNaga does not monitor reports and cannot send help.",
+    "fil": "Hindi binabantayan ng ParaNaga ang mga ulat at hindi ito makakapagpadala ng tulong.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tipsTitle",
+    "en": "Commuting safely",
+    "fil": "Ligtas na pag-commute",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tips.p1",
+    "en": "Wait off the road, where other passengers wait.",
+    "fil": "Huwag maghintay sa mismong kalsada; doon tumayo kung saan naghihintay ang ibang pasahero.",
+    "review": true,
+    "note": "'Wait off the road' rendered 'Huwag maghintay sa mismong kalsada; ...'; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tips.p2",
+    "en": "Ask the driver where the jeepney goes before you board; signboards are not verified yet.",
+    "fil": "Itanong sa driver kung saan papunta ang jeep bago sumakay; hindi pa kumpirmado ang mga signboard.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tips.p3",
+    "en": "Keep valuables in front of you in crowded vehicles.",
+    "fil": "Itago sa harap mo ang mahahalagang gamit kapag siksikan sa sasakyan.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tips.p4",
+    "en": "Note the plate or body number if something feels wrong.",
+    "fil": "Tandaan ang plate o body number kung parang may mali.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.tips.p5",
+    "en": "Share your trip summary with someone you trust.",
+    "fil": "Ibahagi ang buod ng biyahe mo sa taong pinagkakatiwalaan mo.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.reportPrivately",
+    "en": "Report a driver privately in ParaNaga",
+    "fil": "I-report nang pribado ang driver sa ParaNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.reportMyNaga",
+    "en": "Report a driver to the City in MyNaga",
+    "fil": "I-report ang driver sa Lungsod gamit ang MyNaga",
+    "review": true,
+    "note": "'to the City' rendered 'sa Lungsod gamit ang MyNaga'; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.badgesTitle",
+    "en": "What the badges mean",
+    "fil": "Ano ang ibig sabihin ng mga badge",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.badges.verified",
+    "en": "Checked in the field. Nothing in Naga yet.",
+    "fil": "Nasuri sa mismong lugar. Wala pa nito sa Naga.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.badges.candidate",
+    "en": "From a public map, not checked.",
+    "fil": "Mula sa pampublikong mapa, hindi pa nasusuri.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.badges.documented",
+    "en": "Named in documents; no mapped location.",
+    "fil": "Nakapangalan sa mga dokumento; walang lokasyon sa mapa.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.badges.unverified-route",
+    "en": "Built from mapped pins. Confirm with the driver.",
+    "fil": "Binuo mula sa mga pin sa mapa. Itanong sa driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.badges.approximate-path",
+    "en": "Traced along roads between pins. Not a surveyed shape.",
+    "fil": "Iginuhit sa mga kalsada sa pagitan ng mga pin. Hindi sinukat sa mismong lugar.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.dataGroup",
+    "en": "Data",
+    "fil": "Data",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.sourcesLink",
+    "en": "Sources and credits",
+    "fil": "Mga source at pasasalamat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.dataFooter",
+    "en": "ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.",
+    "fil": "Hindi sinusubaybayan ng ParaNaga ang mga sasakyan, kaya hindi nito masasabi kung kailan may dadaan. Gumagana lang ang mga paalala sa hintuan habang bukas ang ParaNaga sa screen mo.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.unknownPublishedDate",
+    "en": "the last time this phone was online",
+    "fil": "huling beses na nag-online ang phone na ito",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.noTimeModel",
+    "en": "The time-estimate model is not on this phone yet. Open ParaNaga with a connection once to load it.",
+    "fil": "Wala pa sa phone na ito ang modelo ng tantiya ng oras. Buksan ang ParaNaga nang may koneksyon kahit isang beses para ma-load ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.assumption",
+    "en": "Assumption {0}",
+    "fil": "Palagay {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.etaWaitingNote",
+    "en": "Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.",
+    "fil": "Saklaw lang ang mga oras. Hindi kasama ang paghihintay, dahil walang nakalathalang iskedyul ng jeep sa Naga.",
+    "note": "'Times are ranges' rendered 'Saklaw lang ang mga oras'; matches eta wording (tantiya, saklaw).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.title",
+    "en": "How trips are planned",
+    "fil": "Paano pinaplano ang biyahe",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.intro",
+    "en": "ParaNaga suggests jeepney trips along mapped routes. Paths come from ordinances and public maps, not a field survey, so every suggestion carries the badge “{0}”.",
+    "fil": "Nagmumungkahi ang ParaNaga ng biyahe sa jeep sa mga rutang nasa mapa. Galing sa mga ordinansa at pampublikong mapa ang mga daan, hindi sa pagsusuri sa mismong lugar, kaya may badge na “{0}” ang bawat mungkahi.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p1",
+    "en": "You can get on and off anywhere along a route. With no stop pin it shows the nearest point and says “Tell the driver ‘para’ · stop not marked”.",
+    "fil": "Puwede kang sumakay at bumaba kahit saan sa ruta. Kung walang pin ng hintuan, ipinapakita nito ang pinakamalapit na punto at sinasabing “Sabihin sa driver ang ‘para’ · walang markang hintuan”.",
+    "note": "Quotes trip.paraFree in Filipino.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p2",
+    "en": "Distances follow roads in the on-device street map (OpenStreetMap). Walks to and from a route can be up to 500 m straight-line and 750 m along streets.",
+    "fil": "Sumusunod sa mga kalsada sa street map na nasa phone mo (OpenStreetMap) ang mga layo. Hanggang 500 m nang diretso at 750 m sa kalye ang lakad papunta at mula sa ruta.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p3",
+    "en": "Walking is recommended only under 500 m with no jeepney near your destination. From 500 m a tricycle follows the jeepney options, marked Recommended; a padyak option appears where an area covers both ends.",
+    "fil": "Inirerekomenda lang ang paglalakad kung wala pang 500 m at walang jeep na malapit sa pupuntahan mo. Mula 500 m, may tricycle kasunod ng mga opsyon sa jeep (na may markang Inirerekomenda); may opsyong padyak kung sakop ng isang lugar ang dalawang dulo.",
+    "review": true,
+    "note": "Kept the English structure: the parenthesis marks the jeepney options Recommended (owner rule: cheapest jeepney is Recommended from 500 m). Native speaker to confirm it cannot read as the tricycle being Recommended.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p4",
+    "en": "A ride is only suggested if it saves walking.",
+    "fil": "Imumungkahi lang ang pagsakay kung makakabawas ito ng lakad.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p5",
+    "en": "Tricycle options avoid the restricted roads we could locate (Ordinance 2006-005/015). Confirm with the driver.",
+    "fil": "Iniiwasan ng mga opsyon sa tricycle ang mga bawal na daan na natukoy namin (Ordinance 2006-005/015). Kumpirmahin sa driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p6",
+    "en": "Far areas (Cararayan and San Isidro, Pacol, Carolina and Panicuason): riders report that tricycles there run inside their own zone, and a trip to or from the city centre is a special trip with a fare that is not fixed. So we send you to the jeepney terminal and suggest no tricycle. This is a local report, not an ordinance.",
+    "fil": "Malalayong lugar (Cararayan at San Isidro, Pacol, Carolina at Panicuason): ayon sa mga pasahero, sa loob lang ng sarili nilang zone bumibiyahe ang mga tricycle doon, at special trip ang biyahe papunta o mula sa sentro ng lungsod, na hindi tiyak ang pasahe. Kaya itinuturo ka namin sa terminal ng jeep at hindi kami nagmumungkahi ng tricycle. Lokal na ulat ito, hindi ordinansa.",
+    "note": "Quotes trip.tricycleThenJeep ('Tricycle, tapos Jeep') and trip.fareFrom ('Mula').",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p7",
+    "en": "If the nearest jeepney is over 600 m of walking from you, an extra option “Tricycle, then Jeep R6” (or the route that serves the area) takes a tricycle to the jeepney’s loading point first. Its fare reads “From”: the jeepney estimate plus the ₱15 tricycle minimum. Tricycle time is not estimated.",
+    "fil": "Kung lampas 600 m ang lakad mo papunta sa pinakamalapit na jeep, may dagdag na opsyong “Tricycle, tapos Jeep R6” (o ang rutang dumadaan sa lugar) na sasakay muna ng tricycle papunta sa sakayan ng jeep. “Mula” ang nakasulat sa pasahe nito: ang tantiyang pasahe sa jeep dagdag ang ₱15 na minimum sa tricycle. Hindi tinatantiya ang oras ng tricycle.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p8",
+    "en": "A special-trip tricycle (fare not fixed) appears when you start within 300 m of a tricycle terminal that serves the area, and as the only tricycle card when no jeepney can be reached. It is never Recommended. Agree the fare with the driver.",
+    "fil": "Lumalabas ang special-trip na tricycle (di tiyak ang pasahe) kapag nagsimula ka sa loob ng 300 m mula sa terminal ng tricycle na sakop ang lugar, at bilang nag-iisang card ng tricycle kapag walang jeep na maaabot. Hindi ito kailanman Inirerekomenda. Pagkasunduan ang pasahe sa driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p9",
+    "en": "Centro to Del Rosario has several routes by different roads: R2 via Magsaysay, R3 via Roxas (Diversion) and R4 via Panganiban. Each shows its road. Locals may call R2 “Francia” (unconfirmed).",
+    "fil": "Maraming ruta mula Centro papunta sa Del Rosario sa magkakaibang daan: R2 via Magsaysay, R3 via Roxas (Diversion) at R4 via Panganiban. Ipinapakita ng bawat isa ang daan nito. Baka “Francia” ang tawag ng mga taga-rito sa R2 (di pa kumpirmado).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p10",
+    "en": "Naga licenses tricycles by colour zone, and no city list of TODAs exists. Zone tricycles shuttle between their centro and a junction. TODA terminals at Ateneo or at jeepney terminals are owner reports we could not confirm.",
+    "fil": "Kulay ng zone ang batayan ng Naga sa paglilisensya ng tricycle, at walang listahan ng mga TODA ang lungsod. Pabalik-balik ang mga zone tricycle sa pagitan ng kanilang centro at isang kanto. Ulat ng may-ari ng proyekto ang mga terminal ng TODA sa Ateneo o sa mga terminal ng jeep, at hindi pa namin ito makumpirma.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p11",
+    "en": "Times are ranges from typical speeds and do not include waiting, because jeepneys have no published schedules. Tricycle and padyak show no minutes.",
+    "fil": "Saklaw ng oras ang ipinapakita, batay sa karaniwang bilis, at hindi kasama ang paghihintay, dahil walang nakalathalang iskedyul ang mga jeep. Walang minuto para sa tricycle at padyak.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.planned.body.p12",
+    "en": "Fares are estimates; discounts are not applied, except a padyak option's named discounted fare.",
+    "fil": "Tantiya lang ang mga pasahe; hindi ibinabawas ang mga diskwento, maliban sa nakapangalang may-diskwentong pasahe ng opsyong padyak.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.stops.title",
+    "en": "Why stops are not verified yet",
+    "fil": "Bakit hindi pa kumpirmado ang mga hintuan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.stops.body.p1",
+    "en": "Stops come from a public map. Nobody has checked boarding sides, signs or whether boarding is allowed.",
+    "fil": "Galing sa isang pampublikong mapa ang mga hintuan. Wala pang nakasuri kung saang gilid sumasakay, ang mga karatula, o kung pinapayagan ang pagsakay doon.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.stops.body.p2",
+    "en": "Until a reviewer attaches field evidence, stops stay “Mapped candidate”. Loops C and D are shown as pins only, because their stop order is unknown.",
+    "fil": "Hangga't walang reviewer na naglalakip ng ebidensya mula sa mismong lugar, mananatiling “Di pa kumpirmado” ang mga hintuan. Pin lang ang ipinapakita para sa Loops C at D, dahil hindi alam ang pagkakasunod-sunod ng mga hintuan nila.",
+    "note": "Quotes the Filipino badge 'Di pa kumpirmado' (kit.badges.candidate), as the English quotes its badge.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.offline.title",
+    "en": "Using ParaNaga offline",
+    "fil": "Paggamit ng ParaNaga nang offline",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.offline.body.p1",
+    "en": "After you open ParaNaga once with a connection, the app and the transport data work offline. Saved trips open as text even when the map background can't load.",
+    "fil": "Kapag nabuksan mo na ang ParaNaga nang isang beses na may koneksyon, gagana nang offline ang app at ang data ng transportasyon. Nabubuksan bilang teksto ang mga naka-save na biyahe kahit hindi ma-load ang background ng mapa.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.offline.dated",
+    "en": "Planning offline uses the data from {0}; fares may have changed. Location works offline if your phone has GPS.",
+    "fil": "Ginagamit ng pagpaplano nang offline ang data mula sa {0}; baka nagbago na ang mga pasahe. Gumagana ang lokasyon nang offline kung may GPS ang phone mo.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.times.title",
+    "en": "How times are estimated",
+    "fil": "Paano tinatantiya ang oras",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.title",
+    "en": "Vehicle types in Naga",
+    "fil": "Mga uri ng sasakyan sa Naga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.body.p1",
+    "en": "Traditional jeepney: ₱14 first 4 km + ₱2.00/km. Traditional jeepneys run on every route group (R1–R8).",
+    "fil": "Traditional na jeep: ₱14 sa unang 4 km + ₱2.00/km. May traditional na jeep sa bawat grupo ng ruta (R1–R8).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.body.p2",
+    "en": "Modern jeepney: ₱17 + ₱2.40/km. Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason) alongside traditional jeepneys. No other route is shown with modern units.",
+    "fil": "Modern na jeep: ₱17 + ₱2.40/km. May de-aircon na modern jeep sa R4 (Centro–Del Rosario via Panganiban) at R7 (Centro–Carolina–Panicuason), kasabay ng mga traditional na jeep. Walang ibang rutang ipinapakitang may modern na unit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.body.p3",
+    "en": "Tricycle and e-tricycle: ₱15 minimum (Ordinance 2024-002); discounts exist for students, seniors, PWD and solo parents but eligibility is not verified, so ParaNaga does not apply them; e-trikes need a franchise.",
+    "fil": "Tricycle at e-tricycle: ₱15 ang minimum (Ordinance 2024-002); may diskwento para sa estudyante, senior, PWD at solo parent pero hindi pa kumpirmado kung sino ang kwalipikado, kaya hindi ito ibinabawas ng ParaNaga; kailangan ng prangkisa ang mga e-trike.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.body.p4",
+    "en": "Tricycle restrictions: franchised tricycles may not use four national-road portions, except 9 pm to 5 am and at named crossings (Ordinance 2006-005/015, sources T01 and T02; check for updates). Tricycle options avoid the restricted roads we could locate; roads we could not locate are not applied, so confirm with the driver.",
+    "fil": "Mga limitasyon sa tricycle: hindi puwedeng dumaan ang mga tricycle na may prangkisa sa apat na bahagi ng national road, maliban mula 9 pm hanggang 5 am at sa mga nakapangalang tawiran (Ordinance 2006-005/015, sources T01 at T02; tingnan kung may update). Iniiwasan ng mga opsyon sa tricycle ang mga bawal na daan na natukoy namin; hindi isinasama ang mga daang hindi namin matukoy, kaya kumpirmahin sa driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.body.p5",
+    "en": "E-trike national-road rules reported in news (Dec 2025) are not applied; unverified. Special VISTODA units may not enter Tecla San Andres–Ziga Rd (Ord 2025-067).",
+    "fil": "Hindi isinasama ang mga patakaran sa e-trike sa national road na iniulat sa balita (Dis 2025); hindi pa kumpirmado. Hindi puwedeng pumasok ang mga special na unit ng VISTODA sa Tecla San Andres–Ziga Rd (Ord 2025-067).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.body.p6",
+    "en": "Padyak (pedicab): ₱10 per passenger, ₱8 with an ID discount (city fare set Sep 2022), up to 2 passengers; confirm with the driver. A padyak option appears only when your start and destination are in the same documented padyak area, and padyaks do not use banned streets.",
+    "fil": "Padyak (pedicab): ₱10 bawat pasahero, ₱8 kapag may ID na pang-diskwento (pasaheng itinakda ng lungsod noong Set 2022), hanggang 2 pasahero; kumpirmahin sa driver. Lumalabas lang ang opsyong padyak kapag nasa iisang nakatalang lugar ng padyak ang simula at pupuntahan mo, at hindi dumadaan ang mga padyak sa mga bawal na kalye.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.body.p7",
+    "en": "Jeepney service hours: jeepneys usually run about 5:00 to 21:00, unconfirmed; some start earlier. Sunday and holiday service not confirmed. There is no official timetable, so no option is hidden because of the hour.",
+    "fil": "Oras ng biyahe ng jeep: karaniwang mga 5:00 hanggang 21:00 ang biyahe ng jeep, di pa kumpirmado; may mga mas maagang nagsisimula. Hindi pa kumpirmado ang biyahe tuwing Linggo at holiday. Walang nakalathalang timetable, kaya walang opsyong itinatago dahil sa oras.",
+    "note": "'no official timetable' rendered 'Walang nakalathalang timetable' ('opisyal' is banned).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "help.articles.vehicles.body.p8",
+    "en": "UV Express and bus: regional; per-km rates; see terminals.",
+    "fil": "UV Express at bus: pang-rehiyon; may singil bawat km; tingnan ang mga terminal.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.panelTitle",
+    "en": "Sources",
+    "fil": "Mga source",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.title",
+    "en": "Sources and credits",
+    "fil": "Mga source at pasasalamat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.revisionGroup",
+    "en": "Data revision",
+    "fil": "Bersyon ng data",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.dataBasisTitle",
+    "en": "Data basis",
+    "fil": "Batayan ng data",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.fareBasisTitle",
+    "en": "How fares are estimated",
+    "fil": "Paano tinatantiya ang pasahe",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.timeBasisTitle",
+    "en": "How times are estimated",
+    "fil": "Paano tinatantiya ang oras",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.timeBasisLink",
+    "en": "How times are estimated",
+    "fil": "Paano tinatantiya ang oras",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.loading",
+    "en": "Loading sources",
+    "fil": "Nilo-load ang mga source",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.registerTitle",
+    "en": "Source register",
+    "fil": "Talaan ng mga source",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.openSource",
+    "en": "Open source",
+    "fil": "Buksan ang source",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.openSourceLabel",
+    "en": "Open source {0} (opens in a new tab)",
+    "fil": "Buksan ang source {0} (magbubukas sa bagong tab)",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.unavailable",
+    "en": "The current revision’s source list is unavailable. Bundled photo credits and research notes remain available below.",
+    "fil": "Hindi available ang listahan ng source ng kasalukuyang bersyon. Makikita pa rin sa ibaba ang mga kasamang pasasalamat sa larawan at mga tala ng pananaliksik.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.railSources",
+    "en": "Sources",
+    "fil": "Mga source",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.dataBasis",
+    "en": "Stops come from a public My Maps snapshot (retrieved {0}). Nobody has checked boarding sides, signs or whether boarding is allowed. Ride paths are traced along OpenStreetMap roads between pins; walk paths follow mapped walkable streets or straight-line estimates (× 1.3).",
+    "fil": "Stops come from a public My Maps snapshot (retrieved {0}). Nobody has checked boarding sides, signs or whether boarding is allowed. Ride paths are traced along OpenStreetMap roads between pins; walk paths follow mapped walkable streets or straight-line estimates (× 1.3).",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.dateNotRecorded",
+    "en": "date not recorded",
+    "fil": "date not recorded",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.fleetBasis",
+    "en": "Fleet: the project owner confirmed on 16 Oct 2026 (U01) that traditional jeepneys run on every route group (R1–R8) and modern jeepneys on R4 and R7. This confirms service, not stop locations, stop order or paths.",
+    "fil": "Fleet: the project owner confirmed on 16 Oct 2026 (U01) that traditional jeepneys run on every route group (R1–R8) and modern jeepneys on R4 and R7. This confirms service, not stop locations, stop order or paths.",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.fareBasis",
+    "en": "Fares are estimates from reported fare rules; the fare matrix is not verified. Where a route runs both traditional and modern jeepneys, the range spans both. Discounts are not applied. National per-km rates of 28 Sep 2026. The tricycle minimum fare of ₱15 follows Ordinance 2024-002.",
+    "fil": "Fares are estimates from reported fare rules; the fare matrix is not verified. Where a route runs both traditional and modern jeepneys, the range spans both. Discounts are not applied. National per-km rates of 28 Sep 2026. The tricycle minimum fare of ₱15 follows Ordinance 2024-002.",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.farBasis",
+    "en": "Far areas: riders’ reports (U03, unconfirmed) say tricycles there charge special trips, that a Balatas to Cararayan tricycle terminal exists, and which roads Del Rosario jeepneys use. Tricycle zones and routes follow ordinances RT25–RT32. TODA terminals at Ateneo or at jeepney terminals are unconfirmed.",
+    "fil": "Far areas: riders’ reports (U03, unconfirmed) say tricycles there charge special trips, that a Balatas to Cararayan tricycle terminal exists, and which roads Del Rosario jeepneys use. Tricycle zones and routes follow ordinances RT25–RT32. TODA terminals at Ateneo or at jeepney terminals are unconfirmed.",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.timeBasis",
+    "en": "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are ParaNaga assumptions.",
+    "fil": "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are ParaNaga assumptions.",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.corrections",
+    "en": "Corrections and verification aren’t open yet.",
+    "fil": "Corrections and verification aren’t open yet.",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.mapOwner",
+    "en": "Naga City Designated Stops — shared publicly by Tan Gumba",
+    "fil": "Naga City Designated Stops — shared publicly by Tan Gumba",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.citedBy",
+    "en": "Cited by the published data revision {0}",
+    "fil": "Cited by the published data revision {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.published",
+    "en": ", published {0}",
+    "fil": ", published {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.publisherNotRecorded",
+    "en": "Publisher not recorded",
+    "fil": "Publisher not recorded",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.rightsNotRecorded",
+    "en": "Reuse rights not recorded",
+    "fil": "Reuse rights not recorded",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.notLinked",
+    "en": "Address on file, not offered as a link (it downloads a file or carries extra parameters)",
+    "fil": "Address on file, not offered as a link (it downloads a file or carries extra parameters)",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "sources.verbatim.noAddress",
+    "en": "No public address on file",
+    "fil": "No public address on file",
+    "review": true,
+    "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.title",
+    "en": "Report a correction",
+    "fil": "Mag-ulat ng pagwawasto",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.link",
+    "en": "Report a correction",
+    "fil": "Mag-ulat ng pagwawasto",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.steps.what",
+    "en": "What's wrong",
+    "fil": "Ano ang mali",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.steps.saw",
+    "en": "Tell us what you saw",
+    "fil": "Ikuwento ang nakita mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.steps.review",
+    "en": "Review and send",
+    "fil": "Suriin at ipadala",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.pickClosest",
+    "en": "Pick the closest match",
+    "fil": "Piliin ang pinakamalapit",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.whatIsWrong",
+    "en": "What is wrong",
+    "fil": "Ano ang mali",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.whatAbout",
+    "en": "What is it about?",
+    "fil": "Tungkol saan ito?",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.chooseOne",
+    "en": "Choose one",
+    "fil": "Pumili ng isa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.nameOrCode",
+    "en": "Name or code",
+    "fil": "Pangalan o code",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.problem",
+    "en": "Problem: {0}",
+    "fil": "Problema: {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.whatDidYouSee",
+    "en": "What did you see?",
+    "fil": "Ano ang nakita mo?",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.whereOptional",
+    "en": "Where you saw it (optional)",
+    "fil": "Saan mo ito nakita (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.addLocation",
+    "en": "Add my location",
+    "fil": "Idagdag ang lokasyon ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.outsideNaga",
+    "en": "This spot is outside Naga City, so it was not added.",
+    "fil": "Nasa labas ng Naga City ang puwestong ito, kaya hindi ito idinagdag.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.locationOff",
+    "en": "Location is off for ParaNaga. You can still send the report without it.",
+    "fil": "Naka-off ang lokasyon para sa ParaNaga. Puwede mo pa ring ipadala ang ulat nang wala ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.locationFailed",
+    "en": "Your location could not be found. You can still send the report without it.",
+    "fil": "Hindi mahanap ang lokasyon mo. Puwede mo pa ring ipadala ang ulat nang wala ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.photosOptional",
+    "en": "Photos (optional)",
+    "fil": "Mga larawan (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.removePhoto",
+    "en": "Remove photo {0}",
+    "fil": "Alisin ang larawang {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.uploading",
+    "en": "Uploading…",
+    "fil": "Ina-upload…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.addPhoto",
+    "en": "Add a photo",
+    "fil": "Magdagdag ng larawan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.signInPhotos",
+    "en": "Sign in to attach photos.",
+    "fil": "Mag-sign in para makapaglakip ng larawan.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.photosHint",
+    "en": "Up to {0} photos. Location data is removed from photos.",
+    "fil": "Hanggang {0} larawan. Inaalis ang data ng lokasyon sa mga larawan.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Privacy/data-handling text: meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.summary.whatsWrong",
+    "en": "What's wrong",
+    "fil": "Ano ang mali",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.summary.about",
+    "en": "About",
+    "fil": "Tungkol sa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.summary.whatYouSaw",
+    "en": "What you saw",
+    "fil": "Ang nakita mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.summary.location",
+    "en": "Location",
+    "fil": "Lokasyon",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.summary.photos",
+    "en": "Photos",
+    "fil": "Mga larawan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.locationSummary",
+    "en": "Added, about {0} m",
+    "fil": "Idinagdag, mga {0} m",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.signInToSend",
+    "en": "Sign in to send this report. An account is only needed to send; everything else works as a guest.",
+    "fil": "Mag-sign in para maipadala ang ulat na ito. Sa pagpapadala lang kailangan ng account; gumagana ang lahat ng iba pa kahit guest ka.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.send",
+    "en": "Send report",
+    "fil": "Ipadala ang ulat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.chooseEntity",
+    "en": "Choose what this is about.",
+    "fil": "Piliin kung tungkol saan ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.sayWhich",
+    "en": "Say which stop, route, fare or trip this is about.",
+    "fil": "Sabihin kung aling hintuan, ruta, pasahe o biyahe ang tinutukoy.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.tickBox",
+    "en": "Tick the box to confirm you have read how reports are checked.",
+    "fil": "I-tsek ang kahon para kumpirmahing nabasa mo kung paano sinusuri ang mga ulat.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.sentTitle",
+    "en": "Report sent",
+    "fil": "Naipadala ang ulat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.sentBody",
+    "en": "A person will review it. Nothing on the map, routes or fares changes until that review is done and the data is republished.",
+    "fil": "May taong susuri nito. Walang magbabago sa mapa, ruta o pasahe hangga't hindi tapos ang pagsusuri at hindi pa nailalathala ulit ang data.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.entity.stop",
+    "en": "Stop",
+    "fil": "Hintuan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.entity.route",
+    "en": "Route",
+    "fil": "Ruta",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.entity.fare",
+    "en": "Fare",
+    "fil": "Pasahe",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.entity.trip",
+    "en": "Trip",
+    "fil": "Biyahe",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.wrong_curb_side.label",
+    "en": "Wrong curb side",
+    "fil": "Maling gilid ng kalsada",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.wrong_curb_side.hint",
+    "en": "The stop is on the other side of the road.",
+    "fil": "Nasa kabilang gilid ng kalsada ang hintuan.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.stop_moved_removed.label",
+    "en": "Stop moved or removed",
+    "fil": "Nalipat o inalis ang hintuan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.stop_moved_removed.hint",
+    "en": "The stop is somewhere else now, or gone.",
+    "fil": "Nasa ibang lugar na ang hintuan, o wala na.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.route_not_stopping.label",
+    "en": "Route doesn't stop here",
+    "fil": "Hindi humihinto rito ang ruta",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.route_not_stopping.hint",
+    "en": "A listed route does not serve this stop.",
+    "fil": "Hindi dumadaan sa hintuang ito ang isang nakalistang ruta.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.route_deviation.label",
+    "en": "Route goes a different way",
+    "fil": "Iba ang dinadaanan ng ruta",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.route_deviation.hint",
+    "en": "The street path differs from what is shown.",
+    "fil": "Iba ang daan sa kalye kaysa sa ipinapakita.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.fare_mismatch.label",
+    "en": "Fare mismatch",
+    "fil": "Hindi tugma ang pasahe",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.fare_mismatch.hint",
+    "en": "What you paid differs from the estimated range.",
+    "fil": "Iba ang ibinayad mo kaysa sa tantiyang saklaw.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.hours_service.label",
+    "en": "Hours or service",
+    "fil": "Oras o biyahe",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.hours_service.hint",
+    "en": "The route is not running when it should.",
+    "fil": "Walang biyahe ang ruta sa oras na dapat mayroon.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.crossing_access.label",
+    "en": "Crossing or access problem",
+    "fil": "Problema sa tawiran o daanan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.crossing_access.hint",
+    "en": "Hard to reach the stop, or unsafe to cross.",
+    "fil": "Mahirap puntahan ang hintuan, o delikadong tumawid.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.other_trip.label",
+    "en": "Other trip problem",
+    "fil": "Ibang problema sa biyahe",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.other_trip.hint",
+    "en": "Something about this trip is off.",
+    "fil": "May mali sa biyaheng ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.other.label",
+    "en": "Something else",
+    "fil": "Iba pa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.categories.other.hint",
+    "en": "Anything that does not fit above.",
+    "fil": "Anumang hindi bagay sa mga nasa itaas.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.draft",
+    "en": "Draft",
+    "fil": "Draft",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.submitted",
+    "en": "Received",
+    "fil": "Natanggap",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.under_review",
+    "en": "Being reviewed",
+    "fil": "Sinusuri",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.needs_evidence",
+    "en": "Needs more detail",
+    "fil": "Kailangan ng dagdag na detalye",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.accepted",
+    "en": "Accepted",
+    "fil": "Tinanggap",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.rejected",
+    "en": "Not accepted",
+    "fil": "Hindi tinanggap",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.duplicate",
+    "en": "Already reported",
+    "fil": "Naiulat na",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.incorporated",
+    "en": "Added to the data",
+    "fil": "Naidagdag sa data",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.statuses.superseded",
+    "en": "Replaced by newer data",
+    "fil": "Napalitan ng mas bagong data",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.chooseWrong",
+    "en": "Choose what is wrong.",
+    "fil": "Piliin kung ano ang mali.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.disclosure.title",
+    "en": "How your report is checked",
+    "fil": "Paano sinusuri ang ulat mo",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. AI-processing disclosure (spec 05 §5.8): text goes to Jev, may be processed outside the Philippines; accepted version is recorded.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.disclosure.points.p1",
+    "en": "The text you write is sent to an AI service called Jev to help sort reports before a person reads them. That service may process text outside the Philippines.",
+    "fil": "Ipinapadala ang isinulat mo sa isang AI service na tinatawag na Jev para tumulong sa pag-aayos ng mga ulat bago ito basahin ng isang tao. Maaaring iproseso ng service na iyon ang teksto sa labas ng Pilipinas.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. AI-processing disclosure (spec 05 §5.8): text goes to Jev, may be processed outside the Philippines; accepted version is recorded.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.disclosure.points.p2",
+    "en": "Emails, phone numbers and plate-like codes are hidden before sending. Photos are never sent.",
+    "fil": "Itinatago ang mga email, numero ng telepono at mga code na mukhang plate number bago ipadala. Hindi kailanman ipinapadala ang mga larawan.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. AI-processing disclosure (spec 05 §5.8): text goes to Jev, may be processed outside the Philippines; accepted version is recorded.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.disclosure.points.p3",
+    "en": "A person makes the final decision. Your report does not change the map or any route until it has been reviewed.",
+    "fil": "Isang tao ang gagawa ng huling desisyon. Hindi binabago ng ulat mo ang mapa o anumang ruta hangga't hindi ito nasusuri.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. AI-processing disclosure (spec 05 §5.8): text goes to Jev, may be processed outside the Philippines; accepted version is recorded.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.disclosure.checkbox",
+    "en": "I understand how my report is checked.",
+    "fil": "Naiintindihan ko kung paano sinusuri ang ulat ko.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. AI-processing disclosure (spec 05 §5.8): text goes to Jev, may be processed outside the Philippines; accepted version is recorded.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.api.signedOut",
+    "en": "Sign in to send a report.",
+    "fil": "Mag-sign in para makapagpadala ng ulat.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.api.rateLimited",
+    "en": "You are sending reports too quickly. Wait a moment, then try again.",
+    "fil": "Masyadong mabilis ang pagpapadala mo ng ulat. Maghintay sandali, saka subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.api.invalid",
+    "en": "Check the report and try again.",
+    "fil": "Suriin ang ulat at subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.api.failed",
+    "en": "Could not send the report. Your answers are kept. Try again.",
+    "fil": "Hindi naipadala ang ulat. Nakatabi pa ang mga sagot mo. Subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.api.offline",
+    "en": "No connection. Your answers are kept. Try again.",
+    "fil": "Walang koneksyon. Nakatabi pa ang mga sagot mo. Subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.api.uploadFailed",
+    "en": "The photo could not be uploaded. You can send the report without it.",
+    "fil": "Hindi na-upload ang larawan. Puwede mong ipadala ang ulat nang wala ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.api.photoType",
+    "en": "Use a JPEG, PNG or WebP photo.",
+    "fil": "Gumamit ng larawang JPEG, PNG o WebP.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "report.api.photoRejected",
+    "en": "That photo was not accepted. Try another one.",
+    "fil": "Hindi tinanggap ang larawang iyan. Subukan ang iba.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.title",
+    "en": "Report a driver",
+    "fil": "I-report ang driver",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.steps.start",
+    "en": "Before you start",
+    "fil": "Bago ka magsimula",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.steps.media",
+    "en": "Photo or video",
+    "fil": "Larawan o video",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.steps.what",
+    "en": "What happened",
+    "fil": "Ang nangyari",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.steps.review",
+    "en": "Review and send",
+    "fil": "Suriin at ipadala",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.tooMany",
+    "en": "Up to {0} photos or videos.",
+    "fil": "Hanggang {0} larawan o video.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.outsideNaga",
+    "en": "This spot is outside Naga City, so it was not added. You can describe the place instead.",
+    "fil": "Nasa labas ng Naga City ang puwestong ito, kaya hindi ito idinagdag. Puwede mong ilarawan na lang ang lugar.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.locationOff",
+    "en": "Location is off for ParaNaga. You can describe the place instead.",
+    "fil": "Naka-off ang lokasyon para sa ParaNaga. Puwede mong ilarawan na lang ang lugar.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.locationFailed",
+    "en": "Your location could not be found. You can describe the place instead.",
+    "fil": "Hindi mahanap ang lokasyon mo. Puwede mong ilarawan na lang ang lugar.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.plateName",
+    "en": "Plate number",
+    "fil": "Numero ng plaka",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.bodyName",
+    "en": "Body number",
+    "fil": "Body number",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.tickBox",
+    "en": "Tick the box to confirm you have read the note above.",
+    "fil": "I-tsek ang kahon para kumpirmahing nabasa mo ang paalala sa itaas.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.uploadingN",
+    "en": "Uploading {0} of {1}…",
+    "fil": "Ina-upload ang {0} sa {1}…",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.sentTitle",
+    "en": "Report sent privately",
+    "fil": "Pribadong naipadala ang ulat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.yourReference",
+    "en": "Your reference",
+    "fil": "Ang reference mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.nextTitle",
+    "en": "What happens next",
+    "fil": "Ano ang susunod",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.nextSteps.p1",
+    "en": "A reviewer checks that the report is complete. You may be asked for more information.",
+    "fil": "Titingnan ng isang reviewer kung kumpleto ang ulat. Baka hingan ka ng dagdag na impormasyon.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.nextSteps.p2",
+    "en": "ParaNaga does not decide who is at fault and does not contact the driver.",
+    "fil": "Hindi nagpapasya ang ParaNaga kung sino ang may kasalanan at hindi nito kinokontak ang driver.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.nextSteps.p3",
+    "en": "To make an official complaint, continue in MyNaga. Opening MyNaga does not submit your report.",
+    "fil": "Para makapagsampa ng pormal na reklamo, ituloy sa MyNaga. Hindi naisusumite ang ulat mo sa pagbukas lang ng MyNaga.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. 'official complaint' rendered 'pormal na reklamo' ('opisyal' is a banned word).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.continueMyNaga",
+    "en": "Continue in MyNaga",
+    "fil": "Ituloy sa MyNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.explainer.p1",
+    "en": "Your report stays private inside ParaNaga. It is never posted in Community and never shown to other commuters.",
+    "fil": "Pribado ang ulat mo sa loob ng ParaNaga. Hindi ito kailanman ipo-post sa Komunidad at hindi ipapakita sa ibang commuter.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.explainer.p2",
+    "en": "ParaNaga does not send it to Naga City or any agency. After you send it, you can choose to continue in MyNaga yourself.",
+    "fil": "Hindi ito ipinapadala ng ParaNaga sa Naga City o sa anumang ahensya. Pagkapadala mo, ikaw ang magpapasya kung itutuloy mo ito sa MyNaga.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.explainer.p3",
+    "en": "A ParaNaga reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer.",
+    "fil": "Babasahin ito ng isang reviewer ng ParaNaga. Nasa pribadong storage ang mga larawan at video, at ikaw at ang reviewer na iyon lang ang makakakita.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.explainer.p4",
+    "en": "Stick to what you saw. Avoid filming faces of other passengers where you can.",
+    "fil": "Manatili sa nakita mo. Hangga't kaya, iwasang makunan ang mukha ng ibang pasahero.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.sharedPhone",
+    "en": "Nothing is saved on this phone. If you leave this screen before sending, your answers and photos are cleared.",
+    "fil": "Walang nase-save sa phone na ito. Kapag umalis ka sa screen na ito bago magpadala, mabubura ang mga sagot at larawan mo.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.signInToSend",
+    "en": "Sign in to send a private report. The account keeps the report linked to you so only you can see it.",
+    "fil": "Mag-sign in para makapagpadala ng pribadong ulat. Naka-link sa iyo ang ulat sa pamamagitan ng account kaya ikaw lang ang makakakita nito.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.kindLegend",
+    "en": "What kind of problem was it?",
+    "fil": "Anong klaseng problema ito?",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.whatHappened",
+    "en": "What happened?",
+    "fil": "Ano ang nangyari?",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.whatHint",
+    "en": "Describe what you saw and heard, in order. Facts help more than opinions.",
+    "fil": "Ilarawan nang sunod-sunod ang nakita at narinig mo. Mas nakakatulong ang mga totoong pangyayari kaysa sa opinyon.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.whenLabel",
+    "en": "When did it happen?",
+    "fil": "Kailan ito nangyari?",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.whenHint",
+    "en": "The time of the incident, not when a photo was taken.",
+    "fil": "Ang oras ng pangyayari, hindi kung kailan kinunan ang larawan.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.whereOptional",
+    "en": "Where did it happen? (optional)",
+    "fil": "Saan ito nangyari? (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.useLocation",
+    "en": "Use my location",
+    "fil": "Gamitin ang lokasyon ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.describePlace",
+    "en": "Or describe the place",
+    "fil": "O ilarawan ang lugar",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.operatorOptional",
+    "en": "Operator or cooperative (optional)",
+    "fil": "Operator o kooperatiba (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.plateOptional",
+    "en": "Plate number (optional)",
+    "fil": "Numero ng plaka (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.bodyOptional",
+    "en": "Body number (optional)",
+    "fil": "Body number (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.blankHint",
+    "en": "Leave these blank if you did not see them.",
+    "fil": "Iwanang blangko kung hindi mo nakita.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.summary.problem",
+    "en": "Problem",
+    "fil": "Problema",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.summary.whatHappened",
+    "en": "What happened",
+    "fil": "Ang nangyari",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.summary.when",
+    "en": "When",
+    "fil": "Kailan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.summary.where",
+    "en": "Where",
+    "fil": "Saan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.summary.operator",
+    "en": "Operator",
+    "fil": "Operator",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.summary.plate",
+    "en": "Plate",
+    "fil": "Plaka",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.summary.body",
+    "en": "Body number",
+    "fil": "Body number",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.summary.media",
+    "en": "Photos and videos",
+    "fil": "Mga larawan at video",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.locationSummary",
+    "en": "Location added, about {0} m",
+    "fil": "Idinagdag ang lokasyon, mga {0} m",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.reviewerSees",
+    "en": "This is everything the reviewer will see. It is not sent to Naga City.",
+    "fil": "Ito lahat ang makikita ng reviewer. Hindi ito ipinapadala sa Naga City.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.beforeSend",
+    "en": "Before you send",
+    "fil": "Bago ka magpadala",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.ackCheckbox",
+    "en": "I have read this and my report is accurate.",
+    "fil": "Nabasa ko ito at tama ang ulat ko.",
+    "review": true,
+    "note": "Acknowledgement checkbox beside the English acknowledgments.driverReport text; meaning must stay exact.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.continueNoPhoto",
+    "en": "Continue without photo",
+    "fil": "Ituloy nang walang larawan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.sendPrivately",
+    "en": "Send privately",
+    "fil": "Ipadala nang pribado",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.intro",
+    "en": "A photo or short video can help, but it is optional. Your phone asks for camera permission only when you tap Open camera.",
+    "fil": "Makakatulong ang larawan o maikling video, pero hindi ito kailangan. Hihingi lang ng pahintulot sa camera ang phone mo kapag pinindot mo ang Buksan ang camera.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Quotes the button 'Buksan ang camera'.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.capturedLabel",
+    "en": "Captured photos and videos",
+    "fil": "Mga nakuhang larawan at video",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.photoPreview",
+    "en": "Photo {0} preview",
+    "fil": "Preview ng larawan {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.videoPreview",
+    "en": "Video {0} preview",
+    "fil": "Preview ng video {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.retake",
+    "en": "Retake",
+    "fil": "Kunan ulit",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.removePhoto",
+    "en": "Remove photo {0}",
+    "fil": "Alisin ang larawan {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.removeVideo",
+    "en": "Remove video {0}",
+    "fil": "Alisin ang video {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.preview",
+    "en": "Camera preview",
+    "fil": "Preview ng camera",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.takePhoto",
+    "en": "Take photo",
+    "fil": "Kumuha ng larawan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.stopRecording",
+    "en": "Stop recording",
+    "fil": "Itigil ang pag-record",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.recordVideo",
+    "en": "Record video (up to {0} s)",
+    "fil": "Mag-record ng video (hanggang {0} s)",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.closeCamera",
+    "en": "Close camera",
+    "fil": "Isara ang camera",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.recording",
+    "en": "Recording. Tap Stop recording when done.",
+    "fil": "Nagre-record. Pindutin ang Itigil ang pag-record kapag tapos na.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.addAnother",
+    "en": "Add another",
+    "fil": "Magdagdag pa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.openCamera",
+    "en": "Open camera",
+    "fil": "Buksan ang camera",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.denied",
+    "en": "Camera access is off for ParaNaga. You can upload a photo or video instead, or continue without one. To use the camera, allow it in your browser settings.",
+    "fil": "Naka-off ang access sa camera para sa ParaNaga. Puwede kang mag-upload ng larawan o video, o magpatuloy nang wala nito. Para magamit ang camera, payagan ito sa settings ng browser mo.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.unavailable",
+    "en": "The camera could not be opened on this phone. You can upload a photo or video instead, or continue without one.",
+    "fil": "Hindi mabuksan ang camera sa phone na ito. Puwede kang mag-upload ng larawan o video, o magpatuloy nang wala nito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.upload",
+    "en": "Upload a photo or video instead",
+    "fil": "Mag-upload na lang ng larawan o video",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.limits",
+    "en": "Up to {0} photos or videos. Videos up to {1} seconds. Photos taken here carry no location data. Files are kept in private storage.",
+    "fil": "Hanggang {0} larawan o video. Hanggang {1} segundo ang video. Walang data ng lokasyon ang mga larawang kinunan dito. Nasa pribadong storage ang mga file.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.camera.nothingCaptured",
+    "en": "Nothing was captured. Try again.",
+    "fil": "Walang nakuha. Subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.overcharging.label",
+    "en": "Overcharging",
+    "fil": "Sobrang singil",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.overcharging.hint",
+    "en": "Asked for more than the posted or usual fare.",
+    "fil": "Humingi ng higit sa nakapaskil o karaniwang pasahe.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.reckless_driving.label",
+    "en": "Reckless driving",
+    "fil": "Walang-ingat na pagmamaneho",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.reckless_driving.hint",
+    "en": "Driving in a way that felt unsafe.",
+    "fil": "Nagmaneho sa paraang parang delikado.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.discount_refused.label",
+    "en": "Discount refused",
+    "fil": "Hindi ibinigay ang diskwento",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.discount_refused.hint",
+    "en": "A student, senior, PWD or solo parent discount was not given.",
+    "fil": "Hindi ibinigay ang diskwento para sa estudyante, senior, PWD o solo parent.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.harassment.label",
+    "en": "Harassment",
+    "fil": "Pambabastos o panliligalig",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.harassment.hint",
+    "en": "Unwelcome words, gestures or contact.",
+    "fil": "Hindi kanais-nais na salita, kilos o paghawak.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.improper_loading.label",
+    "en": "Improper loading or unloading",
+    "fil": "Maling pagsakay o pagbaba ng pasahero",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.improper_loading.hint",
+    "en": "Picking up or dropping off where it is not safe or allowed.",
+    "fil": "Nagsasakay o nagbababa kung saan hindi ligtas o hindi pinapayagan.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.other.label",
+    "en": "Something else",
+    "fil": "Iba pa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.categories.other.hint",
+    "en": "Anything that does not fit above.",
+    "fil": "Anumang hindi bagay sa mga nasa itaas.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.statuses.submitted",
+    "en": "Received",
+    "fil": "Natanggap",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.statuses.under_review",
+    "en": "Being reviewed",
+    "fil": "Sinusuri",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.statuses.needs_information",
+    "en": "More information needed",
+    "fil": "Kailangan ng dagdag na impormasyon",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.statuses.closed",
+    "en": "Closed",
+    "fil": "Sarado",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.statuses.withdrawn",
+    "en": "Withdrawn",
+    "fil": "Binawi",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.chooseWhat",
+    "en": "Choose what happened.",
+    "fil": "Piliin kung ano ang nangyari.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.enterWhen",
+    "en": "Enter when it happened.",
+    "fil": "Ilagay kung kailan ito nangyari.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.future",
+    "en": "The time cannot be in the future.",
+    "fil": "Hindi puwedeng nasa hinaharap ang oras.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.tooOld",
+    "en": "Reports can cover the last 12 months only.",
+    "fil": "Para lang sa nakaraang 12 buwan ang mga ulat.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.hiddenChars",
+    "en": "Remove the hidden characters from the text.",
+    "fil": "Alisin ang mga nakatagong character sa teksto.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.vehicleId",
+    "en": "{0}: use letters, numbers, spaces or dashes (up to {1}).",
+    "fil": "{0}: gumamit ng letra, numero, espasyo o gitling (hanggang {1}).",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.signedOut",
+    "en": "Sign in to send this report.",
+    "fil": "Mag-sign in para maipadala ang ulat na ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.rateLimited",
+    "en": "You have sent several reports today. Try again tomorrow.",
+    "fil": "Marami ka nang naipadalang ulat ngayong araw. Subukan ulit bukas.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.invalid",
+    "en": "Check the report and try again.",
+    "fil": "Suriin ang ulat at subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.failed",
+    "en": "The report could not be sent. Your answers are kept on this screen. Try again.",
+    "fil": "Hindi naipadala ang ulat. Nakatabi pa ang mga sagot mo sa screen na ito. Subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.offline",
+    "en": "No connection. Your answers are kept on this screen. Try again.",
+    "fil": "Walang koneksyon. Nakatabi pa ang mga sagot mo sa screen na ito. Subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.badType",
+    "en": "Use a JPEG, PNG or WebP photo, or an MP4 or WebM video.",
+    "fil": "Gumamit ng larawang JPEG, PNG o WebP, o video na MP4 o WebM.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.tooLarge",
+    "en": "This file is too large. The limit is {0} MB.",
+    "fil": "Masyadong malaki ang file na ito. Hanggang {0} MB lang.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.uploadFailed",
+    "en": "This file could not be uploaded. Try again, remove it, or send the report without it.",
+    "fil": "Hindi na-upload ang file na ito. Subukan ulit, alisin ito, o ipadala ang ulat nang wala ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "driverReport.api.rejected",
+    "en": "This file was not accepted. Try another one.",
+    "fil": "Hindi tinanggap ang file na ito. Subukan ang iba.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.title",
+    "en": "My reports",
+    "fil": "Mga ulat ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.detailTitle",
+    "en": "Report",
+    "fil": "Ulat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.intro",
+    "en": "Only you can see these. Status shows where each report stands in ParaNaga.",
+    "fil": "Ikaw lang ang nakakakita nito. Ipinapakita ng katayuan kung nasaan na ang bawat ulat sa ParaNaga.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.signInList",
+    "en": "Sign in to see the reports you sent. Reports are linked to your account so only you can see them.",
+    "fil": "Mag-sign in para makita ang mga ulat na ipinadala mo. Naka-link ang mga ulat sa account mo kaya ikaw lang ang nakakakita.",
+    "review": true,
+    "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.loadingList",
+    "en": "Loading your reports…",
+    "fil": "Nilo-load ang mga ulat mo…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.empty",
+    "en": "You have not sent any reports yet.",
+    "fil": "Wala ka pang naipapadalang ulat.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.listLabel",
+    "en": "Your reports",
+    "fil": "Ang mga ulat mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.rowTitle",
+    "en": "{0}: {1}",
+    "fil": "{0}: {1}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.kind.correction",
+    "en": "Correction",
+    "fil": "Pagwawasto",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.kind.complaint",
+    "en": "Driver report",
+    "fil": "Ulat tungkol sa driver",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.reportDriver",
+    "en": "Report a driver",
+    "fil": "I-report ang driver",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.mynagaPanelNote",
+    "en": "ParaNaga does not send anything to MyNaga or City Hall and cannot confirm that your report was received. This is only what you told us.",
+    "fil": "Walang ipinapadala ang ParaNaga sa MyNaga o sa City Hall at hindi nito makukumpirma na natanggap ang ulat mo. Ito lang ang sinabi mo sa amin.",
+    "review": true,
+    "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.statusInParaNaga",
+    "en": "Status in ParaNaga",
+    "fil": "Katayuan sa ParaNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.whatYouReported",
+    "en": "What you reported",
+    "fil": "Ang iniulat mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.category",
+    "en": "Category",
+    "fil": "Kategorya",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.when",
+    "en": "When it happened",
+    "fil": "Kailan nangyari",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.where",
+    "en": "Where",
+    "fil": "Saan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.operator",
+    "en": "Operator",
+    "fil": "Operator",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.plate",
+    "en": "Plate number",
+    "fil": "Numero ng plaka",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.body",
+    "en": "Body number",
+    "fil": "Body number",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.whatHappened",
+    "en": "What happened",
+    "fil": "Ang nangyari",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.media",
+    "en": "Photos and videos",
+    "fil": "Mga larawan at video",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.about",
+    "en": "About",
+    "fil": "Tungkol sa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.facts.details",
+    "en": "Details",
+    "fil": "Detalye",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.none",
+    "en": "None",
+    "fil": "Wala",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.mynagaTitle",
+    "en": "MyNaga (self-reported)",
+    "fil": "MyNaga (ayon sa iyo)",
+    "review": true,
+    "note": "'self-reported' rendered '(ayon sa iyo)'; native speaker to confirm it reads as the person's own statement.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.saidSubmitted",
+    "en": "You said you submitted this in MyNaga.",
+    "fil": "Sinabi mong naisumite mo ito sa MyNaga.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.saidSubmittedOn",
+    "en": "You said you submitted this in MyNaga on {0}.",
+    "fil": "Sinabi mong naisumite mo ito sa MyNaga noong {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.notSaid",
+    "en": "You have not said you submitted this in MyNaga.",
+    "fil": "Hindi mo pa sinasabing naisumite mo ito sa MyNaga.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.yourReference",
+    "en": " Your reference: {0}.",
+    "fil": " Ang reference mo: {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.openSteps",
+    "en": "Open the MyNaga steps",
+    "fil": "Buksan ang mga hakbang para sa MyNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.continueMyNaga",
+    "en": "Continue in MyNaga",
+    "fil": "Ituloy sa MyNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.signInOne",
+    "en": "Sign in to see this report.",
+    "fil": "Mag-sign in para makita ang ulat na ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.allMine",
+    "en": "All my reports",
+    "fil": "Lahat ng ulat ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.outcomes.info_provided_to_reporter",
+    "en": "Information was sent to you",
+    "fil": "Naipadala na sa iyo ang impormasyon",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. Neutral outcome of a closed driver report; never a finding about the driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.outcomes.insufficient_detail",
+    "en": "Not enough detail to follow up",
+    "fil": "Kulang ang detalye para masundan",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. Neutral outcome of a closed driver report; never a finding about the driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.outcomes.duplicate",
+    "en": "Already reported",
+    "fil": "Naiulat na",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. Neutral outcome of a closed driver report; never a finding about the driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.outcomes.outside_scope",
+    "en": "Outside what ParaNaga can review",
+    "fil": "Labas sa kayang suriin ng ParaNaga",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. Neutral outcome of a closed driver report; never a finding about the driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.outcomes.reporter_withdrew",
+    "en": "You withdrew it",
+    "fil": "Binawi mo ito",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. Neutral outcome of a closed driver report; never a finding about the driver.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.api.signedOut",
+    "en": "Sign in to see your reports.",
+    "fil": "Mag-sign in para makita ang mga ulat mo.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.api.notFound",
+    "en": "This report was not found.",
+    "fil": "Hindi nakita ang ulat na ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.api.rateLimited",
+    "en": "Too many requests. Wait a moment, then try again.",
+    "fil": "Masyadong maraming request. Maghintay sandali, saka subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.api.failed",
+    "en": "This could not be loaded. Check your connection and try again.",
+    "fil": "Hindi ito na-load. Tingnan ang koneksyon mo at subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "reports.api.badReference",
+    "en": "Check the reference. It can be up to 64 characters.",
+    "fil": "Suriin ang reference. Hanggang 64 na character lang ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.panelTitle",
+    "en": "MyNaga",
+    "fil": "MyNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.title",
+    "en": "Report in MyNaga",
+    "fil": "Mag-report sa MyNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.independentStrong",
+    "en": "ParaNaga is independent.",
+    "fil": "Independiyente ang ParaNaga.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.independentBody",
+    "en": "It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.",
+    "fil": "Hindi ito kaugnay ng MyNaga o ng City Government at hindi ito channel ng gobyerno. Hindi naisusumite ang ulat mo sa pagbukas lang ng MyNaga.",
+    "review": true,
+    "note": "Independence statement: 'not an official channel' rendered 'hindi ito channel ng gobyerno' ('opisyal' is banned). Meaning must stay exact.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.prepareTitle",
+    "en": "Prepare what you will share",
+    "fil": "Ihanda ang ibabahagi mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.prepare.p1",
+    "en": "When it happened (date and time)",
+    "fil": "Kailan ito nangyari (petsa at oras)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.prepare.p2",
+    "en": "Route and direction, if you know them",
+    "fil": "Ruta at direksyon, kung alam mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.prepare.p3",
+    "en": "Plate or body number, if you saw it",
+    "fil": "Plate o body number, kung nakita mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.prepare.p4",
+    "en": "What happened, in your own words",
+    "fil": "Ano ang nangyari, sa sarili mong salita",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.prepare.p5",
+    "en": "Photos you are entitled to share",
+    "fil": "Mga larawang may karapatan kang ibahagi",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.openTitle",
+    "en": "Open MyNaga and submit there",
+    "fil": "Buksan ang MyNaga at doon magsumite",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.links.play",
+    "en": "Get MyNaga on Google Play",
+    "fil": "Kunin ang MyNaga sa Google Play",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.links.appstore",
+    "en": "Get MyNaga on the App Store",
+    "fil": "Kunin ang MyNaga sa App Store",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.links.website",
+    "en": "Open mynaga.app",
+    "fil": "Buksan ang mynaga.app",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.links.about",
+    "en": "About MyNaga (City of Naga)",
+    "fil": "Tungkol sa MyNaga (City of Naga)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.afterTitle",
+    "en": "After you submit in MyNaga",
+    "fil": "Pagkatapos mong magsumite sa MyNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.later",
+    "en": "Sent a private report in ParaNaga? Open it from My reports to copy a summary and note your MyNaga reference.",
+    "fil": "Nagpadala ka ba ng pribadong ulat sa ParaNaga? Buksan ito mula sa Mga ulat ko para kopyahin ang buod at itala ang reference mo sa MyNaga.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.myReports",
+    "en": "My reports",
+    "fil": "Mga ulat ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.footer",
+    "en": "We can't see or confirm what happens in MyNaga.",
+    "fil": "Hindi namin nakikita o nakukumpirma ang nangyayari sa MyNaga.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.bystander.title",
+    "en": "Original files only",
+    "fil": "Orihinal na file lang",
+    "review": true,
+    "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.bystander.lines.p1",
+    "en": "ParaNaga cannot blur faces or plates yet, so the file you download is the original.",
+    "fil": "Hindi pa kayang i-blur ng ParaNaga ang mga mukha o plaka, kaya orihinal na file ang mada-download mo.",
+    "review": true,
+    "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.bystander.lines.p2",
+    "en": "It may show other people's faces and vehicle plates, and it may carry location details.",
+    "fil": "Maaaring makita rito ang mukha ng ibang tao at plaka ng sasakyan, at maaaring may kasama itong detalye ng lokasyon.",
+    "review": true,
+    "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.bystander.lines.p3",
+    "en": "Share it only where you choose to, and only what you are comfortable sharing.",
+    "fil": "Ibahagi lang ito kung saan mo gusto, at kung ano lang ang komportable kang ibahagi.",
+    "review": true,
+    "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.bystander.acknowledge",
+    "en": "I understand the file may show other people and where it was taken.",
+    "fil": "Naiintindihan kong maaaring makita sa file ang ibang tao at kung saan ito kinunan.",
+    "review": true,
+    "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.selfReportNote",
+    "en": "ParaNaga does not send anything to MyNaga or City Hall and cannot confirm your report was received. This note is your own: it is saved to your account, shown as self-reported, and never changes the status of your ParaNaga report.",
+    "fil": "Walang ipinapadala ang ParaNaga sa MyNaga o sa City Hall at hindi nito makukumpirma na natanggap ang ulat mo. Sa iyo ang talang ito: naka-save ito sa account mo, ipinapakitang ayon sa iyo, at hindi nito kailanman binabago ang katayuan ng ulat mo sa ParaNaga.",
+    "review": true,
+    "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summaryLabel",
+    "en": "Summary to paste into MyNaga",
+    "fil": "Buod na ipe-paste sa MyNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.copySummary",
+    "en": "Copy summary",
+    "fil": "Kopyahin ang buod",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.copied",
+    "en": "Summary copied. Paste it into MyNaga.",
+    "fil": "Nakopya ang buod. I-paste ito sa MyNaga.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.copyManual",
+    "en": "Copying is not available here. The text is selected: copy it from the box above.",
+    "fil": "Hindi puwedeng kumopya rito. Naka-select na ang teksto: kopyahin ito mula sa kahon sa itaas.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.mediaTitle",
+    "en": "Your photos and videos",
+    "fil": "Ang mga larawan at video mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.preparing",
+    "en": "Preparing…",
+    "fil": "Inihahanda…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.download",
+    "en": "Download file {0} (original)",
+    "fil": "I-download ang file {0} (orihinal)",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.fileFailed",
+    "en": "File {0} could not be prepared. Try again.",
+    "fil": "Hindi naihanda ang file {0}. Subukan ulit.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.downloading",
+    "en": "File {0} is downloading. The link worked for 60 seconds only.",
+    "fil": "Dina-download ang file {0}. 60 segundo lang gumana ang link.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.submittedCheck",
+    "en": "I submitted it in MyNaga",
+    "fil": "Naisumite ko ito sa MyNaga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.referenceLabel",
+    "en": "MyNaga reference (optional)",
+    "fil": "Reference sa MyNaga (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.referenceHint",
+    "en": "Up to {0} characters, as MyNaga shows it. Plain text.",
+    "fil": "Hanggang {0} character, gaya ng ipinapakita ng MyNaga. Simpleng teksto lang.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.saving",
+    "en": "Saving…",
+    "fil": "Sine-save…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.saveNote",
+    "en": "Save my note",
+    "fil": "I-save ang tala ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.savedSubmitted",
+    "en": "Saved: submitted in MyNaga (self-reported).",
+    "fil": "Na-save: naisumite sa MyNaga (ayon sa iyo).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.savedNot",
+    "en": "Saved: not marked as submitted.",
+    "fil": "Na-save: hindi minarkahang naisumite.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.savedAsSubmitted",
+    "en": "Saved as: submitted in MyNaga (self-reported).",
+    "fil": "Naka-save bilang: naisumite sa MyNaga (ayon sa iyo).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.savedAsSubmittedRef",
+    "en": "Saved as: submitted in MyNaga (self-reported), reference {0}.",
+    "fil": "Naka-save bilang: naisumite sa MyNaga (ayon sa iyo), reference {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.savedAsNot",
+    "en": "Saved as: not marked as submitted.",
+    "fil": "Naka-save bilang: hindi minarkahang naisumite.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.signIn",
+    "en": "Sign in to prepare a summary of your report.",
+    "fil": "Mag-sign in para makapaghanda ng buod ng ulat mo.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.loadingReport",
+    "en": "Loading your report…",
+    "fil": "Nilo-load ang ulat mo…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.reportRef",
+    "en": "Report {0}",
+    "fil": "Ulat {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.tellUs",
+    "en": "Tell us if you submitted it",
+    "fil": "Sabihin sa amin kung naisumite mo na",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.heading",
+    "en": "Report about a public transport driver",
+    "fil": "Ulat tungkol sa driver ng pampublikong sasakyan",
+    "review": true,
+    "note": "Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.category",
+    "en": "Category: {0}",
+    "fil": "Kategorya: {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.when",
+    "en": "When it happened: {0} (Philippine time)",
+    "fil": "Kailan nangyari: {0} (oras sa Pilipinas)",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.where",
+    "en": "Where: {0}",
+    "fil": "Saan: {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.operator",
+    "en": "Operator: {0}",
+    "fil": "Operator: {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.plate",
+    "en": "Plate number: {0}",
+    "fil": "Numero ng plaka: {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.body",
+    "en": "Body number: {0}",
+    "fil": "Body number: {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.what",
+    "en": "What happened: {0}",
+    "fil": "Ang nangyari: {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.evidence",
+    "en": "Photo or video evidence is available from the reporter.",
+    "fil": "May larawan o video na ebidensya ang nag-ulat.",
+    "review": true,
+    "note": "Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "mynaga.summary.reference",
+    "en": "ParaNaga reference (for my own records): {0}",
+    "fil": "Reference sa ParaNaga (para sa sarili kong tala): {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.title",
+    "en": "Community",
+    "fil": "Komunidad",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.postTitle",
+    "en": "Post",
+    "fil": "Post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.newTitle",
+    "en": "New post",
+    "fil": "Bagong post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.editTitle",
+    "en": "Edit post",
+    "fil": "I-edit ang post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.scopes.all",
+    "en": "Everyone",
+    "fil": "Lahat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.scopes.mine",
+    "en": "My posts",
+    "fil": "Mga post ko",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.scopes.saved",
+    "en": "Saved",
+    "fil": "Naka-save",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.newPost",
+    "en": "New post",
+    "fil": "Bagong post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.searchLabel",
+    "en": "Search posts",
+    "fil": "Maghanap ng post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.search",
+    "en": "Search",
+    "fil": "Hanapin",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.searchMin",
+    "en": "Type at least {0} letters to search.",
+    "fil": "Mag-type ng hindi bababa sa {0} letra para maghanap.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.topicGroup",
+    "en": "Topic",
+    "fil": "Paksa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.allTopics",
+    "en": "All topics",
+    "fil": "Lahat ng paksa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.showGroup",
+    "en": "Show",
+    "fil": "Ipakita",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.activeFilters",
+    "en": "Active filters",
+    "fil": "Mga aktibong filter",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.removeTag",
+    "en": "Remove tag filter {0}",
+    "fil": "Alisin ang filter na tag {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.tagChip",
+    "en": "Tag: {0} ×",
+    "fil": "Tag: {0} ×",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.clearSearch",
+    "en": "Clear search for {0}",
+    "fil": "Burahin ang paghahanap para sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.searchChip",
+    "en": "Search: {0} ×",
+    "fil": "Hanap: {0} ×",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.loadingPosts",
+    "en": "Loading posts…",
+    "fil": "Nilo-load ang mga post…",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.loadFailed",
+    "en": "Posts could not be loaded.",
+    "fil": "Hindi na-load ang mga post.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.emptyMine",
+    "en": "You have not posted yet.",
+    "fil": "Wala ka pang post.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.emptySaved",
+    "en": "No saved posts yet.",
+    "fil": "Wala ka pang naka-save na post.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.emptyFiltered",
+    "en": "No posts match. Try another topic or search.",
+    "fil": "Walang tugmang post. Subukan ang ibang paksa o paghahanap.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.emptyAll",
+    "en": "No posts yet. Start the first one.",
+    "fil": "Wala pang post. Ikaw na ang mauna.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.showTagged",
+    "en": "Show posts tagged {0}",
+    "fil": "Ipakita ang mga post na may tag na {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.you",
+    "en": "You",
+    "fil": "Ikaw",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.helpfulCount",
+    "en": "{0} found this helpful",
+    "fil": "Nakatulong sa {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | '{0} found this helpful' rendered 'Nakatulong sa {0}'; native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.comments",
+    "en": "{0} comments",
+    "fil": "{0} komento",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.saved",
+    "en": "Saved",
+    "fil": "Naka-save",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.save",
+    "en": "Save",
+    "fil": "I-save",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.showMore",
+    "en": "Show more",
+    "fil": "Magpakita pa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.feedNotice",
+    "en": "Written by other commuters. Not verified by ParaNaga. A fare or route tip here is not an official fare or route.",
+    "fil": "Isinulat ng ibang commuter. Hindi kinumpirma ng ParaNaga. Ang mga tip dito tungkol sa pasahe o ruta ay hindi pasahe o rutang itinakda ng lungsod.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. 'not an official fare or route' rendered 'hindi ang pasahe o rutang itinakda ng lungsod'.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.blocked",
+    "en": "Blocked people ({0})",
+    "fil": "Mga naka-block ({0})",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.unblock",
+    "en": "Unblock",
+    "fil": "I-unblock",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.unblockLabel",
+    "en": "Unblock {0}",
+    "fil": "I-unblock si {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.labels.community",
+    "en": "Community observation",
+    "fil": "Obserbasyon ng commuter",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.labels.official_notice",
+    "en": "Official notice",
+    "fil": "Pormal na paunawa",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. 'Official notice' rendered 'Pormal na paunawa' ('opisyal' is banned).",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.labels.incorporated_change",
+    "en": "Incorporated change",
+    "fil": "Pagbabagong naisama na",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.topics.commute_tips.label",
+    "en": "Commute tips",
+    "fil": "Mga tip sa pag-commute",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.topics.commute_tips.hint",
+    "en": "What worked for you on a ride",
+    "fil": "Ano ang umubra sa iyo sa biyahe",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.topics.first_time.label",
+    "en": "First-time questions",
+    "fil": "Tanong ng first-timer",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.topics.first_time.hint",
+    "en": "Asking how something works in Naga",
+    "fil": "Pagtatanong kung paano gumagana ang isang bagay sa Naga",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.topics.route_stop_feedback.label",
+    "en": "Route/stop feedback",
+    "fil": "Puna sa ruta/hintuan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.topics.route_stop_feedback.hint",
+    "en": "What you noticed at a stop or on a route",
+    "fil": "Ang napansin mo sa hintuan o sa ruta",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.routeBadge",
+    "en": "Route {0}",
+    "fil": "Ruta {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.editAwaiting",
+    "en": "Edit awaiting review",
+    "fil": "Edit na naghihintay ng pagsusuri",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.states.published",
+    "en": "Published",
+    "fil": "Nailathala",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.states.rejected",
+    "en": "Not published",
+    "fil": "Hindi nailathala",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.states.pending",
+    "en": "Awaiting review",
+    "fil": "Naghihintay ng pagsusuri",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.stateHints.editPublished",
+    "en": "Your edit is visible to everyone.",
+    "fil": "Nakikita na ng lahat ang edit mo.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.stateHints.published",
+    "en": "It is visible to everyone.",
+    "fil": "Nakikita na ito ng lahat.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.stateHints.rejected",
+    "en": "It did not meet the community guidelines, so others cannot see it.",
+    "fil": "Hindi ito pumasa sa mga alituntunin ng Komunidad, kaya hindi ito nakikita ng iba.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.stateHints.editPending",
+    "en": "Only you can see this edit. The earlier version stays visible until it is approved.",
+    "fil": "Ikaw lang ang nakakakita ng edit na ito. Nakikita pa rin ang naunang bersyon hangga't hindi ito naaaprubahan.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.stateHints.pending",
+    "en": "Only you can see it until a person has reviewed it.",
+    "fil": "Ikaw lang ang nakakakita nito hangga't hindi pa ito nasusuri ng isang tao.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.stateLine",
+    "en": "{0}. {1}",
+    "fil": "{0}. {1}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.guidelinesTitle",
+    "en": "Community guidelines",
+    "fil": "Mga alituntunin ng Komunidad",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.guidelinesCheckbox",
+    "en": "I have read the community guidelines.",
+    "fil": "Nabasa ko ang mga alituntunin ng Komunidad.",
+    "review": true,
+    "note": "Acknowledgement checkbox beside the English guidelines (acknowledgments.community); meaning must stay exact.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.unverifiedNotice",
+    "en": "Written by other commuters. Not verified by ParaNaga.",
+    "fil": "Isinulat ng ibang commuter. Hindi kinumpirma ng ParaNaga.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.driverNotice",
+    "en": "Do not name or describe a driver here. Driver reports are private.",
+    "fil": "Huwag pangalanan o ilarawan ang driver dito. Pribado ang mga ulat tungkol sa driver.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.signInWrite",
+    "en": "Sign in to write a post. Reading works without an account.",
+    "fil": "Mag-sign in para makasulat ng post. Kahit walang account, puwedeng magbasa.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.signInEdit",
+    "en": "Sign in to edit your post. Reading works without an account.",
+    "fil": "Mag-sign in para ma-edit ang post mo. Kahit walang account, puwedeng magbasa.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.signInComment",
+    "en": "Sign in to comment, mark posts helpful or save them. Reading works without an account.",
+    "fil": "Mag-sign in para makapag-komento, makapagmarka ng post na nakatulong, o makapag-save nito. Kahit walang account, puwedeng magbasa.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.onlyAuthor",
+    "en": "Only the author can edit this post.",
+    "fil": "Ang sumulat lang ang puwedeng mag-edit ng post na ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.tickGuidelines",
+    "en": "Tick the box to confirm you have read the guidelines.",
+    "fil": "I-tsek ang kahon para kumpirmahing nabasa mo ang mga alituntunin.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.chooseTopic",
+    "en": "Choose a topic.",
+    "fil": "Pumili ng paksa.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.badTags",
+    "en": "These tags are not allowed: {0}. Use letters, numbers and hyphens.",
+    "fil": "Hindi puwede ang mga tag na ito: {0}. Gumamit ng letra, numero at gitling.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.maxTags",
+    "en": "Use at most {0} tags.",
+    "fil": "Hanggang {0} tag lang.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.badRoute",
+    "en": "Route codes use letters, numbers and hyphens, like R4 or R8-A.",
+    "fil": "Letra, numero at gitling ang gamit sa code ng ruta, gaya ng R4 o R8-A.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.titleMin",
+    "en": "Write a title of at least {0} characters.",
+    "fil": "Sumulat ng pamagat na hindi bababa sa {0} na character.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.titleMax",
+    "en": "Keep the title under {0} characters.",
+    "fil": "Huwag lumampas sa {0} na character ang pamagat.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.editHeading",
+    "en": "Edit your post",
+    "fil": "I-edit ang post mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.editSent",
+    "en": "Edit sent",
+    "fil": "Naipadala ang edit",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.postSent",
+    "en": "Post sent",
+    "fil": "Naipadala ang post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.pendingNote",
+    "en": "A person checks posts before others can read them. You can still open your post from My posts.",
+    "fil": "May taong sumusuri ng mga post bago ito mabasa ng iba. Mabubuksan mo pa rin ang post mo mula sa Mga post ko.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.backToCommunity",
+    "en": "Back to community",
+    "fil": "Bumalik sa Komunidad",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.viewPost",
+    "en": "View post",
+    "fil": "Tingnan ang post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.beforePost",
+    "en": "Before you post",
+    "fil": "Bago ka mag-post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.titleLabel",
+    "en": "Title",
+    "fil": "Pamagat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.bodyLabel",
+    "en": "Your post",
+    "fil": "Ang post mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.tagsLabel",
+    "en": "Tags (optional, up to {0})",
+    "fil": "Mga tag (opsyonal, hanggang {0})",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.tagsPlaceholder",
+    "en": "for example: fares, loop-a",
+    "fil": "halimbawa: pasahe, loop-a",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.routeLabel",
+    "en": "Route code (optional)",
+    "fil": "Code ng ruta (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.editHint",
+    "en": "Your edit is checked before it replaces the current version. The current version stays visible until then.",
+    "fil": "Susuriin ang edit mo bago nito palitan ang kasalukuyang bersyon. Nakikita pa rin ang kasalukuyang bersyon hanggang doon.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.sendEdit",
+    "en": "Send edit",
+    "fil": "Ipadala ang edit",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.post",
+    "en": "Post",
+    "fil": "I-post",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.notAvailable",
+    "en": "This post is not available. It may have been removed.",
+    "fil": "Hindi available ang post na ito. Baka inalis na.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.editPendingNote",
+    "en": "Awaiting review. Your edit is not visible yet; the version above is still the one others read.",
+    "fil": "Naghihintay ng pagsusuri. Hindi pa nakikita ang edit mo; ang bersyon sa itaas pa rin ang binabasa ng iba.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.helpful",
+    "en": "Helpful ({0})",
+    "fil": "Nakatulong ({0})",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.edit",
+    "en": "Edit",
+    "fil": "I-edit",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.delete",
+    "en": "Delete",
+    "fil": "Burahin",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.more",
+    "en": "More",
+    "fil": "Iba pa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.report",
+    "en": "Report",
+    "fil": "I-report",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.block",
+    "en": "Block this person",
+    "fil": "I-block ang taong ito",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.history",
+    "en": "Edit history ({0})",
+    "fil": "Kasaysayan ng edit ({0})",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.version",
+    "en": "Version {0}",
+    "fil": "Bersyon {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.visibleToAll",
+    "en": "Visible to everyone",
+    "fil": "Nakikita ng lahat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.replaced",
+    "en": "Replaced",
+    "fil": "Napalitan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.commentsLabel",
+    "en": "Comments",
+    "fil": "Mga komento",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.noComments",
+    "en": "No comments yet.",
+    "fil": "Wala pang komento.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.commentPending",
+    "en": "Comment sent. Awaiting review: only you can see it until a person has reviewed it.",
+    "fil": "Naipadala ang komento. Naghihintay ng pagsusuri: ikaw lang ang nakakakita nito hangga't hindi pa ito nasusuri ng isang tao.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.commentRejected",
+    "en": "Comment not published. It did not meet the community guidelines.",
+    "fil": "Hindi nailathala ang komento. Hindi ito pumasa sa mga alituntunin ng Komunidad.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.commentPosted",
+    "en": "Comment posted.",
+    "fil": "Nai-post ang komento.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.addComment",
+    "en": "Add a comment",
+    "fil": "Magdagdag ng komento",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.deletePost",
+    "en": "Delete this post?",
+    "fil": "Burahin ang post na ito?",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.deleteComment",
+    "en": "Delete this comment?",
+    "fil": "Burahin ang komentong ito?",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.deleteBody",
+    "en": "It is removed for everyone. This cannot be undone.",
+    "fil": "Mabubura ito para sa lahat. Hindi na ito maibabalik.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reply",
+    "en": "Reply",
+    "fil": "Sumagot",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.yourReply",
+    "en": "Your reply",
+    "fil": "Ang sagot mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.yourComment",
+    "en": "Your comment",
+    "fil": "Ang komento mo",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.sendReply",
+    "en": "Send reply",
+    "fil": "Ipadala ang sagot",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.sendComment",
+    "en": "Send comment",
+    "fil": "Ipadala ang komento",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reportDone",
+    "en": "Report sent. A moderator will look at it. Thank you.",
+    "fil": "Naipadala ang ulat. Titingnan ito ng isang moderator. Salamat.",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.close",
+    "en": "Close",
+    "fil": "Isara",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.chooseReason",
+    "en": "Choose a reason.",
+    "fil": "Pumili ng dahilan.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reportPost",
+    "en": "Report this post",
+    "fil": "I-report ang post na ito",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reportComment",
+    "en": "Report this comment",
+    "fil": "I-report ang komentong ito",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reason",
+    "en": "Reason",
+    "fil": "Dahilan",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reasons.spam",
+    "en": "Spam or advertising",
+    "fil": "Spam o patalastas",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reasons.harassment",
+    "en": "Harassment or threats",
+    "fil": "Panliligalig o pagbabanta",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reasons.personal_info",
+    "en": "Private personal details",
+    "fil": "Pribadong personal na detalye",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reasons.off_topic",
+    "en": "Not about commuting in Naga",
+    "fil": "Hindi tungkol sa pag-commute sa Naga",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reasons.misleading",
+    "en": "Misleading information",
+    "fil": "Nakalilinlang na impormasyon",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.reasons.other",
+    "en": "Something else",
+    "fil": "Iba pa",
+    "review": true,
+    "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.noteLabel",
+    "en": "Note (optional)",
+    "fil": "Tala (opsyonal)",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.sendReport",
+    "en": "Send report",
+    "fil": "Ipadala ang ulat",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.api.signedOut",
+    "en": "Sign in to do this.",
+    "fil": "Mag-sign in para magawa ito.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.api.rateLimited",
+    "en": "You are going too fast. Wait a moment, then try again.",
+    "fil": "Masyado kang mabilis. Maghintay sandali, saka subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.api.notFound",
+    "en": "This is no longer available.",
+    "fil": "Hindi na ito available.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.api.invalid",
+    "en": "Check what you wrote and try again.",
+    "fil": "Suriin ang isinulat mo at subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "community.api.failed",
+    "en": "That did not work. Check your connection and try again.",
+    "fil": "Hindi iyon gumana. Tingnan ang koneksyon mo at subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.title",
+    "en": "Sign in",
+    "fil": "Mag-sign in",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.errOrigin",
+    "en": "Sign-in is not set up for this address yet. You can keep using ParaNaga as a guest.",
+    "fil": "Hindi pa naka-set up ang sign-in para sa address na ito. Puwede mo pa ring gamitin ang ParaNaga bilang guest.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.errRate",
+    "en": "Too many tries. Please wait a minute and try again.",
+    "fil": "Masyadong maraming subok. Maghintay ng isang minuto at subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.errCode",
+    "en": "That code did not work. Check it, or ask for a new one.",
+    "fil": "Hindi gumana ang code na iyan. Suriin ito, o humingi ng bago.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.unavailable",
+    "en": "Sign-in is not available right now. You can keep using ParaNaga as a guest.",
+    "fil": "Hindi available ang sign-in ngayon. Puwede mo pa ring gamitin ang ParaNaga bilang guest.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.sendFailed",
+    "en": "Could not send the code. Please try again.",
+    "fil": "Hindi naipadala ang code. Subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.codeSent",
+    "en": "Verification code sent to {0}.",
+    "fil": "Naipadala ang verification code sa {0}.",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.sendNetwork",
+    "en": "Network error sending the code. Please try again.",
+    "fil": "Nagka-problema sa network habang ipinapadala ang code. Subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.codeFailed",
+    "en": "That code did not work. Check it and try again.",
+    "fil": "Hindi gumana ang code na iyan. Suriin ito at subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.signedIn",
+    "en": "Signed in. Redirecting...",
+    "fil": "Naka-sign in na. Inililipat ka...",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.verifyFailed",
+    "en": "Could not verify the code. Please try again.",
+    "fil": "Hindi ma-verify ang code. Subukan ulit.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.googleUnavailable",
+    "en": "Google sign-in is not available right now.",
+    "fil": "Hindi available ang Google sign-in ngayon.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.googleFailed",
+    "en": "Could not start Google sign-in.",
+    "fil": "Hindi masimulan ang Google sign-in.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.lead",
+    "en": "An account is optional.",
+    "fil": "Hindi kailangan ng account.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.body",
+    "en": "Everything in ParaNaga works as a guest, and your saved trips stay on this phone. Signing in lets you contribute community posts, report corrections, and sync your data.",
+    "fil": "Gumagana ang lahat sa ParaNaga kahit guest ka, at nananatili sa phone na ito ang mga naka-save mong biyahe. Kapag nag-sign in ka, puwede kang mag-post sa Komunidad, mag-ulat ng pagwawasto, at i-sync ang data mo.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.emailLabel",
+    "en": "Email address",
+    "fil": "Email address",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.sendingCode",
+    "en": "Sending code...",
+    "fil": "Ipinapadala ang code...",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.continueEmail",
+    "en": "Continue with Email",
+    "fil": "Ituloy gamit ang Email",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.codeLabel",
+    "en": "One-time code sent to {0}",
+    "fil": "One-time code na ipinadala sa {0}",
+    "note": "message function; {0},{1}.. are the arguments in order",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.verifying",
+    "en": "Verifying...",
+    "fil": "Vine-verify...",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.verify",
+    "en": "Verify & Sign in",
+    "fil": "I-verify at mag-sign in",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.differentEmail",
+    "en": "Use a different email",
+    "fil": "Gumamit ng ibang email",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.or",
+    "en": "or",
+    "fil": "o",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.google",
+    "en": "Continue with Google",
+    "fil": "Ituloy gamit ang Google",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.guestQuestion",
+    "en": "Want to stay a guest?",
+    "fil": "Gusto mong manatiling guest?",
+    "reviewed": "opus"
+  },
+  {
+    "key": "auth.returnToMap",
+    "en": "Return to map",
+    "fil": "Bumalik sa mapa",
+    "reviewed": "opus"
+  },
+  {
+    "key": "acknowledgments.community",
+    "en": "Keep this about commuting in Naga. Share accurate, respectful information. Do not post spam, threats, harassment or private personal details. Jev checks submissions before publication; uncertain cases go to a moderator. Data corrections require a separate evidence review.",
+    "fil": "Keep this about commuting in Naga. Share accurate, respectful information. Do not post spam, threats, harassment or private personal details. Jev checks submissions before publication; uncertain cases go to a moderator. Data corrections require a separate evidence review.",
+    "review": true,
+    "note": "Kept English verbatim: the accepted acknowledgment text is recorded (core.ack, versioned). A verbatim-reviewed Filipino translation is pending (T13); listed in SAME_AS_EN.",
+    "reviewed": "opus"
+  },
+  {
+    "key": "acknowledgments.driverReport",
+    "en": "Describe what you observed accurately and submit evidence you are entitled to share. Your complaint is private within ParaNaga, and ParaNaga does not send it to Naga City. You can choose to continue reporting in MyNaga after reviewing your report.",
+    "fil": "Describe what you observed accurately and submit evidence you are entitled to share. Your complaint is private within ParaNaga, and ParaNaga does not send it to Naga City. You can choose to continue reporting in MyNaga after reviewing your report.",
+    "review": true,
+    "note": "Kept English verbatim: the accepted acknowledgment text is recorded (core.ack, versioned). A verbatim-reviewed Filipino translation is pending (T13); listed in SAME_AS_EN.",
+    "reviewed": "opus"
   }
 ]

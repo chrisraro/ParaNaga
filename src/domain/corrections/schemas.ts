@@ -2,6 +2,7 @@ import { z } from "zod";
 import { NAGA_MAX_BOUNDS } from "@/domain/geo/naga";
 import { CORRECTION_CATEGORIES, ENTITY_TYPES } from "./categories";
 import { CORRECTION_STATUSES } from "./status";
+import { en, type Dict } from "@/i18n/dict";
 
 export const DESCRIPTION_MIN = 10;
 export const DESCRIPTION_MAX = 1000;
@@ -40,13 +41,13 @@ export type CreateCorrectionPayload = z.infer<typeof createCorrectionPayloadSche
 export type CreateCorrectionInput = z.input<typeof createCorrectionPayloadSchema>;
 
 /** Wizard state validation per step (client). */
-export function validateWhatsWrong(category: string | null): string | null {
-  return category && (CORRECTION_CATEGORIES as readonly string[]).includes(category) ? null : "Choose what is wrong.";
+export function validateWhatsWrong(category: string | null, copy: Dict = en): string | null {
+  return category && (CORRECTION_CATEGORIES as readonly string[]).includes(category) ? null : copy.report.chooseWrong;
 }
-export function validateDescription(description: string): string | null {
+export function validateDescription(description: string, copy: Dict = en): string | null {
   const n = description.trim().length;
-  if (n < DESCRIPTION_MIN) return `Write at least ${DESCRIPTION_MIN} characters.`;
-  if (n > DESCRIPTION_MAX) return `Keep it under ${DESCRIPTION_MAX} characters.`;
+  if (n < DESCRIPTION_MIN) return copy.forms.minChars(DESCRIPTION_MIN);
+  if (n > DESCRIPTION_MAX) return copy.forms.maxChars(DESCRIPTION_MAX);
   return null;
 }
 

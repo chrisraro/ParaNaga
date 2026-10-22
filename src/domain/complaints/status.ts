@@ -1,20 +1,15 @@
 // Driver report lifecycle (spec 04 §4.7): draft -> submitted -> under_review <-> needs_information
 // -> closed; draft | submitted | needs_information -> withdrawn. Drafts live only on the phone, so
 // the server stores reports from 'submitted' on. Outcomes are neutral: never a finding of guilt.
+import { en, type Dict } from "@/i18n/dict";
 
 export const COMPLAINT_STATUSES = ["submitted", "under_review", "needs_information", "closed", "withdrawn"] as const;
 export type ComplaintStatus = (typeof COMPLAINT_STATUSES)[number];
 
-export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
-  submitted: "Received",
-  under_review: "Being reviewed",
-  needs_information: "More information needed",
-  closed: "Closed",
-  withdrawn: "Withdrawn",
-};
+export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = en.driverReport.statuses;
 
-export function complaintStatusLabel(status: ComplaintStatus): string {
-  return COMPLAINT_STATUS_LABELS[status];
+export function complaintStatusLabel(status: ComplaintStatus, copy: Dict["driverReport"] = en.driverReport): string {
+  return copy.statuses[status];
 }
 
 /** Review queues (spec 03 §3.8): decided by fixed rules only, never by an AI model. */

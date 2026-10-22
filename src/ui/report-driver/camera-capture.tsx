@@ -7,6 +7,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { MAX_CLIP_SECONDS, supportedClipType, useCamera } from "@/client/complaints/use-camera";
 import type { CaptureKind } from "@/domain/complaints/schemas";
+import { useT } from "@/i18n/provider";
 import type { Evidence } from "./driver-report-wizard";
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
 };
 
 export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
+  const tt = useT();
+  const t = tt.driverReport.camera;
   const uid = useId();
   const { state, recording, start, stop, attach, takePhoto, recordClip, stopClip } = useCamera();
   const [note, setNote] = useState<string | null>(null);
@@ -46,7 +49,7 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
   }, [live, state, items.length]);
 
   const add = (blob: Blob | null, kind: CaptureKind) => {
-    if (!blob) return setNote("Nothing was captured. Try again.");
+    if (!blob) return setNote(t.nothingCaptured);
     setNote(onAdd(blob, kind));
   };
 
@@ -70,32 +73,32 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
   return (
     <div className="pn-report__form">
       <p className="pn-report__body">
-        A photo or short video can help, but it is optional. Your phone asks for camera permission only when you tap Open camera.
+        {t.intro}
       </p>
 
       {items.length > 0 ? (
-        <ul ref={listRef} tabIndex={-1} aria-label="Captured photos and videos" className="pn-driver__evidence" data-testid="driver-evidence">
+        <ul ref={listRef} tabIndex={-1} aria-label={t.capturedLabel} className="pn-driver__evidence" data-testid="driver-evidence">
           {items.map((item, n) => (
             <li key={item.key} className="pn-driver__evidence-item">
               {item.kind === "photo" ? (
                 // eslint-disable-next-line @next/next/no-img-element -- a local blob preview, never optimized
-                <img src={item.url} alt={`Photo ${n + 1} preview`} className="pn-driver__media" />
+                <img src={item.url} alt={t.photoPreview(n + 1)} className="pn-driver__media" />
               ) : (
-                <video src={item.url} controls playsInline muted className="pn-driver__media" aria-label={`Video ${n + 1} preview`} />
+                <video src={item.url} controls playsInline muted className="pn-driver__media" aria-label={t.videoPreview(n + 1)} />
               )}
               <div className="pn-report__row">
                 {item.captureKind === "in_app_camera" ? (
                   <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => retake(item.key)}>
-                    Retake
+                    {t.retake}
                   </button>
                 ) : null}
                 <button
                   type="button"
                   className="pn-btn pn-btn--secondary pn-report__small"
                   onClick={() => onRemove(item.key)}
-                  aria-label={`Remove ${item.kind} ${n + 1}`}
+                  aria-label={item.kind === "photo" ? t.removePhoto(n + 1) : t.removeVideo(n + 1)}
                 >
-                  Remove
+                  {tt.forms.remove}
                 </button>
               </div>
             </li>
@@ -105,23 +108,23 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
 
       {live || state === "starting" ? (
         <div className="pn-driver__camera" data-testid="driver-camera">
-          <video ref={attach} className="pn-driver__viewfinder" playsInline muted aria-label="Camera preview" />
+          <video ref={attach} className="pn-driver__viewfinder" playsInline muted aria-label={t.preview} />
           <div className="pn-report__row">
             <button ref={shutterRef} type="button" className="pn-btn pn-btn--primary pn-report__small" onClick={() => void onPhoto()} disabled={!live || recording} data-testid="driver-shutter">
-              Take photo
+              {t.takePhoto}
             </button>
             {canClip ? (
               <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => void onClip()} disabled={!live} data-testid="driver-record">
-                {recording ? "Stop recording" : `Record video (up to ${MAX_CLIP_SECONDS} s)`}
+                {recording ? t.stopRecording : t.recordVideo(MAX_CLIP_SECONDS)}
               </button>
             ) : null}
             <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={stop} data-testid="driver-camera-close">
-              Close camera
+              {t.closeCamera}
             </button>
           </div>
           {recording ? (
             <p className="pn-report__hint" role="status">
-              Recording. Tap Stop recording when done.
+              {t.recording}
             </p>
           ) : null}
         </div>
@@ -130,19 +133,19 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
       {!live && state !== "starting" && !full ? (
         <div className="pn-report__row">
           <button ref={openRef} type="button" className="pn-btn pn-btn--primary pn-report__small" onClick={() => void start()} data-testid="driver-open-camera">
-            {items.length > 0 ? "Add another" : "Open camera"}
+            {items.length > 0 ? t.addAnother : t.openCamera}
           </button>
         </div>
       ) : null}
 
       {state === "denied" ? (
         <p className="pn-report__hint" role="status" data-testid="driver-camera-denied">
-          Camera access is off for ParaNaga. You can upload a photo or video instead, or continue without one. To use the camera, allow it in your browser settings.
+          {t.denied}
         </p>
       ) : null}
       {state === "unavailable" ? (
         <p className="pn-report__hint" role="status" data-testid="driver-camera-unavailable">
-          The camera could not be opened on this phone. You can upload a photo or video instead, or continue without one.
+          {t.unavailable}
         </p>
       ) : null}
 
@@ -161,13 +164,13 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
             }}
           />
           <label htmlFor={`${uid}-file`} className="pn-btn pn-btn--secondary pn-report__small pn-driver__upload">
-            Upload a photo or video instead
+            {t.upload}
           </label>
         </div>
       ) : null}
 
       <p className="pn-report__hint">
-        Up to {max} photos or videos. Videos up to {MAX_CLIP_SECONDS} seconds. Photos taken here carry no location data. Files are kept in private storage.
+        {t.limits(max, MAX_CLIP_SECONDS)}
       </p>
       {note ? (
         <p className="pn-report__hint" role="status" data-testid="driver-capture-note">

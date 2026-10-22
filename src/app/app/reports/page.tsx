@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { driverReportsEnabled } from "@/server/flags";
-import { PageFrame } from "@/ui/app-shell/page-frame";
+import { LocalizedPageFrame } from "@/ui/app-shell/localized-page-frame";
 import { ReportsScreen } from "@/ui/reports/reports-screen";
 
 export const metadata: Metadata = {
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 // Static shell: the session and the lists load in the browser from private endpoints.
 export default function ReportsPage() {
   return (
-    <PageFrame title="My reports" back testId="reports-page">
+    <LocalizedPageFrame title="reports" back testId="reports-page">
       <ReportsScreen driverReports={driverReportsEnabled()} />
-    </PageFrame>
+    </LocalizedPageFrame>
   );
 }

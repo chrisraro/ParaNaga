@@ -2,6 +2,7 @@ import { complaintCategoryLabel, type ComplaintCategory } from "@/domain/complai
 import { complaintStatusLabel, type ComplaintStatus } from "@/domain/complaints/status";
 import { categoryLabel, type CorrectionCategory } from "@/domain/corrections/categories";
 import { statusLabel, type CorrectionStatus } from "@/domain/corrections/status";
+import { en, type Dict } from "@/i18n/dict";
 import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 
 // One list for S19 My reports: the caller's corrections (B6) and driver reports (B8), newest
@@ -52,17 +53,17 @@ const COMPLAINT_TONE: Record<ComplaintStatus, StatusTone> = {
 export const correctionTone = (s: CorrectionStatus): StatusTone => CORRECTION_TONE[s];
 export const complaintTone = (s: ComplaintStatus): StatusTone => COMPLAINT_TONE[s];
 
-export function mergeReports(corrections: readonly CorrectionIn[], complaints: readonly ComplaintIn[]): ReportRow[] {
+export function mergeReports(corrections: readonly CorrectionIn[], complaints: readonly ComplaintIn[], copy: Dict = en): ReportRow[] {
   const rows: ReportRow[] = [
     ...corrections.map(
       (c): ReportRow => ({
         kind: "correction",
         id: c.id,
         reference: null,
-        kindLabel: "Correction",
-        categoryLabel: categoryLabel(c.category),
+        kindLabel: copy.reports.kind.correction,
+        categoryLabel: categoryLabel(c.category, copy.report),
         status: c.status,
-        statusLabel: statusLabel(c.status),
+        statusLabel: statusLabel(c.status, copy.report),
         tone: correctionTone(c.status),
         at: c.submittedAt,
         href: `/app/reports/correction/${c.id}`,
@@ -73,10 +74,10 @@ export function mergeReports(corrections: readonly CorrectionIn[], complaints: r
         kind: "complaint",
         id: c.id,
         reference: c.reference,
-        kindLabel: "Driver report",
-        categoryLabel: complaintCategoryLabel(c.category),
+        kindLabel: copy.reports.kind.complaint,
+        categoryLabel: complaintCategoryLabel(c.category, copy.driverReport),
         status: c.status,
-        statusLabel: complaintStatusLabel(c.status),
+        statusLabel: complaintStatusLabel(c.status, copy.driverReport),
         tone: complaintTone(c.status),
         at: c.submittedAt,
         href: `/app/reports/complaint/${c.id}`,
@@ -87,14 +88,9 @@ export function mergeReports(corrections: readonly CorrectionIn[], complaints: r
 }
 
 /** Neutral wording for a closed driver report; never a finding about the driver. */
-export const OUTCOME_LABELS: Record<string, string> = {
-  info_provided_to_reporter: "Information was sent to you",
-  insufficient_detail: "Not enough detail to follow up",
-  duplicate: "Already reported",
-  outside_scope: "Outside what ParaNaga can review",
-  reporter_withdrew: "You withdrew it",
-};
-export const outcomeLabel = (code: string | null): string | null => (code ? (OUTCOME_LABELS[code] ?? null) : null);
+export const OUTCOME_LABELS: Record<string, string> = en.reports.outcomes;
+export const outcomeLabel = (code: string | null, copy: Dict["reports"] = en.reports): string | null =>
+  code ? ((copy.outcomes as Record<string, string>)[code] ?? null) : null;
 
 export const manilaDate = (iso: string, locale: Locale = DEFAULT_LOCALE): string => {
   const t = new Date(iso);

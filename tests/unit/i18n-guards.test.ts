@@ -102,6 +102,23 @@ const SAME_AS_EN: Record<string, string> = {
   "landing.offline.android.device": "device and browser names",
   "landing.offline.iphone.device": "device and browser names",
   "landing.footer.osm": "legal attribution (OpenStreetMap contributors)",
+  // P3 screens (T13).
+  ...Object.fromEntries(
+    Object.keys(en.sources.verbatim).map((key) => [
+      `sources.verbatim.${key}`,
+      "data basis, licence and attribution text: English verbatim until a verbatim-reviewed translation (ledger note)",
+    ]),
+  ),
+  "help.dataGroup": "everyday English loanword",
+  "report.statuses.draft": "everyday English loanword",
+  "driverReport.bodyName": "everyday word (jeepney body number)",
+  "driverReport.summary.body": "everyday word (jeepney body number)",
+  "reports.facts.body": "everyday word (jeepney body number)",
+  "driverReport.summary.operator": "everyday English loanword",
+  "reports.facts.operator": "everyday English loanword",
+  "mynaga.panelTitle": "brand",
+  "community.postTitle": "everyday English loanword (Taglish 'post')",
+  "auth.emailLabel": "everyday English loanword",
 };
 
 /** Buttons and chips (§1.7 #6): a translation may be at most 1.35 × the English length. */

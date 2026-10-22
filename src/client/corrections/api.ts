@@ -9,6 +9,10 @@ import {
   type CreateCorrectionInput,
 } from "@/domain/corrections/schemas";
 import { confirmMediaResponseSchema, createMediaSlotResponseSchema } from "@/domain/media/schemas";
+import { en } from "@/i18n/dict";
+
+// English messages from the dictionary; screens show them with translated(message, en.report.api, t.report.api).
+const M = en.report.api;
 
 export type SubmitResult =
   | { ok: true; correction: CorrectionSummary }
@@ -24,28 +28,28 @@ export async function submitCorrection(input: CreateCorrectionInput): Promise<Su
       credentials: "same-origin",
       body: JSON.stringify(input),
     });
-    if (res.status === 401) return { ok: false, reason: "signed_out", message: "Sign in to send a report." };
-    if (res.status === 429) return { ok: false, reason: "rate_limited", message: "You are sending reports too quickly. Wait a moment, then try again." };
+    if (res.status === 401) return { ok: false, reason: "signed_out", message: M.signedOut };
+    if (res.status === 429) return { ok: false, reason: "rate_limited", message: M.rateLimited };
     if (res.status === 400) {
       const data = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-      return { ok: false, reason: "invalid", message: data?.error?.message ?? "Check the report and try again." };
+      return { ok: false, reason: "invalid", message: data?.error?.message ?? M.invalid };
     }
-    if (!res.ok) return { ok: false, reason: "failed", message: "Could not send the report. Your answers are kept. Try again." };
+    if (!res.ok) return { ok: false, reason: "failed", message: M.failed };
     const parsed = createCorrectionResponseSchema.safeParse(await res.json());
-    if (!parsed.success) return { ok: false, reason: "failed", message: "Could not send the report. Your answers are kept. Try again." };
+    if (!parsed.success) return { ok: false, reason: "failed", message: M.failed };
     return { ok: true, correction: parsed.data.correction };
   } catch {
-    return { ok: false, reason: "failed", message: "No connection. Your answers are kept. Try again." };
+    return { ok: false, reason: "failed", message: M.offline };
   }
 }
 
 export type UploadResult = { ok: true; mediaId: string } | { ok: false; message: string };
 
-const UPLOAD_FAILED = "The photo could not be uploaded. You can send the report without it.";
+const UPLOAD_FAILED = M.uploadFailed;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export async function uploadEvidencePhoto(file: File): Promise<UploadResult> {
-  if (!IMAGE_TYPES.includes(file.type)) return { ok: false, message: "Use a JPEG, PNG or WebP photo." };
+  if (!IMAGE_TYPES.includes(file.type)) return { ok: false, message: M.photoType };
   try {
     const slotRes = await fetch("/api/v1/media/slots", {
       method: "POST",
@@ -65,7 +69,7 @@ export async function uploadEvidencePhoto(file: File): Promise<UploadResult> {
     });
     if (!confirm.ok) return { ok: false, message: UPLOAD_FAILED };
     const media = confirmMediaResponseSchema.parse(await confirm.json()).media;
-    return media.status === "verified" ? { ok: true, mediaId: media.id } : { ok: false, message: "That photo was not accepted. Try another one." };
+    return media.status === "verified" ? { ok: true, mediaId: media.id } : { ok: false, message: M.photoRejected };
   } catch {
     return { ok: false, message: UPLOAD_FAILED };
   }

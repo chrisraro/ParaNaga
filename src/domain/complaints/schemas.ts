@@ -3,6 +3,7 @@ import { NAGA_MAX_BOUNDS } from "@/domain/geo/naga";
 import { COMPLAINT_CATEGORIES } from "./categories";
 import { REFERENCE_RE } from "./reference";
 import { COMPLAINT_STATUSES } from "./status";
+import { en, type Dict } from "@/i18n/dict";
 
 // Limits from spec 05 §5.6 (complaint description 2 000 chars) and §3.9 (evidence).
 export const COMPLAINT_DESCRIPTION_MIN = 10;
@@ -22,11 +23,11 @@ const clean = (min: number, max: number) =>
 const vehicleId = z.string().trim().min(1).max(VEHICLE_ID_MAX).regex(/^[A-Za-z0-9][A-Za-z0-9 -]*$/);
 
 /** Null when fine, else a short reason. `now` is injected so the rule is testable. */
-export function incidentTimeProblem(iso: string, now: number): string | null {
+export function incidentTimeProblem(iso: string, now: number, copy: Dict["driverReport"] = en.driverReport): string | null {
   const t = Date.parse(iso);
-  if (!Number.isFinite(t)) return "Enter when it happened.";
-  if (t > now + INCIDENT_FUTURE_SKEW_MS) return "The time cannot be in the future.";
-  if (t < now - INCIDENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000) return "Reports can cover the last 12 months only.";
+  if (!Number.isFinite(t)) return copy.enterWhen;
+  if (t > now + INCIDENT_FUTURE_SKEW_MS) return copy.future;
+  if (t < now - INCIDENT_MAX_AGE_DAYS * 24 * 60 * 60 * 1000) return copy.tooOld;
   return null;
 }
 
@@ -106,20 +107,20 @@ export type EvidenceUrlResponse = z.infer<typeof evidenceUrlResponseSchema>;
 
 // ---------------------------------------------------------------- per-step checks (client)
 
-export function validateCategory(category: string | null): string | null {
-  return category && (COMPLAINT_CATEGORIES as readonly string[]).includes(category) ? null : "Choose what happened.";
+export function validateCategory(category: string | null, copy: Dict = en): string | null {
+  return category && (COMPLAINT_CATEGORIES as readonly string[]).includes(category) ? null : copy.driverReport.chooseWhat;
 }
 
-export function validateComplaintDescription(description: string): string | null {
+export function validateComplaintDescription(description: string, copy: Dict = en): string | null {
   const n = description.trim().length;
-  if (n < COMPLAINT_DESCRIPTION_MIN) return `Write at least ${COMPLAINT_DESCRIPTION_MIN} characters.`;
-  if (n > COMPLAINT_DESCRIPTION_MAX) return `Keep it under ${COMPLAINT_DESCRIPTION_MAX} characters.`;
-  if (CONTROL.test(description)) return "Remove the hidden characters from the text.";
+  if (n < COMPLAINT_DESCRIPTION_MIN) return copy.forms.minChars(COMPLAINT_DESCRIPTION_MIN);
+  if (n > COMPLAINT_DESCRIPTION_MAX) return copy.forms.maxChars(COMPLAINT_DESCRIPTION_MAX);
+  if (CONTROL.test(description)) return copy.driverReport.hiddenChars;
   return null;
 }
 
-export function validateVehicleId(value: string, label: string): string | null {
+export function validateVehicleId(value: string, label: string, copy: Dict["driverReport"] = en.driverReport): string | null {
   const v = value.trim();
   if (!v) return null;
-  return vehicleId.safeParse(v).success ? null : `${label}: use letters, numbers, spaces or dashes (up to ${VEHICLE_ID_MAX}).`;
+  return vehicleId.safeParse(v).success ? null : copy.vehicleId(label, VEHICLE_ID_MAX);
 }

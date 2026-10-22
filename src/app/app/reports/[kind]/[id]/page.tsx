@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { parseUuidParam } from "@/domain/api/schemas";
-import { PageFrame } from "@/ui/app-shell/page-frame";
+import { LocalizedPageFrame } from "@/ui/app-shell/localized-page-frame";
 import { ReportDetailScreen } from "@/ui/reports/report-detail";
 
 export const metadata: Metadata = {
@@ -15,11 +15,11 @@ export const metadata: Metadata = {
 // private endpoint (like the rest of the app). The kind is "complaint" or "correction".
 export default function ReportPage({ params }: PageProps<"/app/reports/[kind]/[id]">) {
   return (
-    <PageFrame title="Report" back testId="report-detail-page">
+    <LocalizedPageFrame title="reportDetail" back testId="report-detail-page">
       <Suspense fallback={<p role="status">Loading…</p>}>
         <ReportFromParams params={params} />
       </Suspense>
-    </PageFrame>
+    </LocalizedPageFrame>
   );
 }
 

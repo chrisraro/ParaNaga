@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CONTENT_STATES } from "./status";
 import { TOPIC_VALUES } from "./topics";
+import { en, type Dict } from "@/i18n/dict";
 
 // Request and response shapes of /api/v1/community/*. Request bodies are strict.
 
@@ -38,14 +39,10 @@ const tagsSchema = z
 export const routeCodeSchema = z.string().trim().regex(/^[A-Za-z0-9][A-Za-z0-9-]{0,15}$/);
 export const topicSchema = z.enum(TOPIC_VALUES);
 
-export const REPORT_REASONS = [
-  { value: "spam", label: "Spam or advertising" },
-  { value: "harassment", label: "Harassment or threats" },
-  { value: "personal_info", label: "Private personal details" },
-  { value: "off_topic", label: "Not about commuting in Naga" },
-  { value: "misleading", label: "Misleading information" },
-  { value: "other", label: "Something else" },
-] as const;
+const REASONS = ["spam", "harassment", "personal_info", "off_topic", "misleading", "other"] as const;
+/** The report reasons in display order, worded in `copy`'s language (community.reasons). */
+export const reportReasonsIn = (copy: Dict["community"] = en.community) => REASONS.map((value) => ({ value, label: copy.reasons[value] }));
+export const REPORT_REASONS = reportReasonsIn();
 export type ReportReason = (typeof REPORT_REASONS)[number]["value"];
 const REPORT_REASON_VALUES = REPORT_REASONS.map((r) => r.value) as [ReportReason, ...ReportReason[]];
 
@@ -116,11 +113,7 @@ export type FeedQuery = z.infer<typeof feedQuerySchema>;
 
 // ---------------------------------------------------------------- responses
 export const labelSchema = z.enum(["community", "official_notice", "incorporated_change"]);
-export const LABEL_TEXT: Record<z.infer<typeof labelSchema>, string> = {
-  community: "Community observation",
-  official_notice: "Official notice",
-  incorporated_change: "Incorporated change",
-};
+export const LABEL_TEXT: Record<z.infer<typeof labelSchema>, string> = en.community.labels;
 
 const stateSchema = z.enum(CONTENT_STATES);
 
@@ -223,22 +216,22 @@ export const blockResponseSchema = z.object({ block: blockEntrySchema });
 export const okResponseSchema = z.object({ ok: z.literal(true) });
 
 // ---------------------------------------------------------------- form validation (client)
-export function validateTitle(value: string): string | null {
+export function validateTitle(value: string, copy: Dict = en): string | null {
   const n = value.trim().length;
-  if (n < TITLE_MIN) return `Write a title of at least ${TITLE_MIN} characters.`;
-  if (n > TITLE_MAX) return `Keep the title under ${TITLE_MAX} characters.`;
+  if (n < TITLE_MIN) return copy.community.titleMin(TITLE_MIN);
+  if (n > TITLE_MAX) return copy.community.titleMax(TITLE_MAX);
   return null;
 }
-export function validateBody(value: string): string | null {
+export function validateBody(value: string, copy: Dict = en): string | null {
   const n = value.trim().length;
-  if (n < BODY_MIN) return `Write at least ${BODY_MIN} characters.`;
-  if (n > BODY_MAX) return `Keep it under ${BODY_MAX} characters.`;
+  if (n < BODY_MIN) return copy.forms.minChars(BODY_MIN);
+  if (n > BODY_MAX) return copy.forms.maxChars(BODY_MAX);
   return null;
 }
-export function validateComment(value: string): string | null {
+export function validateComment(value: string, copy: Dict = en): string | null {
   const n = value.trim().length;
-  if (n < COMMENT_MIN) return `Write at least ${COMMENT_MIN} characters.`;
-  if (n > COMMENT_MAX) return `Keep it under ${COMMENT_MAX} characters.`;
+  if (n < COMMENT_MIN) return copy.forms.minChars(COMMENT_MIN);
+  if (n > COMMENT_MAX) return copy.forms.maxChars(COMMENT_MAX);
   return null;
 }
 /** Splits "a, b #c" into valid, unique tags; returns the invalid ones too. */

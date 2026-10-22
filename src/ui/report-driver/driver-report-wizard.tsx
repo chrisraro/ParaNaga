@@ -19,8 +19,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { EVIDENCE_TYPES, evidenceType, submitComplaint, uploadComplaintEvidence } from "@/client/complaints/api";
 import { useGeolocation } from "@/client/geo/use-geolocation";
-import { COMPLAINT_CATEGORY_INFO, complaintCategoryLabel, type ComplaintCategory } from "@/domain/complaints/categories";
-import { EXPLAINER_POINTS, RECEIPT_NEXT_STEPS, SHARED_PHONE_NOTE } from "@/domain/complaints/notice";
+import { complaintCategoryInfo, complaintCategoryLabel, type ComplaintCategory } from "@/domain/complaints/categories";
 import {
   COMPLAINT_DESCRIPTION_MAX,
   complaintGpsSchema,
@@ -37,8 +36,9 @@ import {
   type ComplaintReceipt,
 } from "@/domain/complaints/schemas";
 import { complaintStatusLabel } from "@/domain/complaints/status";
-import { en } from "@/i18n/en";
+import { en, translated } from "@/i18n/dict";
 import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
+import { useLocale, useT } from "@/i18n/provider";
 import { CameraCapture } from "./camera-capture";
 
 type Step = 1 | 2 | 3 | 4;
@@ -52,14 +52,8 @@ export type Evidence = {
   mediaId?: string;
 };
 
-const STEP_TITLES: Record<Step, string> = {
-  1: "Before you start",
-  2: "Photo or video",
-  3: "What happened",
-  4: "Review and send",
-};
+const STEP_KEYS = { 1: "start", 2: "media", 3: "what", 4: "review" } as const;
 const STEPS = 4;
-const ACK_TEXT = en.acknowledgments.driverReport;
 
 /** "YYYY-MM-DDTHH:mm" in the phone's local time, for <input type="datetime-local">. */
 function localNow(): string {
@@ -77,6 +71,10 @@ function formatLocal(local: string, locale: Locale = DEFAULT_LOCALE): string {
 }
 
 export function DriverReportWizard() {
+  const tt = useT();
+  const t = tt.driverReport;
+  const form = tt.forms;
+  const locale = useLocale();
   const uid = useId();
   const { user, loading } = useAuthSession();
 
@@ -118,7 +116,7 @@ export function DriverReportWizard() {
         setGps(parsed.data);
         setLocationNote(null);
       } else {
-        setLocationNote("This spot is outside Naga City, so it was not added. You can describe the place instead.");
+        setLocationNote(t.outsideNaga);
       }
       setLocating(false);
       stopGeo.current();
@@ -132,9 +130,9 @@ export function DriverReportWizard() {
   const shownLocationNote =
     locationNote ??
     (locating && geo.state === "denied"
-      ? "Location is off for ParaNaga. You can describe the place instead."
+      ? t.locationOff
       : locating && geoFailed
-        ? "Your location could not be found. You can describe the place instead."
+        ? t.locationFailed
         : null);
 
   // Focus the step heading on every step change (not on first render: the page title has focus).
@@ -165,9 +163,9 @@ export function DriverReportWizard() {
   };
 
   const addItem = (blob: Blob, captureKind: CaptureKind): string | null => {
-    if (itemsRef.current.length >= MAX_COMPLAINT_EVIDENCE) return `Up to ${MAX_COMPLAINT_EVIDENCE} photos or videos.`;
+    if (itemsRef.current.length >= MAX_COMPLAINT_EVIDENCE) return t.tooMany(MAX_COMPLAINT_EVIDENCE);
     const mime = evidenceType(blob.type);
-    if (!mime) return "Use a JPEG, PNG or WebP photo, or an MP4 or WebM video.";
+    if (!mime) return t.api.badType;
     const item: Evidence = {
       key: crypto.randomUUID(),
       blob,
@@ -189,18 +187,18 @@ export function DriverReportWizard() {
 
   const onNext3 = () => {
     const problem =
-      validateCategory(category) ??
-      validateComplaintDescription(description) ??
-      incidentTimeProblem(localToIso(incidentLocal) ?? "", Date.now()) ??
-      validateVehicleId(plate, "Plate number") ??
-      validateVehicleId(bodyNumber, "Body number");
+      validateCategory(category, tt) ??
+      validateComplaintDescription(description, tt) ??
+      incidentTimeProblem(localToIso(incidentLocal) ?? "", Date.now(), t) ??
+      validateVehicleId(plate, t.plateName, t) ??
+      validateVehicleId(bodyNumber, t.bodyName, t);
     if (problem) return setError(problem);
     go(4);
   };
 
   const onSend = async () => {
     if (!user || !category) return;
-    if (!accepted) return setError("Tick the box to confirm you have read the note above.");
+    if (!accepted) return setError(t.tickBox);
     const incidentAt = localToIso(incidentLocal);
     if (!incidentAt) return go(3);
     setError(null);
@@ -212,18 +210,18 @@ export function DriverReportWizard() {
         uploaded.push(item);
         continue;
       }
-      setSending(`Uploading ${n + 1} of ${items.length}…`);
-      const result = await uploadComplaintEvidence(item.blob);
+      setSending(t.uploadingN(n + 1, items.length));
+      const result = await uploadComplaintEvidence(item.blob, t.api);
       if (!result.ok) {
         setSending(null);
-        return setError(result.message);
+        return setError(translated(result.message, en.driverReport.api, t.api));
       }
       const done = { ...item, mediaId: result.mediaId };
       uploaded.push(done);
       setItems((all) => all.map((i) => (i.key === item.key ? done : i)));
     }
 
-    setSending("Sending…");
+    setSending(form.sending);
     const result = await submitComplaint({
       clientRequestId: requestId,
       category,
@@ -238,7 +236,7 @@ export function DriverReportWizard() {
       noticeAccepted: true,
     });
     setSending(null);
-    if (!result.ok) return setError(result.message);
+    if (!result.ok) return setError(translated(result.message, en.driverReport.api, t.api));
     // The report is stored: drop the local copies of the files and the answers.
     items.forEach((i) => URL.revokeObjectURL(i.url));
     setItems([]);
@@ -250,35 +248,35 @@ export function DriverReportWizard() {
     return (
       <div className="pn-report" data-testid="driver-receipt">
         <h2 ref={heading} tabIndex={-1} className="pn-report__step">
-          Report sent privately
+          {t.sentTitle}
         </h2>
         <div className="pn-driver__receipt">
-          <span className="pn-driver__receipt-label">Your reference</span>
+          <span className="pn-driver__receipt-label">{t.yourReference}</span>
           <span className="pn-driver__reference" data-testid="driver-reference">
             {receipt.reference}
           </span>
         </div>
         <p className="pn-report__status" role="status">
-          Status: {complaintStatusLabel(receipt.status)}
+          {form.status(complaintStatusLabel(receipt.status, t))}
         </p>
         <section aria-labelledby={`${uid}-next`} className="pn-report__form">
           <h3 id={`${uid}-next`} className="pn-report__disclosure-title">
-            What happens next
+            {t.nextTitle}
           </h3>
           <ul className="pn-driver__list">
-            {RECEIPT_NEXT_STEPS.map((p) => (
+            {Object.values(t.nextSteps).map((p) => (
               <li key={p}>{p}</li>
             ))}
           </ul>
         </section>
         <Link href={`/app/mynaga?report=${receipt.id}`} className="pn-btn pn-btn--primary pn-report__action" data-testid="driver-mynaga">
-          Continue in MyNaga
+          {t.continueMyNaga}
         </Link>
         <Link href="/app/reports" className="pn-btn pn-btn--secondary pn-report__action" data-testid="driver-my-reports">
-          See my reports
+          {form.seeMyReports}
         </Link>
         <Link href="/app" className="pn-btn pn-btn--secondary pn-report__action">
-          Back to the map
+          {form.backToMap}
         </Link>
       </div>
     );
@@ -287,30 +285,30 @@ export function DriverReportWizard() {
   return (
     <div className="pn-report" onKeyDown={onKeyDown} data-testid="driver-wizard">
       <p className="pn-report__progress" data-testid="driver-progress">
-        Step {step} of {STEPS}
+        {form.stepOf(step, STEPS)}
       </p>
       <h2 ref={heading} tabIndex={-1} className="pn-report__step">
-        {STEP_TITLES[step]}
+        {t.steps[STEP_KEYS[step]]}
       </h2>
 
       {step === 1 ? (
         <div className="pn-report__form">
           <div className="pn-driver__emergency" data-testid="driver-emergency">
             <p>
-              <strong>In an emergency, call 911.</strong> ParaNaga does not monitor reports and cannot send help.
+              <strong>{tt.help.emergencyStrong}</strong> {tt.help.emergencyBody}
             </p>
           </div>
           <ul className="pn-driver__list" data-testid="driver-explainer">
-            {EXPLAINER_POINTS.map((p) => (
+            {Object.values(t.explainer).map((p) => (
               <li key={p}>{p}</li>
             ))}
           </ul>
-          <p className="pn-report__hint">{SHARED_PHONE_NOTE}</p>
+          <p className="pn-report__hint">{t.sharedPhone}</p>
           {!loading && !user ? (
             <div className="pn-report__signin" data-testid="driver-signin">
-              <p>Sign in to send a private report. The account keeps the report linked to you so only you can see it.</p>
+              <p>{t.signInToSend}</p>
               <Link href="/app/sign-in" className="pn-btn pn-btn--primary pn-report__action">
-                Sign in
+                {form.signIn}
               </Link>
             </div>
           ) : null}
@@ -330,9 +328,9 @@ export function DriverReportWizard() {
       {step === 3 ? (
         <div className="pn-report__form">
           <fieldset className="pn-report__fieldset">
-            <legend className="pn-report__label">What kind of problem was it?</legend>
-            <div className="pn-group" role="radiogroup" aria-label="What kind of problem was it?">
-              {COMPLAINT_CATEGORY_INFO.map((c) => (
+            <legend className="pn-report__label">{t.kindLegend}</legend>
+            <div className="pn-group" role="radiogroup" aria-label={t.kindLegend}>
+              {complaintCategoryInfo(t).map((c) => (
                 <label key={c.value} className="pn-report__option">
                   <input
                     type="radio"
@@ -355,10 +353,10 @@ export function DriverReportWizard() {
 
           <div className="pn-report__field">
             <label htmlFor={`${uid}-desc`} className="pn-report__label">
-              What happened?
+              {t.whatHappened}
             </label>
             <p id={`${uid}-desc-hint`} className="pn-report__hint">
-              Describe what you saw and heard, in order. Facts help more than opinions.
+              {t.whatHint}
             </p>
             <textarea
               id={`${uid}-desc`}
@@ -370,13 +368,13 @@ export function DriverReportWizard() {
               aria-describedby={`${uid}-desc-hint ${uid}-count`}
             />
             <span id={`${uid}-count`} className="pn-report__count">
-              {description.trim().length} of {COMPLAINT_DESCRIPTION_MAX}
+              {form.count(description.trim().length, COMPLAINT_DESCRIPTION_MAX)}
             </span>
           </div>
 
           <div className="pn-report__field">
             <label htmlFor={`${uid}-when`} className="pn-report__label">
-              When did it happen?
+              {t.whenLabel}
             </label>
             <input
               id={`${uid}-when`}
@@ -388,15 +386,15 @@ export function DriverReportWizard() {
               aria-describedby={`${uid}-when-hint`}
             />
             <p id={`${uid}-when-hint`} className="pn-report__hint">
-              The time of the incident, not when a photo was taken.
+              {t.whenHint}
             </p>
           </div>
 
           <div className="pn-report__field">
-            <span className="pn-report__label">Where did it happen? (optional)</span>
+            <span className="pn-report__label">{t.whereOptional}</span>
             {gps ? (
               <p className="pn-report__value" data-testid="driver-location">
-                Location added, accurate to about {gps.accuracyM} m.
+                {form.locationAdded(gps.accuracyM)}
               </p>
             ) : null}
             <div className="pn-report__row">
@@ -412,22 +410,22 @@ export function DriverReportWizard() {
                 disabled={findingLocation}
                 data-testid="driver-add-location"
               >
-                {findingLocation ? "Finding your location…" : gps ? "Update my location" : "Use my location"}
+                {findingLocation ? form.findingLocation : gps ? form.updateLocation : t.useLocation}
               </button>
               {gps ? (
                 <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => setGps(null)}>
-                  Remove location
+                  {form.removeLocation}
                 </button>
               ) : null}
             </div>
-            <p className="pn-report__hint">Your phone asks for permission only when you tap the button.</p>
+            <p className="pn-report__hint">{form.permissionHint}</p>
             {shownLocationNote ? (
               <p className="pn-report__hint" role="status">
                 {shownLocationNote}
               </p>
             ) : null}
             <label htmlFor={`${uid}-place`} className="pn-report__label">
-              Or describe the place
+              {t.describePlace}
             </label>
             <input
               id={`${uid}-place`}
@@ -441,7 +439,7 @@ export function DriverReportWizard() {
 
           <div className="pn-report__field">
             <label htmlFor={`${uid}-operator`} className="pn-report__label">
-              Operator or cooperative (optional)
+              {t.operatorOptional}
             </label>
             <input
               id={`${uid}-operator`}
@@ -456,7 +454,7 @@ export function DriverReportWizard() {
           <div className="pn-driver__pair">
             <div className="pn-report__field">
               <label htmlFor={`${uid}-plate`} className="pn-report__label">
-                Plate number (optional)
+                {t.plateOptional}
               </label>
               <input
                 id={`${uid}-plate`}
@@ -470,7 +468,7 @@ export function DriverReportWizard() {
             </div>
             <div className="pn-report__field">
               <label htmlFor={`${uid}-body`} className="pn-report__label">
-                Body number (optional)
+                {t.bodyOptional}
               </label>
               <input
                 id={`${uid}-body`}
@@ -483,7 +481,7 @@ export function DriverReportWizard() {
               />
             </div>
           </div>
-          <p className="pn-report__hint">Leave these blank if you did not see them.</p>
+          <p className="pn-report__hint">{t.blankHint}</p>
         </div>
       ) : null}
 
@@ -491,50 +489,51 @@ export function DriverReportWizard() {
         <div className="pn-report__form">
           <dl className="pn-group pn-report__summary" data-testid="driver-summary">
             <div className="pn-kv">
-              <dt className="pn-kv__key">Problem</dt>
-              <dd className="pn-kv__value">{category ? complaintCategoryLabel(category) : ""}</dd>
+              <dt className="pn-kv__key">{t.summary.problem}</dt>
+              <dd className="pn-kv__value">{category ? complaintCategoryLabel(category, t) : ""}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">What happened</dt>
+              <dt className="pn-kv__key">{t.summary.whatHappened}</dt>
               <dd className="pn-kv__value pn-report__wrap">{description.trim()}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">When</dt>
-              <dd className="pn-kv__value">{formatLocal(incidentLocal)}</dd>
+              <dt className="pn-kv__key">{t.summary.when}</dt>
+              <dd className="pn-kv__value">{formatLocal(incidentLocal, locale)}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">Where</dt>
+              <dt className="pn-kv__key">{t.summary.where}</dt>
               <dd className="pn-kv__value pn-report__wrap">
-                {[gps ? `Location added, about ${gps.accuracyM} m` : null, locationText.trim() || null].filter(Boolean).join(" · ") || "Not added"}
+                {[gps ? t.locationSummary(gps.accuracyM) : null, locationText.trim() || null].filter(Boolean).join(" · ") || form.notAdded}
               </dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">Operator</dt>
-              <dd className="pn-kv__value">{operator.trim() || "Not given"}</dd>
+              <dt className="pn-kv__key">{t.summary.operator}</dt>
+              <dd className="pn-kv__value">{operator.trim() || form.notGiven}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">Plate</dt>
-              <dd className="pn-kv__value">{plate.trim() || "Not given"}</dd>
+              <dt className="pn-kv__key">{t.summary.plate}</dt>
+              <dd className="pn-kv__value">{plate.trim() || form.notGiven}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">Body number</dt>
-              <dd className="pn-kv__value">{bodyNumber.trim() || "Not given"}</dd>
+              <dt className="pn-kv__key">{t.summary.body}</dt>
+              <dd className="pn-kv__value">{bodyNumber.trim() || form.notGiven}</dd>
             </div>
             <div className="pn-kv">
-              <dt className="pn-kv__key">Photos and videos</dt>
+              <dt className="pn-kv__key">{t.summary.media}</dt>
               <dd className="pn-kv__value">{items.length}</dd>
             </div>
           </dl>
-          <p className="pn-report__hint">This is everything the reviewer will see. It is not sent to Naga City.</p>
+          <p className="pn-report__hint">{t.reviewerSees}</p>
 
           <section className="pn-report__disclosure" aria-labelledby={`${uid}-ack`} data-testid="driver-ack-notice">
             <h3 id={`${uid}-ack`} className="pn-report__disclosure-title">
-              Before you send
+              {t.beforeSend}
             </h3>
-            <p className="pn-driver__ack-text">{ACK_TEXT}</p>
+            {/* The acknowledgment is English in every language until its verbatim-reviewed translation. */}
+            <p className="pn-driver__ack-text">{tt.acknowledgments.driverReport}</p>
             <label className="pn-report__check">
               <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} data-testid="driver-ack" />
-              <span>I have read this and my report is accurate.</span>
+              <span>{t.ackCheckbox}</span>
             </label>
           </section>
         </div>
@@ -554,7 +553,7 @@ export function DriverReportWizard() {
       <div className="pn-report__nav">
         {step === 1 ? (
           <Link href="/app" className="pn-btn pn-btn--secondary pn-report__action" data-testid="driver-cancel">
-            Cancel
+            {tt.kit.cancel}
           </Link>
         ) : (
           <button
@@ -564,22 +563,22 @@ export function DriverReportWizard() {
             disabled={sending !== null}
             data-testid="driver-back"
           >
-            Back
+            {form.back}
           </button>
         )}
         {step === 1 && user ? (
           <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={() => go(2)} data-testid="driver-next">
-            Continue
+            {form.continue}
           </button>
         ) : null}
         {step === 2 ? (
           <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={() => go(3)} data-testid="driver-next">
-            {items.length > 0 ? "Continue" : "Continue without photo"}
+            {items.length > 0 ? form.continue : t.continueNoPhoto}
           </button>
         ) : null}
         {step === 3 ? (
           <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext3} data-testid="driver-next">
-            Review
+            {form.review}
           </button>
         ) : null}
         {step === 4 ? (
@@ -590,7 +589,7 @@ export function DriverReportWizard() {
             disabled={sending !== null}
             data-testid="driver-send"
           >
-            Send privately
+            {t.sendPrivately}
           </button>
         ) : null}
       </div>

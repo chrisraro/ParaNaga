@@ -25,7 +25,9 @@ import { Note } from "@/ui/kit/note";
 import { Segmented, type SegmentedOption } from "@/ui/kit/segmented";
 import { StatusBadge, type BadgeVariant } from "@/ui/kit/badge";
 import { SOURCES_HREF } from "./sources-href";
-import { ARTICLES, articleHref, type ArticleSlug } from "./articles";
+import { en, type Dict } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
+import { articleHref, articlesFor, type ArticleSlug } from "./articles";
 
 export type HelpTab = "help" | "safety" | "data";
 const TABS: readonly HelpTab[] = ["help", "safety", "data"];
@@ -34,22 +36,12 @@ export function parseHelpTab(raw: string | null): HelpTab {
   return TABS.includes(raw as HelpTab) ? (raw as HelpTab) : "help";
 }
 
-export const INDEPENDENT_NOTE = "ParaNaga is an independent commuter guide. It is not an official City Government app.";
-export const DATA_FOOTER = "ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.";
-export const SAFETY_TIPS = [
-  "Wait off the road, where other passengers wait.",
-  "Ask the driver where the jeepney goes before you board; signboards are not verified yet.",
-  "Keep valuables in front of you in crowded vehicles.",
-  "Note the plate or body number if something feels wrong.",
-  "Share your trip summary with someone you trust.",
-] as const;
-export const BADGE_MEANINGS: readonly { variant: BadgeVariant; text: string }[] = [
-  { variant: "verified", text: "Checked in the field. Nothing in Naga yet." },
-  { variant: "candidate", text: "From a public map, not checked." },
-  { variant: "documented", text: "Named in documents; no mapped location." },
-  { variant: "unverified-route", text: "Built from mapped pins. Confirm with the driver." },
-  { variant: "approximate-path", text: "Traced along roads between pins. Not a surveyed shape." },
-];
+export const INDEPENDENT_NOTE = en.help.independentNote;
+export const DATA_FOOTER = en.help.dataFooter;
+export const SAFETY_TIPS = Object.values(en.help.tips);
+const BADGE_ORDER = ["verified", "candidate", "documented", "unverified-route", "approximate-path"] as const satisfies readonly BadgeVariant[];
+const badgeMeanings = (t: Dict["help"]): readonly { variant: BadgeVariant; text: string }[] => BADGE_ORDER.map((variant) => ({ variant, text: t.badges[variant] }));
+export const BADGE_MEANINGS = badgeMeanings(en.help);
 
 const ICON = { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2.2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true, focusable: false } as const;
 
@@ -72,20 +64,23 @@ function Tile({ d }: { d: string }) {
 }
 
 function HelpPanel() {
+  const tt = useT();
+  const t = tt.help;
   return (
     <>
-      <ListGroup label="Help topics" testId="help-links">
-        {ARTICLES.map((a) => (
+      <ListGroup label={t.topicsLabel} testId="help-links">
+        {articlesFor(tt).map((a) => (
           <ListCell key={a.slug} lead={<Tile d={ARTICLE_ICONS[a.slug]} />} title={a.title} href={articleHref(a.slug)} compact testId={`help-link-${a.slug}`} />
         ))}
-        <ListCell lead={<Tile d="M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z" />} title="Report a problem with a driver" href="/app/mynaga" compact testId="help-link-mynaga" />
+        <ListCell lead={<Tile d="M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z" />} title={t.reportDriverLink} href="/app/mynaga" compact testId="help-link-mynaga" />
       </ListGroup>
-      <Note testId="help-independent">{INDEPENDENT_NOTE}</Note>
+      <Note testId="help-independent">{t.independentNote}</Note>
     </>
   );
 }
 
 function SafetyPanel({ driverReports }: { driverReports: boolean }) {
+  const t = useT().help;
   return (
     <>
       <div className="pn-help__emergency" data-testid="help-emergency">
@@ -93,15 +88,15 @@ function SafetyPanel({ driverReports }: { driverReports: boolean }) {
           <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />
         </svg>
         <p>
-          <strong>In an emergency, call 911.</strong> ParaNaga does not monitor reports and cannot send help.
+          <strong>{t.emergencyStrong}</strong> {t.emergencyBody}
         </p>
       </div>
       <section className="pn-section" aria-labelledby="pn-help-tips">
         <h2 id="pn-help-tips" className="pn-section__title">
-          Commuting safely
+          {t.tipsTitle}
         </h2>
         <ul className="pn-group" data-testid="help-tips">
-          {SAFETY_TIPS.map((tip) => (
+          {Object.values(t.tips).map((tip) => (
             <li key={tip} className="pn-help__tip">
               <svg {...ICON} width={18} height={18} strokeWidth={2.4}>
                 <path d="M5 12l5 5L20 7" />
@@ -113,25 +108,26 @@ function SafetyPanel({ driverReports }: { driverReports: boolean }) {
       </section>
       {driverReports ? (
         <Link href="/app/report-driver" className="pn-help__report" data-testid="help-report-driver-private">
-          Report a driver privately in ParaNaga
+          {t.reportPrivately}
         </Link>
       ) : null}
       <Link href="/app/mynaga" className="pn-help__report" data-testid="help-report-driver">
-        Report a driver to the City in MyNaga
+        {t.reportMyNaga}
       </Link>
     </>
   );
 }
 
 function DataPanel() {
+  const t = useT().help;
   return (
     <>
       <section className="pn-section" aria-labelledby="pn-help-badges">
         <h2 id="pn-help-badges" className="pn-section__title">
-          What the badges mean
+          {t.badgesTitle}
         </h2>
         <ul className="pn-group" data-testid="help-badges">
-          {BADGE_MEANINGS.map((b) => (
+          {badgeMeanings(t).map((b) => (
             <li key={b.variant} className="pn-help__badge-row">
               <StatusBadge variant={b.variant} />
               <p>{b.text}</p>
@@ -139,23 +135,21 @@ function DataPanel() {
           ))}
         </ul>
       </section>
-      <ListGroup label="Data" testId="help-data">
-        <ListCell title="Sources and credits" href={SOURCES_HREF} compact testId="help-sources-link" />
+      <ListGroup label={t.dataGroup} testId="help-data">
+        <ListCell title={t.sourcesLink} href={SOURCES_HREF} compact testId="help-sources-link" />
       </ListGroup>
-      <Note testId="help-data-footer">{DATA_FOOTER}</Note>
+      <Note testId="help-data-footer">{t.dataFooter}</Note>
     </>
   );
 }
 
-const TAB_OPTIONS: readonly SegmentedOption<HelpTab>[] = [
-  { value: "help", label: "Help", id: "pn-help-tab-help", controls: "pn-help-panel" },
-  { value: "safety", label: "Safety", id: "pn-help-tab-safety", controls: "pn-help-panel" },
-  { value: "data", label: "About data", id: "pn-help-tab-data", controls: "pn-help-panel" },
-];
+const tabOptions = (t: Dict["help"]): readonly SegmentedOption<HelpTab>[] =>
+  TABS.map((value) => ({ value, label: t.tabs[value], id: `pn-help-tab-${value}`, controls: "pn-help-panel" }));
 
 const PANELS: Record<HelpTab, (props: { driverReports: boolean }) => ReactNode> = { help: HelpPanel, safety: SafetyPanel, data: DataPanel };
 
 export function HelpScreen({ driverReports = false }: { driverReports?: boolean }) {
+  const t = useT().help;
   const params = useSearchParams();
   const fromUrl = parseHelpTab(params.get("tab"));
   // Kept in step with ?tab= when a navigation changes it (Back from an article); a tap replaces
@@ -172,7 +166,7 @@ export function HelpScreen({ driverReports = false }: { driverReports?: boolean 
   };
   return (
     <div className="pn-help" data-testid="help-screen">
-      <Segmented options={TAB_OPTIONS} value={tab} onChange={choose} label="Help sections" variant="tablist" testId="help-tabs" />
+      <Segmented options={tabOptions(t)} value={tab} onChange={choose} label={t.tabsLabel} variant="tablist" testId="help-tabs" />
       <div id="pn-help-panel" role="tabpanel" aria-labelledby={`pn-help-tab-${tab}`} className="pn-help__panel" tabIndex={0} data-testid={`help-panel-${tab}`}>
         {PANELS[tab]({ driverReports })}
       </div>

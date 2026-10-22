@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { parseUuidParam } from "@/domain/api/schemas";
-import { PageFrame } from "@/ui/app-shell/page-frame";
+import { LocalizedPageFrame } from "@/ui/app-shell/localized-page-frame";
 import { PostComposer } from "@/ui/community/post-composer";
 
 export const metadata: Metadata = {
@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 
 export default function EditPostPage({ params }: PageProps<"/app/community/[id]/edit">) {
   return (
-    <PageFrame title="Edit post" back testId="community-edit-page">
+    <LocalizedPageFrame title="communityEdit" back testId="community-edit-page">
       <Suspense fallback={null}>
         <ComposerFromParams params={params} />
       </Suspense>
-    </PageFrame>
+    </LocalizedPageFrame>
   );
 }
 

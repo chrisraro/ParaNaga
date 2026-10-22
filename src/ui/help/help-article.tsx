@@ -17,12 +17,16 @@ import { basisRows } from "@/domain/eta/basis";
 import { publishedDateText } from "@/domain/network/present";
 import { useDocumentTitle } from "@/ui/app-shell/document-title";
 import { DetailPanel, useFocusOnMount } from "@/ui/detail/detail-frame";
+import { en } from "@/i18n/dict";
+import { useLocale, useT } from "@/i18n/provider";
 import { findArticle, type Article, type ArticleSlug } from "./articles";
 
-export const UNKNOWN_PUBLISHED_DATE = "the last time this phone was online";
+export const UNKNOWN_PUBLISHED_DATE = en.help.unknownPublishedDate;
 
 /** The published date of the data on this phone, in words; null while it is being read. */
 function usePublishedDate(): string | null {
+  const t = useT().help;
+  const locale = useLocale();
   const head = useNetworkResource("/api/v1/network/head", networkHeadSchema);
   const seen = head.status === "ready" ? head.data : null;
   const [stored, setStored] = useState<string | null | undefined>(undefined);
@@ -41,8 +45,8 @@ function usePublishedDate(): string | null {
       live = false;
     };
   }, [failed]);
-  if (seen) return publishedDateText(seen.publishedAt) ?? UNKNOWN_PUBLISHED_DATE;
-  if (failed && stored !== undefined) return publishedDateText(stored) ?? UNKNOWN_PUBLISHED_DATE;
+  if (seen) return publishedDateText(seen.publishedAt, locale) ?? t.unknownPublishedDate;
+  if (failed && stored !== undefined) return publishedDateText(stored, locale) ?? t.unknownPublishedDate;
   return null;
 }
 
@@ -66,22 +70,24 @@ function DatedParagraphs({ article }: { article: Article }) {
   return <Paragraphs paragraphs={date === null || !article.dated ? article.body : [...article.body, article.dated(date)]} />;
 }
 
-export const NO_TIME_MODEL = "The time-estimate model is not on this phone yet. Open ParaNaga with a connection once to load it.";
+export const NO_TIME_MODEL = en.help.noTimeModel;
 
 /**
  * "How times are estimated": the lead, then one paragraph per basis row (with its A1–A3 notes)
  * from the time model of the snapshot on this phone (the service worker answers offline).
  */
 function BasisParagraphs({ article }: { article: Article }) {
+  const t = useT();
   const { status, snapshot } = useSnapshot(true);
   const model = snapshot?.etaModel ?? null;
-  const rows = model ? basisRows(model).flatMap((r) => [r.text, ...r.assumptions.map((a) => `Assumption ${a}`)]) : [];
-  const tail = model ? rows : status === "ready" || status === "error" ? [NO_TIME_MODEL] : [];
+  const rows = model ? basisRows(model, t.eta).flatMap((r) => [r.text, ...r.assumptions.map((a) => t.help.assumption(a))]) : [];
+  const tail = model ? rows : status === "ready" || status === "error" ? [t.help.noTimeModel] : [];
   return <Paragraphs paragraphs={[...article.body, ...tail]} />;
 }
 
 export function HelpArticleScreen({ slug }: { slug: ArticleSlug }) {
-  const article = findArticle(slug);
+  const t = useT();
+  const article = findArticle(slug, t);
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   // The tab and history entry name the article (the route's static metadata says "Help"). The
   // old title is restored only if it is still ours (see DetailNotFound).
@@ -89,7 +95,7 @@ export function HelpArticleScreen({ slug }: { slug: ArticleSlug }) {
   useDocumentTitle(title);
   if (!article) return null;
   return (
-    <DetailPanel title="Help" testId="help-article">
+    <DetailPanel title={t.help.title} testId="help-article">
       <main className="pn-detail__main pn-detail-in">
         <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
           {article.title}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PageFrame } from "@/ui/app-shell/page-frame";
+import { LocalizedPageFrame } from "@/ui/app-shell/localized-page-frame";
 import { ReportWizard } from "@/ui/report/report-wizard";
 
 export const metadata: Metadata = {
@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 // the API). The entity comes from ?type=&id=&label= (inside Suspense, so the shell stays static).
 export default function ReportPage() {
   return (
-    <PageFrame title="Report a correction" back testId="report-page">
+    <LocalizedPageFrame title="report" back testId="report-page">
       <Suspense fallback={null}>
         <ReportWizard />
       </Suspense>
-    </PageFrame>
+    </LocalizedPageFrame>
   );
 }

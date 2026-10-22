@@ -2,6 +2,7 @@
 // accepted | rejected | duplicate -> incorporated. Reviewers move it along through definer
 // functions; the submitter never does. Nothing here touches published transit data: accepted
 // only becomes incorporated through a validated publication (AC-13).
+import { en, type Dict } from "@/i18n/dict";
 
 export const CORRECTION_STATUSES = [
   "draft",
@@ -36,18 +37,6 @@ export function isTerminal(status: CorrectionStatus): boolean {
   return TRANSITIONS[status].length === 0;
 }
 
-const STATUS_LABELS: Record<CorrectionStatus, string> = {
-  draft: "Draft",
-  submitted: "Received",
-  under_review: "Being reviewed",
-  needs_evidence: "Needs more detail",
-  accepted: "Accepted",
-  rejected: "Not accepted",
-  duplicate: "Already reported",
-  incorporated: "Added to the data",
-  superseded: "Replaced by newer data",
-};
-
-export function statusLabel(status: CorrectionStatus): string {
-  return STATUS_LABELS[status];
+export function statusLabel(status: CorrectionStatus, copy: Dict["report"] = en.report): string {
+  return copy.statuses[status];
 }

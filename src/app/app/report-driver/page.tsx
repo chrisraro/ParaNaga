@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { driverReportsEnabled } from "@/server/flags";
-import { PageFrame } from "@/ui/app-shell/page-frame";
+import { LocalizedPageFrame } from "@/ui/app-shell/localized-page-frame";
 import { DriverReportWizard } from "@/ui/report-driver/driver-report-wizard";
 
 export const metadata: Metadata = {
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 export default function ReportDriverPage() {
   if (!driverReportsEnabled()) notFound(); // N2: hidden until a complaint reviewer exists; riders use MyNaga
   return (
-    <PageFrame title="Report a driver" back testId="report-driver-page">
+    <LocalizedPageFrame title="reportDriver" back testId="report-driver-page">
       <DriverReportWizard />
-    </PageFrame>
+    </LocalizedPageFrame>
   );
 }

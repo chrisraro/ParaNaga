@@ -15,7 +15,6 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { fetchCommunityMe, fetchPost, submitEdit, submitPost } from "@/client/community/api";
-import { DRIVER_NOTICE } from "@/domain/community/guidelines";
 import {
   BODY_MAX,
   MAX_TAGS,
@@ -26,7 +25,9 @@ import {
   routeCodeSchema,
 } from "@/domain/community/schemas";
 import { stateHint, stateLabel, type ContentState } from "@/domain/community/status";
-import { COMMUNITY_TOPICS, type CommunityTopic } from "@/domain/community/topics";
+import { topicsIn, type CommunityTopic } from "@/domain/community/topics";
+import { en, translated } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 import { GuidelinesAck, SignInPrompt } from "./parts";
 
 type Props = { mode: "new" } | { mode: "edit"; postId: string };
@@ -34,6 +35,8 @@ type Step = "guidelines" | "write";
 type Sent = { id: string; state: ContentState; isEdit: boolean; visibleToOthers: boolean };
 
 export function PostComposer(props: Props) {
+  const tt = useT();
+  const t = tt.community;
   const uid = useId();
   const { user, loading: authLoading } = useAuthSession();
   const editId = props.mode === "edit" ? props.postId : null;
@@ -79,7 +82,7 @@ export function PostComposer(props: Props) {
       if (cancelled) return;
       if (!r.ok) return setLoadError(r.message);
       const draft = r.data.post.editDraft;
-      if (!r.data.post.isOwn || !draft) return setLoadError("Only the author can edit this post.");
+      if (!r.data.post.isOwn || !draft) return setLoadError(en.community.onlyAuthor);
       setTitle(draft.title);
       setBody(draft.body);
       setTagText(draft.tags.join(" "));
@@ -109,7 +112,7 @@ export function PostComposer(props: Props) {
   };
 
   const onContinue = () => {
-    if (!ackChecked) return setError("Tick the box to confirm you have read the guidelines.");
+    if (!ackChecked) return setError(t.tickGuidelines);
     setError(null);
     setStep("write");
   };
@@ -118,12 +121,12 @@ export function PostComposer(props: Props) {
     if (!user) return;
     const tags = parseTagInput(tagText);
     const problem =
-      (props.mode === "new" && !topic ? "Choose a topic." : null) ??
-      validateTitle(title) ??
-      validateBody(body) ??
-      (tags.invalid.length > 0 ? `These tags are not allowed: ${tags.invalid.join(", ")}. Use letters, numbers and hyphens.` : null) ??
-      (tags.tags.length > MAX_TAGS ? `Use at most ${MAX_TAGS} tags.` : null) ??
-      (route.trim() && !routeCodeSchema.safeParse(route).success ? "Route codes use letters, numbers and hyphens, like R4 or R8-A." : null);
+      (props.mode === "new" && !topic ? t.chooseTopic : null) ??
+      validateTitle(title, tt) ??
+      validateBody(body, tt) ??
+      (tags.invalid.length > 0 ? t.badTags(tags.invalid.join(", ")) : null) ??
+      (tags.tags.length > MAX_TAGS ? t.maxTags(MAX_TAGS) : null) ??
+      (route.trim() && !routeCodeSchema.safeParse(route).success ? t.badRoute : null);
     if (problem) return setError(problem);
     setSending(true);
     setError(null);
@@ -134,30 +137,30 @@ export function PostComposer(props: Props) {
         : await submitPost({ ...common, topic: topic as CommunityTopic, ...(route.trim() ? { routeCode: route.trim() } : {}) });
     setSending(false);
     if (result.ok) setSent(result.data.post);
-    else setError(result.message);
+    else setError(translated(result.message, en.community.api, t.api));
   };
 
-  const heading1 = props.mode === "edit" ? "Edit your post" : "New post";
+  const heading1 = props.mode === "edit" ? t.editHeading : t.newPost;
 
   if (sent) {
     const edit = sent.isEdit;
     return (
       <div className="pn-comm" onKeyDown={onKeyDown} data-testid="composer-done">
         <h2 ref={heading} tabIndex={-1} className="pn-comm__h2">
-          {edit ? "Edit sent" : "Post sent"}
+          {edit ? t.editSent : t.postSent}
         </h2>
         <p className={`pn-comm__status pn-comm__status--${sent.state}`} role="status" data-testid="composer-state">
-          {stateLabel(sent.state)}. {stateHint(sent.state, edit ? "edit" : "post")}
+          {t.stateLine(stateLabel(sent.state, t), stateHint(sent.state, edit ? "edit" : "post", t))}
         </p>
         {sent.state === "pending" ? (
-          <p className="pn-comm__muted">A person checks posts before others can read them. You can still open your post from My posts.</p>
+          <p className="pn-comm__muted">{t.pendingNote}</p>
         ) : null}
         <div className="pn-comm__nav">
           <Link href="/app/community" className="pn-btn pn-btn--secondary pn-comm__action">
-            Back to community
+            {t.backToCommunity}
           </Link>
           <Link href={`/app/community/${sent.id}`} className="pn-btn pn-btn--primary pn-comm__action" data-testid="composer-view">
-            View post
+            {t.viewPost}
           </Link>
         </div>
       </div>
@@ -168,7 +171,7 @@ export function PostComposer(props: Props) {
     return (
       <div className="pn-comm" data-testid="composer-guest">
         <h2 className="pn-comm__h2">{heading1}</h2>
-        <SignInPrompt what={props.mode === "edit" ? "edit your post" : "write a post"} />
+        <SignInPrompt text={props.mode === "edit" ? t.signInEdit : t.signInWrite} />
       </div>
     );
   }
@@ -177,10 +180,10 @@ export function PostComposer(props: Props) {
       <div className="pn-comm" data-testid="composer-loading">
         {loadError ? (
           <p className="pn-comm__error" role="alert">
-            {loadError}
+            {translated(translated(loadError, en.community.api, t.api), en.community, t)}
           </p>
         ) : (
-          <p className="pn-comm__muted">Loading…</p>
+          <p className="pn-comm__muted">{tt.forms.loading}</p>
         )}
       </div>
     );
@@ -189,7 +192,7 @@ export function PostComposer(props: Props) {
   return (
     <div className="pn-comm" onKeyDown={onKeyDown} data-testid="composer">
       <h2 ref={heading} tabIndex={-1} className="pn-comm__h2">
-        {step === "guidelines" ? "Before you post" : heading1}
+        {step === "guidelines" ? t.beforePost : heading1}
       </h2>
 
       {step === "guidelines" ? (
@@ -200,14 +203,14 @@ export function PostComposer(props: Props) {
         <div className="pn-comm__form">
           {props.mode === "new" ? (
             <fieldset className="pn-comm__field">
-              <legend className="pn-comm__label">Topic</legend>
-              <div className="pn-group" role="radiogroup" aria-label="Topic">
-                {COMMUNITY_TOPICS.map((t) => (
-                  <label key={t.value} className="pn-comm__option">
-                    <input type="radio" name={`${uid}-topic`} value={t.value} checked={topic === t.value} onChange={() => { setTopic(t.value); setError(null); }} />
+              <legend className="pn-comm__label">{t.topicGroup}</legend>
+              <div className="pn-group" role="radiogroup" aria-label={t.topicGroup}>
+                {topicsIn(t).map((x) => (
+                  <label key={x.value} className="pn-comm__option">
+                    <input type="radio" name={`${uid}-topic`} value={x.value} checked={topic === x.value} onChange={() => { setTopic(x.value); setError(null); }} />
                     <span className="pn-comm__option-text">
-                      <span className="pn-comm__option-label">{t.label}</span>
-                      <span className="pn-comm__option-hint">{t.hint}</span>
+                      <span className="pn-comm__option-label">{x.label}</span>
+                      <span className="pn-comm__option-hint">{x.hint}</span>
                     </span>
                   </label>
                 ))}
@@ -217,14 +220,14 @@ export function PostComposer(props: Props) {
 
           <div className="pn-comm__field">
             <label htmlFor={`${uid}-title`} className="pn-comm__label">
-              Title
+              {t.titleLabel}
             </label>
             <input id={`${uid}-title`} className="pn-comm__input" maxLength={TITLE_MAX} value={title} onChange={(e) => setTitle(e.target.value)} autoComplete="off" />
           </div>
 
           <div className="pn-comm__field">
             <label htmlFor={`${uid}-body`} className="pn-comm__label">
-              Your post
+              {t.bodyLabel}
             </label>
             <textarea
               id={`${uid}-body`}
@@ -236,31 +239,31 @@ export function PostComposer(props: Props) {
               aria-describedby={`${uid}-count ${uid}-driver`}
             />
             <span id={`${uid}-count`} className="pn-comm__count">
-              {body.trim().length} of {BODY_MAX}
+              {tt.forms.count(body.trim().length, BODY_MAX)}
             </span>
             <span id={`${uid}-driver`} className="pn-comm__hint">
-              {DRIVER_NOTICE}
+              {t.driverNotice}
             </span>
           </div>
 
           <div className="pn-comm__field">
             <label htmlFor={`${uid}-tags`} className="pn-comm__label">
-              Tags (optional, up to {MAX_TAGS})
+              {t.tagsLabel(MAX_TAGS)}
             </label>
-            <input id={`${uid}-tags`} className="pn-comm__input" value={tagText} onChange={(e) => setTagText(e.target.value)} autoComplete="off" placeholder="for example: fares, loop-a" />
+            <input id={`${uid}-tags`} className="pn-comm__input" value={tagText} onChange={(e) => setTagText(e.target.value)} autoComplete="off" placeholder={t.tagsPlaceholder} />
           </div>
 
           {props.mode === "new" ? (
             <div className="pn-comm__field">
               <label htmlFor={`${uid}-route`} className="pn-comm__label">
-                Route code (optional)
+                {t.routeLabel}
               </label>
               <input id={`${uid}-route`} className="pn-comm__input" maxLength={16} value={route} onChange={(e) => setRoute(e.target.value)} autoComplete="off" placeholder="R4" />
             </div>
           ) : null}
 
           {props.mode === "edit" ? (
-            <p className="pn-comm__hint">Your edit is checked before it replaces the current version. The current version stays visible until then.</p>
+            <p className="pn-comm__hint">{t.editHint}</p>
           ) : null}
         </div>
       )}
@@ -274,16 +277,16 @@ export function PostComposer(props: Props) {
       <div className="pn-comm__nav">
         {step === "write" && accepted === false ? (
           <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => { setError(null); setStep("guidelines"); }}>
-            Back
+            {tt.forms.back}
           </button>
         ) : null}
         {step === "guidelines" ? (
           <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={onContinue} data-testid="composer-continue">
-            Continue
+            {tt.forms.continue}
           </button>
         ) : (
           <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={() => void onSend()} disabled={sending} data-testid="composer-send">
-            {sending ? "Sending…" : props.mode === "edit" ? "Send edit" : "Post"}
+            {sending ? tt.forms.sending : props.mode === "edit" ? t.sendEdit : t.post}
           </button>
         )}
       </div>

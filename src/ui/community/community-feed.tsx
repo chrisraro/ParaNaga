@@ -11,20 +11,21 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { fetchCommunityMe, fetchFeed, toggleSaved, unblockPerson } from "@/client/community/api";
-import { UNVERIFIED_NOTICE } from "@/domain/community/guidelines";
 import { SEARCH_MAX, SEARCH_MIN, type FeedScope, type PostSummary } from "@/domain/community/schemas";
-import { COMMUNITY_TOPICS, type CommunityTopic } from "@/domain/community/topics";
-import { formatDate, PostBadges } from "./parts";
+import { topicsIn, type CommunityTopic } from "@/domain/community/topics";
+import { en, translated } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
+import { PostBadges, useFormatDate } from "./parts";
 
 type Result = { key: string; ok: boolean; posts: PostSummary[]; next: number | null; message: string | null };
 
-const SCOPES: { value: FeedScope; label: string }[] = [
-  { value: "all", label: "Everyone" },
-  { value: "mine", label: "My posts" },
-  { value: "saved", label: "Saved" },
-];
+const SCOPES: readonly FeedScope[] = ["all", "mine", "saved"];
 
 export function CommunityFeed() {
+  const tt = useT();
+  const t = tt.community;
+  const apiText = (message: string) => translated(message, en.community.api, t.api);
+  const formatDate = useFormatDate();
   const uid = useId();
   const { user, loading: authLoading } = useAuthSession();
   const signedIn = Boolean(user);
@@ -67,14 +68,14 @@ export function CommunityFeed() {
     setNote(null);
     const r = await fetchFeed({ topic, scope: effectiveScope, tag: tag ?? undefined, q: q || undefined, cursor: result.next }, signedIn);
     setLoadingMore(false);
-    if (!r.ok) return setNote(r.message);
+    if (!r.ok) return setNote(apiText(r.message));
     setResult((prev) => (prev && prev.key === key ? { ...prev, posts: [...prev.posts, ...r.data.posts], next: r.data.nextCursor } : prev));
   };
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
     const text = draft.trim();
-    if (text.length > 0 && text.length < SEARCH_MIN) return setSearchNote(`Type at least ${SEARCH_MIN} letters to search.`);
+    if (text.length > 0 && text.length < SEARCH_MIN) return setSearchNote(t.searchMin(SEARCH_MIN));
     setSearchNote(null);
     setQ(text);
   };
@@ -82,7 +83,7 @@ export function CommunityFeed() {
   const onSave = async (post: PostSummary) => {
     setNote(null);
     const r = await toggleSaved(post.id);
-    if (!r.ok) return setNote(r.message);
+    if (!r.ok) return setNote(apiText(r.message));
     setResult((prev) =>
       prev ? { ...prev, posts: prev.posts.map((p) => (p.id === post.id ? { ...p, viewerBookmarked: r.data.active } : p)) } : prev,
     );
@@ -94,26 +95,26 @@ export function CommunityFeed() {
     <div className="pn-comm" data-testid="community-feed">
       <div className="pn-comm__bar">
         <Link href="/app/community/new" className="pn-btn pn-btn--primary pn-comm__action" data-testid="community-new">
-          New post
+          {t.newPost}
         </Link>
       </div>
 
-      <form className="pn-comm__search" role="search" onSubmit={onSearch} aria-label="Search posts">
+      <form className="pn-comm__search" role="search" onSubmit={onSearch} aria-label={t.searchLabel}>
         <label htmlFor={`${uid}-q`} className="sr-only">
-          Search posts
+          {t.searchLabel}
         </label>
         <input
           id={`${uid}-q`}
           type="search"
           className="pn-comm__input"
-          placeholder="Search posts"
+          placeholder={t.searchLabel}
           maxLength={SEARCH_MAX}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           autoComplete="off"
         />
         <button type="submit" className="pn-btn pn-btn--secondary pn-comm__small">
-          Search
+          {t.search}
         </button>
       </form>
       {searchNote ? (
@@ -122,32 +123,32 @@ export function CommunityFeed() {
         </p>
       ) : null}
 
-      <div className="pn-comm__chips" role="group" aria-label="Topic">
+      <div className="pn-comm__chips" role="group" aria-label={t.topicGroup}>
         <button type="button" className="pn-comm__chip" aria-pressed={topic === null} onClick={() => setTopic(null)}>
-          All topics
+          {t.allTopics}
         </button>
-        {COMMUNITY_TOPICS.map((t) => (
-          <button key={t.value} type="button" className="pn-comm__chip" aria-pressed={topic === t.value} onClick={() => setTopic(t.value)}>
-            {t.label}
+        {topicsIn(t).map((x) => (
+          <button key={x.value} type="button" className="pn-comm__chip" aria-pressed={topic === x.value} onClick={() => setTopic(x.value)}>
+            {x.label}
           </button>
         ))}
       </div>
 
       {signedIn ? (
-        <div className="pn-comm__chips" role="group" aria-label="Show">
+        <div className="pn-comm__chips" role="group" aria-label={t.showGroup}>
           {SCOPES.map((s) => (
-            <button key={s.value} type="button" className="pn-comm__chip" aria-pressed={scope === s.value} onClick={() => setScope(s.value)}>
-              {s.label}
+            <button key={s} type="button" className="pn-comm__chip" aria-pressed={scope === s} onClick={() => setScope(s)}>
+              {t.scopes[s]}
             </button>
           ))}
         </div>
       ) : null}
 
       {tag || q ? (
-        <div className="pn-comm__chips" aria-label="Active filters">
+        <div className="pn-comm__chips" aria-label={t.activeFilters}>
           {tag ? (
-            <button type="button" className="pn-comm__chip" onClick={() => setTag(null)} aria-label={`Remove tag filter ${tag}`}>
-              Tag: {tag} ×
+            <button type="button" className="pn-comm__chip" onClick={() => setTag(null)} aria-label={t.removeTag(tag)}>
+              {t.tagChip(tag)}
             </button>
           ) : null}
           {q ? (
@@ -158,9 +159,9 @@ export function CommunityFeed() {
                 setQ("");
                 setDraft("");
               }}
-              aria-label={`Clear search for ${q}`}
+              aria-label={t.clearSearch(q)}
             >
-              Search: {q} ×
+              {t.searchChip(q)}
             </button>
           ) : null}
         </div>
@@ -169,16 +170,16 @@ export function CommunityFeed() {
       <div aria-live="polite" className="pn-comm__live">
         {loading ? (
           <p className="pn-comm__muted" data-testid="community-loading">
-            Loading posts…
+            {t.loadingPosts}
           </p>
         ) : null}
       </div>
 
       {!loading && result && !result.ok ? (
         <div className="pn-comm__panel" data-testid="community-error">
-          <p className="pn-comm__body" role="alert">{result.message ?? "Posts could not be loaded."}</p>
+          <p className="pn-comm__body" role="alert">{result.message ? apiText(result.message) : t.loadFailed}</p>
           <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => setReload((n) => n + 1)}>
-            Try again
+            {tt.forms.tryAgain}
           </button>
         </div>
       ) : null}
@@ -186,12 +187,12 @@ export function CommunityFeed() {
       {!loading && result?.ok && result.posts.length === 0 ? (
         <p className="pn-comm__empty" data-testid="community-empty">
           {effectiveScope === "mine"
-            ? "You have not posted yet."
+            ? t.emptyMine
             : effectiveScope === "saved"
-              ? "No saved posts yet."
+              ? t.emptySaved
               : filtering
-                ? "No posts match. Try another topic or search."
-                : "No posts yet. Start the first one."}
+                ? t.emptyFiltered
+                : t.emptyAll}
         </p>
       ) : null}
 
@@ -208,18 +209,18 @@ export function CommunityFeed() {
               <p className="pn-comm__excerpt">{p.excerpt}</p>
               {p.tags.length > 0 ? (
                 <div className="pn-comm__tags">
-                  {p.tags.map((t) => (
-                    <button key={t} type="button" className="pn-comm__tag" onClick={() => setTag(t)} aria-label={`Show posts tagged ${t}`}>
-                      #{t}
+                  {p.tags.map((tag) => (
+                    <button key={tag} type="button" className="pn-comm__tag" onClick={() => setTag(tag)} aria-label={t.showTagged(tag)}>
+                      #{tag}
                     </button>
                   ))}
                 </div>
               ) : null}
               <div className="pn-comm__meta">
-                <span>{p.isOwn ? "You" : p.authorHandle}</span>
+                <span>{p.isOwn ? t.you : p.authorHandle}</span>
                 <span>{formatDate(p.createdAt)}</span>
-                <span>{p.helpfulCount} found this helpful</span>
-                <span>{p.commentCount} {p.commentCount === 1 ? "comment" : "comments"}</span>
+                <span>{t.helpfulCount(p.helpfulCount)}</span>
+                <span>{t.comments(p.commentCount)}</span>
               </div>
               {signedIn && p.state === "published" ? (
                 <div className="pn-comm__row">
@@ -230,7 +231,7 @@ export function CommunityFeed() {
                     onClick={() => void onSave(p)}
                     data-testid="community-bookmark"
                   >
-                    {p.viewerBookmarked ? "Saved" : "Save"}
+                    {p.viewerBookmarked ? t.saved : t.save}
                   </button>
                 </div>
               ) : null}
@@ -247,12 +248,12 @@ export function CommunityFeed() {
 
       {!loading && result?.next ? (
         <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => void loadMore()} disabled={loadingMore} data-testid="community-more">
-          {loadingMore ? "Loading…" : "Show more"}
+          {loadingMore ? tt.forms.loading : t.showMore}
         </button>
       ) : null}
 
       <p className="pn-comm__notice" data-testid="community-disclaimer">
-        {UNVERIFIED_NOTICE} A fare or route tip here is not an official fare or route.
+        {t.feedNotice}
       </p>
 
       {signedIn ? <BlockedPeople onChanged={() => setReload((n) => n + 1)} /> : null}
@@ -262,6 +263,7 @@ export function CommunityFeed() {
 
 /** The people this commuter blocked, with a way to undo it. Their posts and comments stay hidden until then. */
 function BlockedPeople({ onChanged }: { onChanged: () => void }) {
+  const t = useT().community;
   const [people, setPeople] = useState<{ id: string; handle: string }[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -285,7 +287,7 @@ function BlockedPeople({ onChanged }: { onChanged: () => void }) {
   if (!people || people.length === 0) return null;
   return (
     <details className="pn-comm__more" data-testid="blocked-people">
-      <summary>Blocked people ({people.length})</summary>
+      <summary>{t.blocked(people.length)}</summary>
       <ul className="pn-comm__history">
         {people.map((p) => (
           <li key={p.id}>
@@ -295,20 +297,20 @@ function BlockedPeople({ onChanged }: { onChanged: () => void }) {
               className="pn-btn pn-btn--secondary pn-comm__small"
               onClick={async () => {
                 const r = await unblockPerson(p.id);
-                if (!r.ok) return setError(r.message);
+                if (!r.ok) return setError(translated(r.message, en.community.api, t.api));
                 await load();
                 onChanged();
               }}
-              aria-label={`Unblock ${p.handle}`}
+              aria-label={t.unblockLabel(p.handle)}
             >
-              Unblock
+              {t.unblock}
             </button>
           </li>
         ))}
       </ul>
       {error ? (
         <p className="pn-comm__error" role="alert">
-          {error}
+          {translated(error, en.community.api, t.api)}
         </p>
       ) : null}
     </details>

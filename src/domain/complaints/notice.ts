@@ -2,20 +2,14 @@
 // text in src/i18n/en.ts (acknowledgments.driverReport); accepting it is recorded in
 // core.ack (kind 'driver_report_notice'). Bump the version when that text changes.
 
+import { en } from "@/i18n/dict";
+
 export const DRIVER_NOTICE_KIND = "driver_report_notice" as const;
 export const DRIVER_NOTICE_VERSION = "2026-10-v1";
 
-export const EXPLAINER_POINTS = [
-  "Your report stays private inside ParaNaga. It is never posted in Community and never shown to other commuters.",
-  "ParaNaga does not send it to Naga City or any agency. After you send it, you can choose to continue in MyNaga yourself.",
-  "A ParaNaga reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer.",
-  "Stick to what you saw. Avoid filming faces of other passengers where you can.",
-] as const;
+// The explainer and receipt text are in the dictionary (driverReport.explainer, .sharedPhone, .nextSteps).
+export const EXPLAINER_POINTS = Object.values(en.driverReport.explainer);
 
-export const SHARED_PHONE_NOTE = "Nothing is saved on this phone. If you leave this screen before sending, your answers and photos are cleared.";
+export const SHARED_PHONE_NOTE = en.driverReport.sharedPhone;
 
-export const RECEIPT_NEXT_STEPS = [
-  "A reviewer checks that the report is complete. You may be asked for more information.",
-  "ParaNaga does not decide who is at fault and does not contact the driver.",
-  "To make an official complaint, continue in MyNaga. Opening MyNaga does not submit your report.",
-] as const;
+export const RECEIPT_NEXT_STEPS = Object.values(en.driverReport.nextSteps);

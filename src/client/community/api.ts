@@ -27,13 +27,16 @@ import {
   type ToggleResponse,
 } from "@/domain/community/schemas";
 import type { CommunityTopic } from "@/domain/community/topics";
+import { en } from "@/i18n/dict";
 
 export type ApiResult<T> =
   | { ok: true; data: T }
   | { ok: false; reason: "signed_out" | "rate_limited" | "invalid" | "not_found" | "failed"; message: string };
 
 const JSON_HEADERS = { "content-type": "application/json" };
-const FAILED = "That did not work. Check your connection and try again.";
+// English messages from the dictionary; screens show them with translated(message, en.community.api, t.community.api).
+const M = en.community.api;
+const FAILED = M.failed;
 
 async function request<S extends z.ZodType>(
   path: string,
@@ -47,12 +50,12 @@ async function request<S extends z.ZodType>(
       ...rest,
       ...(json !== undefined ? { headers: JSON_HEADERS, body: JSON.stringify(json) } : {}),
     });
-    if (res.status === 401) return { ok: false, reason: "signed_out", message: "Sign in to do this." };
-    if (res.status === 429) return { ok: false, reason: "rate_limited", message: "You are going too fast. Wait a moment, then try again." };
-    if (res.status === 404) return { ok: false, reason: "not_found", message: "This is no longer available." };
+    if (res.status === 401) return { ok: false, reason: "signed_out", message: M.signedOut };
+    if (res.status === 429) return { ok: false, reason: "rate_limited", message: M.rateLimited };
+    if (res.status === 404) return { ok: false, reason: "not_found", message: M.notFound };
     if (res.status === 400 || res.status === 403) {
       const data = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-      return { ok: false, reason: "invalid", message: data?.error?.message ?? "Check what you wrote and try again." };
+      return { ok: false, reason: "invalid", message: data?.error?.message ?? M.invalid };
     }
     if (!res.ok) return { ok: false, reason: "failed", message: FAILED };
     const parsed = schema.safeParse(await res.json());

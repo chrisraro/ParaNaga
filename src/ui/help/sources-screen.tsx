@@ -19,7 +19,7 @@ import { useEffect, useRef } from "react";
 import { DetailPanel } from "@/ui/detail/detail-frame";
 import Link from "next/link";
 import { Suspense } from "react";
-import { EXPLORE_PLACES_NOTE, RAIL_STATUS_TEXT, railSourcesText } from "@/domain/places/explore";
+import { railSourcesText } from "@/domain/places/explore";
 import { EntitySources } from "./entity-sources";
 import { formatIsoDate, publishedDateText } from "@/domain/network/present";
 import { Note } from "@/ui/kit/note";
@@ -28,15 +28,20 @@ import { OsmAttribution } from "@/ui/kit/osm-attribution";
 import { DataRevisionRow } from "@/ui/settings/data-revision-row";
 import { SourceCredits } from "./source-credits";
 import { rightsForSource } from "@/domain/sources/rights";
+import { en } from "@/i18n/dict";
+import { useT } from "@/i18n/provider";
 
+// The data-basis, licence and attribution notes are English verbatim in every language until a
+// verbatim-reviewed translation exists (sources.verbatim); headings and controls are translated.
+const V = en.sources.verbatim;
 /** The My Maps retrieval date comes from the register (S39 checked date), never typed here. */
-export const dataBasisNote = (retrieved: string | null) => `Stops come from a public My Maps snapshot (retrieved ${formatIsoDate(retrieved) ?? "date not recorded"}). Nobody has checked boarding sides, signs or whether boarding is allowed. Ride paths are traced along OpenStreetMap roads between pins; walk paths follow mapped walkable streets or straight-line estimates (× 1.3).`;
-export const FLEET_BASIS_NOTE = "Fleet: the project owner confirmed on 16 Oct 2026 (U01) that traditional jeepneys run on every route group (R1–R8) and modern jeepneys on R4 and R7. This confirms service, not stop locations, stop order or paths.";
-export const FARE_BASIS_NOTE = "Fares are estimates from reported fare rules; the fare matrix is not verified. Where a route runs both traditional and modern jeepneys, the range spans both. Discounts are not applied. National per-km rates of 28 Sep 2026. The tricycle minimum fare of ₱15 follows Ordinance 2024-002.";
-export const FAR_BASIS_NOTE = "Far areas: riders’ reports (U03, unconfirmed) say tricycles there charge special trips, that a Balatas to Cararayan tricycle terminal exists, and which roads Del Rosario jeepneys use. Tricycle zones and routes follow ordinances RT25–RT32. TODA terminals at Ateneo or at jeepney terminals are unconfirmed.";
-export const TIME_BASIS_NOTE = "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are ParaNaga assumptions.";
-export const CORRECTIONS_NOTE = "Corrections and verification aren’t open yet.";
-export const MAP_OWNER_NOTE = "Naga City Designated Stops — shared publicly by Tan Gumba";
+export const dataBasisNote = (retrieved: string | null) => V.dataBasis(formatIsoDate(retrieved) ?? V.dateNotRecorded);
+export const FLEET_BASIS_NOTE = V.fleetBasis;
+export const FARE_BASIS_NOTE = V.fareBasis;
+export const FAR_BASIS_NOTE = V.farBasis;
+export const TIME_BASIS_NOTE = V.timeBasis;
+export const CORRECTIONS_NOTE = V.corrections;
+export const MAP_OWNER_NOTE = V.mapOwner;
 
 function ExternalIcon() {
   return (
@@ -47,6 +52,9 @@ function ExternalIcon() {
 }
 
 export function SourcesScreen() {
+  const tt = useT();
+  const t = tt.sources;
+  const v = t.verbatim;
   const resource = useNetworkResource("/api/v1/sources", sourceListSchema);
   const heading = useRef<HTMLHeadingElement>(null);
   // A hash link (#photo-…, #fare-basis) lands on its target; otherwise the h1 takes focus.
@@ -101,42 +109,42 @@ export function SourcesScreen() {
     };
   }, []);
   return (
-    <DetailPanel title="Sources" testId="sources-page">
+    <DetailPanel title={t.panelTitle} testId="sources-page">
       <main className="pn-detail__main pn-detail-in">
         <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
-          Sources and credits
+          {t.title}
         </h1>
-        <ListGroup label="Data revision" testId="sources-revision-group">
+        <ListGroup label={t.revisionGroup} testId="sources-revision-group">
           <DataRevisionRow testId="sources-data-revision" />
         </ListGroup>
         <Suspense fallback={null}>
           <EntitySources />
         </Suspense>
         <section aria-labelledby="data-basis" className="pn-section">
-          <h2 id="data-basis" className="pn-section__title">Data basis</h2>
+          <h2 id="data-basis" className="pn-section__title">{t.dataBasisTitle}</h2>
           <p className="pn-footnote" data-testid="sources-data-basis">{dataBasisNote(resource.status === "ready" ? (resource.data.sources.find((x) => x.code === "S39")?.checkedOn ?? null) : null)}</p>
-          <p className="pn-footnote">{FLEET_BASIS_NOTE}</p>
-          <p className="pn-footnote" data-testid="sources-far-basis">{FAR_BASIS_NOTE}</p>
+          <p className="pn-footnote">{v.fleetBasis}</p>
+          <p className="pn-footnote" data-testid="sources-far-basis">{v.farBasis}</p>
         </section>
         <section aria-labelledby="fare-basis-title" className="pn-section" id="fare-basis">
-          <h2 id="fare-basis-title" className="pn-section__title">How fares are estimated</h2>
-          <p className="pn-footnote" data-testid="sources-fare-basis">{FARE_BASIS_NOTE}</p>
+          <h2 id="fare-basis-title" className="pn-section__title">{t.fareBasisTitle}</h2>
+          <p className="pn-footnote" data-testid="sources-fare-basis">{v.fareBasis}</p>
         </section>
         <section aria-labelledby="time-basis" className="pn-section">
-          <h2 id="time-basis" className="pn-section__title">How times are estimated</h2>
-          <p className="pn-footnote">{TIME_BASIS_NOTE} <Link href="/app/help/how-times-are-estimated">How times are estimated</Link></p>
+          <h2 id="time-basis" className="pn-section__title">{t.timeBasisTitle}</h2>
+          <p className="pn-footnote">{v.timeBasis} <Link href="/app/help/how-times-are-estimated">{t.timeBasisLink}</Link></p>
         </section>
         {resource.status === "loading" ? (
-          <div role="status" aria-label="Loading sources" className="pn-detail__stack">
+          <div role="status" aria-label={t.loading} className="pn-detail__stack">
             <div className="pn-skeleton" style={{ width: "90%", height: 64 }} />
             <div className="pn-skeleton" style={{ width: "90%", height: 64 }} />
           </div>
         ) : resource.status === "ready" ? (
           <>
             <p className="pn-footnote" data-testid="sources-revision">
-              Cited by the published data revision {resource.data.revision.label}{publishedDateText(resource.data.revision.publishedAt) ? `, published ${publishedDateText(resource.data.revision.publishedAt)}` : ""}.
+              {v.citedBy(resource.data.revision.label)}{publishedDateText(resource.data.revision.publishedAt) ? v.published(publishedDateText(resource.data.revision.publishedAt)!) : ""}.
             </p>
-            <h2 id="source-register-title" className="pn-section__title">Source register</h2>
+            <h2 id="source-register-title" className="pn-section__title">{t.registerTitle}</h2>
             <ul className="pn-group" data-testid="sources-list" aria-labelledby="source-register-title">
               {resource.data.sources.map((s) => {
                 const href = externalHref(s.url);
@@ -144,22 +152,22 @@ export function SourcesScreen() {
                   <li key={s.code} className="pn-source" data-testid="source-row" data-code={s.code}>
                     <span className="pn-source__title">{sourceTitleLine(s)}</span>
                     <span className="pn-source__meta">{sourceMetaLine(s)}</span>
-                    <span className="pn-source__meta">{rightsForSource(s.code)?.publisher ?? "Publisher not recorded"} · {rightsForSource(s.code)?.license ?? "Reuse rights not recorded"}</span>
+                    <span className="pn-source__meta">{rightsForSource(s.code)?.publisher ?? v.publisherNotRecorded} · {rightsForSource(s.code)?.license ?? v.rightsNotRecorded}</span>
                     {href ? (
                       <a
                         className="pn-source__link"
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`Open source ${s.code} (opens in a new tab)`}
+                        aria-label={t.openSourceLabel(s.code)}
                         data-testid="source-link"
                       >
-                        Open source
+                        {t.openSource}
                         <ExternalIcon />
                       </a>
                     ) : (
                       <span className="pn-source__none" data-testid="source-unlinked">
-                        {s.url ? "Address on file, not offered as a link (it downloads a file or carries extra parameters)" : "No public address on file"}
+                        {s.url ? v.notLinked : v.noAddress}
                       </span>
                     )}
                   </li>
@@ -167,15 +175,15 @@ export function SourcesScreen() {
               })}
             </ul>
           </>
-        ) : <div role="status"><p>The current revision’s source list is unavailable. Bundled photo credits and research notes remain available below.</p><button type="button" className="pn-detail__retry" onClick={resource.retry}>Try again</button></div>}
-        <Note testId="sources-owner-note"><a href="https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4" target="_blank" rel="noopener noreferrer">{MAP_OWNER_NOTE}</a></Note>
+        ) : <div role="status"><p>{t.unavailable}</p><button type="button" className="pn-detail__retry" onClick={resource.retry}>{tt.forms.tryAgain}</button></div>}
+        <Note testId="sources-owner-note"><a href="https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4" target="_blank" rel="noopener noreferrer">{v.mapOwner}</a></Note>
         <OsmAttribution testId="sources-osm-attribution" />
-        <p className="pn-footnote" data-testid="sources-places-note">{EXPLORE_PLACES_NOTE}</p>
+        <p className="pn-footnote" data-testid="sources-places-note">{tt.explore.placesNote}</p>
         <p className="pn-footnote" data-testid="sources-rail-note">
-          {RAIL_STATUS_TEXT} Sources {railSourcesText(resource.status === "ready" ? new Set(resource.data.sources.map((s) => s.code)) : null)}
+          {tt.explore.railStatus} {t.railSources} {railSourcesText(resource.status === "ready" ? new Set(resource.data.sources.map((s) => s.code)) : null, tt.explore)}
         </p>
         <SourceCredits revisionId={resource.status === "ready" ? resource.data.revision.revisionId : undefined} />
-        <p className="pn-footnote" data-testid="sources-corrections-note">{CORRECTIONS_NOTE}</p>
+        <p className="pn-footnote" data-testid="sources-corrections-note">{v.corrections}</p>
       </main>
     </DetailPanel>
   );

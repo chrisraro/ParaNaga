@@ -14,10 +14,12 @@ import { useEffect, useState } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { loadMyReports } from "@/client/reports/api";
 import { manilaDay, type ReportRow } from "@/domain/reports/list";
+import { en, translated } from "@/i18n/dict";
+import { useLocale, useT } from "@/i18n/provider";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 
-export const REPORTS_INTRO = "Only you can see these. Status shows where each report stands in ParaNaga.";
+export const REPORTS_INTRO = en.reports.intro;
 
 export function StatusChip({ tone, children }: { tone: ReportRow["tone"]; children: string }) {
   return <span className={tone === "open" || tone === "closed" ? "pn-rchip" : `pn-rchip pn-rchip--${tone}`}>{children}</span>;
@@ -26,6 +28,9 @@ export function StatusChip({ tone, children }: { tone: ReportRow["tone"]; childr
 type State = { phase: "loading" } | { phase: "ready"; rows: ReportRow[] } | { phase: "error"; message: string };
 
 export function ReportsScreen({ driverReports = false }: { driverReports?: boolean }) {
+  const tt = useT();
+  const t = tt.reports;
+  const locale = useLocale();
   const { user, loading } = useAuthSession();
   const [state, setState] = useState<State>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -34,18 +39,19 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
   useEffect(() => {
     if (!userId) return;
     let live = true;
-    void loadMyReports().then((r) => {
+    // The labels follow the language: a switch reloads the list (rare; the rows hold no report text).
+    void loadMyReports(tt).then((r) => {
       if (live) setState(r.ok ? { phase: "ready", rows: r.data } : { phase: "error", message: r.message });
     });
     return () => {
       live = false;
     };
-  }, [userId, attempt]);
+  }, [userId, attempt, tt]);
 
   if (loading) {
     return (
       <p className="pn-reports__intro" role="status">
-        Loading…
+        {tt.forms.loading}
       </p>
     );
   }
@@ -53,9 +59,9 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
     return (
       <div className="pn-reports" data-testid="reports-guest">
         <div className="pn-report__signin" data-testid="reports-signin">
-          <p>Sign in to see the reports you sent. Reports are linked to your account so only you can see them.</p>
+          <p>{t.signInList}</p>
           <Link href="/app/sign-in" className="pn-btn pn-btn--primary pn-report__action">
-            Sign in
+            {tt.forms.signIn}
           </Link>
         </div>
       </div>
@@ -64,15 +70,15 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
 
   return (
     <div className="pn-reports" data-testid="reports-list-screen">
-      <p className="pn-reports__intro">{REPORTS_INTRO}</p>
+      <p className="pn-reports__intro">{t.intro}</p>
       {state.phase === "loading" ? (
         <p className="pn-reports__intro" role="status">
-          Loading your reports…
+          {t.loadingList}
         </p>
       ) : null}
       {state.phase === "error" ? (
         <div className="pn-report__error" data-testid="reports-error">
-          <p role="alert">{state.message}</p>
+          <p role="alert">{translated(state.message, en.reports.api, t.api)}</p>
           <button
             type="button"
             className="pn-btn pn-btn--secondary pn-report__action"
@@ -81,26 +87,26 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
               setAttempt((n) => n + 1);
             }}
           >
-            Try again
+            {tt.forms.tryAgain}
           </button>
         </div>
       ) : null}
       {state.phase === "ready" && state.rows.length === 0 ? (
-        <Note testId="reports-empty">You have not sent any reports yet.</Note>
+        <Note testId="reports-empty">{t.empty}</Note>
       ) : null}
       {state.phase === "ready" && state.rows.length > 0 ? (
-        <ListGroup label="Your reports" testId="reports-list">
+        <ListGroup label={t.listLabel} testId="reports-list">
           {state.rows.map((r) => (
             <ListCell
               key={`${r.kind}-${r.id}`}
               href={r.href}
               testId={`report-row-${r.kind}`}
-              title={`${r.kindLabel}: ${r.categoryLabel}`}
+              title={t.rowTitle(r.kindLabel, r.categoryLabel)}
               sub={
                 <>
                   {r.reference ? <span data-testid="report-row-ref">{r.reference}</span> : null}
                   {r.reference ? " · " : ""}
-                  {manilaDay(r.at)}
+                  {manilaDay(r.at, locale)}
                 </>
               }
               badges={<StatusChip tone={r.tone}>{r.statusLabel}</StatusChip>}
@@ -110,7 +116,7 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
       ) : null}
       <div className="pn-reports__actions">
         <Link href={driverReports ? "/app/report-driver" : "/app/mynaga"} className="pn-btn pn-btn--secondary pn-report__action">
-          Report a driver
+          {t.reportDriver}
         </Link>
       </div>
     </div>
