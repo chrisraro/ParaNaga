@@ -1633,6 +1633,17 @@ export const en = {
       incorporated: "Added to the data",
       superseded: "Replaced by newer data",
     },
+    // N6: the reviewer's templated reason, shown under the status on My reports.
+    reviewReasons: {
+      need_photo: "Please add a photo of what you saw.",
+      need_location: "Please tell us exactly where this is.",
+      need_details: "Please tell us more about what is wrong.",
+      need_time: "Please tell us when you saw this.",
+      already_correct: "The information already shows this.",
+      not_verifiable: "We could not confirm this.",
+      out_of_scope: "This is outside what ParaNaga covers.",
+      not_transport: "This is not about routes, stops or fares.",
+    },
     chooseWrong: "Choose what is wrong.",
     // AI-processing disclosure (spec 05 §5.8); its accepted version is recorded (AI_DISCLOSURE_VERSION).
     disclosure: {
@@ -1944,6 +1955,35 @@ export const en = {
       pending: "Only you can see it until a person has reviewed it.",
     },
     stateLine: (label: string, hint: string) => `${label}. ${hint}`,
+    // N6: photos on a post (each checked by a person first) and asking for another review.
+    photos: {
+      label: "Photos (optional)",
+      add: "Add a photo",
+      uploading: "Uploading…",
+      hint: (max: number) => `Up to ${max} photos. A person checks each photo before others can see it. Leave out faces and plate numbers.`,
+      remove: (name: string) => `Remove ${name}`,
+      pending: "Photo awaiting review. Others cannot see it until a person has checked it.",
+      rejected: "Photo not published.",
+      alt: (n: number) => `Photo ${n} from the author`,
+      type: "Use a JPEG, PNG or WebP photo.",
+      failed: "The photo could not be uploaded. Try again.",
+      max: (max: number) => `You can add up to ${max} photos.`,
+    },
+    appeal: {
+      ask: "Ask for another review",
+      noteLabel: "Why should it be published?",
+      noteHint: (min: number) => `At least ${min} characters. A different person reviews it.`,
+      send: "Send request",
+      cancel: "Cancel",
+      sent: "Request sent. A different person will review it.",
+      already: "You already asked for another review of this.",
+      failed: "The request could not be sent. Try again.",
+      states: {
+        open: "Another review requested",
+        upheld: "Reviewed again: still not published",
+        overturned: "Reviewed again: now published",
+      },
+    },
     // The guidelines text itself is acknowledgments.community (English until its reviewed translation).
     guidelinesTitle: "Community guidelines",
     guidelinesCheckbox: "I have read the community guidelines.",

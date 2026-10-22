@@ -18,7 +18,8 @@ const PRIVATE = { "cache-control": "private, no-store" };
 const PUB = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a11";
 const DRAFT = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a22";
 const OLD = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a33";
-const ADMIN_PATHS = ["/admin", "/admin/revisions", "/admin/coverage", "/admin/imports", "/admin/candidates", "/admin/stops", "/admin/reconciliation"];
+const TRANSIT_PATHS = ["/admin/revisions", "/admin/coverage", "/admin/imports", "/admin/candidates", "/admin/stops", "/admin/reconciliation"];
+const ADMIN_PATHS = ["/admin", ...TRANSIT_PATHS, "/admin/corrections", "/admin/moderation"];
 
 test.skip(({ isMobile }) => isMobile, "The admin console is desktop-first");
 
@@ -140,7 +141,7 @@ test("signed-out visitors get a 404 status; signed-in non-staff get the ordinary
   page.on("request", (r) => {
     if (r.url().includes("/api/v1/admin")) adminCalls.push(r.url());
   });
-  for (const roles of ["commuter", "commuter,community_moderator,complaint_reviewer,contributor"]) {
+  for (const roles of ["commuter", "commuter,complaint_reviewer,contributor"]) {
     await context.clearCookies();
     await signInAs(context, roles);
     for (const path of ADMIN_PATHS) {
@@ -168,7 +169,18 @@ test("the dashboard shows the counts, is private, and passes axe", async ({ page
   await expect(page.getByTestId("open-corrections")).toHaveText("3");
   await expect(page.getByTestId("import-snapshot")).toHaveText("mymaps:naga:2026-10-15");
   await expect(page.getByTestId("admin-roles")).toHaveText("Signed in as admin");
-  await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText(["Dashboard", "Imports", "Candidate review", "Stops & curbs", "Reconciliation", "Revisions & publication", "Coverage audit"]);
+  await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText([
+    "Dashboard",
+    "Imports",
+    "Candidate review",
+    "Stops & curbs",
+    "Reconciliation",
+    "Revisions & publication",
+    "Coverage audit",
+    "Corrections review",
+    "Moderation & appeals",
+  ]);
+  await expect(page.getByTestId("card-moderation")).toBeVisible();
   await expect(page.getByTestId("admin-nav").getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
   await axe(page, "dashboard");
 });
@@ -510,5 +522,216 @@ for (const scheme of ["light", "dark"] as const) {
     await page.getByTestId("import-dry-run").click();
     await expect(page.getByTestId("import-dry")).toBeVisible();
     await axe(page, `imports-${scheme}`);
+  });
+}
+
+// ================================================================ N6: corrections review (C9), moderation and appeals (C10)
+// Same approach: the shell from the roles cookie, every /api/v1/admin/** call answered here with the
+// production headers, the mock keeping the queue's state. tests/unit/admin-review-handlers.test.ts
+// and tests/integration/review-moderation-rls.test.ts cover the real checks (roles, own content,
+// draft-only accept, override notes, appeals routed to a different moderator).
+
+const N6 = (n: number) => `7b3c1c7e-6f0a-4a39-9d62-0d0f5f2a8${String(n).padStart(3, "0")}`;
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+
+function correctionRow(over: Record<string, unknown>) {
+  return {
+    id: N6(1), kind: "stop_moved_removed", entityType: "stop", entityId: N6(10), entityLabel: "Plaza Rizal", entityRevisionId: null,
+    description: "The stop sign is now across the street, by the bakery.", status: "submitted", submittedAt: "2026-10-22T02:00:00.000Z",
+    updatedAt: "2026-10-22T02:00:00.000Z", moderationReason: "auto_publish_disabled", reviewerNote: null, duplicateOf: null,
+    draftRevisionId: null, draftChange: null, incorporatedRevisionId: null, reviewedAt: null,
+    location: { lat: 13.62355, lng: 123.18485, accuracyM: 6 }, media: [{ id: N6(20), mime: "image/png" }],
+    events: [{ from: "draft", to: "submitted", at: "2026-10-22T02:00:00.000Z", actorRole: "commuter", reasonCode: "auto_publish_disabled", note: null }],
+    similar: [],
+    stop: { stopPointId: N6(10), name: "Plaza Rizal", versionId: N6(11), status: "candidate", inDraft: true, changedInDraft: false, lat: 13.6233869, lng: 123.1846726 },
+    fares: null,
+    ...over,
+  };
+}
+
+async function mockReviewApi(page: Page) {
+  const s = {
+    corrections: [
+      correctionRow({}),
+      correctionRow({
+        id: N6(2), kind: "fare_mismatch", entityType: "fare", entityId: "R4", entityLabel: "Route 4", status: "under_review",
+        description: "The driver charged 15 pesos for a short ride.", location: null, media: [], stop: null,
+        fares: [{ fareRuleId: N6(30), code: "F01", modeCode: "jeepney", versionId: N6(31), baseCentavos: 1300, status: "draft", effectiveFrom: null, sourceCodes: ["S12"], evidence: [], openConflicts: 1 }],
+      }),
+    ] as Record<string, unknown>[],
+    reviews: [] as { id: string; body: unknown }[],
+    decisions: [] as unknown[],
+    appeals: [] as { id: string; body: unknown }[],
+    mediaReads: 0,
+  };
+  const json = (body: unknown, status = 200) => ({ status, contentType: "application/json", headers: PRIVATE, body: JSON.stringify(body) });
+  await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (r) => r.abort());
+  await routeNetwork(page);
+  await page.route(/\/api\/v1\/admin\/corrections(\?.*)?$/, (r) => r.fulfill(json({ draft: { id: DRAFT, label: "draft-2026-10-22-100000" }, corrections: s.corrections })));
+  await page.route(/\/api\/v1\/admin\/corrections\/[^/?]+$/, (r) => {
+    const id = r.request().url().split("/").at(-1)!;
+    const body = r.request().postDataJSON() as { action: string; change?: { kind: string } };
+    s.reviews.push({ id, body });
+    const row = s.corrections.find((c) => c.id === id)!;
+    const to = { start_review: "under_review", request_info: "needs_evidence", reject: "rejected", duplicate: "duplicate", accept: "accepted" }[body.action]!;
+    row.status = to;
+    const draftChange = body.action === "accept" ? (body.change?.kind === "proposal" ? { kind: "proposal" } : { kind: "draft_version", entityKind: "stop_point", entityId: N6(10), versionId: N6(12) }) : null;
+    return r.fulfill(json({ id, status: to, draftRevisionId: body.action === "accept" ? DRAFT : null, draftChange }));
+  });
+  await page.route(/\/api\/v1\/admin\/media\/[^/]+$/, (r) => {
+    s.mediaReads += 1;
+    return r.fulfill({ status: 200, contentType: "image/png", headers: PRIVATE, body: PNG });
+  });
+  await page.route("**/api/v1/admin/moderation", (r) =>
+    r.fulfill(
+      json({
+        items: [
+          {
+            kind: "post_version", id: N6(40), postId: N6(41), status: "pending", submittedAt: "2026-10-22T02:00:00.000Z", title: "R4 before 7 am",
+            body: "The jeepneys wait at the plaza for five minutes.", tags: ["r4"], topic: "commute_tips", authorHandle: "Commuter AB12C",
+            reason: "auto_publish_disabled", isEdit: false, liveTitle: null, jev: { recommendation: "publish", confidence: 0.93, unavailableReason: null, policyVersion: "paranaga-community-v1" }, openReports: 0,
+          },
+          {
+            kind: "photo", id: N6(42), postId: N6(41), status: "pending", submittedAt: "2026-10-22T02:01:00.000Z", title: "R4 before 7 am",
+            body: null, tags: [], topic: null, authorHandle: "Commuter AB12C", reason: null, isEdit: false, liveTitle: null, jev: null, openReports: 0, mediaId: N6(43),
+          },
+        ],
+        appeals: [
+          {
+            id: N6(50), decisionId: N6(51), targetType: "post_version", targetId: N6(52), reasonCode: "threat", decidedAt: "2026-10-21T02:00:00.000Z",
+            decidedBy: "policy", jevRecommendation: "reject", jevConfidence: 0.96, note: "This is criticism of the fare increase, not a threat.",
+            createdAt: "2026-10-22T01:00:00.000Z", excerpt: "Fare increase: this is robbery and the officials should resign.", mediaId: null,
+          },
+        ],
+        history: [{ id: N6(60), targetType: "comment", targetId: N6(61), outcome: "rejected", reasonCode: "spam", deciderRole: "community_moderator", isOverride: false, mine: false, appealed: false, at: "2026-10-21T03:00:00.000Z" }],
+      }),
+    ),
+  );
+  await page.route("**/api/v1/admin/moderation/decisions", (r) => {
+    const body = r.request().postDataJSON() as { outcome: string; targetType: string };
+    s.decisions.push(body);
+    return r.fulfill(json({ decisionId: N6(70), isOverride: body.targetType === "post_version" && body.outcome === "rejected" }));
+  });
+  await page.route(/\/api\/v1\/admin\/moderation\/appeals\/[^/]+$/, (r) => {
+    s.appeals.push({ id: r.request().url().split("/").at(-1)!, body: r.request().postDataJSON() });
+    return r.fulfill(json({ decisionId: N6(71), isOverride: true }));
+  });
+  return s;
+}
+
+test("a moderator sees only the moderation screens; transport staff never see moderation", async ({ page, context }) => {
+  await signInAs(context, "commuter,community_moderator");
+  const s = await mockReviewApi(page);
+  const adminCalls: string[] = [];
+  page.on("request", (r) => {
+    if (r.url().includes("/api/v1/admin/dashboard")) adminCalls.push(r.url());
+  });
+  await page.goto("/admin");
+  await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText(["Dashboard", "Moderation & appeals"]);
+  await expect(page.getByTestId("card-moderation")).toBeVisible();
+  await expect(page.getByTestId("card-published")).toHaveCount(0);
+  for (const path of [...TRANSIT_PATHS, "/admin/corrections"]) {
+    await page.goto(path);
+    await expect(page.getByRole("heading", { level: 1 }), path).toHaveText("Wrong stop.");
+  }
+  expect(adminCalls).toEqual([]);
+  expect(s.reviews).toEqual([]);
+
+  await context.clearCookies();
+  await signInAs(context, "commuter,transport_reviewer");
+  await page.goto("/admin/moderation");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Wrong stop.");
+});
+
+test("corrections review: evidence, start review, accept a stop report as a relocation in the draft, a fare report as a traced proposal", async ({ page, context }) => {
+  await signInAs(context, "commuter,transport_reviewer");
+  const s = await mockReviewApi(page);
+  await page.goto("/admin/corrections");
+  await expect(page).toHaveTitle("Corrections review · Admin · ParaNaga");
+  await expect(page.getByTestId("admin-corrections")).toContainText("open draft draft-2026-10-22-100000");
+
+  await page.getByTestId(`correction-open-${N6(1)}`).click();
+  const detail = page.getByTestId("correction-detail");
+  await expect(detail).toContainText("The stop sign is now across the street");
+  await expect(detail.getByRole("img", { name: "Evidence photo 1" })).toBeVisible();
+  expect(s.mediaReads).toBe(1);
+  await page.getByTestId("correction-submit").click(); // Start review is the first action
+  await expect(page.getByTestId("correction-notice")).toContainText("Moved to under review");
+  expect(s.reviews.at(-1)).toEqual({ id: N6(1), body: { action: "start_review", expectedStatus: "submitted" } });
+
+  await page.getByTestId(`correction-open-${N6(1)}`).click();
+  await page.getByLabel("Move the stop to the reported location (new stop version in the draft)").check();
+  await page.getByTestId("correction-note").fill("Matches the photo.");
+  await page.getByTestId("correction-submit").click();
+  await expect(page.getByTestId("correction-notice")).toContainText("Accepted into the draft. Nothing is public until the draft is validated and published.");
+  expect(s.reviews.at(-1)!.body).toEqual({
+    action: "accept",
+    expectedStatus: "under_review",
+    note: "Matches the photo.",
+    change: {
+      kind: "stop_action",
+      stopPointId: N6(10),
+      stopAction: { action: "relocate", expectedVersionId: N6(11), lat: 13.62355, lng: 123.18485, reason: `Commuter correction ${N6(1).slice(0, 8)}: Matches the photo.` },
+    },
+  });
+
+  await page.getByTestId(`correction-open-${N6(2)}`).click();
+  await expect(page.getByTestId("fare-trace")).toContainText("F01 (jeepney)");
+  await expect(page.getByTestId("fare-trace")).toContainText("₱13.00");
+  await page.getByTestId("correction-submit").click(); // accept, proposal: refused without a note
+  await expect(page.getByTestId("correction-detail")).toContainText("A proposal needs a note");
+  await page.getByLabel("Fare rule this is about (optional, recorded for tracing)").selectOption(N6(31));
+  await page.getByTestId("correction-note").fill("Charged ₱15; check the matrix.");
+  await page.getByTestId("correction-submit").click();
+  await expect(page.getByTestId("correction-notice")).toContainText("as a proposal");
+  expect(s.reviews.at(-1)!.body).toEqual({ action: "accept", expectedStatus: "under_review", note: "Charged ₱15; check the matrix.", change: { kind: "proposal" }, fareRuleVersionId: N6(31) });
+});
+
+test("moderation: an override of Jev needs a note; approving a photo makes it public; an appeal of a policy decision is decided with a note", async ({ page, context }) => {
+  await signInAs(context, "commuter,community_moderator");
+  const s = await mockReviewApi(page);
+  await page.goto("/admin/moderation");
+  const post = page.getByTestId(`item-post_version-${N6(40)}`);
+  await expect(post).toContainText("Jev: publish at 93%");
+  await post.getByLabel("Do not publish").check();
+  await expect(page.getByTestId(`override-post_version-${N6(40)}`)).toBeVisible();
+  await page.getByTestId(`decide-post_version-${N6(40)}`).click();
+  await expect(post).toContainText("needs a note");
+  expect(s.decisions).toEqual([]);
+  await page.getByTestId(`reason-post_version-${N6(40)}`).selectOption("personal_info");
+  await page.getByTestId(`note-post_version-${N6(40)}`).fill("Names a private person.");
+  await page.getByTestId(`decide-post_version-${N6(40)}`).click();
+  await expect(page.getByTestId("moderation-notice")).toContainText("Post not published (override of Jev, recorded).");
+  expect(s.decisions.at(-1)).toEqual({ targetType: "post_version", targetId: N6(40), outcome: "rejected", reason: "personal_info", note: "Names a private person." });
+
+  const photo = page.getByTestId(`item-photo-${N6(42)}`);
+  await expect(photo.getByRole("img")).toBeVisible();
+  await expect(photo).toContainText("Photos are never sent to Jev.");
+  await page.getByTestId(`decide-photo-${N6(42)}`).click();
+  expect(s.decisions.at(-1)).toEqual({ targetType: "photo", targetId: N6(42), outcome: "published", reason: "meets_guidelines" });
+
+  const appeal = page.getByTestId(`appeal-${N6(50)}`);
+  await expect(appeal).toContainText("the policy (Jev, high certainty)");
+  await appeal.getByLabel("Overturn: publish it").check();
+  await expect(appeal).toContainText("recorded as an override");
+  await page.getByTestId(`appeal-note-${N6(50)}`).fill("Criticism of a policy, not a threat.");
+  await page.getByTestId(`appeal-go-${N6(50)}`).click();
+  await expect(page.getByTestId("moderation-notice")).toContainText("Appeal accepted: now published (override of Jev, recorded).");
+  expect(s.appeals).toEqual([{ id: N6(50), body: { outcome: "overturned", note: "Criticism of a policy, not a threat." } }]);
+});
+
+for (const scheme of ["light", "dark"] as const) {
+  test(`corrections review and moderation pass axe (${scheme})`, async ({ page, context }) => {
+    await page.emulateMedia({ colorScheme: scheme });
+    await signInAs(context, "commuter,admin");
+    await mockReviewApi(page);
+    await page.goto("/admin/corrections");
+    await page.getByTestId(`correction-open-${N6(2)}`).click();
+    await expect(page.getByTestId("fare-trace")).toBeVisible();
+    await axe(page, `corrections-${scheme}`);
+    await page.goto("/admin/moderation");
+    await page.getByTestId(`item-post_version-${N6(40)}`).getByLabel("Do not publish").check();
+    await expect(page.getByTestId(`override-post_version-${N6(40)}`)).toBeVisible();
+    await axe(page, `moderation-${scheme}`);
   });
 }

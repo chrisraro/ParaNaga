@@ -6,27 +6,43 @@ import { fetchDashboard, type AdminResult } from "@/client/admin/api";
 import type { AdminDashboard as Dashboard } from "@/domain/admin/schemas";
 import { ErrorNote, Muted, PageTitle, Panel, when } from "./parts";
 
-// A1 Dashboard (N5a, C1): read-only counts that exist in the database today.
-export function AdminDashboard() {
+const linkCls = "font-medium text-teal-ink underline dark:text-teal-bright";
+
+// A1 Dashboard (N5a, C1): read-only counts that exist in the database today. Transport staff see
+// the data counts; a moderator only the moderation queue (N6), whose data endpoint is theirs.
+export function AdminDashboard({ transit, corrections, moderation }: { transit: boolean; corrections: boolean; moderation: boolean }) {
   const [state, setState] = useState<AdminResult<Dashboard> | null>(null);
   useEffect(() => {
+    if (!transit) return;
     let live = true;
     void fetchDashboard().then((r) => live && setState(r));
     return () => {
       live = false;
     };
-  }, []);
+  }, [transit]);
 
   return (
     <div data-testid="admin-dashboard">
       <PageTitle lead="What is published, what is waiting, and the last import. Counts only; nothing here changes data.">Dashboard</PageTitle>
-      {state === null ? (
-        <Muted>Loading…</Muted>
-      ) : !state.ok ? (
-        <ErrorNote testId="admin-dashboard-error">{state.message}</ErrorNote>
-      ) : (
-        <Cards d={state.data} />
-      )}
+      <div className="grid gap-4">
+        {moderation ? (
+          <Panel title="Community moderation" testId="card-moderation">
+            <Muted>Posts, comments and photos waiting for a person, and appeals to decide.</Muted>
+            <p className="mt-3 text-sm">
+              <Link href="/admin/moderation" prefetch={false} className={linkCls}>
+                Moderation and appeals
+              </Link>
+            </p>
+          </Panel>
+        ) : null}
+        {!transit ? null : state === null ? (
+          <Muted>Loading…</Muted>
+        ) : !state.ok ? (
+          <ErrorNote testId="admin-dashboard-error">{state.message}</ErrorNote>
+        ) : (
+          <Cards d={state.data} corrections={corrections} />
+        )}
+      </div>
     </div>
   );
 }
@@ -42,7 +58,7 @@ function Stat({ label, value, testId }: { label: string; value: string | number;
   );
 }
 
-function Cards({ d }: { d: Dashboard }) {
+function Cards({ d, corrections }: { d: Dashboard; corrections: boolean }) {
   const draft = d.latestDraft;
   const draftState = !draft
     ? "No open draft"
@@ -80,7 +96,7 @@ function Cards({ d }: { d: Dashboard }) {
           </Muted>
         </div>
         <p className="mt-3 text-sm">
-          <Link href="/admin/revisions" prefetch={false} className="font-medium text-teal-ink underline dark:text-teal-bright">
+          <Link href="/admin/revisions" prefetch={false} className={linkCls}>
             Revisions and publication
           </Link>
         </p>
@@ -95,6 +111,13 @@ function Cards({ d }: { d: Dashboard }) {
         <dl>
           <Stat label="Open (submitted, under review, needs evidence)" value={d.openCorrections} testId="open-corrections" />
         </dl>
+        {corrections ? (
+          <p className="mt-3 text-sm">
+            <Link href="/admin/corrections" prefetch={false} className={linkCls}>
+              Corrections review
+            </Link>
+          </p>
+        ) : null}
       </Panel>
       <Panel title="Last import" testId="card-import">
         {d.lastImport ? (

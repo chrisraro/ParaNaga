@@ -92,6 +92,7 @@ async function mockApi(page: Page, opts: { signedIn: boolean; stepUp?: boolean }
           description: "The stop is on the other side of the road.",
           events: [
             { status: "submitted", at: "2026-10-10T00:00:00.000Z" },
+            { status: "needs_evidence", at: "2026-10-11T00:00:00.000Z", reason: "need_photo" },
             { status: "accepted", at: "2026-10-12T00:00:00.000Z" },
           ],
         },
@@ -210,6 +211,9 @@ test("the detail shows the owner's own content, the timeline and a separate self
   await page.goto("/app/reports");
   await page.getByTestId("report-row-correction").click();
   await expect(page.getByTestId("report-content")).toContainText("The stop is on the other side of the road.");
+  // N6: the reviewer's templated reason, in the reporter's language; never the reviewer's note.
+  await expect(page.getByTestId("report-timeline")).toContainText("Needs more detail");
+  await expect(page.getByTestId("report-timeline")).toContainText("Please add a photo of what you saw.");
   await expect(page.getByTestId("report-mynaga-panel")).toHaveCount(0);
 });
 

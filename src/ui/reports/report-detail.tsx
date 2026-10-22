@@ -16,6 +16,7 @@ import { loadComplaint, loadCorrection, type Loaded } from "@/client/reports/api
 import { complaintCategoryLabel } from "@/domain/complaints/categories";
 import { complaintStatusLabel } from "@/domain/complaints/status";
 import { categoryLabel } from "@/domain/corrections/categories";
+import { reviewReasonText } from "@/domain/corrections/review-reasons";
 import { statusLabel } from "@/domain/corrections/status";
 import { complaintTone, correctionTone, manilaDate, outcomeLabel } from "@/domain/reports/list";
 import type { ComplaintDetail, CorrectionDetail } from "@/domain/reports/schemas";
@@ -110,7 +111,10 @@ function CorrectionView({ c }: { c: CorrectionDetail }) {
         <h2>{categoryLabel(c.category, r)}</h2>
         <StatusChip tone={correctionTone(c.status)}>{statusLabel(c.status, r)}</StatusChip>
         <h3>{t.statusInParaNaga}</h3>
-        <TimelineList events={c.events} label={(s) => statusLabel(s as CorrectionDetail["status"], r)} />
+        <TimelineList
+          events={c.events.map((e) => ({ status: e.status, at: e.at, note: e.reason ? reviewReasonText(e.reason, r) : null }))}
+          label={(s) => statusLabel(s as CorrectionDetail["status"], r)}
+        />
       </div>
       <div className="pn-reports__panel" data-testid="report-content">
         <h3>{t.whatYouReported}</h3>

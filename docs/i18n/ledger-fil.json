@@ -14190,5 +14190,275 @@
     "note": "T15: was hard-coded English in src/ui/street-view/stop-street-view.tsx; extracted and translated.",
     "reviewed": "opus",
     "t15": "added"
+  },
+  {
+    "key": "report.reviewReasons.need_photo",
+    "en": "Please add a photo of what you saw.",
+    "fil": "Pakidagdag ang larawan ng nakita mo.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "report.reviewReasons.need_location",
+    "en": "Please tell us exactly where this is.",
+    "fil": "Pakisabi kung saan mismo ito.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "report.reviewReasons.need_details",
+    "en": "Please tell us more about what is wrong.",
+    "fil": "Pakisabi pa kung ano ang mali.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "report.reviewReasons.need_time",
+    "en": "Please tell us when you saw this.",
+    "fil": "Pakisabi kung kailan mo ito nakita.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "report.reviewReasons.already_correct",
+    "en": "The information already shows this.",
+    "fil": "Ganito na ang nakalagay sa impormasyon.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "report.reviewReasons.not_verifiable",
+    "en": "We could not confirm this.",
+    "fil": "Hindi namin ito makumpirma.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "report.reviewReasons.out_of_scope",
+    "en": "This is outside what ParaNaga covers.",
+    "fil": "Wala ito sa sakop ng ParaNaga.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "report.reviewReasons.not_transport",
+    "en": "This is not about routes, stops or fares.",
+    "fil": "Hindi ito tungkol sa ruta, hintuan o pamasahe.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.label",
+    "en": "Photos (optional)",
+    "fil": "Mga larawan (opsyonal)",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.add",
+    "en": "Add a photo",
+    "fil": "Magdagdag ng larawan",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.uploading",
+    "en": "Uploading…",
+    "fil": "Ina-upload…",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.hint",
+    "en": "Up to {0} photos. A person checks each photo before others can see it. Leave out faces and plate numbers.",
+    "fil": "Hanggang {0} larawan. May taong sumusuri ng bawat larawan bago ito makita ng iba. Huwag isama ang mukha at plaka.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.remove",
+    "en": "Remove {0}",
+    "fil": "Alisin ang {0}",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.pending",
+    "en": "Photo awaiting review. Others cannot see it until a person has checked it.",
+    "fil": "Naghihintay ng pagsusuri ang larawan. Hindi ito makikita ng iba hangga't hindi pa ito nasusuri ng isang tao.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.rejected",
+    "en": "Photo not published.",
+    "fil": "Hindi nailathala ang larawan.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.alt",
+    "en": "Photo {0} from the author",
+    "fil": "Larawan {0} mula sa nag-post",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.type",
+    "en": "Use a JPEG, PNG or WebP photo.",
+    "fil": "Gumamit ng larawang JPEG, PNG o WebP.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.failed",
+    "en": "The photo could not be uploaded. Try again.",
+    "fil": "Hindi na-upload ang larawan. Subukan ulit.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.photos.max",
+    "en": "You can add up to {0} photos.",
+    "fil": "Hanggang {0} larawan lang ang puwede.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.ask",
+    "en": "Ask for another review",
+    "fil": "Humiling ng muling pagsusuri",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.noteLabel",
+    "en": "Why should it be published?",
+    "fil": "Bakit dapat itong mailathala?",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.noteHint",
+    "en": "At least {0} characters. A different person reviews it.",
+    "fil": "Hindi bababa sa {0} na character. Ibang tao ang susuri nito.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.send",
+    "en": "Send request",
+    "fil": "Ipadala ang hiling",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.cancel",
+    "en": "Cancel",
+    "fil": "Ikansela",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.sent",
+    "en": "Request sent. A different person will review it.",
+    "fil": "Naipadala ang hiling. Ibang tao ang susuri nito.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.already",
+    "en": "You already asked for another review of this.",
+    "fil": "Humiling ka na ng muling pagsusuri nito.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.failed",
+    "en": "The request could not be sent. Try again.",
+    "fil": "Hindi naipadala ang hiling. Subukan ulit.",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.states.open",
+    "en": "Another review requested",
+    "fil": "Hiniling ang muling pagsusuri",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.states.upheld",
+    "en": "Reviewed again: still not published",
+    "fil": "Nasuri ulit: hindi pa rin nailathala",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
+  },
+  {
+    "key": "community.appeal.states.overturned",
+    "en": "Reviewed again: now published",
+    "fil": "Nasuri ulit: nailathala na",
+    "review": true,
+    "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
+    "reviewed": "opus",
+    "t15": "added"
   }
 ]

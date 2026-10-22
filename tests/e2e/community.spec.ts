@@ -31,6 +31,24 @@ const DETAIL = {
   comments: [comment(C1, null, 1, "Thanks, this helped.", [comment(C2, C1, 2, "Same on Loop B.")])],
 };
 
+// N6: an own post whose newest version was not published (appeal once), with one approved photo
+// (served from /api/v1/community/photos) and one still waiting (state only, no image).
+const PHOTO_ID = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a21";
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+const OWN_REJECTED = {
+  post: {
+    ...summary({ id: OWN_ID, isOwn: true, state: "rejected", title: "Fare increase on R4" }),
+    body: "The new fare on R4 is too high for students.",
+    versions: [{ id: C2, n: 1, title: "Fare increase on R4", state: "rejected", isLive: false, submittedAt: "2026-10-17T01:00:00.000Z", appeal: null }],
+    editDraft: { title: "Fare increase on R4", body: "The new fare on R4 is too high for students.", tags: [] },
+    photos: [
+      { id: PHOTO_ID, state: "published", appeal: null },
+      { id: C1, state: "pending", appeal: null },
+    ],
+  },
+  comments: [],
+};
+
 type Mock = { signedIn: boolean; guidelinesAccepted?: boolean; sent: { url: string; method: string; body: unknown }[] };
 
 const json = (route: Route, body: unknown, status = 200) =>
@@ -51,6 +69,9 @@ async function mockApi(page: Page, mock: Mock) {
     if (path === "/posts" && req.method() === "POST")
       return json(route, { post: { id: OWN_ID, state: "pending", isEdit: false, visibleToOthers: false } }, 201);
     if (path === `/posts/${POST_ID}` && req.method() === "GET") return json(route, DETAIL);
+    if (path === `/posts/${OWN_ID}` && req.method() === "GET") return json(route, OWN_REJECTED);
+    if (path === "/appeals") return json(route, { appeal: { id: C1, state: "open" } }, 201);
+    if (path === `/photos/${PHOTO_ID}`) return route.fulfill({ status: 200, contentType: "image/png", headers: { "cache-control": "public, max-age=300" }, body: PNG });
     if (path === `/posts/${POST_ID}/comments`) return json(route, { comment: { id: C1, state: "pending", depth: 1 } }, 201);
     if (path === "/reactions") return json(route, { active: true, count: 3 });
     if (path === "/bookmarks") return json(route, { active: true, count: null });
@@ -158,6 +179,27 @@ test.describe("thread", () => {
     await expect(page.getByTestId("comment")).toHaveCount(2);
     await expect(page.getByTestId("thread-helpful")).toHaveCount(0);
     await expect(page.getByTestId("community-signin")).toBeVisible();
+  });
+});
+
+test.describe("moderation outcomes (N6)", () => {
+  test("the author of a post that was not published asks for another review once; approved photos show, pending ones do not", async ({ page }) => {
+    const mock: Mock = { signedIn: true, sent: [] };
+    await mockApi(page, mock);
+    await page.goto(`/app/community/${OWN_ID}`);
+    await expect(page.getByTestId("thread-state")).toContainText("Not published");
+    await expect(page.getByTestId("thread-photos").getByRole("img", { name: "Photo 1 from the author" })).toBeVisible();
+    await expect(page.getByTestId("thread-own-photo")).toContainText("Photo awaiting review");
+    await expect(page.getByTestId("thread-own-photo").getByRole("img")).toHaveCount(0);
+
+    await page.getByTestId("appeal-open").click();
+    await page.getByLabel("Why should it be published?").fill("short");
+    await page.getByTestId("appeal-send").click();
+    await expect(page.getByTestId("appeal-form")).toContainText("at least 10");
+    await page.getByLabel("Why should it be published?").fill("It is about the fare, not about any person.");
+    await page.getByTestId("appeal-send").click();
+    await expect(page.getByTestId("appeal-state")).toContainText("A different person will review it.");
+    expect(mock.sent.find((s) => s.url === "/appeals")?.body).toEqual({ targetType: "post_version", targetId: C2, note: "It is about the fare, not about any person." });
   });
 });
 

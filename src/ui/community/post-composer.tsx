@@ -15,8 +15,10 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { fetchCommunityMe, fetchPost, submitEdit, submitPost } from "@/client/community/api";
+import { uploadPhoto } from "@/client/corrections/api";
 import {
   BODY_MAX,
+  MAX_PHOTOS,
   MAX_TAGS,
   parseTagInput,
   TITLE_MAX,
@@ -55,6 +57,10 @@ export function PostComposer(props: Props) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<Sent | null>(null);
   const [requestId] = useState(() => crypto.randomUUID());
+  // N6: photos wait in the private bucket until a moderator approves each one.
+  const [photos, setPhotos] = useState<{ id: string; name: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [photoNote, setPhotoNote] = useState<string | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
 
   // Has this person accepted the guidelines? If not, they come first.
@@ -117,6 +123,18 @@ export function PostComposer(props: Props) {
     setStep("write");
   };
 
+  const onPickPhoto = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (!file) return;
+    if (photos.length >= MAX_PHOTOS) return setPhotoNote(t.photos.max(MAX_PHOTOS));
+    setUploading(true);
+    setPhotoNote(null);
+    const result = await uploadPhoto(file, "community_photo");
+    setUploading(false);
+    if (result.ok) setPhotos((p) => [...p, { id: result.mediaId, name: file.name.slice(0, 60) }]);
+    else setPhotoNote(result.message === en.report.api.photoType ? t.photos.type : t.photos.failed);
+  };
+
   const onSend = async () => {
     if (!user) return;
     const tags = parseTagInput(tagText);
@@ -134,7 +152,12 @@ export function PostComposer(props: Props) {
     const result =
       props.mode === "edit"
         ? await submitEdit(props.postId, common)
-        : await submitPost({ ...common, topic: topic as CommunityTopic, ...(route.trim() ? { routeCode: route.trim() } : {}) });
+        : await submitPost({
+            ...common,
+            topic: topic as CommunityTopic,
+            ...(route.trim() ? { routeCode: route.trim() } : {}),
+            photoIds: photos.map((p) => p.id),
+          });
     setSending(false);
     if (result.ok) setSent(result.data.post);
     else setError(translated(result.message, en.community.api, t.api));
@@ -259,6 +282,54 @@ export function PostComposer(props: Props) {
                 {t.routeLabel}
               </label>
               <input id={`${uid}-route`} className="pn-comm__input" maxLength={16} value={route} onChange={(e) => setRoute(e.target.value)} autoComplete="off" placeholder="R4" />
+            </div>
+          ) : null}
+
+          {props.mode === "new" ? (
+            <div className="pn-comm__field">
+              <span className="pn-comm__label">{t.photos.label}</span>
+              {photos.length > 0 ? (
+                <ul className="pn-comm__photo-list" data-testid="composer-photos">
+                  {photos.map((p) => (
+                    <li key={p.id}>
+                      <span className="pn-comm__photo-name">{p.name}</span>
+                      <button
+                        type="button"
+                        className="pn-btn pn-btn--secondary pn-comm__small"
+                        onClick={() => setPhotos((all) => all.filter((x) => x.id !== p.id))}
+                        aria-label={t.photos.remove(p.name)}
+                      >
+                        {tt.forms.remove}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {photos.length < MAX_PHOTOS ? (
+                <>
+                  <input
+                    id={`${uid}-photo`}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="pn-comm__file"
+                    disabled={uploading}
+                    data-testid="composer-photo-input"
+                    onChange={(e) => {
+                      void onPickPhoto(e.target.files);
+                      e.target.value = "";
+                    }}
+                  />
+                  <label htmlFor={`${uid}-photo`} className="pn-btn pn-btn--secondary pn-comm__small" aria-disabled={uploading}>
+                    {uploading ? t.photos.uploading : t.photos.add}
+                  </label>
+                </>
+              ) : null}
+              <span className="pn-comm__hint">{t.photos.hint(MAX_PHOTOS)}</span>
+              {photoNote ? (
+                <p className="pn-comm__hint" role="status">
+                  {photoNote}
+                </p>
+              ) : null}
             </div>
           ) : null}
 

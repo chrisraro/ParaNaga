@@ -18,15 +18,20 @@ import {
   removeComment,
   removePost,
   reportPost,
+  submitAppeal,
   submitComment,
   toggleHelpful,
   toggleSaved,
 } from "@/client/community/api";
 import {
+  APPEAL_NOTE_MAX,
+  APPEAL_NOTE_MIN,
   COMMENT_MAX,
   NOTE_MAX,
   reportReasonsIn,
   validateComment,
+  type AppealState,
+  type AppealTarget,
   type CommentDto,
   type PostDetail,
   type ReportReason,
@@ -149,6 +154,10 @@ export function PostThread({ id }: { id: string }) {
 
   const { post, comments } = load.data;
   const live = post.state === "published";
+  // The author's newest version, when a person or the policy decided not to publish it (N6: appeal once).
+  const latest = post.isOwn ? post.versions[0] : undefined;
+  const shownPhotos = post.photos.filter((ph) => ph.state === "published");
+  const ownPhotos = post.isOwn ? post.photos.filter((ph) => ph.state !== "published") : [];
 
   return (
     <div className="pn-comm" onKeyDown={onKeyDown} data-testid="thread">
@@ -164,6 +173,23 @@ export function PostThread({ id }: { id: string }) {
         <p className="pn-comm__body" data-testid="thread-body">
           {post.body}
         </p>
+        {shownPhotos.length > 0 ? (
+          <ul className="pn-comm__photos" data-testid="thread-photos">
+            {shownPhotos.map((ph, i) => (
+              <li key={ph.id}>
+                {/* Served from the public bucket only, after a moderator approved this photo. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="pn-comm__photo" src={`/api/v1/community/photos/${ph.id}`} alt={t.photos.alt(i + 1)} loading="lazy" decoding="async" />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {ownPhotos.map((ph) => (
+          <div key={ph.id} className="pn-comm__panel" data-testid="thread-own-photo">
+            <p className={`pn-comm__status pn-comm__status--${ph.state}`}>{ph.state === "rejected" ? t.photos.rejected : t.photos.pending}</p>
+            {ph.state === "rejected" ? <AppealBox targetType="photo" targetId={ph.id} appeal={ph.appeal} onSent={refresh} /> : null}
+          </div>
+        ))}
         {post.tags.length > 0 ? (
           <p className="pn-comm__muted">{post.tags.map((t) => `#${t}`).join(" ")}</p>
         ) : null}
@@ -177,6 +203,9 @@ export function PostThread({ id }: { id: string }) {
           <p ref={statusRef} tabIndex={-1} className={`pn-comm__status pn-comm__status--${post.state}`} role="status" data-testid="thread-state">
             {t.stateLine(stateLabel(post.state, t), stateHint(post.state, "post", t))}
           </p>
+        ) : null}
+        {latest && latest.state === "rejected" ? (
+          <AppealBox targetType="post_version" targetId={latest.id} appeal={latest.appeal} onSent={refresh} />
         ) : null}
         {post.isOwn && post.hasPendingEdit ? (
           <p className="pn-comm__status pn-comm__status--pending" role="status" data-testid="thread-edit-state">
@@ -302,6 +331,7 @@ export function PostThread({ id }: { id: string }) {
               onDelete={(c) => setConfirmDelete({ type: "comment", id: c.id })}
               report={report?.type === "comment" ? report : null}
               closeReport={closeReport}
+              onAppealed={refresh}
               composer={(parentId) => (
                 <CommentComposer
                   postId={post.id}
@@ -378,6 +408,7 @@ type ListProps = {
   onDelete: (c: CommentDto) => void;
   report: { type: TargetType; id: string } | null;
   closeReport: () => void;
+  onAppealed: () => void;
   composer: (parentId: string | null) => React.ReactNode;
 };
 
@@ -395,6 +426,7 @@ function CommentList(props: ListProps) {
           </div>
           <p className="pn-comm__body">{c.body}</p>
           {c.state !== "published" && c.isOwn ? <p className="pn-comm__hint">{stateHint(c.state, "comment", t)}</p> : null}
+          {c.state === "rejected" && c.isOwn ? <AppealBox targetType="comment" targetId={c.id} appeal={c.appeal} onSent={props.onAppealed} /> : null}
           <div className="pn-comm__row">
             {c.state === "published" ? (
               props.signedIn && !c.isOwn ? (
@@ -602,5 +634,83 @@ function ReportForm({ target, onDone }: { target: { type: TargetType; id: string
         </button>
       </div>
     </fieldset>
+  );
+}
+
+/**
+ * Asking for another review of a decision not to publish (N6): once per item; a different person
+ * than the one who decided reviews it. Once asked, only the state is shown.
+ */
+function AppealBox({ targetType, targetId, appeal, onSent }: { targetType: AppealTarget; targetId: string; appeal: AppealState | null; onSent: () => void }) {
+  const tt = useT();
+  const t = tt.community;
+  const uid = useId();
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  if (appeal || sent) {
+    return (
+      <p className="pn-comm__status" role="status" data-testid="appeal-state">
+        {sent && !appeal ? t.appeal.sent : t.appeal.states[appeal ?? "open"]}
+      </p>
+    );
+  }
+  if (!open) {
+    return (
+      <div className="pn-comm__row">
+        <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => setOpen(true)} data-testid="appeal-open">
+          {t.appeal.ask}
+        </button>
+      </div>
+    );
+  }
+  const send = async () => {
+    const n = text.trim().length;
+    if (n < APPEAL_NOTE_MIN) return setError(tt.forms.minChars(APPEAL_NOTE_MIN));
+    setSending(true);
+    setError(null);
+    const r = await submitAppeal({ targetType, targetId, note: text.trim() });
+    setSending(false);
+    if (r.ok) {
+      setSent(true);
+      onSent();
+    } else setError(r.reason === "conflict" ? t.appeal.already : r.reason === "failed" ? t.appeal.failed : apiText(r.message, t.api));
+  };
+  return (
+    <div className="pn-comm__panel" data-testid="appeal-form">
+      <div className="pn-comm__field">
+        <label htmlFor={`${uid}-a`} className="pn-comm__label">
+          {t.appeal.noteLabel}
+        </label>
+        <textarea
+          id={`${uid}-a`}
+          className="pn-comm__input pn-comm__textarea"
+          rows={3}
+          maxLength={APPEAL_NOTE_MAX}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          aria-describedby={`${uid}-ah`}
+        />
+        <span id={`${uid}-ah`} className="pn-comm__hint">
+          {t.appeal.noteHint(APPEAL_NOTE_MIN)}
+        </span>
+      </div>
+      {error ? (
+        <p className="pn-comm__error" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <div className="pn-comm__row">
+        <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} disabled={sending} data-testid="appeal-send">
+          {sending ? tt.forms.sending : t.appeal.send}
+        </button>
+        <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => setOpen(false)}>
+          {t.appeal.cancel}
+        </button>
+      </div>
+    </div>
   );
 }

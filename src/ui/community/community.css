@@ -409,3 +409,50 @@
   color: var(--pn-label2);
   font-size: 15px;
 }
+
+/* N6: photos on a post. The file input is visually hidden; its label is the button. */
+.pn-comm__file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.pn-comm__file:focus-visible + label {
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 2px;
+}
+.pn-comm__photo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-comm__photo-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pn-comm__photo-name {
+  font-size: 14px;
+  color: var(--pn-label);
+  overflow-wrap: anywhere;
+}
+.pn-comm__photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-comm__photo {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  background: var(--pn-fill);
+}
