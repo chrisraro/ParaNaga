@@ -1226,4 +1226,188 @@ export const fil: Dict = {
     signedOut: "Mag-sign in ulit para magpatuloy.",
     failed: "May nangyaring mali. Subukan ulit.",
   },
+  // Landing page (/), T14 draft; review:true rows in docs/i18n/ledger-fil.json still need a native Naga speaker.
+  // The captures are English screenshots, so alt text names their on-screen labels as shown.
+  landing: {
+    header: {
+      sections: { how: "Paano gumagana", ride: "Mga paraan ng pagsakay", honest: "Aming datos", faq: "Mga tanong" },
+      openApp: "Buksan ang app",
+      openMenu: "Buksan ang menu",
+      closeMenu: "Isara ang menu",
+      mainNav: "Pangunahin",
+      backToTop: "ParaNaga, bumalik sa itaas",
+    },
+    hero: {
+      titleA: "Aling jeep, saan sasakay,",
+      titleB: "at kailan magsasabi ng",
+      lede: "Pinaplano ng ParaNaga ang biyahe mo sa buong Naga City sakay ng jeep, tricycle, padyak at paglalakad, tapos ginagabayan ka hakbang-hakbang. Libre sa browser ng phone mo, walang account na kailangan.",
+      seeHow: "Tingnan kung paano gumagana",
+      note: "Pansamantala pa ang mga ruta at oras, at tantiya lang ang pasahe. Kumpirmahin sa driver.",
+    },
+    routeBandLabel: "Mga rutang jeep na ginagamit ng ParaNaga sa pagpaplano",
+    how: {
+      heading: "Mula “Saan punta?” hanggang “Para!” sa tatlong hakbang.",
+      lede: "Bago ka sa Naga, nandito para sa Peñafrancia, o sumusubok ng bagong ruta: hindi mo na dapat tanungin ang tatlong estranghero kung anong jeep ang sasakyan.",
+      pick: { title: "Pumili ng lugar", body: "Mag-type ng paaralan, palengke o barangay, o mag-tap ng chip sa mapa." },
+      options: { title: "Tingnan ang mga pagpipilian", body: "Jeep, tricycle, padyak o lakad, bawat isa may tantiyang pasahe." },
+      ride: { title: "Sumakay at magsabi ng Para", body: "Sundan ang mga hakbang: saan maglalakad, saan sasakay at saan bababa." },
+    },
+    showcase: {
+      heading: "Ang totoong app, bawat screen.",
+      deviceLabel: "Mga screen ng ParaNaga",
+      home: {
+        title: "Magsimula sa mapa.",
+        body: "Bumubukas ang mapa sa Naga na may lumulutang na bar na Saan punta? Diretso ang mga chip sa Kainan at inumin, Paaralan, Kalusugan, Palengke at mall, Gobyerno at Terminal, at nauuna ang mga naka-save mong lugar.",
+      },
+      search: {
+        title: "Hanapin ang anumang may pangalang lugar.",
+        body: "Sakop ng paghahanap ang bawat lugar na may pangalan sa OpenStreetMap, pati mga hintuan at ruta. Kapag kulang ang resulta, dinadagdagan ito ng mga mungkahi ng Google, bawat isa may label na di pa kumpirmado.",
+      },
+      directions: {
+        title: "Tingnan ang sakay sa mapa ng kalye.",
+        body: "Plaza Rizal papunta sa Ateneo de Naga University: ang lakad at ang jeep na iginuhit sa mapa ng kalye, at ang dalawang pinakamainam na pagpipilian sa ilalim nito, ang Inirerekomendang jeep at isang tricycle.",
+      },
+      options: {
+        title: "Ihambing ang lahat ng paraan.",
+        body: "Isa ang Inirerekomenda. Ang mga jeep ay ayon sa letra sa karatula at pangalan ng ruta; ang mga card ng tricycle ay nagpapakita ng minimum na pasahe at hindi kailanman ng oras.",
+      },
+      detail: {
+        title: "Sundan nang hakbang-hakbang.",
+        body: "Saan maglalakad, saan sasakay at saan magsasabi ng Para. Saklaw ang mga oras na may markang tantiya, at hindi alam ang oras ng paghihintay.",
+      },
+      saved: {
+        title: "Itago ang mga biyahe sa phone mo.",
+        body: "Gumagana nang offline ang mga naka-save na biyahe, bilang teksto. Mag-sign in lang kung gusto mong ma-backup ang mga ito sa account.",
+      },
+    },
+    ride: {
+      heading: "Lahat ng paraan papunta roon, sa mga pangalang gamit sa Naga.",
+      lede: "Pinaghahalo ng mga biyahe ang jeep, tricycle, padyak at paglalakad. Tantiya ang mga oras at pasahe, ipinapakita bilang saklaw.",
+      routeNames: "Mga pangalan ng ruta",
+      jeepney: {
+        title: "Mga jeep, ayon sa letra sa karatula at pangalan ng ruta",
+        body: "Gaya ng signboard: Loop A Centro-Magsaysay o Centro-Del Rosario via Magsaysay Ave. Pangalan lang ang ipinapakita sa rutang walang kilalang letra, hindi kailanman hinulaang letra, at sinasabi ng pahina ng bawat ruta kung saan galing ang letra nito.",
+      },
+      tricycle: {
+        title: "Mga tricycle, kasama ang terminal",
+        body: "Pinapangalanan ng card ang malapit na terminal ng tricycle at ang minimum na pasahe, ₱15 (Ordinance 2024-002). Hindi tinatantiya ang oras ng tricycle, at minamarkahan ang mga daang bawal sa tricycle.",
+        minFare: "Minimum na pasahe ₱15",
+        noTime: "Walang tantiya sa oras",
+      },
+      padyak: { title: "Padyak", body: "Maiikling lokal na sakay sa ₱10 kada pasahero. Hindi kailanman tinatantiya ang oras." },
+      walk: { title: "Paglalakad", body: "Kapag mas mainam ang maglakad, sinasabi iyon ng app, kasama ang layo sa mga kalye." },
+      anywhere: {
+        title: "Bumaba kahit saan sa ruta",
+        body: "Puwede kang sumakay at bumaba kahit saan sa ruta. Kapag walang markadong hintuan, sasabihin ng mga hakbang na bumaba malapit sa lugar at sabihin sa driver ang “para”.",
+        chip: "Sabihin sa driver ang ‘para’ · walang markadong hintuan",
+      },
+    },
+    far: {
+      title: "Mga malalayong barangay, tapat na sinasabi.",
+      body: "Special-trip na pasahe ang singil ng mga tricycle papuntang Cararayan at San Isidro, Pacol, at Carolina at Panicuason, ayon sa lokal na ulat. Kaya itinuturo ng ParaNaga ang jeep at ang terminal nito.",
+      points: { listed: "Nakalista lang ang special-trip na tricycle kung gusto mo pa rin.", notFixed: "May marka ang pasahe nito na di tiyak: pagkasunduan sa driver.", never: "Hindi ito kailanman ang Inirerekomendang opsyon." },
+    },
+    offline: {
+      title: "Gumagana kahit walang signal.",
+      body: "Buksan ang ParaNaga nang isang beses na may koneksyon at gagana nang offline ang app at ang datos ng transportasyon. Nabubuksan bilang teksto ang mga naka-save na biyahe, kahit sa lugar na walang signal.",
+      android: { device: "Android, Chrome", steps: { open: "Buksan ang ParaNaga", install: "I-tap ang menu, tapos Install app o Add to Home screen" } },
+      iphone: { device: "iPhone, Safari", steps: { open: "Buksan ang ParaNaga", install: "I-tap ang Share, tapos Add to Home Screen" } },
+    },
+    themes: {
+      title: "Maliwanag, madilim at high contrast.",
+      body: "Sinusunod ng ParaNaga ang phone mo, o ikaw ang pipili sa Settings. Ang high contrast ay may mas matingkad na text at border para mabasa kahit tirik ang araw.",
+      altLight: "Home screen ng ParaNaga sa maliwanag na theme: ang mapa ng kalye ng Naga City na may bar na Where to? at mga chip ng kategorya.",
+      altDark: "Ang parehong home screen sa madilim na theme: madilim na search bar, mga chip at tab bar sa ibabaw ng mapa.",
+      light: "Maliwanag",
+      dark: "Madilim",
+      compare: "Ihambing ang maliwanag at madilim na theme",
+      darkShown: (percent: number) => `${percent}% ang madilim na ipinapakita`,
+    },
+    community: {
+      title: "Ayusin ang mapa kasama ng ibang commuter.",
+      correction: {
+        title: "Mag-ulat ng pagwawasto",
+        body: "Hintuang nasa maling gilid ng kalye, rutang ibang daan ang tinatahak, pasaheng iba. May taong magsusuri nito; walang magbabago hangga't hindi pa iyon nangyayari.",
+      },
+      driver: { title: "Mag-ulat ng driver, nang pribado", body: "Hindi kailanman ilalathala. Ang tagasuri lang ang makakakita. Sa emergency, tumawag sa 911." },
+      mine: { title: "Mga ulat ko", body: "Ang mga pagwawasto at ulat mo sa driver sa iisang lugar. Ikaw lang ang makakakita." },
+      myNaga: {
+        title: "MyNaga, kung gusto mong marinig ng Lungsod",
+        body: "Mabubuksan ng ParaNaga ang MyNaga para sa iyo, pero wala itong ipinapadala sa MyNaga o sa City Hall at hindi nito makukumpirma kung natanggap ang ulat mo.",
+      },
+      tips: {
+        title: "Mga tip ng komunidad",
+        body: "Mga tanong at tip mula sa mga commuter ng Naga, sinusuri bago mabasa ng iba, at hindi pa kumpirmado ng ParaNaga.",
+      },
+    },
+    promise: {
+      title: "Ang alam namin, at ang hindi pa.",
+      routes: {
+        title: "Ang mga ruta sa ordinansa",
+        body: "Itinatakda ng Ordinansa 2025-070 ang walong grupo ng ruta: Ruta 1 hanggang 7, at Ruta 8, ang Naga Loop Service A hanggang D, na may 282 unit na nakalaan. Pahintulot iyon, hindi bilang ng mga jeep na bumibiyahe.",
+      },
+      provisional: {
+        title: "Pansamantala, at may label",
+        body: "Hindi pa kumpirmado ng ParaNaga ang mga ruta, hintuan at oras. Sinasabi iyon ng bawat sakay at hinihiling na kumpirmahin mo sa driver.",
+      },
+      fares: { title: "Tantiya ang pasahe", body: "Mula sa mga naiulat na patakaran sa pasahe, ipinapakita bilang saklaw. Hindi pa inilalapat ang mga diskwento." },
+      tracking: { title: "Walang pagsubaybay sa sasakyan", body: "Hindi sinusubaybayan ng ParaNaga ang mga jeep, kaya hindi nito sinasabi kung kailan may jeep." },
+      privacyTitle: "Sa iyo ang mga biyahe mo.",
+      sourcesLead: "Kung saan galing ang datos at sino ang may hawak ng karapatan:",
+      sourcesLink: "Mga source at pasasalamat",
+      privacy: { ads: "Walang ads at walang analytics.", searches: "Nananatili sa phone na ito ang mga huling hinanap. Naka-off bilang default ang kasaysayan ng biyahe.", location: "Sa device na ito lang ginagamit ang lokasyon mo.", account: "Opsyonal ang account. Gumagana ang lahat bilang guest." },
+    },
+    phone: {
+      title: "Gawa para sa phone na hawak mo.",
+      desk: "Ginagabayan ka ng app sa kalye gamit ang lokasyon mo, ang mapa at malalaking tap target, kaya bumubukas ito sa mga phone at maliliit na tablet. Itutok ang camera ng phone mo sa code para magpatuloy doon.",
+      touch: "Tumatakbo ito sa browser mo. I-add sa home screen at bubukas ito na parang app, kahit offline.",
+      qrLabel: (url: string) => `QR code na nagbubukas ng ${url}`,
+    },
+    faq: {
+      heading: "Mga tanong",
+      free: { q: "Libre ba ang ParaNaga?", a: "Oo. Libre ang pagpaplano ng biyahe, pag-save nito at pagbasa ng mapa, walang account." },
+      install: {
+        q: "Kailangan ba itong i-install?",
+        a: "Hindi. Tumatakbo ito sa browser ng phone mo. I-add sa home screen para isang tap lang at magamit kahit offline.",
+      },
+      tracking: {
+        q: "Ipinapakita ba nito kung nasaan ang jeep?",
+        a: "Hindi. Hindi sinusubaybayan ng ParaNaga ang mga sasakyan. Ipinapakita nito ang mga ruta at hakbang, at tantiya ng oras at pasahe bilang saklaw.",
+      },
+      trust: {
+        q: "Mapagkakatiwalaan ba ang mga ruta?",
+        a: "Ituring itong magandang panimula, hindi ang huling salita. Pansamantala ang mga ruta at hintuan hanggang masuri sa kalye, at sinasabi iyon ng bawat sakay. Kumpirmahin sa driver.",
+      },
+      phonesOnly: {
+        q: "Bakit sa mga phone lang bumubukas ang app?",
+        a: "Ginagabayan ka nito sa kalye, gamit ang lokasyon mo, ang mapa at malalaking tap target. Sa computer, i-scan ang code para magpatuloy sa phone mo.",
+      },
+      official: {
+        q: "App ba ito ng Pamahalaang Lungsod?",
+        a: "Hindi. Hiwalay ang ParaNaga at hindi ito pinapatakbo ng Pamahalaang Lungsod ng Naga.",
+      },
+    },
+    closing: { title: "Dito magsisimula ang susunod mong biyahe.", lede: "Libre, sa browser ng phone mo. Walang account na kailangan." },
+    footer: {
+      disclaimer:
+        "Hiwalay na proyekto ang ParaNaga. Hindi ito kaanib, inendorso o pinapatakbo ng Pamahalaang Lungsod ng Naga. Maaaring kulang ang mga ruta, oras at pasahe: laging kumpirmahin sa driver.",
+      captures: "Mga capture ng app ang mga screen sa pahinang ito, may data ng mapa na",
+      osm: "OpenStreetMap contributors",
+      mapInApp: ". Mapa sa app:",
+      label: "Ibaba",
+      sources: "Mga source at pasasalamat",
+      help: "Tulong",
+    },
+    alt: {
+      hero: "ParaNaga sa isang phone: mapa ng kalye ng Naga City na may biyahe mula Plaza Rizal papunta sa Ateneo de Naga University at dalawang pagpipilian sa ilalim nito: ang Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, at ₱14, may markang Unverified route, at isang tricycle na may minimum na pasaheng ₱15.",
+      home: "Home screen ng ParaNaga: mapa ng kalye ng gitnang Naga City na may bar na Where to?, mga chip na Food & drink, Schools, Health at Markets & malls, mga pin ng terminal at tab bar.",
+      search: "Paghahanap ng Ateneo: mga lugar mula sa OpenStreetMap gaya ng Ateneo de Naga University, at isang hintuang nasa mapa sa Loops C at D na may markang Mapped candidate.",
+      directions: "Direksyon mula Plaza Rizal papunta sa Ateneo de Naga University: lakad at sakay sa jeep na iginuhit sa mapa, at dalawang card ng pagpipilian: ang Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, at ₱14, at isang tricycle na may minimum na pasaheng ₱15.",
+      options: "Lahat ng pagpipilian sa biyahe: Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise) na may tinatayang pasaheng ₱14, at isang card ng tricycle na may Time not estimated, ang mga bawal na daang iniiwasan nito at minimum na pasaheng ₱15.",
+      detail: "Detalye ng biyahe para sa C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise): ang lakad at sakay sa mapa, tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, tinatayang pasaheng ₱14, paalala tungkol sa peak hour at button na Start trip.",
+      saved: "Screen ng mga naka-save: biyahe mula Plaza Rizal papunta sa Ateneo de Naga University na may markang Available offline, kasama ang lakad, sakay at tinatayang pasahe.",
+      far: "Mga pagpipilian sa biyahe papuntang Pacol: tala na Local report na special-trip ang singil ng mga tricycle papuntang Pacol, isang Recommended na J Centro-Carolina-Panicuason na jeep na may tinatayang pasaheng ₱18 hanggang ₱25, at opsyong Least walking na nagbabago mula Loop C papuntang J.",
+      report: "Mag-ulat ng pagwawasto, hakbang 1 ng 3: mga pagpipilian gaya ng Wrong curb side, Stop moved or removed at Fare mismatch.",
+    },
+  },
 };

@@ -1235,4 +1235,187 @@ export const en = {
     signedOut: "Sign in again to continue.",
     failed: "Something went wrong. Try again.",
   },
+  // Landing page (/), T14. The captures are English screenshots; their alt text names the labels as shown.
+  landing: {
+    header: {
+      sections: { how: "How it works", ride: "Ways to ride", honest: "Our data", faq: "FAQ" },
+      openApp: "Open the app",
+      openMenu: "Open menu",
+      closeMenu: "Close menu",
+      mainNav: "Main",
+      backToTop: "ParaNaga, back to top",
+    },
+    hero: {
+      titleA: "Which jeepney, where to board,",
+      titleB: "and when to say",
+      lede: "ParaNaga plans trips across Naga City by jeepney, tricycle, padyak and on foot, then guides you step by step. Free in your phone's browser, no account needed.",
+      seeHow: "See how it works",
+      note: "Routes and times are provisional and fares are estimates. Confirm with the driver.",
+    },
+    routeBandLabel: "Jeepney routes ParaNaga plans with",
+    how: {
+      heading: "From “Where to?” to “Para!” in three steps.",
+      lede: "New to Naga, here for Peñafrancia, or trying a new route: you should not have to ask three strangers which jeepney to take.",
+      pick: { title: "Pick a place", body: "Type a school, a market or a barangay, or tap a chip on the map." },
+      options: { title: "See your options", body: "Jeepney, tricycle, padyak or walking, each with an estimated fare." },
+      ride: { title: "Ride and say Para", body: "Follow the steps: where to walk, where to board and where to get off." },
+    },
+    showcase: {
+      heading: "The real app, screen by screen.",
+      deviceLabel: "ParaNaga screens",
+      home: {
+        title: "Start from the map.",
+        body: "The map opens on Naga with a floating Where to? bar. Chips go straight to Food & drink, Schools, Health, Markets & malls, Government and Terminals, with your saved places first.",
+      },
+      search: {
+        title: "Find any named place.",
+        body: "Search covers every named place in OpenStreetMap, plus stops and routes. When it finds too little, Google suggestions fill in, each labelled not verified.",
+      },
+      directions: {
+        title: "See the ride on the street map.",
+        body: "Plaza Rizal to Ateneo de Naga University: the walk and the jeepney drawn on the street map, and the two best options right under it, the Recommended jeepney and a tricycle.",
+      },
+      options: {
+        title: "Compare every way there.",
+        body: "One option is Recommended. Jeepneys go by sign letter and route title; tricycle cards show the minimum fare and never a time.",
+      },
+      detail: {
+        title: "Follow it step by step.",
+        body: "Where to walk, where to board and where to say Para. Times are ranges marked as estimates, and waiting time is shown as unknown.",
+      },
+      saved: {
+        title: "Keep trips on your phone.",
+        body: "Saved trips work offline, as text. Sign in only if you want them backed up to an account.",
+      },
+    },
+    ride: {
+      heading: "Every way to get there, named the way Naga does.",
+      lede: "Trips mix jeepneys, tricycles, padyaks and walking. Times and fares are estimates, shown as ranges.",
+      routeNames: "Route names",
+      jeepney: {
+        title: "Jeepneys, by sign letter and route title",
+        body: "Like the signboard: Loop A Centro-Magsaysay or Centro-Del Rosario via Magsaysay Ave. A route with no known letter shows its title alone, never a guessed letter, and each route page says where its letter comes from.",
+      },
+      tricycle: {
+        title: "Tricycles, with the terminal",
+        body: "The card names a nearby tricycle terminal and the minimum fare, ₱15 (Ordinance 2024-002). Tricycle time is not estimated, and roads tricycles may not use are flagged.",
+        minFare: "Minimum fare ₱15",
+        noTime: "Time not estimated",
+      },
+      padyak: { title: "Padyak", body: "Short local rides at ₱10 per passenger. Never timed." },
+      walk: { title: "Walking", body: "When walking is the better choice, the app says so, with the distance along streets." },
+      anywhere: {
+        title: "Drop off anywhere along the route",
+        body: "You can get on and off anywhere along a route. Where there is no marked stop, your steps say to get off near the place and tell the driver “para”.",
+        chip: "Tell the driver ‘para’ · stop not marked",
+      },
+    },
+    far: {
+      title: "Far barangays, told straight.",
+      body: "Tricycles to Cararayan and San Isidro, Pacol, and Carolina and Panicuason charge special-trip fares, a local report. So ParaNaga points you to the jeepney and its terminal instead.",
+      points: { listed: "A special-trip tricycle is listed only if you still want one.", notFixed: "Its fare is marked not fixed: agree it with the driver.", never: "It is never the Recommended option." },
+    },
+    offline: {
+      title: "Works without signal.",
+      body: "Open ParaNaga once with a connection and the app and the transport data work offline. Saved trips open as text, even in a dead zone.",
+      android: { device: "Android, Chrome", steps: { open: "Open ParaNaga", install: "Tap the menu, then Install app or Add to Home screen" } },
+      iphone: { device: "iPhone, Safari", steps: { open: "Open ParaNaga", install: "Tap Share, then Add to Home Screen" } },
+    },
+    themes: {
+      title: "Light, dark and high contrast.",
+      body: "ParaNaga follows your phone, or you pick in Settings. High contrast gives stronger text and borders for reading in bright sun.",
+      altLight: "ParaNaga's home screen in the light theme: the Naga City street map with the Where to? bar and category chips.",
+      altDark: "The same home screen in the dark theme: dark search bar, chips and tab bar over the map.",
+      light: "Light",
+      dark: "Dark",
+      compare: "Compare the light and dark themes",
+      darkShown: (percent: number) => `${percent}% dark shown`,
+    },
+    community: {
+      title: "Fix the map with other commuters.",
+      correction: {
+        title: "Report a correction",
+        body: "A stop on the wrong curb side, a route that goes another way, a fare that differs. A person reviews it; nothing changes until then.",
+      },
+      driver: { title: "Report a driver, privately", body: "Never published. Only the reviewer sees it. In an emergency, call 911." },
+      mine: { title: "My reports", body: "Your corrections and driver reports in one place. Only you can see them." },
+      myNaga: {
+        title: "MyNaga, if you want the City to hear it",
+        body: "ParaNaga can open MyNaga for you, but it sends nothing to MyNaga or City Hall and cannot confirm your report was received.",
+      },
+      tips: {
+        title: "Community tips",
+        body: "Questions and tips from Naga commuters, reviewed before others can read them, and not verified by ParaNaga.",
+      },
+    },
+    promise: {
+      title: "What we know, and what we don't.",
+      routes: {
+        title: "The official routes",
+        body: "Ordinance 2025-070 sets eight route groups: Routes 1 to 7, and Route 8, the Naga Loop Service A to D, with 282 units allocated. That is an allowance, not a count of jeepneys on the road.",
+      },
+      provisional: {
+        title: "Provisional, and labelled",
+        body: "Routes, stops and times are not verified by ParaNaga yet. Every ride says so and asks you to confirm with the driver.",
+      },
+      fares: { title: "Fares are estimates", body: "From reported fare rules, shown as ranges. Discounts are not applied yet." },
+      tracking: { title: "No vehicle tracking", body: "ParaNaga does not track jeepneys, so it never says when one will come." },
+      privacyTitle: "Your trips are yours.",
+      sourcesLead: "Where the data comes from and who holds the rights:",
+      sourcesLink: "Sources and credits",
+      privacy: { ads: "No ads and no analytics.", searches: "Recent searches stay on this phone. Trip history is off by default.", location: "Your location is used only on this device.", account: "An account is optional. Everything works as a guest." },
+    },
+    phone: {
+      title: "Made for the phone in your hand.",
+      desk: "The app guides you on the street with your location, the map and big tap targets, so it opens on phones and small tablets. Point your phone's camera at the code to continue there.",
+      touch: "It runs in your browser. Add it to your home screen and it opens like an app, even offline.",
+      qrLabel: (url: string) => `QR code that opens ${url}`,
+    },
+    faq: {
+      heading: "Questions",
+      free: { q: "Is ParaNaga free?", a: "Yes. Planning trips, saving them and reading the map are free, with no account." },
+      install: {
+        q: "Do I need to install it?",
+        a: "No. It runs in your phone's browser. Add it to your home screen for one-tap access and offline use.",
+      },
+      tracking: {
+        q: "Does it show where the jeepney is?",
+        a: "No. ParaNaga does not track vehicles. It shows the routes and the steps, with time and fare estimates as ranges.",
+      },
+      trust: {
+        q: "Can I trust the routes?",
+        a: "Treat them as a good start, not the last word. Routes and stops are provisional until checked on the street, and every ride says so. Confirm with the driver.",
+      },
+      phonesOnly: {
+        q: "Why does the app open only on phones?",
+        a: "It guides you on the street, with your location, the map and big tap targets. On a computer, scan the code to continue on your phone.",
+      },
+      official: {
+        q: "Is this the City Government's app?",
+        a: "No. ParaNaga is independent and not an official channel of the City Government of Naga.",
+      },
+    },
+    closing: { title: "Your next ride starts here.", lede: "Free, in your phone's browser. No account needed." },
+    footer: {
+      disclaimer:
+        "ParaNaga is an independent project. It is not affiliated with, endorsed by or an official channel of the City Government of Naga. Routes, times and fares may be incomplete: always confirm with the driver.",
+      captures: "Screens on this page are captures of the app, with map data",
+      osm: "OpenStreetMap contributors",
+      mapInApp: ". Map in the app:",
+      label: "Footer",
+      sources: "Sources and credits",
+      help: "Help",
+    },
+    alt: {
+      hero: "ParaNaga on a phone: a street map of Naga City with a trip from Plaza Rizal to Ateneo de Naga University and two options under it: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, marked Unverified route, and a tricycle at a minimum fare of ₱15.",
+      home: "ParaNaga's home screen: a street map of central Naga City with a Where to? bar, chips for Food & drink, Schools, Health and Markets & malls, terminal pins and a tab bar.",
+      search: "Search for Ateneo: places from OpenStreetMap such as Ateneo de Naga University, and a mapped stop on Loops C and D marked Mapped candidate.",
+      directions: "Directions from Plaza Rizal to Ateneo de Naga University: a walk and a jeepney ride drawn on the map, and two option cards: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, and a tricycle at a minimum fare of ₱15.",
+      options: "All trip options: Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise) with an estimated fare of ₱14, and a tricycle card with Time not estimated, the restricted roads it avoids and a minimum fare of ₱15.",
+      detail: "Trip details for C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise): the walk and ride on the map, estimated 14 to 23 minutes plus waiting, estimated fare ₱14, a peak-hour note and a Start trip button.",
+      saved: "Saved screen: a trip from Plaza Rizal to Ateneo de Naga University marked Available offline, with its walk, ride and estimated fare.",
+      far: "Trip options to Pacol: a Local report note that tricycles to Pacol charge special-trip fares, a Recommended J Centro-Carolina-Panicuason jeepney with an estimated fare of ₱18 to ₱25, and a Least walking option that changes from Loop C to J.",
+      report: "Report a correction, step 1 of 3: choices such as Wrong curb side, Stop moved or removed and Fare mismatch.",
+    },
+  },
 } as const;

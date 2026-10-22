@@ -35,6 +35,27 @@ test("the header language toggle persists across a reload and sets the page lang
   await expect(page.getByRole("group", { name: "Language" }).last().getByRole("button", { name: "Filipino" })).toHaveAttribute("aria-pressed", "true");
 });
 
+test("the header language toggle translates the landing copy without a reload, and back", async ({ page }) => {
+  test.skip(!FILIPINO_ENABLED, "Filipino is hidden until its review (plan T10)");
+  await page.goto("/");
+  const h1 = page.getByRole("heading", { level: 1 });
+  await expect(h1).toContainText("Which jeepney, where to board,");
+  const menu = page.getByRole("button", { name: /^(Open menu|Buksan ang menu)$/ });
+  const choose = async (name: "English" | "Filipino") => {
+    if (await menu.isVisible()) await menu.click();
+    await page.getByRole("group", { name: "Language" }).filter({ visible: true }).first().getByRole("button", { name }).click();
+    // The phone's menu sheet closes itself only on a section link; close it so the page is clear.
+    if (await page.getByRole("button", { name: /^(Close|Isara ang) menu$/ }).isVisible()) await page.keyboard.press("Escape");
+  };
+  await choose("Filipino");
+  await expect(h1).toContainText("Aling jeep, saan sasakay,");
+  await expect(h1).toContainText("Para!");
+  await expect(page.getByRole("link", { name: /^Buksan ang app/ }).first()).toHaveAttribute("href", "/app");
+  await expect(page.getByRole("img", { name: /^ParaNaga sa isang phone/ })).toHaveCount(1);
+  await choose("English");
+  await expect(h1).toContainText("Which jeepney, where to board,");
+});
+
 test("every call to action opens the app, and the credits link to Sources and credits", async ({ page }) => {
   await page.goto("/");
   const open = page.getByRole("link", { name: /^Open the app/ });
