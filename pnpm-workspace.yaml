@@ -17,3 +17,6 @@ minimumReleaseAgeExclude:
   - '@next/swc-win32-x64-msvc@16.4.1'
   - eslint-config-next@16.4.1
   - next@16.4.1
+overrides:
+  # N8 audit: GHSA-c83g-rgw3-j3cx, GHSA-73wf-gq98-2v4g (build-time only, via @serwist/*). Patch bump; drop once @serwist pulls >=4.28.7.
+  "browserslist@<4.28.7": ^4.28.7
