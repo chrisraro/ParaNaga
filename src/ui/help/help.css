@@ -215,3 +215,12 @@
     transform: none;
   }
 }
+
+/* "Show all sources" under a service's filtered register (?service=, IC1): a 44 px target. */
+.pn-detail a.pn-sources__show-all {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  min-height: 44px;
+  margin: 0 4px;
+}

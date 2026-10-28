@@ -28,6 +28,9 @@ import searchPlaces from "./network/search-places.json" with { type: "json" };
 import snapshot from "./network/snapshot.json" with { type: "json" };
 import lines from "./network/lines.json" with { type: "json" };
 import walkGraph from "./network/walk-graph.json" with { type: "json" };
+// SYNTHETIC (IC1): the draft intercity seed in the shape of /api/v1/network/intercity/:revisionId,
+// for the published revision above (flagged in its `fixture` header).
+import intercity from "./network/intercity.json" with { type: "json" };
 import stopA1 from "./network/stop-a1.json" with { type: "json" };
 import stopB18 from "./network/stop-b18.json" with { type: "json" };
 import stopCFirst from "./network/stop-c-first.json" with { type: "json" };
@@ -87,6 +90,8 @@ export const SNAPSHOT = snapshot;
 export const LINES = lines;
 /** A synthetic walk graph extract around Centro, served for the published revision. */
 export const WALK_GRAPH = walkGraph;
+/** The synthetic Leaving Naga guide (IC1), served for the published revision. */
+export const INTERCITY = intercity;
 
 export type NetworkCalls = {
   bboxes: string[];
@@ -100,6 +105,7 @@ export type NetworkCalls = {
   terminals: string[];
   lines: string[];
   walkGraphs: string[];
+  intercity: string[];
 };
 
 /**
@@ -107,7 +113,8 @@ export type NetworkCalls = {
  * captured stops, /api/v1/routes (the captured list of 11), /api/v1/routes/:code for the
  * captured routes, /api/v1/network/head (the captured revision),
  * /api/v1/network/search-index/:revisionId (that revision only), /api/v1/terminals/:code (T01,
- * T06), /api/v1/sources and /api/v1/network/snapshot/:revisionId; anything else is a 404.
+ * T06), /api/v1/sources, /api/v1/network/snapshot/:revisionId and
+ * /api/v1/network/intercity/:revisionId (the synthetic guide); anything else is a 404.
  *
  * `target` is a page, or a browser context for the offline suite: context routes also answer the
  * service worker's own requests. `realCacheHeaders` answers with production Cache-Control headers
@@ -118,7 +125,7 @@ export async function routeNetwork(target: Page | BrowserContext, opts: { realCa
   const json = reply(opts.realCacheHeaders ?? false);
   const page = target;
   const calls: NetworkCalls = { bboxes: [], stops: [], routes: [], routeLists: 0, searchIndexes: [], searchPlaces: [], snapshots: [], heads: 0, terminals: [],
-    lines: [], walkGraphs: [] };
+    lines: [], walkGraphs: [], intercity: [] };
   await page.route(/\/api\/v1\/stops(\?|\/|$)/, async (route) => {
     const url = new URL(route.request().url());
     const id = /\/api\/v1\/stops\/([^/?]+)/.exec(url.pathname)?.[1];
@@ -162,6 +169,11 @@ export async function routeNetwork(target: Page | BrowserContext, opts: { realCa
     const id = decodeURIComponent(/walk-graph\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);
     calls.walkGraphs.push(id);
     return id === snapshot.revision.revisionId ? json(route, walkGraph, 200, "immutable") : notFound(route);
+  });
+  await page.route(/\/api\/v1\/network\/intercity\/[^/?]+$/, (route) => {
+    const id = decodeURIComponent(/intercity\/([^/?]+)$/.exec(new URL(route.request().url()).pathname)![1]!);
+    calls.intercity.push(id);
+    return id === intercity.revision.revisionId ? json(route, intercity, 200, "immutable") : notFound(route);
   });
   await page.route(/\/api\/v1\/routes(\?.*)?$/, async (route) => {
     calls.routeLists += 1;

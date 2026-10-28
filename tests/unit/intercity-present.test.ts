@@ -8,6 +8,7 @@ import {
   sectionOf,
   sortServices,
   statusPillParts,
+  visibleDepartures,
   visibleObservations,
   type PresentObservation,
 } from "@/domain/intercity/present";
@@ -122,5 +123,19 @@ describe("line parts", () => {
     });
     expect(statusPillParts(s, "2026-11-28").stale).toBe(true);
     expect(JSON.stringify(statusPillParts({ ...s, status: "operating" }, "2026-10-28"))).not.toMatch(/cheapest/i);
+  });
+});
+
+describe("visibleDepartures", () => {
+  const dep = (basis: string, observedOn: string) => ({
+    pattern: "listed_times", times: ["20:00"], headwayMin: null, startTime: null, endTime: null, tripsPerDay: null,
+    dayType: "unspecified", basis, observedOn,
+  });
+  it("hides booking-site times past review_by or 120 days after the listing; keeps other bases", () => {
+    const list = [dep("booking_site", "2026-09-01"), dep("terminal_rule", "2024-04-23")];
+    expect(visibleDepartures(list, { reviewBy: "2027-02-25" }, "2026-10-28")).toHaveLength(2);
+    expect(visibleDepartures(list, { reviewBy: "2027-02-25" }, "2026-12-30").map((d) => d.basis)).toEqual(["booking_site", "terminal_rule"]);
+    expect(visibleDepartures(list, { reviewBy: "2027-02-25" }, "2026-12-31").map((d) => d.basis)).toEqual(["terminal_rule"]);
+    expect(visibleDepartures(list, { reviewBy: "2026-11-01" }, "2026-11-02").map((d) => d.basis)).toEqual(["terminal_rule"]);
   });
 });

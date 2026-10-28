@@ -60,6 +60,8 @@ type CellBase = {
   /** Short value on the right ("Regular", "English"). */
   trailing?: ReactNode;
   compact?: boolean;
+  /** next/link prefetch; false for links that would reveal what was typed in a filter box. */
+  prefetch?: boolean;
   testId?: string;
 };
 
@@ -73,7 +75,7 @@ type CellProps = CellBase &
 const isExternal = (href: string) => /^https?:\/\//.test(href);
 
 export function ListCell(props: CellProps) {
-  const { title, sub, subTone, icon, lead, badges, trailing, compact, testId } = props;
+  const { title, sub, subTone, icon, lead, badges, trailing, compact, prefetch, testId } = props;
   const className = compact ? "pn-cell pn-cell--compact" : "pn-cell";
   const actionable = props.href !== undefined || props.onClick !== undefined;
   const body = (
@@ -97,7 +99,7 @@ export function ListCell(props: CellProps) {
         {body}
       </a>
     ) : (
-      <Link href={props.href} className={className} data-testid={testId}>
+      <Link href={props.href} prefetch={prefetch === false ? false : undefined} className={className} data-testid={testId}>
         {body}
       </Link>
     );

@@ -10,6 +10,7 @@ import { guidanceView } from "@/domain/guidance/view";
 import { MYNAGA_LINKS } from "@/domain/mynaga/links";
 import { TRAFFIC_ROW, basisRows } from "@/domain/eta/basis";
 import SOURCES from "../e2e/fixtures/network/sources.json" with { type: "json" };
+import INTERCITY from "../e2e/fixtures/network/intercity.json" with { type: "json" };
 import { ETA_MODEL } from "./eta-fixtures";
 import { oneRide, tripOf } from "./guidance-fixtures";
 
@@ -28,6 +29,7 @@ const { MAP_OWNER_NOTE, SourcesScreen } = await import("@/ui/help/sources-screen
 const { LATER_NOTE, MYNAGA_FOOTER, MyNagaScreen, PREPARE_ITEMS } = await import("@/ui/mynaga/mynaga-screen");
 const { RideStep } = await import("@/ui/guidance/ride-step");
 const { resetSnapshotForTests } = await import("@/client/network/use-snapshot");
+const { resetIntercityForTests } = await import("@/client/network/use-intercity");
 
 const HEAD = { revisionId: "67e56657-7542-462e-b57c-eb14439a0c7a", label: "osm-places-2026-10-15", kind: "provisional", publishedAt: "2026-10-15T12:59:57.089Z" };
 
@@ -51,9 +53,38 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  resetIntercityForTests();
 });
 
 describe("Help", () => {
+  // IC1: the Leaving Naga row shows only once the published guide lists a destination.
+  const withGuide = (destinations: unknown[]) =>
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const body = url === "/api/v1/network/head" ? HEAD : url.includes("/network/intercity/") ? { ...INTERCITY, revision: HEAD, destinations } : SOURCES;
+        return new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
+      }),
+    );
+
+  it("lists Leaving Naga before the MyNaga link once the guide has destinations", async () => {
+    withGuide(INTERCITY.destinations);
+    render(<HelpScreen />);
+    const row = await screen.findByTestId("help-link-leaving");
+    expect(row.textContent).toBe("Leaving Naga: buses, vans, trains");
+    expect(row.getAttribute("href")).toBe("/app/leaving");
+    const links = within(screen.getByTestId("help-links")).getAllByRole("link");
+    expect(links.at(-2)).toBe(row);
+  });
+
+  it("hides Leaving Naga while the guide is empty (not yet published)", async () => {
+    withGuide([]);
+    render(<HelpScreen />);
+    await waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([u]) => String(u).includes("/network/intercity/"))).toBe(true));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(screen.queryByTestId("help-link-leaving")).toBeNull();
+  });
+
   it("opens on Help with the three articles, the MyNaga link and the independence note", () => {
     render(<HelpScreen />);
     expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["Help", "Safety", "About data"]);

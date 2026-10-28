@@ -18,6 +18,7 @@
     "db:migrate": "tsx --env-file-if-exists=.env.local scripts/migrate.ts",
     "db:check-rls": "tsx --env-file-if-exists=.env.local scripts/check-rls.ts",
     "db:import": "tsx --env-file-if-exists=.env.local scripts/import-naga.ts",
+    "db:import-intercity": "tsx --env-file-if-exists=.env.local scripts/import-intercity.ts",
     "admin:bootstrap": "tsx --env-file-if-exists=.env.local scripts/bootstrap-admin.ts",
     "data:far-zone-places": "tsx scripts/far-zone-places.ts",
     "data:preview-paths": "tsx scripts/preview-route-paths.ts",

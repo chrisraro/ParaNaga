@@ -123,6 +123,15 @@ const SAME_AS_EN: Record<string, string> = {
   "community.scopes.saved": "Taglish, tab/button length budget (matches shell.tabs.saved)",
   "community.saved": "Taglish, tab/button length budget (matches shell.tabs.saved)",
   "auth.emailLabel": "everyday English loanword",
+  // Leaving Naga (IC1): place names are proper nouns; vehicle names as said in Naga.
+  "intercity.group.partido": "place name",
+  "intercity.group.rinconada": "place name",
+  "intercity.group.albay": "place name",
+  "intercity.group.sorsogon": "place name",
+  "intercity.group.cam_norte": "place name",
+  "intercity.group.manila": "place name",
+  "intercity.mode.uv_express": "proper name",
+  "intercity.mode.bus": "everyday word (Taglish vehicle names)",
 };
 
 /** Buttons and chips (§1.7 #6): a translation may be at most 1.35 × the English length. */
@@ -297,6 +306,29 @@ describe("§6.5 banned wording per locale", () => {
     expect(bannedHits(EN, BANNED.en)).toEqual([]);
     expect(bannedHits(FIL, BANNED.fil)).toEqual([]);
     expect(bannedHits(BCL, BANNED.bcl)).toEqual([]);
+  });
+});
+
+/** Leaving Naga copy rules (IC1, design §4): no timetable, punctuality or booking promises. */
+const INTERCITY_BANNED: RegExp[] = [/schedule/i, /next bus/i, /on time/i, /\bbook(?!ing site)/i, /iskedyul/i, /cheapest|pinakamura/i];
+
+describe("Leaving Naga copy rules", () => {
+  it("flags a timetable or booking promise", () => {
+    expect(bannedHits({ a: "Book now", b: "Next bus at 20:00", c: "listed on a booking site" }, INTERCITY_BANNED)).toEqual(["a", "b"]);
+  });
+
+  it("no locale's intercity block makes one", () => {
+    for (const tree of [EN, FIL, BCL]) {
+      const block = (tree.intercity ?? {}) as Tree;
+      expect(bannedHits(block, INTERCITY_BANNED)).toEqual([]);
+      const calls = leaves(block).filter(([, leaf]) => typeof leaf !== "string").map(([key, leaf]) => [key, sample(leaf)] as [string, string]);
+      expect(calls.filter(([, text]) => INTERCITY_BANNED.some((p) => p.test(text))).map(([key]) => key)).toEqual([]);
+    }
+  });
+
+  it("Filipino month names keep twelve entries", () => {
+    expect(en.intercity.months.split(" ")).toHaveLength(12);
+    expect(fil.intercity.months.split(" ")).toHaveLength(12);
   });
 });
 

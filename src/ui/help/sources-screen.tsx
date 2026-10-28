@@ -8,16 +8,20 @@
 // S39), opened in a new tab with rel="noopener noreferrer" and nothing appended; the KML export
 // (S40) is listed without a link, since it downloads a file. The
 // only attribution of the public stop map is its owner's display name, never as a verified identity.
+// ?service=RS.. (a Leaving Naga card, IC1) narrows the register to that service's sources.
 
 import "@/ui/kit/styles";
 import "./help.css";
 
 import { useNetworkResource } from "@/client/network/use-network-resource";
-import { sourceListSchema } from "@/domain/api/schemas";
+import { sourceListSchema, type SourceList } from "@/domain/api/schemas";
 import { externalHref, sourceMetaLine, sourceTitleLine } from "@/domain/sources/present";
 import { useEffect, useRef } from "react";
 import { DetailPanel } from "@/ui/detail/detail-frame";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useIntercity } from "@/client/network/use-intercity";
+import { SOURCES_HREF } from "./sources-href";
 import { Suspense } from "react";
 import { railSourcesText } from "@/domain/places/explore";
 import { EntitySources } from "./entity-sources";
@@ -42,6 +46,86 @@ export const FAR_BASIS_NOTE = V.farBasis;
 export const TIME_BASIS_NOTE = V.timeBasis;
 export const CORRECTIONS_NOTE = V.corrections;
 export const MAP_OWNER_NOTE = V.mapOwner;
+
+type RegisterSource = SourceList["sources"][number];
+
+/** The source register rows ("{code} · {title}", meta, rights, "Open source"). */
+function Register({ sources, title }: { sources: readonly RegisterSource[]; title?: string }) {
+  const tt = useT();
+  const t = tt.sources;
+  const v = t.verbatim;
+  return (
+    <>
+      <h2 id="source-register-title" className="pn-section__title">{title ?? t.registerTitle}</h2>
+      <ul className="pn-group" data-testid="sources-list" aria-labelledby="source-register-title">
+        {sources.map((s) => {
+          const href = externalHref(s.url);
+          return (
+            <li key={s.code} className="pn-source" data-testid="source-row" data-code={s.code}>
+              <span className="pn-source__title">{sourceTitleLine(s)}</span>
+              <span className="pn-source__meta">{sourceMetaLine(s)}</span>
+              <span className="pn-source__meta">{rightsForSource(s.code)?.publisher ?? v.publisherNotRecorded} · {rightsForSource(s.code)?.license ?? v.rightsNotRecorded}</span>
+              {href ? (
+                <a
+                  className="pn-source__link"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t.openSourceLabel(s.code)}
+                  data-testid="source-link"
+                >
+                  {t.openSource}
+                  <ExternalIcon />
+                </a>
+              ) : (
+                <span className="pn-source__none" data-testid="source-unlinked">
+                  {s.url ? v.notLinked : v.noAddress}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+}
+
+/**
+ * ?service=RS16 (a Leaving Naga card's "Sources" link): only that service's sources, under
+ * "Showing sources for {name}", with "Show all sources". The service and its source codes come
+ * from the intercity guide (memory or the worker's cache); an unknown code shows the full register.
+ */
+function RegisterForLink({ sources }: { sources: readonly RegisterSource[] }) {
+  const raw = useSearchParams().get("service");
+  const code = raw && /^RS[0-9]{2}$/.test(raw) ? raw : null;
+  if (!code) return <Register sources={sources} />;
+  return <ServiceRegister code={code} sources={sources} />;
+}
+
+function ServiceRegister({ code, sources }: { code: string; sources: readonly RegisterSource[] }) {
+  const t = useT().sources;
+  const guide = useIntercity();
+  if (guide.status === "loading" || guide.status === "idle") {
+    return (
+      <div role="status" aria-label={t.serviceLoading} className="pn-detail__stack" data-testid="sources-service-loading">
+        <div className="pn-skeleton" style={{ width: "90%", height: 64 }} />
+      </div>
+    );
+  }
+  const service = guide.status === "ready" ? guide.data.services.find((x) => x.code === code) : undefined;
+  if (!service) return <Register sources={sources} />;
+  const own = new Set(service.sourceCodes);
+  const list = sources.filter((x) => own.has(x.code));
+  return (
+    <div className="pn-detail__stack" data-testid="sources-service">
+      <Register sources={list} title={t.showingFor(service.name)} />
+      {list.length === 0 ? <p className="pn-footnote" data-testid="sources-service-none">{t.serviceNone}</p> : null}
+      <Link href={SOURCES_HREF} className="pn-inline-link pn-sources__show-all" data-testid="sources-show-all">
+        {t.showAll}
+      </Link>
+    </div>
+  );
+}
 
 function ExternalIcon() {
   return (
@@ -144,36 +228,9 @@ export function SourcesScreen() {
             <p className="pn-footnote" data-testid="sources-revision">
               {v.citedBy(resource.data.revision.label)}{publishedDateText(resource.data.revision.publishedAt) ? v.published(publishedDateText(resource.data.revision.publishedAt)!) : ""}.
             </p>
-            <h2 id="source-register-title" className="pn-section__title">{t.registerTitle}</h2>
-            <ul className="pn-group" data-testid="sources-list" aria-labelledby="source-register-title">
-              {resource.data.sources.map((s) => {
-                const href = externalHref(s.url);
-                return (
-                  <li key={s.code} className="pn-source" data-testid="source-row" data-code={s.code}>
-                    <span className="pn-source__title">{sourceTitleLine(s)}</span>
-                    <span className="pn-source__meta">{sourceMetaLine(s)}</span>
-                    <span className="pn-source__meta">{rightsForSource(s.code)?.publisher ?? v.publisherNotRecorded} · {rightsForSource(s.code)?.license ?? v.rightsNotRecorded}</span>
-                    {href ? (
-                      <a
-                        className="pn-source__link"
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={t.openSourceLabel(s.code)}
-                        data-testid="source-link"
-                      >
-                        {t.openSource}
-                        <ExternalIcon />
-                      </a>
-                    ) : (
-                      <span className="pn-source__none" data-testid="source-unlinked">
-                        {s.url ? v.notLinked : v.noAddress}
-                      </span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+            <Suspense fallback={<Register sources={resource.data.sources} />}>
+              <RegisterForLink sources={resource.data.sources} />
+            </Suspense>
           </>
         ) : <div role="status"><p>{t.unavailable}</p><button type="button" className="pn-detail__retry" onClick={resource.retry}>{tt.forms.tryAgain}</button></div>}
         <Note testId="sources-owner-note"><a href="https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4" target="_blank" rel="noopener noreferrer">{v.mapOwner}</a></Note>

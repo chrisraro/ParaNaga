@@ -23,6 +23,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, ViewTransition, type ReactNode } from "react";
 import { useRecentSearches, useSavedPlaces } from "@/client/saved/use-saved";
 import { useSearchIndex } from "@/client/search/use-search-index";
+import { useIntercity } from "@/client/network/use-intercity";
 import { putSavedPlace, recordRecentSearch } from "@/client/storage/db";
 import { findSavedPlace, type SavedPlaceSource } from "@/domain/saved/saved";
 import { recentKeyForEndpoint, type RecentSearchEntry } from "@/domain/search/recents";
@@ -102,6 +103,7 @@ const KIND_ICON: Record<SearchResult["kind"], { tone: string; glyph: ReactNode }
   barangay: { tone: "teal", glyph: <path d="M4 20V9l8-5 8 5v11z" /> },
   study: { tone: "grey", glyph: <><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.5" /></> },
   legacy: { tone: "grey", glyph: <><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5M12 8v4l3 2" /></> },
+  intercity: { tone: "teal", glyph: <><path d="M3 12h13" /><path d="M12 6l6 6-6 6" /><path d="M21 4v16" /></> },
   regional: { tone: "grey", glyph: <><path d="M3 12h18" /><path d="M15 6l6 6-6 6" /></> },
   feeder: { tone: "grey", glyph: <><circle cx="6" cy="18" r="2" /><circle cx="18" cy="18" r="2" /><path d="M8 18h8M6 16V8h8l4 5v3" /></> },
 };
@@ -140,6 +142,7 @@ function resultKey(result: SearchResult): string {
     case "terminal":
     case "study":
     case "feeder":
+    case "intercity":
       return `${result.kind}:${result.code}`;
     case "legacy":
       return `legacy:${result.title}`;
@@ -171,7 +174,9 @@ function ResultRow({ result, purpose, onSelect }: { result: SearchResult; purpos
   if (action.type === "open") {
     return (
       <li>
-        <Link href={action.href} className="pn-cell pn-search__cell" data-testid={testId} data-result-key={key}>
+        {/* A Leaving Naga link names the destination (?to=D-IRIGA): never prefetched, so no request
+            reveals what was typed. Its screen is one static shell anyway. */}
+        <Link href={action.href} prefetch={result.kind === "intercity" ? false : undefined} className="pn-cell pn-search__cell" data-testid={testId} data-result-key={key}>
           {body}
         </Link>
       </li>
@@ -437,7 +442,13 @@ function SearchBody({
     () => (savedPlaces.status === "ready" ? savedPlaces.records.map((p) => ({ id: p.id, label: p.label, point: p.point, source: p.source })) : []),
     [savedPlaces],
   );
-  const groups = useMemo(() => (index ? searchIndex(index, debounced, { regional, saved }) : []), [index, debounced, regional, saved]);
+  // Leaving Naga destinations (IC1): fetched only once the regional switch is on.
+  const guide = useIntercity(regional);
+  const intercity = guide.status === "ready" ? guide.data.destinations : undefined;
+  const groups = useMemo(
+    () => (index ? searchIndex(index, debounced, { regional, saved, intercity }) : []),
+    [index, debounced, regional, saved, intercity],
+  );
   // for=save: the place whose name is being chosen.
   const [saving, setSaving] = useState<Extract<SearchAction, { type: "save" }>["place"] | null>(null);
   const [alreadySaved, setAlreadySaved] = useState<{ query: string; label: string } | null>(null);

@@ -7,7 +7,8 @@
 // only through a street of its legal plan scores as a substring (40) and says so.
 //
 // Order: groups in a fixed order (GROUP_ORDER: Saved, Places, Routes, Terminals, Barangays,
-// Study labels, Old route names, Regional), so unmapped 1993 names never lead. Inside a group:
+// Study labels, Old route names, Regional), so unmapped 1993 names never lead. Regional holds the
+// Leaving Naga destinations (IC1) too, with the regional option only. Inside a group:
 // score, then where the match starts in the text (a match at the start of a name beats one deep
 // inside a long name), then kind order (OpenStreetMap before mapped pins), then index order.
 //
@@ -41,10 +42,15 @@ const FAR = 1_000_000;
 /** A place saved on this phone (Task 8 stores them; search reads label, point and origin). */
 export type SavedPlaceInput = { id: string; label: string; point: LatLng; source?: SavedPlaceSource };
 
+/** A Leaving Naga destination (IC1, intercity guide): named only, never a trip end. */
+export type IntercityDestinationInput = { code: string; name: string; aliases: readonly string[] };
+
 export type SearchOptions = {
-  /** "Include regional connections": destination categories and feeder leads. */
+  /** "Include regional connections": destination categories, feeder leads and, when given, the Leaving Naga destinations. */
   regional: boolean;
   saved?: readonly SavedPlaceInput[];
+  /** The published intercity guide's destinations (searched only with `regional` on). */
+  intercity?: readonly IntercityDestinationInput[];
 };
 
 type Ranked = { score: number; offset: number };
@@ -68,6 +74,7 @@ export type SearchResult = Ranked &
     | { kind: "barangay"; key: string; title: string }
     | { kind: "study"; code: string; title: string; routeCode: string | null; direction: string | null }
     | { kind: "legacy"; title: string; sourceCode: string; year: number }
+    | { kind: "intercity"; code: string; title: string }
     | { kind: "regional"; title: string; category: string; terminalCode: string | null; terminalName: string | null }
     | { kind: "feeder"; code: string; title: string }
   );
@@ -79,7 +86,7 @@ export type SearchGroupId = "saved" | "places" | "routes" | "terminals" | "baran
 export type SearchGroup = { id: SearchGroupId; title: string; results: SearchResult[] };
 
 const KIND_ORDER: readonly SearchResultKind[] = [
-  "saved", "osm", "pin", "route", "terminal", "barangay", "study", "legacy", "regional", "feeder",
+  "saved", "osm", "pin", "route", "terminal", "barangay", "study", "legacy", "intercity", "regional", "feeder",
 ];
 const GROUP_OF: Record<SearchResultKind, SearchGroupId> = {
   saved: "saved",
@@ -90,6 +97,7 @@ const GROUP_OF: Record<SearchResultKind, SearchGroupId> = {
   barangay: "barangays",
   study: "study",
   legacy: "legacy",
+  intercity: "regional",
   regional: "regional",
   feeder: "regional",
 };
@@ -222,6 +230,8 @@ export function resultSubtitle(result: SearchResult, copy: Pick<Dict, "search" |
     }
     case "legacy":
       return s.subLegacy(result.year, result.sourceCode);
+    case "intercity":
+      return s.subIntercity;
     case "regional":
       return s.subRegional(regionalCategoryLabel(result.category, s), result.terminalName ?? "");
     case "feeder":
@@ -325,6 +335,8 @@ export function searchIndex(index: SearchIndex, rawQuery: string, options: Searc
       }
     }
     for (const f of index.feederLeads) add({ kind: "feeder", code: f.code, title: f.name, ...best([f.name]) });
+    // Leaving Naga (IC1): a town or hub outside the city, by its name or an alias; opens S24.
+    for (const d of options.intercity ?? []) add({ kind: "intercity", code: d.code, title: d.name, ...best([d.name, ...d.aliases]) });
   }
 
   out.sort(compareResults);

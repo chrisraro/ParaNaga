@@ -50,6 +50,9 @@ export function sortServices<T extends { code: string; status: string }>(list: r
   return [...list].sort((a, b) => rank(a.status) - rank(b.status) || a.code.localeCompare(b.code));
 }
 
+/** Today's date in Manila (YYYY-MM-DD): what the screen compares review dates with, offline too. */
+export const manilaToday = (now: Date = new Date()): string => manilaDate(now);
+
 /** Today (Manila) is past `reviewBy`. No review date (community_mapped) is never stale. */
 export const isStale = (reviewBy: string | null, today: string = manilaDate(new Date())): boolean =>
   reviewBy !== null && today > reviewBy;
@@ -70,6 +73,19 @@ export function visibleObservations<O extends PresentObservation>(
     .filter((o) => o.basis !== "booking_site"
       || (!isStale(svc.reviewBy, today) && addDays(day(o.observedAt), EXPIRY_DAYS.booking_site) >= today))
     .map((o) => ({ ...o, old: o.basis === "travel_guide" }));
+}
+
+/**
+ * Departure facts with the same rule as booking-site amounts: a booking-site listing is hidden once
+ * the service is stale or the listing is over 120 days old. Other bases are kept. Order is kept.
+ */
+export function visibleDepartures<D extends PresentDeparture>(
+  deps: readonly D[],
+  svc: { reviewBy: string | null },
+  today: string = manilaDate(new Date()),
+): D[] {
+  return deps.filter((d) => d.basis !== "booking_site"
+    || (!isStale(svc.reviewBy, today) && addDays(day(d.observedOn), EXPIRY_DAYS.booking_site) >= today));
 }
 
 /** "Get to {terminal}" target: only a terminal with a coordinate inside the city (AC-IC1). */

@@ -6,7 +6,8 @@
 //       published revision forward (carryForwardRevision): every member is copied by id except the
 //       ones this seed replaces (its terminals, the fare rules it touches, its feeder routes and
 //       their variants, and every per-route record and regional service), which are added again
-//       from the seed. Stop, LPTRP route and variant ids are unchanged, so saved trips stay valid.
+//       from the seed (except the regional services the intercity import owns, which are kept:
+//       intercityKeptServices). Stop, LPTRP route and variant ids are unchanged, so saved trips stay valid.
 //       Rows are inserted only where the content is new (content hash); released rows are never
 //       updated. Then transit.publish_revision.
 //   - committed batch with the same file hash -> "unchanged", nothing written;
@@ -21,12 +22,15 @@ import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import type { ModesPlan } from "./modes-plan";
 import {
+  ensureIdentities,
   IMPORT_ACTOR,
   ImportRefusedError,
   insertRows,
   numberArray,
   point,
   publishedIncludes,
+  reuseOrPlan,
+  stableJson,
   textArray,
   textArrayNotNull,
   type Row,
@@ -305,11 +309,17 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
       ["source_code", "text"], ["is_synthetic", "boolean"]]);
 
   // ---------------------------------------------------------------- regional services
-  const serviceIds = await ensureIdentities(c, "transit.regional_service", "code", modes.regionalServices.map((r) => r.code),
+  // Carry-forward guard (IC1): a base member written by the intercity import (as_of set or
+  // destination codes) is kept as it is; the modes seed's older row would revert it (e.g. RS06 v2).
+  const kept = await intercityKeptServices(c, base.id);
+  const keptCodes = new Set(kept.map((k) => k.code));
+  const seedServices = modes.regionalServices.filter((r) => !keptCodes.has(r.code));
+  counts.regional_services_kept = kept.length;
+  const serviceIds = await ensureIdentities(c, "transit.regional_service", "code", seedServices.map((r) => r.code),
     synthetic, (code) => ({ code, is_synthetic: synthetic }), [["code", "text"], ["is_synthetic", "boolean"]]);
   counts.regional_service_rows_inserted = serviceIds.inserted;
   const services = await reuseOrPlan(c, "transit.regional_service_version", "regional_service_id",
-    modes.regionalServices.map((r) => ({ owner: serviceIds.ids.get(r.code)!, hash: r.contentHash, row: r })), synthetic);
+    seedServices.map((r) => ({ owner: serviceIds.ids.get(r.code)!, hash: r.contentHash, row: r })), synthetic);
   counts.regional_service_versions_inserted = await insertRows(c, "transit.regional_service_version",
     services.filter((x) => x.isNew).map(({ id, owner, row: r }) => ({
       id, regional_service_id: owner, mode: r.mode, name: r.name, operators: r.operators, terminal_code: r.terminalCode,
@@ -349,9 +359,10 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
     ...same("route_cooperative", cooperatives.map((x) => x.id)),
     ...same("route_fare_observation", observations.map((x) => x.id)),
     ...same("route_alias", aliasRows.map((x) => x.id)),
-    ...modes.regionalServices.map((r) => ({
+    ...seedServices.map((r) => ({
       entity_kind: "regional_service", entity_id: serviceIds.ids.get(r.code)!, version_id: services.find((x) => x.row === r)!.id,
     })),
+    ...kept.map(({ entity_id, version_id }) => ({ entity_kind: "regional_service", entity_id, version_id })),
   ];
   const carried = await carryForwardRevision(c, base.id, revisionId, {
     dropKinds: [...MODES_OWNED_KINDS],
@@ -409,6 +420,22 @@ export async function carryForwardRevision(
   return result.rowCount ?? 0;
 }
 
+/**
+ * Regional service members of `revisionId` that the intercity import owns: the member version has
+ * `as_of` set or non-empty `destination_codes` (0029). The modes seed and road stages keep these
+ * members as they are instead of replacing them with a seed or distance version.
+ */
+export async function intercityKeptServices(c: pg.ClientBase, revisionId: string) {
+  const { rows } = await c.query<{ entity_id: string; version_id: string; code: string }>(
+    `select m.entity_id, m.version_id, s.code from transit.revision_member m
+       join transit.regional_service s on s.id = m.entity_id
+       join transit.regional_service_version v on v.id = m.version_id
+      where m.revision_id = $1 and m.entity_kind = 'regional_service'
+        and (v.as_of is not null or cardinality(v.destination_codes) > 0)
+      order by s.code`, [revisionId]);
+  return rows;
+}
+
 async function writeSources(c: pg.ClientBase, modes: ModesPlan): Promise<number> {
   const existing = await c.query<Row & { code: string }>(
     `select code, title, url, evidence_type, published_or_enacted, checked_on::text as checked_on, publisher, licence,
@@ -434,29 +461,6 @@ async function writeSources(c: pg.ClientBase, modes: ModesPlan): Promise<number>
   return insertRows(c, "ingest.source", fresh, [["code", "text"], ["title", "text"], ["url", "text"],
     ["evidence_type", "text"], ["published_or_enacted", "text"], ["checked_on", "date"], ["publisher", "text"],
     ["licence", "text"], ["extra_urls", "jsonb", textArrayNotNull("extra_urls")]]);
-}
-
-/** Stable identity rows by a unique key (code): existing ids are reused, missing ones inserted. */
-async function ensureIdentities(
-  c: pg.ClientBase,
-  table: string,
-  key: string,
-  keys: string[],
-  synthetic: boolean,
-  build: (key: string) => Row,
-  columns: Parameters<typeof insertRows>[3],
-): Promise<{ ids: Map<string, string>; inserted: number }> {
-  const existing = await c.query<{ id: string; k: string; is_synthetic: boolean }>(
-    `select id, ${key} as k, is_synthetic from ${table} where ${key} = any($1::text[])`, [keys]);
-  const bad = existing.rows.filter((r) => r.is_synthetic && !synthetic);
-  if (bad.length > 0) {
-    throw new ImportRefusedError(`${table} ${bad.map((r) => r.k).join(", ")} exist(s) as synthetic test data; nothing written`);
-  }
-  const ids = new Map(existing.rows.map((r) => [r.k, r.id]));
-  const fresh: Row[] = keys.filter((k) => !ids.has(k)).map((k) => ({ id: randomUUID(), ...build(k) }));
-  const inserted = await insertRows(c, table, fresh, [["id", "uuid"], ...columns]);
-  for (const r of fresh) ids.set(String(r[key]), String(r.id));
-  return { ids, inserted };
 }
 
 /** Feeder routes by public code. An existing route must equal the seed (routes are not versioned). */
@@ -498,38 +502,6 @@ async function ensureRoutes(c: pg.ClientBase, modes: ModesPlan, synthetic: boole
     ["allocated_units", "integer"], ["notes", "text"], ["source_codes", "jsonb", textArrayNotNull("source_codes")],
     ["properties", "jsonb"], ["is_synthetic", "boolean"]]);
   return { ids, inserted };
-}
-
-/** JSON with object keys sorted (jsonb returns keys in its own order). */
-function stableJson(value: unknown): string {
-  return JSON.stringify(value, (_k, v: unknown) =>
-    v && typeof v === "object" && !Array.isArray(v)
-      ? Object.fromEntries(Object.entries(v as Row).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
-      : v);
-}
-
-/**
- * Rows keyed by (owner, content_hash): an existing row with that content is reused (its id),
- * otherwise a new id is planned (`isNew`). A reused row must have the same is_synthetic flag.
- */
-async function reuseOrPlan<T>(
-  c: pg.ClientBase,
-  table: string,
-  ownerColumn: string,
-  items: { owner: string; hash: string; row: T }[],
-  synthetic: boolean,
-): Promise<{ id: string; owner: string; row: T; isNew: boolean }[]> {
-  const existing = await c.query<{ id: string; owner: string; content_hash: string; is_synthetic: boolean }>(
-    `select id, ${ownerColumn} as owner, content_hash, is_synthetic from ${table} where ${ownerColumn} = any($1::uuid[])`,
-    [[...new Set(items.map((i) => i.owner))]]);
-  const byKey = new Map(existing.rows.map((r) => [`${r.owner}:${r.content_hash}`, r]));
-  return items.map((i) => {
-    const found = byKey.get(`${i.owner}:${i.hash}`);
-    if (found && found.is_synthetic !== synthetic) {
-      throw new ImportRefusedError(`${table} ${found.id} differs in is_synthetic; nothing written`);
-    }
-    return { id: found?.id ?? randomUUID(), owner: i.owner, row: i.row, isNew: !found };
-  });
 }
 
 async function checkModesUnchanged(

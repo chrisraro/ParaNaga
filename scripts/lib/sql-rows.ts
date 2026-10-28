@@ -1,4 +1,5 @@
 // Bulk-insert helpers shared by the import writers (scripts/lib/import-writer.ts, modes-writer.ts).
+import { randomUUID } from "node:crypto";
 import type pg from "pg";
 
 export type Row = Record<string, unknown>;
@@ -69,4 +70,59 @@ export async function publishedIncludes(
     [revisionId, kinds, entityOnlyKinds],
   );
   return rows[0]!.published && rows[0]!.missing === 0;
+}
+
+/** Stable identity rows by a unique key (code): existing ids are reused, missing ones inserted. */
+export async function ensureIdentities(
+  c: pg.ClientBase,
+  table: string,
+  key: string,
+  keys: string[],
+  synthetic: boolean,
+  build: (key: string) => Row,
+  columns: Column[],
+): Promise<{ ids: Map<string, string>; inserted: number }> {
+  const existing = await c.query<{ id: string; k: string; is_synthetic: boolean }>(
+    `select id, ${key} as k, is_synthetic from ${table} where ${key} = any($1::text[])`, [keys]);
+  const bad = existing.rows.filter((r) => r.is_synthetic && !synthetic);
+  if (bad.length > 0) {
+    throw new ImportRefusedError(`${table} ${bad.map((r) => r.k).join(", ")} exist(s) as synthetic test data; nothing written`);
+  }
+  const ids = new Map(existing.rows.map((r) => [r.k, r.id]));
+  const fresh: Row[] = keys.filter((k) => !ids.has(k)).map((k) => ({ id: randomUUID(), ...build(k) }));
+  const inserted = await insertRows(c, table, fresh, [["id", "uuid"], ...columns]);
+  for (const r of fresh) ids.set(String(r[key]), String(r.id));
+  return { ids, inserted };
+}
+
+/** JSON with object keys sorted (jsonb returns keys in its own order). */
+export function stableJson(value: unknown): string {
+  return JSON.stringify(value, (_k, v: unknown) =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v as Row).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : v);
+}
+
+/**
+ * Rows keyed by (owner, content_hash): an existing row with that content is reused (its id),
+ * otherwise a new id is planned (`isNew`). A reused row must have the same is_synthetic flag.
+ */
+export async function reuseOrPlan<T>(
+  c: pg.ClientBase,
+  table: string,
+  ownerColumn: string,
+  items: { owner: string; hash: string; row: T }[],
+  synthetic: boolean,
+): Promise<{ id: string; owner: string; row: T; isNew: boolean }[]> {
+  const existing = await c.query<{ id: string; owner: string; content_hash: string; is_synthetic: boolean }>(
+    `select id, ${ownerColumn} as owner, content_hash, is_synthetic from ${table} where ${ownerColumn} = any($1::uuid[])`,
+    [[...new Set(items.map((i) => i.owner))]]);
+  const byKey = new Map(existing.rows.map((r) => [`${r.owner}:${r.content_hash}`, r]));
+  return items.map((i) => {
+    const found = byKey.get(`${i.owner}:${i.hash}`);
+    if (found && found.is_synthetic !== synthetic) {
+      throw new ImportRefusedError(`${table} ${found.id} differs in is_synthetic; nothing written`);
+    }
+    return { id: found?.id ?? randomUUID(), owner: i.owner, row: i.row, isNew: !found };
+  });
 }

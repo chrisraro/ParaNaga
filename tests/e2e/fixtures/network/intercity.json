@@ -1,0 +1,1611 @@
+{
+  "fixture": "SYNTHETIC: built from data/source/research/naga-intercity-seed-2026-10-28.json (draft seed) in the shape of GET /api/v1/network/intercity/:revisionId; terminals from the captured snapshot, fare rules F06–F12 as in tests/unit/regional-fare.test.ts. Replace with a capture once IC1 is published.",
+  "revision": {
+    "revisionId": "20ca7d87-d4b2-46bc-93e4-10fced9935c6",
+    "label": "modes-lines-2026-10-16",
+    "kind": "provisional",
+    "publishedAt": "2026-10-16T08:27:21.544Z"
+  },
+  "destinations": [
+    {
+      "code": "D-GOA",
+      "name": "Goa",
+      "aliases": [],
+      "groupCode": "partido",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-TIGAON",
+      "name": "Tigaon",
+      "aliases": [],
+      "groupCode": "partido",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-LAGONOY",
+      "name": "Lagonoy",
+      "aliases": [],
+      "groupCode": "partido",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-CARAMOAN",
+      "name": "Caramoan",
+      "aliases": [],
+      "groupCode": "partido",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-GARCHITORENA",
+      "name": "Garchitorena",
+      "aliases": [],
+      "groupCode": "partido",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-IRIGA",
+      "name": "Iriga",
+      "aliases": [],
+      "groupCode": "rinconada",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-NABUA",
+      "name": "Nabua",
+      "aliases": [],
+      "groupCode": "rinconada",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-BULA",
+      "name": "Bula",
+      "aliases": [],
+      "groupCode": "rinconada",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-LEGAZPI",
+      "name": "Legazpi",
+      "aliases": [],
+      "groupCode": "albay",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-TABACO",
+      "name": "Tabaco",
+      "aliases": [],
+      "groupCode": "albay",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-BULAN",
+      "name": "Bulan",
+      "aliases": [],
+      "groupCode": "sorsogon",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-DAET",
+      "name": "Daet",
+      "aliases": [],
+      "groupCode": "cam_norte",
+      "psgcCode": null,
+      "kind": "town"
+    },
+    {
+      "code": "D-PAMPLONA",
+      "name": "Pamplona",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-LIBMANAN",
+      "name": "Libmanan",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-SIPOCOT",
+      "name": "Sipocot",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-LUPI-VIEJO",
+      "name": "Lupi Viejo",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-SAMPALOC",
+      "name": "Sampaloc",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-BORABOD",
+      "name": "Borabod",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-MAMBULO",
+      "name": "Mambulo",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-MALANSAD",
+      "name": "Malansad",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-RONGOS",
+      "name": "Rongos",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-CAMAMBUGAN",
+      "name": "Camambugan",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-MANTALISAY",
+      "name": "Mantalisay",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-AWAYAN",
+      "name": "Awayan",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-AZUCENA",
+      "name": "Azucena",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-MALAGUICO",
+      "name": "Malaguico",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-LUPI-NUEVO-TAPI",
+      "name": "Lupi Nuevo-Tapi",
+      "aliases": [],
+      "groupCode": "nw_camsur",
+      "psgcCode": null,
+      "kind": "station"
+    },
+    {
+      "code": "D-CUBAO",
+      "name": "Cubao",
+      "aliases": [],
+      "groupCode": "manila",
+      "psgcCode": null,
+      "kind": "hub"
+    },
+    {
+      "code": "D-PITX",
+      "name": "PITX",
+      "aliases": [],
+      "groupCode": "manila",
+      "psgcCode": null,
+      "kind": "hub"
+    },
+    {
+      "code": "D-ALABANG",
+      "name": "Alabang",
+      "aliases": [],
+      "groupCode": "manila",
+      "psgcCode": null,
+      "kind": "hub"
+    },
+    {
+      "code": "D-CLARK",
+      "name": "Clark",
+      "aliases": [],
+      "groupCode": "luzon_air",
+      "psgcCode": null,
+      "kind": "airport"
+    }
+  ],
+  "services": [
+    {
+      "code": "RS01",
+      "mode": "jeepney",
+      "name": "Naga–Goa",
+      "operators": [],
+      "terminal": {
+        "code": "T03",
+        "name": "LCC / Integrated Southbound Terminal",
+        "locationText": "Felix Plazo Street, Sabang",
+        "lat": 13.6189669,
+        "lng": 123.1782111
+      },
+      "destinationCodes": [
+        "D-GOA"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "community_mapped",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": null,
+      "reviewBy": null,
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F01"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "N01"
+      ],
+      "sourceEvidenceTypes": [
+        "community"
+      ]
+    },
+    {
+      "code": "RS02",
+      "mode": "bus",
+      "name": "Florencia Naga–Goa",
+      "operators": [
+        "Florencia Transport Services Inc."
+      ],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-GOA"
+      ],
+      "distanceKm": 52.024,
+      "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11495322 v17 52.202 km; relation 11495323 v15 52.024 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+      "status": "community_mapped",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": null,
+      "reviewBy": null,
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "N01"
+      ],
+      "sourceEvidenceTypes": [
+        "community"
+      ]
+    },
+    {
+      "code": "RS03",
+      "mode": "bus",
+      "name": "Florencia/JC Liner Naga–Lagonoy",
+      "operators": [
+        "Florencia Transport Services Inc.",
+        "JC Liner Corporation"
+      ],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-LAGONOY"
+      ],
+      "distanceKm": 59,
+      "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11495326 v16 59.092 km; relation 11495327 v16 59.000 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+      "status": "community_mapped",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": null,
+      "reviewBy": null,
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "N01"
+      ],
+      "sourceEvidenceTypes": [
+        "community"
+      ]
+    },
+    {
+      "code": "RS05",
+      "mode": "uv_express",
+      "name": "UV Express Naga–Tabaco via Sabluyon",
+      "operators": [],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-TABACO"
+      ],
+      "distanceKm": 94.278,
+      "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 2 directions is used): relation 11498948 v13 94.278 km; relation 11498949 v14 94.349 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+      "status": "community_mapped",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": null,
+      "reviewBy": null,
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F06",
+        "F07"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "N01"
+      ],
+      "sourceEvidenceTypes": [
+        "community"
+      ]
+    },
+    {
+      "code": "RS06",
+      "mode": "bus",
+      "name": "PITX–Naga (Philtranco)",
+      "operators": [
+        "Philtranco"
+      ],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-PITX"
+      ],
+      "distanceKm": 383.668,
+      "distanceBasis": "Length of the OpenStreetMap route relations (the shorter of 3 directions is used): relation 9732639 v224 386.606 km; relation 10594406 v173 383.668 km; relation 10939369 v155 385.447 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+      "status": "discontinued_reported",
+      "statusSince": "2026-03-30",
+      "statusNoteCode": "stopped_no_resumption_found",
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-04-26",
+      "accessNoteCode": null,
+      "fareRuleCodes": [],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "N01",
+        "IC23"
+      ],
+      "sourceEvidenceTypes": [
+        "community",
+        "news"
+      ]
+    },
+    {
+      "code": "RS08",
+      "mode": "rail",
+      "name": "PNR Naga–Lupi Viejo (Bicol Commuter)",
+      "operators": [
+        "PNR"
+      ],
+      "terminal": {
+        "code": "T06",
+        "name": "Naga PNR railway station",
+        "locationText": "Naga City; exact passenger entrance not verified",
+        "lat": 13.619618,
+        "lng": 123.185879
+      },
+      "destinationCodes": [
+        "D-PAMPLONA",
+        "D-LIBMANAN",
+        "D-SIPOCOT",
+        "D-LUPI-VIEJO",
+        "D-SAMPALOC",
+        "D-BORABOD",
+        "D-MAMBULO",
+        "D-MALANSAD",
+        "D-RONGOS",
+        "D-CAMAMBUGAN",
+        "D-MANTALISAY",
+        "D-AWAYAN",
+        "D-AZUCENA",
+        "D-MALAGUICO",
+        "D-LUPI-NUEVO-TAPI"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "operating_limited",
+      "statusSince": "2025-11-05",
+      "statusNoteCode": "limited_trips",
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-04-26",
+      "accessNoteCode": null,
+      "fareRuleCodes": [],
+      "departures": [
+        {
+          "pattern": "daily_unspecified",
+          "times": [
+            "04:29"
+          ],
+          "headwayMin": null,
+          "startTime": null,
+          "endTime": null,
+          "tripsPerDay": 3,
+          "dayType": "daily",
+          "basis": "at_launch",
+          "observedOn": "2025-11-05",
+          "sourceCodes": [
+            "IC01",
+            "IC02",
+            "IC03",
+            "IC04",
+            "IC05",
+            "IC10"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "amountCentavos": 1200,
+          "amountHighCentavos": 6000,
+          "seatClassText": "Senior/PWD",
+          "destinationCode": null,
+          "basis": "at_launch",
+          "observedAt": "2025-11-01",
+          "sourceCodes": [
+            "IC01",
+            "IC02",
+            "IC03",
+            "IC04",
+            "IC05",
+            "IC10"
+          ]
+        },
+        {
+          "amountCentavos": 1500,
+          "amountHighCentavos": 7500,
+          "seatClassText": null,
+          "destinationCode": null,
+          "basis": "at_launch",
+          "observedAt": "2025-11-01",
+          "sourceCodes": [
+            "IC01",
+            "IC02",
+            "IC03",
+            "IC04",
+            "IC05",
+            "IC10"
+          ]
+        }
+      ],
+      "sourceCodes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "sourceEvidenceTypes": [
+        "community",
+        "news",
+        "official"
+      ]
+    },
+    {
+      "code": "RS09",
+      "mode": "rail",
+      "name": "PNR Naga–Legazpi",
+      "operators": [
+        "PNR"
+      ],
+      "terminal": {
+        "code": "T06",
+        "name": "Naga PNR railway station",
+        "locationText": "Naga City; exact passenger entrance not verified",
+        "lat": 13.619618,
+        "lng": 123.185879
+      },
+      "destinationCodes": [
+        "D-LEGAZPI",
+        "D-IRIGA"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "suspended",
+      "statusSince": "2025-11-10",
+      "statusNoteCode": "bridge_damage_no_reopening_date",
+      "asOf": "2026-10-28",
+      "reviewBy": "2026-11-27",
+      "accessNoteCode": null,
+      "fareRuleCodes": [],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "IC06",
+        "IC08",
+        "IC09",
+        "IC10",
+        "IC35"
+      ],
+      "sourceEvidenceTypes": [
+        "community",
+        "news"
+      ]
+    },
+    {
+      "code": "RS10",
+      "mode": "bus",
+      "name": "BCS buses to Legazpi",
+      "operators": [],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-LEGAZPI"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "operating",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [
+        {
+          "pattern": "headway_rule",
+          "times": [],
+          "headwayMin": 15,
+          "startTime": null,
+          "endTime": null,
+          "tripsPerDay": null,
+          "dayType": "unspecified",
+          "basis": "terminal_rule",
+          "observedOn": "2024-04-23",
+          "sourceCodes": [
+            "IC13"
+          ]
+        }
+      ],
+      "observations": [],
+      "sourceCodes": [
+        "IC13"
+      ],
+      "sourceEvidenceTypes": [
+        "official"
+      ]
+    },
+    {
+      "code": "RS11",
+      "mode": "bus",
+      "name": "BCS buses to Rinconada",
+      "operators": [],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-IRIGA",
+        "D-NABUA",
+        "D-BULA"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "operating",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [
+        {
+          "pattern": "headway_rule",
+          "times": [],
+          "headwayMin": 12,
+          "startTime": null,
+          "endTime": null,
+          "tripsPerDay": null,
+          "dayType": "unspecified",
+          "basis": "terminal_rule",
+          "observedOn": "2024-04-23",
+          "sourceCodes": [
+            "IC13"
+          ]
+        }
+      ],
+      "observations": [],
+      "sourceCodes": [
+        "IC13"
+      ],
+      "sourceEvidenceTypes": [
+        "official"
+      ]
+    },
+    {
+      "code": "RS12",
+      "mode": "bus",
+      "name": "BCS buses to Partido",
+      "operators": [],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-GOA",
+        "D-TIGAON",
+        "D-LAGONOY"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "operating",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [
+        {
+          "pattern": "headway_rule",
+          "times": [],
+          "headwayMin": 12,
+          "startTime": null,
+          "endTime": null,
+          "tripsPerDay": null,
+          "dayType": "unspecified",
+          "basis": "terminal_rule",
+          "observedOn": "2024-04-23",
+          "sourceCodes": [
+            "IC13"
+          ]
+        }
+      ],
+      "observations": [],
+      "sourceCodes": [
+        "IC13"
+      ],
+      "sourceEvidenceTypes": [
+        "official"
+      ]
+    },
+    {
+      "code": "RS13",
+      "mode": "bus",
+      "name": "BCS buses to Caramoan",
+      "operators": [],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-CARAMOAN"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "operating",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "IC13"
+      ],
+      "sourceEvidenceTypes": [
+        "official"
+      ]
+    },
+    {
+      "code": "RS14",
+      "mode": "bus",
+      "name": "BCS buses to Garchitorena",
+      "operators": [],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-GARCHITORENA"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "operating",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "IC13"
+      ],
+      "sourceEvidenceTypes": [
+        "official"
+      ]
+    },
+    {
+      "code": "RS15",
+      "mode": "bus",
+      "name": "BCS buses to Bulan",
+      "operators": [],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-BULAN"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "operating",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "IC13"
+      ],
+      "sourceEvidenceTypes": [
+        "official"
+      ]
+    },
+    {
+      "code": "RS16",
+      "mode": "bus",
+      "name": "DLTB Naga–Manila",
+      "operators": [
+        "DLTB"
+      ],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-CUBAO",
+        "D-PITX"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "unconfirmed",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-02-25",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [
+        {
+          "pattern": "listed_times",
+          "times": [
+            "20:00",
+            "20:45"
+          ],
+          "headwayMin": null,
+          "startTime": null,
+          "endTime": null,
+          "tripsPerDay": null,
+          "dayType": "unspecified",
+          "basis": "booking_site",
+          "observedOn": "2026-09-01",
+          "sourceCodes": [
+            "IC25"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "amountCentavos": 111200,
+          "amountHighCentavos": null,
+          "seatClassText": "Regular",
+          "destinationCode": "D-CUBAO",
+          "basis": "booking_site",
+          "observedAt": "2026-09-01",
+          "sourceCodes": [
+            "IC25"
+          ]
+        },
+        {
+          "amountCentavos": 123000,
+          "amountHighCentavos": null,
+          "seatClassText": "Seater 41",
+          "destinationCode": "D-CUBAO",
+          "basis": "booking_site",
+          "observedAt": "2026-09-01",
+          "sourceCodes": [
+            "IC25"
+          ]
+        }
+      ],
+      "sourceCodes": [
+        "IC25",
+        "IC27"
+      ],
+      "sourceEvidenceTypes": [
+        "booking_site"
+      ]
+    },
+    {
+      "code": "RS17",
+      "mode": "bus",
+      "name": "Peñafrancia Tours Naga–Manila",
+      "operators": [
+        "Peñafrancia Tours"
+      ],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-CUBAO",
+        "D-ALABANG",
+        "D-PITX"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "unconfirmed",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-02-25",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [
+        {
+          "pattern": "operating_hours",
+          "times": [],
+          "headwayMin": null,
+          "startTime": "08:00",
+          "endTime": "22:00",
+          "tripsPerDay": 12,
+          "dayType": "unspecified",
+          "basis": "booking_site",
+          "observedOn": "2026-09-01",
+          "sourceCodes": [
+            "IC26"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "amountCentavos": 100000,
+          "amountHighCentavos": null,
+          "seatClassText": "Regular/Skybus",
+          "destinationCode": "D-CUBAO",
+          "basis": "booking_site",
+          "observedAt": "2026-09-01",
+          "sourceCodes": [
+            "IC26"
+          ]
+        },
+        {
+          "amountCentavos": 138000,
+          "amountHighCentavos": null,
+          "seatClassText": "Elite",
+          "destinationCode": "D-CUBAO",
+          "basis": "booking_site",
+          "observedAt": "2026-09-01",
+          "sourceCodes": [
+            "IC26"
+          ]
+        }
+      ],
+      "sourceCodes": [
+        "IC26",
+        "IC27"
+      ],
+      "sourceEvidenceTypes": [
+        "booking_site"
+      ]
+    },
+    {
+      "code": "RS18",
+      "mode": "bus",
+      "name": "Isarog Line Naga–Manila",
+      "operators": [
+        "Isarog Line"
+      ],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-CUBAO",
+        "D-ALABANG",
+        "D-PITX"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "unconfirmed",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-02-25",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "IC27"
+      ],
+      "sourceEvidenceTypes": [
+        "booking_site"
+      ]
+    },
+    {
+      "code": "RS19",
+      "mode": "bus",
+      "name": "Raymond Naga–Manila",
+      "operators": [
+        "Raymond"
+      ],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-CUBAO",
+        "D-PITX"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "unconfirmed",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-02-25",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "IC27",
+        "IC24"
+      ],
+      "sourceEvidenceTypes": [
+        "booking_site",
+        "news"
+      ]
+    },
+    {
+      "code": "RS20",
+      "mode": "bus",
+      "name": "Legaspi St Jude Naga–Manila",
+      "operators": [
+        "Legaspi St Jude"
+      ],
+      "terminal": {
+        "code": "T01",
+        "name": "Bicol Central Station",
+        "locationText": "Ninoy & Cory Avenue, Triangulo",
+        "lat": 13.6192359,
+        "lng": 123.1897426
+      },
+      "destinationCodes": [
+        "D-CUBAO",
+        "D-PITX",
+        "D-ALABANG"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "unconfirmed",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-02-25",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "IC27"
+      ],
+      "sourceEvidenceTypes": [
+        "booking_site"
+      ]
+    },
+    {
+      "code": "RS21",
+      "mode": "uv_express",
+      "name": "Eastbound vans to Albay",
+      "operators": [],
+      "terminal": {
+        "code": "T02",
+        "name": "Eastbound Terminal",
+        "locationText": "Anciano Street / Naga City Subdivision area",
+        "lat": null,
+        "lng": null
+      },
+      "destinationCodes": [
+        "D-LEGAZPI",
+        "D-TABACO"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "unconfirmed",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2026-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F06",
+        "F07"
+      ],
+      "departures": [
+        {
+          "pattern": "operating_hours",
+          "times": [],
+          "headwayMin": null,
+          "startTime": "05:00",
+          "endTime": "18:00",
+          "tripsPerDay": null,
+          "dayType": "unspecified",
+          "basis": "travel_guide",
+          "observedOn": "2023-10-01",
+          "sourceCodes": [
+            "IC29"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "amountCentavos": 14000,
+          "amountHighCentavos": null,
+          "seatClassText": null,
+          "destinationCode": "D-LEGAZPI",
+          "basis": "travel_guide",
+          "observedAt": "2023-10-01",
+          "sourceCodes": [
+            "IC29"
+          ]
+        },
+        {
+          "amountCentavos": 18000,
+          "amountHighCentavos": null,
+          "seatClassText": null,
+          "destinationCode": "D-TABACO",
+          "basis": "travel_guide",
+          "observedAt": "2023-10-01",
+          "sourceCodes": [
+            "IC29"
+          ]
+        }
+      ],
+      "sourceCodes": [
+        "IC29"
+      ],
+      "sourceEvidenceTypes": [
+        "travel_guide"
+      ]
+    },
+    {
+      "code": "RS22",
+      "mode": "uv_express",
+      "name": "Westbound vans to Daet",
+      "operators": [],
+      "terminal": {
+        "code": "T03",
+        "name": "LCC / Integrated Southbound Terminal",
+        "locationText": "Felix Plazo Street, Sabang",
+        "lat": 13.6189669,
+        "lng": 123.1782111
+      },
+      "destinationCodes": [
+        "D-DAET"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "unconfirmed",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2026-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F06",
+        "F07"
+      ],
+      "departures": [
+        {
+          "pattern": "operating_hours",
+          "times": [],
+          "headwayMin": null,
+          "startTime": "05:00",
+          "endTime": "18:00",
+          "tripsPerDay": null,
+          "dayType": "unspecified",
+          "basis": "travel_guide",
+          "observedOn": "2023-10-01",
+          "sourceCodes": [
+            "IC29"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "amountCentavos": 14000,
+          "amountHighCentavos": null,
+          "seatClassText": null,
+          "destinationCode": "D-DAET",
+          "basis": "travel_guide",
+          "observedAt": "2023-10-01",
+          "sourceCodes": [
+            "IC29"
+          ]
+        }
+      ],
+      "sourceCodes": [
+        "IC29"
+      ],
+      "sourceEvidenceTypes": [
+        "travel_guide"
+      ]
+    },
+    {
+      "code": "RS23",
+      "mode": "jeepney",
+      "name": "Eastbound jeepneys to Rinconada and Partido",
+      "operators": [],
+      "terminal": {
+        "code": "T02",
+        "name": "Eastbound Terminal",
+        "locationText": "Anciano Street / Naga City Subdivision area",
+        "lat": null,
+        "lng": null
+      },
+      "destinationCodes": [
+        "D-IRIGA",
+        "D-NABUA",
+        "D-BULA",
+        "D-GOA",
+        "D-TIGAON",
+        "D-LAGONOY"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "unconfirmed",
+      "statusSince": null,
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-10-28",
+      "accessNoteCode": null,
+      "fareRuleCodes": [
+        "F01"
+      ],
+      "departures": [],
+      "observations": [],
+      "sourceCodes": [
+        "IC15",
+        "IC16"
+      ],
+      "sourceEvidenceTypes": [
+        "official"
+      ]
+    },
+    {
+      "code": "RS24",
+      "mode": "air",
+      "name": "Cebgo Naga–Clark (DG6129/6130)",
+      "operators": [
+        "Cebgo"
+      ],
+      "terminal": {
+        "code": "T17",
+        "name": "Naga Airport (WNP)",
+        "locationText": "Maharlika Hwy, San Jose, Pili",
+        "lat": null,
+        "lng": null
+      },
+      "destinationCodes": [
+        "D-CLARK"
+      ],
+      "distanceKm": null,
+      "distanceBasis": null,
+      "status": "operating",
+      "statusSince": "2026-03-29",
+      "statusNoteCode": null,
+      "asOf": "2026-10-28",
+      "reviewBy": "2027-04-26",
+      "accessNoteCode": "airport_walk_to_maharlika",
+      "fareRuleCodes": [],
+      "departures": [
+        {
+          "pattern": "daily_unspecified",
+          "times": [],
+          "headwayMin": null,
+          "startTime": null,
+          "endTime": null,
+          "tripsPerDay": 1,
+          "dayType": "daily",
+          "basis": "news",
+          "observedOn": "2026-03-01",
+          "sourceCodes": [
+            "IC30",
+            "IC31",
+            "IC32"
+          ]
+        }
+      ],
+      "observations": [],
+      "sourceCodes": [
+        "IC30",
+        "IC31",
+        "IC32"
+      ],
+      "sourceEvidenceTypes": [
+        "community",
+        "news"
+      ]
+    }
+  ],
+  "fareRules": [
+    {
+      "code": "F01",
+      "modeCode": "traditional_jeepney",
+      "vehicleClass": null,
+      "baseCentavos": 1400,
+      "baseKm": 4,
+      "incrementCentavosPerKm": 200,
+      "discountPercent": null,
+      "discountedBaseCentavos": null,
+      "discountGroups": null,
+      "rounding": null,
+      "effectiveFrom": "2026-09-28",
+      "enactedOn": null,
+      "evidenceStatus": "national_rates_reported;local_matrix_not_retrieved",
+      "status": "draft",
+      "publishExact": false,
+      "isEstimate": true,
+      "sourceCodes": [
+        "S05",
+        "S06",
+        "N17",
+        "N32"
+      ]
+    },
+    {
+      "code": "F06",
+      "modeCode": "uv_express_traditional",
+      "vehicleClass": null,
+      "baseCentavos": null,
+      "baseKm": null,
+      "incrementCentavosPerKm": 260,
+      "discountPercent": null,
+      "discountedBaseCentavos": null,
+      "discountGroups": null,
+      "rounding": null,
+      "effectiveFrom": "2026-09-28",
+      "enactedOn": null,
+      "evidenceStatus": "provisional_national_rate",
+      "status": "draft",
+      "publishExact": false,
+      "isEstimate": true,
+      "sourceCodes": [
+        "IC21",
+        "IC22"
+      ]
+    },
+    {
+      "code": "F07",
+      "modeCode": "uv_express_modern",
+      "vehicleClass": null,
+      "baseCentavos": null,
+      "baseKm": null,
+      "incrementCentavosPerKm": 300,
+      "discountPercent": null,
+      "discountedBaseCentavos": null,
+      "discountGroups": null,
+      "rounding": null,
+      "effectiveFrom": "2026-09-28",
+      "enactedOn": null,
+      "evidenceStatus": "provisional_national_rate",
+      "status": "draft",
+      "publishExact": false,
+      "isEstimate": true,
+      "sourceCodes": [
+        "IC21",
+        "IC22"
+      ]
+    },
+    {
+      "code": "F08",
+      "modeCode": "bus_ordinary",
+      "vehicleClass": null,
+      "baseCentavos": 1200,
+      "baseKm": 5,
+      "incrementCentavosPerKm": 220,
+      "discountPercent": null,
+      "discountedBaseCentavos": null,
+      "discountGroups": null,
+      "rounding": null,
+      "effectiveFrom": "2026-09-28",
+      "enactedOn": null,
+      "evidenceStatus": "provisional_national_rate",
+      "status": "draft",
+      "publishExact": false,
+      "isEstimate": true,
+      "sourceCodes": [
+        "IC21",
+        "IC22"
+      ]
+    },
+    {
+      "code": "F09",
+      "modeCode": "bus_aircon",
+      "vehicleClass": null,
+      "baseCentavos": null,
+      "baseKm": null,
+      "incrementCentavosPerKm": 245,
+      "discountPercent": null,
+      "discountedBaseCentavos": null,
+      "discountGroups": null,
+      "rounding": null,
+      "effectiveFrom": "2026-09-28",
+      "enactedOn": null,
+      "evidenceStatus": "provisional_national_rate",
+      "status": "draft",
+      "publishExact": false,
+      "isEstimate": true,
+      "sourceCodes": [
+        "IC21",
+        "IC22"
+      ]
+    },
+    {
+      "code": "F10",
+      "modeCode": "bus_deluxe",
+      "vehicleClass": null,
+      "baseCentavos": null,
+      "baseKm": null,
+      "incrementCentavosPerKm": 260,
+      "discountPercent": null,
+      "discountedBaseCentavos": null,
+      "discountGroups": null,
+      "rounding": null,
+      "effectiveFrom": "2026-09-28",
+      "enactedOn": null,
+      "evidenceStatus": "provisional_national_rate",
+      "status": "draft",
+      "publishExact": false,
+      "isEstimate": true,
+      "sourceCodes": [
+        "IC21",
+        "IC22"
+      ]
+    },
+    {
+      "code": "F11",
+      "modeCode": "bus_super_deluxe",
+      "vehicleClass": null,
+      "baseCentavos": null,
+      "baseKm": null,
+      "incrementCentavosPerKm": 270,
+      "discountPercent": null,
+      "discountedBaseCentavos": null,
+      "discountGroups": null,
+      "rounding": null,
+      "effectiveFrom": "2026-09-28",
+      "enactedOn": null,
+      "evidenceStatus": "provisional_national_rate",
+      "status": "draft",
+      "publishExact": false,
+      "isEstimate": true,
+      "sourceCodes": [
+        "IC21",
+        "IC22"
+      ]
+    },
+    {
+      "code": "F12",
+      "modeCode": "bus_luxury",
+      "vehicleClass": null,
+      "baseCentavos": null,
+      "baseKm": null,
+      "incrementCentavosPerKm": 335,
+      "discountPercent": null,
+      "discountedBaseCentavos": null,
+      "discountGroups": null,
+      "rounding": null,
+      "effectiveFrom": "2026-09-28",
+      "enactedOn": null,
+      "evidenceStatus": "provisional_national_rate",
+      "status": "draft",
+      "publishExact": false,
+      "isEstimate": true,
+      "sourceCodes": [
+        "IC21",
+        "IC22"
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "key": "intercity_south_long_haul",
+      "value": {
+        "status": "planned_not_funded",
+        "trainsRun": false,
+        "sourceCodes": [
+          "IC10",
+          "IC11"
+        ],
+        "asOf": "2026-07-13"
+      }
+    }
+  ]
+}

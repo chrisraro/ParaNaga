@@ -7,7 +7,8 @@
 //       (carryForwardRevision): every member is copied by id except the shapes, the street graph
 //       (format v2), the time-estimate parameters and the route notes (replaced as a whole) and the
 //       regional services that get a
-//       distance (a new version: the seed row plus the D5 distance). Stop, route and variant ids
+//       distance (a new version: the seed row plus the D5 distance), except those the intercity
+//       import owns (kept as they are: intercityKeptServices). Stop, route and variant ids
 //       are unchanged, so saved trips stay valid. Rows are inserted only where the content is new
 //       (content hash); released rows are never updated. Then transit.publish_revision.
 //   - committed batch with the same key (roads date, seed date and inputs hash) -> "unchanged";
@@ -22,7 +23,7 @@
 import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import type { LinesPlan, PlannedTrace } from "./lines-plan";
-import { carryForwardRevision } from "./modes-writer";
+import { carryForwardRevision, intercityKeptServices } from "./modes-writer";
 import { IMPORT_ACTOR, ImportRefusedError, insertRows, numberArray, point, publishedIncludes, textArrayNotNull, type Row } from "./sql-rows";
 
 export type LinesOutcome =
@@ -215,7 +216,11 @@ export async function writeLines(c: pg.ClientBase, lines: LinesPlan): Promise<Li
     `select s.id, s.code from transit.revision_member m join transit.regional_service s on s.id = m.entity_id
       where m.revision_id = $1 and m.entity_kind = 'regional_service'`, [base.id]);
   const serviceId = new Map(services.rows.map((s) => [s.code, s.id]));
-  const distances = lines.regionalDistances.filter((d) => serviceId.has(d.service.code));
+  // Carry-forward guard (IC1): a service the intercity import owns keeps its base member (its own
+  // distance, status and destinations); a distance version of the modes seed row would revert it.
+  const kept = new Set((await intercityKeptServices(c, base.id)).map((k) => k.code));
+  counts.regional_services_kept = kept.size;
+  const distances = lines.regionalDistances.filter((d) => serviceId.has(d.service.code) && !kept.has(d.service.code));
   const distanceVersions = await reuseOrPlan(c, "transit.regional_service_version", "regional_service_id",
     distances.map((d) => ({ owner: serviceId.get(d.service.code)!, hash: d.contentHash, row: d })));
   counts.regional_service_versions_inserted = await insertRows(c, "transit.regional_service_version",

@@ -5,7 +5,7 @@
 // localStorage, ParaNaga's sessionStorage keys (guidance state), every IndexedDB store (saved
 // trips, saved places, trip history and the last-seen revision, Task 8), and the service worker's
 // data caches (Task 12: head, snapshots, search indexes, reference reads; Task 15: the route
-// lines and the walk graph) with their expiry
+// lines and the walk graph; IC1: the intercity guide) with their expiry
 // records. The app code itself (precached build assets and static shells) stays, so ParaNaga
 // still opens offline afterwards.
 
@@ -13,6 +13,7 @@ import { resetPrefs } from "@/client/prefs/use-prefs";
 import { clearAllStores } from "@/client/storage/db";
 import { forgetGuidance } from "@/client/guidance/guidance-store";
 import { cachesToClear } from "@/domain/pwa/sw-routes";
+import { forgetIntercity } from "@/client/network/use-intercity";
 import { forgetLines } from "@/client/network/use-lines";
 import { forgetSnapshot } from "@/client/network/use-snapshot";
 import { forgetWalkGraph } from "@/client/network/use-walk-graph";
@@ -69,6 +70,7 @@ export async function clearDeviceData(): Promise<void> {
     // load it afresh (as on a new visit) instead of keeping the old copy on screen.
     forgetSnapshot();
     forgetLines();
+    forgetIntercity();
     forgetWalkGraph();
     resetSearchIndexCache();
     // Even if a store failed (the caller reports it): re-read the (now empty) preferences,

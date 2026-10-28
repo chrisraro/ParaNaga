@@ -276,6 +276,19 @@
   line-height: 1.4;
 }
 
+/* The Leaving Naga card's tile (IC1). */
+.pn-explore__leaving-tile {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pn-explore__chip,
   .pn-explore__commute {

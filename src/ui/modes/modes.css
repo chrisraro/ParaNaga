@@ -80,7 +80,7 @@
   }
 }
 
-/* ModeChip: icon + text label + 4 px colour stripe (never colour-only). */
+/* ModeChip: colour dot + icon + text label (never colour-only). */
 .pn-mode-chip {
   display: inline-flex;
   align-items: center;
@@ -89,8 +89,6 @@
   padding: 3px 10px 3px 8px;
   border-radius: 8px;
   border: 1px solid rgba(15, 30, 61, 0.22);
-  border-left-width: 4px;
-  border-left-color: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
   background: #FFFFFF;
   color: #0F1E3D;
   font-size: 0.8125rem;
@@ -102,7 +100,6 @@
   background: #111A2E;
   color: #F8FAFC;
   border-color: rgba(226, 232, 240, 0.28);
-  border-left-color: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -110,8 +107,17 @@
     background: #111A2E;
     color: #F8FAFC;
     border-color: rgba(226, 232, 240, 0.28);
-    border-left-color: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
-  }
+    }
+}
+
+.pn-mode-chip::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pn-chip-stripe, var(--pn-mode-traditional_puj));
+  box-shadow: 0 0 0 1px rgba(15, 30, 61, 0.25);
 }
 
 .pn-mode-chip--compact {

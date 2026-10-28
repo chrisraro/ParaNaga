@@ -7,7 +7,8 @@
 // OsmAttribution line. Without one: "Location not mapped" and no directions, with a note saying
 // why. The Routes tab lists the routes whose legal plan or Nov 2025 trial circuit names the
 // terminal, the regional services leaving from it with fare ESTIMATES ("operator prices may
-// differ"), then its destination categories (services not verified). "Help map an entrance" is
+// differ"), then "Destinations from here" (Leaving Naga, IC1) when a published intercity service
+// leaves from it, then its destination categories (services not verified). "Help map an entrance" is
 // not offered until corrections open (no dead buttons).
 
 import "@/ui/kit/styles";
@@ -33,7 +34,7 @@ import { regionalCategoryLabel } from "@/domain/search/search";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { DetailError, DetailLoading, DetailNotFound, DetailPanel, useFocusOnMount, useReturnToMap } from "@/ui/detail/detail-frame";
 import { StatusBadge } from "@/ui/kit/badge";
-import { ListChevron } from "@/ui/kit/list";
+import { ListCell, ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { Segmented } from "@/ui/kit/segmented";
 import { NagaMap } from "@/ui/map/naga-map";
@@ -130,6 +131,11 @@ function RoutesPanel({ data }: { data: TerminalDetail }) {
         </>
       )}
       <RegionalServices data={data} />
+      {data.hasIntercity ? (
+        <ul className="pn-group" data-testid="terminal-intercity">
+          <ListCell href="/app/leaving" title={t.destinationsFromHere} testId="terminal-destinations-from-here" />
+        </ul>
+      ) : null}
       {destinationCategories.length > 0 ? (
         <section className="pn-section" aria-labelledby={`${uid}-categories`}>
           <h2 id={`${uid}-categories`} className="pn-section__title">

@@ -55,6 +55,7 @@ test("Help opens from More with its three tabs, and Back returns to More", async
     "Using ParaNaga offline",
     "How times are estimated",
     "Vehicle types in Naga",
+    "Leaving Naga: buses, vans, trains",
     "Report a problem with a driver",
   ]);
   await expect(page.getByTestId("help-independent")).toHaveText("ParaNaga is an independent commuter guide. It is not an official City Government app.");

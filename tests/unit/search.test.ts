@@ -2,7 +2,8 @@
 // index captured for the e2e fixtures (revision modes-lines-2026-10-16: 233 OpenStreetMap places,
 // 47 mapped-pin places, 11 routes, 6 terminals, 27 barangays, 32 study labels).
 import { describe, expect, it } from "vitest";
-import { searchIndexSchema } from "@/domain/api/schemas";
+import { intercitySchema, searchIndexSchema } from "@/domain/api/schemas";
+import { actionFor, detailHref } from "@/domain/search/select";
 import {
   GROUP_LIMIT,
   GROUP_ORDER,
@@ -17,6 +18,7 @@ import {
   type SearchResult,
 } from "@/domain/search/search";
 import raw from "../e2e/fixtures/network/search-index.json" with { type: "json" };
+import rawIntercity from "../e2e/fixtures/network/intercity.json" with { type: "json" };
 
 const index = searchIndexSchema.parse(raw);
 const off = { regional: false } as const;
@@ -352,5 +354,37 @@ describe("searchIndex: route aliases (stop-sign letters and names)", () => {
 
   it("an index without aliases parses with an empty list (older snapshots)", () => {
     expect(index.routes.every((r) => r.aliases.length === 0)).toBe(true);
+  });
+});
+
+describe("searchIndex: Leaving Naga destinations (IC1)", () => {
+  const destinations = intercitySchema.parse(rawIntercity).destinations.map((d) =>
+    d.code === "D-PITX" ? { ...d, aliases: ["Parañaque Integrated Terminal Exchange"] } : d,
+  );
+  const withIntercity = (regional: boolean) => ({ regional, intercity: destinations });
+
+  it("appear only with regional connections on, in the regional group, before the category rows", () => {
+    expect(searchIndex(index, "Legazpi", withIntercity(false)).flatMap((g) => g.results).some((r) => r.kind === "intercity")).toBe(false);
+    const regional = group(searchIndex(index, "Legazpi", withIntercity(true)), "regional")!;
+    expect(regional.results[0]).toMatchObject({ kind: "intercity", code: "D-LEGAZPI", title: "Legazpi", score: 100 });
+    expect(resultSubtitle(regional.results[0]!)).toBe("Leaving Naga · how to go from Naga");
+  });
+
+  it("match on an alias (folded: case and accents)", () => {
+    const hit = searchIndex(index, "paranaque integrated", withIntercity(true)).flatMap((g) => g.results).find((r) => r.kind === "intercity");
+    expect(hit).toMatchObject({ kind: "intercity", code: "D-PITX", title: "PITX" });
+  });
+
+  it("are never a trip end; they open S24 with ?to=", () => {
+    const hit = group(searchIndex(index, "Clark", withIntercity(true)), "regional")!.results.find((r) => r.kind === "intercity")!;
+    expect(endpointForResult(hit)).toBeNull();
+    expect(detailHref(hit)).toBe("/app/leaving?to=D-CLARK");
+    expect(actionFor(hit, "destination")).toEqual({ type: "open", href: "/app/leaving?to=D-CLARK" });
+  });
+
+  it("without the guide (not loaded yet) the regional option works as before", () => {
+    const groups = searchIndex(index, "Iriga", on);
+    expect(groups.flatMap((g) => g.results).some((r) => r.kind === "intercity")).toBe(false);
+    expect(group(groups, "regional")!.results[0]).toMatchObject({ kind: "regional", title: "Iriga" });
   });
 });

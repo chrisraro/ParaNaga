@@ -1,0 +1,291 @@
+/* S24 Leaving Naga (src/ui/intercity/leaving-screen.tsx). Built on the detail panel tokens
+   (--pn-surface, --pn-label2, --pn-caption, --pn-warn-*), so light, dark and "more contrast"
+   follow the app's theme. Status is text first; colour only repeats it. */
+
+.pn-ic-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pn-ic-head__sub {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.pn-ic-dest-title {
+  margin: 8px 0 2px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Search box: a visible label, a 48 px field. */
+.pn-ic-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.pn-ic-search__label {
+  margin: 0 4px;
+  color: var(--pn-label2);
+  font-size: 14px;
+  font-weight: 600;
+}
+.pn-ic-search__input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--pn-ring);
+  border-radius: 14px;
+  background: var(--pn-surface);
+  color: var(--pn-label);
+  font-size: 16px;
+}
+.pn-ic-search__input::placeholder {
+  color: var(--pn-caption);
+}
+.pn-ic-search__input:focus-visible {
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 2px;
+}
+
+.pn-ic-empty {
+  margin: 0 4px;
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.pn-ic-slh {
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.pn-ic-tile {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+
+/* ------------------------------------------------------------------ service cards */
+
+.pn-ic-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pn-ic-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+}
+/* Not running: no surface, a hairline, secondary text; the pill still says why. */
+.pn-ic-card--muted {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--pn-sep);
+  color: var(--pn-label2);
+}
+.pn-ic-card__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pn-ic-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+}
+.pn-ic-card__name {
+  flex: 1 1 12ch;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.pn-ic-card__operators,
+.pn-ic-card__where {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.pn-ic-card__confirming {
+  font-weight: 600;
+}
+
+.pn-ic-air {
+  --pn-chip-stripe: var(--pn-label2);
+}
+
+/* The status pill: label, then its date. */
+.pn-ic-pill {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0;
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.pn-ic-pill__label {
+  font-weight: 700;
+}
+.pn-ic-pill--neutral {
+  background: var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-ic-pill--stopped {
+  background: var(--pn-fill);
+  color: var(--pn-label);
+}
+.pn-ic-pill--stale {
+  background: var(--pn-warn-bg);
+  box-shadow: inset 0 0 0 1.5px var(--pn-warn-ring);
+  color: var(--pn-warn-text);
+}
+
+.pn-ic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Facts: one row per departure or fare, each with its basis and month. */
+.pn-ic-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--pn-sep);
+}
+.pn-ic-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pn-ic-fact__label {
+  color: var(--pn-caption);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pn-ic-fact__line {
+  margin: 0;
+  color: var(--pn-label);
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.pn-ic-fact__line--muted {
+  color: var(--pn-label2);
+}
+.pn-ic-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The rule estimate stays apart from the fares seen: a disclosure, closed by default. */
+.pn-ic-estimate {
+  border-radius: 12px;
+  background: var(--pn-fill);
+}
+.pn-ic-estimate summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  color: var(--pn-label);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.pn-ic-estimate summary::-webkit-details-marker {
+  display: none;
+}
+.pn-ic-estimate summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-ic-estimate[open] summary::after {
+  transform: rotate(-135deg);
+}
+.pn-ic-estimate summary:focus-visible {
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+.pn-ic-estimate p {
+  margin: 0;
+  padding: 0 12px 12px;
+  color: var(--pn-label2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.pn-ic-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.pn-ic-getto {
+  gap: 10px;
+  min-height: 50px;
+  height: auto;
+  padding: 10px 18px;
+  line-height: 1.25;
+  text-align: center;
+}
+.pn-detail a.pn-ic-sources,
+.pn-detail a.pn-ic-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--pn-teal-soft-text);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.pn-ic-retry-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-ic-estimate summary::after {
+    transition: none;
+  }
+}

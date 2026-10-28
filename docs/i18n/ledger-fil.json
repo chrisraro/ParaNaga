@@ -14468,5 +14468,824 @@
     "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
     "reviewed": "opus",
     "t15": "added"
+  },
+  {
+    "key": "terminals.destinationsFromHere",
+    "en": "Destinations from here",
+    "fil": "Mga destinasyon mula rito",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "search.subIntercity",
+    "en": "Leaving Naga · how to go from Naga",
+    "fil": "Paalis ng Naga · paano pumunta mula Naga",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "explore.leavingTitle",
+    "en": "Leaving Naga",
+    "fil": "Paalis ng Naga",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "explore.leavingSub",
+    "en": "Buses, vans, trains and flights to towns outside the city",
+    "fil": "Bus, van, tren at eroplano papunta sa mga bayan sa labas ng lungsod",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.title",
+    "en": "Leaving Naga",
+    "fil": "Paalis ng Naga",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.intro",
+    "en": "Buses, vans, trains and flights from Naga. Each fact shows its source and date.",
+    "fil": "Bus, van, tren at eroplano mula Naga. May source at petsa ang bawat detalye.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.loading",
+    "en": "Loading Leaving Naga",
+    "fil": "Nilo-load ang Paalis ng Naga",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.searchLabel",
+    "en": "Find a town or hub",
+    "fil": "Hanapin ang bayan o hub",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.searchPlaceholder",
+    "en": "Town, city or hub",
+    "fil": "Bayan, lungsod o hub",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.noMatch",
+    "en": "Nothing on file matches “{0}”.",
+    "fil": "Walang nakatalang tugma sa “{0}”.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.destinationsLabel",
+    "en": "Towns and hubs",
+    "fil": "Mga bayan at hub",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.destinationSub",
+    "en": "{0} from Naga",
+    "fil": "{0} mula Naga",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.noRunningSub",
+    "en": "No running service on file",
+    "fil": "Walang nakatalang tumatakbong biyahe",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.railTitle",
+    "en": "Trains",
+    "fil": "Tren",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.southLongHaul",
+    "en": "South Long Haul (Bicol Express): Planned project · not funded · no trains run",
+    "fil": "South Long Haul (Bicol Express): Plano pa lang · walang pondo · walang tren na tumatakbo",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.airTitle",
+    "en": "Flights",
+    "fil": "Lipad",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.flightsTo",
+    "en": "Flights to {0}",
+    "fil": "Lipad papuntang {0}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.group.partido",
+    "en": "Partido",
+    "fil": "Partido",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.group.rinconada",
+    "en": "Rinconada",
+    "fil": "Rinconada",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.group.albay",
+    "en": "Albay",
+    "fil": "Albay",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.group.sorsogon",
+    "en": "Sorsogon",
+    "fil": "Sorsogon",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.group.cam_norte",
+    "en": "Camarines Norte",
+    "fil": "Camarines Norte",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.group.nw_camsur",
+    "en": "PNR stations west of Naga",
+    "fil": "Mga istasyon ng PNR sa kanluran ng Naga",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.group.manila",
+    "en": "Metro Manila",
+    "fil": "Metro Manila",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.group.luzon_air",
+    "en": "By air",
+    "fil": "Sa eroplano",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.detailSub",
+    "en": "{0} · ways to go from Naga",
+    "fil": "{0} · paano pumunta mula Naga",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.running",
+    "en": "Running",
+    "fil": "Tumatakbo",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.notRunning",
+    "en": "Not running",
+    "fil": "Hindi tumatakbo",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.noneRunning",
+    "en": "No running service to {0} is on file. Ask at the terminal.",
+    "fil": "Walang nakatalang tumatakbong biyahe papuntang {0}. Magtanong sa terminal.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.staleBanner",
+    "en": "Some facts here may be out of date. Check at the terminal before you travel.",
+    "fil": "Baka luma na ang ilang detalye rito. Magtanong sa terminal bago bumiyahe.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.unknownTitle",
+    "en": "Place not on file",
+    "fil": "Walang tala ang lugar",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.unknownCopy",
+    "en": "Nothing is on file for that link. Pick a town or hub from the list.",
+    "fil": "Walang nakatala para sa link na ito. Pumili ng bayan o hub sa listahan.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.backToList",
+    "en": "All towns and hubs",
+    "fil": "Lahat ng bayan at hub",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.from",
+    "en": "From {0}",
+    "fil": "Mula sa {0}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.getTo",
+    "en": "Get to {0}",
+    "fil": "Pumunta sa {0}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.locationBeingConfirmed",
+    "en": "Location being confirmed",
+    "fil": "Kinukumpirma pa ang lokasyon",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.terminalNotFound",
+    "en": "Terminal not found. Ask locally where it leaves from.",
+    "fil": "Walang nakitang terminal. Magtanong kung saan ito umaalis.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.departuresLabel",
+    "en": "Departures",
+    "fil": "Mga alis",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.accessLabel",
+    "en": "Getting there",
+    "fil": "Paano pumunta roon",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.faresLabel",
+    "en": "Fares seen",
+    "fil": "Mga nakitang pasahe",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.estimateLabel",
+    "en": "Estimate from national rates",
+    "fil": "Tantiya mula sa pambansang singil",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.hiddenListings",
+    "en": "Prices listed on booking sites are hidden: they may be out of date. Ask at the terminal.",
+    "fil": "Nakatago ang presyo mula sa booking site: baka luma na. Magtanong sa terminal.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.sourcesFor",
+    "en": "Sources for {0}",
+    "fil": "Mga source ng {0}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.sources",
+    "en": "Sources",
+    "fil": "Mga source",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.chipsLabel",
+    "en": "Evidence",
+    "fil": "Ebidensiya",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.chip.low",
+    "en": "Low",
+    "fil": "Mahina",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.chip.old",
+    "en": "Old",
+    "fil": "Luma",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.chip.single_source",
+    "en": "Single source",
+    "fil": "Isang source",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.mode.uv_express",
+    "en": "UV Express",
+    "fil": "UV Express",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.mode.bus",
+    "en": "Bus",
+    "fil": "Bus",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.mode.jeepney",
+    "en": "Jeepney",
+    "fil": "Jeep",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.mode.rail",
+    "en": "Train",
+    "fil": "Tren",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.mode.air",
+    "en": "Flight",
+    "fil": "Eroplano",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.months",
+    "en": "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec",
+    "fil": "Ene Peb Mar Abr May Hun Hul Ago Set Okt Nob Dis",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.asOf",
+    "en": "as of {0}",
+    "fil": "noong {0}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.stalePill",
+    "en": "May be out of date · as of {0}",
+    "fil": "Baka luma na · noong {0}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.status.operating",
+    "en": "Running",
+    "fil": "Tumatakbo",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.status.operating_limited",
+    "en": "Limited service",
+    "fil": "Limitado ang biyahe",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.status.unconfirmed",
+    "en": "Not confirmed",
+    "fil": "Di pa kumpirmado",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.status.community_mapped",
+    "en": "Community-mapped",
+    "fil": "Mula sa komunidad",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.status.suspended",
+    "en": "Suspended since {0}",
+    "fil": "Suspendido mula {0}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.status.discontinued_reported",
+    "en": "Stopped service reported ({0})",
+    "fil": "Iniulat na tumigil ({0})",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.statusNote.bridge_damage_no_reopening_date",
+    "en": "bridge damage · no reopening date",
+    "fil": "sira ang tulay · wala pang petsa ng pagbalik",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.statusNote.stopped_no_resumption_found",
+    "en": "no resumption found",
+    "fil": "walang balitang bumalik",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.statusNote.limited_trips",
+    "en": "few trips a day",
+    "fil": "kaunti ang biyahe araw-araw",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.access.airport_walk_to_maharlika",
+    "en": "The airport is about a 400 m walk from Maharlika Highway in Pili. Jeepney or bus fare there: not found.",
+    "fil": "Mga 400 m na lakad ang airport mula sa Maharlika Highway sa Pili. Pasahe ng jeep o bus papunta roon: walang nakita.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.basis.official",
+    "en": "published",
+    "fil": "nakalathala",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.basis.terminal_rule",
+    "en": "terminal rule",
+    "fil": "patakaran ng terminal",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.basis.booking_site",
+    "en": "booking site, not verified",
+    "fil": "booking site, di pa kumpirmado",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.basis.news",
+    "en": "news report",
+    "fil": "balita",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.basis.at_launch",
+    "en": "at launch",
+    "fil": "noong simula",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.basis.travel_guide",
+    "en": "travel guide, likely changed",
+    "fil": "travel guide, malamang nagbago na",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.fare.official",
+    "en": "{0} {1} · published fare, {2}",
+    "fil": "{0} {1} · nakalathalang pasahe, {2}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.fare.booking_site",
+    "en": "{0} {1} · listed on a booking site, {2} · not verified",
+    "fil": "{0} {1} · nakalista sa booking site, {2} · di pa kumpirmado",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.fare.travel_guide",
+    "en": "{0} {1} (listing from {2}) · likely changed",
+    "fil": "{0} {1} (listahan noong {2}) · malamang nagbago na",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.fare.at_launch",
+    "en": "{0} {1} at launch ({2}) · current fares not confirmed",
+    "fil": "{0} {1} noong simula ({2}) · di pa kumpirmado ang pasahe ngayon",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.fare.not_found",
+    "en": "Fare not found. Ask at the terminal before you board.",
+    "fil": "Walang nakitang pasahe. Magtanong sa terminal bago sumakay.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.departure.listed_times",
+    "en": "Listed times {0} · {1}, {2}",
+    "fil": "Nakalistang oras {0} · {1}, {2}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.departure.headway_rule",
+    "en": "Dispatch every {0} min · {1}, {2}",
+    "fil": "Umaalis kada {0} min · {1}, {2}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.departure.when_full",
+    "en": "Leaves when full · {0}, {1}",
+    "fil": "Umaalis kapag puno · {0}, {1}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.departure.operating_hours",
+    "en": "Departures {0}–{1} · {2} trips a day · {3}, {4}",
+    "fil": "Mga alis {0}–{1} · {2} biyahe araw-araw · {3}, {4}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.departure.daily_unspecified",
+    "en": "{0} trips a day · first {1} · {2}, {3}",
+    "fil": "{0} biyahe araw-araw · una {1} · {2}, {3}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.departure.not_found",
+    "en": "Departure times not found. Ask at the terminal.",
+    "fil": "Walang nakitang oras ng alis. Magtanong sa terminal.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.footer",
+    "en": "Fares and times change often. Ask at the terminal. ParaNaga sells no tickets.",
+    "fil": "Madalas magbago ang pasahe at oras. Magtanong sa terminal. Walang ibinebentang tiket ang ParaNaga.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "help.leavingLink",
+    "en": "Leaving Naga: buses, vans, trains",
+    "fil": "Paalis ng Naga: bus, van, tren",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "sources.showingFor",
+    "en": "Showing sources for {0}",
+    "fil": "Mga source ng {0}",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "sources.showAll",
+    "en": "Show all sources",
+    "fil": "Ipakita lahat ng source",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "sources.serviceNone",
+    "en": "None of this service’s sources are in the register.",
+    "fil": "Wala sa rehistro ang mga source ng biyaheng ito.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "sources.serviceLoading",
+    "en": "Loading this service’s sources",
+    "fil": "Nilo-load ang mga source ng biyaheng ito",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.noneOnFile",
+    "en": "No towns outside Naga are on file yet.",
+    "fil": "Wala pang nakatalang bayan sa labas ng Naga.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "intercity.hiddenTimes",
+    "en": "Times listed on booking sites are hidden: they may be out of date. Ask at the terminal.",
+    "fil": "Nakatago ang oras mula sa booking site: baka luma na. Magtanong sa terminal.",
+    "review": true,
+    "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
   }
 ]

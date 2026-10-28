@@ -8,7 +8,8 @@
 // Each chip shows CARD_LIMIT cards, then "Show all {n} places", and a "Jump to directory" link sits
 // at the top, so the directory below stays reachable. The directory lists everything else on file:
 // mapped-pin places, routes, terminals, barangays and feeder leads, each row linking to its own
-// detail screen (leads are text only). Without the search index, the routes still list.
+// detail screen (leads are text only). Without the search index, the routes still list. Between
+// the two, a card opens Leaving Naga (S24, IC1).
 
 import "@/ui/kit/styles";
 import "./explore.css";
@@ -32,6 +33,7 @@ import {
   type RefObject,
 } from "react";
 import { Suspense } from "react";
+import { useLeavingAvailable } from "@/client/network/use-intercity";
 import { useNetworkResource } from "@/client/network/use-network-resource";
 import { useSearchIndex, type MorePlacesState } from "@/client/search/use-search-index";
 import { routeListSchema, type SearchIndex, type SearchOsmPlace } from "@/domain/api/schemas";
@@ -59,7 +61,7 @@ import { barangayHref, osmPlaceHref, pinPlaceHref, terminalHref } from "@/domain
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
 import { useReturnToMap } from "@/ui/detail/detail-frame";
 import { StatusBadge } from "@/ui/kit/badge";
-import { ListCell, ListChevron } from "@/ui/kit/list";
+import { ListCell, ListChevron, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 import { ModeChip } from "@/ui/modes/mode-chip";
 import { ModeIcon } from "@/ui/modes/mode-icon";
@@ -124,6 +126,7 @@ export function ExploreScreen() {
             {tt.trip.tryAgain}
           </button>
         </div>
+        <LeavingCard />
         <Directory index={null} headingRef={directoryHeading} />
       </div>
     );
@@ -150,8 +153,33 @@ export function ExploreView({ index, morePlaces = "ready", onRetry, requested = 
         {t.jump}
       </a>
       <PlacesByCategory places={index.osmPlaces} morePlaces={morePlaces} onRetry={onRetry} requested={requested} />
+      <LeavingCard />
       <Directory index={index} headingRef={directoryHeading} />
     </div>
+  );
+}
+
+/** Section card to S24 Leaving Naga (IC1): travel to towns outside the city, its own screen. */
+function LeavingCard() {
+  const t = useT().explore;
+  // Only once the published guide lists a destination (nothing while loading or empty).
+  if (!useLeavingAvailable()) return null;
+  return (
+    <ListGroup label={t.leavingTitle} testId="explore-leaving">
+      <ListCell
+        href="/app/leaving"
+        lead={
+          <span className="pn-explore__leaving-tile">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+              <path d="M3 12h13M12 6l6 6-6 6M21 4v16" />
+            </svg>
+          </span>
+        }
+        title={t.leavingTitle}
+        sub={t.leavingSub}
+        testId="explore-leaving-link"
+      />
+    </ListGroup>
   );
 }
 

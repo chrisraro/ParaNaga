@@ -45,6 +45,8 @@ export function detailHref(result: SearchResult): string | null {
       return studyLabelHref(result.code);
     case "regional":
       return result.terminalCode ? terminalHref(result.terminalCode) : null;
+    case "intercity":
+      return `/app/leaving?to=${encodeURIComponent(result.code)}`;
     case "saved":
     case "legacy":
     case "feeder":
@@ -126,6 +128,7 @@ export function noticeFor(result: SearchResult, purpose: SearchPurpose | null, c
         osm: false,
       };
     case "route":
+    case "intercity":
     case "legacy":
     case "feeder":
       return { title: result.title, body: "", endpoint: null, osm: false };

@@ -18,6 +18,7 @@ import "@/ui/kit/styles";
 import "./help.css";
 
 import Link from "next/link";
+import { useLeavingAvailable } from "@/client/network/use-intercity";
 import { useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { ListCell, ListGroup } from "@/ui/kit/list";
@@ -63,6 +64,13 @@ function Tile({ d }: { d: string }) {
   );
 }
 
+/** Leaving Naga (IC1): listed once the published guide has a destination; nothing while loading or empty. */
+function LeavingRow() {
+  const t = useT().help;
+  if (!useLeavingAvailable()) return null;
+  return <ListCell lead={<Tile d="M3 12h13M12 6l6 6-6 6M21 4v16" />} title={t.leavingLink} href="/app/leaving" compact testId="help-link-leaving" />;
+}
+
 function HelpPanel() {
   const tt = useT();
   const t = tt.help;
@@ -72,6 +80,7 @@ function HelpPanel() {
         {articlesFor(tt).map((a) => (
           <ListCell key={a.slug} lead={<Tile d={ARTICLE_ICONS[a.slug]} />} title={a.title} href={articleHref(a.slug)} compact testId={`help-link-${a.slug}`} />
         ))}
+        <LeavingRow />
         <ListCell lead={<Tile d="M7 11V7a5 5 0 0 1 10 0v4M5 11h14v10H5z" />} title={t.reportDriverLink} href="/app/mynaga" compact testId="help-link-mynaga" />
       </ListGroup>
       <Note testId="help-independent">{t.independentNote}</Note>

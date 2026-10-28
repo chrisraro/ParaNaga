@@ -343,6 +343,8 @@ for (const [screen, path, text] of [
   ["route detail (loop)", "/app/routes/R8-A", fil.routes.fare],
   ["place detail", SM_PATH, fil.places.directionsTo],
   ["terminal detail", "/app/terminals/T01", fil.terminals.directionsToHere],
+  ["leaving Naga", "/app/leaving", fil.intercity.intro],
+  ["leaving Naga detail", "/app/leaving?to=D-LEGAZPI", fil.intercity.notRunning],
   ["more / settings", "/app/more", fil.settings.general],
   ["help", "/app/help", fil.help.reportDriverLink],
   ["help safety", "/app/help?tab=safety", fil.help.tipsTitle],
