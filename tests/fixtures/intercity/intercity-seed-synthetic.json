@@ -1,0 +1,71 @@
+{
+  "header": {
+    "seedDate": "2026-10-28",
+    "preparedFrom": [{ "file": "synthetic-intercity-research.md", "sha256": "0000000000000000000000000000000000000000000000000000000000000000" }],
+    "reviewStatus": "draft",
+    "synthetic": true
+  },
+  "sources": [
+    { "code": "IC01", "title": "Synthetic official notice", "url": null, "publisher": "Synthetic Agency", "date": "2026-10", "evidence_type": "official", "ai_confidence": "high", "retrieved": "2026-10-28", "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } },
+    { "code": "IC02", "title": "Synthetic news item", "url": "https://example.invalid/news", "publisher": "Synthetic News", "date": "2026-03-29", "evidence_type": "news", "ai_confidence": null, "retrieved": "2026-10-28", "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } },
+    { "code": "IC03", "title": "Synthetic booking listing", "url": "https://example.invalid/book", "publisher": null, "date": "2026-09", "evidence_type": "booking_site", "ai_confidence": "low", "retrieved": "2026-10-28", "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } },
+    { "code": "IC04", "title": "Synthetic travel guide", "url": null, "publisher": null, "date": "2023-10", "evidence_type": "travel_guide", "ai_confidence": null, "retrieved": "2026-10-28", "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } }
+  ],
+  "sourceMap": { "R1": "IC01", "R2": "IC02", "R3": "IC03", "R4": "IC04" },
+  "destinations": [
+    { "code": "D-SYN-A", "name": "Synthetic Town A", "aliases": ["Syn A"], "group_code": "albay", "psgc_code": null, "kind": "town", "source_codes": ["IC01"], "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } },
+    { "code": "D-SYN-HUB", "name": "Synthetic Hub", "aliases": [], "group_code": "manila", "psgc_code": null, "kind": "hub", "source_codes": ["IC03"], "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } }
+  ],
+  "terminals": [
+    { "code": "T17", "name": "Synthetic Airport", "kind": "airport", "location_text": "Synthetic highway", "modes": ["air"], "coordinate": null, "verification": "address text only", "status_note": null, "notes": null, "source_codes": ["IC02"], "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } }
+  ],
+  "services": [
+    {
+      "code": "RS90", "mode": "rail", "name": "Synthetic rail", "operators": ["Synthetic Rail Co"], "terminal_code": "T06", "terminal_note": null,
+      "destination": "Synthetic Town A", "osm_relation_ids": [], "distance_km": null, "distance_basis": null,
+      "status": "operating_limited", "status_since": null, "status_note_code": "limited_trips", "basis": "news", "as_of": "2026-10-28", "review_by": "2027-04-26",
+      "destination_codes": ["D-SYN-A"], "access_note_code": null, "fare_rule_codes": [], "notes": null, "source_codes": ["IC01", "IC02"],
+      "departures": [{ "pattern": "daily_unspecified", "times": ["04:29"], "headway_min": null, "start_time": null, "end_time": null, "trips_per_day": 3, "day_type": "daily", "basis": "at_launch", "observed_on": "2025-11-05", "source_codes": ["IC01"] }],
+      "observations": [{ "kind": "official_matrix", "destination_code": "D-SYN-A", "category": "regular", "seat_class_text": null, "amount_centavos": 1500, "amount_high_centavos": 7500, "basis": "at_launch", "observed_month": "2025-11", "source_codes": ["IC01"] }],
+      "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" }
+    },
+    {
+      "code": "RS91", "mode": "rail", "name": "Synthetic suspended rail", "operators": [], "terminal_code": "T06", "terminal_note": null,
+      "destination": "Synthetic Town A", "osm_relation_ids": [], "distance_km": null, "distance_basis": null,
+      "status": "suspended", "status_since": "2025-11-10", "status_note_code": "bridge_damage_no_reopening_date", "basis": "suspended", "as_of": "2026-10-28", "review_by": "2026-11-27",
+      "destination_codes": ["D-SYN-A"], "access_note_code": null, "fare_rule_codes": [], "notes": null, "source_codes": ["IC02"],
+      "departures": [], "observations": [],
+      "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" }
+    },
+    {
+      "code": "RS92", "mode": "bus", "name": "Synthetic bus", "operators": ["Synthetic Bus Lines"], "terminal_code": "T01", "terminal_note": null,
+      "destination": "Synthetic Hub", "osm_relation_ids": [], "distance_km": null, "distance_basis": null,
+      "status": "unconfirmed", "status_since": null, "status_note_code": null, "basis": "booking_site", "as_of": "2026-10-28", "review_by": "2027-02-25",
+      "destination_codes": ["D-SYN-HUB"], "access_note_code": null, "fare_rule_codes": ["F06"], "notes": null, "source_codes": ["IC03"],
+      "departures": [{ "pattern": "listed_times", "times": ["20:00", "20:45"], "headway_min": null, "start_time": null, "end_time": null, "trips_per_day": null, "day_type": "unspecified", "basis": "booking_site", "observed_on": "2026-09", "source_codes": ["IC03"] }],
+      "observations": [
+        { "kind": "operator_listing", "destination_code": "D-SYN-HUB", "category": "regular", "seat_class_text": "Regular", "amount_centavos": 111200, "amount_high_centavos": null, "basis": "booking_site", "observed_month": "2026-09", "source_codes": ["IC03"] },
+        { "kind": "operator_listing", "destination_code": "D-SYN-HUB", "category": "seater_41", "seat_class_text": "Seater 41", "amount_centavos": 123000, "amount_high_centavos": null, "basis": "booking_site", "observed_month": "2026-09", "source_codes": ["IC03"] }
+      ],
+      "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" }
+    },
+    {
+      "code": "RS93", "mode": "air", "name": "Synthetic flight", "operators": ["Synthetic Air"], "terminal_code": "T17", "terminal_note": null,
+      "destination": "Synthetic Hub", "osm_relation_ids": [], "distance_km": null, "distance_basis": null,
+      "status": "operating", "status_since": "2026-03-29", "status_note_code": null, "basis": "news", "as_of": "2026-10-28", "review_by": "2027-04-26",
+      "destination_codes": ["D-SYN-HUB"], "access_note_code": "airport_walk_to_maharlika", "fare_rule_codes": [], "notes": null, "source_codes": ["IC02"],
+      "departures": [{ "pattern": "daily_unspecified", "times": [], "headway_min": null, "start_time": null, "end_time": null, "trips_per_day": 1, "day_type": "daily", "basis": "news", "observed_on": "2026-03", "source_codes": ["IC02"] }],
+      "observations": [],
+      "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" }
+    }
+  ],
+  "serviceLinks": [
+    { "service_code": "RS01", "destination_codes": ["D-SYN-A"], "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } }
+  ],
+  "datasetNotes": [
+    { "key": "intercity_synthetic_project", "value": { "status": "planned_not_funded", "trainsRun": false, "sourceCodes": ["IC01"], "asOf": "2026-07-13" }, "review": { "decision": "import", "reason": "synthetic", "reviewedOn": "2026-10-28", "reviewer": "tester" } }
+  ],
+  "excluded": [
+    { "code": "X-SYN-OLD", "summary": "Synthetic 2013 blog fare", "source_codes": [], "review": { "decision": "exclude", "reason": "synthetic old listing", "reviewedOn": "2026-10-28", "reviewer": "tester" } }
+  ]
+}
