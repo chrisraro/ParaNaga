@@ -13,7 +13,7 @@ import { LINES_FORMAT_VERSION } from "../api/lines-format";
 //  - Runtime data caches, GET and same-origin only: the immutable snapshot and search index of a
 //    revision (CacheFirst, 3 revisions each; the approximate paths too, in a cache keyed by the
 //    lines format version as well as the build; the walk graph too, 2 revisions because of its
-//    size), the published head (NetworkFirst, 2 s), and the
+//    size; the intercity guide too, IC1), the published head (NetworkFirst, 2 s), and the
 //    reference reads (StaleWhileRevalidate, 200 entries, 30 days).
 //  - The router's segment prefetches of the static shells (GET with RSC, Next-Router-Prefetch and
 //    Next-Router-Segment-Prefetch): NetworkFirst, keyed by shell path + segment, the core ones
@@ -35,10 +35,13 @@ import { LINES_FORMAT_VERSION } from "../api/lines-format";
  * The two Task 14 Help articles (time estimates, vehicle types) are prerendered and read the
  * cached snapshot, so they open offline too. So does Sources and credits: trip detail links its
  * fare basis and sources there, and the register falls back to "unavailable" offline.
+ * Leaving Naga (IC1) is one too: its detail is `?to=` on the same shell, and it reads the cached
+ * intercity file of the revision.
  */
 export const SHELL_PATHS = [
   "/app", "/app/saved", "/app/more", "/app/help", "/app/explore", "/app/mynaga", "/app/search", "/offline",
   "/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga", "/app/help/sources",
+  "/app/leaving",
 ] as const;
 export type ShellPath = (typeof SHELL_PATHS)[number];
 export const OFFLINE_PATH = "/offline";
@@ -53,10 +56,10 @@ export const REFERENCE_MAX_AGE_S = 30 * 24 * 60 * 60;
 
 /** Every cache ParaNaga's worker creates starts with this; the build id is appended. */
 export const CACHE_PREFIX = "pn-";
-export const CACHE_KINDS = ["shell", "rsc", "head", "snapshot", "search-index", "search-places", "lines", "walk-graph", "reference"] as const;
+export const CACHE_KINDS = ["shell", "rsc", "head", "snapshot", "search-index", "search-places", "lines", "walk-graph", "intercity", "reference"] as const;
 export type CacheKind = (typeof CACHE_KINDS)[number];
 /** The per-revision data caches (CacheFirst; the revision is in the URL). */
-export type RevisionCache = "snapshot" | "search-index" | "search-places" | "lines" | "walk-graph";
+export type RevisionCache = "snapshot" | "search-index" | "search-places" | "lines" | "walk-graph" | "intercity";
 
 /** How many revisions a CacheFirst data cache keeps. */
 export function revisionsKept(cache: RevisionCache): number {
@@ -90,6 +93,7 @@ const SEARCH_INDEX = new RegExp(`^/api/v1/network/search-index/${UUID}$`);
 const SEARCH_PLACES = new RegExp(`^/api/v1/network/search-places/${UUID}$`);
 const LINES = new RegExp(`^/api/v1/network/lines/${UUID}$`);
 const WALK_GRAPH = new RegExp(`^/api/v1/network/walk-graph/${UUID}$`);
+const INTERCITY = new RegExp(`^/api/v1/network/intercity/${UUID}$`);
 const REFERENCE = [/^\/api\/v1\/stops\/[^/]+$/, /^\/api\/v1\/routes$/, /^\/api\/v1\/routes\/[^/]+$/, /^\/api\/v1\/terminals\/[^/]+$/, /^\/api\/v1\/sources$/];
 const PRIVATE_SECTIONS = /^\/(admin|account)(\/|$)/;
 /**
@@ -144,7 +148,7 @@ export function rscCacheKey(path: ShellPath, segment: string): string {
  * shells offline even when their prefetches ran before this worker controlled the page (the first
  * visit). The route tree and the page segment of each static page; its layouts are in every page.
  */
-export const RSC_WARM_PATHS = ["/app", "/app/search", "/app/saved", "/app/more", "/app/explore", "/app/help", "/app/mynaga", "/app/help/sources"] as const satisfies readonly ShellPath[];
+export const RSC_WARM_PATHS = ["/app", "/app/search", "/app/saved", "/app/more", "/app/explore", "/app/help", "/app/mynaga", "/app/help/sources", "/app/leaving"] as const satisfies readonly ShellPath[];
 export function rscWarmSegments(path: ShellPath): string[] {
   return ["/_tree", `${path}/__PAGE__`];
 }
@@ -169,6 +173,7 @@ export function classifyRequest(info: SwRequestInfo): SwRoute {
   if (SEARCH_PLACES.test(path)) return { kind: "cache-first", cache: "search-places" };
   if (LINES.test(path)) return { kind: "cache-first", cache: "lines" };
   if (WALK_GRAPH.test(path)) return { kind: "cache-first", cache: "walk-graph" };
+  if (INTERCITY.test(path)) return { kind: "cache-first", cache: "intercity" };
   if (path === "/api/v1/network/head") return { kind: "network-first", cache: "head" };
   if (REFERENCE.some((re) => re.test(path))) return { kind: "stale-while-revalidate", cache: "reference" };
   return NETWORK_ONLY;
@@ -246,7 +251,7 @@ export type AcceptedHandoff = HandoffEntry & { cache: "head" | RevisionCache };
 
 /**
  * Checks one entry the page offers: a same-origin URL that the allow-list would store as the
- * head, a snapshot, a search index, the lines or the walk graph, a JSON body of bounded size, and a Cache-Control that may be
+ * head, a snapshot, a search index, the lines, the walk graph or the intercity guide, a JSON body of bounded size, and a Cache-Control that may be
  * stored. Anything else is refused (null), so the handoff can never widen what is cached.
  */
 export function acceptHandoff(entry: unknown, origin: string): AcceptedHandoff | null {

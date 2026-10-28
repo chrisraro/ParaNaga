@@ -68,6 +68,7 @@ const strategies = {
   "search-places": revisionCache("search-places"),
   lines: revisionCache("lines"),
   "walk-graph": revisionCache("walk-graph"),
+  intercity: revisionCache("intercity"),
   head: new NetworkFirst({
     cacheName: cacheName("head", BUILD_ID),
     networkTimeoutSeconds: HEAD_TIMEOUT_S,
@@ -220,7 +221,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(Promise.all([cacheShells(), cacheRscSegments()]));
 });
 
-/** Stores the page's copies of the head / snapshot / search index / lines / walk graph unless one is cached already. */
+/** Stores the page's copies of the head / snapshot / search index / lines / walk graph / intercity guide unless one is cached already. */
 async function storeHandoff(entries: unknown): Promise<void> {
   if (!Array.isArray(entries)) return;
   for (const entry of entries) {

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -125,6 +126,52 @@ describe("validateIntercitySeed", () => {
     const p = problems(j);
     expect(p).toContain("service RS91: suspended needs status_since");
     expect(p).toContain("service RS92: unconfirmed needs as_of, review_by and basis");
+  });
+});
+
+describe("the real seed (data/source/research/naga-intercity-seed-2026-10-28.json)", () => {
+  const raw: Json = JSON.parse(readFileSync("data/source/research/naga-intercity-seed-2026-10-28.json", "utf8"));
+  const modes: Json = JSON.parse(readFileSync("data/source/research/naga-modes-seed-2026-10-16.json", "utf8"));
+  const base: Json = JSON.parse(readFileSync("Data_Sets/naga_transport_seed.json", "utf8"));
+  const imported = (rows: Json[]) => rows.filter((r) => r.review.decision === "import");
+  const realCtx = {
+    terminalCodes: imported(modes.terminals).map((t: Json) => t.code as string),
+    fareRuleCodes: [...base.fare_rules.map((f: Json) => f.id as string), ...imported(modes.fareRules).map((f: Json) => f.code as string)],
+    sourceCodes: modes.sources.map((s: Json) => s.code as string),
+  };
+
+  it("parses and validates with no problems", () => {
+    expect(validateIntercitySeed(parseIntercitySeed(raw), realCtx)).toEqual([]);
+  });
+
+  it("every record has a decision and a reviewer", () => {
+    const seed = parseIntercitySeed(raw);
+    const records = [
+      ...seed.sources, ...seed.destinations, ...seed.terminals, ...seed.services,
+      ...seed.serviceLinks, ...seed.datasetNotes, ...seed.excluded,
+    ];
+    expect(records.length).toBeGreaterThan(0);
+    for (const r of records) {
+      expect(["import", "exclude"]).toContain(r.review.decision);
+      expect(r.review.reviewer.trim()).not.toBe("");
+    }
+  });
+
+  it("RS06 no longer lists Bicol Isarog", () => {
+    const rs06 = parseIntercitySeed(raw).services.find((s) => s.code === "RS06");
+    expect(rs06?.operators).toEqual(["Philtranco"]);
+    expect(JSON.stringify(rs06)).not.toMatch(/Bicol Isarog/i);
+  });
+
+  it("no service carries planned_not_funded", () => {
+    expect(JSON.stringify(parseIntercitySeed(raw).services)).not.toContain("planned_not_funded");
+  });
+
+  it("pins the research copy by the sha256 of its LF-normalised text", () => {
+    const [{ file, sha256 }] = parseIntercitySeed(raw).header.preparedFrom as [{ file: string; sha256: string }];
+    expect(file).toBe("data/source/research/naga-intercity-research-2026-10-28.md");
+    const text = readFileSync(file, "utf8").replace(/\r\n/g, "\n");
+    expect(createHash("sha256").update(text).digest("hex")).toBe(sha256);
   });
 });
 

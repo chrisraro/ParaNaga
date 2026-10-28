@@ -169,6 +169,17 @@ create trigger fare_observation_running_guard before insert on transit.fare_obse
   for each row when (new.regional_service_version_id is not null)
   execute function transit.regional_child_running_guard();
 
+-- A released service version keeps its children as published (deviation 2: they are covered by
+-- the version's content hash). paranaga_import has no UPDATE or DELETE grant on
+-- regional_departure and no DELETE grant on fare_observation; its UPDATE on fare_observation
+-- (0001 import_update_unreleased, keyed on the row's own id, which a regional observation never
+-- is a member under) is narrowed here, like the 0026 restrictive policies: no edit of an
+-- observation of a published or superseded version, and none that moves a row onto one.
+create policy import_update_regional_unreleased on transit.fare_observation as restrictive
+  for update to paranaga_import
+  using (regional_service_version_id is null or not transit.in_released_revision(regional_service_version_id))
+  with check (regional_service_version_id is null or not transit.in_released_revision(regional_service_version_id));
+
 -- ================================================================ membership kinds
 alter table transit.revision_member drop constraint revision_member_entity_kind_check;
 alter table transit.revision_member add constraint revision_member_entity_kind_check check (entity_kind in (

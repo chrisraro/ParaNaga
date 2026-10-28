@@ -192,12 +192,18 @@ export async function getTerminalDetail(db: Db, revisionId: string, code: string
       from transit.v_published_destination_categories
      where revision_id = ${revisionId}::uuid and candidate_terminal_code = ${code}
      order by category`);
+  // Community-mapped services only: an intercity service with a researched status (RS06 v2 and
+  // RS08+, IC1) is shown on Leaving Naga, never here as if it were running.
   const regional = await rows(db, sql`
     select code, mode, name, operators::text[] as operators, terminal_note, destination, distance_km::float8 as distance_km,
            distance_basis, status, fare_rule_codes::text[] as fare_rule_codes, notes, source_codes::text[] as source_codes
       from transit.v_published_regional_services
-     where revision_id = ${revisionId}::uuid and terminal_code = ${code}
+     where revision_id = ${revisionId}::uuid and terminal_code = ${code} and status = 'community_mapped'
      order by code`);
+  const [intercity] = await rows(db, sql`
+    select exists (select 1 from transit.v_published_regional_services
+                    where revision_id = ${revisionId}::uuid and terminal_code = ${code}
+                      and cardinality(destination_codes) > 0) as has_intercity`);
   // Regional fare rules (F06–F12, F01 for regional jeepneys) appear ONLY here, as estimates.
   const ruleCodes = [...new Set(regional.flatMap((s) => strArray(s.fare_rule_codes)))];
   const fareRules = await publishedFareRules(db, revisionId, ruleCodes);
@@ -266,6 +272,7 @@ export async function getTerminalDetail(db: Db, revisionId: string, code: string
         sourceCodes: strArray(s.source_codes),
       };
     }),
+    hasIntercity: intercity?.has_intercity === true,
     destinationCategories: categories.map((c) => ({
       category: str(c.category),
       destinations: strArray(c.destinations),

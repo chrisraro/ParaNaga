@@ -1,0 +1,2502 @@
+{
+  "header": {
+    "seedDate": "2026-10-28",
+    "preparedFrom": [
+      {
+        "file": "data/source/research/naga-intercity-research-2026-10-28.md",
+        "sha256": "72010543af6db4395b50200abf0d61aec5f19be83315aa6af7740f0e14d5cf35"
+      }
+    ],
+    "reviewStatus": "draft"
+  },
+  "sources": [
+    {
+      "code": "IC01",
+      "title": "TopGear, PNR Naga–Lupi Viejo",
+      "url": "https://www.topgear.com.ph/news/motoring-news/pnr-naga-lupi-viejo-route-a6888-20251023",
+      "publisher": "TopGear",
+      "date": "2025-10-23",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R1 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC02",
+      "title": "PNA, new PNR route",
+      "url": "https://www.pna.gov.ph/articles/1261523",
+      "publisher": "PNA",
+      "date": "Oct 2025",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R2 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC03",
+      "title": "Wikipedia, Lupi Viejo station",
+      "url": "https://en.wikipedia.org/wiki/Lupi_Viejo_station",
+      "publisher": "Wikipedia",
+      "date": null,
+      "evidence_type": "community",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R3 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC04",
+      "title": "PNR operations documentation",
+      "url": "https://sites.google.com/pnr.gov.ph/operations/documentation",
+      "publisher": "PNR",
+      "date": null,
+      "evidence_type": "official",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R4 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC05",
+      "title": "PNR Bicol fan status page",
+      "url": "https://sites.google.com/view/pnrbicolline/home",
+      "publisher": null,
+      "date": null,
+      "evidence_type": "community",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R5 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC06",
+      "title": "Manila Times, Guinobatan bridge",
+      "url": "https://www.manilatimes.net/2025/11/10/news/pnr-bridge-in-guinobatan-albay-damaged-by-typhoon-nagalegazpi-train-operations-suspended/2219745",
+      "publisher": "Manila Times",
+      "date": "2025-11-10",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R6 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC07",
+      "title": "BusinessWorld",
+      "url": "https://www.bworldonline.com/the-nation/2025/11/10/711304/dotr-suspends-pnr-naga-legazpi-due-to-typhoon-damage/",
+      "publisher": "BusinessWorld",
+      "date": null,
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R7 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC08",
+      "title": "Inquirer, PNR partly resumes trips to Bicol",
+      "url": "https://newsinfo.inquirer.net/2148879/pnr-partly-resumes-trips-to-bicol",
+      "publisher": "Inquirer",
+      "date": "2025-12-01",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R8 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC09",
+      "title": "Wikipedia, Legazpi station",
+      "url": "https://en.wikipedia.org/wiki/Legazpi_station",
+      "publisher": "Wikipedia",
+      "date": null,
+      "evidence_type": "community",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R9 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC10",
+      "title": "Philstar, US funding for Bicol rail",
+      "url": "https://www.philstar.com/business/2026/07/13/2541661/philippines-seeks-us-funding-bicol-rail-revival",
+      "publisher": "Philstar",
+      "date": "2026-07-13",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R10 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC11",
+      "title": "Philstar, South Long Haul",
+      "url": "https://www.philstar.com/music/2026/07/10/2541008/no-derailing-revival-bicol-express-pnr",
+      "publisher": "Philstar",
+      "date": "2026-07-10",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R11 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC12",
+      "title": "d0ctrine blog",
+      "url": "https://d0ctrine.com/2025/06/26/pnr-services-from-naga-city/",
+      "publisher": "d0ctrine blog",
+      "date": "2025-06-26",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R12 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC13",
+      "title": "Ord. 2024-032, BCS fees",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2024/05/Ordno-2024-032-New-Fees-in-the-Bicol-Central-Station.pdf",
+      "publisher": "Naga City Government",
+      "date": "2024-04-23",
+      "evidence_type": "official",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R13 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC14",
+      "title": "Citizen's Charter, BCS terminal pass",
+      "url": "https://www2.naga.gov.ph/wp-content/uploads/2022/02/CC-5E-BCS-Request-for-Terminal-Pass.pdf",
+      "publisher": "Naga City Government",
+      "date": "2022-01-25",
+      "evidence_type": "official",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R14 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC15",
+      "title": "East-bound terminal",
+      "url": "https://www2.naga.gov.ph/naga-has-newly-built-east-bound-terminal/",
+      "publisher": "Naga City Government",
+      "date": "2021-11-11",
+      "evidence_type": "official",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R15 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC16",
+      "title": "Ord. 2022-013",
+      "url": "https://www2.naga.gov.ph/sp_ordinances/ordinance-no-2022-013/",
+      "publisher": "Naga City Government",
+      "date": "2022-02-15",
+      "evidence_type": "official",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R16 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC17",
+      "title": "TopGear, LTFRB fare adjustments",
+      "url": "https://www.topgear.com.ph/news/motoring-news/ltfrb-approves-fare-adjustments-puvs-a2578-20260317",
+      "publisher": "TopGear",
+      "date": "2026-03-17",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R17 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC18",
+      "title": "Philstar, \"Most fares going up\"",
+      "url": "https://www.philstar.com/headlines/2026/03/18/2515089/most-fares-going-up",
+      "publisher": "Philstar",
+      "date": "2026-03-18",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R18 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC19",
+      "title": "Philstar, \"Marcos suspends fare hike\"",
+      "url": "https://www.philstar.com/headlines/2026/03/19/2515358/marcos-suspends-fare-hike",
+      "publisher": "Philstar",
+      "date": "2026-03-19",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R19 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC20",
+      "title": "Philstar, DOTr lifts suspension",
+      "url": "https://philstar.com/headlines/2026/09/26/2558947/dotr-lifts-suspension-puv-fare-hike",
+      "publisher": "Philstar",
+      "date": "2026-09-26",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R20 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC21",
+      "title": "PhilstarLife, effective Sept 28",
+      "url": "https://philstarlife.com/news-and-views/486689-dotr-approves-puv-fare-hikes-effective-sept-28",
+      "publisher": "PhilstarLife",
+      "date": "2026-09-26",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R21 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC22",
+      "title": "PhilstarLife, provincial bus fare guide",
+      "url": "https://philstarlife.com/news-and-views/909317-updated-fare-guide-provincial-buses",
+      "publisher": "PhilstarLife",
+      "date": "2026-03-15",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R22 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC23",
+      "title": "Interaksyon, Philtranco closure",
+      "url": "https://media.interaksyon.com/trends-spotlights/2026/02/12/309172/century-old-philtranco-remembered-commuters-closure-news/",
+      "publisher": "Interaksyon",
+      "date": "2026-02-12",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R23 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC24",
+      "title": "DZRH, PITX Bicol trips",
+      "url": "https://www.dzrh.com.ph/post/some-bicol-trips-at-pitx-fully-booked-ahead-of-christmas",
+      "publisher": "DZRH",
+      "date": "2025-12-08",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R24 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC25",
+      "title": "Pamasahe, DLTB",
+      "url": "https://pamasahe.com/routes/manila-naga-dltb-co-schedule-fares",
+      "publisher": "Pamasahe",
+      "date": null,
+      "evidence_type": "booking_site",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R25 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC26",
+      "title": "Pamasahe, Peñafrancia",
+      "url": "https://pamasahe.com/routes/manila-naga-camarines-sur-penafrancia-tours-schedule-fares",
+      "publisher": "Pamasahe",
+      "date": null,
+      "evidence_type": "booking_site",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R26 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC27",
+      "title": "bustickets.ph",
+      "url": "https://bustickets.ph/?p=6825",
+      "publisher": "bustickets.ph",
+      "date": null,
+      "evidence_type": "booking_site",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R27 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC28",
+      "title": "commutetour",
+      "url": "https://ph.commutetour.com/ph/terminal/naga-bicol-central-terminal/",
+      "publisher": "commutetour",
+      "date": null,
+      "evidence_type": "low_quality",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R28 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC29",
+      "title": "Wikivoyage, Naga",
+      "url": "https://en.wikivoyage.org/wiki/Naga",
+      "publisher": "Wikivoyage",
+      "date": "listings 2019–2023",
+      "evidence_type": "travel_guide",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R29 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC30",
+      "title": "Aviation Updates PH",
+      "url": "https://aviationupdatesph.com/2026/01/cebgo-airswift-to-move-remaining-turboprop-operations-from-naia-to-clark/",
+      "publisher": "Aviation Updates PH",
+      "date": "Jan 2026",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R30 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC31",
+      "title": "Tribune",
+      "url": "https://tribune.net.ph/2025/08/28/ceb-shifts-naga-san-jose-flights-to-clark",
+      "publisher": "Tribune",
+      "date": "2025-08-28",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R31 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC32",
+      "title": "Wikipedia, Naga Airport",
+      "url": "https://en.wikipedia.org/wiki/Naga_Airport",
+      "publisher": "Wikipedia",
+      "date": null,
+      "evidence_type": "community",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R32 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC33",
+      "title": "PITX press release, Naga and Matnog",
+      "url": "https://pitx.ph/wp-content/uploads/PTX.-CAB.-Press-Release_PITX-extends-operations-to-Naga-and-Matnog.pdf",
+      "publisher": "PITX",
+      "date": "2021-07-02",
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R33 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC34",
+      "title": "naga.gov.ph UV listing",
+      "url": "https://www2.naga.gov.ph/?p=74752",
+      "publisher": "Naga City Government",
+      "date": null,
+      "evidence_type": "news",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R34 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "IC35",
+      "title": "Wikipedia: Ligao station, Pili station",
+      "url": "https://en.wikipedia.org/wiki/Ligao_station",
+      "publisher": "Wikipedia",
+      "date": null,
+      "evidence_type": "community",
+      "ai_confidence": null,
+      "retrieved": "2026-10-28",
+      "review": {
+        "decision": "import",
+        "reason": "Research source R35 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    }
+  ],
+  "sourceMap": {
+    "R1": "IC01",
+    "R2": "IC02",
+    "R3": "IC03",
+    "R4": "IC04",
+    "R5": "IC05",
+    "R6": "IC06",
+    "R7": "IC07",
+    "R8": "IC08",
+    "R9": "IC09",
+    "R10": "IC10",
+    "R11": "IC11",
+    "R12": "IC12",
+    "R13": "IC13",
+    "R14": "IC14",
+    "R15": "IC15",
+    "R16": "IC16",
+    "R17": "IC17",
+    "R18": "IC18",
+    "R19": "IC19",
+    "R20": "IC20",
+    "R21": "IC21",
+    "R22": "IC22",
+    "R23": "IC23",
+    "R24": "IC24",
+    "R25": "IC25",
+    "R26": "IC26",
+    "R27": "IC27",
+    "R28": "IC28",
+    "R29": "IC29",
+    "R30": "IC30",
+    "R31": "IC31",
+    "R32": "IC32",
+    "R33": "IC33",
+    "R34": "IC34",
+    "R35": "IC35"
+  },
+  "destinations": [
+    {
+      "code": "D-GOA",
+      "name": "Goa",
+      "aliases": [],
+      "group_code": "partido",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-TIGAON",
+      "name": "Tigaon",
+      "aliases": [],
+      "group_code": "partido",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-LAGONOY",
+      "name": "Lagonoy",
+      "aliases": [],
+      "group_code": "partido",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-CARAMOAN",
+      "name": "Caramoan",
+      "aliases": [],
+      "group_code": "partido",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 names the Caramoan route, research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-GARCHITORENA",
+      "name": "Garchitorena",
+      "aliases": [],
+      "group_code": "partido",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 names the Garchitorena route, research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-IRIGA",
+      "name": "Iriga",
+      "aliases": [],
+      "group_code": "rinconada",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-NABUA",
+      "name": "Nabua",
+      "aliases": [],
+      "group_code": "rinconada",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-BULA",
+      "name": "Bula",
+      "aliases": [],
+      "group_code": "rinconada",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-LEGAZPI",
+      "name": "Legazpi",
+      "aliases": [],
+      "group_code": "albay",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13",
+        "IC06"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 Legazpi route (research §1); suspended Naga–Legazpi rail (research §4)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-TABACO",
+      "name": "Tabaco",
+      "aliases": [],
+      "group_code": "albay",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC29"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Eastbound van listing Tabaco ₱180 (R29), research §2",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-BULAN",
+      "name": "Bulan",
+      "aliases": [],
+      "group_code": "sorsogon",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC13"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 names the Bulan route, research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-DAET",
+      "name": "Daet",
+      "aliases": [],
+      "group_code": "cam_norte",
+      "psgc_code": null,
+      "kind": "town",
+      "source_codes": [
+        "IC29"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Westbound van listing Daet ₱140 (R29), research §2",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-PAMPLONA",
+      "name": "Pamplona",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo station, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-LIBMANAN",
+      "name": "Libmanan",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo station, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-SIPOCOT",
+      "name": "Sipocot",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo station, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-LUPI-VIEJO",
+      "name": "Lupi Viejo",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo terminus, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-SAMPALOC",
+      "name": "Sampaloc",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-BORABOD",
+      "name": "Borabod",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-MAMBULO",
+      "name": "Mambulo",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-MALANSAD",
+      "name": "Malansad",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-RONGOS",
+      "name": "Rongos",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-CAMAMBUGAN",
+      "name": "Camambugan",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-MANTALISAY",
+      "name": "Mantalisay",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-AWAYAN",
+      "name": "Awayan",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-AZUCENA",
+      "name": "Azucena",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-MALAGUICO",
+      "name": "Malaguico",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-LUPI-NUEVO-TAPI",
+      "name": "Lupi Nuevo-Tapi",
+      "aliases": [],
+      "group_code": "nw_camsur",
+      "psgc_code": null,
+      "kind": "station",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-CUBAO",
+      "name": "Cubao",
+      "aliases": [],
+      "group_code": "manila",
+      "psgc_code": null,
+      "kind": "hub",
+      "source_codes": [
+        "IC25",
+        "IC26"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "DLTB and Peñafrancia Cubao listings (R25, R26), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-PITX",
+      "name": "PITX",
+      "aliases": [],
+      "group_code": "manila",
+      "psgc_code": null,
+      "kind": "hub",
+      "source_codes": [
+        "IC27",
+        "IC23"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Manila operators listed to PITX (R27); former Philtranco PITX–Naga (R23), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-ALABANG",
+      "name": "Alabang",
+      "aliases": [],
+      "group_code": "manila",
+      "psgc_code": null,
+      "kind": "hub",
+      "source_codes": [
+        "IC27"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Peñafrancia, Isarog Line and Legaspi St Jude listed to Alabang (R27), research §1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "D-CLARK",
+      "name": "Clark",
+      "aliases": [],
+      "group_code": "luzon_air",
+      "psgc_code": null,
+      "kind": "airport",
+      "source_codes": [
+        "IC30",
+        "IC31",
+        "IC32"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Cebgo Clark–Naga daily since 2026-03-29 (R30–R32), research §5",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    }
+  ],
+  "terminals": [
+    {
+      "code": "T17",
+      "name": "Naga Airport (WNP)",
+      "kind": "airport",
+      "location_text": "Maharlika Hwy, San Jose, Pili",
+      "modes": [
+        "air"
+      ],
+      "coordinate": null,
+      "verification": "address text only",
+      "status_note": null,
+      "notes": "Run by CAAP.",
+      "source_codes": [
+        "IC30",
+        "IC31",
+        "IC32"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research §5 and §6: Naga Airport (WNP), San Jose, Pili, on Maharlika Hwy, run by CAAP; no OSM coordinate on file",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    }
+  ],
+  "services": [
+    {
+      "code": "RS08",
+      "mode": "rail",
+      "name": "PNR Naga–Lupi Viejo (Bicol Commuter)",
+      "operators": [
+        "PNR"
+      ],
+      "terminal_code": "T06",
+      "terminal_note": null,
+      "destination": "Lupi Viejo",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "operating_limited",
+      "status_since": "2025-11-05",
+      "status_note_code": "limited_trips",
+      "basis": "news",
+      "as_of": "2026-10-28",
+      "review_by": "2027-04-26",
+      "destination_codes": [
+        "D-PAMPLONA",
+        "D-LIBMANAN",
+        "D-SIPOCOT",
+        "D-LUPI-VIEJO",
+        "D-SAMPALOC",
+        "D-BORABOD",
+        "D-MAMBULO",
+        "D-MALANSAD",
+        "D-RONGOS",
+        "D-CAMAMBUGAN",
+        "D-MANTALISAY",
+        "D-AWAYAN",
+        "D-AZUCENA",
+        "D-MALAGUICO",
+        "D-LUPI-NUEVO-TAPI"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [],
+      "notes": "3 trips a day each way; first trains at launch 04:29 from Naga and 06:23 from Lupi Viejo; about 1h39m. 2026 times not found.",
+      "source_codes": [
+        "IC01",
+        "IC02",
+        "IC03",
+        "IC04",
+        "IC05",
+        "IC10"
+      ],
+      "departures": [
+        {
+          "pattern": "daily_unspecified",
+          "times": [
+            "04:29"
+          ],
+          "headway_min": null,
+          "start_time": null,
+          "end_time": null,
+          "trips_per_day": 3,
+          "day_type": "daily",
+          "basis": "at_launch",
+          "observed_on": "2025-11-05",
+          "source_codes": [
+            "IC01",
+            "IC02",
+            "IC03",
+            "IC04",
+            "IC05",
+            "IC10"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "kind": "official_matrix",
+          "destination_code": null,
+          "category": "regular",
+          "seat_class_text": null,
+          "amount_centavos": 1500,
+          "amount_high_centavos": 7500,
+          "basis": "at_launch",
+          "observed_month": "2025-11",
+          "source_codes": [
+            "IC01",
+            "IC02",
+            "IC03",
+            "IC04",
+            "IC05",
+            "IC10"
+          ]
+        },
+        {
+          "kind": "official_matrix",
+          "destination_code": null,
+          "category": "senior_pwd",
+          "seat_class_text": "Senior/PWD",
+          "amount_centavos": 1200,
+          "amount_high_centavos": 6000,
+          "basis": "at_launch",
+          "observed_month": "2025-11",
+          "source_codes": [
+            "IC01",
+            "IC02",
+            "IC03",
+            "IC04",
+            "IC05",
+            "IC10"
+          ]
+        }
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Research §4: operating with limited trips since 2025-11-05 (status Medium-High, times Low); fares at launch",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS09",
+      "mode": "rail",
+      "name": "PNR Naga–Legazpi",
+      "operators": [
+        "PNR"
+      ],
+      "terminal_code": "T06",
+      "terminal_note": null,
+      "destination": "Legazpi",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "suspended",
+      "status_since": "2025-11-10",
+      "status_note_code": "bridge_damage_no_reopening_date",
+      "basis": "suspended",
+      "as_of": "2026-10-28",
+      "review_by": "2026-11-27",
+      "destination_codes": [
+        "D-LEGAZPI",
+        "D-IRIGA"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [],
+      "notes": "Guinobatan bridge damage. The February 2026 target was missed; sleepers removed 2026-07-13 while repair materials are procured.",
+      "source_codes": [
+        "IC06",
+        "IC08",
+        "IC09",
+        "IC10",
+        "IC35"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Research §4: suspended since 2025-11-10, no reopening date (High); decision 4a, review in 30 days",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS10",
+      "mode": "bus",
+      "name": "BCS buses to Legazpi",
+      "operators": [],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Legazpi",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "operating",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "terminal_rule",
+      "as_of": "2026-10-28",
+      "review_by": "2027-10-28",
+      "destination_codes": [
+        "D-LEGAZPI"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC13"
+      ],
+      "departures": [
+        {
+          "pattern": "headway_rule",
+          "times": [],
+          "headway_min": 15,
+          "start_time": null,
+          "end_time": null,
+          "trips_per_day": null,
+          "day_type": "unspecified",
+          "basis": "terminal_rule",
+          "observed_on": "2024-04-23",
+          "source_codes": [
+            "IC13"
+          ]
+        }
+      ],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 15 min (terminal rule); fare not found",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS11",
+      "mode": "bus",
+      "name": "BCS buses to Rinconada",
+      "operators": [],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Rinconada (Iriga, Nabua, Bula…)",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "operating",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "terminal_rule",
+      "as_of": "2026-10-28",
+      "review_by": "2027-10-28",
+      "destination_codes": [
+        "D-IRIGA",
+        "D-NABUA",
+        "D-BULA"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC13"
+      ],
+      "departures": [
+        {
+          "pattern": "headway_rule",
+          "times": [],
+          "headway_min": 12,
+          "start_time": null,
+          "end_time": null,
+          "trips_per_day": null,
+          "day_type": "unspecified",
+          "basis": "terminal_rule",
+          "observed_on": "2024-04-23",
+          "source_codes": [
+            "IC13"
+          ]
+        }
+      ],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 12 min (terminal rule); fare not found",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS12",
+      "mode": "bus",
+      "name": "BCS buses to Partido",
+      "operators": [],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Partido (Goa, Tigaon, Lagonoy…)",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "operating",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "terminal_rule",
+      "as_of": "2026-10-28",
+      "review_by": "2027-10-28",
+      "destination_codes": [
+        "D-GOA",
+        "D-TIGAON",
+        "D-LAGONOY"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC13"
+      ],
+      "departures": [
+        {
+          "pattern": "headway_rule",
+          "times": [],
+          "headway_min": 12,
+          "start_time": null,
+          "end_time": null,
+          "trips_per_day": null,
+          "day_type": "unspecified",
+          "basis": "terminal_rule",
+          "observed_on": "2024-04-23",
+          "source_codes": [
+            "IC13"
+          ]
+        }
+      ],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 12 min (terminal rule); fare not found",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS13",
+      "mode": "bus",
+      "name": "BCS buses to Caramoan",
+      "operators": [],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Caramoan",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "operating",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "official",
+      "as_of": "2026-10-28",
+      "review_by": "2027-10-28",
+      "destination_codes": [
+        "D-CARAMOAN"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": "Departures follow each bus company's schedule; not found.",
+      "source_codes": [
+        "IC13"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS14",
+      "mode": "bus",
+      "name": "BCS buses to Garchitorena",
+      "operators": [],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Garchitorena",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "operating",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "official",
+      "as_of": "2026-10-28",
+      "review_by": "2027-10-28",
+      "destination_codes": [
+        "D-GARCHITORENA"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": "Departures follow each bus company's schedule; not found.",
+      "source_codes": [
+        "IC13"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS15",
+      "mode": "bus",
+      "name": "BCS buses to Bulan",
+      "operators": [],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Bulan",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "operating",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "official",
+      "as_of": "2026-10-28",
+      "review_by": "2027-10-28",
+      "destination_codes": [
+        "D-BULAN"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": "Departures follow each bus company's schedule; not found.",
+      "source_codes": [
+        "IC13"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS16",
+      "mode": "bus",
+      "name": "DLTB Naga–Manila",
+      "operators": [
+        "DLTB"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Cubao (via Lucena); PITX",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "unconfirmed",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "booking_site",
+      "as_of": "2026-10-28",
+      "review_by": "2027-02-25",
+      "destination_codes": [
+        "D-CUBAO",
+        "D-PITX"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC25",
+        "IC27"
+      ],
+      "departures": [
+        {
+          "pattern": "listed_times",
+          "times": [
+            "20:00",
+            "20:45"
+          ],
+          "headway_min": null,
+          "start_time": null,
+          "end_time": null,
+          "trips_per_day": null,
+          "day_type": "unspecified",
+          "basis": "booking_site",
+          "observed_on": "2026-09",
+          "source_codes": [
+            "IC25"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "kind": "operator_listing",
+          "destination_code": "D-CUBAO",
+          "category": "regular",
+          "seat_class_text": "Regular",
+          "amount_centavos": 111200,
+          "amount_high_centavos": null,
+          "basis": "booking_site",
+          "observed_month": "2026-09",
+          "source_codes": [
+            "IC25"
+          ]
+        },
+        {
+          "kind": "operator_listing",
+          "destination_code": "D-CUBAO",
+          "category": "seater_41",
+          "seat_class_text": "Seater 41",
+          "amount_centavos": 123000,
+          "amount_high_centavos": null,
+          "basis": "booking_site",
+          "observed_month": "2026-09",
+          "source_codes": [
+            "IC25"
+          ]
+        }
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Booking-site listing R25 (Sep 2026), Low; PITX destination from R27; unconfirmed",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS17",
+      "mode": "bus",
+      "name": "Peñafrancia Tours Naga–Manila",
+      "operators": [
+        "Peñafrancia Tours"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": "Listed as BCS / CBD II",
+      "destination": "Cubao (599 EDSA); Alabang; PITX",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "unconfirmed",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "booking_site",
+      "as_of": "2026-10-28",
+      "review_by": "2027-02-25",
+      "destination_codes": [
+        "D-CUBAO",
+        "D-ALABANG",
+        "D-PITX"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC26",
+        "IC27"
+      ],
+      "departures": [
+        {
+          "pattern": "operating_hours",
+          "times": [],
+          "headway_min": null,
+          "start_time": "08:00",
+          "end_time": "22:00",
+          "trips_per_day": 12,
+          "day_type": "unspecified",
+          "basis": "booking_site",
+          "observed_on": "2026-09",
+          "source_codes": [
+            "IC26"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "kind": "operator_listing",
+          "destination_code": "D-CUBAO",
+          "category": "regular",
+          "seat_class_text": "Regular/Skybus",
+          "amount_centavos": 100000,
+          "amount_high_centavos": null,
+          "basis": "booking_site",
+          "observed_month": "2026-09",
+          "source_codes": [
+            "IC26"
+          ]
+        },
+        {
+          "kind": "operator_listing",
+          "destination_code": "D-CUBAO",
+          "category": "elite",
+          "seat_class_text": "Elite",
+          "amount_centavos": 138000,
+          "amount_high_centavos": null,
+          "basis": "booking_site",
+          "observed_month": "2026-09",
+          "source_codes": [
+            "IC26"
+          ]
+        }
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Booking-site listing R26 (Sep 2026), Low; Alabang and PITX destinations from R27; unconfirmed",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS18",
+      "mode": "bus",
+      "name": "Isarog Line Naga–Manila",
+      "operators": [
+        "Isarog Line"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": "Listed as BCS / Triangulo",
+      "destination": "Cubao; Alabang; PITX",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "unconfirmed",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "booking_site",
+      "as_of": "2026-10-28",
+      "review_by": "2027-02-25",
+      "destination_codes": [
+        "D-CUBAO",
+        "D-ALABANG",
+        "D-PITX"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC27"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Booking-site listing R27, Low; fares undated, so no amounts or times imported; unconfirmed",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS19",
+      "mode": "bus",
+      "name": "Raymond Naga–Manila",
+      "operators": [
+        "Raymond"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Cubao; PITX",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "unconfirmed",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "booking_site",
+      "as_of": "2026-10-28",
+      "review_by": "2027-02-25",
+      "destination_codes": [
+        "D-CUBAO",
+        "D-PITX"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": "Reported active Dec 2025.",
+      "source_codes": [
+        "IC27",
+        "IC24"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Booking-site listing R27 and DZRH R24 (active Dec 2025), Low; 2025 fares have no month; unconfirmed",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS20",
+      "mode": "bus",
+      "name": "Legaspi St Jude Naga–Manila",
+      "operators": [
+        "Legaspi St Jude"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": null,
+      "destination": "Cubao; PITX; Alabang",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "unconfirmed",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "booking_site",
+      "as_of": "2026-10-28",
+      "review_by": "2027-02-25",
+      "destination_codes": [
+        "D-CUBAO",
+        "D-PITX",
+        "D-ALABANG"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC27"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Booking-site listing R27, Low; 2025 fare has no month; unconfirmed",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS06",
+      "mode": "bus",
+      "name": "PITX–Naga (Philtranco)",
+      "operators": [
+        "Philtranco"
+      ],
+      "terminal_code": "T01",
+      "terminal_note": "terminal from OSM tags/name; confirm",
+      "destination": "PITX (Parañaque)",
+      "osm_relation_ids": [
+        9732639,
+        10594406,
+        10939369
+      ],
+      "distance_km": 383.668,
+      "distance_basis": "Length of the OpenStreetMap route relations (the shorter of 3 directions is used): relation 9732639 v224 386.606 km; relation 10594406 v173 383.668 km; relation 10939369 v155 385.447 km. Approximate path length from OSMR-2026-10-16, not a measured trip distance. Map data © OpenStreetMap contributors (ODbL).",
+      "status": "discontinued_reported",
+      "status_since": "2026-03-30",
+      "status_note_code": "stopped_no_resumption_found",
+      "basis": "news",
+      "as_of": "2026-10-28",
+      "review_by": "2027-04-26",
+      "destination_codes": [
+        "D-PITX"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [],
+      "notes": null,
+      "source_codes": [
+        "N01",
+        "IC23"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Decision 9a: Philtranco announced it would stop on 2026-03-30, no resumption found (R23, Medium); the second listed operator is removed: no Naga departures found for it (research §1)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS21",
+      "mode": "uv_express",
+      "name": "Eastbound vans to Albay",
+      "operators": [],
+      "terminal_code": "T02",
+      "terminal_note": "Eastbound van terminal, Waling-Waling St, Naga City Subd., Triangulo (the dataset says Anciano St; needs a field check)",
+      "destination": "Legazpi; Tabaco",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "unconfirmed",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "travel_guide",
+      "as_of": "2026-10-28",
+      "review_by": "2026-10-28",
+      "destination_codes": [
+        "D-LEGAZPI",
+        "D-TABACO"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F06",
+        "F07"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC29"
+      ],
+      "departures": [
+        {
+          "pattern": "operating_hours",
+          "times": [],
+          "headway_min": null,
+          "start_time": "05:00",
+          "end_time": "18:00",
+          "trips_per_day": null,
+          "day_type": "unspecified",
+          "basis": "travel_guide",
+          "observed_on": "2023-10",
+          "source_codes": [
+            "IC29"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "kind": "operator_listing",
+          "destination_code": "D-LEGAZPI",
+          "category": "regular",
+          "seat_class_text": null,
+          "amount_centavos": 14000,
+          "amount_high_centavos": null,
+          "basis": "travel_guide",
+          "observed_month": "2023-10",
+          "source_codes": [
+            "IC29"
+          ]
+        },
+        {
+          "kind": "operator_listing",
+          "destination_code": "D-TABACO",
+          "category": "regular",
+          "seat_class_text": null,
+          "amount_centavos": 18000,
+          "amount_high_centavos": null,
+          "basis": "travel_guide",
+          "observed_month": "2023-10",
+          "source_codes": [
+            "IC29"
+          ]
+        }
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Decision 7a: Wikivoyage listing R29 (Oct 2023), Low (old); shown as an old listing next to the estimate",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS22",
+      "mode": "uv_express",
+      "name": "Westbound vans to Daet",
+      "operators": [],
+      "terminal_code": "T03",
+      "terminal_note": "Westbound van terminal, Felix Plazo St, Sabang (near LCC)",
+      "destination": "Daet",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "unconfirmed",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "travel_guide",
+      "as_of": "2026-10-28",
+      "review_by": "2026-10-28",
+      "destination_codes": [
+        "D-DAET"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F06",
+        "F07"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC29"
+      ],
+      "departures": [
+        {
+          "pattern": "operating_hours",
+          "times": [],
+          "headway_min": null,
+          "start_time": "05:00",
+          "end_time": "18:00",
+          "trips_per_day": null,
+          "day_type": "unspecified",
+          "basis": "travel_guide",
+          "observed_on": "2023-10",
+          "source_codes": [
+            "IC29"
+          ]
+        }
+      ],
+      "observations": [
+        {
+          "kind": "operator_listing",
+          "destination_code": "D-DAET",
+          "category": "regular",
+          "seat_class_text": null,
+          "amount_centavos": 14000,
+          "amount_high_centavos": null,
+          "basis": "travel_guide",
+          "observed_month": "2023-10",
+          "source_codes": [
+            "IC29"
+          ]
+        }
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Decision 7a: Wikivoyage listing R29 (Oct 2023), Low (old); shown as an old listing next to the estimate",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS23",
+      "mode": "jeepney",
+      "name": "Eastbound jeepneys to Rinconada and Partido",
+      "operators": [],
+      "terminal_code": "T02",
+      "terminal_note": "Eastbound PUV terminal, Triangulo (opened 2021-11-06); temporary eastbound PUJV terminal, CBD II (Ruby Shelter) per Ord. 2022-013",
+      "destination": "Rinconada and Partido",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "unconfirmed",
+      "status_since": null,
+      "status_note_code": null,
+      "basis": "official",
+      "as_of": "2026-10-28",
+      "review_by": "2027-10-28",
+      "destination_codes": [
+        "D-IRIGA",
+        "D-NABUA",
+        "D-BULA",
+        "D-GOA",
+        "D-TIGAON",
+        "D-LAGONOY"
+      ],
+      "access_note_code": null,
+      "fare_rule_codes": [
+        "F01"
+      ],
+      "notes": null,
+      "source_codes": [
+        "IC15",
+        "IC16"
+      ],
+      "departures": [],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Research §3: Rinconada and Partido jeepneys use the eastbound terminal (R15, R16; Medium, historical); fare not found, F01 estimate only",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "RS24",
+      "mode": "air",
+      "name": "Cebgo Naga–Clark (DG6129/6130)",
+      "operators": [
+        "Cebgo"
+      ],
+      "terminal_code": "T17",
+      "terminal_note": null,
+      "destination": "Clark",
+      "osm_relation_ids": [],
+      "distance_km": null,
+      "distance_basis": null,
+      "status": "operating",
+      "status_since": "2026-03-29",
+      "status_note_code": null,
+      "basis": "news",
+      "as_of": "2026-10-28",
+      "review_by": "2027-04-26",
+      "destination_codes": [
+        "D-CLARK"
+      ],
+      "access_note_code": "airport_walk_to_maharlika",
+      "fare_rule_codes": [],
+      "notes": "Replaced the Manila flights DG6113/6114. Fare not found.",
+      "source_codes": [
+        "IC30",
+        "IC31",
+        "IC32"
+      ],
+      "departures": [
+        {
+          "pattern": "daily_unspecified",
+          "times": [],
+          "headway_min": null,
+          "start_time": null,
+          "end_time": null,
+          "trips_per_day": 1,
+          "day_type": "daily",
+          "basis": "news",
+          "observed_on": "2026-03",
+          "source_codes": [
+            "IC30",
+            "IC31",
+            "IC32"
+          ]
+        }
+      ],
+      "observations": [],
+      "review": {
+        "decision": "import",
+        "reason": "Decision 8a: Cebgo flies Clark–Naga daily since 2026-03-29 (R30–R32, Medium-High); fare not found",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    }
+  ],
+  "serviceLinks": [
+    {
+      "service_code": "RS01",
+      "destination_codes": [
+        "D-GOA"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "service_code": "RS02",
+      "destination_codes": [
+        "D-GOA"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "service_code": "RS03",
+      "destination_codes": [
+        "D-LAGONOY"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "service_code": "RS05",
+      "destination_codes": [
+        "D-TABACO"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    }
+  ],
+  "datasetNotes": [
+    {
+      "key": "intercity_south_long_haul",
+      "value": {
+        "status": "planned_not_funded",
+        "trainsRun": false,
+        "sourceCodes": [
+          "IC10",
+          "IC11"
+        ],
+        "asOf": "2026-07-13"
+      },
+      "review": {
+        "decision": "import",
+        "reason": "Decision 3a: South Long Haul is planned only and unfunded (R10, R11, High); shown as 'no trains run', never as a service",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    }
+  ],
+  "excluded": [
+    {
+      "code": "X-RAIL-FARES-2025",
+      "summary": "Naga–Legazpi rail fares, 2025 range ₱15–₱155",
+      "source_codes": [
+        "IC06",
+        "IC08",
+        "IC09",
+        "IC35",
+        "IC05"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "suspended service; old fares ('do not use', research §4)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-BOOKING-2025",
+      "summary": "bustickets.ph fares with a year but no month: DLTB PITX ₱1,050 (2025); Peñafrancia Elite ₱1,740 (2025); Isarog Line ₱1,340–₱2,140 by class; Raymond ₱1,160–₱1,450 (2025); Legaspi St Jude ₱1,280 (2025); with their listed times",
+      "source_codes": [
+        "IC27"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "a booking-site fare needs a month",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-ALPS",
+      "summary": "ALPS, BCS to Cubao, Alabang, PITX; fare and schedule not confirmed",
+      "source_codes": [
+        "IC28"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "not confirmed; low-quality source",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-BUS-NOT-FOUND",
+      "summary": "Bicol Isarog, RSL, Elavil, Cagsawa, Amihan, Superlines (Amihan reported suspended with Philtranco in 2025)",
+      "source_codes": [],
+      "review": {
+        "decision": "exclude",
+        "reason": "no Naga departures found",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-UV-R34",
+      "summary": "Terminal not stated: Iriga ₱90/₱70; Buhi ₱60; Daraga ₱200/₱160 (R34 snippet, UNVERIFIED)",
+      "source_codes": [
+        "IC34"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "page 404; undated (decision 7a)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-ROGER",
+      "summary": "Roger Lines to Legazpi, terminal not stated, ₱220 / ₱170 discounted, Mon–Sun (R34, UNVERIFIED)",
+      "source_codes": [
+        "IC34"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "page 404; undated (decision 7a)",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-BLOG-2013-19",
+      "summary": "Van near SM Naga to Sabang port (San Jose) for Caramoan, ₱100, leaves when full; boat to Guijalo about ₱120 (travel blog, 2013–2019)",
+      "source_codes": [],
+      "review": {
+        "decision": "exclude",
+        "reason": "blog posts from 2013–2019",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-EB-FEE",
+      "summary": "Eastbound terminal fee ₱40 per jeepney / ₱60 per van per dispatch",
+      "source_codes": [
+        "IC16"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "paid by operators, not a fare",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-LUCENA",
+      "summary": "Lucena–Sipocot rail: no service",
+      "source_codes": [
+        "IC01"
+      ],
+      "review": {
+        "decision": "exclude",
+        "reason": "not a goal for IC1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    },
+    {
+      "code": "X-SEA",
+      "summary": "Sea notes: Caramoan via Sabang port boat to Guijalo; Catanduanes via van to Tabaco then ferry (2023 listing); Matnog by passing buses, no trip starting in Naga confirmed",
+      "source_codes": [],
+      "review": {
+        "decision": "exclude",
+        "reason": "not a goal for IC1",
+        "reviewedOn": "2026-10-28",
+        "reviewer": "owner"
+      }
+    }
+  ]
+}

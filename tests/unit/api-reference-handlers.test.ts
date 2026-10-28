@@ -105,6 +105,7 @@ describe("GET /api/v1/terminals/:code", () => {
     },
     routes: [{ routeCode: "R8-A", routeName: "Loop A", basis: "legal_plan", sourceCodes: ["S01"] }],
     regionalServices: [],
+    hasIntercity: false,
     destinationCategories: [],
     sources: [],
   };

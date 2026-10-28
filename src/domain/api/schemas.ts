@@ -22,6 +22,18 @@ import {
   VEHICLE_CLASSES,
   fleetSummary,
 } from "../modes/fleet";
+import {
+  ACCESS_NOTE_CODES,
+  DAY_TYPES,
+  DEPARTURE_BASES,
+  DEPARTURE_PATTERNS,
+  DESTINATION_GROUPS,
+  DESTINATION_KINDS,
+  INTERCITY_MODES,
+  OBSERVATION_BASES,
+  SERVICE_STATUSES as INTERCITY_SERVICE_STATUSES,
+  STATUS_NOTE_CODES,
+} from "../import/intercity-seed";
 
 // ---------------------------------------------------------------- shared pieces
 
@@ -164,7 +176,8 @@ export const terminalCoordinateSchema = z.object({
   attribution: z.literal("Map data © OpenStreetMap contributors"),
   attributionUrl: z.literal("https://www.openstreetmap.org/copyright"),
 });
-export const TERMINAL_KINDS = ["terminal", "loading_point", "waiting_area", "station"] as const;
+/** `airport` since 0029 (IC1: T17, Naga Airport, no coordinate). */
+export const TERMINAL_KINDS = ["terminal", "loading_point", "waiting_area", "station", "airport"] as const;
 
 /**
  * What riders report paying for one vehicle class on a route, as a delta over the traditional
@@ -927,6 +940,11 @@ export const terminalDetailSchema = z.object({
       sourceCodes: z.array(z.string()).min(1),
     }),
   ),
+  /**
+   * A published service leaving from here names at least one out-of-city destination: the
+   * "Destinations from here" link to Leaving Naga (IC1). False for responses from before IC1.
+   */
+  hasIntercity: z.boolean().default(false),
   /** External destination categories whose candidate terminal is this one. */
   destinationCategories: z.array(
     z.object({
@@ -939,6 +957,120 @@ export const terminalDetailSchema = z.object({
   sources: z.array(sourceSchema),
 });
 export type TerminalDetail = z.infer<typeof terminalDetailSchema>;
+
+// ---------------------------------------------------------------- GET /api/v1/network/intercity/:revisionId
+
+export {
+  ACCESS_NOTE_CODES,
+  DAY_TYPES,
+  DEPARTURE_BASES,
+  DEPARTURE_PATTERNS,
+  DESTINATION_GROUPS,
+  DESTINATION_KINDS,
+  INTERCITY_MODES,
+  INTERCITY_SERVICE_STATUSES,
+  OBSERVATION_BASES,
+  STATUS_NOTE_CODES,
+};
+
+export const intercityDestinationSchema = z.object({
+  code: z.string().regex(/^D-[A-Z0-9-]{2,30}$/),
+  name: z.string().min(1),
+  aliases: z.array(z.string()),
+  groupCode: z.enum(DESTINATION_GROUPS),
+  psgcCode: z.string().regex(/^[0-9]{10}$/).nullable(),
+  kind: z.enum(DESTINATION_KINDS),
+});
+
+/** One departure fact (pattern, basis, the day or month observed); times are HH:MM, Manila. */
+export const intercityDepartureSchema = z.object({
+  pattern: z.enum(DEPARTURE_PATTERNS),
+  times: z.array(clockTime),
+  headwayMin: z.number().int().positive().nullable(),
+  startTime: clockTime.nullable(),
+  endTime: clockTime.nullable(),
+  tripsPerDay: z.number().int().positive().nullable(),
+  dayType: z.enum(DAY_TYPES),
+  basis: z.enum(DEPARTURE_BASES),
+  observedOn: isoDate,
+  sourceCodes: z.array(z.string()).min(1),
+});
+
+/** One observed amount (or range) with its basis and month (first day): never an estimate, never summed. */
+export const intercityObservationSchema = z
+  .object({
+    amountCentavos: z.number().int().nonnegative(),
+    amountHighCentavos: z.number().int().nonnegative().nullable(),
+    seatClassText: z.string().nullable(),
+    destinationCode: z.string().nullable(),
+    basis: z.enum(OBSERVATION_BASES),
+    observedAt: isoDate,
+    sourceCodes: z.array(z.string()).min(1),
+  })
+  .refine((o) => o.amountHighCentavos === null || o.amountHighCentavos >= o.amountCentavos, {
+    message: "a fare range never ends below its start",
+  });
+
+export const intercityServiceSchema = z.object({
+  code: z.string().regex(/^RS\d{2}$/),
+  mode: z.enum(INTERCITY_MODES),
+  name: z.string(),
+  operators: z.array(z.string()),
+  /** Null when the terminal is not published. lat/lng null: no coordinate on file ("Location being confirmed"). */
+  terminal: z
+    .object({
+      code: z.string().regex(/^T\d{2}$/),
+      name: z.string(),
+      locationText: z.string().nullable(),
+      lat: latitude.nullable(),
+      lng: longitude.nullable(),
+    })
+    .refine((t) => (t.lat === null) === (t.lng === null), { message: "a coordinate has both lat and lng" })
+    .nullable(),
+  destinationCodes: z.array(z.string()),
+  /** Null: distance not on file (the on-device rule estimate then gives rates only). */
+  distanceKm: z.number().positive().nullable(),
+  distanceBasis: z.string().nullable(),
+  status: z.enum(INTERCITY_SERVICE_STATUSES),
+  statusSince: isoDate.nullable(),
+  statusNoteCode: z.enum(STATUS_NOTE_CODES).nullable(),
+  /** Null only for community_mapped (the 0029 CHECK). */
+  asOf: isoDate.nullable(),
+  reviewBy: isoDate.nullable(),
+  accessNoteCode: z.enum(ACCESS_NOTE_CODES).nullable(),
+  fareRuleCodes: z.array(z.string()),
+  departures: z.array(intercityDepartureSchema),
+  observations: z.array(intercityObservationSchema),
+  sourceCodes: z.array(z.string()).min(1),
+  /** The distinct reviewer-assigned evidence types of sourceCodes (evidence chips; never ai_confidence). */
+  sourceEvidenceTypes: z.array(z.string()),
+});
+
+/** A reviewed intercity_* dataset note (rail status, "planned, not funded", …). */
+export const intercityNoteSchema = z.object({
+  key: z.string().regex(/^intercity_[a-z0-9_]+$/),
+  value: z.looseObject({ sourceCodes: z.array(z.string()).min(1), asOf: isoDate }),
+});
+
+/**
+ * The Leaving Naga guide of one published revision (IC1): immutable, cached CacheFirst. Status,
+ * staleness and the rule estimate are computed on the device (Manila time), so the body never
+ * depends on the time it was read. Missing facts stay null or [] ("not found"), never 0.
+ */
+export const intercitySchema = z.object({
+  revision: revisionMetaSchema,
+  destinations: z.array(intercityDestinationSchema),
+  services: z.array(intercityServiceSchema),
+  /** The published regional rules the services cite (F06–F12, F01): estimate inputs only, never the planner's. */
+  fareRules: z.array(fareRuleEstimateSchema),
+  notes: z.array(intercityNoteSchema),
+});
+export type Intercity = z.infer<typeof intercitySchema>;
+export type IntercityService = z.infer<typeof intercityServiceSchema>;
+export type IntercityDestination = z.infer<typeof intercityDestinationSchema>;
+export type IntercityDeparture = z.infer<typeof intercityDepartureSchema>;
+export type IntercityObservation = z.infer<typeof intercityObservationSchema>;
+export type IntercityNote = z.infer<typeof intercityNoteSchema>;
 
 // ---------------------------------------------------------------- GET /api/v1/sources
 

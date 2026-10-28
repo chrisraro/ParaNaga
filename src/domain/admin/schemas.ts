@@ -55,6 +55,26 @@ export const validationFactsSchema = z.object({
       measures: z.array(z.object({ seq: z.unknown(), measureM: z.unknown() })),
     }),
   ),
+  // 0029 (IC1); the defaults read facts of a database still on 0028.
+  regionalServices: z
+    .array(
+      z.object({
+        code: z.string(),
+        status: z.string(),
+        mode: z.string(),
+        terminalCode: z.string().nullable(),
+        asOf: z.string().nullable(),
+        reviewBy: z.string().nullable(),
+        statusNoteCode: z.string().nullable(),
+        destinationCodes: z.array(z.string()),
+        sourceEvidenceTypes: z.array(z.string()),
+        departureCount: z.coerce.number().int(),
+        observationCount: z.coerce.number().int(),
+        observationsWithoutMonth: z.coerce.number().int(),
+      }),
+    )
+    .default([]),
+  regionalDestinations: z.array(z.object({ code: z.string(), serviceCount: z.coerce.number().int() })).default([]),
 });
 
 // ---------------------------------------------------------------- responses (server → browser)

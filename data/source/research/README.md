@@ -128,3 +128,63 @@ The San Felipe (R5) and Cararayan (R1) letters are blurred (G or H) and are excl
 photo or document confirms them. The 1998–2014 ordinance letters (multicab Loops G–J) are not kept
 (CX11). No stop coordinates were added: the sign has no location on file. See
 `docs/plans/2026-10-18-routes-update.md`.
+
+## Intercity (IC1)
+
+`naga-intercity-seed-YYYY-MM-DD.json` holds the reviewed records for travel out of Naga ("Leaving
+Naga", S24). It is separate from the modes seed. It is validated by
+`src/domain/import/intercity-seed.ts`:
+- `parseIntercitySeed` checks the strict shape;
+- `validateIntercitySeed` checks the rules;
+- `importableIntercity` returns what may be imported.
+
+Its importer is `scripts/import-intercity.ts` (IC1 Task 4), which writes into the open draft and
+never publishes. The plan is `docs/plans/2026-10-28-intercity-ic1-plan.md`.
+
+**Provenance.**
+- The evidence is `naga-intercity-research-2026-10-28.md`, an exact copy of
+  `docs/research/2026-10-28-naga-intercity.md`, an AI-written research draft.
+- `header.preparedFrom` pins the sha256 of its LF-normalised text, and a unit test checks the pin.
+- Research references R1–R35 become source codes IC01–IC35 (`sourceMap`), because R-codes clash
+  with the `R[TLPH]` families.
+- Titles, URLs and date text are copied verbatim from the register.
+- `evidence_type` is assigned per the plan:
+  - official: R4, R13–R16;
+  - community: R3, R5, R9, R32, R35;
+  - booking_site: R25–R27;
+  - travel_guide: R29;
+  - low_quality: R28;
+  - news: everything else.
+- `ai_confidence` is null on every source: the research gives confidence per claim, not per source.
+
+| Section | Records | Imported | Excluded |
+|---|---|---|---|
+| Sources IC01–IC35 | 35 | 35 | 0 |
+| Destinations (D-…) | 31 | 31 | 0 |
+| Terminals (T17 Naga Airport, no coordinate) | 1 | 1 | 0 |
+| Services (RS06 v2, RS08–RS24) | 18 | 18 | 0 |
+| Service links (RS01, RS02, RS03, RS05) | 4 | 4 | 0 |
+| Dataset notes (`intercity_south_long_haul`) | 1 | 1 | 0 |
+| Excluded register (X-…) | 10 | 0 | 10 |
+
+**Rules the seed follows.**
+- Unknown values are null and show as "not found". No fare, time, coordinate or PSGC code is
+  invented, so `psgc_code` is null everywhere.
+- Every non-community service has `basis`, `as_of` and `review_by`. `review_by` is
+  `reviewByFor(basis, as_of)` or earlier.
+- Fare observations always carry their month and basis (`at_launch`, `booking_site` or
+  `travel_guide`). They are never rules and are never added together.
+- Suspended and discontinued services (RS09, RS06 v2) have no fares, departures or fare rules.
+- The South Long Haul is a dataset note (`planned_not_funded`, no trains run), never a service.
+- RS06 v2 keeps the published name, destination, OSM relation ids and source N01. It removes the
+  second operator and becomes `discontinued_reported` since 2026-03-30 (IC23).
+- Its `distance_km` and `distance_basis` are rebuilt from the pinned road snapshot
+  `data/source/osm/naga-roads-2026-10-16.osm.json`, using the formula in `scripts/lib/lines-plan.ts`.
+  Check them against the published row before commit.
+
+**Review.**
+- Every record carries `review: { decision, reason, reviewedOn, reviewer }`.
+- The file is a draft: `reviewStatus: "draft"`, with `reviewer: "owner"` as a placeholder and
+  AI-proposed decisions.
+- `commitProblems` refuses a commit until the owner reviews it and sets
+  `reviewStatus: "owner_approved"`.

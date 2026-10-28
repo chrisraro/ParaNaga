@@ -131,9 +131,124 @@ describe("validateRevision", () => {
   });
 });
 
+// IC1 (Task 6): the intercity facts of 0029. TODAY is fixed so the 180-day staleness check is stable.
+const TODAY = "2026-10-28";
+type Svc = NonNullable<ValidationFacts["regionalServices"]>[number];
+const svc = (over: Partial<Svc> = {}): Svc => ({
+  code: "RS-NAGA-LEGAZPI-VAN",
+  status: "operating",
+  mode: "uv_express",
+  terminalCode: "T01",
+  asOf: "2026-10-01",
+  reviewBy: "2027-01-01",
+  statusNoteCode: null,
+  destinationCodes: ["LEGAZPI"],
+  sourceEvidenceTypes: ["official"],
+  departureCount: 0,
+  observationCount: 0,
+  observationsWithoutMonth: 0,
+  ...over,
+});
+const regional = (services: Svc[], destinations = [{ code: "LEGAZPI", serviceCount: 1 }]) =>
+  facts({ regionalServices: services, regionalDestinations: destinations });
+const regionalFound = (f: ValidationFacts) =>
+  validateRevision(f, TODAY).issues.filter((i) => i.rule.startsWith("regional_")).map((i) => [i.rule, i.severity, i.ref]);
+
+describe("validateRevision: intercity (IC1)", () => {
+  it("passes a clean regional service and destination", () => {
+    const r = validateRevision(regional([svc()]), TODAY);
+    expect(r).toMatchObject({ ok: true, errorCount: 0, warningCount: 0, issues: [] });
+  });
+
+  it("errors on a suspended or discontinued service that still has departures or fares", () => {
+    const f = regional([
+      svc({ code: "RS-A", status: "suspended", departureCount: 2 }),
+      svc({ code: "RS-B", status: "discontinued_reported", observationCount: 1 }),
+      svc({ code: "RS-C", status: "suspended" }),
+    ]);
+    expect(regionalFound(f)).toEqual([
+      ["regional_not_running_with_facts", "error", "regional service RS-A"],
+      ["regional_not_running_with_facts", "error", "regional service RS-B"],
+    ]);
+  });
+
+  it("errors on an operating service with no official or news source", () => {
+    const f = regional([
+      svc({ code: "RS-A", sourceEvidenceTypes: ["community", "booking_site"] }),
+      svc({ code: "RS-B", status: "operating_limited", sourceEvidenceTypes: [] }),
+      svc({ code: "RS-C", sourceEvidenceTypes: ["news"] }),
+      svc({ code: "RS-D", status: "unconfirmed", sourceEvidenceTypes: ["community"] }),
+    ]);
+    expect(regionalFound(f)).toEqual([
+      ["regional_operating_without_official_or_news", "error", "regional service RS-A"],
+      ["regional_operating_without_official_or_news", "error", "regional service RS-B"],
+    ]);
+  });
+
+  it("errors on a fare observation with no month", () => {
+    const f = regional([svc({ observationCount: 3, observationsWithoutMonth: 2 })]);
+    expect(regionalFound(f)).toEqual([["regional_observation_without_month", "error", "regional service RS-NAGA-LEGAZPI-VAN"]]);
+    expect(validateRevision(f, TODAY).issues[0]!.message).toContain("2");
+  });
+
+  it("errors when the review date is before the as-of date", () => {
+    const f = regional([svc({ asOf: "2026-10-01", reviewBy: "2026-09-30" })]);
+    expect(regionalFound(f)).toEqual([["regional_review_before_as_of", "error", "regional service RS-NAGA-LEGAZPI-VAN"]]);
+  });
+
+  it("errors on a destination code that is not a member destination", () => {
+    const f = regional([svc({ destinationCodes: ["LEGAZPI", "SORSOGON"] })]);
+    expect(regionalFound(f)).toEqual([["regional_unknown_destination", "error", "regional service RS-NAGA-LEGAZPI-VAN"]]);
+    expect(validateRevision(f, TODAY).issues[0]!.message).toContain("SORSOGON");
+  });
+
+  it("warns when an operating service's as-of date is more than 180 days old", () => {
+    // 2026-10-28 minus 180 days is 2026-05-01: that day is not stale, the day before is.
+    expect(regionalFound(regional([svc({ asOf: "2026-05-01" })]))).toEqual([]);
+    const f = regional([
+      svc({ code: "RS-A", asOf: "2026-04-30" }),
+      svc({ code: "RS-B", status: "suspended", asOf: "2025-01-01", reviewBy: "2025-02-01" }),
+    ]);
+    const r = validateRevision(f, TODAY);
+    expect(regionalFound(f)).toEqual([["regional_operating_stale", "warning", "regional service RS-A"]]);
+    expect(r.ok).toBe(true);
+  });
+
+  it("defaults today to the Manila date", () => {
+    const old = svc({ asOf: "2000-01-01", reviewBy: "2000-02-01" });
+    expect(validateRevision(regional([old])).issues.map((i) => i.rule)).toEqual(["regional_operating_stale"]);
+  });
+
+  it("warns on a member destination no member service reaches", () => {
+    const f = regional([svc()], [{ code: "LEGAZPI", serviceCount: 1 }, { code: "IRIGA", serviceCount: 0 }]);
+    expect(regionalFound(f)).toEqual([["regional_destination_without_service", "warning", "regional destination IRIGA"]]);
+  });
+
+  it("warns on a service whose terminal has no coordinate in this revision", () => {
+    const f = regional([svc({ terminalCode: "T77" }), svc({ code: "RS-NO-TERMINAL", terminalCode: null })]);
+    expect(regionalFound(f)).toEqual([["regional_terminal_without_coordinate", "warning", "regional service RS-NAGA-LEGAZPI-VAN"]]);
+  });
+});
+
 describe("validationFactsSchema", () => {
   it("reads the jsonb the database builds (numeric distances as text included)", () => {
     const parsed = validationFactsSchema.parse({ ...facts(), routeStops: [{ variantRef: "v", seq: 1, distAlongM: "12.5" }] });
     expect(parsed.routeStops[0]!.distAlongM).toBe(12.5);
+  });
+
+  it("defaults the intercity facts to empty on a database before 0029", () => {
+    const parsed = validationFactsSchema.parse(facts());
+    expect(parsed.regionalServices).toEqual([]);
+    expect(parsed.regionalDestinations).toEqual([]);
+  });
+
+  it("reads the intercity facts (counts as numbers, dates as text)", () => {
+    const parsed = validationFactsSchema.parse({
+      ...facts(),
+      regionalServices: [svc({ asOf: "2026-10-01", reviewBy: null, terminalCode: null })],
+      regionalDestinations: [{ code: "LEGAZPI", serviceCount: 1 }],
+    });
+    expect(parsed.regionalServices[0]).toMatchObject({ code: "RS-NAGA-LEGAZPI-VAN", reviewBy: null, departureCount: 0 });
+    expect(parsed.regionalDestinations).toEqual([{ code: "LEGAZPI", serviceCount: 1 }]);
   });
 });

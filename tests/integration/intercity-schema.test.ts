@@ -167,4 +167,32 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("intercity schema (0029, Neo
       expect((await pgCode(asApp(async (db) => db.execute(q)))).code).toBe("42501");
     }
   });
+
+  it("paranaga_import cannot change the children of a released service version", async () => {
+    await owner.query("begin");
+    try {
+      await owner.query("set local role paranaga_import");
+      const v = await serviceVersion(owner, "RS96", { status: "operating", asOf: "2026-10-01", reviewBy: "2027-01-01" });
+      await departure(owner, v.id);
+      await observation(owner, v.id, "2026-09-01");
+      const bump = "update transit.fare_observation set amount_centavos = amount_centavos + 1 where regional_service_version_id = $1";
+      expect((await owner.query(bump, [v.id])).rowCount).toBe(1);
+      const rev = await one(owner,
+        "insert into transit.revision (label, kind, status, created_by) values ($1, 'provisional', 'draft', 'test') returning id",
+        [`ic-released-${run}`]);
+      await owner.query(
+        "insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id) select $1, 'regional_service', regional_service_id, id from transit.regional_service_version where id = $2",
+        [rev.id, v.id]);
+      await owner.query("set local role paranaga_definer");
+      await owner.query("update transit.revision set status = 'superseded' where id = $1", [rev.id]);
+      await owner.query("set local role paranaga_import");
+      expect((await owner.query(bump, [v.id])).rowCount).toBe(0);
+      expect((await pgCode(owner.query("delete from transit.fare_observation where regional_service_version_id = $1", [v.id]))).code).toBe("42501");
+    } finally {
+      await owner.query("rollback");
+    }
+    for (const q of ["update transit.regional_departure set trips_per_day = 4", "delete from transit.regional_departure"]) {
+      expect((await pgCode(rolledBack((c) => c.query(q)))).code, q).toBe("42501");
+    }
+  });
 });

@@ -6,18 +6,19 @@
 // paranaga_app). Restores the previously published revision afterwards.
 // CAPTURE_E2E_FIXTURES=1 also writes the real responses to tests/e2e/fixtures/network/: the new
 // reference fixtures AND the older stop/route fixtures, so every e2e fixture names one revision.
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import pg from "pg";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { apiErrorSchema, searchIndexSchema, searchPlacesSchema, sourceListSchema, terminalDetailSchema } from "@/domain/api/schemas";
+import { apiErrorSchema, intercitySchema, searchIndexSchema, searchPlacesSchema, sourceListSchema, terminalDetailSchema } from "@/domain/api/schemas";
 import { runInRequestContext } from "@/server/db/run-in-context";
 import { getPool } from "@/server/db/client";
 import { GET as searchIndexGET } from "@/app/api/v1/network/search-index/[revisionId]/route";
 import { GET as searchPlacesGET } from "@/app/api/v1/network/search-places/[revisionId]/route";
 import { GET as snapshotGET } from "@/app/api/v1/network/snapshot/[revisionId]/route";
 import { GET as linesGET } from "@/app/api/v1/network/lines/[revisionId]/route";
+import { GET as intercityGET } from "@/app/api/v1/network/intercity/[revisionId]/route";
 import { GET as terminalGET } from "@/app/api/v1/terminals/[code]/route";
 import { GET as sourcesGET } from "@/app/api/v1/sources/route";
 import { GET as stopsGET } from "@/app/api/v1/stops/route";
@@ -243,6 +244,26 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     await notFound(await searchIndexGET(get(`/network/search-index/${transitRevisionId}`), ctx({ revisionId: transitRevisionId })));
   });
 
+  // ---------------------------------------------------------------- intercity (IC1)
+
+  it("intercity: 200 immutable and a valid, empty guide before the intercity import", async () => {
+    const raw = await okText(
+      await intercityGET(get(`/network/intercity/${revisionId}`), ctx({ revisionId })), "public, s-maxage=31536000, immutable");
+    const body = intercitySchema.parse(JSON.parse(raw));
+    expect(body.revision.revisionId).toBe(revisionId);
+    // Legacy services have no destination codes, so none is on the guide (RS04/RS07 stay on terminal detail).
+    expect(body).toMatchObject({ destinations: [], services: [], fareRules: [], notes: [] });
+  });
+
+  it("intercity: 404 for an unknown or superseded revision, 400 for a malformed id", async () => {
+    const unknown = randomUUID();
+    await notFound(await intercityGET(get(`/network/intercity/${unknown}`), ctx({ revisionId: unknown })));
+    await notFound(await intercityGET(get(`/network/intercity/${transitRevisionId}`), ctx({ revisionId: transitRevisionId })));
+    const bad = await intercityGET(get("/network/intercity/not-a-uuid"), ctx({ revisionId: "not-a-uuid" }));
+    expect(bad.status).toBe(400);
+    expect(apiErrorSchema.parse(await bad.json()).error.code).toBe("bad_request");
+  });
+
   // ---------------------------------------------------------------- terminals
 
   it("T01: the BCS OpenStreetMap coordinate with provenance, R8-A/R8-B, and the regional services with fare estimates", async () => {
@@ -261,6 +282,8 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
     ]);
     expect(body.routes.find((r) => r.basis === "trial")!.sourceCodes).toContain("S03");
     expect(body.regionalServices.map((s) => s.code)).toEqual(["RS02", "RS03", "RS05", "RS06", "RS07"]);
+    // No published service from here names an out-of-city destination yet (the IC1 import comes later).
+    expect(body.hasIntercity).toBe(false);
     for (const s of body.regionalServices) {
       expect(s.sourceCodes.length, s.code).toBeGreaterThan(0);
       expect(s.fareEstimate.isEstimate).toBe(true);
@@ -384,6 +407,103 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl || !runtimeUrl)("reference re
       expect(await names("select code as v from transit.v_published_designated_stop_candidates where code like $1")).toEqual([`${tag}-CONTROL`]);
     } finally {
       await owner.query("rollback");
+    }
+  });
+
+  // Republishes (published_at resets): kept after every fixture capture.
+  it("intercity: a researched RS06 v2 and a new service leave T01 detail and appear on the guide", async () => {
+    const tag = run.toUpperCase();
+    const dest = `D-IT-${tag}`;
+    const hash = () => randomBytes(32).toString("hex");
+    const one = async (text: string, values: unknown[]) => (await owner.query(text, values)).rows[0] as Record<string, unknown>;
+    const rs06 = await one(
+      `select m.entity_id as service_id, v.source_codes from transit.revision_member m
+         join transit.regional_service s on s.id = m.entity_id and s.code = 'RS06'
+         join transit.regional_service_version v on v.id = m.version_id
+        where m.revision_id = $1 and m.entity_kind = 'regional_service'`, [revisionId]);
+    expect(rs06, "RS06 is a member of the published revision").toBeDefined();
+
+    let draft = "";
+    await owner.query("begin");
+    try {
+      await owner.query("set local role paranaga_import");
+      draft = String((await one(
+        "insert into transit.revision (label, kind, status, created_by) values ($1, 'provisional', 'draft', 'test') returning id",
+        [`it-intercity-${run}`])).id);
+      await owner.query(
+        `insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id)
+         select $1, entity_kind, entity_id, version_id from transit.revision_member
+          where revision_id = $2 and not (entity_kind = 'regional_service' and entity_id = $3)`,
+        [draft, revisionId, rs06!.service_id]);
+      const d = await one("insert into transit.regional_destination (code) values ($1) returning id", [dest]);
+      const dv = await one(
+        `insert into transit.regional_destination_version (regional_destination_id, name, aliases, group_code, kind, source_codes, content_hash)
+         values ($1, 'Test Hub', '{Test Alias}', 'manila', 'hub', '{S09}', $2) returning id`, [d!.id, hash()]);
+      const v2 = await one(
+        `insert into transit.regional_service_version
+           (regional_service_id, mode, name, operators, terminal_code, destination, osm_relation_ids, status, status_since,
+            status_note_code, as_of, review_by, destination_codes, source_codes, content_hash)
+         values ($1, 'bus', 'RS06 v2 test', '{Test Lines}', 'T01', 'Test Hub', '{}', 'discontinued_reported', '2026-03-01',
+                 'stopped_no_resumption_found', '2026-10-01', '2026-10-31', $2, $3, $4) returning id`,
+        [rs06!.service_id, [dest], rs06!.source_codes, hash()]);
+      const s = await one("insert into transit.regional_service (code) values ('RS88') returning id", []);
+      const v88 = await one(
+        `insert into transit.regional_service_version
+           (regional_service_id, mode, name, operators, terminal_code, destination, osm_relation_ids, status,
+            as_of, review_by, destination_codes, source_codes, content_hash)
+         values ($1, 'bus', 'RS88 test', '{Test Bus}', 'T01', 'Test Hub', '{}', 'operating',
+                 '2026-10-01', '2027-10-01', $2, '{S09}', $3) returning id`, [s!.id, [dest], hash()]);
+      await owner.query(
+        `insert into transit.regional_departure (regional_service_version_id, pattern, times, day_type, basis, observed_on, source_codes)
+         values ($1, 'listed_times', '{19:30,07:05}', 'daily', 'official', '2026-10-01', '{S09}')`, [v88!.id]);
+      await owner.query(
+        `insert into transit.fare_observation (code, mode_code, amount_centavos, amount_high_centavos, category, kind, observed_at,
+           source_codes, regional_service_version_id, destination_code, seat_class_text, basis)
+         values ($1, 'bus', 90000, 110000, 'regular', 'operator_listing', '2026-09-01', '{S09}', $2, $3, 'Regular aircon', 'booking_site')`,
+        [`ICT-${tag}`, v88!.id, dest]);
+      await owner.query(
+        `insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id)
+         values ($1, 'regional_destination', $2, $3), ($1, 'regional_service', $4, $5), ($1, 'regional_service', $6, $7)`,
+        [draft, d!.id, dv!.id, rs06!.service_id, v2!.id, s!.id, v88!.id]);
+      await owner.query("commit");
+    } catch (error) {
+      await owner.query("rollback");
+      throw error;
+    }
+
+    await publish(draft);
+    try {
+      const t01 = terminalDetailSchema.parse(await (await terminalGET(get("/terminals/T01"), ctx({ code: "T01" }))).json());
+      // RS06 v2 and RS88 are not community_mapped: never listed here as running.
+      expect(t01.regionalServices.map((x) => x.code)).toEqual(["RS02", "RS03", "RS05", "RS07"]);
+      expect(t01.hasIntercity).toBe(true);
+      const t14 = terminalDetailSchema.parse(await (await terminalGET(get("/terminals/T14"), ctx({ code: "T14" }))).json());
+      expect(t14.hasIntercity).toBe(false);
+
+      const raw = await okText(
+        await intercityGET(get(`/network/intercity/${draft}`), ctx({ revisionId: draft })), "public, s-maxage=31536000, immutable");
+      const body = intercitySchema.parse(JSON.parse(raw));
+      expect(body.destinations).toEqual([
+        { code: dest, name: "Test Hub", aliases: ["Test Alias"], groupCode: "manila", psgcCode: null, kind: "hub" },
+      ]);
+      expect(body.services.map((x) => [x.code, x.status])).toEqual([["RS06", "discontinued_reported"], ["RS88", "operating"]]);
+      const [v2, rs88] = body.services;
+      expect(v2).toMatchObject({
+        destinationCodes: [dest], statusSince: "2026-03-01", statusNoteCode: "stopped_no_resumption_found",
+        asOf: "2026-10-01", reviewBy: "2026-10-31", distanceKm: null, departures: [], observations: [], fareRuleCodes: [],
+      });
+      expect(rs88!.terminal).toEqual({ code: "T01", name: "Bicol Central Station", locationText: expect.any(String), lat: 13.6192359, lng: 123.1897426 });
+      expect(rs88!.departures).toEqual([{
+        pattern: "listed_times", times: ["07:05", "19:30"], headwayMin: null, startTime: null, endTime: null, tripsPerDay: null,
+        dayType: "daily", basis: "official", observedOn: "2026-10-01", sourceCodes: ["S09"],
+      }]);
+      expect(rs88!.observations).toEqual([{
+        amountCentavos: 90000, amountHighCentavos: 110000, seatClassText: "Regular aircon", destinationCode: dest,
+        basis: "booking_site", observedAt: "2026-09-01", sourceCodes: ["S09"],
+      }]);
+      expect(rs88!.sourceEvidenceTypes.length).toBeGreaterThan(0);
+    } finally {
+      await publish(revisionId);
     }
   });
 

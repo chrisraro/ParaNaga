@@ -4,6 +4,7 @@
 // database stores; publishing is refused while it has any error (transit.admin_publish_revision).
 // The synthetic guard is src/domain/network/publication.ts (N4) and runs first.
 import { publicationBlockers, type PublishableRow } from "@/domain/network/publication";
+import { manilaDate } from "@/domain/planner/fares";
 
 /**
  * The service area: the same envelope as the database CHECK stop_point_version_in_city (0001),
@@ -50,6 +51,25 @@ export type ValidationFacts = {
   }[];
   routeStops: { variantRef: string; seq: number; distAlongM: number }[];
   shapes: { variantRef: string; traceStatus: string; untracedReason: string | null; measures: { seq: unknown; measureM: unknown }[] }[];
+  /** Since 0029 (IC1): the member regional services and destinations. Absent reads as none. */
+  regionalServices?: {
+    code: string;
+    status: string;
+    mode: string;
+    terminalCode: string | null;
+    /** ISO dates (YYYY-MM-DD); null only on community_mapped. */
+    asOf: string | null;
+    reviewBy: string | null;
+    statusNoteCode: string | null;
+    destinationCodes: string[];
+    /** The distinct evidence_type of the service's sources. */
+    sourceEvidenceTypes: string[];
+    departureCount: number;
+    observationCount: number;
+    observationsWithoutMonth: number;
+  }[];
+  /** serviceCount: member regional services that list the destination. */
+  regionalDestinations?: { code: string; serviceCount: number }[];
 };
 
 export type Severity = "error" | "warning";
@@ -59,6 +79,9 @@ export type Severity = "error" | "warning";
  * approximate path's stop measure is stale and riders' saved trips point at the old spot.
  */
 export const STOP_MOVED_FLAG_M = 50;
+
+/** An operating regional service whose as-of date is older than this many days is flagged as stale. */
+export const REGIONAL_STALE_DAYS = 180;
 
 export const RULES = {
   synthetic: { title: "Synthetic (test) rows", severity: "error" },
@@ -79,6 +102,15 @@ export const RULES = {
   curb_without_evidence: { title: "Curb side recorded without curb position evidence", severity: "kind" },
   retired_stop_in_sequence: { title: "Retired stop still in a route's stop order", severity: "error" },
   stop_moved_far: { title: `Stop moved more than ${STOP_MOVED_FLAG_M} m since the published revision`, severity: "warning" },
+  // IC1 (0029): the intercity "Leaving Naga" facts.
+  regional_not_running_with_facts: { title: "Suspended or discontinued regional service with departures or fares", severity: "error" },
+  regional_operating_without_official_or_news: { title: "Operating regional service with no official or news source", severity: "error" },
+  regional_observation_without_month: { title: "Regional fare observation with no month observed", severity: "error" },
+  regional_review_before_as_of: { title: "Regional service review date before its as-of date", severity: "error" },
+  regional_unknown_destination: { title: "Regional service destination that is not in the revision", severity: "error" },
+  regional_operating_stale: { title: `Operating regional service checked more than ${REGIONAL_STALE_DAYS} days ago`, severity: "warning" },
+  regional_destination_without_service: { title: "Regional destination no service in the revision reaches", severity: "warning" },
+  regional_terminal_without_coordinate: { title: "Regional service terminal with no coordinate in the revision", severity: "warning" },
 } as const satisfies Record<string, { title: string; severity: Severity | "kind" }>;
 
 export type RuleId = keyof typeof RULES;
@@ -131,7 +163,58 @@ type Found = { rule: RuleId; ref: string; message: string };
 /** Statuses that claim more than a source pin (spec 04 §4.6). */
 const PROMOTED = new Set(["documentary", "installed", "field_verified", "published"]);
 
-function findings(facts: ValidationFacts): Found[] {
+/** Statuses under which a regional service runs, and under which it does not (AC-IC2). */
+const REGIONAL_RUNNING = new Set(["operating", "operating_limited"]);
+const REGIONAL_NOT_RUNNING = new Set(["suspended", "discontinued_reported"]);
+const REGIONAL_STATUS_SOURCES = new Set(["official", "news"]);
+
+/** today minus days, both ISO dates (YYYY-MM-DD; calendar arithmetic at UTC midnight). */
+const isoDaysBefore = (today: string, days: number): string =>
+  new Date(Date.parse(`${today}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10);
+
+function regionalFindings(facts: ValidationFacts, today: string): Found[] {
+  const out: Found[] = [];
+  const services = facts.regionalServices ?? [];
+  const destinations = facts.regionalDestinations ?? [];
+  const destinationCodes = new Set(destinations.map((d) => d.code));
+  const terminalCodes = new Set(facts.terminals.map((t) => t.code));
+  const staleBefore = isoDaysBefore(today, REGIONAL_STALE_DAYS);
+
+  for (const s of services) {
+    const ref = `regional service ${s.code}`;
+    const running = REGIONAL_RUNNING.has(s.status);
+    if (REGIONAL_NOT_RUNNING.has(s.status) && (s.departureCount > 0 || s.observationCount > 0)) {
+      out.push({ rule: "regional_not_running_with_facts", ref, message: `The service is ${s.status.replace(/_/g, " ")} but has ${s.departureCount} departures and ${s.observationCount} fare observations.` });
+    }
+    if (running && !s.sourceEvidenceTypes.some((t) => REGIONAL_STATUS_SOURCES.has(t))) {
+      out.push({ rule: "regional_operating_without_official_or_news", ref, message: "An operating status needs an official or news source." });
+    }
+    if (s.observationsWithoutMonth > 0) {
+      out.push({ rule: "regional_observation_without_month", ref, message: `${s.observationsWithoutMonth} fare observations have no month observed.` });
+    }
+    if (s.asOf && s.reviewBy && s.reviewBy < s.asOf) {
+      out.push({ rule: "regional_review_before_as_of", ref, message: `Review date ${s.reviewBy} is before the as-of date ${s.asOf}.` });
+    }
+    const unknown = s.destinationCodes.filter((c) => !destinationCodes.has(c));
+    if (unknown.length > 0) {
+      out.push({ rule: "regional_unknown_destination", ref, message: `Destinations not in the revision: ${unknown.join(", ")}.` });
+    }
+    if (running && s.asOf && s.asOf < staleBefore) {
+      out.push({ rule: "regional_operating_stale", ref, message: `Last checked ${s.asOf}, more than ${REGIONAL_STALE_DAYS} days ago.` });
+    }
+    if (s.terminalCode && !terminalCodes.has(s.terminalCode)) {
+      out.push({ rule: "regional_terminal_without_coordinate", ref, message: `Terminal ${s.terminalCode} has no coordinate in this revision.` });
+    }
+  }
+  for (const d of destinations) {
+    if (d.serviceCount === 0) {
+      out.push({ rule: "regional_destination_without_service", ref: `regional destination ${d.code}`, message: "No regional service in this revision lists this destination." });
+    }
+  }
+  return out;
+}
+
+function findings(facts: ValidationFacts, today: string): Found[] {
   const out: Found[] = [];
 
   // N4's synthetic guard over every member that exists.
@@ -219,12 +302,14 @@ function findings(facts: ValidationFacts): Found[] {
       out.push({ rule: "stop_moved_far", ref, message: `Moved ${Math.round(s.movedM)} m; check its route's approximate path and the reason given.` });
     }
   }
+  out.push(...regionalFindings(facts, today));
   return out;
 }
 
-export function validateRevision(facts: ValidationFacts): ValidationReport {
+/** today: the Manila date (YYYY-MM-DD) the staleness rule counts from; injectable for tests. */
+export function validateRevision(facts: ValidationFacts, today: string = manilaDate(new Date())): ValidationReport {
   const kind = facts.revision.kind;
-  const all = findings(facts).map((f) => ({ ...f, severity: severityOf(f.rule, kind) }));
+  const all = findings(facts, today).map((f) => ({ ...f, severity: severityOf(f.rule, kind) }));
   const ids = Object.keys(RULES) as RuleId[];
   const rules = ids.map((id) => ({ id, title: RULES[id].title, severity: severityOf(id, kind), count: all.filter((f) => f.rule === id).length }));
   const issues = ids.flatMap((id) => all.filter((f) => f.rule === id).slice(0, ISSUES_PER_RULE));

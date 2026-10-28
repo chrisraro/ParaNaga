@@ -36,6 +36,12 @@ describe("classifyRequest: navigations", () => {
     expect(SHELL_PATHS).toEqual(expect.arrayContaining(["/app/help/how-times-are-estimated", "/app/help/vehicle-types-in-naga", "/app/help/sources"]));
   });
 
+  it("serves the Leaving Naga guide (IC1) as a static shell, whatever the destination query", () => {
+    expect(classifyRequest(nav("/app/leaving"))).toEqual({ kind: "shell", path: "/app/leaving" });
+    expect(classifyRequest(nav("/app/leaving?to=D-LEGAZPI"))).toEqual({ kind: "shell", path: "/app/leaving" });
+    expect(RSC_WARM_PATHS).toContain("/app/leaving");
+  });
+
   it("sends any other navigation to the network, with /offline as the fallback", () => {
     for (const path of [`/app/stops/${REV}`, "/app/routes/R8-A", "/"]) {
       expect(classifyRequest(nav(path)), path).toEqual({ kind: "navigate" });
@@ -71,6 +77,18 @@ describe("classifyRequest: runtime data caches", () => {
     expect(classifyRequest(req(`/api/v1/network/walk-graph/${REV}/x`))).toEqual({ kind: "network-only" });
     expect(cacheName("walk-graph", "b1")).toBe("pn-walk-graph-b1");
     expect(outdatedCaches([cacheName("walk-graph", "b1"), "pn-walk-graph-b0"], "b1")).toEqual(["pn-walk-graph-b0"]);
+  });
+
+  it("caches a revision's intercity guide CacheFirst in its own cache, 3 revisions (IC1)", () => {
+    expect(classifyRequest(req(`/api/v1/network/intercity/${REV}`))).toEqual({ kind: "cache-first", cache: "intercity" });
+    expect(classifyRequest(req("/api/v1/network/intercity/not-a-uuid"))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req("/api/v1/network/intercity"))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req(`/api/v1/network/intercity/${REV}/x`))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req(`/api/v1/network/intercity/${REV}?v=2`))).toEqual({ kind: "network-only" });
+    expect(classifyRequest(req(`/api/v1/network/intercity/${REV}`, { method: "POST" }))).toEqual({ kind: "network-only" });
+    expect(revisionsKept("intercity")).toBe(3);
+    expect(cacheName("intercity", "b1")).toBe("pn-intercity-b1");
+    expect(outdatedCaches([cacheName("intercity", "b1"), "pn-intercity-b0"], "b1")).toEqual(["pn-intercity-b0"]);
   });
 
   it("keeps fewer walk graph revisions than the other data caches (its size)", () => {
@@ -244,6 +262,7 @@ describe("acceptHandoff", () => {
     expect(ok(`/api/v1/network/search-places/${REV}`)?.cache).toBe("search-places");
     expect(ok(`/api/v1/network/lines/${REV}`)?.cache).toBe("lines");
     expect(ok(`/api/v1/network/walk-graph/${REV}`)?.cache).toBe("walk-graph");
+    expect(ok(`/api/v1/network/intercity/${REV}`)?.cache).toBe("intercity");
     expect(ok("/api/v1/network/head", "public, s-maxage=30")).toEqual({ url: `${ORIGIN}/api/v1/network/head`, body: "{}", cacheControl: "public, s-maxage=30", cache: "head" });
   });
 
