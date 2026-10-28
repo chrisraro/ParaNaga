@@ -24,12 +24,11 @@
 // notes, "… time not estimated", and "I've arrived" (needs location when it is the last step).
 import { en, type Dict } from "@/i18n/dict";
 import { STALE_MS, type LocationFix } from "../geo/location-fix";
-import { decodePolyline } from "../geo/polyline";
 import { directionText, fareChipText, formatDistance, freeAlightText } from "../trip/present";
 import { estimateOption, type EtaLeg, type EtaOptionInput } from "../eta/eta";
 import { formatLeg, formatRemaining } from "../eta/format";
-import { ARRIVE_NEAR_M, paraSuggested, pathRideProgress, usableFix, walkProgress, type PathRideProgress, type WalkProgress } from "./progress";
-import { reduceSession, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
+import { ARRIVE_NEAR_M, paraSuggested, usableFix, walkProgress, type WalkProgress } from "./progress";
+import { reduceSession, ridePathProgress, sessionSteps, type GuidanceEvent, type GuidanceSession, type RideState } from "./session";
 import {
   type GuidanceStep,
   type GuidanceTrip,
@@ -317,14 +316,6 @@ function walkView(session: GuidanceSession, step: WalkToBoardStep | TransferStep
   };
 }
 
-/** Progress along the Lines path for a pinless ride whose path is on the phone; null otherwise. */
-function pathProgress(trip: GuidanceTrip, step: RideStep, fix: LocationFix | null, now: number): PathRideProgress | null {
-  const path = step.pinned ? undefined : trip.ridePaths?.[step.ride.variantId];
-  const m = step.stopMeasuresM;
-  if (!path || !m) return null;
-  return pathRideProgress(decodePolyline(path.encoded), path.isCircuit, m[0]!, m[m.length - 1]!, fix, now);
-}
-
 function rideView(session: GuidanceSession, ride: RideState, step: RideStep, total: number, fix: LocationFix | null, now: number, copy: GuidanceCopy, shared: SharedCopy): RideView {
   const alightIndex = step.stops.length - 1;
   // A GPS-backed count only while GPS still supports it (countLost: the jeepney is past the window).
@@ -334,7 +325,7 @@ function rideView(session: GuidanceSession, ride: RideState, step: RideStep, tot
   const alight = step.alight.label;
   const chip = step.ride.routeChip;
   const remainingTime = rideRemainingTime(session.trip, step, ride, now, copy, shared);
-  const onPath = pathProgress(session.trip, step, fix, now);
+  const onPath = ridePathProgress(session.trip, step, fix, now, ride.pathM ?? null);
 
   let title: string;
   if (ride.paraAcknowledged) title = copy.paraAckTitle;

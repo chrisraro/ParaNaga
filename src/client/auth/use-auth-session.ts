@@ -49,7 +49,7 @@ export function useAuthSession() {
 
   const signOut = useCallback(async () => {
     try {
-      const client = getAuthClient();
+      const client = await getAuthClient();
       if (client?.signOut) {
         await client.signOut();
       } else {

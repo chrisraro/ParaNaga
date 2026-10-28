@@ -53,4 +53,12 @@ describe("rate limiter key generation", () => {
 
     expect(keyMin).not.toBe(keyDay);
   });
+
+  it("groups guest IPv6 addresses by /64, so rotating within a prefix shares one bucket", () => {
+    const guest = (ip: string) =>
+      getRateLimitKey("plan:min", new Request("http://localhost/api/v1/plan", { headers: { "x-forwarded-for": ip } }), null);
+    expect(guest("2001:db8:1:2::1")).toBe(guest("2001:db8:1:2:ffff:abcd:1234:9"));
+    expect(guest("2001:db8:1:2::1")).not.toBe(guest("2001:db8:1:3::1"));
+    expect(guest("::ffff:203.0.113.195")).toBe(guest("203.0.113.195"));
+  });
 });

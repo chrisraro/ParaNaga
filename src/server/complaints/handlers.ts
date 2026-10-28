@@ -198,7 +198,7 @@ export function getMyEvidenceUrl(request: Request, complaintId: string, evidence
     if (found === "rate_limited") throw tooManyRequests();
     if (found === "step_up") throw stepUpRequired();
     if (!found) throw notFound("Not found.");
-    const url = await getStorage().createPresignedDownload(found.bucket, found.object_key, EVIDENCE_URL_TTL_S);
+    const url = await getStorage().createPresignedDownload(found.bucket, found.object_key, EVIDENCE_URL_TTL_S, { attachment: true });
     return json(evidenceUrlResponseSchema.parse({ url, expiresInSeconds: EVIDENCE_URL_TTL_S }), requestId);
   });
 }

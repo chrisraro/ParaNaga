@@ -41,8 +41,9 @@ export interface StoragePort {
 
   /**
    * Reads object bytes from storage (for magic bytes, hash, and processing).
+   * With `maxBytes`, a larger object is refused (null) before its body is buffered.
    */
-  getObject(bucket: string, key: string): Promise<Uint8Array | null>;
+  getObject(bucket: string, key: string, maxBytes?: number): Promise<Uint8Array | null>;
 
   /**
    * Copies object from source to destination (e.g. quarantine to public/private).

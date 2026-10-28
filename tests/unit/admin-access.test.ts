@@ -10,9 +10,13 @@ import { ROLES } from "@/domain/auth/permissions";
 const state = vi.hoisted(() => ({
   user: null as { id: string; name: string; roles: string[] } | null,
   cookie: undefined as string | undefined,
+  authAt: new Date() as Date | null,
 }));
 
-vi.mock("@/server/auth/session", () => ({ getCurrentUser: async () => state.user }));
+vi.mock("@/server/auth/session", () => ({
+  getCurrentUser: async () => state.user,
+  getAuthSession: async () => (state.user ? { userId: state.user.id, sessionId: "sess-1", email: null, authenticatedAt: state.authAt } : null),
+}));
 vi.mock("@/server/auth/neon", () => ({ neonAuth: () => null }));
 vi.mock("next/headers", () => ({
   cookies: async () => ({ get: (name: string) => (name === "pn-e2e-admin-roles" && state.cookie !== undefined ? { value: state.cookie } : undefined) }),
@@ -29,6 +33,7 @@ const { proxy } = await import("@/proxy");
 beforeEach(() => {
   state.user = null;
   state.cookie = undefined;
+  state.authAt = new Date();
 });
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -80,6 +85,17 @@ describe("server guard", () => {
     await expect(requireStaffAction("complaint.review")).rejects.toThrow(/404/);
     for (const user of [null, { id: "c", name: "C", roles: ["commuter"] }, { id: "x", name: "X", roles: ["commuter", "contributor"] }, { id: "s", name: "S", roles: [] }]) {
       state.user = user;
+      expect(await getStaffUser()).toBeNull();
+      await expect(requireStaffPage()).rejects.toThrow(/404/);
+    }
+  });
+
+  it("treats a staff session signed in over 12 hours ago as signed out (spec 05 §5.4)", async () => {
+    state.user = { id: "a", name: "A", roles: ["commuter", "admin"] };
+    state.authAt = new Date(Date.now() - 11 * 3_600_000);
+    expect((await getStaffUser())?.id).toBe("a");
+    for (const authAt of [new Date(Date.now() - 12 * 3_600_000 - 60_000), null]) {
+      state.authAt = authAt;
       expect(await getStaffUser()).toBeNull();
       await expect(requireStaffPage()).rejects.toThrow(/404/);
     }

@@ -1,7 +1,7 @@
 // Translation guard tests (ADR 011, plan §1.7, task T3). Each check is a small function run on the
 // real dictionaries and, once, on a broken fixture to prove it would catch the mistake.
 // A missing Filipino key is a type error (`fil: Dict`), proven by the @ts-expect-error below.
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { en, type DeepPartial, type Dict } from "@/i18n/dict";
@@ -316,5 +316,16 @@ describe("Bikol gate", () => {
     const file = path.resolve("docs/i18n/ledger-bcl.json");
     const ledger = existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as LedgerRow[]) : null;
     expect(bikolGateProblems(BIKOL_ENABLED, EN, BCL, ledger)).toEqual([]);
+  });
+});
+
+describe("no sentence hard-coded in the saved client code", () => {
+  it("user-facing lines live in the dictionaries", () => {
+    const dir = path.join(process.cwd(), "src/client/saved");
+    for (const file of readdirSync(dir)) {
+      const lines = readFileSync(path.join(dir, file), "utf8").split(String.fromCharCode(10));
+      const code = lines.filter((l) => !/^\s*(\/\/|\/?\*)/.test(l)).join(" ");
+      expect(code, file).not.toMatch(/"[A-Z][a-z]+( [a-z]+)+\."/);
+    }
   });
 });

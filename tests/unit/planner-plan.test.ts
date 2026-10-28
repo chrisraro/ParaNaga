@@ -217,6 +217,25 @@ describe("planningNetwork memo", () => {
   });
 });
 
+describe("planTrip: cached network and walks give identical plans", () => {
+  const trips: [ReturnType<typeof at>, ReturnType<typeof at>][] = [
+    [at(2100, -50), at(4050, 2000)],
+    [at(2400, 300), at(2850, 300)],
+    [at(2100, -50), at(3000, 1500)],
+  ];
+  it("the same request twice, and a fresh network, plan byte-identically with and without streets", () => {
+    for (const net of [NET, { lines, streets: null }]) {
+      for (const [o, d] of trips) {
+        const fresh = JSON.stringify(plan(o, d, net, TEN, { ...snap }));
+        const first = JSON.stringify(plan(o, d, net));
+        const again = JSON.stringify(plan(o, d, net));
+        expect(again).toBe(first);
+        expect(first).toBe(fresh);
+      }
+    }
+  });
+});
+
 describe("planTrip: properties", () => {
   it("≤ 6 options in order walk → jeepney → tricycle → padyak, unique ids, walks within caps, deterministic", () => {
     const point = fc.record({ e: fc.integer({ min: -200, max: 4000 }), n: fc.integer({ min: -200, max: 400 }) }).map(({ e, n }) => at(e, n));

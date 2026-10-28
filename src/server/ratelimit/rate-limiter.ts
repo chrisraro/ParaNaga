@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import { ipAddress } from "@vercel/functions";
 import type { Db } from "@/server/db/context";
 import { serverEnv } from "@/server/env";
+import { rateLimitAddress } from "@/domain/places/google";
 
 export interface RateLimitConfig {
   prefix: string;
@@ -57,7 +58,8 @@ export function getRateLimitKey(
   const salt = env.NEON_AUTH_COOKIE_SECRET ?? "paranaga-guest-ratelimit-salt";
   const ip = ipAddress(request) ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
   // IP only: a user-agent in the key would let a guest reset their limit by changing it.
-  const raw = `${prefix}|guest|${ip}|${salt}`;
+  // IPv6 by /64, so rotating addresses inside one subscriber prefix does not reset the limit.
+  const raw = `${prefix}|guest|${rateLimitAddress(ip)}|${salt}`;
   return createHash("sha256").update(raw).digest("hex");
 }
 

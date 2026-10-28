@@ -29,11 +29,15 @@ export class S3StorageAdapter implements StoragePort {
   async createPresignedUpload(
     bucket: string,
     key: string,
-    _expectedBytes: number,
+    expectedBytes: number,
     mime?: string,
     expiresInSeconds: number = 900,
   ): Promise<PresignedUpload> {
-    const url = this.signUrl("PUT", bucket, key, expiresInSeconds, mime);
+    // Spec 05 §5.8: the exact size and the type are part of the signature, so the URL accepts
+    // nothing else (the browser sets Content-Length from the body; clients send the Content-Type).
+    const signed: Record<string, string> = { "content-length": String(expectedBytes) };
+    if (mime) signed["content-type"] = mime;
+    const url = this.signUrl("PUT", bucket, key, expiresInSeconds, signed);
     return {
       url,
       method: "PUT",
@@ -50,7 +54,7 @@ export class S3StorageAdapter implements StoragePort {
   ): Promise<string> {
     // response-content-disposition is part of the signed query: the object downloads as a file
     // (spec 05 §5.8, evidence originals), never renders in the browser.
-    return this.signUrl("GET", bucket, key, expiresInSeconds, undefined, options.attachment ? { "response-content-disposition": "attachment" } : {});
+    return this.signUrl("GET", bucket, key, expiresInSeconds, {}, options.attachment ? { "response-content-disposition": "attachment" } : {});
   }
 
   async headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null> {
@@ -67,12 +71,17 @@ export class S3StorageAdapter implements StoragePort {
     }
   }
 
-  async getObject(bucket: string, key: string): Promise<Uint8Array | null> {
+  async getObject(bucket: string, key: string, maxBytes?: number): Promise<Uint8Array | null> {
     const url = this.getUrl(bucket, key);
     const headers = this.signedHeaders("GET", bucket, key);
     try {
       const res = await fetch(url, { method: "GET", headers });
       if (!res.ok) return null;
+      // Refuse an oversized (or unsized) body before buffering it: the object can change after a HEAD.
+      if (maxBytes !== undefined && !(Number(res.headers.get("content-length")) <= maxBytes)) {
+        await res.body?.cancel();
+        return null;
+      }
       const buf = await res.arrayBuffer();
       return new Uint8Array(buf);
     } catch {
@@ -132,7 +141,7 @@ export class S3StorageAdapter implements StoragePort {
     bucket: string,
     key: string,
     expiresInSeconds: number,
-    _mime?: string,
+    signedHeaders: Record<string, string> = {},
     extraQuery: Record<string, string> = {},
   ): string {
     const now = new Date();
@@ -145,7 +154,10 @@ export class S3StorageAdapter implements StoragePort {
     u.searchParams.set("X-Amz-Credential", `${this.accessKeyId}/${credentialScope}`);
     u.searchParams.set("X-Amz-Date", amzDate);
     u.searchParams.set("X-Amz-Expires", expiresInSeconds.toString());
-    u.searchParams.set("X-Amz-SignedHeaders", "host");
+    const headers: Record<string, string> = { ...signedHeaders, host: u.host };
+    const headerKeys = Object.keys(headers).sort();
+    const signedHeadersList = headerKeys.join(";");
+    u.searchParams.set("X-Amz-SignedHeaders", signedHeadersList);
     for (const [k, v] of Object.entries(extraQuery)) u.searchParams.set(k, v);
 
     // Canonical query string must be sorted by key
@@ -154,8 +166,8 @@ export class S3StorageAdapter implements StoragePort {
       .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
       .join("&");
 
-    const canonicalHeaders = `host:${u.host}\n`;
-    const canonicalRequest = `${method}\n${u.pathname}\n${canonicalQuery}\n${canonicalHeaders}\nhost\nUNSIGNED-PAYLOAD`;
+    const canonicalHeaders = headerKeys.map((k) => `${k}:${headers[k]?.trim()}\n`).join("");
+    const canonicalRequest = `${method}\n${u.pathname}\n${canonicalQuery}\n${canonicalHeaders}\n${signedHeadersList}\nUNSIGNED-PAYLOAD`;
 
     const stringToSign = `AWS4-HMAC-SHA256\n${amzDate}\n${credentialScope}\n${createHash("sha256").update(canonicalRequest).digest("hex")}`;
     const signingKey = this.getSignatureKey(this.secretAccessKey, dateStamp, this.region, "s3");
@@ -243,9 +255,9 @@ export class MemoryStorageAdapter implements StoragePort {
     return { bytes: obj.data.byteLength, mime: obj.mime };
   }
 
-  async getObject(bucket: string, key: string): Promise<Uint8Array | null> {
+  async getObject(bucket: string, key: string, maxBytes?: number): Promise<Uint8Array | null> {
     const obj = this.objects.get(`${bucket}:${key}`);
-    return obj ? obj.data : null;
+    return obj && (maxBytes === undefined || obj.data.byteLength <= maxBytes) ? obj.data : null;
   }
 
   async copyObject(

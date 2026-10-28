@@ -35,7 +35,8 @@
 //  - A ride with a Lines path (pinless rides boarding/alighting at free points, plan E): `pathRideProgress`
 //    projects the fix onto the ride's slice of the path, [board, alight] in path order (wrapping across
 //    the start on a circuit): remaining = alight − current. More than PATH_OFF_M from the slice reads
-//    "off path" (the jeepney may use another street), never progress. Stateless per fix.
+//    "off path" (the jeepney may use another street), never progress. Where an out-and-back slice passes the same
+//    place twice, the last measure (kept by the session) picks the pass at or after it.
 import { compass8, initialBearingDegrees, type Compass8 } from "../geo/bearing";
 import { haversineMeters } from "../geo/geometry";
 import { projectOnLine } from "../geo/measure";
@@ -196,14 +197,15 @@ export function rideProgress(stops: readonly LatLng[], memory: RideMemory, fix: 
 export const PATH_OFF_M = 100;
 /** "Get ready" once this little riding is left. */
 export const GET_READY_M = 300;
-/** Projections within this much of the nearest one count as the same place (the earliest pass wins). */
+/** Projections within this much of the nearest one count as the same place (the earliest pass at or after the last measure wins). */
 export const SAME_PLACE_M = 25;
 
-export type PathRideProgress = { offPath: true; distM: number } | { offPath: false; remainingM: number; getReady: boolean };
+export type PathRideProgress = { offPath: true; distM: number } | { offPath: false; remainingM: number; getReady: boolean; measureM: number };
 
 /**
  * Progress of a ride along `path` from measure `boardM` to `alightM` (path order; on a circuit the ride may
  * cross the path's start, and an alight measure past the length is read modulo it). Null without a usable fix.
+ * `lastM`: the measure of the previous on-path fix (null at first), so a later pass is not read as the earlier one.
  */
 export function pathRideProgress(
   path: readonly LatLng[],
@@ -212,6 +214,7 @@ export function pathRideProgress(
   alightM: number,
   fix: LocationFix | null,
   now: number,
+  lastM: number | null = null,
 ): PathRideProgress | null {
   if (!fix || !usableFix(fix, now) || path.length < 2) return null;
   const cum = [0];
@@ -235,10 +238,13 @@ export function pathRideProgress(
   }
   if (candidates.length === 0) return null;
   // An out-and-back slice passes the same place twice: GPS noise must not jump to the later pass, so
-  // among projections about as near as the nearest, the earliest measure (least progress) wins.
+  // among projections about as near as the nearest, the earliest measure (least progress) at or after the
+  // last measure wins (the ride never goes back), else the earliest.
   const nearest = Math.min(...candidates.map((x) => x.distM));
-  const best = candidates.filter((x) => x.distM <= nearest + SAME_PLACE_M).reduce((a, b) => (b.m < a.m ? b : a));
+  const near = candidates.filter((x) => x.distM <= nearest + SAME_PLACE_M);
+  const ahead = lastM === null ? [] : near.filter((x) => x.m >= lastM - SAME_PLACE_M);
+  const best = (ahead.length > 0 ? ahead : near).reduce((a, b) => (b.m < a.m ? b : a));
   if (best.distM > PATH_OFF_M) return { offPath: true, distM: Math.round(best.distM) };
   const remainingM = Math.max(0, Math.round(end - best.m));
-  return { offPath: false, remainingM, getReady: remainingM <= GET_READY_M };
+  return { offPath: false, remainingM, getReady: remainingM <= GET_READY_M, measureM: best.m };
 }

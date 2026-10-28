@@ -13,11 +13,12 @@ import {
 import { validateRevision } from "@/domain/admin/validation";
 import { parseUuidParam } from "@/domain/api/schemas";
 import { can, type Action } from "@/domain/auth/permissions";
-import { authedRoute, badRequest, CACHE, conflict, forbidden, notFound, readJsonBody, stepUpRequired, tooManyRequests, unavailable } from "@/server/api/http";
+import { authedRoute, badRequest, CACHE, conflict, forbidden, notFound, readJsonBody, stepUpRequired, tooManyRequests, unauthorized, unavailable } from "@/server/api/http";
 import { getCurrentUser, type CurrentUser } from "@/server/auth/session";
 import { applyStepUp, currentStepUpKey, isStepUpError } from "@/server/auth/step-up";
 import { withRequestContext, type Db } from "@/server/db/context";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
+import { isStaffSessionFresh } from "./access";
 import { getPublishedRevision } from "@/server/repos/network-repo";
 import { createDraft, listRevisions, publishRevision, readCoverage, readDashboard, readValidationFacts, recordValidation } from "./repo";
 import { commitPayload, planAdminImport } from "@/domain/admin/imports";
@@ -75,6 +76,8 @@ export function adminRoute(request: Request, route: string, action: Action | nul
   return authedRoute(request, route, async (requestId) => {
     const user = await getCurrentUser();
     if (!user || !canEnterAdmin(user.roles) || (action && !can(user.roles, action))) throw notFound(NOT_FOUND);
+    // Spec 05 §5.4: a staff sign-in counts for 12 hours; after that, sign in again (no data call).
+    if (!(await isStaffSessionFresh(user.id))) throw unauthorized("Your staff sign-in is over 12 hours old. Sign in again to continue.");
     const db: Ctx["db"] = (fn, readOnly = false) => withRequestContext({ userId: user.id, requestId }, fn, { readOnly });
     try {
       return await run({ user, requestId, db });

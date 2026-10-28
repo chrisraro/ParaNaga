@@ -56,13 +56,19 @@ export function viaChipText(o: Pick<PlanOptionDto, "via"> & { legs?: readonly { 
 
 /**
  * Roadside advice for a jeepney option: tells commuters which side of a two-way street to board on
- * (e.g. Westbound side to Centro vs Eastbound side to Diversion), or null.
+ * (e.g. Westbound side to Centro vs Eastbound side to Diversion), or null. The direction is the variant's known loop
+ * direction from the plan's `variants`; unknown gives null.
  */
-export function optionRoadside(o: Pick<PlanOptionDto, "legs" | "rides" | "via">, copy: Dict["trip"] = en.trip): RoadsideInfo | null {
+export function optionRoadside(
+  o: Pick<PlanOptionDto, "legs" | "rides" | "via">,
+  variants: PlanResponse["variants"],
+  copy: Dict["trip"] = en.trip,
+): RoadsideInfo | null {
   if (isAccessOption(o) || o.rides !== 1 || o.via !== undefined) return null;
   const ride = o.legs?.find((l): l is RideLegDto => l.kind === "ride");
   if (!ride || !ride.routeCode) return null;
-  return getRoadsideAdvice(ride.routeCode, ride.board, ride.alight, copy.roadside);
+  const direction = variants.find((v) => v.variantId === ride.variantId)?.loopDirection ?? null;
+  return getRoadsideAdvice(ride.routeCode, direction, ride.board, copy.roadside);
 }
 
 type PlanTerminals = { tricycleTerminals?: PlanOptionDto["tricycleTerminals"] };

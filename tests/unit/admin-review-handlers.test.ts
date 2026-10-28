@@ -41,7 +41,10 @@ const flat = (q: unknown): unknown[] =>
     typeof c === "object" && c && "value" in c ? [] : typeof c === "object" && c && "queryChunks" in c ? flat(c) : [c],
   );
 
-vi.mock("@/server/auth/session", () => ({ getCurrentUser: async () => state.user }));
+vi.mock("@/server/auth/session", () => ({
+  getCurrentUser: async () => state.user,
+  getAuthSession: async () => (state.user ? { userId: state.user.id, sessionId: "sess-1", email: null, authenticatedAt: new Date() } : null),
+}));
 
 const QUEUE = {
   draft: { id: DRAFT, label: "draft-x" },

@@ -2,7 +2,8 @@ import "server-only";
 import type { Lines } from "@/domain/api/schemas";
 import { parseWalkGraph, type WalkGraph } from "@/domain/walk/walk-graph";
 import type { Db } from "@/server/db/context";
-import { getLines, getWalkGraphMeta, getWalkGraphPayload } from "@/server/repos/network-repo";
+import { isCompleteSnapshot, type NetworkSnapshot } from "@/domain/api/schemas";
+import { getLines, getSnapshot, getWalkGraphMeta, getWalkGraphPayload } from "@/server/repos/network-repo";
 
 // The planner's geometry for the published revision: its approximate paths (Lines) and street graph.
 // Both are immutable per revision, so the decoded pair is kept in memory per revision id (at most
@@ -54,7 +55,27 @@ export function planNetwork(db: Db, revisionId: string): Promise<PlanNetwork> {
   return pending;
 }
 
+const snapshots = new Map<string, Promise<NetworkSnapshot | null>>();
+
+/**
+ * The published snapshot of `revisionId` (immutable per revision), read once; the caller checks freshness with
+ * getPublishedRevision. A failed, missing or incomplete read is not kept. Callers must not mutate it.
+ */
+export function publishedSnapshot(db: Db, revisionId: string): Promise<NetworkSnapshot | null> {
+  const hit = snapshots.get(revisionId);
+  if (hit) return hit;
+  const pending = getSnapshot(db, revisionId);
+  snapshots.set(revisionId, pending);
+  const drop = () => {
+    if (snapshots.get(revisionId) === pending) snapshots.delete(revisionId);
+  };
+  pending.then((s) => (s && isCompleteSnapshot(s) ? undefined : drop()), drop);
+  while (snapshots.size > MAX_REVISIONS) snapshots.delete(snapshots.keys().next().value!);
+  return pending;
+}
+
 /** Tests only. */
 export function resetPlanNetworkForTests(): void {
   cache.clear();
+  snapshots.clear();
 }

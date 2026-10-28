@@ -110,6 +110,16 @@ function modeDirs(f: number, mode: StreetMode): number {
 
 /** Directions per edge for a mode at `now` (restricted tricycle edges closed outside their lifted window). */
 function passable(g: WalkGraph, { mode, now }: StreetOptions): Uint8Array {
+  if (mode === "tricycle") return computePassable(g, mode, now);
+  // Walk and padyak do not depend on `now`: kept per graph and mode (read-only to every caller).
+  let kept = passableByMode.get(g);
+  if (!kept) passableByMode.set(g, (kept = {}));
+  return (kept[mode] ??= computePassable(g, mode, now));
+}
+
+const passableByMode = new WeakMap<WalkGraph, Partial<Record<StreetMode, Uint8Array>>>();
+
+function computePassable(g: WalkGraph, mode: StreetMode, now: Date): Uint8Array {
   const lifted = g.rules.map((r) => mode === "tricycle" && ruleLifted(r, now));
   const dirs = new Uint8Array(g.edgeCount);
   for (let e = 0; e < g.edgeCount; e++) {

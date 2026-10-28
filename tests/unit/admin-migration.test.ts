@@ -652,3 +652,61 @@ describe("0026: the definer can reach every table its functions touch", () => {
     });
   }
 });
+
+// ================================================================ 0027: two-person rule checks the last editor (audit I2)
+
+describe("0027: the publisher must differ from the revision's last editor (spec 05 §5.3)", () => {
+  const file = path.join(DIR, "0027_revision_last_editor.sql");
+  const SQL27 = strip(readFileSync(file, "utf8"));
+  const fns27 = [...SQL27.matchAll(/create or replace function ([\w.]+)\(([^)]*)\)([\s\S]*?)\$\$([\s\S]*?)\$\$;/g)].map((m) => ({
+    name: m[1]!,
+    header: m[3]!,
+    body: m[4]!,
+  }));
+  const fn27 = (name: string) => fns27.find((f) => f.name === name)!;
+
+  it("adds transit.revision.last_edited_by and lets only the definer write that column (RLS unchanged)", () => {
+    expect(SQL27).toMatch(/alter table transit\.revision add column last_edited_by text;/);
+    expect(SQL27).toContain("grant update (last_edited_by) on transit.revision to paranaga_definer;");
+    expect(SQL27).not.toMatch(/create policy|drop policy|row level security/);
+    expect(SQL27).not.toMatch(/grant (?!execute)[^;]*to [^;]*paranaga_app/);
+  });
+
+  it("every draft edit goes through admin_open_draft, which records the caller as the last editor (fails closed without one)", () => {
+    const b = fn27("transit.admin_open_draft").body;
+    expect(fn27("transit.admin_open_draft").header).not.toContain("security definer");
+    expect(fn27("transit.admin_open_draft").header).toMatch(/set search_path = pg_catalog,[\w, ]*pg_temp\s/);
+    expect(b).toContain("core.current_user_id()");
+    expect(b).toMatch(/update transit\.revision set last_edited_by = v_user where id = v_draft;/);
+    expect(b).toContain("errcode = '42501'");
+    expect(SQL27).toContain("alter function transit.admin_open_draft() owner to paranaga_definer;");
+    expect(SQL27).toContain("revoke execute on function transit.admin_open_draft() from public;");
+    expect(SQL27).not.toMatch(/grant execute on function transit\.admin_open_draft/);
+    // The writers of 0024 and 0025 all reach the draft through it (directly or via admin_draft_stop).
+    const SQL25x = strip(readFileSync(path.join(DIR, "0025_review_moderation.sql"), "utf8"));
+    expect(SQL24).toContain("o_draft := transit.admin_open_draft();");
+    expect(SQL24).toContain("v_draft := transit.admin_open_draft();");
+    expect(SQL25x).toContain("v_draft := transit.admin_open_draft();");
+  });
+
+  it("publish refuses when the publisher is the last editor (or the creator of an unedited draft)", () => {
+    const f = fn27("transit.admin_publish_revision");
+    expect(f.header).toContain("security definer");
+    expect(f.header).toMatch(/set search_path = pg_catalog,[\w, ]*pg_temp\s/);
+    expect(f.body).toContain("coalesce(v_rev.last_edited_by, v_rev.created_by) = v_user");
+    expect(f.body).not.toMatch(/and v_rev\.created_by = v_user/);
+    // Everything else in 0023's publish is kept, in the same order.
+    const order = ["transit.admin_assert_staff()", "priv.require_step_up()", "p_expected_published", "membershipHash", "interval '30 minutes'", "publish_requires_second_reviewer", "perform transit.publish_revision(p_revision)"];
+    const at = order.map((s) => f.body.indexOf(s));
+    expect(at.every((i) => i >= 0), JSON.stringify(at)).toBe(true);
+    expect([...at].sort((x, y) => x - y)).toEqual(at);
+    expect(SQL27).toContain("alter function transit.admin_publish_revision(uuid, uuid, text) owner to paranaga_definer;");
+    expect(SQL27).toContain("revoke execute on function transit.admin_publish_revision(uuid, uuid, text) from public;");
+    expect(grantsOf(SQL27, "transit.admin_publish_revision")).toEqual(["paranaga_app"]);
+  });
+
+  it("gives schema CREATE to the definer only for the length of the migration", () => {
+    expect(SQL27.trimStart().startsWith("grant create on schema transit to paranaga_definer;")).toBe(true);
+    expect(SQL27.trimEnd().endsWith("revoke create on schema transit from paranaga_definer;")).toBe(true);
+  });
+});

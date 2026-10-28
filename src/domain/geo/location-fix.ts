@@ -39,6 +39,7 @@ export function pickBetterFix(
   now: number,
 ): LocationFix {
   if (current === null || isStale(current, now)) return next;
+  if (isStale(next, now)) return current;
   if (!validAccuracy(next.accuracy)) return current;
   if (!validAccuracy(current.accuracy)) return next;
   if (next.accuracy <= current.accuracy) return next;

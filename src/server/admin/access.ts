@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { canEnterAdmin } from "@/domain/admin/access";
 import { can, isRole, type Action } from "@/domain/auth/permissions";
 import { E2E_ADMIN_ROLES_COOKIE, e2eAdminShellEnabled } from "@/domain/pwa/build-guard";
-import { getCurrentUser, type CurrentUser } from "@/server/auth/session";
+import { getAuthSession, getCurrentUser, type CurrentUser } from "@/server/auth/session";
 
 // Who may see /admin (N5a). Roles come from core.user_role (getCurrentUser, per request); a
 // suspended account has none. Everyone else gets the not-found page, never a hint that the area exists. The
@@ -18,10 +18,29 @@ async function e2eShellUser(): Promise<CurrentUser | null> {
   return roles.length > 0 ? { id: "e2e-shell", name: "E2E", roles } : null;
 }
 
-/** The signed-in staff user of this request, or null. */
+/** Staff must sign in again this long after signing in (spec 05 §5.4: re-authenticate after 12 h). */
+export const STAFF_SESSION_MAX_AGE_MS = 12 * 3_600_000;
+
+/**
+ * True when this request's Neon Auth session belongs to `userId` and was signed in within the last
+ * 12 hours (1 minute of clock skew tolerated). Unknown sign-in time: false (fails closed).
+ */
+export async function isStaffSessionFresh(userId: string, now: Date = new Date()): Promise<boolean> {
+  const session = await getAuthSession();
+  const at = session?.userId === userId ? session.authenticatedAt : null;
+  if (!at) return false;
+  const age = now.getTime() - at.getTime();
+  return age <= STAFF_SESSION_MAX_AGE_MS && age >= -60_000;
+}
+
+/** The signed-in staff user of this request, or null (also null once the sign-in is over 12 h old). */
 export async function getStaffUser(): Promise<CurrentUser | null> {
-  const user = e2eAdminShellEnabled(process.env) ? await e2eShellUser() : await getCurrentUser();
-  return user && canEnterAdmin(user.roles) ? user : null;
+  if (e2eAdminShellEnabled(process.env)) {
+    const shell = await e2eShellUser();
+    return shell && canEnterAdmin(shell.roles) ? shell : null;
+  }
+  const user = await getCurrentUser();
+  return user && canEnterAdmin(user.roles) && (await isStaffSessionFresh(user.id)) ? user : null;
 }
 
 /** For the /admin layout: the staff user, or the not-found page (notFound()). */

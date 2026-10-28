@@ -2,8 +2,13 @@
 // two revisions kept, a failed load not kept.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const repo = vi.hoisted(() => ({ lines: 0, fail: false, graph: null as string | null }));
+const repo = vi.hoisted(() => ({ snaps: 0, snap: { stops: [{}], variants: [{}] } as unknown, lines: 0, fail: false, graph: null as string | null }));
 vi.mock("@/server/repos/network-repo", () => ({
+  getSnapshot: async () => {
+    repo.snaps += 1;
+    if (repo.fail) throw new Error("boom");
+    return repo.snap;
+  },
   getLines: async () => {
     repo.lines += 1;
     if (repo.fail) throw new Error("boom");
@@ -13,11 +18,13 @@ vi.mock("@/server/repos/network-repo", () => ({
   getWalkGraphPayload: async () => repo.graph,
 }));
 
-const { planNetwork, resetPlanNetworkForTests, MAX_REVISIONS } = await import("@/server/repos/network-cache");
+const { publishedSnapshot, planNetwork, resetPlanNetworkForTests, MAX_REVISIONS } = await import("@/server/repos/network-cache");
 const db = {} as never;
 
 beforeEach(() => {
   repo.lines = 0;
+  repo.snaps = 0;
+  repo.snap = { stops: [{}], variants: [{}] };
   repo.fail = false;
   repo.graph = null;
   resetPlanNetworkForTests();
@@ -57,5 +64,33 @@ describe("planNetwork", () => {
     await expect(planNetwork(db, "r1")).rejects.toBeInstanceOf((await import("@/server/repos/network-cache")).NetworkIncomplete);
     repo.graph = null;
     await expect(planNetwork(db, "r1")).resolves.toEqual({ lines: null, streets: null });
+  });
+});
+
+describe("publishedSnapshot", () => {
+  it("reads once per revision, shares concurrent callers, keeps at most two revisions", async () => {
+    const [a, b] = await Promise.all([publishedSnapshot(db, "r1"), publishedSnapshot(db, "r1")]);
+    expect(a).toBe(b);
+    expect(repo.snaps).toBe(1);
+    await publishedSnapshot(db, "r2");
+    await publishedSnapshot(db, "r3");
+    await publishedSnapshot(db, "r1");
+    expect(repo.snaps).toBe(4);
+  });
+
+  it("evicts on error, and never keeps a missing or incomplete snapshot", async () => {
+    repo.fail = true;
+    await expect(publishedSnapshot(db, "r1")).rejects.toThrow("boom");
+    repo.fail = false;
+    await expect(publishedSnapshot(db, "r1")).resolves.toBe(repo.snap);
+    expect(repo.snaps).toBe(2);
+    repo.snap = null;
+    await publishedSnapshot(db, "r2");
+    await publishedSnapshot(db, "r2");
+    expect(repo.snaps).toBe(4);
+    repo.snap = { stops: [], variants: [] };
+    await publishedSnapshot(db, "r3");
+    await publishedSnapshot(db, "r3");
+    expect(repo.snaps).toBe(6);
   });
 });

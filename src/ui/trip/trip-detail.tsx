@@ -195,7 +195,7 @@ function rideSteps(
   const rideNotes = ctx.notes.rides.find((r) => r.legIndex === i)?.notes ?? [];
   const route = routeChipLabel(leg.routeCode, leg.routeName, leg.display);
   const dir = directionText(lookups.direction(leg.variantId), "short", route, t);
-  const roadside = getRoadsideAdvice(leg.routeCode, leg.board, leg.alight, t.roadside);
+  const roadside = getRoadsideAdvice(leg.routeCode, lookups.direction(leg.variantId), leg.board, t.roadside);
   const count = ends.pinned ? ends.stops.length - 1 : null;
   const pathLabel = trace.untraced ? ctx.t.map.untracedRide : translated(PATH_LABEL, en.map, ctx.t.map);
   const etaLeg = estimate?.legs[i];

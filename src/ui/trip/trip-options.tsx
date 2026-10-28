@@ -117,6 +117,7 @@ function OptionCard({
   reason,
   now,
   routes,
+  variants,
 }: {
   option: PlanOptionDto;
   onOpen: (id: string) => void;
@@ -127,6 +128,7 @@ function OptionCard({
   reason?: string | null;
   now: Date;
   routes?: NetworkSnapshot["routes"] | null;
+  variants: PlanResponse["variants"];
 }) {
   const t = useT();
   // The access option rides a jeepney after its tricycle: it keeps the jeepney card (minutes for the walk and ride only).
@@ -139,7 +141,7 @@ function OptionCard({
   const notes = useMemo(() => optionNotesView(option, routes, now, t), [option, routes, now, t]);
   const routeNotes = cardRouteNotes(notes);
   const terminalLines = tricycleTerminalCardLines(option, t.trip);
-  const roadside = optionRoadside(option, t.trip);
+  const roadside = optionRoadside(option, variants, t.trip);
 
   return (
     <li className="pn-trip-li" style={{ ["--i" as string]: Math.min(index, 5) }}>
@@ -280,7 +282,7 @@ export function TripOptions({ data, refreshing = false, onOpen, etaModel, routes
       <FarNote note={data.plan.farNote} options={data.plan.options} />
       <ul id={OPTIONS_LIST_ID} className="pn-trip-list">
         {data.plan.options.map((option, i) => (
-          <OptionCard key={option.id} option={option} onOpen={onOpen} index={i} primary={i === primary} etaModel={etaModel} reason={reason} now={now} routes={routes} />
+          <OptionCard key={option.id} option={option} onOpen={onOpen} index={i} primary={i === primary} etaModel={etaModel} reason={reason} now={now} routes={routes} variants={data.variants} />
         ))}
       </ul>
       {extraNotes.length > 0 ? (

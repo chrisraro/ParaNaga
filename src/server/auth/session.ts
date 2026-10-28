@@ -16,8 +16,11 @@ export const requestId = cache(async (): Promise<string> => {
   return safeRequestId(h.get("x-vercel-id") ?? h.get("x-request-id"));
 });
 
-/** The Neon Auth session behind this request (validated server-side): ids and email, no roles. */
-export type AuthSession = { userId: string; sessionId: string | null; email: string | null };
+/**
+ * The Neon Auth session behind this request (validated server-side): ids, email and when the user
+ * signed in (the session's creation time; a refresh keeps it), no roles.
+ */
+export type AuthSession = { userId: string; sessionId: string | null; email: string | null; authenticatedAt: Date | null };
 
 /** Neon Auth's session for this request, memoized per request; null for guests. Used by step-up. */
 export const getAuthSession = cache(async (): Promise<AuthSession | null> => {
@@ -28,10 +31,13 @@ export const getAuthSession = cache(async (): Promise<AuthSession | null> => {
   if (!user?.id) return null;
   const sessionId: unknown = data?.session?.id;
   const email: unknown = user.email;
+  const createdAt: unknown = data?.session?.createdAt;
+  const authenticatedAt = createdAt == null ? null : new Date(createdAt as string | number | Date);
   return {
     userId: user.id,
     sessionId: typeof sessionId === "string" && sessionId ? sessionId : null,
     email: typeof email === "string" && email ? email : null,
+    authenticatedAt: authenticatedAt && !Number.isNaN(authenticatedAt.getTime()) ? authenticatedAt : null,
   };
 });
 

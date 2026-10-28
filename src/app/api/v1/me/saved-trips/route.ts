@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { z } from "zod";
 import { withRequestContext } from "@/server/db/context";
 import { authorize } from "@/server/auth/authorize";
 import { authedRoute, CACHE, readJsonBody, badRequest, tooManyRequests } from "@/server/api/http";
@@ -137,6 +138,29 @@ async function postSaved(request: Request, requestId: string) {
   });
 }
 
+const idsSchema = z.object({ ids: z.array(z.string().min(1).max(200)).max(50) });
+
+/** Removes the caller's own items by client id (a removal made on a phone); RLS scopes it to the user. */
+async function removeSaved(request: Request, requestId: string) {
+  const user = await authorize("account.saved.sync");
+  const parsed = idsSchema.safeParse(await readJsonBody(request, 16384));
+  if (!parsed.success) throw badRequest("Invalid payload.");
+
+  const allowed = await withRequestContext({ userId: user.id, requestId }, (db) =>
+    checkRateLimit(db, request, RATE_LIMITS.mutationPerMinute, user.id),
+  );
+  if (!allowed) throw tooManyRequests();
+
+  if (parsed.data.ids.length > 0) {
+    await withRequestContext({ userId: user.id, requestId }, (db) =>
+      db.execute(sql`delete from core.saved_trip where user_id = ${user.id} and client_id = any(${sql.param(parsed.data.ids)}::text[])`),
+    );
+  }
+  return Response.json({ ok: true, count: parsed.data.ids.length }, {
+    headers: { "Cache-Control": CACHE.none, "X-Request-Id": requestId },
+  });
+}
+
 /** Every path (no session, bad body, DB error) answers the standard error envelope. */
 export function GET(request: Request): Promise<Response> {
   return authedRoute(request, "saved-trips-get", (requestId) => getSaved(request, requestId));
@@ -144,4 +168,8 @@ export function GET(request: Request): Promise<Response> {
 
 export function POST(request: Request): Promise<Response> {
   return authedRoute(request, "saved-trips-post", (requestId) => postSaved(request, requestId));
+}
+
+export function DELETE(request: Request): Promise<Response> {
+  return authedRoute(request, "saved-trips-delete", (requestId) => removeSaved(request, requestId));
 }

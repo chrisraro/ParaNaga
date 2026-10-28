@@ -191,16 +191,60 @@ export async function removeUnreadable(store: RecordStore): Promise<number> {
   return bad.length;
 }
 
+// Deletes not yet sent to the account (so a sync cannot bring the item back). Kept in the
+// snapshotMeta store (no schema change); a save of the same id cancels its pending delete.
+const PENDING_DELETES_KEY = "pendingDeletes";
+export type PendingDeletes = { places: string[]; trips: string[] };
+const PENDING_KIND = { savedPlaces: "places", savedTrips: "trips" } as const;
+
+function pendingOf(value: unknown): PendingDeletes {
+  const v = (value ?? {}) as Partial<PendingDeletes>;
+  const strings = (a: unknown) => (Array.isArray(a) ? a.filter((x): x is string => typeof x === "string") : []);
+  return { places: strings(v.places), trips: strings(v.trips) };
+}
+
+async function editPending(tx: IDBPTransaction<DeviceDb, StoreNames<DeviceDb>[], "readwrite">, edit: (p: PendingDeletes) => void) {
+  const meta = tx.objectStore("snapshotMeta");
+  const pending = pendingOf(await meta.get(PENDING_DELETES_KEY));
+  edit(pending);
+  await meta.put({ ...pending, v: RECORD_FORMAT }, PENDING_DELETES_KEY);
+}
+
+export async function listPendingDeletes(): Promise<PendingDeletes> {
+  const db = await requireDb();
+  return pendingOf(await db.get("snapshotMeta", PENDING_DELETES_KEY));
+}
+
+/** The account has these deletes: forget them (an id saved again meanwhile was already cancelled). */
+export async function clearPendingDeletes(kind: keyof PendingDeletes, ids: string[]): Promise<void> {
+  const db = await requireDb();
+  const tx = db.transaction(["snapshotMeta"], "readwrite");
+  await Promise.all([editPending(tx, (p) => void (p[kind] = p[kind].filter((id) => !ids.includes(id)))), tx.done]);
+}
+
 async function put<T extends { id: string }>(store: RecordStore, schema: { parse: (v: unknown) => T }, value: T): Promise<void> {
   const record = schema.parse(value);
   const db = await requireDb();
-  await db.put(store, { ...record, v: RECORD_FORMAT }, record.id);
+  const tx = db.transaction([store, "snapshotMeta"], "readwrite");
+  const kind = store === "history" ? null : PENDING_KIND[store];
+  await Promise.all([
+    tx.objectStore(store).put({ ...record, v: RECORD_FORMAT }, record.id),
+    kind ? editPending(tx, (p) => void (p[kind] = p[kind].filter((id) => id !== record.id))) : null,
+    tx.done,
+  ]);
   notify();
 }
 
 async function remove(store: RecordStore, id: string): Promise<void> {
   const db = await requireDb();
-  await db.delete(store, id);
+  const tx = db.transaction([store, "snapshotMeta"], "readwrite");
+  const kind = store === "history" ? null : PENDING_KIND[store];
+  await Promise.all([
+    tx.objectStore(store).delete(id),
+    // Bounded: a guest who never signs in never flushes this list.
+    kind ? editPending(tx, (p) => void (p[kind] = [...p[kind].filter((x) => x !== id), id].slice(-500))) : null,
+    tx.done,
+  ]);
   notify();
 }
 
@@ -229,9 +273,11 @@ export const deleteSavedTrip = (id: string) => remove("savedTrips", id);
 export async function replaceSavedTrip(oldId: string, trip: SavedTrip): Promise<void> {
   const record = savedTripSchema.parse(trip);
   const db = await requireDb();
-  const tx = db.transaction("savedTrips", "readwrite");
-  const writes: Promise<unknown>[] = [tx.store.put({ ...record, v: RECORD_FORMAT }, record.id)];
-  if (oldId !== record.id) writes.push(tx.store.delete(oldId));
+  const tx = db.transaction(["savedTrips", "snapshotMeta"], "readwrite");
+  const trips = tx.objectStore("savedTrips");
+  const writes: Promise<unknown>[] = [trips.put({ ...record, v: RECORD_FORMAT }, record.id)];
+  writes.push(editPending(tx, (p) => void (p.trips = [...p.trips.filter((x) => x !== record.id && x !== oldId), ...(oldId !== record.id ? [oldId] : [])])));
+  if (oldId !== record.id) writes.push(trips.delete(oldId));
   await Promise.all([...writes, tx.done]);
   notify();
 }

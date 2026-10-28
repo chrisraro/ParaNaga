@@ -5,6 +5,7 @@
 // snapshot's fareRules stay scoped to intra-city modes, see INTRA_CITY_FARE_MODES).
 // Always an estimate, always "operator prices may differ"; a missing distance gives rates only.
 import type { FareRuleEstimate } from "../api/schemas";
+import { manilaDate, rulesInForce } from "../planner/fares";
 
 export type RegionalMode = "uv_express" | "bus" | "jeepney";
 
@@ -39,22 +40,24 @@ const join = (...parts: (string | null)[]) => parts.filter((p): p is string => p
 
 /** Distance-based fare of a rule with a base: base + ceil(max(0, km − baseKm)) × increment. */
 function withBase(r: FareRuleEstimate, km: number): number {
-  return r.baseCentavos! + Math.ceil(Math.max(0, km - (r.baseKm ?? 0))) * (r.incrementCentavosPerKm ?? 0);
+  return r.baseCentavos! + Math.ceil(Math.max(0, km - r.baseKm!)) * r.incrementCentavosPerKm!;
 }
+/** A base fare, the distance it covers and a per-km increment: a rule missing any of them is not priced. */
 const hasBase = (r: FareRuleEstimate | undefined): r is FareRuleEstimate =>
-  r !== undefined && r.baseCentavos !== null && r.incrementCentavosPerKm !== null;
+  r !== undefined && r.baseCentavos !== null && r.baseKm !== null && r.incrementCentavosPerKm !== null;
 
 /**
  * The estimate for one regional service: `ruleCodes` are the service's fare rule codes, `rules`
- * the published fare rules (only those listed and published are used).
+ * the published fare rules (only those listed and in force on `now`'s Manila date are used).
  */
 export function regionalFareEstimate(
   distanceKm: number | null,
   mode: RegionalMode,
   ruleCodes: readonly string[],
   rules: readonly FareRuleEstimate[],
+  now: Date = new Date(),
 ): RegionalFareEstimate {
-  const listed = rules.filter((r) => ruleCodes.includes(r.code));
+  const listed = rulesInForce(rules, manilaDate(now)).filter((r) => ruleCodes.includes(r.code));
   const byMode = (m: string) => listed.find((r) => r.modeCode === m);
   const none: RegionalFareEstimate = {
     isEstimate: true, distanceKm, lowCentavos: null, highCentavos: null, text: join("No fare rule on file", DIFFER), ruleCodes: [],

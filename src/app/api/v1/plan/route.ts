@@ -4,8 +4,8 @@ import { planTrip } from "@/domain/planner/plan";
 import { badRequest, CACHE, notFound, publicPost, readJsonBody, tooManyRequests, unavailable } from "@/server/api/http";
 import { withRequestContext } from "@/server/db/context";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
-import { NetworkIncomplete, planNetwork } from "@/server/repos/network-cache";
-import { getPublishedRevision, getSnapshot } from "@/server/repos/network-repo";
+import { NetworkIncomplete, planNetwork, publishedSnapshot } from "@/server/repos/network-cache";
+import { getPublishedRevision } from "@/server/repos/network-repo";
 
 // Provisional trip planning over the published network. The body is two points inside Naga City;
 // it is validated before the database is touched. The snapshot is read in one read-only
@@ -28,7 +28,7 @@ export function POST(request: Request) {
 
     const { snapshot, network } = await withDb(async (db) => {
       const revision = await getPublishedRevision(db);
-      const snapshot = revision ? await getSnapshot(db, revision.revisionId) : null;
+      const snapshot = revision ? await publishedSnapshot(db, revision.revisionId) : null;
       if (!snapshot) return { snapshot: null, network: null };
       if (!isCompleteSnapshot(snapshot)) return { snapshot, network: null };
       return { snapshot, network: await planNetwork(db, snapshot.revision.revisionId).catch((e: unknown) => (e instanceof NetworkIncomplete ? null : Promise.reject(e))) };

@@ -57,7 +57,7 @@ export function SignInScreen() {
     setBusy(true);
     setStatus(null);
     try {
-      const client = getAuthClient() as AuthClientLike | null;
+      const client = (await getAuthClient()) as AuthClientLike | null;
       // Never report success unless the service answered without an error.
       if (!client?.emailOtp?.sendVerificationOtp) {
         fail(null, t.unavailable);
@@ -83,7 +83,7 @@ export function SignInScreen() {
     setBusy(true);
     setStatus(null);
     try {
-      const client = getAuthClient() as AuthClientLike | null;
+      const client = (await getAuthClient()) as AuthClientLike | null;
       if (!client?.signIn?.emailOtp) {
         fail(null, t.unavailable);
         return;
@@ -106,7 +106,7 @@ export function SignInScreen() {
     setBusy(true);
     setStatus(null);
     try {
-      const client = getAuthClient() as AuthClientLike | null;
+      const client = (await getAuthClient()) as AuthClientLike | null;
       if (!client?.signIn?.social) {
         fail(null, t.googleUnavailable);
         return;

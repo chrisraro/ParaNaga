@@ -2,7 +2,8 @@ import "server-only";
 import { timingSafeEqual } from "node:crypto";
 import { serverEnv } from "@/server/env";
 import { safeRequestId } from "@/server/request-id";
-import { runJobBatch } from "@/server/jobs/worker";
+import { withRequestContext } from "@/server/db/context";
+import { enqueueJob, runJobBatch } from "@/server/jobs/worker";
 import { registerDefaultJobHandlers } from "@/server/jobs/handlers";
 
 /**
@@ -38,6 +39,10 @@ export async function GET(request: Request): Promise<Response> {
   registerDefaultJobHandlers();
 
   try {
+    // The orphan media sweep (spec 05 §5.8) recurs with this endpoint; the fixed key keeps one queued.
+    await withRequestContext({ userId: null, requestId }, (db) =>
+      enqueueJob(db, "sweep_orphan_media", {}, { idempotencyKey: "sweep_orphan_media" }),
+    );
     const summary = await runJobBatch({ batchSize: 20 });
     return Response.json(
       { ok: true, summary, requestId },

@@ -1,6 +1,7 @@
 // POST /api/v1/plan request validation and response building (pure, no database).
 import { describe, expect, it } from "vitest";
 import { buildPlanResponse, parsePlanRequest, planOptionSchema, planResponseSchema, type TricycleLegDto } from "@/domain/api/plan";
+import { encodePolyline } from "@/domain/geo/polyline";
 import { isCircuitLine } from "@/domain/planner/paths";
 import { planTrip } from "@/domain/planner/plan";
 import { ringDirection } from "@/domain/trip/present";
@@ -191,7 +192,7 @@ describe("plan response: Increment E compatibility and refinements", () => {
     expect(planResponseSchema.safeParse(seven).success).toBe(false);
     const leg = triLeg as unknown as { path: string | null; basis: string; distanceMeters: number | null; fare: Record<string, unknown> };
     const bad = (l: unknown) => planOptionSchema.safeParse({ ...tricycle, legs: [l] }).success;
-    const walk = { ...walkOpt.legs[0]!, path: "abc", basis: "straight_x1_3" };
+    const walk = { ...walkOpt.legs[0]!, path: encodePolyline([{ lat: 13.62, lng: 123.18 }, { lat: 13.621, lng: 123.181 }]), basis: "straight_x1_3" };
     expect(planOptionSchema.safeParse({ ...walkOpt, legs: [walk] }).success).toBe(false);
     expect(planOptionSchema.safeParse({ ...walkOpt, legs: [{ ...walk, basis: "street_graph" }] }).success).toBe(true);
     expect(bad({ ...leg, basis: "street_graph", path: null })).toBe(false);

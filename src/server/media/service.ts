@@ -1,6 +1,6 @@
 import "server-only";
 import { sql } from "drizzle-orm";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { withRequestContext, type Db } from "@/server/db/context";
 import { safeRequestId } from "@/server/request-id";
 import { getStorage } from "@/server/storage/adapter";
@@ -83,10 +83,12 @@ export class MediaConfirmError extends Error {
  *  - Checks slot ownership & status (a slot that is not the caller's is "not found", like a missing one)
  *  - HEADs the quarantine object and refuses one over the expected size before reading it
  *  - Sniffs magic bytes and computes SHA-256
- *  - complaint_evidence: copies the original, untouched, to evidence-private
+ *  - complaint_evidence: writes the verified original, untouched, to evidence-private (the buffer
+ *    that passed the checks, never a copy of the re-PUTtable quarantine key; spec 05 §5.8)
  *  - every other purpose: images only; EXIF/XMP/GPS stripped, stored in the same private bucket until approved
- *  - Stores under a per-slot key (two uploads of the same bytes never collide on object_key)
- *  - Promotes in the DB, then deletes the quarantine copy (a failed promote keeps the upload)
+ *  - Stores under a per-attempt key: a retried confirm never overwrites or deletes the file a
+ *    verified row points to
+ *  - Promotes in the DB, then deletes the quarantine copy (a failed promote deletes only its own copy)
  */
 export async function confirmMediaSlot(
   userId: string,
@@ -131,8 +133,8 @@ export async function confirmMediaSlot(
   if (!head || head.bytes === 0) throw await reject(false);
   if (head.bytes > Number(slot.expected_bytes)) throw await reject(true);
 
-  const bytes = await storage.getObject(slot.bucket, slot.object_key);
-  if (!bytes || bytes.byteLength === 0) throw await reject(false);
+  const bytes = await storage.getObject(slot.bucket, slot.object_key, Number(slot.expected_bytes));
+  if (!bytes || bytes.byteLength === 0) throw await reject(true);
   if (bytes.byteLength > Number(slot.expected_bytes)) throw await reject(true);
 
   // 3. Verify magic bytes
@@ -144,22 +146,18 @@ export async function confirmMediaSlot(
   // bucket. STORAGE_BUCKET_PUBLIC is for approved display copies, written by the approval step (N6).
   const destBucket = env.STORAGE_BUCKET_EVIDENCE;
   const ext = sniffed.mime.split("/")[1] ?? "bin";
-  const destKey = `${slot.purpose}/${slot.id}.${ext}`;
+  const destKey = `${slot.purpose}/${slot.id}-${randomUUID()}.${ext}`;
 
   // 4. Store: evidence originals verbatim; anything bound for public-media stripped of metadata
   let stored: Uint8Array = bytes;
-  if (isEvidence) {
-    if (!(await storage.copyObject(slot.bucket, slot.object_key, destBucket, destKey))) {
-      throw new MediaConfirmError("failed");
-    }
-  } else {
+  if (!isEvidence) {
     if (sniffed.kind !== "image") throw await reject(true);
     const stripped = stripImageMetadata(bytes, sniffed.mime);
     if (!stripped) throw await reject(true);
     stored = stripped;
-    if (!(await storage.putObject(destBucket, destKey, stored, sniffed.mime))) {
-      throw new MediaConfirmError("failed");
-    }
+  }
+  if (!(await storage.putObject(destBucket, destKey, stored, sniffed.mime))) {
+    throw new MediaConfirmError("failed");
   }
   const sha256 = createHash("sha256").update(stored).digest("hex");
 

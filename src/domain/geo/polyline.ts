@@ -29,6 +29,16 @@ export function encodePolyline(points: readonly LatLng[]): string {
   return out;
 }
 
+/** True when `encoded` decodes (for schema refines: a corrupt stored path fails validation, never a render). */
+export function decodesPolyline(encoded: string): boolean {
+  try {
+    decodePolyline(encoded);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Decodes an encoded polyline. Throws on a truncated or malformed string. */
 export function decodePolyline(encoded: string): LatLng[] {
   const points: LatLng[] = [];

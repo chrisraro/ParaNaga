@@ -11,6 +11,7 @@ const PUB = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a11";
 const state = vi.hoisted(() => ({
   user: null as { id: string; name: string; roles: string[] } | null,
   stepUpAt: null as Date | null,
+  authAt: new Date() as Date | null,
   calls: [] as string[],
   params: new Map<string, unknown[]>(),
   publishFail: null as { code: string; message: string } | null,
@@ -26,7 +27,7 @@ const params = (q: unknown): unknown[] =>
 
 vi.mock("@/server/auth/session", () => ({
   getCurrentUser: async () => state.user,
-  getAuthSession: async () => (state.user ? { userId: state.user.id, sessionId: "sess-1", email: "a@example.com" } : null),
+  getAuthSession: async () => (state.user ? { userId: state.user.id, sessionId: "sess-1", email: "a@example.com", authenticatedAt: state.authAt } : null),
 }));
 vi.mock("@/server/repos/network-repo", () => ({
   getPublishedRevision: async () => ({ revisionId: REV, label: "draft-x", kind: "provisional", publishedAt: "2026-10-22T02:00:00.000Z" }),
@@ -98,6 +99,7 @@ const NOT_STAFF = [
 beforeEach(() => {
   state.user = null;
   state.stepUpAt = null;
+  state.authAt = new Date();
   state.calls = [];
   state.params.clear();
   state.publishFail = null;
@@ -133,6 +135,29 @@ describe("role guard", () => {
       const body = adminDashboardSchema.parse(await res.json());
       expect(body.published?.publishedAt).toBe("2026-10-16T08:00:00.500Z");
       expect(body.stopCandidates).toBe(128);
+    }
+  });
+});
+
+describe("12-hour staff re-login (spec 05 §5.4)", () => {
+  it("answers 401 sign-in-again to staff whose session is over 12 hours old, before any data call", async () => {
+    for (const user of STAFF) {
+      state.user = user;
+      for (const authAt of [new Date(Date.now() - 12 * 3_600_000 - 60_000), null]) {
+        state.authAt = authAt;
+        state.calls = [];
+        for (const res of [
+          await getDashboard(get("/api/v1/admin/dashboard")),
+          await postPublish(post(`/api/v1/admin/revisions/${REV}/publish`, { expectedPublishedId: PUB }), idParams()),
+        ]) {
+          expect(res.status).toBe(401);
+          expect(await errorCode(res)).toBe("unauthorized");
+          expect(res.headers.get("cache-control")).toBe("private, no-store");
+        }
+        expect(state.calls).toEqual([]);
+      }
+      state.authAt = new Date(Date.now() - 11 * 3_600_000);
+      expect((await getDashboard(get("/api/v1/admin/dashboard"))).status).toBe(200);
     }
   });
 });

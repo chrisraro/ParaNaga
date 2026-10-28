@@ -22,7 +22,7 @@
 // jeepneyReasons "roundabout" (every jeepney loops or roams) and "centro" (city-centre trip, no jeepney drops off there).
 import { z } from "zod";
 import { isInsideNaga } from "../geo/naga";
-import { encodePolyline } from "../geo/polyline";
+import { decodesPolyline, encodePolyline } from "../geo/polyline";
 import type { LatLng } from "../geo/types";
 import { fleetSummary } from "../modes/fleet";
 import { PLAN_LABELS } from "../planner/labels";
@@ -73,7 +73,7 @@ const walkLegSchema = z.object({
   estimateMeters: meters,
   pathVerified: z.literal(false),
   /** Encoded polyline (precision 5) of the street path; null for an estimate or an older body. */
-  path: z.string().nullable().default(null),
+  path: z.string().refine(decodesPolyline, { message: "the path must decode" }).nullable().default(null),
   basis: z.enum(["street_graph", "straight_x1_3"]).default("straight_x1_3"),
 }).refine((l) => l.path === null || l.basis === "street_graph", {
   message: "only a street-graph walk has a path",

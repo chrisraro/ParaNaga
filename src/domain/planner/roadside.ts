@@ -3,6 +3,7 @@
 // especially on major two-way corridors like Magsaysay Ave, Roxas Ave (Diversion), Peñafrancia Ave, and Centro.
 // Pure and deterministic.
 import { en, type Dict } from "@/i18n/dict";
+import type { LoopDirection } from "../trip/present";
 
 export type RoadsideHeading = "northbound" | "southbound" | "eastbound" | "westbound" | "terminal";
 
@@ -21,267 +22,70 @@ export type RoadsideInfo = {
 
 type PointLike = { lat: number; lng: number; name?: string | null };
 
-/**
- * Detects the corridor of a boarding point in Naga City based on coordinates and stop name.
- */
-function detectCorridor(point: PointLike): { name: string; isTwoWay: boolean } | null {
+const NAMES: [string, RegExp][] = [
+  ["Magsaysay Ave", /magsaysay/],
+  ["Roxas Ave (Diversion)", /roxas|diversion/],
+  ["Peñafrancia Ave", /peñafrancia|penafrancia|francia/],
+  ["Panganiban Drive", /panganiban/],
+  ["Bagumbayan", /bagumbayan/],
+  ["Centro", /plaza rizal|general luna|gen\. luna|elias angeles|centro/],
+];
+// Approximate corridor boxes in Naga City: [corridor, lat min, lat max, lng min, lng max]. Some overlap.
+const BOXES: [string, number, number, number, number][] = [
+  ["Centro", 13.621, 13.6265, 123.181, 123.1875],
+  ["Peñafrancia Ave", 13.6265, 13.637, 123.185, 123.193],
+  ["Magsaysay Ave", 13.6275, 13.634, 123.192, 123.203],
+  ["Roxas Ave (Diversion)", 13.616, 13.628, 123.195, 123.204],
+  ["Panganiban Drive", 13.62, 13.6255, 123.1875, 123.197],
+  ["Bagumbayan", 13.627, 13.639, 123.178, 123.186],
+];
+const only = (names: string[]) => (new Set(names).size === 1 ? names[0]! : null);
+
+/** The one corridor a boarding point is on, by its name, else by the boxes; null when none or ambiguous (two match). */
+function detectCorridor(point: PointLike): string | null {
   const name = (point.name ?? "").toLowerCase();
-
-  // Name-based detection
-  if (name.includes("magsaysay")) return { name: "Magsaysay Ave", isTwoWay: true };
-  if (name.includes("roxas") || name.includes("diversion")) return { name: "Roxas Ave (Diversion)", isTwoWay: true };
-  if (name.includes("peñafrancia") || name.includes("penafrancia") || name.includes("francia")) return { name: "Peñafrancia Ave", isTwoWay: true };
-  if (name.includes("panganiban")) return { name: "Panganiban Drive", isTwoWay: true };
-  if (name.includes("bagumbayan")) return { name: "Bagumbayan", isTwoWay: true };
-  if (name.includes("plaza rizal") || name.includes("general luna") || name.includes("gen. luna") || name.includes("elias angeles") || name.includes("centro")) {
-    return { name: "Centro", isTwoWay: false };
-  }
-
-  // Coordinate bounding boxes in Naga City
+  const byName = NAMES.filter(([, re]) => re.test(name)).map(([c]) => c);
+  if (byName.length > 0) return only(byName);
   const { lat, lng } = point;
-
-  // Centro / Plaza Rizal / Gen. Luna (approx 13.6210 - 13.6265, 123.1810 - 123.1875)
-  if (lat >= 13.6210 && lat <= 13.6265 && lng >= 123.1810 && lng <= 123.1875) {
-    return { name: "Centro", isTwoWay: false };
-  }
-
-  // Peñafrancia Ave corridor (approx 13.6265 - 13.6370, 123.1850 - 123.1930)
-  if (lat >= 13.6265 && lat <= 13.6370 && lng >= 123.1850 && lng <= 123.1930) {
-    return { name: "Peñafrancia Ave", isTwoWay: true };
-  }
-
-  // Magsaysay Ave corridor (approx 13.6275 - 13.6340, 123.1920 - 123.2030)
-  if (lat >= 13.6275 && lat <= 13.6340 && lng >= 123.1920 && lng <= 123.2030) {
-    return { name: "Magsaysay Ave", isTwoWay: true };
-  }
-
-  // Roxas Ave / Diversion Road corridor (approx 13.6160 - 13.6280, 123.1950 - 123.2040)
-  if (lat >= 13.6160 && lat <= 13.6280 && lng >= 123.1950 && lng <= 123.2040) {
-    return { name: "Roxas Ave (Diversion)", isTwoWay: true };
-  }
-
-  // Panganiban Drive (approx 13.6200 - 13.6255, 123.1875 - 123.1970)
-  if (lat >= 13.6200 && lat <= 13.6255 && lng >= 123.1875 && lng <= 123.1970) {
-    return { name: "Panganiban Drive", isTwoWay: true };
-  }
-
-  // Bagumbayan corridor (approx 13.6270 - 13.6390, 123.1780 - 123.1860)
-  if (lat >= 13.6270 && lat <= 13.6390 && lng >= 123.1780 && lng <= 123.1860) {
-    return { name: "Bagumbayan", isTwoWay: true };
-  }
-
-  return null;
+  return only(BOXES.filter(([, a, b, c, d]) => lat >= a && lat <= b && lng >= c && lng <= d).map(([c]) => c));
 }
 
+/** The R8 loops: ordinance direction and the corridors each runs on (route-display sources, Ord 2025-070). */
+const LOOPS: Record<string, { label: string; direction: LoopDirection; corridors: readonly string[] }> = {
+  "R8-A": { label: "Loop A", direction: "clockwise", corridors: ["Peñafrancia Ave", "Magsaysay Ave", "Roxas Ave (Diversion)", "Centro"] },
+  "R8-B": { label: "Loop B", direction: "counterclockwise", corridors: ["Roxas Ave (Diversion)", "Magsaysay Ave", "Peñafrancia Ave", "Centro"] },
+  "R8-C": { label: "Loop C", direction: "clockwise", corridors: ["Centro", "Peñafrancia Ave", "Bagumbayan", "Magsaysay Ave", "Roxas Ave (Diversion)"] },
+  "R8-D": { label: "Loop D", direction: "counterclockwise", corridors: ["Centro", "Roxas Ave (Diversion)", "Magsaysay Ave", "Bagumbayan"] },
+};
+
 /**
- * Returns roadside boarding guidance for a jeepney route and boarding location.
+ * Roadside boarding guidance, or null. Only for an R8 loop whose known direction (from the plan's variant, never
+ * guessed) matches its ordinance direction, boarding on one corridor that loop runs on: no data is invented.
  */
 export function getRoadsideAdvice(
   routeCode: string,
+  direction: LoopDirection | null,
   boardPoint: PointLike | null,
-  alightPoint?: PointLike | null,
   copy: Dict["trip"]["roadside"] = en.trip.roadside,
 ): RoadsideInfo | null {
-  if (!boardPoint) return null;
-
-  const detected = detectCorridor(boardPoint);
-  const corridor = detected?.name ?? "Street";
-  const isTwoWay = detected?.isTwoWay ?? false;
-
-  // 1. Magsaysay Avenue
-  if (corridor === "Magsaysay Ave") {
-    // Loop B and Loop D run Northbound/Westbound toward Peñafrancia & Centro
-    if (routeCode === "R8-B" || routeCode === "R8-D") {
-      return {
-        chip: copy.chipWestCentro,
-        advice: copy.magsaysayWest(routeCode === "R8-B" ? "Loop B" : "Loop D"),
-        heading: "westbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-    // Loop A and Loop C run Southbound/Eastbound toward Diversion Road / SM
-    if (routeCode === "R8-A" || routeCode === "R8-C") {
-      return {
-        chip: copy.chipEastDiversion,
-        advice: copy.magsaysayEast(routeCode === "R8-A" ? "Loop A" : "Loop C"),
-        heading: "eastbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-    // R1 / R2 heading to Centro (inbound)
-    if (alightPoint && (alightPoint.name?.toLowerCase().includes("centro") || alightPoint.name?.toLowerCase().includes("plaza rizal") || alightPoint.lng < boardPoint.lng)) {
-      return {
-        chip: copy.chipWestCentro,
-        advice: copy.magsaysayCentro(routeCode),
-        heading: "westbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-    // R1 / R2 heading outbound
-    return {
-      chip: copy.chipEastOutbound,
-      advice: copy.magsaysayOutbound(routeCode),
-      heading: "eastbound",
-      corridor,
-      isTwoWay: true,
-    };
+  const loop = LOOPS[routeCode];
+  if (!boardPoint || !loop || direction !== loop.direction) return null;
+  const corridor = detectCorridor(boardPoint);
+  if (corridor === null || !loop.corridors.includes(corridor)) return null;
+  const cw = direction === "clockwise";
+  const info = (chip: string, advice: string, heading: RoadsideHeading): RoadsideInfo => ({ chip, advice, heading, corridor, isTwoWay: corridor !== "Centro" });
+  switch (corridor) {
+    case "Magsaysay Ave":
+      return cw ? info(copy.chipEastDiversion, copy.magsaysayEast(loop.label), "eastbound") : info(copy.chipWestCentro, copy.magsaysayWest(loop.label), "westbound");
+    case "Roxas Ave (Diversion)":
+      return cw ? info(copy.chipSouthCentro, copy.roxasSouth(loop.label), "southbound") : info(copy.chipNorthMagsaysay, copy.roxasNorth(loop.label), "northbound");
+    case "Peñafrancia Ave":
+      return cw ? info(copy.chipNorthMagsaysay, copy.franciaNorth(loop.label), "northbound") : info(copy.chipSouthCentro, copy.franciaSouth(loop.label), "southbound");
+    case "Bagumbayan":
+      return cw ? info(copy.chipNorthMagsaysay, copy.bagumbayanNorth, "northbound") : info(copy.chipSouthCentro, copy.bagumbayanSouth, "southbound");
+    case "Centro":
+      return cw ? info(copy.chipCentroGenLuna, copy.centroNorth(loop.label), "terminal") : info(copy.chipGenLunaElias, copy.centroWest(loop.label), "terminal");
+    default:
+      return null;
   }
-
-  // 2. Roxas Ave (Diversion Road)
-  if (corridor === "Roxas Ave (Diversion)") {
-    // Loop B and Loop D run Northbound toward Magsaysay Ave
-    if (routeCode === "R8-B" || routeCode === "R8-D") {
-      return {
-        chip: copy.chipNorthMagsaysay,
-        advice: copy.roxasNorth(routeCode === "R8-B" ? "Loop B" : "Loop D"),
-        heading: "northbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-    // Loop A and Loop C run Southbound toward Panganiban / Centro
-    if (routeCode === "R8-A" || routeCode === "R8-C") {
-      return {
-        chip: copy.chipSouthCentro,
-        advice: copy.roxasSouth(routeCode === "R8-A" ? "Loop A" : "Loop C"),
-        heading: "southbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-    // R3 (Roxas Ave)
-    if (routeCode === "R3") {
-      const inbound = alightPoint && (alightPoint.name?.toLowerCase().includes("centro") || alightPoint.name?.toLowerCase().includes("plaza rizal"));
-      return {
-        chip: inbound ? copy.chipSouthCentro : copy.chipOutboundDelRosario,
-        advice: copy.roxasR3(inbound ? copy.roxasR3West : copy.roxasR3East),
-        heading: inbound ? "southbound" : "northbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-  }
-
-  // 3. Peñafrancia Ave (Francia)
-  if (corridor === "Peñafrancia Ave") {
-    // Loop A and Loop C run Northbound toward Magsaysay Ave
-    if (routeCode === "R8-A" || routeCode === "R8-C") {
-      return {
-        chip: copy.chipNorthMagsaysay,
-        advice: copy.franciaNorth(routeCode === "R8-A" ? "Loop A" : "Loop C"),
-        heading: "northbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-    // Loop B and Loop D run Southbound toward Centro / Plaza Rizal
-    if (routeCode === "R8-B" || routeCode === "R8-D") {
-      return {
-        chip: copy.chipSouthCentro,
-        advice: copy.franciaSouth(routeCode === "R8-B" ? "Loop B" : "Loop D"),
-        heading: "southbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-    // R5, R6, R7 (Peñafrancia / San Felipe / Pacol / Carolina)
-    if (["R5", "R6", "R7", "R2"].includes(routeCode)) {
-      const inbound = alightPoint && (alightPoint.name?.toLowerCase().includes("centro") || alightPoint.name?.toLowerCase().includes("plaza rizal"));
-      return {
-        chip: inbound ? copy.chipSouthCentro : copy.chipNorthOutbound,
-        advice: copy.francia(inbound ? copy.franciaInbound : copy.franciaOutbound, routeCode),
-        heading: inbound ? "southbound" : "northbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-  }
-
-  // 4. Bagumbayan
-  if (corridor === "Bagumbayan") {
-    if (routeCode === "R8-C") {
-      return {
-        chip: copy.chipNorthMagsaysay,
-        advice: copy.bagumbayanNorth,
-        heading: "northbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-    if (routeCode === "R8-D") {
-      return {
-        chip: copy.chipSouthCentro,
-        advice: copy.bagumbayanSouth,
-        heading: "southbound",
-        corridor,
-        isTwoWay: true,
-      };
-    }
-  }
-
-  // 5. Panganiban Drive
-  if (corridor === "Panganiban Drive") {
-    const inbound = alightPoint && (alightPoint.name?.toLowerCase().includes("centro") || alightPoint.name?.toLowerCase().includes("plaza rizal"));
-    return {
-      chip: inbound ? copy.chipWestCentro : copy.chipEastDelRosario,
-      advice: copy.panganiban(inbound ? copy.panganibanInbound : copy.panganibanOutbound, routeCode),
-      heading: inbound ? "westbound" : "eastbound",
-      corridor,
-      isTwoWay: true,
-    };
-  }
-
-  // 6. Centro (Gen. Luna / Elias Angeles / Plaza area)
-  if (corridor === "Centro") {
-    if (routeCode === "R8-A" || routeCode === "R8-C") {
-      return {
-        chip: copy.chipCentroGenLuna,
-        advice: copy.centroNorth(routeCode === "R8-A" ? "Loop A" : "Loop C"),
-        heading: "terminal",
-        corridor,
-        isTwoWay: false,
-      };
-    }
-    if (routeCode === "R8-B" || routeCode === "R8-D") {
-      return {
-        chip: copy.chipGenLunaElias,
-        advice: copy.centroWest(routeCode === "R8-B" ? "Loop B" : "Loop D"),
-        heading: "terminal",
-        corridor,
-        isTwoWay: false,
-      };
-    }
-    return {
-      chip: copy.chipCentroTerminal,
-      advice: copy.centroTerminal(routeCode),
-      heading: "terminal",
-      corridor,
-      isTwoWay: false,
-    };
-  }
-
-  // General fallback for loops or lines
-  if (routeCode === "R8-B" || routeCode === "R8-D") {
-    return {
-      chip: copy.chipCounterclockwise,
-      advice: copy.checkCounterclockwise(routeCode === "R8-B" ? "Loop B" : "Loop D"),
-      heading: "westbound",
-      corridor,
-      isTwoWay,
-    };
-  }
-  if (routeCode === "R8-A" || routeCode === "R8-C") {
-    return {
-      chip: copy.chipClockwise,
-      advice: copy.checkClockwise(routeCode === "R8-A" ? "Loop A" : "Loop C"),
-      heading: "eastbound",
-      corridor,
-      isTwoWay,
-    };
-  }
-
-  return null;
 }

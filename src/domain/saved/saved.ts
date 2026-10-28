@@ -322,7 +322,11 @@ export type Reopen = { kind: "current"; optionId: string } | { kind: "replanned"
  */
 export function resolveReopen(card: SavedTrip, live: PlanResponse): Reopen {
   if (live.plan.coverage !== "provisional") return { kind: "changed" };
-  const match = live.plan.options.find((o) => o.id === card.option.id);
+  // The id carries board/alight measures rounded to 10 m: a stop shifted a few metres changes it, so the
+  // same variant sequence (the id without its measures) within sameRides' 50 m is the same option too.
+  const seq = (id: string) => id.replace(/@[\d.]+-[\d.]+/g, "");
+  const match = live.plan.options.find((o) => o.id === card.option.id)
+    ?? live.plan.options.find((o) => seq(o.id) === seq(card.option.id) && sameRides(o, card.option));
   if (!match) return { kind: "changed" };
   if (live.plan.revisionId === card.revisionId) return { kind: "current", optionId: match.id };
   return sameRides(match, card.option) ? { kind: "replanned", optionId: match.id } : { kind: "changed" };

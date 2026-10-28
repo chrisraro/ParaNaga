@@ -6,18 +6,12 @@
 
 import { useState } from "react";
 import { deleteSavedTrip, putSavedTrip, replaceSavedTrip } from "@/client/storage/db";
+import { useT } from "@/i18n/provider";
 import { useSavedTrips } from "@/client/saved/use-saved";
 import type { LatLng } from "@/domain/geo/types";
 import { matchSavedTrip, type SavedTripMatch, type SavedTrip } from "@/domain/saved/saved";
 
 export type SavedTripTarget = { optionId: string; start: LatLng; destination: LatLng; revisionId: string };
-
-export const SAVE_STATUS = {
-  removed: "Removed from saved trips.",
-  updated: "Saved copy updated to the current data.",
-  saved: "Saved on this phone. It opens without signal from Saved.",
-  failed: "Could not save on this phone.",
-} as const;
 
 export type SavedTripToggle = {
   /** null while the saved trips load. */
@@ -33,6 +27,7 @@ export type SavedTripToggle = {
 
 /** `newCard` builds a fresh card (new id and date) for a save; `onStatus` gets the outcome line. */
 export function useSavedTripToggle(target: SavedTripTarget, newCard: () => SavedTrip, onStatus: (status: string) => void): SavedTripToggle {
+  const t = useT().saved;
   const trips = useSavedTrips();
   const [busy, setBusy] = useState(false);
   const match = trips.status === "ready" ? matchSavedTrip(trips.records, target.optionId, target.start, target.destination, target.revisionId) : null;
@@ -46,16 +41,16 @@ export function useSavedTripToggle(target: SavedTripTarget, newCard: () => Saved
     try {
       if (match.kind === "saved") {
         await deleteSavedTrip(match.trip.id);
-        onStatus(SAVE_STATUS.removed);
+        onStatus(t.tripRemoved);
       } else if (match.kind === "older") {
         await replaceSavedTrip(match.trip.id, newCard());
-        onStatus(SAVE_STATUS.updated);
+        onStatus(t.tripUpdated);
       } else {
         await putSavedTrip(newCard());
-        onStatus(SAVE_STATUS.saved);
+        onStatus(t.tripSaved);
       }
     } catch {
-      onStatus(SAVE_STATUS.failed);
+      onStatus(t.tripSaveFailed);
     } finally {
       setBusy(false);
     }

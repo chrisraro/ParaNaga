@@ -67,4 +67,18 @@ describe("a real R1 ride has no pins", () => {
     expect(resolveReopen(card, live(shifted(300), newRev))).toEqual({ kind: "changed" });
     expect(revalidateSavedTrip(card, { ...snapshot, revision: { ...snapshot.revision, revisionId: newRev } })).toBe("unchanged_in_new_revision");
   });
+
+  it("D4: a reopened trip whose measures moved 20 m (so its option id changed) is still the same option", () => {
+    const card = buildSavedTrip({ id: "c1", savedAt: NOW.toISOString(), data, option, start: { label: "a", point: PLAZA_RIZAL }, destination: { label: "b", point: SAN_ISIDRO } });
+    const moved = (m: number): PlanOptionDto => ({
+      ...option,
+      id: option.id.replace(/@(\d+)-(\d+)/, (_, b: string, a: string) => `@${Number(b) + m}-${Number(a) + m}`),
+      legs: option.legs.map((l) => (l.kind === "ride" ? { ...l, boardMeasureM: l.boardMeasureM! + m, alightMeasureM: l.alightMeasureM! + m } : l)),
+    });
+    const newRev = "11111111-1111-4111-8111-111111111111";
+    const live = (o: PlanOptionDto): PlanResponse => ({ ...data, plan: { ...data.plan, revisionId: newRev, options: [o] } });
+    expect(moved(20).id).not.toBe(option.id);
+    expect(resolveReopen(card, live(moved(20)))).toEqual({ kind: "replanned", optionId: moved(20).id });
+    expect(resolveReopen(card, live(moved(300)))).toEqual({ kind: "changed" });
+  });
 });

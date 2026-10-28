@@ -21,9 +21,10 @@ import { planOptionSchema, toWireOption } from "../api/plan";
 import { etaModelSchema } from "../api/schemas";
 import type { LocationFix } from "../geo/location-fix";
 import { haversineMeters } from "../geo/geometry";
-import { ARRIVE_NEAR_M, CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, rideProgress, usableFix, type RideMemory } from "./progress";
+import { decodePolyline, decodesPolyline } from "../geo/polyline";
+import { ARRIVE_NEAR_M, CLOCK_SKEW_MS, NEW_RIDE_MEMORY, paraSuggested, pathRideProgress, rideProgress, usableFix, type PathRideProgress, type RideMemory } from "./progress";
 import type { Dict } from "@/i18n/dict";
-import { guidanceSteps, type GuidanceStep, type GuidanceTrip } from "./steps";
+import { guidanceSteps, type GuidanceStep, type GuidanceTrip, type RideStep } from "./steps";
 
 /** 2: street rides and `trip.ridePaths` (Increment E). Format-1 sessions still read (migrated to 2 on parse);
  *  format-1 code (rollback) discards a format-2 session, as it does any unreadable one. */
@@ -39,6 +40,8 @@ export type RideState = RideMemory & {
   /** A usable fix arrived during this ride (so the stop count is from GPS, not just the plan). */
   gpsSeen: boolean;
   paraAcknowledged: boolean;
+  /** A pinless ride with its path: the measure of the last on-path fix (an out-and-back pass is not read as the earlier one). */
+  pathM?: number;
 };
 
 export type GuidanceSession = {
@@ -164,11 +167,21 @@ export function reduceSession(session: GuidanceSession, event: GuidanceEvent): G
         alightNear: p.alightNear,
         nearStopBefore: p.nearStopBefore,
       };
+      const onPath = ridePathProgress(session.trip, step, event.fix, event.now, ride.pathM ?? null);
+      const pathM = onPath && !onPath.offPath ? onPath.measureM : ride.pathM;
       const same = (Object.keys(memory) as (keyof RideMemory)[]).every((k) => memory[k] === ride[k]);
-      if (same && ride.gpsSeen) return session;
-      return { ...session, ride: { ...ride, ...memory, gpsSeen: true } };
+      if (same && ride.gpsSeen && pathM === ride.pathM) return session;
+      return { ...session, ride: { ...ride, ...memory, gpsSeen: true, ...(pathM === undefined ? {} : { pathM }) } };
     }
   }
+}
+
+/** Progress along the Lines path for a pinless ride whose path is on the phone; null otherwise. */
+export function ridePathProgress(trip: GuidanceTrip, step: RideStep, fix: LocationFix | null, now: number, lastM: number | null): PathRideProgress | null {
+  const path = step.pinned ? undefined : trip.ridePaths?.[step.ride.variantId];
+  const m = step.stopMeasuresM;
+  if (!path || !m) return null;
+  return pathRideProgress(decodePolyline(path.encoded), path.isCircuit, m[0]!, m[m.length - 1]!, fix, now, lastM);
 }
 
 // ---------------------------------------------------------------- sessionStorage
@@ -180,7 +193,7 @@ const tripSchema = z.strictObject({
   destinationLabel: z.string().max(200).nullable(),
   etaModel: etaModelSchema.nullable().optional(),
   walkLengths: z.array(z.number().min(0).nullable()).max(50).optional(),
-  ridePaths: z.record(z.string().max(64), z.strictObject({ encoded: z.string().max(200_000), isCircuit: z.boolean() })).optional(),
+  ridePaths: z.record(z.string().max(64), z.strictObject({ encoded: z.string().max(200_000).refine(decodesPolyline), isCircuit: z.boolean() })).optional(),
 });
 
 const rideSchema = z.strictObject({
@@ -193,6 +206,7 @@ const rideSchema = z.strictObject({
   /** Read from sessions stored before 2026-10-22 (the manual "My stop is next"), then dropped. */
   stopIsNext: z.boolean().optional(),
   paraAcknowledged: z.boolean(),
+  pathM: z.number().min(0).optional(),
 });
 
 const sessionSchema = z.strictObject({

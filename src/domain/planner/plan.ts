@@ -246,6 +246,8 @@ export function planningNetwork(snapshot: Pick<NetworkSnapshot, "stops" | "varia
 
 // ---------------------------------------------------------------- walks
 
+const transferCache = new WeakMap<PlanningNetwork, { g: WalkGraph | null; walks: Map<string, Walk | null> }>();
+
 type Walk = { m: number; basis: WalkBasis };
 type Walker = (to: LatLng) => Walk | null;
 
@@ -320,7 +322,10 @@ function search(
     }));
   const boards = ends(origin, access, originFar);
   const alights = ends(destination, egress, destinationFar);
-  const transferWalks = new Map<string, Walk | null>();
+  // Transfer walks depend only on the network and street graph (walk mode, fixed time), so they are kept per pair.
+  let kept = transferCache.get(net);
+  if (!kept || kept.g !== g) transferCache.set(net, (kept = { g, walks: new Map() }));
+  const transferWalks = kept.walks;
   const transferWalk = (i: number, k: number): Walk | null => {
     const key = `${i}:${k}`;
     if (!transferWalks.has(key)) {
