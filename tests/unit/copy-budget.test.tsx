@@ -135,6 +135,7 @@ describe("copy budgets", () => {
       session: s,
       card: null,
       view: guidanceView(s, { lat: ORIGIN.lat, lng: ORIGIN.lng, accuracy: 10, timestamp: now }, now),
+      status: null,
       now,
       location: { state: "watching", fix: null, watching: false },
       start: vi.fn(),

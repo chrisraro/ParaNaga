@@ -99,6 +99,10 @@
   fill: var(--pn-dot);
   stroke: var(--pn-marker-ring);
 }
+.pn-map .pn-heading {
+  fill: var(--pn-dot);
+  stroke: var(--pn-marker-ring);
+}
 .pn-map .pn-dot--stale {
   opacity: 0.45;
 }
@@ -167,6 +171,29 @@
 }
 .pn-map .pn-map-zoom {
   top: calc(var(--naga-map-controls-top, 60px) + 116px);
+}
+/* Guidance: "Follow my position" appears at the top once the rider has dragged the map away. */
+.pn-map .pn-map-follow {
+  position: absolute;
+  top: var(--naga-map-controls-top, 60px);
+  left: 16px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--pn-label, inherit);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pn-map .pn-map-follow:focus-visible {
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 2px;
 }
 .pn-map .pn-glass {
   background: var(--pn-glass);

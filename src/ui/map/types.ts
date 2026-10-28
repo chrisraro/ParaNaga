@@ -62,6 +62,8 @@ export type NagaMapProps = {
   tripLines?: TripLinesData | null;
   /** The option leg the guidance is on: its line is drawn at full strength, the others softer. */
   activeLegIndex?: number | null;
+  /** Guidance: keeps `userFix` in view with the step's stops and the destination until the rider drags the map (then a follow button appears). */
+  followUser?: boolean;
   /** Line for the legend panel (e.g. the trip's lines did not load). */
   legendNotice?: string | null;
   /** Overview lines are only a stand-in for the trip's rides: drawn dimmed and not tappable. */

@@ -31,6 +31,7 @@ import { UndoButton, type LocationUi } from "./guidance-parts";
 import { RideStep } from "./ride-step";
 import { StreetRideStep } from "./street-ride-step";
 import { TransferStep } from "./transfer-step";
+import { TripStatusPanel } from "./trip-status";
 import { WalkStep } from "./walk-step";
 
 type Props = {
@@ -172,6 +173,7 @@ export function Guidance({ guidance, covered, onEnd, onDone, onReplan }: Props) 
   return (
     <div className="pn-guide" data-testid="guidance" data-screen={shown.screen}>
       <Header view={shown} location={location} now={now} onEnd={onEnd} />
+      {guidance.status && shown.screen !== "arrive" && shown.screen !== "missed" ? <TripStatusPanel status={guidance.status} /> : null}
       {shown.screen === "walk" && shown.stepKind === "transfer" ? (
         <TransferStep view={shown} {...stepProps} />
       ) : shown.screen === "walk" ? (

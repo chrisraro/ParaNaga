@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { guidanceActiveLegIndex, guidanceStopPins } from "@/ui/home/use-home-guidance";
 import { legendVisualKeys, mapLayerPolicy, mapScene, overviewLinesForTrip } from "@/ui/map/map-layer-policy";
-import { INACTIVE_LEG_OPACITY, buildTripLinesData, legOpacity } from "@/ui/map/trip-lines-layer";
+import { COMPLETED_LEG_OPACITY, INACTIVE_LEG_OPACITY, buildTripLinesData, legOpacity } from "@/ui/map/trip-lines-layer";
 import { startSession } from "@/domain/guidance/session";
 import { oneRide, twoRides, tripOf, LOOP_A, LOOP_B } from "./guidance-fixtures";
 
@@ -104,10 +104,12 @@ describe("trip lines while guided", () => {
     expect(data.legendItems).toEqual(["walk"]);
   });
 
-  it("emphasises only the current leg", () => {
+  it("emphasises only the current leg: the legs ahead softer, the legs already travelled softest", () => {
     expect(legOpacity(null, 1)).toBe(1);
     expect(legOpacity(1, 1)).toBe(1);
-    expect(legOpacity(1, 0)).toBe(INACTIVE_LEG_OPACITY);
+    expect(legOpacity(1, 2)).toBe(INACTIVE_LEG_OPACITY);
+    expect(legOpacity(1, 0)).toBe(COMPLETED_LEG_OPACITY);
+    expect(COMPLETED_LEG_OPACITY).toBeLessThan(INACTIVE_LEG_OPACITY);
   });
 
   it("names the current leg and the current ride's stops for each guidance step", () => {

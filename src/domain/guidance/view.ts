@@ -2,8 +2,8 @@
 //
 // Honest by construction (global constraints, copy rules §6.5): distances are straight-line
 // estimates ("≈"), stops are counted by provisional pin order, a time is only ever
-// a range labelled "(estimate)" from the snapshot's model (never a clock time or
-// "arriving"), nothing says "live", and there is no curb, crossing, boarding side, signboard
+// a range labelled "(estimate)" from the snapshot's model (the trip-wide "arrive about" clock time
+// lives in trip-status.ts, with its own caveats), nothing says "live", and there is no curb, crossing, boarding side, signboard
 // text or entrance, because none of them exists in the data; the artboards' versions of those lines
 // are replaced by a plain "not mapped / not on file" note with a next step. "Para! Next stop is
 // yours" is a suggestion shown only on a ride the person confirmed boarding, by the single rule
@@ -211,7 +211,7 @@ function walkRemainingTime(trip: GuidanceTrip, step: WalkToBoardStep | TransferS
 }
 
 /** The ride still ahead: measure(alight) − measure(last passed stop), else split by stop count. */
-function rideMetersLeft(step: RideStep, passedIndex: number): { meters: number; byStopCount: boolean } {
+export function rideMetersLeft(step: RideStep, passedIndex: number): { meters: number; byStopCount: boolean } {
   const alightIndex = step.stops.length - 1;
   const m = step.stopMeasuresM;
   if (m) return { meters: Math.max(0, m[alightIndex]! - m[passedIndex]!), byStopCount: false };

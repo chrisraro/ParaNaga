@@ -1012,6 +1012,7 @@ export function HomeScreen() {
           tripLines={tripLines}
           activeLegIndex={guiding ? home.activeLegIndex : null}
           fitTripLines={!guiding}
+          followUser={guiding && guidance.session?.status === "active"}
           routeLines={overviewLines}
           routeLinesDimmed={layerPolicy.overviewStandIn}
           legendNotice={legendNotice}

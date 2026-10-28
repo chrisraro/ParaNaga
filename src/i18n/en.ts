@@ -96,6 +96,17 @@ export const en = {
     // Tricycle / padyak.
     streetTitle: (mode: "tricycle" | "padyak", place: string) => `Take a ${mode} to ${place}`,
     streetTime: (mode: string) => `${mode} time not estimated`,
+    // Trip progress bar and arrival time (src/domain/guidance/trip-status-format.ts).
+    progressLabel: "Trip progress",
+    progressDone: (percent: number) => `${percent}% done`,
+    progressLeft: (percent: number, distance: string) => `${percent}% done · ${distance} left`,
+    progressSpoken: (percent: number) => `${percent}% of the trip done`,
+    progressSpokenLeft: (percent: number, distance: string) => `${percent}% of the trip done, about ${distance} left`,
+    etaLine: (range: string, clock: string) => `≈ ${range} · arrive about ${clock}`,
+    etaPartial: (range: string, note: string) => `≈ ${range} · ${note}`,
+    etaCaption: "Based on typical speeds. No traffic data.",
+    etaCaptionPace: "Based on typical speeds, adjusted to your pace.",
+    etaWaitNote: "Waiting for a jeepney is not counted.",
     // Screen chrome.
     useLocation: "Use my location",
     findingLocation: "Finding your location…",
@@ -1267,6 +1278,7 @@ export const en = {
   map: {
     layers: "Layers",
     centerOnMe: "Center on my location",
+    followMe: "Follow my position",
     zoom: "Zoom",
     zoomIn: "Zoom in",
     zoomOut: "Zoom out",
