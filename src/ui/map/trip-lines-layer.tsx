@@ -310,9 +310,13 @@ export const INACTIVE_LEG_OPACITY = 0.5;
 /** The dash of a caution section (same as the route lines). */
 export const CAUTION_DASH_ARRAY = "8 6" as const;
 
-/** 1 for every leg unless a current leg is named; then only that leg stays at full strength. */
+/** Opacity of the legs already travelled (before the current one): the road behind fades most. */
+export const COMPLETED_LEG_OPACITY = 0.3;
+
+/** 1 for every leg unless a current leg is named; then only that leg stays at full strength, the legs ahead softer, those behind softest. */
 export function legOpacity(activeLegIndex: number | null, legIndex: number): number {
-  return activeLegIndex === null || activeLegIndex === legIndex ? 1 : INACTIVE_LEG_OPACITY;
+  if (activeLegIndex === null || activeLegIndex === legIndex) return 1;
+  return legIndex < activeLegIndex ? COMPLETED_LEG_OPACITY : INACTIVE_LEG_OPACITY;
 }
 
 export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = null }: Props) {

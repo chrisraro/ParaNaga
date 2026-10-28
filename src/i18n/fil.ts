@@ -101,6 +101,17 @@ export const fil: Dict = {
     // Tricycle / padyak.
     streetTitle: (mode: "tricycle" | "padyak", place: string) => `Sumakay ng ${mode} papunta sa ${place}`,
     streetTime: (mode: string) => `Walang tantiya sa oras ng ${mode}`,
+    // Trip progress bar and arrival time (src/domain/guidance/trip-status-format.ts).
+    progressLabel: "Progreso ng biyahe",
+    progressDone: (percent: number) => `Tapos na ang ${percent}%`,
+    progressLeft: (percent: number, distance: string) => `Tapos na ang ${percent}% · ${distance} pa`,
+    progressSpoken: (percent: number) => `${percent}% na ng biyahe ang tapos`,
+    progressSpokenLeft: (percent: number, distance: string) => `${percent}% na ng biyahe ang tapos, mga ${distance} pa ang natitira`,
+    etaLine: (range: string, clock: string) => `≈ ${range} · darating nang mga ${clock}`,
+    etaPartial: (range: string, note: string) => `≈ ${range} · ${note}`,
+    etaCaption: "Batay sa karaniwang bilis. Walang datos ng trapiko.",
+    etaCaptionPace: "Batay sa karaniwang bilis, iniayon sa bilis mo.",
+    etaWaitNote: "Hindi kasama ang paghihintay ng jeep.",
     // Screen chrome.
     useLocation: "Lokasyon ko",
     findingLocation: "Hinahanap ang lokasyon mo…",
@@ -1255,6 +1266,7 @@ export const fil: Dict = {
   map: {
     layers: "Mga layer",
     centerOnMe: "I-center sa lokasyon ko",
+    followMe: "Sundan ang posisyon ko",
     zoom: "Zoom",
     zoomIn: "I-zoom in",
     zoomOut: "I-zoom out",

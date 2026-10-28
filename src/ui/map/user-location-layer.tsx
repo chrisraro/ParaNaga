@@ -11,11 +11,13 @@ import { isInsideNaga } from "@/domain/geo/naga";
 const DOT_SIZE = 68;
 
 // Leaflet's default PNG marker icons break under bundlers; every marker is an inline-SVG divIcon.
-function dotIcon(coarse: boolean, stale = false): L.DivIcon {
+function dotIcon(coarse: boolean, stale = false, heading: number | null = null): L.DivIcon {
   const pulse = coarse || stale ? "" : `<circle class="pn-pulse" cx="34" cy="34" r="34" />`;
+  // Direction of travel (when the device gives one): a wedge on the dot, turned about its centre.
+  const wedge = heading === null ? "" : `<path class="pn-heading" d="M34 11 L42 26 L34 22 L26 26 Z" stroke-width="2" stroke-linejoin="round" transform="rotate(${heading} 34 34)" />`;
   return L.divIcon({
     className: "pn-marker",
-    html: `<svg width="${DOT_SIZE}" height="${DOT_SIZE}" viewBox="0 0 68 68" aria-hidden="true" focusable="false">${pulse}<circle class="pn-dot${coarse ? " pn-dot--coarse" : ""}${stale ? " pn-dot--stale" : ""}" cx="34" cy="34" r="9" stroke-width="3.5" /></svg>`,
+    html: `<svg width="${DOT_SIZE}" height="${DOT_SIZE}" viewBox="0 0 68 68" aria-hidden="true" focusable="false">${pulse}${wedge}<circle class="pn-dot${coarse ? " pn-dot--coarse" : ""}${stale ? " pn-dot--stale" : ""}" cx="34" cy="34" r="9" stroke-width="3.5" /></svg>`,
     iconSize: [DOT_SIZE, DOT_SIZE],
     iconAnchor: [DOT_SIZE / 2, DOT_SIZE / 2],
   });
@@ -43,6 +45,13 @@ const COARSE_ACCURACY_STYLE: L.PathOptions = {
   interactive: false,
 };
 
+/** The direction of travel in whole 5° steps (fewer icon rebuilds), only while the device reports moving (> 1 m/s). */
+export function movingHeading(fix: LocationFix): number | null {
+  const { heading, speed } = fix;
+  if (typeof heading !== "number" || !Number.isFinite(heading) || typeof speed !== "number" || !(speed > 1)) return null;
+  return (Math.round((((heading % 360) + 360) % 360) / 5) * 5) % 360;
+}
+
 type Props = { fix: LocationFix | null | undefined; quality?: FixQuality; stale?: boolean };
 
 export function UserLocationLayer({ fix, quality, stale = false }: Props) {
@@ -51,7 +60,8 @@ export function UserLocationLayer({ fix, quality, stale = false }: Props) {
   if (!isInsideNaga({ lat: fix.lat, lng: fix.lng })) return null;
 
   const coarse = (quality ?? fixQuality(fix)) === "coarse";
-  const icon = coarse ? COARSE_ICON : stale ? STALE_ICON : PRECISE_ICON;
+  const heading = movingHeading(fix);
+  const icon = coarse ? COARSE_ICON : stale ? STALE_ICON : heading === null ? PRECISE_ICON : dotIcon(false, false, heading);
   const radius = Number.isFinite(fix.accuracy) && fix.accuracy > 0 ? fix.accuracy : 0;
   const center: L.LatLngTuple = [fix.lat, fix.lng];
 

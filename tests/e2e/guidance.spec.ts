@@ -252,6 +252,42 @@ test("one ride with GPS: Walk → Ride (rail advances, Para once) → Arrive wit
   await expect(page.getByTestId("saved-trip")).toHaveCount(1);
 });
 
+test("trip progress: a progress bar and an arrival range move with the fixes; a drag hands the map back until 'Follow my position'", async ({ page, context }) => {
+  await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));
+  await grantLocation(context);
+  await stubGeolocation(page);
+  await openApp(page);
+  await startGuidance(page);
+
+  const bar = guide(page).getByRole("progressbar", { name: "Trip progress" });
+  await expect(bar).toHaveAttribute("aria-valuenow", "0");
+  await expect(bar).toHaveAttribute("aria-valuetext", /^0% of the trip done, about [0-9.]+ (m|km) left$/);
+  await expect(page.getByTestId("guidance-eta")).toHaveText(/^≈ [0-9]+–[0-9]+ min · arrive about [0-9]{1,2}:[0-9]{2} (AM|PM)$/);
+  await expect(page.getByTestId("guidance-eta-caption")).toContainText("Waiting for a jeepney is not counted.");
+  // Not a live region, and the dot is on the map once a fix lands.
+  await expect(guide(page).getByTestId("guidance-progress").locator("xpath=ancestor-or-self::*[@aria-live]")).toHaveCount(0);
+  await expectHonest(page);
+
+  await expect.poll(() => geoStub(page)).toEqual({ watches: 1, calls: 1 });
+  await emit(page, { lat: 13.6224, lng: 123.1838 }, 12);
+  await emit(page, A1, 8);
+  await expect(page.getByTestId("guidance-progress-text")).toHaveText(/^[1-9][0-9]*% done · /);
+  await expect(page.locator(".pn-dot")).toHaveCount(1);
+
+  // A drag hands the map to the rider; the follow button takes it back.
+  await expect(page.getByTestId("map-follow-btn")).toHaveCount(0);
+  const box = (await mapEl(page).boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + 150);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 90, box.y + 190, { steps: 6 });
+  await page.mouse.up();
+  const follow = page.getByTestId("map-follow-btn");
+  await expect(follow).toHaveText("Follow my position");
+  await follow.click();
+  await expect(follow).toHaveCount(0);
+  await expectAxeClean(page);
+});
+
 // AC-7: a mocked low-accuracy fix never becomes a distance; guidance falls back to a landmark/stop check.
 test("low GPS accuracy: no distance or direction, a 'Check you're beside' stop check instead; a good fix restores the distance", async ({ page, context }) => {
   await page.route("**/api/v1/plan", (route) => fulfill(route, PROVISIONAL_PLAN));

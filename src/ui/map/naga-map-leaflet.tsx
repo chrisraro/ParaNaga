@@ -207,6 +207,83 @@ function FitHighlights({
   return null;
 }
 
+/** A fix this close (px) to the edge of the visible map is "leaving": the view is refitted around it. */
+const FOLLOW_EDGE_PX = 56;
+
+/**
+ * Guidance: keeps the rider's dot in view without taking over the map. Fits the dot together with
+ * the step's stops and the destination once per step, and again whenever a new fix lands near the
+ * edge of the part of the map that is not under the sheet. A drag hands the map back to the rider
+ * (`onDetach`); the follow button or the locate button takes it again. Reads only the fix the map
+ * already draws; nothing leaves the device.
+ */
+function FollowUser({
+  userFix,
+  stops,
+  destination,
+  paddingBottom,
+  paddingTop,
+  detached,
+  onDetach,
+}: {
+  userFix: LocationFix | null | undefined;
+  stops: readonly HighlightStop[] | undefined;
+  destination: LatLng | undefined;
+  paddingBottom: number;
+  paddingTop: number | undefined;
+  detached: boolean;
+  onDetach: () => void;
+}) {
+  const map = useMap();
+  const stepKey = stops && stops.length > 0 ? stops.map((s) => s.id).join("|") : "";
+  const lat = userFix?.lat;
+  const lng = userFix?.lng;
+  const inside = lat !== undefined && lng !== undefined && Number.isFinite(lat) && Number.isFinite(lng) && isInsideNaga({ lat, lng });
+
+  const fit = useEffectEvent(() => {
+    if (lat === undefined || lng === undefined) return;
+    const points: L.LatLngTuple[] = [[lat, lng]];
+    for (const s of stops ?? []) points.push([s.lat, s.lng]);
+    if (destination) points.push([destination.lat, destination.lng]);
+    const pad = routeFitPadding(paddingBottom, map.getSize().y, paddingTop);
+    map.fitBounds(L.latLngBounds(points), {
+      paddingTopLeft: [pad.left, pad.top],
+      paddingBottomRight: [pad.right, pad.bottom],
+      maxZoom: ROUTE_FIT_MAX_ZOOM,
+      duration: ROUTE_FIT_DURATION_S,
+      easeLinearity: ROUTE_FIT_EASE_LINEARITY,
+      animate: !prefersReducedMotion(),
+    });
+  });
+  const leaving = useEffectEvent(() => {
+    if (lat === undefined || lng === undefined) return false;
+    const size = map.getSize();
+    const p = map.latLngToContainerPoint([lat, lng]);
+    return p.x < FOLLOW_EDGE_PX || p.x > size.x - FOLLOW_EDGE_PX || p.y < (paddingTop ?? FOLLOW_EDGE_PX) || p.y > size.y - paddingBottom - FOLLOW_EDGE_PX;
+  });
+
+  useEffect(() => {
+    map.on("dragstart", onDetach);
+    return () => {
+      map.off("dragstart", onDetach);
+    };
+  }, [map, onDetach]);
+
+  // Nothing is fitted while the rider holds the map; taking it back fits at once.
+  const fitted = useRef<string | null>(null);
+  useEffect(() => {
+    if (detached) fitted.current = null;
+  }, [detached]);
+  useEffect(() => {
+    if (detached || !inside) return;
+    if (fitted.current !== stepKey || leaving()) {
+      fitted.current = stepKey;
+      fit();
+    }
+  }, [detached, inside, lat, lng, stepKey]);
+  return null;
+}
+
 type View = { lat: number; lng: number; zoom: number; bounds: Bounds };
 
 type SyncProps = {
@@ -318,6 +395,7 @@ export default function NagaMapLeaflet({
   layersButtonRef,
   tripLines = null,
   activeLegIndex = null,
+  followUser = false,
   legendNotice = null,
   routeLinesDimmed = false,
   fitTripLines = true,
@@ -374,6 +452,13 @@ export default function NagaMapLeaflet({
   const [map, setMap] = useState<L.Map | null>(null);
   const [view, setView] = useState<View | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  // Follow mode: a drag hands the map to the rider until the locate button (a new recenter signal)
+  // or the follow button takes it back. `detachedAt` is the recenter signal the drag happened under.
+  const [detachedAt, setDetachedAt] = useState<number | null>(null);
+  const signal = recenterSignal ?? 0;
+  const detached = followUser && detachedAt === signal;
+  const detach = useCallback(() => setDetachedAt(signal), [signal]);
+  const followVisible = detached && userFix != null && isInsideNaga({ lat: userFix.lat, lng: userFix.lng });
 
   const handleView = (next: View) => {
     setView(next);
@@ -525,6 +610,17 @@ export default function NagaMapLeaflet({
           fitId={fitId}
           fitPathReady={fitPathReady}
         />
+        {followUser ? (
+          <FollowUser
+            userFix={userFix}
+            stops={highlightStops}
+            destination={pins?.destination}
+            paddingBottom={highlightPaddingBottom}
+            paddingTop={highlightPaddingTop}
+            detached={detached}
+            onDetach={detach}
+          />
+        ) : null}
         <MapViewSync
           recenterSignal={recenterSignal}
           userFix={userFix}
@@ -547,6 +643,16 @@ export default function NagaMapLeaflet({
             <circle cx="18" cy="17.5" r="5.5" fill="#FFFFFF" />
           </svg>
         </div>
+      ) : null}
+
+      {followVisible ? (
+        <button type="button" className="pn-glass pn-map-follow" onClick={() => setDetachedAt(null)} data-testid="map-follow-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+          </svg>
+          {t.followMe}
+        </button>
       ) : null}
 
       <MapControls

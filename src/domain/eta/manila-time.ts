@@ -48,6 +48,14 @@ export function peakWindowsHit(departure: Date, durHighMin: number, windows: rea
   });
 }
 
+/** "3:45 PM": the Manila wall-clock time of an instant (epoch ms), to the minute. Same in every language. */
+export function formatManilaClock(epochMs: number): string {
+  const total = Math.floor(manilaMinutesOfDay(new Date(epochMs)));
+  const h24 = Math.floor(total / 60);
+  const mm = String(total % 60).padStart(2, "0");
+  return `${h24 % 12 === 0 ? 12 : h24 % 12}:${mm} ${h24 < 12 ? "AM" : "PM"}`;
+}
+
 /** True when [departure, departure + durHighMin] touches any peak window (see peakWindowsHit). */
 export function inPeakWindow(departure: Date, durHighMin: number, windows: readonly ClockWindow[]): boolean {
   return peakWindowsHit(departure, durHighMin, windows).length > 0;

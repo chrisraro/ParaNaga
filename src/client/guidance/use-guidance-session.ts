@@ -18,7 +18,9 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { useGeolocation, type GeolocationState } from "@/client/geo/use-geolocation";
 import { recordTrip } from "@/client/history/trip-history";
 import type { LocationFix } from "@/domain/geo/location-fix";
-import { startSession, type GuidanceEvent, type GuidanceSession } from "@/domain/guidance/session";
+import { NO_SPEED, updateSpeed, type SpeedTracker } from "@/domain/eta/live-speed";
+import { currentStep, sessionSteps, startSession, type GuidanceEvent, type GuidanceSession } from "@/domain/guidance/session";
+import { speedModeFor, tripStatus, type TripStatus } from "@/domain/guidance/trip-status";
 import type { GuidanceTrip } from "@/domain/guidance/steps";
 import { guidanceView, type GuidanceView } from "@/domain/guidance/view";
 import type { SavedTrip } from "@/domain/saved/saved";
@@ -38,6 +40,8 @@ export type UseGuidanceSession = {
   session: GuidanceSession | null;
   card: SavedTrip | null;
   view: GuidanceView | null;
+  /** How far along the trip is and when it should end (null unless active); see trip-status.ts. */
+  status: TripStatus | null;
   /** When the view was computed (the last fix or clock tick), for the polite-announcement throttle. */
   now: number;
   location: { state: GeolocationState; fix: LocationFix | null; watching: boolean };
@@ -78,9 +82,18 @@ export function useGuidanceSession(): UseGuidanceSession {
   // The view's clock: moved by each fix and by a tick while the watch runs (never read in render).
   const [now, setNow] = useState(0);
 
+  // The rider's pace on this step, in memory only (never stored or sent), restarted per step.
+  const [speed, setSpeed] = useState<SpeedTracker>(NO_SPEED);
+
   const geo = useGeolocation({
     onFix: (fix, at) => {
       setNow(at);
+      const before = getGuidanceSnapshot()?.session;
+      if (before?.status === "active") {
+        const kind = currentStep(before).kind;
+        const mode = speedModeFor(kind);
+        if (mode) setSpeed((prev) => updateSpeed(prev, `${before.startedAt}:${before.stepIndex}:${mode}`, mode, fix));
+      }
       applyGuidanceEvent({ type: "fix", fix, now: at });
     },
   });
@@ -198,11 +211,14 @@ export function useGuidanceSession(): UseGuidanceSession {
   const watching = geo.state === "watching";
   const fix = watching ? geo.fix : null;
   const view = session ? guidanceView(session, fix, now, t.guidance, t) : null;
+  // Progress and arrival time: the pace only counts for the step it was measured on (the tracker key).
+  const status = session ? tripStatus(session, sessionSteps(session), fix, now, speed.key === `${session.startedAt}:${session.stepIndex}:${speedModeFor(currentStep(session).kind)}` ? speed : null) : null;
   useAttention(view, session?.startedAt ?? null);
   return {
     session,
     card: snapshot?.card ?? null,
     view,
+    status,
     now,
     location: { state: geo.state, fix: geo.fix, watching },
     start,

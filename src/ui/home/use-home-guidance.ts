@@ -132,7 +132,7 @@ export function useHomeGuidance(): HomeGuidance {
   const destination = useMemo(() => {
     if (!trip) return null;
     const last = guidanceSteps(trip, t.guidance, t).at(-1);
-    return last?.kind === "walk_to_destination" ? { lat: last.target.lat, lng: last.target.lng } : null;
+    return last?.kind === "walk_to_destination" || last?.kind === "street_ride" ? { lat: last.target.lat, lng: last.target.lng } : null;
   }, [trip, t]);
   return { guidance, guiding: session !== null, highlights, stopPins, activeLegIndex, destination, pickPrompt, setPickPrompt };
 }

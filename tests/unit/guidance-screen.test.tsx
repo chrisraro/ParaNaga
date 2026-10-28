@@ -7,7 +7,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { UseGuidanceSession } from "@/client/guidance/use-guidance-session";
 import type { LocationFix } from "@/domain/geo/location-fix";
-import { reduceSession, startSession, type GuidanceSession } from "@/domain/guidance/session";
+import { reduceSession, sessionSteps, startSession, type GuidanceSession } from "@/domain/guidance/session";
+import { tripStatus } from "@/domain/guidance/trip-status";
 import { guidanceView } from "@/domain/guidance/view";
 import { Guidance } from "@/ui/guidance/guidance";
 import { DEST, ORIGIN, oneRide, streetOnly, tripOf } from "./guidance-fixtures";
@@ -24,6 +25,7 @@ function fake(session: GuidanceSession, fix: LocationFix | null, now: number, se
     session,
     card: null,
     view: guidanceView(session, fix, now),
+    status: tripStatus(session, sessionSteps(session), fix, now, null),
     now,
     location: { state: fix ? "watching" : "idle", fix, watching: fix !== null },
     start: vi.fn(),
@@ -51,6 +53,28 @@ describe("Guidance header", () => {
 
     rerender(ui(fake(s, fix, T0 + 31_000)));
     expect(screen.queryByTestId("guidance-accuracy")).toBeNull();
+  });
+});
+
+describe("Guidance trip progress", () => {
+  it("shows an accessible progress bar, the arrival range and the basis; none of it is a live region", () => {
+    const s = startSession(tripOf(oneRide()), T0);
+    render(ui(fake(s, null, T0)));
+    const bar = screen.getByRole("progressbar", { name: "Trip progress" });
+    expect(bar.getAttribute("aria-valuenow")).toBe("0");
+    expect(bar.getAttribute("aria-valuemin")).toBe("0");
+    expect(bar.getAttribute("aria-valuemax")).toBe("100");
+    expect(bar.getAttribute("aria-valuetext")).toBe("0% of the trip done, about 1.3 km left");
+    expect(screen.getByTestId("guidance-eta").textContent).toMatch(/^≈ \d+–\d+ min · arrive about \d{1,2}:\d{2} (AM|PM)$/);
+    expect(screen.getByTestId("guidance-progress-text").textContent).toBe("0% done · ≈ 1.3 km left");
+    expect(screen.getByTestId("guidance-eta-caption").textContent).toContain("No traffic data.");
+    expect(screen.getByTestId("guidance-progress").closest("[aria-live]")).toBeNull();
+  });
+
+  it("is left out of the arrive screen", () => {
+    const arrived = { ...startSession(tripOf(oneRide()), T0), status: "arrived" as const };
+    render(ui({ ...fake(arrived, null, T0), status: null }));
+    expect(screen.queryByTestId("guidance-progress")).toBeNull();
   });
 });
 
