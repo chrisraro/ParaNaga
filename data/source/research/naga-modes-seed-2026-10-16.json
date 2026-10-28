@@ -3136,6 +3136,47 @@
         "reason": "Routes update 2026-10-18; owner field evidence, evidence owner_report_unverified",
         "reviewedOn": "2026-10-18"
       }
+    },
+    {
+      "code": "RT33",
+      "title": "DILG Memorandum Circular No. 2020-036 (tricycles and pedicabs on national highways), as reported by DILG Region IV-A (2024-02-20)",
+      "url": "https://calabarzon.dilg.gov.ph/abalos-enforce-trikes-pedicabs-ban-on-highways/",
+      "extra_urls": [
+        "https://batasnatin.com/laws/mc-2020-036",
+        "https://newsinfo.inquirer.net/1230855/dilg-orders-lgus-to-strictly-enforce-ban-on-tricycles-pedicabs-on-highways"
+      ],
+      "publisher": "Department of the Interior and Local Government",
+      "date": "2020-02-17 (issued)",
+      "type": "official",
+      "licence": null,
+      "retrieved": "2026-10-29",
+      "properties": {
+        "scope": "National rule: tricycles and pedicabs barred from national highways used by 4-wheelers over 4 t at speeds over 40 KPH. Which Naga roads qualify is not published by the city; see docs/research/2026-10-29-tricycle-road-bans.md."
+      },
+      "review": {
+        "decision": "import",
+        "reason": "research 2026-10-29",
+        "reviewedOn": "2026-10-29"
+      }
+    },
+    {
+      "code": "U05",
+      "title": "Project owner instruction, 2026-10-29: tricycle trips must not use highways such as Almeda Highway",
+      "url": null,
+      "extra_urls": [],
+      "publisher": "ParaNaga project owner",
+      "date": "2026-10-29",
+      "type": "user_report_unverified",
+      "licence": null,
+      "retrieved": "2026-10-29",
+      "properties": {
+        "scope": "Owner designates Almeda Highway and the Maharlika Highway segments not already under Ordinance 2006-005/015 as national highways under DILG MC 2020-036. No Naga ordinance naming these roads was found (research 2026-10-29)."
+      },
+      "review": {
+        "decision": "import",
+        "reason": "owner instruction 2026-10-29",
+        "reviewedOn": "2026-10-29"
+      }
     }
   ],
   "terminals": [
@@ -6438,6 +6479,164 @@
         "decision": "import",
         "reason": "Task 2 review: ways and nodes checked against naga-roads-2026-10-16.osm.json; preview pending owner review",
         "reviewedOn": "2026-10-17"
+      }
+    },
+    {
+      "code": "NAT-HWY-T1",
+      "ruleCode": "NAT-HWY",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Almeda Highway"
+      ],
+      "ruleText": "Tricycles and pedicabs are prohibited on national highways (DILG MC 2020-036); crossing at intersections stays possible.",
+      "enacted": "2020-02-17",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        23525865,
+        238039992,
+        769916314,
+        769916316,
+        959623255,
+        959623256,
+        959623258,
+        959623296,
+        959623297,
+        959623298,
+        959623299,
+        959623300,
+        959623301,
+        1017413438,
+        1053960476,
+        1475251844,
+        1475251845
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Every OSM way named Almeda Highway in naga-roads-2026-10-16 (17 ways, trunk). Crossing at junctions uses no restricted edge.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "RT33",
+        "U05"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Owner instruction 2026-10-29: tricycles and pedicabs off Almeda Highway and Maharlika Highway at all hours (DILG MC 2020-036)",
+        "reviewedOn": "2026-10-29"
+      }
+    },
+    {
+      "code": "NAT-HWY-T2",
+      "ruleCode": "NAT-HWY",
+      "kind": "exclude",
+      "appliesTo": [
+        "tricycle"
+      ],
+      "streets": [
+        "Maharlika Highway"
+      ],
+      "ruleText": "Tricycles and pedicabs are prohibited on national highways (DILG MC 2020-036); crossing at intersections stays possible.",
+      "enacted": "2020-02-17",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        49062074,
+        769916313
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "The OSM Maharlika Highway ways not already under TRI-2006-P2 (ways 49062074 and 769916313, trunk); the 6 m rotonda connector way/721779676 stays a junction.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "RT33",
+        "U05"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Owner instruction 2026-10-29: tricycles and pedicabs off Almeda Highway and Maharlika Highway at all hours (DILG MC 2020-036)",
+        "reviewedOn": "2026-10-29"
+      }
+    },
+    {
+      "code": "NAT-HWY-P1",
+      "ruleCode": "NAT-HWY-PEDICAB",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Almeda Highway"
+      ],
+      "ruleText": "Tricycles and pedicabs are prohibited on national highways (DILG MC 2020-036); crossing at intersections stays possible.",
+      "enacted": "2020-02-17",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        23525865,
+        238039992,
+        769916314,
+        769916316,
+        959623255,
+        959623256,
+        959623258,
+        959623296,
+        959623297,
+        959623298,
+        959623299,
+        959623300,
+        959623301,
+        1017413438,
+        1053960476,
+        1475251844,
+        1475251845
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "Every OSM way named Almeda Highway in naga-roads-2026-10-16 (17 ways, trunk). Crossing at junctions uses no restricted edge.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "RT33",
+        "U05"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Owner instruction 2026-10-29: tricycles and pedicabs off Almeda Highway and Maharlika Highway at all hours (DILG MC 2020-036)",
+        "reviewedOn": "2026-10-29"
+      }
+    },
+    {
+      "code": "NAT-HWY-P2",
+      "ruleCode": "NAT-HWY-PEDICAB",
+      "kind": "exclude",
+      "appliesTo": [
+        "padyak"
+      ],
+      "streets": [
+        "Maharlika Highway"
+      ],
+      "ruleText": "Tricycles and pedicabs are prohibited on national highways (DILG MC 2020-036); crossing at intersections stays possible.",
+      "enacted": "2020-02-17",
+      "exceptWindow": null,
+      "geometry": "ways",
+      "wayIds": [
+        49062074,
+        769916313
+      ],
+      "clips": [],
+      "junctionNodeId": null,
+      "clipNote": "The OSM Maharlika Highway ways not already under TRI-2006-P2 (ways 49062074 and 769916313, trunk); the 6 m rotonda connector way/721779676 stays a junction.",
+      "evidence": "owner_report_unverified",
+      "sourceCodes": [
+        "RT33",
+        "U05"
+      ],
+      "review": {
+        "decision": "import",
+        "reason": "Owner instruction 2026-10-29: tricycles and pedicabs off Almeda Highway and Maharlika Highway at all hours (DILG MC 2020-036)",
+        "reviewedOn": "2026-10-29"
       }
     }
   ],

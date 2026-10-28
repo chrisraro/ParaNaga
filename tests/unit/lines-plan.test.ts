@@ -86,7 +86,7 @@ describe("buildLinesPlan on the committed snapshot", () => {
     expect(wg.sha256).toBe(createHash("sha256").update(wg.payload, "utf8").digest("hex"));
     const parsed = walkGraphPayloadSchema.parse(JSON.parse(wg.payload));
     expect(parsed).toMatchObject({ v: 2, roadSource: "OSMR-2026-10-16" });
-    expect(parsed.v === 2 && parsed.rules.map((r) => r.code)).toEqual(["TRI-2006"]);
+    expect(parsed.v === 2 && parsed.rules.map((r) => r.code)).toEqual(["NAT-HWY", "TRI-2006"]);
   });
 
   it("reports the road rules, padyak areas and notes per route for the dry run", () => {

@@ -332,6 +332,15 @@ export const ROAD_RULE_STREETS = {
       "Bagumbayan Road",
     ],
   },
+  // DILG MC 2020-036 (national highways): owner-designated highway segments, 2026-10-29.
+  "NAT-HWY": {
+    appliesTo: "tricycle",
+    streets: ["Almeda Highway", "Maharlika Highway"],
+  },
+  "NAT-HWY-PEDICAB": {
+    appliesTo: "padyak",
+    streets: ["Almeda Highway", "Maharlika Highway"],
+  },
 } as const satisfies Record<string, { appliesTo: "tricycle" | "padyak"; streets: readonly string[] }>;
 
 const osmId = z.number().int().positive();
@@ -339,8 +348,8 @@ const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const evidence = z.enum(RULE_EVIDENCE);
 
 const RoadRule = z.strictObject({
-  code: z.string().regex(/^(TRI-2006-(P[1-4]|X[1-6])|PADYAK-SEC132-[1-8])$/),
-  ruleCode: z.enum(Object.keys(ROAD_RULE_STREETS) as ["TRI-2006", "PADYAK-SEC132"]),
+  code: z.string().regex(/^(TRI-2006-(P[1-4]|X[1-6])|PADYAK-SEC132-[1-8]|NAT-HWY-[TP][1-9])$/),
+  ruleCode: z.enum(Object.keys(ROAD_RULE_STREETS) as ["TRI-2006", "PADYAK-SEC132", "NAT-HWY", "NAT-HWY-PEDICAB"]),
   kind: z.enum(["exclude", "exempt"]),
   appliesTo: z.union([z.tuple([z.literal("tricycle")]), z.tuple([z.literal("padyak")])]),
   /** Street names as the research writes them (checked against ROAD_RULE_STREETS). */

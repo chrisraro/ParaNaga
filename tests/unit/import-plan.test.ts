@@ -204,7 +204,7 @@ describe("buildImportPlan with the reviewed modes seed", () => {
 
   it("counts every imported kind", () => {
     expect(modes.counts).toEqual({
-      sources: 135, terminals: 16, terminals_with_coordinate: 12, routes: 2, variants: 3,
+      sources: 137, terminals: 16, terminals_with_coordinate: 12, routes: 2, variants: 3,
       route_operating_statuses: 11, route_vehicle_classes: 15, route_cooperatives: 7, route_fare_observations: 2,
       regional_services: 7, fare_rules_new: 7, fare_rule_versions_sources_added: 3, research_conflicts: 12,
       route_aliases: 9, excluded_records: modes.excluded.length,

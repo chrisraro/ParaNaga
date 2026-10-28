@@ -356,9 +356,9 @@ describe("real file content", () => {
 describe("research sources RT/RL/RP/RH and owner report U02 (2026-10-17)", () => {
   const research = real.sources.filter((s) => /^R[TLPH][0-9]{2}$/.test(s.code));
 
-  it("has one record per candidate: 24 tricycle candidates + 8 TODA ordinances (RT25-RT32), 19 loops, 22 padyak, 21 jeepney-hours", () => {
+  it("has one record per candidate: 24 tricycle candidates + 8 TODA ordinances (RT25-RT32) + DILG MC 2020-036 (RT33), 19 loops, 22 padyak, 21 jeepney-hours", () => {
     const count = (p: string) => research.filter((s) => s.code.startsWith(p)).length;
-    expect({ RT: count("RT"), RL: count("RL"), RP: count("RP"), RH: count("RH") }).toEqual({ RT: 32, RL: 19, RP: 22, RH: 21 });
+    expect({ RT: count("RT"), RL: count("RL"), RP: count("RP"), RH: count("RH") }).toEqual({ RT: 33, RL: 19, RP: 22, RH: 21 });
   });
 
   it("every new code is unique and matches the R-prefixed pattern; the parser refuses other R codes", () => {

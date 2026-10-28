@@ -38,13 +38,17 @@ const violations = (mutate: (j: Json) => void) => {
 const rule = (j: Json, code: string) => j.roadRules.find((r: Json) => r.code === code);
 
 describe("road rules (TRI-2006 and Ord 93-049 Sec 132)", () => {
-  it("has four TRI-2006 portions, six crossings and eight Sec 132 items", () => {
+  it("has four TRI-2006 portions, six crossings, eight Sec 132 items and the owner's national-highway rules", () => {
     const codes = real.roadRules.map((r) => r.code);
     expect(codes).toEqual([
       "TRI-2006-P1", "TRI-2006-P2", "TRI-2006-P3", "TRI-2006-P4",
       "TRI-2006-X1", "TRI-2006-X2", "TRI-2006-X3", "TRI-2006-X4", "TRI-2006-X5", "TRI-2006-X6",
       ...[1, 2, 3, 4, 5, 6, 7, 8].map((n) => `PADYAK-SEC132-${n}`),
+      "NAT-HWY-T1", "NAT-HWY-T2", "NAT-HWY-P1", "NAT-HWY-P2",
     ]);
+    // DILG MC 2020-036 (owner, 2026-10-29): all hours, tricycle and pedicab, ways only.
+    const hwy = real.roadRules.filter((r) => r.code.startsWith("NAT-HWY"));
+    expect(hwy.every((r) => r.kind === "exclude" && r.exceptWindow === null && r.geometry === "ways" && r.evidence === "owner_report_unverified")).toBe(true);
     expect(real.roadRules.filter((r) => r.ruleCode === "TRI-2006" && r.kind === "exclude")).toHaveLength(4);
     expect(real.roadRules.filter((r) => r.ruleCode === "TRI-2006" && r.kind === "exempt")).toHaveLength(6);
     expect(real.roadRules.filter((r) => r.ruleCode === "PADYAK-SEC132").every((r) => r.kind === "exclude" && r.appliesTo[0] === "padyak")).toBe(true);

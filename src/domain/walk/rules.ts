@@ -16,6 +16,7 @@ export type StreetRule = {
 /** Labels of the rule codes the builder may emit (the seed carries no label). */
 export const STREET_RULE_LABELS: Readonly<Record<string, string>> = {
   "TRI-2006": "Ordinance 2006-005/015 · check for updates",
+  "NAT-HWY": "DILG MC 2020-036 · national highway, all hours",
 };
 
 /** True when the rule's restriction is lifted at `now` (Manila time): its edges may be used. */

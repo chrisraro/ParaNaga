@@ -204,9 +204,10 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
  * Recorded at Task 6 and re-recorded for review I1 (exactly one Recommended; walk card on every trip < 500 m).
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  * Re-recorded 2026-10-22: ride stops keep the pins the board/alight points are named after (same options).
+ * Re-recorded 2026-10-29: tricycle and padyak routes avoid Almeda and Maharlika Highway (NAT-HWY, same options).
  */
 const REGRESSION_BASELINE = {
   options: 695,
   byMode: { jeepney: 477, tricycle: 200, padyak: 8, walk: 10 },
-  digest: "3ef888d96d0700657ba360c76b2065c21273c14c9dc952de660636112e2fe197",
+  digest: "67ef11498689d909fb0133933c61b69e6de66707a2795b859dc7f65237716c99",
 };
