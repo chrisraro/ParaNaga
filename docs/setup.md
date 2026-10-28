@@ -62,11 +62,11 @@ Sign up in the app with your email, verify it, then:
 pnpm admin:bootstrap --email you@example.com
 ```
 
-It refuses to run if an admin already exists. Grant other roles from the admin console (later increment) or `select core.grant_role(...)` in an admin session.
+It refuses to run if an admin already exists. Grant other roles from the admin console (Users and roles) or `select core.grant_role(...)` in an admin session.
 
-## 5. CI
+## 5. Checks (no CI)
 
-Create a GitHub environment `neon-ci` (with required reviewers if you like) holding secret `NEON_API_KEY` (least-privilege key); add repository variables `NEON_PROJECT_ID`, `NEON_SEED_BRANCH=dev`, `NEON_OWNER_ROLE` (the owner role name), `NEON_DATABASE`. On pushes to `master` or manual runs (never on pull requests), the `database` job creates a branch, migrates, runs the RLS check and integration tests, and deletes the branch. Keep real personal data out of the seed branch.
+There is no CI pipeline; the GitHub Actions setup was retired on 2026-10-20. Before pushing to `main`, run `pnpm verify` and the Playwright specs your change touches. For database changes, also run `bash scripts/with-neon-branch.sh pnpm db:check-rls` and `bash scripts/with-neon-branch.sh pnpm test:integration`. Each run creates a throwaway branch of `main`, applies pending migrations there, and deletes the branch.
 
 ## Transit data import
 
@@ -127,7 +127,7 @@ The Increment D release adds migrations 0006-0009 (modes, fleet, terminals, shap
 2. **Migrate.** `pnpm db:migrate` (applies 0006-0009; additive, no data rewritten), then `pnpm db:check-rls`.
 3. **Dry run.** `pnpm db:import --dry-run`. It must print no problems: a missing time-estimate parameter, an unpinned or altered road snapshot, or a seed record that fails review aborts with the list.
 4. **Import.** `pnpm db:import --commit`, then once more: the second run must report `unchanged` for every stage.
-5. **Deploy** the app (merge to `master`). Set or confirm the Vercel env vars first; `NEXT_PUBLIC_*` values are embedded at build time, so a change needs a redeploy. The new code needs migration 0009 and the published `modes-lines-*` revision, so deploy only after steps 2-4.
+5. **Deploy** the app (push to `main`). Set or confirm the Vercel env vars first; `NEXT_PUBLIC_*` values are embedded at build time, so a change needs a redeploy. The new code needs migration 0009 and the published `modes-lines-*` revision, so deploy only after steps 2-4.
 6. **Verify the endpoints** on the production URL:
    - `GET /api/v1/network/head` names `modes-lines-2026-10-16` as the published revision.
    - `GET /api/v1/network/snapshot/<id>` (its `routes[].fareReports` is present), `/network/search-index/<id>`, `/network/lines/<id>` (cache headers `immutable`), `/network/walk-graph/<id>`, `/routes/R4`, `/terminals/T01`.
@@ -170,7 +170,7 @@ Adds migrations 0010 (route notes, street graph v2, research source codes), 0011
 
 1. Back up Neon `main` (branch it) and note the published revision id; that is the rollback target.
 2. `pnpm db:migrate` (applies 0010, 0011, 0012), then `pnpm db:check-rls`. 0011 must be in place before the places import (the new place categories fail the check constraint without it). 0012 must be in place before `PLACES_GOOGLE_ENABLED=true`; keep that flag `false` until 0012 is applied on `main` and `db:check-rls` passes.
-3. Merge the PR (CI e2e gates the merge); Vercel deploys on merge. Deploying before the import is safe: the new code reads the old revision's v1 graph until v2 is published.
+3. Run the affected Playwright specs locally, then push to `main`; Vercel deploys on push. Deploying before the import is safe: the new code reads the old revision's v1 graph until v2 is published.
 4. `pnpm db:import --dry-run`. It prints metres per road rule, padyak-banned metres, padyak areas with their place nodes and coverage, graph size against the 800 KB / 260 KB budget, and notes per route. Read it before committing.
 5. `pnpm db:import --commit`, then again: the second run must report `unchanged`. The reviewed seed keeps the name `naga-modes-seed-2026-10-16.json`; because its hash changed, the importer records it as a revised-seed batch (ADR 010).
 6. Smoke test: `GET /api/v1/network/head` names the new revision; the snapshot has `routes[].notes`; `/network/walk-graph/<id>` returns v2; plan a trip in `/app` (jeepney, tricycle and padyak options, a 400 m walk). Between the deploy and the import the tricycle option is still offered at 500 m or more (Recommended) but reads "Street route not available" (the v1 graph has no mode data), and there is no padyak option.

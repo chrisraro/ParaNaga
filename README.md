@@ -4,7 +4,7 @@
 
 ParaNaga is a mobile-first commuter web app (PWA) for **Naga City, Camarines Sur, Philippines**. It helps tourists, students, newcomers and residents answer the everyday questions: where to wait, which jeepney and direction to take, what it costs, where to transfer, and when to get off. People can also report corrections, share commuting tips, and privately report a driver, with a handoff to the city's official MyNaga app.
 
-> **Status: early development.** Foundation and the data import are built. A provisional planner covers Loops A and B on unverified pins, always badged, with no exact fares and no drawn path. No trip is presented as verified until reviewers publish checked route data.
+> **Status: pre-launch (N8 readiness).** The planner, step-by-step guidance, saved trips, community tips, corrections, private driver reports and the admin review console are built (increments N1–N7). Route data stays provisional and badged, with fare ranges rather than exact fares, until reviewers publish checked data.
 
 ## Principles
 
@@ -21,8 +21,9 @@ Next.js 16 (App Router, Cache Components) · React 19 · strict TypeScript · Ne
 ## Docs
 
 - [Product, architecture, security and delivery spec](docs/spec/README.md)
-- [Setup: Neon via Vercel, roles, environment, first admin, CI](docs/setup.md)
+- [Setup: Neon via Vercel, roles, environment, first admin](docs/setup.md)
 - [Research package and source register](Data_Sets/Naga_Commuter_Research.md) (read-only input)
+- [Research updates](docs/research/) (dated, AI-drafted evidence; not app data until reviewed)
 
 ## Development
 
@@ -51,15 +52,18 @@ Copy `.env.example` to `.env.local` and fill it in per [docs/setup.md](docs/setu
 ## Layout
 
 ```
-src/domain/    pure TypeScript (permissions; planner, fares, moderation policy later)
-src/server/    server-only: env, db (withRequestContext), auth (session, authorize)
-src/app/       routes; api/auth (Neon Auth proxy), api/health, api/csp-report
+src/domain/    pure TypeScript: planner, fares, walk graph, guidance, moderation, API schemas
+src/server/    server-only: env, db (withRequestContext), auth, repos, admin, media, jobs, rate limits
+src/client/    browser state: IndexedDB, saved-trip sync, geolocation, offline/PWA
+src/ui/        React components by feature
+src/i18n/      en, fil, bcl dictionaries (Bikol falls back to Filipino)
+src/app/       routes: /app (commuter), /admin (review console), /api/v1 (JSON), /api/cron
 src/proxy.ts   optimistic gate for /account and /admin
 db/migrations  hand-written SQL; row-level security forced on every table
-scripts/       migrate, check-rls, bootstrap-admin, check-boundaries, check-bundle-secrets
+scripts/       migrate, check-rls, import, bootstrap-admin, boundary and bundle-secret checks, load test
 tests/         unit · integration · e2e
-docs/          spec and setup
-Data_Sets/     research snapshot (15 Oct 2026)
+docs/          spec, setup, plans, research updates
+Data_Sets/     research snapshot (15 Oct 2026, read-only)
 ```
 
 ## Data and attribution
