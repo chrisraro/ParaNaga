@@ -7,7 +7,7 @@
         "sha256": "72010543af6db4395b50200abf0d61aec5f19be83315aa6af7740f0e14d5cf35"
       }
     ],
-    "reviewStatus": "draft"
+    "reviewStatus": "owner_approved"
   },
   "sources": [
     {
@@ -23,7 +23,7 @@
         "decision": "import",
         "reason": "Research source R1 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -39,7 +39,7 @@
         "decision": "import",
         "reason": "Research source R2 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -55,7 +55,7 @@
         "decision": "import",
         "reason": "Research source R3 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -71,7 +71,7 @@
         "decision": "import",
         "reason": "Research source R4 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -87,7 +87,7 @@
         "decision": "import",
         "reason": "Research source R5 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -103,7 +103,7 @@
         "decision": "import",
         "reason": "Research source R6 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -119,7 +119,7 @@
         "decision": "import",
         "reason": "Research source R7 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -135,7 +135,7 @@
         "decision": "import",
         "reason": "Research source R8 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -151,7 +151,7 @@
         "decision": "import",
         "reason": "Research source R9 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -167,7 +167,7 @@
         "decision": "import",
         "reason": "Research source R10 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -183,7 +183,7 @@
         "decision": "import",
         "reason": "Research source R11 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -199,7 +199,7 @@
         "decision": "import",
         "reason": "Research source R12 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -215,7 +215,7 @@
         "decision": "import",
         "reason": "Research source R13 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -231,7 +231,7 @@
         "decision": "import",
         "reason": "Research source R14 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -247,7 +247,7 @@
         "decision": "import",
         "reason": "Research source R15 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -263,7 +263,7 @@
         "decision": "import",
         "reason": "Research source R16 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -279,7 +279,7 @@
         "decision": "import",
         "reason": "Research source R17 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -295,7 +295,7 @@
         "decision": "import",
         "reason": "Research source R18 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -311,7 +311,7 @@
         "decision": "import",
         "reason": "Research source R19 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -327,7 +327,7 @@
         "decision": "import",
         "reason": "Research source R20 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -343,7 +343,7 @@
         "decision": "import",
         "reason": "Research source R21 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -359,7 +359,7 @@
         "decision": "import",
         "reason": "Research source R22 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -375,7 +375,7 @@
         "decision": "import",
         "reason": "Research source R23 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -391,7 +391,7 @@
         "decision": "import",
         "reason": "Research source R24 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -407,7 +407,7 @@
         "decision": "import",
         "reason": "Research source R25 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -423,7 +423,7 @@
         "decision": "import",
         "reason": "Research source R26 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -439,7 +439,7 @@
         "decision": "import",
         "reason": "Research source R27 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -455,7 +455,7 @@
         "decision": "import",
         "reason": "Research source R28 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -471,7 +471,7 @@
         "decision": "import",
         "reason": "Research source R29 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -487,7 +487,7 @@
         "decision": "import",
         "reason": "Research source R30 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -503,7 +503,7 @@
         "decision": "import",
         "reason": "Research source R31 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -519,7 +519,7 @@
         "decision": "import",
         "reason": "Research source R32 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -535,7 +535,7 @@
         "decision": "import",
         "reason": "Research source R33 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -551,7 +551,7 @@
         "decision": "import",
         "reason": "Research source R34 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -567,7 +567,7 @@
         "decision": "import",
         "reason": "Research source R35 (register, accessed 2026-10-28); evidence type per IC1 plan Task 3",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     }
   ],
@@ -623,7 +623,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -640,7 +640,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -657,7 +657,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -674,7 +674,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 names the Caramoan route, research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -691,7 +691,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 names the Garchitorena route, research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -708,7 +708,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -725,7 +725,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -742,7 +742,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -760,7 +760,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 Legazpi route (research §1); suspended Naga–Legazpi rail (research §4)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -777,7 +777,7 @@
         "decision": "import",
         "reason": "Eastbound van listing Tabaco ₱180 (R29), research §2",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -794,7 +794,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 names the Bulan route, research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -811,7 +811,7 @@
         "decision": "import",
         "reason": "Westbound van listing Daet ₱140 (R29), research §2",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -833,7 +833,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo station, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -855,7 +855,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo station, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -877,7 +877,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo station, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -899,7 +899,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo terminus, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -921,7 +921,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -943,7 +943,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -965,7 +965,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -987,7 +987,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1009,7 +1009,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1031,7 +1031,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1053,7 +1053,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1075,7 +1075,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1097,7 +1097,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1119,7 +1119,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1141,7 +1141,7 @@
         "decision": "import",
         "reason": "Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1159,7 +1159,7 @@
         "decision": "import",
         "reason": "DLTB and Peñafrancia Cubao listings (R25, R26), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1177,7 +1177,7 @@
         "decision": "import",
         "reason": "Manila operators listed to PITX (R27); former Philtranco PITX–Naga (R23), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1194,7 +1194,7 @@
         "decision": "import",
         "reason": "Peñafrancia, Isarog Line and Legaspi St Jude listed to Alabang (R27), research §1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1213,7 +1213,7 @@
         "decision": "import",
         "reason": "Cebgo Clark–Naga daily since 2026-03-29 (R30–R32), research §5",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     }
   ],
@@ -1239,7 +1239,7 @@
         "decision": "import",
         "reason": "Research §5 and §6: Naga Airport (WNP), San Jose, Pili, on Maharlika Hwy, run by CAAP; no OSM coordinate on file",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     }
   ],
@@ -1356,7 +1356,7 @@
         "decision": "import",
         "reason": "Research §4: operating with limited trips since 2025-11-05 (status Medium-High, times Low); fares at launch",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1398,7 +1398,7 @@
         "decision": "import",
         "reason": "Research §4: suspended since 2025-11-10, no reopening date (High); decision 4a, review in 30 days",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1454,7 +1454,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 15 min (terminal rule); fare not found",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1512,7 +1512,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 12 min (terminal rule); fare not found",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1570,7 +1570,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 12 min (terminal rule); fare not found",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1611,7 +1611,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1652,7 +1652,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1693,7 +1693,7 @@
         "decision": "import",
         "reason": "Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1783,7 +1783,7 @@
         "decision": "import",
         "reason": "Booking-site listing R25 (Sep 2026), Low; PITX destination from R27; unconfirmed",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1871,7 +1871,7 @@
         "decision": "import",
         "reason": "Booking-site listing R26 (Sep 2026), Low; Alabang and PITX destinations from R27; unconfirmed",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1916,7 +1916,7 @@
         "decision": "import",
         "reason": "Booking-site listing R27, Low; fares undated, so no amounts or times imported; unconfirmed",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -1961,7 +1961,7 @@
         "decision": "import",
         "reason": "Booking-site listing R27 and DZRH R24 (active Dec 2025), Low; 2025 fares have no month; unconfirmed",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2006,7 +2006,7 @@
         "decision": "import",
         "reason": "Booking-site listing R27, Low; 2025 fare has no month; unconfirmed",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2048,7 +2048,7 @@
         "decision": "import",
         "reason": "Decision 9a: Philtranco announced it would stop on 2026-03-30, no resumption found (R23, Medium); the second listed operator is removed: no Naga departures found for it (research §1)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2129,7 +2129,7 @@
         "decision": "import",
         "reason": "Decision 7a: Wikivoyage listing R29 (Oct 2023), Low (old); shown as an old listing next to the estimate",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2196,7 +2196,7 @@
         "decision": "import",
         "reason": "Decision 7a: Wikivoyage listing R29 (Oct 2023), Low (old); shown as an old listing next to the estimate",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2239,7 +2239,7 @@
         "decision": "import",
         "reason": "Research §3: Rinconada and Partido jeepneys use the eastbound terminal (R15, R16; Medium, historical); fare not found, F01 estimate only",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2295,7 +2295,7 @@
         "decision": "import",
         "reason": "Decision 8a: Cebgo flies Clark–Naga daily since 2026-03-29 (R30–R32, Medium-High); fare not found",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     }
   ],
@@ -2309,7 +2309,7 @@
         "decision": "import",
         "reason": "Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2321,7 +2321,7 @@
         "decision": "import",
         "reason": "Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2333,7 +2333,7 @@
         "decision": "import",
         "reason": "Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2345,7 +2345,7 @@
         "decision": "import",
         "reason": "Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     }
   ],
@@ -2365,7 +2365,7 @@
         "decision": "import",
         "reason": "Decision 3a: South Long Haul is planned only and unfunded (R10, R11, High); shown as 'no trains run', never as a service",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     }
   ],
@@ -2384,7 +2384,7 @@
         "decision": "exclude",
         "reason": "suspended service; old fares ('do not use', research §4)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2397,7 +2397,7 @@
         "decision": "exclude",
         "reason": "a booking-site fare needs a month",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2410,7 +2410,7 @@
         "decision": "exclude",
         "reason": "not confirmed; low-quality source",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2421,7 +2421,7 @@
         "decision": "exclude",
         "reason": "no Naga departures found",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2434,7 +2434,7 @@
         "decision": "exclude",
         "reason": "page 404; undated (decision 7a)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2447,7 +2447,7 @@
         "decision": "exclude",
         "reason": "page 404; undated (decision 7a)",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2458,7 +2458,7 @@
         "decision": "exclude",
         "reason": "blog posts from 2013–2019",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2471,7 +2471,7 @@
         "decision": "exclude",
         "reason": "paid by operators, not a fare",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2484,7 +2484,7 @@
         "decision": "exclude",
         "reason": "not a goal for IC1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     },
     {
@@ -2495,7 +2495,7 @@
         "decision": "exclude",
         "reason": "not a goal for IC1",
         "reviewedOn": "2026-10-28",
-        "reviewer": "owner"
+        "reviewer": "Christian Raro"
       }
     }
   ]
