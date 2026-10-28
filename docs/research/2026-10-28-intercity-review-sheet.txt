@@ -1,0 +1,124 @@
+intercity seed: naga-intercity-seed-2026-10-28.json  sha256 342bd3ddaea343937969f2f458d78916be40fdf1615c8d591eab5b1b7dbf4a7a  69427 bytes
+  batch key intercity-seed:2026-10-28:342bd3ddaea3
+counts:
+  sources                            35
+  destinations                       31
+  terminals                          1
+  services                           18
+  service_links                      4
+  departures                         9
+  observations                       9
+  dataset_notes                      1
+  excluded                           10
+excluded by review (10, never written):
+  excluded X-RAIL-FARES-2025: suspended service; old fares ('do not use', research §4)
+  excluded X-BOOKING-2025: a booking-site fare needs a month
+  excluded X-ALPS: not confirmed; low-quality source
+  excluded X-BUS-NOT-FOUND: no Naga departures found
+  excluded X-UV-R34: page 404; undated (decision 7a)
+  excluded X-ROGER: page 404; undated (decision 7a)
+  excluded X-BLOG-2013-19: blog posts from 2013–2019
+  excluded X-EB-FEE: paid by operators, not a fare
+  excluded X-LUCENA: not a goal for IC1
+  excluded X-SEA: not a goal for IC1
+
+
+draft revision: (none open)
+import decisions (91):
+  no open draft: the plan below is read against the published revision; a commit would be refused
+  source IC01 import (news): new
+  source IC02 import (news): new
+  source IC03 import (community): new
+  source IC04 import (official): new
+  source IC05 import (community): new
+  source IC06 import (news): new
+  source IC07 import (news): new
+  source IC08 import (news): new
+  source IC09 import (community): new
+  source IC10 import (news): new
+  source IC11 import (news): new
+  source IC12 import (news): new
+  source IC13 import (official): new
+  source IC14 import (official): new
+  source IC15 import (official): new
+  source IC16 import (official): new
+  source IC17 import (news): new
+  source IC18 import (news): new
+  source IC19 import (news): new
+  source IC20 import (news): new
+  source IC21 import (news): new
+  source IC22 import (news): new
+  source IC23 import (news): new
+  source IC24 import (news): new
+  source IC25 import (booking_site): new
+  source IC26 import (booking_site): new
+  source IC27 import (booking_site): new
+  source IC28 import (low_quality): new
+  source IC29 import (travel_guide): new
+  source IC30 import (news): new
+  source IC31 import (news): new
+  source IC32 import (community): new
+  source IC33 import (news): new
+  source IC34 import (news): new
+  source IC35 import (community): new
+  destination D-GOA import: Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1 -> identity new, version new 28e97006dceb, member added
+  destination D-TIGAON import: Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1 -> identity new, version new 31ebb3251c8b, member added
+  destination D-LAGONOY import: Ord. 2024-032 Partido route (Goa, Tigaon, Lagonoy…), research §1 -> identity new, version new a91cf4acdd3a, member added
+  destination D-CARAMOAN import: Ord. 2024-032 names the Caramoan route, research §1 -> identity new, version new 3e50c161c6c4, member added
+  destination D-GARCHITORENA import: Ord. 2024-032 names the Garchitorena route, research §1 -> identity new, version new 078945ef7c25, member added
+  destination D-IRIGA import: Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1 -> identity new, version new aaeacb2f0f13, member added
+  destination D-NABUA import: Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1 -> identity new, version new cda4fc9f6a0a, member added
+  destination D-BULA import: Ord. 2024-032 Rinconada route (Iriga, Nabua, Bula…), research §1 -> identity new, version new f910dda8b1eb, member added
+  destination D-LEGAZPI import: Ord. 2024-032 Legazpi route (research §1); suspended Naga–Legazpi rail (research §4) -> identity new, version new c2a0ad35d458, member added
+  destination D-TABACO import: Eastbound van listing Tabaco ₱180 (R29), research §2 -> identity new, version new 3759415ef3c4, member added
+  destination D-BULAN import: Ord. 2024-032 names the Bulan route, research §1 -> identity new, version new 0d346738127e, member added
+  destination D-DAET import: Westbound van listing Daet ₱140 (R29), research §2 -> identity new, version new aca5d1fe70a4, member added
+  destination D-PAMPLONA import: Naga–Lupi Viejo station, research §4 (R1–R5, R10) -> identity new, version new a4537401bc7e, member added
+  destination D-LIBMANAN import: Naga–Lupi Viejo station, research §4 (R1–R5, R10) -> identity new, version new bb3c7609ceb4, member added
+  destination D-SIPOCOT import: Naga–Lupi Viejo station, research §4 (R1–R5, R10) -> identity new, version new 3937ee156b88, member added
+  destination D-LUPI-VIEJO import: Naga–Lupi Viejo terminus, research §4 (R1–R5, R10) -> identity new, version new 00f5df54863b, member added
+  destination D-SAMPALOC import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new 2507bf18cd61, member added
+  destination D-BORABOD import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new 64c3d8d7c5b3, member added
+  destination D-MAMBULO import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new 7d1abe93d48d, member added
+  destination D-MALANSAD import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new 7c5c5087aac1, member added
+  destination D-RONGOS import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new bc08d6ed0e7a, member added
+  destination D-CAMAMBUGAN import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new f8af780ab5f9, member added
+  destination D-MANTALISAY import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new 66674c542841, member added
+  destination D-AWAYAN import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new ba1b6250db5e, member added
+  destination D-AZUCENA import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new 05917748a7f7, member added
+  destination D-MALAGUICO import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new b6b8b8270916, member added
+  destination D-LUPI-NUEVO-TAPI import: Naga–Lupi Viejo flag stop, research §4 (R1–R5, R10) -> identity new, version new 50eeaf73e685, member added
+  destination D-CUBAO import: DLTB and Peñafrancia Cubao listings (R25, R26), research §1 -> identity new, version new 39a904bb3fb4, member added
+  destination D-PITX import: Manila operators listed to PITX (R27); former Philtranco PITX–Naga (R23), research §1 -> identity new, version new 272eadc45565, member added
+  destination D-ALABANG import: Peñafrancia, Isarog Line and Legaspi St Jude listed to Alabang (R27), research §1 -> identity new, version new bb74f8fd14b7, member added
+  destination D-CLARK import: Cebgo Clark–Naga daily since 2026-03-29 (R30–R32), research §5 -> identity new, version new 4943ceccd441, member added
+  terminal T17 import: Research §5 and §6: Naga Airport (WNP), San Jose, Pili, on Maharlika Hwy, run by CAAP; no OSM coordinate on file -> identity new, version new a96ec8008fe2, member added
+  service RS08 import (operating_limited): Research §4: operating with limited trips since 2025-11-05 (status Medium-High, times Low); fares at launch -> identity new, version new 4f625ec58be4, member added; 1 departure(s), 2 observation(s)
+  service RS09 import (suspended): Research §4: suspended since 2025-11-10, no reopening date (High); decision 4a, review in 30 days -> identity new, version new 42082b761fdf, member added
+  service RS10 import (operating): Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 15 min (terminal rule); fare not found -> identity new, version new 71751a2ee4b1, member added; 1 departure(s)
+  service RS11 import (operating): Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 12 min (terminal rule); fare not found -> identity new, version new 49095896c60d, member added; 1 departure(s)
+  service RS12 import (operating): Ord. 2024-032 (R13, 2024-04-23) city route category with dispatch every 12 min (terminal rule); fare not found -> identity new, version new 16f0ef7280fc, member added; 1 departure(s)
+  service RS13 import (operating): Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found -> identity new, version new 60628689dc0d, member added
+  service RS14 import (operating): Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found -> identity new, version new bdcf29b10ffc, member added
+  service RS15 import (operating): Ord. 2024-032 (R13) names this route, by bus company; fare and schedule not found -> identity new, version new ae5359cbccda, member added
+  service RS16 import (unconfirmed): Booking-site listing R25 (Sep 2026), Low; PITX destination from R27; unconfirmed -> identity new, version new c1d33828a7e4, member added; 1 departure(s), 2 observation(s)
+  service RS17 import (unconfirmed): Booking-site listing R26 (Sep 2026), Low; Alabang and PITX destinations from R27; unconfirmed -> identity new, version new dc59b1f2bda6, member added; 1 departure(s), 2 observation(s)
+  service RS18 import (unconfirmed): Booking-site listing R27, Low; fares undated, so no amounts or times imported; unconfirmed -> identity new, version new f150dc18051c, member added
+  service RS19 import (unconfirmed): Booking-site listing R27 and DZRH R24 (active Dec 2025), Low; 2025 fares have no month; unconfirmed -> identity new, version new 7d5a9fe5baac, member added
+  service RS20 import (unconfirmed): Booking-site listing R27, Low; 2025 fare has no month; unconfirmed -> identity new, version new 70151202614d, member added
+  service RS06 import (discontinued_reported): Decision 9a: Philtranco announced it would stop on 2026-03-30, no resumption found (R23, Medium); the second listed operator is removed: no Naga departures found for it (research §1) -> identity exists, version new 9c67a77b507e, member repointed; OSM relation versions kept from the member version
+  service RS21 import (unconfirmed): Decision 7a: Wikivoyage listing R29 (Oct 2023), Low (old); shown as an old listing next to the estimate -> identity new, version new dcabd4f58964, member added; 1 departure(s), 2 observation(s)
+  service RS22 import (unconfirmed): Decision 7a: Wikivoyage listing R29 (Oct 2023), Low (old); shown as an old listing next to the estimate -> identity new, version new a2b8b637e3b7, member added; 1 departure(s), 1 observation(s)
+  service RS23 import (unconfirmed): Research §3: Rinconada and Partido jeepneys use the eastbound terminal (R15, R16; Medium, historical); fare not found, F01 estimate only -> identity new, version new 29cb9a10ee99, member added
+  service RS24 import (operating): Decision 8a: Cebgo flies Clark–Naga daily since 2026-03-29 (R30–R32, Medium-High); fare not found -> identity new, version new e66bc43f67bd, member added; 1 departure(s)
+  serviceLink RS01 import (community_mapped): Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6) -> identity exists, version new 66d32e6c1549, member repointed; copy of the member version with destination codes
+  serviceLink RS02 import (community_mapped): Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6) -> identity exists, version new 7d0cb7753290, member repointed; copy of the member version with destination codes
+  serviceLink RS03 import (community_mapped): Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6) -> identity exists, version new e6e4ce937dc0, member repointed; copy of the member version with destination codes
+  serviceLink RS05 import (community_mapped): Legacy service destination matches an IC1 destination; new community_mapped version (plan deviation 6) -> identity exists, version new bafb90616b80, member repointed; copy of the member version with destination codes
+  datasetNote intercity_south_long_haul import: Decision 3a: South Long Haul is planned only and unfunded (R10, R11, High); shown as 'no trains run', never as a service -> row new, member added
+
+a commit would be refused:
+  - reviewStatus is draft, owner_approved required
+  - no open draft revision
+
+dry run: no problems found; nothing written
