@@ -55,7 +55,10 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   const farD = zoneOf(destination, FAR_AREAS) !== null;
   // Increment F (review C1/I2): a long far trip with no jeepney shows only an unlabelled special-trip tricycle.
   const noneRecommended = (farO || farD) && !p.options.some((o) => o.mode === "jeepney") && p.directWalkEstimateMeters! >= 500;
-  expect(p.options.filter((o) => o.labels.includes("Recommended"))).toHaveLength(noneRecommended ? 0 : 1);
+  // A restricted tricycle (street banned at this hour) is never Recommended, so there may be none.
+  const recommendedCount = p.options.filter((o) => o.labels.includes("Recommended")).length;
+  if (p.options.some((x) => x.legs.some((l) => l.kind === "tricycle" && l.basis === "restricted"))) expect(recommendedCount).toBeLessThanOrEqual(1);
+  else expect(recommendedCount).toBe(noneRecommended ? 0 : 1);
   // Under 500 m a jeepney is Recommended only when it passes the destination (its last drop-off within 100 m).
   const rec = p.options.find((o) => o.labels.includes("Recommended"));
   const lastRide = rec?.legs.filter((l) => l.kind === "ride").at(-1);
@@ -204,9 +207,10 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
  * Recorded at Task 6 and re-recorded for review I1 (exactly one Recommended; walk card on every trip < 500 m).
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  * Re-recorded 2026-10-22: ride stops keep the pins the board/alight points are named after (same options).
+ * Re-recorded: a tricycle blocked by the restricted roads at 10:00 is now a "restricted" leg (no distance, no line, never Recommended).
  */
 const REGRESSION_BASELINE = {
   options: 695,
   byMode: { jeepney: 477, tricycle: 200, padyak: 8, walk: 10 },
-  digest: "3ef888d96d0700657ba360c76b2065c21273c14c9dc952de660636112e2fe197",
+  digest: "e1e9f040e3a5d5abb6506e596e3e3421f2efceb5ac153cd875d9b3074dccff56",
 };

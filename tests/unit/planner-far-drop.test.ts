@@ -149,7 +149,9 @@ describe("far drop-off jeepney (JEEP_NEAR_DROP_M, JEEP_FAR_DROP_MAX_M)", () => {
         const farO = zoneOf(o, FAR_AREAS) !== null;
         const farD = zoneOf(d, FAR_AREAS) !== null;
         const noneRecommended = (farO || farD) && jeepneys(p).length === 0 && p.directWalkEstimateMeters! >= 500;
-        expect(recommended(p)).toHaveLength(noneRecommended ? 0 : 1);
+        // A restricted tricycle (street banned at this hour) is never Recommended, so there may be none.
+        if (p.options.some((x) => x.legs.some((l) => l.kind === "tricycle" && l.basis === "restricted"))) expect(recommended(p).length).toBeLessThanOrEqual(1);
+        else expect(recommended(p)).toHaveLength(noneRecommended ? 0 : 1);
         if (farD) expect(afterStreet(p)).toHaveLength(0);
         const nearM = inCentro(o) && inCentro(d) && !farO ? PASSES_DESTINATION_M : JEEP_NEAR_DROP_M;
         for (const j of afterStreet(p)) {

@@ -100,9 +100,16 @@ describe("city centre (CENTRO anchors)", () => {
     const d = anchor(b);
     const p = plan(o, d);
     expect(p.directWalkEstimateMeters).toBeGreaterThanOrEqual(500);
-    expect(recommended(p)).toHaveLength(1);
-    expect(recommended(p)[0]!.mode).toBe("tricycle");
-    expect(p.options[0]!.mode).toBe("tricycle");
+    const tri = p.options.find((x) => x.mode === "tricycle")!;
+    if ((tri.legs[0] as { basis: string }).basis === "restricted") {
+      // The street is banned to tricycles at this hour: no line, nothing Recommended, not listed first.
+      expect(tri.labels).toEqual([]);
+      expect(recommended(p)).toHaveLength(0);
+    } else {
+      expect(recommended(p)).toHaveLength(1);
+      expect(recommended(p)[0]!.mode).toBe("tricycle");
+      expect(p.options[0]!.mode).toBe("tricycle");
+    }
     expect(withinGuard(p, o, d)).toBe(true);
     for (const j of jeepneys(p)) {
       const last = j.legs.filter((l) => l.kind === "ride").at(-1)!;

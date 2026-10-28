@@ -16,7 +16,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import L from "leaflet";
 import { resolveVisualKey, type RouteMode, type VisualKey } from "@/domain/modes/modes";
 import {
-  APPROX_STREET_DASH_ARRAY,
   PADYAK_DASH_ARRAY,
   PALETTE_D,
   PALETTE_L,
@@ -33,15 +32,14 @@ export const LEGEND_WALK_NOTE = en.map.legendWalk;
 export const LEGEND_STOP_LABEL = en.map.legendStop;
 export const LEGEND_MIXED_NOTE = en.map.legendMixed;
 
-/** Extra entries a trip can need: padyak (dashed), a straight line that is not a route, a free board or get-off point. */
-export type LegendExtra = "padyak" | "approx_street" | "free_point";
+/** Extra entries a trip can need: padyak (dashed), a free board or get-off point. */
+export type LegendExtra = "padyak" | "free_point";
 export const LEGEND_EXTRA_LABEL: Record<LegendExtra, string> = {
   padyak: en.map.legendPadyak,
-  approx_street: en.map.legendApproxStreet,
   free_point: en.map.legendFreePoint,
 };
 
-const extraLabel = (extra: LegendExtra, m: Dict["map"]) => (extra === "padyak" ? m.legendPadyak : extra === "approx_street" ? m.legendApproxStreet : m.legendFreePoint);
+const extraLabel = (extra: LegendExtra, m: Dict["map"]) => (extra === "padyak" ? m.legendPadyak : m.legendFreePoint);
 
 export type LegendEntry =
   | VisualKey
@@ -145,7 +143,7 @@ function LegendSwatch({ visualKey, surface }: { visualKey: VisualKey; surface: M
   );
 }
 
-/** Padyak (tricycle colour, dashed), an approximate street line (thin, sparse) or a free point (a diamond, not a stop ring). */
+/** Padyak (tricycle colour, dashed) or a free point (a diamond, not a stop ring). */
 function ExtraSwatch({ extra, surface }: { extra: LegendExtra; surface: MapSurface }) {
   const token = (surface === "dark" ? PALETTE_D : PALETTE_L).tricycle;
   if (extra === "free_point") {
@@ -155,8 +153,8 @@ function ExtraSwatch({ extra, surface }: { extra: LegendExtra; surface: MapSurfa
       </svg>
     );
   }
-  const dash = extra === "padyak" ? PADYAK_DASH_ARRAY : APPROX_STREET_DASH_ARRAY;
-  const core = extra === "padyak" ? 5 : 2.5;
+  const dash = PADYAK_DASH_ARRAY;
+  const core = 5;
   return (
     <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
       <line x1="2" y1="8" x2="34" y2="8" stroke={token.casing} strokeWidth={core + 4} />

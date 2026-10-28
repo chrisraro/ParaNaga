@@ -41,11 +41,12 @@ describe("AC-5 rejection: prohibited (restricted road, mode not allowed)", () =>
   const pocket = at(3200, -200);
   const away = at(600, 300);
 
-  it("a tricycle never uses a restricted road in the restricted hours: no drawn path, a straight-line 'route not confirmed'", () => {
+  it("a tricycle never uses a restricted road in the restricted hours: no drawn path, no straight line: the tricycle is 'restricted'", () => {
     const route = routeStreet(streets, pocket, away, { mode: "tricycle", now: manila(10) });
     expect(route).toMatchObject({ kind: "straight", reason: "no_path" });
     const leg = plan(pocket, away).options.find((o) => o.mode === "tricycle")!.legs[0] as TricycleLeg;
-    expect(leg).toMatchObject({ basis: "straight_line", path: null });
+    expect(leg).toMatchObject({ basis: "restricted", path: null, distanceMeters: null });
+    expect(leg.notes[0]).toMatch(/^No tricycle route right now: restricted roads .* allowed 9 pm–5 am$/);
   });
 
   it("the same trip is routed once the restriction is lifted (21:00-05:00)", () => {

@@ -148,7 +148,7 @@ export const FULL_CIRCLE = [0, 40, 80, 120, 160, 200, 240, 280, 320, 352].map((d
 // ---------------------------------------------------------------- Increment E (Task 9)
 
 /** A tricycle or padyak option: one street leg origin → destination, no walks (as the planner builds it). */
-export function streetOnly(kind: "tricycle" | "padyak", distanceMeters: number | null = 1500, basis: "street_graph" | "straight_line" | "unavailable" = "street_graph"): PlanOptionDto {
+export function streetOnly(kind: "tricycle" | "padyak", distanceMeters: number | null = 1500, basis: "street_graph" | "straight_line" | "unavailable" | "restricted" = "street_graph"): PlanOptionDto {
   const ends = { from: place("origin", ORIGIN), to: place("destination", DEST) };
   const street = { ...ends, distanceMeters, path: basis === "street_graph" ? "_p~iF~ps|U_ulLnnqC" : null, basis, ruleCodes: [] as string[] };
   const leg = kind === "tricycle"

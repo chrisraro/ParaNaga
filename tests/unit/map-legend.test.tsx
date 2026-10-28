@@ -91,9 +91,8 @@ describe("MapLegend (Task 11)", () => {
 
 describe("MapLegend extras (Increment E Task 10)", () => {
   it("lists Padyak, the approximate line and the free point with their own swatches, in text", () => {
-    render(<MapLegend items={["tricycle"]} extras={["padyak", "approx_street", "free_point"]} showStops={false} defaultOpen />);
+    render(<MapLegend items={["tricycle"]} extras={["padyak", "free_point"]} showStops={false} defaultOpen />);
     expect(screen.getByText("Padyak")).toBeTruthy();
-    expect(screen.getByText("Approximate, not a route")).toBeTruthy();
     expect(screen.getByText("Board or get off here (stop not marked)")).toBeTruthy();
     expect(screen.queryByText(LEGEND_STOP_LABEL)).toBeNull();
     const padyak = document.querySelector('[data-legend-item="padyak"] line:last-of-type');
