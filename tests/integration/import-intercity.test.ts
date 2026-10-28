@@ -1,7 +1,7 @@
 // Reviewed intercity seed import (IC1 Task 4) against a throwaway Neon branch:
 //   bash scripts/with-neon-branch.sh npx vitest run --project integration tests/integration/import-intercity.test.ts
-// The committed seed is reviewStatus "draft" (only the owner may approve it), so the commit tests
-// use an in-memory copy with reviewStatus "owner_approved" built here; the file is never changed.
+// The committed seed was approved by the owner on 2026-10-28 (reviewStatus "owner_approved"); the
+// commit tests still build their own in-memory approved copy, and a draft copy proves the refusal.
 // The open draft is made the way the admin console makes it (transit.admin_create_draft as a
 // transport reviewer). The writer only ever writes into that draft and never publishes; the last
 // test publishes it itself, re-imports the modes seed (carry-forward guard), and afterAll puts the
@@ -55,7 +55,13 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed intercity seed import (Neon bran
   let draftId = "";
   const real = readNewestIntercitySeed()!;
   const realJson = () => JSON.parse(real.bytes.toString("utf8")) as SeedJson;
-  const fileOf = (json: unknown): IntercityFile => ({ fileName: real.fileName, bytes: Buffer.from(`${JSON.stringify(json, null, 2)}\n`) });
+  // Compact JSON: the test copies never share the committed file's bytes (production already holds its batch).
+  const fileOf = (json: unknown): IntercityFile => ({ fileName: real.fileName, bytes: Buffer.from(JSON.stringify(json)) });
+  const draftSeed = (() => {
+    const json = realJson();
+    json.header.reviewStatus = "draft";
+    return fileOf(json);
+  })();
   const approved = (() => {
     const json = realJson();
     json.header.reviewStatus = "owner_approved";
@@ -138,12 +144,15 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed intercity seed import (Neon bran
     await owner?.end();
   }, 60_000);
 
-  it("the plan reads the committed seed (still draft) and lists every exclusion with its reason", () => {
+  it("the plan reads the committed (owner-approved) seed and lists every exclusion with its reason", () => {
     expect(real.fileName).toMatch(/^naga-intercity-seed-\d{4}-\d{2}-\d{2}\.json$/);
     expect(INTERCITY_DIR).toBe("data/source/research");
     const plan = buildIntercityPlan(real);
     expect(plan.problems).toEqual([]);
-    expect(plan.commitProblems).toEqual(["reviewStatus is draft, owner_approved required"]);
+    expect(plan.commitProblems).toEqual([]);
+    const draft = realJson();
+    draft.header.reviewStatus = "draft";
+    expect(buildIntercityPlan(fileOf(draft)).commitProblems).toEqual(["reviewStatus is draft, owner_approved required"]);
     expect(plan.excluded.length).toBeGreaterThan(0);
     for (const e of plan.excluded) expect(e).toMatch(/: \S/);
     expect(plan.counts).toMatchObject({ services: 18, service_links: 4, destinations: 31, terminals: 1, dataset_notes: 1 });
@@ -165,7 +174,7 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed intercity seed import (Neon bran
 
   it("a dry run prints decisions and writes nothing", async () => {
     const before = await tableCounts();
-    const result = await dryRunIntercity(ownerUrl!, buildIntercityPlan(real));
+    const result = await dryRunIntercity(ownerUrl!, buildIntercityPlan(draftSeed));
     expect(result.problems).toEqual([]);
     expect(result.draft?.id).toBe(draftId);
     expect(result.commitProblems).toEqual(["reviewStatus is draft, owner_approved required"]);
@@ -178,7 +187,7 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed intercity seed import (Neon bran
 
   it("a reviewStatus draft seed is refused and writes nothing", async () => {
     const before = await tableCounts();
-    const error = await failure(commitIntercity(ownerUrl!, buildIntercityPlan(real)));
+    const error = await failure(commitIntercity(ownerUrl!, buildIntercityPlan(draftSeed)));
     expect(error).toBeInstanceOf(ImportRefusedError);
     expect(error.message).toMatch(/owner_approved required/);
     expect(await tableCounts()).toEqual(before);
@@ -218,7 +227,10 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed intercity seed import (Neon bran
     const published = await pointer();
     const result = await commitIntercity(ownerUrl!, buildIntercityPlan(approved));
     expect(result).toMatchObject({ outcome: "committed", draftId });
-    expect(result.counts.members_changed).toBeGreaterThan(0);
+    // Production published this seed on 2026-10-28, so a branch of main already carries every member forward
+    // (members_changed is 0 there); a fresh database changes them all. Either way the draft holds the seed.
+    expect(result.counts.members_changed).toBeGreaterThanOrEqual(0);
+    expect(result.counts.seed_members).toBeGreaterThan(0);
     expect(await pointer()).toBe(published);
     const status = await asImport(async (c) => (await c.query("select status from transit.revision where id = $1", [draftId])).rows[0]);
     expect(status).toEqual({ status: "draft" });
@@ -313,8 +325,8 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed intercity seed import (Neon bran
   }, 600_000);
 });
 
-// Keeps the reader honest: the committed file is the draft one.
-it("the committed intercity seed is still reviewStatus draft", () => {
+// Keeps the reader honest: the committed file is the owner-approved one (2026-10-28).
+it("the committed intercity seed is reviewStatus owner_approved", () => {
   const json = JSON.parse(readFileSync(`${INTERCITY_DIR}/${readNewestIntercitySeed()!.fileName}`, "utf8")) as SeedJson;
-  expect(json.header.reviewStatus).toBe("draft");
+  expect(json.header.reviewStatus).toBe("owner_approved");
 });
