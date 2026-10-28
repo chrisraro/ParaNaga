@@ -12,12 +12,17 @@
 // Offline (Task 12): when the request cannot reach the server, the plan is made in the browser on
 // the snapshot this phone holds (plan-offline.ts) and marked `offline` with that data's published
 // date; without a snapshot the error says "offline" (only when the browser knows it is).
+//
+// Tricycle road rules have hours (domain/walk/rules.ts): an open plan is made again the minute a
+// restriction starts or is lifted (keeping the current options on screen while it refreshes), so the
+// options never show a tricycle road that has just closed. A guided trip keeps its own copy.
 
 import { useEffect, useMemo, useState } from "react";
 import { useWalkGraph } from "@/client/network/use-walk-graph";
 import { planResponseSchema, type PlanResponse } from "@/domain/api/plan";
 import { enrichPlan, type EnrichedPlanResponse, type WalkGraphStatus } from "@/domain/trip/enrich";
 import { isGpsRefinement, shouldReplan, type PlanEnd, type PlanPair } from "@/domain/trip/replan";
+import { msUntilNextRuleBoundary } from "@/domain/walk/rules";
 
 /** busy: rate limited (429), retry later; invalid: a rejected request (400) that fails the same way again. */
 export type PlanErrorKind = "offline" | "server" | "invalid" | "busy";
@@ -152,6 +157,20 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
       ...(originPoint && destinationPoint ? { origin: originPoint, destination: destinationPoint } : {}),
     });
   }, [rawReady, walkGraph.graph, walkGraph.status, originPoint, destinationPoint]);
+
+  // Replan at the next tricycle-rule boundary, the current options staying up as a refresh.
+  const rules = walkGraph.graph?.rules ?? null;
+  const readyData = rawReady?.data ?? null;
+  useEffect(() => {
+    if (!readyData || !rules) return undefined;
+    const ms = msUntilNextRuleBoundary(rules, new Date());
+    if (ms === null) return undefined;
+    const timer = window.setTimeout(() => {
+      setPlanned((p) => (p ? { ...p, gpsRefinement: true } : p));
+      setAttempt((n) => n + 1);
+    }, ms);
+    return () => window.clearTimeout(timer);
+  }, [readyData, rules]);
 
   const retry = () => setAttempt((n) => n + 1);
   if (key === null) return { status: "idle", retry };
