@@ -90,7 +90,7 @@ export function UsersScreen() {
           ) : null}
         </Panel>
 
-        <Panel title={`Staff (${staffList.length})`} testId="users-staff">
+        <Panel title={`Staff (${staffList.length})`} variant="bare" testId="users-staff">
           {staff === null ? (
             <Muted>Loading…</Muted>
           ) : !staff.ok ? (
@@ -100,7 +100,7 @@ export function UsersScreen() {
           ) : (
             <ul className="grid gap-4">
               {staffList.map((u) => (
-                <li key={u.userId} className="rounded-md border border-fill p-3 dark:border-navy-raised">
+                <li key={u.userId} className="rounded-lg border border-ink-3/25 p-3 dark:border-navy-raised">
                   <UserRoles user={u} staff={staffList} onChange={(p) => void apply(p)} />
                 </li>
               ))}
@@ -139,7 +139,7 @@ function UserRoles({ user, staff, onChange }: { user: UserCard; staff: readonly 
         ) : null}
         {user.suspended ? (
           <span className="ml-2">
-            <Chip tone="warn">Suspended</Chip>
+            <Chip tone="error">Suspended</Chip>
           </span>
         ) : null}
       </p>

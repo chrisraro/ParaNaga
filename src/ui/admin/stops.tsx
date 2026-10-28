@@ -114,7 +114,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                 </select>
               </Field>
             </div>
-            <div className="max-h-[70vh] overflow-auto rounded-lg border border-fill bg-white dark:border-navy-raised dark:bg-navy">
+            <div className="max-h-[70vh] overflow-auto rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
               <table className="w-full text-left text-sm" data-testid="stops-table">
                 <caption className="px-3 py-2 text-left text-sm text-ink-2 dark:text-slate-300">
                   {rows.length} of {data?.stops.length ?? 0} stops in {data?.revision?.label ?? "no revision"}
@@ -132,7 +132,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                   {rows.map((s) => (
                     <tr
                       key={s.stopPointId}
-                      className={`border-b border-fill last:border-0 dark:border-navy-raised ${s.stopPointId === selectedId ? "bg-fill dark:bg-navy-raised" : ""}`}
+                      data-selected={s.stopPointId === selectedId ? "" : undefined}
                       data-testid={`stop-${s.layer ?? "x"}-${s.code ?? s.stopPointId}`}
                     >
                       <td className="px-3 py-2">{s.layer?.replace(/^Loop Service /, "") ?? "–"}</td>
