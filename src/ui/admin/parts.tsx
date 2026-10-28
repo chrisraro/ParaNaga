@@ -12,7 +12,7 @@ export const btnSecondary = `${btnBase} border border-ink-3 bg-white text-navy h
 /** Page header: title, one line of purpose, and the screen's primary action on the right. */
 export function PageTitle({ children, lead, actions }: { children: ReactNode; lead?: ReactNode; actions?: ReactNode }) {
   return (
-    <header className="adm-in mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-ink-3/25 pb-5 dark:border-navy-raised">
+    <header className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-ink-3/25 pb-5 dark:border-navy-raised">
       <div className="min-w-0">
         <h1 className="text-balance text-3xl font-semibold tracking-tight">{children}</h1>
         {lead ? <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-ink-2 dark:text-slate-300">{lead}</p> : null}
@@ -34,7 +34,7 @@ export function Panel({ title, children, testId, variant = "box" }: { title: str
         ? "border-t border-ink-3/25 pt-4 dark:border-navy-raised"
         : "";
   return (
-    <section className={`adm-in ${cls}`} data-testid={testId} aria-label={title}>
+    <section className={cls} data-testid={testId} aria-label={title}>
       <h2 className="mb-3 text-sm font-semibold text-ink-2 dark:text-slate-300">{title}</h2>
       {children}
     </section>
