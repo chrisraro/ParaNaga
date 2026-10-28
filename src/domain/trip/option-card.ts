@@ -120,7 +120,7 @@ export function farNoteView(note: string | null, options: readonly Pick<PlanOpti
 }
 
 export type StreetCardView = {
-  state: "route" | "not_confirmed" | "unavailable";
+  state: "route" | "not_confirmed" | "unavailable" | "restricted";
   /** "Route not confirmed" / "Street route not available"; null for a routed leg. */
   headline: string | null;
   distanceText: string | null;
@@ -135,15 +135,18 @@ export type StreetCardView = {
 };
 
 const RESTRICTION = /^(Avoids the restricted roads|Uses roads tricycles may use only)/;
+const NO_ROUTE = /^No tricycle route/;
 const AREA = /^Area per city ordinance/;
 const SPECIAL_LINES = /^(Special trip|From .*: local report, unconfirmed)/;
 
 export function streetCardView(leg: TricycleLegDto | PadyakLegDto, copy: Dict["trip"] = en.trip, geo: Dict["geo"] = en.geo): StreetCardView {
   const d = leg.distanceMeters;
-  const state = leg.basis === "street_graph" ? "route" : leg.basis === "straight_line" ? "not_confirmed" : "unavailable";
+  const state = leg.basis === "street_graph" ? "route" : leg.basis === "straight_line" ? "not_confirmed" : leg.basis === "restricted" ? "restricted" : "unavailable";
   return {
     state,
-    headline: state === "not_confirmed" ? copy.routeNotConfirmed : state === "unavailable" ? copy.streetUnavailable : null,
+    headline: state === "not_confirmed" ? copy.routeNotConfirmed : state === "unavailable" ? copy.streetUnavailable
+      : state === "restricted" ? (leg.notes.find((n) => NO_ROUTE.test(n)) ?? copy.tricycleRestricted) : null,
+    // A straight line is never a route: say "not confirmed" in the headline and keep the distance as plain text only.
     distanceText: d === null ? null : state === "route" ? copy.alongStreets(formatDistance(d, geo)) : copy.straightApprox(formatDistance(d, geo)),
     fareText: fareChipText(leg.fare, copy),
     timeText: copy.timeNotEstimated,

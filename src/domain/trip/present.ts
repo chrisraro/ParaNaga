@@ -102,7 +102,7 @@ export function rideFleetText(mode: RouteMode, fleet: FleetSummary, copy: Dict["
   return aircon ? copy.fleetMixedAircon(modeName(mode)) : copy.fleetMixed(modeName(mode));
 }
 
-type StreetLegLike = { kind: "tricycle" | "padyak"; distanceMeters: number | null; basis: "street_graph" | "straight_line" | "unavailable"; fare: FareLike };
+type StreetLegLike = { kind: "tricycle" | "padyak"; distanceMeters: number | null; basis: "street_graph" | "straight_line" | "unavailable" | "restricted"; fare: FareLike };
 
 /**
  * One tricycle or padyak leg as a step: "Take a tricycle to {destination} · about 1.5 km along streets ·
@@ -112,6 +112,7 @@ export function streetRideText(leg: StreetLegLike, destination: string, midTrip 
   const km = leg.distanceMeters === null ? "" : copy.streetKm((leg.distanceMeters / 1000).toFixed(1));
   const route = leg.basis === "street_graph" ? copy.streetAlong(km)
     : leg.basis === "straight_line" ? copy.streetStraight(km)
+    : leg.basis === "restricted" ? copy.streetRestricted
     : copy.streetNoRoute;
   const fare = leg.fare.minCentavos === null ? copy.streetFareNone
     : leg.kind === "tricycle" ? (midTrip ? copy.streetFareTricycleMid : copy.streetFareTricycle)(peso(leg.fare.minCentavos)) : copy.streetFarePadyak(peso(leg.fare.minCentavos));

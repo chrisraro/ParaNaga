@@ -147,13 +147,13 @@ const streetLeg = {
   distanceMeters: meters.nullable(),
   /** Encoded polyline (precision 5); only on a routed (street_graph) leg. */
   path: z.string().nullable(),
-  basis: z.enum(["street_graph", "straight_line", "unavailable"]),
+  basis: z.enum(["street_graph", "straight_line", "unavailable", "restricted"]),
   notes: z.array(z.string()),
   ruleCodes: z.array(z.string()),
 };
 const streetLegOk = (l: { distanceMeters: number | null; path: string | null; basis: string }) =>
-  (l.basis === "street_graph") === (l.path !== null) && (l.basis === "unavailable") === (l.distanceMeters === null);
-const streetLegRule = { message: "a routed leg has its path, an unavailable one has no distance, a straight-line one has a distance and no path" };
+  (l.basis === "street_graph") === (l.path !== null) && (l.basis === "unavailable" || l.basis === "restricted") === (l.distanceMeters === null);
+const streetLegRule = { message: "a routed leg has its path, an unavailable or restricted one has no distance, a straight-line one has a distance and no path" };
 
 const tricycleLegSchema = z.object({
   kind: z.literal("tricycle"),

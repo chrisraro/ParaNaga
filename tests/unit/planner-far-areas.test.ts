@@ -198,8 +198,10 @@ describe("far areas: zone membership and the far note", () => {
         expect(p.options.length).toBeLessThanOrEqual(6);
         const jeep = p.options.some((x) => x.mode === "jeepney");
         const short = p.directWalkEstimateMeters! < 500;
-        expect(recommended(p)).toHaveLength(far && !jeep && !short ? 0 : 1);
-        if (far && !jeep && short) expect(recommended(p)[0]!.mode).toBe("walk");
+        // A restricted tricycle (street banned at this hour) is never Recommended, so there may be none.
+        if (p.options.some((x) => x.legs.some((l) => l.kind === "tricycle" && l.basis === "restricted"))) expect(recommended(p).length).toBeLessThanOrEqual(1);
+        else expect(recommended(p)).toHaveLength(far && !jeep && !short ? 0 : 1);
+        if (far && !jeep && short && recommended(p)[0]) expect(recommended(p)[0]!.mode).toBe("walk");
         if (far && jeep) expect(recommended(p)[0]!.mode).toBe("jeepney");
         expect(p.farNote !== undefined).toBe(far);
         const t = tricycle(p);

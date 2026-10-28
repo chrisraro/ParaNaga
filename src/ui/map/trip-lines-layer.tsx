@@ -22,7 +22,7 @@ import type { ColourKey } from "@/domain/modes/fleet";
 import { type VisualKey } from "@/domain/modes/modes";
 import { en, type Dict } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
-import { APPROX_STREET_DASH_ARRAY, PADYAK_DASH_ARRAY, lineWidths, paletteForSurface, type MapSurface } from "@/domain/modes/palette";
+import { PADYAK_DASH_ARRAY, lineWidths, paletteForSurface, type MapSurface } from "@/domain/modes/palette";
 import { WALK_STRAIGHT_LABEL, type EnrichedPlanOption, type EnrichedWalkLeg } from "@/domain/trip/enrich";
 import { isNegligibleWalk, routeChipLabel } from "@/domain/trip/present";
 import { chevronSvgHtml, sampleChevrons, type DirectionChevron } from "./direction-chevrons";
@@ -98,26 +98,23 @@ export type TripRideSegment = {
   label: string;
 };
 
-/** A tricycle or padyak leg: its street path, or (a tricycle with no street route) the straight line, drawn only as approximate. */
+/** A routed tricycle or padyak leg. A street leg with no routed path (not confirmed, unavailable, restricted) is never drawn. */
 export type TripStreetSegment = {
   key: string;
   legIndex: number;
   mode: "tricycle" | "padyak";
   coords: LatLng[];
-  /** A straight line with no street route: "approximate, not a route". */
-  approximate: boolean;
   midpoint: LatLng | null;
   chipText: string;
   label: string;
 };
 
-export const APPROX_STREET_LABEL = en.map.legendApproxStreet;
 
 export type TripLinesData = {
   walkSegments: TripWalkSegment[];
   rideSegments: TripRideSegment[];
   streetSegments: TripStreetSegment[];
-  /** Legend entries beyond the vehicle classes: padyak, an approximate street line. */
+  /** Legend entries beyond the vehicle classes: padyak and the free point. */
   legendExtras: LegendExtra[];
   allCoords: LatLng[];
   legendItems: VisualKey[];
@@ -192,27 +189,20 @@ export function buildTripLinesData(
         } catch {
           coords = null;
         }
-      } else if (leg.basis === "straight_line") {
-        coords = [
-          { lat: leg.from.lat, lng: leg.from.lng },
-          { lat: leg.to.lat, lng: leg.to.lng },
-        ];
       }
+      // No straight dashed line for a street leg: without a routed path (not confirmed, unavailable, restricted) nothing is drawn.
       if (!coords || coords.length < 2) return;
-      const approximate = !routed;
       streetSegments.push({
         key: `street-${idx}`,
         legIndex: idx,
         mode: leg.kind,
         coords,
-        approximate,
         midpoint: midpointOnPolyline(coords),
-        chipText: approximate ? m.chipApproximate : leg.kind === "tricycle" ? modes.chip.tricycle : m.chipPadyak,
-        label: approximate ? m.legendApproxStreet : leg.kind === "tricycle" ? m.streetRoute : m.streetRoutePadyak,
+        chipText: leg.kind === "tricycle" ? modes.chip.tricycle : m.chipPadyak,
+        label: leg.kind === "tricycle" ? m.streetRoute : m.streetRoutePadyak,
       });
       allCoords.push(...coords);
-      if (approximate) legendExtras.add("approx_street");
-      else if (leg.kind === "padyak") legendExtras.add("padyak");
+      if (leg.kind === "padyak") legendExtras.add("padyak");
       else legendSet.add("tricycle");
       return;
     }
@@ -378,9 +368,9 @@ export function TripLinesLayer({ data, surface, highContrast, activeLegIndex = n
       const swatch = palette.tricycle;
       const opacity = legOpacity(current, seg.legIndex);
       const positions = seg.coords.map((c) => [c.lat, c.lng] as [number, number]);
-      const dashArray = seg.approximate ? APPROX_STREET_DASH_ARRAY : seg.mode === "padyak" ? PADYAK_DASH_ARRAY : undefined;
-      const core = seg.approximate ? Math.max(2, Math.round(widths.tripRideCorePx / 2)) : widths.tripRideCorePx;
-      const kind = seg.approximate ? "pn-line--street-approx" : seg.mode === "padyak" ? "pn-line--padyak" : "pn-line--tricycle";
+      const dashArray = seg.mode === "padyak" ? PADYAK_DASH_ARRAY : undefined;
+      const core = widths.tripRideCorePx;
+      const kind = seg.mode === "padyak" ? "pn-line--padyak" : "pn-line--tricycle";
       const cap = dashArray ? "butt" : "round";
       return (
         <Fragment key={seg.key}>

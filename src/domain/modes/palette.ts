@@ -90,8 +90,6 @@ export function paletteForSurface(surface: MapSurface): Record<PaletteKey, Palet
 export const WALK_DASH_ARRAY = "1 9" as const;
 /** Padyak is drawn in the tricycle colour, dashed, so colour is never the only cue (plan E, UI changes). */
 export const PADYAK_DASH_ARRAY = "8 6" as const;
-/** A tricycle straight line with no street route: thin and sparse, never read as a route. */
-export const APPROX_STREET_DASH_ARRAY = "6 10" as const;
 export const TWO_TONE_DASH_ARRAY = "24 24" as const;
 export const CHEVRON_SPACING_M = 250;
 

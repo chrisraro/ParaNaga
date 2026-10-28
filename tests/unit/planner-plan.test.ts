@@ -173,12 +173,19 @@ describe("planTrip: tricycle and padyak (plan E §C)", () => {
     expect(leg.notes).toContain("Uses roads tricycles may use only 9 pm–5 am (Ordinance 2006-005/015 · check for updates)");
   });
 
-  it("a daytime tricycle pocket gives a straight-line distance flagged 'route not confirmed', never a drawn path", () => {
-    const leg = plan(at(3200, -200), at(600, 300)).options.find((o) => o.mode === "tricycle")!.legs[0] as TricycleLeg;
-    expect(leg).toMatchObject({ basis: "straight_line", path: null });
-    expect(leg.distanceMeters).toBeGreaterThan(0);
-    expect(leg.notes[0]).toMatch(/^Route not confirmed/);
-    expect(leg.notes.some((n) => n.startsWith("Avoids"))).toBe(false); // no routed avoidance is claimed
+  it("a daytime tricycle pocket blocked by the restricted roads is 'restricted': no path, no distance, no Recommended, with the window", () => {
+    const t = plan(at(3200, -200), at(600, 300)).options.find((o) => o.mode === "tricycle")!;
+    const leg = t.legs[0] as TricycleLeg;
+    expect(leg).toMatchObject({ basis: "restricted", path: null, distanceMeters: null, ruleCodes: [] });
+    expect(leg.notes).toEqual(["No tricycle route right now: restricted roads (Ordinance 2006-005/015 · check for updates) — allowed 9 pm–5 am"]);
+    expect(t.labels).toEqual([]);
+    expect(t.fare).toMatchObject({ minCentavos: null, status: "unavailable" });
+    expect(t.tricycleTerminals).toBeUndefined();
+  });
+
+  it("the same trip at 22:00 is routed (the ban is lifted), so the line only exists while it is legal", () => {
+    const leg = plan(at(3200, -200), at(600, 300), NET, manila(22)).options.find((o) => o.mode === "tricycle")!.legs[0] as TricycleLeg;
+    expect(leg.basis).toBe("street_graph");
   });
 
   it("padyak only when both ends share the area and the street path is ≤ 2,000 m; ₱10 flat (₱8 with ID), no minutes", () => {
@@ -248,7 +255,12 @@ describe("planTrip: properties", () => {
         expect([...idx].sort((a, b) => a - b)).toEqual(idx);
         expect(new Set(p.options.map((x) => x.id)).size).toBe(p.options.length);
         expect(p.options.filter((x) => x.mode === "tricycle")).toHaveLength(1);
-        expect(p.options.filter((x) => x.labels.includes("Recommended"))).toHaveLength(1);
+        // Exactly one Recommended, except when a restricted (blocked) tricycle was the only candidate: then none, and never the blocked one.
+        const blocked = p.options.some((x) => x.legs.some((l) => l.kind === "tricycle" && l.basis === "restricted"));
+        const rec = p.options.filter((x) => x.labels.includes("Recommended"));
+        if (blocked) expect(rec.length).toBeLessThanOrEqual(1);
+        else expect(rec).toHaveLength(1);
+        for (const x of rec) expect(x.legs.some((l) => l.kind === "tricycle" && l.basis === "restricted")).toBe(false);
         for (const x of p.options) expect(x.labels.includes("Short local ride")).toBe(x.mode === "padyak");
         expect(p.options.some((x) => x.mode === "walk")).toBe(p.directWalkEstimateMeters! < 500);
         for (const x of p.options.filter((y) => y.mode === "jeepney")) {

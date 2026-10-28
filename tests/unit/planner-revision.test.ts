@@ -100,15 +100,23 @@ describe("city centre (CENTRO anchors)", () => {
     const d = anchor(b);
     const p = plan(o, d);
     expect(p.directWalkEstimateMeters).toBeGreaterThanOrEqual(500);
-    expect(recommended(p)).toHaveLength(1);
-    expect(recommended(p)[0]!.mode).toBe("tricycle");
-    expect(p.options[0]!.mode).toBe("tricycle");
+    const tri = p.options.find((x) => x.mode === "tricycle")!;
+    if ((tri.legs[0] as { basis: string }).basis === "restricted") {
+      // The street is banned to tricycles at this hour: no line, not Recommended; a jeepney (if any) inherits it.
+      expect(tri.labels).toEqual([]);
+      expect(recommended(p)).toHaveLength(jeepneys(p).length > 0 ? 1 : 0);
+      if (jeepneys(p).length > 0) expect(recommended(p)[0]!.mode).toBe("jeepney");
+    } else {
+      expect(recommended(p)).toHaveLength(1);
+      expect(recommended(p)[0]!.mode).toBe("tricycle");
+      expect(p.options[0]!.mode).toBe("tricycle");
+    }
     expect(withinGuard(p, o, d)).toBe(true);
     for (const j of jeepneys(p)) {
       const last = j.legs.filter((l) => l.kind === "ride").at(-1)!;
       if (last.kind !== "ride") throw new Error("a ride");
-      expect(haversineMeters(last.alight, d)).toBeLessThanOrEqual(j.labels.length === 0 ? JEEP_FAR_DROP_MAX_M : 100);
-      expect(j.labels).not.toContain("Recommended");
+      expect(haversineMeters(last.alight, d)).toBeLessThanOrEqual(j.labels.length === 0 || (tri.legs[0] as { basis: string }).basis === "restricted" ? JEEP_FAR_DROP_MAX_M : 100);
+      if ((tri.legs[0] as { basis: string }).basis !== "restricted") expect(j.labels).not.toContain("Recommended");
     }
     expect((p.jeepneyReason === null) === (jeepneys(p).length > 0)).toBe(true);
   });

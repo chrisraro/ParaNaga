@@ -55,7 +55,10 @@ function assertWellFormed(p: TripPlan, origin: LatLng, destination: LatLng) {
   const farD = zoneOf(destination, FAR_AREAS) !== null;
   // Increment F (review C1/I2): a long far trip with no jeepney shows only an unlabelled special-trip tricycle.
   const noneRecommended = (farO || farD) && !p.options.some((o) => o.mode === "jeepney") && p.directWalkEstimateMeters! >= 500;
-  expect(p.options.filter((o) => o.labels.includes("Recommended"))).toHaveLength(noneRecommended ? 0 : 1);
+  // A restricted tricycle (street banned at this hour) is never Recommended, so there may be none.
+  const recommendedCount = p.options.filter((o) => o.labels.includes("Recommended")).length;
+  if (p.options.some((x) => x.legs.some((l) => l.kind === "tricycle" && l.basis === "restricted"))) expect(recommendedCount).toBeLessThanOrEqual(1);
+  else expect(recommendedCount).toBe(noneRecommended ? 0 : 1);
   // Under 500 m a jeepney is Recommended only when it passes the destination (its last drop-off within 100 m).
   const rec = p.options.find((o) => o.labels.includes("Recommended"));
   const lastRide = rec?.legs.filter((l) => l.kind === "ride").at(-1);
@@ -205,9 +208,10 @@ describe("regression baseline (Increment E Task 6: real Lines + street graph v2,
  * Former baseline: 308 options (273 ride options on R8-A/R8-B, 35 walk-only).
  * Re-recorded 2026-10-22: ride stops keep the pins the board/alight points are named after (same options).
  * Re-recorded 2026-10-29: tricycle and padyak routes avoid Almeda and Maharlika Highway (NAT-HWY, same options).
+ * Re-recorded: a tricycle blocked by the restricted roads at 10:00 is now a "restricted" leg (no distance, no line, never Recommended; the best jeepney inherits Recommended).
  */
 const REGRESSION_BASELINE = {
   options: 695,
   byMode: { jeepney: 477, tricycle: 200, padyak: 8, walk: 10 },
-  digest: "67ef11498689d909fb0133933c61b69e6de66707a2795b859dc7f65237716c99",
+  digest: "1aaaa364880b75ed648547fa9d08ad52cd381bf5ac7d164396645a20d4b86301",
 };

@@ -256,8 +256,8 @@ describe("buildTripLinesData: tricycle and padyak legs (Increment E Task 10)", (
   const A = { lat: 13.6233869, lng: 123.1846726 };
   const B = { lat: 13.6323904, lng: 123.1946726 };
   const mid = { lat: 13.6283, lng: 123.1846726 };
-  const streetOption = (kind: "tricycle" | "padyak", basis: "street_graph" | "straight_line" | "unavailable") => {
-    const o = streetOnly(kind, basis === "unavailable" ? null : 1500, basis);
+  const streetOption = (kind: "tricycle" | "padyak", basis: "street_graph" | "straight_line" | "unavailable" | "restricted") => {
+    const o = streetOnly(kind, basis === "unavailable" || basis === "restricted" ? null : 1500, basis);
     const leg = {
       ...o.legs[0]!,
       from: { kind: "origin" as const, ...A, stopId: null, name: null },
@@ -270,7 +270,7 @@ describe("buildTripLinesData: tricycle and padyak legs (Increment E Task 10)", (
   it("draws a routed tricycle as a solid street segment in the tricycle key, with a legend entry", () => {
     const data = buildTripLinesData(streetOption("tricycle", "street_graph"), [], LINES);
     expect(data.streetSegments).toHaveLength(1);
-    expect(data.streetSegments[0]).toMatchObject({ mode: "tricycle", approximate: false, chipText: "Trike" });
+    expect(data.streetSegments[0]).toMatchObject({ mode: "tricycle", chipText: "Trike" });
     expect(data.streetSegments[0]!.coords).toHaveLength(3);
     expect(data.legendItems).toContain("tricycle");
     expect(data.legendExtras).toEqual([]);
@@ -280,18 +280,20 @@ describe("buildTripLinesData: tricycle and padyak legs (Increment E Task 10)", (
 
   it("draws a padyak routed path dashed (legend extra padyak), not under the tricycle entry", () => {
     const data = buildTripLinesData(streetOption("padyak", "street_graph"), [], LINES);
-    expect(data.streetSegments[0]).toMatchObject({ mode: "padyak", approximate: false, chipText: "Padyak" });
+    expect(data.streetSegments[0]).toMatchObject({ mode: "padyak", chipText: "Padyak" });
     expect(data.legendExtras).toEqual(["padyak"]);
     expect(data.legendItems).not.toContain("tricycle");
   });
 
-  it("draws a straight-line tricycle only as approximate, not a route", () => {
-    const data = buildTripLinesData(streetOption("tricycle", "straight_line"), [], LINES);
-    expect(data.streetSegments[0]).toMatchObject({ mode: "tricycle", approximate: true });
-    expect(data.streetSegments[0]!.coords).toEqual([A, B]);
-    expect(data.streetSegments[0]!.label).toBe("Approximate, not a route");
-    expect(data.streetSegments[0]!.chipText).toBe("Approximate");
-    expect(data.legendExtras).toEqual(["approx_street"]);
+  it("never draws a straight line for a tricycle or padyak without a routed path", () => {
+    for (const kind of ["tricycle", "padyak"] as const) {
+      for (const basis of ["straight_line", "restricted"] as const) {
+        const data = buildTripLinesData(streetOption(kind, basis), [], LINES);
+        expect(data.streetSegments).toEqual([]);
+        expect(data.allCoords).toEqual([]);
+        expect(data.legendExtras).toEqual([]);
+      }
+    }
   });
 
   it("draws nothing for an unavailable street route", () => {

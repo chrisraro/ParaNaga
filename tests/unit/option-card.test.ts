@@ -72,6 +72,14 @@ describe("streetCardView", () => {
     expect(v.distanceText).toBe("≈ 900 m straight line · approximate, not a route");
     expect(v.restrictionNote).toBeNull();
   });
+  it("a restricted tricycle shows the no-route line with the window, no distance, no fare", () => {
+    const note = "No tricycle route right now: restricted roads (Ordinance 2006-005/015) — allowed 9 pm–5 am";
+    const v = streetCardView({ ...tricycleLeg(), basis: "restricted", path: null, distanceMeters: null, notes: [note], fare: { ...tricycleLeg().fare, minCentavos: null, status: "unavailable" } } as TricycleLegDto);
+    expect(v.state).toBe("restricted");
+    expect(v.headline).toBe(note);
+    expect(v.distanceText).toBeNull();
+    expect(streetCardView({ ...tricycleLeg(), basis: "restricted", path: null, distanceMeters: null, notes: [] } as TricycleLegDto).headline).toBe("No tricycle route: restricted roads");
+  });
   it("an unavailable street route has no distance and no 'offline' wording", () => {
     const v = streetCardView({ ...tricycleLeg(), basis: "unavailable", path: null, distanceMeters: null } as TricycleLegDto);
     expect(v.state).toBe("unavailable");

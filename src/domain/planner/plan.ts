@@ -164,8 +164,11 @@ export type RideLeg = {
   display: RouteDisplay;
 };
 
-/** street_graph: routed; straight_line: no street route found ("Route not confirmed"); unavailable: no graph. */
-export type StreetLegBasis = "street_graph" | "straight_line" | "unavailable";
+/**
+ * street_graph: routed; straight_line: no street route found ("Route not confirmed", never drawn); unavailable: no graph;
+ * restricted: roads closed to tricycles at this hour block every route (no distance, no path, no line).
+ */
+export type StreetLegBasis = "street_graph" | "straight_line" | "unavailable" | "restricted";
 
 type StreetLeg = { from: Place; to: Place; distanceMeters: number | null; path: string | null; basis: StreetLegBasis; notes: string[]; ruleCodes: string[] };
 export type TricycleLeg = StreetLeg & { kind: "tricycle"; fare: TricycleFare };
@@ -502,6 +505,22 @@ function ruleNote(r: StreetRule, used: boolean, now: Date): string | null {
 
 const peso = (c: number) => `₱${c / 100}`;
 
+/**
+ * Why a tricycle has no street route now: the time-windowed bans block it (a route exists once they are lifted),
+ * as opposed to an end that is simply off the street map. Returns the plain-words note, else null.
+ */
+function restrictionNote(g: WalkGraph | null, origin: LatLng, destination: LatLng, route: StreetRoute | null, now: Date): string | null {
+  if (!g || route?.kind !== "straight" || route.reason === "no_mode_data") return null;
+  const open = routeStreet(g, origin, destination, { mode: "tricycle", now, ignoreRules: true });
+  if (open.kind !== "path") return null;
+  const rules = g.rules.filter((r) => open.usedRules.includes(r.code) && !ruleLifted(r, now));
+  if (rules.length === 0) return null;
+  const labels = [...new Set(rules.map((r) => r.label))].join("; ");
+  if (rules.some((r) => !r.liftedFrom || !r.liftedTo)) return `No tricycle route: restricted roads (${labels})`;
+  const windows = [...new Set(rules.map((r) => `${clock(r.liftedFrom!)}–${clock(r.liftedTo!)}`))].join(", ");
+  return `No tricycle route right now: restricted roads (${labels}) — allowed ${windows}`;
+}
+
 function streetLeg(g: WalkGraph | null, origin: LatLng, destination: LatLng, route: StreetRoute | null, toPlace?: Place): StreetLeg {
   const from: Place = { kind: "origin", lat: origin.lat, lng: origin.lng, stopId: null, name: null };
   const to: Place = toPlace ?? { kind: "destination", lat: destination.lat, lng: destination.lng, stopId: null, name: null };
@@ -526,6 +545,13 @@ function tricycleLeg(
   special: SpecialTrip | null, to?: Place,
 ): TricycleLeg {
   const base = streetLeg(g, origin, destination, route, to);
+  const banned = restrictionNote(g, origin, destination, route, now);
+  if (banned) {
+    const fare: TricycleFare = { ...tricycleFare(snapshot.fareRules), minCentavos: null, status: "unavailable" };
+    const specialNotes = special ? ["Special trip · fare not fixed · confirm with the driver",
+      special.terminal ? `From ${special.terminal.name}: local report, unconfirmed` : "Special trip by local report, unconfirmed"] : [];
+    return { ...base, kind: "tricycle", fare, distanceMeters: null, basis: "restricted", notes: [banned, ...specialNotes], ruleCodes: [] };
+  }
   const fare: TricycleFare = special ? { ...tricycleFare(snapshot.fareRules), minCentavos: null, status: "unavailable" } : tricycleFare(snapshot.fareRules);
   const notes = [
     ...base.notes,
@@ -548,9 +574,10 @@ function tricycleOption(
   const route = g ? routeStreet(g, origin, destination, { mode: "tricycle", now }) : null;
   const leg = tricycleLeg(g, snapshot, origin, destination, now, route, special);
   const fare = leg.fare;
-  const terminals = special ? [] : tricycleTerminals(snapshot, origin, destination);
+  const blocked = leg.basis === "restricted";
+  const terminals = special || blocked ? [] : tricycleTerminals(snapshot, origin, destination);
   return {
-    id: "tricycle", mode: "tricycle", labels: recommended ? ["Recommended"] : [], legs: [leg], rides: 0, walkMeters: 0, walkEstimateMeters: 0,
+    id: "tricycle", mode: "tricycle", labels: recommended && !blocked ? ["Recommended"] : [], legs: [leg], rides: 0, walkMeters: 0, walkEstimateMeters: 0,
     rideMeters: 0, score: 0, fare: { minCentavos: fare.minCentavos, maxCentavos: null, status: fare.status, completeness: "estimate" }, evidence: "provisional",
     ...(special && { specialTrip: true as const }),
     ...(terminals.length > 0 && { tricycleTerminals: terminals }),
@@ -680,6 +707,7 @@ function accessOption(
     }
     if (!c) continue;
     const route = g ? routeStreet(g, origin, lp, { mode: "tricycle", now }) : null;
+    if (restrictionNote(g, origin, lp, route, now)) continue;
     const triM = route?.kind === "path" ? route.lengthM : haversineMeters(origin, lp);
     if (!best || triM < best.triM) best = { lp, c, triM, route };
   }
@@ -868,7 +896,15 @@ export function planTrip(
   // One-Recommended exception: should a far drop-off jeepney be left with no other option able to carry Recommended
   // (a far start: no walk card, no plain tricycle, a special trip never Recommended), the first one carries it.
   // Unreachable today (a far drop-off is added only beside a shown jeepney, a walk or a plain tricycle); kept as a guard.
-  if (farDrops.length > 0 && !options.some((x) => x.labels.includes("Recommended"))) farDrops[0]!.labels.unshift("Recommended");
+  // Not when a restricted (banned) tricycle left the plan without one: a far drop-off is never promoted to fill the gap.
+  const tricycleBlocked = options.some((x) => x.legs.some((l) => l.kind === "tricycle" && l.basis === "restricted"));
+  if (farDrops.length > 0 && !tricycleBlocked && !options.some((x) => x.labels.includes("Recommended"))) farDrops[0]!.labels.unshift("Recommended");
+  // A restricted tricycle that would have been Recommended hands it on: the best shown jeepney, else the walk, else
+  // (nothing else can carry the trip) the first far drop-off jeepney.
+  if (tricycleBlocked && !options.some((x) => x.labels.includes("Recommended"))) {
+    const heir = options.find((x) => x.mode === "jeepney" && !farDrops.includes(x)) ?? options.find((x) => x.mode === "walk") ?? farDrops[0];
+    heir?.labels.unshift("Recommended");
+  }
   // City centre: the Recommended tricycle is the top option, listed first.
   const tri = centro ? options.findIndex((x) => x.id === "tricycle" && x.labels.includes("Recommended")) : -1;
   if (tri > 0) options.unshift(...options.splice(tri, 1));
