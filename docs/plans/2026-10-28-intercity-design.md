@@ -258,9 +258,9 @@ Evidence chips come from the source's `evidence_type`, which a reviewer assigns.
 - **IC4 Planner handoff:** when a trip ends at a terminal, trip detail adds "Then: buses to Legazpi from here".
 - **Option B** waits until verified timetables and fares exist.
 
-## 9. Open decisions
+## 9. Decisions
 
-The first option listed in each is the recommendation.
+**Decided 2026-10-28:** the owner chose option (a), the recommendation, for every question below.
 
 1. **Where S24 lives:** (a) an Explore section, plus regional search results and terminal links; (b) a new bottom tab; (c) only under More > Help.
 2. **Booking-site fares:** (a) shown with "booking site, {month}, not verified" and hidden after 120 days; (b) always shown, with the date; (c) never shown.
