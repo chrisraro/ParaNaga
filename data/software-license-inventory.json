@@ -1420,11 +1420,6 @@
     "hasLicenseText": true
   },
   {
-    "package": "browserslist@4.28.6",
-    "license": "MIT",
-    "hasLicenseText": true
-  },
-  {
     "package": "esbuild@0.28.2",
     "license": "MIT",
     "hasLicenseText": true

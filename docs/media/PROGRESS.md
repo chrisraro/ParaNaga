@@ -4,7 +4,7 @@ Updated 16 October 2026. Owner: Codex. Branch: `codex/place-media`, based on `fe
 
 ## Implemented
 
-- Inventoried all **233 Explore OSM places and 128 source stop pins**. `data/media-inventory.json` records candidates, selected asset, evidence status and manual reference links. `data/stop-photo-coverage.csv` and `stop-coverage.html` cover every original stop, including duplicate landmarks and unlabelled pins.
+- Inventoried all **233 Explore OSM places and 128 source stop pins**. `data/media-inventory.json` records candidates, selected asset, evidence status and manual reference links. `data/stop-photo-coverage.csv` covers every original stop, including duplicate landmarks and unlabelled pins.
 - **17 licensed photographs**, linked to **16 Explore places and 20 nearby stop landmarks**. The seventeenth photo is a separate streetscape in the credits register. Capture dates are preserved; the collection includes older images and is not described as current field verification.
 - **217 Explore places and 108 stop records have no selected photograph. Zero stop-sign photographs are field verified.** This task is not represented as complete coverage. No missing photo is replaced with a generic or invented scene. Some individual Commons queries were rate-limited; missing candidate rows do not prove that no photo exists online.
 - Jev `typesafe/jev-1.14-20261014` ranked metadata in bounded batches. Raw decisions are in `data/media-jev-*.json`. Six candidates with `review`/`abstain` were explicitly approved by the user on 16 October; approval evidence is recorded in `data/media-human-approvals.json`. Their original Jev decisions are retained. Bicol Medical Center is excluded pending creator-attribution resolution.
@@ -36,7 +36,7 @@ Street View follow-up: the 128-stop gallery, CSV and inventory now include coord
 
 Claude Code owns the integration branch; Antigravity owns Tasks 10–12. Their active worktrees are unchanged. Updates were appended to the integration worktree's `.superpowers/sdd/HARNESS-SYNC.md` and `progress.md`. This branch adds one small service-worker manifest exclusion in `src/app/serwist/[path]/route.ts`; preserve it when doing Task 15. No intermediate production deployment or merge was performed.
 
-Review `contact-sheet.jpg`, the mobile screenshots, and `stop-coverage.html`. `review.html` is the historical candidate review; six named-creator selections are now approved and in the app. Bicol Medical Center remains staged.
+The mobile screenshots stay here. The contact sheets, `stop-coverage.html`, `review.html` and the review images were removed on 2026-10-28 after review finished; they are in git history. Six named-creator selections are now approved and in the app. Bicol Medical Center remains staged.
 
 ## Embedded Street View (2026-10-16)
 
