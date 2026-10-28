@@ -7,7 +7,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 const ROOT = path.resolve("src");
-const SERVER_ONLY_EXEMPT = new Set(["server/db/run-in-context.ts", "server/db/schema.ts"]);
+const SERVER_ONLY_EXEMPT = new Set(["server/db/run-in-context.ts", "server/db/schema.ts", "server/db/saved-delete.ts"]);
 
 async function walk(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });

@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { withRequestContext } from "@/server/db/context";
+import { deleteSavedTrips } from "@/server/db/saved-delete";
 import { authorize } from "@/server/auth/authorize";
 import { authedRoute, CACHE, readJsonBody, badRequest, tooManyRequests } from "@/server/api/http";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
@@ -153,7 +154,7 @@ async function removeSaved(request: Request, requestId: string) {
 
   if (parsed.data.ids.length > 0) {
     await withRequestContext({ userId: user.id, requestId }, (db) =>
-      db.execute(sql`delete from core.saved_trip where user_id = ${user.id} and client_id = any(${sql.param(parsed.data.ids)}::text[])`),
+      deleteSavedTrips(db, user.id, parsed.data.ids),
     );
   }
   return Response.json({ ok: true, count: parsed.data.ids.length }, {
