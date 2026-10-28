@@ -53,7 +53,7 @@ export function ProvidersScreen() {
             </dd>
             <dt className="font-medium">Model</dt>
             <dd>
-              <code>{jev.modelId}</code> {jev.modelPinned ? <Chip tone="ok">Dated build</Chip> : <Chip tone="warn">Not a dated build (refused in production)</Chip>}
+              <code>{jev.modelId}</code> {jev.modelPinned ? <Chip tone="ok">Dated build</Chip> : <Chip tone="error">Not a dated build (refused in production)</Chip>}
             </dd>
             <dt className="font-medium">Decisions endpoint</dt>
             <dd>{jev.decisionsHost}</dd>

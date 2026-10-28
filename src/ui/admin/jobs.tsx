@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchJobs, type AdminResult } from "@/client/admin/api";
 import type { Jobs } from "@/domain/admin/system";
 import { label } from "@/domain/admin/stops";
-import { Chip, ErrorNote, Muted, PageTitle, Panel, when } from "./parts";
+import { Chip, ErrorNote, Muted, PageTitle, Panel, when, Empty } from "./parts";
 
 // A20 Jobs (N7, C12), admins only: the background job queue (ops.job) by status, the latest 100
 // rows (kind, status, attempts, error code; never the payload), and the last retention runs.
@@ -30,7 +30,7 @@ export function JobsScreen() {
       <div className="grid gap-6">
         <Panel title="Queue" testId="jobs-counts">
           {counts.length === 0 ? (
-            <Muted>The queue is empty.</Muted>
+            <Empty title="The queue is empty.">Nothing is waiting or running. Jobs show up here as the app schedules them.</Empty>
           ) : (
             <dl className="flex flex-wrap gap-6">
               {counts.map((c) => (
@@ -66,7 +66,7 @@ export function JobsScreen() {
 
         <Panel title="Latest jobs" testId="jobs-list">
           {jobs.length === 0 ? (
-            <Muted>No job has run yet.</Muted>
+            <Empty title="No job has run yet.">Once the scheduled jobs start, the latest runs are listed here.</Empty>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm" data-testid="jobs-table">
@@ -85,7 +85,7 @@ export function JobsScreen() {
                     <tr key={j.id} className="border-t border-fill dark:border-navy-raised">
                       <td className="py-1 pr-3">{when(j.createdAt)}</td>
                       <td className="py-1 pr-3">{label(j.kind)}</td>
-                      <td className="py-1 pr-3">{j.status === "dead" ? <Chip tone="warn">dead</Chip> : label(j.status)}</td>
+                      <td className="py-1 pr-3">{j.status === "dead" ? <Chip tone="error">dead</Chip> : label(j.status)}</td>
                       <td className="py-1 pr-3 tabular-nums">
                         {j.attempts} / {j.maxAttempts}
                       </td>

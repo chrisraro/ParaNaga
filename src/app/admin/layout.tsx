@@ -1,4 +1,5 @@
 import { requireStaffPage } from "@/server/admin/access";
+import "./admin.css";
 import { AdminShell } from "@/ui/admin/admin-shell";
 
 // /admin (N5a): staff only, checked on the server for every request that renders this layout.

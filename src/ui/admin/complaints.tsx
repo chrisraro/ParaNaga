@@ -15,7 +15,7 @@ import {
   type OutcomeCode,
 } from "@/domain/admin/complaints";
 import type { ComplaintStatus } from "@/domain/complaints/status";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A17 Complaint review (N7, C11). Private driver reports, for the complaint reviewer role only.
@@ -97,9 +97,9 @@ export function ComplaintsScreen() {
       ) : !state.ok ? (
         isStepUp(state) ? <Muted>Confirm it is you to see the reports.</Muted> : <ErrorNote testId="complaints-error">{state.message}</ErrorNote>
       ) : state.data.complaints.length === 0 ? (
-        <Muted>{scope === "open" ? "No open reports." : "No closed reports."}</Muted>
+        <Empty title={scope === "open" ? "No open reports." : "No closed reports."}>Reports appear here when a commuter files one.</Empty>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-fill bg-white dark:border-navy-raised dark:bg-navy">
+        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
           <table className="w-full text-left text-sm" data-testid="complaints-table">
             <caption className="sr-only">{scope === "open" ? "Open reports, priority first" : "Closed and withdrawn reports, newest first"}</caption>
             <thead className="border-b border-fill dark:border-navy-raised">

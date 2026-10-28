@@ -171,18 +171,19 @@ test("the dashboard shows the counts, is private, and passes axe", async ({ page
   await expect(page.getByTestId("import-snapshot")).toHaveText("mymaps:naga:2026-10-15");
   await expect(page.getByTestId("admin-roles")).toHaveText("Signed in as admin");
   await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText([
+    // Grouped by job (N8): Network data, Community, System.
     "Dashboard",
+    "Revisions & publication",
     "Imports",
     "Candidate review",
+    "Corrections review",
+    "Coverage audit",
     "Stops & curbs",
     "Reconciliation",
-    "Revisions & publication",
-    "Coverage audit",
-    "Corrections review",
     "Moderation & appeals",
-    "Users & roles",
-    "Jev & providers",
     "Jobs",
+    "Jev & providers",
+    "Users & roles",
     "Audit log",
   ]);
   await expect(page.getByTestId("card-moderation")).toBeVisible();

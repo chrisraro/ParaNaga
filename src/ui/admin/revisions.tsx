@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createDraft, fetchRevisions, publish, validate, type AdminResult } from "@/client/admin/api";
 import type { RevisionList, RevisionRow, StoredValidationReport } from "@/domain/admin/schemas";
 import { RULES } from "@/domain/admin/validation";
-import { btnDanger, btnPrimary, btnSecondary, ErrorNote, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnDanger, btnPrimary, btnSecondary, Chip, ErrorNote, Muted, OkNote, PageTitle, Panel, when } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A12 Revisions & publication (N5a, C8, F-E11). Validate runs every rule and stores the report;
@@ -92,16 +92,19 @@ export function RevisionsScreen() {
 
   return (
     <div data-testid="admin-revisions">
-      <PageTitle lead="A revision is a complete snapshot of the network. Validate it, then publish it; rolling back re-publishes an earlier one. Nothing is edited in place.">
+      <PageTitle
+        lead="A revision is a complete snapshot of the network. Validate it, then publish it; rolling back re-publishes an earlier one. Nothing is edited in place."
+        actions={
+          <>
+            {openDraft ? <Muted>A draft is open; publish it before starting another.</Muted> : null}
+            <button type="button" className={btnPrimary} disabled={!published || openDraft || busy !== null} onClick={() => void onCreate()} data-testid="create-draft">
+              {busy === "create" ? "Creating…" : "New draft from published"}
+            </button>
+          </>
+        }
+      >
         Revisions and publication
       </PageTitle>
-
-      <div className="mb-4 flex items-center gap-3">
-        <button type="button" className={btnSecondary} disabled={!published || openDraft || busy !== null} onClick={() => void onCreate()} data-testid="create-draft">
-          {busy === "create" ? "Creating…" : "New draft from published"}
-        </button>
-        {openDraft ? <Muted>A draft is open; publish it before starting another.</Muted> : null}
-      </div>
 
       {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="admin-notice">{notice.text}</OkNote> : <ErrorNote testId="admin-notice">{notice.text}</ErrorNote>}</div> : null}
 
@@ -110,7 +113,7 @@ export function RevisionsScreen() {
       ) : !list.ok ? (
         <ErrorNote testId="revisions-error">{list.message}</ErrorNote>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-fill bg-white dark:border-navy-raised dark:bg-navy">
+        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
           <table className="w-full text-left text-sm" data-testid="revisions-table">
             <caption className="sr-only">Revisions, newest first</caption>
             <thead className="border-b border-fill dark:border-navy-raised">
@@ -131,7 +134,9 @@ export function RevisionsScreen() {
                     {r.isSynthetic ? <span className="ml-2 text-xs text-coral-ink dark:text-coral-bright">test data</span> : null}
                   </th>
                   <td className="px-3 py-2">{r.kind === "provisional" ? "Provisional" : "Verified"}</td>
-                  <td className="px-3 py-2">{r.isPublished ? "Published (live)" : STATUS[r.status]}</td>
+                  <td className="px-3 py-2">
+                    <Chip tone={r.isPublished ? "ok" : r.status === "superseded" ? "plain" : "info"}>{r.isPublished ? "Published (live)" : STATUS[r.status]}</Chip>
+                  </td>
                   <td className="px-3 py-2 tabular-nums">{r.memberCount}</td>
                   <td className="px-3 py-2">{when(r.createdAt)}</td>
                   <td className="px-3 py-2">{when(r.publishedAt)}</td>

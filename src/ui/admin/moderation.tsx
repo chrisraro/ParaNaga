@@ -13,7 +13,7 @@ import {
   type ModerationQueue,
   type ModerationReason,
 } from "@/domain/admin/moderation";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
 
 // A15 Community moderation and A16 Appeals (N6, C10). Posts, comments and photos waiting for a
 // person, with Jev's typed answer as a probability (advice, never a decision). Going against it is
@@ -62,9 +62,9 @@ export function ModerationScreen() {
         <ErrorNote>{state.message}</ErrorNote>
       ) : (
         <div className="grid gap-6">
-          <Panel title={`Waiting for review (${data?.items.length ?? 0})`} testId="moderation-items">
+          <Panel title={`Waiting for review (${data?.items.length ?? 0})`} variant="bare" testId="moderation-items">
             {data?.items.length === 0 ? (
-              <Muted>Nothing is waiting.</Muted>
+              <Empty title="Nothing is waiting.">The queue is clear. New posts, comments and photos that need a person land here.</Empty>
             ) : (
               <ul className="grid gap-4">
                 {data!.items.map((item) => (
@@ -81,7 +81,7 @@ export function ModerationScreen() {
             )}
           </Panel>
 
-          <Panel title={`Appeals (${data?.appeals.length ?? 0})`} testId="moderation-appeals">
+          <Panel title={`Appeals (${data?.appeals.length ?? 0})`} variant="bare" testId="moderation-appeals">
             {data?.appeals.length === 0 ? (
               <Muted>No open appeal for you. Appeals of your own decisions go to another moderator.</Muted>
             ) : (
@@ -160,8 +160,8 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
   };
 
   return (
-    <li className="grid gap-3 rounded-md border border-fill p-4 lg:grid-cols-[1fr_22rem] dark:border-navy-raised" data-testid={`item-${id}`}>
-      <div className="grid content-start gap-2 text-sm">
+    <li className="grid grid-cols-1 gap-3 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-[1fr_22rem] dark:border-navy-raised" data-testid={`item-${id}`}>
+      <div className="grid min-w-0 content-start gap-2 text-sm">
         <p className="flex flex-wrap items-center gap-2">
           <Chip>{KIND_LABEL[item.kind]}</Chip>
           {item.isEdit ? <Chip tone="warn">edit of a live post</Chip> : null}
@@ -185,7 +185,7 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
         </p>
       </div>
       <form
-        className="grid content-start gap-2 text-sm"
+        className="grid min-w-0 content-start gap-2 text-sm"
         aria-label={`Decide on this ${KIND_LABEL[item.kind].toLowerCase()}`}
         onSubmit={(e) => {
           e.preventDefault();
@@ -250,8 +250,8 @@ function AppealCard({ appeal, onDone }: { appeal: AppealItem; onDone: (text: str
   };
 
   return (
-    <li className="grid gap-3 rounded-md border border-fill p-4 lg:grid-cols-[1fr_22rem] dark:border-navy-raised" data-testid={`appeal-${appeal.id}`}>
-      <div className="grid content-start gap-2 text-sm">
+    <li className="grid grid-cols-1 gap-3 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-[1fr_22rem] dark:border-navy-raised" data-testid={`appeal-${appeal.id}`}>
+      <div className="grid min-w-0 content-start gap-2 text-sm">
         <p className="flex flex-wrap items-center gap-2">
           <Chip>{KIND_LABEL[appeal.targetType]}</Chip>
           <span>
@@ -275,7 +275,7 @@ function AppealCard({ appeal, onDone }: { appeal: AppealItem; onDone: (text: str
         </div>
       </div>
       <form
-        className="grid content-start gap-2 text-sm"
+        className="grid min-w-0 content-start gap-2 text-sm"
         aria-label="Decide the appeal"
         onSubmit={(e) => {
           e.preventDefault();

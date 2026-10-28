@@ -17,7 +17,7 @@ import {
 import { label } from "@/domain/admin/stops";
 import { INFO_REASONS, REJECT_REASONS } from "@/domain/corrections/review-reasons";
 import { en } from "@/i18n/dict";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
 
 // A14 Corrections review (N6, C9). Commuter reports with their evidence; a transport reviewer
 // starts the review, asks for information, rejects, marks a duplicate or accepts. Accepting puts
@@ -85,7 +85,7 @@ export function CorrectionsScreen() {
           <Muted>{data?.draft ? `Accepted changes go into the open draft ${data.draft.label}.` : "No draft is open: accepting a report needs one (Revisions & publication)."}</Muted>
           <Panel title={`${scope === "open" ? "Open" : "Closed"} reports (${data?.corrections.length ?? 0})`} testId="corrections">
             {data?.corrections.length === 0 ? (
-              <Muted>Nothing here.</Muted>
+              <Empty title="Nothing here.">No reports match this filter. Switch the filter above to see other reports.</Empty>
             ) : (
               <table className="w-full text-left text-sm" data-testid="corrections-table">
                 <caption className="sr-only">Correction reports</caption>
@@ -148,7 +148,7 @@ function Row({ c, open, draftOpen, onOpen, onAct }: { c: CorrectionItem; open: b
 
 function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean; onAct: (c: CorrectionItem, p: ReviewPayload) => Promise<void> }) {
   return (
-    <div className="grid gap-4 rounded-md border border-fill p-4 lg:grid-cols-2 dark:border-navy-raised" data-testid="correction-detail">
+    <div className="grid gap-4 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-2 dark:border-navy-raised" data-testid="correction-detail">
       <div className="grid gap-3 text-sm">
         <section aria-label="What the commuter wrote">
           <h3 className="font-semibold">What they wrote</h3>

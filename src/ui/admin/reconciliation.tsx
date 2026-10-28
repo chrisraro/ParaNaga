@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { decidePair, fetchReconciliation, type AdminResult } from "@/client/admin/api";
 import { label, PIN_MISMATCH_M, type Reconciliation } from "@/domain/admin/stops";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
 
 // A7 Reconciliation (N5b, C3). Stops of the open draft within 15 m of each other: never merged
 // automatically; a reviewer links them (one kept, the other retired, its pins added to the kept
@@ -62,9 +62,9 @@ export function ReconciliationScreen() {
       ) : (
         <div className="grid gap-6">
           {!data?.editable ? <Muted>No draft is open: decisions need a draft (Revisions & publication).</Muted> : null}
-          <Panel title={`Nearby stops to decide (${data?.pairs.length ?? 0})`} testId="pairs">
+          <Panel title={`Nearby stops to decide (${data?.pairs.length ?? 0})`} variant="bare" testId="pairs">
             {data?.pairs.length === 0 ? (
-              <Muted>Nothing to decide.</Muted>
+              <Empty title="Nothing to decide.">No stops sit within 15 m of each other. New pairs appear after an import.</Empty>
             ) : (
               <table className="w-full text-left text-sm" data-testid="pairs-table">
                 <caption className="sr-only">Pairs of stops within 15 m</caption>
@@ -177,7 +177,7 @@ function PairRow({
         <tr>
           <td colSpan={5} className="pb-3">
             <form
-              className="grid gap-3 rounded-md border border-fill p-3 md:grid-cols-[auto_1fr_auto] dark:border-navy-raised"
+              className="grid gap-3 rounded-lg border border-ink-3/25 p-3 md:grid-cols-[auto_1fr_auto] dark:border-navy-raised"
               onSubmit={(e) => {
                 e.preventDefault();
                 setBusy(true);
