@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchCoverage, type AdminResult } from "@/client/admin/api";
 import type { Coverage } from "@/domain/admin/schemas";
-import { ErrorNote, Muted, PageTitle, Empty } from "./parts";
+import { cardCls, Empty, ErrorNote, Loading, PageTitle } from "./parts";
 
 // A13 Coverage audit (N5a, C8, F-E12): what the published revision holds per barangay. The
 // spec's 27 × 9 matrix needs field data: today each barangay has a survey status and one
@@ -27,30 +27,30 @@ export function CoverageScreen() {
         Coverage audit
       </PageTitle>
       {state === null ? (
-        <Muted>Loading…</Muted>
+        <Loading />
       ) : !state.ok ? (
         <ErrorNote>{state.message}</ErrorNote>
       ) : state.data.rows.length === 0 ? (
         <Empty title="The published revision has no barangay rows.">Rows appear once a revision with barangay survey data is published.</Empty>
       ) : (
-        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
+        <div tabIndex={0} className={`adm-scroll ${cardCls}`}>
           <table className="w-full text-left text-sm" data-testid="coverage-table">
-            <caption className="px-3 py-2 text-left text-sm text-ink-2 dark:text-night-ink-2">
+            <caption className="text-left text-ink-2 dark:text-night-ink-2">
               {state.data.rows.length} barangays in {state.data.label}
             </caption>
-            <thead className="border-b border-fill dark:border-night-border">
+            <thead>
               <tr>
-                <th scope="col" className="px-3 py-2 font-semibold">Barangay</th>
-                <th scope="col" className="px-3 py-2 font-semibold">Survey status</th>
-                <th scope="col" className="px-3 py-2 font-semibold">Exact boarding points verified</th>
+                <th scope="col">Barangay</th>
+                <th scope="col">Survey status</th>
+                <th scope="col">Exact boarding points verified</th>
               </tr>
             </thead>
             <tbody>
               {state.data.rows.map((r) => (
-                <tr key={r.barangay} className="border-b border-fill last:border-0 dark:border-night-border">
-                  <th scope="row" className="px-3 py-2 font-medium">{r.barangay}</th>
-                  <td className="px-3 py-2">{survey(r.surveyStatus)}</td>
-                  <td className="px-3 py-2">{yesNo(r.exactBoardingPointsVerified)}</td>
+                <tr key={r.barangay}>
+                  <th scope="row" className="font-medium">{r.barangay}</th>
+                  <td>{survey(r.surveyStatus)}</td>
+                  <td>{yesNo(r.exactBoardingPointsVerified)}</td>
                 </tr>
               ))}
             </tbody>

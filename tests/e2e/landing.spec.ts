@@ -119,29 +119,25 @@ test("reduced motion: nothing animates and everything is visible", async ({ page
   await scrollThrough(page);
   const running = await page.evaluate(() => document.getAnimations().filter((a) => a.playState === "running").map((a) => (a as CSSAnimation).animationName ?? "?"));
   expect(running).toEqual([]);
-  // Reveal targets are fully opaque, and the hero route is drawn.
-  const faded = await page.locator(".pnl-reveal, .pnl-in").evaluateAll((els) => els.filter((el) => getComputedStyle(el).opacity !== "1").length);
-  expect(faded).toBe(0);
-  const offsets = await page.locator(".pnl-route__mask").evaluateAll((els) => els.map((el) => getComputedStyle(el).strokeDashoffset));
-  expect(offsets.length).toBeGreaterThan(0);
-  for (const o of offsets) expect(o).toMatch(/^0(px)?$/);
+  // Reveal targets are fully opaque, and nothing is held back for a reveal.
+  const reveals = page.locator(".pnl-reveal");
+  expect(await reveals.count()).toBeGreaterThan(3);
+  expect(await reveals.evaluateAll((els) => els.filter((el) => getComputedStyle(el).opacity !== "1").length)).toBe(0);
+  await expect(page.locator("html")).not.toHaveClass(/pnl-io/);
 });
 
-test("looping motion pauses while the tab is hidden", async ({ page }) => {
+test("with motion, captures below the fold rise in as they enter, and no text is ever faded", async ({ page }) => {
   await page.goto("/");
-  await page.evaluate(() => Object.defineProperty(document, "hidden", { configurable: true, get: () => true }));
-  // Retried until the page has hydrated and its listener has seen the event.
-  await expect
-    .poll(() => page.evaluate(() => (document.dispatchEvent(new Event("visibilitychange")), document.documentElement.hasAttribute("data-pnl-hidden"))))
-    .toBe(true);
-  const loops = await page.evaluate(() =>
-    document
-      .getAnimations()
-      .filter((a) => a.effect?.getTiming().iterations === Infinity)
-      .map((a) => `${(a as CSSAnimation).animationName}:${a.playState}`),
-  );
-  expect(loops.length).toBeGreaterThan(0);
-  for (const state of loops) expect(state).toMatch(/:paused$/);
+  await expect(page.locator("html")).toHaveClass(/pnl-io/);
+  // Only captures take part: no reveal target holds text.
+  expect(await page.locator(".pnl-reveal").evaluateAll((els) => els.filter((el) => (el as HTMLElement).innerText.trim()).length)).toBe(0);
+  const last = page.locator(".pnl-reveal").last();
+  await expect(last).not.toHaveAttribute("data-in", "");
+  await last.scrollIntoViewIfNeeded();
+  await expect(last).toHaveAttribute("data-in", "");
+  await expect(last).toHaveCSS("opacity", "1");
+  // Nothing loops on this page.
+  expect(await page.evaluate(() => document.getAnimations().filter((a) => a.effect?.getTiming().iterations === Infinity).length)).toBe(0);
 });
 
 test("no sideways scroll at 320, 375, 768 and 1280 px", async ({ page }) => {
@@ -154,13 +150,17 @@ test("no sideways scroll at 320, 375, 768 and 1280 px", async ({ page }) => {
   }
 });
 
-test("the showcase phone follows the step in view", async ({ page }) => {
+test("the showcase shows the screen of the step that is open", async ({ page }) => {
   await page.goto("/");
-  const step = page.locator("[data-pnl-step='3']");
-  await step.scrollIntoViewIfNeeded();
-  await step.evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
-  await expect(page.locator("[data-pnl-screen='3']")).toHaveAttribute("data-on", "true");
-  await expect(page.locator("[data-pnl-screen='0']")).toHaveAttribute("data-on", "false");
+  const list = page.getByRole("list", { name: "Lunad screens" });
+  const step = (name: string) => list.getByRole("button", { name });
+  await expect(step("Start from the map.")).toHaveAttribute("aria-expanded", "true");
+  await expect(list.getByRole("img")).toHaveAttribute("src", "/landing/home-light.webp");
+  await step("Compare every way there.").click();
+  await expect(step("Compare every way there.")).toHaveAttribute("aria-expanded", "true");
+  await expect(step("Start from the map.")).toHaveAttribute("aria-expanded", "false");
+  await expect(list.getByRole("img")).toHaveAttribute("src", "/landing/options-light.webp");
+  await expect(list.getByText(/One option is Recommended/)).toBeVisible();
 });
 
 test.describe("large screens", () => {

@@ -1,35 +1,70 @@
-/* Admin console (N8 redesign). Operator console: calm neutral surfaces, one deep-green navigation rail,
-   dense readable tables. Scoped to the shell's test id so the commuter app is untouched. Plain
-   CSS rather than utilities so it also reaches the many per-screen tables without editing every
-   cell; it is unlayered on purpose, so it wins over the utility classes the screens still carry.
-   Dark follows the app theme (html[data-theme], same rule as src/app/globals.css). */
+/* Admin console (N8 redesign, finished to the Lunad system). A working tool: one deep-green rail,
+   neutral surfaces, dense readable tables. Scoped to the shell's test id so the commuter app is
+   untouched. Plain CSS rather than utilities so it also reaches the many per-screen tables without
+   editing every cell; it is unlayered on purpose, so it wins over the utility classes the screens
+   still carry. Dark follows the app theme (html[data-theme], same rule as src/app/globals.css).
+
+   The console's rules, in one place:
+   - Elevation: a hairline (--adm-rule) around surfaces and between rows. No shadows in the content.
+   - Radius: 12px surfaces (rounded-xl), 8px controls, notes and insets (rounded-lg), pills for chips.
+   - Type: 24/700 page title, 16/600 section, 14 body, 13 tables and secondary text (.adm-meta),
+     12/600 column headers and chips. Numbers are tabular.
+   - Focus: one 2px ring from --adm-focus (green; the bright green on the rail and in dark).
+   - No animation here: axe reads colours mid-transition. */
 [data-testid="admin-shell"] {
   --adm-rule: var(--color-border);
-  --adm-zebra: var(--color-canvas);
   --adm-head: var(--color-fill);
   --adm-head-ink: var(--color-ink-2);
-  --adm-hover: var(--color-brand-soft);
+  --adm-hover: color-mix(in srgb, var(--color-ink) 5%, var(--color-surface));
+  --adm-selected: var(--color-brand-soft);
+  --adm-placeholder: var(--color-ink-3);
   --adm-accent: var(--color-brand);
   --adm-on-accent: var(--color-on-brand);
+  --adm-focus: var(--color-brand);
+  accent-color: var(--adm-accent);
+  caret-color: var(--adm-accent);
 }
 :root[data-theme="dark"] [data-testid="admin-shell"] {
   --adm-rule: var(--color-night-border);
-  --adm-zebra: color-mix(in srgb, var(--color-night-raised) 50%, var(--color-night-surface));
   --adm-head: var(--color-night-raised);
   --adm-head-ink: var(--color-night-ink-2);
-  --adm-hover: color-mix(in srgb, var(--color-brand-bright) 14%, var(--color-night-surface));
+  --adm-hover: color-mix(in srgb, var(--color-night-ink) 6%, var(--color-night-surface));
+  --adm-selected: color-mix(in srgb, var(--color-brand-bright) 14%, var(--color-night-surface));
+  --adm-placeholder: var(--color-night-ink-3);
   --adm-accent: var(--color-brand-bright);
   --adm-on-accent: var(--color-on-brand-bright);
+  --adm-focus: var(--color-brand-bright);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) [data-testid="admin-shell"] {
     --adm-rule: var(--color-night-border);
-    --adm-zebra: color-mix(in srgb, var(--color-night-raised) 50%, var(--color-night-surface));
     --adm-head: var(--color-night-raised);
     --adm-head-ink: var(--color-night-ink-2);
-    --adm-hover: color-mix(in srgb, var(--color-brand-bright) 14%, var(--color-night-surface));
+    --adm-hover: color-mix(in srgb, var(--color-night-ink) 6%, var(--color-night-surface));
+    --adm-selected: color-mix(in srgb, var(--color-brand-bright) 14%, var(--color-night-surface));
+    --adm-placeholder: var(--color-night-ink-3);
     --adm-accent: var(--color-brand-bright);
     --adm-on-accent: var(--color-on-brand-bright);
+    --adm-focus: var(--color-brand-bright);
+  }
+}
+/* The rail and the mobile bar are deep green in both themes: the ring is the bright green there. */
+[data-testid="admin-shell"] :is(#admin-rail, .adm-topbar) {
+  --adm-focus: var(--color-brand-bright);
+}
+
+/* Browser-drawn parts (scrollbars, date and file pickers, select lists, the page behind the
+   shell) follow the theme while the console is on screen, as the commuter app does for .pn-home. */
+:root[data-theme="dark"]:has([data-testid="admin-shell"]) {
+  color-scheme: dark;
+  --background: var(--color-night);
+  --foreground: var(--color-night-ink);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):has([data-testid="admin-shell"]) {
+    color-scheme: dark;
+    --background: var(--color-night);
+    --foreground: var(--color-night-ink);
   }
 }
 
@@ -46,44 +81,112 @@
   background: var(--adm-accent);
   color: var(--adm-on-accent);
 }
+[data-testid="admin-shell"] ::placeholder {
+  color: var(--adm-placeholder);
+  opacity: 1;
+}
+[data-testid="admin-shell"] :focus-visible {
+  outline: 2px solid var(--adm-focus);
+  outline-offset: 2px;
+}
 
+/* Secondary text: hints, timestamps, ids. 13px is the floor for running text (DESIGN.md). */
+[data-testid="admin-shell"] .adm-meta {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+[data-testid="admin-shell"] :where(code, .font-mono) {
+  font-size: 0.8125rem;
+}
+
+/* A button that is working: it is disabled as well, so the cursor and the dots are the visible part. */
+[data-testid="admin-shell"] button[aria-busy="true"] {
+  cursor: progress;
+}
+[data-testid="admin-shell"] button[aria-busy="true"]::after {
+  content: "…";
+}
+
+/* Tables: a quiet header band, hairline rows, a neutral hover. */
 [data-testid="admin-shell"] table {
   border-collapse: separate;
   border-spacing: 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
   font-variant-numeric: tabular-nums;
 }
 [data-testid="admin-shell"] table caption {
-  padding: 0.5rem 0.75rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.8125rem;
 }
 [data-testid="admin-shell"] table :where(th, td) {
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid var(--adm-rule);
+  text-align: left;
   vertical-align: middle;
 }
-[data-testid="admin-shell"] table tbody tr:last-child > :where(th, td) {
+[data-testid="admin-shell"] table tbody > tr:last-child > :where(th, td) {
   border-bottom-width: 0;
 }
 [data-testid="admin-shell"] table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   background: var(--adm-head);
   color: var(--adm-head-ink);
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
 }
-[data-testid="admin-shell"] table tbody tr:nth-child(even) {
-  background: var(--adm-zebra);
+/* A table that sits in a section (no scroll box of its own) gets the band as a rounded strip. */
+[data-testid="admin-shell"] :not(.adm-scroll) > table > thead th {
+  border-bottom-width: 0;
+}
+[data-testid="admin-shell"] :not(.adm-scroll) > table > thead th:first-child {
+  border-radius: 0.5rem 0 0 0.5rem;
+}
+[data-testid="admin-shell"] :not(.adm-scroll) > table > thead th:last-child {
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+[data-testid="admin-shell"] .adm-scroll > table > thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 [data-testid="admin-shell"] table tbody tr:hover {
   background: var(--adm-hover);
 }
-
+/* A row that only holds an opened detail or form is not a data row. */
+[data-testid="admin-shell"] table tbody tr:has(> td[colspan]):hover {
+  background: transparent;
+}
 [data-testid="admin-shell"] table tbody tr[data-selected] {
-  background: var(--adm-hover);
+  background: var(--adm-selected);
   outline: 2px solid var(--adm-accent);
   outline-offset: -2px;
+}
+
+/* Numbers line up on the right. The cell carries .adm-num; its column header follows by position,
+   so a header can never drift from its column. */
+[data-testid="admin-shell"] table .adm-num {
+  text-align: right;
+  white-space: nowrap;
+}
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(1)) > thead th:nth-child(1),
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(2)) > thead th:nth-child(2),
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(3)) > thead th:nth-child(3),
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(4)) > thead th:nth-child(4),
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(5)) > thead th:nth-child(5),
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(6)) > thead th:nth-child(6),
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(7)) > thead th:nth-child(7),
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(8)) > thead th:nth-child(8),
+[data-testid="admin-shell"] table:has(> tbody > tr > td.adm-num:nth-child(9)) > thead th:nth-child(9) {
+  text-align: right;
+}
+
+/* Long values (file names, labels, ids) are cut on one line; the cell's title holds the whole value. */
+[data-testid="admin-shell"] table .adm-clip {
+  max-width: 18rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Tables outside a scroll box wrap long text instead of widening the page. */
@@ -91,10 +194,10 @@
   [data-testid="admin-shell"] table :where(th, td) {
     overflow-wrap: anywhere;
   }
-}
-[data-testid="admin-shell"] .adm-scroll:focus-visible {
-  outline: 2px solid var(--adm-accent);
-  outline-offset: 2px;
+  [data-testid="admin-shell"] table .adm-clip {
+    max-width: none;
+    white-space: normal;
+  }
 }
 
 /* Wide tables scroll inside their own box, so the sticky header has something to stick to. */

@@ -15,7 +15,7 @@ import {
   type StopList,
   type StopRow,
 } from "@/domain/admin/stops";
-import { btnDanger, btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnDanger, btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, cardCls, Loading } from "./parts";
 
 // A3 Candidate review and A6 Stops & curbs (N5b, C3). One list of the open draft's stops; the
 // selected stop's panel offers the actions of the screen. Every action is a new stop version in
@@ -98,7 +98,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
       {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="stops-notice">{notice.text}</OkNote> : <ErrorNote testId="stops-notice">{notice.text}</ErrorNote>}</div> : null}
 
       {list === null ? (
-        <Muted>Loading…</Muted>
+        <Loading />
       ) : !list.ok ? (
         <ErrorNote testId="stops-error">{list.message}</ErrorNote>
       ) : (
@@ -120,15 +120,15 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                 </select>
               </Field>
             </div>
-            <div className="max-h-[70vh] overflow-auto rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
+            <div className={`adm-scroll ${cardCls}`}>
               <table className="w-full text-left text-sm" data-testid="stops-table">
-                <caption className="px-3 py-2 text-left text-sm text-ink-2 dark:text-night-ink-2">
+                <caption className="text-left text-ink-2 dark:text-night-ink-2">
                   {rows.length} of {data?.stops.length ?? 0} stops in {data?.revision?.label ?? "no revision"}
                 </caption>
-                <thead className="border-b border-fill dark:border-night-border">
+                <thead>
                   <tr>
                     {["Layer", "Code", "Name", "Status", "Evidence", "Routes", ""].map((h, i) => (
-                      <th key={h || i} scope="col" className="px-3 py-2 font-semibold">
+                      <th key={h || i} scope="col">
                         {h || <span className="sr-only">Open</span>}
                       </th>
                     ))}
@@ -141,17 +141,17 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                       data-selected={s.stopPointId === selectedId ? "" : undefined}
                       data-testid={`stop-${s.layer ?? "x"}-${s.code ?? s.stopPointId}`}
                     >
-                      <td className="px-3 py-2">{s.layer?.replace(/^Loop Service /, "") ?? "–"}</td>
-                      <td className="px-3 py-2 tabular-nums">{s.code ?? "–"}</td>
-                      <th scope="row" className="px-3 py-2 font-medium">
+                      <td>{s.layer?.replace(/^Loop Service /, "") ?? "–"}</td>
+                      <td className="tabular-nums">{s.code ?? "–"}</td>
+                      <th scope="row" className="font-medium">
                         {s.name}
-                        {s.isSynthetic ? <span className="ml-2 text-xs text-danger-ink dark:text-danger-bright">test data</span> : null}
+                        {s.isSynthetic ? <span className="ml-2 adm-meta text-danger-ink dark:text-danger-bright">test data</span> : null}
                       </th>
-                      <td className="px-3 py-2">{label(s.status)}</td>
-                      <td className="px-3 py-2">{s.evidence.length === 0 ? "None" : [...new Set(s.evidence.map((e) => label(e.claim)))].join(", ")}</td>
-                      <td className="px-3 py-2">{s.sequences.join(", ") || "–"}</td>
-                      <td className="px-3 py-2">
-                        <button type="button" className={btnSecondary} onClick={() => setSelectedId(s.stopPointId)} aria-pressed={s.stopPointId === selectedId}>
+                      <td>{label(s.status)}</td>
+                      <td>{s.evidence.length === 0 ? "None" : [...new Set(s.evidence.map((e) => label(e.claim)))].join(", ")}</td>
+                      <td>{s.sequences.join(", ") || "–"}</td>
+                      <td>
+                        <button type="button" className={btnRow} onClick={() => setSelectedId(s.stopPointId)} aria-pressed={s.stopPointId === selectedId}>
                           {mode === "candidates" ? "Review" : "Edit"}
                           <span className="sr-only"> {s.code ?? s.name}</span>
                         </button>
@@ -223,7 +223,7 @@ function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode
             {stop.pins.map((p, i) => (
               <li key={`${p.layer}-${p.code}-${i}`}>
                 {p.layer} {p.code}: “{p.label}” at <span className="tabular-nums">{coords(p.lat, p.lng)}</span>
-                {p.description && p.description !== p.label ? <span className="block text-xs text-ink-2 dark:text-night-ink-2">{p.description}</span> : null}
+                {p.description && p.description !== p.label ? <span className="block adm-meta text-ink-2 dark:text-night-ink-2">{p.description}</span> : null}
               </li>
             ))}
           </ul>
@@ -239,7 +239,7 @@ function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode
                 {e.sourceCode ? ` (${e.sourceCode})` : ""}
                 {e.hasMedia ? ", photo in the private bucket" : ""}
                 {e.observedOn ? `, observed ${e.observedOn}` : ""}, added {when(e.createdAt)}
-                {e.note ? <span className="block text-xs text-ink-2 dark:text-night-ink-2">{e.note}</span> : null}
+                {e.note ? <span className="block adm-meta text-ink-2 dark:text-night-ink-2">{e.note}</span> : null}
               </li>
             ))}
           </ul>

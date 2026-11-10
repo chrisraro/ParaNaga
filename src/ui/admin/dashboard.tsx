@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { fetchDashboard, type AdminResult } from "@/client/admin/api";
 import type { AdminDashboard as Dashboard } from "@/domain/admin/schemas";
-import { Chip, ErrorNote, Muted, PageTitle, Panel, when, type ChipTone } from "./parts";
+import { Chip, ErrorNote, linkCls, Loading, Muted, PageTitle, Panel, when, type ChipTone } from "./parts";
 
-const linkCls = "font-medium text-brand-strong underline underline-offset-2 dark:text-brand-bright";
 const DAY_MS = 86_400_000;
 
 // A1 Dashboard (N5a, C1; redesigned N8): answers "is the network healthy, what needs me now" from
@@ -43,7 +42,7 @@ export function AdminDashboard({
       <PageTitle lead="What is published, what is waiting, and the last import. Counts only; nothing here changes data.">Dashboard</PageTitle>
       <div className="grid gap-4">
         {!transit ? null : state === null ? (
-          <Muted>Loading…</Muted>
+          <Loading />
         ) : !state.ok ? (
           <ErrorNote testId="admin-dashboard-error">{state.message}</ErrorNote>
         ) : (
@@ -109,7 +108,7 @@ function Attention({ d, corrections }: { d: Dashboard; corrections: boolean }) {
           <span>Nothing is waiting on you. A published revision is live and no draft, candidate or correction is open.</span>
         </p>
       ) : (
-        <ul className="divide-y divide-ink-3/20 dark:divide-night-border">
+        <ul className="divide-y divide-border dark:divide-night-border">
           {items.map((i) => (
             <li key={i.chip + i.cta} className="grid gap-x-4 gap-y-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[7.5rem_1fr_auto] sm:items-center">
               <span>
@@ -132,7 +131,7 @@ function Attention({ d, corrections }: { d: Dashboard; corrections: boolean }) {
 function Stat({ label, value, testId }: { label: string; value: string | number; testId: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs text-ink-2 dark:text-night-ink-2">{label}</dt>
+      <dt className="adm-meta text-ink-2 dark:text-night-ink-2">{label}</dt>
       <dd className="mt-0.5 break-words text-2xl font-semibold tabular-nums tracking-tight" data-testid={testId}>
         {value}
       </dd>
@@ -208,7 +207,7 @@ function Cards({ d, corrections, now }: { d: Dashboard; corrections: boolean; no
         >
           <div className="h-full rounded-full bg-brand dark:bg-brand-bright" style={{ width: `${share}%` }} />
         </div>
-        <p className="mt-1.5 text-xs text-ink-2 dark:text-night-ink-2">{share}% of stops are still candidates</p>
+        <p className="mt-1.5 adm-meta text-ink-2 dark:text-night-ink-2">{share}% of stops are still candidates</p>
       </Panel>
       <Panel title="Corrections" testId="card-corrections">
         <dl>

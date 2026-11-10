@@ -1,98 +1,110 @@
-/* Lunad landing page (/). The app's identity: green with amber highlights (the palette in
-   src/app/globals.css), Geist, light and dark by the same rule as the app
+/* Lunad landing page (/). The category standard, played straight: a calm, bright, product-led page
+   in the app's own palette (src/app/globals.css). Green carries the page; amber appears only where
+   the app uses it (caution chips, the note icon). Light and dark by the same rule as the app
    (`:root[data-theme="dark"]` or System + prefers-color-scheme), high contrast via data-contrast.
 
-   Motion budget: transform, opacity, clip-path and stroke-dashoffset only. Every animation is
-   declared inside `prefers-reduced-motion: no-preference`, so reduced motion means none at all and
-   everything is visible and still. Scroll-linked effects use scroll-driven animations where the
-   browser has them; otherwise src/ui/landing/landing-motion.tsx reveals with an
-   IntersectionObserver. Looping effects pause while the tab is hidden (html[data-pnl-hidden]). */
+   Surfaces are solid: no blur, no glow, no gradients. Elevation is a hairline, except the phone
+   frame, which takes one soft offset shadow in light.
+
+   Motion: the captures rise in as they enter (landing-motion.tsx marks them); text never fades, so
+   no words are ever part-way transparent. Declared inside `prefers-reduced-motion: no-preference`,
+   so reduced motion means none at all. The phone frame and the capture rules (.pnl-device,
+   .pnl-shot) are also used by the large-screen gate (src/ui/app-gate), outside `.pnl`. */
 
 .pnl {
-  --pnl-bg: var(--color-canvas);
+  --pnl-bg: var(--color-surface);
+  --pnl-alt: var(--color-canvas);
+  --pnl-tint: var(--color-brand-soft);
   --pnl-surface: var(--color-surface);
-  --pnl-raised: var(--color-fill);
+  --pnl-fill: var(--color-fill);
   --pnl-ink: var(--color-ink);
   --pnl-ink2: var(--color-ink-2);
-  --pnl-sep: color-mix(in srgb, var(--color-ink) 10%, transparent);
+  --pnl-ink3: var(--color-ink-3);
+  --pnl-sep: color-mix(in srgb, var(--color-ink) 12%, transparent);
   --pnl-accent: var(--color-brand);
+  --pnl-accent-hover: var(--color-brand-strong);
   --pnl-on-accent: var(--color-on-brand);
-  --pnl-accent-soft: var(--color-brand-soft);
   --pnl-accent-ink: var(--color-brand-strong);
-  --pnl-coral: var(--color-accent);
-  --pnl-gold: var(--color-accent);
-  --pnl-gold-ink: var(--color-accent-ink);
+  --pnl-accent-tint: color-mix(in srgb, var(--color-brand) 14%, var(--color-surface));
   --pnl-warn-bg: var(--color-accent-soft);
-  --pnl-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink) 6%, transparent), 0 12px 32px -12px color-mix(in srgb, var(--color-ink) 16%, transparent);
-  --pnl-shadow-lift: 0 2px 4px color-mix(in srgb, var(--color-ink) 6%, transparent), 0 28px 56px -18px color-mix(in srgb, var(--color-ink) 28%, transparent);
-  /* The hero and the promise band stay deep green in both themes (brand surfaces). */
-  --pnl-night: var(--color-deep);
-  --pnl-night-deep: var(--color-deep-2);
-  --pnl-night-ink: var(--color-night-ink);
-  --pnl-night-ink2: var(--color-night-ink-2);
-  --pnl-bright: var(--color-brand-bright);
-  --pnl-on-bright: var(--color-on-brand-bright);
-  --pnl-coral-bright: var(--color-accent);
+  --pnl-warn-ink: var(--color-accent-ink);
+  --pnl-note: var(--color-accent-line);
+  /* The closing panel: the one solid green surface on the page. */
+  --pnl-panel: var(--color-brand);
+  --pnl-on-panel: #ffffff;
+  --pnl-on-panel-2: color-mix(in srgb, #ffffff 86%, var(--color-brand));
+  --pnl-panel-btn: #ffffff;
+  --pnl-panel-btn-ink: var(--color-brand-strong);
   --pnl-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --pnl-gutter: clamp(16px, 4vw, 40px);
-  --pnl-max: 1240px;
-  --pnl-section: clamp(88px, 11vw, 168px);
+  --pnl-max: 1200px;
+  --pnl-section: clamp(64px, 9vw, 120px);
+  /* The global focus ring and selection read this (src/app/globals.css). */
+  --pn-accent: var(--pnl-accent);
+  --pn-on-primary: var(--pnl-on-accent);
 
   background: var(--pnl-bg);
   color: var(--pnl-ink);
   overflow-x: clip;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-  font-feature-settings: "ss01";
-}
-.pnl ::selection {
-  background: var(--color-brand-bright);
-  color: var(--color-on-brand-bright);
 }
 
 /* Dark: Dark always, System when the device prefers dark (same rule as the app). */
 :root[data-theme="dark"] .pnl {
   --pnl-bg: var(--color-night);
+  --pnl-alt: var(--color-night-surface);
+  --pnl-tint: var(--color-deep);
   --pnl-surface: var(--color-night-surface);
-  --pnl-raised: var(--color-night-raised);
+  --pnl-fill: var(--color-night-raised);
   --pnl-ink: var(--color-night-ink);
   --pnl-ink2: var(--color-night-ink-2);
-  --pnl-sep: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
+  --pnl-ink3: var(--color-night-ink-3);
+  --pnl-sep: color-mix(in srgb, var(--color-night-ink) 14%, transparent);
   --pnl-accent: var(--color-brand-bright);
+  --pnl-accent-hover: var(--color-brand-light);
   --pnl-on-accent: var(--color-on-brand-bright);
-  --pnl-accent-soft: color-mix(in srgb, var(--color-brand-bright) 16%, transparent);
   --pnl-accent-ink: var(--color-brand-light);
-  --pnl-coral: var(--color-accent);
-  --pnl-gold-ink: var(--color-accent);
-  --pnl-warn-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
-  --pnl-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
-  --pnl-shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.3), 0 28px 56px -18px rgba(0, 0, 0, 0.7);
-  --pnl-night: var(--color-deep-2);
-  --pnl-night-deep: color-mix(in srgb, var(--color-deep-2) 70%, black);
+  --pnl-accent-tint: color-mix(in srgb, var(--color-brand-bright) 16%, var(--color-night-surface));
+  --pnl-warn-bg: color-mix(in srgb, var(--color-accent) 14%, var(--color-night-surface));
+  --pnl-warn-ink: var(--color-accent);
+  --pnl-note: var(--color-accent);
+  --pnl-panel: var(--color-deep-raised);
+  --pnl-on-panel: var(--color-night-ink);
+  --pnl-on-panel-2: color-mix(in srgb, var(--color-night-ink) 82%, var(--color-deep-raised));
+  --pnl-panel-btn: var(--color-brand-bright);
+  --pnl-panel-btn-ink: var(--color-on-brand-bright);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pnl {
     --pnl-bg: var(--color-night);
+    --pnl-alt: var(--color-night-surface);
+    --pnl-tint: var(--color-deep);
     --pnl-surface: var(--color-night-surface);
-    --pnl-raised: var(--color-night-raised);
+    --pnl-fill: var(--color-night-raised);
     --pnl-ink: var(--color-night-ink);
     --pnl-ink2: var(--color-night-ink-2);
-    --pnl-sep: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
+    --pnl-ink3: var(--color-night-ink-3);
+    --pnl-sep: color-mix(in srgb, var(--color-night-ink) 14%, transparent);
     --pnl-accent: var(--color-brand-bright);
+    --pnl-accent-hover: var(--color-brand-light);
     --pnl-on-accent: var(--color-on-brand-bright);
-    --pnl-accent-soft: color-mix(in srgb, var(--color-brand-bright) 16%, transparent);
     --pnl-accent-ink: var(--color-brand-light);
-    --pnl-coral: var(--color-accent);
-    --pnl-gold-ink: var(--color-accent);
-    --pnl-warn-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
-    --pnl-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
-    --pnl-shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.3), 0 28px 56px -18px rgba(0, 0, 0, 0.7);
-    --pnl-night: var(--color-deep-2);
-    --pnl-night-deep: color-mix(in srgb, var(--color-deep-2) 70%, black);
+    --pnl-accent-tint: color-mix(in srgb, var(--color-brand-bright) 16%, var(--color-night-surface));
+    --pnl-warn-bg: color-mix(in srgb, var(--color-accent) 14%, var(--color-night-surface));
+    --pnl-warn-ink: var(--color-accent);
+    --pnl-note: var(--color-accent);
+    --pnl-panel: var(--color-deep-raised);
+    --pnl-on-panel: var(--color-night-ink);
+    --pnl-on-panel-2: color-mix(in srgb, var(--color-night-ink) 82%, var(--color-deep-raised));
+    --pnl-panel-btn: var(--color-brand-bright);
+    --pnl-panel-btn-ink: var(--color-on-brand-bright);
   }
 }
 /* The page behind the landing follows its theme too (overscroll, the browser's own surfaces). */
 :root:has(.pnl) {
-  --background: var(--color-canvas);
+  --background: var(--color-surface);
+  accent-color: var(--color-brand);
+  caret-color: var(--color-brand);
 }
 :root[data-theme="dark"]:has(.pnl) {
   color-scheme: dark;
@@ -111,10 +123,12 @@
 /* High contrast (Settings → High contrast): secondary text as strong as body text, firmer edges. */
 :root[data-contrast="more"] .pnl {
   --pnl-ink2: var(--pnl-ink);
+  --pnl-ink3: var(--pnl-ink);
   --pnl-sep: color-mix(in srgb, var(--pnl-ink) 55%, transparent);
-  --pnl-night-ink2: #ffffff;
+  --pnl-on-panel-2: var(--pnl-on-panel);
 }
 
+/* ---------- Captures and the phone frame (shared with the large-screen gate) ---------- */
 /* One capture per theme is displayed; the other is never fetched (lazy + display: none). */
 .pnl-shot {
   display: block;
@@ -138,22 +152,50 @@
     display: block;
   }
 }
-.pnl-theme-dark-only {
-  display: none;
+.pnl-device {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  margin: 0;
+  padding: 9px;
+  border-radius: 44px;
+  background: #121a17;
+  box-shadow:
+    0 2px 4px color-mix(in srgb, var(--color-ink) 14%, transparent),
+    0 28px 56px -24px color-mix(in srgb, var(--color-ink) 38%, transparent);
 }
-:root[data-theme="dark"] .pnl-theme-dark-only {
-  display: inline;
-}
-:root[data-theme="dark"] .pnl-theme-light-only {
-  display: none;
+:root[data-theme="dark"] .pnl-device {
+  background: var(--color-night-border);
+  box-shadow: none;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .pnl-theme-dark-only {
-    display: inline;
+  :root:not([data-theme="light"]) .pnl-device {
+    background: var(--color-night-border);
+    box-shadow: none;
   }
-  :root:not([data-theme="light"]) .pnl-theme-light-only {
-    display: none;
-  }
+}
+.pnl-device__screen {
+  position: relative;
+  overflow: hidden;
+  border-radius: 35px;
+  aspect-ratio: 412 / 915;
+  background: var(--color-map-land);
+}
+.pnl-device__screen > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.pnl-device__camera {
+  position: absolute;
+  top: 1.3%;
+  left: 50%;
+  width: 3.2%;
+  aspect-ratio: 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: #121a17;
 }
 
 /* ---------- Layout and type ---------- */
@@ -165,27 +207,57 @@
 }
 .pnl-section {
   padding-block: var(--pnl-section);
-  scroll-margin-top: 72px;
 }
-.pnl-h2 {
-  font-size: clamp(2rem, 4.4vw, 3.6rem);
-  line-height: 1.04;
-  font-weight: 800;
+.pnl-section--alt {
+  background: var(--pnl-alt);
+}
+.pnl-section--tint {
+  background: var(--pnl-tint);
+}
+/* Two plain sections in a row share one gap, not two. */
+.pnl-section:not([class*="--"]) + .pnl-section:not([class*="--"]) {
+  padding-top: 0;
+}
+.pnl h1 {
+  font-size: clamp(2.25rem, 1.45rem + 3.1vw, 3.75rem);
+  line-height: 1.05;
+  font-weight: 700;
   letter-spacing: -0.03em;
   text-wrap: balance;
-  max-width: 22ch;
+  overflow-wrap: break-word; /* a long Filipino word at 200 % text breaks instead of overflowing (i18n T15) */
+}
+.pnl h1 em {
+  font-style: normal;
+  color: var(--pnl-accent);
+}
+.pnl-h2 {
+  font-size: clamp(1.75rem, 1.3rem + 1.9vw, 2.75rem);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  max-width: 20ch;
+  overflow-wrap: break-word;
+}
+.pnl-h3 {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 .pnl-lede {
-  font-size: clamp(1.06rem, 1.4vw, 1.25rem);
-  line-height: 1.55;
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.5;
   color: var(--pnl-ink2);
-  max-width: 60ch;
+  max-width: 56ch;
   text-wrap: pretty;
 }
 .pnl-body {
   font-size: 1rem;
   line-height: 1.6;
   color: var(--pnl-ink2);
+  max-width: 65ch;
   text-wrap: pretty;
 }
 .pnl :is(main, .pnl-footer p) a:not([class]) {
@@ -194,23 +266,40 @@
   text-underline-offset: 3px;
   text-decoration-thickness: 1.5px;
 }
+.pnl :is(main, .pnl-footer p) a:not([class]):hover {
+  text-decoration-thickness: 2.5px;
+}
+/* Heading, then its lede: side by side on wide screens. */
+.pnl-intro {
+  display: grid;
+  gap: 16px;
+  margin-bottom: clamp(32px, 5vw, 56px);
+}
+@media (min-width: 900px) {
+  .pnl-intro {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    align-items: end;
+  }
+}
 
-/* ---------- Buttons ---------- */
+/* ---------- Buttons and links ---------- */
 .pnl-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   min-height: 52px;
-  padding: 0 24px;
+  padding: 8px 26px;
   border-radius: 999px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  transition: transform 220ms var(--pnl-ease), box-shadow 220ms var(--pnl-ease), background-color 220ms var(--pnl-ease);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  transition: transform 120ms var(--pnl-ease), background-color 220ms var(--pnl-ease);
 }
 .pnl-btn svg {
+  flex-shrink: 0;
   transition: transform 220ms var(--pnl-ease);
 }
 .pnl-btn:hover svg {
@@ -219,65 +308,33 @@
 .pnl-btn:active {
   transform: scale(0.97);
 }
-.pnl-btn--bright {
-  background: var(--pnl-bright);
-  color: var(--pnl-on-bright);
-  box-shadow: 0 10px 28px -8px color-mix(in srgb, var(--color-brand-bright) 55%, transparent);
-}
-.pnl-btn--bright:hover {
-  box-shadow: 0 16px 36px -10px color-mix(in srgb, var(--color-brand-bright) 70%, transparent);
-}
-.pnl-btn--ghost {
-  color: var(--pnl-night-ink);
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-night-ink) 35%, transparent);
-}
-.pnl-btn--ghost:hover {
-  background: color-mix(in srgb, var(--color-night-ink) 8%, transparent);
-}
-.pnl-btn--solid {
+.pnl-btn--primary {
   background: var(--pnl-accent);
   color: var(--pnl-on-accent);
 }
-
-/* ---------- Device frame ---------- */
-.pnl-device {
-  position: relative;
-  width: 100%;
-  max-width: 340px;
-  margin: 0;
-  padding: 10px;
-  border-radius: 46px;
-  background: linear-gradient(160deg, var(--color-ink), #05080f 60%);
-  box-shadow:
-    inset 0 0 0 1.5px rgba(255, 255, 255, 0.1),
-    0 2px 6px rgba(5, 8, 15, 0.25),
-    0 40px 80px -30px rgba(5, 8, 15, 0.55);
+.pnl-btn--primary:hover {
+  background: var(--pnl-accent-hover);
 }
-.pnl-device__screen {
-  position: relative;
-  overflow: hidden;
-  border-radius: 37px;
-  aspect-ratio: 412 / 915;
-  background: #e9e5dc;
+.pnl-btn--onbrand {
+  background: var(--pnl-panel-btn);
+  color: var(--pnl-panel-btn-ink);
 }
-.pnl-device__screen > img,
-.pnl-device__screen > picture,
-.pnl-device__screen > picture > img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.pnl-textlink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding-inline: 6px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--pnl-accent-ink);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+  transition: text-decoration-color 220ms var(--pnl-ease);
 }
-.pnl-device__camera {
-  position: absolute;
-  top: 1.4%;
-  left: 50%;
-  width: 3.4%;
-  aspect-ratio: 1;
-  translate: -50% 0;
-  border-radius: 50%;
-  background: #05080f;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
+.pnl-textlink:hover {
+  text-decoration-color: currentColor;
 }
 
 /* ---------- Header ---------- */
@@ -285,22 +342,18 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  padding: 10px var(--pnl-gutter) 0;
+  container-type: inline-size;
+  background: var(--pnl-bg);
+  border-bottom: 1px solid var(--pnl-sep);
 }
 .pnl-header__bar {
   max-width: var(--pnl-max);
   margin-inline: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 60px;
-  padding: 8px 8px 8px 16px;
-  border-radius: 999px;
-  color: var(--pnl-night-ink);
-  background: color-mix(in srgb, var(--pnl-night) 82%, transparent);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 10%, transparent), 0 12px 32px -16px rgba(5, 8, 15, 0.5);
+  gap: 8px;
+  min-height: 64px;
+  padding: 8px var(--pnl-gutter);
 }
 .pnl-header__brand {
   display: flex;
@@ -311,96 +364,108 @@
 }
 .pnl-header__links {
   display: none;
-  gap: 4px;
+  gap: 2px;
+  margin-right: 8px;
 }
 .pnl-header__links a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: 999px;
-  font-size: 0.94rem;
-  color: var(--pnl-night-ink2);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--pnl-ink2);
   transition: color 200ms, background-color 200ms;
 }
 .pnl-header__links a:hover {
-  color: var(--pnl-night-ink);
-  background: color-mix(in srgb, var(--color-night-ink) 8%, transparent);
+  color: var(--pnl-ink);
+  background: var(--pnl-fill);
 }
 .pnl-header__lang {
   display: flex;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
+  background: var(--pnl-fill);
 }
 .pnl-header__lang button {
   min-width: 44px;
   min-height: 44px;
-  padding: 0 8px;
+  padding: 0 10px;
   border-radius: 999px;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--pnl-night-ink2);
+  letter-spacing: 0.02em;
+  color: var(--pnl-ink2);
 }
 .pnl-header__lang button[aria-pressed="true"] {
-  color: var(--pnl-night);
-  background: var(--pnl-night-ink);
+  color: var(--pnl-bg);
+  background: var(--pnl-ink);
 }
 .pnl-header__lang--bar {
   display: none;
 }
 .pnl-header__lang--sheet {
   width: fit-content;
-  margin: 12px 20px 4px;
+  margin-block: 8px 4px;
 }
 .pnl-header__cta {
   min-height: 44px;
-  padding: 0 18px;
-  font-size: 0.95rem;
+  padding: 6px 18px;
+  font-size: 0.9375rem;
 }
 .pnl-header__menu {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  color: var(--pnl-night-ink);
-  background: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
+  color: var(--pnl-ink);
+  background: var(--pnl-fill);
 }
 .pnl-header__sheet {
   position: absolute;
-  inset-inline: var(--pnl-gutter);
-  top: calc(100% + 8px);
-  display: grid;
-  grid-template-rows: 0fr;
-  border-radius: 28px;
-  background: var(--pnl-night);
-  color: var(--pnl-night-ink);
+  inset-inline: 0;
+  top: 100%;
+  padding: 4px var(--pnl-gutter) 12px;
+  background: var(--pnl-bg);
+  box-shadow: 0 20px 32px -20px color-mix(in srgb, var(--color-ink) 40%, transparent);
+  /* Closed: inert (site-header.tsx), so it only needs to be out of sight and out of the pointer's way. */
   opacity: 0;
-  transition: grid-template-rows 360ms var(--pnl-ease), opacity 240ms var(--pnl-ease);
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition: opacity 200ms var(--pnl-ease), transform 220ms var(--pnl-ease);
 }
 .pnl-header__sheet[data-open="true"] {
-  grid-template-rows: 1fr;
   opacity: 1;
-  box-shadow: 0 24px 48px -16px rgba(5, 8, 15, 0.6), inset 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 10%, transparent);
+  pointer-events: auto;
+  transform: none;
 }
-.pnl-header__sheet > div {
-  overflow: hidden;
+:root[data-theme="dark"] .pnl-header__sheet {
+  box-shadow: 0 1px 0 var(--pnl-sep);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pnl-header__sheet {
+    box-shadow: 0 1px 0 var(--pnl-sep);
+  }
 }
 .pnl-header__sheet a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   min-height: 56px;
-  margin-inline: 20px;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-night-ink) 10%, transparent);
-  font-size: 1.15rem;
+  border-bottom: 1px solid var(--pnl-sep);
+  font-size: 1.125rem;
   font-weight: 600;
 }
 .pnl-header__sheet a:last-child {
   border-bottom: 0;
-  margin-bottom: 8px;
+}
+.pnl-header__sheet a svg {
+  flex-shrink: 0;
+  color: var(--pnl-ink3);
 }
 @media (min-width: 900px) {
   .pnl-header__links,
@@ -412,529 +477,366 @@
     display: none;
   }
 }
+/* Too narrow for mark, name, action and menu (a 320 px phone, or large text): the mark stands alone. */
+@container (max-width: 21rem) {
+  .pnl-header__word {
+    display: none;
+  }
+}
+
+/* ---------- Stage: a phone on the page's tint ---------- */
+.pnl-stage {
+  display: grid;
+  justify-items: center;
+  padding: clamp(24px, 4vw, 40px) 20px;
+  border-radius: 28px;
+  background: var(--pnl-tint);
+}
+.pnl-stage .pnl-device {
+  width: min(280px, 100%);
+}
 
 /* ---------- Hero ---------- */
 .pnl-hero {
-  position: relative;
-  isolation: isolate;
-  margin-top: -70px;
-  padding-top: calc(70px + clamp(48px, 8vw, 112px));
-  padding-bottom: clamp(56px, 7vw, 96px);
-  color: var(--pnl-night-ink);
-  background: var(--pnl-night);
-  overflow: clip;
+  padding-block: clamp(28px, 4vw, 48px) clamp(48px, 6vw, 80px);
 }
-.pnl-hero__glow {
-  position: absolute;
-  inset: -20% -10% auto auto;
-  z-index: -1;
-  width: min(900px, 120vw);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-brand-bright) 32%, transparent), transparent 70%);
-  pointer-events: none;
-}
-.pnl-hero__glow--coral {
-  inset: auto auto -35% -20%;
-  width: min(760px, 110vw);
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 70%);
-}
-.pnl-hero h1 {
-  font-size: clamp(2.5rem, 5vw, 5rem);
-  line-height: 0.98;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  max-width: 17ch;
-  overflow-wrap: break-word; /* a long Filipino word at 200 % text breaks instead of overflowing (i18n T15) */
-}
-@media (min-width: 900px) {
-  .pnl-hero h1 {
-    max-width: none;
-  }
-  .pnl-hero h1 > span {
-    white-space: nowrap;
-  }
-}
-.pnl-hero h1 > span {
-  display: block;
-}
-.pnl-hero h1 em {
-  font-style: normal;
-  color: var(--pnl-coral-bright);
-}
-.pnl-hero__row {
+.pnl-hero__grid {
   display: grid;
-  gap: clamp(40px, 6vw, 72px);
-  margin-top: clamp(28px, 4vw, 48px);
-  align-items: start;
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
 }
 @media (min-width: 900px) {
-  .pnl-hero__row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  .pnl-hero__grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   }
 }
 .pnl-hero__copy {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-}
-.pnl-hero__copy .pnl-lede {
-  color: var(--pnl-night-ink2);
+  align-items: flex-start;
+  gap: 20px;
 }
 .pnl-hero__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  align-items: center;
+  gap: 4px 14px;
+  margin-top: 4px;
 }
 .pnl-hero__note {
   display: flex;
   gap: 10px;
   align-items: flex-start;
   max-width: 46ch;
-  font-size: 0.92rem;
+  font-size: 0.9375rem;
   line-height: 1.5;
-  color: var(--pnl-night-ink2);
+  color: var(--pnl-ink2);
 }
 .pnl-hero__note svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: var(--color-accent);
+  color: var(--pnl-note);
 }
-.pnl-stage {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  padding-bottom: 8px;
+.pnl-hero__stage .pnl-device {
+  width: min(300px, 100%);
 }
-.pnl-stage__front {
-  position: relative;
-  z-index: 2;
-  width: min(340px, 78vw);
-}
-.pnl-stage__back {
-  position: absolute;
-  z-index: 1;
-  top: 9%;
-  width: min(280px, 62vw);
-  left: 50%;
-  translate: -112% 0;
-  rotate: -7deg;
-  opacity: 0.92;
-}
-@media (max-width: 520px) {
-  .pnl-stage__back {
-    translate: -88% 0;
-    width: 56vw;
+/* On a phone the frame hangs from the top of its stage, so the trip options (the lower half of the
+   capture) are in the first viewport with the headline and the action. */
+@media (max-width: 899px) {
+  .pnl-hero {
+    padding-top: 20px;
   }
-  .pnl-stage__front {
-    translate: 14% 0;
-    width: 70vw;
+  .pnl-hero__copy {
+    gap: 16px;
+  }
+  .pnl-hero__stage {
+    overflow: hidden;
+    padding-top: 0;
+  }
+  .pnl-hero__stage .pnl-device {
+    width: min(280px, 100%);
+    margin-top: -150px;
   }
 }
-/* Real trip lines (src/ui/landing/hero-lines.ts) over the capture, which has them hidden. */
-.pnl-route {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-.pnl-route--dark {
-  display: none;
-}
-:root[data-theme="dark"] .pnl-route--light {
-  display: none;
-}
-:root[data-theme="dark"] .pnl-route--dark {
-  display: block;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .pnl-route--light {
-    display: none;
-  }
-  :root:not([data-theme="light"]) .pnl-route--dark {
-    display: block;
+/* A short laptop screen: the whole phone stays in the first viewport. */
+@media (min-width: 900px) and (max-height: 840px) {
+  .pnl-hero__stage .pnl-device {
+    width: min(250px, 100%);
   }
 }
 
-/* ---------- Route band ---------- */
-.pnl-band {
-  background: var(--pnl-night-deep);
-  color: var(--pnl-night-ink);
-  padding-block: 18px;
-  overflow: hidden;
-}
-.pnl-band__track {
-  display: flex;
-  width: max-content;
-  gap: 10px;
-}
-.pnl-band ul {
-  display: flex;
-  gap: 10px;
-}
-.pnl-band li {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding: 0 16px 0 6px;
-  border-radius: 999px;
-  white-space: nowrap;
-  font-size: 0.95rem;
-  font-weight: 600;
-  background: color-mix(in srgb, var(--color-night-ink) 7%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 10%, transparent);
-}
-.pnl-letter {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 30px;
-  height: 30px;
-  padding: 0 6px;
-  border-radius: 9px;
-  font-weight: 800;
-  font-size: 0.95rem;
-  background: #b45309;
-  color: #ffffff;
-}
-.pnl-letter--none {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-night-ink) 30%, transparent);
-  color: var(--pnl-night-ink2);
-}
-
-/* ---------- How it works ---------- */
+/* ---------- How it works: three crops of the real screens ---------- */
 .pnl-how {
   display: grid;
-  gap: clamp(40px, 5vw, 64px);
+  gap: 40px;
 }
-.pnl-how__intro {
+@media (min-width: 760px) {
+  .pnl-how {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(20px, 3vw, 40px);
+  }
+}
+.pnl-how > li {
   display: grid;
   gap: 20px;
+  align-content: start;
 }
-@media (min-width: 900px) {
-  .pnl-how__intro {
-    grid-template-columns: 1.2fr 1fr;
-    align-items: end;
-  }
-}
-.pnl-how__steps {
-  position: relative;
-}
-.pnl-how__list {
-  position: relative;
-  display: grid;
-  gap: 16px;
-}
-@media (min-width: 760px) {
-  .pnl-how__list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 24px;
-  }
-}
-.pnl-how__path {
-  position: absolute;
-  inset: 34px 8% auto 8%;
-  height: 24px;
-  width: 84%;
-  display: none;
-  overflow: visible;
-}
-@media (min-width: 760px) {
-  .pnl-how__path {
-    display: block;
-  }
-}
-.pnl-how__step {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 24px;
-  border-radius: 16px;
+.pnl-crop {
+  overflow: hidden;
+  aspect-ratio: 5 / 6;
+  margin: 0;
+  border-radius: 20px;
   background: var(--pnl-surface);
-  box-shadow: var(--pnl-shadow);
+  box-shadow: 0 0 0 1px var(--pnl-sep);
 }
-.pnl-how__dot {
+.pnl-crop .pnl-shot {
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% var(--at, 0%);
+}
+.pnl-how__text {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  align-items: center;
+}
+.pnl-how__n {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  font-weight: 800;
-  font-size: 1.05rem;
-  background: var(--pnl-accent);
-  color: var(--pnl-on-accent);
-  box-shadow: 0 0 0 6px var(--pnl-bg);
-}
-.pnl-how__step:last-child .pnl-how__dot {
-  background: var(--pnl-coral);
-  color: var(--color-ink);
-}
-:root[data-theme="dark"] .pnl-how__step:last-child .pnl-how__dot {
-  color: var(--color-ink);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .pnl-how__step:last-child .pnl-how__dot {
-    color: var(--color-ink);
-  }
-}
-.pnl-how__step h3 {
-  font-size: 1.35rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  background: var(--pnl-accent-tint);
+  color: var(--pnl-accent-ink);
+}
+.pnl-how__text .pnl-body {
+  grid-column: 2;
 }
 
-/* ---------- Showcase (sticky phone, steps scroll by) ---------- */
+/* ---------- Showcase: six screens, one phone ---------- */
 .pnl-show {
   display: grid;
-  gap: 32px;
+  gap: clamp(24px, 4vw, 40px);
 }
-.pnl-show__grid {
-  position: relative;
-  display: grid;
+.pnl-show__list {
+  border-top: 1px solid var(--pnl-sep);
 }
-.pnl-show__pin {
-  position: sticky;
-  top: 76px;
-  z-index: 1;
+.pnl-show__item {
+  border-bottom: 1px solid var(--pnl-sep);
+}
+.pnl-show__item button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 60px;
+  /* The side padding leaves room for the icon's corners when it turns. */
+  padding: 10px 4px 10px 0;
+  text-align: left;
+  font-size: 1.1875rem;
+  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--pnl-ink2);
+  transition: color 200ms;
+}
+.pnl-show__item button:hover,
+.pnl-show__item button[aria-expanded="true"] {
+  color: var(--pnl-ink);
+}
+.pnl-show__item button svg {
+  flex-shrink: 0;
+  color: var(--pnl-ink3);
+  transition: transform 220ms var(--pnl-ease);
+}
+.pnl-show__item button[aria-expanded="true"] svg {
+  transform: rotate(45deg);
+  color: var(--pnl-accent);
+}
+.pnl-show__panel:not([hidden]) {
   display: grid;
+  gap: 24px;
   justify-items: center;
-  padding-bottom: 20px;
-  background: linear-gradient(var(--pnl-bg) 82%, transparent);
+  padding-bottom: 28px;
+}
+.pnl-show__panel .pnl-body {
+  justify-self: start;
 }
 .pnl-show__device {
-  width: min(250px, 58vw, calc((100svh - 330px) * 0.45));
-  min-width: 170px;
-}
-.pnl-show__screens {
-  position: absolute;
-  inset: 0;
-}
-.pnl-show__screen {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 520ms var(--pnl-ease), scale 620ms var(--pnl-ease), filter 520ms var(--pnl-ease);
-  scale: 1.03;
-}
-.pnl-show__screen[data-on="true"] {
-  opacity: 1;
-  scale: 1;
-}
-.pnl-show__rail {
-  display: flex;
-  gap: 6px;
-  margin-top: 16px;
-}
-.pnl-show__rail span {
-  width: 18px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--pnl-sep);
-  transition: background-color 300ms, width 400ms var(--pnl-ease);
-}
-.pnl-show__rail span[data-on="true"] {
-  width: 36px;
-  background: var(--pnl-accent);
-}
-.pnl-show__steps {
-  display: grid;
-}
-.pnl-show__step {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 12px;
-  min-height: 62svh;
-  padding-block: 32px;
-  transition: opacity 400ms var(--pnl-ease);
-}
-.pnl-show__step h3 {
-  font-size: clamp(1.6rem, 3vw, 2.5rem);
-  line-height: 1.08;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  text-wrap: balance;
-}
-.pnl-show__step p {
-  max-width: 44ch;
+  width: min(260px, 72vw);
 }
 @media (min-width: 900px) {
-  .pnl-show__grid {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 48px;
+  /* The wrap is the positioning box: heading and list on the left, the open screen on the tint. */
+  .pnl-show {
+    position: relative;
+    align-content: center;
+    min-height: 740px;
+    padding-right: calc(52% + var(--pnl-gutter));
   }
-  .pnl-show__pin {
-    grid-column: 2;
-    grid-row: 1;
-    top: calc(50vh - min(330px, 40vh));
-    height: max-content;
-    background: none;
-    padding: 0;
+  .pnl-show::after {
+    content: "";
+    position: absolute;
+    inset: 0 var(--pnl-gutter) 0 54%;
+    border-radius: 28px;
+    background: var(--pnl-tint);
+  }
+  .pnl-show__panel:not([hidden]) {
+    display: block;
+    padding-bottom: 20px;
   }
   .pnl-show__device {
-    width: min(320px, calc(80vh * 0.42));
-  }
-  .pnl-show__steps {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .pnl-show__step {
-    min-height: 82vh;
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    left: calc(77% - var(--pnl-gutter) / 2);
+    translate: -50% -50%;
+    width: 296px;
   }
 }
 
-/* ---------- Bento: ways to ride ---------- */
-.pnl-bento {
+/* ---------- Ways to ride ---------- */
+.pnl-ride {
   display: grid;
+  gap: 40px;
+}
+@media (min-width: 900px) {
+  .pnl-ride {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: clamp(40px, 6vw, 80px);
+    align-items: start;
+  }
+}
+.pnl-modes > li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
   gap: 16px;
-  grid-auto-flow: dense;
+  padding-block: 20px;
+  border-top: 1px solid var(--pnl-sep);
 }
-@media (min-width: 760px) {
-  .pnl-bento {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .pnl-bento__jeep {
-    grid-column: span 2;
-    grid-row: span 2;
-  }
-  .pnl-bento__trike {
-    grid-column: span 2;
-  }
-  .pnl-bento__wide {
-    grid-column: 1 / -1;
-  }
+.pnl-modes > li:last-child {
+  border-bottom: 1px solid var(--pnl-sep);
 }
-.pnl-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: clamp(22px, 3vw, 32px);
-  border-radius: 16px;
-  background: var(--pnl-surface);
-  box-shadow: var(--pnl-shadow);
-  transition: transform 420ms var(--pnl-ease), box-shadow 420ms var(--pnl-ease);
+.pnl-modes > li > div {
+  display: grid;
+  gap: 6px;
 }
-.pnl-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--pnl-shadow-lift);
-}
-.pnl-card h3 {
-  font-size: clamp(1.25rem, 2vw, 1.6rem);
-  line-height: 1.15;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-  text-wrap: balance;
-}
-.pnl-card__icon {
+.pnl-modes__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: var(--pnl-accent-soft);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--pnl-accent-tint);
   color: var(--pnl-accent-ink);
-  transition: transform 420ms var(--pnl-ease);
 }
-.pnl-card:hover .pnl-card__icon {
-  transform: rotate(-6deg) scale(1.06);
+.pnl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.pnl-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  background: var(--pnl-fill);
+  color: var(--pnl-ink);
+}
+.pnl-chip--dashed {
+  background: none;
+  border: 1px dashed var(--pnl-ink3);
+}
+.pnl-chip--warn {
+  background: var(--pnl-warn-bg);
+  color: var(--pnl-warn-ink);
 }
 .pnl-routes {
-  display: grid;
-  margin-top: 8px;
-  border-top: 1px solid var(--pnl-sep);
+  padding: 20px 24px 8px;
+  border-radius: 16px;
+  background: var(--pnl-surface);
+  box-shadow: 0 0 0 1px var(--pnl-sep);
+}
+.pnl-routes__title {
+  padding-bottom: 12px;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--pnl-ink2);
 }
 .pnl-routes li {
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: 48px;
-  border-bottom: 1px solid var(--pnl-sep);
+  padding-block: 8px;
+  border-top: 1px solid var(--pnl-sep);
+  font-size: 0.9375rem;
+  line-height: 1.35;
   font-weight: 600;
-  font-size: 0.98rem;
 }
-.pnl-routes .pnl-letter--none {
-  box-shadow: inset 0 0 0 1.5px var(--pnl-sep);
-  color: var(--pnl-ink2);
-}
-.pnl-chip {
-  justify-self: start;
+/* The sign letter in the traditional jeepney's data colour, as on the app's map and legend. */
+.pnl-letter {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
-  gap: 6px;
-  align-self: flex-start;
-  min-height: 30px;
-  padding: 2px 12px;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 650;
-  color: var(--pnl-gold-ink);
-  box-shadow: inset 0 0 0 1.5px var(--pnl-gold);
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  background: var(--color-mode-traditional-puj, #b45309);
+  color: #ffffff;
 }
-.pnl-chip--dashed {
-  box-shadow: none;
-  border: 1.5px dashed color-mix(in srgb, var(--pnl-ink) 45%, transparent);
-  color: var(--pnl-ink);
-}
-.pnl-chip--warn {
-  box-shadow: none;
-  background: var(--pnl-warn-bg);
-}
-.pnl-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 8px;
-}
-/* A route line with stops, drawn across the drop-off card. */
-.pnl-anywhere {
-  display: grid;
-  gap: 24px;
-  align-items: center;
-}
-@media (min-width: 760px) {
-  .pnl-anywhere {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  }
-}
-.pnl-anywhere svg {
-  width: 100%;
-  height: auto;
-  overflow: visible;
+/* No known letter: the title alone, on the same left edge as the lettered routes. */
+.pnl-letter--none {
+  background: none;
 }
 
-/* ---------- Split sections (far areas, community) ---------- */
+/* ---------- Split sections (far areas, community, themes) ---------- */
 .pnl-split {
   display: grid;
-  gap: clamp(40px, 6vw, 88px);
+  gap: clamp(32px, 6vw, 88px);
   align-items: center;
 }
 @media (min-width: 900px) {
   .pnl-split {
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
+  .pnl-split > .pnl-split__media {
+    order: -1;
   }
   .pnl-split--flip {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   }
-  .pnl-split--flip > :first-child {
-    order: 2;
+  .pnl-split--flip > .pnl-split__media {
+    order: 0;
   }
 }
-.pnl-split__device {
+.pnl-split__media {
+  display: grid;
+}
+.pnl-crop--tall {
+  aspect-ratio: 4 / 5;
+  width: 100%;
+  max-width: 440px;
   justify-self: center;
-  width: min(320px, 76vw);
 }
 .pnl-split__copy {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
 }
 .pnl-ticks {
   display: grid;
@@ -944,7 +846,7 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  font-size: 1.02rem;
+  font-size: 1rem;
   line-height: 1.5;
 }
 .pnl-ticks svg {
@@ -955,108 +857,37 @@
 .pnl-places {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 .pnl-places span {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: 32px;
+  padding: 2px 14px;
   border-radius: 999px;
-  font-weight: 650;
-  background: var(--pnl-raised);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  background: var(--pnl-fill);
 }
 .pnl-list {
   display: grid;
-  border-top: 1px solid var(--pnl-sep);
 }
 .pnl-list li {
   display: grid;
   gap: 4px;
-  padding-block: 18px;
+  padding-block: 16px;
+  border-top: 1px solid var(--pnl-sep);
+}
+.pnl-list li:last-child {
   border-bottom: 1px solid var(--pnl-sep);
 }
-.pnl-list strong {
-  font-size: 1.12rem;
-  letter-spacing: -0.01em;
-}
-
-/* ---------- Offline and install ---------- */
-.pnl-offline {
-  display: grid;
-  gap: 40px;
-}
-@media (min-width: 900px) {
-  .pnl-offline {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    align-items: end;
-  }
-}
-.pnl-install {
-  display: grid;
-  gap: 16px;
-}
-@media (min-width: 600px) {
-  .pnl-install {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-.pnl-install ol {
-  display: grid;
-  gap: 10px;
-  counter-reset: pnl-install;
-}
-.pnl-install li {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  line-height: 1.45;
-  counter-increment: pnl-install;
-}
-.pnl-install li::before {
-  content: counter(pnl-install);
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 0.85rem;
-  font-weight: 800;
-  background: var(--pnl-accent-soft);
-  color: var(--pnl-accent-ink);
-}
-.pnl-signal {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 56px;
-}
-.pnl-signal span {
-  width: 14px;
-  border-radius: 4px;
-  background: var(--pnl-accent);
-}
-.pnl-signal span:nth-child(1) { height: 25%; }
-.pnl-signal span:nth-child(2) { height: 50%; opacity: 0.35; }
-.pnl-signal span:nth-child(3) { height: 75%; opacity: 0.2; }
-.pnl-signal span:nth-child(4) { height: 100%; opacity: 0.12; }
 
 /* ---------- Light and dark compare ---------- */
 .pnl-compare {
   display: grid;
-  gap: 40px;
-  align-items: center;
-}
-@media (min-width: 900px) {
-  .pnl-compare {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-}
-.pnl-compare__device {
-  justify-self: center;
-  width: min(320px, 76vw);
+  gap: 12px;
+  justify-items: center;
+  width: min(280px, 100%);
 }
 .pnl-compare__top {
   clip-path: inset(0 0 0 var(--pnl-split, 50%));
@@ -1076,75 +907,106 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   translate: -50% -50%;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-ink) 35%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-ink) 35%, transparent);
 }
 .pnl-compare__range {
   display: grid;
-  gap: 8px;
-  width: min(320px, 76vw);
-  justify-self: center;
-  font-size: 0.92rem;
+  gap: 4px;
+  width: 100%;
+  font-size: 0.875rem;
   color: var(--pnl-ink2);
 }
 .pnl-compare__range input {
   width: 100%;
   min-height: 44px;
-  accent-color: var(--pnl-accent);
 }
 .pnl-compare__labels {
   display: flex;
   justify-content: space-between;
-  font-weight: 650;
+  font-weight: 600;
 }
 
-/* ---------- Promise (deep green band) ---------- */
-.pnl-promise {
-  background: var(--pnl-night);
-  color: var(--pnl-night-ink);
+/* ---------- Offline and install ---------- */
+.pnl-offline {
+  display: grid;
+  gap: 40px;
 }
-.pnl-promise .pnl-lede {
-  color: var(--pnl-night-ink2);
+@media (min-width: 900px) {
+  .pnl-offline {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(40px, 6vw, 88px);
+    align-items: start;
+  }
 }
-/* Full ink, not the secondary: these lines fade in on scroll, and the secondary colour drops
-   under 3:1 on the green band while a line is part-way through its reveal. */
-.pnl-promise .pnl-body {
-  color: var(--pnl-night-ink);
+.pnl-install {
+  display: grid;
+  gap: 28px;
 }
-.pnl-night-link {
-  color: var(--color-brand-light);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-thickness: 1.5px;
+@media (min-width: 560px) {
+  .pnl-install {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+}
+.pnl-install > div {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding-top: 20px;
+  border-top: 1px solid var(--pnl-sep);
+}
+.pnl-install ol {
+  display: grid;
+  gap: 10px;
+  counter-reset: pnl-install;
+}
+.pnl-install li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  line-height: 1.5;
+  counter-increment: pnl-install;
+}
+.pnl-install li::before {
+  content: counter(pnl-install);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: var(--pnl-accent-tint);
+  color: var(--pnl-accent-ink);
+}
+
+/* ---------- What we know (the tinted band) ---------- */
+.pnl-section--tint {
+  --pnl-sep: color-mix(in srgb, var(--pnl-ink) 16%, transparent);
 }
 .pnl-facts {
   display: grid;
-  gap: 1px;
-  margin-top: clamp(32px, 4vw, 56px);
-  border-radius: 16px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
+  margin-top: clamp(28px, 4vw, 48px);
 }
 @media (min-width: 760px) {
   .pnl-facts {
     grid-template-columns: 1fr 1fr;
+    column-gap: clamp(32px, 5vw, 72px);
   }
 }
-.pnl-facts > div {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: clamp(22px, 3vw, 36px);
-  background: var(--pnl-night);
-}
-.pnl-facts h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+.pnl-facts li {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  padding-block: 20px;
+  border-top: 1px solid var(--pnl-sep);
 }
 .pnl-privacy {
   display: grid;
@@ -1154,75 +1016,31 @@
 @media (min-width: 900px) {
   .pnl-privacy {
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: clamp(32px, 5vw, 72px);
   }
 }
-.pnl-privacy ul {
+.pnl-privacy > div {
   display: grid;
-  gap: 12px;
+  gap: 10px;
+  align-content: start;
+}
+.pnl-privacy__title {
+  font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 @media (min-width: 600px) {
-  .pnl-privacy ul {
+  .pnl-privacy .pnl-ticks {
     grid-template-columns: 1fr 1fr;
-  }
-}
-.pnl-privacy li {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  line-height: 1.45;
-}
-.pnl-privacy li svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--color-brand-light);
-}
-
-/* ---------- On your phone (QR on large screens) ---------- */
-.pnl-phone {
-  display: grid;
-  gap: 28px;
-  align-items: center;
-  padding: clamp(24px, 4vw, 48px);
-  border-radius: 24px;
-  background: var(--pnl-surface);
-  box-shadow: var(--pnl-shadow);
-}
-@media (min-width: 900px) {
-  .pnl-phone {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 48px;
-  }
-}
-.pnl-phone__qr {
-  display: none;
-  position: relative;
-  width: 196px;
-  height: 196px;
-  padding: 14px;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 10%, transparent);
-  overflow: hidden;
-}
-.pnl-phone__desk {
-  display: none;
-}
-@media (min-width: 1024px) and (hover: hover) {
-  .pnl-phone__qr {
-    display: block;
-  }
-  .pnl-phone__desk {
-    display: block;
-  }
-  .pnl-phone__touch {
-    display: none;
+    gap: 16px 32px;
   }
 }
 
 /* ---------- FAQ ---------- */
 .pnl-faq {
   display: grid;
-  gap: 32px;
+  gap: 24px;
 }
 @media (min-width: 900px) {
   .pnl-faq {
@@ -1241,10 +1059,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 64px;
-  padding-block: 12px;
-  font-size: 1.12rem;
-  font-weight: 650;
+  min-height: 60px;
+  padding: 12px 4px 12px 0;
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  font-weight: 600;
   cursor: pointer;
   list-style: none;
 }
@@ -1253,41 +1072,102 @@
 }
 .pnl-faq summary svg {
   flex-shrink: 0;
-  transition: rotate 300ms var(--pnl-ease);
+  color: var(--pnl-ink3);
+  transition: transform 220ms var(--pnl-ease);
 }
 .pnl-faq details[open] summary svg {
-  rotate: 45deg;
+  transform: rotate(45deg);
+  color: var(--pnl-accent);
 }
 .pnl-faq details p {
   padding-bottom: 20px;
-  max-width: 62ch;
 }
 
-/* ---------- Closing call and footer ---------- */
+/* ---------- Closing: the same action, and the way onto a phone ---------- */
+.pnl-section--close {
+  padding-top: 0;
+}
 .pnl-cta {
-  position: relative;
-  isolation: isolate;
-  overflow: clip;
+  --pn-accent: var(--pnl-on-panel);
+  display: grid;
+  gap: 32px;
+  padding: clamp(28px, 5vw, 64px);
+  border-radius: 28px;
+  background: var(--pnl-panel);
+  color: var(--pnl-on-panel);
+}
+@media (min-width: 900px) {
+  .pnl-cta {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: clamp(32px, 5vw, 64px);
+    align-items: center;
+  }
+}
+.pnl-cta__copy {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.pnl-cta__copy .pnl-lede {
+  color: var(--pnl-on-panel-2);
+}
+.pnl-cta__copy .pnl-btn {
+  margin-top: 8px;
+}
+.pnl-cta ::selection {
+  background: var(--pnl-on-panel);
+  color: var(--pnl-panel);
+}
+.pnl-phone {
+  display: grid;
+  gap: 20px;
   align-items: center;
-  gap: 24px;
-  padding: clamp(48px, 8vw, 112px) clamp(20px, 5vw, 64px);
-  border-radius: 28px;
-  text-align: center;
-  color: var(--pnl-night-ink);
-  background: var(--pnl-night);
+  padding: 24px;
+  border-radius: 20px;
+  background: var(--pnl-surface);
+  color: var(--pnl-ink);
 }
-.pnl-cta h2 {
-  font-size: clamp(2.2rem, 5.6vw, 4.6rem);
-  line-height: 1;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  text-wrap: balance;
+.pnl-phone > div:last-child {
+  display: grid;
+  gap: 8px;
 }
+.pnl-phone__qr {
+  display: none;
+  width: 168px;
+  height: 168px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-ink) 12%, transparent);
+}
+.pnl-phone__qr svg {
+  width: 100%;
+  height: 100%;
+}
+.pnl-phone__desk {
+  display: none;
+}
+@media (min-width: 1024px) and (hover: hover) {
+  .pnl-phone {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 24px;
+  }
+  .pnl-phone__qr {
+    display: block;
+  }
+  .pnl-phone__desk {
+    display: block;
+  }
+  .pnl-phone__touch {
+    display: none;
+  }
+}
+
+/* ---------- Footer ---------- */
 .pnl-footer {
   border-top: 1px solid var(--pnl-sep);
-  background: var(--pnl-surface);
+  background: var(--pnl-alt);
 }
 .pnl-footer__inner {
   display: grid;
@@ -1297,208 +1177,84 @@
 @media (min-width: 900px) {
   .pnl-footer__inner {
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 64px;
   }
 }
+.pnl-footer__about {
+  display: grid;
+  gap: 12px;
+}
+.pnl-footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
 .pnl-footer p {
-  font-size: 0.88rem;
+  font-size: 0.875rem;
   line-height: 1.6;
   color: var(--pnl-ink2);
+  max-width: 70ch;
 }
 .pnl-footer nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 24px;
+  gap: 0 24px;
   align-content: start;
 }
+@media (min-width: 900px) {
+  .pnl-footer nav {
+    justify-content: flex-end;
+  }
+}
 .pnl-footer nav a {
-  color: var(--pnl-ink);
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 48px;
+  font-size: 0.9375rem;
   font-weight: 600;
+  color: var(--pnl-ink);
 }
 .pnl-footer nav a:hover {
   color: var(--pnl-accent-ink);
 }
 
 /* ---------- Motion (only when the visitor has not asked for less) ---------- */
-@keyframes pnl-rise {
+@keyframes pnl-screen-in {
   from {
     opacity: 0;
-    translate: 0 28px;
+    transform: translateY(10px);
   }
 }
-@keyframes pnl-rise-tilt {
-  from {
-    opacity: 0;
-    transform: translateY(56px) rotate(5deg);
-  }
-}
-@keyframes pnl-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes pnl-drift {
-  to {
-    transform: translate3d(-8%, 10%, 0) scale(1.12);
-  }
-}
-@keyframes pnl-drift-b {
-  to {
-    transform: translate3d(10%, -6%, 0) scale(0.92);
-  }
-}
-@keyframes pnl-marquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-@keyframes pnl-reveal {
-  from {
-    opacity: 0;
-    translate: 0 40px;
-  }
-}
-@keyframes pnl-parallax-back {
-  to {
-    transform: translateY(-70px);
-  }
-}
-@keyframes pnl-parallax-front {
-  to {
-    transform: translateY(36px);
-  }
-}
-@keyframes pnl-grow {
-  from {
-    stroke-dashoffset: 1;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes pnl-split-intro {
-  from {
-    --pnl-split: 92%;
-  }
-  to {
-    --pnl-split: 50%;
-  }
-}
-@property --pnl-split {
-  syntax: "<percentage>";
-  inherits: true;
-  initial-value: 50%;
-}
-
-/* The route draws in only where motion is welcome; otherwise it is simply there. */
-.pnl-route__mask {
-  stroke-dasharray: 1 1;
-  stroke-dashoffset: 0;
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  .pnl-in {
-    animation: pnl-rise 900ms var(--pnl-ease) both;
-    animation-delay: calc(var(--d, 0) * 110ms + 80ms);
+  /* The captures rise in as they enter; landing-motion.tsx marks them (html.pnl-io, data-in). */
+  html.pnl-io .pnl-reveal {
+    transition: opacity 500ms ease-out, transform 700ms var(--pnl-ease);
+    transition-delay: calc(var(--d, 0) * 90ms);
   }
-  .pnl-stage__back {
-    animation: pnl-rise-tilt 1100ms var(--pnl-ease) 260ms both;
+  html.pnl-io .pnl-reveal:not([data-in]) {
+    opacity: 0;
+    transform: translateY(28px);
   }
-  .pnl-route__mask {
-    stroke-dashoffset: 1;
-    animation: pnl-draw 900ms cubic-bezier(0.45, 0, 0.2, 1) forwards;
-    animation-delay: calc(900ms + var(--step) * 520ms);
+  /* The showcase phone settles in when its screen changes (positioned by `translate`, so the
+     transform here is free). */
+  .pnl-show__device {
+    animation: pnl-screen-in 360ms var(--pnl-ease);
   }
-  .pnl-hero__glow {
-    animation: pnl-drift 16s ease-in-out infinite alternate;
-  }
-  .pnl-hero__glow--coral {
-    animation: pnl-drift-b 19s ease-in-out infinite alternate;
-  }
-  .pnl-band__track {
-    animation: pnl-marquee 60s linear infinite;
-  }
-  .pnl-band:hover .pnl-band__track,
-  .pnl-band:focus-within .pnl-band__track {
-    animation-play-state: paused;
-  }
-  html[data-pnl-hidden] .pnl-hero__glow,
-  html[data-pnl-hidden] .pnl-band__track {
-    animation-play-state: paused;
-  }
-
-  /* Scroll-linked: native where supported. */
-  @supports (animation-timeline: view()) {
-    .pnl-reveal {
-      animation: pnl-reveal linear both;
-      animation-timeline: view();
-      animation-range: entry calc(4% + var(--d, 0) * 7%) cover calc(26% + var(--d, 0) * 7%);
-    }
-    .pnl-how__line {
-      animation: pnl-grow linear both;
-      animation-timeline: view();
-      animation-range: entry 20% cover 45%;
-    }
-    .pnl-stage__parallax-back {
-      animation: pnl-parallax-back linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 100vh;
-    }
-    .pnl-stage__parallax-front {
-      animation: pnl-parallax-front linear both;
-      animation-timeline: scroll(root);
-      animation-range: 0 100vh;
-    }
-  }
-  /* Elsewhere: landing-motion.tsx marks elements as they enter (html.pnl-io, data-in). */
-  @supports not (animation-timeline: view()) {
-    html.pnl-io .pnl-reveal {
-      transition: opacity 900ms var(--pnl-ease), translate 900ms var(--pnl-ease);
-      transition-delay: calc(var(--d, 0) * 90ms);
-    }
-    html.pnl-io .pnl-reveal:not([data-in]) {
-      opacity: 0;
-      translate: 0 40px;
-    }
-    html.pnl-io .pnl-how__line {
-      transition: stroke-dashoffset 1400ms var(--pnl-ease) 300ms;
-    }
-    html.pnl-io .pnl-how__line:not([data-in]) {
-      stroke-dashoffset: 1;
-    }
-  }
-  .pnl-compare__device[data-in] {
-    animation: pnl-split-intro 1400ms var(--pnl-ease) 200ms backwards;
-  }
-}
-.pnl-how__line {
-  stroke-dasharray: 1 1;
-  stroke-dashoffset: 0;
 }
 
 /* Forced colours: the system palette replaces ours; frames and controls keep visible edges. */
 @media (forced-colors: active) {
   .pnl-device,
-  .pnl-card,
-  .pnl-how__step,
+  .pnl-crop,
+  .pnl-stage,
+  .pnl-routes,
   .pnl-phone,
+  .pnl-cta,
   .pnl-btn,
-  .pnl-header__bar,
-  .pnl-band li {
+  .pnl-chip {
     border: 1px solid CanvasText;
   }
-  .pnl-hero__glow {
-    display: none;
-  }
-  .pnl-letter,
-  .pnl-how__dot {
+  .pnl-letter {
     forced-color-adjust: none;
-  }
-}
-@media (max-width: 400px) {
-  .pnl-header__word {
-    display: none;
   }
 }

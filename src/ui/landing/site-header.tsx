@@ -28,7 +28,7 @@ function LanguageToggle({ className }: { className: string }) {
   );
 }
 
-/** Floating pill header; on small screens the sections open in a sheet under it (never shifts the page). */
+/** A plain sticky bar; on small screens the sections open in a panel under it (never shifts the page). */
 export function SiteHeader() {
   const t = useT().landing.header;
   const [open, setOpen] = useState(false);
@@ -45,7 +45,7 @@ export function SiteHeader() {
       <nav aria-label={t.mainNav} className="pnl-header__bar">
         <a href="#top" className="pnl-header__brand" aria-label={t.backToTop}>
           <LunadMark size={32} />
-          <LunadWordmark className="pnl-header__word text-xl" />
+          <LunadWordmark className="pnl-header__word text-[1.375rem]" />
         </a>
         <div className="pnl-header__links">
           {SECTIONS.map((s) => (
@@ -55,7 +55,7 @@ export function SiteHeader() {
           ))}
         </div>
         <LanguageToggle className="pnl-header__lang pnl-header__lang--bar" />
-        <Link href="/app" className="pnl-btn pnl-btn--bright pnl-header__cta">
+        <Link href="/app" className="pnl-btn pnl-btn--primary pnl-header__cta">
           {t.openApp}
         </Link>
         <button
@@ -66,23 +66,21 @@ export function SiteHeader() {
           aria-controls="mobile-menu"
           aria-label={open ? t.closeMenu : t.openMenu}
         >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+          <svg width="20" height="20" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
             {open ? <path d="M4 4l10 10M14 4L4 14" /> : <path d="M3 6h12M3 12h12" />}
           </svg>
         </button>
       </nav>
       <div id="mobile-menu" className="pnl-header__sheet" data-open={open} inert={!open}>
-        <div>
-          <LanguageToggle className="pnl-header__lang pnl-header__lang--sheet" />
-          {SECTIONS.map((s) => (
-            <a key={s.href} href={s.href} onClick={() => setOpen(false)}>
-              {t.sections[s.key]}
-              <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden opacity="0.6">
-                <path d="M1 1l6 6-6 6" />
-              </svg>
-            </a>
-          ))}
-        </div>
+        <LanguageToggle className="pnl-header__lang pnl-header__lang--sheet" />
+        {SECTIONS.map((s) => (
+          <a key={s.href} href={s.href} onClick={() => setOpen(false)}>
+            {t.sections[s.key]}
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+              <path d="M1 1l6 6-6 6" />
+            </svg>
+          </a>
+        ))}
       </div>
     </header>
   );

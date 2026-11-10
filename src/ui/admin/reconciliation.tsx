@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { decidePair, fetchReconciliation, type AdminResult } from "@/client/admin/api";
 import { label, PIN_MISMATCH_M, type Reconciliation } from "@/domain/admin/stops";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
+import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, insetCls, Loading } from "./parts";
 
 // A7 Reconciliation (N5b, C3). Stops of the open draft within 15 m of each other: never merged
 // automatically; a reviewer links them (one kept, the other retired, its pins added to the kept
@@ -56,13 +56,13 @@ export function ReconciliationScreen() {
       </PageTitle>
       {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="reconcile-notice">{notice.text}</OkNote> : <ErrorNote testId="reconcile-notice">{notice.text}</ErrorNote>}</div> : null}
       {state === null ? (
-        <Muted>Loading…</Muted>
+        <Loading />
       ) : !state.ok ? (
         <ErrorNote>{state.message}</ErrorNote>
       ) : (
         <div className="grid gap-6">
           {!data?.editable ? <Muted>No draft is open: decisions need a draft (Revisions & publication).</Muted> : null}
-          <Panel title={`Nearby stops to decide (${data?.pairs.length ?? 0})`} variant="bare" testId="pairs">
+          <Panel title={`Nearby stops to decide (${data?.pairs.length ?? 0})`} testId="pairs">
             {data?.pairs.length === 0 ? (
               <Empty title="Nothing to decide.">No stops sit within 15 m of each other. New pairs appear after an import.</Empty>
             ) : (
@@ -71,7 +71,7 @@ export function ReconciliationScreen() {
                 <thead>
                   <tr>
                     {["First stop", "Second stop", "Distance", "Names", ""].map((h, i) => (
-                      <th key={h || i} scope="col" className="py-1 pr-3 font-semibold">
+                      <th key={h || i} scope="col">
                         {h || <span className="sr-only">Decide</span>}
                       </th>
                     ))}
@@ -94,7 +94,7 @@ export function ReconciliationScreen() {
                 <thead>
                   <tr>
                     {["Stop", "Status", "Pin", "Pin label", "Distance", "Why"].map((h) => (
-                      <th key={h} scope="col" className="py-1 pr-3 font-semibold">
+                      <th key={h} scope="col">
                         {h}
                       </th>
                     ))}
@@ -102,15 +102,17 @@ export function ReconciliationScreen() {
                 </thead>
                 <tbody>
                   {data.mismatches.map((m, i) => (
-                    <tr key={`${m.stopPointId}-${m.pinCode}-${i}`} className="border-t border-fill dark:border-night-border">
-                      <th scope="row" className="py-1 pr-3 font-medium">{m.name}</th>
-                      <td className="py-1 pr-3">{label(m.status)}</td>
-                      <td className="py-1 pr-3">
+                    <tr key={`${m.stopPointId}-${m.pinCode}-${i}`}>
+                      <th scope="row" className="font-medium">{m.name}</th>
+                      <td>{label(m.status)}</td>
+                      <td>
                         {m.pinLayer} {m.pinCode}
                       </td>
-                      <td className="py-1 pr-3">{m.pinLabel}</td>
-                      <td className="py-1 pr-3 tabular-nums">{m.distanceM} m</td>
-                      <td className="py-1 pr-3">{[m.far && "far", m.nameDiffers && "name differs"].filter(Boolean).join(", ")}</td>
+                      <td className="adm-clip" title={m.pinLabel || undefined}>
+                        {m.pinLabel}
+                      </td>
+                      <td className="adm-num">{m.distanceM} m</td>
+                      <td>{[m.far && "far", m.nameDiffers && "name differs"].filter(Boolean).join(", ")}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -158,17 +160,17 @@ function PairRow({
   const id = `${pair.a.code ?? pair.a.stopPointId}-${pair.b.code ?? pair.b.stopPointId}`;
   return (
     <>
-      <tr className="border-t border-fill dark:border-night-border" data-testid={`pair-${id}`}>
-        <td className="py-1 pr-3">
-          {who(pair.a)} <span className="text-xs">({label(pair.a.status)})</span>
+      <tr data-testid={`pair-${id}`}>
+        <td>
+          {who(pair.a)} <span className="adm-meta">({label(pair.a.status)})</span>
         </td>
-        <td className="py-1 pr-3">
-          {who(pair.b)} <span className="text-xs">({label(pair.b.status)})</span>
+        <td>
+          {who(pair.b)} <span className="adm-meta">({label(pair.b.status)})</span>
         </td>
-        <td className="py-1 pr-3 tabular-nums">{pair.distanceM === 0 ? "Same point" : `${pair.distanceM} m`}</td>
-        <td className="py-1 pr-3">{pair.similarNames ? "Similar" : <Chip tone="warn">Different</Chip>}</td>
-        <td className="py-1 pr-3">
-          <button type="button" className={btnSecondary} onClick={onOpen} aria-expanded={open} data-testid={`pair-open-${id}`}>
+        <td className="adm-num">{pair.distanceM === 0 ? "Same point" : `${pair.distanceM} m`}</td>
+        <td>{pair.similarNames ? "Similar" : <Chip tone="warn">Different</Chip>}</td>
+        <td>
+          <button type="button" className={btnRow} onClick={onOpen} aria-expanded={open} data-testid={`pair-open-${id}`}>
             Decide<span className="sr-only"> on {who(pair.a)} and {who(pair.b)}</span>
           </button>
         </td>
@@ -177,7 +179,7 @@ function PairRow({
         <tr>
           <td colSpan={5} className="pb-3">
             <form
-              className="grid gap-3 rounded-lg border border-ink-3/25 p-3 md:grid-cols-[auto_1fr_auto] dark:border-night-border"
+              className={`grid gap-3 p-4 md:grid-cols-[auto_1fr_auto] ${insetCls}`}
               onSubmit={(e) => {
                 e.preventDefault();
                 setBusy(true);
@@ -185,7 +187,7 @@ function PairRow({
               }}
             >
               <fieldset className="grid gap-1 text-sm">
-                <legend className="mb-1 font-medium">Decision</legend>
+                <legend className="mb-1 font-semibold">Decision</legend>
                 {(
                   [
                     ["keep_separate", "Keep separate"],
@@ -203,7 +205,7 @@ function PairRow({
                 <input className={inputCls} value={note} maxLength={500} onChange={(e) => setNote(e.target.value)} />
               </Field>
               <div className="self-end">
-                <button type="submit" className={btnPrimary} disabled={!editable || busy} data-testid={`pair-go-${id}`}>
+                <button type="submit" className={btnPrimary} disabled={!editable || busy} aria-busy={busy} data-testid={`pair-go-${id}`}>
                   Record decision
                 </button>
               </div>

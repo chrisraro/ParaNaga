@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchAudit, type AdminResult, type AuditFilters } from "@/client/admin/api";
 import type { AuditPage } from "@/domain/admin/system";
-import { btnPrimary, btnSecondary, ErrorNote, Field, inputCls, Muted, PageTitle, when, Empty } from "./parts";
+import { btnPrimary, btnSecondary, cardCls, Empty, ErrorNote, Field, inputCls, Loading, PageTitle, when } from "./parts";
 
 // A21 Audit log (N7, C12). Read-only, newest first, 50 rows a page. Admins read every row and can
 // filter by actor; other staff read their own actions only (the database decides, not this page).
@@ -63,25 +63,29 @@ export function AuditScreen({ all }: { all: boolean }) {
             <input className={inputCls} type="date" value={draft.to ?? ""} onChange={set("to")} data-testid="audit-to" />
           </Field>
         </div>
-        <button type="submit" className={`${btnPrimary} mt-6`} data-testid="audit-apply">
-          Show
-        </button>
+        {/* An empty label line above the button, so it sits on the fields' row whatever the label size. */}
+        <div className="grid gap-1.5 text-sm">
+          <span aria-hidden="true">&nbsp;</span>
+          <button type="submit" className={btnPrimary} data-testid="audit-apply">
+            Show
+          </button>
+        </div>
       </form>
 
       {state === null ? (
-        <Muted>Loading…</Muted>
+        <Loading />
       ) : !state.ok ? (
         <ErrorNote testId="audit-error">{state.message}</ErrorNote>
       ) : state.data.rows.length === 0 ? (
         <Empty title="No recorded action matches.">Staff actions are recorded as they happen. Try again after the next change.</Empty>
       ) : (
-        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
+        <div tabIndex={0} className={`adm-scroll ${cardCls}`}>
           <table className="w-full text-left text-sm" data-testid="audit-table">
             <caption className="sr-only">Audit log rows, newest first</caption>
-            <thead className="border-b border-fill dark:border-night-border">
+            <thead>
               <tr>
                 {["When", "Who", "Action", "Entity", "Details", "Request"].map((h) => (
-                  <th key={h} scope="col" className="px-3 py-2 font-semibold">
+                  <th key={h} scope="col">
                     {h}
                   </th>
                 ))}
@@ -89,20 +93,22 @@ export function AuditScreen({ all }: { all: boolean }) {
             </thead>
             <tbody>
               {state.data.rows.map((r) => (
-                <tr key={r.id} className="border-b border-fill align-top last:border-0 dark:border-night-border">
-                  <td className="whitespace-nowrap px-3 py-2">{when(r.at)}</td>
-                  <td className="px-3 py-2">
-                    {r.actorName ?? (r.actorUserId ? <code className="text-xs">{r.actorUserId}</code> : r.actorRole === "system" ? "System" : r.actorRole ?? "–")}
+                <tr key={r.id} className="align-top">
+                  <td className="whitespace-nowrap">{when(r.at)}</td>
+                  <td>
+                    {r.actorName ?? (r.actorUserId ? <code>{r.actorUserId}</code> : r.actorRole === "system" ? "System" : r.actorRole ?? "–")}
                   </td>
-                  <td className="px-3 py-2">
+                  <td>
                     <code>{r.action}</code>
                   </td>
-                  <td className="px-3 py-2">
+                  <td>
                     {r.entityType}
-                    {r.entityId ? <code className="ml-1 break-all text-xs">{r.entityId}</code> : null}
+                    {r.entityId ? <code className="ml-1 break-all">{r.entityId}</code> : null}
                   </td>
-                  <td className="max-w-xs break-all px-3 py-2 font-mono text-xs">{compact(r.after)}</td>
-                  <td className="px-3 py-2 font-mono text-xs">{r.requestId ?? "–"}</td>
+                  <td className="max-w-xs break-all font-mono">{compact(r.after)}</td>
+                  <td className="adm-clip font-mono" title={r.requestId ?? undefined}>
+                    {r.requestId ?? "–"}
+                  </td>
                 </tr>
               ))}
             </tbody>

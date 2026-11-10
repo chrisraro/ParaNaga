@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchProviders, runJevDiagnostic, type AdminResult } from "@/client/admin/api";
 import { diagnosticBlocker, type DiagnosticResult, type Providers } from "@/domain/admin/system";
 import { label } from "@/domain/admin/stops";
-import { btnPrimary, Chip, ErrorNote, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnPrimary, Chip, ErrorNote, Muted, OkNote, PageTitle, Panel, when, Loading } from "./parts";
 
 // A19 Jev & providers (N7, C12). What is configured, as yes/no: never a key, a secret or an error
 // body. Moderators and admins read it; admins can run one synthetic Decisions call (only when the
@@ -34,7 +34,7 @@ export function ProvidersScreen() {
     setState(await fetchProviders());
   };
 
-  if (state === null) return <Muted>Loading…</Muted>;
+  if (state === null) return <Loading />;
   if (!state.ok) return <ErrorNote>{state.message}</ErrorNote>;
   const { jev, providers, flags, canRunDiagnostic } = state.data;
   const blocked = diagnosticBlocker(jev);
@@ -77,7 +77,7 @@ export function ProvidersScreen() {
             </dd>
           </dl>
 
-          <div className="mt-4 grid gap-2 border-t border-fill pt-4 dark:border-night-border">
+          <div className="mt-4 grid gap-2 border-t border-border pt-4 dark:border-night-border">
             <h3 className="text-sm font-semibold">Diagnostic</h3>
             {!canRunDiagnostic ? (
               <Muted>Only admins run the diagnostic.</Muted>
@@ -117,7 +117,7 @@ export function ProvidersScreen() {
             <thead>
               <tr>
                 {["Provider", "Configured", "On", "Notes"].map((h) => (
-                  <th key={h} scope="col" className="py-1 pr-3 font-semibold">
+                  <th key={h} scope="col">
                     {h}
                   </th>
                 ))}
@@ -125,13 +125,13 @@ export function ProvidersScreen() {
             </thead>
             <tbody>
               {providers.map((p) => (
-                <tr key={p.id} className="border-t border-fill dark:border-night-border" data-testid={`provider-${p.id}`}>
-                  <th scope="row" className="py-1 pr-3 font-medium">
+                <tr key={p.id} data-testid={`provider-${p.id}`}>
+                  <th scope="row" className="font-medium">
                     {p.label}
                   </th>
-                  <td className="py-1 pr-3">{yesNo(p.configured)}</td>
-                  <td className="py-1 pr-3">{yesNo(p.enabled)}</td>
-                  <td className="py-1 pr-3">{p.detail}</td>
+                  <td>{yesNo(p.configured)}</td>
+                  <td>{yesNo(p.enabled)}</td>
+                  <td>{p.detail}</td>
                 </tr>
               ))}
             </tbody>
@@ -142,7 +142,7 @@ export function ProvidersScreen() {
           <ul className="grid gap-1 text-sm">
             {flags.map((f) => (
               <li key={f.key}>
-                <code>{f.key}</code>: {yesNo(f.enabled)} {f.updatedAt ? <span className="text-xs">(changed {when(f.updatedAt)})</span> : null}
+                <code>{f.key}</code>: {yesNo(f.enabled)} {f.updatedAt ? <span className="adm-meta">(changed {when(f.updatedAt)})</span> : null}
               </li>
             ))}
           </ul>

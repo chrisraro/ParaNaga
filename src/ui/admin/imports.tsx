@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { fetchImports, importCommit, importDryRun, type AdminResult } from "@/client/admin/api";
 import { IMPORT_MAX_CHARS, label, type ImportCommitResult, type ImportDryRun, type ImportFormat, type ImportList, type ImportUpload } from "@/domain/admin/stops";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, confirmInset, Loading } from "./parts";
 
 // A2 Imports (N5b, C2). Upload a My Maps export (KML, the raw authority, or the package CSV), run a
 // dry run on the server (nothing is written: the diff against the newest committed batch, the
@@ -120,7 +120,7 @@ export function ImportsScreen() {
             <Field label="Export date" hint="The day the file was downloaded from My Maps.">
               <input className={inputCls} type="date" required value={retrievedOn} disabled={busy !== null} onChange={(e) => { edited(); setRetrievedOn(e.target.value); }} data-testid="import-date" />
             </Field>
-            <div className="md:col-span-3 flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3 md:col-span-3">
               <button type="submit" className={btnSecondary} disabled={!current || !retrievedOn || busy !== null} data-testid="import-dry-run">
                 {busy === "dry" ? "Checking…" : "Run dry run"}
               </button>
@@ -136,7 +136,7 @@ export function ImportsScreen() {
 
         <Panel title="Import history" testId="import-history">
           {imports === null ? (
-            <Muted>Loading…</Muted>
+            <Loading />
           ) : !imports.ok ? (
             <ErrorNote>{imports.message}</ErrorNote>
           ) : imports.data.batches.length === 0 ? (
@@ -147,7 +147,7 @@ export function ImportsScreen() {
               <thead>
                 <tr>
                   {["Snapshot", "Status", "File", "Added", "Changed", "Unchanged", "Missing", "Conflicts", "Finished"].map((h) => (
-                    <th key={h} scope="col" className="py-1 pr-3 font-semibold">
+                    <th key={h} scope="col">
                       {h}
                     </th>
                   ))}
@@ -155,16 +155,18 @@ export function ImportsScreen() {
               </thead>
               <tbody>
                 {imports.data.batches.map((b) => (
-                  <tr key={b.id} className="border-t border-fill dark:border-night-border">
-                    <th scope="row" className="py-1 pr-3 font-medium">{b.snapshotVersion}</th>
-                    <td className="py-1 pr-3">{b.status}</td>
-                    <td className="py-1 pr-3">{b.fileName ?? "–"}</td>
-                    <td className="py-1 pr-3 tabular-nums">{b.changes.added}</td>
-                    <td className="py-1 pr-3 tabular-nums">{b.changes.changed}</td>
-                    <td className="py-1 pr-3 tabular-nums">{b.changes.unchanged}</td>
-                    <td className="py-1 pr-3 tabular-nums">{b.changes.missing}</td>
-                    <td className="py-1 pr-3 tabular-nums">{b.conflicts}</td>
-                    <td className="py-1 pr-3">{when(b.finishedAt)}</td>
+                  <tr key={b.id}>
+                    <th scope="row" className="font-medium">{b.snapshotVersion}</th>
+                    <td>{b.status}</td>
+                    <td className="adm-clip" title={b.fileName ?? undefined}>
+                      {b.fileName ?? "–"}
+                    </td>
+                    <td className="adm-num">{b.changes.added}</td>
+                    <td className="adm-num">{b.changes.changed}</td>
+                    <td className="adm-num">{b.changes.unchanged}</td>
+                    <td className="adm-num">{b.changes.missing}</td>
+                    <td className="adm-num">{b.conflicts}</td>
+                    <td>{when(b.finishedAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -182,7 +184,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
   return (
     <Panel title="Dry run" testId="import-dry">
       <p className="mb-3 text-sm">
-        {dry.snapshotVersion ?? "No snapshot"} · sha256 <span className="font-mono text-xs break-all">{dry.sha256}</span>
+        {dry.snapshotVersion ?? "No snapshot"} · sha256 <span className="break-all font-mono">{dry.sha256}</span>
       </p>
       <ul className="mb-3 flex flex-wrap gap-2 text-sm" data-testid="import-changes">
         <li><Chip>{changes.added} added</Chip></li>
@@ -197,7 +199,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
         <thead>
           <tr>
             {["Layer", "In the file", "Expected"].map((h) => (
-              <th key={h} scope="col" className="py-1 pr-6 font-semibold">
+              <th key={h} scope="col">
                 {h}
               </th>
             ))}
@@ -205,16 +207,16 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
         </thead>
         <tbody>
           {Object.entries(dry.counts.expectedByLayer).map(([layer, expected]) => (
-            <tr key={layer} className="border-t border-fill dark:border-night-border">
-              <th scope="row" className="py-1 pr-6 font-medium">{layer}</th>
-              <td className="py-1 pr-6 tabular-nums">{dry.counts.byLayer[layer] ?? 0}</td>
-              <td className="py-1 pr-6 tabular-nums">{expected}</td>
+            <tr key={layer}>
+              <th scope="row" className="font-medium">{layer}</th>
+              <td className="adm-num">{dry.counts.byLayer[layer] ?? 0}</td>
+              <td className="adm-num">{expected}</td>
             </tr>
           ))}
-          <tr className="border-t border-fill dark:border-night-border">
-            <th scope="row" className="py-1 pr-6 font-medium">Total</th>
-            <td className="py-1 pr-6 tabular-nums">{dry.counts.total}</td>
-            <td className="py-1 pr-6 tabular-nums">{dry.counts.expectedTotal}</td>
+          <tr>
+            <th scope="row" className="font-medium">Total</th>
+            <td className="adm-num">{dry.counts.total}</td>
+            <td className="adm-num">{dry.counts.expectedTotal}</td>
           </tr>
         </tbody>
       </table>
@@ -238,7 +240,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
             <thead>
               <tr>
                 {["Change", "Layer", "Code", "Label", "Was", "Moved"].map((h) => (
-                  <th key={h} scope="col" className="py-1 pr-3 font-semibold">
+                  <th key={h} scope="col">
                     {h}
                   </th>
                 ))}
@@ -246,13 +248,17 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
             </thead>
             <tbody>
               {dry.rows.map((r, i) => (
-                <tr key={`${r.kind}-${r.layer}-${r.code}-${i}`} className="border-t border-fill dark:border-night-border">
-                  <td className="py-1 pr-3">{r.kind}</td>
-                  <td className="py-1 pr-3">{r.layer}</td>
-                  <td className="py-1 pr-3">{r.code ?? "–"}</td>
-                  <th scope="row" className="py-1 pr-3 font-medium">{r.label || "(no label)"}</th>
-                  <td className="py-1 pr-3">{r.fromLabel ?? "–"}</td>
-                  <td className="py-1 pr-3 tabular-nums">{r.movedM === null ? "–" : `${r.movedM} m`}</td>
+                <tr key={`${r.kind}-${r.layer}-${r.code}-${i}`}>
+                  <td>{r.kind}</td>
+                  <td>{r.layer}</td>
+                  <td>{r.code ?? "–"}</td>
+                  <th scope="row" className="adm-clip font-medium" title={r.label || undefined}>
+                    {r.label || "(no label)"}
+                  </th>
+                  <td className="adm-clip" title={r.fromLabel ?? undefined}>
+                    {r.fromLabel ?? "–"}
+                  </td>
+                  <td className="adm-num">{r.movedM === null ? "–" : `${r.movedM} m`}</td>
                 </tr>
               ))}
             </tbody>
@@ -274,7 +280,8 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
         </ul>
       )}
 
-      <div className="mt-4 flex items-center gap-3">
+      {/* The commit step: the amber wash marks the one control here that writes. */}
+      <div className={`mt-4 flex flex-wrap items-center gap-3 p-4 ${confirmInset}`}>
         <button type="button" className={btnPrimary} disabled={!dry.canCommit || busy} onClick={onCommit} data-testid="import-commit">
           {busy ? "Committing…" : nothing ? "Commit (nothing will change)" : "Commit to the open draft"}
         </button>

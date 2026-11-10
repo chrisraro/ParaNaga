@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { changeRole, fetchStaff, findUser, type AdminResult } from "@/client/admin/api";
 import { GRANTABLE_ROLES, ROLE_LABELS, wouldRemoveLastAdmin, type FoundUser, type GrantableRole, type StaffList, type UserCard } from "@/domain/admin/system";
 import type { Role } from "@/domain/auth/permissions";
-import { btnDanger, btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnPrimary, btnRowDanger, btnSecondary, cardCls, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Loading } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A18 Users & roles (N7, C12), admins only. Find an account by its full email address (no list of
@@ -104,7 +104,7 @@ export function UsersScreen() {
 
         <Panel title={`Staff (${staffList.length})`} variant="bare" testId="users-staff">
           {staff === null ? (
-            <Muted>Loading…</Muted>
+            <Loading />
           ) : !staff.ok ? (
             <ErrorNote>{staff.message}</ErrorNote>
           ) : staffList.length === 0 ? (
@@ -112,7 +112,7 @@ export function UsersScreen() {
           ) : (
             <ul className="grid gap-4">
               {staffList.map((u) => (
-                <li key={u.userId} className="rounded-lg border border-ink-3/25 p-3 dark:border-night-border">
+                <li key={u.userId} className={`p-4 ${cardCls}`}>
                   <UserRoles user={u} staff={staffList} busy={flow.step === "applying"} onChange={(p) => void apply(p)} />
                 </li>
               ))}
@@ -161,12 +161,12 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
         {active.map((r) => (
           <li key={r.role} className="flex flex-wrap items-center gap-2">
             <Chip tone="ok">{ROLE_LABELS[r.role]}</Chip>
-            <span className="text-xs text-ink-2 dark:text-night-ink-2">
+            <span className="adm-meta text-ink-2 dark:text-night-ink-2">
               since {when(r.grantedAt)}
               {r.grantedBy ? ` by ${r.grantedBy}` : ""} – {r.reason}
             </span>
             {!user.self && r.role !== "commuter" ? (
-              <button type="button" className={btnDanger} disabled={busy} onClick={() => go("revoke", r.role)} data-testid={`revoke-${tid}-${r.role}`}>
+              <button type="button" className={`${btnRowDanger} ml-auto`} disabled={busy} onClick={() => go("revoke", r.role)} data-testid={`revoke-${tid}-${r.role}`}>
                 Revoke
               </button>
             ) : null}

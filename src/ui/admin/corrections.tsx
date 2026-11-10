@@ -17,7 +17,7 @@ import {
 import { label } from "@/domain/admin/stops";
 import { INFO_REASONS, REJECT_REASONS } from "@/domain/corrections/review-reasons";
 import { en } from "@/i18n/dict";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
+import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, insetCls, Loading, segBtn, segGroup } from "./parts";
 
 // A14 Corrections review (N6, C9). Commuter reports with their evidence; a transport reviewer
 // starts the review, asks for information, rejects, marks a duplicate or accepts. Accepting puts
@@ -86,16 +86,16 @@ export function CorrectionsScreen() {
       <PageTitle lead="Reports from commuters, with their evidence. Accepting puts the change into the open draft only; nothing public changes until that draft is validated and published. Your own reports are never shown to you.">
         Corrections review
       </PageTitle>
-      <div className="mb-4 flex gap-2" role="group" aria-label="Which reports">
+      <div className={`mb-4 ${segGroup}`} role="group" aria-label="Which reports">
         {(["open", "closed"] as const).map((s) => (
-          <button key={s} type="button" className={btnSecondary} aria-pressed={scope === s} onClick={() => { if (s !== scope) setState(null); setScope(s); }} data-testid={`scope-${s}`}>
+          <button key={s} type="button" className={segBtn} aria-pressed={scope === s} onClick={() => { if (s !== scope) setState(null); setScope(s); }} data-testid={`scope-${s}`}>
             {s === "open" ? "Open" : "Closed"}
           </button>
         ))}
       </div>
       {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="correction-notice">{notice.text}</OkNote> : <ErrorNote testId="correction-notice">{notice.text}</ErrorNote>}</div> : null}
       {state === null ? (
-        <Muted>Loading…</Muted>
+        <Loading />
       ) : !state.ok ? (
         <ErrorNote>{state.message}</ErrorNote>
       ) : (
@@ -110,7 +110,7 @@ export function CorrectionsScreen() {
                 <thead>
                   <tr>
                     {["Report", "About", "Status", "Sent", "Evidence", ""].map((h, i) => (
-                      <th key={h || i} scope="col" className="py-1 pr-3 font-semibold">
+                      <th key={h || i} scope="col">
                         {h || <span className="sr-only">Open</span>}
                       </th>
                     ))}
@@ -134,21 +134,21 @@ function Row({ c, open, draftOpen, onOpen, onAct }: { c: CorrectionItem; open: b
   const evidence = [c.media.length ? `${c.media.length} photo${c.media.length === 1 ? "" : "s"}` : null, c.location ? "location" : null].filter(Boolean).join(", ") || "text only";
   return (
     <>
-      <tr className="border-t border-fill dark:border-night-border" data-testid={`correction-${c.id}`}>
-        <th scope="row" className="py-1 pr-3 font-medium">
+      <tr data-testid={`correction-${c.id}`}>
+        <th scope="row" className="font-medium">
           {category(c)}
         </th>
-        <td className="py-1 pr-3">{entity(c)}</td>
-        <td className="py-1 pr-3">
+        <td>{entity(c)}</td>
+        <td>
           <Chip tone={tone(c.status)}>{label(c.status)}</Chip>
         </td>
-        <td className="py-1 pr-3">{when(c.submittedAt)}</td>
-        <td className="py-1 pr-3">
+        <td>{when(c.submittedAt)}</td>
+        <td>
           {evidence}
           {c.similar.length ? `; ${c.similar.length} similar` : ""}
         </td>
-        <td className="py-1 pr-3">
-          <button type="button" className={btnSecondary} onClick={onOpen} aria-expanded={open} data-testid={`correction-open-${c.id}`}>
+        <td>
+          <button type="button" className={btnRow} onClick={onOpen} aria-expanded={open} data-testid={`correction-open-${c.id}`}>
             Open<span className="sr-only"> {category(c)}, {entity(c)}</span>
           </button>
         </td>
@@ -166,7 +166,7 @@ function Row({ c, open, draftOpen, onOpen, onAct }: { c: CorrectionItem; open: b
 
 function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean; onAct: (c: CorrectionItem, p: ReviewPayload) => Promise<void> }) {
   return (
-    <div className="grid gap-4 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-2 dark:border-night-border" data-testid="correction-detail">
+    <div className={`grid gap-4 p-4 lg:grid-cols-2 ${insetCls}`} data-testid="correction-detail">
       <div className="grid gap-3 text-sm">
         <section aria-label="What the commuter wrote">
           <h3 className="font-semibold">What they wrote</h3>
@@ -175,7 +175,7 @@ function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           <dt className="font-medium">About</dt>
           <dd>
-            {entity(c)} <span className="text-xs">({c.entityId})</span>
+            {entity(c)} <span className="adm-meta">({c.entityId})</span>
           </dd>
           {c.stop ? (
             <>
@@ -213,7 +213,7 @@ function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean
               {c.media.map((m, i) => (
                 <li key={m.id}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={reviewMediaSrc(m.id)} alt={`Evidence photo ${i + 1}`} className="aspect-[4/3] w-full rounded object-cover" loading="lazy" />
+                  <img src={reviewMediaSrc(m.id)} alt={`Evidence photo ${i + 1}`} className="aspect-[4/3] w-full rounded-lg object-cover" loading="lazy" />
                 </li>
               ))}
             </ul>
@@ -226,7 +226,7 @@ function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean
             <ul>
               {c.similar.map((s) => (
                 <li key={s.id}>
-                  {en.report.categories[s.kind as CorrectionItem["kind"]]?.label ?? label(s.kind)}, {label(s.status)}, {when(s.submittedAt)} <span className="text-xs">({s.id.slice(0, 8)})</span>
+                  {en.report.categories[s.kind as CorrectionItem["kind"]]?.label ?? label(s.kind)}, {label(s.status)}, {when(s.submittedAt)} <span className="adm-meta">({s.id.slice(0, 8)})</span>
                 </li>
               ))}
             </ul>
@@ -262,12 +262,12 @@ function FareTrace({ c }: { c: CorrectionItem }) {
       {fares.length === 0 ? (
         <Muted>No fare rule is published for this mode.</Muted>
       ) : (
-        <table className="mt-1 w-full text-left text-xs" data-testid="fare-trace">
+        <table className="mt-1 w-full" data-testid="fare-trace">
           <caption className="sr-only">Fare rules with sources and conflicts</caption>
           <thead>
             <tr>
               {["Rule", "Base", "Status", "Sources", "Evidence", "Open conflicts"].map((h) => (
-                <th key={h} scope="col" className="pr-2 font-semibold">
+                <th key={h} scope="col">
                   {h}
                 </th>
               ))}
@@ -276,14 +276,14 @@ function FareTrace({ c }: { c: CorrectionItem }) {
           <tbody>
             {fares.map((f) => (
               <tr key={f.versionId}>
-                <th scope="row" className="pr-2 font-medium">
+                <th scope="row" className="font-medium">
                   {f.code} ({f.modeCode})
                 </th>
-                <td className="pr-2">{pesos(f.baseCentavos)}</td>
-                <td className="pr-2">{label(f.status)}</td>
-                <td className="pr-2">{f.sourceCodes.join(", ") || "–"}</td>
-                <td className="pr-2">{f.evidence.map((e) => `${label(e.claim)} (${e.sourceCode ?? e.kind})`).join("; ") || "none"}</td>
-                <td className="pr-2">{f.openConflicts}</td>
+                <td className="adm-num">{pesos(f.baseCentavos)}</td>
+                <td>{label(f.status)}</td>
+                <td>{f.sourceCodes.join(", ") || "–"}</td>
+                <td>{f.evidence.map((e) => `${label(e.claim)} (${e.sourceCode ?? e.kind})`).join("; ") || "none"}</td>
+                <td className="adm-num">{f.openConflicts}</td>
               </tr>
             ))}
           </tbody>
@@ -432,7 +432,7 @@ function ActionForm({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boo
       </Field>
       {problem ? <ErrorNote>{problem}</ErrorNote> : null}
       <div>
-        <button type="submit" className={btnPrimary} disabled={busy || action === null} data-testid="correction-submit">
+        <button type="submit" className={btnPrimary} disabled={busy || action === null} aria-busy={busy} data-testid="correction-submit">
           {action ? ACTION_LABELS[action] : "Choose an action"}
         </button>
       </div>

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchJobs, type AdminResult } from "@/client/admin/api";
 import type { Jobs } from "@/domain/admin/system";
 import { label } from "@/domain/admin/stops";
-import { Chip, ErrorNote, Muted, PageTitle, Panel, when, Empty } from "./parts";
+import { Chip, ErrorNote, Muted, PageTitle, Panel, when, Empty, Loading } from "./parts";
 
 // A20 Jobs (N7, C12), admins only: the background job queue (ops.job) by status, the latest 100
 // rows (kind, status, attempts, error code; never the payload), and the last retention runs.
@@ -20,7 +20,7 @@ export function JobsScreen() {
     };
   }, []);
 
-  if (state === null) return <Muted>Loading…</Muted>;
+  if (state === null) return <Loading />;
   if (!state.ok) return <ErrorNote>{state.message}</ErrorNote>;
   const { counts, jobs, retention } = state.data;
 
@@ -74,7 +74,7 @@ export function JobsScreen() {
                 <thead>
                   <tr>
                     {["Created", "Kind", "Status", "Attempts", "Next run", "Finished", "Last error"].map((h) => (
-                      <th key={h} scope="col" className="py-1 pr-3 font-semibold">
+                      <th key={h} scope="col">
                         {h}
                       </th>
                     ))}
@@ -82,16 +82,18 @@ export function JobsScreen() {
                 </thead>
                 <tbody>
                   {jobs.map((j) => (
-                    <tr key={j.id} className="border-t border-fill dark:border-night-border">
-                      <td className="py-1 pr-3">{when(j.createdAt)}</td>
-                      <td className="py-1 pr-3">{label(j.kind)}</td>
-                      <td className="py-1 pr-3">{j.status === "dead" ? <Chip tone="error">dead</Chip> : label(j.status)}</td>
-                      <td className="py-1 pr-3 tabular-nums">
+                    <tr key={j.id}>
+                      <td>{when(j.createdAt)}</td>
+                      <td>{label(j.kind)}</td>
+                      <td>{j.status === "dead" ? <Chip tone="error">dead</Chip> : label(j.status)}</td>
+                      <td className="adm-num">
                         {j.attempts} / {j.maxAttempts}
                       </td>
-                      <td className="py-1 pr-3">{j.status === "done" || j.status === "dead" ? "–" : when(j.runAfter)}</td>
-                      <td className="py-1 pr-3">{when(j.finishedAt)}</td>
-                      <td className="py-1 pr-3">{j.lastErrorCode ?? "–"}</td>
+                      <td>{j.status === "done" || j.status === "dead" ? "–" : when(j.runAfter)}</td>
+                      <td>{when(j.finishedAt)}</td>
+                      <td className="adm-clip" title={j.lastErrorCode ?? undefined}>
+                        {j.lastErrorCode ?? "–"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

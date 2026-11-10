@@ -1,22 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { useT } from "@/i18n/provider";
 import { LunadMark, LunadWordmark } from "@/ui/brand/lunad-mark";
 import { DeviceFrame, Shot } from "@/ui/landing/device-frame";
-import { HERO_LINES } from "@/ui/landing/hero-lines";
-import { ROUTES, SHOT_H, SHOT_W, SHOWCASE_SCREENS } from "@/ui/landing/landing-content";
+import { ROUTES, SHOWCASE_SCREENS, type Screen } from "@/ui/landing/landing-content";
 import { LandingMotion } from "@/ui/landing/landing-motion";
 import { AppQr } from "@/ui/landing/qr-code";
 import { SiteHeader } from "@/ui/landing/site-header";
 import { ThemeCompare } from "@/ui/landing/theme-compare";
 import "@/ui/landing/landing.css";
 
-// Marketing landing page. Persuade, but only with what ships: every screen is a capture of the
-// running app (public/landing, scripts/capture-landing.ts) and every claim comes from the app
-// (landing-content.ts, held to the copy rules by tests/unit/landing-copy.test.ts).
+// Marketing landing page. The category standard, played straight (PRODUCT.md): a calm, bright,
+// product-led page. Every screen is a capture of the running app (public/landing, written by
+// tests/e2e/landing-captures.spec.ts) and every claim comes from the app (landing-content.ts, held
+// to the copy rules by tests/unit/landing-copy.test.ts).
 // A client component so the copy follows the chosen language without a reload (the EN | FIL toggle in
 // the header); it is still prerendered, in English, like the app shell (src/i18n/provider.tsx).
 
@@ -24,7 +24,7 @@ const d = (i: number) => ({ "--d": i }) as CSSProperties;
 
 function Arrow() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M3 9h12M10 4l5 5-5 5" />
     </svg>
   );
@@ -32,7 +32,7 @@ function Arrow() {
 
 function Tick() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M5 12.5l4.5 4.5L19 7.5" />
     </svg>
   );
@@ -40,7 +40,7 @@ function Tick() {
 
 function Icon({ d: path }: { d: string }) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d={path} />
     </svg>
   );
@@ -51,39 +51,12 @@ const ICON = {
   trike: "M5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM8 16h8M13 16V8h4l3 5M13 8H8L5.5 13.5",
   padyak: "M5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM5.5 16 9 9h5l4.5 7M9 9 8 6H6M14 9l-2 7",
   walk: "M13 4.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM10 22l2-7 3 3v4M7 12l3-5 4 1 2 4M12 15l-2-4",
+  para: "M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
 };
 
-/** The real trip lines over the hero capture: a mask draws them in, in trip order. */
-function RouteOverlay({ theme }: { theme: "light" | "dark" }) {
-  const lines = HERO_LINES[theme];
-  const id = `pnl-route-${theme}`;
-  return (
-    <svg className={`pnl-route pnl-route--${theme}`} viewBox="0 0 412 915" aria-hidden>
-      <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="412" height="915">
-        {lines
-          .filter((l) => l.kind === "casing")
-          .map((l, i) => (
-            <polyline
-              key={i}
-              className="pnl-route__mask"
-              points={l.points}
-              pathLength={1}
-              fill="none"
-              stroke="#fff"
-              strokeWidth={l.width + 6}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ "--step": l.step } as CSSProperties}
-            />
-          ))}
-      </mask>
-      <g mask={`url(#${id})`} fill="none" strokeLinecap="round" strokeLinejoin="round">
-        {lines.map((l, i) => (
-          <polyline key={i} points={l.points} stroke={l.color} strokeWidth={l.width} strokeDasharray={l.dash ?? undefined} />
-        ))}
-      </g>
-    </svg>
-  );
+/** A phone on the page's tinted stage. */
+function Stage({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <div className={`pnl-stage ${className}`}>{children}</div>;
 }
 
 function Hero() {
@@ -93,258 +66,216 @@ function Hero() {
       {/* The LCP candidate: React hoists these into <head>, one per colour scheme. */}
       <link rel="preload" as="image" href="/landing/hero-light.webp" media="(prefers-color-scheme: light)" fetchPriority="high" />
       <link rel="preload" as="image" href="/landing/hero-dark.webp" media="(prefers-color-scheme: dark)" fetchPriority="high" />
-      <span className="pnl-hero__glow" aria-hidden />
-      <span className="pnl-hero__glow pnl-hero__glow--coral" aria-hidden />
-      <div className="pnl-wrap">
-        <h1 id="hero-h">
-          <span className="pnl-in" style={d(0)}>{t.hero.titleA}</span>
-          <span className="pnl-in" style={d(1)}>
-            {t.hero.titleB} <em>Para!</em>
-          </span>
-        </h1>
-        <div className="pnl-hero__row">
-          <div className="pnl-hero__copy">
-            <p className="pnl-lede pnl-in" style={d(2)}>{t.hero.lede}</p>
-            <div className="pnl-hero__actions pnl-in" style={d(3)}>
-              <Link href="/app" className="pnl-btn pnl-btn--bright">
-                {t.header.openApp}
-                <Arrow />
-              </Link>
-              <a href="#how" className="pnl-btn pnl-btn--ghost">
-                {t.hero.seeHow}
-              </a>
-            </div>
-            <p className="pnl-hero__note pnl-in" style={d(4)}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 7.5v5.5M12 16.5h.01" />
-              </svg>
-              {t.hero.note}
-            </p>
+      <div className="pnl-wrap pnl-hero__grid">
+        <div className="pnl-hero__copy">
+          <h1 id="hero-h">
+            {t.hero.titleA} {t.hero.titleB} <em>Para!</em>
+          </h1>
+          <p className="pnl-lede">{t.hero.lede}</p>
+          <div className="pnl-hero__actions">
+            <Link href="/app" className="pnl-btn pnl-btn--primary">
+              {t.header.openApp}
+              <Arrow />
+            </Link>
+            <a href="#how" className="pnl-textlink">
+              {t.hero.seeHow}
+            </a>
           </div>
-          <div className="pnl-stage">
-            <div className="pnl-stage__back">
-              <div className="pnl-stage__parallax-back">
-                <DeviceFrame>
-                  <Shot screen="options" decorative />
-                </DeviceFrame>
-              </div>
-            </div>
-            <div className="pnl-stage__front">
-              <div className="pnl-stage__parallax-front">
-                <div className="pnl-in" style={d(2)}>
-                  <DeviceFrame>
-                    <picture>
-                      <source media="(prefers-color-scheme: dark)" srcSet="/landing/hero-dark.webp" />
-                      <img src="/landing/hero-light.webp" width={SHOT_W} height={SHOT_H} alt={t.alt.hero} fetchPriority="high" decoding="async" />
-                    </picture>
-                    <RouteOverlay theme="light" />
-                    <RouteOverlay theme="dark" />
-                  </DeviceFrame>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function RouteBand() {
-  const t = useT().landing;
-  const list = (hidden: boolean) => (
-    <ul aria-hidden={hidden || undefined}>
-      {ROUTES.map((r, i) => (
-        <li key={i}>
-          <span className={r.letter ? "pnl-letter" : "pnl-letter pnl-letter--none"} aria-hidden>
-            {r.letter ?? "·"}
-          </span>
-          {r.letter ? `${r.letter} ${r.title}` : r.title}
-        </li>
-      ))}
-    </ul>
-  );
-  return (
-    <section aria-label={t.routeBandLabel} className="pnl-band">
-      <div className="pnl-band__track">
-        {list(false)}
-        {list(true)}
-      </div>
-    </section>
-  );
-}
-
-function How() {
-  const t = useT().landing.how;
-  const steps = [t.pick, t.options, t.ride];
-  return (
-    <section id="how" aria-labelledby="how-h" className="pnl-section">
-      <div className="pnl-wrap pnl-how">
-        <div className="pnl-how__intro">
-          <h2 id="how-h" className="pnl-h2 pnl-reveal">
-            {t.heading}
-          </h2>
-          <p className="pnl-lede pnl-reveal" style={d(1)}>
-            {t.lede}
+          <p className="pnl-hero__note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7.5v5.5M12 16.5h.01" />
+            </svg>
+            {t.hero.note}
           </p>
         </div>
-        <div className="pnl-how__steps">
-          <svg className="pnl-how__path" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden>
-            <path className="pnl-how__line" d="M0 12 C 20 2, 30 22, 50 12 S 80 2, 100 12" pathLength={1} fill="none" stroke="var(--pnl-accent)" strokeWidth="2" strokeDasharray="1 1" vectorEffect="non-scaling-stroke" />
-          </svg>
-          <ol className="pnl-how__list">
-          {steps.map((s, i) => (
-            <li key={s.title} className="pnl-how__step pnl-reveal" style={d(i)}>
-              <span className="pnl-how__dot" aria-hidden>
-                {i + 1}
-              </span>
-              <h3>{s.title}</h3>
-              <p className="pnl-body">{s.body}</p>
-            </li>
-          ))}
-          </ol>
-        </div>
+        <Stage className="pnl-hero__stage">
+          <DeviceFrame>
+            <Shot screen="hero" eager />
+          </DeviceFrame>
+        </Stage>
       </div>
     </section>
   );
 }
 
+/** Search a place, compare the ways to go, follow the trip: one crop of the real screen per step. */
+function How() {
+  const t = useT().landing.how;
+  const steps: { copy: { title: string; body: string }; screen: Screen; at: string }[] = [
+    { copy: t.pick, screen: "search", at: "0%" },
+    { copy: t.options, screen: "options", at: "9%" },
+    { copy: t.ride, screen: "detail", at: "100%" },
+  ];
+  return (
+    <section id="how" aria-labelledby="how-h" className="pnl-section pnl-section--alt">
+      <div className="pnl-wrap">
+        <div className="pnl-intro">
+          <h2 id="how-h" className="pnl-h2">
+            {t.heading}
+          </h2>
+          <p className="pnl-lede">{t.lede}</p>
+        </div>
+        <ol className="pnl-how">
+          {steps.map((s, i) => (
+            <li key={s.screen}>
+              <figure className="pnl-crop pnl-reveal" style={{ ...d(i), "--at": s.at } as CSSProperties}>
+                <Shot screen={s.screen} />
+              </figure>
+              <div className="pnl-how__text">
+                <span className="pnl-how__n" aria-hidden>
+                  {i + 1}
+                </span>
+                <h3 className="pnl-h3">{s.copy.title}</h3>
+                <p className="pnl-body">{s.copy.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+/** Six screens, one phone: the open item's capture sits beside the list (under it on a phone). */
 function Showcase() {
   const t = useT().landing.showcase;
+  const [open, setOpen] = useState<Screen>(SHOWCASE_SCREENS[0]);
   return (
-    <section aria-labelledby="show-h" className="pnl-section" style={{ paddingTop: 0 }}>
+    <section aria-labelledby="show-h" className="pnl-section">
       <div className="pnl-wrap pnl-show">
-        <h2 id="show-h" className="pnl-h2 pnl-reveal">
+        <h2 id="show-h" className="pnl-h2">
           {t.heading}
         </h2>
-        <div className="pnl-show__grid">
-          <div className="pnl-show__pin">
-            <DeviceFrame className="pnl-show__device" label={t.deviceLabel}>
-              <div className="pnl-show__screens">
-                {SHOWCASE_SCREENS.map((screen, i) => (
-                  <div key={screen} className="pnl-show__screen" data-pnl-screen={i} data-on={i === 0}>
+        <ol className="pnl-show__list" aria-label={t.deviceLabel}>
+          {SHOWCASE_SCREENS.map((screen) => {
+            const on = open === screen;
+            return (
+              <li key={screen} className="pnl-show__item" data-on={on}>
+                <h3>
+                  <button type="button" aria-expanded={on} aria-controls={`show-${screen}`} onClick={() => setOpen(screen)}>
+                    {t[screen].title}
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+                      <path d="M8 3v10M3 8h10" />
+                    </svg>
+                  </button>
+                </h3>
+                <div id={`show-${screen}`} className="pnl-show__panel" hidden={!on}>
+                  <p className="pnl-body">{t[screen].body}</p>
+                  <DeviceFrame className="pnl-show__device">
                     <Shot screen={screen} />
-                  </div>
-                ))}
-              </div>
-            </DeviceFrame>
-            <div className="pnl-show__rail" aria-hidden>
-              {SHOWCASE_SCREENS.map((screen, i) => (
-                <span key={screen} data-pnl-rail={i} data-on={i === 0} />
-              ))}
-            </div>
-          </div>
-          <ol className="pnl-show__steps">
-            {SHOWCASE_SCREENS.map((screen, i) => (
-              <li key={screen} className="pnl-show__step" data-pnl-step={i}>
-                <h3 className="pnl-reveal">{t[screen].title}</h3>
-                <p className="pnl-body pnl-reveal" style={d(1)}>
-                  {t[screen].body}
-                </p>
+                  </DeviceFrame>
+                </div>
               </li>
-            ))}
-          </ol>
-        </div>
+            );
+          })}
+        </ol>
       </div>
     </section>
   );
 }
 
 function Ride() {
-  const t = useT().landing.ride;
+  const t = useT().landing;
+  const r = t.ride;
   return (
-    <section id="ride" aria-labelledby="ride-h" className="pnl-section" style={{ paddingTop: 0 }}>
-      <div className="pnl-wrap" style={{ display: "grid", gap: "clamp(32px, 4vw, 56px)" }}>
-        <div style={{ display: "grid", gap: 20 }}>
-          <h2 id="ride-h" className="pnl-h2 pnl-reveal">
-            {t.heading}
+    <section id="ride" aria-labelledby="ride-h" className="pnl-section pnl-section--alt">
+      <div className="pnl-wrap">
+        <div className="pnl-intro">
+          <h2 id="ride-h" className="pnl-h2">
+            {r.heading}
           </h2>
-          <p className="pnl-lede pnl-reveal" style={d(1)}>
-            {t.lede}
-          </p>
+          <p className="pnl-lede">{r.lede}</p>
         </div>
-        <div className="pnl-bento">
-          <article className="pnl-card pnl-bento__jeep pnl-reveal">
-            <span className="pnl-card__icon">
-              <Icon d={ICON.jeep} />
-            </span>
-            <h3>{t.jeepney.title}</h3>
-            <p className="pnl-body">{t.jeepney.body}</p>
-            <ul className="pnl-routes" aria-label={t.routeNames}>
-              {ROUTES.map((r, i) => (
+        <div className="pnl-ride">
+          <ul className="pnl-modes">
+            <li>
+              <span className="pnl-modes__icon">
+                <Icon d={ICON.jeep} />
+              </span>
+              <div>
+                <h3 className="pnl-h3">{r.jeepney.title}</h3>
+                <p className="pnl-body">{r.jeepney.body}</p>
+              </div>
+            </li>
+            <li>
+              <span className="pnl-modes__icon">
+                <Icon d={ICON.trike} />
+              </span>
+              <div>
+                <h3 className="pnl-h3">{r.tricycle.title}</h3>
+                <p className="pnl-body">{r.tricycle.body}</p>
+                <p className="pnl-chips">
+                  <span className="pnl-chip">{r.tricycle.minFare}</span>
+                  <span className="pnl-chip pnl-chip--dashed">{r.tricycle.noTime}</span>
+                </p>
+              </div>
+            </li>
+            <li>
+              <span className="pnl-modes__icon">
+                <Icon d={ICON.padyak} />
+              </span>
+              <div>
+                <h3 className="pnl-h3">{r.padyak.title}</h3>
+                <p className="pnl-body">{r.padyak.body}</p>
+              </div>
+            </li>
+            <li>
+              <span className="pnl-modes__icon">
+                <Icon d={ICON.walk} />
+              </span>
+              <div>
+                <h3 className="pnl-h3">{r.walk.title}</h3>
+                <p className="pnl-body">{r.walk.body}</p>
+              </div>
+            </li>
+            <li>
+              <span className="pnl-modes__icon">
+                <Icon d={ICON.para} />
+              </span>
+              <div>
+                <h3 className="pnl-h3">{r.anywhere.title}</h3>
+                <p className="pnl-body">{r.anywhere.body}</p>
+                <p className="pnl-chips">
+                  <span className="pnl-chip pnl-chip--warn">{r.anywhere.chip}</span>
+                </p>
+              </div>
+            </li>
+          </ul>
+          <div className="pnl-routes">
+            <h3 id="routes-h" className="pnl-routes__title">
+              {t.routeBandLabel}
+            </h3>
+            <ul aria-label={r.routeNames}>
+              {ROUTES.map((route, i) => (
                 <li key={i}>
-                  <span className={r.letter ? "pnl-letter" : "pnl-letter pnl-letter--none"} aria-hidden>
-                    {r.letter ?? "·"}
+                  <span className={route.letter ? "pnl-letter" : "pnl-letter pnl-letter--none"} aria-hidden>
+                    {route.letter}
                   </span>
-                  {r.letter ? (
+                  {route.letter ? (
                     <span>
-                      <span className="sr-only">{r.letter} </span>
-                      {r.title}
+                      <span className="sr-only">{route.letter} </span>
+                      {route.title}
                     </span>
                   ) : (
-                    r.title
+                    route.title
                   )}
                 </li>
               ))}
             </ul>
-          </article>
-          <article className="pnl-card pnl-bento__trike pnl-reveal" style={d(1)}>
-            <span className="pnl-card__icon">
-              <Icon d={ICON.trike} />
-            </span>
-            <h3>{t.tricycle.title}</h3>
-            <p className="pnl-body">{t.tricycle.body}</p>
-            <div className="pnl-chips">
-              <span className="pnl-chip pnl-chip--dashed">{t.tricycle.minFare}</span>
-              <span className="pnl-chip pnl-chip--dashed">{t.tricycle.noTime}</span>
-            </div>
-          </article>
-          <article className="pnl-card pnl-reveal" style={d(2)}>
-            <span className="pnl-card__icon">
-              <Icon d={ICON.padyak} />
-            </span>
-            <h3>{t.padyak.title}</h3>
-            <p className="pnl-body">{t.padyak.body}</p>
-          </article>
-          <article className="pnl-card pnl-reveal" style={d(3)}>
-            <span className="pnl-card__icon">
-              <Icon d={ICON.walk} />
-            </span>
-            <h3>{t.walk.title}</h3>
-            <p className="pnl-body">{t.walk.body}</p>
-          </article>
-          <article className="pnl-card pnl-bento__wide pnl-reveal">
-            <div className="pnl-anywhere">
-              <div style={{ display: "grid", gap: 12 }}>
-                <h3>{t.anywhere.title}</h3>
-                <p className="pnl-body">{t.anywhere.body}</p>
-                <span className="pnl-chip pnl-chip--warn">{t.anywhere.chip}</span>
-              </div>
-              <svg viewBox="0 0 520 120" aria-hidden>
-                <path d="M10 80 C 120 80, 150 30, 260 40 S 420 90, 510 50" fill="none" stroke="#ffffff" strokeWidth="14" strokeLinecap="round" />
-                <path className="pnl-how__line" d="M10 80 C 120 80, 150 30, 260 40 S 420 90, 510 50" pathLength={1} fill="none" stroke="#b45309" strokeWidth="8" strokeLinecap="round" strokeDasharray="1 1" />
-                <circle cx="10" cy="80" r="9" fill="var(--color-brand)" stroke="#fff" strokeWidth="4" />
-                <circle cx="510" cy="50" r="9" fill="var(--color-danger)" stroke="#fff" strokeWidth="4" />
-                <g fill="#ffffff" stroke="var(--color-ink)" strokeWidth="3">
-                  <circle cx="150" cy="52" r="7" />
-                  <circle cx="330" cy="58" r="7" />
-                </g>
-              </svg>
-            </div>
-          </article>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function Split({ device, children, flip = false, id, labelledBy }: { device: ReactNode; children: ReactNode; flip?: boolean; id?: string; labelledBy: string }) {
+function Split({ media, children, flip = false, alt = false, labelledBy }: { media: ReactNode; children: ReactNode; flip?: boolean; alt?: boolean; labelledBy: string }) {
   return (
-    <section id={id} aria-labelledby={labelledBy} className="pnl-section" style={{ paddingTop: 0 }}>
+    <section aria-labelledby={labelledBy} className={`pnl-section ${alt ? "pnl-section--alt" : ""}`}>
       <div className={`pnl-wrap pnl-split ${flip ? "pnl-split--flip" : ""}`}>
-        <div className="pnl-split__device pnl-reveal">{device}</div>
         <div className="pnl-split__copy">{children}</div>
+        <div className="pnl-split__media">{media}</div>
       </div>
     </section>
   );
@@ -355,28 +286,26 @@ function Far() {
   return (
     <Split
       labelledBy="far-h"
-      device={
-        <DeviceFrame>
+      media={
+        <figure className="pnl-crop pnl-crop--tall pnl-reveal">
           <Shot screen="far" />
-        </DeviceFrame>
+        </figure>
       }
     >
-      <h2 id="far-h" className="pnl-h2 pnl-reveal">
+      <h2 id="far-h" className="pnl-h2">
         {t.title}
       </h2>
-      <div className="pnl-places pnl-reveal" style={d(1)}>
+      <p className="pnl-places">
         <span>Cararayan</span>
         <span>San Isidro</span>
         <span>Pacol</span>
         <span>Carolina</span>
         <span>Panicuason</span>
-      </div>
-      <p className="pnl-lede pnl-reveal" style={d(1)}>
-        {t.body}
       </p>
+      <p className="pnl-lede">{t.body}</p>
       <ul className="pnl-ticks">
-        {Object.values(t.points).map((p, i) => (
-          <li key={p} className="pnl-reveal" style={d(i + 2)}>
+        {Object.values(t.points).map((p) => (
+          <li key={p}>
             <Tick />
             {p}
           </li>
@@ -386,29 +315,72 @@ function Far() {
   );
 }
 
+function Community() {
+  const t = useT().landing.community;
+  const items = [t.correction, t.driver, t.mine, t.myNaga, t.tips];
+  return (
+    <Split
+      flip
+      labelledBy="community-h"
+      media={
+        <Stage className="pnl-reveal">
+          <DeviceFrame>
+            <Shot screen="report" />
+          </DeviceFrame>
+        </Stage>
+      }
+    >
+      <h2 id="community-h" className="pnl-h2">
+        {t.title}
+      </h2>
+      <ul className="pnl-list">
+        {items.map((item) => (
+          <li key={item.title}>
+            <h3 className="pnl-h3">{item.title}</h3>
+            <p className="pnl-body">{item.body}</p>
+          </li>
+        ))}
+      </ul>
+    </Split>
+  );
+}
+
+function Themes() {
+  const t = useT().landing.themes;
+  return (
+    <section aria-labelledby="themes-h" className="pnl-section pnl-section--alt">
+      <div className="pnl-wrap pnl-split">
+        <div className="pnl-split__copy">
+          <h2 id="themes-h" className="pnl-h2">
+            {t.title}
+          </h2>
+          <p className="pnl-lede">{t.body}</p>
+        </div>
+        <div className="pnl-split__media">
+          <Stage>
+            <ThemeCompare />
+          </Stage>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Offline() {
   const t = useT().landing.offline;
   return (
-    <section aria-labelledby="offline-h" className="pnl-section" style={{ paddingTop: 0 }}>
+    <section aria-labelledby="offline-h" className="pnl-section">
       <div className="pnl-wrap pnl-offline">
-        <div style={{ display: "grid", gap: 22 }}>
-          <div className="pnl-signal pnl-reveal" aria-hidden>
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-          <h2 id="offline-h" className="pnl-h2 pnl-reveal">
+        <div className="pnl-split__copy">
+          <h2 id="offline-h" className="pnl-h2">
             {t.title}
           </h2>
-          <p className="pnl-lede pnl-reveal" style={d(1)}>
-            {t.body}
-          </p>
+          <p className="pnl-lede">{t.body}</p>
         </div>
         <div className="pnl-install">
-          {[t.android, t.iphone].map((g, i) => (
-            <div key={g.device} className="pnl-card pnl-reveal" style={d(i)}>
-              <h3>{g.device}</h3>
+          {[t.android, t.iphone].map((g) => (
+            <div key={g.device}>
+              <h3 className="pnl-h3">{g.device}</h3>
               <ol>
                 {Object.values(g.steps).map((s) => (
                   <li key={s} className="pnl-body">
@@ -424,88 +396,34 @@ function Offline() {
   );
 }
 
-function Themes() {
-  const t = useT().landing.themes;
-  return (
-    <section aria-labelledby="themes-h" className="pnl-section" style={{ paddingTop: 0 }}>
-      <div className="pnl-wrap pnl-compare">
-        <div style={{ display: "grid", gap: 22 }}>
-          <h2 id="themes-h" className="pnl-h2 pnl-reveal">
-            {t.title}
-          </h2>
-          <p className="pnl-lede pnl-reveal" style={d(1)}>
-            {t.body}
-          </p>
-        </div>
-        <div style={{ display: "grid", gap: 20 }}>
-          <ThemeCompare />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Community() {
-  const t = useT().landing.community;
-  const items = [t.correction, t.driver, t.mine, t.myNaga, t.tips];
-  return (
-    <Split
-      flip
-      labelledBy="community-h"
-      device={
-        <DeviceFrame>
-          <Shot screen="report" />
-        </DeviceFrame>
-      }
-    >
-      <h2 id="community-h" className="pnl-h2 pnl-reveal">
-        {t.title}
-      </h2>
-      <ul className="pnl-list">
-        {items.map((item, i) => (
-          <li key={item.title} className="pnl-reveal" style={d(i % 3)}>
-            <strong>{item.title}</strong>
-            <span className="pnl-body">{item.body}</span>
-          </li>
-        ))}
-      </ul>
-    </Split>
-  );
-}
-
 function Honesty() {
   const t = useT().landing.promise;
   const facts = [t.routes, t.provisional, t.fares, t.tracking];
   return (
-    <section id="honest" aria-labelledby="honest-h" className="pnl-section pnl-promise">
+    <section id="honest" aria-labelledby="honest-h" className="pnl-section pnl-section--tint">
       <div className="pnl-wrap">
-        <h2 id="honest-h" className="pnl-h2 pnl-reveal">
+        <h2 id="honest-h" className="pnl-h2">
           {t.title}
         </h2>
-        <div className="pnl-facts">
-          {facts.map((f, i) => (
-            <div key={f.title} className="pnl-reveal" style={d(i % 2)}>
-              <h3>{f.title}</h3>
+        <ul className="pnl-facts">
+          {facts.map((f) => (
+            <li key={f.title}>
+              <h3 className="pnl-h3">{f.title}</h3>
               <p className="pnl-body">{f.body}</p>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
         <div className="pnl-privacy">
-          <div style={{ display: "grid", gap: 12, alignContent: "start" }}>
-            <h3 className="pnl-reveal" style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.02em" }}>
-              {t.privacyTitle}
-            </h3>
-            <p className="pnl-body pnl-reveal">
+          <div>
+            <h3 className="pnl-privacy__title">{t.privacyTitle}</h3>
+            <p className="pnl-body">
               {t.sourcesLead}{" "}
-              <Link href="/app/help/sources" className="pnl-night-link">
-                {t.sourcesLink}
-              </Link>
-              .
+              <Link href="/app/help/sources">{t.sourcesLink}</Link>.
             </p>
           </div>
-          <ul>
-            {Object.values(t.privacy).map((p, i) => (
-              <li key={p} className="pnl-reveal" style={d(i % 2)}>
+          <ul className="pnl-ticks">
+            {Object.values(t.privacy).map((p) => (
+              <li key={p}>
                 <Tick />
                 {p}
               </li>
@@ -517,40 +435,11 @@ function Honesty() {
   );
 }
 
-function OnYourPhone() {
-  const t = useT().landing.phone;
-  const open = useT().landing.header.openApp;
-  return (
-    <section aria-labelledby="phone-h" className="pnl-section">
-      <div className="pnl-wrap">
-        <div className="pnl-phone pnl-reveal">
-          <div className="pnl-phone__qr">
-            <AppQr />
-          </div>
-          <div style={{ display: "grid", gap: 14, justifyItems: "start" }}>
-            <h2 id="phone-h" className="pnl-h2" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)" }}>
-              {t.title}
-            </h2>
-            <p className="pnl-body pnl-phone__desk">
-              {t.desk}
-            </p>
-            <p className="pnl-body pnl-phone__touch">{t.touch}</p>
-            <Link href="/app" className="pnl-btn pnl-btn--solid">
-              {open}
-              <Arrow />
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function Faq() {
   const t = useT().landing.faq;
   const items = [t.free, t.install, t.tracking, t.trust, t.phonesOnly, t.official];
   return (
-    <section id="faq" aria-labelledby="faq-h" className="pnl-section" style={{ paddingTop: 0 }}>
+    <section id="faq" aria-labelledby="faq-h" className="pnl-section">
       <div className="pnl-wrap pnl-faq">
         <h2 id="faq-h" className="pnl-h2">
           {t.heading}
@@ -560,7 +449,7 @@ function Faq() {
             <details key={q}>
               <summary>
                 {q}
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
                   <path d="M8 3v10M3 8h10" />
                 </svg>
               </summary>
@@ -573,22 +462,34 @@ function Faq() {
   );
 }
 
+/** The same action as the hero, with the way onto a phone: a QR on computers, the install hint on touch. */
 function Closing() {
   const t = useT().landing;
   return (
-    <section aria-labelledby="cta-h" style={{ paddingBottom: "var(--pnl-section)" }}>
+    <section aria-labelledby="cta-h" className="pnl-section pnl-section--close">
       <div className="pnl-wrap">
-        <div className="pnl-cta pnl-reveal">
-          <span className="pnl-hero__glow" aria-hidden />
-          <LunadMark size={64} tone="bright" />
-          <h2 id="cta-h">{t.closing.title}</h2>
-          <p className="pnl-lede" style={{ color: "var(--pnl-night-ink2)" }}>
-            {t.closing.lede}
-          </p>
-          <Link href="/app" className="pnl-btn pnl-btn--bright">
-            {t.header.openApp}
-            <Arrow />
-          </Link>
+        <div className="pnl-cta">
+          <div className="pnl-cta__copy">
+            <LunadMark size={56} tone="bright" />
+            <h2 id="cta-h" className="pnl-h2">
+              {t.closing.title}
+            </h2>
+            <p className="pnl-lede">{t.closing.lede}</p>
+            <Link href="/app" className="pnl-btn pnl-btn--onbrand">
+              {t.header.openApp}
+              <Arrow />
+            </Link>
+          </div>
+          <div className="pnl-phone">
+            <div className="pnl-phone__qr">
+              <AppQr />
+            </div>
+            <div>
+              <h3 className="pnl-h3">{t.phone.title}</h3>
+              <p className="pnl-body pnl-phone__desk">{t.phone.desk}</p>
+              <p className="pnl-body pnl-phone__touch">{t.phone.touch}</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -601,11 +502,12 @@ function Footer() {
   return (
     <footer className="pnl-footer">
       <div className="pnl-wrap pnl-footer__inner">
-        <div style={{ display: "grid", gap: 12 }}>
-          <LunadWordmark className="text-[22px]" />
-          <p>
-            {t.footer.disclaimer}
-          </p>
+        <div className="pnl-footer__about">
+          <span className="pnl-footer__brand">
+            <LunadMark size={28} />
+            <LunadWordmark className="text-xl" />
+          </span>
+          <p>{t.footer.disclaimer}</p>
           <p>
             {t.footer.captures} &copy; <a href="https://www.openstreetmap.org/copyright">{t.footer.osm}</a>
             {t.footer.mapInApp}{" "}
@@ -639,16 +541,14 @@ export function LandingPage() {
       <SiteHeader />
       <main>
         <Hero />
-        <RouteBand />
         <How />
         <Showcase />
         <Ride />
         <Far />
-        <Offline />
-        <Themes />
         <Community />
+        <Themes />
+        <Offline />
         <Honesty />
-        <OnYourPhone />
         <Faq />
         <Closing />
       </main>

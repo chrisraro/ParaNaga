@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createDraft, fetchRevisions, publish, validate, type AdminResult } from "@/client/admin/api";
 import type { RevisionList, RevisionRow, StoredValidationReport } from "@/domain/admin/schemas";
 import { RULES } from "@/domain/admin/validation";
-import { btnDanger, btnPrimary, btnSecondary, Chip, ErrorNote, Muted, OkNote, PageTitle, Panel, when } from "./parts";
+import { btnDanger, btnPrimary, btnRow, btnRowDanger, btnRowPrimary, btnSecondary, Chip, ErrorNote, Muted, OkNote, PageTitle, Panel, when, cardCls, Loading } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A12 Revisions & publication (N5a, C8, F-E11). Validate runs every rule and stores the report;
@@ -111,17 +111,17 @@ export function RevisionsScreen() {
       {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="admin-notice">{notice.text}</OkNote> : <ErrorNote testId="admin-notice">{notice.text}</ErrorNote>}</div> : null}
 
       {list === null ? (
-        <Muted>Loading…</Muted>
+        <Loading />
       ) : !list.ok ? (
         <ErrorNote testId="revisions-error">{list.message}</ErrorNote>
       ) : (
-        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
+        <div tabIndex={0} className={`adm-scroll ${cardCls}`}>
           <table className="w-full text-left text-sm" data-testid="revisions-table">
             <caption className="sr-only">Revisions, newest first</caption>
-            <thead className="border-b border-fill dark:border-night-border">
+            <thead>
               <tr>
                 {["#", "Label", "Kind", "Status", "Members", "Created", "Published", "Last validation", "Actions"].map((h) => (
-                  <th key={h} scope="col" className="px-3 py-2 font-semibold">
+                  <th key={h} scope="col">
                     {h}
                   </th>
                 ))}
@@ -129,32 +129,32 @@ export function RevisionsScreen() {
             </thead>
             <tbody>
               {list.data.revisions.map((r) => (
-                <tr key={r.id} className="border-b border-fill last:border-0 dark:border-night-border" data-testid={`revision-${r.label}`}>
-                  <td className="px-3 py-2 tabular-nums">{r.seq}</td>
-                  <th scope="row" className="px-3 py-2 font-medium">
+                <tr key={r.id} data-testid={`revision-${r.label}`}>
+                  <td className="adm-num">{r.seq}</td>
+                  <th scope="row" className="font-medium">
                     {r.label}
-                    {r.isSynthetic ? <span className="ml-2 text-xs text-danger-ink dark:text-danger-bright">test data</span> : null}
+                    {r.isSynthetic ? <span className="ml-2 adm-meta text-danger-ink dark:text-danger-bright">test data</span> : null}
                   </th>
-                  <td className="px-3 py-2">{r.kind === "provisional" ? "Provisional" : "Verified"}</td>
-                  <td className="px-3 py-2">
+                  <td>{r.kind === "provisional" ? "Provisional" : "Verified"}</td>
+                  <td>
                     <Chip tone={r.isPublished ? "ok" : r.status === "superseded" ? "plain" : "info"}>{r.isPublished ? "Published (live)" : STATUS[r.status]}</Chip>
                   </td>
-                  <td className="px-3 py-2 tabular-nums">{r.memberCount}</td>
-                  <td className="px-3 py-2">{when(r.createdAt)}</td>
-                  <td className="px-3 py-2">{when(r.publishedAt)}</td>
-                  <td className="px-3 py-2">{r.isPublished ? "–" : validationText(r)}</td>
-                  <td className="px-3 py-2">
+                  <td className="adm-num">{r.memberCount}</td>
+                  <td>{when(r.createdAt)}</td>
+                  <td>{when(r.publishedAt)}</td>
+                  <td>{r.isPublished ? "–" : validationText(r)}</td>
+                  <td>
                     {r.isPublished ? (
                       <Muted>Live</Muted>
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        <button type="button" className={btnSecondary} disabled={working} onClick={() => void onValidate(r)} data-testid={`validate-${r.label}`}>
+                        <button type="button" className={btnRow} disabled={working} onClick={() => void onValidate(r)} data-testid={`validate-${r.label}`}>
                           {busy === `validate:${r.id}` ? "Validating…" : "Validate"}
                         </button>
                         {r.status === "draft" || r.status === "validating" ? (
                           <button
                             type="button"
-                            className={btnPrimary}
+                            className={btnRowPrimary}
                             disabled={working || !publishable(r)}
                             onClick={() => setFlow({ step: "confirming", target: { id: r.id, label: r.label, mode: "publish" } })}
                             data-testid={`publish-${r.label}`}
@@ -164,7 +164,7 @@ export function RevisionsScreen() {
                         ) : r.status === "superseded" ? (
                           <button
                             type="button"
-                            className={btnDanger}
+                            className={btnRowDanger}
                             disabled={working || !publishable(r)}
                             onClick={() => setFlow({ step: "confirming", target: { id: r.id, label: r.label, mode: "rollback" } })}
                             data-testid={`rollback-${r.label}`}
@@ -184,11 +184,11 @@ export function RevisionsScreen() {
 
       {flow.step !== "idle" ? (
         <div className="mt-4" data-testid="confirm-publication">
-          <Panel title={flow.target.mode === "publish" ? `Publish ${flow.target.label}?` : `Roll back to ${flow.target.label}?`}>
+          <Panel variant="confirm" title={flow.target.mode === "publish" ? `Publish ${flow.target.label}?` : `Roll back to ${flow.target.label}?`}>
             <Muted>
               {`It replaces ${published?.label ?? "the published revision"} for every rider, at once. Saved trips on phones are checked against it the next time they open.`}
             </Muted>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-4 flex flex-wrap gap-3">
               <button
                 type="button"
                 className={flow.target.mode === "publish" ? btnPrimary : btnDanger}
@@ -204,6 +204,7 @@ export function RevisionsScreen() {
             </div>
             {flow.step === "stepUp" ? (
               <AdminStepUp
+                nested
                 action={flow.target.mode === "publish" ? "publish" : "roll back"}
                 onVerified={() => void run(flow.target)}
                 onCancel={() => setFlow({ step: "confirming", target: flow.target })}
@@ -239,7 +240,7 @@ function Report({ report }: { report: StoredValidationReport }) {
             <thead>
               <tr>
                 {["Severity", "Rule", "Item", "Detail"].map((h) => (
-                  <th key={h} scope="col" className="py-1 pr-3 font-semibold">
+                  <th key={h} scope="col">
                     {h}
                   </th>
                 ))}
@@ -247,11 +248,11 @@ function Report({ report }: { report: StoredValidationReport }) {
             </thead>
             <tbody>
               {report.issues.map((i, n) => (
-                <tr key={`${i.rule}-${n}`} className="border-t border-fill dark:border-night-border">
-                  <td className={`py-1 pr-3 font-medium ${i.severity === "error" ? "text-danger-ink dark:text-danger-bright" : ""}`}>{i.severity === "error" ? "Error" : "Warning"}</td>
-                  <td className="py-1 pr-3">{RULES[i.rule].title}</td>
-                  <td className="py-1 pr-3">{i.ref}</td>
-                  <td className="py-1 pr-3">{i.message}</td>
+                <tr key={`${i.rule}-${n}`}>
+                  <td className={`font-medium ${i.severity === "error" ? "text-danger-ink dark:text-danger-bright" : ""}`}>{i.severity === "error" ? "Error" : "Warning"}</td>
+                  <td>{RULES[i.rule].title}</td>
+                  <td>{i.ref}</td>
+                  <td>{i.message}</td>
                 </tr>
               ))}
             </tbody>

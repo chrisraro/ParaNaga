@@ -11,7 +11,7 @@ export function AdminShell({ roles, children }: { roles: readonly Role[]; childr
   return (
     <div lang="en" className="min-h-screen bg-canvas text-ink lg:flex dark:bg-night dark:text-white" data-testid="admin-shell">
       <AdminNav items={adminNavFor(roles)}>
-        <p className="px-3 text-xs text-night-ink-2" data-testid="admin-roles">
+        <p className="adm-meta px-3 text-night-ink-2" data-testid="admin-roles">
           Signed in as {staffRoles.join(" · ")}
         </p>
       </AdminNav>

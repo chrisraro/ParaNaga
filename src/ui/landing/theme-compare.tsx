@@ -11,11 +11,11 @@ export function ThemeCompare() {
   const [split, setSplit] = useState(50);
   const img = { width: SHOT_W, height: SHOT_H, loading: "lazy" as const, decoding: "async" as const, className: "pnl-shot" };
   return (
-    <>
-      <figure className="pnl-device pnl-compare__device" style={{ "--pnl-split": `${split}%` } as CSSProperties}>
+    <div className="pnl-compare">
+      <figure className="pnl-device pnl-reveal" style={{ "--pnl-split": `${split}%` } as CSSProperties}>
         <div className="pnl-device__screen">
           <img {...img} src="/landing/home-light.webp" alt={t.altLight} />
-          <img {...img} src="/landing/home-dark.webp" alt={t.altDark} className="pnl-shot pnl-compare__top" style={{ position: "absolute", inset: 0, display: "block" }} />
+          <img {...img} src="/landing/home-dark.webp" alt={t.altDark} className="pnl-shot pnl-compare__top" />
           <span className="pnl-compare__handle" aria-hidden />
           <span className="pnl-device__camera" aria-hidden />
         </div>
@@ -28,6 +28,6 @@ export function ThemeCompare() {
         <span className="sr-only">{t.compare}</span>
         <input type="range" min={0} max={100} value={split} onChange={(e) => setSplit(Number(e.target.value))} aria-valuetext={t.darkShown(100 - split)} />
       </label>
-    </>
+    </div>
   );
 }

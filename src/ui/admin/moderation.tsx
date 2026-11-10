@@ -13,7 +13,7 @@ import {
   type ModerationQueue,
   type ModerationReason,
 } from "@/domain/admin/moderation";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, cardCls, Loading } from "./parts";
 
 // A15 Community moderation and A16 Appeals (N6, C10). Posts, comments and photos waiting for a
 // person, with Jev's typed answer as a probability (advice, never a decision). Going against it is
@@ -30,7 +30,7 @@ function JevLine({ jev }: { jev: ModerationItem["jev"] }) {
   return (
     <span>
       Jev: {label(jev.recommendation)} at {percent(jev.confidence)}
-      {jev.policyVersion ? <span className="text-xs"> ({jev.policyVersion})</span> : null}
+      {jev.policyVersion ? <span className="adm-meta"> ({jev.policyVersion})</span> : null}
     </span>
   );
 }
@@ -57,7 +57,7 @@ export function ModerationScreen() {
       </PageTitle>
       {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="moderation-notice">{notice.text}</OkNote> : <ErrorNote testId="moderation-notice">{notice.text}</ErrorNote>}</div> : null}
       {state === null ? (
-        <Muted>Loading…</Muted>
+        <Loading />
       ) : !state.ok ? (
         <ErrorNote>{state.message}</ErrorNote>
       ) : (
@@ -107,7 +107,7 @@ export function ModerationScreen() {
                 <thead>
                   <tr>
                     {["When", "Item", "Outcome", "Reason", "By", "Flags"].map((h) => (
-                      <th key={h} scope="col" className="py-1 pr-3 font-semibold">
+                      <th key={h} scope="col">
                         {h}
                       </th>
                     ))}
@@ -115,13 +115,13 @@ export function ModerationScreen() {
                 </thead>
                 <tbody>
                   {data.history.map((h) => (
-                    <tr key={h.id} className="border-t border-fill dark:border-night-border">
-                      <td className="py-1 pr-3">{when(h.at)}</td>
-                      <td className="py-1 pr-3">{KIND_LABEL[h.targetType]}</td>
-                      <td className="py-1 pr-3">{h.outcome === "published" ? "Published" : "Not published"}</td>
-                      <td className="py-1 pr-3">{REASON_LABELS[h.reasonCode as ModerationReason] ?? label(h.reasonCode)}</td>
-                      <td className="py-1 pr-3">{h.mine ? "You" : h.deciderRole === "policy" ? "Policy (Jev)" : label(h.deciderRole)}</td>
-                      <td className="py-1 pr-3">
+                    <tr key={h.id}>
+                      <td>{when(h.at)}</td>
+                      <td>{KIND_LABEL[h.targetType]}</td>
+                      <td>{h.outcome === "published" ? "Published" : "Not published"}</td>
+                      <td>{REASON_LABELS[h.reasonCode as ModerationReason] ?? label(h.reasonCode)}</td>
+                      <td>{h.mine ? "You" : h.deciderRole === "policy" ? "Policy (Jev)" : label(h.deciderRole)}</td>
+                      <td>
                         {h.isOverride ? <Chip tone="warn">override</Chip> : null} {h.appealed ? <Chip>appealed</Chip> : null}
                       </td>
                     </tr>
@@ -160,7 +160,7 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
   };
 
   return (
-    <li className="grid grid-cols-1 gap-3 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-[1fr_22rem] dark:border-night-border" data-testid={`item-${id}`}>
+    <li className={`grid grid-cols-1 gap-4 p-4 lg:grid-cols-[1fr_22rem] ${cardCls}`} data-testid={`item-${id}`}>
       <div className="grid min-w-0 content-start gap-2 text-sm">
         <p className="flex flex-wrap items-center gap-2">
           <Chip>{KIND_LABEL[item.kind]}</Chip>
@@ -173,12 +173,12 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
         {item.title ? <h3 className="text-base font-semibold">{item.title}</h3> : null}
         {item.isEdit && item.liveTitle ? <Muted>Live version: {item.liveTitle}</Muted> : null}
         {item.body ? <p className="whitespace-pre-wrap">{item.body}</p> : null}
-        {item.tags.length ? <p className="text-xs">{item.tags.map((t) => `#${t}`).join(" ")}</p> : null}
+        {item.tags.length ? <p className="adm-meta">{item.tags.map((t) => `#${t}`).join(" ")}</p> : null}
         {item.mediaId ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={reviewMediaSrc(item.mediaId)} alt={`Photo waiting for review on “${item.title ?? "a post"}”`} className="max-h-72 w-auto rounded object-contain" loading="lazy" />
+          <img src={reviewMediaSrc(item.mediaId)} alt={`Photo waiting for review on “${item.title ?? "a post"}”`} className="max-h-72 w-auto rounded-lg object-contain" loading="lazy" />
         ) : null}
-        <p className="text-xs">
+        <p className="adm-meta">
           {item.kind === "photo" ? "Photos are never sent to Jev." : <JevLine jev={item.jev} />}
           {item.reason ? ` · waiting because: ${label(item.reason)}` : ""}
           {item.openReports ? ` · ${item.openReports} open report${item.openReports === 1 ? "" : "s"}` : ""}
@@ -225,7 +225,7 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
         </Field>
         {problem ? <ErrorNote>{problem}</ErrorNote> : null}
         <div>
-          <button type="submit" className={outcome === "published" ? btnPrimary : btnSecondary} disabled={busy} data-testid={`decide-${id}`}>
+          <button type="submit" className={outcome === "published" ? btnPrimary : btnSecondary} disabled={busy} aria-busy={busy} data-testid={`decide-${id}`}>
             Record decision
           </button>
         </div>
@@ -250,7 +250,7 @@ function AppealCard({ appeal, onDone }: { appeal: AppealItem; onDone: (text: str
   };
 
   return (
-    <li className="grid grid-cols-1 gap-3 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-[1fr_22rem] dark:border-night-border" data-testid={`appeal-${appeal.id}`}>
+    <li className={`grid grid-cols-1 gap-4 p-4 lg:grid-cols-[1fr_22rem] ${cardCls}`} data-testid={`appeal-${appeal.id}`}>
       <div className="grid min-w-0 content-start gap-2 text-sm">
         <p className="flex flex-wrap items-center gap-2">
           <Chip>{KIND_LABEL[appeal.targetType]}</Chip>
@@ -260,14 +260,14 @@ function AppealCard({ appeal, onDone }: { appeal: AppealItem; onDone: (text: str
           </span>
         </p>
         {appeal.jevRecommendation ? (
-          <p className="text-xs">
+          <p className="adm-meta">
             Jev: {label(appeal.jevRecommendation)} at {percent(appeal.jevConfidence)}
           </p>
         ) : null}
         {appeal.excerpt ? <p className="whitespace-pre-wrap">{appeal.excerpt}</p> : null}
         {appeal.mediaId ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={reviewMediaSrc(appeal.mediaId)} alt="The appealed photo" className="max-h-72 w-auto rounded object-contain" loading="lazy" />
+          <img src={reviewMediaSrc(appeal.mediaId)} alt="The appealed photo" className="max-h-72 w-auto rounded-lg object-contain" loading="lazy" />
         ) : null}
         <div>
           <h3 className="font-semibold">The author says</h3>
@@ -302,7 +302,7 @@ function AppealCard({ appeal, onDone }: { appeal: AppealItem; onDone: (text: str
         </Field>
         {problem ? <ErrorNote>{problem}</ErrorNote> : null}
         <div>
-          <button type="submit" className={btnPrimary} disabled={busy} data-testid={`appeal-go-${appeal.id}`}>
+          <button type="submit" className={btnPrimary} disabled={busy} aria-busy={busy} data-testid={`appeal-go-${appeal.id}`}>
             Record outcome
           </button>
         </div>

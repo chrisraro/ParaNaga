@@ -15,7 +15,7 @@ import {
   type OutcomeCode,
 } from "@/domain/admin/complaints";
 import type { ComplaintStatus } from "@/domain/complaints/status";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
+import { btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, cardCls, insetCls, Loading, segBtn, segGroup } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A17 Complaint review (N7, C11). Private driver reports, for the complaint reviewer role only.
@@ -82,12 +82,12 @@ export function ComplaintsScreen() {
 
       {notice ? <div className="my-4">{notice.ok ? <OkNote testId="complaint-notice">{notice.text}</OkNote> : <ErrorNote testId="complaint-notice">{notice.text}</ErrorNote>}</div> : null}
 
-      <div className="my-4 flex gap-2" role="group" aria-label="Which reports">
+      <div className={`my-4 ${segGroup}`} role="group" aria-label="Which reports">
         {(["open", "closed"] as const).map((s) => (
           <button
             key={s}
             type="button"
-            className={scope === s ? btnPrimary : btnSecondary}
+            className={segBtn}
             aria-pressed={scope === s}
             onClick={() => {
               setOpenId(null);
@@ -103,7 +103,7 @@ export function ComplaintsScreen() {
       </div>
 
       {list.step === "loading" ? (
-        <Muted>Loading…</Muted>
+        <Loading />
       ) : list.step === "needsStepUp" ? (
         <div className="grid justify-items-start gap-2">
           <Muted>Confirm it is you to see the reports.</Muted>
@@ -118,13 +118,13 @@ export function ComplaintsScreen() {
       ) : list.data.complaints.length === 0 ? (
         <Empty title={scope === "open" ? "No open reports." : "No closed reports."}>Reports appear here when a commuter files one.</Empty>
       ) : (
-        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
+        <div tabIndex={0} className={`adm-scroll ${cardCls}`}>
           <table className="w-full text-left text-sm" data-testid="complaints-table">
             <caption className="sr-only">{scope === "open" ? "Open reports, priority first" : "Closed and withdrawn reports, newest first"}</caption>
-            <thead className="border-b border-fill dark:border-night-border">
+            <thead>
               <tr>
                 {["Reference", "Category", "Queue", "Status", "Submitted", "Evidence", ""].map((h, i) => (
-                  <th key={i} scope="col" className="px-3 py-2 font-semibold">
+                  <th key={i} scope="col">
                     {h || <span className="sr-only">Actions</span>}
                   </th>
                 ))}
@@ -132,8 +132,8 @@ export function ComplaintsScreen() {
             </thead>
             <tbody>
               {list.data.complaints.map((c) => (
-                <tr key={c.id} className="border-b border-fill last:border-0 dark:border-night-border">
-                  <th scope="row" className="px-3 py-2 font-mono font-medium">
+                <tr key={c.id}>
+                  <th scope="row" className="font-mono font-medium">
                     {c.publicRef}
                     {c.legalHold ? (
                       <span className="ml-2">
@@ -141,13 +141,13 @@ export function ComplaintsScreen() {
                       </span>
                     ) : null}
                   </th>
-                  <td className="px-3 py-2">{CATEGORY_LABELS[c.category]}</td>
-                  <td className="px-3 py-2">{c.queue === "queue_priority" ? <Chip tone="warn">{QUEUE_LABELS[c.queue]}</Chip> : QUEUE_LABELS[c.queue]}</td>
-                  <td className="px-3 py-2">{STATUS_LABELS[c.status]}</td>
-                  <td className="px-3 py-2">{when(c.submittedAt)}</td>
-                  <td className="px-3 py-2 tabular-nums">{c.evidenceCount}</td>
-                  <td className="px-3 py-2">
-                    <button type="button" className={btnSecondary} onClick={() => setOpenId(c.id)} aria-label={`Open report ${c.publicRef}`} data-testid={`complaint-open-${c.id}`}>
+                  <td>{CATEGORY_LABELS[c.category]}</td>
+                  <td>{c.queue === "queue_priority" ? <Chip tone="warn">{QUEUE_LABELS[c.queue]}</Chip> : QUEUE_LABELS[c.queue]}</td>
+                  <td>{STATUS_LABELS[c.status]}</td>
+                  <td>{when(c.submittedAt)}</td>
+                  <td className="adm-num">{c.evidenceCount}</td>
+                  <td>
+                    <button type="button" className={btnRow} onClick={() => setOpenId(c.id)} aria-label={`Open report ${c.publicRef}`} data-testid={`complaint-open-${c.id}`}>
                       Open
                     </button>
                   </td>
@@ -216,7 +216,7 @@ function ComplaintDetailView({
     window.location.assign(r.data.url);
   };
 
-  if (state === null) return <Muted>Loading the report…</Muted>;
+  if (state === null) return <Loading>Loading the report…</Loading>;
   if (!state.ok) {
     if (!isStepUp(state)) return <ErrorNote testId="complaint-error">{state.message}</ErrorNote>;
     return (
@@ -261,7 +261,7 @@ function ComplaintDetailView({
 
         <section aria-label="What the reporter wrote">
           <h3 className="mb-1 text-sm font-semibold">What the reporter wrote</h3>
-          <p className="whitespace-pre-wrap rounded-md bg-fill p-3 text-sm dark:bg-night" data-testid="complaint-description">
+          <p className={`whitespace-pre-wrap p-3 text-sm ${insetCls}`} data-testid="complaint-description">
             {c.description}
           </p>
         </section>
@@ -363,7 +363,7 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
   };
 
   return (
-    <form className="grid max-w-xl gap-3 border-t border-fill pt-4 dark:border-night-border" onSubmit={(e) => void submit(e)} aria-label="Change the status" data-testid="complaint-status-form">
+    <form className="grid max-w-xl gap-3 border-t border-border pt-4 dark:border-night-border" onSubmit={(e) => void submit(e)} aria-label="Change the status" data-testid="complaint-status-form">
       <h3 className="text-sm font-semibold">Change the status</h3>
       <Field label="New status">
         <select className={inputCls} value={to} onChange={(e) => setTo(e.target.value as ComplaintStatus)} data-testid="complaint-to">
@@ -419,7 +419,7 @@ function HoldForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp: 
     await onChanged(c.legalHold ? `Legal hold lifted on ${c.publicRef}.` : `${c.publicRef} is on legal hold and will not be purged.`);
   };
   return (
-    <form className="grid max-w-xl gap-3 border-t border-fill pt-4 dark:border-night-border" onSubmit={(e) => void submit(e)} aria-label="Legal hold" data-testid="complaint-hold-form">
+    <form className="grid max-w-xl gap-3 border-t border-border pt-4 dark:border-night-border" onSubmit={(e) => void submit(e)} aria-label="Legal hold" data-testid="complaint-hold-form">
       <h3 className="text-sm font-semibold">Legal hold</h3>
       <Muted>{c.legalHold ? "This report is on legal hold: the retention purge skips it." : "A legal hold stops the retention purge (for example, a request from the authorities)."}</Muted>
       <Field label="Reason (reviewers only)">
@@ -427,7 +427,7 @@ function HoldForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp: 
       </Field>
       {error ? <ErrorNote>{error}</ErrorNote> : null}
       <div>
-        <button type="submit" className={btnSecondary} disabled={busy} data-testid="complaint-hold">
+        <button type="submit" className={btnSecondary} disabled={busy} aria-busy={busy} data-testid="complaint-hold">
           {c.legalHold ? "Lift the legal hold" : "Put on legal hold"}
         </button>
       </div>
