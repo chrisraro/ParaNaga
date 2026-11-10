@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { fetchStops, stopAction, uploadStopPhoto, type AdminResult } from "@/client/admin/api";
 import {
   CURB_SIDES,
@@ -47,7 +47,13 @@ export function StopsScreen({ mode }: { mode: Mode }) {
   const [status, setStatus] = useState<string>(mode === "candidates" ? "queue" : "all");
   const [notice, setNotice] = useState<Notice>(null);
 
-  const load = useCallback(async () => setList(await fetchStops()), []);
+  // Reloads can overlap (an action on one stop, then on another): only the newest one lands.
+  const loads = useRef(0);
+  const load = useCallback(async () => {
+    const mine = ++loads.current;
+    const r = await fetchStops();
+    if (loads.current === mine) setList(r);
+  }, []);
   useEffect(() => {
     let live = true;
     void fetchStops().then((r) => live && setList(r));
@@ -178,8 +184,10 @@ function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode
   const run = async (action: StopAction, text: string) => {
     setBusy(true);
     const r = await stopAction(stop.stopPointId, action);
+    // Busy until the list is back: a click before then would send the version this action replaced.
+    const ok = await onDone(r, text);
     setBusy(false);
-    return onDone(r, text);
+    return ok;
   };
   const disabled = !editable || busy;
   return (

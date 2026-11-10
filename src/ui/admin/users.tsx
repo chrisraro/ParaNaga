@@ -14,14 +14,20 @@ import { AdminStepUp } from "./step-up";
 // stops working on the person's next request.
 
 type Pending = { userId: string; name: string; role: Role; change: "grant" | "revoke"; reason: string };
+/** One role change at a time: the request, then the step-up that request asked for (with its change). */
+type Flow = { step: "idle" } | { step: "applying" | "stepUp"; change: Pending };
+const IDLE: Flow = { step: "idle" };
+/** The person on the card, with the address that found them (the input may have changed since). */
+type Lookup = { email: string; user: FoundUser | null };
 
 export function UsersScreen() {
   const [staff, setStaff] = useState<AdminResult<StaffList> | null>(null);
   const [email, setEmail] = useState("");
-  const [found, setFound] = useState<FoundUser | null | undefined>(undefined);
+  const [lookedUp, setLookedUp] = useState<Lookup | null>(null);
   const [lookupError, setLookupError] = useState("");
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
-  const [stepUp, setStepUp] = useState<Pending | null>(null);
+  const [flow, setFlow] = useState<Flow>(IDLE);
+  const found = lookedUp?.user;
 
   const loadStaff = useCallback(async () => setStaff(await fetchStaff()), []);
   useEffect(() => {
@@ -35,24 +41,30 @@ export function UsersScreen() {
   const lookup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLookupError("");
-    setFound(undefined);
-    const r = await findUser(email.trim());
+    setLookedUp(null);
+    const address = email.trim();
+    const r = await findUser(address);
     if (!r.ok) return setLookupError(r.message);
-    setFound(r.data.user);
+    setLookedUp({ email: address, user: r.data.user });
   };
 
   const apply = async (p: Pending) => {
     setNotice(null);
+    setFlow({ step: "applying", change: p });
     const r = await changeRole({ userId: p.userId, role: p.role as GrantableRole, change: p.change, reason: p.reason });
-    if (!r.ok && r.code === "step_up_required") return setStepUp(p);
-    setStepUp(null);
-    if (!r.ok) return setNotice({ ok: false, text: r.message });
-    setNotice({ ok: true, text: `${p.change === "grant" ? "Granted" : "Revoked"} ${ROLE_LABELS[p.role]} ${p.change === "grant" ? "to" : "from"} ${p.name}.` });
-    await loadStaff();
-    if (found && found.userId === p.userId) {
-      const again = await findUser(email.trim());
-      if (again.ok) setFound(again.data.user);
+    if (!r.ok && r.code === "step_up_required") return setFlow({ step: "stepUp", change: p });
+    if (!r.ok) {
+      setFlow(IDLE);
+      return setNotice({ ok: false, text: r.message });
     }
+    setNotice({ ok: true, text: `${p.change === "grant" ? "Granted" : "Revoked"} ${ROLE_LABELS[p.role]} ${p.change === "grant" ? "to" : "from"} ${p.name}.` });
+    // Still applying until both cards are fresh: a second click would act on roles that are gone.
+    await loadStaff();
+    if (lookedUp?.user?.userId === p.userId) {
+      const again = await findUser(lookedUp.email);
+      if (again.ok) setLookedUp((now) => (now?.email === lookedUp.email ? { email: lookedUp.email, user: again.data.user } : now));
+    }
+    setFlow(IDLE);
   };
 
   const staffList = staff?.ok ? staff.data.staff : [];
@@ -63,7 +75,7 @@ export function UsersScreen() {
         Users and roles
       </PageTitle>
       {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="users-notice">{notice.text}</OkNote> : <ErrorNote testId="users-notice">{notice.text}</ErrorNote>}</div> : null}
-      {stepUp ? <AdminStepUp action={`${stepUp.change} a role`} onVerified={() => void apply(stepUp)} onCancel={() => setStepUp(null)} /> : null}
+      {flow.step === "stepUp" ? <AdminStepUp action={`${flow.change.change} a role`} onVerified={() => void apply(flow.change)} onCancel={() => setFlow(IDLE)} /> : null}
 
       <div className="mt-4 grid gap-6">
         <Panel title="Find a person" testId="users-lookup">
@@ -84,7 +96,7 @@ export function UsersScreen() {
               {!found.hasProfile ? (
                 <Muted>This account has not opened ParaNaga yet; roles can be given after their first sign-in.</Muted>
               ) : (
-                <UserRoles user={found} staff={staffList} onChange={(p) => void apply(p)} />
+                <UserRoles user={found} staff={staffList} busy={flow.step === "applying"} onChange={(p) => void apply(p)} />
               )}
             </div>
           ) : null}
@@ -101,7 +113,7 @@ export function UsersScreen() {
             <ul className="grid gap-4">
               {staffList.map((u) => (
                 <li key={u.userId} className="rounded-lg border border-ink-3/25 p-3 dark:border-navy-raised">
-                  <UserRoles user={u} staff={staffList} onChange={(p) => void apply(p)} />
+                  <UserRoles user={u} staff={staffList} busy={flow.step === "applying"} onChange={(p) => void apply(p)} />
                 </li>
               ))}
             </ul>
@@ -112,12 +124,14 @@ export function UsersScreen() {
   );
 }
 
-function UserRoles({ user, staff, onChange }: { user: UserCard; staff: readonly UserCard[]; onChange: (p: Pending) => void }) {
-  const [role, setRole] = useState<GrantableRole | "">("");
+function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: readonly UserCard[]; busy: boolean; onChange: (p: Pending) => void }) {
+  const [picked, setRole] = useState<GrantableRole | "">("");
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const active = user.roles.filter((r) => r.active);
   const missing = GRANTABLE_ROLES.filter((r) => !active.some((a) => a.role === r));
+  // A role just granted is no longer on offer, so the choice falls back to "Choose…".
+  const role = picked && missing.includes(picked) ? picked : "";
   const tid = user.userId.replace(/[^\w-]/g, "");
 
   const go = (change: "grant" | "revoke", which: Role) => {
@@ -152,7 +166,7 @@ function UserRoles({ user, staff, onChange }: { user: UserCard; staff: readonly 
               {r.grantedBy ? ` by ${r.grantedBy}` : ""} – {r.reason}
             </span>
             {!user.self && r.role !== "commuter" ? (
-              <button type="button" className={btnDanger} onClick={() => go("revoke", r.role)} data-testid={`revoke-${tid}-${r.role}`}>
+              <button type="button" className={btnDanger} disabled={busy} onClick={() => go("revoke", r.role)} data-testid={`revoke-${tid}-${r.role}`}>
                 Revoke
               </button>
             ) : null}
@@ -180,7 +194,7 @@ function UserRoles({ user, staff, onChange }: { user: UserCard; staff: readonly 
               <input className={inputCls} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} data-testid={`reason-${tid}`} />
             </Field>
           </div>
-          <button type="button" className={btnSecondary} disabled={!role} onClick={() => role && go("grant", role)} data-testid={`grant-${tid}`}>
+          <button type="button" className={btnSecondary} disabled={!role || busy} onClick={() => role && go("grant", role)} data-testid={`grant-${tid}`}>
             Grant
           </button>
         </div>

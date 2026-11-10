@@ -50,7 +50,8 @@ export function ReportWizard() {
   const uid = useId();
   const params = useSearchParams();
   const prefilled = parseReportEntity(params);
-  const { user, loading } = useAuthSession();
+  const auth = useAuthSession();
+  const user = auth.user;
 
   const [step, setStep] = useState<Step>(1);
   const [category, setCategory] = useState<CorrectionCategory | null>(null);
@@ -61,11 +62,12 @@ export function ReportWizard() {
   const [locating, setLocating] = useState(false);
   const [locationNote, setLocationNote] = useState<string | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [uploading, setUploading] = useState(false);
+  // One request at a time: a photo upload must finish before Review and Send, or the report
+  // would go without it.
+  const [busy, setBusy] = useState<"idle" | "uploading" | "sending">("idle");
   const [photoNote, setPhotoNote] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
   const [sent, setSent] = useState<{ status: CorrectionStatus } | null>(null);
   const [requestId] = useState(() => crypto.randomUUID());
   const heading = useRef<HTMLHeadingElement>(null);
@@ -118,6 +120,12 @@ export function ReportWizard() {
 
   const go = (next: Step) => {
     setError(null);
+    // Leaving the step that asked for the location cancels the request (battery, privacy).
+    if (next !== 2 && locating) {
+      wantFix.current = false;
+      setLocating(false);
+      stopGeo.current();
+    }
     setStep(next);
   };
 
@@ -127,6 +135,7 @@ export function ReportWizard() {
     go(2);
   };
   const onNext2 = () => {
+    if (busy !== "idle") return;
     if (!entityType) return setError(t.chooseEntity);
     if (!entityId) return setError(t.sayWhich);
     const problem = validateDescription(description, tt);
@@ -142,20 +151,20 @@ export function ReportWizard() {
 
   const onPickPhoto = async (files: FileList | null) => {
     const file = files?.[0];
-    if (!file) return;
-    setUploading(true);
+    if (!file || busy !== "idle") return;
+    setBusy("uploading");
     setPhotoNote(null);
     const result = await uploadEvidencePhoto(file);
-    setUploading(false);
+    setBusy("idle");
     if (result.ok) setPhotos((p) => [...p, { id: result.mediaId, name: file.name.slice(0, 60) }]);
     else setPhotoNote(translated(result.message, en.report.api, t.api));
   };
 
   const onSend = async () => {
-    if (!user) return;
+    if (!user || busy !== "idle") return;
     if (!accepted) return setError(t.tickBox);
     if (!category || !entityType) return;
-    setSending(true);
+    setBusy("sending");
     setError(null);
     const result = await submitCorrection({
       clientRequestId: requestId,
@@ -168,7 +177,7 @@ export function ReportWizard() {
       mediaIds: photos.map((p) => p.id),
       aiDisclosureAccepted: true,
     });
-    setSending(false);
+    setBusy("idle");
     if (result.ok) setSent({ status: result.correction.status });
     else setError(translated(result.message, en.report.api, t.api));
   };
@@ -359,18 +368,18 @@ export function ReportWizard() {
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   className="pn-report__file"
-                  disabled={uploading}
+                  disabled={busy !== "idle"}
                   onChange={(e) => {
                     void onPickPhoto(e.target.files);
                     e.target.value = "";
                   }}
                 />
-                <label htmlFor={`${uid}-photo`} className="pn-btn pn-btn--secondary pn-report__small" aria-disabled={uploading}>
-                  {uploading ? t.uploading : t.addPhoto}
+                <label htmlFor={`${uid}-photo`} className="pn-btn pn-btn--secondary pn-report__small" aria-disabled={busy !== "idle"}>
+                  {busy === "uploading" ? t.uploading : t.addPhoto}
                 </label>
               </>
             ) : null}
-            {!user && !loading ? <p className="pn-report__hint">{t.signInPhotos}</p> : null}
+            {auth.status === "signedOut" ? <p className="pn-report__hint">{t.signInPhotos}</p> : null}
             <p className="pn-report__hint">{t.photosHint(MAX_EVIDENCE_PHOTOS)}</p>
             {photoNote ? (
               <p className="pn-report__hint" role="status">
@@ -423,12 +432,20 @@ export function ReportWizard() {
             </label>
           </section>
 
-          {!loading && !user ? (
+          {auth.status === "signedOut" ? (
             <div className="pn-report__signin" data-testid="report-signin">
               <p>{t.signInToSend}</p>
               <Link href="/app/sign-in" className="pn-btn pn-btn--primary pn-report__action">
                 {form.signIn}
               </Link>
+            </div>
+          ) : null}
+          {auth.status === "unknown" ? (
+            <div className="pn-report__signin" data-testid="report-signin-unknown">
+              <p role="status">{form.signInUnknown}</p>
+              <button type="button" className="pn-btn pn-btn--secondary pn-report__action" onClick={() => void auth.refresh()}>
+                {form.tryAgain}
+              </button>
             </div>
           ) : null}
         </div>
@@ -452,8 +469,8 @@ export function ReportWizard() {
           </button>
         ) : null}
         {step === 2 ? (
-          <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext2} data-testid="report-next">
-            {form.review}
+          <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext2} disabled={busy === "uploading"} data-testid="report-next">
+            {busy === "uploading" ? t.uploading : form.review}
           </button>
         ) : null}
         {step === 3 && user ? (
@@ -461,10 +478,10 @@ export function ReportWizard() {
             type="button"
             className="pn-btn pn-btn--primary pn-report__action"
             onClick={() => void onSend()}
-            disabled={sending}
+            disabled={busy !== "idle"}
             data-testid="report-send"
           >
-            {sending ? form.sending : t.send}
+            {busy === "sending" ? form.sending : t.send}
           </button>
         ) : null}
       </div>

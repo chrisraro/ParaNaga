@@ -80,7 +80,7 @@ export function useSavedTripReopen({ tripRequest, endpoints, plan, ready, onRest
     setRestored(null);
     setNote(null);
   }
-  if (restored && active && restored.phase === "waiting" && plan.status === "ready" && !plan.refreshing) {
+  if (restored && active && restored.phase === "waiting" && plan.status === "ready" && plan.refresh.status === "current") {
     const outcome = resolveReopen(restored.card, plan.data);
     if (outcome.kind === "changed") {
       setRestored({ ...restored, phase: "changed" });
@@ -128,7 +128,8 @@ export function useSavedTripReopen({ tripRequest, endpoints, plan, ready, onRest
   const storedData = useMemo(() => (card ? savedTripResponse(card) : null), [card]);
   // Stored in wire form (encoded walk paths); the screens read the decoded ones.
   const storedOption = useMemo(() => (card ? enrichOptionWalks(card.option, null) : null), [card]);
-  const error = plan.status === "error" ? plan.kind : null;
+  // A failed re-plan that left the earlier options on screen is a failed check all the same.
+  const error = plan.status === "error" ? plan.kind : plan.status === "ready" && plan.refresh.status === "failed" ? plan.refresh.kind : null;
   const stored =
     showStored && card && storedData && storedOption
       ? { data: storedData, option: storedOption, ends: { start: card.start, destination: card.destination }, note: storedNote(card, error, t) }

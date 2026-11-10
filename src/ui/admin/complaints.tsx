@@ -25,12 +25,15 @@ import { AdminStepUp } from "./step-up";
 // link (never a preview, never in the page). Outcomes are neutral: never a finding about a driver.
 
 type Notice = { ok: boolean; text: string } | null;
+/** The queue. `needsStepUp` is its own state so that closing the code panel leaves a way back in. */
+type ListState = { step: "loading" } | { step: "needsStepUp" } | { step: "error"; message: string } | { step: "ready"; data: ComplaintList };
+const LOADING: ListState = { step: "loading" };
 
 const isStepUp = (r: AdminResult<unknown>): boolean => !r.ok && (r as AdminFailure).code === "step_up_required";
 
 export function ComplaintsScreen() {
   const [scope, setScope] = useState<ComplaintScope>("open");
-  const [state, setState] = useState<AdminResult<ComplaintList> | null>(null);
+  const [list, setList] = useState<ListState>(LOADING);
   const [openId, setOpenId] = useState<string | null>(null);
   const [stepUp, setStepUp] = useState<(() => void) | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
@@ -39,18 +42,23 @@ export function ComplaintsScreen() {
   // Bumped to load the list again (after a step-up or a change).
   const [nonce, setNonce] = useState(0);
   const reload = useCallback(() => setNonce((n) => n + 1), []);
+  // After a step-up the queue starts over (nothing was shown); after a change the rows stay up while it reloads.
+  const retryList = useCallback(() => {
+    setList(LOADING);
+    reload();
+  }, [reload]);
 
   useEffect(() => {
     let live = true;
     void fetchComplaints(scope).then((r) => {
       if (!live) return;
-      if (isStepUp(r)) setStepUp(() => reload);
-      setState(r);
+      if (isStepUp(r)) setStepUp(() => retryList);
+      setList(r.ok ? { step: "ready", data: r.data } : isStepUp(r) ? { step: "needsStepUp" } : { step: "error", message: r.message });
     });
     return () => {
       live = false;
     };
-  }, [scope, nonce, reload]);
+  }, [scope, nonce, retryList]);
 
   const askStepUp = useCallback((retry: () => void) => setStepUp(() => retry), []);
 
@@ -83,6 +91,8 @@ export function ComplaintsScreen() {
             aria-pressed={scope === s}
             onClick={() => {
               setOpenId(null);
+              // The other scope's rows never sit under this scope's caption while it loads.
+              if (s !== scope) setList(LOADING);
               setScope(s);
             }}
             data-testid={`complaints-scope-${s}`}
@@ -92,11 +102,20 @@ export function ComplaintsScreen() {
         ))}
       </div>
 
-      {state === null ? (
+      {list.step === "loading" ? (
         <Muted>Loading…</Muted>
-      ) : !state.ok ? (
-        isStepUp(state) ? <Muted>Confirm it is you to see the reports.</Muted> : <ErrorNote testId="complaints-error">{state.message}</ErrorNote>
-      ) : state.data.complaints.length === 0 ? (
+      ) : list.step === "needsStepUp" ? (
+        <div className="grid justify-items-start gap-2">
+          <Muted>Confirm it is you to see the reports.</Muted>
+          {stepUp ? null : (
+            <button type="button" className={btnSecondary} onClick={() => askStepUp(retryList)} data-testid="complaints-step-up">
+              Enter a code
+            </button>
+          )}
+        </div>
+      ) : list.step === "error" ? (
+        <ErrorNote testId="complaints-error">{list.message}</ErrorNote>
+      ) : list.data.complaints.length === 0 ? (
         <Empty title={scope === "open" ? "No open reports." : "No closed reports."}>Reports appear here when a commuter files one.</Empty>
       ) : (
         <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
@@ -112,7 +131,7 @@ export function ComplaintsScreen() {
               </tr>
             </thead>
             <tbody>
-              {state.data.complaints.map((c) => (
+              {list.data.complaints.map((c) => (
                 <tr key={c.id} className="border-b border-fill last:border-0 dark:border-navy-raised">
                   <th scope="row" className="px-3 py-2 font-mono font-medium">
                     {c.publicRef}
@@ -198,7 +217,17 @@ function ComplaintDetailView({
   };
 
   if (state === null) return <Muted>Loading the report…</Muted>;
-  if (!state.ok) return isStepUp(state) ? <Muted>Confirm it is you to open this report.</Muted> : <ErrorNote testId="complaint-error">{state.message}</ErrorNote>;
+  if (!state.ok) {
+    if (!isStepUp(state)) return <ErrorNote testId="complaint-error">{state.message}</ErrorNote>;
+    return (
+      <div className="grid justify-items-start gap-2">
+        <Muted>Confirm it is you to open this report.</Muted>
+        <button type="button" className={btnSecondary} onClick={() => askStepUp(reload)}>
+          Enter a code
+        </button>
+      </div>
+    );
+  }
   const c = state.data;
 
   return (

@@ -76,7 +76,8 @@ export function DriverReportWizard() {
   const form = tt.forms;
   const locale = useLocale();
   const uid = useId();
-  const { user, loading } = useAuthSession();
+  const auth = useAuthSession();
+  const user = auth.user;
 
   const [step, setStep] = useState<Step>(1);
   const [items, setItems] = useState<Evidence[]>([]);
@@ -304,12 +305,20 @@ export function DriverReportWizard() {
             ))}
           </ul>
           <p className="pn-report__hint">{t.sharedPhone}</p>
-          {!loading && !user ? (
+          {auth.status === "signedOut" ? (
             <div className="pn-report__signin" data-testid="driver-signin">
               <p>{t.signInToSend}</p>
               <Link href="/app/sign-in" className="pn-btn pn-btn--primary pn-report__action">
                 {form.signIn}
               </Link>
+            </div>
+          ) : null}
+          {auth.status === "unknown" ? (
+            <div className="pn-report__signin" data-testid="driver-signin-unknown">
+              <p role="status">{form.signInUnknown}</p>
+              <button type="button" className="pn-btn pn-btn--secondary pn-report__action" onClick={() => void auth.refresh()}>
+                {form.tryAgain}
+              </button>
             </div>
           ) : null}
         </div>

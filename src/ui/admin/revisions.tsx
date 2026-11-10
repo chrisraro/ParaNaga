@@ -12,7 +12,11 @@ import { AdminStepUp } from "./step-up";
 // errors on the current membership and a fresh step-up, and run in one database transaction.
 
 type Mode = "publish" | "rollback";
-type Pending = { id: string; label: string; mode: Mode };
+type Target = { id: string; label: string; mode: Mode };
+/** Publishing one revision: its confirm click, the request, and the step-up that request asked
+ *  for. The step-up belongs to its target, so picking another revision starts at confirm again. */
+type Flow = { step: "idle" } | { step: "confirming" | "running" | "stepUp"; target: Target };
+const IDLE: Flow = { step: "idle" };
 type Notice = { ok: boolean; text: string } | null;
 
 const STATUS: Record<RevisionRow["status"], string> = { draft: "Draft", validating: "Validating", published: "Published", superseded: "Superseded" };
@@ -31,8 +35,8 @@ export function RevisionsScreen() {
   const [report, setReport] = useState<StoredValidationReport | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
-  const [pending, setPending] = useState<Pending | null>(null);
-  const [stepUp, setStepUp] = useState(false);
+  const [flow, setFlow] = useState<Flow>(IDLE);
+  const working = busy !== null || flow.step === "running";
 
   const load = useCallback(async () => setList(await fetchRevisions()), []);
   useEffect(() => {
@@ -59,7 +63,7 @@ export function RevisionsScreen() {
   const onValidate = async (row: RevisionRow) => {
     setBusy(`validate:${row.id}`);
     setNotice(null);
-    setPending(null);
+    setFlow(IDLE);
     const r = await validate(row.id);
     setBusy(null);
     if (r.ok) setReport(r.data);
@@ -67,17 +71,15 @@ export function RevisionsScreen() {
     await load();
   };
 
-  const run = async (p: Pending) => {
-    setBusy(`${p.mode}:${p.id}`);
+  const run = async (p: Target) => {
+    setFlow({ step: "running", target: p });
     setNotice(null);
     const r = await publish(p.id, p.mode, data?.publishedId ?? null);
-    setBusy(null);
     if (!r.ok && r.code === "step_up_required") {
-      setStepUp(true);
+      setFlow({ step: "stepUp", target: p });
       return;
     }
-    setStepUp(false);
-    setPending(null);
+    setFlow(IDLE);
     if (r.ok) {
       setReport(null);
       setNotice({
@@ -97,7 +99,7 @@ export function RevisionsScreen() {
         actions={
           <>
             {openDraft ? <Muted>A draft is open; publish it before starting another.</Muted> : null}
-            <button type="button" className={btnPrimary} disabled={!published || openDraft || busy !== null} onClick={() => void onCreate()} data-testid="create-draft">
+            <button type="button" className={btnPrimary} disabled={!published || openDraft || working} onClick={() => void onCreate()} data-testid="create-draft">
               {busy === "create" ? "Creating…" : "New draft from published"}
             </button>
           </>
@@ -146,15 +148,15 @@ export function RevisionsScreen() {
                       <Muted>Live</Muted>
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        <button type="button" className={btnSecondary} disabled={busy !== null} onClick={() => void onValidate(r)} data-testid={`validate-${r.label}`}>
+                        <button type="button" className={btnSecondary} disabled={working} onClick={() => void onValidate(r)} data-testid={`validate-${r.label}`}>
                           {busy === `validate:${r.id}` ? "Validating…" : "Validate"}
                         </button>
                         {r.status === "draft" || r.status === "validating" ? (
                           <button
                             type="button"
                             className={btnPrimary}
-                            disabled={busy !== null || !publishable(r)}
-                            onClick={() => setPending({ id: r.id, label: r.label, mode: "publish" })}
+                            disabled={working || !publishable(r)}
+                            onClick={() => setFlow({ step: "confirming", target: { id: r.id, label: r.label, mode: "publish" } })}
                             data-testid={`publish-${r.label}`}
                           >
                             Publish…
@@ -163,8 +165,8 @@ export function RevisionsScreen() {
                           <button
                             type="button"
                             className={btnDanger}
-                            disabled={busy !== null || !publishable(r)}
-                            onClick={() => setPending({ id: r.id, label: r.label, mode: "rollback" })}
+                            disabled={working || !publishable(r)}
+                            onClick={() => setFlow({ step: "confirming", target: { id: r.id, label: r.label, mode: "rollback" } })}
                             data-testid={`rollback-${r.label}`}
                           >
                             Roll back to this…
@@ -180,39 +182,31 @@ export function RevisionsScreen() {
         </div>
       )}
 
-      {pending ? (
+      {flow.step !== "idle" ? (
         <div className="mt-4" data-testid="confirm-publication">
-          <Panel title={pending.mode === "publish" ? `Publish ${pending.label}?` : `Roll back to ${pending.label}?`}>
+          <Panel title={flow.target.mode === "publish" ? `Publish ${flow.target.label}?` : `Roll back to ${flow.target.label}?`}>
             <Muted>
               {`It replaces ${published?.label ?? "the published revision"} for every rider, at once. Saved trips on phones are checked against it the next time they open.`}
             </Muted>
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
-                className={pending.mode === "publish" ? btnPrimary : btnDanger}
-                disabled={busy !== null || stepUp}
-                onClick={() => void run(pending)}
+                className={flow.target.mode === "publish" ? btnPrimary : btnDanger}
+                disabled={working || flow.step !== "confirming"}
+                onClick={() => void run(flow.target)}
                 data-testid="confirm-publication-go"
               >
-                {busy ? "Working…" : pending.mode === "publish" ? "Publish now" : "Roll back now"}
+                {flow.step === "running" ? "Working…" : flow.target.mode === "publish" ? "Publish now" : "Roll back now"}
               </button>
-              <button
-                type="button"
-                className={btnSecondary}
-                disabled={busy !== null}
-                onClick={() => {
-                  setPending(null);
-                  setStepUp(false);
-                }}
-              >
+              <button type="button" className={btnSecondary} disabled={working} onClick={() => setFlow(IDLE)}>
                 Cancel
               </button>
             </div>
-            {stepUp ? (
+            {flow.step === "stepUp" ? (
               <AdminStepUp
-                action={pending.mode === "publish" ? "publish" : "roll back"}
-                onVerified={() => void run(pending)}
-                onCancel={() => setStepUp(false)}
+                action={flow.target.mode === "publish" ? "publish" : "roll back"}
+                onVerified={() => void run(flow.target)}
+                onCancel={() => setFlow({ step: "confirming", target: flow.target })}
               />
             ) : null}
           </Panel>

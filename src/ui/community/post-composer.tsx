@@ -40,7 +40,8 @@ export function PostComposer(props: Props) {
   const tt = useT();
   const t = tt.community;
   const uid = useId();
-  const { user, loading: authLoading } = useAuthSession();
+  const auth = useAuthSession();
+  const user = auth.user;
   const editId = props.mode === "edit" ? props.postId : null;
 
   const [accepted, setAccepted] = useState<boolean | null>(null); // null until /me answered
@@ -54,12 +55,13 @@ export function PostComposer(props: Props) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [draftReady, setDraftReady] = useState(props.mode === "new");
   const [error, setError] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  // One request at a time: a photo upload must finish before the post is sent, or it would go
+  // without the photo.
+  const [busy, setBusy] = useState<"idle" | "uploading" | "sending">("idle");
   const [sent, setSent] = useState<Sent | null>(null);
   const [requestId] = useState(() => crypto.randomUUID());
   // N6: photos wait in the private bucket until a moderator approves each one.
   const [photos, setPhotos] = useState<{ id: string; name: string }[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [photoNote, setPhotoNote] = useState<string | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
 
@@ -125,18 +127,18 @@ export function PostComposer(props: Props) {
 
   const onPickPhoto = async (files: FileList | null) => {
     const file = files?.[0];
-    if (!file) return;
+    if (!file || busy !== "idle") return;
     if (photos.length >= MAX_PHOTOS) return setPhotoNote(t.photos.max(MAX_PHOTOS));
-    setUploading(true);
+    setBusy("uploading");
     setPhotoNote(null);
     const result = await uploadPhoto(file, "community_photo");
-    setUploading(false);
+    setBusy("idle");
     if (result.ok) setPhotos((p) => [...p, { id: result.mediaId, name: file.name.slice(0, 60) }]);
     else setPhotoNote(result.message === en.report.api.photoType ? t.photos.type : t.photos.failed);
   };
 
   const onSend = async () => {
-    if (!user) return;
+    if (!user || busy !== "idle") return;
     const tags = parseTagInput(tagText);
     const problem =
       (props.mode === "new" && !topic ? t.chooseTopic : null) ??
@@ -146,7 +148,7 @@ export function PostComposer(props: Props) {
       (tags.tags.length > MAX_TAGS ? t.maxTags(MAX_TAGS) : null) ??
       (route.trim() && !routeCodeSchema.safeParse(route).success ? t.badRoute : null);
     if (problem) return setError(problem);
-    setSending(true);
+    setBusy("sending");
     setError(null);
     const common = { clientRequestId: requestId, title: title.trim(), body: body.trim(), tags: tags.tags, guidelinesAccepted: accepted === false ? ackChecked : true };
     const result =
@@ -158,7 +160,7 @@ export function PostComposer(props: Props) {
             ...(route.trim() ? { routeCode: route.trim() } : {}),
             photoIds: photos.map((p) => p.id),
           });
-    setSending(false);
+    setBusy("idle");
     if (result.ok) setSent(result.data.post);
     else setError(translated(result.message, en.community.api, t.api));
   };
@@ -190,7 +192,7 @@ export function PostComposer(props: Props) {
     );
   }
 
-  if (!authLoading && !user) {
+  if (auth.status === "signedOut") {
     return (
       <div className="pn-comm" data-testid="composer-guest">
         <h2 className="pn-comm__h2">{heading1}</h2>
@@ -198,7 +200,22 @@ export function PostComposer(props: Props) {
       </div>
     );
   }
-  if (authLoading || accepted === null || !draftReady) {
+  if (auth.status === "unknown") {
+    return (
+      <div className="pn-comm" data-testid="composer-auth-unknown">
+        <h2 className="pn-comm__h2">{heading1}</h2>
+        <div className="pn-comm__panel">
+          <p className="pn-comm__body" role="status">
+            {tt.forms.signInUnknown}
+          </p>
+          <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => void auth.refresh()}>
+            {tt.forms.tryAgain}
+          </button>
+        </div>
+      </div>
+    );
+  }
+  if (auth.status === "checking" || accepted === null || !draftReady) {
     return (
       <div className="pn-comm" data-testid="composer-loading">
         {loadError ? (
@@ -312,15 +329,15 @@ export function PostComposer(props: Props) {
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     className="pn-comm__file"
-                    disabled={uploading}
+                    disabled={busy !== "idle"}
                     data-testid="composer-photo-input"
                     onChange={(e) => {
                       void onPickPhoto(e.target.files);
                       e.target.value = "";
                     }}
                   />
-                  <label htmlFor={`${uid}-photo`} className="pn-btn pn-btn--secondary pn-comm__small" aria-disabled={uploading}>
-                    {uploading ? t.photos.uploading : t.photos.add}
+                  <label htmlFor={`${uid}-photo`} className="pn-btn pn-btn--secondary pn-comm__small" aria-disabled={busy !== "idle"}>
+                    {busy === "uploading" ? t.photos.uploading : t.photos.add}
                   </label>
                 </>
               ) : null}
@@ -356,8 +373,8 @@ export function PostComposer(props: Props) {
             {tt.forms.continue}
           </button>
         ) : (
-          <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={() => void onSend()} disabled={sending} data-testid="composer-send">
-            {sending ? tt.forms.sending : props.mode === "edit" ? t.sendEdit : t.post}
+          <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={() => void onSend()} disabled={busy !== "idle"} data-testid="composer-send">
+            {busy === "sending" ? tt.forms.sending : busy === "uploading" ? t.photos.uploading : props.mode === "edit" ? t.sendEdit : t.post}
           </button>
         )}
       </div>

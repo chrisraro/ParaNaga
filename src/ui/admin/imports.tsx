@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { fetchImports, importCommit, importDryRun, type AdminResult } from "@/client/admin/api";
 import { IMPORT_MAX_CHARS, label, type ImportCommitResult, type ImportDryRun, type ImportFormat, type ImportList, type ImportUpload } from "@/domain/admin/stops";
 import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty } from "./parts";
@@ -13,15 +13,22 @@ import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNo
 
 const formatOf = (name: string): ImportFormat => (name.toLowerCase().endsWith(".csv") ? "csv" : "kml");
 
+/** A dry run with the exact upload it was computed from: commit sends this payload, never the live fields. */
+type Reviewed = { payload: ImportUpload; result: AdminResult<ImportDryRun> };
+
 export function ImportsScreen() {
   const [imports, setImports] = useState<AdminResult<ImportList> | null>(null);
   const [upload, setUpload] = useState<ImportUpload | null>(null);
   const [retrievedOn, setRetrievedOn] = useState("");
   const [format, setFormat] = useState<ImportFormat>("kml");
   const [fileError, setFileError] = useState<string | null>(null);
-  const [dry, setDry] = useState<AdminResult<ImportDryRun> | null>(null);
+  const [dry, setDry] = useState<Reviewed | null>(null);
   const [committed, setCommitted] = useState<AdminResult<ImportCommitResult> | null>(null);
   const [busy, setBusy] = useState<"dry" | "commit" | null>(null);
+  // Bumped by every change to the upload (file, format, date): a dry run that started before the
+  // change is out of date and its answer is dropped. `picks` does the same for a slow file read.
+  const edits = useRef(0);
+  const picks = useRef(0);
 
   const load = useCallback(async () => setImports(await fetchImports()), []);
   useEffect(() => {
@@ -32,13 +39,20 @@ export function ImportsScreen() {
     };
   }, []);
 
-  const onFile = async (file: File | undefined) => {
+  const edited = () => {
+    edits.current += 1;
     setDry(null);
+  };
+
+  const onFile = async (file: File | undefined) => {
+    edited();
+    const mine = ++picks.current;
     setCommitted(null);
     setFileError(null);
     setUpload(null);
     if (!file) return;
     const text = await file.text();
+    if (picks.current !== mine) return;
     if (text.length > IMPORT_MAX_CHARS) {
       setFileError("The file is too large for an import (at most 1,000,000 characters).");
       return;
@@ -52,16 +66,18 @@ export function ImportsScreen() {
   const runDry = async (e: FormEvent) => {
     e.preventDefault();
     if (!current) return;
+    const mine = edits.current;
     setBusy("dry");
     setCommitted(null);
-    setDry(await importDryRun(current));
+    const result = await importDryRun(current);
     setBusy(null);
+    if (edits.current === mine) setDry({ payload: current, result });
   };
 
   const runCommit = async () => {
-    if (!current || !dry?.ok || !dry.data.baseline) return;
+    if (!dry?.result.ok || !dry.result.data.baseline) return;
     setBusy("commit");
-    const r = await importCommit(current, dry.data.baseline.batchId);
+    const r = await importCommit(dry.payload, dry.result.data.baseline.batchId);
     setBusy(null);
     setCommitted(r);
     if (r.ok) setDry(null);
@@ -90,18 +106,19 @@ export function ImportsScreen() {
                 className={inputCls}
                 type="file"
                 accept=".kml,.csv,application/vnd.google-earth.kml+xml,text/csv"
+                disabled={busy !== null}
                 onChange={(e) => void onFile(e.target.files?.[0])}
                 data-testid="import-file"
               />
             </Field>
             <Field label="Format">
-              <select className={inputCls} value={format} onChange={(e) => setFormat(e.target.value as ImportFormat)} data-testid="import-format">
+              <select className={inputCls} value={format} disabled={busy !== null} onChange={(e) => { edited(); setFormat(e.target.value as ImportFormat); }} data-testid="import-format">
                 <option value="kml">KML (My Maps export)</option>
                 <option value="csv">CSV (research package)</option>
               </select>
             </Field>
             <Field label="Export date" hint="The day the file was downloaded from My Maps.">
-              <input className={inputCls} type="date" required value={retrievedOn} onChange={(e) => setRetrievedOn(e.target.value)} data-testid="import-date" />
+              <input className={inputCls} type="date" required value={retrievedOn} disabled={busy !== null} onChange={(e) => { edited(); setRetrievedOn(e.target.value); }} data-testid="import-date" />
             </Field>
             <div className="md:col-span-3 flex items-center gap-3">
               <button type="submit" className={btnSecondary} disabled={!current || !retrievedOn || busy !== null} data-testid="import-dry-run">
@@ -113,8 +130,8 @@ export function ImportsScreen() {
           {fileError ? <div className="mt-3"><ErrorNote>{fileError}</ErrorNote></div> : null}
         </Panel>
 
-        {dry && !dry.ok ? <ErrorNote testId="import-error">{dry.message}</ErrorNote> : null}
-        {dry?.ok ? <DryRun dry={dry.data} busy={busy === "commit"} onCommit={() => void runCommit()} /> : null}
+        {dry && !dry.result.ok ? <ErrorNote testId="import-error">{dry.result.message}</ErrorNote> : null}
+        {dry?.result.ok ? <DryRun dry={dry.result.data} busy={busy === "commit"} onCommit={() => void runCommit()} /> : null}
         {committed ? <CommitOutcome result={committed} /> : null}
 
         <Panel title="Import history" testId="import-history">

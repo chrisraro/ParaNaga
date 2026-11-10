@@ -6,8 +6,11 @@
 //
 // Replanning rules live in domain/trip/replan.ts: a GPS refinement under 25 m does not replan; a
 // hand pin or search pick always does. Only while a GPS-refinement replan is in flight does the
-// last ready plan stay on screen (`refreshing: true`); any other replan shows loading, so the
-// previous trip's options never appear for a deliberately changed trip.
+// last ready plan stay on screen (`refresh: refreshing`); any other replan shows loading, so the
+// previous trip's options never appear for a deliberately changed trip. When that refresh fails
+// (rate limited, offline without a snapshot), the plan stays on screen marked `refresh: failed`,
+// never shown as current, and the refresh is tried again every minute and when the phone is back
+// online. A failed first load, or a load for changed endpoints, is an error as before.
 //
 // Offline (Task 12): when the request cannot reach the server, the plan is made in the browser on
 // the snapshot this phone holds (plan-offline.ts) and marked `offline` with that data's published
@@ -28,6 +31,17 @@ import { msUntilNextRuleBoundary } from "@/domain/walk/rules";
 export type PlanErrorKind = "offline" | "server" | "invalid" | "busy";
 export type PlannedOnPhone = false | "offline" | "unreachable";
 
+/**
+ * How the plan on screen relates to the newest request for this trip. `failed`: that request did
+ * not bring a plan, so the options shown may be out of date (say so; never present them as current).
+ */
+export type PlanRefresh = { status: "current" } | { status: "refreshing" } | { status: "failed"; kind: PlanErrorKind };
+
+const CURRENT: PlanRefresh = { status: "current" };
+const REFRESHING: PlanRefresh = { status: "refreshing" };
+/** A failed refresh is tried again after this long ("wait a minute" for a rate limit). */
+export const REFRESH_RETRY_MS = 60_000;
+
 export type TripPlanState =
   | { status: "idle" }
   | { status: "loading" }
@@ -39,7 +53,7 @@ export type TripPlanState =
   | {
       status: "ready";
       data: EnrichedPlanResponse;
-      refreshing: boolean;
+      refresh: PlanRefresh;
       offline: PlannedOnPhone;
       walkGraphStatus: WalkGraphStatus;
     }
@@ -89,7 +103,7 @@ async function requestPlan(pair: PlanPair, signal: AbortSignal): Promise<Outcome
 export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null): TripPlanState & { retry: () => void } {
   const [attempt, setAttempt] = useState(0);
   const [settled, setSettled] = useState<Settled | null>(null);
-  // The last ready plan, kept on screen only while a GPS-refinement replan is in flight.
+  // The last ready plan, kept on screen only for a GPS-refinement replan (in flight or failed).
   const [lastReady, setLastReady] = useState<{ data: PlanResponse; offline: PlannedOnPhone } | null>(null);
   // The pair actually planned for; small GPS moves of an end keep it (no replan).
   const [planned, setPlanned] = useState<Planned | null>(null);
@@ -119,7 +133,10 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
       (result) => {
         if (controller.signal.aborted) return;
         setSettled({ key, ...result });
-        setLastReady(result.status === "ready" ? { data: result.data, offline: result.offline } : null);
+        if (result.status === "ready") setLastReady({ data: result.data, offline: result.offline });
+        // A failed refresh keeps the plan on screen; any other failure is the error alone, and so
+        // is a rejected request (a refined GPS point outside the city: waiting will not fix it).
+        else if (!planned.gpsRefinement || result.kind === "invalid") setLastReady(null);
       },
       () => undefined, // aborted: a newer request owns the state
     );
@@ -128,23 +145,15 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  // Memoised on stable identities (the settled result, the last ready plan, the pair planned for)
-  // so the walk enrichment below, and the map's trip-lines memo that keys on its result, rerun only
-  // when the plan or the walk graph changes, not on every render (pans, bounds, GPS fixes).
+  // The plan to show: this request's own, else (a refresh only) the last ready one. A ready result
+  // is stored in `lastReady` in the same update, so `lastReady` is the plan in both cases; it is a
+  // stable identity, so the walk enrichment below, and the map's trip-lines memo that keys on its
+  // result, rerun only when the plan or the walk graph changes (not on pans, bounds, GPS fixes).
   const gpsRefinement = planned?.gpsRefinement ?? false;
-  const rawReady = useMemo(
-    () =>
-      key === null
-        ? null
-        : !settled || settled.key !== key
-          ? gpsRefinement && lastReady
-            ? { data: lastReady.data, offline: lastReady.offline, refreshing: true }
-            : null
-          : settled.status === "ready"
-            ? { data: settled.data, offline: settled.offline, refreshing: false }
-            : null,
-    [key, settled, lastReady, gpsRefinement],
-  );
+  const outcome = settled && settled.key === key ? settled : null;
+  const rawReady = key !== null && (outcome?.status === "ready" || gpsRefinement) ? lastReady : null;
+  const refresh: PlanRefresh = !outcome ? REFRESHING : outcome.status === "ready" ? CURRENT : { status: "failed", kind: outcome.kind };
+  const refreshFailed = rawReady !== null && refresh.status === "failed";
 
   // Lazy walk-graph load (Task 10, D18): fetched only once a plan exists.
   const walkGraph = useWalkGraph(rawReady?.data.revision.revisionId ?? null, rawReady !== null);
@@ -158,42 +167,34 @@ export function useTripPlan(origin: PlanEnd | null, destination: PlanEnd | null)
     });
   }, [rawReady, walkGraph.graph, walkGraph.status, originPoint, destinationPoint]);
 
-  // Replan at the next tricycle-rule boundary, the current options staying up as a refresh.
+  // Replan at the next tricycle-rule boundary, the current options staying up as a refresh; after
+  // a failed refresh, try again in a minute and as soon as the phone is back online.
   const rules = walkGraph.graph?.rules ?? null;
   const readyData = rawReady?.data ?? null;
   useEffect(() => {
-    if (!readyData || !rules) return undefined;
-    const ms = msUntilNextRuleBoundary(rules, new Date());
-    if (ms === null) return undefined;
-    const timer = window.setTimeout(() => {
+    if (!readyData) return undefined;
+    const refreshPlan = () => {
       setPlanned((p) => (p ? { ...p, gpsRefinement: true } : p));
       setAttempt((n) => n + 1);
-    }, ms);
+    };
+    if (refreshFailed) {
+      const timer = window.setTimeout(refreshPlan, REFRESH_RETRY_MS);
+      window.addEventListener("online", refreshPlan);
+      return () => {
+        window.clearTimeout(timer);
+        window.removeEventListener("online", refreshPlan);
+      };
+    }
+    const ms = rules ? msUntilNextRuleBoundary(rules, new Date()) : null;
+    if (ms === null) return undefined;
+    const timer = window.setTimeout(refreshPlan, ms);
     return () => window.clearTimeout(timer);
-  }, [readyData, rules]);
+  }, [readyData, rules, refreshFailed]);
 
   const retry = () => setAttempt((n) => n + 1);
   if (key === null) return { status: "idle", retry };
-  if (!settled || settled.key !== key) {
-    return rawReady && enrichedData
-      ? {
-          status: "ready",
-          data: enrichedData,
-          refreshing: true,
-          offline: rawReady.offline,
-          walkGraphStatus: walkGraph.status,
-          retry,
-        }
-      : { status: "loading", retry };
+  if (rawReady && enrichedData) {
+    return { status: "ready", data: enrichedData, refresh, offline: rawReady.offline, walkGraphStatus: walkGraph.status, retry };
   }
-  return settled.status === "ready" && enrichedData
-    ? {
-        status: "ready",
-        data: enrichedData,
-        refreshing: false,
-        offline: settled.offline,
-        walkGraphStatus: walkGraph.status,
-        retry,
-      }
-    : { status: "error", kind: settled.status === "error" ? settled.kind : "server", retry };
+  return outcome?.status === "error" ? { status: "error", kind: outcome.kind, retry } : { status: "loading", retry };
 }

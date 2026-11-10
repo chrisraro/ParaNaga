@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchCorrections, reviewCorrection, reviewMediaSrc, type AdminResult } from "@/client/admin/api";
 import {
   ACTION_LABELS,
@@ -35,18 +35,36 @@ export function CorrectionsScreen() {
   const [open, setOpen] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const load = useCallback(async (s: CorrectionScope) => setState(await fetchCorrections(s)), []);
+  // Bumped to load the list again after a review action. The effect always reads the scope on
+  // screen and drops an answer that a newer request has replaced (same pattern as Complaint review).
+  const [nonce, setNonce] = useState(0);
+  // Resolves when the next list answer arrives, so a form stays busy until it shows the new status.
+  const landed = useRef<(() => void) | null>(null);
+  const reload = useCallback(
+    () =>
+      new Promise<void>((resolve) => {
+        landed.current?.();
+        landed.current = resolve;
+        setNonce((n) => n + 1);
+      }),
+    [],
+  );
   useEffect(() => {
     let live = true;
-    void fetchCorrections(scope).then((r) => live && setState(r));
+    void fetchCorrections(scope).then((r) => {
+      if (live) setState(r);
+      landed.current?.();
+      landed.current = null;
+    });
     return () => {
       live = false;
     };
-  }, [scope]);
+  }, [scope, nonce]);
 
   const data = state?.ok ? state.data : null;
 
   const act = async (c: CorrectionItem, payload: ReviewPayload) => {
+    setNotice(null);
     const r = await reviewCorrection(c.id, payload);
     setNotice(
       r.ok
@@ -60,7 +78,7 @@ export function CorrectionsScreen() {
         : { ok: false, text: r.message },
     );
     if (r.ok) setOpen(null);
-    await load(scope);
+    await reload();
   };
 
   return (
@@ -70,7 +88,7 @@ export function CorrectionsScreen() {
       </PageTitle>
       <div className="mb-4 flex gap-2" role="group" aria-label="Which reports">
         {(["open", "closed"] as const).map((s) => (
-          <button key={s} type="button" className={btnSecondary} aria-pressed={scope === s} onClick={() => setScope(s)} data-testid={`scope-${s}`}>
+          <button key={s} type="button" className={btnSecondary} aria-pressed={scope === s} onClick={() => { if (s !== scope) setState(null); setScope(s); }} data-testid={`scope-${s}`}>
             {s === "open" ? "Open" : "Closed"}
           </button>
         ))}
@@ -229,7 +247,8 @@ function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean
           </ol>
         </section>
       </div>
-      <ActionForm c={c} draftOpen={draftOpen} onAct={onAct} />
+      {/* Keyed on the status: after a refused action the list reloads, and the form starts over with that status's actions. */}
+      <ActionForm key={c.status} c={c} draftOpen={draftOpen} onAct={onAct} />
     </div>
   );
 }

@@ -118,7 +118,8 @@ export function AuditScreen({ all }: { all: boolean }) {
           type="button"
           className={btnSecondary}
           disabled={!state?.ok || !state.data.next}
-          onClick={() => state?.ok && state.data.next && setCursors((c) => [...c, state.data.next!])}
+          // The old page stays up while the next one loads; a second click must not push its cursor again.
+          onClick={() => state?.ok && state.data.next && setCursors((c) => (c.at(-1) === state.data.next ? c : [...c, state.data.next!]))}
           data-testid="audit-older"
         >
           Older

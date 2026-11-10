@@ -101,6 +101,24 @@ describe("useWalkGraph and useLines (Task 10, D18)", () => {
     }
   });
 
+  it("a revision that failed stays failed (not loading) after another revision loads", async () => {
+    const OTHER = crypto.randomUUID(); // the mock answers 404 for it
+    const failedGraph = renderHook(() => useWalkGraph(OTHER));
+    const failedLines = renderHook(() => useLines(OTHER));
+    await waitFor(() => expect(failedGraph.result.current.status).toBe("error"));
+    await waitFor(() => expect(failedLines.result.current.status).toBe("error"));
+
+    const graph = renderHook(() => useWalkGraph(REV_ID));
+    const lines = renderHook(() => useLines(REV_ID));
+    await waitFor(() => expect(graph.result.current.status).toBe("ready"));
+    await waitFor(() => expect(lines.result.current.status).toBe("ready"));
+
+    failedGraph.rerender();
+    failedLines.rerender();
+    expect(failedGraph.result.current).toMatchObject({ status: "error", revisionId: OTHER });
+    expect(failedLines.result.current).toMatchObject({ status: "error", revisionId: OTHER });
+  });
+
   it("useTripPlan loads the walk graph only after a plan exists, showing loading copy first and then graph paths", async () => {
     delayWalkGraph = () => undefined;
     const idle = renderHook(({ s, d }: { s: PlanEnd | null; d: PlanEnd | null }) => useTripPlan(s, d), {

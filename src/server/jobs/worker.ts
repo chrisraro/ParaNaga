@@ -100,49 +100,71 @@ export async function finishJob(
  */
 export async function runJobBatch(
   options: { workerId?: string; batchSize?: number; leaseSeconds?: number } = {},
-): Promise<{ claimed: number; succeeded: number; failed: number; retried: number }> {
+): Promise<{ claimed: number; succeeded: number; failed: number; retried: number; leaseLost: number }> {
   const workerId = options.workerId ?? `worker-${crypto.randomUUID().slice(0, 8)}`;
   const batchSize = options.batchSize ?? 10;
   const leaseSeconds = options.leaseSeconds ?? 120;
 
   const jobs = await claimJobs(workerId, batchSize, leaseSeconds);
-  let succeeded = 0;
-  let failed = 0;
-  let retried = 0;
+  const summary = { claimed: jobs.length, succeeded: 0, failed: 0, retried: 0, leaseLost: 0 };
 
   for (const job of jobs) {
+    const heartbeat = () => heartbeatJob(job.id, workerId, leaseSeconds);
+    const lost = (stage: "start" | "finish") => {
+      console.warn(JSON.stringify({ event: "job_lease_lost", jobId: job.id, kind: job.kind, stage }));
+      summary.leaseLost++;
+    };
+    // A finish that updates nothing means another worker took the job over: not ours to count.
+    const finish = async (
+      counter: "succeeded" | "failed" | "retried",
+      ...args: [status: "done" | "retry" | "dead", errorCode?: string, retryDelaySeconds?: number]
+    ) => {
+      if (await finishJob(job.id, workerId, ...args)) summary[counter]++;
+      else lost("finish");
+    };
+
+    // The batch shares one lease taken at claim time and runs in sequence, so a later job's lease
+    // may have expired (and the job been reclaimed) while earlier ones ran. Renew it or skip.
+    // A heartbeat that throws (database blip) is treated the same: the lease will expire and the
+    // job is claimed again, instead of the whole batch failing with every job left running.
+    if (!(await heartbeat().catch(() => false))) {
+      lost("start");
+      continue;
+    }
+
+    // ops.claim_jobs counts an attempt on every claim, including a reclaim after a run that never
+    // reached finish_job (the only place the cap is applied). Stop a job that keeps dying mid-run.
+    if (job.attempts > job.max_attempts) {
+      console.warn(JSON.stringify({ event: "job_attempts_exhausted", jobId: job.id, kind: job.kind }));
+      await finish("failed", "dead", "MAX_ATTEMPTS");
+      continue;
+    }
+
     const handler = registry.get(job.kind);
     if (!handler) {
       // Unrecognized job kind, fail permanently to avoid spinning
       console.warn(JSON.stringify({ event: "job_unknown_kind", jobId: job.id, kind: job.kind }));
-      await finishJob(job.id, workerId, "dead", "UNKNOWN_KIND");
-      failed++;
+      await finish("failed", "dead", "UNKNOWN_KIND");
       continue;
     }
-
-    const heartbeat = () => heartbeatJob(job.id, workerId, leaseSeconds);
 
     try {
       const outcome: JobHandlerResult = await handler(job, heartbeat);
       if (outcome.success) {
-        await finishJob(job.id, workerId, "done");
-        succeeded++;
+        await finish("succeeded", "done");
       } else if (outcome.retry) {
         const delay = outcome.retryDelaySeconds ?? Math.min(30 * Math.pow(2, job.attempts), 3600);
-        await finishJob(job.id, workerId, "retry", outcome.errorCode ?? "HANDLER_RETRY", delay);
-        retried++;
+        await finish("retried", "retry", outcome.errorCode ?? "HANDLER_RETRY", delay);
       } else {
-        await finishJob(job.id, workerId, "dead", outcome.errorCode ?? "HANDLER_FAILED");
-        failed++;
+        await finish("failed", "dead", outcome.errorCode ?? "HANDLER_FAILED");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.name : "UNHANDLED_EXCEPTION";
       console.error(JSON.stringify({ event: "job_exception", jobId: job.id, kind: job.kind, error: message }));
       const delay = Math.min(30 * Math.pow(2, job.attempts), 3600);
-      await finishJob(job.id, workerId, "retry", message, delay);
-      retried++;
+      await finish("retried", "retry", message, delay);
     }
   }
 
-  return { claimed: jobs.length, succeeded, failed, retried };
+  return summary;
 }

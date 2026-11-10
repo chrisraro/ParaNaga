@@ -6,6 +6,8 @@
 // pick). Rows are "Google suggestion · not verified"; a pick resolves to a point on our map. Any
 // non-ok answer leaves the on-device results alone: "capped" and "rate_limited" say so, and
 // "unavailable" (Google off, offline, failed) hides this block until the next search opening.
+// A pick is one paid details call: while it runs the rows are busy and a second tap does nothing,
+// and its answer is dropped when the query has changed (or the screen closed) in the meantime.
 
 import { useEffect, useId, useRef, useState } from "react";
 import { fetchGoogleSuggestions, resolveGooglePlace } from "@/client/places/google-places";
@@ -24,6 +26,13 @@ import { useT } from "@/i18n/provider";
 
 type Endpoint = { point: LatLng; label: string; place: "google" };
 
+/** The row that was tapped, for the query it was listed under. */
+type Picked = { query: string; title: string } & (
+  | { status: "resolving"; placeId: string }
+  | { status: "problem"; problem: string }
+  | { status: "resolved"; endpoint: Endpoint }
+);
+
 type Props = {
   /** The (debounced) query the on-device results are for. */
   query: string;
@@ -36,7 +45,8 @@ type Props = {
 };
 
 export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoint, onSave }: Props) {
-  const t = useT().search;
+  const tt = useT();
+  const t = tt.search;
   const NOTE = { capped: t.googleCapped, rate_limited: t.googleRateLimited } as const;
   const PICK_PROBLEM = { outside: t.googleOutside, capped: NOTE.capped, rate_limited: NOTE.rate_limited, unavailable: t.googleUnavailable } as const;
   const id = useId();
@@ -44,7 +54,9 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
   const [off, setOff] = useState(false);
   const [tapped, setTapped] = useState<string | null>(null);
   const [answer, setAnswer] = useState<{ query: string; response: SuggestResponse } | null>(null);
-  const [picked, setPicked] = useState<{ query: string; title: string; problem?: string; endpoint?: Endpoint } | null>(null);
+  const [picked, setPicked] = useState<Picked | null>(null);
+  // The pick in flight (state lags a double tap by a render; this does not).
+  const picking = useRef<AbortController | null>(null);
 
   const q = normalizeGoogleQuery(query);
   const auto = ready && shouldAskGoogle(q, localCount);
@@ -68,6 +80,15 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
     };
   }, [wanted, auto, q]);
 
+  // A new query (or closing the screen) drops the pick in flight: its answer must not navigate.
+  useEffect(
+    () => () => {
+      picking.current?.abort();
+      picking.current = null;
+    },
+    [q],
+  );
+
   if (off || [...q].length < GOOGLE_QUERY_MIN) return null;
   if (!wanted) {
     return ready ? (
@@ -83,19 +104,31 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
   if (response.suggestions.length === 0) return null;
 
   const pick = async (s: GoogleSuggestion) => {
+    if (picking.current) return;
+    const run = new AbortController();
+    picking.current = run;
+    setPicked({ query: q, title: s.title, status: "resolving", placeId: s.placeId });
     const result = await resolveGooglePlace(s.placeId, token.current);
-    if (result.status !== "ok") {
-      setPicked({ query: q, title: s.title, problem: PICK_PROBLEM[result.status] });
+    // The session ends with the details call: the next search starts a new one.
+    if (result.status === "ok") token.current = crypto.randomUUID();
+    if (run.signal.aborted) {
+      // Stale (the query changed): drop the busy mark, never navigate.
+      setPicked((p) => (p?.status === "resolving" && p.placeId === s.placeId && p.query === q ? null : p));
       return;
     }
-    // The session ends with the details call: the next search starts a new one.
-    token.current = crypto.randomUUID();
+    picking.current = null;
+    if (result.status !== "ok") {
+      setPicked({ query: q, title: s.title, status: "problem", problem: PICK_PROBLEM[result.status] });
+      return;
+    }
     const endpoint: Endpoint = { point: result.point, label: s.title, place: "google" };
+    const handedOver = purpose === "start" || purpose === "destination" || purpose === "save";
+    setPicked(handedOver ? null : { query: q, title: s.title, status: "resolved", endpoint });
     if (purpose === "start" || purpose === "destination") onEndpoint(purpose, endpoint);
     else if (purpose === "save") onSave({ label: s.title, point: result.point, source: "google" });
-    else setPicked({ query: q, title: s.title, endpoint });
   };
   const shownPick = picked?.query === q ? picked : null;
+  const resolving = shownPick?.status === "resolving" ? shownPick.placeId : null;
 
   return (
     <section className="pn-section" aria-labelledby={id} data-testid="search-google">
@@ -105,25 +138,33 @@ export function GoogleSuggestions({ query, localCount, ready, purpose, onEndpoin
       <ul className="pn-group">
         {response.suggestions.map((s) => (
           <li key={s.placeId}>
-            <button type="button" className="pn-cell pn-search__cell" onClick={() => void pick(s)} data-testid="search-result-google">
+            {/* aria-disabled, not disabled: the tapped row keeps focus while its place is fetched. */}
+            <button
+              type="button"
+              className="pn-cell pn-search__cell"
+              aria-disabled={resolving !== null}
+              aria-busy={resolving === s.placeId || undefined}
+              onClick={() => void pick(s)}
+              data-testid="search-result-google"
+            >
               <span className="pn-cell__text">
                 <span className="pn-cell__title">{s.title}</span>
-                {s.subtitle ? <span className="pn-cell__sub">{s.subtitle}</span> : null}
+                {resolving === s.placeId ? <span className="pn-cell__sub">{tt.forms.loading}</span> : s.subtitle ? <span className="pn-cell__sub">{s.subtitle}</span> : null}
                 <span className="pn-badge pn-badge--evidence">{t.googleSuggestion}</span>
               </span>
             </button>
           </li>
         ))}
       </ul>
-      {shownPick ? (
+      {shownPick && shownPick.status !== "resolving" ? (
         <div className="pn-card pn-search__notice" role="status" data-testid="search-google-pick">
-          <p className="pn-card__text">{shownPick.problem ?? t.googlePicked(shownPick.title)}</p>
-          {shownPick.endpoint ? (
+          <p className="pn-card__text">{shownPick.status === "problem" ? shownPick.problem : t.googlePicked(shownPick.title)}</p>
+          {shownPick.status === "resolved" ? (
             <div className="pn-search__notice-actions">
-              <button type="button" className="pn-btn pn-btn--secondary" onClick={() => onEndpoint("start", shownPick.endpoint!)}>
+              <button type="button" className="pn-btn pn-btn--secondary" onClick={() => onEndpoint("start", shownPick.endpoint)}>
                 {t.setStart}
               </button>
-              <button type="button" className="pn-btn pn-btn--secondary" onClick={() => onEndpoint("destination", shownPick.endpoint!)}>
+              <button type="button" className="pn-btn pn-btn--secondary" onClick={() => onEndpoint("destination", shownPick.endpoint)}>
                 {t.setDestination}
               </button>
             </div>

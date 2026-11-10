@@ -19,6 +19,7 @@ import "@/ui/reports/reports.css";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
+import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { loadComplaint, loadEvidenceUrl, saveMyNagaSelfReport } from "@/client/reports/api";
 import { buildMyNagaSummary } from "@/domain/mynaga/summary";
 import { en, translated } from "@/i18n/dict";
@@ -253,7 +254,7 @@ type Load = { phase: "loading" } | { phase: "error"; message: string } | { phase
 export function ReportHandoff({ id, links }: { id: string; links: React.ReactNode }) {
   const tt = useT();
   const t = tt.mynaga;
-  const { user, loading } = useAuthSession();
+  const { user, loading, status, refresh } = useAuthSession();
   const [state, setState] = useState<Load>({ phase: "loading" });
   const userId = user?.id ?? null;
 
@@ -269,6 +270,7 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
   }, [userId, id]);
 
   if (loading) return <p role="status">{tt.forms.loading}</p>;
+  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} />;
   if (!user) {
     return (
       <div className="pn-report__signin" data-testid="handoff-signin">

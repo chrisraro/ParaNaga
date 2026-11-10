@@ -39,31 +39,32 @@ const IDLE: WalkGraphState = { status: "idle", graph: null, revisionId: null };
 
 const byRevision = new Map<string, WalkGraph>();
 const inflightByRevision = new Map<string, Promise<WalkGraph | null>>();
-let state: WalkGraphState = IDLE;
+// One status per revision: a failed revision stays failed when another revision loads.
+const stateByRevision = new Map<string, WalkGraphState & { revisionId: string }>();
 const listeners = new Set<() => void>();
 
 function notify(): void {
   for (const listener of [...listeners]) listener();
 }
 
-function setState(next: WalkGraphState): void {
-  if (state.status === next.status && state.graph === next.graph && state.revisionId === next.revisionId) return;
-  state = next;
+function setState(next: WalkGraphState & { revisionId: string }): void {
+  const state = stateByRevision.get(next.revisionId);
+  if (state && state.status === next.status && state.graph === next.graph) return;
+  stateByRevision.set(next.revisionId, next);
   notify();
 }
+
+const stateOf = (rev: string | null): WalkGraphState => (rev ? stateByRevision.get(rev) : undefined) ?? IDLE;
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
-/** The decoded walk graph already held in memory for `revisionId` (or the current one). */
-export function heldWalkGraph(revisionId?: string | null): WalkGraph | null {
-  if (revisionId) {
-    const parsed = parseUuidParam(revisionId, "revisionId");
-    return parsed.ok ? (byRevision.get(parsed.value) ?? null) : null;
-  }
-  return state.graph;
+/** The decoded walk graph already held in memory for `revisionId`. */
+export function heldWalkGraph(revisionId: string): WalkGraph | null {
+  const parsed = parseUuidParam(revisionId, "revisionId");
+  return parsed.ok ? (byRevision.get(parsed.value) ?? null) : null;
 }
 
 const decodeGraph = (raw: unknown): WalkGraph | null => {
@@ -139,10 +140,10 @@ export const WALK_GRAPH_DOWNLOAD_LABEL = "Download street paths (≈ 80 KB)";
  * arrive (the button stays, to try again).
  */
 export function useWalkGraphDownload(revisionId: string | null | undefined): { offer: boolean; busy: boolean; failed: boolean; download: () => Promise<boolean> } {
-  const current = useSyncExternalStore(subscribe, () => state, () => IDLE);
   const [attempt, setAttempt] = useState<"idle" | "busy" | "failed">("idle");
   const parsedRev = revisionId ? parseUuidParam(revisionId, "revisionId") : null;
   const rev = parsedRev?.ok ? parsedRev.value : null;
+  const current = useSyncExternalStore(subscribe, () => stateOf(rev), () => IDLE);
   const held = rev !== null && byRevision.has(rev);
   const skipped = rev !== null && current.revisionId === rev && (current.status === "skipped" || (attempt !== "idle" && current.status === "error"));
   const download = async () => {
@@ -159,7 +160,8 @@ export function useWalkGraphDownload(revisionId: string | null | undefined): { o
 export function forgetWalkGraph(): void {
   byRevision.clear();
   inflightByRevision.clear();
-  setState(IDLE);
+  stateByRevision.clear();
+  notify();
 }
 
 /** Tests only. */
@@ -170,9 +172,9 @@ export function resetWalkGraphForTests(): void {
 
 export function useWalkGraph(revisionId: string | null | undefined, enabled = true): WalkGraphState & { retry: () => void } {
   const prefs = usePrefs();
-  const current = useSyncExternalStore(subscribe, () => state, () => IDLE);
   const parsedRev = revisionId ? parseUuidParam(revisionId, "revisionId") : null;
   const rev = parsedRev?.ok ? parsedRev.value : null;
+  const current = useSyncExternalStore(subscribe, () => stateOf(rev), () => IDLE);
   const saveData = savingData();
 
   useEffect(() => {

@@ -37,7 +37,12 @@ export function AdminStepUp({ action, onVerified, onCancel }: { action: string; 
     setPhase("verifying");
     setError("");
     const r = await verifyStepUpCode(code);
-    if (r.ok) return onVerified();
+    if (r.ok) {
+      // Back to the start: if the parent keeps this mounted and the retry needs a code again, it must be usable.
+      setPhase("idle");
+      setCode("");
+      return onVerified();
+    }
     setPhase("sent");
     setError(explain(r));
   };

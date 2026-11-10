@@ -224,6 +224,24 @@ describe("useGeolocation", () => {
     expect(result.current.fix).not.toBeNull();
   });
 
+  it("start() after a timeout or unavailable restarts the watch (a retry tap is not a no-op)", () => {
+    for (const code of [3, 2]) {
+      watchPosition.mockClear();
+      clearWatch.mockClear();
+      const { result, unmount } = renderHook(() => useGeolocation());
+      act(() => result.current.start());
+      act(() => failure(error(code)));
+      const failedWatch = watchPosition.mock.results[0]!.value as number;
+      act(() => result.current.start());
+      expect(clearWatch).toHaveBeenCalledWith(failedWatch);
+      expect(watchPosition).toHaveBeenCalledTimes(2);
+      expect(result.current.state).toBe("requesting");
+      act(() => success(position(10)));
+      expect(result.current.state).toBe("watching");
+      unmount();
+    }
+  });
+
   it("unavailable then success returns to watching", () => {
     const { result } = renderHook(() => useGeolocation());
     act(() => result.current.start());

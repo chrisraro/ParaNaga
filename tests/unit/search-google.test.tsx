@@ -180,6 +180,30 @@ describe("Search: Google suggestions", () => {
     await waitFor(() => expect(frame.requestEndpoint).toHaveBeenCalledWith("destination", { point: POINT, label: "Zzyzx Bakeshop", place: "google" }));
   });
 
+  it("a double tap on a row makes one paid place lookup, and the row is busy meanwhile", async () => {
+    renderSearch("destination");
+    await ready();
+    await type("zzyzx bakeshop");
+    const row = await screen.findByTestId("search-result-google");
+    fireEvent.click(row);
+    fireEvent.click(row);
+    expect(row.getAttribute("aria-busy")).toBe("true");
+    expect(row.getAttribute("aria-disabled")).toBe("true");
+    await waitFor(() => expect(frame.requestEndpoint).toHaveBeenCalledTimes(1));
+    expect(posts.filter((p) => p.url === "/api/v1/places/resolve")).toHaveLength(1);
+  });
+
+  it("an answer that arrives after the query changed does not set the trip end", async () => {
+    renderSearch("destination");
+    await ready();
+    await type("zzyzx bakeshop");
+    fireEvent.click(await screen.findByTestId("search-result-google"));
+    await type("zzyzx bakery");
+    await waitFor(() => expect(posts.filter((p) => p.url === "/api/v1/places/resolve")).toHaveLength(1));
+    await act(async () => undefined);
+    expect(frame.requestEndpoint).not.toHaveBeenCalled();
+  });
+
   it("at the daily cap says so and shows OpenStreetMap results only", async () => {
     suggestAnswer = { status: "capped" };
     renderSearch();

@@ -12,6 +12,7 @@ import "./reports.css";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
+import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { loadComplaint, loadCorrection, type Loaded } from "@/client/reports/api";
 import { complaintCategoryLabel } from "@/domain/complaints/categories";
 import { complaintStatusLabel } from "@/domain/complaints/status";
@@ -131,7 +132,7 @@ type View = { phase: "loading" } | { phase: "error"; message: string } | { phase
 
 export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correction"; id: string }) {
   const tt = useT();
-  const { user, loading } = useAuthSession();
+  const { user, loading, status, refresh } = useAuthSession();
   const [view, setView] = useState<View>({ phase: "loading" });
   const userId = user?.id ?? null;
 
@@ -155,6 +156,7 @@ export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correcti
       </p>
     );
   }
+  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} />;
   if (!user) {
     return (
       <div className="pn-report__signin" data-testid="reports-signin">

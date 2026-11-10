@@ -12,7 +12,9 @@ import { useId, useState } from "react";
 import { sendStepUpCode, verifyStepUpCode, type StepUpResult } from "@/client/auth/step-up";
 import { useT } from "@/i18n/provider";
 
-type Phase = "idle" | "sending" | "sent" | "verifying";
+// "resending": a new code was asked for from the code field; the field stays (a person may still
+// hold a valid code) and a failed resend returns to "sent" with the error.
+type Phase = "idle" | "sending" | "sent" | "resending" | "verifying";
 
 export function StepUpPrompt({ onVerified, onCancel }: { onVerified: () => void; onCancel: () => void }) {
   const t = useT().stepUp;
@@ -25,20 +27,22 @@ export function StepUpPrompt({ onVerified, onCancel }: { onVerified: () => void;
     r.reason === "bad_code" ? t.badCode : r.reason === "rate_limited" ? t.rateLimited : r.reason === "signed_out" ? t.signedOut : t.failed;
 
   const onSend = async () => {
-    setPhase("sending");
+    if (phase !== "idle" && phase !== "sent") return;
+    const resend = phase === "sent";
+    setPhase(resend ? "resending" : "sending");
     setError("");
     const r = await sendStepUpCode();
     if (r.ok) {
       setPhase("sent");
       return;
     }
-    setPhase("idle");
+    setPhase(resend ? "sent" : "idle");
     setError(explain(r));
   };
 
   const onVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code.trim()) return;
+    if (!code.trim() || phase !== "sent") return;
     setPhase("verifying");
     setError("");
     const r = await verifyStepUpCode(code);
@@ -51,7 +55,8 @@ export function StepUpPrompt({ onVerified, onCancel }: { onVerified: () => void;
     setError(explain(r));
   };
 
-  const asked = phase === "sent" || phase === "verifying";
+  const asked = phase !== "idle" && phase !== "sending";
+  const busy = phase === "resending" || phase === "verifying";
   return (
     <section className="pn-reports__panel" aria-labelledby={`${uid}-t`} data-testid="step-up">
       <h3 id={`${uid}-t`}>{t.title}</h3>
@@ -73,11 +78,12 @@ export function StepUpPrompt({ onVerified, onCancel }: { onVerified: () => void;
             data-testid="step-up-code"
           />
           <div className="pn-reports__actions">
-            <button type="submit" className="pn-btn pn-btn--primary" disabled={phase === "verifying" || !code.trim()} data-testid="step-up-verify">
+            <button type="submit" className="pn-btn pn-btn--primary" disabled={busy || !code.trim()} data-testid="step-up-verify">
               {phase === "verifying" ? t.verifying : t.verify}
             </button>
-            <button type="button" className="pn-btn pn-btn--secondary" disabled={phase === "verifying"} onClick={() => void onSend()} data-testid="step-up-resend">
-              {t.resend}
+            {/* aria-disabled, not disabled: the button keeps focus while its own request runs. */}
+            <button type="button" className="pn-btn pn-btn--secondary" aria-disabled={busy} onClick={() => void onSend()} data-testid="step-up-resend">
+              {phase === "resending" ? t.sending : t.resend}
             </button>
           </div>
         </form>

@@ -6,21 +6,24 @@
 import { z } from "zod";
 import { CORRECTION_CATEGORIES, ENTITY_TYPES } from "@/domain/corrections/categories";
 import { INFO_REASONS, REJECT_REASONS } from "@/domain/corrections/review-reasons";
-import { CORRECTION_STATUSES, type CorrectionStatus } from "@/domain/corrections/status";
+import { CORRECTION_STATUSES, TRANSITIONS, type CorrectionStatus } from "@/domain/corrections/status";
 import { stopActionSchema, STOP_STATUSES } from "./stops";
 
 export const REVIEW_ACTIONS = ["start_review", "request_info", "reject", "duplicate", "accept"] as const;
 export type ReviewAction = (typeof REVIEW_ACTIONS)[number];
 
-/** Mirrors the transition list in community.admin_review_correction (0025). */
-const OFFERED: Readonly<Partial<Record<CorrectionStatus, readonly ReviewAction[]>>> = {
-  submitted: ["start_review", "request_info", "reject", "duplicate"],
-  under_review: ["accept", "request_info", "reject", "duplicate"],
-  needs_evidence: ["start_review", "reject", "duplicate"],
+/** The status each action moves a report to (the `v_to` case in community.admin_review_correction, 0025). */
+const ACTION_TO: Readonly<Record<ReviewAction, CorrectionStatus>> = {
+  start_review: "under_review",
+  request_info: "needs_evidence",
+  reject: "rejected",
+  duplicate: "duplicate",
+  accept: "accepted",
 };
 
+/** The actions a status offers, in the order of its TRANSITIONS row (the one table, checked against 0025). */
 export function reviewActions(status: CorrectionStatus): readonly ReviewAction[] {
-  return OFFERED[status] ?? [];
+  return TRANSITIONS[status].flatMap((to) => REVIEW_ACTIONS.filter((a) => ACTION_TO[a] === to));
 }
 
 export const ACTION_LABELS: Readonly<Record<ReviewAction, string>> = {

@@ -285,6 +285,9 @@ export function HomeScreen() {
   const peekNotes: string[] = [];
   if (optionsListed && reopen.changed) peekNotes.push(t.home.changedSinceSaved);
   if (optionsListed && plan.status === "ready" && plan.offline) peekNotes.push(offlinePlanChip(plan.data.revision.publishedAt, plan.offline, t.pwa));
+  // The newest request for this trip failed: the options stay, said to be possibly out of date.
+  const planStale = plan.status === "ready" && plan.refresh.status === "failed";
+  if (optionsListed && planStale) peekNotes.push(t.trip.refreshFailed);
   // The sheet drags without re-rendering this screen: the map chrome that rides its edge is written
   // here directly (same value as attributionBottom below). During the drag the value goes on the
   // followers themselves, not on the root: a custom property on the root re-styles the whole map.
@@ -1143,7 +1146,14 @@ export function HomeScreen() {
               option={openOption}
               onBack={handleCloseOption}
               ends={{ start: endFor(endpoints.start, snapshotStops), destination: endFor(endpoints.destination, snapshotStops) }}
-              note={reopen.note ?? (plan.status === "ready" && plan.offline ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline, t.pwa), tone: "warning" } : null)}
+              note={
+                reopen.note ??
+                (planStale
+                  ? { text: t.trip.refreshFailed, tone: "warning" }
+                  : plan.status === "ready" && plan.offline
+                    ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline, t.pwa), tone: "warning" }
+                    : null)
+              }
               onStart={(walkLengths) =>
                 guidanceActions.start(planData, openOption, { start: endFor(endpoints.start!, snapshotStops), destination: endFor(endpoints.destination!, snapshotStops) }, { etaModel: snapshotState.snapshot?.etaModel ?? null, walkLengths, ridePaths: ridePathsFor(openOption, tripRevisionLines) })
               }
@@ -1163,6 +1173,16 @@ export function HomeScreen() {
                   {offlinePlanNote(plan.data.revision.publishedAt, plan.offline, t.pwa)}
                 </p>
               ) : null}
+              {planStale ? (
+                <>
+                  <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-stale-note">
+                    {t.trip.refreshFailed}
+                  </p>
+                  <button type="button" className="pn-text-btn" onClick={plan.retry} data-testid="trip-stale-retry">
+                    {t.trip.tryAgain}
+                  </button>
+                </>
+              ) : null}
               {plan.status === "loading" ? <TripLoading /> : null}
               {plan.status === "error" ? <TripError kind={plan.kind} onRetry={handleRetry} onChangeEndpoints={handleChangeEndpoints} /> : null}
               {planData && planData.plan.coverage === "none" ? (
@@ -1171,7 +1191,7 @@ export function HomeScreen() {
               {planData && planData.plan.coverage === "provisional" ? (
                 <TripOptions
                   data={planData}
-                  refreshing={plan.status === "ready" && plan.refreshing}
+                  refreshing={plan.status === "ready" && plan.refresh.status === "refreshing"}
                   onOpen={handleOpenOption}
                   etaModel={snapshotState.snapshot?.etaModel}
                   routes={snapshotState.snapshot?.routes}

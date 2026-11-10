@@ -16,6 +16,7 @@ import { loadMyReports } from "@/client/reports/api";
 import { manilaDay, type ReportRow } from "@/domain/reports/list";
 import { en, translated } from "@/i18n/dict";
 import { useLocale, useT } from "@/i18n/provider";
+import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { ListCell, ListGroup } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
 
@@ -31,7 +32,7 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
   const tt = useT();
   const t = tt.reports;
   const locale = useLocale();
-  const { user, loading } = useAuthSession();
+  const { user, loading, status, refresh } = useAuthSession();
   const [state, setState] = useState<State>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
   const userId = user?.id ?? null;
@@ -55,6 +56,7 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
       </p>
     );
   }
+  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} />;
   if (!user) {
     return (
       <div className="pn-reports" data-testid="reports-guest">

@@ -58,8 +58,10 @@ export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocat
 
   const fixRef = useRef<LocationFix | null>(null);
   const watchId = useRef<number | null>(null);
-  // The user wants a watch (true between start() and stop()/denied), even while hidden.
-  const wanted = useRef(false);
+  // The watch the user asked for, kept even while hidden: "off" until start() and after
+  // stop()/denied; "failed" once it reported unavailable or timed out with no fix (the next start()
+  // restarts it); "on" otherwise.
+  const watch = useRef<"off" | "on" | "failed">("off");
   // True once the current start() session has received a success (fixRef may hold an older session's fix).
   const sessionHasFix = useRef(false);
   const onFixRef = useRef(options.onFix);
@@ -83,6 +85,7 @@ export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocat
         const next = pickBetterFix(fixRef.current, raw, now);
         fixRef.current = next;
         sessionHasFix.current = true;
+        watch.current = "on";
         setFix(next);
         setAssessment(assessFix(next, now));
         setState("watching");
@@ -90,12 +93,14 @@ export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocat
       },
       (err) => {
         if (err.code === PERMISSION_DENIED) {
-          wanted.current = false;
+          watch.current = "off";
           clear();
           setState("denied");
         } else if (err.code === POSITION_UNAVAILABLE) {
+          watch.current = "failed";
           setState("unavailable");
         } else if (err.code === TIMEOUT) {
+          watch.current = sessionHasFix.current ? "on" : "failed";
           setState(sessionHasFix.current ? "watching" : "timeout");
         }
       },
@@ -113,15 +118,17 @@ export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocat
       setState("unsupported");
       return;
     }
-    if (wanted.current) return;
-    wanted.current = true;
+    // Already watching: nothing to do. After a failed attempt, a new start() is a real retry.
+    if (watch.current === "on") return;
+    watch.current = "on";
     sessionHasFix.current = false;
+    clear();
     setState("requesting");
     if (document.visibilityState !== "hidden") begin();
-  }, [begin]);
+  }, [begin, clear]);
 
   const stop = useCallback(() => {
-    wanted.current = false;
+    watch.current = "off";
     clear();
     setState((s) => (s === "denied" || s === "unsupported" || s === "insecure" ? s : "idle"));
   }, [clear]);
@@ -130,12 +137,12 @@ export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocat
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState === "hidden") clear();
-      else if (wanted.current) begin();
+      else if (watch.current !== "off") begin();
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
-      wanted.current = false;
+      watch.current = "off";
       clear();
     };
   }, [begin, clear]);

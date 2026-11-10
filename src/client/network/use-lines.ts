@@ -24,16 +24,18 @@ const IDLE: LinesState = { status: "idle", lines: null, revisionId: null };
 
 const byRevision = new Map<string, Lines>();
 const inflightByRevision = new Map<string, Promise<Lines | null>>();
-let state: LinesState = IDLE;
+// One status per revision: a failed revision stays failed when another revision loads.
+const stateByRevision = new Map<string, LinesState & { revisionId: string }>();
 const listeners = new Set<() => void>();
 
 function notify(): void {
   for (const listener of [...listeners]) listener();
 }
 
-function setState(next: LinesState): void {
-  if (state.status === next.status && state.lines === next.lines && state.revisionId === next.revisionId) return;
-  state = next;
+function setState(next: LinesState & { revisionId: string }): void {
+  const state = stateByRevision.get(next.revisionId);
+  if (state && state.status === next.status && state.lines === next.lines) return;
+  stateByRevision.set(next.revisionId, next);
   notify();
 }
 
@@ -42,13 +44,10 @@ function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-/** The lines object already held in memory for `revisionId` (or the latest one). */
-export function heldLines(revisionId?: string | null): Lines | null {
-  if (revisionId) {
-    const parsed = parseUuidParam(revisionId, "revisionId");
-    return parsed.ok ? (byRevision.get(parsed.value) ?? null) : null;
-  }
-  return state.lines;
+/** The lines object already held in memory for `revisionId`. */
+export function heldLines(revisionId: string): Lines | null {
+  const parsed = parseUuidParam(revisionId, "revisionId");
+  return parsed.ok ? (byRevision.get(parsed.value) ?? null) : null;
 }
 
 /**
@@ -101,7 +100,8 @@ export function loadLines(revisionId: string, opts?: { force?: boolean }): Promi
 export function forgetLines(): void {
   byRevision.clear();
   inflightByRevision.clear();
-  setState(IDLE);
+  stateByRevision.clear();
+  notify();
 }
 
 /** Tests only. */
@@ -112,9 +112,9 @@ export function resetLinesForTests(): void {
 
 export function useLines(revisionId: string | null | undefined, enabled = true): LinesState & { retry: () => void } {
   const prefs = usePrefs();
-  const current = useSyncExternalStore(subscribe, () => state, () => IDLE);
   const parsedRev = revisionId ? parseUuidParam(revisionId, "revisionId") : null;
   const rev = parsedRev?.ok ? parsedRev.value : null;
+  const current = useSyncExternalStore(subscribe, () => (rev ? stateByRevision.get(rev) : undefined) ?? IDLE, () => IDLE);
   const saveData = savingData();
 
   useEffect(() => {

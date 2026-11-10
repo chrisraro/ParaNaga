@@ -6,11 +6,12 @@ import { describe, expect, it } from "vitest";
 import { reviewActions, reviewPayloadSchema, type ReviewAction } from "@/domain/admin/corrections";
 import { isOverride, moderatePayloadSchema, percent, PUBLISH_REASONS, reasonsFor, REJECT_REASONS as MOD_REJECT } from "@/domain/admin/moderation";
 import { INFO_REASONS, REJECT_REASONS, REVIEW_REASONS, isReviewReason, reviewReasonText } from "@/domain/corrections/review-reasons";
-import { canTransition, CORRECTION_STATUSES, type CorrectionStatus } from "@/domain/corrections/status";
+import { canTransition, CORRECTION_STATUSES, SYSTEM_TRANSITIONS, TRANSITIONS, type CorrectionStatus } from "@/domain/corrections/status";
 import { en } from "@/i18n/en";
 import { fil } from "@/i18n/fil";
 
 const SQL = readFileSync("db/migrations/0025_review_moderation.sql", "utf8").replace(/\r\n/g, "\n");
+const SQL_0016 = readFileSync("db/migrations/0016_community_correction.sql", "utf8");
 const body = (name: string) => SQL.match(new RegExp(`create or replace function ${name.replace(".", "\\.")}\\([\\s\\S]*?\\$\\$([\\s\\S]*?)\\$\\$;`))![1]!;
 const list = (s: string) => [...s.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]!);
 
@@ -26,8 +27,30 @@ describe("corrections review mirrors 0025", () => {
     expect(offered.map((p) => p.join(">")).sort()).toEqual(SQL_PAIRS.map((p) => p.join(">")).sort());
   });
 
-  it("the commuter-facing status model allows every reviewer transition", () => {
-    for (const [from, to] of SQL_PAIRS) expect(canTransition(from as CorrectionStatus, to as CorrectionStatus), `${from}>${to}`).toBe(true);
+  it("the reviewer transition table is the database's list, pair for pair", () => {
+    const ts = CORRECTION_STATUSES.flatMap((from) => TRANSITIONS[from].map((to) => `${from}>${to}`));
+    expect(new Set(ts).size).toBe(ts.length);
+    expect([...ts].sort()).toEqual(SQL_PAIRS.map((p) => p.join(">")).sort());
+  });
+
+  it("the offered actions and their order are what the review screen relies on", () => {
+    expect(reviewActions("submitted")).toEqual(["start_review", "request_info", "reject", "duplicate"]);
+    expect(reviewActions("under_review")).toEqual(["accept", "request_info", "reject", "duplicate"]);
+    expect(reviewActions("needs_evidence")).toEqual(["start_review", "reject", "duplicate"]);
+    for (const s of ["draft", "accepted", "rejected", "duplicate", "incorporated", "superseded"] as const) expect(reviewActions(s)).toEqual([]);
+  });
+
+  it("system transitions are the submission and the publication trigger, and no reviewer can make them", () => {
+    expect(SYSTEM_TRANSITIONS.map((p) => p.join(">"))).toEqual(["draft>submitted", "accepted>incorporated"]);
+    expect(body("community.incorporate_corrections")).toMatch(/set status = 'incorporated'[\s\S]*?where c\.status = 'accepted'/);
+    expect(SQL_0016).toContain("values (v_row.id, 'draft', 'submitted', v_user_id, 'commuter', p_moderation_reason)");
+    for (const [from, to] of SYSTEM_TRANSITIONS) {
+      expect(TRANSITIONS[from]).not.toContain(to);
+      expect(canTransition(from, to)).toBe(true);
+    }
+    // In neither list: 0025 never moves a report back to submitted, and nothing sets superseded.
+    expect(canTransition("needs_evidence", "submitted")).toBe(false);
+    expect(canTransition("accepted", "superseded")).toBe(false);
   });
 
   it("templated reasons are the database's, and each has words in English and Filipino", () => {
