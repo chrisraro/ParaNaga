@@ -2,7 +2,7 @@
 
 // Report a driver, privately (S18, F-D4, task B8): 1 Before you start -> 2 Photo or video ->
 // 3 What happened -> 4 Review and send -> receipt with a PN-XXXX-XX reference.
-// A report is never published and never sent to Naga City by ParaNaga. Sending needs an account;
+// A report is never published and never sent to Naga City by Lunad. Sending needs an account;
 // guests read the explainer and are asked to sign in. Nothing is stored on the phone: answers and
 // captured files live in memory and are dropped when the screen closes.
 //

@@ -48,7 +48,7 @@ export function Chevron() {
 /** The caution chip on an option card or the peek (the full badge is in the detail). */
 export const UNVERIFIED_CHIP = en.trip.unverifiedChip;
 
-/** Warning-style badge (never the teal "Verified route"). */
+/** Warning-style badge (never the green "Verified route"). */
 export function UnverifiedBadge() {
   return <StatusBadge variant="unverified-route" testId="unverified-badge" />;
 }

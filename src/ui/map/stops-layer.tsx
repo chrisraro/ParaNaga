@@ -12,8 +12,13 @@ import { useMap } from "react-leaflet";
 import { useColorScheme } from "@/client/map/use-color-scheme";
 import type { StopPin } from "@/domain/api/schemas";
 
-const AMBER = "#E8A317";
-/** Map design brief: candidate ring r=8, stroke 3.5, fill = marker fill (light #FFFFFF / dark #111A2E). */
+// Drawn on a canvas, which cannot read CSS variables: these mirror --color-accent,
+// --color-accent-line (the ring on a light map: 3.7:1 on the land, where the fill amber is 1.6:1)
+// and --color-night-surface (src/app/globals.css).
+const AMBER = "#FFB81C";
+const AMBER_LINE = "#A86F00";
+const DARK_FILL = "#17201C";
+/** Map design brief: candidate ring r=8, stroke 3.5, fill = marker fill (light white / dark surface). */
 const RING_RADIUS = 7;
 const RING_WEIGHT = 3.5;
 const CENTRE_RADIUS = 2.75;
@@ -58,7 +63,7 @@ export function StopsLayer({ stops, interactive, onSelect }: Props) {
 
   useEffect(() => {
     group.clearLayers();
-    const fill = dark ? "#111A2E" : "#FFFFFF";
+    const fill = dark ? DARK_FILL : "#FFFFFF";
     // Pins on a route order draw last, so their centre dot stays visible over a plain ring.
     const ordered = [...stops].sort((a, b) => Number(a.routeCodes.length > 0) - Number(b.routeCodes.length > 0));
     for (const stop of ordered) {
@@ -67,7 +72,7 @@ export function StopsLayer({ stops, interactive, onSelect }: Props) {
         renderer,
         radius: RING_RADIUS,
         weight: RING_WEIGHT,
-        color: AMBER,
+        color: dark ? AMBER : AMBER_LINE,
         fillColor: fill,
         fillOpacity: 1,
         interactive,

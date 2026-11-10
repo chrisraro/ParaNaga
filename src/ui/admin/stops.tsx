@@ -120,12 +120,12 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                 </select>
               </Field>
             </div>
-            <div className="max-h-[70vh] overflow-auto rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
+            <div className="max-h-[70vh] overflow-auto rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
               <table className="w-full text-left text-sm" data-testid="stops-table">
-                <caption className="px-3 py-2 text-left text-sm text-ink-2 dark:text-slate-300">
+                <caption className="px-3 py-2 text-left text-sm text-ink-2 dark:text-night-ink-2">
                   {rows.length} of {data?.stops.length ?? 0} stops in {data?.revision?.label ?? "no revision"}
                 </caption>
-                <thead className="border-b border-fill dark:border-navy-raised">
+                <thead className="border-b border-fill dark:border-night-border">
                   <tr>
                     {["Layer", "Code", "Name", "Status", "Evidence", "Routes", ""].map((h, i) => (
                       <th key={h || i} scope="col" className="px-3 py-2 font-semibold">
@@ -145,7 +145,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                       <td className="px-3 py-2 tabular-nums">{s.code ?? "–"}</td>
                       <th scope="row" className="px-3 py-2 font-medium">
                         {s.name}
-                        {s.isSynthetic ? <span className="ml-2 text-xs text-coral-ink dark:text-coral-bright">test data</span> : null}
+                        {s.isSynthetic ? <span className="ml-2 text-xs text-danger-ink dark:text-danger-bright">test data</span> : null}
                       </th>
                       <td className="px-3 py-2">{label(s.status)}</td>
                       <td className="px-3 py-2">{s.evidence.length === 0 ? "None" : [...new Set(s.evidence.map((e) => label(e.claim)))].join(", ")}</td>
@@ -223,7 +223,7 @@ function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode
             {stop.pins.map((p, i) => (
               <li key={`${p.layer}-${p.code}-${i}`}>
                 {p.layer} {p.code}: “{p.label}” at <span className="tabular-nums">{coords(p.lat, p.lng)}</span>
-                {p.description && p.description !== p.label ? <span className="block text-xs text-ink-2 dark:text-slate-300">{p.description}</span> : null}
+                {p.description && p.description !== p.label ? <span className="block text-xs text-ink-2 dark:text-night-ink-2">{p.description}</span> : null}
               </li>
             ))}
           </ul>
@@ -239,7 +239,7 @@ function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode
                 {e.sourceCode ? ` (${e.sourceCode})` : ""}
                 {e.hasMedia ? ", photo in the private bucket" : ""}
                 {e.observedOn ? `, observed ${e.observedOn}` : ""}, added {when(e.createdAt)}
-                {e.note ? <span className="block text-xs text-ink-2 dark:text-slate-300">{e.note}</span> : null}
+                {e.note ? <span className="block text-xs text-ink-2 dark:text-night-ink-2">{e.note}</span> : null}
               </li>
             ))}
           </ul>

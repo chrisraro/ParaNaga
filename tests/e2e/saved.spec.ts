@@ -207,7 +207,7 @@ test("Share copies a text-only summary (no coordinates, no links) when the share
   await page.getByTestId("trip-share").click();
   await expect(page.getByTestId("trip-action-status")).toHaveText("Copied");
   const text = await page.evaluate(() => navigator.clipboard.readText());
-  expect(text).toMatch(/ParaNaga trip: (Near \S.*|Pinned location) to (Near \S.*|Pinned location)/);
+  expect(text).toMatch(/Lunad trip: (Near \S.*|Pinned location) to (Near \S.*|Pinned location)/);
   expect(text).toContain(BADGE);
   expect(text).toContain("Board Centro-Magsaysay Loop A (clockwise) at Plaza Rizal (A1)");
   expect(text).toContain("Avenue Square (A5)");

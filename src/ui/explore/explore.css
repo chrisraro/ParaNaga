@@ -5,44 +5,44 @@
 /* The Explore body wrapper: carries the tokens below and keeps the page's flex column layout. */
 .pn-explore {
   display: contents;
-  --pn-explore-chip-on-bg: #0f1e3d;
-  --pn-explore-chip-on-text: #ffffff;
+  --pn-explore-chip-on-bg: var(--color-ink);
+  --pn-explore-chip-on-text: var(--color-surface);
   --pn-explore-photo-chip: rgba(255, 255, 255, 0.82);
-  --pn-explore-ink: #24324f;
-  --pn-explore-faith: linear-gradient(135deg, #ede6fa, #f4f6fa);
-  --pn-explore-schools: linear-gradient(135deg, #e0e9fb, #f4f6fa);
-  --pn-explore-markets: linear-gradient(135deg, #fce6e3, #f4f6fa);
-  --pn-explore-health: linear-gradient(135deg, #e3f4ea, #f4f6fa);
-  --pn-explore-government: linear-gradient(135deg, #e6eaf2, #f4f6fa);
-  --pn-explore-parks: linear-gradient(135deg, #ddf0ee, #f4f6fa);
-  --pn-explore-terminals: linear-gradient(135deg, #fbefd6, #f4f6fa);
+  --pn-explore-ink: var(--color-ink);
+  --pn-explore-faith: linear-gradient(135deg, #ede6fa, var(--color-canvas));
+  --pn-explore-schools: linear-gradient(135deg, #e0e9fb, var(--color-canvas));
+  --pn-explore-markets: linear-gradient(135deg, #fce6e3, var(--color-canvas));
+  --pn-explore-health: linear-gradient(135deg, #e3f4ea, var(--color-canvas));
+  --pn-explore-government: linear-gradient(135deg, var(--color-fill), var(--color-canvas));
+  --pn-explore-parks: linear-gradient(135deg, #ddf0ee, var(--color-canvas));
+  --pn-explore-terminals: linear-gradient(135deg, #fbefd6, var(--color-canvas));
 }
 :root[data-theme="dark"] .pn-explore {
-  --pn-explore-chip-on-bg: #f2f5fa;
-  --pn-explore-chip-on-text: #0b1220;
-  --pn-explore-photo-chip: rgba(11, 18, 32, 0.72);
-  --pn-explore-ink: #c7cedc;
-  --pn-explore-faith: linear-gradient(135deg, #2a2140, #1a2540);
-  --pn-explore-schools: linear-gradient(135deg, #1b2d4f, #1a2540);
-  --pn-explore-markets: linear-gradient(135deg, #3a2420, #1a2540);
-  --pn-explore-health: linear-gradient(135deg, #17352a, #1a2540);
-  --pn-explore-government: linear-gradient(135deg, #222c44, #1a2540);
-  --pn-explore-parks: linear-gradient(135deg, #12343a, #1a2540);
-  --pn-explore-terminals: linear-gradient(135deg, #3a3020, #1a2540);
+  --pn-explore-chip-on-bg: var(--color-night-ink);
+  --pn-explore-chip-on-text: var(--color-night);
+  --pn-explore-photo-chip: color-mix(in srgb, var(--color-night) 72%, transparent);
+  --pn-explore-ink: var(--color-night-ink-2);
+  --pn-explore-faith: linear-gradient(135deg, #2a2140, var(--color-night-raised));
+  --pn-explore-schools: linear-gradient(135deg, #1b2d4f, var(--color-night-raised));
+  --pn-explore-markets: linear-gradient(135deg, #3a2420, var(--color-night-raised));
+  --pn-explore-health: linear-gradient(135deg, #17352a, var(--color-night-raised));
+  --pn-explore-government: linear-gradient(135deg, var(--color-night-border), var(--color-night-raised));
+  --pn-explore-parks: linear-gradient(135deg, #12343a, var(--color-night-raised));
+  --pn-explore-terminals: linear-gradient(135deg, #3a3020, var(--color-night-raised));
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-explore {
-    --pn-explore-chip-on-bg: #f2f5fa;
-    --pn-explore-chip-on-text: #0b1220;
-    --pn-explore-photo-chip: rgba(11, 18, 32, 0.72);
-    --pn-explore-ink: #c7cedc;
-    --pn-explore-faith: linear-gradient(135deg, #2a2140, #1a2540);
-    --pn-explore-schools: linear-gradient(135deg, #1b2d4f, #1a2540);
-    --pn-explore-markets: linear-gradient(135deg, #3a2420, #1a2540);
-    --pn-explore-health: linear-gradient(135deg, #17352a, #1a2540);
-    --pn-explore-government: linear-gradient(135deg, #222c44, #1a2540);
-    --pn-explore-parks: linear-gradient(135deg, #12343a, #1a2540);
-    --pn-explore-terminals: linear-gradient(135deg, #3a3020, #1a2540);
+    --pn-explore-chip-on-bg: var(--color-night-ink);
+    --pn-explore-chip-on-text: var(--color-night);
+    --pn-explore-photo-chip: color-mix(in srgb, var(--color-night) 72%, transparent);
+    --pn-explore-ink: var(--color-night-ink-2);
+    --pn-explore-faith: linear-gradient(135deg, #2a2140, var(--color-night-raised));
+    --pn-explore-schools: linear-gradient(135deg, #1b2d4f, var(--color-night-raised));
+    --pn-explore-markets: linear-gradient(135deg, #3a2420, var(--color-night-raised));
+    --pn-explore-health: linear-gradient(135deg, #17352a, var(--color-night-raised));
+    --pn-explore-government: linear-gradient(135deg, var(--color-night-border), var(--color-night-raised));
+    --pn-explore-parks: linear-gradient(135deg, #12343a, var(--color-night-raised));
+    --pn-explore-terminals: linear-gradient(135deg, #3a3020, var(--color-night-raised));
   }
 }
 

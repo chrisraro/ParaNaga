@@ -79,7 +79,7 @@
   outline: none;
 }
 .pn-guide__title:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 .pn-guide__title--big {
@@ -308,15 +308,15 @@
   text-align: right;
 }
 
-/* "Para! Next stop is yours": the one loud card. White on #c73a2f ≈ 5.2:1. */
+/* "Para! Next stop is yours": the one loud card, in the "your stop" amber. Ink on it ≈ 9.5:1. */
 .pn-guide__para {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 16px;
   border-radius: 20px;
-  background: #c73a2f;
-  color: #ffffff;
+  background: var(--color-accent);
+  color: var(--color-ink);
   font-size: 16px;
   line-height: 1.4;
 }
@@ -350,7 +350,7 @@
   text-decoration: none;
 }
 .pn-guide__report:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 
@@ -557,7 +557,7 @@
   width: 100%;
   height: 100%;
   border-radius: 999px;
-  background: var(--pn-accent, #0b7a75);
+  background: var(--pn-accent, var(--color-brand));
   transform-origin: left center;
   transition: transform 0.6s ease-out;
 }

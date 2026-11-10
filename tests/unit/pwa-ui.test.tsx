@@ -158,7 +158,7 @@ describe("UpdatePrompt", () => {
     vi.stubGlobal("matchMedia", (q: string) => ({ matches: q.includes("reduced-motion") }));
     render(
       <main>
-        <h1>ParaNaga</h1>
+        <h1>Lunad</h1>
         <UpdatePrompt />
       </main>,
     );
@@ -166,7 +166,7 @@ describe("UpdatePrompt", () => {
     screen.getByRole("button", { name: "Later" }).focus();
     fireEvent.click(screen.getByRole("button", { name: "Later" }));
     expect(screen.queryByTestId("update-prompt")).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "ParaNaga" }));
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Lunad" }));
     delete (navigator as unknown as { serviceWorker?: unknown }).serviceWorker;
   });
 
@@ -219,7 +219,7 @@ describe("install", () => {
     });
     expect(event.defaultPrevented).toBe(true);
     expect(prompt).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: /Install ParaNaga/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Install Lunad/ }));
     expect(prompt).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.getByTestId("settings-install").textContent).toContain("Installed"));
   });

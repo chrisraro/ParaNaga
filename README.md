@@ -1,8 +1,10 @@
-# ParaNaga
+# Lunad
 
 **Know your ride. Find your way.**
 
-ParaNaga is a mobile-first commuter web app (PWA) for **Naga City, Camarines Sur, Philippines**. It helps tourists, students, newcomers and residents answer the everyday questions: where to wait, which jeepney and direction to take, what it costs, where to transfer, and when to get off. People can also report corrections, share commuting tips, and privately report a driver, with a handoff to the city's official MyNaga app.
+Lunad is Bikol for "ride, embark". The working name was ParaNaga; database roles, environment variables and storage keys still carry it.
+
+Lunad is a mobile-first commuter web app (PWA) for **Naga City, Camarines Sur, Philippines**. It helps tourists, students, newcomers and residents answer the everyday questions: where to wait, which jeepney and direction to take, what it costs, where to transfer, and when to get off. People can also report corrections, share commuting tips, and privately report a driver, with a handoff to the city's official MyNaga app.
 
 > **Status: pre-launch (N8 readiness).** The planner, step-by-step guidance, saved trips, community tips, corrections, private driver reports and the admin review console are built (increments N1–N7). Route data stays provisional and badged, with fare ranges rather than exact fares, until reviewers publish checked data.
 
@@ -68,4 +70,4 @@ Data_Sets/     research snapshot (15 Oct 2026, read-only)
 
 ## Data and attribution
 
-The research snapshot cites its sources (S01–S42) in [Data_Sets/Naga_Commuter_Research.md](Data_Sets/Naga_Commuter_Research.md). Mapped stop pins come from the public *Naga City Designated Stops* Google My Maps collection, whose public owner display name is "Tan Gumba"; ParaNaga does not claim city endorsement or affiliation with MyNaga or the City Government of Naga. "ParaNaga" is a working name.
+The research snapshot cites its sources (S01–S42) in [Data_Sets/Naga_Commuter_Research.md](Data_Sets/Naga_Commuter_Research.md). Mapped stop pins come from the public *Naga City Designated Stops* Google My Maps collection, whose public owner display name is "Tan Gumba"; Lunad does not claim city endorsement or affiliation with MyNaga or the City Government of Naga. The name "Lunad" has not been checked against trademark registers yet; "ParaNaga" was the working name.

@@ -1,9 +1,9 @@
 "use client";
 
-// One of the person's own reports (S19 detail, task B9): the ParaNaga status timeline (events the
+// One of the person's own reports (S19 detail, task B9): the Lunad status timeline (events the
 // reporter may see), what they wrote (their own content, visible to them only), and, for a driver
 // report, a SEPARATE "MyNaga (self-reported)" panel. That panel shows only what the person told
-// us; ParaNaga never sends anything to MyNaga or City Hall and cannot confirm it was received.
+// us; Lunad never sends anything to MyNaga or City Hall and cannot confirm it was received.
 
 import "@/ui/kit/styles";
 import "@/ui/report/report.css";

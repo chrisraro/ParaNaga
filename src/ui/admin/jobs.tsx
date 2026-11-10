@@ -35,7 +35,7 @@ export function JobsScreen() {
             <dl className="flex flex-wrap gap-6">
               {counts.map((c) => (
                 <div key={c.status}>
-                  <dt className="text-sm text-ink-2 dark:text-slate-300">{label(c.status)}</dt>
+                  <dt className="text-sm text-ink-2 dark:text-night-ink-2">{label(c.status)}</dt>
                   <dd className="text-2xl font-semibold tabular-nums" data-testid={`jobs-count-${c.status}`}>
                     {c.count}
                   </dd>
@@ -82,7 +82,7 @@ export function JobsScreen() {
                 </thead>
                 <tbody>
                   {jobs.map((j) => (
-                    <tr key={j.id} className="border-t border-fill dark:border-navy-raised">
+                    <tr key={j.id} className="border-t border-fill dark:border-night-border">
                       <td className="py-1 pr-3">{when(j.createdAt)}</td>
                       <td className="py-1 pr-3">{label(j.kind)}</td>
                       <td className="py-1 pr-3">{j.status === "dead" ? <Chip tone="error">dead</Chip> : label(j.status)}</td>

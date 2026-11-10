@@ -132,13 +132,13 @@ describe("useTripPlan offline", () => {
     onLine.mockRestore();
   });
 
-  it("with a connection but no server, it says ParaNaga could not be reached (not offline)", async () => {
+  it("with a connection but no server, it says Lunad could not be reached (not offline)", async () => {
     const { result } = renderHook(() => useTripPlan(end(ORIGIN), end(DESTINATION)));
     await waitFor(() => expect(result.current.status).toBe("ready"), { timeout: 15_000 });
     if (result.current.status !== "ready") return;
     expect(result.current.offline).toBe("unreachable");
     expect(offlinePlanNote(result.current.data.revision.publishedAt, "unreachable")).toBe(
-      "Couldn't reach ParaNaga — planned on this phone with data from Oct 16, 2026. Fares may have changed.",
+      "Couldn't reach Lunad — planned on this phone with data from Oct 16, 2026. Fares may have changed.",
     );
   });
 

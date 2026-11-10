@@ -33,12 +33,12 @@ export function CoverageScreen() {
       ) : state.data.rows.length === 0 ? (
         <Empty title="The published revision has no barangay rows.">Rows appear once a revision with barangay survey data is published.</Empty>
       ) : (
-        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
+        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
           <table className="w-full text-left text-sm" data-testid="coverage-table">
-            <caption className="px-3 py-2 text-left text-sm text-ink-2 dark:text-slate-300">
+            <caption className="px-3 py-2 text-left text-sm text-ink-2 dark:text-night-ink-2">
               {state.data.rows.length} barangays in {state.data.label}
             </caption>
-            <thead className="border-b border-fill dark:border-navy-raised">
+            <thead className="border-b border-fill dark:border-night-border">
               <tr>
                 <th scope="col" className="px-3 py-2 font-semibold">Barangay</th>
                 <th scope="col" className="px-3 py-2 font-semibold">Survey status</th>
@@ -47,7 +47,7 @@ export function CoverageScreen() {
             </thead>
             <tbody>
               {state.data.rows.map((r) => (
-                <tr key={r.barangay} className="border-b border-fill last:border-0 dark:border-navy-raised">
+                <tr key={r.barangay} className="border-b border-fill last:border-0 dark:border-night-border">
                   <th scope="row" className="px-3 py-2 font-medium">{r.barangay}</th>
                   <td className="px-3 py-2">{survey(r.surveyStatus)}</td>
                   <td className="px-3 py-2">{yesNo(r.exactBoardingPointsVerified)}</td>

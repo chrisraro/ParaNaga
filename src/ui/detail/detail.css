@@ -3,9 +3,9 @@
    page background and the darker caption colour are the artboards' bg / label3. */
 
 .pn-detail {
-  --pn-bg: #f4f6fa;
-  --pn-caption: #5a6478;
-  --pn-route-line: #3e4c6b;
+  --pn-bg: var(--color-canvas);
+  --pn-caption: var(--color-ink-3);
+  --pn-route-line: var(--color-ink-2);
 
   position: fixed;
   inset: 0;
@@ -16,15 +16,15 @@
   color: var(--pn-label);
 }
 :root[data-theme="dark"] .pn-detail {
-  --pn-bg: #0b1220;
-  --pn-caption: #8a95ab;
-  --pn-route-line: #8a9bc4;
+  --pn-bg: var(--color-night);
+  --pn-caption: var(--color-night-ink-3);
+  --pn-route-line: var(--color-night-ink-2);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-detail {
-    --pn-bg: #0b1220;
-    --pn-caption: #8a95ab;
-    --pn-route-line: #8a9bc4;
+    --pn-bg: var(--color-night);
+    --pn-caption: var(--color-night-ink-3);
+    --pn-route-line: var(--color-night-ink-2);
   }
 }
 :root[data-contrast="more"] .pn-detail {
@@ -38,7 +38,7 @@
 }
 .pn-detail a:focus-visible,
 .pn-detail button:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 /* Headings take focus programmatically when a panel opens; no ring for that. */

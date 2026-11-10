@@ -5,7 +5,7 @@ import { MyNagaRoute } from "@/ui/mynaga/mynaga-route";
 
 export const metadata: Metadata = {
   title: "Report in MyNaga",
-  description: "How to report a problem with a driver to the City of Naga in its MyNaga app. ParaNaga is not affiliated with MyNaga.",
+  description: "How to report a problem with a driver to the City of Naga in its MyNaga app. Lunad is not affiliated with MyNaga.",
   referrer: "no-referrer",
 };
 

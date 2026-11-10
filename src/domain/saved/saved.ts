@@ -353,7 +353,7 @@ export function shareText(
   };
   const direction = (variantId: string) => input.variants.find((v) => v.variantId === variantId)?.loopDirection ?? null;
   const { option } = input;
-  const lines: string[] = [`ParaNaga trip: ${input.start.label} to ${input.destination.label}`];
+  const lines: string[] = [`Lunad trip: ${input.start.label} to ${input.destination.label}`];
   if (option.rides > 0) lines.push(`${UNVERIFIED_ROUTE_BADGE}.`);
   const steps: string[] = [];
   const lastRide = option.legs.reduce((last, l, i) => (l.kind === "ride" ? i : last), -1);

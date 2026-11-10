@@ -5,11 +5,11 @@
 //  2 Open MyNaga: the verified links (rendered by the parent screen).
 //  3 After you submit: the person's own note that they submitted it, with an optional reference.
 //
-// Evidence: ParaNaga has no redaction tooling yet, so the only copy is the original, served by the
+// Evidence: Lunad has no redaction tooling yet, so the only copy is the original, served by the
 // owner's 60 s signed link. Each download is gated behind an explicit acknowledgement that the
 // file may show other people's faces and vehicle plates and may carry location details.
 //
-// Honesty: ParaNaga sends nothing to MyNaga or City Hall and cannot confirm anything was received.
+// Honesty: Lunad sends nothing to MyNaga or City Hall and cannot confirm anything was received.
 // The "I submitted it" note is the person's own statement and is labelled self-reported.
 
 import "@/ui/kit/styles";

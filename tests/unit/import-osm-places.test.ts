@@ -59,7 +59,7 @@ describe("parseOsmPlaces on the synthetic fixture", () => {
     expect(places.get("osm:node/999000000015")?.category).toBe("college_university");
   });
 
-  it("the precedence table covers every ParaNaga category exactly once", () => {
+  it("the precedence table covers every Lunad category exactly once", () => {
     // The D10 categories keep their order at the top of the table; the fallbacks come last.
     const order = [...new Set(CATEGORY_RULES.map((r) => r.category))];
     expect(order.slice(0, 10)).toEqual([
@@ -325,7 +325,7 @@ describe("category mapping (Task 14: every named place)", () => {
 });
 
 describe("migration 0011", () => {
-  it("lists exactly the ParaNaga categories in the place_version check", () => {
+  it("lists exactly the Lunad categories in the place_version check", () => {
     const sqlText = readFileSync("db/migrations/0011_osm_place_categories.sql", "utf8");
     const check = sqlText.slice(sqlText.indexOf("add constraint place_version_category_check"));
     const listed = [...check.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);

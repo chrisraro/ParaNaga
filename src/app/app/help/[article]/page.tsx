@@ -10,7 +10,7 @@ import { HelpArticleScreen } from "@/ui/help/help-article";
 // itself once it renders (src/ui/help/help-article.tsx).
 export const metadata: Metadata = {
   title: "Help",
-  description: "ParaNaga help: how trips are planned, why stops are not verified yet, using ParaNaga offline, how times are estimated, vehicle types in Naga.",
+  description: "Lunad help: how trips are planned, why stops are not verified yet, using Lunad offline, how times are estimated, vehicle types in Naga.",
 };
 
 // The Help articles are prerendered (the offline and time-estimate ones fill in data from this

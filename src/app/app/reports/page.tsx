@@ -5,7 +5,7 @@ import { ReportsScreen } from "@/ui/reports/reports-screen";
 
 export const metadata: Metadata = {
   title: "My reports",
-  description: "The corrections and driver reports you sent to ParaNaga, and where each one stands.",
+  description: "The corrections and driver reports you sent to Lunad, and where each one stands.",
   referrer: "no-referrer",
 };
 

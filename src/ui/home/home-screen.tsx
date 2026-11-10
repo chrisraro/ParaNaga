@@ -56,6 +56,7 @@ import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
 import { PEEK_NOTE_VISIBLE, PEEK_VISIBLE, peekOptionsVisible, TINY_SHEET, mapInsetFor, useSheet, type Snap } from "@/ui/app-shell/bottom-sheet";
 import { EndpointSheet, endpointRowMainId } from "./endpoint-sheet";
+import { LunadMark } from "@/ui/brand/lunad-mark";
 import { HomeSearchBar } from "./home-search-bar";
 import { applyIfAccepted, gpsEndpointKey, shouldKeepWatching } from "./gps-policy";
 import {
@@ -148,15 +149,6 @@ function useMeasuredHeight(): [number, (el: HTMLElement | null) => (() => void) 
     return () => observer.disconnect();
   }, []);
   return [height, ref];
-}
-
-function PillMark() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-      <path d="M32 90 V30 L60 60" fill="none" stroke="var(--pn-mark-teal)" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M60 60 L88 90 V30" fill="none" stroke="var(--pn-mark-coral)" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
 }
 
 /** A start or destination refused for being on top of the other end (not a GPS status). */
@@ -989,7 +981,7 @@ export function HomeScreen() {
   return (
     <main ref={homeRef} className="pn-home" style={rootStyle} data-screen={screen} data-testid="home-screen">
       <h1 className="sr-only" tabIndex={-1} data-home-heading="">
-        ParaNaga trip planner
+        Lunad trip planner
       </h1>
       <div className="pn-home__map" inert={!atHome && sheet.snap === 2 && picking === null}>
         <NagaMap
@@ -1055,7 +1047,7 @@ export function HomeScreen() {
           data-testid="accuracy-pill"
           data-stale={fixAge ? "true" : undefined}
         >
-          <PillMark />
+          <LunadMark size={18} />
           <span>
             {t.home.locationPill(formatAccuracy(geo.fix.accuracy, t.geo))}
             {fixAge ? ` · ${fixAge}` : null}

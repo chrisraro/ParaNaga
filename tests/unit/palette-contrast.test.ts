@@ -45,14 +45,14 @@ describe("palette WCAG 2.2 AA 1.4.11 non-text contrast and tokens (Task 11)", ()
     }
   });
 
-  it("every Palette D core meets ≥ 3.0 contrast against dark casing (#0B1220) and dark land (#1E2633)", () => {
+  it("every Palette D core meets ≥ 3.0 contrast against dark casing (#0E1512) and dark land (#1F2A25)", () => {
     for (const key of PALETTE_KEYS) {
       const token = PALETTE_D[key];
-      expect(token.casing.toUpperCase()).toBe("#0B1220");
+      expect(token.casing.toUpperCase()).toBe("#0E1512");
       const vsCasing = contrastRatio(token.core, DARK_SURFACES.casing);
       const vsLand = contrastRatio(token.core, DARK_SURFACES.land);
-      expect(vsCasing, `${key} D vs #0B1220 casing`).toBeGreaterThanOrEqual(3.0);
-      expect(vsLand, `${key} D vs dark land #1E2633`).toBeGreaterThanOrEqual(3.0);
+      expect(vsCasing, `${key} D vs #0E1512 casing`).toBeGreaterThanOrEqual(3.0);
+      expect(vsLand, `${key} D vs dark land #1F2A25`).toBeGreaterThanOrEqual(3.0);
       if (token.secondaryCore) {
         expect(contrastRatio(token.secondaryCore, DARK_SURFACES.casing)).toBeGreaterThanOrEqual(3.0);
         expect(contrastRatio(token.secondaryCore, DARK_SURFACES.land)).toBeGreaterThanOrEqual(3.0);
@@ -60,7 +60,7 @@ describe("palette WCAG 2.2 AA 1.4.11 non-text contrast and tokens (Task 11)", ()
     }
   });
 
-  it("legend swatches meet ≥ 3.0 (and ≥ 5.0 L / ≥ 5.5 D) against sheet backgrounds (white and #111A2E)", () => {
+  it("legend swatches meet ≥ 3.0 (and ≥ 5.0 L / ≥ 5.5 D) against sheet backgrounds (white and #17201C)", () => {
     for (const key of PALETTE_KEYS) {
       const ratioL = contrastRatio(PALETTE_L[key].core, LIGHT_SURFACES.sheet);
       const ratioD = contrastRatio(PALETTE_D[key].core, DARK_SURFACES.sheet);

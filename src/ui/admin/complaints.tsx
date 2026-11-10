@@ -118,10 +118,10 @@ export function ComplaintsScreen() {
       ) : list.data.complaints.length === 0 ? (
         <Empty title={scope === "open" ? "No open reports." : "No closed reports."}>Reports appear here when a commuter files one.</Empty>
       ) : (
-        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
+        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
           <table className="w-full text-left text-sm" data-testid="complaints-table">
             <caption className="sr-only">{scope === "open" ? "Open reports, priority first" : "Closed and withdrawn reports, newest first"}</caption>
-            <thead className="border-b border-fill dark:border-navy-raised">
+            <thead className="border-b border-fill dark:border-night-border">
               <tr>
                 {["Reference", "Category", "Queue", "Status", "Submitted", "Evidence", ""].map((h, i) => (
                   <th key={i} scope="col" className="px-3 py-2 font-semibold">
@@ -132,7 +132,7 @@ export function ComplaintsScreen() {
             </thead>
             <tbody>
               {list.data.complaints.map((c) => (
-                <tr key={c.id} className="border-b border-fill last:border-0 dark:border-navy-raised">
+                <tr key={c.id} className="border-b border-fill last:border-0 dark:border-night-border">
                   <th scope="row" className="px-3 py-2 font-mono font-medium">
                     {c.publicRef}
                     {c.legalHold ? (
@@ -261,7 +261,7 @@ function ComplaintDetailView({
 
         <section aria-label="What the reporter wrote">
           <h3 className="mb-1 text-sm font-semibold">What the reporter wrote</h3>
-          <p className="whitespace-pre-wrap rounded-md bg-fill p-3 text-sm dark:bg-navy-deep" data-testid="complaint-description">
+          <p className="whitespace-pre-wrap rounded-md bg-fill p-3 text-sm dark:bg-night" data-testid="complaint-description">
             {c.description}
           </p>
         </section>
@@ -363,7 +363,7 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
   };
 
   return (
-    <form className="grid max-w-xl gap-3 border-t border-fill pt-4 dark:border-navy-raised" onSubmit={(e) => void submit(e)} aria-label="Change the status" data-testid="complaint-status-form">
+    <form className="grid max-w-xl gap-3 border-t border-fill pt-4 dark:border-night-border" onSubmit={(e) => void submit(e)} aria-label="Change the status" data-testid="complaint-status-form">
       <h3 className="text-sm font-semibold">Change the status</h3>
       <Field label="New status">
         <select className={inputCls} value={to} onChange={(e) => setTo(e.target.value as ComplaintStatus)} data-testid="complaint-to">
@@ -419,7 +419,7 @@ function HoldForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp: 
     await onChanged(c.legalHold ? `Legal hold lifted on ${c.publicRef}.` : `${c.publicRef} is on legal hold and will not be purged.`);
   };
   return (
-    <form className="grid max-w-xl gap-3 border-t border-fill pt-4 dark:border-navy-raised" onSubmit={(e) => void submit(e)} aria-label="Legal hold" data-testid="complaint-hold-form">
+    <form className="grid max-w-xl gap-3 border-t border-fill pt-4 dark:border-night-border" onSubmit={(e) => void submit(e)} aria-label="Legal hold" data-testid="complaint-hold-form">
       <h3 className="text-sm font-semibold">Legal hold</h3>
       <Muted>{c.legalHold ? "This report is on legal hold: the retention purge skips it." : "A legal hold stops the retention purge (for example, a request from the authorities)."}</Muted>
       <Field label="Reason (reviewers only)">

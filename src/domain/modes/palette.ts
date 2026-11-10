@@ -3,8 +3,8 @@
 //
 // Two palettes:
 //  - Palette L (white `#FFFFFF` casing) whenever raster tiles are drawn, and in light theme.
-//  - Palette D (`#0B1220` casing) only when the theme is dark AND no tiles are drawn (low-data
-//    mode or no tile URL), so lines sit on dark land `#1E2633`.
+//  - Palette D (`#0E1512` casing) only when the theme is dark AND no tiles are drawn (low-data
+//    mode or no tile URL), so lines sit on dark land `#1F2A25`.
 //
 // Every core meets ≥ 3.0 contrast against its casing and surface, and ≥ 5.0 (L) / ≥ 5.5 (D)
 // against the legend sheet backgrounds.
@@ -43,9 +43,9 @@ export const LIGHT_SURFACES = {
 } as const;
 
 export const DARK_SURFACES = {
-  casing: "#0B1220",
-  land: "#1E2633",
-  sheet: "#111A2E",
+  casing: "#0E1512",
+  land: "#1F2A25",
+  sheet: "#17201C",
 } as const;
 
 export const PALETTE_L: Record<PaletteKey, PaletteToken> = {
@@ -57,21 +57,21 @@ export const PALETTE_L: Record<PaletteKey, PaletteToken> = {
   uv_express: { core: "#BE123C", secondaryCore: null, casing: "#FFFFFF", glyph: "#FFFFFF", pattern: "marker_only" },
   bus: { core: "#6D28D9", secondaryCore: null, casing: "#FFFFFF", glyph: "#FFFFFF", pattern: "marker_only" },
   unconfirmed: { core: "#57534E", secondaryCore: null, casing: "#FFFFFF", glyph: "#FFFFFF", pattern: "solid" },
-  walk: { core: "#0F1E3D", secondaryCore: null, casing: "#FFFFFF", glyph: "#FFFFFF", pattern: "dotted" },
-  rail: { core: "#0F1E3D", secondaryCore: null, casing: "#FFFFFF", glyph: "#FFFFFF", pattern: "marker_only" },
+  walk: { core: "#17211D", secondaryCore: null, casing: "#FFFFFF", glyph: "#FFFFFF", pattern: "dotted" },
+  rail: { core: "#17211D", secondaryCore: null, casing: "#FFFFFF", glyph: "#FFFFFF", pattern: "marker_only" },
 };
 
 export const PALETTE_D: Record<PaletteKey, PaletteToken> = {
-  traditional_puj: { core: "#F59E0B", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "solid" },
-  modern_puj: { core: "#60A5FA", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "solid" },
-  mixed_trad_modern: { core: "#F59E0B", secondaryCore: "#60A5FA", casing: "#0B1220", glyph: "#0B1220", pattern: "two_tone" },
-  tricycle: { core: "#E879F9", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "solid" },
-  e_tricycle: { core: "#22D3EE", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "solid" },
-  uv_express: { core: "#FB7185", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "marker_only" },
-  bus: { core: "#A78BFA", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "marker_only" },
-  unconfirmed: { core: "#D6D3D1", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "solid" },
-  walk: { core: "#E2E8F0", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "dotted" },
-  rail: { core: "#E2E8F0", secondaryCore: null, casing: "#0B1220", glyph: "#0B1220", pattern: "marker_only" },
+  traditional_puj: { core: "#F59E0B", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "solid" },
+  modern_puj: { core: "#60A5FA", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "solid" },
+  mixed_trad_modern: { core: "#F59E0B", secondaryCore: "#60A5FA", casing: "#0E1512", glyph: "#0E1512", pattern: "two_tone" },
+  tricycle: { core: "#E879F9", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "solid" },
+  e_tricycle: { core: "#22D3EE", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "solid" },
+  uv_express: { core: "#FB7185", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "marker_only" },
+  bus: { core: "#A78BFA", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "marker_only" },
+  unconfirmed: { core: "#D6D3D1", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "solid" },
+  walk: { core: "#F1F5F3", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "dotted" },
+  rail: { core: "#F1F5F3", secondaryCore: null, casing: "#0E1512", glyph: "#0E1512", pattern: "marker_only" },
 };
 
 /**

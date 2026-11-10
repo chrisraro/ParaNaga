@@ -422,7 +422,7 @@ test("update: new worker bytes at the same URL wait; the card offers Reload, and
   await deployNextVersion(page, context, "next");
   // It installs and waits: nothing reloads by itself.
   const prompt = page.getByTestId("update-prompt");
-  await expect(prompt).toContainText("A new version of ParaNaga is ready.");
+  await expect(prompt).toContainText("A new version of Lunad is ready.");
   expect(await page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(true);
   const before = await page.evaluate(() => performance.timeOrigin);
   // Tapping Reload activates the waiting version, and the page reloads once it controls it.

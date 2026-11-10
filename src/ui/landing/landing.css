@@ -1,5 +1,5 @@
-/* ParaNaga landing page (/). The app's identity: navy, teal and coral (src/app/globals.css,
-   src/ui/home/home-screen.css), Geist, light and dark by the same rule as the app
+/* Lunad landing page (/). The app's identity: green with amber highlights (the palette in
+   src/app/globals.css), Geist, light and dark by the same rule as the app
    (`:root[data-theme="dark"]` or System + prefers-color-scheme), high contrast via data-contrast.
 
    Motion budget: transform, opacity, clip-path and stroke-dashoffset only. Every animation is
@@ -9,30 +9,30 @@
    IntersectionObserver. Looping effects pause while the tab is hidden (html[data-pnl-hidden]). */
 
 .pnl {
-  --pnl-bg: #f4f6fa;
-  --pnl-surface: #ffffff;
-  --pnl-raised: #eceff4;
-  --pnl-ink: #0f1e3d;
-  --pnl-ink2: #4a5468;
-  --pnl-sep: rgba(15, 30, 61, 0.1);
-  --pnl-accent: #0b7a75;
-  --pnl-on-accent: #ffffff;
-  --pnl-accent-soft: #e3f2f1;
-  --pnl-accent-ink: #075e5a;
-  --pnl-coral: #c73a2f;
-  --pnl-gold: #e8a317;
-  --pnl-gold-ink: #6b4a00;
-  --pnl-warn-bg: #fff4dc;
-  --pnl-shadow: 0 1px 2px rgba(15, 30, 61, 0.06), 0 12px 32px -12px rgba(15, 30, 61, 0.16);
-  --pnl-shadow-lift: 0 2px 4px rgba(15, 30, 61, 0.06), 0 28px 56px -18px rgba(15, 30, 61, 0.28);
-  /* The hero and the promise band stay navy in both themes (brand surfaces). */
-  --pnl-night: #0f1e3d;
-  --pnl-night-deep: #0b1630;
-  --pnl-night-ink: #f2f5fa;
-  --pnl-night-ink2: #b8c2d6;
-  --pnl-bright: #2bb5ae;
-  --pnl-on-bright: #04201e;
-  --pnl-coral-bright: #ff8a7a;
+  --pnl-bg: var(--color-canvas);
+  --pnl-surface: var(--color-surface);
+  --pnl-raised: var(--color-fill);
+  --pnl-ink: var(--color-ink);
+  --pnl-ink2: var(--color-ink-2);
+  --pnl-sep: color-mix(in srgb, var(--color-ink) 10%, transparent);
+  --pnl-accent: var(--color-brand);
+  --pnl-on-accent: var(--color-on-brand);
+  --pnl-accent-soft: var(--color-brand-soft);
+  --pnl-accent-ink: var(--color-brand-strong);
+  --pnl-coral: var(--color-accent);
+  --pnl-gold: var(--color-accent);
+  --pnl-gold-ink: var(--color-accent-ink);
+  --pnl-warn-bg: var(--color-accent-soft);
+  --pnl-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink) 6%, transparent), 0 12px 32px -12px color-mix(in srgb, var(--color-ink) 16%, transparent);
+  --pnl-shadow-lift: 0 2px 4px color-mix(in srgb, var(--color-ink) 6%, transparent), 0 28px 56px -18px color-mix(in srgb, var(--color-ink) 28%, transparent);
+  /* The hero and the promise band stay deep green in both themes (brand surfaces). */
+  --pnl-night: var(--color-deep);
+  --pnl-night-deep: var(--color-deep-2);
+  --pnl-night-ink: var(--color-night-ink);
+  --pnl-night-ink2: var(--color-night-ink-2);
+  --pnl-bright: var(--color-brand-bright);
+  --pnl-on-bright: var(--color-on-brand-bright);
+  --pnl-coral-bright: var(--color-accent);
   --pnl-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --pnl-gutter: clamp(16px, 4vw, 40px);
   --pnl-max: 1240px;
@@ -45,63 +45,67 @@
   font-feature-settings: "ss01";
 }
 .pnl ::selection {
-  background: #2bb5ae;
-  color: #04201e;
+  background: var(--color-brand-bright);
+  color: var(--color-on-brand-bright);
 }
 
 /* Dark: Dark always, System when the device prefers dark (same rule as the app). */
 :root[data-theme="dark"] .pnl {
-  --pnl-bg: #0b1220;
-  --pnl-surface: #111a2e;
-  --pnl-raised: #1a2540;
-  --pnl-ink: #f2f5fa;
-  --pnl-ink2: #a9b3c7;
-  --pnl-sep: rgba(242, 245, 250, 0.12);
-  --pnl-accent: #2bb5ae;
-  --pnl-on-accent: #04201e;
-  --pnl-accent-soft: rgba(43, 181, 174, 0.16);
-  --pnl-accent-ink: #5fd4cd;
-  --pnl-coral: #ff8a7a;
-  --pnl-gold-ink: #f2c877;
-  --pnl-warn-bg: rgba(242, 184, 75, 0.14);
+  --pnl-bg: var(--color-night);
+  --pnl-surface: var(--color-night-surface);
+  --pnl-raised: var(--color-night-raised);
+  --pnl-ink: var(--color-night-ink);
+  --pnl-ink2: var(--color-night-ink-2);
+  --pnl-sep: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
+  --pnl-accent: var(--color-brand-bright);
+  --pnl-on-accent: var(--color-on-brand-bright);
+  --pnl-accent-soft: color-mix(in srgb, var(--color-brand-bright) 16%, transparent);
+  --pnl-accent-ink: var(--color-brand-light);
+  --pnl-coral: var(--color-accent);
+  --pnl-gold-ink: var(--color-accent);
+  --pnl-warn-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
   --pnl-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
   --pnl-shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.3), 0 28px 56px -18px rgba(0, 0, 0, 0.7);
-  --pnl-night: #0d1830;
-  --pnl-night-deep: #080f1e;
+  --pnl-night: var(--color-deep-2);
+  --pnl-night-deep: color-mix(in srgb, var(--color-deep-2) 70%, black);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pnl {
-    --pnl-bg: #0b1220;
-    --pnl-surface: #111a2e;
-    --pnl-raised: #1a2540;
-    --pnl-ink: #f2f5fa;
-    --pnl-ink2: #a9b3c7;
-    --pnl-sep: rgba(242, 245, 250, 0.12);
-    --pnl-accent: #2bb5ae;
-    --pnl-on-accent: #04201e;
-    --pnl-accent-soft: rgba(43, 181, 174, 0.16);
-    --pnl-accent-ink: #5fd4cd;
-    --pnl-coral: #ff8a7a;
-    --pnl-gold-ink: #f2c877;
-    --pnl-warn-bg: rgba(242, 184, 75, 0.14);
+    --pnl-bg: var(--color-night);
+    --pnl-surface: var(--color-night-surface);
+    --pnl-raised: var(--color-night-raised);
+    --pnl-ink: var(--color-night-ink);
+    --pnl-ink2: var(--color-night-ink-2);
+    --pnl-sep: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
+    --pnl-accent: var(--color-brand-bright);
+    --pnl-on-accent: var(--color-on-brand-bright);
+    --pnl-accent-soft: color-mix(in srgb, var(--color-brand-bright) 16%, transparent);
+    --pnl-accent-ink: var(--color-brand-light);
+    --pnl-coral: var(--color-accent);
+    --pnl-gold-ink: var(--color-accent);
+    --pnl-warn-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
     --pnl-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -12px rgba(0, 0, 0, 0.6);
     --pnl-shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.3), 0 28px 56px -18px rgba(0, 0, 0, 0.7);
-    --pnl-night: #0d1830;
-    --pnl-night-deep: #080f1e;
+    --pnl-night: var(--color-deep-2);
+    --pnl-night-deep: color-mix(in srgb, var(--color-deep-2) 70%, black);
   }
 }
 /* The page behind the landing follows its theme too (overscroll, the browser's own surfaces). */
 :root:has(.pnl) {
-  --background: #f4f6fa;
+  --background: var(--color-canvas);
 }
 :root[data-theme="dark"]:has(.pnl) {
   color-scheme: dark;
-  --background: #0b1220;
+  --background: var(--color-night);
+  accent-color: var(--color-brand-bright);
+  caret-color: var(--color-brand-bright);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):has(.pnl) {
     color-scheme: dark;
-    --background: #0b1220;
+    --background: var(--color-night);
+    accent-color: var(--color-brand-bright);
+    caret-color: var(--color-brand-bright);
   }
 }
 /* High contrast (Settings → High contrast): secondary text as strong as body text, firmer edges. */
@@ -218,17 +222,17 @@
 .pnl-btn--bright {
   background: var(--pnl-bright);
   color: var(--pnl-on-bright);
-  box-shadow: 0 10px 28px -8px rgba(43, 181, 174, 0.55);
+  box-shadow: 0 10px 28px -8px color-mix(in srgb, var(--color-brand-bright) 55%, transparent);
 }
 .pnl-btn--bright:hover {
-  box-shadow: 0 16px 36px -10px rgba(43, 181, 174, 0.7);
+  box-shadow: 0 16px 36px -10px color-mix(in srgb, var(--color-brand-bright) 70%, transparent);
 }
 .pnl-btn--ghost {
   color: var(--pnl-night-ink);
-  box-shadow: inset 0 0 0 1.5px rgba(242, 245, 250, 0.35);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-night-ink) 35%, transparent);
 }
 .pnl-btn--ghost:hover {
-  background: rgba(242, 245, 250, 0.08);
+  background: color-mix(in srgb, var(--color-night-ink) 8%, transparent);
 }
 .pnl-btn--solid {
   background: var(--pnl-accent);
@@ -243,7 +247,7 @@
   margin: 0;
   padding: 10px;
   border-radius: 46px;
-  background: linear-gradient(160deg, #1c2333, #05080f 60%);
+  background: linear-gradient(160deg, var(--color-ink), #05080f 60%);
   box-shadow:
     inset 0 0 0 1.5px rgba(255, 255, 255, 0.1),
     0 2px 6px rgba(5, 8, 15, 0.25),
@@ -296,7 +300,7 @@
   background: color-mix(in srgb, var(--pnl-night) 82%, transparent);
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
-  box-shadow: inset 0 0 0 1px rgba(242, 245, 250, 0.1), 0 12px 32px -16px rgba(5, 8, 15, 0.5);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 10%, transparent), 0 12px 32px -16px rgba(5, 8, 15, 0.5);
 }
 .pnl-header__brand {
   display: flex;
@@ -321,12 +325,12 @@
 }
 .pnl-header__links a:hover {
   color: var(--pnl-night-ink);
-  background: rgba(242, 245, 250, 0.08);
+  background: color-mix(in srgb, var(--color-night-ink) 8%, transparent);
 }
 .pnl-header__lang {
   display: flex;
   border-radius: 999px;
-  background: rgba(242, 245, 250, 0.1);
+  background: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
 }
 .pnl-header__lang button {
   min-width: 44px;
@@ -362,7 +366,7 @@
   height: 44px;
   border-radius: 50%;
   color: var(--pnl-night-ink);
-  background: rgba(242, 245, 250, 0.1);
+  background: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
 }
 .pnl-header__sheet {
   position: absolute;
@@ -379,7 +383,7 @@
 .pnl-header__sheet[data-open="true"] {
   grid-template-rows: 1fr;
   opacity: 1;
-  box-shadow: 0 24px 48px -16px rgba(5, 8, 15, 0.6), inset 0 0 0 1px rgba(242, 245, 250, 0.1);
+  box-shadow: 0 24px 48px -16px rgba(5, 8, 15, 0.6), inset 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 10%, transparent);
 }
 .pnl-header__sheet > div {
   overflow: hidden;
@@ -390,7 +394,7 @@
   justify-content: space-between;
   min-height: 56px;
   margin-inline: 20px;
-  border-bottom: 1px solid rgba(242, 245, 250, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-night-ink) 10%, transparent);
   font-size: 1.15rem;
   font-weight: 600;
 }
@@ -427,13 +431,13 @@
   width: min(900px, 120vw);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(43, 181, 174, 0.32), rgba(43, 181, 174, 0) 70%);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-brand-bright) 32%, transparent), transparent 70%);
   pointer-events: none;
 }
 .pnl-hero__glow--coral {
   inset: auto auto -35% -20%;
   width: min(760px, 110vw);
-  background: radial-gradient(closest-side, rgba(242, 107, 91, 0.2), rgba(242, 107, 91, 0) 70%);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-accent) 20%, transparent), transparent 70%);
 }
 .pnl-hero h1 {
   font-size: clamp(2.5rem, 5vw, 5rem);
@@ -494,7 +498,7 @@
 .pnl-hero__note svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: #f2c877;
+  color: var(--color-accent);
 }
 .pnl-stage {
   position: relative;
@@ -579,8 +583,8 @@
   white-space: nowrap;
   font-size: 0.95rem;
   font-weight: 600;
-  background: rgba(242, 245, 250, 0.07);
-  box-shadow: inset 0 0 0 1px rgba(242, 245, 250, 0.1);
+  background: color-mix(in srgb, var(--color-night-ink) 7%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 10%, transparent);
 }
 .pnl-letter {
   display: inline-flex;
@@ -597,7 +601,7 @@
 }
 .pnl-letter--none {
   background: transparent;
-  box-shadow: inset 0 0 0 1.5px rgba(242, 245, 250, 0.3);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-night-ink) 30%, transparent);
   color: var(--pnl-night-ink2);
 }
 
@@ -668,14 +672,14 @@
 }
 .pnl-how__step:last-child .pnl-how__dot {
   background: var(--pnl-coral);
-  color: #ffffff;
+  color: var(--color-ink);
 }
 :root[data-theme="dark"] .pnl-how__step:last-child .pnl-how__dot {
-  color: #2a0c08;
+  color: var(--color-ink);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pnl-how__step:last-child .pnl-how__dot {
-    color: #2a0c08;
+    color: var(--color-ink);
   }
 }
 .pnl-how__step h3 {
@@ -1064,7 +1068,7 @@
   width: 3px;
   translate: -50% 0;
   background: #ffffff;
-  box-shadow: 0 0 0 1px rgba(15, 30, 61, 0.3);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-ink) 30%, transparent);
   pointer-events: none;
 }
 .pnl-compare__handle::after {
@@ -1077,7 +1081,7 @@
   translate: -50% -50%;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 4px 14px rgba(15, 30, 61, 0.35);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-ink) 35%, transparent);
 }
 .pnl-compare__range {
   display: grid;
@@ -1098,17 +1102,21 @@
   font-weight: 650;
 }
 
-/* ---------- Promise (navy band) ---------- */
+/* ---------- Promise (deep green band) ---------- */
 .pnl-promise {
   background: var(--pnl-night);
   color: var(--pnl-night-ink);
 }
-.pnl-promise .pnl-body,
 .pnl-promise .pnl-lede {
   color: var(--pnl-night-ink2);
 }
+/* Full ink, not the secondary: these lines fade in on scroll, and the secondary colour drops
+   under 3:1 on the green band while a line is part-way through its reveal. */
+.pnl-promise .pnl-body {
+  color: var(--pnl-night-ink);
+}
 .pnl-night-link {
-  color: #5fd4cd;
+  color: var(--color-brand-light);
   text-decoration: underline;
   text-underline-offset: 3px;
   text-decoration-thickness: 1.5px;
@@ -1119,7 +1127,7 @@
   margin-top: clamp(32px, 4vw, 56px);
   border-radius: 16px;
   overflow: hidden;
-  background: rgba(242, 245, 250, 0.12);
+  background: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
 }
 @media (min-width: 760px) {
   .pnl-facts {
@@ -1166,7 +1174,7 @@
 .pnl-privacy li svg {
   flex-shrink: 0;
   margin-top: 2px;
-  color: #5fd4cd;
+  color: var(--color-brand-light);
 }
 
 /* ---------- On your phone (QR on large screens) ---------- */
@@ -1193,7 +1201,7 @@
   padding: 14px;
   border-radius: 18px;
   background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(15, 30, 61, 0.1);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 10%, transparent);
   overflow: hidden;
 }
 .pnl-phone__desk {

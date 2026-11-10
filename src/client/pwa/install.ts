@@ -1,6 +1,6 @@
 "use client";
 
-// Install ParaNaga (More → Install). Honest by construction: the button exists only when the
+// Install Lunad (More → Install). Honest by construction: the button exists only when the
 // browser has actually offered an install (Chromium's `beforeinstallprompt`, kept here when it
 // fires); iPhone and iPad Safari get the Share → "Add to Home Screen" instructions; a running
 // installed app (display-mode: standalone) says "Installed". Nothing is ever prompted unasked.
@@ -76,7 +76,7 @@ export function useInstallState(): InstallState | null {
   return useSyncExternalStore(subscribe, installState, () => null);
 }
 
-/** Shows the browser's own install dialog (only after a tap on "Install ParaNaga"). */
+/** Shows the browser's own install dialog (only after a tap on "Install Lunad"). */
 export async function promptInstall(): Promise<"accepted" | "dismissed" | "unavailable"> {
   const event = deferred;
   if (!event) return "unavailable";

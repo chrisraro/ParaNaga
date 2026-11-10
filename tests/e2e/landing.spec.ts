@@ -51,7 +51,7 @@ test("the header language toggle translates the landing copy without a reload, a
   await expect(h1).toContainText("Aling jeep, saan sasakay,");
   await expect(h1).toContainText("Para!");
   await expect(page.getByRole("link", { name: /^Buksan ang app/ }).first()).toHaveAttribute("href", "/app");
-  await expect(page.getByRole("img", { name: /^ParaNaga sa isang phone/ })).toHaveCount(1);
+  await expect(page.getByRole("img", { name: /^Lunad sa isang phone/ })).toHaveCount(1);
   await choose("English");
   await expect(h1).toContainText("Which jeepney, where to board,");
 });

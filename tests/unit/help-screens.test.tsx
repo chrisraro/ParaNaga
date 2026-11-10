@@ -92,7 +92,7 @@ describe("Help", () => {
     expect(links.map((l) => [l.textContent, l.getAttribute("href")])).toEqual([
       ["How trips are planned", "/app/help/how-trips-are-planned"],
       ["Why stops are not verified yet", "/app/help/why-stops-are-not-verified"],
-      ["Using ParaNaga offline", "/app/help/using-paranaga-offline"],
+      ["Using Lunad offline", "/app/help/using-paranaga-offline"],
       ["How times are estimated", "/app/help/how-times-are-estimated"],
       ["Vehicle types in Naga", "/app/help/vehicle-types-in-naga"],
       ["Report a problem with a driver", "/app/mynaga"],
@@ -106,7 +106,7 @@ describe("Help", () => {
     render(<HelpScreen />);
     fireEvent.click(screen.getByRole("tab", { name: "Safety" }));
     expect(replace).toHaveBeenLastCalledWith(window.history.state, "", "/app/help?tab=safety");
-    expect(screen.getByTestId("help-emergency").textContent).toBe("In an emergency, call 911. ParaNaga does not monitor reports and cannot send help.");
+    expect(screen.getByTestId("help-emergency").textContent).toBe("In an emergency, call 911. Lunad does not monitor reports and cannot send help.");
     expect(within(screen.getByTestId("help-tips")).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...SAFETY_TIPS]);
     const report = screen.getByTestId("help-report-driver");
     expect(report.textContent).toBe("Report a driver to the City in MyNaga");
@@ -149,10 +149,10 @@ describe("Help articles", () => {
       expect(body).toContain(phrase);
     expect(body).not.toMatch(/capped at 600 m|exact|guaranteed|official fare/i);
     expect(fetched).toEqual([]);
-    expect(document.title).toBe("How trips are planned · ParaNaga");
+    expect(document.title).toBe("How trips are planned · Lunad");
   });
 
-  it("Using ParaNaga offline names the published date of the data, never a placeholder", async () => {
+  it("Using Lunad offline names the published date of the data, never a placeholder", async () => {
     render(<HelpArticleScreen slug="using-paranaga-offline" />);
     // Until the date is known, the dated paragraph is not rendered (nothing like "…" is read).
     expect(screen.getByTestId("help-article-body").textContent).not.toContain("Planning offline");
@@ -171,7 +171,7 @@ describe("Help articles", () => {
     for (const a of ["Assumption A1:", "Assumption A2:", "Assumption A3:"]) expect(body()).toContain(a);
     expect(body()).toContain(TRAFFIC_ROW);
     expect(body()).not.toMatch(/live/i);
-    expect(document.title).toBe("How times are estimated · ParaNaga");
+    expect(document.title).toBe("How times are estimated · Lunad");
   });
 
   it("How times are estimated: an older snapshot without a time model says so instead of guessing", async () => {
@@ -207,7 +207,7 @@ describe("Help articles", () => {
     expect(body).not.toMatch(/2023|last reported|Euro-?4/i);
     expect(body).not.toMatch(/live/i);
     expect(fetched).toEqual([]);
-    expect(document.title).toBe("Vehicle types in Naga · ParaNaga");
+    expect(document.title).toBe("Vehicle types in Naga · Lunad");
   });
 });
 
@@ -259,7 +259,7 @@ describe("MyNaga handoff", () => {
     const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)");
     render(<MyNagaScreen />);
     expect(screen.getByTestId("mynaga-independent").textContent).toBe(
-      "ParaNaga is independent. It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.",
+      "Lunad is independent. It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.",
     );
     expect(within(screen.getByTestId("mynaga-prepare")).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...PREPARE_ITEMS]);
     const links = within(screen.getByTestId("mynaga-links")).getAllByRole("link");

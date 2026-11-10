@@ -4,7 +4,7 @@ import { SignInScreen } from "@/ui/auth/sign-in-screen";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Optional commuter sign in for ParaNaga.",
+  description: "Optional commuter sign in for Lunad.",
 };
 
 export default function SignInPage() {

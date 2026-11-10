@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-// ParaNaga's service worker (Task 12, decision D6: Serwist through its Turbopack integration).
+// Lunad's service worker (Task 12, decision D6: Serwist through its Turbopack integration).
 // Bundled by esbuild in src/app/serwist/[path]/route.ts and served at /serwist/sw.js (scope /).
 //
 // Which request goes where is decided by the pure allow-list in src/domain/pwa/sw-routes.ts

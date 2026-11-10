@@ -18,7 +18,7 @@ const PAGES = [
   ["Saved", "Saved"],
   ["More", "Settings"],
 ] as const;
-const homeHeading = (page: Page) => page.getByRole("heading", { level: 1, name: "ParaNaga trip planner" });
+const homeHeading = (page: Page) => page.getByRole("heading", { level: 1, name: "Lunad trip planner" });
 
 async function openApp(page: Page) {
   await page.goto("/app");
@@ -235,7 +235,7 @@ test.describe("large screen", () => {
 
   test("tab pages stay behind the phone-only gate", async ({ page }) => {
     await page.goto("/app/explore");
-    await expect(page.getByRole("heading", { level: 1, name: "ParaNaga rides in your pocket." })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Lunad rides in your pocket." })).toBeVisible();
     await expect(page.getByRole("heading", { level: 1, name: "Explore" })).toHaveCount(0);
     await expect(tabBar(page)).toHaveCount(0);
   });

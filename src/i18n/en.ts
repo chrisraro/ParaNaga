@@ -1,12 +1,12 @@
 // English: the source of truth for every UI string (ADR 011). Other locales are typed against it
 // (src/i18n/dict.ts). Fixed texts from the brief are stored verbatim (spec §6.5).
 export const en = {
-  app: { name: "ParaNaga", tagline: "Know your ride. Find your way." },
+  app: { name: "Lunad", tagline: "Know your ride. Find your way." },
   acknowledgments: {
     community:
       "Keep this about commuting in Naga. Share accurate, respectful information. Do not post spam, threats, harassment or private personal details. Jev checks submissions before publication; uncertain cases go to a moderator. Data corrections require a separate evidence review.",
     driverReport:
-      "Describe what you observed accurately and submit evidence you are entitled to share. Your complaint is private within ParaNaga, and ParaNaga does not send it to Naga City. You can choose to continue reporting in MyNaga after reviewing your report.",
+      "Describe what you observed accurately and submit evidence you are entitled to share. Your complaint is private within Lunad, and Lunad does not send it to Naga City. You can choose to continue reporting in MyNaga after reviewing your report.",
   },
   // Trip guidance (src/domain/guidance, src/ui/guidance). Message functions take already-formatted
   // numbers (no maths inside, so every locale gets the same values).
@@ -163,10 +163,10 @@ export const en = {
     estAbbr: "Est.",
     estimate: "Estimate",
     waitingRow: "Waiting: unknown — no published schedules or headways for Naga",
-    trafficRow: "Based on typical speeds. ParaNaga uses no traffic service.",
-    assumption: "ParaNaga assumption",
-    speedAssumption: "(ParaNaga assumption)",
-    speedMixed: (codes: string) => `(upper from ${codes}; lower is a ParaNaga assumption)`,
+    trafficRow: "Based on typical speeds. Lunad uses no traffic service.",
+    assumption: "Lunad assumption",
+    speedAssumption: "(Lunad assumption)",
+    speedMixed: (codes: string) => `(upper from ${codes}; lower is a Lunad assumption)`,
     rowWalk: (band: string, cite: string, pct: number, basis: string) => `Walking: ${band} km/h (${cite}); up to ${pct}% slower for crossings (${basis})`,
     rowOffpeak: (band: string, basis: string) => `Jeepney off-peak: ${band} km/h ${basis}`,
     rowPeak: (band: string, basis: string) => `Jeepney peak: ${band} km/h ${basis}`,
@@ -521,8 +521,8 @@ export const en = {
     dataNone: "No transport data is saved on this phone yet.",
     dataFromDate: (date: string) => `Data from ${date}. Fares may have changed.`,
     dataFromVisit: "Data from your last visit. Fares may have changed.",
-    planUnreachableDate: (date: string) => `Couldn't reach ParaNaga — planned on this phone with data from ${date}. Fares may have changed.`,
-    planUnreachable: "Couldn't reach ParaNaga — planned on this phone with the data it has. Fares may have changed.",
+    planUnreachableDate: (date: string) => `Couldn't reach Lunad — planned on this phone with data from ${date}. Fares may have changed.`,
+    planUnreachable: "Couldn't reach Lunad — planned on this phone with the data it has. Fares may have changed.",
     planOfflineDate: (date: string) => `Planned offline from data of ${date}. Fares may have changed.`,
     planOffline: "Planned offline from the data on this phone. Fares may have changed.",
     chipUnreachable: "Planned on this phone",
@@ -530,22 +530,22 @@ export const en = {
     chipDate: (base: string, date: string) => `${base}, data of ${date}`,
     panelOffline: "You're offline · This opens when you're back online.",
     walkPathsOffline: "Street paths need a connection the first time.",
-    updateText: "A new version of ParaNaga is ready.",
+    updateText: "A new version of Lunad is ready.",
     reload: "Reload",
     later: "Later",
     installGroup: "App",
-    installAppRow: "ParaNaga app",
+    installAppRow: "Lunad app",
     installed: "Installed",
-    installTitle: "Install ParaNaga",
+    installTitle: "Install Lunad",
     installSub: "Opens from your home screen, also offline",
-    installOther: "To add ParaNaga to your home screen, use your browser’s menu (Install app or Add to Home screen).",
+    installOther: "To add Lunad to your home screen, use your browser’s menu (Install app or Add to Home screen).",
     installDismissed: (menuText: string) => `Not installed. ${menuText}`,
     installChecking: "Checking…",
     installIos: (device: string) => `On ${device}: tap Share, then “Add to Home Screen”.`,
     iphone: "iPhone",
     ipad: "iPad",
     updateReadyTitle: "Update ready — Reload",
-    updateReadySub: "A new version of ParaNaga is ready.",
+    updateReadySub: "A new version of Lunad is ready.",
     pageTitle: "You're offline",
     pageChecking: "Checking the data on this phone…",
     pageNeedsConnection: "This page needs a connection. These open without one:",
@@ -596,7 +596,7 @@ export const en = {
     locationAsk: "Ask each time",
     locationBlocked: "Blocked",
     locationUnavailable: "Not available",
-    locationNote: "Used when you tap “Use current location” or start guidance. To plan a trip it is sent to ParaNaga, never stored or logged. Change it in your browser or phone settings.",
+    locationNote: "Used when you tap “Use current location” or start guidance. To plan a trip it is sent to Lunad, never stored or logged. Change it in your browser or phone settings.",
     dataTitle: "Data on this device",
     clearData: "Clear data on this device",
     cleared: "Data on this phone removed. Settings are back to their defaults.",
@@ -648,7 +648,7 @@ export const en = {
     terminalNotFoundCopy: "No terminal on file has this code.",
     pageNotFound: "Not found",
     pageNotFoundCopy: "There is nothing at this link.",
-    notFoundTabTitle: (title: string) => `${title} · ParaNaga`,
+    notFoundTabTitle: (title: string) => `${title} · Lunad`,
   },
   // Stop detail (src/ui/stops) and its wording in src/domain/network/present.
   stops: {
@@ -1008,7 +1008,7 @@ export const en = {
     googleSuggestion: "Google suggestion · not verified",
     googleAttribution: "Suggestions from Google Maps",
     googleFooter: (attribution: string) =>
-      `${attribution}. Google receives what you typed. ParaNaga keeps Google's suggestions up to 24 hours, and the location of a place you pick up to 30 days, under a one-way hash, with no typed text and no IP address.`,
+      `${attribution}. Google receives what you typed. Lunad keeps Google's suggestions up to 24 hours, and the location of a place you pick up to 30 days, under a one-way hash, with no typed text and no IP address.`,
     googleMore: "Search more places",
     googleHeading: "More places from Google",
     googleCapped: "No more Google suggestions today. Showing OpenStreetMap results only.",
@@ -1183,7 +1183,7 @@ export const en = {
         `${trips ? (trips === "1" ? "1 trip a day" : `${trips} trips a day`) : "Daily"}${times ? ` · first ${times}` : ""} · ${basis}, ${month}`,
       not_found: "Departure times not found. Ask at the terminal.",
     },
-    footer: "Fares and times change often. Ask at the terminal. ParaNaga sells no tickets.",
+    footer: "Fares and times change often. Ask at the terminal. Lunad sells no tickets.",
   },
   // Saved (src/ui/saved, src/domain/saved).
   saved: {
@@ -1379,16 +1379,16 @@ export const en = {
       openMenu: "Open menu",
       closeMenu: "Close menu",
       mainNav: "Main",
-      backToTop: "ParaNaga, back to top",
+      backToTop: "Lunad, back to top",
     },
     hero: {
       titleA: "Which jeepney, where to board,",
       titleB: "and when to say",
-      lede: "ParaNaga plans trips across Naga City by jeepney, tricycle, padyak and on foot, then guides you step by step. Free in your phone's browser, no account needed.",
+      lede: "Lunad plans trips across Naga City by jeepney, tricycle, padyak and on foot, then guides you step by step. Free in your phone's browser, no account needed.",
       seeHow: "See how it works",
       note: "Routes and times are provisional and fares are estimates. Confirm with the driver.",
     },
-    routeBandLabel: "Jeepney routes ParaNaga plans with",
+    routeBandLabel: "Jeepney routes Lunad plans with",
     how: {
       heading: "From “Where to?” to “Para!” in three steps.",
       lede: "New to Naga, here for Peñafrancia, or trying a new route: you should not have to ask three strangers which jeepney to take.",
@@ -1398,7 +1398,7 @@ export const en = {
     },
     showcase: {
       heading: "The real app, screen by screen.",
-      deviceLabel: "ParaNaga screens",
+      deviceLabel: "Lunad screens",
       home: {
         title: "Start from the map.",
         body: "The map opens on Naga with a floating Where to? bar. Chips go straight to Food & drink, Schools, Health, Markets & malls, Government and Terminals, with your saved places first.",
@@ -1448,19 +1448,19 @@ export const en = {
     },
     far: {
       title: "Far barangays, told straight.",
-      body: "Tricycles to Cararayan and San Isidro, Pacol, and Carolina and Panicuason charge special-trip fares, a local report. So ParaNaga points you to the jeepney and its terminal instead.",
+      body: "Tricycles to Cararayan and San Isidro, Pacol, and Carolina and Panicuason charge special-trip fares, a local report. So Lunad points you to the jeepney and its terminal instead.",
       points: { listed: "A special-trip tricycle is listed only if you still want one.", notFixed: "Its fare is marked not fixed: agree it with the driver.", never: "It is never the Recommended option." },
     },
     offline: {
       title: "Works without signal.",
-      body: "Open ParaNaga once with a connection and the app and the transport data work offline. Saved trips open as text, even in a dead zone.",
-      android: { device: "Android, Chrome", steps: { open: "Open ParaNaga", install: "Tap the menu, then Install app or Add to Home screen" } },
-      iphone: { device: "iPhone, Safari", steps: { open: "Open ParaNaga", install: "Tap Share, then Add to Home Screen" } },
+      body: "Open Lunad once with a connection and the app and the transport data work offline. Saved trips open as text, even in a dead zone.",
+      android: { device: "Android, Chrome", steps: { open: "Open Lunad", install: "Tap the menu, then Install app or Add to Home screen" } },
+      iphone: { device: "iPhone, Safari", steps: { open: "Open Lunad", install: "Tap Share, then Add to Home Screen" } },
     },
     themes: {
       title: "Light, dark and high contrast.",
-      body: "ParaNaga follows your phone, or you pick in Settings. High contrast gives stronger text and borders for reading in bright sun.",
-      altLight: "ParaNaga's home screen in the light theme: the Naga City street map with the Where to? bar and category chips.",
+      body: "Lunad follows your phone, or you pick in Settings. High contrast gives stronger text and borders for reading in bright sun.",
+      altLight: "Lunad's home screen in the light theme: the Naga City street map with the Where to? bar and category chips.",
       altDark: "The same home screen in the dark theme: dark search bar, chips and tab bar over the map.",
       light: "Light",
       dark: "Dark",
@@ -1477,11 +1477,11 @@ export const en = {
       mine: { title: "My reports", body: "Your corrections and driver reports in one place. Only you can see them." },
       myNaga: {
         title: "MyNaga, if you want the City to hear it",
-        body: "ParaNaga can open MyNaga for you, but it sends nothing to MyNaga or City Hall and cannot confirm your report was received.",
+        body: "Lunad can open MyNaga for you, but it sends nothing to MyNaga or City Hall and cannot confirm your report was received.",
       },
       tips: {
         title: "Community tips",
-        body: "Questions and tips from Naga commuters, reviewed before others can read them, and not verified by ParaNaga.",
+        body: "Questions and tips from Naga commuters, reviewed before others can read them, and not verified by Lunad.",
       },
     },
     promise: {
@@ -1492,10 +1492,10 @@ export const en = {
       },
       provisional: {
         title: "Provisional, and labelled",
-        body: "Routes, stops and times are not verified by ParaNaga yet. Every ride says so and asks you to confirm with the driver.",
+        body: "Routes, stops and times are not verified by Lunad yet. Every ride says so and asks you to confirm with the driver.",
       },
       fares: { title: "Fares are estimates", body: "From reported fare rules, shown as ranges. Discounts are not applied yet." },
-      tracking: { title: "No vehicle tracking", body: "ParaNaga does not track jeepneys, so it never says when one will come." },
+      tracking: { title: "No vehicle tracking", body: "Lunad does not track jeepneys, so it never says when one will come." },
       privacyTitle: "Your trips are yours.",
       sourcesLead: "Where the data comes from and who holds the rights:",
       sourcesLink: "Sources and credits",
@@ -1509,14 +1509,14 @@ export const en = {
     },
     faq: {
       heading: "Questions",
-      free: { q: "Is ParaNaga free?", a: "Yes. Planning trips, saving them and reading the map are free, with no account." },
+      free: { q: "Is Lunad free?", a: "Yes. Planning trips, saving them and reading the map are free, with no account." },
       install: {
         q: "Do I need to install it?",
         a: "No. It runs in your phone's browser. Add it to your home screen for one-tap access and offline use.",
       },
       tracking: {
         q: "Does it show where the jeepney is?",
-        a: "No. ParaNaga does not track vehicles. It shows the routes and the steps, with time and fare estimates as ranges.",
+        a: "No. Lunad does not track vehicles. It shows the routes and the steps, with time and fare estimates as ranges.",
       },
       trust: {
         q: "Can I trust the routes?",
@@ -1528,13 +1528,13 @@ export const en = {
       },
       official: {
         q: "Is this the City Government's app?",
-        a: "No. ParaNaga is independent and not an official channel of the City Government of Naga.",
+        a: "No. Lunad is independent and not an official channel of the City Government of Naga.",
       },
     },
     closing: { title: "Your next ride starts here.", lede: "Free, in your phone's browser. No account needed." },
     footer: {
       disclaimer:
-        "ParaNaga is an independent project. It is not affiliated with, endorsed by or an official channel of the City Government of Naga. Routes, times and fares may be incomplete: always confirm with the driver.",
+        "Lunad is an independent project. It is not affiliated with, endorsed by or an official channel of the City Government of Naga. Routes, times and fares may be incomplete: always confirm with the driver.",
       captures: "Screens on this page are captures of the app, with map data",
       osm: "OpenStreetMap contributors",
       mapInApp: ". Map in the app:",
@@ -1543,8 +1543,8 @@ export const en = {
       help: "Help",
     },
     alt: {
-      hero: "ParaNaga on a phone: a street map of Naga City with a trip from Plaza Rizal to Ateneo de Naga University and two options under it: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, marked Unverified route, and a tricycle at a minimum fare of ₱15.",
-      home: "ParaNaga's home screen: a street map of central Naga City with a Where to? bar, chips for Food & drink, Schools, Health and Markets & malls, terminal pins and a tab bar.",
+      hero: "Lunad on a phone: a street map of Naga City with a trip from Plaza Rizal to Ateneo de Naga University and two options under it: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, marked Unverified route, and a tricycle at a minimum fare of ₱15.",
+      home: "Lunad's home screen: a street map of central Naga City with a Where to? bar, chips for Food & drink, Schools, Health and Markets & malls, terminal pins and a tab bar.",
       search: "Search for Ateneo: places from OpenStreetMap such as Ateneo de Naga University, and a mapped stop on Loops C and D marked Mapped candidate.",
       directions: "Directions from Plaza Rizal to Ateneo de Naga University: a walk and a jeepney ride drawn on the map, and two option cards: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, and a tricycle at a minimum fare of ₱15.",
       options: "All trip options: Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise) with an estimated fare of ₱14, and a tricycle card with Time not estimated, the restricted roads it avoids and a minimum fare of ₱15.",
@@ -1589,9 +1589,9 @@ export const en = {
     topicsLabel: "Help topics",
     reportDriverLink: "Report a problem with a driver",
     leavingLink: "Leaving Naga: buses, vans, trains",
-    independentNote: "ParaNaga is an independent commuter guide. It is not an official City Government app.",
+    independentNote: "Lunad is an independent commuter guide. It is not an official City Government app.",
     emergencyStrong: "In an emergency, call 911.",
-    emergencyBody: "ParaNaga does not monitor reports and cannot send help.",
+    emergencyBody: "Lunad does not monitor reports and cannot send help.",
     tipsTitle: "Commuting safely",
     tips: {
       p1: "Wait off the road, where other passengers wait.",
@@ -1600,7 +1600,7 @@ export const en = {
       p4: "Note the plate or body number if something feels wrong.",
       p5: "Share your trip summary with someone you trust.",
     },
-    reportPrivately: "Report a driver privately in ParaNaga",
+    reportPrivately: "Report a driver privately in Lunad",
     reportMyNaga: "Report a driver to the City in MyNaga",
     badgesTitle: "What the badges mean",
     badges: {
@@ -1612,16 +1612,16 @@ export const en = {
     },
     dataGroup: "Data",
     sourcesLink: "Sources and credits",
-    dataFooter: "ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.",
+    dataFooter: "Lunad does not track vehicles, so it cannot say when one will come. Stop alerts work only while Lunad is open on your screen.",
     unknownPublishedDate: "the last time this phone was online",
-    noTimeModel: "The time-estimate model is not on this phone yet. Open ParaNaga with a connection once to load it.",
+    noTimeModel: "The time-estimate model is not on this phone yet. Open Lunad with a connection once to load it.",
     assumption: (note: string) => `Assumption ${note}`,
     etaWaitingNote: "Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.",
     articles: {
       planned: {
         title: "How trips are planned",
         intro: (badge: string) =>
-          `ParaNaga suggests jeepney trips along mapped routes. Paths come from ordinances and public maps, not a field survey, so every suggestion carries the badge “${badge}”.`,
+          `Lunad suggests jeepney trips along mapped routes. Paths come from ordinances and public maps, not a field survey, so every suggestion carries the badge “${badge}”.`,
         body: {
           p1: "You can get on and off anywhere along a route. With no stop pin it shows the nearest point and says “Tell the driver ‘para’ · stop not marked”.",
           p2: "Distances follow roads in the on-device street map (OpenStreetMap). Walks to and from a route can be up to 500 m straight-line and 750 m along streets.",
@@ -1645,8 +1645,8 @@ export const en = {
         },
       },
       offline: {
-        title: "Using ParaNaga offline",
-        body: { p1: "After you open ParaNaga once with a connection, the app and the transport data work offline. Saved trips open as text even when the map background can't load." },
+        title: "Using Lunad offline",
+        body: { p1: "After you open Lunad once with a connection, the app and the transport data work offline. Saved trips open as text even when the map background can't load." },
         dated: (publishedDate: string) => `Planning offline uses the data from ${publishedDate}; fares may have changed. Location works offline if your phone has GPS.`,
       },
       times: { title: "How times are estimated" },
@@ -1655,7 +1655,7 @@ export const en = {
         body: {
           p1: "Traditional jeepney: ₱14 first 4 km + ₱2.00/km. Traditional jeepneys run on every route group (R1–R8).",
           p2: "Modern jeepney: ₱17 + ₱2.40/km. Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7 (Centro–Carolina–Panicuason) alongside traditional jeepneys. No other route is shown with modern units.",
-          p3: "Tricycle and e-tricycle: ₱15 minimum (Ordinance 2024-002); discounts exist for students, seniors, PWD and solo parents but eligibility is not verified, so ParaNaga does not apply them; e-trikes need a franchise.",
+          p3: "Tricycle and e-tricycle: ₱15 minimum (Ordinance 2024-002); discounts exist for students, seniors, PWD and solo parents but eligibility is not verified, so Lunad does not apply them; e-trikes need a franchise.",
           p4: "Tricycle restrictions: franchised tricycles may not use four national-road portions, except 9 pm to 5 am and at named crossings (Ordinance 2006-005/015, sources T01 and T02; check for updates). Tricycle options avoid the restricted roads we could locate; roads we could not locate are not applied, so confirm with the driver.",
           p5: "E-trike national-road rules reported in news (Dec 2025) are not applied; unverified. Special VISTODA units may not enter Tecla San Andres–Ziga Rd (Ord 2025-067).",
           p6: "Padyak (pedicab): ₱10 per passenger, ₱8 with an ID discount (city fare set Sep 2022), up to 2 passengers; confirm with the driver. A padyak option appears only when your start and destination are in the same documented padyak area, and padyaks do not use banned streets.",
@@ -1694,7 +1694,7 @@ export const en = {
       fleetBasis: "Fleet: the project owner confirmed on 16 Oct 2026 (U01) that traditional jeepneys run on every route group (R1–R8) and modern jeepneys on R4 and R7. This confirms service, not stop locations, stop order or paths.",
       fareBasis: "Fares are estimates from reported fare rules; the fare matrix is not verified. Where a route runs both traditional and modern jeepneys, the range spans both. Discounts are not applied. National per-km rates of 28 Sep 2026. The tricycle minimum fare of ₱15 follows Ordinance 2024-002.",
       farBasis: "Far areas: riders’ reports (U03, unconfirmed) say tricycles there charge special trips, that a Balatas to Cararayan tricycle terminal exists, and which roads Del Rosario jeepneys use. Tricycle zones and routes follow ordinances RT25–RT32. TODA terminals at Ateneo or at jeepney terminals are unconfirmed.",
-      timeBasis: "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are ParaNaga assumptions.",
+      timeBasis: "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are Lunad assumptions.",
       corrections: "Corrections and verification aren’t open yet.",
       mapOwner: "Naga City Designated Stops — shared publicly by Tan Gumba",
       citedBy: (label: string) => `Cited by the published data revision ${label}`,
@@ -1719,7 +1719,7 @@ export const en = {
     whereOptional: "Where you saw it (optional)",
     addLocation: "Add my location",
     outsideNaga: "This spot is outside Naga City, so it was not added.",
-    locationOff: "Location is off for ParaNaga. You can still send the report without it.",
+    locationOff: "Location is off for Lunad. You can still send the report without it.",
     locationFailed: "Your location could not be found. You can still send the report without it.",
     photosOptional: "Photos (optional)",
     removePhoto: (name: string) => `Remove photo ${name}`,
@@ -1767,7 +1767,7 @@ export const en = {
       need_time: "Please tell us when you saw this.",
       already_correct: "The information already shows this.",
       not_verifiable: "We could not confirm this.",
-      out_of_scope: "This is outside what ParaNaga covers.",
+      out_of_scope: "This is outside what Lunad covers.",
       not_transport: "This is not about routes, stops or fares.",
     },
     chooseWrong: "Choose what is wrong.",
@@ -1797,7 +1797,7 @@ export const en = {
     steps: { start: "Before you start", media: "Photo or video", what: "What happened", review: "Review and send" },
     tooMany: (max: number) => `Up to ${max} photos or videos.`,
     outsideNaga: "This spot is outside Naga City, so it was not added. You can describe the place instead.",
-    locationOff: "Location is off for ParaNaga. You can describe the place instead.",
+    locationOff: "Location is off for Lunad. You can describe the place instead.",
     locationFailed: "Your location could not be found. You can describe the place instead.",
     plateName: "Plate number",
     bodyName: "Body number",
@@ -1808,14 +1808,14 @@ export const en = {
     nextTitle: "What happens next",
     nextSteps: {
       p1: "A reviewer checks that the report is complete. You may be asked for more information.",
-      p2: "ParaNaga does not decide who is at fault and does not contact the driver.",
+      p2: "Lunad does not decide who is at fault and does not contact the driver.",
       p3: "To make an official complaint, continue in MyNaga. Opening MyNaga does not submit your report.",
     },
     continueMyNaga: "Continue in MyNaga",
     explainer: {
-      p1: "Your report stays private inside ParaNaga. It is never posted in Community and never shown to other commuters.",
-      p2: "ParaNaga does not send it to Naga City or any agency. After you send it, you can choose to continue in MyNaga yourself.",
-      p3: "A ParaNaga reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer. A closed report and its files are deleted 365 days after it was closed, unless it is under a legal hold.",
+      p1: "Your report stays private inside Lunad. It is never posted in Community and never shown to other commuters.",
+      p2: "Lunad does not send it to Naga City or any agency. After you send it, you can choose to continue in MyNaga yourself.",
+      p3: "A Lunad reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer. A closed report and its files are deleted 365 days after it was closed, unless it is under a legal hold.",
       p4: "Stick to what you saw. Avoid filming faces of other passengers where you can.",
     },
     sharedPhone: "Nothing is saved on this phone. If you leave this screen before sending, your answers and photos are cleared.",
@@ -1864,7 +1864,7 @@ export const en = {
       recording: "Recording. Tap Stop recording when done.",
       addAnother: "Add another",
       openCamera: "Open camera",
-      denied: "Camera access is off for ParaNaga. You can upload a photo or video instead, or continue without one. To use the camera, allow it in your browser settings.",
+      denied: "Camera access is off for Lunad. You can upload a photo or video instead, or continue without one. To use the camera, allow it in your browser settings.",
       unavailable: "The camera could not be opened on this phone. You can upload a photo or video instead, or continue without one.",
       upload: "Upload a photo or video instead",
       limits: (max: number, s: number) =>
@@ -1907,7 +1907,7 @@ export const en = {
   reports: {
     title: "My reports",
     detailTitle: "Report",
-    intro: "Only you can see these. Status shows where each report stands in ParaNaga.",
+    intro: "Only you can see these. Status shows where each report stands in Lunad.",
     signInList: "Sign in to see the reports you sent. Reports are linked to your account so only you can see them.",
     loadingList: "Loading your reports…",
     empty: "You have not sent any reports yet.",
@@ -1915,8 +1915,8 @@ export const en = {
     rowTitle: (kind: string, category: string) => `${kind}: ${category}`,
     kind: { correction: "Correction", complaint: "Driver report" },
     reportDriver: "Report a driver",
-    mynagaPanelNote: "ParaNaga does not send anything to MyNaga or City Hall and cannot confirm that your report was received. This is only what you told us.",
-    statusInParaNaga: "Status in ParaNaga",
+    mynagaPanelNote: "Lunad does not send anything to MyNaga or City Hall and cannot confirm that your report was received. This is only what you told us.",
+    statusInParaNaga: "Status in Lunad",
     whatYouReported: "What you reported",
     facts: {
       category: "Category",
@@ -1945,7 +1945,7 @@ export const en = {
       info_provided_to_reporter: "Information was sent to you",
       insufficient_detail: "Not enough detail to follow up",
       duplicate: "Already reported",
-      outside_scope: "Outside what ParaNaga can review",
+      outside_scope: "Outside what Lunad can review",
       reporter_withdrew: "You withdrew it",
     },
     api: {
@@ -1959,7 +1959,7 @@ export const en = {
   mynaga: {
     panelTitle: "MyNaga",
     title: "Report in MyNaga",
-    independentStrong: "ParaNaga is independent.",
+    independentStrong: "Lunad is independent.",
     independentBody: "It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.",
     prepareTitle: "Prepare what you will share",
     prepare: {
@@ -1977,21 +1977,21 @@ export const en = {
       about: "About MyNaga (City of Naga)",
     },
     afterTitle: "After you submit in MyNaga",
-    later: "Sent a private report in ParaNaga? Open it from My reports to copy a summary and note your MyNaga reference.",
+    later: "Sent a private report in Lunad? Open it from My reports to copy a summary and note your MyNaga reference.",
     myReports: "My reports",
     footer: "We can't see or confirm what happens in MyNaga.",
     // The handoff for one of the person's own driver reports.
     bystander: {
       title: "Original files only",
       lines: {
-        p1: "ParaNaga cannot blur faces or plates yet, so the file you download is the original.",
+        p1: "Lunad cannot blur faces or plates yet, so the file you download is the original.",
         p2: "It may show other people's faces and vehicle plates, and it may carry location details.",
         p3: "Share it only where you choose to, and only what you are comfortable sharing.",
       },
       acknowledge: "I understand the file may show other people and where it was taken.",
     },
     selfReportNote:
-      "ParaNaga does not send anything to MyNaga or City Hall and cannot confirm your report was received. This note is your own: it is saved to your account, shown as self-reported, and never changes the status of your ParaNaga report.",
+      "Lunad does not send anything to MyNaga or City Hall and cannot confirm your report was received. This note is your own: it is saved to your account, shown as self-reported, and never changes the status of your Lunad report.",
     summaryLabel: "Summary to paste into MyNaga",
     copySummary: "Copy summary",
     copied: "Summary copied. Paste it into MyNaga.",
@@ -2026,7 +2026,7 @@ export const en = {
       body: (body: string) => `Body number: ${body}`,
       what: (text: string) => `What happened: ${text}`,
       evidence: "Photo or video evidence is available from the reporter.",
-      reference: (ref: string) => `ParaNaga reference (for my own records): ${ref}`,
+      reference: (ref: string) => `Lunad reference (for my own records): ${ref}`,
     },
   },
   community: {
@@ -2060,7 +2060,7 @@ export const en = {
     saved: "Saved",
     save: "Save",
     showMore: "Show more",
-    feedNotice: "Written by other commuters. Not verified by ParaNaga. A fare or route tip here is not an official fare or route.",
+    feedNotice: "Written by other commuters. Not verified by Lunad. A fare or route tip here is not an official fare or route.",
     blocked: (n: number) => `Blocked people (${n})`,
     unblock: "Unblock",
     unblockLabel: (handle: string) => `Unblock ${handle}`,
@@ -2113,7 +2113,7 @@ export const en = {
     // The guidelines text itself is acknowledgments.community (English until its reviewed translation).
     guidelinesTitle: "Community guidelines",
     guidelinesCheckbox: "I have read the community guidelines.",
-    unverifiedNotice: "Written by other commuters. Not verified by ParaNaga.",
+    unverifiedNotice: "Written by other commuters. Not verified by Lunad.",
     driverNotice: "Do not name or describe a driver here. Driver reports are private.",
     signInWrite: "Sign in to write a post. Reading works without an account.",
     signInEdit: "Sign in to edit your post. Reading works without an account.",
@@ -2193,10 +2193,10 @@ export const en = {
   },
   auth: {
     title: "Sign in",
-    errOrigin: "Sign-in is not set up for this address yet. You can keep using ParaNaga as a guest.",
+    errOrigin: "Sign-in is not set up for this address yet. You can keep using Lunad as a guest.",
     errRate: "Too many tries. Please wait a minute and try again.",
     errCode: "That code did not work. Check it, or ask for a new one.",
-    unavailable: "Sign-in is not available right now. You can keep using ParaNaga as a guest.",
+    unavailable: "Sign-in is not available right now. You can keep using Lunad as a guest.",
     sendFailed: "Could not send the code. Please try again.",
     codeSent: (email: string) => `Verification code sent to ${email}.`,
     sendNetwork: "Network error sending the code. Please try again.",

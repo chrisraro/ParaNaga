@@ -246,7 +246,7 @@ const BCL = bcl as Tree;
 describe("Filipino completeness", () => {
   it("is enforced by the type (a missing key does not compile)", () => {
     // @ts-expect-error: `acknowledgments` is missing, so this is not a Dict.
-    const broken: Dict = { app: { name: "ParaNaga", tagline: "x" } };
+    const broken: Dict = { app: { name: "Lunad", tagline: "x" } };
     expect(missingKeys(EN, broken as Tree)).toEqual(leaves(EN).map(([key]) => key).filter((key) => !key.startsWith("app.")));
   });
 
@@ -333,7 +333,7 @@ describe("Leaving Naga copy rules", () => {
 });
 
 describe("Bikol gate", () => {
-  const partial: DeepPartial<Dict> = { app: { name: "ParaNaga" } };
+  const partial: DeepPartial<Dict> = { app: { name: "Lunad" } };
 
   it("refuses Bikol enabled without a ledger, a key, or a native approval", () => {
     expect(bikolGateProblems(true, EN, BCL, null)).toEqual(["docs/i18n/ledger-bcl.json is missing"]);

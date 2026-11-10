@@ -68,7 +68,7 @@ describe("buildMyNagaSummary", () => {
     expect(text).toContain("Operator: Loop A cooperative");
     expect(text).toContain("Plate number: ABC 1234");
     expect(text).toContain(EVIDENCE_NOTE);
-    expect(text).toContain("ParaNaga reference (for my own records): PN-7KQ4-2M");
+    expect(text).toContain("Lunad reference (for my own records): PN-7KQ4-2M");
   });
 
   it("leaves out empty fields and the evidence note when there is none", () => {

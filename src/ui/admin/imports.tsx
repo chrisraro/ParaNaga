@@ -155,7 +155,7 @@ export function ImportsScreen() {
               </thead>
               <tbody>
                 {imports.data.batches.map((b) => (
-                  <tr key={b.id} className="border-t border-fill dark:border-navy-raised">
+                  <tr key={b.id} className="border-t border-fill dark:border-night-border">
                     <th scope="row" className="py-1 pr-3 font-medium">{b.snapshotVersion}</th>
                     <td className="py-1 pr-3">{b.status}</td>
                     <td className="py-1 pr-3">{b.fileName ?? "–"}</td>
@@ -205,13 +205,13 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
         </thead>
         <tbody>
           {Object.entries(dry.counts.expectedByLayer).map(([layer, expected]) => (
-            <tr key={layer} className="border-t border-fill dark:border-navy-raised">
+            <tr key={layer} className="border-t border-fill dark:border-night-border">
               <th scope="row" className="py-1 pr-6 font-medium">{layer}</th>
               <td className="py-1 pr-6 tabular-nums">{dry.counts.byLayer[layer] ?? 0}</td>
               <td className="py-1 pr-6 tabular-nums">{expected}</td>
             </tr>
           ))}
-          <tr className="border-t border-fill dark:border-navy-raised">
+          <tr className="border-t border-fill dark:border-night-border">
             <th scope="row" className="py-1 pr-6 font-medium">Total</th>
             <td className="py-1 pr-6 tabular-nums">{dry.counts.total}</td>
             <td className="py-1 pr-6 tabular-nums">{dry.counts.expectedTotal}</td>
@@ -246,7 +246,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
             </thead>
             <tbody>
               {dry.rows.map((r, i) => (
-                <tr key={`${r.kind}-${r.layer}-${r.code}-${i}`} className="border-t border-fill dark:border-navy-raised">
+                <tr key={`${r.kind}-${r.layer}-${r.code}-${i}`} className="border-t border-fill dark:border-night-border">
                   <td className="py-1 pr-3">{r.kind}</td>
                   <td className="py-1 pr-3">{r.layer}</td>
                   <td className="py-1 pr-3">{r.code ?? "–"}</td>

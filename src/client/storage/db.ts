@@ -146,7 +146,7 @@ function notify(): void {
 /**
  * `dropped`: records of this store that could not be read; they stay stored, untouched.
  * `unreadable`: those of them that are damaged (fail validation), which the person may remove with
- * removeUnreadable; the rest are from a newer ParaNaga (another tab) and are never offered for removal.
+ * removeUnreadable; the rest are from a newer Lunad (another tab) and are never offered for removal.
  */
 export type ListResult<T> = { records: T[]; dropped: number; unreadable: number };
 
@@ -175,7 +175,7 @@ const SCHEMAS: Record<RecordStore, Schema<unknown>> = { savedTrips: savedTripSch
 
 /**
  * Deletes this store's damaged records (those failing validation), in one transaction that
- * re-checks every record, so a record written meanwhile or one from a newer ParaNaga is never
+ * re-checks every record, so a record written meanwhile or one from a newer Lunad is never
  * removed. Returns how many were removed.
  */
 export async function removeUnreadable(store: RecordStore): Promise<number> {

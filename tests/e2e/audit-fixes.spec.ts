@@ -244,20 +244,20 @@ test.describe("phone", () => {
   test("F-10 / F-22 not-found panels: honest title, 'not found' said once", async ({ page }) => {
     await page.goto("/app/stops/not-a-uuid");
     await expect(page.getByRole("heading", { level: 1, name: "Stop not found" })).toBeVisible();
-    await expect(page).toHaveTitle("Stop not found · ParaNaga");
+    await expect(page).toHaveTitle("Stop not found · Lunad");
     await expect(page.getByText(/not found/i)).toHaveCount(1);
 
     await page.goto("/app/routes/NOPE");
     await expect(page.getByRole("heading", { level: 1, name: "Route not found" })).toBeVisible();
-    await expect(page).toHaveTitle("Route not found · ParaNaga");
+    await expect(page).toHaveTitle("Route not found · Lunad");
   });
 
   test("F-10 leaving a not-found panel gives the map its own title back", async ({ page }) => {
     await page.goto("/app/stops/not-a-uuid");
-    await expect(page).toHaveTitle("Stop not found · ParaNaga");
+    await expect(page).toHaveTitle("Stop not found · Lunad");
     await page.getByRole("link", { name: "Back to map" }).click();
     await expect(page).toHaveURL(/\/app$/);
-    await expect(page).toHaveTitle("App · ParaNaga");
+    await expect(page).toHaveTitle("App · Lunad");
   });
 
   test("F-15 a held or repeated Escape goes back only once", async ({ page }) => {
@@ -357,8 +357,8 @@ test("F-11 an unknown URL shows the branded 404 with a way back", async ({ page 
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1, name: "Wrong stop." })).toBeVisible();
   await expect(page.getByRole("link", { name: "Open the map" })).toHaveAttribute("href", "/app");
-  await expect(page.getByRole("link", { name: "ParaNaga home" })).toHaveAttribute("href", "/");
-  await expect(page).toHaveTitle("Page not found · ParaNaga");
+  await expect(page.getByRole("link", { name: "Lunad home" })).toHaveAttribute("href", "/");
+  await expect(page).toHaveTitle("Page not found · Lunad");
 });
 
 test("F-14 robots.txt allows the site and keeps crawlers out of the API and admin", async ({ request }) => {

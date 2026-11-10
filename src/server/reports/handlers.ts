@@ -167,7 +167,7 @@ type HandoffRow = { submitted: boolean; submitted_at: string | Date | null; refe
 
 /**
  * POST /api/v1/me/reports/[kind]/[id]/mynaga: the reporter's own statement that they submitted
- * the report in MyNaga, with an optional reference. ParaNaga sends nothing to MyNaga or City Hall
+ * the report in MyNaga, with an optional reference. Lunad sends nothing to MyNaga or City Hall
  * and cannot confirm receipt; this is stored and shown back as self-reported, never as a status.
  * authorize -> strict zod -> rate limit -> priv.set_mynaga_handoff (definer, owner only).
  */

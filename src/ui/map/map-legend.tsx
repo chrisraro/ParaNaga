@@ -149,7 +149,7 @@ function ExtraSwatch({ extra, surface }: { extra: LegendExtra; surface: MapSurfa
   if (extra === "free_point") {
     return (
       <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
-        <rect x="12" y="2" width="12" height="12" transform="rotate(45 18 8)" fill="#3E4C6B" stroke="#FFFFFF" strokeWidth="2" />
+        <rect x="12" y="2" width="12" height="12" transform="rotate(45 18 8)" fill="var(--color-ink-2)" stroke="#FFFFFF" strokeWidth="2" />
       </svg>
     );
   }
@@ -167,7 +167,7 @@ function ExtraSwatch({ extra, surface }: { extra: LegendExtra; surface: MapSurfa
 function StopSwatch() {
   return (
     <svg className="pn-map-legend__swatch" width="36" height="16" viewBox="0 0 36 16" aria-hidden="true" focusable="false">
-      <circle cx="18" cy="8" r="5.5" fill="#FFFFFF" stroke="#E8A317" strokeWidth="3" />
+      <circle cx="18" cy="8" r="5.5" fill="#FFFFFF" stroke="var(--color-accent-line)" strokeWidth="3" />
     </svg>
   );
 }

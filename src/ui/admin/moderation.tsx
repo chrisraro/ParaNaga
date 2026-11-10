@@ -115,7 +115,7 @@ export function ModerationScreen() {
                 </thead>
                 <tbody>
                   {data.history.map((h) => (
-                    <tr key={h.id} className="border-t border-fill dark:border-navy-raised">
+                    <tr key={h.id} className="border-t border-fill dark:border-night-border">
                       <td className="py-1 pr-3">{when(h.at)}</td>
                       <td className="py-1 pr-3">{KIND_LABEL[h.targetType]}</td>
                       <td className="py-1 pr-3">{h.outcome === "published" ? "Published" : "Not published"}</td>
@@ -160,7 +160,7 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
   };
 
   return (
-    <li className="grid grid-cols-1 gap-3 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-[1fr_22rem] dark:border-navy-raised" data-testid={`item-${id}`}>
+    <li className="grid grid-cols-1 gap-3 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-[1fr_22rem] dark:border-night-border" data-testid={`item-${id}`}>
       <div className="grid min-w-0 content-start gap-2 text-sm">
         <p className="flex flex-wrap items-center gap-2">
           <Chip>{KIND_LABEL[item.kind]}</Chip>
@@ -250,7 +250,7 @@ function AppealCard({ appeal, onDone }: { appeal: AppealItem; onDone: (text: str
   };
 
   return (
-    <li className="grid grid-cols-1 gap-3 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-[1fr_22rem] dark:border-navy-raised" data-testid={`appeal-${appeal.id}`}>
+    <li className="grid grid-cols-1 gap-3 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-[1fr_22rem] dark:border-night-border" data-testid={`appeal-${appeal.id}`}>
       <div className="grid min-w-0 content-start gap-2 text-sm">
         <p className="flex flex-wrap items-center gap-2">
           <Chip>{KIND_LABEL[appeal.targetType]}</Chip>

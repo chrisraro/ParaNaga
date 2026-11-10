@@ -17,16 +17,17 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "ParaNaga · Know your ride in Naga City",
-    template: "%s · ParaNaga",
+    default: "Lunad · Know your ride in Naga City",
+    template: "%s · Lunad",
   },
   description:
     "Where to wait, which jeepney to take, where to transfer and when to say Para! Step-by-step commuting in Naga City, Camarines Sur.",
-  applicationName: "ParaNaga",
+  applicationName: "Lunad",
+  appleWebApp: { title: "Lunad" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f1e3d",
+  themeColor: "#0B6B52",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

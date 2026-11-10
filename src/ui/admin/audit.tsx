@@ -75,10 +75,10 @@ export function AuditScreen({ all }: { all: boolean }) {
       ) : state.data.rows.length === 0 ? (
         <Empty title="No recorded action matches.">Staff actions are recorded as they happen. Try again after the next change.</Empty>
       ) : (
-        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
+        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
           <table className="w-full text-left text-sm" data-testid="audit-table">
             <caption className="sr-only">Audit log rows, newest first</caption>
-            <thead className="border-b border-fill dark:border-navy-raised">
+            <thead className="border-b border-fill dark:border-night-border">
               <tr>
                 {["When", "Who", "Action", "Entity", "Details", "Request"].map((h) => (
                   <th key={h} scope="col" className="px-3 py-2 font-semibold">
@@ -89,7 +89,7 @@ export function AuditScreen({ all }: { all: boolean }) {
             </thead>
             <tbody>
               {state.data.rows.map((r) => (
-                <tr key={r.id} className="border-b border-fill align-top last:border-0 dark:border-navy-raised">
+                <tr key={r.id} className="border-b border-fill align-top last:border-0 dark:border-night-border">
                   <td className="whitespace-nowrap px-3 py-2">{when(r.at)}</td>
                   <td className="px-3 py-2">
                     {r.actorName ?? (r.actorUserId ? <code className="text-xs">{r.actorUserId}</code> : r.actorRole === "system" ? "System" : r.actorRole ?? "–")}

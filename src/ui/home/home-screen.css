@@ -11,28 +11,32 @@
 .pn-detail,
 .pn-pwa,
 .pn-tabbar {
-  --pn-surface: #ffffff;
-  --pn-fill: #eceff4;
-  --pn-label: #0f1e3d;
-  --pn-label2: #4a5468;
-  --pn-sep: rgba(15, 30, 61, 0.08);
-  --pn-ring: rgba(15, 30, 61, 0.1);
-  --pn-shadow: rgba(15, 30, 61, 0.14);
-  --pn-glass: rgba(255, 255, 255, 0.62);
-  --pn-glass-edge: rgba(255, 255, 255, 0.95);
-  --pn-grabber: rgba(15, 30, 61, 0.25);
-  --pn-accent: #0b7a75;
-  --pn-on-primary: #ffffff;
-  --pn-teal-soft-bg: rgba(11, 122, 117, 0.14);
-  --pn-teal-soft-text: #075e5a;
-  --pn-coral-soft-bg: #fce6e3;
-  --pn-coral-soft-text: #c73a2f;
-  --pn-warn-bg: #fff4dc;
-  --pn-warn-text: #5a3f00;
-  --pn-warn-ring: #e8a317;
-  --pn-mark-teal: #0b7a75;
-  --pn-mark-coral: #c73a2f;
-  --pn-dest: #c73a2f;
+  --pn-surface: var(--color-surface);
+  --pn-fill: var(--color-fill);
+  --pn-label: var(--color-ink);
+  --pn-label2: var(--color-ink-2);
+  --pn-sep: color-mix(in srgb, var(--color-ink) 10%, transparent);
+  --pn-ring: color-mix(in srgb, var(--color-ink) 16%, transparent);
+  --pn-shadow: color-mix(in srgb, var(--color-ink) 14%, transparent);
+  /* The one shadow: anything that floats over the map (search bar, chips, controls, tab bar). Cards
+     inside a sheet take a hairline (--pn-ring) instead, never both. */
+  --pn-elev: 0 1px 2px color-mix(in srgb, var(--color-ink) 10%, transparent), 0 4px 14px -2px var(--pn-shadow);
+  --pn-elev-sm: 0 1px 3px var(--pn-shadow);
+  --pn-elev-sheet: 0 -2px 16px var(--pn-shadow);
+  /* The "Recommended" tag: solid amber, ink text (never white on amber). */
+  --pn-tag-bg: var(--color-accent);
+  --pn-tag-text: var(--color-ink);
+  --pn-grabber: color-mix(in srgb, var(--color-ink) 25%, transparent);
+  --pn-accent: var(--color-brand);
+  --pn-on-primary: var(--color-on-brand);
+  --pn-teal-soft-bg: color-mix(in srgb, var(--color-brand) 14%, transparent);
+  --pn-teal-soft-text: var(--color-brand-strong);
+  --pn-coral-soft-bg: var(--color-danger-soft);
+  --pn-coral-soft-text: var(--color-danger-ink);
+  --pn-warn-bg: var(--color-accent-soft);
+  --pn-warn-text: var(--color-accent-ink);
+  --pn-warn-ring: var(--color-accent-line);
+  --pn-dest: var(--color-danger);
 }
 
 .pn-home {
@@ -54,56 +58,60 @@
 :root[data-theme="dark"] .pn-detail,
 :root[data-theme="dark"] .pn-pwa,
 :root[data-theme="dark"] .pn-tabbar {
-  --pn-surface: #111a2e;
-  --pn-fill: #1a2540;
-  --pn-label: #f2f5fa;
-  --pn-label2: #a9b3c7;
-  --pn-sep: rgba(242, 245, 250, 0.1);
-  --pn-ring: rgba(242, 245, 250, 0.12);
+  --pn-surface: var(--color-night-surface);
+  --pn-fill: var(--color-night-raised);
+  --pn-label: var(--color-night-ink);
+  --pn-label2: var(--color-night-ink-2);
+  --pn-sep: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
+  --pn-ring: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
   --pn-shadow: rgba(0, 0, 0, 0.45);
-  --pn-glass: rgba(17, 26, 46, 0.62);
-  --pn-glass-edge: rgba(255, 255, 255, 0.14);
-  --pn-grabber: rgba(242, 245, 250, 0.3);
-  --pn-accent: #2bb5ae;
-  --pn-on-primary: #04201e;
-  --pn-teal-soft-bg: rgba(43, 181, 174, 0.16);
-  --pn-teal-soft-text: #5fd4cd;
-  --pn-coral-soft-bg: rgba(255, 138, 122, 0.16);
-  --pn-coral-soft-text: #ffa394;
-  --pn-warn-bg: rgba(242, 184, 75, 0.14);
-  --pn-warn-text: #f2c877;
-  --pn-warn-ring: rgba(242, 184, 75, 0.55);
-  --pn-mark-teal: #2bb5ae;
-  --pn-mark-coral: #ff8a7a;
-  --pn-dest: #ff8a7a;
+  /* Dark: a shadow does not show on a dark map, so what floats takes the hairline instead. */
+  --pn-elev: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+  --pn-elev-sm: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+  --pn-elev-sheet: 0 -1px 0 color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+  --pn-tag-bg: var(--color-accent);
+  --pn-grabber: color-mix(in srgb, var(--color-night-ink) 30%, transparent);
+  --pn-accent: var(--color-brand-bright);
+  --pn-on-primary: var(--color-on-brand-bright);
+  --pn-teal-soft-bg: color-mix(in srgb, var(--color-brand-bright) 16%, transparent);
+  --pn-teal-soft-text: var(--color-brand-light);
+  --pn-coral-soft-bg: color-mix(in srgb, var(--color-danger-bright) 16%, transparent);
+  --pn-coral-soft-text: var(--color-danger-bright);
+  --pn-warn-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  --pn-warn-text: var(--color-accent);
+  --pn-warn-ring: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  --pn-tag-text: var(--color-ink);
+  --pn-dest: var(--color-danger-bright);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-home,
   :root:not([data-theme="light"]) .pn-detail,
   :root:not([data-theme="light"]) .pn-pwa,
   :root:not([data-theme="light"]) .pn-tabbar {
-    --pn-surface: #111a2e;
-    --pn-fill: #1a2540;
-    --pn-label: #f2f5fa;
-    --pn-label2: #a9b3c7;
-    --pn-sep: rgba(242, 245, 250, 0.1);
-    --pn-ring: rgba(242, 245, 250, 0.12);
+    --pn-surface: var(--color-night-surface);
+    --pn-fill: var(--color-night-raised);
+    --pn-label: var(--color-night-ink);
+    --pn-label2: var(--color-night-ink-2);
+    --pn-sep: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
+    --pn-ring: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
     --pn-shadow: rgba(0, 0, 0, 0.45);
-    --pn-glass: rgba(17, 26, 46, 0.62);
-    --pn-glass-edge: rgba(255, 255, 255, 0.14);
-    --pn-grabber: rgba(242, 245, 250, 0.3);
-    --pn-accent: #2bb5ae;
-    --pn-on-primary: #04201e;
-    --pn-teal-soft-bg: rgba(43, 181, 174, 0.16);
-    --pn-teal-soft-text: #5fd4cd;
-    --pn-coral-soft-bg: rgba(255, 138, 122, 0.16);
-    --pn-coral-soft-text: #ffa394;
-    --pn-warn-bg: rgba(242, 184, 75, 0.14);
-    --pn-warn-text: #f2c877;
-    --pn-warn-ring: rgba(242, 184, 75, 0.55);
-    --pn-mark-teal: #2bb5ae;
-    --pn-mark-coral: #ff8a7a;
-    --pn-dest: #ff8a7a;
+    /* Dark: a shadow does not show on a dark map, so what floats takes the hairline instead. */
+    --pn-elev: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+    --pn-elev-sm: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+    --pn-elev-sheet: 0 -1px 0 color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+    --pn-tag-bg: var(--color-accent);
+    --pn-grabber: color-mix(in srgb, var(--color-night-ink) 30%, transparent);
+    --pn-accent: var(--color-brand-bright);
+    --pn-on-primary: var(--color-on-brand-bright);
+    --pn-teal-soft-bg: color-mix(in srgb, var(--color-brand-bright) 16%, transparent);
+    --pn-teal-soft-text: var(--color-brand-light);
+    --pn-coral-soft-bg: color-mix(in srgb, var(--color-danger-bright) 16%, transparent);
+    --pn-coral-soft-text: var(--color-danger-bright);
+    --pn-warn-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
+    --pn-warn-text: var(--color-accent);
+    --pn-warn-ring: color-mix(in srgb, var(--color-accent) 55%, transparent);
+    --pn-tag-text: var(--color-ink);
+    --pn-dest: var(--color-danger-bright);
   }
 }
 
@@ -118,26 +126,26 @@
   --pn-sep: color-mix(in srgb, var(--pn-label) 55%, transparent);
   --pn-ring: color-mix(in srgb, var(--pn-label) 55%, transparent);
   --pn-grabber: color-mix(in srgb, var(--pn-label) 55%, transparent);
-  /* Accent text ≥ 7:1: #085e5a on #fff ≈ 7.5:1 (white on it too); soft text #054744 on the
-     soft teal ≈ 8.8:1. */
-  --pn-accent: #085e5a;
-  --pn-teal-soft-text: #054744;
+  /* Accent text ≥ 7:1: brand-strong on white ≈ 9.8:1 (white on it too), and ≈ 8:1 on the soft
+     green. */
+  --pn-accent: var(--color-brand-strong);
+  --pn-teal-soft-text: var(--color-brand-strong);
 }
-/* Dark + high contrast: #3cc4bd on #111a2e ≈ 8:1. */
+/* Dark + high contrast: brand-light on the dark surface ≈ 9.7:1. */
 :root[data-contrast="more"][data-theme="dark"] .pn-home,
 :root[data-contrast="more"][data-theme="dark"] .pn-detail,
 :root[data-contrast="more"][data-theme="dark"] .pn-pwa,
 :root[data-contrast="more"][data-theme="dark"] .pn-tabbar {
-  --pn-accent: #3cc4bd;
-  --pn-teal-soft-text: #5fd4cd;
+  --pn-accent: var(--color-brand-light);
+  --pn-teal-soft-text: var(--color-brand-light);
 }
 @media (prefers-color-scheme: dark) {
   :root[data-contrast="more"]:not([data-theme="light"]) .pn-home,
   :root[data-contrast="more"]:not([data-theme="light"]) .pn-detail,
   :root[data-contrast="more"]:not([data-theme="light"]) .pn-pwa,
   :root[data-contrast="more"]:not([data-theme="light"]) .pn-tabbar {
-    --pn-accent: #3cc4bd;
-    --pn-teal-soft-text: #5fd4cd;
+    --pn-accent: var(--color-brand-light);
+    --pn-teal-soft-text: var(--color-brand-light);
   }
 }
 
@@ -148,7 +156,7 @@
 }
 .pn-home button:focus-visible,
 .pn-home a.pn-option:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 
@@ -169,15 +177,11 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 34px;
-  padding: 0 12px;
+  height: 32px;
+  padding: 0 12px 0 8px;
   border-radius: 999px;
-  background: var(--pn-glass);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  box-shadow:
-    inset 0 1px 0 var(--pn-glass-edge),
-    0 6px 18px var(--pn-shadow);
+  background: var(--pn-surface);
+  box-shadow: var(--pn-elev);
   color: var(--pn-label);
   font-size: 13px;
   font-weight: 600;
@@ -189,10 +193,9 @@
   opacity: 0.45;
 }
 .pn-pill--approximate {
-  background: var(--pn-warn-bg);
+  /* The warning tint over the solid surface (the dark tint is translucent). */
+  background: linear-gradient(var(--pn-warn-bg), var(--pn-warn-bg)), var(--pn-surface);
   color: var(--pn-warn-text);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
 }
 
 /* Bottom sheet ("Trip planner"). Position = translateY(offset); snaps from the brief. */
@@ -205,9 +208,10 @@
   z-index: 20;
   display: flex;
   flex-direction: column;
-  border-radius: 28px 28px 0 0;
+  border-radius: 16px 16px 0 0;
   background: var(--pn-surface);
-  box-shadow: 0 -8px 32px var(--pn-shadow);
+  box-shadow: var(--pn-elev-sheet);
+  font-variant-numeric: tabular-nums;
   /* The part translated below the screen edge is padding, so the scrolling content is exactly as
      tall as the visible sheet: scrollIntoView, sticky bars and the last row all work on screen. */
   box-sizing: border-box;
@@ -229,18 +233,18 @@
     transform: translateY(100%);
   }
 }
-/* Grabber: full-width 44px target (min touch size); the visible pill is 36x5. */
+/* Grabber: full-width 48px target; the visible pill is 36x4. It takes 34 px of the head's flow. */
 .pn-grabber {
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 44px;
-  margin-bottom: -10px;
-  padding: 0;
+  height: 48px;
+  margin-bottom: -14px;
+  padding: 0 0 4px;
   border: 0;
-  border-radius: 28px 28px 0 0;
+  border-radius: 16px 16px 0 0;
   background: transparent;
   cursor: grab;
   touch-action: none;
@@ -248,8 +252,8 @@
 .pn-grabber::before {
   content: "";
   width: 36px;
-  height: 5px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
   background: var(--pn-grabber);
 }
 
@@ -286,6 +290,8 @@
   scroll-padding-bottom: calc(var(--pn-sheet-clearance, 0px) + var(--pn-bar-h, 0px) + 12px);
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--pn-grabber) transparent;
 }
 
 /* Footer: the sheet's primary action ("Start trip", the guidance step buttons), outside the
@@ -339,7 +345,7 @@
 .pn-sheet.pn-sheet--dragging,
 .pn-sheet.pn-sheet--settling {
   box-shadow:
-    0 -8px 32px var(--pn-shadow),
+    var(--pn-elev-sheet),
     0 120px 0 var(--pn-surface);
 }
 
@@ -348,10 +354,11 @@
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 8px;
 }
 /* The option cards: a fixed height (--pn-peek-row, PEEK_ROW in bottom-sheet.tsx) of three 16 px
-   lines, cut with an ellipsis rather than wrapped, so the peek never grows over the route. */
+   lines beside the mode icon, cut with an ellipsis rather than wrapped, so the peek never grows
+   over the route. The height is the sheet's budget (see PEEK_ROW), so the room goes to the sides. */
 .pn-peek__rows {
   display: flex;
   flex-direction: column;
@@ -359,15 +366,16 @@
 }
 .pn-peek-row {
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 12px;
+  align-content: center;
   width: 100%;
   height: var(--pn-peek-row, 56px);
-  padding: 3px 12px;
+  padding: 3px 14px 3px 12px;
   overflow: hidden;
   border: 1px solid var(--pn-ring);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--pn-surface);
   color: var(--pn-label);
   font: inherit;
@@ -378,7 +386,27 @@
 }
 .pn-peek-row--best {
   border: 2px solid var(--pn-accent);
-  padding: 2px 11px;
+  padding: 2px 13px 2px 11px;
+}
+/* The mode icon in the same soft circle as an option card (.pn-trip-card__icon), at 32 px. The box
+   itself is 20 px and the ring fills the rest, so the row's lines stay one text line tall. */
+.pn-peek-row__icon {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  align-self: center;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--pn-teal-soft-bg);
+  box-shadow: 0 0 0 6px var(--pn-teal-soft-bg);
+  color: var(--pn-teal-soft-text);
+}
+.pn-peek-row > :not(.pn-peek-row__icon) {
+  grid-column: 2;
 }
 .pn-peek-row__line {
   display: flex;
@@ -401,12 +429,16 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
 }
 .pn-peek-row__mark {
   flex: none;
-  color: var(--pn-teal-soft-text);
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--pn-tag-bg);
+  color: var(--pn-tag-text);
+  font-size: 13px;
   font-weight: 700;
 }
 /* Landscape and zoomed phones: one card, so the route keeps the strip of map above the sheet. */
@@ -439,15 +471,53 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
+  position: relative;
   width: 100%;
   min-height: 44px;
   border: 0;
   border-radius: 999px;
   background: var(--pn-fill);
   color: var(--pn-teal-soft-text);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+}
+/* 48 px target around the 44 px pill (its height is part of the peek's fixed budget). */
+.pn-peek__toggle::after {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
+/* The count form ("All options (3 options)") is cut with an ellipsis before it leaves the button. */
+.pn-peek__toggle > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Full: the list is all there is, so the toggle is a quiet text button at the right of the
+   "Trip options" heading row instead of a second grey slab above it. The peek box takes no height
+   and the button hangs into the heading's row (the heading keeps the right 55 % free, trip.css).
+   Same element, same place in the focus order. */
+.pn-sheet[data-snap="2"] .pn-peek {
+  position: relative;
+  z-index: 1;
+  height: 0;
+  align-items: flex-end;
+}
+.pn-sheet[data-snap="2"] .pn-peek__toggle {
+  flex: none;
+  width: auto;
+  max-width: 55%;
+  min-height: 48px;
+  padding: 0 0 0 12px;
+  border-radius: 8px;
+  background: transparent;
+  /* 14 px to the heading's row, then centred on its 28 px first line. */
+  transform: translateY(4px);
+}
+.pn-sheet[data-snap="2"] .pn-peek__toggle::after {
+  inset: 0;
 }
 .pn-peek__toggle svg {
   transition: transform var(--pn-dur) var(--pn-ease);
@@ -539,6 +609,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   width: 44px;
   height: 44px;
   padding: 0;
@@ -547,6 +618,12 @@
   background: transparent;
   color: var(--pn-label2);
   cursor: pointer;
+}
+/* 48 px target around the 44 px circle (the card's rows are sized to it). */
+.pn-icon-btn::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
 }
 .pn-swap {
   position: absolute;
@@ -568,8 +645,6 @@
   color: var(--pn-label2);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 .pn-option {
   display: flex;
@@ -612,7 +687,7 @@ a.pn-option {
   gap: 10px;
   padding: 12px 14px;
   border-radius: 14px;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.45;
 }
 .pn-status p {
@@ -661,7 +736,7 @@ a.pn-option {
 .pn-status__action {
   display: inline-flex;
   align-items: center;
-  height: 44px;
+  height: 48px;
   margin-top: 10px;
   padding: 0 16px;
   border: 0;
@@ -693,7 +768,7 @@ a.pn-option {
   display: flex;
   gap: 12px;
   padding: 16px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
   box-shadow: 0 0 0 1px var(--pn-ring);
 }
@@ -723,7 +798,7 @@ a.pn-option {
 }
 .pn-text-btn {
   align-self: flex-start;
-  min-height: 44px;
+  min-height: 48px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -744,9 +819,9 @@ a.pn-option {
   flex-direction: column;
   gap: 10px;
   padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px));
-  border-radius: 28px 28px 0 0;
+  border-radius: 16px 16px 0 0;
   background: var(--pn-surface);
-  box-shadow: 0 -8px 32px var(--pn-shadow);
+  box-shadow: var(--pn-elev-sheet);
 }
 .pn-pick__title {
   margin: 0;
@@ -756,7 +831,7 @@ a.pn-option {
 .pn-pick__hint {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.45;
 }
 .pn-pick__hint--warn {
@@ -794,9 +869,9 @@ a.pn-option {
   cursor: not-allowed;
 }
 .pn-btn--secondary {
-  height: 44px;
+  height: 48px;
   background: var(--pn-fill);
-  font-size: 16px;
+  font-size: 15px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -814,14 +889,6 @@ a.pn-option {
   }
   .pn-btn:active:not([aria-disabled="true"]) {
     transform: none;
-  }
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .pn-pill {
-    background: var(--pn-surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
   }
 }
 
@@ -860,7 +927,7 @@ a.pn-option {
   text-decoration: none;
 }
 .pn-nearby__cell:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 .pn-nearby__text {
@@ -877,7 +944,7 @@ a.pn-option {
 }
 .pn-nearby__sub {
   color: var(--pn-warn-text);
-  font-size: 14px;
+  font-size: 15px;
 }
 .pn-nearby__layer {
   color: var(--pn-label2);
@@ -909,12 +976,10 @@ a.pn-option {
   gap: 12px;
   height: 52px;
   margin: 0 12px;
-  padding: 0 20px;
+  padding: 0 18px 0 12px;
   border-radius: 26px;
   background: var(--pn-surface);
-  box-shadow:
-    0 2px 6px -1px var(--pn-shadow),
-    0 8px 24px -8px var(--pn-shadow);
+  box-shadow: var(--pn-elev);
   color: var(--pn-label2);
   font-size: 17px;
   text-decoration: none;
@@ -926,7 +991,13 @@ a.pn-option {
 }
 .pn-home-search svg {
   flex: none;
-  color: var(--pn-accent);
+}
+.pn-home-search__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .pn-home-chips {
   display: flex;
@@ -938,7 +1009,7 @@ a.pn-option {
   scrollbar-width: none;
   /* Saved places arrive after the first paint, in front of the categories: keep the row at its start. */
   overflow-anchor: none;
-  /* A pill's 4 px hit-area slack above and below, inside the scroller (it clips what overflows). */
+  /* A pill's 6 px hit-area slack above and below, inside the scroller (it clips what overflows). */
   overscroll-behavior-x: contain;
 }
 .pn-home-chips::-webkit-scrollbar {
@@ -946,7 +1017,7 @@ a.pn-option {
 }
 .pn-home-chips > li {
   flex: none;
-  padding: 4px 0;
+  padding: 6px 0;
 }
 .pn-home-chip {
   position: relative;
@@ -958,11 +1029,9 @@ a.pn-option {
   border: 0;
   border-radius: 18px;
   background: var(--pn-surface);
-  box-shadow:
-    0 1px 2px var(--pn-shadow),
-    0 2px 5px -1px var(--pn-shadow);
+  box-shadow: var(--pn-elev-sm);
   color: var(--pn-label);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1;
   text-decoration: none;
@@ -970,11 +1039,11 @@ a.pn-option {
   cursor: pointer;
   transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
-/* 44 px hit area around the 36 px chip. */
+/* 48 px hit area around the 36 px chip. */
 .pn-home-chip::before {
   content: "";
   position: absolute;
-  inset: -4px 0;
+  inset: -6px 0;
 }
 /* A saved place's own name is capped (ellipsis); a category chip shows its whole label in the
    sideways-scrolling row, also at 200 % text (i18n T15). */
@@ -992,7 +1061,7 @@ a.pn-option {
 .pn-home a.pn-home-search:focus-visible,
 .pn-home a.pn-home-chip:focus-visible,
 .pn-home button.pn-home-chip:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 @media (forced-colors: active) {
@@ -1005,7 +1074,7 @@ a.pn-option {
 /* The map's controls re-stack: layers under the chips, locate and zoom at the bottom right, the
    accuracy chip above Legend at the bottom left. --pn-home-bottom is the tab bar's clearance. */
 .pn-home[data-screen="home"] .pn-map .pn-map-layers {
-  top: calc(var(--naga-map-controls-top) + 112px);
+  top: calc(var(--naga-map-controls-top) + 116px);
 }
 .pn-home[data-screen="home"] .pn-map .pn-map-locate {
   top: auto;
@@ -1018,13 +1087,13 @@ a.pn-option {
 .pn-home[data-screen="home"] .pn-pill {
   top: auto;
   left: 12px;
-  bottom: calc(var(--pn-home-bottom, 0px) + 84px);
+  bottom: calc(var(--pn-home-bottom, 0px) + 88px);
 }
 
 /* A location problem (denied, outside Naga) has no sheet to sit in: a card under the chips. */
 .pn-home__status {
   position: absolute;
-  top: calc(var(--naga-map-controls-top) + 112px);
+  top: calc(var(--naga-map-controls-top) + 116px);
   left: 12px;
   right: 76px;
   z-index: 12;
@@ -1049,9 +1118,7 @@ a.pn-option {
   max-height: 45dvh;
   overflow-y: auto;
   padding: 12px 16px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
-  box-shadow:
-    0 2px 6px -1px var(--pn-shadow),
-    0 8px 24px -8px var(--pn-shadow);
+  box-shadow: var(--pn-elev);
 }

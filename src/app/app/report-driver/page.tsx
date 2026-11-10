@@ -6,7 +6,7 @@ import { DriverReportWizard } from "@/ui/report-driver/driver-report-wizard";
 
 export const metadata: Metadata = {
   title: "Report a driver",
-  description: "Send ParaNaga a private report about a driver. It is never published and ParaNaga does not send it to Naga City.",
+  description: "Send Lunad a private report about a driver. It is never published and Lunad does not send it to Naga City.",
   referrer: "no-referrer",
 };
 

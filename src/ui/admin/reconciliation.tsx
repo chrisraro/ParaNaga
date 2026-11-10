@@ -102,7 +102,7 @@ export function ReconciliationScreen() {
                 </thead>
                 <tbody>
                   {data.mismatches.map((m, i) => (
-                    <tr key={`${m.stopPointId}-${m.pinCode}-${i}`} className="border-t border-fill dark:border-navy-raised">
+                    <tr key={`${m.stopPointId}-${m.pinCode}-${i}`} className="border-t border-fill dark:border-night-border">
                       <th scope="row" className="py-1 pr-3 font-medium">{m.name}</th>
                       <td className="py-1 pr-3">{label(m.status)}</td>
                       <td className="py-1 pr-3">
@@ -158,7 +158,7 @@ function PairRow({
   const id = `${pair.a.code ?? pair.a.stopPointId}-${pair.b.code ?? pair.b.stopPointId}`;
   return (
     <>
-      <tr className="border-t border-fill dark:border-navy-raised" data-testid={`pair-${id}`}>
+      <tr className="border-t border-fill dark:border-night-border" data-testid={`pair-${id}`}>
         <td className="py-1 pr-3">
           {who(pair.a)} <span className="text-xs">({label(pair.a.status)})</span>
         </td>
@@ -177,7 +177,7 @@ function PairRow({
         <tr>
           <td colSpan={5} className="pb-3">
             <form
-              className="grid gap-3 rounded-lg border border-ink-3/25 p-3 md:grid-cols-[auto_1fr_auto] dark:border-navy-raised"
+              className="grid gap-3 rounded-lg border border-ink-3/25 p-3 md:grid-cols-[auto_1fr_auto] dark:border-night-border"
               onSubmit={(e) => {
                 e.preventDefault();
                 setBusy(true);

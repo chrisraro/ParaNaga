@@ -79,8 +79,8 @@ async function expectAxeClean(page: Page) {
 }
 
 const pageBackground = (page: Page) => page.getByTestId("more-page").evaluate((el) => getComputedStyle(el).backgroundColor);
-const LIGHT_BG = "rgb(244, 246, 250)";
-const DARK_BG = "rgb(11, 18, 32)";
+const LIGHT_BG = "rgb(245, 247, 246)";
+const DARK_BG = "rgb(14, 21, 18)";
 
 test.describe("phone", () => {
   test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
@@ -97,7 +97,7 @@ test.describe("phone", () => {
     // Install: only what the browser offers. Headless Chromium has made no install offer, so the
     // row is text pointing to the browser menu, never a button that does nothing.
     const install = page.getByTestId("settings-install");
-    await expect(install).toContainText("Install ParaNaga");
+    await expect(install).toContainText("Install Lunad");
     await expect(install).toContainText("use your browser’s menu");
     await expect(install.getByRole("button")).toHaveCount(0);
     const general = page.getByTestId("settings-general");
@@ -124,7 +124,7 @@ test.describe("phone", () => {
     }
     await expect(page.getByTestId("settings-display")).toContainText("Reduce motionFollows your device setting");
     await expect(page.getByTestId("settings-location")).toContainText("Location access");
-    await expect(page.getByText("Used when you tap “Use current location” or start guidance. To plan a trip it is sent to ParaNaga, never stored or logged. Change it in your browser or phone settings.")).toBeVisible();
+    await expect(page.getByText("Used when you tap “Use current location” or start guidance. To plan a trip it is sent to Lunad, never stored or logged. Change it in your browser or phone settings.")).toBeVisible();
     await expect(page.getByTestId("settings-sources")).toHaveText("Sources and credits");
     await expect(page.getByTestId("settings-data-revision")).toHaveCount(0);
     // Help (Task 11) opens from the About group.
@@ -186,8 +186,8 @@ test.describe("phone", () => {
     await page.getByRole("switch", { name: "High contrast" }).click();
     await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
     // Secondary text takes the primary label colour.
-    await expect.poll(() => hint.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(15, 30, 61)");
-    expect(before).not.toBe("rgb(15, 30, 61)");
+    await expect.poll(() => hint.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(23, 33, 29)");
+    expect(before).not.toBe("rgb(23, 33, 29)");
     await page.reload();
     await expect(page.locator("html")).toHaveAttribute("data-contrast", "more");
     await page.getByRole("switch", { name: "High contrast" }).click();
@@ -261,7 +261,7 @@ test.describe("phone", () => {
     expect(JSON.parse((await page.evaluate((k) => localStorage.getItem(k), PREFS_KEY))!)).toMatchObject({ historyEnabled: false });
   });
 
-  test("Clear data on this device asks first, then empties ParaNaga's storage", async ({ page }) => {
+  test("Clear data on this device asks first, then empties Lunad's storage", async ({ page }) => {
     await openSettings(page);
     await page.getByRole("radio", { name: "Dark" }).click();
     await page.getByRole("switch", { name: "Low-data mode" }).click();

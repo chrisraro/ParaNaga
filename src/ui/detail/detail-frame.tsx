@@ -52,8 +52,8 @@ export function ChevronRight() {
 export function CandidateRing({ size = 30, onRoute = false }: { size?: number; onRoute?: boolean }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" focusable="false" style={{ flex: "none" }}>
-      <circle cx="20" cy="20" r="13" fill="var(--pn-surface)" stroke="#E8A317" strokeWidth="4" />
-      {onRoute ? <circle cx="20" cy="20" r="5" fill="#E8A317" /> : null}
+      <circle cx="20" cy="20" r="13" fill="var(--pn-surface)" stroke="var(--pn-amber-line, var(--color-accent))" strokeWidth="4" />
+      {onRoute ? <circle cx="20" cy="20" r="5" fill="var(--color-accent)" /> : null}
     </svg>
   );
 }
@@ -165,7 +165,7 @@ export function DetailNotFound({ what: whatProp }: { what?: NotFoundKind }) {
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   const t = useT().detail;
   const { name, title, copy } = notFoundCopy(t)[what];
-  // An honest tab title: the page's static metadata says "Stop · ParaNaga" (the id is only known
+  // An honest tab title: the page's static metadata says "Stop · Lunad" (the id is only known
   // at runtime, and the response is already streaming with HTTP 200 when notFound() is reached).
   // The cleanup restores the old title only if it is still ours: when leaving for another route,
   // React may already have applied that route's <title> before this cleanup runs.

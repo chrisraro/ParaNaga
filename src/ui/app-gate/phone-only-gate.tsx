@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { useViewportClass } from "@/client/use-viewport-class";
-import { RouteNMark } from "@/ui/brand/route-n-mark";
+import { LunadMark } from "@/ui/brand/lunad-mark";
 import { LargeScreenGate } from "@/ui/app-gate/large-screen-gate";
 
 /**
@@ -38,8 +38,8 @@ export function PhoneOnlyGate({ children }: { children: ReactNode }) {
 
 function Splash() {
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-navy" aria-busy="true">
-      <RouteNMark size={72} title="ParaNaga is loading" />
+    <div className="flex min-h-dvh items-center justify-center bg-deep" aria-busy="true">
+      <LunadMark size={72} tone="bright" title="Lunad is loading" />
     </div>
   );
 }

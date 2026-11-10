@@ -7,7 +7,7 @@
 //
 // Updates: a new worker installs and then WAITS (it never takes over by itself). When one is
 // waiting while this page is controlled, `useUpdateReady()` turns true and the app shows "A new
-// version of ParaNaga is ready. [Reload]". Tapping Reload (applyUpdate) asks the waiting worker to
+// version of Lunad is ready. [Reload]". Tapping Reload (applyUpdate) asks the waiting worker to
 // take over and reloads once it has; the app never offers or performs that reload while guidance
 // is running. A first install shows nothing (there is no older version to replace).
 

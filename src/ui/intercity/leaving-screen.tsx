@@ -132,7 +132,7 @@ function StatusPill({ service, today }: { service: IntercityService; today: stri
   const note = statusNoteText(parts, t);
   const asOf = service.asOf ? dateText(service.asOf, t) : null;
   const stale = parts.stale && asOf !== null;
-  // Teal only for a service reported running; unconfirmed, community-mapped and stopped are grey.
+  // Brand green only for a service reported running; unconfirmed, community-mapped and stopped are grey.
   const tone = stale ? "stale" : service.status === "operating" || service.status === "operating_limited" ? "neutral" : "stopped";
   return (
     <p className={`pn-ic-pill pn-ic-pill--${tone}`} data-testid="leaving-status" data-stale={stale ? "true" : undefined}>

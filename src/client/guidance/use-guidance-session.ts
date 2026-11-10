@@ -4,7 +4,7 @@
 // location watch and the Screen Wake Lock.
 //
 // Location, by the privacy rules: never requested without a tap. "Start trip" turns the watch on
-// only when the person already allowed location for ParaNaga (permission "granted", so no prompt
+// only when the person already allowed location for Lunad (permission "granted", so no prompt
 // appears); otherwise, and after a reload, each step offers "Use my location for progress". Every
 // position the watch delivers is dispatched as a `fix` event (the reducer ignores unusable ones),
 // so ride progress survives a reload. The watch and the wake lock stop the moment the session

@@ -3,7 +3,7 @@
 // Terminals layer (Increment D, Task 13): one marker per terminal WITH a coordinate (OpenStreetMap,
 // ODbL); terminals without one are never drawn (the Layers sheet and Explore list them as
 // "Location not mapped"). Up to TERMINAL_DOM_MARKER_LIMIT terminals are DOM markers: a rounded
-// square per mode in the mode colour with its glyph (white on Palette L, #0B1220 on Palette D; the
+// square per mode in the mode colour with its glyph (white on Palette L, #0E1512 on Palette D; the
 // colours come from the map's `data-map-surface` tokens), stacked side by side for a terminal of
 // several modes. Never colour alone: every tile carries the mode glyph, and the marker's
 // accessible name is "{name}, {modes} terminal, community-mapped location".

@@ -1,4 +1,4 @@
-// ParaNaga theme init (Increment A, Task 2). Loaded with a plain <script src> at the top of <head>
+// Lunad theme init (Increment A, Task 2). Loaded with a plain <script src> at the top of <head>
 // (src/app/layout.tsx), so it runs synchronously before the first paint: it reads the device
 // preferences (localStorage "paranaga.prefs", see src/domain/prefs/prefs.ts) and sets
 //   data-theme    = "light" | "dark" | "system"   (System follows prefers-color-scheme in CSS)

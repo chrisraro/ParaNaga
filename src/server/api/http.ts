@@ -90,7 +90,7 @@ export function publicText(request: Request, route: string, run: (ctx: RunContex
 
 /** pg-pool gave up waiting for a free connection: busy, not broken (503, the client retries). */
 const isPoolTimeout = (error: unknown) => error instanceof Error && /timeout exceeded when trying to connect/i.test(error.message);
-const BUSY = "ParaNaga is busy. Try again in a moment.";
+const BUSY = "Lunad is busy. Try again in a moment.";
 
 async function handle(request: Request, route: string, respond: (ctx: RunContext) => Promise<Response>): Promise<Response> {
   const requestId = safeRequestId(request.headers.get("x-vercel-id") ?? request.headers.get("x-request-id"));

@@ -59,14 +59,15 @@ const OUTLINE: L.LatLngTuple[] = NAGA_BOUNDARY.map(([lng, lat]): L.LatLngTuple =
 const MASK_STYLE: L.PathOptions = {
   className: "pn-mask",
   stroke: false,
-  fillColor: "#0F1E3D",
+  fillColor: "var(--color-ink)",
   fillOpacity: 0.28,
   interactive: false,
 };
 const OUTLINE_STYLE: L.PathOptions = {
   className: "pn-outline",
-  color: "#0B7A75",
-  weight: 2,
+  // A neutral hairline (naga-map.css sets the theme's tone): the city edge is context, not brand.
+  color: "var(--color-ink-3)",
+  weight: 1,
   fill: false,
   interactive: false,
 };

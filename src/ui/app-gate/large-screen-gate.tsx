@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AppIconTile, Wordmark } from "@/ui/brand/route-n-mark";
+import { LunadMark, LunadWordmark } from "@/ui/brand/lunad-mark";
 import { DeviceFrame, Shot } from "@/ui/landing/device-frame";
 import { QrCode, useAppUrl } from "@/ui/landing/qr-code";
 import "@/ui/landing/landing.css";
@@ -28,12 +28,12 @@ export function LargeScreenGate() {
   return (
     <div
       className="flex min-h-dvh flex-col text-white"
-      style={{ background: "radial-gradient(900px 500px at 15% 0%, #1d3870 0%, rgba(29,56,112,0) 60%), radial-gradient(700px 500px at 100% 100%, rgba(43,181,174,0.18), rgba(43,181,174,0) 60%), #0f1e3d" }}
+      style={{ background: "radial-gradient(900px 500px at 15% 0%, var(--color-deep-raised) 0%, transparent 60%), radial-gradient(700px 500px at 100% 100%, color-mix(in srgb, var(--color-brand-bright) 18%, transparent), transparent 60%), var(--color-deep)" }}
     >
       <header className="mx-auto flex w-full max-w-[1180px] items-center justify-between gap-4 px-4 py-5 md:px-8">
         <Link href="/" className="flex items-center gap-2.5">
-          <AppIconTile size={30} />
-          <Wordmark className="text-xl" />
+          <LunadMark size={30} tone="bright" />
+          <LunadWordmark className="text-xl" />
         </Link>
         <Link href="/" className="flex min-h-11 items-center text-sm text-white/80 hover:text-white">Back to the website</Link>
       </header>
@@ -50,7 +50,7 @@ export function LargeScreenGate() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><rect x="2" y="4" width="20" height="13" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
             Large screen detected
           </span>
-          <h1 id="gate-h" className="animate-rise text-[clamp(36px,4.6vw,56px)] font-extrabold leading-[1.02] tracking-[-0.04em] [animation-delay:0.1s]">ParaNaga rides in your pocket.</h1>
+          <h1 id="gate-h" className="animate-rise text-[clamp(36px,4.6vw,56px)] font-extrabold leading-[1.02] tracking-[-0.04em] [animation-delay:0.1s]">Lunad rides in your pocket.</h1>
           <p className="animate-rise text-lg leading-relaxed text-white/80 [animation-delay:0.1s]">
             The app guides you on the street with your location, the map and one-hand controls, so it only opens on phones and small tablets. Scan the code to continue on your phone.
           </p>
@@ -58,12 +58,12 @@ export function LargeScreenGate() {
           <div className="flex animate-rise flex-wrap items-center gap-5 rounded-3xl bg-white/[0.06] p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] [animation-delay:0.2s]">
             <div className="relative size-[196px] shrink-0 overflow-hidden rounded-[18px] bg-white p-3.5">
               <QrCode value={appUrl} />
-              <span aria-hidden className="absolute inset-x-2.5 top-2.5 h-0.5 animate-scan rounded bg-[linear-gradient(90deg,rgba(43,181,174,0),#2bb5ae,rgba(43,181,174,0))]" />
+              <span aria-hidden className="absolute inset-x-2.5 top-2.5 h-0.5 animate-scan rounded bg-[linear-gradient(90deg,transparent,var(--color-brand-bright),transparent)]" />
             </div>
             <ol className="flex flex-[1_1_200px] flex-col gap-3 text-[15px] leading-snug text-white/85">
               {["Open your phone's camera", "Point it at the code and tap the link", "Add to Home Screen for one-tap access"].map((t, i) => (
                 <li key={t} className="flex gap-2.5">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-teal-bright text-[13px] font-bold text-on-teal-bright">{i + 1}</span>
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-bright text-[13px] font-bold text-on-brand-bright">{i + 1}</span>
                   {t}
                 </li>
               ))}
@@ -81,7 +81,7 @@ export function LargeScreenGate() {
             <button
               type="button"
               onClick={copy}
-              className={`inline-flex h-12 items-center gap-2 rounded-full px-5 text-[15px] font-bold transition-[transform,background-color] active:scale-[0.97] ${copied ? "bg-teal-bright/20 text-[#5fd4cd]" : "bg-teal-bright text-on-teal-bright"}`}
+              className={`inline-flex h-12 items-center gap-2 rounded-full px-5 text-[15px] font-bold transition-[transform,background-color] active:scale-[0.97] ${copied ? "bg-brand-bright/20 text-brand-light" : "bg-brand-bright text-on-brand-bright"}`}
             >
               {copied ? "Copied" : "Copy link"}
             </button>
@@ -90,7 +90,7 @@ export function LargeScreenGate() {
 
           <p className="flex items-start gap-2.5 text-sm leading-normal text-white/60">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="mt-px shrink-0"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>
-            On a tablet or a narrow window? ParaNaga opens automatically once the screen is phone or small-tablet size.
+            On a tablet or a narrow window? Lunad opens automatically once the screen is phone or small-tablet size.
           </p>
         </section>
       </main>

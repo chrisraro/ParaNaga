@@ -1,0 +1,937 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T05:05:51.350Z",
+  "title": "Design System: Lunad",
+  "extensions": {
+    "colorMeta": {
+      "brand": {
+        "role": "primary",
+        "displayName": "Lunad Green",
+        "canonical": "#0b6b52",
+        "tonalRamp": [
+          "#001009",
+          "#002f22",
+          "#014f3b",
+          "#1b745a",
+          "#46987d",
+          "#69ba9e",
+          "#90e1c3",
+          "#c0ffe6"
+        ]
+      },
+      "brand-strong": {
+        "role": "primary",
+        "displayName": "Deep Green",
+        "canonical": "#084d3b",
+        "tonalRamp": [
+          "#001009",
+          "#022e22",
+          "#0a4e3c",
+          "#34705d",
+          "#58947f",
+          "#7ab7a1",
+          "#9fddc6",
+          "#bfffe7"
+        ]
+      },
+      "brand-soft": {
+        "role": "primary",
+        "displayName": "Green Wash",
+        "canonical": "#e3f1ec",
+        "tonalRamp": [
+          "#050d0a",
+          "#1e2926",
+          "#3a4541",
+          "#5a6662",
+          "#7d8985",
+          "#9eaba7",
+          "#c4d1cd",
+          "#e4f2ed"
+        ]
+      },
+      "on-brand": {
+        "role": "primary",
+        "displayName": "On Green",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#424242",
+          "#636363",
+          "#868686",
+          "#a8a8a8",
+          "#cecece",
+          "#eeeeee"
+        ]
+      },
+      "brand-bright": {
+        "role": "primary",
+        "displayName": "Bright Green",
+        "canonical": "#2fbf93",
+        "tonalRamp": [
+          "#001008",
+          "#022f21",
+          "#004f3a",
+          "#0b7557",
+          "#1e9d77",
+          "#34c296",
+          "#65eabc",
+          "#c0ffe5"
+        ]
+      },
+      "brand-light": {
+        "role": "primary",
+        "displayName": "Light Green",
+        "canonical": "#6fd9b5",
+        "tonalRamp": [
+          "#001009",
+          "#012f22",
+          "#074f3c",
+          "#037559",
+          "#289c7a",
+          "#53be9b",
+          "#7ce6c1",
+          "#beffe6"
+        ]
+      },
+      "on-brand-bright": {
+        "role": "primary",
+        "displayName": "Night Green Ink",
+        "canonical": "#04221a",
+        "tonalRamp": [
+          "#000f0a",
+          "#0f2d24",
+          "#2c4940",
+          "#4c6b61",
+          "#6f8e83",
+          "#90b0a5",
+          "#b5d7cb",
+          "#d5f8eb"
+        ]
+      },
+      "accent": {
+        "role": "secondary",
+        "displayName": "Stop Amber",
+        "canonical": "#ffb81c",
+        "tonalRamp": [
+          "#130900",
+          "#342301",
+          "#583d00",
+          "#825b06",
+          "#ad7c16",
+          "#d89b15",
+          "#fdc359",
+          "#feeccf"
+        ]
+      },
+      "accent-ink": {
+        "role": "secondary",
+        "displayName": "Amber Ink",
+        "canonical": "#6b4a00",
+        "tonalRamp": [
+          "#130900",
+          "#352301",
+          "#593c00",
+          "#7e5d1d",
+          "#a38043",
+          "#c6a164",
+          "#edc789",
+          "#feeccf"
+        ]
+      },
+      "accent-soft": {
+        "role": "secondary",
+        "displayName": "Amber Wash",
+        "canonical": "#fff3d6",
+        "tonalRamp": [
+          "#120a00",
+          "#2f250e",
+          "#4b4129",
+          "#6d6249",
+          "#90856b",
+          "#b2a78c",
+          "#d9cdb1",
+          "#faeed1"
+        ]
+      },
+      "accent-line": {
+        "role": "secondary",
+        "displayName": "Amber Line",
+        "canonical": "#a86f00",
+        "tonalRamp": [
+          "#150800",
+          "#372100",
+          "#5c3a00",
+          "#865907",
+          "#b27918",
+          "#d69b44",
+          "#ffc16c",
+          "#ffebd3"
+        ]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Destination Red",
+        "canonical": "#c73a2f",
+        "tonalRamp": [
+          "#200000",
+          "#4f0101",
+          "#7f0907",
+          "#b3241d",
+          "#dd5042",
+          "#fb7c6c",
+          "#febab0",
+          "#ffe9e5"
+        ]
+      },
+      "danger-ink": {
+        "role": "tertiary",
+        "displayName": "Red Ink",
+        "canonical": "#9e2a21",
+        "tonalRamp": [
+          "#210000",
+          "#500000",
+          "#810303",
+          "#a9352b",
+          "#d35b4e",
+          "#f97e6e",
+          "#fdbbb1",
+          "#fee9e5"
+        ]
+      },
+      "danger-soft": {
+        "role": "tertiary",
+        "displayName": "Red Wash",
+        "canonical": "#fce6e3",
+        "tonalRamp": [
+          "#140706",
+          "#322220",
+          "#4f3e3b",
+          "#715e5c",
+          "#95817e",
+          "#b7a29f",
+          "#ddc8c5",
+          "#ffe9e6"
+        ]
+      },
+      "danger-bright": {
+        "role": "tertiary",
+        "displayName": "Soft Red",
+        "canonical": "#ff8a7a",
+        "tonalRamp": [
+          "#210000",
+          "#500000",
+          "#7e0f0a",
+          "#a63a2f",
+          "#cf5f51",
+          "#f58171",
+          "#fdbbb1",
+          "#fee9e5"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#17211d",
+        "tonalRamp": [
+          "#050d0a",
+          "#1f2925",
+          "#3a4541",
+          "#5b6661",
+          "#7d8984",
+          "#9eaba6",
+          "#c4d1cc",
+          "#e5f2ec"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "canonical": "#4a5651",
+        "tonalRamp": [
+          "#050d0a",
+          "#1e2925",
+          "#3a4541",
+          "#5a6761",
+          "#7d8a84",
+          "#9eaba6",
+          "#c4d2cc",
+          "#e4f2ec"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "canonical": "#5c6964",
+        "tonalRamp": [
+          "#040e0a",
+          "#1e2925",
+          "#394641",
+          "#5a6762",
+          "#7c8a85",
+          "#9daba6",
+          "#c3d2cc",
+          "#e4f3ed"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "canonical": "#f5f7f6",
+        "tonalRamp": [
+          "#0a0b0b",
+          "#252726",
+          "#414342",
+          "#626463",
+          "#858786",
+          "#a6a8a7",
+          "#cccecd",
+          "#edefee"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#424242",
+          "#636363",
+          "#868686",
+          "#a8a8a8",
+          "#cecece",
+          "#eeeeee"
+        ]
+      },
+      "fill": {
+        "role": "neutral",
+        "displayName": "Fill",
+        "canonical": "#ecefed",
+        "tonalRamp": [
+          "#0a0c0a",
+          "#252726",
+          "#414341",
+          "#616462",
+          "#848785",
+          "#a6a8a7",
+          "#cccecd",
+          "#ecefed"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "canonical": "#d5dbd8",
+        "tonalRamp": [
+          "#080c0a",
+          "#232825",
+          "#3f4441",
+          "#5f6562",
+          "#828885",
+          "#a3a9a6",
+          "#c9cfcc",
+          "#eaf0ed"
+        ]
+      },
+      "deep": {
+        "role": "neutral",
+        "displayName": "Deep",
+        "canonical": "#0f2e25",
+        "tonalRamp": [
+          "#001009",
+          "#0e2d24",
+          "#2b4a40",
+          "#4b6b60",
+          "#6e8e83",
+          "#8fb0a4",
+          "#b4d7ca",
+          "#d4f8eb"
+        ]
+      },
+      "deep-2": {
+        "role": "neutral",
+        "displayName": "Deep 2",
+        "canonical": "#0a211a",
+        "tonalRamp": [
+          "#000f09",
+          "#152c24",
+          "#314840",
+          "#516a61",
+          "#738d83",
+          "#94afa5",
+          "#bad5cb",
+          "#daf6eb"
+        ]
+      },
+      "deep-raised": {
+        "role": "neutral",
+        "displayName": "Deep Raised",
+        "canonical": "#17463a",
+        "tonalRamp": [
+          "#000f0a",
+          "#002e24",
+          "#1e4c40",
+          "#406e60",
+          "#639183",
+          "#84b3a5",
+          "#a9daca",
+          "#c9fbeb"
+        ]
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Night",
+        "canonical": "#0e1512",
+        "tonalRamp": [
+          "#070d0a",
+          "#212825",
+          "#3c4541",
+          "#5d6662",
+          "#808984",
+          "#a1aaa6",
+          "#c7d0cc",
+          "#e7f1ed"
+        ]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "#17201c",
+        "tonalRamp": [
+          "#060d0a",
+          "#202925",
+          "#3b4540",
+          "#5c6661",
+          "#7e8984",
+          "#9faba5",
+          "#c5d1cb",
+          "#e6f2ec"
+        ]
+      },
+      "night-raised": {
+        "role": "neutral",
+        "displayName": "Night Raised",
+        "canonical": "#1f2a25",
+        "tonalRamp": [
+          "#050e09",
+          "#1e2924",
+          "#3a4640",
+          "#5a6761",
+          "#7d8a84",
+          "#9eaba5",
+          "#c4d2cb",
+          "#e4f3ec"
+        ]
+      },
+      "night-border": {
+        "role": "neutral",
+        "displayName": "Night Border",
+        "canonical": "#2c3832",
+        "tonalRamp": [
+          "#040e09",
+          "#1e2924",
+          "#39463f",
+          "#5a6760",
+          "#7c8a83",
+          "#9daca4",
+          "#c3d2ca",
+          "#e4f3eb"
+        ]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "#f1f5f3",
+        "tonalRamp": [
+          "#090c0b",
+          "#242726",
+          "#404342",
+          "#616462",
+          "#838785",
+          "#a5a9a7",
+          "#cbcfcd",
+          "#ecefed"
+        ]
+      },
+      "night-ink-2": {
+        "role": "neutral",
+        "displayName": "Night Ink 2",
+        "canonical": "#a7b4ae",
+        "tonalRamp": [
+          "#050d0a",
+          "#1f2925",
+          "#3a4540",
+          "#5b6661",
+          "#7d8a84",
+          "#9eaba5",
+          "#c4d1cb",
+          "#e5f2ec"
+        ]
+      },
+      "night-ink-3": {
+        "role": "neutral",
+        "displayName": "Night Ink 3",
+        "canonical": "#8a9790",
+        "tonalRamp": [
+          "#050e09",
+          "#1f2924",
+          "#3a463f",
+          "#5a6760",
+          "#7d8a83",
+          "#9eaba4",
+          "#c4d2ca",
+          "#e4f3eb"
+        ]
+      },
+      "map-land": {
+        "role": "neutral",
+        "displayName": "Map Land",
+        "canonical": "#f2efe9",
+        "tonalRamp": [
+          "#0d0b07",
+          "#282622",
+          "#44423d",
+          "#65635e",
+          "#888680",
+          "#aaa7a2",
+          "#d0cdc7",
+          "#f1eee8"
+        ]
+      },
+      "mode-traditional-puj": {
+        "role": "data",
+        "displayName": "Traditional Jeepney",
+        "canonical": "#b45309",
+        "tonalRamp": [
+          "#1a0400",
+          "#421900",
+          "#6b2e02",
+          "#9b480c",
+          "#ca6728",
+          "#f0894e",
+          "#febd9b",
+          "#ffeadf"
+        ]
+      },
+      "mode-modern-puj": {
+        "role": "data",
+        "displayName": "Modern Jeepney",
+        "canonical": "#1d4ed8",
+        "tonalRamp": [
+          "#000036",
+          "#01057c",
+          "#0427b3",
+          "#2052dc",
+          "#457cff",
+          "#7ea5fb",
+          "#b7cefd",
+          "#e7efff"
+        ]
+      },
+      "mode-tricycle": {
+        "role": "data",
+        "displayName": "Tricycle",
+        "canonical": "#a21caf",
+        "tonalRamp": [
+          "#1a001d",
+          "#420049",
+          "#6c0375",
+          "#9c11a9",
+          "#c445d1",
+          "#e96bf6",
+          "#f8b0fe",
+          "#fde5ff"
+        ]
+      },
+      "mode-e-tricycle": {
+        "role": "data",
+        "displayName": "E-Tricycle",
+        "canonical": "#0e7490",
+        "tonalRamp": [
+          "#000e15",
+          "#002b38",
+          "#054a5d",
+          "#006e8a",
+          "#3a92af",
+          "#5fb5d3",
+          "#86dcfb",
+          "#d8f4ff"
+        ]
+      },
+      "mode-uv-express": {
+        "role": "data",
+        "displayName": "UV Express",
+        "canonical": "#be123c",
+        "tonalRamp": [
+          "#200003",
+          "#4e0112",
+          "#7d0925",
+          "#b90538",
+          "#e4425a",
+          "#fe7782",
+          "#fdbabb",
+          "#fee8e9"
+        ]
+      },
+      "mode-bus": {
+        "role": "data",
+        "displayName": "Bus",
+        "canonical": "#6d28d9",
+        "tonalRamp": [
+          "#0f002c",
+          "#2e0265",
+          "#4d0fa0",
+          "#6f2cdc",
+          "#8e63f8",
+          "#ab94fb",
+          "#cfc5fe",
+          "#eeecff"
+        ]
+      },
+      "mode-unconfirmed": {
+        "role": "data",
+        "displayName": "Unconfirmed Mode",
+        "canonical": "#57534e",
+        "tonalRamp": [
+          "#0e0b07",
+          "#292621",
+          "#46423d",
+          "#67625d",
+          "#8a8580",
+          "#aba7a1",
+          "#d2cdc7",
+          "#f2eee8"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The trip detail title. One per screen."
+      },
+      "title-lg": {
+        "displayName": "Title large",
+        "purpose": "The sheet heading (Trip options)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Option card titles; card and dialog headings."
+      },
+      "body-lg": {
+        "displayName": "Body large",
+        "purpose": "Place names, time and fare in the detail header, primary button labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Explanatory text, status cards, time and fare on a card, secondary buttons."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Chips over the map, section labels, the accuracy pill."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Boarding guidance, transfers, footnotes, in secondary ink."
+      },
+      "tag": {
+        "displayName": "Tag",
+        "purpose": "Tags and chips on cards; tab labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "pn-elev",
+        "value": "0 1px 2px color-mix(in srgb, #17211d 10%, transparent), 0 4px 14px -2px color-mix(in srgb, #17211d 14%, transparent)",
+        "purpose": "Float: anything over the map (search bar, pill, tab bar, map controls). Light theme."
+      },
+      {
+        "name": "pn-elev-sm",
+        "value": "0 1px 3px color-mix(in srgb, #17211d 14%, transparent)",
+        "purpose": "Float small: category chips over the map. Light theme."
+      },
+      {
+        "name": "pn-elev-sheet",
+        "value": "0 -2px 16px color-mix(in srgb, #17211d 14%, transparent)",
+        "purpose": "Top edge of the bottom sheet and the pick panel. Light theme."
+      },
+      {
+        "name": "pn-elev-dark",
+        "value": "0 0 0 1px color-mix(in srgb, #f1f5f3 16%, transparent)",
+        "purpose": "Dark theme replacement for pn-elev and pn-elev-sm: a hairline ring, no shadow."
+      },
+      {
+        "name": "pn-elev-sheet-dark",
+        "value": "0 -1px 0 color-mix(in srgb, #f1f5f3 16%, transparent)",
+        "purpose": "Dark theme sheet edge: a 1 px top line."
+      },
+      {
+        "name": "pn-ring",
+        "value": "0 0 0 1px color-mix(in srgb, #17211d 16%, transparent)",
+        "purpose": "Hairline ring for cards and outlined controls inside a sheet (12% of night ink in dark)."
+      },
+      {
+        "name": "pn-sep",
+        "value": "color-mix(in srgb, #17211d 10%, transparent)",
+        "purpose": "1 px separator colour inside cards and lists (10% of night ink in dark)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "pn-dur-fast",
+        "value": "120ms",
+        "purpose": "Press feedback; exits."
+      },
+      {
+        "name": "pn-dur",
+        "value": "220ms",
+        "purpose": "Chevrons, fades, chips, panel entrances."
+      },
+      {
+        "name": "pn-dur-slow",
+        "value": "360ms",
+        "purpose": "Sheet snaps, list and panel entrances, switch knob and segmented thumb."
+      },
+      {
+        "name": "pn-ease",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Standard ease-out."
+      },
+      {
+        "name": "pn-ease-snap",
+        "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "The sheet's detent curve: critically damped, no overshoot."
+      },
+      {
+        "name": "pn-ease-exit",
+        "value": "cubic-bezier(0.4, 0, 1, 1)",
+        "purpose": "Ease-in for content that leaves."
+      },
+      {
+        "name": "pn-stagger",
+        "value": "60ms",
+        "purpose": "Delay between list items entering."
+      },
+      {
+        "name": "pn-rise-sm",
+        "value": "6px",
+        "purpose": "Rise distance for small entrances and exits."
+      },
+      {
+        "name": "pn-rise",
+        "value": "8px",
+        "purpose": "Rise distance for list items."
+      },
+      {
+        "name": "pn-rise-lg",
+        "value": "12px",
+        "purpose": "Rise distance for large entrances."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "short-screen",
+        "value": "(max-height: 480px)"
+      },
+      {
+        "name": "narrow-card",
+        "value": "@container (max-width: 21em)"
+      },
+      {
+        "name": "tablet",
+        "value": "600px"
+      },
+      {
+        "name": "wide",
+        "value": "900px"
+      }
+    ],
+    "modePaletteDark": {
+      "source": "src/domain/modes/palette.ts (PALETTE_D)",
+      "casing": "#0E1512",
+      "values": {
+        "traditional_puj": "#F59E0B",
+        "modern_puj": "#60A5FA",
+        "tricycle": "#E879F9",
+        "e_tricycle": "#22D3EE",
+        "uv_express": "#FB7185",
+        "bus": "#A78BFA",
+        "unconfirmed": "#D6D3D1",
+        "walk": "#F1F5F3",
+        "rail": "#F1F5F3"
+      }
+    },
+    "scope": {
+      "rebuilt": [
+        "Home map",
+        "search bar",
+        "trip sheet",
+        "option cards",
+        "trip detail header",
+        "tab bar"
+      ],
+      "note": "Only the Home screen has been rebuilt to this system: the map, the search bar, the trip sheet, the option cards, the trip detail header and the tab bar. Every other screen (stop and route detail, Explore, Saved, Community, reports, Help, Settings, sign-in, the admin console) takes the new palette through the tokens but keeps its earlier layout and component styling until later sprints. The landing page is a separate, later direction round; nothing here describes it. When extending a screen that has not been rebuilt, follow the Home patterns below, not the screen's current styling.",
+      "knownDeviations": [
+        "A timeline side stripe remains at `src/ui/reports/reports.css:73` (`border-left: 3px`, the last item in brand green). Three such stripes were removed on Home. A second one sits on nested comments at `src/ui/community/community.css:363`.",
+        "Glass and blur remain on the landing page nav (`src/ui/landing/landing.css:301`). The map controls still carry the class name `pn-glass`, but it is a solid surface now.",
+        "The typeface was not changed in this sprint. See Typography.",
+        "The route overview card, the layers sheet, the confirm dialog and the terminal markers use older shadows, and the overview card pairs a border with a shadow (`src/ui/modes/modes.css:597`). They predate the one-elevation rule.",
+        "The legend, mode chip, layers sheet and overview card set their light background as a literal white instead of the surface token (`src/ui/modes/modes.css`).",
+        "The switch and the tab bar tabs transition `background-color` and `color` (`src/ui/kit/kit.css:256`, `:386`), outside the transform-and-opacity rule."
+      ]
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one primary action of a sheet (Start trip, Set start here). Full-width green pill.",
+      "html": "<button class=\"ds-btn-primary\">Start trip</button>",
+      "css": ".ds-btn-primary { display: flex; align-items: center; justify-content: center; width: 100%; height: 50px; border: 0; border-radius: 999px; background: var(--color-brand); color: var(--color-on-brand); font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-primary:hover { background: var(--color-brand-strong); } .ds-btn-primary:active { transform: scale(0.97); } .ds-btn-primary:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; } @media (prefers-reduced-motion: reduce) { .ds-btn-primary { transition: none; } .ds-btn-primary:active { transform: none; } }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Lower-weight action beside or under the primary. Grey fill pill.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: flex; align-items: center; justify-content: center; width: 100%; height: 48px; border: 0; border-radius: 999px; background: var(--color-fill); color: var(--color-ink); font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-btn-secondary:active { transform: scale(0.97); } .ds-btn-secondary:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Bar",
+      "kind": "input",
+      "refersTo": "search-bar",
+      "description": "Floating search pill at the top of the map, led by the L mark. A link to the Search screen.",
+      "html": "<a class=\"ds-search\" href=\"#\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 96 96\" aria-hidden=\"true\"><rect width=\"96\" height=\"96\" rx=\"22\" fill=\"#0B6B52\"/><g transform=\"translate(-6 0)\"><path d=\"M33 22V56a14 14 0 0 0 14 14h3\" fill=\"none\" stroke=\"#ffffff\" stroke-width=\"12\" stroke-linecap=\"round\"/><circle cx=\"33\" cy=\"22\" r=\"4\" fill=\"#0B6B52\"/><circle cx=\"71\" cy=\"70\" r=\"10\" fill=\"#FFB81C\"/></g></svg><span class=\"ds-search__text\">Where to?</span><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/></svg></a>",
+      "css": ".ds-search { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 18px 0 12px; border-radius: 26px; background: var(--color-surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink) 10%, transparent), 0 4px 14px -2px color-mix(in srgb, var(--color-ink) 14%, transparent); color: var(--color-ink-2); font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; font-size: 17px; text-decoration: none; transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-search svg { flex: none; } .ds-search__text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-search:active { transform: scale(0.98); } .ds-search:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Category Chip",
+      "kind": "chip",
+      "refersTo": "chip-category",
+      "description": "Shortcut chips in the row under the search bar, floating over the map.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\">Food &amp; drink</button><button class=\"ds-chip\">Schools</button><button class=\"ds-chip\">Health</button></div>",
+      "css": ".ds-chips { display: flex; gap: 8px; } .ds-chip { display: inline-flex; align-items: center; height: 36px; padding: 0 14px; border: 0; border-radius: 18px; background: var(--color-surface); box-shadow: 0 1px 3px color-mix(in srgb, var(--color-ink) 14%, transparent); color: var(--color-ink); font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; font-size: 15px; font-weight: 600; line-height: 1; white-space: nowrap; cursor: pointer; transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-chip:active { transform: scale(0.98); } .ds-chip:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Option Card",
+      "kind": "card",
+      "refersTo": "option-card",
+      "description": "One way to make the trip. Every card shares one grid; the recommended one takes the 2 px green border and the amber tag.",
+      "html": "<button class=\"ds-option ds-option--selected\"><span class=\"ds-option__icon\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 15V9a2 2 0 0 1 2-2h12l4 4v4a1 1 0 0 1-1 1h-1M3 15a1 1 0 0 0 1 1h1M3 11h18M9 16h6\"/><circle cx=\"7\" cy=\"16\" r=\"2\"/><circle cx=\"17\" cy=\"16\" r=\"2\"/></svg></span><strong class=\"ds-option__title\">Centro-Magsaysay Loop A (clockwise)</strong><span class=\"ds-option__tag\">Recommended</span><span class=\"ds-option__board\">Get on near Plaza Rizal (A1) · Toward Avenue Square (A5)</span><span class=\"ds-option__chips\"><span class=\"ds-option__info\">Centro / Gen. Luna</span><span class=\"ds-option__caution\">Unverified route</span></span><span class=\"ds-option__rule\"></span><span class=\"ds-option__eta\">Est. 9–18 min + waiting (unknown)</span><span class=\"ds-option__foot\"><span>Est. ₱14</span><span class=\"ds-option__transfers\">No transfers</span></span></button>",
+      "css": ".ds-option { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 6px 12px; align-items: start; width: 100%; padding: 14px; border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent); border-radius: 14px; background: var(--color-surface); color: var(--color-ink); font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; text-align: left; cursor: pointer; transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-option--selected { padding: 13px; border: 2px solid var(--color-brand); } .ds-option > * { grid-column: 2 / -1; } .ds-option > .ds-option__icon { grid-column: 1; grid-row: 1 / span 2; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: color-mix(in srgb, var(--color-brand) 14%, transparent); color: var(--color-brand-strong); } .ds-option > .ds-option__title { grid-column: 2; grid-row: 1; align-self: center; font-size: 17px; font-weight: 700; line-height: 1.3; } .ds-option > .ds-option__tag { grid-column: 3; grid-row: 1; align-self: center; padding: 2px 8px; border-radius: 999px; background: var(--color-accent); color: var(--color-ink); font-size: 12px; font-weight: 700; line-height: 16px; } .ds-option__board { color: var(--color-ink-2); font-size: 13px; line-height: 1.4; } .ds-option__chips { display: flex; flex-wrap: wrap; gap: 6px; } .ds-option__info, .ds-option__caution { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 16px; } .ds-option__info { background: color-mix(in srgb, var(--color-brand) 14%, transparent); color: var(--color-brand-strong); } .ds-option__caution { background: var(--color-accent-soft); color: var(--color-accent-ink); } .ds-option__rule { height: 1px; margin: 4px 0 2px; background: color-mix(in srgb, var(--color-ink) 10%, transparent); } .ds-option__eta { font-size: 15px; font-weight: 600; line-height: 1.35; font-variant-numeric: tabular-nums; } .ds-option__foot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; } .ds-option__transfers { color: var(--color-ink-2); font-size: 13px; font-weight: 400; } .ds-option:active { transform: scale(0.98); } .ds-option:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Trip-ends Card",
+      "kind": "custom",
+      "refersTo": "trip-ends-card",
+      "description": "Start and destination rows at the top of the trip sheet, with the swap button.",
+      "html": "<div class=\"ds-ends\"><button class=\"ds-ends__row\"><span class=\"ds-ends__icon ds-ends__icon--start\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 14 14\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"5\" fill=\"currentColor\"/></svg></span><span>Plaza Rizal</span></button><div class=\"ds-ends__sep\"></div><button class=\"ds-ends__row\"><span class=\"ds-ends__icon ds-ends__icon--dest\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.800 7 12 7 12Z\" fill=\"currentColor\"/><circle cx=\"12\" cy=\"10\" r=\"2.6\" fill=\"#FFFFFF\"/></svg></span><span>SM City Naga</span></button><button class=\"ds-ends__swap\" aria-label=\"Swap start and destination\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 20V5m0 0L4 9m4-4 4 4M16 4v15m0 0-4-4m4 4 4-4\"/></svg></button></div>",
+      "css": ".ds-ends { position: relative; border-radius: 14px; background: var(--color-fill); color: var(--color-ink); font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; } .ds-ends__row { display: flex; align-items: center; gap: 12px; width: calc(100% - 56px); min-height: 56px; padding: 0 4px 0 14px; border: 0; border-radius: 14px; background: transparent; color: inherit; font: inherit; font-size: 17px; font-weight: 600; text-align: left; cursor: pointer; } .ds-ends__row:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--color-brand); } .ds-ends__icon { flex: none; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; } .ds-ends__icon--start { background: color-mix(in srgb, var(--color-brand) 14%, transparent); color: var(--color-brand); } .ds-ends__icon--dest { background: var(--color-danger-soft); color: var(--color-danger); } .ds-ends__sep { height: 1px; margin: 0 64px 0 54px; background: color-mix(in srgb, var(--color-ink) 10%, transparent); } .ds-ends__swap { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 999px; background: var(--color-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-ink) 16%, transparent); color: var(--color-ink); cursor: pointer; } .ds-ends__swap:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Tags and Chips",
+      "kind": "chip",
+      "refersTo": "tag-recommended",
+      "description": "Recommended (amber, ink text), neutral tag, caution chip, estimate and unknown fare chips.",
+      "html": "<div class=\"ds-tags\"><span class=\"ds-tag ds-tag--rec\">Recommended</span><span class=\"ds-tag ds-tag--neutral\">Least walking</span><span class=\"ds-tag ds-tag--caution\">Unverified route</span><span class=\"ds-tag ds-tag--fare\">Est. ₱14</span><span class=\"ds-tag ds-tag--nofare\">Fare unknown</span></div>",
+      "css": ".ds-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; } .ds-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 16px; } .ds-tag--rec { background: var(--color-accent); color: var(--color-ink); font-weight: 700; } .ds-tag--neutral { background: var(--color-fill); color: var(--color-ink-2); font-weight: 700; } .ds-tag--caution { background: var(--color-accent-soft); color: var(--color-accent-ink); } .ds-tag--fare { min-height: 24px; padding: 0 9px; border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent); color: var(--color-ink); font-size: 13px; font-variant-numeric: tabular-nums; } .ds-tag--nofare { min-height: 24px; padding: 0 9px; border: 1px dashed var(--color-ink-3); color: var(--color-ink-2); font-size: 13px; }"
+    },
+    {
+      "name": "Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Solid floating bar with five destinations; the current tab takes a green tint.",
+      "html": "<nav class=\"ds-tabbar\" aria-label=\"Main\"><a class=\"ds-tab\" href=\"#\" aria-current=\"page\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2ZM9 4v14M15 6v14\"/></svg><span>Map</span></a><a class=\"ds-tab\" href=\"#\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m15.500 8.500-2 5-5 2 2-5 5-2Z\"/></svg><span>Explore</span></a><a class=\"ds-tab\" href=\"#\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 4h12v17l-6-4-6 4V4Z\"/></svg><span>Saved</span></a><a class=\"ds-tab\" href=\"#\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"8\" r=\"3\"/><circle cx=\"17\" cy=\"9\" r=\"2.500\"/><path d=\"M3 20c0-3.300 2.700-6 6-6s6 2.700 6 6M15 14.500c3 0 6 1.800 6 5.500\"/></svg><span>Community</span></a><a class=\"ds-tab\" href=\"#\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><circle cx=\"5\" cy=\"12\" r=\"1.600\"/><circle cx=\"12\" cy=\"12\" r=\"1.600\"/><circle cx=\"19\" cy=\"12\" r=\"1.600\"/></svg><span>More</span></a></nav>",
+      "css": ".ds-tabbar { display: flex; justify-content: space-between; padding: 6px 4px; border-radius: 16px; background: var(--color-surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink) 10%, transparent), 0 4px 14px -2px color-mix(in srgb, var(--color-ink) 14%, transparent); font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; } .ds-tab { display: flex; flex: 1 1 auto; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; height: 54px; padding: 0 2px; border-radius: 10px; color: var(--color-ink-2); font-size: 12px; font-weight: 600; line-height: 14px; text-decoration: none; transition: transform 360ms cubic-bezier(0.32, 0.72, 0, 1); } .ds-tab[aria-current=\"page\"] { background: color-mix(in srgb, var(--color-brand) 14%, transparent); color: var(--color-brand); font-weight: 700; } .ds-tab:active { transform: scale(0.96); } .ds-tab:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Map Controls",
+      "kind": "custom",
+      "refersTo": "map-control",
+      "description": "Round white controls at the map's right edge: a zoom capsule and the locate button.",
+      "html": "<div class=\"ds-ctls\"><div class=\"ds-ctl-capsule\" role=\"group\" aria-label=\"Zoom\"><button class=\"ds-ctl\" aria-label=\"Zoom in\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><div class=\"ds-ctl-divider\"></div><button class=\"ds-ctl\" aria-label=\"Zoom out\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/></svg></button></div><div class=\"ds-ctl-capsule\"><button class=\"ds-ctl ds-ctl--locate\" aria-label=\"Go to my location\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M21 3 3 10.500l7 2.500 2.500 7L21 3Z\"/></svg></button></div></div>",
+      "css": ".ds-ctls { display: inline-flex; flex-direction: column; gap: 12px; } .ds-ctl-capsule { display: flex; flex-direction: column; border-radius: 999px; overflow: hidden; background: var(--color-surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink) 10%, transparent), 0 4px 14px -2px color-mix(in srgb, var(--color-ink) 14%, transparent); } .ds-ctl-divider { height: 1px; margin: 0 10px; background: color-mix(in srgb, var(--color-ink) 10%, transparent); } .ds-ctl { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; padding: 0; border: 0; background: transparent; color: var(--color-ink); cursor: pointer; transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-ctl--locate { color: var(--color-brand); } .ds-ctl:active { transform: scale(0.97); } .ds-ctl:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; outline-offset: -3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The category standard, played straight",
+    "overview": "Lunad looks and behaves like the map apps a rider already has on their phone, so nothing has to be learned. The owner chose this on 2026-11-10 after seeing two rounds of more distinctive directions; the benchmarks for finish are Apple Maps, Google Maps and Moovit. The screen is a full-bleed map with white chrome floating over it: a rounded search bar at the top, pill chips under it, round controls at the right edge, a floating tab bar at the bottom, and a draggable bottom sheet for trips.\n\nColour does little and means something each time. Green is the brand and the primary action. Amber marks \"your stop\", the Recommended tag and cautions. Red is the destination pin, closures and errors. Each transport mode keeps its own data colour on the line and in the legend. Everything else is white, near-white and green-tinted ink. The dark theme is the same system on green-tinted near-black.\n\nThe product's promise is honest data, and the system carries it visually: an unverified route gets an amber chip in a fixed place, an estimate is written as \"Est.\", an unknown fare gets a dashed outline, and none of these is ever styled away.",
+    "keyCharacteristics": [
+      "Map first: the map is the screen and every other element floats over it or slides up from the bottom.",
+      "White, rounded, quiet chrome: pills for controls, 12 to 16 px corners for cards and sheets.",
+      "One elevation language: a soft shadow for what floats over the map, a hairline inside sheets, hairline only in dark.",
+      "Three meaning colours (green, amber, red) plus the mode palette, which is data.",
+      "Outdoor-readable: 13 px is the working minimum for text, targets are at least 48 px, secondary text is at least 4.5:1.",
+      "CSS-only motion on transform and opacity, with reduced motion respected everywhere."
+    ],
+    "rules": [
+      {
+        "name": "The Dark Text On Amber Rule",
+        "body": "Stop Amber never carries white text. Text on amber is Ink; text on the amber wash is Amber Ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The Amber Line Rule",
+        "body": "Amber as a thin stroke or outline on a light surface uses Amber Line, never Stop Amber. Fills stay Stop Amber, and dark surfaces use Stop Amber for both.",
+        "section": "colors"
+      },
+      {
+        "name": "The Data Colour Rule",
+        "body": "Mode colours are data. They are never recoloured to brand green, never used for chrome, and the trip line keeps each mode's own colour so the list and the map key to each other.",
+        "section": "colors"
+      },
+      {
+        "name": "The Neutral Outline Rule",
+        "body": "The city outline is a neutral hairline (Ink 3), never brand green.",
+        "section": "colors"
+      },
+      {
+        "name": "The 13 Pixel Floor Rule",
+        "body": "Running text is never under 13 px, and tags and tab labels never under 12 px. The single exception is the map attribution strip at 10 px.",
+        "section": "typography"
+      },
+      {
+        "name": "The Fixed Position Rule",
+        "body": "On an option card, time and fare always sit in the same place, as the last two lines under a hairline, so the eye compares down a column. Do not move them per card.",
+        "section": "typography"
+      },
+      {
+        "name": "The Shadow Or Hairline Rule",
+        "body": "Over the map: shadow. Inside a sheet: hairline. Never both on one element, and in dark: hairline only.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Solid Surface Rule",
+        "body": "Home's chrome is opaque. There is no blur, glass or translucency over the map; the one translucent element is the attribution strip.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** read colour through the tokens: `--color-*` from `src/app/globals.css`, or the screen's `--pn-*` aliases, which already switch for dark and high contrast.",
+      "**Do** write every dark block twice, as the stylesheets do: `:root[data-theme=\"dark\"]` and `@media (prefers-color-scheme: dark) { :root:not([data-theme=\"light\"]) }`.",
+      "**Do** use Ink text on Stop Amber, and Amber Line (#a86f00) when amber is a thin stroke on a light surface.",
+      "**Do** give anything that floats over the map the float shadow, and anything inside a sheet a hairline. In dark, hairline only.",
+      "**Do** keep time and fare in fixed positions on every option card, and label estimates (\"Est.\") and unknowns in words.",
+      "**Do** keep targets at 48 px or more, extending a smaller shape's hit area with a pseudo-element.",
+      "**Do** animate with CSS on transform and opacity only, using the `--pn-dur*` and `--pn-ease*` tokens, and give every animation a reduced-motion branch.",
+      "**Do** pair every colour cue with an icon or text: mode chips carry an icon and a label, caution chips carry words.",
+      "**Do** keep the legacy internal names. Storage keys (`paranaga.*`), cache names (`paranaga-*`), the database role (`paranaga_app`) and the CSS class prefix (`pn-`) keep their old names on purpose; renaming them would lose riders' saved data or break deployments."
+    ],
+    "donts": [
+      "**Don't** put white text on Stop Amber (#ffb81c), or draw Stop Amber as a thin line on a white or map surface.",
+      "**Don't** recolour mode colours to brand green, or use them for anything that is not that mode.",
+      "**Don't** draw the city outline, separators or card borders in brand green; green on a border means selected.",
+      "**Don't** combine a shadow and a border on one element, or add shadows in the dark theme.",
+      "**Don't** add blur, glass or translucent chrome over the map.",
+      "**Don't** mark emphasis with a coloured stripe down one side of a card or list item; use a soft tint with a leading icon.",
+      "**Don't** show stop icons on a trip's map. A trip map shows the route, the start, the destination and the get-off dot.",
+      "**Don't** add an animation library (no `motion`, `framer-motion` or GSAP), and don't animate layout properties.",
+      "**Don't** redraw, recolour or re-proportion the route-shaped L, and don't place it without its tile.",
+      "**Don't** propose a more expressive visual world, a display typeface or a novelty layout for the app; the owner's standing choice is the category standard.",
+      "**Don't** style away uncertainty: an unverified route keeps its amber chip, an unknown fare keeps its dashed outline, and neither is ever shown as a confident value.",
+      "**Don't** treat the screens that have not been rebuilt, or the items under Known deviations, as patterns to copy."
+    ]
+  }
+}

@@ -7,28 +7,28 @@
 .pn-home,
 .pn-detail,
 .pn-tabbar {
-  --pn-tab-idle: #24324f;
-  --pn-seg-on: #ffffff;
+  --pn-tab-idle: var(--color-ink-2);
+  --pn-seg-on: var(--color-surface);
   /* Off track: 3:1 against the white group surface (WCAG 1.4.11), so "off" reads as a control. */
-  --pn-switch-off: #7c8699;
+  --pn-switch-off: var(--color-ink-3);
   /* Coral text strong enough for 4.5:1 on --pn-coral-soft-bg (artboard Help coralSoftText). */
-  --pn-coral-strong-text: #9e2a21;
+  --pn-coral-strong-text: var(--color-danger-ink);
 }
 :root[data-theme="dark"] .pn-home,
 :root[data-theme="dark"] .pn-detail,
 :root[data-theme="dark"] .pn-tabbar {
-  --pn-tab-idle: #c7cedc;
-  --pn-seg-on: #2a3654;
-  --pn-switch-off: #5f6c88;
+  --pn-tab-idle: var(--color-night-ink-2);
+  --pn-seg-on: color-mix(in srgb, var(--color-night-ink) 12%, var(--color-night-raised));
+  --pn-switch-off: var(--color-night-ink-3);
   --pn-coral-strong-text: var(--pn-coral-soft-text);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-home,
   :root:not([data-theme="light"]) .pn-detail,
   :root:not([data-theme="light"]) .pn-tabbar {
-    --pn-tab-idle: #c7cedc;
-    --pn-seg-on: #2a3654;
-    --pn-switch-off: #5f6c88;
+    --pn-tab-idle: var(--color-night-ink-2);
+    --pn-seg-on: color-mix(in srgb, var(--color-night-ink) 12%, var(--color-night-raised));
+    --pn-switch-off: var(--color-night-ink-3);
     --pn-coral-strong-text: var(--pn-coral-soft-text);
   }
 }
@@ -39,7 +39,7 @@
   --pn-switch-off: color-mix(in srgb, var(--pn-label) 55%, transparent);
 }
 /* High contrast: badges get a solid border in their text colour (the dashed ones keep the dash,
-   which is part of their meaning: trial, historical), and the tab bar a solid surface. */
+   which is part of their meaning: trial, historical), and the tab bar a hairline instead of its shadow. */
 :root[data-contrast="more"] .pn-badge,
 :root[data-contrast="more"] .pn-trip-badge {
   border: 1.5px solid currentColor;
@@ -50,12 +50,7 @@
   border-style: dashed;
 }
 :root[data-contrast="more"] .pn-tabbar {
-  background: var(--pn-surface);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  box-shadow:
-    inset 0 0 0 1.5px var(--pn-sep),
-    0 12px 32px var(--pn-shadow);
+  box-shadow: inset 0 0 0 1.5px var(--pn-sep);
 }
 
 /* ------------------------------------------------------------------ Screen header (large title) */
@@ -104,7 +99,7 @@ button.pn-cell:active {
   transform: scale(0.98);
 }
 .pn-cell:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
   border-radius: 10px;
 }
@@ -141,7 +136,7 @@ button.pn-cell:active {
 }
 .pn-badge--historical {
   background: transparent;
-  border: 1.5px dashed var(--pn-label3, #8a95ab);
+  border: 1.5px dashed var(--pn-label3, var(--color-ink-3));
   color: var(--pn-label2);
 }
 
@@ -174,7 +169,7 @@ button.pn-cell:active {
   width: calc((100% - 4px) / var(--pn-seg-count, 2));
   border-radius: 8px;
   background: var(--pn-seg-on);
-  box-shadow: 0 2px 6px var(--pn-shadow);
+  box-shadow: 0 1px 3px var(--pn-shadow);
   transform: translateX(calc(var(--pn-seg-index, 0) * 100%));
   transition: transform var(--pn-dur-slow) var(--pn-ease-snap);
 }
@@ -284,7 +279,7 @@ button.pn-cell:active {
   inset: -7px -4px;
 }
 .pn-switch:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 /* Forced colours drop the fills: an outlined track, a knob in the text colour, Highlight when on. */
@@ -315,13 +310,13 @@ button.pn-cell:active {
   width: min(340px, calc(100vw - 32px));
   padding: 20px;
   border: 0;
-  border-radius: 22px;
+  border-radius: 16px;
   background: var(--pn-surface);
   color: var(--pn-label);
   box-shadow: 0 20px 48px var(--pn-shadow);
 }
 .pn-dialog::backdrop {
-  background: rgba(11, 22, 48, 0.45);
+  background: color-mix(in srgb, var(--color-ink) 45%, transparent);
 }
 .pn-dialog__title {
   margin: 0;
@@ -351,37 +346,38 @@ button.pn-cell:active {
   font-size: 17px;
 }
 .pn-dialog button:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 
-/* ------------------------------------------------------------------ Tab bar (Liquid Glass pill) */
+/* ------------------------------------------------------------------ Tab bar (a solid bar floating over the map) */
 .pn-tabbar {
   position: fixed;
-  left: 16px;
-  right: 16px;
+  left: 12px;
+  right: 12px;
   bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 8px));
   z-index: 2100; /* above the panels (.pn-detail, 2000) */
   display: flex;
   justify-content: space-between;
-  padding: 6px;
-  border-radius: 999px;
-  background: var(--pn-glass);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
-  box-shadow:
-    inset 0 1px 0 var(--pn-glass-edge),
-    0 12px 32px var(--pn-shadow);
+  padding: 6px 4px;
+  border-radius: 16px;
+  background: var(--pn-surface);
+  box-shadow: var(--pn-elev);
 }
 .pn-tabbar__tab {
   display: flex;
-  flex: 1 1 0;
+  /* Each tab takes the width of its label plus an equal share of what is left, so the longest
+     label ("Community", "Komunidad") fits at 320 px without shrinking the type. When even that is
+     too narrow (200 % text), the tabs shrink together and a label ends in an ellipsis. */
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;
   height: 54px;
-  border-radius: 999px;
+  padding: 0 2px;
+  border-radius: 10px;
   color: var(--pn-tab-idle);
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
@@ -392,14 +388,22 @@ button.pn-cell:active {
 }
 .pn-tabbar__tab[aria-current="page"] {
   background: var(--pn-teal-soft-bg);
-  color: var(--pn-teal-soft-text);
+  color: var(--pn-accent);
+}
+.pn-tabbar__tab[aria-current="page"] .pn-tabbar__label {
+  font-weight: 700;
 }
 .pn-tabbar__tab:active {
   transform: scale(0.96);
 }
 .pn-tabbar__label {
-  font-size: 10px;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 12px;
   font-weight: 600;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 /* Short screens (landscape, 200-400 % zoom): a compact bar, icons only (the labels stay the tabs'
    accessible names), so it covers 60 px instead of 90. */
@@ -421,17 +425,9 @@ button.pn-cell:active {
   }
 }
 .pn-tabbar__tab:focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
-@media (prefers-reduced-transparency: reduce) {
-  .pn-tabbar {
-    background: var(--pn-surface);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-
 /* The home screen's sr-only heading takes focus when the Map tab is chosen; no ring for that. */
 .pn-home h1:focus {
   outline: none;

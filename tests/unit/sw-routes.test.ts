@@ -203,7 +203,7 @@ describe("isCacheableResponse", () => {
 });
 
 describe("cache names", () => {
-  it("are keyed by the build; another build's ParaNaga caches are outdated, nothing else is", () => {
+  it("are keyed by the build; another build's Lunad caches are outdated, nothing else is", () => {
     expect(cacheName("snapshot", "b1")).toBe("pn-snapshot-b1");
     expect(outdatedCaches(["pn-snapshot-b1", "pn-snapshot-b0", "pn-shell-b0", "pn-head-b1", "serwist-precache-v2-x", "other"], "b1")).toEqual(["pn-snapshot-b0", "pn-shell-b0"]);
   });

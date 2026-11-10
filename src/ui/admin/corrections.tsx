@@ -134,7 +134,7 @@ function Row({ c, open, draftOpen, onOpen, onAct }: { c: CorrectionItem; open: b
   const evidence = [c.media.length ? `${c.media.length} photo${c.media.length === 1 ? "" : "s"}` : null, c.location ? "location" : null].filter(Boolean).join(", ") || "text only";
   return (
     <>
-      <tr className="border-t border-fill dark:border-navy-raised" data-testid={`correction-${c.id}`}>
+      <tr className="border-t border-fill dark:border-night-border" data-testid={`correction-${c.id}`}>
         <th scope="row" className="py-1 pr-3 font-medium">
           {category(c)}
         </th>
@@ -166,7 +166,7 @@ function Row({ c, open, draftOpen, onOpen, onAct }: { c: CorrectionItem; open: b
 
 function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean; onAct: (c: CorrectionItem, p: ReviewPayload) => Promise<void> }) {
   return (
-    <div className="grid gap-4 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-2 dark:border-navy-raised" data-testid="correction-detail">
+    <div className="grid gap-4 rounded-lg border border-ink-3/25 p-4 lg:grid-cols-2 dark:border-night-border" data-testid="correction-detail">
       <div className="grid gap-3 text-sm">
         <section aria-label="What the commuter wrote">
           <h3 className="font-semibold">What they wrote</h3>

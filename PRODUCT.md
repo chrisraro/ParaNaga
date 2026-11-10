@@ -45,7 +45,8 @@ Honest local transport data. Every fact carries an evidence level; unknown fares
 - **Name: Lunad** (owner-approved 2026-11-10). Bikol Central for "ride, embark"; its opposite is "lusad", "get off". Replaces the working name ParaNaga.
 - **Mark: the route-shaped L** (owner-approved): an L drawn as a route with a start node, one turn and a dot for the stop.
 - **Reach: Bikol-wide later.** The logo is "Lunad" alone. Naga is the current city, not part of the lockup.
-- Colours, typeface and the overall look are open; the green and amber shown with the first mock-up were placeholders.
+- **Look: the category standard, played straight** (owner's standing choice, 2026-11-10, after seeing two hands of more distinctive directions). Lunad should feel like the map apps riders already know. Benchmarks for finish: Apple Maps, Google Maps and Moovit. Do not propose a more expressive visual world unless the owner asks.
+- **Brand colour: green**, with amber for "your stop" and highlights (owner-chosen 2026-11-10). Exact values live in the design tokens.
 - Not yet checked: trademark register, app stores, domain. A Bikol speaker should confirm the name reads naturally.
 
 ## Evidence on Hand

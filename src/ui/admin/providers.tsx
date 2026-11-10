@@ -77,7 +77,7 @@ export function ProvidersScreen() {
             </dd>
           </dl>
 
-          <div className="mt-4 grid gap-2 border-t border-fill pt-4 dark:border-navy-raised">
+          <div className="mt-4 grid gap-2 border-t border-fill pt-4 dark:border-night-border">
             <h3 className="text-sm font-semibold">Diagnostic</h3>
             {!canRunDiagnostic ? (
               <Muted>Only admins run the diagnostic.</Muted>
@@ -125,7 +125,7 @@ export function ProvidersScreen() {
             </thead>
             <tbody>
               {providers.map((p) => (
-                <tr key={p.id} className="border-t border-fill dark:border-navy-raised" data-testid={`provider-${p.id}`}>
+                <tr key={p.id} className="border-t border-fill dark:border-night-border" data-testid={`provider-${p.id}`}>
                   <th scope="row" className="py-1 pr-3 font-medium">
                     {p.label}
                   </th>

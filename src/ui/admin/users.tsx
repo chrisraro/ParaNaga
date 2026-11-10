@@ -90,11 +90,11 @@ export function UsersScreen() {
             </button>
           </form>
           {lookupError ? <div className="mt-3"><ErrorNote testId="users-lookup-error">{lookupError}</ErrorNote></div> : null}
-          {found === null ? <div className="mt-3"><Muted>No account uses that address. They need to sign in to ParaNaga once first.</Muted></div> : null}
+          {found === null ? <div className="mt-3"><Muted>No account uses that address. They need to sign in to Lunad once first.</Muted></div> : null}
           {found ? (
             <div className="mt-4">
               {!found.hasProfile ? (
-                <Muted>This account has not opened ParaNaga yet; roles can be given after their first sign-in.</Muted>
+                <Muted>This account has not opened Lunad yet; roles can be given after their first sign-in.</Muted>
               ) : (
                 <UserRoles user={found} staff={staffList} busy={flow.step === "applying"} onChange={(p) => void apply(p)} />
               )}
@@ -112,7 +112,7 @@ export function UsersScreen() {
           ) : (
             <ul className="grid gap-4">
               {staffList.map((u) => (
-                <li key={u.userId} className="rounded-lg border border-ink-3/25 p-3 dark:border-navy-raised">
+                <li key={u.userId} className="rounded-lg border border-ink-3/25 p-3 dark:border-night-border">
                   <UserRoles user={u} staff={staffList} busy={flow.step === "applying"} onChange={(p) => void apply(p)} />
                 </li>
               ))}
@@ -145,7 +145,7 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
     <div className="grid gap-2" data-testid={`user-${tid}`}>
       <p className="text-sm">
         <span className="font-semibold">{user.name}</span>
-        {user.email ? <span className="text-ink-2 dark:text-slate-300"> · {user.email}</span> : null}
+        {user.email ? <span className="text-ink-2 dark:text-night-ink-2"> · {user.email}</span> : null}
         {user.self ? (
           <span className="ml-2">
             <Chip>You</Chip>
@@ -161,7 +161,7 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
         {active.map((r) => (
           <li key={r.role} className="flex flex-wrap items-center gap-2">
             <Chip tone="ok">{ROLE_LABELS[r.role]}</Chip>
-            <span className="text-xs text-ink-2 dark:text-slate-300">
+            <span className="text-xs text-ink-2 dark:text-night-ink-2">
               since {when(r.grantedAt)}
               {r.grantedBy ? ` by ${r.grantedBy}` : ""} – {r.reason}
             </span>

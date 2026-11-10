@@ -188,7 +188,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           </p>
         </div>
 
-        <div className="pn-route-map-container" style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--pn-border, #E2E8F0)" }}>
+        <div className="pn-route-map-container" style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--pn-sep, var(--color-border))" }}>
           <div style={{ height: 240, position: "relative" }} data-testid="route-map">
             <NagaMap
               routeLines={activeLine ? [activeLine] : []}
@@ -198,7 +198,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
               label={t.mapOf(route.name)}
             />
           </div>
-          <div className="pn-route-map-status" style={{ padding: "8px 12px", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pn-surface, #F8FAFC)" }} data-testid="route-map-status">
+          <div className="pn-route-map-status" style={{ padding: "8px 12px", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pn-surface, var(--color-canvas))" }} data-testid="route-map-status">
             <span data-testid="route-path-status">{pathStatus}</span>
             {activeLine ? (
               <span className="pn-route-map-badge" style={{ fontSize: 11, fontWeight: 600, opacity: 0.8 }} data-testid="route-trace-badge">

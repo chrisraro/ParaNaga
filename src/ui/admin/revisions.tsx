@@ -115,10 +115,10 @@ export function RevisionsScreen() {
       ) : !list.ok ? (
         <ErrorNote testId="revisions-error">{list.message}</ErrorNote>
       ) : (
-        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-navy-raised dark:bg-navy">
+        <div tabIndex={0} className="adm-scroll rounded-xl border border-ink-3/25 bg-white dark:border-night-border dark:bg-night-surface">
           <table className="w-full text-left text-sm" data-testid="revisions-table">
             <caption className="sr-only">Revisions, newest first</caption>
-            <thead className="border-b border-fill dark:border-navy-raised">
+            <thead className="border-b border-fill dark:border-night-border">
               <tr>
                 {["#", "Label", "Kind", "Status", "Members", "Created", "Published", "Last validation", "Actions"].map((h) => (
                   <th key={h} scope="col" className="px-3 py-2 font-semibold">
@@ -129,11 +129,11 @@ export function RevisionsScreen() {
             </thead>
             <tbody>
               {list.data.revisions.map((r) => (
-                <tr key={r.id} className="border-b border-fill last:border-0 dark:border-navy-raised" data-testid={`revision-${r.label}`}>
+                <tr key={r.id} className="border-b border-fill last:border-0 dark:border-night-border" data-testid={`revision-${r.label}`}>
                   <td className="px-3 py-2 tabular-nums">{r.seq}</td>
                   <th scope="row" className="px-3 py-2 font-medium">
                     {r.label}
-                    {r.isSynthetic ? <span className="ml-2 text-xs text-coral-ink dark:text-coral-bright">test data</span> : null}
+                    {r.isSynthetic ? <span className="ml-2 text-xs text-danger-ink dark:text-danger-bright">test data</span> : null}
                   </th>
                   <td className="px-3 py-2">{r.kind === "provisional" ? "Provisional" : "Verified"}</td>
                   <td className="px-3 py-2">
@@ -247,8 +247,8 @@ function Report({ report }: { report: StoredValidationReport }) {
             </thead>
             <tbody>
               {report.issues.map((i, n) => (
-                <tr key={`${i.rule}-${n}`} className="border-t border-fill dark:border-navy-raised">
-                  <td className={`py-1 pr-3 font-medium ${i.severity === "error" ? "text-coral-ink dark:text-coral-bright" : ""}`}>{i.severity === "error" ? "Error" : "Warning"}</td>
+                <tr key={`${i.rule}-${n}`} className="border-t border-fill dark:border-night-border">
+                  <td className={`py-1 pr-3 font-medium ${i.severity === "error" ? "text-danger-ink dark:text-danger-bright" : ""}`}>{i.severity === "error" ? "Error" : "Warning"}</td>
                   <td className="py-1 pr-3">{RULES[i.rule].title}</td>
                   <td className="py-1 pr-3">{i.ref}</td>
                   <td className="py-1 pr-3">{i.message}</td>

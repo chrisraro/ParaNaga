@@ -49,7 +49,7 @@ export function AdminStepUp({ action, onVerified, onCancel }: { action: string; 
   const asked = phase === "sent" || phase === "verifying";
 
   return (
-    <section aria-labelledby={`${uid}-t`} className="mt-4 grid gap-3 rounded-md border border-gold bg-white p-4 dark:bg-navy-deep" data-testid="admin-step-up">
+    <section aria-labelledby={`${uid}-t`} className="mt-4 grid gap-3 rounded-md border border-accent-line bg-white p-4 dark:border-accent dark:bg-night" data-testid="admin-step-up">
       <h3 id={`${uid}-t`} className="font-semibold">
         Confirm it is you
       </h3>
@@ -70,7 +70,7 @@ export function AdminStepUp({ action, onVerified, onCancel }: { action: string; 
               maxLength={12}
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="w-40 rounded-md border border-ink-3 bg-white px-2 py-1.5 text-navy dark:border-slate-300 dark:bg-navy dark:text-white"
+              className="w-40 rounded-md border border-ink-3 bg-white px-2 py-1.5 text-ink dark:border-night-ink-2 dark:bg-night-surface dark:text-white"
               data-testid="admin-step-up-code"
             />
           </label>

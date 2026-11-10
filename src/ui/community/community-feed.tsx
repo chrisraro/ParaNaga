@@ -2,7 +2,7 @@
 
 // Community feed (S17, F-D2): published posts, filtered by topic, search and tag. Guests read;
 // writing, saving and "My posts" need an account. Everything here was written by other commuters
-// and is not verified by ParaNaga; the notice says so once, under the list.
+// and is not verified by Lunad; the notice says so once, under the list.
 
 import "@/ui/kit/styles";
 import "./community.css";

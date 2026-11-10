@@ -49,7 +49,7 @@ const tab = (page: Page, name: string) => page.getByRole("navigation", { name: "
 
 async function tour(page: Page) {
   const h1 = (name: string) => page.getByRole("heading", { level: 1, name });
-  for (const [name, heading] of [["Explore", "Explore"], ["Saved", "Saved"], ["More", "Settings"], ["Map", "ParaNaga trip planner"], ["Saved", "Saved"], ["Explore", "Explore"]] as const) {
+  for (const [name, heading] of [["Explore", "Explore"], ["Saved", "Saved"], ["More", "Settings"], ["Map", "Lunad trip planner"], ["Saved", "Saved"], ["Explore", "Explore"]] as const) {
     await tab(page, name).click();
     await expect(h1(heading)).toBeAttached();
     await expect(page).toHaveURL(name === "Map" ? /\/app$/ : new RegExp(`/app/${name === "More" ? "more" : name.toLowerCase()}`));

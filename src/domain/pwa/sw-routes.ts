@@ -54,7 +54,7 @@ export const WALK_GRAPH_REVISIONS_KEPT = 2;
 export const REFERENCE_MAX_ENTRIES = 200;
 export const REFERENCE_MAX_AGE_S = 30 * 24 * 60 * 60;
 
-/** Every cache ParaNaga's worker creates starts with this; the build id is appended. */
+/** Every cache Lunad's worker creates starts with this; the build id is appended. */
 export const CACHE_PREFIX = "pn-";
 export const CACHE_KINDS = ["shell", "rsc", "head", "snapshot", "search-index", "search-places", "lines", "walk-graph", "intercity", "reference"] as const;
 export type CacheKind = (typeof CACHE_KINDS)[number];
@@ -192,7 +192,7 @@ export function cacheName(kind: CacheKind, buildId: string): string {
   return `${CACHE_PREFIX}${kind}-${buildId}`;
 }
 
-/** ParaNaga caches of another build (removed when this build's worker activates). */
+/** Lunad caches of another build (removed when this build's worker activates). */
 export function outdatedCaches(names: readonly string[], buildId: string): string[] {
   const current = new Set(CACHE_KINDS.map((k) => cacheName(k, buildId)));
   return names.filter((n) => n.startsWith(CACHE_PREFIX) && !current.has(n));

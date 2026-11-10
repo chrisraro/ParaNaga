@@ -3,7 +3,7 @@
 // Help (artboard Help; Increment A, Task 11): Help · Safety · About data, opened from More. The
 // section is in the URL (?tab=help|safety|data), changed in place with history.replaceState like
 // Saved. Differences from the artboard, on purpose:
-//  - Help: "Report a problem with a driver" opens the MyNaga handoff (D9). The private ParaNaga
+//  - Help: "Report a problem with a driver" opens the MyNaga handoff (D9). The private Lunad
 //    report link shows only when DRIVER_REPORTS_ENABLED is on (N2).
 //  - Safety: the emergency number is the national 911, as the spec prescribes
 //    (docs/spec/02-features.md:104, "urgent situations show official emergency numbers (911)").

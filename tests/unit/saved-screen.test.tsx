@@ -210,7 +210,7 @@ describe("Saved → Trips", () => {
     expect(document.activeElement).toBe(screen.getByTestId("saved-dropped-status"));
   });
 
-  it("a record from a newer ParaNaga is only mentioned, never offered for removal", async () => {
+  it("a record from a newer Lunad is only mentioned, never offered for removal", async () => {
     const { openDB } = await import("idb");
     const raw = await openDB(db.DEVICE_DB_NAME);
     await raw.put("savedTrips", { ...card, id: "future", v: RECORD_FORMAT + 1 }, "future");

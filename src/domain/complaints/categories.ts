@@ -1,5 +1,5 @@
 // Report a driver (S18, F-D4, task B8): what happened. Plain, neutral wording: the report
-// describes what the commuter saw; ParaNaga never decides who is at fault.
+// describes what the commuter saw; Lunad never decides who is at fault.
 // The words live in the dictionary (driverReport.categories); English by default.
 import { en, type Dict } from "@/i18n/dict";
 

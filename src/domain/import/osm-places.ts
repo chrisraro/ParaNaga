@@ -1,5 +1,5 @@
 // Pure parser of a committed OpenStreetMap places snapshot (data/source/osm/naga-places-*.osm.json,
-// written by scripts/fetch-osm-places.ts). Reads only what ParaNaga keeps from OSM: the name and
+// written by scripts/fetch-osm-places.ts). Reads only what Lunad keeps from OSM: the name and
 // four alias tags, the tags that decide the category, the coordinate and the element's
 // type/id/version/timestamp. Every other tag (opening_hours, phone, website, image, entrances,
 // addresses, …) is never read and never output.

@@ -1,6 +1,6 @@
 "use client";
 
-// More → App: install ParaNaga. Only what the browser really offers: a button when it has fired
+// More → App: install Lunad. Only what the browser really offers: a button when it has fired
 // `beforeinstallprompt` (Android / Chromium), the Share → "Add to Home Screen" steps on iPhone and
 // iPad, "Installed" inside the installed app, and plain text pointing to the browser menu
 // otherwise. No fake prompt, no button that does nothing. While a new version waits, the group also

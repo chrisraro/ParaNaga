@@ -11,6 +11,7 @@ import { useIsOffline } from "@/client/pwa/connectivity";
 import { useSavedPlaces } from "@/client/saved/use-saved";
 import { useT } from "@/i18n/provider";
 import { useAppFrame } from "@/ui/app-shell/app-frame-context";
+import { LunadMark } from "@/ui/brand/lunad-mark";
 import { homeChips } from "./home-chips";
 
 function SearchIcon() {
@@ -42,8 +43,9 @@ export function HomeSearchBar({ searchRef }: { searchRef: Ref<HTMLAnchorElement>
     <div className="pn-home-top">
       <ViewTransition name="pn-search-field">
         <Anchor ref={searchRef} href="/app/search?for=destination" className="pn-home-search" aria-label={home.searchLabel} data-testid="home-search">
+          <LunadMark size={28} />
+          <span className="pn-home-search__text">{home.whereTo}</span>
           <SearchIcon />
-          <span>{home.whereTo}</span>
         </Anchor>
       </ViewTransition>
       <ul className="pn-home-chips" aria-label={home.browsePlaces} data-testid="home-chips">

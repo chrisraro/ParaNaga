@@ -6,7 +6,7 @@ import { fetchDashboard, type AdminResult } from "@/client/admin/api";
 import type { AdminDashboard as Dashboard } from "@/domain/admin/schemas";
 import { Chip, ErrorNote, Muted, PageTitle, Panel, when, type ChipTone } from "./parts";
 
-const linkCls = "font-medium text-teal-ink underline underline-offset-2 dark:text-teal-bright";
+const linkCls = "font-medium text-brand-strong underline underline-offset-2 dark:text-brand-bright";
 const DAY_MS = 86_400_000;
 
 // A1 Dashboard (N5a, C1; redesigned N8): answers "is the network healthy, what needs me now" from
@@ -109,7 +109,7 @@ function Attention({ d, corrections }: { d: Dashboard; corrections: boolean }) {
           <span>Nothing is waiting on you. A published revision is live and no draft, candidate or correction is open.</span>
         </p>
       ) : (
-        <ul className="divide-y divide-ink-3/20 dark:divide-navy-raised">
+        <ul className="divide-y divide-ink-3/20 dark:divide-night-border">
           {items.map((i) => (
             <li key={i.chip + i.cta} className="grid gap-x-4 gap-y-1.5 py-3 first:pt-0 last:pb-0 sm:grid-cols-[7.5rem_1fr_auto] sm:items-center">
               <span>
@@ -132,7 +132,7 @@ function Attention({ d, corrections }: { d: Dashboard; corrections: boolean }) {
 function Stat({ label, value, testId }: { label: string; value: string | number; testId: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-xs text-ink-2 dark:text-slate-300">{label}</dt>
+      <dt className="text-xs text-ink-2 dark:text-night-ink-2">{label}</dt>
       <dd className="mt-0.5 break-words text-2xl font-semibold tabular-nums tracking-tight" data-testid={testId}>
         {value}
       </dd>
@@ -168,7 +168,7 @@ function Cards({ d, corrections, now }: { d: Dashboard; corrections: boolean; no
             <dl>
               <Stat label="Label" value={d.published.label} testId="published-label" />
             </dl>
-            <p className="flex flex-wrap items-center gap-2 text-sm text-ink-2 dark:text-slate-300">
+            <p className="flex flex-wrap items-center gap-2 text-sm text-ink-2 dark:text-night-ink-2">
               <Chip tone={d.published.kind === "provisional" ? "warn" : "ok"}>{d.published.kind === "provisional" ? "Provisional (unverified data)" : "Verified"}</Chip>
               <span>
                 #{d.published.seq} · {ageText(d.published.publishedAt, now) || `published ${when(d.published.publishedAt)}`}
@@ -185,7 +185,7 @@ function Cards({ d, corrections, now }: { d: Dashboard; corrections: boolean; no
           <dl>
             <Stat label="Open drafts" value={d.drafts} testId="draft-count" />
           </dl>
-          <p className="flex flex-wrap items-center gap-2 text-sm text-ink-2 dark:text-slate-300">
+          <p className="flex flex-wrap items-center gap-2 text-sm text-ink-2 dark:text-night-ink-2">
             <Chip tone={draftTone}>{draftState}</Chip>
             {draft ? <span>{draft.label}</span> : null}
           </p>
@@ -202,13 +202,13 @@ function Cards({ d, corrections, now }: { d: Dashboard; corrections: boolean; no
           <Stat label="All stops" value={d.stopsTotal} testId="stops-total" />
         </dl>
         <div
-          className="mt-4 h-2 overflow-hidden rounded-full bg-fill dark:bg-navy-raised"
+          className="mt-4 h-2 overflow-hidden rounded-full bg-fill dark:bg-night-raised"
           role="img"
           aria-label={`${d.stopCandidates} of ${d.stopsTotal} stops are still candidates (${share}%)`}
         >
-          <div className="h-full rounded-full bg-teal dark:bg-teal-bright" style={{ width: `${share}%` }} />
+          <div className="h-full rounded-full bg-brand dark:bg-brand-bright" style={{ width: `${share}%` }} />
         </div>
-        <p className="mt-1.5 text-xs text-ink-2 dark:text-slate-300">{share}% of stops are still candidates</p>
+        <p className="mt-1.5 text-xs text-ink-2 dark:text-night-ink-2">{share}% of stops are still candidates</p>
       </Panel>
       <Panel title="Corrections" testId="card-corrections">
         <dl>
@@ -228,7 +228,7 @@ function Cards({ d, corrections, now }: { d: Dashboard; corrections: boolean; no
             <dl>
               <Stat label="Snapshot" value={d.lastImport.snapshotVersion} testId="import-snapshot" />
             </dl>
-            <p className="flex flex-wrap items-center gap-2 text-sm text-ink-2 dark:text-slate-300">
+            <p className="flex flex-wrap items-center gap-2 text-sm text-ink-2 dark:text-night-ink-2">
               <Chip>{d.lastImport.mode === "commit" ? "Commit" : "Dry run"}</Chip>
               <Chip>{d.lastImport.status}</Chip>
               <span>started {when(d.lastImport.startedAt)}</span>

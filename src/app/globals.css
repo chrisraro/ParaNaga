@@ -15,10 +15,16 @@
   }
 }
 
-/* ParaNaga design tokens (design canvas: 02 · Color, 03 · Foundations). */
+/* Lunad design tokens. The palette is defined once, in the `@theme static` block below; every
+   stylesheet points its own light/dark properties at these. */
 :root {
-  --background: #f4f6fa;
-  --foreground: #0f1e3d;
+  --background: var(--color-canvas);
+  --foreground: var(--color-ink);
+  /* Amber drawn as a line (rings, dashed outlines): the darker amber on light surfaces, the
+     brand amber on dark ones. */
+  --pn-amber-line: var(--color-accent-line);
+  accent-color: var(--color-brand);
+  caret-color: var(--color-brand);
 }
 
 @theme inline {
@@ -26,26 +32,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-
-  --color-navy: #0f1e3d;
-  --color-navy-deep: #0b1630;
-  --color-navy-raised: #1d3870;
-  --color-ink-2: #4a5468;
-  --color-ink-3: #5a6478;
-  --color-canvas: #f4f6fa;
-  --color-fill: #eceff4;
-  --color-teal: #0b7a75;
-  --color-teal-bright: #2bb5ae;
-  --color-teal-soft: #e3f2f1;
-  --color-teal-ink: #075e5a;
-  --color-on-teal-bright: #04201e;
-  --color-coral: #c73a2f;
-  --color-coral-brand: #f26b5b;
-  --color-coral-bright: #ff8a7a;
-  --color-coral-soft: #fce6e3;
-  --color-coral-ink: #9e2a21;
-  --color-gold: #e8a317;
-  --color-gold-ink: #6b4a00;
 
   --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
@@ -74,6 +60,57 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(176px); }
   }
+}
+
+/* The palette. `static` so every token is emitted on :root: the stylesheets under src/ui read
+   them with var(), which Tailwind's used-variable scan does not see.
+   Green is the brand; amber marks "your stop" and highlights, and never carries white text (use
+   ink or accent-ink on it). The night-* tokens are the dark theme's values: a stylesheet's dark
+   block points at them, the same way its light block points at the others. */
+@theme static {
+  /* Brand green: primary buttons, the route line, selection, links. */
+  --color-brand: #0b6b52;
+  --color-brand-strong: #084d3b; /* hover and pressed; text on brand-soft; high-contrast accent */
+  --color-brand-soft: #e3f1ec;
+  --color-on-brand: #ffffff;
+  /* Primary on dark surfaces (dark theme, the deep sections). */
+  --color-brand-bright: #2fbf93;
+  --color-brand-light: #6fd9b5; /* text on a tinted dark surface; dark high-contrast accent */
+  --color-on-brand-bright: #04221a;
+
+  --color-accent: #ffb81c;
+  --color-accent-ink: #6b4a00;
+  --color-accent-soft: #fff3d6;
+  /* Amber as a thin stroke or outline on a light surface (rings, dashed borders): 4.25:1 on white,
+     3.7:1 on the map's land. Fills stay --color-accent; dark surfaces keep --color-accent too. */
+  --color-accent-line: #a86f00;
+
+  --color-danger: #c73a2f;
+  --color-danger-ink: #9e2a21;
+  --color-danger-soft: #fce6e3;
+  --color-danger-bright: #ff8a7a; /* on dark */
+
+  --color-ink: #17211d;
+  --color-ink-2: #4a5651;
+  --color-ink-3: #5c6964;
+  --color-canvas: #f5f7f6;
+  --color-surface: #ffffff;
+  --color-fill: #ecefed;
+  --color-border: #d5dbd8;
+
+  /* Dark brand surfaces: the admin sidebar, the dark landing sections. */
+  --color-deep: #0f2e25;
+  --color-deep-2: #0a211a;
+  --color-deep-raised: #17463a;
+
+  /* Dark theme. */
+  --color-night: #0e1512;
+  --color-night-surface: #17201c;
+  --color-night-raised: #1f2a25;
+  --color-night-border: #2c3832;
+  --color-night-ink: #f1f5f3;
+  --color-night-ink-2: #a7b4ae;
+  --color-night-ink-3: #8a9790;
 }
 
 /* Motion tokens, shared by every screen: transform/opacity only. Durations: fast = press feedback,
@@ -179,20 +216,33 @@ body {
    stylesheets (Settings → Appearance). */
 :root[data-theme="dark"]:has(.pn-home) {
   color-scheme: dark;
-  --background: #0b1220;
-  --foreground: #f2f5fa;
+  --background: var(--color-night);
+  --foreground: var(--color-night-ink);
+  --pn-amber-line: var(--color-accent);
+  accent-color: var(--color-brand-bright);
+  caret-color: var(--color-brand-bright);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]):has(.pn-home) {
     color-scheme: dark;
-    --background: #0b1220;
-    --foreground: #f2f5fa;
+    --background: var(--color-night);
+    --foreground: var(--color-night-ink);
+    --pn-amber-line: var(--color-accent);
+    accent-color: var(--color-brand-bright);
+    caret-color: var(--color-brand-bright);
   }
 }
 
+/* Browser-drawn parts take the palette too. --pn-accent is the screen's own accent (it follows
+   the theme and high contrast); outside a screen that sets it, the brand green. */
 :focus-visible {
-  outline: 3px solid var(--pn-accent, #0b7a75);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 3px;
+}
+
+::selection {
+  background: var(--pn-accent, var(--color-brand));
+  color: var(--pn-on-primary, var(--color-on-brand));
 }
 
 /* Forced colours replace the palette: the ring keeps a system colour whatever the rule's specificity. */

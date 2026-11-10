@@ -1,4 +1,4 @@
-// ParaNaga categories for OpenStreetMap places (decision D10, widened in Increment E2 Task 14 to
+// Lunad categories for OpenStreetMap places (decision D10, widened in Increment E2 Task 14 to
 // every named place). Shared by the import parser (src/domain/import/osm-places.ts), the API
 // schema and the UI; pure and dependency-free so the client bundle can import it.
 

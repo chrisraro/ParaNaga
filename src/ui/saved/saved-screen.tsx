@@ -110,7 +110,7 @@ function HistoryIcon() {
 // ------------------------------------------------------------------ shared
 
 /**
- * Records this store could not read. Newer-format ones (another tab on a newer ParaNaga) are only
+ * Records this store could not read. Newer-format ones (another tab on a newer Lunad) are only
  * mentioned; damaged ones (failed validation) can be removed, after a confirmation, and only those.
  * Always mounted (the notes show only while something is skipped), so the "Removed …" status
  * outlives the notes; after a removal focus goes to that status line, so it is read out.

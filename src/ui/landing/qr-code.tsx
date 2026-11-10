@@ -19,7 +19,7 @@ export function QrCode({ value, size = 168, label }: { value: string; size?: num
   qr.data.forEach((row, y) => row.forEach((on, x) => { if (on) d += `M${x} ${y}h1v1h-1z`; }));
   return (
     <svg width={size} height={size} viewBox={`0 0 ${n} ${n}`} shapeRendering="crispEdges" role="img" aria-label={label ? label(value) : `QR code that opens ${value}`}>
-      <path d={d} fill="#0f1e3d" />
+      <path d={d} fill="var(--color-ink)" />
     </svg>
   );
 }

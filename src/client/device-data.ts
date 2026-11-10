@@ -1,12 +1,12 @@
 "use client";
 
 // "Clear data on this device" (Settings → Data on this device). One entry point that later tasks
-// extend as they add stores. It removes the preferences and any other ParaNaga keys in
-// localStorage, ParaNaga's sessionStorage keys (guidance state), every IndexedDB store (saved
+// extend as they add stores. It removes the preferences and any other Lunad keys in
+// localStorage, Lunad's sessionStorage keys (guidance state), every IndexedDB store (saved
 // trips, saved places, trip history and the last-seen revision, Task 8), and the service worker's
 // data caches (Task 12: head, snapshots, search indexes, reference reads; Task 15: the route
 // lines and the walk graph; IC1: the intercity guide) with their expiry
-// records. The app code itself (precached build assets and static shells) stays, so ParaNaga
+// records. The app code itself (precached build assets and static shells) stays, so Lunad
 // still opens offline afterwards.
 
 import { resetPrefs } from "@/client/prefs/use-prefs";
@@ -36,7 +36,7 @@ export async function clearRuntimeCaches(): Promise<void> {
   }
 }
 
-/** Every key ParaNaga writes to Web Storage starts with this. */
+/** Every key Lunad writes to Web Storage starts with this. */
 export const STORAGE_PREFIX = "paranaga.";
 
 function removeOwnKeys(storage: Storage): void {
@@ -56,7 +56,7 @@ function clearStorage(get: () => Storage): void {
   }
 }
 
-/** Removes everything ParaNaga keeps on this device; settings go back to their defaults. */
+/** Removes everything Lunad keeps on this device; settings go back to their defaults. */
 export async function clearDeviceData(): Promise<void> {
   clearStorage(() => window.sessionStorage);
   // A running guidance session is forgotten too (its keys were just removed).

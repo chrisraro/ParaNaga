@@ -9,7 +9,7 @@ import { getAuthSession, getCurrentUser } from "./session";
 import { sessionKey } from "./step-up";
 
 // Step-up endpoints (N3). The one-time code is Neon Auth's own email OTP (Better Auth email-otp
-// plugin, type "sign-in"): Neon Auth generates, emails, stores and checks it; ParaNaga never sees
+// plugin, type "sign-in"): Neon Auth generates, emails, stores and checks it; Lunad never sees
 // it except in transit to the check, never stores or logs it. Flow:
 //   POST /api/v1/me/step-up/code  -> rate limit, core.step_up_begin (open a 10 min challenge for this
 //                                    session, audited), then Neon Auth sends a fresh code.

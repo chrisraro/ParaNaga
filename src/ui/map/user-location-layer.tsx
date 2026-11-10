@@ -31,7 +31,7 @@ const STALE_ICON = dotIcon(false, true);
 const ACCURACY_STYLE: L.PathOptions = {
   className: "pn-accuracy",
   stroke: false,
-  fillColor: "#2BB5AE",
+  fillColor: "var(--color-brand-bright)",
   fillOpacity: 0.14,
   interactive: false,
 };
@@ -39,8 +39,8 @@ const COARSE_ACCURACY_STYLE: L.PathOptions = {
   className: "pn-accuracy pn-accuracy--coarse",
   stroke: true,
   weight: 1,
-  color: "#5A6478",
-  fillColor: "#5A6478",
+  color: "var(--color-ink-3)",
+  fillColor: "var(--color-ink-3)",
   fillOpacity: 0.12,
   interactive: false,
 };

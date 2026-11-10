@@ -6,7 +6,7 @@ import { HelpScreen } from "@/ui/help/help-screen";
 
 export const metadata: Metadata = {
   title: "Help",
-  description: "How ParaNaga plans trips, commuting safely, and where its data comes from.",
+  description: "How Lunad plans trips, commuting safely, and where its data comes from.",
 };
 
 // Opened from More (Back returns there), over the mounted home map. The section comes from ?tab=

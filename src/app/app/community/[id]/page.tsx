@@ -7,7 +7,7 @@ import { PostThread } from "@/ui/community/post-thread";
 
 export const metadata: Metadata = {
   title: "Community post",
-  description: "A post from a Naga commuter and its comments. Not verified by ParaNaga.",
+  description: "A post from a Naga commuter and its comments. Not verified by Lunad.",
 };
 
 // Cache Components: the id is runtime data, so it is read inside Suspense; the frame is prerendered.

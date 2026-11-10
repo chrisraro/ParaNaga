@@ -120,12 +120,12 @@ describe("format (exact copy)", () => {
 describe("basis rows (exact copy from the model)", () => {
   it("the six rows", () => {
     expect(basisRows(ETA_MODEL).map((r) => r.text)).toEqual([
-      "Walking: 4.24 km/h (Tolentino & Sigua 2022, N28); up to 25% slower for crossings (ParaNaga assumption)",
+      "Walking: 4.24 km/h (Tolentino & Sigua 2022, N28); up to 25% slower for crossings (Lunad assumption)",
       "Jeepney off-peak: 10–15 km/h (SafeTravelPH 2025, N16; Puerto Princesa study 2025, N29)",
-      "Jeepney peak: 7–13 km/h (upper from N29; lower is a ParaNaga assumption)",
+      "Jeepney peak: 7–13 km/h (upper from N29; lower is a Lunad assumption)",
       "Peak windows: 06:00–08:00, 11:00–13:00, 16:00–19:00 (Ordinance 2025-110, N04), applied every day (no day-of-week data)",
       "Waiting: unknown — no published schedules or headways for Naga",
-      "Based on typical speeds. ParaNaga uses no traffic service.",
+      "Based on typical speeds. Lunad uses no traffic service.",
     ]);
   });
 

@@ -52,17 +52,17 @@ test("Help opens from More with its three tabs, and Back returns to More", async
   await expect(page.getByTestId("help-links").getByRole("link")).toHaveText([
     "How trips are planned",
     "Why stops are not verified yet",
-    "Using ParaNaga offline",
+    "Using Lunad offline",
     "How times are estimated",
     "Vehicle types in Naga",
     "Leaving Naga: buses, vans, trains",
     "Report a problem with a driver",
   ]);
-  await expect(page.getByTestId("help-independent")).toHaveText("ParaNaga is an independent commuter guide. It is not an official City Government app.");
+  await expect(page.getByTestId("help-independent")).toHaveText("Lunad is an independent commuter guide. It is not an official City Government app.");
 
   await tabs(page).getByRole("tab", { name: "Safety" }).click();
   await expect(page).toHaveURL(/\/app\/help\?tab=safety$/);
-  await expect(page.getByTestId("help-emergency")).toHaveText("In an emergency, call 911. ParaNaga does not monitor reports and cannot send help.");
+  await expect(page.getByTestId("help-emergency")).toHaveText("In an emergency, call 911. Lunad does not monitor reports and cannot send help.");
   await expect(page.getByTestId("help-tips").getByRole("listitem")).toHaveCount(5);
   await expect(page.getByTestId("help-report-driver")).toHaveAttribute("href", "/app/mynaga");
 
@@ -71,7 +71,7 @@ test("Help opens from More with its three tabs, and Back returns to More", async
   // The revision label lives on Sources and credits, not here.
   await expect(page.getByTestId("help-data-revision")).toHaveCount(0);
   await expect(page.getByTestId("help-sources-link")).toContainText("Sources and credits");
-  await expect(page.getByTestId("help-data-footer")).toHaveText("ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.");
+  await expect(page.getByTestId("help-data-footer")).toHaveText("Lunad does not track vehicles, so it cannot say when one will come. Stop alerts work only while Lunad is open on your screen.");
 
   await page.getByTestId("help-page").getByTestId("detail-back").click();
   await expect(h1(page, "Settings")).toBeVisible();
@@ -82,13 +82,13 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   for (const [title, phrase] of [
     ["How trips are planned", "every suggestion carries the badge “Unverified route — confirm with the driver”."],
     ["Why stops are not verified yet", "Stops come from a public map."],
-    ["How times are estimated", "Jeepney peak: 7–13 km/h (upper from N29; lower is a ParaNaga assumption)"],
+    ["How times are estimated", "Jeepney peak: 7–13 km/h (upper from N29; lower is a Lunad assumption)"],
     ["Vehicle types in Naga", "Air-conditioned modern jeepneys run on R4 (Centro–Del Rosario via Panganiban) and R7"],
-    ["Using ParaNaga offline", "Planning offline uses the data from Oct 16, 2026; fares may have changed."],
+    ["Using Lunad offline", "Planning offline uses the data from Oct 16, 2026; fares may have changed."],
   ] as const) {
     await page.getByTestId("help-links").getByRole("link", { name: title }).click();
     await expect(h1(page, title)).toBeFocused();
-    await expect(page).toHaveTitle(`${title} · ParaNaga`);
+    await expect(page).toHaveTitle(`${title} · Lunad`);
     // Earlier panels stay mounted (hidden) under the open one: act on the visible one.
     await expect(page.getByTestId("help-article-body").filter({ visible: true })).toContainText(phrase);
     await page.getByTestId("help-article").filter({ visible: true }).getByTestId("detail-back").click();
@@ -100,7 +100,7 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   await expect(times).toContainText("Times are ranges. They do not include waiting, because Naga has no published jeepney schedules.");
   for (const code of ["N28", "N16", "N29", "N04"]) await expect(times).toContainText(code);
   for (const a of ["Assumption A1:", "Assumption A2:", "Assumption A3:"]) await expect(times).toContainText(a);
-  await expect(times).toContainText("Based on typical speeds. ParaNaga uses no traffic service.");
+  await expect(times).toContainText("Based on typical speeds. Lunad uses no traffic service.");
   await expect(times).not.toContainText(/live/i);
   await page.goto("/app/help/vehicle-types-in-naga");
   await expect(page.getByTestId("help-article-body")).toContainText("Traditional jeepneys run on every route group (R1–R8)");
@@ -156,7 +156,7 @@ test("MyNaga: the independence note, the checklist and four verified links that 
   await page.getByTestId("help-report-driver").click();
   await expect(h1(page, "Report in MyNaga")).toBeFocused();
   await expect(page.getByTestId("mynaga-independent")).toHaveText(
-    "ParaNaga is independent. It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.",
+    "Lunad is independent. It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.",
   );
   await expect(page.getByTestId("mynaga-prepare").getByRole("listitem")).toHaveCount(5);
   const links = page.getByTestId("mynaga-links").getByRole("link");

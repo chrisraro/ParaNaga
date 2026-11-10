@@ -18,11 +18,13 @@ export const PEEK_VISIBLE = 214;
 /**
  * One option card at the peek (OptionsPeek): three 16 px lines (route, time, fare + chip) in a
  * fixed-height card, so the peek never grows with a long route title (it is cut with an ellipsis).
+ * The card cannot be taller: two cards, their gap and the base are 354 px, and with the tab bar
+ * (90 px) that is exactly the half detent (444 px); any more and peek and half become one stop.
  */
 export const PEEK_ROW = 56;
 export const PEEK_ROW_GAP = 4;
-/** The peek's own rows around the option cards: start / destination and "All options". */
-const PEEK_OPTIONS_BASE = 232;
+/** The peek's own rows around the option cards: start / destination and "All options" (8 px under the cards). */
+const PEEK_OPTIONS_BASE = 238;
 /** Peek while trip options are listed, with `rows` option cards (one or two). */
 export const peekOptionsVisible = (rows: number) => PEEK_OPTIONS_BASE + rows * PEEK_ROW + Math.max(0, rows - 1) * PEEK_ROW_GAP;
 /** The usual options peek: the top jeepney and the tricycle side by side in two cards. */

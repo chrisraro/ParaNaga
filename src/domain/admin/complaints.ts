@@ -18,7 +18,7 @@ export const OUTCOME_LABELS: Readonly<Record<OutcomeCode, string>> = {
   info_provided_to_reporter: "Information given to the reporter",
   insufficient_detail: "Not enough detail to act on",
   duplicate: "Duplicate of another report",
-  outside_scope: "Outside what ParaNaga handles",
+  outside_scope: "Outside what Lunad handles",
   reporter_withdrew: "The reporter withdrew it",
 };
 

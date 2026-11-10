@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FILIPINO_ENABLED } from "@/i18n/locales";
 import { setLocale, useLocale, useT } from "@/i18n/provider";
-import { AppIconTile, Wordmark } from "@/ui/brand/route-n-mark";
+import { LunadMark, LunadWordmark } from "@/ui/brand/lunad-mark";
 
 const SECTIONS = [
   { href: "#how", key: "how" },
@@ -44,8 +44,8 @@ export function SiteHeader() {
     <header className="pnl-header">
       <nav aria-label={t.mainNav} className="pnl-header__bar">
         <a href="#top" className="pnl-header__brand" aria-label={t.backToTop}>
-          <AppIconTile size={32} />
-          <Wordmark className="pnl-header__word text-xl" />
+          <LunadMark size={32} />
+          <LunadWordmark className="pnl-header__word text-xl" />
         </a>
         <div className="pnl-header__links">
           {SECTIONS.map((s) => (

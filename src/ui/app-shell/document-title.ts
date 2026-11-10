@@ -12,7 +12,7 @@ export function useDocumentTitle(title: string | undefined) {
   useLayoutEffect(() => {
     if (!title) return undefined;
     const previous = document.title;
-    const mine = `${title} · ParaNaga`;
+    const mine = `${title} · Lunad`;
     const apply = () => {
       if (document.title !== mine) document.title = mine;
     };

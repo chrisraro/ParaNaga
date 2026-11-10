@@ -65,7 +65,7 @@ export async function readStoredCopy(url: string): Promise<string | null> {
 }
 
 /**
- * Drops every stored copy of `url` from ParaNaga's caches: a copy the client validator rejected
+ * Drops every stored copy of `url` from Lunad's caches: a copy the client validator rejected
  * (corrupt, or from an older format) is never served again, so the next request goes to the network.
  */
 export async function dropStoredCopy(url: string): Promise<void> {

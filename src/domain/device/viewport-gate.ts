@@ -1,5 +1,5 @@
 // Phone-only gate for the commuter app (/app).
-// ParaNaga is a street companion: it opens on phones and small tablets and shows an "open on
+// Lunad is a street companion: it opens on phones and small tablets and shows an "open on
 // your phone" screen on anything larger. The rule follows the DEVICE, not the current width, so a
 // rotated phone keeps the app (landscape is supported, docs/spec/06-screens.md §6.6):
 //  - any viewport up to 820 px wide is a phone or small tablet (a narrow desktop window or a

@@ -1,29 +1,35 @@
-/* Admin console (N8 redesign). Operator console: calm neutral surfaces, one dark navigation rail,
+/* Admin console (N8 redesign). Operator console: calm neutral surfaces, one deep-green navigation rail,
    dense readable tables. Scoped to the shell's test id so the commuter app is untouched. Plain
    CSS rather than utilities so it also reaches the many per-screen tables without editing every
    cell; it is unlayered on purpose, so it wins over the utility classes the screens still carry.
    Dark follows the app theme (html[data-theme], same rule as src/app/globals.css). */
 [data-testid="admin-shell"] {
-  --adm-rule: #dfe3ea;
-  --adm-zebra: #f7f8fb;
-  --adm-head: #eef1f6;
-  --adm-head-ink: #4a5468;
-  --adm-hover: #e9f3f2;
+  --adm-rule: var(--color-border);
+  --adm-zebra: var(--color-canvas);
+  --adm-head: var(--color-fill);
+  --adm-head-ink: var(--color-ink-2);
+  --adm-hover: var(--color-brand-soft);
+  --adm-accent: var(--color-brand);
+  --adm-on-accent: var(--color-on-brand);
 }
 :root[data-theme="dark"] [data-testid="admin-shell"] {
-  --adm-rule: #2a3d68;
-  --adm-zebra: #10204a;
-  --adm-head: #162a54;
-  --adm-head-ink: #cbd5e1;
-  --adm-hover: #1a3563;
+  --adm-rule: var(--color-night-border);
+  --adm-zebra: color-mix(in srgb, var(--color-night-raised) 50%, var(--color-night-surface));
+  --adm-head: var(--color-night-raised);
+  --adm-head-ink: var(--color-night-ink-2);
+  --adm-hover: color-mix(in srgb, var(--color-brand-bright) 14%, var(--color-night-surface));
+  --adm-accent: var(--color-brand-bright);
+  --adm-on-accent: var(--color-on-brand-bright);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) [data-testid="admin-shell"] {
-    --adm-rule: #2a3d68;
-    --adm-zebra: #10204a;
-    --adm-head: #162a54;
-    --adm-head-ink: #cbd5e1;
-    --adm-hover: #1a3563;
+    --adm-rule: var(--color-night-border);
+    --adm-zebra: color-mix(in srgb, var(--color-night-raised) 50%, var(--color-night-surface));
+    --adm-head: var(--color-night-raised);
+    --adm-head-ink: var(--color-night-ink-2);
+    --adm-hover: color-mix(in srgb, var(--color-brand-bright) 14%, var(--color-night-surface));
+    --adm-accent: var(--color-brand-bright);
+    --adm-on-accent: var(--color-on-brand-bright);
   }
 }
 
@@ -37,8 +43,8 @@
 }
 
 [data-testid="admin-shell"] ::selection {
-  background: var(--color-teal);
-  color: #fff;
+  background: var(--adm-accent);
+  color: var(--adm-on-accent);
 }
 
 [data-testid="admin-shell"] table {
@@ -76,7 +82,7 @@
 
 [data-testid="admin-shell"] table tbody tr[data-selected] {
   background: var(--adm-hover);
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--adm-accent);
   outline-offset: -2px;
 }
 
@@ -87,7 +93,7 @@
   }
 }
 [data-testid="admin-shell"] .adm-scroll:focus-visible {
-  outline: 2px solid var(--color-teal);
+  outline: 2px solid var(--adm-accent);
   outline-offset: 2px;
 }
 

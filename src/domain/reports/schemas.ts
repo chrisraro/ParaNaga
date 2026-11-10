@@ -30,7 +30,7 @@ export const myNagaSelfReportSchema = z
   .refine((b) => b.submitted || b.reference === undefined, "a reference needs the submitted flag");
 export type MyNagaSelfReport = z.infer<typeof myNagaSelfReportSchema>;
 
-/** What the reporter says they did in MyNaga. Never ParaNaga's own status. */
+/** What the reporter says they did in MyNaga. Never Lunad's own status. */
 export const myNagaHandoffSchema = z.object({
   submitted: z.boolean(),
   submittedAt: z.string().nullable(),

@@ -172,7 +172,7 @@ describe("walk graph offline and cache safety (Task 15)", () => {
     fetchMock.mockImplementation(defaultFetch);
   });
 
-  /** A minimal Cache Storage: one ParaNaga cache holding `stored` (url → body). */
+  /** A minimal Cache Storage: one Lunad cache holding `stored` (url → body). */
   function stubCaches(stored: Map<string, string>) {
     const deleted: string[] = [];
     const cache = {

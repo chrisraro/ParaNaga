@@ -1,4 +1,4 @@
-ParaNaga third-party software notices
+Lunad third-party software notices
 Generated from the installed pnpm dependency tree on 2026-10-16. Includes build/test tools as well as runtime packages. Package licenses apply to their respective components; inclusion is not an endorsement or a claim that one license covers the app.
 
 ===== @alloc/quick-lru@5.3.0 | MIT =====

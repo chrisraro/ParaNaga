@@ -4,7 +4,7 @@ import { MorePage as MoreTab } from "@/ui/settings/more-screen";
 
 export const metadata: Metadata = {
   title: "Settings",
-  description: "Settings for ParaNaga on this phone.",
+  description: "Settings for Lunad on this phone.",
 };
 
 // The "More" tab (artboard Settings) over the mounted home map. Static shell: every value comes

@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { useT } from "@/i18n/provider";
-import { RouteNMark, Wordmark } from "@/ui/brand/route-n-mark";
+import { LunadMark, LunadWordmark } from "@/ui/brand/lunad-mark";
 import { DeviceFrame, Shot } from "@/ui/landing/device-frame";
 import { HERO_LINES } from "@/ui/landing/hero-lines";
 import { ROUTES, SHOT_H, SHOT_W, SHOWCASE_SCREENS } from "@/ui/landing/landing-content";
@@ -324,9 +324,9 @@ function Ride() {
               <svg viewBox="0 0 520 120" aria-hidden>
                 <path d="M10 80 C 120 80, 150 30, 260 40 S 420 90, 510 50" fill="none" stroke="#ffffff" strokeWidth="14" strokeLinecap="round" />
                 <path className="pnl-how__line" d="M10 80 C 120 80, 150 30, 260 40 S 420 90, 510 50" pathLength={1} fill="none" stroke="#b45309" strokeWidth="8" strokeLinecap="round" strokeDasharray="1 1" />
-                <circle cx="10" cy="80" r="9" fill="#0b7a75" stroke="#fff" strokeWidth="4" />
-                <circle cx="510" cy="50" r="9" fill="#c73a2f" stroke="#fff" strokeWidth="4" />
-                <g fill="#ffffff" stroke="#0f1e3d" strokeWidth="3">
+                <circle cx="10" cy="80" r="9" fill="var(--color-brand)" stroke="#fff" strokeWidth="4" />
+                <circle cx="510" cy="50" r="9" fill="var(--color-danger)" stroke="#fff" strokeWidth="4" />
+                <g fill="#ffffff" stroke="var(--color-ink)" strokeWidth="3">
                   <circle cx="150" cy="52" r="7" />
                   <circle cx="330" cy="58" r="7" />
                 </g>
@@ -580,7 +580,7 @@ function Closing() {
       <div className="pnl-wrap">
         <div className="pnl-cta pnl-reveal">
           <span className="pnl-hero__glow" aria-hidden />
-          <RouteNMark size={64} />
+          <LunadMark size={64} tone="bright" />
           <h2 id="cta-h">{t.closing.title}</h2>
           <p className="pnl-lede" style={{ color: "var(--pnl-night-ink2)" }}>
             {t.closing.lede}
@@ -602,7 +602,7 @@ function Footer() {
     <footer className="pnl-footer">
       <div className="pnl-wrap pnl-footer__inner">
         <div style={{ display: "grid", gap: 12 }}>
-          <Wordmark className="text-[22px]" />
+          <LunadWordmark className="text-[22px]" />
           <p>
             {t.footer.disclaimer}
           </p>

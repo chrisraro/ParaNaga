@@ -164,7 +164,7 @@ test("the dashboard shows the counts, is private, and passes axe", async ({ page
   expect(res?.status()).toBe(200);
   expect(res?.headers()["cache-control"] ?? "").toMatch(/private|no-store/);
   expect(res?.headers()["x-robots-tag"]).toBe("noindex, nofollow");
-  await expect(page).toHaveTitle("Dashboard · Admin · ParaNaga");
+  await expect(page).toHaveTitle("Dashboard · Admin · Lunad");
   await expect(page.getByTestId("published-label")).toHaveText("modes-lines-2026-10-16");
   await expect(page.getByTestId("stop-candidates")).toHaveText("128");
   await expect(page.getByTestId("open-corrections")).toHaveText("3");
@@ -402,7 +402,7 @@ test("candidate review: evidence, promote, relocate and retire in the draft (AC-
   await signInAs(context, "commuter,transport_reviewer");
   const s = await mockStopsApi(page);
   await page.goto("/admin/candidates");
-  await expect(page).toHaveTitle("Candidate review · Admin · ParaNaga");
+  await expect(page).toHaveTitle("Candidate review · Admin · Lunad");
   await expect(page.getByTestId("stops-table")).toContainText("3 of 3 stops in draft-2026-10-22-100000");
 
   // A stop in a route's stop order cannot be retired from here.
@@ -654,7 +654,7 @@ test("corrections review: evidence, start review, accept a stop report as a relo
   await signInAs(context, "commuter,transport_reviewer");
   const s = await mockReviewApi(page);
   await page.goto("/admin/corrections");
-  await expect(page).toHaveTitle("Corrections review · Admin · ParaNaga");
+  await expect(page).toHaveTitle("Corrections review · Admin · Lunad");
   await expect(page.getByTestId("admin-corrections")).toContainText("open draft draft-2026-10-22-100000");
 
   await page.getByTestId(`correction-open-${N6(1)}`).click();
@@ -870,7 +870,7 @@ test("complaint review: step-up first, list without text, open, a 60-second down
   await signInAs(context, "commuter,complaint_reviewer");
   const s = await mockN7Api(page);
   await page.goto("/admin/complaints");
-  await expect(page).toHaveTitle("Complaint review · Admin · ParaNaga");
+  await expect(page).toHaveTitle("Complaint review · Admin · Lunad");
   await expect(page.getByTestId("admin-step-up")).toBeVisible();
   await expect(page.getByTestId("complaints-table")).toHaveCount(0);
   await page.getByTestId("admin-step-up-send").click();

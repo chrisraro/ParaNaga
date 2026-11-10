@@ -1,4 +1,4 @@
-// MyNaga entry points (decision D9). MyNaga is the City of Naga's own app; ParaNaga is not
+// MyNaga entry points (decision D9). MyNaga is the City of Naga's own app; Lunad is not
 // affiliated with it. These are the four public entry points verified on 15 October 2026
 // (ParaNaga_Build_Prompt.md §9E). No deep link, URL scheme or report-prefill contract exists, so
 // nothing is ever appended: the URLs are used exactly as written. The Play Store address carries

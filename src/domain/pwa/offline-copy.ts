@@ -20,7 +20,7 @@ export function offlineDataLine(publishedAt: string | null | undefined, hasData:
 
 /**
  * The note on a plan made in the browser from the cached snapshot: "offline" when the phone has no
- * connection, "unreachable" when it has one but ParaNaga's server could not be reached.
+ * connection, "unreachable" when it has one but Lunad's server could not be reached.
  */
 export function offlinePlanNote(
   publishedAt: string | null | undefined,

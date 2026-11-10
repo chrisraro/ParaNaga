@@ -23,7 +23,7 @@ for entry in sorted(base.iterdir()):
      if f.stat().st_size<200000:texts.append(str(f.relative_to(p))+'\n'+f.read_text(encoding='utf-8',errors='replace'))
   packages.append(dict(package=key,license=meta.get('license') or 'NOT RECORDED',hasLicenseText=bool(texts)))
   notices.append('\n===== '+key+' | '+str(meta.get('license','NOT RECORDED'))+' =====\n'+'\n\n'.join(texts))
-header='ParaNaga third-party software notices\nGenerated from the installed pnpm dependency tree on 2026-10-16. Includes build/test tools as well as runtime packages. Package licenses apply to their respective components; inclusion is not an endorsement or a claim that one license covers the app.\n'
+header='Lunad third-party software notices\nGenerated from the installed pnpm dependency tree on 2026-10-16. Includes build/test tools as well as runtime packages. Package licenses apply to their respective components; inclusion is not an endorsement or a claim that one license covers the app.\n'
 (r/'public/licenses/THIRD-PARTY-NOTICES.txt').write_text(header+'\n'.join(notices),encoding='utf-8');(r/'data/software-license-inventory.json').write_text(json.dumps(packages,indent=2),encoding='utf-8')
 print('Packages',len(packages),'missing license metadata',sum(p['license']=='NOT RECORDED' for p in packages),'notice bytes',(r/'public/licenses/THIRD-PARTY-NOTICES.txt').stat().st_size)
 

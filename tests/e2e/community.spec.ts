@@ -109,7 +109,7 @@ test.describe("feed", () => {
     await page.goto("/app/community");
     await expect(page.getByRole("heading", { level: 1, name: "Community" })).toBeFocused();
     await expect(page.getByTestId("community-post")).toHaveCount(2);
-    await expect(page.getByTestId("community-disclaimer")).toContainText("Not verified by ParaNaga");
+    await expect(page.getByTestId("community-disclaimer")).toContainText("Not verified by Lunad");
     await expect(page.getByTestId("community-bookmark")).toHaveCount(0);
 
     const tab = page.getByTestId("tab-community");
@@ -150,7 +150,7 @@ test.describe("thread", () => {
     await mockApi(page, mock);
     await page.goto(`/app/community/${POST_ID}`);
     await expect(page.getByTestId("thread-body")).toContainText("Seats are easy");
-    await expect(page.getByTestId("thread-disclaimer")).toContainText("Not verified by ParaNaga");
+    await expect(page.getByTestId("thread-disclaimer")).toContainText("Not verified by Lunad");
     await expect(page.getByTestId("comment")).toHaveCount(2);
     // The reply (level 2) has no Reply button: only two levels.
     await expect(page.getByTestId("comment-reply")).toHaveCount(1);

@@ -2,7 +2,7 @@
 // category, and a directory of everything else on file (mapped-pin places, routes, terminals,
 // barangays, feeder leads, the rail status note). Pure: no I/O, no React.
 //
-// Honesty: an OSM bus station is a place, never a ParaNaga terminal or stop (global constraints).
+// Honesty: an OSM bus station is a place, never a Lunad terminal or stop (global constraints).
 // No photos, hours or entrances exist; the screen says so.
 import type { RouteList, RouteSummary, SearchIndex, SearchOsmPlace, SearchPinPlace } from "../api/schemas";
 import { isActiveRoute } from "../planner/route-display";

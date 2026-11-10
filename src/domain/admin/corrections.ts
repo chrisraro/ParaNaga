@@ -42,7 +42,7 @@ export const REASON_LABELS: Readonly<Record<(typeof INFO_REASONS)[number] | (typ
   need_time: "Needs the date and time seen",
   already_correct: "The data already shows this",
   not_verifiable: "Could not be verified",
-  out_of_scope: "Outside what ParaNaga covers",
+  out_of_scope: "Outside what Lunad covers",
   not_transport: "Not about transport data",
 };
 

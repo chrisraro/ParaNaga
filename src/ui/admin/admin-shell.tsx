@@ -9,9 +9,9 @@ import { AdminNav } from "./admin-nav";
 export function AdminShell({ roles, children }: { roles: readonly Role[]; children: ReactNode }) {
   const staffRoles = roles.filter((r) => r !== "commuter");
   return (
-    <div lang="en" className="min-h-screen bg-canvas text-navy lg:flex dark:bg-navy-deep dark:text-white" data-testid="admin-shell">
+    <div lang="en" className="min-h-screen bg-canvas text-ink lg:flex dark:bg-night dark:text-white" data-testid="admin-shell">
       <AdminNav items={adminNavFor(roles)}>
-        <p className="px-3 text-xs text-slate-300" data-testid="admin-roles">
+        <p className="px-3 text-xs text-night-ink-2" data-testid="admin-roles">
           Signed in as {staffRoles.join(" · ")}
         </p>
       </AdminNav>

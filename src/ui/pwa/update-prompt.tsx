@@ -1,6 +1,6 @@
 "use client";
 
-// "A new version of ParaNaga is ready. [Reload]" (Task 12). Shown only when a new service worker
+// "A new version of Lunad is ready. [Reload]" (Task 12). Shown only when a new service worker
 // is installed and waiting behind the one controlling this page; never while guidance runs (a
 // reload must not interrupt a trip in progress, so the card hides and Reload re-checks). Nothing
 // reloads until the person taps Reload. "Later" hides the card for this page session; More → App

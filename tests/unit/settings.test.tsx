@@ -85,7 +85,7 @@ describe("prefs store", () => {
 });
 
 describe("clearDeviceData", () => {
-  it("removes ParaNaga's storage keys, resets the settings and leaves other sites' keys", async () => {
+  it("removes Lunad's storage keys, resets the settings and leaves other sites' keys", async () => {
     updatePrefs({ theme: "dark", highContrast: true, lowData: true });
     localStorage.setItem("paranaga.other", "x");
     localStorage.setItem("someone-else", "keep");
