@@ -258,3 +258,28 @@ N2 to N8 built; migrations through 0026 applied in production (owner). Format: �
 - Reviewer recruitment (§7.7): transport-data and complaint reviewers distinct from the moderator.
 
 **Owner actions:** deploy and check the header (`curl -sI https://<host>/app | grep -i content-security`); watch Vercel logs for `csp_violation` for a few days (kill switch: `CSP_REPORT_ONLY=1` + redeploy); schedule `/api/cron/retention?mode=commit` daily before turning driver reports on; run gitleaks once; confirm Neon Auth OTP send/verify limits per email and IP; set `OPENROUTER_API_KEY` when ready; have a native speaker review the N8 Filipino rows; counsel review of privacy, terms and the community AI wording.
+
+## 7.13 Enhanced experience: AR and VR navigation (added 2026-11-10)
+
+Owner request (2026-11-10): put camera-based navigation on the roadmap as an enhanced experience. The increments below are scoped from `docs/research/2026-10-29-ar-feasibility.md`, which is still an AI-written draft; the effort figures and browser-support notes in it need the X0 device test before anyone relies on them.
+
+Order: after the Lunad redesign of Home, trip detail and live trip (the camera view is built once, in the new design system). Nothing here adds a paid service or, through X4, a new dependency.
+
+| Code | Increment | Covers | Rough effort |
+|---|---|---|---|
+| X0 | Device test (go / no-go) | Compass heading error and battery use on real phones in Naga: two low-end Androids and one iPhone, near vehicles and under roofs. If heading error is regularly above about 30°, stop after X1. | 0.5–1 day |
+| X1 | "Which way" compass | No camera. From the walking legs of a trip and from a stop page: an arrow and distance to the boarding stop, then to the destination after getting off, with the same information as a text list. Pure `relativeBearing` in `src/domain/geo/`, nearest stops from the offline snapshot. | 1–2 days |
+| X2 | Heading sensor | `useHeading` hook (Android absolute orientation, iOS compass heading, smoothing, permission asked on a tap only). | 1–2 days |
+| X3 | AR "Look around" | Live camera behind labels for the boarding stop and the nearest stops, placed by bearing; off-screen arrows; hidden when the location fix is rougher than about 30 m, with the reason shown; stops itself after 2 minutes idle. | 2–3 days |
+| X4 | AR in the live trip | "Look around" opens from the live trip screen on walking legs and at the get-off point. Filipino and Bikol strings, screen-reader pass, Playwright with mocked sensors, one sentence in the privacy text. | 1–2 days |
+| X5 | Street-following arrow (optional) | Snap the arrow to the next corner on the walk graph instead of the straight line. A 3D library (LocAR.js + three.js) is considered only if the plain overlay proves insufficient, and needs owner approval as a new dependency. | 2–4 days |
+| V1 | VR trip preview (research first) | "See the trip before you go": a look-around preview of the boarding point and the get-off point, so a first-time rider recognises the place. Not scoped. Open questions: imagery source and its licence and cost (Street View coverage in Naga, or contributed 360° photos), whether a headset mode adds anything over a phone, and data use on mobile networks. Needs its own research note before a plan. | not estimated |
+
+Rules that apply to every increment:
+
+- AR is never the only way: each label and arrow has a text equivalent, and the map stays one tap away.
+- Direction and distance, never fake precision. Unverified pins keep their badge in the camera view.
+- Camera frames stay in the `<video>` element: never read to a canvas, uploaded or stored. Coordinates are not logged.
+- The view shows a "stop walking, then hold up your phone" hint. It is a glance aid, not a walk-while-looking mode.
+- VR while moving on a street is out of scope for safety; V1 is a preview before the trip.
+- Not planned: reading jeepney signboards with the camera, and anything that needs cloud visual positioning.
