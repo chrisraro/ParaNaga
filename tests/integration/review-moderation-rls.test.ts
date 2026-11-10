@@ -51,6 +51,8 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("corrections review and mode
   let s1 = "";
   let s1v = "";
   let fareVersion = "";
+  // Set by the AC-13 test, read by the 0030 rollback test after it.
+  let published = { draft: "", stopReport: "", fareReport: "" };
 
   const as = <T>(userId: string | null, fn: (db: Db) => Promise<T>, opts: { stepUp?: boolean } = {}) =>
     runInRequestContext<T>(app, { userId, requestId }, async (db) => {
@@ -288,6 +290,52 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("corrections review and mode
     expect(reviews.some((r) => (r.after?.draft_change as Obj | undefined)?.fareRuleVersionId === fareVersion)).toBe(true);
     expect(a.some((r) => r.action === "media.review_view")).toBe(true);
     expect(a.map((r) => r.action)).toEqual(expect.arrayContaining(["revision.draft_create", "stop.relocate", "revision.validate", "revision.publish"]));
+    published = { draft, stopReport, fareReport };
+  }, 120_000);
+
+  it("0030: a rollback puts an incorporated correction back to accepted (its change is no longer live); publishing that revision again incorporates it again", async () => {
+    const { draft, stopReport, fareReport } = published;
+    expect(draft).not.toBe("");
+    const lat = async () => Number((await rows(null, sql`select lat from transit.v_published_stops where stop_point_id = ${s1}::uuid`))[0]!.lat);
+    const state = () => rows(author, sql`select id, status, draft_revision_id, incorporated_revision_id from community.correction where id in (${stopReport}::uuid, ${fareReport}::uuid) order by status, id`);
+    const events = () => rows(author, sql`select from_status, to_status, actor_role, reason_code from community.correction_event where correction_id = ${stopReport}::uuid order by at`);
+    const fareEvents = async () => (await rows(author, sql`select count(*)::int as n from community.correction_event where correction_id = ${fareReport}::uuid`))[0]!.n;
+    const fareBefore = await fareEvents();
+    expect(await pointer()).toBe(draft);
+
+    // Roll back to the base revision, which does not have the moved stop.
+    await importer.query("select transit.publish_revision($1)", [base]);
+    expect(await pointer()).toBe(base);
+    expect(await lat()).toBeCloseTo(13.6233869, 6);
+    expect((await state()).find((c) => c.id === stopReport)).toEqual({ id: stopReport, status: "accepted", draft_revision_id: draft, incorporated_revision_id: null });
+    expect((await events()).at(-1)).toEqual({ from_status: "incorporated", to_status: "accepted", actor_role: "publication", reason_code: "publication_rolled_back" });
+    // It is a closed report in the console again, as before its draft was published.
+    expect((await queue(reviewer, "closed")).corrections.find((c) => c.id === stopReport)).toMatchObject({ status: "accepted", incorporatedRevisionId: null });
+    // The reporter cannot move it; the proposal (never incorporated) is untouched.
+    expect((await failure(rows(author, sql`update community.correction set status = 'incorporated' where id = ${stopReport}::uuid`))).code).toBe("42501");
+    expect((await state()).find((c) => c.id === fareReport)).toMatchObject({ status: "accepted", incorporated_revision_id: null });
+
+    const n = (await events()).length;
+
+    // Go forward again: the revision with the change is live, so the report is incorporated again.
+    await importer.query("select transit.publish_revision($1)", [draft]);
+    expect(await pointer()).toBe(draft);
+    expect(await lat()).toBeCloseTo(13.62355, 5);
+    expect((await state()).find((c) => c.id === stopReport)).toEqual({ id: stopReport, status: "incorporated", draft_revision_id: draft, incorporated_revision_id: draft });
+    const all = await events();
+    expect(all.length).toBe(n + 1);
+    expect(all.map((e) => e.to_status)).toEqual(["submitted", "under_review", "accepted", "incorporated", "accepted", "incorporated"]);
+    expect(all.at(-1)).toEqual({ from_status: "accepted", to_status: "incorporated", actor_role: "publication", reason_code: null });
+    expect((await state()).find((c) => c.id === fareReport)).toMatchObject({ status: "accepted", incorporated_revision_id: null });
+    expect(await fareEvents()).toBe(fareBefore);
+
+    // The trigger function is still a guarded definer, and the app role cannot call it.
+    const fn = (await owner.query(
+      `select p.prosecdef as definer, pg_get_userbyid(p.proowner) as owner, p.proconfig as config,
+              has_function_privilege('paranaga_app', p.oid, 'execute') as app
+         from pg_proc p where p.oid = 'community.incorporate_corrections()'::regprocedure`,
+    )).rows[0];
+    expect(fn).toEqual({ definer: true, owner: "paranaga_definer", config: [expect.stringMatching(/^search_path=pg_catalog, ?community, ?core, ?pg_temp$/)], app: false });
   }, 120_000);
 
   // ================================================================ C10 moderation (AC-11, AC-12)

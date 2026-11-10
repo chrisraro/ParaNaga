@@ -92,7 +92,7 @@ describe("Help", () => {
     expect(links.map((l) => [l.textContent, l.getAttribute("href")])).toEqual([
       ["How trips are planned", "/app/help/how-trips-are-planned"],
       ["Why stops are not verified yet", "/app/help/why-stops-are-not-verified"],
-      ["Using Lunad offline", "/app/help/using-paranaga-offline"],
+      ["Using Lunad offline", "/app/help/using-lunad-offline"],
       ["How times are estimated", "/app/help/how-times-are-estimated"],
       ["Vehicle types in Naga", "/app/help/vehicle-types-in-naga"],
       ["Report a problem with a driver", "/app/mynaga"],
@@ -153,7 +153,7 @@ describe("Help articles", () => {
   });
 
   it("Using Lunad offline names the published date of the data, never a placeholder", async () => {
-    render(<HelpArticleScreen slug="using-paranaga-offline" />);
+    render(<HelpArticleScreen slug="using-lunad-offline" />);
     // Until the date is known, the dated paragraph is not rendered (nothing like "…" is read).
     expect(screen.getByTestId("help-article-body").textContent).not.toContain("Planning offline");
     expect(screen.getByTestId("help-article-body").textContent).not.toContain("…");

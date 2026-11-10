@@ -139,6 +139,32 @@ describe("More screen", () => {
     expect(readPrefs().locale).toBeUndefined();
   });
 
+  it("a sign-in check with no answer is never shown as no account: Try again, busy while it checks", async () => {
+    let checks = 0;
+    let answer!: (res: Response) => void;
+    vi.stubGlobal("fetch", vi.fn(async (url: RequestInfo | URL) => {
+      if (!String(url).includes("/api/v1/me")) return new Response(JSON.stringify(HEAD), { status: 200 });
+      checks += 1;
+      if (checks === 1) throw new TypeError("Failed to fetch");
+      return new Promise<Response>((resolve) => (answer = resolve));
+    }));
+    render(<MoreScreen />);
+    const retry = (await screen.findByTestId("settings-auth-retry")) as HTMLButtonElement;
+    const line = screen.getByTestId("settings-auth-unknown");
+    expect(line.getAttribute("role")).toBe("status");
+    expect(line.textContent).toBe("Couldn't check your sign-in. Check your connection, then try again.");
+    expect(screen.queryByText("No account needed")).toBeNull();
+    expect(screen.queryByTestId("settings-sign-in")).toBeNull();
+
+    fireEvent.click(retry);
+    await waitFor(() => expect(retry.disabled).toBe(true));
+    expect(retry.getAttribute("aria-busy")).toBe("true");
+    expect(line.textContent).toBe("Checking…");
+    await act(async () => answer(new Response(JSON.stringify({ user: null }), { status: 200 })));
+    expect(await screen.findByText("No account needed")).toBeTruthy();
+    expect(screen.getByTestId("settings-sign-in")).toBeTruthy();
+  });
+
   it("shows the exact copy and the Sources and credits row", async () => {
     render(<MoreScreen />);
     expect(screen.getByText("No account needed")).toBeTruthy();

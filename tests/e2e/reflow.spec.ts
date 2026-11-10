@@ -85,9 +85,12 @@ async function expectReflow(page: Page) {
   const scrolled = await sheet(page).evaluate((el) => {
     const content = el.querySelector<HTMLElement>(".pn-sheet__content")!;
     if (content.closest("[inert]") || content.scrollHeight <= content.clientHeight) return true;
+    // Wherever the content rests (guidance puts the step title at the top, which can be the very
+    // end of the scroll range): it must move to the other end and back.
     const before = content.scrollTop;
-    content.scrollTop = content.scrollHeight;
-    const moved = content.scrollTop > before;
+    const end = content.scrollHeight - content.clientHeight;
+    content.scrollTop = before >= end - 1 ? 0 : end;
+    const moved = Math.abs(content.scrollTop - before) >= 1;
     content.scrollTop = before;
     return moved;
   });

@@ -33,9 +33,14 @@ async function checkSession(): Promise<AuthSession> {
 export function useAuthSession() {
   const [session, setSession] = useState<AuthSession>(CHECKING);
 
-  /** Checks again; the current answer stays on screen until the new one is in. */
+  const [refreshing, setRefreshing] = useState(false);
+
+  /** Checks again; the current answer stays on screen until the new one is in (`refreshing` meanwhile). */
   const refresh = useCallback(async () => {
-    setSession(await checkSession());
+    setRefreshing(true);
+    const next = await checkSession();
+    setSession(next);
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
@@ -68,5 +73,5 @@ export function useAuthSession() {
     else if (done) setSession(SIGNED_OUT);
   }, []);
 
-  return { user: session.user, loading: session.status === "checking", status: session.status, signOut, refresh };
+  return { user: session.user, loading: session.status === "checking", status: session.status, signOut, refresh, refreshing };
 }

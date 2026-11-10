@@ -177,14 +177,6 @@
     grid-row: 2;
   }
 }
-/* One line of boarding guidance under the title: where to get on, toward where. `order` places it
-   before the chips, which come first in the DOM. */
-.pn-trip-card__head > .pn-trip-card__board {
-  order: -1;
-  color: var(--pn-label2);
-  font-size: 13px;
-  line-height: 1.4;
-}
 .pn-trip-card__tags {
   display: flex;
   flex-wrap: wrap;
@@ -656,11 +648,6 @@ abbr.pn-est {
   background: var(--pn-sign-bg);
   box-shadow: inset 0 0 0 1px var(--pn-sign-rim);
   color: #ffffff;
-}
-.pn-sign__kicker {
-  color: var(--color-night-ink-2);
-  font-size: 13px;
-  font-weight: 600;
 }
 .pn-sign__text {
   font-size: 17px;

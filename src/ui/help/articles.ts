@@ -12,7 +12,7 @@ export const ETA_WAITING_NOTE = en.help.etaWaitingNote;
 export type ArticleSlug =
   | "how-trips-are-planned"
   | "why-stops-are-not-verified"
-  | "using-paranaga-offline"
+  | "using-lunad-offline"
   | "how-times-are-estimated"
   | "vehicle-types-in-naga";
 
@@ -36,7 +36,7 @@ export function articlesFor(t: Dict = en): readonly Article[] {
       body: [a.planned.intro(t.trip.unverifiedBadge), ...Object.values(a.planned.body)],
     },
     { slug: "why-stops-are-not-verified", title: a.stops.title, body: Object.values(a.stops.body) },
-    { slug: "using-paranaga-offline", title: a.offline.title, body: Object.values(a.offline.body), dated: a.offline.dated },
+    { slug: "using-lunad-offline", title: a.offline.title, body: Object.values(a.offline.body), dated: a.offline.dated },
     // The basis paragraphs come from the time model on this phone (basisRows), after this lead.
     { slug: "how-times-are-estimated", title: a.times.title, body: [t.help.etaWaitingNote], basis: true },
     { slug: "vehicle-types-in-naga", title: a.vehicles.title, body: Object.values(a.vehicles.body) },

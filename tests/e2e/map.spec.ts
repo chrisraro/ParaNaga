@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { chooseOnMapVia, openTripSheet, pinTrip, useLocationFromSearch } from "./fixtures/options";
+import { chooseOnMapVia, openTripSheet, pinTrip, sheetSettled, useLocationFromSearch } from "./fixtures/options";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
 import { routeNetwork } from "./fixtures/network";
@@ -491,6 +491,9 @@ test.describe("focus and sheet behaviour", () => {
     // Set both endpoints so swap and both clear buttons exist, then collapse to peek.
     await page.keyboard.press("ArrowDown");
     await snapIs("1");
+    // data-snap changes at once; the sheet still glides from full to half. A drag that starts
+    // before it lands would hit the sheet (and drag it to peek) instead of the map.
+    await sheetSettled(page);
     // Move away first: a start on top of the destination is refused (same place).
     await drag(page, -120, 80);
     await settled(page);

@@ -1132,29 +1132,29 @@
   },
   {
     "key": "eta.trafficRow",
-    "en": "Based on typical speeds. ParaNaga uses no traffic service.",
-    "fil": "Batay sa karaniwang bilis. Hindi gumagamit ng traffic service ang ParaNaga.",
+    "en": "Based on typical speeds. Lunad uses no traffic service.",
+    "fil": "Batay sa karaniwang bilis. Hindi gumagamit ng traffic service ang Lunad.",
     "reviewed": "opus",
     "t15": "checked"
   },
   {
     "key": "eta.assumption",
-    "en": "ParaNaga assumption",
-    "fil": "Palagay ng ParaNaga",
+    "en": "Lunad assumption",
+    "fil": "Palagay ng Lunad",
     "reviewed": "opus",
     "t15": "checked"
   },
   {
     "key": "eta.speedAssumption",
-    "en": "(ParaNaga assumption)",
-    "fil": "(palagay ng ParaNaga)",
+    "en": "(Lunad assumption)",
+    "fil": "(palagay ng Lunad)",
     "reviewed": "opus",
     "t15": "checked"
   },
   {
     "key": "eta.speedMixed",
-    "en": "(upper from {0}; lower is a ParaNaga assumption)",
-    "fil": "(ang mataas ay mula sa {0}; palagay ng ParaNaga ang mababa)",
+    "en": "(upper from {0}; lower is a Lunad assumption)",
+    "fil": "(ang mataas ay mula sa {0}; palagay ng Lunad ang mababa)",
     "note": "message function; {0},{1}.. are the arguments in order | Technical basis row.",
     "reviewed": "opus",
     "t15": "checked"
@@ -3675,16 +3675,16 @@
   },
   {
     "key": "pwa.planUnreachableDate",
-    "en": "Couldn't reach ParaNaga — planned on this phone with data from {0}. Fares may have changed.",
-    "fil": "Hindi makakonekta sa ParaNaga — pinlano sa phone na ito gamit ang data noong {0}. Baka nagbago na ang pasahe.",
+    "en": "Couldn't reach Lunad — planned on this phone with data from {0}. Fares may have changed.",
+    "fil": "Hindi makakonekta sa Lunad — pinlano sa phone na ito gamit ang data noong {0}. Baka nagbago na ang pasahe.",
     "note": "message function; {0},{1}.. are the arguments in order | T12 review: was 'Hindi maabot ang ParaNaga — nagplano sa phone na ito gamit ang data noong {0}. Baka nagbago na ang pasahe.'. see planUnreachable.",
     "reviewed": "opus",
     "t15": "checked"
   },
   {
     "key": "pwa.planUnreachable",
-    "en": "Couldn't reach ParaNaga — planned on this phone with the data it has. Fares may have changed.",
-    "fil": "Hindi makakonekta sa ParaNaga — pinlano sa phone na ito gamit ang data na nasa phone. Baka nagbago na ang pasahe.",
+    "en": "Couldn't reach Lunad — planned on this phone with the data it has. Fares may have changed.",
+    "fil": "Hindi makakonekta sa Lunad — pinlano sa phone na ito gamit ang data na nasa phone. Baka nagbago na ang pasahe.",
     "note": "T12 review: was 'Hindi maabot ang ParaNaga — nagplano sa phone na ito gamit ang data na mayroon ito. Baka nagbago na ang pasahe.'. 'Hindi maabot' -> 'Hindi makakonekta'; 'pinlano' (was planned) matches chipUnreachable.",
     "reviewed": "opus",
     "t15": "checked"
@@ -3744,8 +3744,8 @@
   },
   {
     "key": "pwa.updateText",
-    "en": "A new version of ParaNaga is ready.",
-    "fil": "May bagong bersyon na ng ParaNaga.",
+    "en": "A new version of Lunad is ready.",
+    "fil": "May bagong bersyon na ng Lunad.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -3773,8 +3773,8 @@
   },
   {
     "key": "pwa.installAppRow",
-    "en": "ParaNaga app",
-    "fil": "ParaNaga app",
+    "en": "Lunad app",
+    "fil": "Lunad app",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -3787,8 +3787,8 @@
   },
   {
     "key": "pwa.installTitle",
-    "en": "Install ParaNaga",
-    "fil": "I-install ang ParaNaga",
+    "en": "Install Lunad",
+    "fil": "I-install ang Lunad",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -3801,8 +3801,8 @@
   },
   {
     "key": "pwa.installOther",
-    "en": "To add ParaNaga to your home screen, use your browser’s menu (Install app or Add to Home screen).",
-    "fil": "Para idagdag ang ParaNaga sa home screen mo, gamitin ang menu ng browser (Install app o Add to Home screen).",
+    "en": "To add Lunad to your home screen, use your browser’s menu (Install app or Add to Home screen).",
+    "fil": "Para idagdag ang Lunad sa home screen mo, gamitin ang menu ng browser (Install app o Add to Home screen).",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -3852,8 +3852,8 @@
   },
   {
     "key": "pwa.updateReadySub",
-    "en": "A new version of ParaNaga is ready.",
-    "fil": "May bagong bersyon na ng ParaNaga.",
+    "en": "A new version of Lunad is ready.",
+    "fil": "May bagong bersyon na ng Lunad.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -4194,8 +4194,8 @@
   },
   {
     "key": "settings.locationNote",
-    "en": "Used when you tap “Use current location” or start guidance. To plan a trip it is sent to ParaNaga, never stored or logged. Change it in your browser or phone settings.",
-    "fil": "Ginagamit kapag pinindot mo ang “Gamitin ang lokasyon ko” o sinimulan ang gabay. Para magplano ng biyahe, ipinapadala ito sa ParaNaga pero hindi itinatago o inililista. Baguhin ito sa settings ng browser o ng phone.",
+    "en": "Used when you tap “Use current location” or start guidance. To plan a trip it is sent to Lunad, never stored or logged. Change it in your browser or phone settings.",
+    "fil": "Ginagamit kapag pinindot mo ang “Gamitin ang lokasyon ko” o sinimulan ang gabay. Para magplano ng biyahe, ipinapadala ito sa Lunad pero hindi itinatago o inililista. Baguhin ito sa settings ng browser o ng phone.",
     "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review.",
     "reviewed": "opus",
     "t15": "checked",
@@ -4547,8 +4547,8 @@
   },
   {
     "key": "detail.notFoundTabTitle",
-    "en": "{0} · ParaNaga",
-    "fil": "{0} · ParaNaga",
+    "en": "{0} · Lunad",
+    "fil": "{0} · Lunad",
     "note": "message function; {0},{1}.. are the arguments in order",
     "reviewed": "opus",
     "t15": "checked"
@@ -7042,8 +7042,8 @@
   },
   {
     "key": "search.googleFooter",
-    "en": "{0}. Google receives what you typed. ParaNaga keeps Google's suggestions up to 24 hours, and the location of a place you pick up to 30 days, under a one-way hash, with no typed text and no IP address.",
-    "fil": "{0}. Natatanggap ng Google ang na-type mo. Itinatago ng ParaNaga ang mga mungkahi ng Google nang hanggang 24 oras, at ang lokasyon ng lugar na pinili mo nang hanggang 30 araw, naka-one-way hash; hindi nito itinatago ang na-type mo o ang IP address mo.",
+    "en": "{0}. Google receives what you typed. Lunad keeps Google's suggestions up to 24 hours, and the location of a place you pick up to 30 days, under a one-way hash, with no typed text and no IP address.",
+    "fil": "{0}. Natatanggap ng Google ang na-type mo. Itinatago ng Lunad ang mga mungkahi ng Google nang hanggang 24 oras, at ang lokasyon ng lugar na pinili mo nang hanggang 30 araw, naka-one-way hash; hindi nito itinatago ang na-type mo o ang IP address mo.",
     "note": "T12 draft | privacy/data-deletion: meaning must be exact (what is stored, what is removed) | message function; {0},{1}.. are the arguments in order | T12 review: was '{0}. Natatanggap ng Google ang tinipa mo. Itinatago ng ParaNaga ang sagot ng Google nang hanggang 24 oras sa ilalim ng one-way hash, walang tinipang teksto at walang IP address.'. Privacy: 'sa ilalim ng one-way hash, walang tinipang teksto' was a calque and the 'no typed text' clause could attach to Google's answer; now says plainly that ParaNaga does not keep what you typed or your IP. | N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review.",
     "reviewed": "opus",
     "t15": "checked",
@@ -8941,8 +8941,8 @@
   },
   {
     "key": "landing.header.backToTop",
-    "en": "ParaNaga, back to top",
-    "fil": "ParaNaga, bumalik sa itaas",
+    "en": "Lunad, back to top",
+    "fil": "Lunad, bumalik sa itaas",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -8966,8 +8966,8 @@
   },
   {
     "key": "landing.hero.lede",
-    "en": "ParaNaga plans trips across Naga City by jeepney, tricycle, padyak and on foot, then guides you step by step. Free in your phone's browser, no account needed.",
-    "fil": "Pinaplano ng ParaNaga ang biyahe mo sa buong Naga City sakay ng jeep, tricycle, padyak at paglalakad, tapos ginagabayan ka hakbang-hakbang. Libre sa browser ng phone mo, walang account na kailangan.",
+    "en": "Lunad plans trips across Naga City by jeepney, tricycle, padyak and on foot, then guides you step by step. Free in your phone's browser, no account needed.",
+    "fil": "Pinaplano ng Lunad ang biyahe mo sa buong Naga City sakay ng jeep, tricycle, padyak at paglalakad, tapos ginagabayan ka hakbang-hakbang. Libre sa browser ng phone mo, walang account na kailangan.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -8987,8 +8987,8 @@
   },
   {
     "key": "landing.routeBandLabel",
-    "en": "Jeepney routes ParaNaga plans with",
-    "fil": "Mga rutang jeep na ginagamit ng ParaNaga sa pagpaplano",
+    "en": "Jeepney routes Lunad plans with",
+    "fil": "Mga rutang jeep na ginagamit ng Lunad sa pagpaplano",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -9062,8 +9062,8 @@
   },
   {
     "key": "landing.showcase.deviceLabel",
-    "en": "ParaNaga screens",
-    "fil": "Mga screen ng ParaNaga",
+    "en": "Lunad screens",
+    "fil": "Mga screen ng Lunad",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -9280,8 +9280,8 @@
   },
   {
     "key": "landing.far.body",
-    "en": "Tricycles to Cararayan and San Isidro, Pacol, and Carolina and Panicuason charge special-trip fares, a local report. So ParaNaga points you to the jeepney and its terminal instead.",
-    "fil": "Special-trip na pasahe ang singil ng mga tricycle papunta sa Cararayan at San Isidro, Pacol, at Carolina at Panicuason, ayon sa ulat ng taga-rito. Kaya itinuturo ng ParaNaga ang jeep at ang terminal nito.",
+    "en": "Tricycles to Cararayan and San Isidro, Pacol, and Carolina and Panicuason charge special-trip fares, a local report. So Lunad points you to the jeepney and its terminal instead.",
+    "fil": "Special-trip na pasahe ang singil ng mga tricycle papunta sa Cararayan at San Isidro, Pacol, at Carolina at Panicuason, ayon sa ulat ng taga-rito. Kaya itinuturo ng Lunad ang jeep at ang terminal nito.",
     "review": true,
     "note": "'special-trip na pasahe' kept English like trip.farNoteSpecial. | T15 review: was 'Special-trip na pasahe ang singil ng mga tricycle papuntang Cararayan at San Isidro, Pacol, at Carolina at Panicuason, ayon sa lokal na ulat. Kaya itinuturo ng ParaNaga ang jeep at ang terminal nito.'. 'papunta sa X' everywhere. 'ulat ng taga-rito' for a local report (trip.localReport).",
     "reviewed": "opus",
@@ -9319,8 +9319,8 @@
   },
   {
     "key": "landing.offline.body",
-    "en": "Open ParaNaga once with a connection and the app and the transport data work offline. Saved trips open as text, even in a dead zone.",
-    "fil": "Buksan ang ParaNaga nang isang beses na may koneksyon at gagana nang offline ang app at ang data ng transportasyon. Nabubuksan bilang teksto ang mga naka-save na biyahe, kahit sa lugar na walang signal.",
+    "en": "Open Lunad once with a connection and the app and the transport data work offline. Saved trips open as text, even in a dead zone.",
+    "fil": "Buksan ang Lunad nang isang beses na may koneksyon at gagana nang offline ang app at ang data ng transportasyon. Nabubuksan bilang teksto ang mga naka-save na biyahe, kahit sa lugar na walang signal.",
     "reviewed": "opus",
     "note": "T15 review: was 'Buksan ang ParaNaga nang isang beses na may koneksyon at gagana nang offline ang app at ang datos ng transportasyon. Nabubuksan bilang teksto ang mga naka-save na biyahe, kahit sa lugar na walang signal.'. 'data' everywhere (the app's word).",
     "t15": "changed"
@@ -9334,8 +9334,8 @@
   },
   {
     "key": "landing.offline.android.steps.open",
-    "en": "Open ParaNaga",
-    "fil": "Buksan ang ParaNaga",
+    "en": "Open Lunad",
+    "fil": "Buksan ang Lunad",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -9355,8 +9355,8 @@
   },
   {
     "key": "landing.offline.iphone.steps.open",
-    "en": "Open ParaNaga",
-    "fil": "Buksan ang ParaNaga",
+    "en": "Open Lunad",
+    "fil": "Buksan ang Lunad",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -9376,8 +9376,8 @@
   },
   {
     "key": "landing.themes.body",
-    "en": "ParaNaga follows your phone, or you pick in Settings. High contrast gives stronger text and borders for reading in bright sun.",
-    "fil": "Sinusunod ng ParaNaga ang phone mo, o ikaw ang pipili sa Settings. Ang high contrast ay may mas matingkad na text at border para mabasa kahit tirik ang araw.",
+    "en": "Lunad follows your phone, or you pick in Settings. High contrast gives stronger text and borders for reading in bright sun.",
+    "fil": "Sinusunod ng Lunad ang phone mo, o ikaw ang pipili sa Settings. Ang high contrast ay may mas matingkad na text at border para mabasa kahit tirik ang araw.",
     "review": true,
     "note": "'matingkad' (stronger/brighter) for 'stronger text and borders'; 'tirik ang araw' for bright sun. Confirm.",
     "reviewed": "opus",
@@ -9385,8 +9385,8 @@
   },
   {
     "key": "landing.themes.altLight",
-    "en": "ParaNaga's home screen in the light theme: the Naga City street map with the Where to? bar and category chips.",
-    "fil": "Home screen ng ParaNaga sa maliwanag na theme: ang mapa ng kalye ng Naga City na may bar na Where to? at mga chip ng kategorya.",
+    "en": "Lunad's home screen in the light theme: the Naga City street map with the Where to? bar and category chips.",
+    "fil": "Home screen ng Lunad sa maliwanag na theme: ang mapa ng kalye ng Naga City na may bar na Where to? at mga chip ng kategorya.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -9490,8 +9490,8 @@
   },
   {
     "key": "landing.community.myNaga.body",
-    "en": "ParaNaga can open MyNaga for you, but it sends nothing to MyNaga or City Hall and cannot confirm your report was received.",
-    "fil": "Mabubuksan ng ParaNaga ang MyNaga para sa iyo, pero wala itong ipinapadala sa MyNaga o sa City Hall at hindi nito makukumpirma kung natanggap ang ulat mo.",
+    "en": "Lunad can open MyNaga for you, but it sends nothing to MyNaga or City Hall and cannot confirm your report was received.",
+    "fil": "Mabubuksan ng Lunad ang MyNaga para sa iyo, pero wala itong ipinapadala sa MyNaga o sa City Hall at hindi nito makukumpirma kung natanggap ang ulat mo.",
     "review": true,
     "note": "Privacy-critical: must clearly say nothing is sent to MyNaga or City Hall.",
     "reviewed": "opus",
@@ -9506,8 +9506,8 @@
   },
   {
     "key": "landing.community.tips.body",
-    "en": "Questions and tips from Naga commuters, reviewed before others can read them, and not verified by ParaNaga.",
-    "fil": "Mga tanong at tip mula sa mga commuter ng Naga, sinusuri bago mabasa ng iba, at di pa kumpirmado ng ParaNaga.",
+    "en": "Questions and tips from Naga commuters, reviewed before others can read them, and not verified by Lunad.",
+    "fil": "Mga tanong at tip mula sa mga commuter ng Naga, sinusuri bago mabasa ng iba, at di pa kumpirmado ng Lunad.",
     "reviewed": "opus",
     "note": "T15 review: was 'Mga tanong at tip mula sa mga commuter ng Naga, sinusuri bago mabasa ng iba, at hindi pa kumpirmado ng ParaNaga.'. 'Di pa kumpirmado' everywhere (the badge's form).",
     "t15": "changed"
@@ -9548,8 +9548,8 @@
   },
   {
     "key": "landing.promise.provisional.body",
-    "en": "Routes, stops and times are not verified by ParaNaga yet. Every ride says so and asks you to confirm with the driver.",
-    "fil": "Di pa kumpirmado ng ParaNaga ang mga ruta, hintuan at oras. Sinasabi iyon ng bawat sakay at hinihiling na kumpirmahin mo sa driver.",
+    "en": "Routes, stops and times are not verified by Lunad yet. Every ride says so and asks you to confirm with the driver.",
+    "fil": "Di pa kumpirmado ng Lunad ang mga ruta, hintuan at oras. Sinasabi iyon ng bawat sakay at hinihiling na kumpirmahin mo sa driver.",
     "reviewed": "opus",
     "note": "T15 review: was 'Hindi pa kumpirmado ng ParaNaga ang mga ruta, hintuan at oras. Sinasabi iyon ng bawat sakay at hinihiling na kumpirmahin mo sa driver.'. 'Di pa kumpirmado' everywhere (the badge's form).",
     "t15": "changed"
@@ -9579,8 +9579,8 @@
   },
   {
     "key": "landing.promise.tracking.body",
-    "en": "ParaNaga does not track jeepneys, so it never says when one will come.",
-    "fil": "Hindi sinusubaybayan ng ParaNaga ang mga jeep, kaya hindi nito sinasabi kung kailan may jeep.",
+    "en": "Lunad does not track jeepneys, so it never says when one will come.",
+    "fil": "Hindi sinusubaybayan ng Lunad ang mga jeep, kaya hindi nito sinasabi kung kailan may jeep.",
     "review": true,
     "note": "Avoids 'darating'/'parating' (banned): 'hindi nito sinasabi kung kailan may jeep'. Confirm the meaning (never says when one will come) is clear.",
     "reviewed": "opus",
@@ -9677,8 +9677,8 @@
   },
   {
     "key": "landing.faq.free.q",
-    "en": "Is ParaNaga free?",
-    "fil": "Libre ba ang ParaNaga?",
+    "en": "Is Lunad free?",
+    "fil": "Libre ba ang Lunad?",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -9712,8 +9712,8 @@
   },
   {
     "key": "landing.faq.tracking.a",
-    "en": "No. ParaNaga does not track vehicles. It shows the routes and the steps, with time and fare estimates as ranges.",
-    "fil": "Hindi. Hindi sinusubaybayan ng ParaNaga ang mga sasakyan. Ipinapakita nito ang mga ruta at hakbang, at tantiya ng oras at pasahe bilang saklaw.",
+    "en": "No. Lunad does not track vehicles. It shows the routes and the steps, with time and fare estimates as ranges.",
+    "fil": "Hindi. Hindi sinusubaybayan ng Lunad ang mga sasakyan. Ipinapakita nito ang mga ruta at hakbang, at tantiya ng oras at pasahe bilang saklaw.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -9754,8 +9754,8 @@
   },
   {
     "key": "landing.faq.official.a",
-    "en": "No. ParaNaga is independent and not an official channel of the City Government of Naga.",
-    "fil": "Hindi. Hiwalay ang ParaNaga at hindi ito pormal na channel ng Pamahalaang Lungsod ng Naga.",
+    "en": "No. Lunad is independent and not an official channel of the City Government of Naga.",
+    "fil": "Hindi. Hiwalay ang Lunad at hindi ito pormal na channel ng Pamahalaang Lungsod ng Naga.",
     "review": true,
     "note": "Avoids banned 'opisyal': 'hindi ito pinapatakbo ng Pamahalaang Lungsod ng Naga'. | T15 review: was 'Hindi. Hiwalay ang ParaNaga at hindi ito pinapatakbo ng Pamahalaang Lungsod ng Naga.'. Official handling: 'opisyal' stays banned; 'official channel' is 'pormal na channel'; City Government is 'Pamahalaang Lungsod'.",
     "reviewed": "opus",
@@ -9777,8 +9777,8 @@
   },
   {
     "key": "landing.footer.disclaimer",
-    "en": "ParaNaga is an independent project. It is not affiliated with, endorsed by or an official channel of the City Government of Naga. Routes, times and fares may be incomplete: always confirm with the driver.",
-    "fil": "Hiwalay na proyekto ang ParaNaga. Hindi ito kaanib, inendorso, o pormal na channel ng Pamahalaang Lungsod ng Naga. Maaaring kulang ang mga ruta, oras at pasahe: laging kumpirmahin sa driver.",
+    "en": "Lunad is an independent project. It is not affiliated with, endorsed by or an official channel of the City Government of Naga. Routes, times and fares may be incomplete: always confirm with the driver.",
+    "fil": "Hiwalay na proyekto ang Lunad. Hindi ito kaanib, inendorso, o pormal na channel ng Pamahalaang Lungsod ng Naga. Maaaring kulang ang mga ruta, oras at pasahe: laging kumpirmahin sa driver.",
     "review": true,
     "note": "Avoids banned 'opisyal'. 'kaanib, inendorso o pinapatakbo' for 'affiliated with, endorsed by or an official channel of'. Legal wording: owner to confirm. | T15 review: was 'Hiwalay na proyekto ang ParaNaga. Hindi ito kaanib, inendorso o pinapatakbo ng Pamahalaang Lungsod ng Naga. Maaaring kulang ang mga ruta, oras at pasahe: laging kumpirmahin sa driver.'. Official handling: 'opisyal' stays banned; 'official channel' is 'pormal na channel'; City Government is 'Pamahalaang Lungsod'.",
     "reviewed": "opus",
@@ -9828,16 +9828,16 @@
   },
   {
     "key": "landing.alt.hero",
-    "en": "ParaNaga on a phone: a street map of Naga City with a trip from Plaza Rizal to Ateneo de Naga University and two options under it: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, marked Unverified route, and a tricycle at a minimum fare of ₱15.",
-    "fil": "ParaNaga sa isang phone: mapa ng kalye ng Naga City na may biyahe mula Plaza Rizal papunta sa Ateneo de Naga University at dalawang opsyon sa ilalim nito: ang Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, at ₱14, may markang Unverified route, at isang tricycle na may minimum na pasaheng ₱15.",
+    "en": "Lunad on a phone: a street map of Naga City with a trip from Plaza Rizal to Ateneo de Naga University and two options under it: the Recommended C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), estimated 14 to 23 minutes plus waiting and ₱14, marked Unverified route, and a tricycle at a minimum fare of ₱15.",
+    "fil": "Lunad sa isang phone: mapa ng kalye ng Naga City na may biyahe mula Plaza Rizal papunta sa Ateneo de Naga University at dalawang opsyon sa ilalim nito: ang Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, at ₱14, may markang Unverified route, at isang tricycle na may minimum na pasaheng ₱15.",
     "reviewed": "opus",
     "note": "T15 review: was 'ParaNaga sa isang phone: mapa ng kalye ng Naga City na may biyahe mula Plaza Rizal papunta sa Ateneo de Naga University at dalawang pagpipilian sa ilalim nito: ang Recommended na C Centro-Bagumbayan-Magsaysay-Roxas Loop C (clockwise), tinatayang 14 hanggang 23 minuto, dagdag pa ang paghihintay, at ₱14, may markang Unverified route, at isang tricycle na may minimum na pasaheng ₱15.'. 'opsyon' for trip options, as in the app.",
     "t15": "changed"
   },
   {
     "key": "landing.alt.home",
-    "en": "ParaNaga's home screen: a street map of central Naga City with a Where to? bar, chips for Food & drink, Schools, Health and Markets & malls, terminal pins and a tab bar.",
-    "fil": "Home screen ng ParaNaga: mapa ng kalye ng gitnang Naga City na may bar na Where to?, mga chip na Food & drink, Schools, Health at Markets & malls, mga pin ng terminal at tab bar.",
+    "en": "Lunad's home screen: a street map of central Naga City with a Where to? bar, chips for Food & drink, Schools, Health and Markets & malls, terminal pins and a tab bar.",
+    "fil": "Home screen ng Lunad: mapa ng kalye ng gitnang Naga City na may bar na Where to?, mga chip na Food & drink, Schools, Health at Markets & malls, mga pin ng terminal at tab bar.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -10114,8 +10114,8 @@
   },
   {
     "key": "help.independentNote",
-    "en": "ParaNaga is an independent commuter guide. It is not an official City Government app.",
-    "fil": "Independiyenteng gabay para sa commuter ang ParaNaga. Hindi ito app ng Pamahalaang Lungsod.",
+    "en": "Lunad is an independent commuter guide. It is not an official City Government app.",
+    "fil": "Independiyenteng gabay para sa commuter ang Lunad. Hindi ito app ng Pamahalaang Lungsod.",
     "note": "'not an official City Government app' rendered 'Hindi ito app ng City Government' ('opisyal' is banned). | T15 review: was 'Independiyenteng gabay para sa commuter ang ParaNaga. Hindi ito app ng City Government.'. Official handling: 'opisyal' stays banned; 'official channel' is 'pormal na channel'; City Government is 'Pamahalaang Lungsod'.",
     "reviewed": "opus",
     "t15": "changed"
@@ -10129,8 +10129,8 @@
   },
   {
     "key": "help.emergencyBody",
-    "en": "ParaNaga does not monitor reports and cannot send help.",
-    "fil": "Hindi binabantayan ng ParaNaga ang mga ulat at hindi ito makakapagpadala ng tulong.",
+    "en": "Lunad does not monitor reports and cannot send help.",
+    "fil": "Hindi binabantayan ng Lunad ang mga ulat at hindi ito makakapagpadala ng tulong.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -10182,8 +10182,8 @@
   },
   {
     "key": "help.reportPrivately",
-    "en": "Report a driver privately in ParaNaga",
-    "fil": "I-report nang pribado ang driver sa ParaNaga",
+    "en": "Report a driver privately in Lunad",
+    "fil": "I-report nang pribado ang driver sa Lunad",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -10255,8 +10255,8 @@
   },
   {
     "key": "help.dataFooter",
-    "en": "ParaNaga does not track vehicles, so it cannot say when one will come. Stop alerts work only while ParaNaga is open on your screen.",
-    "fil": "Hindi sinusubaybayan ng ParaNaga ang mga sasakyan, kaya hindi nito masasabi kung kailan may dadaan. Gumagana lang ang mga paalala sa hintuan habang bukas ang ParaNaga sa screen mo.",
+    "en": "Lunad does not track vehicles, so it cannot say when one will come. Stop alerts work only while Lunad is open on your screen.",
+    "fil": "Hindi sinusubaybayan ng Lunad ang mga sasakyan, kaya hindi nito masasabi kung kailan may dadaan. Gumagana lang ang mga paalala sa hintuan habang bukas ang Lunad sa screen mo.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -10269,8 +10269,8 @@
   },
   {
     "key": "help.noTimeModel",
-    "en": "The time-estimate model is not on this phone yet. Open ParaNaga with a connection once to load it.",
-    "fil": "Wala pa sa phone na ito ang modelo ng tantiya ng oras. Buksan ang ParaNaga nang may koneksyon kahit isang beses para ma-load ito.",
+    "en": "The time-estimate model is not on this phone yet. Open Lunad with a connection once to load it.",
+    "fil": "Wala pa sa phone na ito ang modelo ng tantiya ng oras. Buksan ang Lunad nang may koneksyon kahit isang beses para ma-load ito.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -10299,8 +10299,8 @@
   },
   {
     "key": "help.articles.planned.intro",
-    "en": "ParaNaga suggests jeepney trips along mapped routes. Paths come from ordinances and public maps, not a field survey, so every suggestion carries the badge “{0}”.",
-    "fil": "Nagmumungkahi ang ParaNaga ng biyahe sa jeep sa mga rutang nasa mapa. Galing sa mga ordinansa at pampublikong mapa ang mga daan, hindi sa pagsusuri sa mismong lugar, kaya may badge na “{0}” ang bawat mungkahi.",
+    "en": "Lunad suggests jeepney trips along mapped routes. Paths come from ordinances and public maps, not a field survey, so every suggestion carries the badge “{0}”.",
+    "fil": "Nagmumungkahi ang Lunad ng biyahe sa jeep sa mga rutang nasa mapa. Galing sa mga ordinansa at pampublikong mapa ang mga daan, hindi sa pagsusuri sa mismong lugar, kaya may badge na “{0}” ang bawat mungkahi.",
     "note": "message function; {0},{1}.. are the arguments in order",
     "reviewed": "opus",
     "t15": "checked"
@@ -10419,15 +10419,15 @@
   },
   {
     "key": "help.articles.offline.title",
-    "en": "Using ParaNaga offline",
-    "fil": "Paggamit ng ParaNaga nang offline",
+    "en": "Using Lunad offline",
+    "fil": "Paggamit ng Lunad nang offline",
     "reviewed": "opus",
     "t15": "checked"
   },
   {
     "key": "help.articles.offline.body.p1",
-    "en": "After you open ParaNaga once with a connection, the app and the transport data work offline. Saved trips open as text even when the map background can't load.",
-    "fil": "Kapag nabuksan mo na ang ParaNaga nang isang beses na may koneksyon, gagana nang offline ang app at ang data ng transportasyon. Nabubuksan bilang teksto ang mga naka-save na biyahe kahit hindi ma-load ang background ng mapa.",
+    "en": "After you open Lunad once with a connection, the app and the transport data work offline. Saved trips open as text even when the map background can't load.",
+    "fil": "Kapag nabuksan mo na ang Lunad nang isang beses na may koneksyon, gagana nang offline ang app at ang data ng transportasyon. Nabubuksan bilang teksto ang mga naka-save na biyahe kahit hindi ma-load ang background ng mapa.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -10469,8 +10469,8 @@
   },
   {
     "key": "help.articles.vehicles.body.p3",
-    "en": "Tricycle and e-tricycle: ₱15 minimum (Ordinance 2024-002); discounts exist for students, seniors, PWD and solo parents but eligibility is not verified, so ParaNaga does not apply them; e-trikes need a franchise.",
-    "fil": "Tricycle at e-tricycle: ₱15 ang minimum (Ordinansa 2024-002); may diskwento para sa estudyante, senior, PWD at solo parent pero di pa kumpirmado kung sino ang kwalipikado, kaya hindi ito ibinabawas ng ParaNaga; kailangan ng prangkisa ang mga e-trike.",
+    "en": "Tricycle and e-tricycle: ₱15 minimum (Ordinance 2024-002); discounts exist for students, seniors, PWD and solo parents but eligibility is not verified, so Lunad does not apply them; e-trikes need a franchise.",
+    "fil": "Tricycle at e-tricycle: ₱15 ang minimum (Ordinansa 2024-002); may diskwento para sa estudyante, senior, PWD at solo parent pero di pa kumpirmado kung sino ang kwalipikado, kaya hindi ito ibinabawas ng Lunad; kailangan ng prangkisa ang mga e-trike.",
     "reviewed": "opus",
     "note": "T15 review: was 'Tricycle at e-tricycle: ₱15 ang minimum (Ordinance 2024-002); may diskwento para sa estudyante, senior, PWD at solo parent pero hindi pa kumpirmado kung sino ang kwalipikado, kaya hindi ito ibinabawas ng ParaNaga; kailangan ng prangkisa ang mga e-trike.'. 'Di pa kumpirmado' everywhere (the badge's form). 'Ordinansa' in Filipino text (verbatim source records stay English).",
     "t15": "changed"
@@ -10652,8 +10652,8 @@
   },
   {
     "key": "sources.verbatim.timeBasis",
-    "en": "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are ParaNaga assumptions.",
-    "fil": "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are ParaNaga assumptions.",
+    "en": "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are Lunad assumptions.",
+    "fil": "Times are ranges from typical walking and jeepney speeds. Each speed and window cites the sources below; the unmarked ends are Lunad assumptions.",
     "review": true,
     "note": "Kept English verbatim (data basis, licence or attribution text); a verbatim-reviewed Filipino translation is pending (T13). Listed in SAME_AS_EN.",
     "reviewed": "opus",
@@ -10839,8 +10839,8 @@
   },
   {
     "key": "report.locationOff",
-    "en": "Location is off for ParaNaga. You can still send the report without it.",
-    "fil": "Naka-off ang lokasyon para sa ParaNaga. Puwede mo pa ring ipadala ang ulat nang wala ito.",
+    "en": "Location is off for Lunad. You can still send the report without it.",
+    "fil": "Naka-off ang lokasyon para sa Lunad. Puwede mo pa ring ipadala ang ulat nang wala ito.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -11385,8 +11385,8 @@
   },
   {
     "key": "driverReport.locationOff",
-    "en": "Location is off for ParaNaga. You can describe the place instead.",
-    "fil": "Naka-off ang lokasyon para sa ParaNaga. Puwede mong ilarawan na lang ang lugar.",
+    "en": "Location is off for Lunad. You can describe the place instead.",
+    "fil": "Naka-off ang lokasyon para sa Lunad. Puwede mong ilarawan na lang ang lugar.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -11458,8 +11458,8 @@
   },
   {
     "key": "driverReport.nextSteps.p2",
-    "en": "ParaNaga does not decide who is at fault and does not contact the driver.",
-    "fil": "Hindi nagpapasya ang ParaNaga kung sino ang may kasalanan at hindi nito kinokontak ang driver.",
+    "en": "Lunad does not decide who is at fault and does not contact the driver.",
+    "fil": "Hindi nagpapasya ang Lunad kung sino ang may kasalanan at hindi nito kinokontak ang driver.",
     "review": true,
     "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
     "reviewed": "opus",
@@ -11483,8 +11483,8 @@
   },
   {
     "key": "driverReport.explainer.p1",
-    "en": "Your report stays private inside ParaNaga. It is never posted in Community and never shown to other commuters.",
-    "fil": "Pribado ang ulat mo sa loob ng ParaNaga. Hindi ito kailanman ipo-post sa Komunidad at hindi ipapakita sa ibang commuter.",
+    "en": "Your report stays private inside Lunad. It is never posted in Community and never shown to other commuters.",
+    "fil": "Pribado ang ulat mo sa loob ng Lunad. Hindi ito kailanman ipo-post sa Komunidad at hindi ipapakita sa ibang commuter.",
     "review": true,
     "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage.",
     "reviewed": "opus",
@@ -11492,8 +11492,8 @@
   },
   {
     "key": "driverReport.explainer.p2",
-    "en": "ParaNaga does not send it to Naga City or any agency. After you send it, you can choose to continue in MyNaga yourself.",
-    "fil": "Hindi ito ipinapadala ng ParaNaga sa Naga City o sa anumang ahensya. Pagkapadala mo, ikaw ang magpapasya kung itutuloy mo ito sa MyNaga.",
+    "en": "Lunad does not send it to Naga City or any agency. After you send it, you can choose to continue in MyNaga yourself.",
+    "fil": "Hindi ito ipinapadala ng Lunad sa Naga City o sa anumang ahensya. Pagkapadala mo, ikaw ang magpapasya kung itutuloy mo ito sa MyNaga.",
     "review": true,
     "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage.",
     "reviewed": "opus",
@@ -11501,8 +11501,8 @@
   },
   {
     "key": "driverReport.explainer.p3",
-    "en": "A ParaNaga reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer. A closed report and its files are deleted 365 days after it was closed, unless it is under a legal hold.",
-    "fil": "Babasahin ito ng isang reviewer ng ParaNaga. Nasa pribadong storage ang mga larawan at video, at ikaw at ang reviewer na iyon lang ang makakakita. Binubura ang saradong ulat at ang mga file nito 365 araw matapos itong isara, maliban kung may legal hold.",
+    "en": "A Lunad reviewer reads it. Photos and videos are kept in private storage and shown only to you and that reviewer. A closed report and its files are deleted 365 days after it was closed, unless it is under a legal hold.",
+    "fil": "Babasahin ito ng isang reviewer ng Lunad. Nasa pribadong storage ang mga larawan at video, at ikaw at ang reviewer na iyon lang ang makakakita. Binubura ang saradong ulat at ang mga file nito 365 araw matapos itong isara, maliban kung may legal hold.",
     "review": true,
     "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm. Private report: never posted, not sent to the City, reviewer-only storage. | N8 privacy pass (2026-10-22): English corrected to match behaviour; Filipino drafted by Claude, needs native review.",
     "reviewed": "opus",
@@ -11836,8 +11836,8 @@
   },
   {
     "key": "driverReport.camera.denied",
-    "en": "Camera access is off for ParaNaga. You can upload a photo or video instead, or continue without one. To use the camera, allow it in your browser settings.",
-    "fil": "Naka-off ang access sa camera para sa ParaNaga. Puwede kang mag-upload ng larawan o video, o magpatuloy nang wala nito. Para magamit ang camera, payagan ito sa settings ng browser mo.",
+    "en": "Camera access is off for Lunad. You can upload a photo or video instead, or continue without one. To use the camera, allow it in your browser settings.",
+    "fil": "Naka-off ang access sa camera para sa Lunad. Puwede kang mag-upload ng larawan o video, o magpatuloy nang wala nito. Para magamit ang camera, payagan ito sa settings ng browser mo.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -12123,8 +12123,8 @@
   },
   {
     "key": "reports.intro",
-    "en": "Only you can see these. Status shows where each report stands in ParaNaga.",
-    "fil": "Ikaw lang ang nakakakita nito. Ipinapakita ng katayuan kung nasaan na ang bawat ulat sa ParaNaga.",
+    "en": "Only you can see these. Status shows where each report stands in Lunad.",
+    "fil": "Ikaw lang ang nakakakita nito. Ipinapakita ng katayuan kung nasaan na ang bawat ulat sa Lunad.",
     "review": true,
     "note": "Privacy/data-handling text: meaning must stay exact; native speaker to confirm.",
     "reviewed": "opus",
@@ -12191,8 +12191,8 @@
   },
   {
     "key": "reports.mynagaPanelNote",
-    "en": "ParaNaga does not send anything to MyNaga or City Hall and cannot confirm that your report was received. This is only what you told us.",
-    "fil": "Walang ipinapadala ang ParaNaga sa MyNaga o sa City Hall at hindi nito makukumpirma na natanggap ang ulat mo. Ito lang ang sinabi mo sa amin.",
+    "en": "Lunad does not send anything to MyNaga or City Hall and cannot confirm that your report was received. This is only what you told us.",
+    "fil": "Walang ipinapadala ang Lunad sa MyNaga o sa City Hall at hindi nito makukumpirma na natanggap ang ulat mo. Ito lang ang sinabi mo sa amin.",
     "review": true,
     "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
     "reviewed": "opus",
@@ -12200,8 +12200,8 @@
   },
   {
     "key": "reports.statusInParaNaga",
-    "en": "Status in ParaNaga",
-    "fil": "Katayuan sa ParaNaga",
+    "en": "Status in Lunad",
+    "fil": "Katayuan sa Lunad",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -12385,8 +12385,8 @@
   },
   {
     "key": "reports.outcomes.outside_scope",
-    "en": "Outside what ParaNaga can review",
-    "fil": "Labas sa kayang suriin ng ParaNaga",
+    "en": "Outside what Lunad can review",
+    "fil": "Labas sa kayang suriin ng Lunad",
     "review": true,
     "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. Neutral outcome of a closed driver report; never a finding about the driver.",
     "reviewed": "opus",
@@ -12452,8 +12452,8 @@
   },
   {
     "key": "mynaga.independentStrong",
-    "en": "ParaNaga is independent.",
-    "fil": "Independiyente ang ParaNaga.",
+    "en": "Lunad is independent.",
+    "fil": "Independiyente ang Lunad.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -12553,8 +12553,8 @@
   },
   {
     "key": "mynaga.later",
-    "en": "Sent a private report in ParaNaga? Open it from My reports to copy a summary and note your MyNaga reference.",
-    "fil": "Nagpadala ka ba ng pribadong ulat sa ParaNaga? Buksan ito mula sa Mga ulat ko para kopyahin ang buod at itala ang reference mo sa MyNaga.",
+    "en": "Sent a private report in Lunad? Open it from My reports to copy a summary and note your MyNaga reference.",
+    "fil": "Nagpadala ka ba ng pribadong ulat sa Lunad? Buksan ito mula sa Mga ulat ko para kopyahin ang buod at itala ang reference mo sa MyNaga.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -12583,8 +12583,8 @@
   },
   {
     "key": "mynaga.bystander.lines.p1",
-    "en": "ParaNaga cannot blur faces or plates yet, so the file you download is the original.",
-    "fil": "Hindi pa kayang i-blur ng ParaNaga ang mga mukha o plaka, kaya orihinal na file ang mada-download mo.",
+    "en": "Lunad cannot blur faces or plates yet, so the file you download is the original.",
+    "fil": "Hindi pa kayang i-blur ng Lunad ang mga mukha o plaka, kaya orihinal na file ang mada-download mo.",
     "review": true,
     "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
     "reviewed": "opus",
@@ -12619,8 +12619,8 @@
   },
   {
     "key": "mynaga.selfReportNote",
-    "en": "ParaNaga does not send anything to MyNaga or City Hall and cannot confirm your report was received. This note is your own: it is saved to your account, shown as self-reported, and never changes the status of your ParaNaga report.",
-    "fil": "Walang ipinapadala ang ParaNaga sa MyNaga o sa City Hall at hindi nito makukumpirma na natanggap ang ulat mo. Sa iyo ang talang ito: naka-save ito sa account mo, ipinapakitang ayon sa iyo, at hindi nito kailanman binabago ang katayuan ng ulat mo sa ParaNaga.",
+    "en": "Lunad does not send anything to MyNaga or City Hall and cannot confirm your report was received. This note is your own: it is saved to your account, shown as self-reported, and never changes the status of your Lunad report.",
+    "fil": "Walang ipinapadala ang Lunad sa MyNaga o sa City Hall at hindi nito makukumpirma na natanggap ang ulat mo. Sa iyo ang talang ito: naka-save ito sa account mo, ipinapakitang ayon sa iyo, at hindi nito kailanman binabago ang katayuan ng ulat mo sa Lunad.",
     "review": true,
     "note": "Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
     "reviewed": "opus",
@@ -12877,8 +12877,8 @@
   },
   {
     "key": "mynaga.summary.reference",
-    "en": "ParaNaga reference (for my own records): {0}",
-    "fil": "Reference sa ParaNaga (para sa sarili kong tala): {0}",
+    "en": "Lunad reference (for my own records): {0}",
+    "fil": "Reference sa Lunad (para sa sarili kong tala): {0}",
     "review": true,
     "note": "message function; {0},{1}.. are the arguments in order | Plain-text summary the reporter pastes into MyNaga (City of Naga staff read it); written in the reporter's UI language. Native speaker to confirm.",
     "reviewed": "opus",
@@ -13121,8 +13121,8 @@
   },
   {
     "key": "community.feedNotice",
-    "en": "Written by other commuters. Not verified by ParaNaga. A fare or route tip here is not an official fare or route.",
-    "fil": "Isinulat ng ibang commuter. Hindi kinumpirma ng ParaNaga. Ang mga tip dito tungkol sa pasahe o ruta ay hindi pasahe o rutang itinakda ng lungsod.",
+    "en": "Written by other commuters. Not verified by Lunad. A fare or route tip here is not an official fare or route.",
+    "fil": "Isinulat ng ibang commuter. Hindi kinumpirma ng Lunad. Ang mga tip dito tungkol sa pasahe o ruta ay hindi pasahe o rutang itinakda ng lungsod.",
     "review": true,
     "note": "Moderation/review wording: meaning must stay exact (no promise, no finding of fault); native speaker to confirm. 'not an official fare or route' rendered 'hindi ang pasahe o rutang itinakda ng lungsod'.",
     "reviewed": "opus",
@@ -13329,8 +13329,8 @@
   },
   {
     "key": "community.unverifiedNotice",
-    "en": "Written by other commuters. Not verified by ParaNaga.",
-    "fil": "Isinulat ng ibang commuter. Hindi kinumpirma ng ParaNaga.",
+    "en": "Written by other commuters. Not verified by Lunad.",
+    "fil": "Isinulat ng ibang commuter. Hindi kinumpirma ng Lunad.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -13881,8 +13881,8 @@
   },
   {
     "key": "auth.errOrigin",
-    "en": "Sign-in is not set up for this address yet. You can keep using ParaNaga as a guest.",
-    "fil": "Hindi pa naka-set up ang sign-in para sa address na ito. Puwede mo pa ring gamitin ang ParaNaga bilang guest.",
+    "en": "Sign-in is not set up for this address yet. You can keep using Lunad as a guest.",
+    "fil": "Hindi pa naka-set up ang sign-in para sa address na ito. Puwede mo pa ring gamitin ang Lunad bilang guest.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -13902,8 +13902,8 @@
   },
   {
     "key": "auth.unavailable",
-    "en": "Sign-in is not available right now. You can keep using ParaNaga as a guest.",
-    "fil": "Hindi available ang sign-in ngayon. Puwede mo pa ring gamitin ang ParaNaga bilang guest.",
+    "en": "Sign-in is not available right now. You can keep using Lunad as a guest.",
+    "fil": "Hindi available ang sign-in ngayon. Puwede mo pa ring gamitin ang Lunad bilang guest.",
     "reviewed": "opus",
     "t15": "checked"
   },
@@ -14070,8 +14070,8 @@
   },
   {
     "key": "acknowledgments.driverReport",
-    "en": "Describe what you observed accurately and submit evidence you are entitled to share. Your complaint is private within ParaNaga, and ParaNaga does not send it to Naga City. You can choose to continue reporting in MyNaga after reviewing your report.",
-    "fil": "Describe what you observed accurately and submit evidence you are entitled to share. Your complaint is private within ParaNaga, and ParaNaga does not send it to Naga City. You can choose to continue reporting in MyNaga after reviewing your report.",
+    "en": "Describe what you observed accurately and submit evidence you are entitled to share. Your complaint is private within Lunad, and Lunad does not send it to Naga City. You can choose to continue reporting in MyNaga after reviewing your report.",
+    "fil": "Describe what you observed accurately and submit evidence you are entitled to share. Your complaint is private within Lunad, and Lunad does not send it to Naga City. You can choose to continue reporting in MyNaga after reviewing your report.",
     "review": true,
     "note": "Kept English verbatim: the accepted acknowledgment text is recorded (core.ack, versioned). A verbatim-reviewed Filipino translation is pending (T13); listed in SAME_AS_EN.",
     "reviewed": "opus",
@@ -14255,8 +14255,8 @@
   },
   {
     "key": "report.reviewReasons.out_of_scope",
-    "en": "This is outside what ParaNaga covers.",
-    "fil": "Wala ito sa sakop ng ParaNaga.",
+    "en": "This is outside what Lunad covers.",
+    "fil": "Wala ito sa sakop ng Lunad.",
     "review": true,
     "note": "N6 (2026-10-22): moderation/review wording, meaning must stay exact (no promise, no finding of fault); native speaker to confirm.",
     "reviewed": "opus",
@@ -15218,8 +15218,8 @@
   },
   {
     "key": "intercity.footer",
-    "en": "Fares and times change often. Ask at the terminal. ParaNaga sells no tickets.",
-    "fil": "Madalas magbago ang pasahe at oras. Magtanong sa terminal. Walang ibinebentang tiket ang ParaNaga.",
+    "en": "Fares and times change often. Ask at the terminal. Lunad sells no tickets.",
+    "fil": "Madalas magbago ang pasahe at oras. Magtanong sa terminal. Walang ibinebentang tiket ang Lunad.",
     "review": true,
     "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
     "reviewed": "claude",

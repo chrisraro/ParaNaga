@@ -18,14 +18,8 @@
   --pn-sep: color-mix(in srgb, var(--color-ink) 10%, transparent);
   --pn-ring: color-mix(in srgb, var(--color-ink) 16%, transparent);
   --pn-shadow: color-mix(in srgb, var(--color-ink) 14%, transparent);
-  /* The one shadow: anything that floats over the map (search bar, chips, controls, tab bar). Cards
-     inside a sheet take a hairline (--pn-ring) instead, never both. */
-  --pn-elev: 0 1px 2px color-mix(in srgb, var(--color-ink) 10%, transparent), 0 4px 14px -2px var(--pn-shadow);
-  --pn-elev-sm: 0 1px 3px var(--pn-shadow);
-  --pn-elev-sheet: 0 -2px 16px var(--pn-shadow);
-  /* The "Recommended" tag: solid amber, ink text (never white on amber). */
-  --pn-tag-bg: var(--color-accent);
-  --pn-tag-text: var(--color-ink);
+  /* Elevation (--pn-elev, --pn-elev-sm, --pn-elev-sheet) and the tag colours (--pn-tag-bg,
+     --pn-tag-text) are shared tokens on :root: src/ui/theme/tokens.css. */
   --pn-grabber: color-mix(in srgb, var(--color-ink) 25%, transparent);
   --pn-accent: var(--color-brand);
   --pn-on-primary: var(--color-on-brand);
@@ -65,11 +59,6 @@
   --pn-sep: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
   --pn-ring: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
   --pn-shadow: rgba(0, 0, 0, 0.45);
-  /* Dark: a shadow does not show on a dark map, so what floats takes the hairline instead. */
-  --pn-elev: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
-  --pn-elev-sm: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
-  --pn-elev-sheet: 0 -1px 0 color-mix(in srgb, var(--color-night-ink) 16%, transparent);
-  --pn-tag-bg: var(--color-accent);
   --pn-grabber: color-mix(in srgb, var(--color-night-ink) 30%, transparent);
   --pn-accent: var(--color-brand-bright);
   --pn-on-primary: var(--color-on-brand-bright);
@@ -80,7 +69,6 @@
   --pn-warn-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
   --pn-warn-text: var(--color-accent);
   --pn-warn-ring: color-mix(in srgb, var(--color-accent) 55%, transparent);
-  --pn-tag-text: var(--color-ink);
   --pn-dest: var(--color-danger-bright);
 }
 @media (prefers-color-scheme: dark) {
@@ -95,11 +83,6 @@
     --pn-sep: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
     --pn-ring: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
     --pn-shadow: rgba(0, 0, 0, 0.45);
-    /* Dark: a shadow does not show on a dark map, so what floats takes the hairline instead. */
-    --pn-elev: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
-    --pn-elev-sm: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
-    --pn-elev-sheet: 0 -1px 0 color-mix(in srgb, var(--color-night-ink) 16%, transparent);
-    --pn-tag-bg: var(--color-accent);
     --pn-grabber: color-mix(in srgb, var(--color-night-ink) 30%, transparent);
     --pn-accent: var(--color-brand-bright);
     --pn-on-primary: var(--color-on-brand-bright);
@@ -110,7 +93,6 @@
     --pn-warn-bg: color-mix(in srgb, var(--color-accent) 14%, transparent);
     --pn-warn-text: var(--color-accent);
     --pn-warn-ring: color-mix(in srgb, var(--color-accent) 55%, transparent);
-    --pn-tag-text: var(--color-ink);
     --pn-dest: var(--color-danger-bright);
   }
 }

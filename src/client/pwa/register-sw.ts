@@ -8,7 +8,8 @@
 // Updates: a new worker installs and then WAITS (it never takes over by itself). When one is
 // waiting while this page is controlled, `useUpdateReady()` turns true and the app shows "A new
 // version of Lunad is ready. [Reload]". Tapping Reload (applyUpdate) asks the waiting worker to
-// take over and reloads once it has; the app never offers or performs that reload while guidance
+// take over and reloads once it has (or after TAKEOVER_TIMEOUT_MS without an answer, so the button
+// is never dead); the app never offers or performs that reload while guidance
 // is running. A first install shows nothing (there is no older version to replace).
 
 import { useSyncExternalStore } from "react";
@@ -22,12 +23,24 @@ let started = false;
 /** This tab asked the waiting worker to take over (and will reload once it has). */
 let initiated = false;
 let controllerListener = false;
+/** The page reloads once per update this tab asked for, however the answer arrives. */
+let reloaded = false;
+let takeoverTimer: ReturnType<typeof setTimeout> | undefined;
+/** How long Reload waits for the new version to take control before reloading anyway. */
+export const TAKEOVER_TIMEOUT_MS = 4000;
 let watched = new WeakSet<ServiceWorker>();
 const listeners = new Set<() => void>();
 let reloadPage = () => window.location.reload();
 
 /** "Later" on the card: hidden for this page session (More → App still offers Reload). */
 let later = false;
+
+function reloadOnce(): void {
+  clearTimeout(takeoverTimer);
+  if (reloaded) return;
+  reloaded = true;
+  reloadPage();
+}
 
 function setWaiting(worker: ServiceWorker | null): void {
   if (waiting === worker) return;
@@ -56,6 +69,7 @@ function watch(worker: ServiceWorker): void {
     if (worker.state === "redundant") {
       // Superseded (e.g. a newer version arrived before it activated): a later one can be applied.
       initiated = false;
+      clearTimeout(takeoverTimer);
       setWaiting(null);
     } else if (!initiated && isActive(worker)) {
       setWaiting(null);
@@ -70,12 +84,9 @@ function watch(worker: ServiceWorker): void {
 function listenForControllerChange(): void {
   if (controllerListener) return;
   controllerListener = true;
-  let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (initiated) {
-      if (reloaded) return;
-      reloaded = true;
-      reloadPage();
+      reloadOnce();
     } else {
       setWaiting(null);
     }
@@ -155,6 +166,9 @@ export function applyUpdate(): void {
   initiated = true;
   listenForControllerChange();
   worker.postMessage({ type: "SKIP_WAITING" });
+  // No controller change (the message was lost, the worker stalled): reload anyway. The page then
+  // either runs the new version or offers the update again with a working button.
+  takeoverTimer = setTimeout(reloadOnce, TAKEOVER_TIMEOUT_MS);
 }
 
 /** Tests only. */
@@ -163,6 +177,8 @@ export function resetServiceWorkerForTests(): void {
   registration = null;
   started = false;
   initiated = false;
+  reloaded = false;
+  clearTimeout(takeoverTimer);
   later = false;
   controllerListener = false;
   watched = new WeakSet();

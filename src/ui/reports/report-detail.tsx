@@ -132,7 +132,7 @@ type View = { phase: "loading" } | { phase: "error"; message: string } | { phase
 
 export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correction"; id: string }) {
   const tt = useT();
-  const { user, loading, status, refresh } = useAuthSession();
+  const { user, loading, status, refresh, refreshing } = useAuthSession();
   const [view, setView] = useState<View>({ phase: "loading" });
   const userId = user?.id ?? null;
 
@@ -156,7 +156,7 @@ export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correcti
       </p>
     );
   }
-  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} />;
+  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} busy={refreshing} />;
   if (!user) {
     return (
       <div className="pn-report__signin" data-testid="reports-signin">

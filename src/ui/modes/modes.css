@@ -2,6 +2,10 @@
  *
  * Palette L is the default and applies when `[data-map-surface="light"]`.
  * Palette D applies on `[data-map-surface="dark"]` (dark theme with tiles off) and inside dark UI sheets.
+ * The --pn-mode-* values mirror src/domain/modes/palette.ts and are data: they stay literal.
+ *
+ * Chrome below follows DESIGN.md "Shadow Or Hairline": over the map, the float shadow (--pn-elev,
+ * a hairline in dark); inside a sheet, a hairline. The tokens are on :root (src/ui/theme/tokens.css).
  */
 
 :root,
@@ -89,7 +93,7 @@
   padding: 3px 10px 3px 8px;
   border-radius: 8px;
   border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
-  background: #FFFFFF;
+  background: var(--color-surface);
   color: var(--color-ink);
   font-size: 0.8125rem;
   font-weight: 600;
@@ -173,27 +177,21 @@
   padding: 8px 14px;
   border-radius: 999px;
   border: 0;
-  background: #FFFFFF;
+  background: var(--pn-ctl-bg);
   color: var(--color-ink);
   font-size: 0.8125rem;
   font-weight: 700;
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--color-ink) 14%, transparent),
-    0 4px 14px -2px color-mix(in srgb, var(--color-ink) 14%, transparent);
+  box-shadow: var(--pn-elev);
   cursor: pointer;
 }
 
 :root[data-theme="dark"] .pn-map-legend__toggle {
-  background: var(--color-night-surface);
   color: var(--color-night-ink);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-map-legend__toggle {
-    background: var(--color-night-surface);
     color: var(--color-night-ink);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
   }
 }
 
@@ -216,11 +214,9 @@
   padding: 12px;
   border-radius: 14px;
   border: 0;
-  background: #FFFFFF;
+  background: var(--pn-ctl-bg);
   color: var(--color-ink);
-  box-shadow:
-    0 1px 2px color-mix(in srgb, var(--color-ink) 14%, transparent),
-    0 6px 20px color-mix(in srgb, var(--color-ink) 18%, transparent);
+  box-shadow: var(--pn-elev);
   font-size: 0.8125rem;
 }
 
@@ -237,16 +233,12 @@
 }
 
 :root[data-theme="dark"] .pn-map-legend__panel {
-  background: var(--color-night-surface);
   color: var(--color-night-ink);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-map-legend__panel {
-    background: var(--color-night-surface);
     color: var(--color-night-ink);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
   }
 }
 
@@ -278,7 +270,7 @@
 .pn-map-legend__note {
   margin: 0;
   padding-left: 44px;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--color-ink-2);
 }
 
@@ -295,19 +287,19 @@
 .pn-map-legend__footnote {
   margin: 10px 0 0;
   padding-top: 8px;
-  border-top: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
-  font-size: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+  font-size: 0.8125rem;
   color: var(--color-ink-2);
 }
 
 :root[data-theme="dark"] .pn-map-legend__footnote {
-  border-top-color: color-mix(in srgb, var(--color-night-ink) 20%, transparent);
+  border-top-color: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
   color: var(--color-night-ink-2);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-map-legend__footnote {
-    border-top-color: color-mix(in srgb, var(--color-night-ink) 20%, transparent);
+    border-top-color: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
     color: var(--color-night-ink-2);
   }
 }
@@ -333,14 +325,14 @@
   transform: translate(-50%, -50%);
   padding: 2px 7px;
   border-radius: 999px;
+  /* An outlined pill (DESIGN.md "Trip line"): the outline is its edge, so no shadow. */
   border: 1.5px solid var(--color-ink);
-  background: #FFFFFF;
+  background: var(--color-surface);
   color: var(--color-ink);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
-  box-shadow: 0 1px 4px color-mix(in srgb, var(--color-night) 20%, transparent);
 }
 
 /* LayersSheet modal & switches (Task 12). */
@@ -360,21 +352,19 @@
   max-height: 82vh;
   display: flex;
   flex-direction: column;
-  border-radius: 20px 20px 0 0;
-  background: #FFFFFF;
+  border-radius: 16px 16px 0 0;
+  background: var(--pn-ctl-bg);
   color: var(--color-ink);
-  box-shadow: 0 -8px 28px color-mix(in srgb, var(--color-night) 26%, transparent);
+  box-shadow: var(--pn-elev-sheet);
   overflow: hidden;
 }
 
 :root[data-theme="dark"] .pn-layers-sheet {
-  background: var(--color-night-surface);
   color: var(--color-night-ink);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-layers-sheet {
-    background: var(--color-night-surface);
     color: var(--color-night-ink);
   }
 }
@@ -384,16 +374,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
 }
 
 :root[data-theme="dark"] .pn-layers-sheet__head {
-  border-bottom-color: color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-layers-sheet__head {
-    border-bottom-color: color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
   }
 }
 
@@ -404,25 +394,25 @@
 }
 
 .pn-layers-sheet__close {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--color-ink) 20%, transparent);
+  min-width: 48px;
+  min-height: 48px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
   background: transparent;
   color: inherit;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
 }
 
 :root[data-theme="dark"] .pn-layers-sheet__close {
-  border-color: color-mix(in srgb, var(--color-night-ink) 28%, transparent);
+  border-color: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-layers-sheet__close {
-    border-color: color-mix(in srgb, var(--color-night-ink) 28%, transparent);
+    border-color: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
   }
 }
 
@@ -442,7 +432,7 @@
 .pn-layers-section-label,
 .pn-layers-section-title {
   margin: 0 0 8px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 
@@ -456,8 +446,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 44px;
-  padding: 6px 12px;
+  min-height: 48px;
+  padding: 6px 14px;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--color-ink) 24%, transparent);
   background: var(--color-canvas);
@@ -483,7 +473,7 @@
 
 .pn-mode-filter-chip--on {
   background: var(--color-ink);
-  color: #FFFFFF;
+  color: var(--color-surface);
   border-color: var(--color-ink);
 }
 
@@ -535,7 +525,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-height: 44px;
+  min-height: 48px;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
@@ -566,7 +556,7 @@
 
 .pn-layers-list__sub,
 .pn-layers-empty {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--color-ink-2);
   margin: 0;
 }
@@ -594,27 +584,32 @@
   z-index: 1050;
   padding: 12px 14px;
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-ink) 22%, transparent);
-  background: #FFFFFF;
+  /* Floats over the map: the float shadow alone (a hairline in dark), never a border as well.
+     The transparent border only shows in forced-colours mode, where shadows are dropped. */
+  border: 1px solid transparent;
+  background: var(--pn-ctl-bg);
   color: var(--color-ink);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-night) 24%, transparent);
+  box-shadow: var(--pn-elev);
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
 :root[data-theme="dark"] .pn-route-overview-card {
-  background: var(--color-night-surface);
   color: var(--color-night-ink);
-  border-color: color-mix(in srgb, var(--color-night-ink) 28%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-route-overview-card {
-    background: var(--color-night-surface);
     color: var(--color-night-ink);
-    border-color: color-mix(in srgb, var(--color-night-ink) 28%, transparent);
   }
+}
+
+/* High contrast: what floats over the map takes a firm ring instead of its shadow (as the tab bar). */
+:root[data-contrast="more"] .pn-map-legend__toggle,
+:root[data-contrast="more"] .pn-map-legend__panel,
+:root[data-contrast="more"] .pn-route-overview-card {
+  box-shadow: inset 0 0 0 1.5px var(--pn-sep, currentColor);
 }
 
 .pn-route-overview-card__head {
@@ -630,10 +625,10 @@
 }
 
 .pn-route-overview-card__close {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 48px;
+  min-height: 48px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 999px;
   background: transparent;
   color: inherit;
   font-size: 1.25rem;
@@ -664,13 +659,13 @@
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 6px 14px;
-  border-radius: 10px;
+  min-height: 48px;
+  padding: 6px 18px;
+  border-radius: 999px;
   background: var(--color-brand);
-  color: #FFFFFF;
-  font-size: 0.875rem;
-  font-weight: 700;
+  color: var(--color-on-brand);
+  font-size: 0.9375rem;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -730,7 +725,8 @@
 
 /* Terminals layer (Task 13): a rounded square per mode in the mode colour, with the glyph in the
  * casing colour (white on Palette L, #0E1512 on Palette D). Several modes stack side by side. The
- * marker element itself is the 44 px target (Leaflet divIcon, focusable when interactive). */
+ * marker element itself is the 44 px target (Leaflet divIcon, focusable when interactive). Like the
+ * pins, a tile is separated from the map by its ring in the casing colour, not by a shadow. */
 .pn-terminal-marker {
   display: flex;
   align-items: center;
@@ -741,7 +737,7 @@
 }
 
 .pn-terminal-marker:focus-visible {
-  outline: 3px solid var(--color-brand);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 1px;
 }
 
@@ -761,7 +757,6 @@
   background: var(--pn-tile);
   color: var(--pn-tile-glyph);
   border: 2px solid var(--pn-tile-glyph);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
 }
 
 .pn-terminal-marker__tile + .pn-terminal-marker__tile {
@@ -771,7 +766,8 @@
 .pn-terminal-marker--emphasized .pn-terminal-marker__tile {
   width: 34px;
   height: 34px;
-  box-shadow: 0 0 0 3px var(--pn-tile), 0 1px 4px rgb(0 0 0 / 0.45);
+  /* A second ring in the mode colour marks the emphasised terminal (a state, not elevation). */
+  box-shadow: 0 0 0 3px var(--pn-tile);
 }
 
 /* A group marker's count (its accessible name lists the terminals). */
@@ -784,8 +780,8 @@
   padding: 0 5px;
   border-radius: 999px;
   background: var(--color-ink);
-  color: #FFFFFF;
-  border: 2px solid #FFFFFF;
+  color: var(--color-surface);
+  border: 2px solid var(--color-surface);
   font-size: 12px;
   font-weight: 700;
   line-height: 16px;

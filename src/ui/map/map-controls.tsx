@@ -29,7 +29,7 @@ export function MapControls({
   return (
     <>
       {onOpenLayers ? (
-        <div className="pn-glass pn-capsule pn-map-layers">
+        <div className="pn-ctl-surface pn-capsule pn-map-layers">
           <button
             ref={layersButtonRef}
             type="button"
@@ -47,7 +47,7 @@ export function MapControls({
         </div>
       ) : null}
       {onLocate ? (
-        <div className="pn-glass pn-capsule pn-map-locate">
+        <div className="pn-ctl-surface pn-capsule pn-map-locate">
           <button
             type="button"
             className="pn-ctl pn-ctl--locate"
@@ -60,7 +60,7 @@ export function MapControls({
           </button>
         </div>
       ) : null}
-      <div className="pn-glass pn-capsule pn-map-zoom" role="group" aria-label={t.zoom}>
+      <div className="pn-ctl-surface pn-capsule pn-map-zoom" role="group" aria-label={t.zoom}>
         {/* aria-disabled (not `disabled`) keeps keyboard focus on the button at the zoom limit. */}
         <button
           type="button"

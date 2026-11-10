@@ -39,6 +39,7 @@ import { complaintStatusLabel } from "@/domain/complaints/status";
 import { en, translated } from "@/i18n/dict";
 import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 import { useLocale, useT } from "@/i18n/provider";
+import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { CameraCapture } from "./camera-capture";
 
 type Step = 1 | 2 | 3 | 4;
@@ -314,12 +315,7 @@ export function DriverReportWizard() {
             </div>
           ) : null}
           {auth.status === "unknown" ? (
-            <div className="pn-report__signin" data-testid="driver-signin-unknown">
-              <p role="status">{form.signInUnknown}</p>
-              <button type="button" className="pn-btn pn-btn--secondary pn-report__action" onClick={() => void auth.refresh()}>
-                {form.tryAgain}
-              </button>
-            </div>
+            <SignInUnknown onRetry={() => void auth.refresh()} busy={auth.refreshing} testId="driver-signin-unknown" />
           ) : null}
         </div>
       ) : null}

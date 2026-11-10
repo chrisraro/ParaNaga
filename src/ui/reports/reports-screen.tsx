@@ -32,7 +32,7 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
   const tt = useT();
   const t = tt.reports;
   const locale = useLocale();
-  const { user, loading, status, refresh } = useAuthSession();
+  const { user, loading, status, refresh, refreshing } = useAuthSession();
   const [state, setState] = useState<State>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
   const userId = user?.id ?? null;
@@ -56,7 +56,7 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
       </p>
     );
   }
-  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} />;
+  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} busy={refreshing} />;
   if (!user) {
     return (
       <div className="pn-reports" data-testid="reports-guest">

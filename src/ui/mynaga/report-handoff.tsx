@@ -254,7 +254,7 @@ type Load = { phase: "loading" } | { phase: "error"; message: string } | { phase
 export function ReportHandoff({ id, links }: { id: string; links: React.ReactNode }) {
   const tt = useT();
   const t = tt.mynaga;
-  const { user, loading, status, refresh } = useAuthSession();
+  const { user, loading, status, refresh, refreshing } = useAuthSession();
   const [state, setState] = useState<Load>({ phase: "loading" });
   const userId = user?.id ?? null;
 
@@ -270,7 +270,7 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
   }, [userId, id]);
 
   if (loading) return <p role="status">{tt.forms.loading}</p>;
-  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} />;
+  if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} busy={refreshing} />;
   if (!user) {
     return (
       <div className="pn-report__signin" data-testid="handoff-signin">

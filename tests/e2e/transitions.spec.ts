@@ -12,7 +12,7 @@ import { routeNetwork } from "./fixtures/network";
 // (the layout keeps it mounted; a remount would flash the map).
 //
 // Switches: the kit switch (More, Search) and the Layers sheet share one look: a 51 x 31 track,
-// the knob centred in it and travelling 20 px, a 44 px tall hit area, a label that toggles it, and
+// the knob centred in it and travelling 20 px, a hit area at least 48 px tall (49: DESIGN.md's 48 px target floor), a label that toggles it, and
 // axe clean in light and dark.
 
 type Frame = { p: string; body: string; home: boolean; panel: string };
@@ -226,7 +226,7 @@ async function expectSwitchGeometry(sw: Locator, knobX: number) {
       before: getComputedStyle(el, "::before").content,
     };
   });
-  expect(g).toEqual({ w: 51, h: 31, knobTop: 2, knobBottom: 2, knobSize: 27, hitHeight: 45, before: "none" });
+  expect(g).toEqual({ w: 51, h: 31, knobTop: 2, knobBottom: 2, knobSize: 27, hitHeight: 49, before: "none" });
 }
 
 async function axeClean(page: Page, include: string) {

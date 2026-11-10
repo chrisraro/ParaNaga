@@ -1,4 +1,4 @@
-// Community data (tasks B6/B7, migrations 0016, 0017, 0020) against a migrated Neon branch:
+// Community data (tasks B6/B7, migrations 0016, 0017, 0020, 0030) against a migrated Neon branch:
 //   TEST_OWNER_DATABASE_URL=... TEST_APP_DATABASE_URL=... pnpm test:integration
 // Multi-role IDOR/RLS matrix (task B10): guest, author, other commuter, contributor, community
 // moderator, transport reviewer, complaint reviewer and admin across community.correction*,
@@ -42,6 +42,19 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
     }
     throw new Error("expected the query to fail");
   };
+  /** The grant itself refuses the call (0030), whatever the caller's role: not the function's own 'forbidden'. */
+  const noGrant = async (promise: Promise<unknown>) => {
+    try {
+      await promise;
+    } catch (error) {
+      const e = error as { code?: string; message?: string; cause?: { code?: string; message?: string } };
+      return `${e.cause?.code ?? e.code} ${e.cause?.message ?? e.message}`;
+    }
+    throw new Error("expected the query to fail");
+  };
+  const NO_GRANT = /^42501 permission denied for function set_(correction|content)_status$/;
+  const moderate = (userId: string, type: string, id: string) =>
+    rows(userId, sql`select community.admin_moderate(${type}, ${id}::uuid, 'published', 'meets_guidelines', null, null) as r`);
 
   const everyone = () =>
     [
@@ -134,12 +147,20 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
       if (userId === null) continue;
       expect(await pgError(rows(userId, sql`update community.correction set status = 'accepted' where id = ${correctionId}::uuid`))).toBe("42501");
     }
-    expect(
-      await pgError(rows(moderator, sql`select community.set_correction_status(${correctionId}::uuid, 'under_review')`)),
-    ).toBe("42501");
-    expect(
-      (await rows(transport, sql`select community.set_correction_status(${correctionId}::uuid, 'under_review') as ok`))[0]!.ok,
-    ).toBe(true);
+    // 0030: the legacy function is closed to the app role, reviewers and admins included.
+    for (const userId of [moderator, transport, admin]) {
+      expect(
+        await noGrant(rows(userId, sql`select community.set_correction_status(${correctionId}::uuid, 'under_review')`)),
+        userId,
+      ).toMatch(NO_GRANT);
+    }
+    // The live path (0025): moderators are refused; a stale page is a conflict; a reviewer moves it.
+    const review = (userId: string, expected: string) =>
+      rows(userId, sql`select community.admin_review_correction(${correctionId}::uuid, ${expected}, 'start_review', null, null, null, null, null) as r`);
+    expect(await pgError(review(moderator, "submitted"))).toBe("42501");
+    expect(await pgError(review(transport, "under_review"))).toBe("55000");
+    expect((await review(transport, "submitted"))[0]!.r).toMatchObject({ status: "under_review" });
+    expect(await rows(author, sql`select status from community.correction where id = ${correctionId}::uuid`)).toEqual([{ status: "under_review" }]);
   });
 
   // ---------------------------------------------------------------- posts (0017)
@@ -154,19 +175,23 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
   it("posts: only moderators and admins reach the content queue, never for their own content", async () => {
     for (const userId of [author, other, contributor, transport, complaintReviewer]) {
       expect(await pgError(rows(userId, sql`select * from community.content_review_queue(10)`)), userId).toBe("42501");
+      expect(await pgError(moderate(userId, "post_version", versionId)), userId).toBe("42501");
+    }
+    // 0030: the legacy function is closed to the app role, moderators and admins included.
+    for (const userId of [author, moderator, admin]) {
       expect(
-        await pgError(rows(userId, sql`select community.set_content_status('post_version', ${versionId}::uuid, 'published')`)),
+        await noGrant(rows(userId, sql`select community.set_content_status('post_version', ${versionId}::uuid, 'published')`)),
         userId,
-      ).toBe("42501");
+      ).toMatch(NO_GRANT);
     }
     const queue = await rows(moderator, sql`select id from community.content_review_queue(200)`);
     expect(queue.some((r) => r.id === versionId)).toBe(true);
   });
 
   it("posts: once a moderator publishes, everyone reads the post; nobody writes it directly", async () => {
-    expect(
-      (await rows(moderator, sql`select community.set_content_status('post_version', ${versionId}::uuid, 'published') as ok`))[0]!.ok,
-    ).toBe(true);
+    expect((await moderate(moderator, "post_version", versionId))[0]!.r).toMatchObject({ isOverride: false });
+    // Decided once: a second decision on the same version is a conflict, not an overwrite.
+    expect(await pgError(moderate(moderator2, "post_version", versionId))).toBe("55000");
     for (const [name, userId] of everyone()) {
       expect(await rows(userId, sql`select id from community.post where id = ${postId}::uuid`), name).toHaveLength(1);
       if (userId === null) continue;
@@ -185,10 +210,9 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
       const n = userId === other ? 1 : 0;
       expect(await rows(userId, sql`select id from community.comment where id = ${commentId}::uuid`), name).toHaveLength(n);
     }
-    expect(
-      await pgError(rows(other, sql`select community.set_content_status('comment', ${commentId}::uuid, 'published')`)),
-    ).toBe("42501");
-    await rows(moderator, sql`select community.set_content_status('comment', ${commentId}::uuid, 'published')`);
+    expect(await pgError(moderate(other, "comment", commentId))).toBe("42501");
+    expect(await noGrant(rows(moderator, sql`select community.set_content_status('comment', ${commentId}::uuid, 'published')`))).toMatch(NO_GRANT);
+    await moderate(moderator, "comment", commentId);
     expect(await rows(null, sql`select id from community.comment where id = ${commentId}::uuid`)).toHaveLength(1);
   });
 

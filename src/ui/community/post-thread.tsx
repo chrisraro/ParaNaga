@@ -42,6 +42,7 @@ import { ConfirmDialog } from "@/ui/kit/confirm-dialog";
 import { captureOpener } from "@/ui/kit/opener";
 import { en, translated, type Dict } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
+import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { GuidelinesAck, PostBadges, SignInPrompt, StateBadge, useFormatDate } from "./parts";
 
 const apiText = (message: string, current: Dict["community"]["api"]) => translated(message, en.community.api, current);
@@ -54,13 +55,16 @@ export function PostThread({ id }: { id: string }) {
   const formatDate = useFormatDate();
   const uid = useId();
   const router = useRouter();
-  const { user, loading: authLoading } = useAuthSession();
+  const { user, loading: authLoading, status: authStatus, refresh: recheckAuth, refreshing: recheckingAuth } = useAuthSession();
   const signedIn = Boolean(user);
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const [reload, setReload] = useState(0);
   const [guidelinesOk, setGuidelinesOk] = useState<boolean | null>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
+  // The actions in flight, by key ("helpful", "delete-<id>", ...). The ref answers "already sent?"
+  // at once (two taps before a render); the state copy is what the buttons read.
+  const inFlight = useRef(new Set<string>());
+  const [busy, setBusy] = useState<ReadonlySet<string>>(() => new Set());
   const [report, setReport] = useState<{ type: TargetType; id: string } | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ type: TargetType; id: string } | null>(null);
@@ -94,13 +98,21 @@ export function PostThread({ id }: { id: string }) {
   const refresh = useCallback(() => setReload((n) => n + 1), []);
 
   const run = async (name: string, fn: () => Promise<{ ok: true } | { ok: false; message: string }>, after?: () => void) => {
-    setBusy(name);
+    if (inFlight.current.has(name)) return;
+    inFlight.current.add(name);
+    setBusy(new Set(inFlight.current));
     setNote(null);
+    setCommentSent(null);
     const r = await fn();
-    setBusy(null);
+    inFlight.current.delete(name);
+    setBusy(new Set(inFlight.current));
     if (!r.ok) return setNote(apiText(r.message, t.api));
     after?.();
   };
+
+  /** Patches the post on screen from the newest state, so two answers in a row never undo each other. */
+  const patchPost = (patch: (post: PostDetail["post"]) => Partial<PostDetail["post"]>) =>
+    setLoad((prev) => (prev.status === "ready" ? { ...prev, data: { ...prev.data, post: { ...prev.data.post, ...patch(prev.data.post) } } } : prev));
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Escape") return;
@@ -219,11 +231,11 @@ export function PostThread({ id }: { id: string }) {
               type="button"
               className="pn-btn pn-btn--secondary pn-comm__small"
               aria-pressed={post.viewerHelpful}
-              disabled={busy === "helpful"}
+              disabled={busy.has("helpful")}
               onClick={() =>
                 void run("helpful", async () => {
                   const r = await toggleHelpful("post", post.id);
-                  if (r.ok) setLoad({ status: "ready", data: { ...load.data, post: { ...post, viewerHelpful: r.data.active, helpfulCount: r.data.count ?? post.helpfulCount } } });
+                  if (r.ok) patchPost((now) => ({ viewerHelpful: r.data.active, helpfulCount: r.data.count ?? now.helpfulCount }));
                   return r.ok ? { ok: true as const } : r;
                 })
               }
@@ -239,11 +251,11 @@ export function PostThread({ id }: { id: string }) {
               type="button"
               className="pn-btn pn-btn--secondary pn-comm__small"
               aria-pressed={post.viewerBookmarked}
-              disabled={busy === "bookmark"}
+              disabled={busy.has("bookmark")}
               onClick={() =>
                 void run("bookmark", async () => {
                   const r = await toggleSaved(post.id);
-                  if (r.ok) setLoad({ status: "ready", data: { ...load.data, post: { ...post, viewerBookmarked: r.data.active } } });
+                  if (r.ok) patchPost(() => ({ viewerBookmarked: r.data.active }));
                   return r.ok ? { ok: true as const } : r;
                 })
               }
@@ -257,7 +269,7 @@ export function PostThread({ id }: { id: string }) {
               <Link href={`/app/community/${post.id}/edit`} className="pn-btn pn-btn--secondary pn-comm__small" data-testid="thread-edit">
                 {t.edit}
               </Link>
-              <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" onClick={() => setConfirmDelete({ type: "post", id: post.id })} data-testid="thread-delete">
+              <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" disabled={busy.has(`delete-${post.id}`)} onClick={() => setConfirmDelete({ type: "post", id: post.id })} data-testid="thread-delete">
                 {t.delete}
               </button>
             </>
@@ -271,8 +283,9 @@ export function PostThread({ id }: { id: string }) {
                 <button
                   type="button"
                   className="pn-btn pn-btn--secondary pn-comm__small"
+                  disabled={busy.has(`block-${post.id}`)}
                   onClick={() =>
-                    void run("block", () => blockPerson("post", post.id), () => router.replace("/app/community"))
+                    void run(`block-${post.id}`, () => blockPerson("post", post.id), () => router.replace("/app/community"))
                   }
                   data-testid="thread-block"
                 >
@@ -327,7 +340,7 @@ export function PostThread({ id }: { id: string }) {
                 })
               }
               onReport={(c) => openReport("comment", c.id)}
-              onBlock={(c) => void run("block", () => blockPerson("comment", c.id), refresh)}
+              onBlock={(c) => void run(`block-${c.id}`, () => blockPerson("comment", c.id), refresh)}
               onDelete={(c) => setConfirmDelete({ type: "comment", id: c.id })}
               report={report?.type === "comment" ? report : null}
               closeReport={closeReport}
@@ -339,6 +352,7 @@ export function PostThread({ id }: { id: string }) {
                   needGuidelines={guidelinesOk === false}
                   onSent={(state) => {
                     setReplyTo(null);
+                    setNote(null);
                     setCommentSent(state);
                     refresh();
                   }}
@@ -358,7 +372,8 @@ export function PostThread({ id }: { id: string }) {
             </p>
           ) : null}
 
-          {!authLoading && !signedIn ? <SignInPrompt text={t.signInComment} /> : null}
+          {authStatus === "signedOut" ? <SignInPrompt text={t.signInComment} /> : null}
+          {authStatus === "unknown" ? <SignInUnknown look="community" onRetry={() => void recheckAuth()} busy={recheckingAuth} /> : null}
           {signedIn && replyTo === null ? (
             <div className="pn-comm__panel">
               <h4 className="pn-comm__panel-title">{t.addComment}</h4>
@@ -367,6 +382,7 @@ export function PostThread({ id }: { id: string }) {
                 parentId={null}
                 needGuidelines={guidelinesOk === false}
                 onSent={(state) => {
+                  setNote(null);
                   setCommentSent(state);
                   refresh();
                 }}
@@ -386,8 +402,8 @@ export function PostThread({ id }: { id: string }) {
           const target = confirmDelete;
           setConfirmDelete(null);
           if (!target) return;
-          if (target.type === "post") void run("delete", () => removePost(target.id), () => router.replace("/app/community"));
-          else void run("delete", () => removeComment(target.id), refresh);
+          if (target.type === "post") void run(`delete-${target.id}`, () => removePost(target.id), () => router.replace("/app/community"));
+          else void run(`delete-${target.id}`, () => removeComment(target.id), refresh);
         }}
       >
         <p>{t.deleteBody}</p>
@@ -399,7 +415,7 @@ export function PostThread({ id }: { id: string }) {
 type ListProps = {
   comments: CommentDto[];
   signedIn: boolean;
-  busy: string | null;
+  busy: ReadonlySet<string>;
   replyTo: string | null;
   onReply: (id: string | null) => void;
   onHelpful: (c: CommentDto) => void;
@@ -434,7 +450,7 @@ function CommentList(props: ListProps) {
                   type="button"
                   className="pn-btn pn-btn--secondary pn-comm__small"
                   aria-pressed={c.viewerHelpful}
-                  disabled={props.busy === `c-${c.id}`}
+                  disabled={props.busy.has(`c-${c.id}`)}
                   onClick={() => props.onHelpful(c)}
                 >
                   {t.helpful(c.helpfulCount)}
@@ -455,7 +471,7 @@ function CommentList(props: ListProps) {
               </button>
             ) : null}
             {c.isOwn ? (
-              <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" onClick={() => props.onDelete(c)}>
+              <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" disabled={props.busy.has(`delete-${c.id}`)} onClick={() => props.onDelete(c)}>
                 {t.delete}
               </button>
             ) : props.signedIn && c.state === "published" ? (
@@ -465,7 +481,7 @@ function CommentList(props: ListProps) {
                   <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => props.onReport(c)}>
                     {t.report}
                   </button>
-                  <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => props.onBlock(c)}>
+                  <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" disabled={props.busy.has(`block-${c.id}`)} onClick={() => props.onBlock(c)}>
                     {t.block}
                   </button>
                 </div>

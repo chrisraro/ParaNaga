@@ -4,7 +4,7 @@
 // the card; Reload asks once and reloads once; a version already active just reloads.
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { applyUpdate, postponeUpdate, resetServiceWorkerForTests, setReloadForTests, trackRegistration, useUpdateCard, useUpdateReady } from "@/client/pwa/register-sw";
+import { applyUpdate, postponeUpdate, resetServiceWorkerForTests, setReloadForTests, TAKEOVER_TIMEOUT_MS, trackRegistration, useUpdateCard, useUpdateReady } from "@/client/pwa/register-sw";
 
 class FakeWorker extends EventTarget {
   postMessage = vi.fn();
@@ -36,6 +36,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   cleanup();
   vi.unstubAllGlobals();
 });
@@ -117,6 +118,47 @@ describe("applyUpdate", () => {
     act(() => next.set("activating"));
     fire(container, "controllerchange");
     fire(container, "controllerchange");
+    expect(reloads).toBe(1);
+  });
+
+  it("reloads anyway when the new version never takes control, and only once", () => {
+    vi.useFakeTimers();
+    const reg = new FakeRegistration();
+    const next = new FakeWorker("installed");
+    reg.waiting = next;
+    track(reg);
+    act(() => applyUpdate());
+    act(() => void vi.advanceTimersByTime(TAKEOVER_TIMEOUT_MS - 1));
+    expect(reloads).toBe(0);
+    act(() => void vi.advanceTimersByTime(1));
+    expect(reloads).toBe(1);
+    // A controller change that arrives late does not reload a second time.
+    fire(container, "controllerchange");
+    expect(reloads).toBe(1);
+  });
+
+  it("a controller change in time, or a superseded version, cancels the fallback reload", () => {
+    vi.useFakeTimers();
+    const reg = new FakeRegistration();
+    const next = new FakeWorker("installed");
+    reg.waiting = next;
+    track(reg);
+    act(() => applyUpdate());
+    fire(container, "controllerchange");
+    act(() => void vi.advanceTimersByTime(TAKEOVER_TIMEOUT_MS * 2));
+    expect(reloads).toBe(1);
+
+    resetServiceWorkerForTests();
+    setReloadForTests(() => {
+      reloads += 1;
+    });
+    const other = new FakeRegistration();
+    const stale = new FakeWorker("installed");
+    other.waiting = stale;
+    track(other);
+    act(() => applyUpdate());
+    act(() => stale.set("redundant"));
+    act(() => void vi.advanceTimersByTime(TAKEOVER_TIMEOUT_MS * 2));
     expect(reloads).toBe(1);
   });
 

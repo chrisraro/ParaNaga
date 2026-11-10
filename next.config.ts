@@ -108,6 +108,10 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // The rebrand renamed this Help article: shared links and installed apps keep working (308).
+  redirects() {
+    return [{ source: "/app/help/using-paranaga-offline", destination: "/app/help/using-lunad-offline", permanent: true }];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

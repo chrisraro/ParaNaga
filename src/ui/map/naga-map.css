@@ -1,9 +1,9 @@
 /* Naga map chrome (.superpowers/sdd/map-design-brief.md). Scoped to .pn-map. Dark tokens apply
-   for <html data-theme="dark">, and for System (any other value) when the device prefers dark. */
+   for <html data-theme="dark">, and for System (any other value) when the device prefers dark.
+   The controls surface and shadow (--pn-ctl-bg, --pn-elev) are shared tokens on :root:
+   src/ui/theme/tokens.css. */
 
 .pn-map {
-  --pn-ctl-bg: var(--color-surface);
-  --pn-ctl-elev: 0 1px 2px var(--pn-shadow), 0 4px 14px -2px var(--pn-shadow);
   --pn-pin-start: var(--color-brand);
   --pn-pin-dest: var(--color-danger);
   --pn-shadow: color-mix(in srgb, var(--color-ink) 14%, transparent);
@@ -12,8 +12,8 @@
   --pn-label2: var(--color-ink-2);
   --pn-accent: var(--color-brand);
   --pn-land: #f2efe9;
-  --pn-attr-bg: rgba(255, 255, 255, 0.75);
-  --pn-marker-ring: #ffffff;
+  --pn-attr-bg: color-mix(in srgb, var(--color-surface) 75%, transparent);
+  --pn-marker-ring: var(--color-surface);
   --pn-dot: var(--color-brand);
   --pn-crosshair: var(--color-ink);
 
@@ -25,16 +25,13 @@
 }
 
 :root[data-theme="dark"] .pn-map {
-  --pn-ctl-bg: var(--color-night-surface);
-  /* A shadow does not show on a dark map: the controls take a hairline instead. */
-  --pn-ctl-elev: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
   --pn-pin-start: var(--color-brand-bright);
   --pn-shadow: rgba(0, 0, 0, 0.45);
   --pn-sep: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
   --pn-label: var(--color-night-ink);
   --pn-label2: var(--color-night-ink-2);
   --pn-accent: var(--color-brand-bright);
-  --pn-land: #1f2a25;
+  --pn-land: var(--color-night-raised);
   --pn-attr-bg: color-mix(in srgb, var(--color-night-surface) 75%, transparent);
   --pn-marker-ring: var(--color-night);
   --pn-dot: var(--color-brand-bright);
@@ -42,15 +39,13 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .pn-map {
-    --pn-ctl-bg: var(--color-night-surface);
-    --pn-ctl-elev: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
     --pn-pin-start: var(--color-brand-bright);
     --pn-shadow: rgba(0, 0, 0, 0.45);
     --pn-sep: color-mix(in srgb, var(--color-night-ink) 10%, transparent);
     --pn-label: var(--color-night-ink);
     --pn-label2: var(--color-night-ink-2);
     --pn-accent: var(--color-brand-bright);
-    --pn-land: #1f2a25;
+    --pn-land: var(--color-night-raised);
     --pn-attr-bg: color-mix(in srgb, var(--color-night-surface) 75%, transparent);
     --pn-marker-ring: var(--color-night);
     --pn-dot: var(--color-brand-bright);
@@ -217,9 +212,10 @@
   outline: 3px solid var(--pn-accent);
   outline-offset: 2px;
 }
-.pn-map .pn-glass {
+/* The solid surface every map control sits on: float shadow in light, hairline in dark. */
+.pn-map .pn-ctl-surface {
   background: var(--pn-ctl-bg);
-  box-shadow: var(--pn-ctl-elev);
+  box-shadow: var(--pn-elev);
 }
 .pn-map .pn-capsule {
   display: flex;
@@ -255,7 +251,7 @@
   transform: scale(0.97);
 }
 .pn-map .pn-ctl[aria-disabled="true"] {
-  opacity: 0.38;
+  opacity: 0.4;
   cursor: default;
 }
 .pn-map .pn-ctl:focus-visible,
@@ -330,21 +326,6 @@
   }
 }
 
-/* Highlighted boarding / alighting stops on the map (markers only, never a line). */
-.pn-trip-stop svg {
-  display: block;
-}
-.pn-trip-stop__ring {
-  fill: #ffffff;
-  stroke: var(--color-ink-2);
-  stroke-width: 4;
-}
-.pn-trip-stop--board .pn-trip-stop__ring {
-  fill: var(--color-ink-2);
-  stroke: #ffffff;
-  stroke-width: 3;
-}
-
 /* Low-data mode (Settings): the notice carries a text button to load the background once. */
 .pn-map .pn-map-notice--action {
   display: flex;
@@ -357,7 +338,8 @@
   pointer-events: auto;
 }
 .pn-map .pn-map-notice__btn {
-  min-height: 44px; /* artboard target size */
+  position: relative;
+  min-height: 44px;
   padding: 0 6px;
   border: 0;
   background: transparent;
@@ -367,12 +349,13 @@
   text-underline-offset: 2px;
   cursor: pointer;
 }
+/* The visible button stays 44 px so the notice keeps its height; the target is 48 px. */
+.pn-map .pn-map-notice__btn::after {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+}
 .pn-map .pn-map-notice__btn:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
-}
-
-/* A free board or get-off point (no stop of its own): a diamond, not the stop ring. */
-.pn-trip-stop--free .pn-trip-stop__ring {
-  stroke-linejoin: miter;
 }

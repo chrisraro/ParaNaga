@@ -46,8 +46,15 @@ describe("useAuthSession", () => {
     me(() => json({}, 503), () => json({ user: USER }));
     const b = renderHook(() => useAuthSession());
     await waitFor(() => expect(b.result.current.status).toBe("unknown"));
-    await act(() => b.result.current.refresh());
-    expect(b.result.current).toMatchObject({ status: "signedIn", user: USER });
+    expect(b.result.current.refreshing).toBe(false);
+    let done!: Promise<void>;
+    act(() => {
+      done = b.result.current.refresh();
+    });
+    // While the retry runs the old answer stays and `refreshing` says a check is in flight.
+    expect(b.result.current).toMatchObject({ status: "unknown", refreshing: true });
+    await act(() => done);
+    expect(b.result.current).toMatchObject({ status: "signedIn", user: USER, refreshing: false });
   });
 
   it("a sign-out that fails, with no answer from the re-check, keeps showing the signed-in person", async () => {

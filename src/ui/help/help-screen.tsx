@@ -49,7 +49,7 @@ const ICON = { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke
 const ARTICLE_ICONS: Record<ArticleSlug, string> = {
   "how-trips-are-planned": "M4 19c4 0 4-14 8-14s4 14 8 14",
   "why-stops-are-not-verified": "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 17h.01",
-  "using-paranaga-offline": "M3 10a13 13 0 0 1 18 0M6.5 13.5a8 8 0 0 1 11 0M10 17a3 3 0 0 1 4 0M4 4l16 16",
+  "using-lunad-offline": "M3 10a13 13 0 0 1 18 0M6.5 13.5a8 8 0 0 1 11 0M10 17a3 3 0 0 1 4 0M4 4l16 16",
   "how-times-are-estimated": "M12 8v4l3 3M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z",
   "vehicle-types-in-naga": "M5 18H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2M10 18H8M7 18a2 2 0 1 1-4 0M17 18a2 2 0 1 1-4 0",
 };

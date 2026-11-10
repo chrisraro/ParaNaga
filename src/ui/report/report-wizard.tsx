@@ -37,6 +37,7 @@ import {
 import { statusLabel, type CorrectionStatus } from "@/domain/corrections/status";
 import { en, translated } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
+import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 
 type Step = 1 | 2 | 3;
 type Photo = { id: string; name: string };
@@ -441,12 +442,7 @@ export function ReportWizard() {
             </div>
           ) : null}
           {auth.status === "unknown" ? (
-            <div className="pn-report__signin" data-testid="report-signin-unknown">
-              <p role="status">{form.signInUnknown}</p>
-              <button type="button" className="pn-btn pn-btn--secondary pn-report__action" onClick={() => void auth.refresh()}>
-                {form.tryAgain}
-              </button>
-            </div>
+            <SignInUnknown onRetry={() => void auth.refresh()} busy={auth.refreshing} testId="report-signin-unknown" />
           ) : null}
         </div>
       ) : null}

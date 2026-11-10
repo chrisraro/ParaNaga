@@ -1,4 +1,4 @@
-// N7 (migration 0026) against a migrated Neon branch:
+// N7 (migration 0026; 0030 for the expected status of priv.set_complaint_status) against a migrated Neon branch:
 //   bash scripts/with-neon-branch.sh pnpm vitest run --project integration tests/integration/complaint-review-system-rls.test.ts
 // C11 (AC-14): only complaint reviewers, after a fresh step-up, read the queue, open a report and
 // get evidence; guests, commuters, moderators, transport reviewers and admins never do; the
@@ -173,6 +173,35 @@ describe.skipIf(!ownerUrl || !appUrl)("N7: complaint review, retention, roles, a
     // Own report: the hold function answers false, the status function refuses.
     expect((await stepped(reviewer, sql`select priv.set_complaint_legal_hold(${ownComplaintId}::uuid, true, 'mine') as ok`))[0]!.ok).toBe(false);
     expect((await pgError(stepped(reviewer, sql`select priv.set_complaint_status(${ownComplaintId}::uuid, 'under_review') as ok`))).message).toBe("forbidden: own report");
+  });
+
+  it("0030: a stale page is a conflict (55000) and changes nothing; the expected status is optional; one signature, still a guarded definer", async () => {
+    const state = async () => (await owner.query("select c.status, (select count(*)::int from priv.complaint_event e where e.complaint_id = c.id) as events from priv.complaint c where c.id = $1", [complaintId])).rows[0];
+    const before = await state();
+    expect(before.status).toBe("under_review");
+    // Two reviewers on the same page: the second one's page still says 'submitted'.
+    expect(await pgError(stepped(reviewer, sql`select priv.set_complaint_status(${complaintId}::uuid, 'closed', 'insufficient_detail', null, 'reviewer_only', 'submitted') as ok`)))
+      .toEqual({ code: "55000", message: "this report changed since the page was loaded; reload and try again" });
+    expect(await state()).toEqual(before);
+    // Without a step-up, and for other roles, the expected status changes nothing about access.
+    expect(await pgError(rows(reviewer, sql`select priv.set_complaint_status(${complaintId}::uuid, 'needs_information', null, null, 'reviewer_only', 'under_review') as ok`))).toEqual({ code: "42501", message: "step-up required" });
+    expect(await pgError(stepped(admin, sql`select priv.set_complaint_status(${complaintId}::uuid, 'needs_information', null, null, 'reviewer_only', 'under_review') as ok`))).toEqual({ code: "42501", message: "forbidden" });
+    // The status the page showed: accepted. An explicit null and the five-argument call the app makes today: no check.
+    expect((await stepped(reviewer, sql`select priv.set_complaint_status(${complaintId}::uuid, 'needs_information', null, null, 'reviewer_only', 'under_review') as ok`))[0]!.ok).toBe(true);
+    expect((await stepped(reviewer, sql`select priv.set_complaint_status(${complaintId}::uuid, 'under_review', null, null, 'reviewer_only', null) as ok`))[0]!.ok).toBe(true);
+    expect((await stepped(reviewer, sql`select priv.set_complaint_status(${complaintId}::uuid, 'needs_information', ${null}, ${null}, ${"reviewer_only"}) as ok`))[0]!.ok).toBe(true);
+    expect(await state()).toEqual({ status: "needs_information", events: before.events + 3 });
+
+    const fns = (await owner.query(
+      `select pg_get_function_identity_arguments(p.oid) as args, p.prosecdef as definer, pg_get_userbyid(p.proowner) as owner, p.proconfig as config,
+              has_function_privilege('paranaga_app', p.oid, 'execute') as app, has_function_privilege('public', p.oid, 'execute') as public
+         from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'priv' and p.proname = 'set_complaint_status'`,
+    )).rows;
+    expect(fns).toEqual([{
+      args: "p_id uuid, p_to text, p_outcome_code text, p_note text, p_visibility text, p_expected_status text",
+      definer: true, owner: "paranaga_definer", config: [expect.stringMatching(/^search_path=pg_catalog, ?priv, ?core, ?pg_temp$/)], app: true, public: false,
+    }]);
   });
 
   // ---------------------------------------------------------------- retention

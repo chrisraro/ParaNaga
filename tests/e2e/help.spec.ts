@@ -110,6 +110,15 @@ test("each article opens with its copy, and Back returns to the Help tab", async
   await expect(h1(page, "Not found")).toBeVisible();
 });
 
+test("the offline article's old address (before the rename to Lunad) redirects for good", async ({ page, request }) => {
+  const res = await request.get("/app/help/using-paranaga-offline", { maxRedirects: 0 });
+  expect(res.status()).toBe(308);
+  expect(res.headers()["location"]).toBe("/app/help/using-lunad-offline");
+  await page.goto("/app/help/using-paranaga-offline");
+  await expect(page).toHaveURL(/\/app\/help\/using-lunad-offline$/);
+  await expect(h1(page, "Using Lunad offline")).toBeVisible();
+});
+
 test("Sources and credits lists the captured sources with checked dates and safe external links", async ({ page }) => {
   test.slow(); // one assertion per source row
   await page.goto("/app/help?tab=data");
@@ -204,7 +213,7 @@ async function axeAll(page: Page) {
     if (name === "About data") await expect(page.getByTestId("help-sources-link")).toBeVisible();
     await expectAxeClean(page, "help-page");
   }
-  await page.goto("/app/help/using-paranaga-offline");
+  await page.goto("/app/help/using-lunad-offline");
   await expect(page.getByTestId("help-article-body")).toContainText("Oct 16, 2026");
   await expectAxeClean(page, "help-article");
   await page.goto("/app/help/how-times-are-estimated");

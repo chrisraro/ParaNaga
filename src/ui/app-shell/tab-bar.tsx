@@ -1,7 +1,7 @@
 "use client";
 
-// The app's tab bar (artboard Home "Main" nav; Components "Tab bar · Liquid Glass over the map"):
-// a glass pill 16 px from the sides and 24 px from the bottom, over the map and the tab pages.
+// The app's tab bar (DESIGN.md "Navigation"): a solid white bar with 16 px corners and the float
+// shadow, 12 px from the sides and at least 24 px from the bottom, over the map and the tab pages.
 // Map · Explore · Saved · Community · More (task B7 adds Community now that it has content). The current
 // tab carries aria-current="page". AppFrame hides it in detail panels, and the home screen hides it
 // whenever the map is not the whole screen: a pin being placed, planning, a trip's detail, guidance.

@@ -30,6 +30,7 @@ import { stateHint, stateLabel, type ContentState } from "@/domain/community/sta
 import { topicsIn, type CommunityTopic } from "@/domain/community/topics";
 import { en, translated } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
+import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { GuidelinesAck, SignInPrompt } from "./parts";
 
 type Props = { mode: "new" } | { mode: "edit"; postId: string };
@@ -204,14 +205,7 @@ export function PostComposer(props: Props) {
     return (
       <div className="pn-comm" data-testid="composer-auth-unknown">
         <h2 className="pn-comm__h2">{heading1}</h2>
-        <div className="pn-comm__panel">
-          <p className="pn-comm__body" role="status">
-            {tt.forms.signInUnknown}
-          </p>
-          <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => void auth.refresh()}>
-            {tt.forms.tryAgain}
-          </button>
-        </div>
+        <SignInUnknown look="community" onRetry={() => void auth.refresh()} busy={auth.refreshing} />
       </div>
     );
   }

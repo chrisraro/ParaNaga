@@ -1,0 +1,44 @@
+/* Shared elevation, tag and map-control tokens (DESIGN.md "Elevation & Depth"). They sit on :root
+   so every screen stylesheet reads the same values whatever its own scope (.pn-home, .pn-detail,
+   .pn-pwa, .pn-tabbar, .pn-map, a <dialog>). Loaded through src/ui/kit/styles.ts, which the tab bar
+   imports, so it is present on every /app screen. Colour aliases (--pn-surface, --pn-label, ...)
+   stay on the screen scopes in src/ui/home/home-screen.css.
+
+   The Shadow Or Hairline Rule: what floats over the map takes --pn-elev (or --pn-elev-sm), a sheet's
+   top edge takes --pn-elev-sheet, and anything inside a sheet takes a hairline (--pn-ring) instead.
+   Never both on one element. In dark a shadow does not show on a dark map, so the same tokens become
+   a 1 px hairline and there are no shadows at all.
+
+   Every dark block is written twice (tests/unit/theme-css.test.ts pattern). */
+
+:root {
+  /* Float: search bar, accuracy pill, tab bar, map controls, legend, cards over the map, dialogs. */
+  --pn-elev:
+    0 1px 2px color-mix(in srgb, var(--color-ink) 10%, transparent),
+    0 4px 14px -2px color-mix(in srgb, var(--color-ink) 14%, transparent);
+  /* Float small: chips over the map, the segmented control's thumb. */
+  --pn-elev-sm: 0 1px 3px color-mix(in srgb, var(--color-ink) 14%, transparent);
+  /* Sheet edge: the top edge of a bottom sheet. */
+  --pn-elev-sheet: 0 -2px 16px color-mix(in srgb, var(--color-ink) 14%, transparent);
+  /* The "Recommended" tag: solid amber, ink text (never white on amber), the same in dark. */
+  --pn-tag-bg: var(--color-accent);
+  --pn-tag-text: var(--color-ink);
+  /* Map chrome (controls, legend, the overview card): the surface and the float shadow. */
+  --pn-ctl-bg: var(--color-surface);
+  --pn-ctl-elev: var(--pn-elev);
+}
+
+:root[data-theme="dark"] {
+  --pn-elev: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+  --pn-elev-sm: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+  --pn-elev-sheet: 0 -1px 0 color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+  --pn-ctl-bg: var(--color-night-surface);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pn-elev: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+    --pn-elev-sm: 0 0 0 1px color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+    --pn-elev-sheet: 0 -1px 0 color-mix(in srgb, var(--color-night-ink) 16%, transparent);
+    --pn-ctl-bg: var(--color-night-surface);
+  }
+}

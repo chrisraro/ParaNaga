@@ -91,7 +91,8 @@ export function MorePage({ driverReports = false }: { driverReports?: boolean })
 
 /** `driverReports`: private reports are live (N2); otherwise "Report a driver" opens MyNaga. */
 export function MoreScreen({ driverReports = false }: { driverReports?: boolean }) {
-  const t = useT().settings;
+  const tt = useT();
+  const t = tt.settings;
   const prefs = usePrefs();
   const permission = useLocationPermission();
   const [confirmClear, setConfirmClear] = useState(false);
@@ -146,7 +147,9 @@ export function MoreScreen({ driverReports = false }: { driverReports?: boolean 
     }
   };
 
-  const { user, signOut } = useAuthSession();
+  const { user, status: authStatus, signOut, refresh, refreshing } = useAuthSession();
+  // The sign-in check got no answer (offline, a server error): never shown as "no account".
+  const authUnknown = authStatus === "unknown";
 
   return (
     <div className="pn-settings" data-ready={ready ? "" : undefined}>
@@ -156,11 +159,30 @@ export function MoreScreen({ driverReports = false }: { driverReports?: boolean 
             <AccountIcon />
           </span>
           <span className="pn-settings__account-text">
-            <strong>{user ? user.name : t.noAccount}</strong>
-            <span>{user ? t.signedIn(user.roles.join(", ") || t.roleCommuter) : t.staysOnPhone}</span>
+            {authUnknown ? (
+              <span role="status" data-testid="settings-auth-unknown">
+                {refreshing ? t.checking : tt.forms.signInUnknown}
+              </span>
+            ) : (
+              <>
+                <strong>{user ? user.name : t.noAccount}</strong>
+                <span>{user ? t.signedIn(user.roles.join(", ") || t.roleCommuter) : t.staysOnPhone}</span>
+              </>
+            )}
           </span>
         </div>
-        {user ? (
+        {authUnknown ? (
+          <button
+            type="button"
+            className="pn-settings__account-action"
+            onClick={() => void refresh()}
+            disabled={refreshing}
+            aria-busy={refreshing}
+            data-testid="settings-auth-retry"
+          >
+            {tt.forms.tryAgain}
+          </button>
+        ) : user ? (
           <button
             type="button"
             className="pn-settings__account-action"

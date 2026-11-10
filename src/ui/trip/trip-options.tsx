@@ -19,12 +19,11 @@ import { PEEK_ROW, PEEK_ROW_GAP } from "@/ui/app-shell/bottom-sheet";
 import { accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionRoadside, optionsCountText, previewIndex, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
-import { rideEnds } from "@/domain/trip/ride-ends";
 import { EtaTotalText, extractWalkLengths, useMinuteTicker, useOptionEta } from "./eta-text";
 import { RouteNote } from "./route-note";
 import { ServiceWindowNote } from "./service-window-note";
 import { ModeIcon } from "@/ui/modes/mode-icon";
-import { Chevron, FareChip, FareShort, FarNote, LoopChip, PadyakIcon, StreetModeIcon, WalkIcon, planLookups, type PlanLookups } from "./trip-parts";
+import { Chevron, FareChip, FareShort, FarNote, LoopChip, PadyakIcon, StreetModeIcon, WalkIcon, type PlanLookups } from "./trip-parts";
 
 export function optionDomId(optionId: string): string {
   return `pn-trip-option-${optionId.replace(/[^A-Za-z0-9_-]/g, "_")}`;
@@ -79,22 +78,6 @@ function OptionModeIcon({ mode, size }: { mode: PlanOptionDto["mode"]; size: num
   return mode === "padyak" ? <PadyakIcon size={size} /> : <ModeIcon mode={mode} size={size} />;
 }
 
-/**
- * Where to board a ride option and toward where, from the first ride's own ends: "Get on near Plaza Rizal (A1) ·
- * Toward Ateneo (A3)". Null when the plan does not name the boarding point (nothing is invented), and for the
- * access option (its first step is the tricycle, described by its own lines).
- */
-function boardingLine(option: PlanOptionDto, lookups: PlanLookups, t: ReturnType<typeof useT>): string | null {
-  if (isAccessOption(option)) return null;
-  const ride = option.legs.find((l) => l.kind === "ride");
-  const ends = ride ? rideEnds(ride) : null;
-  if (!ride || !ends) return null;
-  if (!(ends.pinned || ride.board?.stopId || ride.board?.name)) return null;
-  const board = t.trip.getOnNear(lookups.stopName(ends.board.id, ends.board.name));
-  const alightNamed = ends.pinned || Boolean(ride.alight?.stopId || ride.alight?.name);
-  return alightNamed ? `${board} · ${t.routes.toward(lookups.stopName(ends.alight.id, ends.alight.name))}` : board;
-}
-
 function StreetLines({ leg }: { leg: TricycleLegDto | PadyakLegDto }) {
   const t = useT();
   const v = streetCardView(leg, t.trip, t.geo);
@@ -141,7 +124,6 @@ function OptionCard({
   now,
   routes,
   variants,
-  lookups,
 }: {
   option: PlanOptionDto;
   onOpen: (id: string) => void;
@@ -153,10 +135,8 @@ function OptionCard({
   now: Date;
   routes?: NetworkSnapshot["routes"] | null;
   variants: PlanResponse["variants"];
-  lookups: PlanLookups;
 }) {
   const t = useT();
-  const boarding = boardingLine(option, lookups, t);
   // The access option rides a jeepney after its tricycle: it keeps the jeepney card (minutes for the walk and ride only).
   const access = isAccessOption(option);
   const street = access ? undefined : option.legs.find((l): l is TricycleLegDto | PadyakLegDto => l.kind === "tricycle" || l.kind === "padyak");
@@ -224,14 +204,6 @@ function OptionCard({
         </span>
         <span className="pn-trip-card__head">
           <strong>{optionTitle(option, t.trip, t.geo)}</strong>
-          {boarding ? (
-            <>
-              <span className="sr-only">. </span>
-              <span className="pn-trip-card__board" data-testid="card-boarding">
-                {boarding}
-              </span>
-            </>
-          ) : null}
           {option.rides === 0 && !street ? <span className="pn-trip-card__time">{t.trip.pathsNotVerified}</span> : null}
           <span className="sr-only">. </span>
           {street ? (
@@ -314,7 +286,6 @@ export function TripOptions({ data, refreshing = false, onOpen, etaModel, routes
   const now = useMinuteTicker();
   const primary = recommendedIndex(data.plan.options);
   const reason = jeepneyReasonText(data.plan.jeepneyReason, t.trip);
-  const lookups = useMemo(() => planLookups(data, t.trip), [data, t.trip]);
   const extraNotes = data.plan.notes.filter((n) => n !== UNVERIFIED_ROUTE_BADGE);
   return (
     <section className="pn-trip" aria-labelledby="pn-trip-options-title" aria-busy={refreshing || undefined} data-testid="trip-options">
@@ -325,7 +296,7 @@ export function TripOptions({ data, refreshing = false, onOpen, etaModel, routes
       <FarNote note={data.plan.farNote} options={data.plan.options} />
       <ul id={OPTIONS_LIST_ID} className="pn-trip-list">
         {data.plan.options.map((option, i) => (
-          <OptionCard key={option.id} option={option} onOpen={onOpen} index={i} primary={i === primary} etaModel={etaModel} reason={reason} now={now} routes={routes} variants={data.variants} lookups={lookups} />
+          <OptionCard key={option.id} option={option} onOpen={onOpen} index={i} primary={i === primary} etaModel={etaModel} reason={reason} now={now} routes={routes} variants={data.variants} />
         ))}
       </ul>
       {extraNotes.length > 0 ? (
