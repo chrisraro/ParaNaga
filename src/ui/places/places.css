@@ -1,6 +1,6 @@
-/* Place detail and Terminal detail (artboards PlaceDetail, TerminalDetail). Full-screen panels
-   (.pn-detail) over the home map; tokens from home-screen.css / detail.css. Only what the shared
-   classes (.pn-btn, .pn-section, .pn-group, .pn-badge, .pn-note-plain) do not already cover. */
+/* Place detail and Terminal detail. Full-screen panels (.pn-detail) over the home map; tokens from
+   home-screen.css / detail.css. The header, sections, grouped rows, badges and notes are the shared
+   ones (detail.css); only what those do not cover is here. */
 
 /* Map preview of a place with a location (OpenStreetMap or mapped pins). */
 .pn-place__map {
@@ -8,11 +8,13 @@
   height: 220px;
   margin: 12px 16px 0;
   overflow: hidden;
-  border-radius: 20px;
+  border: 1px solid var(--pn-ring);
+  border-radius: 14px;
   /* Zoom capsule near the preview's top-right corner (no locate button here). */
   --naga-map-controls-top: -104px;
 }
 
+/* Title block: the name, one line saying what it is, then the badges. */
 .pn-place__head {
   display: flex;
   flex-direction: column;
@@ -22,26 +24,37 @@
   margin: 0;
   color: var(--pn-label2);
   font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
+/* The primary action; a long Filipino label wraps instead of leaving the pill. */
 .pn-place__cta {
   gap: 10px;
+  height: auto;
   min-height: 52px;
+  padding: 8px 18px;
+  line-height: 1.25;
+  text-align: center;
+}
+.pn-place__cta svg {
+  flex: none;
 }
 
 .pn-place__link {
   display: inline-flex;
   align-items: center;
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
 }
 
 /* Grouped fact rows: label (small), value, muted line. */
 .pn-place__facts {
   margin: 0;
   padding: 0 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
 }
 .pn-place__fact {
   display: flex;
@@ -53,12 +66,14 @@
   border-top: 1px solid var(--pn-sep);
 }
 .pn-place__fact-label {
-  color: var(--pn-caption);
+  color: var(--pn-label2);
   font-size: 13px;
+  line-height: 1.4;
 }
 .pn-place__fact-value {
   margin: 0;
-  font-size: 17px;
+  font-size: 15px;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 .pn-place__fact-sub {
@@ -74,27 +89,30 @@
 .pn-place__fact-sub a {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 48px;
   font-size: 15px;
 }
 
-/* "Photo pending" row (text only). */
+/* "Photo pending" row (text only): the same row as a list cell, with a neutral icon circle. */
 .pn-place__photo {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 14px;
-  border-radius: 16px;
+  min-height: 60px;
+  padding: 10px 14px;
+  box-sizing: border-box;
+  border-radius: 14px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
 }
 .pn-place__photo-icon {
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 44px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
   background: var(--pn-fill);
   color: var(--pn-label2);
 }
@@ -107,71 +125,83 @@
 .pn-place__photo-title {
   font-size: 15px;
   font-weight: 600;
+  line-height: 1.35;
 }
 .pn-place__photo-sub {
   color: var(--pn-label2);
   font-size: 13px;
+  line-height: 1.4;
 }
 
 /* ------------------------------------------------------------------ Terminal detail */
 
-/* "Location not mapped" pill in the header (the artboard's map-overlay pill). */
+/* "Location not mapped" / "Mapped point" in the header: a neutral tag, not a control. */
 .pn-terminal__pill {
   display: inline-flex;
   align-items: center;
-  min-height: 32px;
-  padding: 0 12px;
+  min-height: 28px;
+  padding: 2px 12px;
+  box-sizing: border-box;
   border-radius: 999px;
-  background: var(--pn-surface);
-  box-shadow: 0 1px 3px var(--pn-shadow);
+  background: var(--pn-fill);
+  color: var(--pn-label);
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.3;
   text-align: center; /* wraps at large text (i18n T15) */
+}
+:root[data-contrast="more"] .pn-terminal__pill {
+  box-shadow: inset 0 0 0 1.5px var(--pn-sep);
 }
 .pn-terminal__address {
   color: var(--pn-caption);
   font-size: 13px;
+  line-height: 1.4;
 }
+/* Information note (role=note): the neutral block, fill with a leading green icon. */
 .pn-terminal__info {
   display: flex;
   gap: 10px;
   align-items: flex-start;
   margin: 0;
   padding: 10px 12px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--pn-fill);
-  color: var(--pn-label2);
-  font-size: 14px;
-  line-height: 1.4;
+  color: var(--pn-label);
+  font-size: 15px;
+  line-height: 1.45;
 }
 .pn-terminal__info svg {
   flex: none;
-  margin-top: 1px;
+  margin-top: 2px;
   color: var(--pn-accent);
 }
 .pn-terminal__panel {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
+/* "No entrances mapped": a finished empty state in the tab's place. */
 .pn-terminal__empty {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 14px;
-  border-radius: 16px;
+  gap: 4px;
+  padding: 14px;
+  border-radius: 14px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
 }
 .pn-terminal__empty-title {
   margin: 0;
   font-size: 17px;
   font-weight: 600;
+  line-height: 1.3;
 }
 .pn-terminal__empty-text {
   margin: 0;
   color: var(--pn-label2);
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .pn-terminal__hours {
   margin: 0;
@@ -180,28 +210,26 @@
 .pn-terminal__hours dd {
   margin: 0;
 }
-.pn-terminal__hours .pn-kv + .pn-kv {
-  border-top: 1px solid var(--pn-sep);
-}
 
 /* Terminal detail (Task 13): status note, regional service rows, mode chips with sources. */
 .pn-terminal__status {
   margin: 0;
   color: var(--pn-label2);
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .pn-terminal__service-title {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
 }
 .pn-terminal__modes {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
+  padding-top: 4px;
 }
 .pn-terminal__mode {
   display: inline-flex;
@@ -211,4 +239,14 @@
 }
 .pn-terminal__mode-sources {
   font-size: 13px;
+}
+
+@media (forced-colors: active) {
+  .pn-place__facts,
+  .pn-place__photo,
+  .pn-terminal__empty,
+  .pn-terminal__info,
+  .pn-terminal__pill {
+    border: 1px solid CanvasText;
+  }
 }

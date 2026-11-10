@@ -1,94 +1,124 @@
-/* Saved (artboard Saved): trip cards, saved places, history, and the save-place dialog.
-   Builds on the kit (tokens, .pn-group, .pn-cell, .pn-text-btn, .pn-dialog). */
+/* Saved (Trips · Places · History) and the save-place dialog. Builds on the kit (tokens,
+   .pn-group, .pn-cell, .pn-text-btn, .pn-dialog). One surface language, as on every tab page:
+   white groups with a hairline ring on the canvas (the kit's .pn-group), hairlines between rows,
+   no shadows. Colours come from the
+   --pn-* aliases, so dark and high contrast follow without blocks of their own. */
 
 .pn-saved {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  font-variant-numeric: tabular-nums;
 }
-.pn-saved__sync {
+/* Section labels are sentence case here (no tracked capitals), and row titles sit on the scale. */
+.pn-saved .pn-section__title {
+  letter-spacing: 0;
+  text-transform: none;
+}
+.pn-saved .pn-cell__title {
+  font-size: 17px;
+}
+
+/* ------------------------------------------------------------------ sync row (signed in) */
+.pn-saved .pn-saved__sync {
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--pn-surface);
-  border-radius: 16px;
-  border: 1px solid var(--pn-sep);
+  gap: 8px 12px;
+  padding: 12px 14px;
 }
 .pn-saved__sync-text {
   display: flex;
+  flex: 1 1 11em;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 .pn-saved__sync-text strong {
-  font-size: 15px;
-  font-weight: 600;
   color: var(--pn-label);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
 }
 .pn-saved__sync-text span {
-  font-size: 13px;
   color: var(--pn-label2);
-  line-height: 1.35;
+  font-size: 13px;
+  line-height: 1.4;
 }
-.pn-saved__sync-btn {
+.pn-btn.pn-saved__sync-btn {
   flex: none;
-  height: 38px;
-  padding: 0 14px;
-  font-size: 14px;
   width: auto;
+  height: auto;
+  min-height: 48px;
+  padding: 0 18px;
+  font-size: 15px;
 }
+.pn-saved__sync-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .pn-saved__panel {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 .pn-saved__intro {
-  margin: 0;
+  margin: 0 4px;
   color: var(--pn-label2);
   font-size: 15px;
   line-height: 1.45;
 }
+/* Nothing saved yet: a quiet block in the list's place, so it reads as "the list is empty". */
 .pn-saved__empty {
   margin: 0;
+  padding: 28px 20px;
+  border-radius: 14px;
+  background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
   color: var(--pn-label2);
   font-size: 15px;
   line-height: 1.45;
-}
-.pn-saved__cards {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  text-align: center;
+  text-wrap: balance;
 }
 
-/* ------------------------------------------------------------------ trip card */
+/* ------------------------------------------------------------------ trips: rows in one group */
+.pn-saved__cards {
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 14px;
+  background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
+  list-style: none;
+}
+.pn-saved__cards > li + li {
+  border-top: 1px solid var(--pn-sep);
+}
 .pn-saved-card {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border-radius: 22px;
-  background: var(--pn-surface);
-  box-shadow: 0 6px 20px var(--pn-shadow);
+  gap: 8px;
+  padding: 14px 0;
 }
 .pn-saved-card__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 .pn-saved-badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  min-height: 24px;
-  padding: 2px 10px;
+  gap: 4px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 16px;
+}
+.pn-saved-badge svg {
+  flex: none;
 }
 .pn-saved-badge--offline {
   background: var(--pn-teal-soft-bg);
@@ -101,34 +131,40 @@
 .pn-saved-card__from {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 .pn-saved-card__to {
-  margin: 2px 0 0;
-  font-size: 21px;
+  margin: 0;
+  font-size: 17px;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 .pn-saved-card__meta {
   margin: 0;
-  color: var(--pn-label2);
-  font-size: 14px;
+  color: var(--pn-label);
+  font-size: 15px;
+  line-height: 1.45;
 }
 .pn-saved-card__date {
   margin: 0;
   color: var(--pn-label2);
   font-size: 13px;
+  line-height: 1.4;
 }
 .pn-saved-card__actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 0 16px;
+  margin-top: 2px;
 }
+/* The row's action: the soft green pill ("Open trip"), solid when the trip needs a look. */
 .pn-saved-cta {
   display: inline-flex;
-  flex: 1;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
   min-height: 48px;
@@ -138,17 +174,26 @@
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
   font: inherit;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 .pn-saved-cta--primary {
   background: var(--pn-accent);
   color: var(--pn-on-primary);
 }
+.pn-saved-cta:active {
+  transform: scale(0.97);
+}
 .pn-saved-cta:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
+}
+/* Remove is the destructive action of a row: red text, never a red fill. */
+.pn-saved__remove,
+.pn-saved-place__actions .pn-text-btn:last-child {
+  color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
 }
 .pn-saved__remove {
   align-self: center;
@@ -160,21 +205,36 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 12px;
-  min-height: 0;
-  color: var(--pn-label2);
+  justify-content: space-between;
+  gap: 0 12px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
+  color: var(--pn-label);
   font-size: 15px;
+  line-height: 1.45;
+}
+.pn-saved__undo > span {
+  flex: 1 1 10em;
+  padding: 12px 0;
 }
 .pn-saved__undo:empty {
   display: none;
 }
 .pn-saved__status {
-  margin: 0;
+  margin: 0 4px;
   color: var(--pn-label2);
   font-size: 15px;
+  line-height: 1.45;
 }
 .pn-saved__status:empty {
   display: none;
+}
+.pn-saved__status:focus-visible {
+  outline: 3px solid var(--pn-accent, var(--color-brand));
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 .pn-saved__clear {
   align-self: stretch;
@@ -182,7 +242,7 @@
 
 /* ------------------------------------------------------------------ places */
 .pn-saved-place {
-  padding: 4px 0 8px;
+  padding: 2px 0 4px;
 }
 .pn-saved-place__main {
   width: 100%;
@@ -197,22 +257,28 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
   background: var(--pn-teal-soft-bg);
-  color: var(--pn-teal-soft-text);
+  color: var(--pn-accent);
 }
+/* The row's own actions line up under its title (36 px icon + 12 px gap). */
 .pn-saved-place__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 18px;
-  padding-left: 46px;
+  gap: 0 20px;
+  padding-left: 48px;
 }
-.pn-saved-add {
-  gap: 10px;
+.pn-saved .pn-saved-add {
+  gap: 12px;
   color: var(--pn-accent);
+  font-size: 17px;
   font-weight: 600;
+}
+.pn-saved-add svg {
+  flex: none;
+  width: 36px;
 }
 
 /* ------------------------------------------------------------------ history off */
@@ -220,29 +286,34 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 28px 20px;
-  border-radius: 22px;
+  gap: 6px;
+  padding: 28px 20px 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
   text-align: center;
 }
 .pn-saved-off__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 6px;
   border-radius: 999px;
   background: var(--pn-fill);
   color: var(--pn-label2);
 }
 .pn-saved-off__title {
-  margin: 6px 0 0;
-  font-size: 20px;
+  margin: 0;
+  font-size: 17px;
   font-weight: 700;
+  line-height: 1.3;
+  text-wrap: balance;
 }
 .pn-saved-off__text {
   margin: 0;
+  max-width: 34em;
   color: var(--pn-label2);
   font-size: 15px;
   line-height: 1.45;
@@ -250,10 +321,12 @@
 .pn-saved-off__link {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 48px;
+  padding: 0 8px;
   color: var(--pn-accent);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
+  text-decoration: none;
 }
 
 /* ------------------------------------------------------------------ save-place dialog */
@@ -268,28 +341,56 @@
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
-  border: 1px solid var(--pn-ring);
+  /* 3:1 against the surface, so the field's edge shows in sunlight (WCAG 1.4.11). */
+  border: 1px solid color-mix(in srgb, var(--pn-label) 50%, transparent);
   border-radius: 12px;
-  background: var(--pn-fill);
+  background: var(--pn-surface);
   color: var(--pn-label);
   font: inherit;
   font-size: 17px;
 }
 .pn-saved-dialog__input:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 .pn-saved-dialog__input[aria-invalid="true"] {
-  border-color: var(--pn-coral-soft-text);
+  border-color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
+  box-shadow: inset 0 0 0 1px var(--pn-coral-strong-text, var(--pn-coral-soft-text));
 }
 .pn-saved-dialog__hint {
   margin: 6px 0 0;
   color: var(--pn-label2);
   font-size: 13px;
+  line-height: 1.4;
 }
 .pn-saved-dialog__error {
   margin: 6px 0 0;
-  color: var(--pn-coral-ink, var(--pn-coral-soft-text));
-  font-size: 14px;
+  color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.4;
+}
+
+/* High contrast: the ring token is already 3:1; the chips get an outline in their own colour. */
+:root[data-contrast="more"] .pn-saved-badge {
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-saved-cta {
+    transition: none;
+  }
+  .pn-saved-cta:active {
+    transform: none;
+  }
+}
+
+/* Large text (i18n T15): a word longer than its control breaks inside it instead of spilling out. */
+.pn-saved-badge,
+.pn-saved-cta,
+.pn-saved-off__title,
+.pn-saved-off__link,
+.pn-saved__sync-btn,
+.pn-saved-dialog__label {
+  overflow-wrap: anywhere;
 }

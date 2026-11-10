@@ -1,49 +1,72 @@
-/* Guidance steps in the home sheet (artboards Walk / Ride / Transfer / Arrive). Tokens are the
-   home screen's (.pn-home, home-screen.css and trip.css), so light, dark and high contrast follow. */
+/* Live trip in the home sheet (Walk / Ride / Street ride / Transfer / Arrive / Missed). Tokens are
+   the home screen's (.pn-home: home-screen.css, trip.css, theme/tokens.css), so light, dark and
+   high contrast follow without a rule here; the few high-contrast rules are at the end.
+
+   Every step is read in the same order, from the top of the sheet:
+     header      End (48 px), "Step i of n · Walk", GPS accuracy
+     trip status progress bar, then the arrival range: always here, always in this order
+     title       24/700  the one "what do I do now" line
+     values      17/600  time left and distance, tabular
+     guidance    15      notes and checks, tinted by tone (amber = caution, green = you are close)
+   The step's buttons are in the sheet footer. Colour is by role: green for progress and actions,
+   amber for the get-off stop and cautions. Everything is inside a sheet: hairlines and tints, no
+   shadows (DESIGN.md, the Shadow Or Hairline Rule). */
 
 .pn-guide {
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding-top: 6px;
+  /* The idle part of the progress bar and of the stop rail: the label colour at 18 %, both themes. */
+  --pn-guide-track: color-mix(in srgb, var(--pn-label) 18%, transparent);
 }
 
-/* Header: round End, the step pill, the GPS accuracy pill. */
+/* Header: round End, the step label, the GPS accuracy pill. */
 .pn-guide-head {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 44px;
+  gap: 10px;
+  min-height: 48px;
 }
 .pn-guide-head__end {
   flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
   border: 0;
   border-radius: 999px;
   background: var(--pn-fill);
   color: var(--pn-label);
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
+.pn-guide-head__end:active {
+  transform: scale(0.97);
+}
+/* Plain text, not a pill: it is a status, and nothing here looks tappable except End. */
 .pn-guide-head__step {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  background: var(--pn-fill);
+  min-width: 0;
+  color: var(--pn-label);
   font-size: 15px;
   font-weight: 600;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.pn-guide-head__step svg {
+  flex: none;
 }
 .pn-guide-head__step--done {
-  background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
 }
 .pn-guide-head__acc {
+  flex: none;
   margin-left: auto;
   display: inline-flex;
   align-items: center;
@@ -62,6 +85,49 @@
   color: var(--pn-warn-text);
 }
 
+/* Trip progress: the bar, then the arrival range, the share done and the basis of the estimate,
+   always directly under the header. The fill moves with transform only (no layout shift) and
+   stands still under reduced motion. */
+.pn-trip-status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--pn-fill);
+}
+.pn-trip-status__bar {
+  height: 8px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--pn-guide-track);
+}
+.pn-trip-status__fill {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--pn-accent, var(--color-brand));
+  transform-origin: left center;
+  transition: transform var(--pn-dur-slow) var(--pn-ease);
+}
+.pn-trip-status__eta {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+.pn-trip-status__left,
+.pn-trip-status__caption {
+  margin: 0;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The step. */
 .pn-guide__step {
   display: flex;
   flex-direction: column;
@@ -69,11 +135,12 @@
 }
 .pn-guide__title {
   margin: 0;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.015em;
-  line-height: 1.25;
+  line-height: 1.2;
   overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 .pn-guide__title:focus {
   outline: none;
@@ -82,20 +149,19 @@
   outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
-.pn-guide__title--big {
-  font-size: 30px;
-}
 .pn-guide__body {
   margin: 0;
   color: var(--pn-label2);
   font-size: 17px;
-  line-height: 1.45;
+  line-height: 1.4;
+  overflow-wrap: break-word;
 }
 .pn-guide__sub {
   margin: 0;
   color: var(--pn-label2);
   font-size: 15px;
   line-height: 1.4;
+  overflow-wrap: break-word;
 }
 .pn-guide__note,
 .pn-guide__keep {
@@ -104,45 +170,45 @@
   font-size: 13px;
   line-height: 1.45;
 }
-.pn-guide__keep {
-  text-align: center;
-}
 .pn-guide__note:empty {
   display: none;
 }
 
-.pn-guide__time {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--pn-label-secondary);
-  font-variant-numeric: tabular-nums;
-}
-/* Walk: the distance line (artboard's big number) and direction. */
+/* Time left, then the distance: the two values of a step, one treatment (as in the trip detail
+   header). The direction after the distance is secondary. */
+.pn-guide__time,
 .pn-guide__distance {
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.25;
+  color: var(--pn-label);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
   font-variant-numeric: tabular-nums;
 }
-.pn-guide__direction {
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.4;
+.pn-guide__time + .pn-guide__distance {
+  margin-top: -8px;
 }
+.pn-guide__direction {
+  color: var(--pn-label2);
+  font-size: 15px;
+  font-weight: 400;
+}
+
+/* Notes on a step: a neutral block; amber for the rough-GPS check ("Check you're beside ...");
+   green once the rider looks close. The words carry the meaning, the tint is the second cue. */
 .pn-guide__card {
   margin: 0;
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-fill);
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: break-word;
 }
 .pn-guide__card--warn {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.5px var(--pn-warn-ring);
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
+  font-weight: 600;
 }
 .pn-guide__card--near {
   background: var(--pn-teal-soft-bg);
@@ -150,15 +216,16 @@
   font-weight: 600;
 }
 
+/* Location: finding, off or unavailable (amber, with what to tap instead), or the offer to use it. */
 .pn-guide__loc {
   margin: 0;
   color: var(--pn-label2);
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .pn-guide__loc--off {
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
 }
@@ -168,47 +235,47 @@
   justify-content: center;
   gap: 8px;
   min-height: 48px;
-  padding: 0 16px;
+  padding: 6px 16px;
   border: 0;
   border-radius: 999px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.25;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-guide__use-loc svg {
+  flex: none;
+}
+.pn-guide__use-loc:active {
+  transform: scale(0.97);
 }
 
-.pn-guide__next {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-.pn-guide__next-row,
 .pn-guide__transfer-line {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
   margin: 0;
   color: var(--pn-label2);
   font-size: 15px;
+  line-height: 1.4;
 }
 .pn-guide__transfer-line > span:first-child {
+  min-width: 0;
   color: var(--pn-label);
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
-}
-.pn-guide__route-name {
-  color: var(--pn-label);
-  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
-/* Transfer checklist. */
+/* Transfer checklist: done rows step back, the current row is the one in full ink with a green ring. */
 .pn-guide__checklist {
   display: flex;
   flex-direction: column;
-  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -217,9 +284,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 44px;
-  font-size: 16px;
+  min-height: 48px;
+  padding: 6px 0;
+  color: var(--pn-label2);
+  font-size: 15px;
   line-height: 1.35;
+}
+.pn-guide__check + .pn-guide__check {
+  border-top: 1px solid var(--pn-sep);
 }
 .pn-guide__check-mark {
   flex: none;
@@ -230,49 +302,58 @@
   height: 28px;
   border-radius: 999px;
   background: var(--pn-fill);
-  font-size: 14px;
+  color: var(--pn-label);
+  font-size: 13px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .pn-guide__check--done .pn-guide__check-mark {
   background: var(--pn-accent);
   color: var(--pn-on-primary);
 }
 .pn-guide__check[aria-current="step"] {
+  color: var(--pn-label);
+  font-size: 17px;
   font-weight: 600;
 }
 .pn-guide__check[aria-current="step"] .pn-guide__check-mark {
+  background: var(--pn-surface);
   box-shadow: inset 0 0 0 2px var(--pn-accent);
+  color: var(--pn-accent);
 }
 
-/* Ride progress: the dot rail (decorative; the count says it in words). */
+/* Ride progress: the count in words, then the dot rail (decorative; the count says it). Stops
+   behind the rider are green (progress); the get-off stop is the amber "your stop" dot. */
 .pn-guide__progress {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-fill);
 }
 .pn-guide__count {
   margin: 0;
   font-size: 17px;
   font-weight: 600;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
 }
 .pn-rail {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 28px;
+  height: 24px;
 }
 .pn-rail__track {
   position: absolute;
   left: 6px;
   right: 6px;
-  top: 12px;
+  top: 10px;
   height: 4px;
   border-radius: 2px;
-  background: var(--pn-sep);
+  background: var(--pn-guide-track);
 }
 .pn-rail__dot {
   position: relative;
@@ -281,59 +362,73 @@
   height: 12px;
   border-radius: 50%;
   background: var(--pn-surface);
-  box-shadow: inset 0 0 0 3px var(--pn-label2);
+  box-shadow: inset 0 0 0 2px var(--pn-label2);
 }
 .pn-rail__dot--boarded,
 .pn-rail__dot--passed {
-  background: var(--pn-label2);
+  background: var(--pn-accent);
+  box-shadow: none;
 }
+/* Amber fill with the darker amber ring (the Amber Line Rule), as on the trip detail timeline. */
 .pn-rail__dot--alight {
   width: 20px;
   height: 20px;
-  background: var(--pn-dest);
-  box-shadow: 0 0 0 3px var(--pn-surface);
+  background: var(--color-accent);
+  box-shadow: inset 0 0 0 3px var(--pn-amber-line, var(--color-accent));
 }
 .pn-guide__rail-labels {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   margin: 0;
   color: var(--pn-label2);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.35;
 }
 .pn-guide__rail-alight {
+  min-width: 0;
   color: var(--pn-label);
   font-weight: 600;
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
-/* "Para! Next stop is yours": the one loud card, in the "your stop" amber. Ink on it ≈ 9.5:1. */
+/* "Para! Next stop is yours": the one loud block, in the "your stop" amber. Ink on it ≈ 9.5:1
+   (the Dark Text On Amber Rule), the same in dark. */
 .pn-guide__para {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   padding: 16px;
-  border-radius: 20px;
+  border-radius: 16px;
   background: var(--color-accent);
   color: var(--color-ink);
-  font-size: 16px;
-  line-height: 1.4;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
 }
 .pn-guide__para p {
   margin: 0;
 }
 .pn-guide__para-word {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
 
+/* The step's buttons, in the sheet footer. A long label (Filipino, 200 % text) wraps inside the
+   pill instead of running out of it. */
 .pn-guide__actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+.pn-guide__actions .pn-btn {
+  height: auto;
+  padding: 6px 16px;
+  line-height: 1.25;
+  text-align: center;
 }
 .pn-guide__actions .pn-btn--primary {
   min-height: 52px;
@@ -346,24 +441,28 @@
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 48px;
+  text-align: left;
   text-decoration: none;
 }
 .pn-guide__report:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* Arrive. */
+/* Arrive: the trip in one block (walk, rides, fare), then "Save this trip". */
 .pn-guide__summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-fill);
   font-size: 15px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
 }
 .pn-guide__summary-ride {
   display: inline-flex;
@@ -372,7 +471,7 @@
   gap: 6px;
   max-width: 100%;
 }
-/* Long route names wrap inside the pill instead of spilling out of a fixed 26px height. */
+/* Long route names wrap inside the chip instead of spilling out of a fixed 26px height. */
 .pn-guide__summary .pn-loop-chip,
 .pn-guide__chip {
   height: auto;
@@ -401,14 +500,21 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 60px;
+  min-height: 56px;
   padding: 10px 16px;
   border: 0;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
   text-align: left;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-guide__save-btn svg {
+  flex: none;
+}
+.pn-guide__save-btn:active:not([aria-disabled="true"]) {
+  transform: scale(0.98);
 }
 .pn-guide__save-btn--on {
   background: var(--pn-accent);
@@ -421,13 +527,18 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 14px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.4;
 }
 .pn-guide__save-text strong {
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
-/* Top instruction banner and bottom strip (home redesign T6). */
+/* Top instruction banner and bottom strip (home redesign T6). Both float over the map, so they
+   take the float shadow and no ring (in dark the token is the hairline). */
 .pn-guide-banner {
   display: flex;
   flex-direction: column;
@@ -438,11 +549,19 @@
 @keyframes pn-guide-banner-in {
   from {
     opacity: 0;
-    transform: translateY(-12px);
+    transform: translateY(calc(-1 * var(--pn-rise-lg, 12px)));
   }
   to {
     opacity: 1;
     transform: none;
+  }
+}
+@keyframes pn-guide-banner-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 .pn-guide-banner__card {
@@ -451,9 +570,9 @@
   gap: 12px;
   width: 100%;
   padding: 12px 14px;
-  border-radius: 18px;
+  border-radius: 14px;
   background: var(--pn-surface);
-  box-shadow: 0 0 0 1px var(--pn-ring), 0 8px 24px var(--pn-shadow);
+  box-shadow: var(--pn-elev);
   color: var(--pn-label);
 }
 .pn-guide-banner__icon {
@@ -463,7 +582,7 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: 50%;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
 }
@@ -476,35 +595,42 @@
 .pn-guide-banner__title {
   font-size: 17px;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 .pn-guide-banner__sub {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 14px;
-  line-height: 1.35;
+  font-size: 15px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
 }
 .pn-guide-banner__recenter {
-  min-height: 44px;
+  min-height: 48px;
   padding: 0 16px;
   border: 0;
   border-radius: 999px;
   background: var(--pn-surface);
-  box-shadow: 0 0 0 1px var(--pn-ring), 0 4px 12px var(--pn-shadow);
+  box-shadow: var(--pn-elev);
   color: var(--pn-accent);
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-guide-banner__recenter:active {
+  transform: scale(0.97);
 }
 .pn-guide-strip {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 12px 16px;
-  border-radius: 22px 22px 0 0;
+  border-radius: 16px 16px 0 0;
   background: var(--pn-surface);
-  box-shadow: 0 0 0 1px var(--pn-ring), 0 -4px 20px var(--pn-shadow);
+  box-shadow: var(--pn-elev-sheet);
   color: var(--pn-label);
 }
 .pn-guide-strip__top {
@@ -520,68 +646,74 @@
   gap: 2px;
 }
 .pn-guide-strip__step {
-  font-size: 15px;
-  font-weight: 700;
-}
-.pn-guide-strip__time {
-  color: var(--pn-label2);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-.pn-guide-strip__steps {
-  min-height: 44px;
-  padding: 0 14px;
-}
-.pn-guide-strip__primary {
-  min-height: 52px;
-}
-
-/* Trip progress: the bar, the arrival range, the share done and the basis of the estimate. The fill
-   moves with transform only (no layout shift) and stands still under reduced motion. */
-.pn-trip-status {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 10px 14px 12px;
-  border-radius: 16px;
-  background: var(--pn-fill);
-}
-.pn-trip-status__bar {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--pn-teal-soft-bg);
-  box-shadow: inset 0 0 0 1px var(--pn-teal-soft-bg);
-}
-.pn-trip-status__fill {
-  width: 100%;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--pn-accent, var(--color-brand));
-  transform-origin: left center;
-  transition: transform 0.6s ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .pn-trip-status__fill {
-    transition: none;
-  }
-}
-.pn-trip-status__eta {
-  margin: 6px 0 0;
   font-size: 17px;
   font-weight: 700;
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
 }
-.pn-trip-status__left,
-.pn-trip-status__caption {
-  margin: 0;
+.pn-guide-strip__time {
   color: var(--pn-label2);
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 1.35;
   font-variant-numeric: tabular-nums;
 }
-.pn-trip-status__caption {
-  font-size: 12px;
+.pn-guide-strip__steps {
+  flex: none;
+  width: auto;
+  min-height: 48px;
+  padding: 0 16px;
+}
+.pn-guide-strip__primary {
+  height: auto;
+  min-height: 52px;
+  padding: 6px 16px;
+  line-height: 1.25;
+  text-align: center;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .pn-trip-status__fill,
+  .pn-guide-head__end,
+  .pn-guide__use-loc,
+  .pn-guide__save-btn,
+  .pn-guide-banner__recenter {
+    transition: none;
+  }
+  .pn-guide-head__end:active,
+  .pn-guide__use-loc:active,
+  .pn-guide__save-btn:active:not([aria-disabled="true"]),
+  .pn-guide-banner__recenter:active {
+    transform: none;
+  }
+  .pn-guide-banner {
+    animation-name: pn-guide-banner-fade;
+  }
+}
+
+/* High contrast: a tint alone is not a boundary, so each tinted block takes an outline in its own
+   text colour (the rule kit.css applies to badges), and the rail's idle marks take the label colour. */
+:root[data-contrast="more"] .pn-trip-status,
+:root[data-contrast="more"] .pn-guide__card,
+:root[data-contrast="more"] .pn-guide__loc--off,
+:root[data-contrast="more"] .pn-guide__use-loc,
+:root[data-contrast="more"] .pn-guide__progress,
+:root[data-contrast="more"] .pn-guide__summary,
+:root[data-contrast="more"] .pn-guide__save-btn,
+:root[data-contrast="more"] .pn-guide__para,
+:root[data-contrast="more"] .pn-guide-head__acc,
+:root[data-contrast="more"] .pn-guide-head__end {
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+:root[data-contrast="more"] .pn-guide {
+  --pn-guide-track: var(--pn-ring);
+}
+:root[data-contrast="more"] .pn-rail__dot {
+  box-shadow: inset 0 0 0 2px var(--pn-label);
+}
+:root[data-contrast="more"] .pn-rail__dot--boarded,
+:root[data-contrast="more"] .pn-rail__dot--passed {
+  box-shadow: none;
+}
+:root[data-contrast="more"] .pn-rail__dot--alight {
+  box-shadow: inset 0 0 0 3px var(--color-ink);
+}

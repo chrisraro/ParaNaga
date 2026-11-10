@@ -7,8 +7,6 @@
   --pn-label3: var(--color-ink-3);
   --pn-gold-text: var(--color-accent-ink);
   --pn-loop-bg: var(--color-ink-2);
-  --pn-sign-bg: var(--color-deep);
-  --pn-sign-rim: transparent;
   --pn-coral-ink: var(--color-danger-ink);
 }
 :root[data-theme="dark"] .pn-home,
@@ -16,8 +14,6 @@
   --pn-label3: var(--color-night-ink-3);
   --pn-gold-text: var(--color-accent);
   --pn-loop-bg: var(--color-ink-2);
-  --pn-sign-bg: var(--color-night-raised);
-  --pn-sign-rim: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
   --pn-coral-ink: var(--color-danger-bright);
 }
 @media (prefers-color-scheme: dark) {
@@ -26,8 +22,6 @@
     --pn-label3: var(--color-night-ink-3);
     --pn-gold-text: var(--color-accent);
     --pn-loop-bg: var(--color-ink-2);
-    --pn-sign-bg: var(--color-night-raised);
-    --pn-sign-rim: color-mix(in srgb, var(--color-night-ink) 12%, transparent);
     --pn-coral-ink: var(--color-danger-bright);
   }
 }
@@ -431,6 +425,12 @@ abbr.pn-est {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-trip-retry:active,
+.pn-trip-back:active,
+.pn-trip-action:active:not([aria-disabled="true"]) {
+  transform: scale(0.97);
 }
 
 /* Trip detail. */
@@ -451,6 +451,7 @@ abbr.pn-est {
   background: var(--pn-fill);
   color: var(--pn-label);
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 /* The header above the steps (title, time, fare, how estimated, Save/Share): its words are budgeted. */
 .pn-trip-detail__header {
@@ -466,9 +467,6 @@ abbr.pn-est {
   color: var(--pn-accent);
   font-size: 15px;
   font-weight: 600;
-}
-.pn-tl__sub--dir {
-  text-transform: none;
 }
 .pn-trip-detail__title {
   margin: 0;
@@ -513,6 +511,7 @@ abbr.pn-est {
   font-weight: 400;
 }
 .pn-trip-detail__basis-btn {
+  position: relative;
   align-self: flex-start;
   padding: 0;
   border: 0;
@@ -520,12 +519,22 @@ abbr.pn-est {
   color: var(--pn-accent);
   font-size: 15px;
   font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
   text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
 }
+/* The visible shape is one line of text; the target is 48 px tall. */
+.pn-trip-detail__basis-btn::after {
+  content: "";
+  position: absolute;
+  inset: -14px 0;
+}
 .pn-trip-detail__basis-btn:focus-visible {
-  outline: 2px solid var(--pn-accent);
+  outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
+  border-radius: 4px;
 }
 .pn-eta-sheet__lead {
   margin: 0 0 16px;
@@ -545,30 +554,42 @@ abbr.pn-est {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding-bottom: 12px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--pn-sep);
+  font-variant-numeric: tabular-nums;
 }
 .pn-eta-sheet__item:last-child {
+  padding-bottom: 0;
   border-bottom: none;
 }
 .pn-eta-sheet__text {
   margin: 0;
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
   color: var(--pn-label);
 }
 .pn-eta-sheet__assumptions {
-  margin: 2px 0 0 16px;
-  padding: 0;
+  margin: 0;
+  padding: 0 0 0 18px;
   color: var(--pn-label2);
   font-size: 13px;
+  line-height: 1.45;
 }
 .pn-eta-sheet__empty {
+  margin: 0;
   color: var(--pn-label2);
   font-size: 15px;
+  line-height: 1.45;
 }
 
-/* Timeline: 36px rail + body, like the artboard's grid. */
+/* Timeline: every step is the same two columns, a 28 px rail (marker, then the line down to the
+   next step) and the text. The text column is one ladder on every row:
+     title      17/600  what to do, landmark first ("Get on Loop A at ...", "Get off at ...")
+     sub        15      how (direction, stops to ride), amber when it is a caution
+     time       15/600  the estimate for this leg, tabular
+     meta       13      evidence and detail (vehicle class, path basis, stops passed, notes)
+   Marker colours are roles: green start, amber get-off ("your stop"), red destination, ink for a
+   boarding point. Dotted line = walking, solid = riding. */
 .pn-tl {
   margin: 4px 0 0;
   padding: 0;
@@ -576,7 +597,7 @@ abbr.pn-est {
 }
 .pn-tl__step {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   column-gap: 12px;
 }
 .pn-tl__rail {
@@ -584,39 +605,71 @@ abbr.pn-est {
   flex-direction: column;
   align-items: center;
 }
+/* Every marker sits in the same 26 px box, so its centre meets the title's first line. */
+.pn-tl__rail > svg {
+  flex: none;
+  height: 26px;
+}
 .pn-tl__line {
   flex-grow: 1;
-  margin: 2px 0;
+  min-height: 14px;
+  margin: 3px 0;
 }
 .pn-tl__line--walk {
   width: 0;
   border-left: 4px dotted var(--pn-label3);
 }
 .pn-tl__line--ride {
-  width: 8px;
-  border-radius: 4px;
-  background: var(--pn-loop-bg);
+  width: 6px;
+  border-radius: 3px;
+  /* Ink 2 in light (as before), Night Ink 2 in dark, where the chip grey would sink into the sheet. */
+  background: var(--pn-label2);
 }
 .pn-tl__body {
-  padding-bottom: 18px;
+  min-width: 0;
+  padding: 2px 0 20px;
+}
+.pn-tl__step:last-child > .pn-tl__body {
+  padding-bottom: 4px;
 }
 .pn-tl__stack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 .pn-tl__title {
+  display: block;
   font-size: 17px;
   font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: break-word;
 }
 .pn-tl__sub {
   margin: 2px 0 0;
   color: var(--pn-label2);
   font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+.pn-tl__stack > .pn-tl__sub {
+  margin: 0;
 }
 .pn-tl__sub--gold {
   color: var(--pn-gold-text);
-  font-size: 15px;
+  font-weight: 600;
+}
+.pn-tl__sub--time {
+  color: var(--pn-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.pn-tl__sub--meta,
+.pn-tl__sub--path-label {
+  font-size: 13px;
+}
+/* "Show on map" under the nearest terminal: its own row, a full 48 px target. */
+.pn-tl__sub > .pn-btn {
+  margin-top: 8px;
 }
 .pn-tl-dot {
   stroke: var(--pn-surface);
@@ -628,7 +681,7 @@ abbr.pn-est {
   fill: var(--pn-label3);
 }
 .pn-tl-dot--board {
-  fill: var(--pn-loop-bg);
+  fill: var(--pn-label2);
 }
 /* The get-off stop is "your stop": amber, with the darker amber ring on a light surface. */
 .pn-tl-dot--alight {
@@ -636,45 +689,21 @@ abbr.pn-est {
   stroke: var(--pn-amber-line, var(--color-accent));
 }
 .pn-tl-dot--dest {
-  fill: var(--color-danger);
+  fill: var(--pn-dest);
 }
 
-.pn-sign {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--pn-sign-bg);
-  box-shadow: inset 0 0 0 1px var(--pn-sign-rim);
-  color: #ffffff;
-}
-.pn-sign__text {
-  font-size: 17px;
-  font-weight: 600;
-}
-.pn-sign .pn-loop {
-  align-self: flex-start;
-}
-.pn-sign .pn-loop-chip {
-  background: rgba(255, 255, 255, 0.14);
-}
-
+/* "Say Para" under the get-off step: part of "your stop", so the amber wash (not an error). */
 .pn-para {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: 14px;
-  background: var(--pn-coral-soft-bg);
-  color: var(--pn-coral-ink);
+  border-radius: 10px;
+  background: var(--pn-warn-bg);
+  color: var(--pn-warn-text);
   font-size: 15px;
+  font-weight: 600;
   line-height: 1.4;
-}
-.pn-para__word {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
 }
 
 .pn-fares {
@@ -687,31 +716,51 @@ abbr.pn-est {
 }
 .pn-fares h3 {
   margin: 0;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 700;
+  line-height: 1.3;
 }
+/* What it is on the left, the amount on the right, in one column down the card; a long amount
+   (Filipino, 200 % text) wraps under its label instead of squeezing it. */
 .pn-fares__row {
   display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: 2px 12px;
   margin: 0;
   font-size: 15px;
+  line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
+.pn-fares__row span {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
 .pn-fares__row span:last-child {
+  margin-left: auto;
   font-weight: 600;
   text-align: right;
 }
 .pn-fares__row--total {
-  padding-top: 8px;
+  padding-top: 10px;
   border-top: 1px solid var(--pn-sep);
+  font-size: 17px;
+  font-weight: 700;
+}
+.pn-fares__row--total span:last-child {
   font-weight: 700;
 }
 .pn-fares__note {
-  margin: 0;
+  margin: 2px 0 0;
   color: var(--pn-label2);
   font-size: 13px;
   line-height: 1.45;
+}
+.pn-fares__note a {
+  color: var(--pn-accent);
+  font-weight: 600;
+  text-underline-offset: 2px;
 }
 
 /* Entrance (artboard .pn-in); reduced motion fades instead. */
@@ -748,6 +797,16 @@ abbr.pn-est {
   .pn-trip-card:active {
     transform: none;
   }
+  .pn-trip-retry,
+  .pn-trip-back,
+  .pn-trip-action {
+    transition: none;
+  }
+  .pn-trip-retry:active,
+  .pn-trip-back:active,
+  .pn-trip-action:active:not([aria-disabled="true"]) {
+    transform: none;
+  }
   .pn-trip-state__spinner {
     animation: none;
   }
@@ -778,7 +837,12 @@ abbr.pn-est {
   font: inherit;
   font-size: 15px;
   font-weight: 600;
+  line-height: 1.25;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-trip-action svg {
+  flex: none;
 }
 .pn-trip-action--on {
   background: var(--pn-accent);
@@ -800,20 +864,32 @@ abbr.pn-est {
   font-size: 15px;
 }
 .pn-trip-actions__check input {
+  flex: none;
   width: 22px;
   height: 22px;
   margin: 0;
   accent-color: var(--pn-accent);
 }
+/* The label carries the row's 48 px target, not only the 22 px box. */
+.pn-trip-actions__check label {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
 .pn-trip-actions__status {
   margin: 0;
   min-height: 1.2em;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 .pn-trip-reopen {
   margin: 0;
   padding: 10px 12px;
+  line-height: 1.4;
   border-radius: 12px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
@@ -827,22 +903,39 @@ abbr.pn-est {
 
 /* "Start trip" (guidance, Task 10): the primary action of Trip detail (>= 48 px). */
 .pn-trip-start {
+  height: auto;
   min-height: 52px;
+  padding: 6px 16px;
+  text-align: center;
 }
 
 /* Low-data opt-in: download the walk graph (Task 15 follow-up). */
 .pn-trip-paths-offer {
-  margin: 12px 0;
-  padding: 12px;
-  border: 1px solid var(--pn-sep);
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--pn-ring);
+  border-radius: 14px;
 }
 .pn-trip-paths-offer__text {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 15px;
+  line-height: 1.45;
+}
+.pn-trip-paths-offer__text[role="alert"] {
+  color: var(--pn-coral-ink);
+  font-weight: 600;
 }
 .pn-trip-paths-offer__btn {
+  height: auto;
   min-height: 48px;
+  padding: 6px 16px;
+  text-align: center;
+}
+.pn-trip-paths-offer__btn[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: progress;
 }
 
 /* Increment E: route notes with an evidence chip, the soft service-window warning, the tricycle /
@@ -962,14 +1055,17 @@ abbr.pn-est {
 .pn-tl__terminal-highlight {
   display: block;
   padding: 8px 12px;
-  margin: 6px 0;
   border-radius: 10px;
   background: var(--pn-teal-soft-bg);
+  color: var(--pn-label);
   line-height: 1.4;
 }
+.pn-tl__terminal-highlight .pn-terminal-icon {
+  color: var(--pn-accent);
+}
 .pn-tl__toda-line {
-  display: inline-block;
-  margin-top: 3px;
+  /* Inline: the line break before it is in the markup, so a block here would add an empty line. */
+  display: inline;
   color: var(--pn-label2, var(--color-ink-2));
   font-size: 13px;
   font-weight: 400;
@@ -990,6 +1086,7 @@ abbr.pn-est {
   color: var(--pn-label2);
   font-size: 15px;
   line-height: 1.4;
+  overflow-wrap: break-word;
 }
 /* Quiet note above the options and in the detail: a local report, labelled as one. */
 .pn-trip-farnote {
@@ -1056,7 +1153,7 @@ abbr.pn-est {
   flex-direction: column;
   gap: 4px;
   padding: 8px 12px;
-  margin: 6px 0 8px;
+  margin: 8px 0;
   border-radius: 10px;
   background: var(--pn-teal-soft-bg);
   font-size: 13px;
@@ -1074,4 +1171,26 @@ abbr.pn-est {
 .pn-tl__roadside-chip svg {
   color: var(--pn-accent, var(--color-brand));
   flex-shrink: 0;
+}
+
+/* High contrast: a tint alone is not a boundary, so the tinted blocks of the detail take an
+   outline in their own text colour (the same rule kit.css applies to badges), and the rail
+   takes the primary label colour. */
+:root[data-contrast="more"] .pn-para,
+:root[data-contrast="more"] .pn-svc-note,
+:root[data-contrast="more"] .pn-trip-reopen,
+:root[data-contrast="more"] .pn-tl__roadside,
+:root[data-contrast="more"] .pn-tl__terminal-highlight,
+:root[data-contrast="more"] .pn-trip-state,
+:root[data-contrast="more"] .pn-fares {
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+:root[data-contrast="more"] .pn-tl__line--walk {
+  border-left-color: var(--pn-label);
+}
+:root[data-contrast="more"] .pn-tl__line--ride {
+  background: var(--pn-label);
+}
+:root[data-contrast="more"] .pn-tl-dot--board {
+  fill: var(--pn-label);
 }

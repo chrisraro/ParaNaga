@@ -6,6 +6,7 @@
 // reloads until the person taps Reload. "Later" hides the card for this page session; More → App
 // keeps "Update ready — Reload" while the version waits.
 
+import "@/ui/theme/tokens.css";
 import "./pwa.css";
 
 import { useEffect, useSyncExternalStore } from "react";

@@ -2,9 +2,10 @@
 
 // Explore (artboard Explore; Increment A, Task 7; decision D5). Category chips over the
 // OpenStreetMap places of the cached search index (the same index Search and Place detail use, so
-// Explore reaches no new API), as artboard cards: a tinted tile with "Photo pending", the name,
-// "{Category} · from OpenStreetMap", "How to commute here" (the place's coordinate becomes the
-// destination and the map plans from the current start, or asks for one) and a link to the place.
+// Explore reaches no new API), as rows of one list: a tinted category tile (or the place's photo),
+// the name linking to the place, "{Category} · from OpenStreetMap", "Photo pending" and "How to
+// commute here" (the place's coordinate becomes the destination and the map plans from the current
+// start, or asks for one). The row's layout is CSS grid over this markup (explore.css).
 // Each chip shows CARD_LIMIT cards, then "Show all {n} places", and a "Jump to directory" link sits
 // at the top, so the directory below stays reachable. The directory lists everything else on file:
 // mapped-pin places, routes, terminals, barangays and feeder leads, each row linking to its own
@@ -337,8 +338,10 @@ const ICON_PATH: Record<Exclude<ExploreCategoryId, "all">, string> = {
 
 function CommuteIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-      <path d="M32 90 V30 L60 60 L88 90 V30" fill="none" stroke="currentColor" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="18" height="18" viewBox="0 0 96 96" aria-hidden="true" focusable="false">
+      {/* The Lunad route: a line with one turn and the stop. */}
+      <path d="M27 22V56a14 14 0 0 0 14 14h3" fill="none" stroke="currentColor" strokeWidth="13" strokeLinecap="round" />
+      <circle cx="65" cy="70" r="10" fill="currentColor" />
     </svg>
   );
 }
@@ -354,7 +357,7 @@ const PlaceCard = memo(function PlaceCard({ place, onCommute }: { place: SearchO
     <li className="pn-explore__card" data-testid="explore-card" data-category={place.category}>
       <div className={`pn-explore__tile pn-explore__tile--${chip}`}>
         {photo && !photoFailed ? (
-          <Image src={photo.src} alt={photo.alt} fill sizes="(max-width: 600px) 50vw, 280px" style={{ objectFit: "cover" }} onError={() => setPhotoFailed(true)} />
+          <Image src={photo.src} alt={photo.alt} width={48} height={48} sizes="48px" onError={() => setPhotoFailed(true)} />
         ) : <>
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
           <path d={ICON_PATH[chip]} />

@@ -154,7 +154,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
 
   return (
     <DetailPanel title={tt.detail.route} sources={`${SOURCES_HREF}?route=${encodeURIComponent(route.code)}`} testId="route-detail">
-      <main className="pn-detail__main pn-detail-in" style={{ gap: 12 }}>
+      <main className="pn-detail__main pn-detail-in">
         <div className="pn-detail__stack">
           <div className="pn-detail__row">
             <LoopChip leg={{ routeCode: route.code, routeName: route.name }} icon={isCircuit ? "loop" : "line"} short />
@@ -188,8 +188,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           </p>
         </div>
 
-        <div className="pn-route-map-container" style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--pn-sep, var(--color-border))" }}>
-          <div style={{ height: 240, position: "relative" }} data-testid="route-map">
+        <div className="pn-route-map-container pn-route-map">
+          <div className="pn-route-map__canvas" data-testid="route-map">
             <NagaMap
               routeLines={activeLine ? [activeLine] : []}
               selectedRouteCode={route.code}
@@ -198,10 +198,10 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
               label={t.mapOf(route.name)}
             />
           </div>
-          <div className="pn-route-map-status" style={{ padding: "8px 12px", fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--pn-surface, var(--color-canvas))" }} data-testid="route-map-status">
+          <div className="pn-route-map-status pn-route-map__status" data-testid="route-map-status">
             <span data-testid="route-path-status">{pathStatus}</span>
             {activeLine ? (
-              <span className="pn-route-map-badge" style={{ fontSize: 11, fontWeight: 600, opacity: 0.8 }} data-testid="route-trace-badge">
+              <span className="pn-route-map-badge pn-route-map__trace" data-testid="route-trace-badge">
                 {activeLine.status === "ok" ? t.traceOk : t.traceFlagged(activeLine.flagReason)}
               </span>
             ) : null}
@@ -317,7 +317,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           <h2 id={`${uid}-fleet`} className="pn-section__title">
             {t.fleet}
           </h2>
-          <p className="pn-detail__caption" data-testid="route-fleet-label" style={{ fontWeight: 600, margin: "4px 0 8px" }}>
+          <p className="pn-detail__caption pn-route-fleet-label" data-testid="route-fleet-label">
             {route.fleet.label}
           </p>
           <div className="pn-group" data-testid="fleet-rows">
@@ -325,8 +325,8 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
               const label = r.label;
 
               return (
-                <div key={i} className="pn-cell" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4, padding: "10px 14px" }} data-testid="fleet-row">
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "space-between" }}>
+                <div key={i} className="pn-cell pn-cell--stack" data-testid="fleet-row">
+                  <div>
                     <strong className="pn-cell__title">{label}</strong>
                   </div>
                 </div>
@@ -342,13 +342,13 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
           {data.cooperatives.length === 0 ? (
             <p className="pn-footnote">{t.noCooperatives}</p>
           ) : (
-            <ul className="pn-group" style={{ listStyle: "none", padding: 0, margin: 0 }} data-testid="cooperatives-list">
+            <ul className="pn-group" data-testid="cooperatives-list">
               {data.cooperatives.map((c) => {
                 const label = cooperativeLabel(c.basis, c.reportedOn);
                 return (
-                  <li key={c.name} className="pn-cell" style={{ flexDirection: "column", alignItems: "flex-start", gap: 4, padding: "10px 14px" }} data-testid="cooperative-row">
+                  <li key={c.name} className="pn-cell pn-cell--stack" data-testid="cooperative-row">
                     <strong className="pn-cell__title">{c.name}</strong>
-                    <p className="pn-footnote" style={{ margin: 0 }}>
+                    <p className="pn-footnote">
                       {label}
                     </p>
                   </li>
@@ -356,7 +356,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
               })}
             </ul>
           )}
-          <p className="pn-footnote" style={{ marginTop: 6 }} data-testid="cooperatives-footnote">
+          <p className="pn-footnote" data-testid="cooperatives-footnote">
             {t.leadersHidden}
           </p>
         </section>
@@ -372,7 +372,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             <ol className="pn-group" data-testid="route-stops">
               {variant.stops.map((s) => (
                 <li key={`${s.seq}:${s.id}`}>
-                  <Link href={`/app/stops/${s.id}`} className="pn-cell" style={{ minHeight: 52 }}>
+                  <Link href={`/app/stops/${s.id}`} className="pn-cell">
                     <CandidateRing size={26} onRoute />
                     <span className="pn-cell__text">
                       <span className="pn-cell__title">{stopLabel(s.name, s.source.code, tt.trip)}</span>

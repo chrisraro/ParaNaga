@@ -131,7 +131,7 @@ export function DetailLoading({ title: titleProp, what }: { title?: string; what
   return (
     <DetailPanel title={title} testId="detail-loading">
       <div className="pn-detail__state" role="status" aria-label={t.detail.loading(title)}>
-        <div className="pn-skeleton" style={{ width: "60%", height: 34 }} />
+        <div className="pn-skeleton" style={{ width: "60%", height: 28 }} />
         <div className="pn-skeleton" style={{ width: "40%" }} />
         <div className="pn-skeleton" style={{ width: "90%", height: 64 }} />
       </div>
@@ -184,7 +184,7 @@ export function DetailNotFound({ what: whatProp }: { what?: NotFoundKind }) {
           {title}
         </h1>
         <p>{copy}</p>
-        <Link href="/app" className="pn-detail__retry" style={{ display: "inline-flex", alignItems: "center" }}>
+        <Link href="/app" className="pn-detail__retry">
           {t.backToMap}
         </Link>
       </main>

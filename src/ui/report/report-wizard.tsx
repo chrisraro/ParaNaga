@@ -12,7 +12,7 @@ import "./report.css";
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { submitCorrection, uploadEvidencePhoto } from "@/client/corrections/api";
 import { useGeolocation } from "@/client/geo/use-geolocation";
@@ -205,7 +205,7 @@ export function ReportWizard() {
 
   return (
     <div className="pn-report" onKeyDown={onKeyDown} data-testid="report-wizard">
-      <p className="pn-report__progress" data-testid="report-progress">
+      <p className="pn-report__progress" style={{ "--pn-step": step, "--pn-steps": 3 } as CSSProperties} data-testid="report-progress">
         {form.stepOf(step, 3)}
       </p>
       <h2 ref={heading} tabIndex={-1} className="pn-report__step">
@@ -447,13 +447,15 @@ export function ReportWizard() {
         </div>
       ) : null}
 
-      {error ? (
-        <p className="pn-report__error" role="alert" data-testid="report-error">
-          {error}
-        </p>
-      ) : null}
+      {/* The error and the step's actions stay together, pinned above the tab bar (report.css). */}
+      <div className="pn-report__foot">
+        {error ? (
+          <p className="pn-report__error" role="alert" data-testid="report-error">
+            {error}
+          </p>
+        ) : null}
 
-      <div className="pn-report__nav">
+        <div className="pn-report__nav">
         {step > 1 ? (
           <button type="button" className="pn-btn pn-btn--secondary pn-report__action" onClick={() => go((step - 1) as Step)} data-testid="report-back">
             {form.back}
@@ -480,6 +482,7 @@ export function ReportWizard() {
             {busy === "sending" ? form.sending : t.send}
           </button>
         ) : null}
+        </div>
       </div>
     </div>
   );

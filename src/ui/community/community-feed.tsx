@@ -176,7 +176,7 @@ export function CommunityFeed() {
       </div>
 
       {!loading && result && !result.ok ? (
-        <div className="pn-comm__panel" data-testid="community-error">
+        <div className="pn-comm__panel pn-comm__panel--error" data-testid="community-error">
           <p className="pn-comm__body" role="alert">{result.message ? apiText(result.message) : t.loadFailed}</p>
           <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => setReload((n) => n + 1)}>
             {tt.forms.tryAgain}

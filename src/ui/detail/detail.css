@@ -1,6 +1,10 @@
-/* Stop detail and Route detail (artboards StopDetail, RouteDetail). Full-screen panels over the
-   home map; the --pn-* tokens come from home-screen.css / trip.css (.pn-home, .pn-detail). The
-   page background and the darker caption colour are the artboards' bg / label3. */
+/* Detail panels and tab pages (.pn-detail): stop, route, terminal, place, Leaving Naga, Search,
+   Explore and the other tab pages. One header pattern (round Back, screen name, Sources link or one
+   action), one section pattern (a 13 px label over a grouped list of plain rows split by hairlines)
+   and one set of states (loading, not found, error with retry, offline). The --pn-* tokens come
+   from home-screen.css / trip.css (.pn-home, .pn-detail). Elevation follows DESIGN.md: nothing here
+   floats over the map, so surfaces take the hairline ring and no shadow.
+   Type scale: 24 title, 22 state heading, 17 row title, 15 body, 13 secondary, 12 tags. */
 
 .pn-detail {
   --pn-bg: var(--color-canvas);
@@ -14,6 +18,8 @@
   overscroll-behavior: contain;
   background: var(--pn-bg);
   color: var(--pn-label);
+  scrollbar-width: thin;
+  scrollbar-color: var(--pn-grabber) transparent;
 }
 :root[data-theme="dark"] .pn-detail {
   --pn-bg: var(--color-night);
@@ -47,38 +53,47 @@
   outline: none;
 }
 
+/* ------------------------------------------------------------------ Header */
 .pn-detail__header {
   display: flex;
   flex-wrap: wrap; /* large text (i18n T15): the end group moves under the title instead of off screen */
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: calc(env(safe-area-inset-top, 0px) + var(--pn-offline-inset, 0px) + 16px) 16px 0;
+  padding: calc(env(safe-area-inset-top, 0px) + var(--pn-offline-inset, 0px) + 12px) 16px 0;
 }
 .pn-detail__header-title {
   font-size: 17px;
   font-weight: 600;
+  line-height: 1.3;
 }
+/* Round header control (Back, Show on map, Explore's search): a 48 px white circle with the
+   hairline ring, like the swap button on Home. */
 .pn-detail__round {
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border: 0;
   border-radius: 999px;
   background: var(--pn-surface);
-  box-shadow: 0 1px 3px var(--pn-shadow);
+  box-shadow: 0 0 0 1px var(--pn-ring);
   color: var(--pn-label);
   cursor: pointer;
   transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 .pn-detail__round:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 .pn-detail__spacer {
-  width: 44px;
+  width: 48px;
+}
+/* Beside the Sources link the spacer has nothing to balance; without it a long screen name
+   (Filipino, 320 px) keeps the header on one line. */
+.pn-detail__sources + .pn-detail__spacer {
+  display: none;
 }
 .pn-detail__header-end {
   display: flex;
@@ -92,27 +107,32 @@
 .pn-detail__sources {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 48px;
   padding: 0 8px;
   color: var(--pn-accent);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
+  text-decoration: none;
 }
 
+/* ------------------------------------------------------------------ Body */
 .pn-detail__main {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+  padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+  font-variant-numeric: tabular-nums;
 }
 
+/* The screen's one headline (DESIGN.md Headline: 700, 24 px, 1.2). */
 .pn-detail__title {
   margin: 0;
-  font-size: 34px;
+  font-size: 24px;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
   overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 .pn-detail__head {
   display: flex;
@@ -122,7 +142,7 @@
 .pn-detail__head-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 .pn-detail__stack {
@@ -138,28 +158,31 @@
 }
 /* A row of text buttons ("Set as start" / "Set as destination"). */
 .pn-detail__row--actions {
-  gap: 24px;
+  gap: 0 24px;
 }
 .pn-detail__caption {
   color: var(--pn-caption);
   font-size: 13px;
+  line-height: 1.4;
 }
 
-/* Badges: "Mapped candidate" (warn ring) and the grey evidence chip ("Documented only"). */
+/* Badges: "Mapped candidate" and "Provisional stops" are caution chips (amber wash, amber ink);
+   the grey evidence chip ("Documented only") is a neutral tag. Text plus icon, never colour alone. */
 .pn-badge {
   display: inline-flex;
   align-self: flex-start;
   align-items: center;
   gap: 5px;
+  box-sizing: border-box;
   min-height: 24px;
-  padding: 0 9px;
+  padding: 2px 9px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
+  line-height: 16px;
 }
 .pn-badge--candidate {
   background: var(--pn-warn-bg);
-  box-shadow: inset 0 0 0 1.5px var(--pn-warn-ring);
   color: var(--pn-warn-text);
 }
 .pn-badge--evidence {
@@ -171,39 +194,41 @@
   font-weight: 600;
 }
 
-/* Warning note (role=note). */
+/* Warning note (role=note): the caution block, amber wash with a leading icon. */
 .pn-note {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .pn-note--small {
   padding: 10px 12px;
-  border-radius: 14px;
-  font-size: 14px;
+  border-radius: 12px;
 }
 .pn-note svg {
   flex: none;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 .pn-note p {
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-/* Cards and list cells. */
+/* ------------------------------------------------------------------ Cards and list rows */
 .pn-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 12px 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
 }
 .pn-card__label {
   color: var(--pn-caption);
@@ -211,13 +236,15 @@
 }
 .pn-card__text {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 .pn-card__sub {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 .pn-card__mono {
@@ -229,36 +256,42 @@
   color: var(--pn-accent);
   font-weight: 600;
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
 }
 
+/* A section: a quiet label (sentence case, never tracked capitals) over a grouped list. */
 .pn-section {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .pn-section__title {
-  margin: 0 0 0 4px;
+  margin: 0 4px;
   color: var(--pn-label2);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  line-height: 1.4;
 }
+/* A grouped list: one surface with the hairline ring, plain rows split by separators. */
 .pn-group {
   margin: 0;
   padding: 0 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
   list-style: none;
 }
-.pn-group > li + li {
+.pn-group > li + li,
+.pn-group > .pn-cell + .pn-cell,
+.pn-group > .pn-kv + .pn-kv {
   border-top: 1px solid var(--pn-sep);
 }
+/* A row: leading icon or chip, one title line and one secondary line, trailing meta, chevron. */
 .pn-cell {
   display: flex;
   align-items: center;
   gap: 12px;
+  box-sizing: border-box;
   min-height: 60px;
   padding: 8px 0;
   color: var(--pn-label);
@@ -270,6 +303,17 @@ a.pn-cell {
 a.pn-cell:active {
   transform: scale(0.98);
 }
+/* A row of stacked facts with no leading icon (fleet classes, cooperatives). */
+.pn-cell--stack {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-height: 48px;
+}
+.pn-cell--stack .pn-footnote {
+  margin: 0;
+}
 .pn-cell__text {
   display: flex;
   flex: 1;
@@ -278,13 +322,16 @@ a.pn-cell:active {
   min-width: 0;
 }
 .pn-cell__title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
 .pn-cell__sub {
   color: var(--pn-label2);
   font-size: 13px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 .pn-cell__sub--gold {
   color: var(--pn-gold-text);
@@ -301,6 +348,7 @@ a.pn-cell:active {
   min-height: 48px;
   color: var(--pn-label2);
   font-size: 15px;
+  line-height: 1.45;
 }
 
 /* Key/value rows ("Curb side · toward" … "Not yet surveyed"). */
@@ -312,29 +360,32 @@ a.pn-cell:active {
   min-height: 48px;
 }
 .pn-kv__key {
-  font-size: 16px;
+  font-size: 15px;
 }
 .pn-kv__value {
+  margin: 0;
   color: var(--pn-label2);
   font-size: 15px;
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
-/* Disclosure ("Passing nearby · not confirmed to stop"). */
+/* Disclosure ("Passing nearby · not confirmed to stop"): a section label that opens its list. */
 .pn-disclosure {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 44px;
+  gap: 12px;
+  min-height: 48px;
   padding: 0 4px;
   border: 0;
+  border-radius: 10px;
   background: transparent;
   color: var(--pn-label2);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  line-height: 1.4;
   text-align: left;
-  text-transform: uppercase;
   cursor: pointer;
 }
 .pn-disclosure svg {
@@ -343,9 +394,6 @@ a.pn-cell:active {
 }
 .pn-disclosure[aria-expanded="true"] svg {
   transform: rotate(180deg);
-}
-.pn-disclosure-panel {
-  opacity: 0.86;
 }
 
 /* Honest "not yet" note where the artboard has a button ("Verification opens soon."): plain,
@@ -357,72 +405,134 @@ a.pn-cell:active {
   line-height: 1.4;
 }
 
-/* Route tiles (Fare / Service / Vehicle). */
+/* ------------------------------------------------------------------ Route detail */
+/* Route facts (Fare / Service / Vehicle): one strip split by hairlines, not three cards. The 1 px
+   gaps show the strip's separator colour between the cells. Three across when the strip is at
+   least 20em wide; narrower (a 320 px phone, large text) the cells stack as three rows, all at
+   once: the flex-basis below is hugely positive under 20em and negative (so zero) above it.
+   Label, value and note keep the same place in every cell. */
 .pn-tiles {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
   margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--pn-ring);
+  border-radius: 14px;
+  background: var(--pn-sep);
 }
 .pn-tile {
   display: flex;
+  flex: 1 1 calc((20em - 100%) * 999);
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
   padding: 10px 12px;
-  border-radius: 14px;
   background: var(--pn-surface);
 }
 .pn-tile dt {
-  color: var(--pn-caption);
-  font-size: 12px;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.4;
 }
 .pn-tile dd {
   margin: 0;
 }
 .pn-tile__value {
   display: block;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.35;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 .pn-tile__note {
   display: block;
   color: var(--pn-label2);
   font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
 }
 
-/* Direction toggle (radiogroup). */
+/* Route map preview: the map, its path status line and the line's notes in one bordered box. */
+.pn-route-map {
+  overflow: hidden;
+  border: 1px solid var(--pn-ring);
+  border-radius: 14px;
+  background: var(--pn-surface);
+}
+.pn-route-map__canvas {
+  position: relative;
+  height: 240px;
+  /* Zoom capsule near the preview's top-right corner (no locate button here), as on place detail;
+     at the Home offset its lower half fell outside the 240 px preview. */
+  --naga-map-controls-top: -104px;
+}
+.pn-route-map__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--pn-sep);
+  color: var(--pn-label);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.pn-route-map__trace {
+  color: var(--pn-label2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+/* The fleet summary line over the fleet rows. */
+.pn-route-fleet-label {
+  margin: 0 4px;
+  font-weight: 600;
+}
+
+/* Direction toggle (radiogroup). The kit's Segmented builds on these two rules (kit.css). */
 .pn-seg {
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-height: 36px;
+  min-height: 40px;
   padding: 2px;
   border-radius: 10px;
   background: var(--pn-fill);
 }
 .pn-seg__btn {
   position: relative;
-  min-height: 32px;
+  min-height: 36px;
+  padding: 2px 4px;
   border: 0;
   border-radius: 8px;
   background: transparent;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.25;
   cursor: pointer;
 }
+/* 48 px target around the 36 px segment. */
+.pn-seg__btn::after {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+}
 .pn-seg__btn[aria-checked="true"] {
-  background: var(--pn-surface);
-  box-shadow: 0 2px 6px var(--pn-shadow);
+  background: var(--pn-seg-on, var(--pn-surface));
+  box-shadow: var(--pn-elev-sm);
 }
 
 /* Street order list: a rail with end nodes (filled) and street nodes (hollow). */
 .pn-streets {
   margin: 0;
   padding: 8px 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
   list-style: none;
 }
 .pn-street {
@@ -486,8 +596,9 @@ a.pn-cell:active {
   min-width: 0;
 }
 .pn-street__name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
+  line-height: 1.35;
   overflow-wrap: anywhere;
 }
 .pn-street:first-child .pn-street__name,
@@ -497,6 +608,7 @@ a.pn-cell:active {
 .pn-street__note {
   color: var(--pn-caption);
   font-size: 12px;
+  line-height: 16px;
 }
 
 .pn-footnote {
@@ -506,39 +618,87 @@ a.pn-cell:active {
   line-height: 1.4;
 }
 
-/* Loading / not found / error states. */
+/* ------------------------------------------------------------------ States */
+/* Loading / not found / error / offline: a heading, one line that names the problem and the way
+   out, and one action. */
 .pn-detail__state {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding: 24px 16px;
 }
 .pn-detail__state h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 28px;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 .pn-detail__state p {
   margin: 0;
+  max-width: 34em;
   color: var(--pn-label2);
   font-size: 15px;
+  line-height: 1.45;
 }
+/* "Try again" / "Back to map": the soft action (green tint, deep green text), a 48 px pill. */
 .pn-detail__retry {
+  display: inline-flex;
+  align-items: center;
   align-self: flex-start;
-  min-height: 44px;
-  padding: 0 18px;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 0 20px;
   border: 0;
   border-radius: 999px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
+.pn-detail__retry:active {
+  transform: scale(0.97);
+}
+/* Placeholder bars while data loads: a slow opacity pulse says "working", nothing moves. */
 .pn-skeleton {
   height: 18px;
   border-radius: 8px;
   background: var(--pn-fill);
+  animation: pn-skeleton 1.4s ease-in-out infinite;
+}
+@keyframes pn-skeleton {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* High contrast: the ring tokens are already at least 3:1; tinted pills and notes get an outline
+   in their own text colour. */
+:root[data-contrast="more"] .pn-detail__retry,
+:root[data-contrast="more"] .pn-note {
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+/* Forced colours drop backgrounds and shadows: the surfaces keep a border. */
+@media (forced-colors: active) {
+  .pn-group,
+  .pn-card,
+  .pn-streets,
+  .pn-note,
+  .pn-detail__round,
+  .pn-detail__retry,
+  .pn-seg {
+    border: 1px solid CanvasText;
+  }
+  .pn-seg__btn[aria-checked="true"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
 }
 
 .pn-detail-in {
@@ -556,10 +716,12 @@ a.pn-cell:active {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pn-detail-in {
+  .pn-detail-in,
+  .pn-skeleton {
     animation: none;
   }
   .pn-detail__round:active,
+  .pn-detail__retry:active,
   a.pn-cell:active {
     transform: none;
   }

@@ -4,8 +4,8 @@ import { useT } from "@/i18n/provider";
 
 // The screen's own classes: report.css on the report screens, community.css on the community ones.
 const LOOK = {
-  report: { box: "pn-report__signin", text: undefined, action: "pn-report__action" },
-  community: { box: "pn-comm__panel", text: "pn-comm__body", action: "pn-comm__action" },
+  report: { box: "pn-report__signin pn-report__signin--unknown", text: undefined, action: "pn-report__action" },
+  community: { box: "pn-comm__panel pn-comm__panel--unknown", text: "pn-comm__body", action: "pn-comm__action" },
 } as const;
 
 /**

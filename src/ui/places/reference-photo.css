@@ -1,5 +1,41 @@
-.pn-reference-photo { margin: 0; min-width: 0; }
-.pn-reference-photo img { display: block; width: 100%; height: auto; max-height: 360px; object-fit: contain; border-radius: 16px; }
-.pn-reference-photo figcaption { padding: 10px 4px; font-size: 13px; line-height: 1.5; color: var(--pn-label2); overflow-wrap: anywhere; }
-.pn-reference-photo figcaption a { color: var(--pn-accent); text-decoration: underline; text-underline-offset: 3px; }
-.pn-reference-photo a:focus-visible { outline: 2px solid var(--pn-accent); outline-offset: 3px; }
+/* A reference photo with its credit line (place, stop and terminal detail; Sources and credits). */
+.pn-reference-photo {
+  margin: 0;
+  min-width: 0;
+}
+.pn-reference-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 360px;
+  border-radius: 14px;
+  background: var(--pn-fill);
+  object-fit: contain;
+}
+.pn-reference-photo > p {
+  margin: 0;
+  padding: 16px 14px;
+  border-radius: 14px;
+  background: var(--pn-fill);
+  color: var(--pn-label2);
+  font-size: 15px;
+  line-height: 1.45;
+}
+.pn-reference-photo figcaption {
+  padding: 10px 4px;
+  color: var(--pn-label2);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.pn-reference-photo figcaption a {
+  color: var(--pn-accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* The single "Photo credit" link: its block padding does not move the line (the link is inline)
+   but gives it a 48 px target. The full credit line on Sources has several links and keeps theirs. */
+.pn-reference-photo figcaption a:only-of-type {
+  padding: 14px 0;
+}

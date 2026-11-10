@@ -32,7 +32,7 @@ import { queryFromHash } from "@/domain/places/place-detail";
 import { actionFor, noticeFor, parseSearchPurpose, type SearchAction, type SearchPurpose } from "@/domain/search/select";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
 import { useEscapeToClose } from "@/ui/app-shell/panel";
-import { DetailPanel } from "@/ui/detail/detail-frame";
+import { DetailPanel, WarnIcon } from "@/ui/detail/detail-frame";
 import { NearbyStops } from "@/ui/home/nearby-stops";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ListChevron } from "@/ui/kit/list";
@@ -51,7 +51,7 @@ export function SearchFallback() {
   return (
     <DetailPanel title={t.search.title} testId="search-fallback">
       <div className="pn-detail__state" role="status" aria-label={t.search.loadingScreen}>
-        <div className="pn-skeleton" style={{ width: "100%", height: 44 }} />
+        <div className="pn-skeleton" style={{ width: "100%", height: 52, borderRadius: 26 }} />
         <div className="pn-skeleton" style={{ width: "70%" }} />
       </div>
     </DetailPanel>
@@ -612,6 +612,7 @@ function SearchBody({
         {indexState.status === "loading" ? <SkeletonRows /> : null}
         {indexState.status === "error" ? (
           <div className="pn-search__error" data-testid="search-error">
+            <WarnIcon />
             <p>{indexState.problem === "offline" ? t.needsConnection : t.failed}</p>
             <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
               {tt.trip.tryAgain}
@@ -625,6 +626,7 @@ function SearchBody({
         ) : null}
         {indexState.status === "ready" && indexState.problem === "failed" ? (
           <div className="pn-search__error" data-testid="search-failed">
+            <WarnIcon />
             <p>{t.failed}</p>
             <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
               {tt.trip.tryAgain}
@@ -676,6 +678,7 @@ function SearchBody({
         ) : null}
         {index && hasQuery && morePlaces === "failed" ? (
           <div className="pn-search__error" data-testid="search-more-failed">
+            <WarnIcon />
             <p>{t.moreFailed}</p>
             <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
               {tt.trip.tryAgain}

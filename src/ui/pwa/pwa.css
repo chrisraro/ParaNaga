@@ -1,6 +1,7 @@
 /* Offline banner, update card and the /offline page (Task 12). Tokens (--pn-*) come from the
-   .pn-pwa entries in src/ui/home/home-screen.css, so light, dark and high contrast follow the
-   device preferences like every other screen. */
+   .pn-pwa entries in src/ui/home/home-screen.css, so light, dark and high contrast follow like
+   every other screen. The banner and the update card float over whatever screen is open, so they
+   take the float elevation (--pn-elev: a shadow in light, a hairline in dark) and nothing else. */
 
 .pn-offline-banner {
   position: fixed;
@@ -14,7 +15,7 @@
   border-radius: 12px;
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
-  box-shadow: 0 0 0 1px var(--pn-warn-ring), 0 4px 14px var(--pn-shadow);
+  box-shadow: var(--pn-elev);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.35;
@@ -31,125 +32,150 @@
   background: var(--pn-surface);
 }
 
+/* "A new version is ready": the message, Reload as the primary pill, Later as a text button. */
 .pn-update {
   position: fixed;
   z-index: 2200; /* above the panels and the tab bar, so Reload is always reachable */
-  left: 16px;
-  right: 16px;
+  left: 12px;
+  right: 12px;
   bottom: calc(max(var(--pn-tabbar-clearance, 0px), env(safe-area-inset-bottom, 0px)) + 16px);
   margin: 0 auto;
   max-width: 520px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 12px 12px 12px 16px;
-  border-radius: 16px;
+  justify-content: flex-end;
+  gap: 4px 8px;
+  padding: 10px 10px 10px 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
   color: var(--pn-label);
-  box-shadow: 0 0 0 1px var(--pn-ring), 0 8px 24px var(--pn-shadow);
+  box-shadow: var(--pn-elev);
   font-size: 15px;
+  line-height: 1.45;
 }
 .pn-update p {
   margin: 0;
-  flex: 1;
+  flex: 1 1 9em;
   font-weight: 600;
 }
 .pn-update button {
   min-height: 48px;
   min-width: 48px;
-  padding: 0 18px;
+  padding: 4px 20px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 999px;
   background: var(--pn-accent);
   color: var(--pn-on-primary);
   font: inherit;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-update button:active {
+  transform: scale(0.97);
 }
 .pn-update .pn-update__later {
-  padding: 0 12px;
+  padding: 4px 12px;
   background: transparent;
   color: var(--pn-accent);
-  box-shadow: inset 0 0 0 1px var(--pn-ring);
 }
 .pn-update button:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
 
-/* /offline: a plain page, no map. */
+/* /offline: a plain page, no map. What still works, one clear way back, then the saved trips. */
 .pn-offline {
   min-height: 100dvh;
   background: var(--pn-fill);
   color: var(--pn-label);
-  padding: calc(env(safe-area-inset-top, 0px) + 24px) 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+  padding: calc(env(safe-area-inset-top, 0px) + 32px) 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+  font-variant-numeric: tabular-nums;
 }
 .pn-offline__inner {
   max-width: 560px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 .pn-offline h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
+  font-weight: 700;
   line-height: 1.2;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 .pn-offline h2 {
-  margin: 8px 0 0;
-  font-size: 19px;
+  margin: 16px 0 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
 }
 .pn-offline p {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.45;
 }
 .pn-offline__links {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
+  margin-top: 8px;
 }
+/* "Open the map" is the page's action; "Saved" is the outlined pill beside it. */
 .pn-offline__links a {
   display: inline-flex;
+  flex: 1 1 10em;
   align-items: center;
-  min-height: 48px;
-  padding: 0 18px;
-  border-radius: 12px;
+  justify-content: center;
+  min-height: 50px;
+  padding: 6px 20px;
+  border-radius: 999px;
   background: var(--pn-accent);
   color: var(--pn-on-primary);
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: center;
   text-decoration: none;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-offline__links a:active {
+  transform: scale(0.97);
 }
 .pn-offline__links a + a {
   background: var(--pn-surface);
-  color: var(--pn-label);
+  color: var(--pn-accent);
   box-shadow: inset 0 0 0 1px var(--pn-ring);
 }
 .pn-offline__links a:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
 }
+/* Saved trips: rows in one group; a row opens to its steps. */
 .pn-offline__trips {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.pn-offline__trip {
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--pn-surface);
   box-shadow: inset 0 0 0 1px var(--pn-ring);
+  display: flex;
+  flex-direction: column;
+}
+.pn-offline__trips > li + li {
+  border-top: 1px solid var(--pn-sep);
 }
 .pn-offline__trip summary {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-height: 48px;
-  padding: 12px 16px;
+  min-height: 60px;
+  padding: 12px 14px;
   cursor: pointer;
   list-style: none;
 }
@@ -158,29 +184,77 @@
 }
 .pn-offline__trip summary:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
-  outline-offset: 2px;
-  border-radius: 16px;
+  outline-offset: -3px;
+  border-radius: 14px;
 }
 .pn-offline__trip-to {
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 1.3;
   color: var(--pn-label);
+  overflow-wrap: anywhere;
 }
-.pn-offline__trip-from,
-.pn-offline__trip-hint {
-  font-size: 15px;
+.pn-offline__trip-from {
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--pn-label2);
+  overflow-wrap: anywhere;
+}
+.pn-offline__trip-hint {
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--pn-accent);
 }
 .pn-offline__steps {
   margin: 0;
-  padding: 0 16px 16px 36px;
+  padding: 0 14px 12px 36px;
+  list-style: decimal;
   display: flex;
   flex-direction: column;
   gap: 6px;
   color: var(--pn-label);
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.pn-offline .pn-offline__meta {
+  padding: 0 14px 14px;
+  font-size: 13px;
   line-height: 1.4;
 }
-.pn-offline__meta {
-  padding: 0 16px 16px;
+
+/* High contrast: the tinted banner gets an outline in its own colour, the update card a ring. */
+:root[data-contrast="more"] .pn-offline-banner {
+  box-shadow: 0 0 0 1.5px currentColor;
+}
+:root[data-contrast="more"] .pn-update {
+  box-shadow: 0 0 0 1.5px var(--pn-ring);
+}
+/* Forced colours drop backgrounds and shadows: the floating pieces keep a border. */
+@media (forced-colors: active) {
+  .pn-offline-banner,
+  .pn-update,
+  .pn-offline__trips {
+    border: 1px solid CanvasText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-update button,
+  .pn-offline__links a {
+    transition: none;
+  }
+  .pn-update button:active,
+  .pn-offline__links a:active {
+    transform: none;
+  }
+}
+
+/* Large text (i18n T15): a word longer than its control breaks inside it instead of spilling out. */
+.pn-update button,
+.pn-offline h1,
+.pn-offline h2,
+.pn-offline__links a {
+  overflow-wrap: anywhere;
 }

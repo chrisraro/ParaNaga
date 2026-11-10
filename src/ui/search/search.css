@@ -1,6 +1,10 @@
-/* Search (artboard Search). A full-screen panel (.pn-detail: tokens, background, z-index) with
-   the artboard's header: a 44 px rounded field with the search glyph, the clear button and a
-   "Cancel" text button. Cells, groups, badges and notes come from the kit (src/ui/kit/styles.ts). */
+/* Search. A full-screen panel (.pn-detail: tokens, background, z-index). The field is the Home
+   search bar made editable: the same 52 px white pill with the float shadow (it stays pinned over
+   the scrolling results, and the Home bar morphs into it through the pn-search-field view
+   transition), with the clear button inside and a "Cancel" text button beside it. Every result,
+   recent and Google suggestion uses one row: a 40 px icon circle, a title line, a secondary line,
+   the badge, and the chevron at the right. Cells, groups, badges and notes come from the kit
+   (src/ui/kit/styles.ts) and detail.css. */
 
 .pn-search__header {
   position: sticky;
@@ -9,24 +13,34 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: calc(env(safe-area-inset-top, 0px) + var(--pn-offline-inset, 0px) + 16px) 16px 10px;
+  padding: calc(env(safe-area-inset-top, 0px) + var(--pn-offline-inset, 0px) + 12px) 16px 10px 12px;
   background: var(--pn-bg);
 }
 .pn-search__field {
   display: flex;
   flex: 1 1 0;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
-  height: 44px;
-  padding: 0 8px 0 12px;
-  border-radius: 12px;
-  background: var(--pn-fill);
+  height: 52px;
+  padding: 0 2px 0 16px;
+  border-radius: 26px;
+  background: var(--pn-surface);
+  box-shadow: var(--pn-elev);
   color: var(--pn-label2);
 }
 .pn-search__field:focus-within {
   outline: 3px solid var(--pn-accent, var(--color-brand));
   outline-offset: 2px;
+}
+/* High contrast: a solid outline in place of the soft shadow. */
+:root[data-contrast="more"] .pn-search__field {
+  box-shadow: inset 0 0 0 1.5px var(--pn-sep);
+}
+@media (forced-colors: active) {
+  .pn-search__field {
+    border: 1px solid CanvasText;
+  }
 }
 .pn-search__field > svg {
   flex: none;
@@ -54,35 +68,44 @@
   -webkit-appearance: none;
   appearance: none;
 }
-/* 28 px glyph inside a 44 px target. */
+/* Clear: a 24 px glyph disc inside a 48 px target. */
 .pn-search__clear {
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin-right: -8px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: 0;
+  border-radius: 999px;
   background: transparent;
   cursor: pointer;
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
+}
+.pn-search__clear:active {
+  transform: scale(0.94);
 }
 .pn-search__clear svg {
   box-sizing: content-box;
-  padding: 9px;
+  padding: 7px;
   border-radius: 50%;
-  background: var(--pn-caption);
-  color: var(--pn-bg);
+  background: var(--pn-fill);
+  color: var(--pn-label);
+}
+:root[data-contrast="more"] .pn-search__clear svg {
+  box-shadow: 0 0 0 1.5px var(--pn-sep);
 }
 .pn-search__cancel {
   flex: none;
-  min-height: 44px;
-  padding: 0;
+  min-height: 48px;
+  padding: 0 4px;
   border: 0;
+  border-radius: 8px;
   background: transparent;
   color: var(--pn-accent);
-  font-size: 17px;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -90,38 +113,58 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 4px 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+  padding: 6px 16px calc(env(safe-area-inset-bottom, 0px) + 32px);
+  font-variant-numeric: tabular-nums;
 }
 
-/* Options card: "Use current location", "Choose on map", the regional switch. */
+/* Options group: "Use current location", "Choose on map", the regional switch. */
 .pn-search__option {
   gap: 12px;
 }
 .pn-search__option-icon {
   display: flex;
   flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
   color: var(--pn-accent);
 }
 
+/* ------------------------------------------------------------------ result rows */
+/* One row for results, recents and Google suggestions. */
 .pn-search__cell {
   min-height: 64px;
 }
 .pn-search__cell .pn-cell__text {
-  gap: 3px;
+  gap: 2px;
 }
 .pn-search__cell .pn-badge {
-  margin-top: 2px;
+  margin-top: 4px;
 }
+/* A row that only shows a fact (no screen behind it) takes focus by script, never a ring of its
+   own from the browser default. */
+div.pn-search__cell:focus-visible {
+  outline: 3px solid var(--pn-accent, var(--color-brand));
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+/* The leading icon: a 40 px circle. Grey for a fact on file, red wash for a place (a destination),
+   green tint for the rider's own and the city's areas, amber wash for an unverified mapped pin. */
 .pn-search__kind {
+  position: relative;
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: var(--pn-fill);
   color: var(--pn-label2);
+}
+.pn-search__kind svg {
+  width: 18px;
+  height: 18px;
 }
 .pn-search__kind--coral {
   background: var(--pn-coral-soft-bg);
@@ -135,29 +178,83 @@
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
 }
+
+/* A Google suggestion being resolved (one paid lookup): its icon gives way to a spinner and the row
+   says "Loading…"; the other suggestions wait, dimmed, until it answers. */
+.pn-search__cell[aria-disabled="true"] {
+  cursor: default;
+}
+.pn-search__cell[aria-disabled="true"]:not([aria-busy="true"]) {
+  opacity: 0.45;
+}
+.pn-search__cell[aria-disabled="true"]:active {
+  transform: none;
+}
+.pn-search__cell[aria-busy="true"] .pn-search__kind svg {
+  opacity: 0;
+}
+.pn-search__cell[aria-busy="true"] .pn-search__kind::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 2.5px solid var(--pn-ring);
+  border-top-color: var(--pn-accent);
+  border-radius: 50%;
+  animation: pn-search-spin 0.9s linear infinite;
+}
+@keyframes pn-search-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .pn-search__more {
   margin-left: 4px;
 }
 
+/* ------------------------------------------------------------------ states */
+/* No results, or more places still loading: plain text where the list would be. */
 .pn-search__empty {
-  margin: 0 4px;
+  margin: 0;
+  padding: 8px 4px;
   color: var(--pn-label2);
   font-size: 15px;
   line-height: 1.45;
 }
 
+/* Could not load (or needs a connection): the error block, red wash with a leading icon, and a
+   white "Try again" pill. */
 .pn-search__error {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 16px;
-  background: var(--pn-surface);
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--pn-coral-soft-bg);
+  color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
+}
+.pn-search__error > svg {
+  margin-top: 1px;
 }
 .pn-search__error p {
+  grid-column: 2;
   margin: 0;
   font-size: 15px;
   line-height: 1.45;
+}
+.pn-search__error .pn-btn {
+  grid-column: 2;
+  justify-self: start;
+  width: auto;
+  height: 48px;
+  padding: 0 18px;
+  background: var(--pn-surface);
+  box-shadow: 0 0 0 1px var(--pn-ring);
+  color: var(--pn-accent);
+}
+:root[data-contrast="more"] .pn-search__error,
+:root[data-contrast="more"] .pn-search__already {
+  box-shadow: inset 0 0 0 1.5px currentColor;
 }
 
 .pn-search__notice {
@@ -168,46 +265,72 @@
 .pn-search__notice-title {
   margin: 0;
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.3;
 }
 .pn-search__notice-title:focus {
   outline: none;
 }
 .pn-search__notice-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
+  margin-top: 4px;
 }
 .pn-search__notice-actions .pn-btn {
-  flex: 1 1 0;
+  flex: 1 1 8em;
+  height: auto;
   min-height: 48px;
+  padding: 6px 12px;
+  line-height: 1.25;
 }
 
+/* Loading the search data: three placeholder rows in the list's place. */
 .pn-search__skeleton {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 14px;
-  border-radius: 16px;
+  padding: 0 14px;
+  border-radius: 14px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
 }
 .pn-search__skeleton-row {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 64px;
+}
+.pn-search__skeleton-row + .pn-search__skeleton-row {
+  border-top: 1px solid var(--pn-sep);
 }
 .pn-search__skeleton-icon {
   flex: none;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
 }
 
+/* "Already saved as …": the ok block. */
 .pn-search__already {
   margin: 0;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-radius: 12px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
   font-size: 15px;
   font-weight: 600;
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-search__clear {
+    transition: none;
+  }
+  .pn-search__clear:active {
+    transform: none;
+  }
+  /* The spinner stands still: the row's "Loading…" line carries the state. */
+  .pn-search__cell[aria-busy="true"] .pn-search__kind::after {
+    animation: none;
+  }
 }

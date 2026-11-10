@@ -350,27 +350,30 @@ export function PostComposer(props: Props) {
         </div>
       )}
 
-      {error ? (
-        <p className="pn-comm__error" role="alert" data-testid="composer-error">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="pn-comm__nav">
-        {step === "write" && accepted === false ? (
-          <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => { setError(null); setStep("guidelines"); }}>
-            {tt.forms.back}
-          </button>
+      {/* The error and the actions stay together, pinned above the tab bar (community.css). */}
+      <div className="pn-comm__foot">
+        {error ? (
+          <p className="pn-comm__error" role="alert" data-testid="composer-error">
+            {error}
+          </p>
         ) : null}
-        {step === "guidelines" ? (
-          <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={onContinue} data-testid="composer-continue">
-            {tt.forms.continue}
-          </button>
-        ) : (
-          <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={() => void onSend()} disabled={busy !== "idle"} data-testid="composer-send">
-            {busy === "sending" ? tt.forms.sending : busy === "uploading" ? t.photos.uploading : props.mode === "edit" ? t.sendEdit : t.post}
-          </button>
-        )}
+
+        <div className="pn-comm__nav">
+          {step === "write" && accepted === false ? (
+            <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => { setError(null); setStep("guidelines"); }}>
+              {tt.forms.back}
+            </button>
+          ) : null}
+          {step === "guidelines" ? (
+            <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={onContinue} data-testid="composer-continue">
+              {tt.forms.continue}
+            </button>
+          ) : (
+            <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={() => void onSend()} disabled={busy !== "idle"} data-testid="composer-send">
+              {busy === "sending" ? tt.forms.sending : busy === "uploading" ? t.photos.uploading : props.mode === "edit" ? t.sendEdit : t.post}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

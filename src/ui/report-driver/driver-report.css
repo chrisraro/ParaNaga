@@ -1,18 +1,21 @@
-/* Report a driver (/app/report-driver, S18). Builds on report.css; --pn-* tokens only. */
+/* Report a driver (/app/report-driver, S18). Builds on report.css; --pn-* aliases only (they
+   switch for dark and high contrast). Red is the emergency block only; the reference on the
+   receipt sits on the green "sent" tint. Evidence previews stay on this screen. */
 .pn-driver__emergency {
-  padding: 14px;
-  border-radius: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
   background: var(--pn-coral-soft-bg);
   color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
 }
 .pn-driver__emergency p {
   margin: 0;
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 .pn-driver__list {
   margin: 0;
   padding-left: 20px;
+  list-style: disc;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -22,10 +25,12 @@
 }
 .pn-driver__ack-text {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--pn-label);
 }
+
+/* ------------------------------------------------------------------ camera and captured files */
 .pn-driver__camera {
   display: flex;
   flex-direction: column;
@@ -36,22 +41,33 @@
   display: block;
   width: 100%;
   max-height: 50vh;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--pn-fill);
   object-fit: contain;
 }
+/* An empty viewfinder (the camera is starting) keeps its place instead of collapsing. */
+.pn-driver__viewfinder {
+  min-height: 180px;
+}
+/* What was captured: one block per file, the preview above its own actions. */
 .pn-driver__evidence {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
 }
 .pn-driver__evidence-item {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 14px 0;
+}
+.pn-driver__evidence-item:first-child {
+  padding-top: 0;
+}
+.pn-driver__evidence-item + .pn-driver__evidence-item {
+  border-top: 1px solid var(--pn-sep);
 }
 .pn-driver__upload {
   align-self: flex-start;
@@ -59,42 +75,49 @@
   align-items: center;
   cursor: pointer;
 }
+/* Plate and body number side by side; labels of different lengths keep the fields aligned. */
 .pn-driver__pair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
   gap: 12px;
 }
+
+/* ------------------------------------------------------------------ receipt */
 .pn-driver__receipt {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 16px;
+  gap: 2px;
+  padding: 14px 16px;
   border-radius: 14px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
 }
 .pn-driver__receipt-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  line-height: 1.4;
 }
 .pn-driver__reference {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 @media (max-width: 340px) {
   .pn-driver__pair {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
-}
-/* report.css gives small buttons the label colour (made for secondary ones); keep primary text on accent. */
-.pn-btn--primary.pn-report__small {
-  color: var(--pn-on-primary);
 }
 .pn-driver__evidence:focus-visible {
   outline: 3px solid var(--pn-accent);
   outline-offset: 3px;
   border-radius: 8px;
+}
+
+/* High contrast: tinted blocks get an outline in their own colour. */
+:root[data-contrast="more"] .pn-driver__emergency,
+:root[data-contrast="more"] .pn-driver__receipt {
+  box-shadow: inset 0 0 0 1.5px currentColor;
 }

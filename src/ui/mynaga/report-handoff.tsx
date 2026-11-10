@@ -269,7 +269,7 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
     };
   }, [userId, id]);
 
-  if (loading) return <p role="status">{tt.forms.loading}</p>;
+  if (loading) return <p className="pn-reports__intro" role="status">{tt.forms.loading}</p>;
   if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} busy={refreshing} />;
   if (!user) {
     return (
@@ -281,7 +281,7 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
       </div>
     );
   }
-  if (state.phase === "loading") return <p role="status">{t.loadingReport}</p>;
+  if (state.phase === "loading") return <p className="pn-reports__intro" role="status">{t.loadingReport}</p>;
   if (state.phase === "error") {
     return (
       <div className="pn-report__error" role="alert" data-testid="handoff-error">

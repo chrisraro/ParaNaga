@@ -1,8 +1,9 @@
-/* Sign-in screen styles (/app/sign-in) */
+/* Sign-in (/app/sign-in): a calm, standard form. One card (the kit's .pn-card) with the email
+   step, a divider and the Google button; --pn-* aliases only, so dark and high contrast follow. */
 .pn-signin {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
@@ -11,30 +12,29 @@
 .pn-signin__intro {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  margin: 0 4px;
 }
 
 .pn-signin__lead {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--pn-label);
-  line-height: 1.4;
+  line-height: 1.35;
+  text-wrap: balance;
 }
 
 .pn-signin__body {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--pn-label2);
   line-height: 1.45;
 }
 
-.pn-signin__card {
+.pn-signin .pn-signin__card {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 20px 16px;
-  background: var(--pn-surface);
-  border-radius: 18px;
-  border: 1px solid var(--pn-sep);
+  padding: 16px;
 }
 
 .pn-signin__section-title {
@@ -53,32 +53,63 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .pn-signin__label {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
+  line-height: 1.4;
   color: var(--pn-label);
+  overflow-wrap: anywhere;
 }
 
 .pn-signin__input {
-  height: 48px;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
   padding: 0 14px;
   border-radius: 12px;
-  border: 1px solid var(--pn-ring);
-  background: var(--pn-fill);
+  /* 3:1 against the surface, so the field's edge shows in sunlight (WCAG 1.4.11). */
+  border: 1px solid color-mix(in srgb, var(--pn-label) 50%, transparent);
+  background: var(--pn-surface);
   color: var(--pn-label);
-  font-size: 16px;
-  transition: border-color var(--pn-dur-fast) var(--pn-ease);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
 }
 
-.pn-signin__input:focus {
-  border-color: var(--pn-accent);
+.pn-signin__input::placeholder {
+  color: var(--pn-label2);
+  opacity: 1;
 }
 
-/* Keep a visible focus ring (WCAG 2.4.7 / 1.4.11); the border change alone is too faint. */
 .pn-signin__input:focus-visible {
-  outline: 2px solid var(--pn-accent);
+  outline: 3px solid var(--pn-accent);
+  outline-offset: 2px;
+}
+
+.pn-signin__input:disabled {
+  opacity: 0.6;
+}
+
+/* The form's buttons follow their label's height (Filipino at large text wraps inside the pill). */
+.pn-signin .pn-btn {
+  height: auto;
+  min-height: 50px;
+  padding: 6px 20px;
+  font-size: 17px;
+  text-align: center;
+}
+
+.pn-signin .pn-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pn-signin .pn-btn:focus-visible,
+.pn-signin__google-btn:focus-visible,
+.pn-signin__guest-link:focus-visible {
+  outline: 3px solid var(--pn-accent);
   outline-offset: 2px;
 }
 
@@ -90,7 +121,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 4px 0;
   color: var(--pn-label2);
   font-size: 13px;
 }
@@ -103,62 +133,81 @@
   background: var(--pn-sep);
 }
 
+/* "Continue with Google": the outlined pill, the provider's mark in its own colours. */
 .pn-signin__google-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  height: 48px;
-  border: 1px solid var(--pn-sep);
+  min-height: 50px;
+  padding: 6px 20px;
+  border: 0;
   border-radius: 999px;
   background: var(--pn-surface);
+  box-shadow: inset 0 0 0 1px var(--pn-ring);
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
+  text-align: center;
   cursor: pointer;
-  transition: background-color var(--pn-dur-fast) var(--pn-ease);
+  transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
 
-.pn-signin__google-btn:hover {
-  background: var(--pn-fill);
+.pn-signin__google-btn svg {
+  flex: none;
 }
 
 .pn-signin__google-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
+.pn-signin__google-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* The form's message: what happened and what to do, above the field it is about. */
 .pn-signin__status {
   padding: 12px 14px;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.4;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .pn-signin__status--success {
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  border: 1px solid var(--pn-accent);
 }
 
 .pn-signin__status--error {
   background: var(--pn-coral-soft-bg);
   color: var(--pn-coral-strong-text);
-  border: 1px solid var(--pn-coral-soft-text);
 }
 
 .pn-signin__status--info {
   background: var(--pn-fill);
-  color: var(--pn-label2);
+  color: var(--pn-label);
 }
 
 .pn-signin__guest-note {
-  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0 6px;
   text-align: center;
-  font-size: 13px;
+  font-size: 15px;
+  line-height: 1.45;
   color: var(--pn-label2);
 }
 
+/* "Return to map": a text link with a 48 px target. */
 .pn-signin__guest-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
   color: var(--pn-accent);
   text-decoration: none;
   font-weight: 600;
@@ -166,4 +215,26 @@
 
 .pn-signin__guest-link:hover {
   text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* High contrast: tinted messages get an outline in their own colour. */
+:root[data-contrast="more"] .pn-signin__status {
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pn-signin__google-btn {
+    transition: none;
+  }
+  .pn-signin__google-btn:active {
+    transform: none;
+  }
+}
+
+/* Large text (i18n T15): a word longer than its control breaks inside it instead of spilling out. */
+.pn-signin .pn-btn,
+.pn-signin__google-btn,
+.pn-signin__guest-link {
+  overflow-wrap: anywhere;
 }

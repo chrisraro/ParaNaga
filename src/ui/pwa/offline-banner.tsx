@@ -5,6 +5,7 @@
 // else the revision last seen (IndexedDB snapshotMeta). The live region is always mounted so the
 // change is announced; it never blocks the map (pointer-events: none).
 
+import "@/ui/theme/tokens.css";
 import "./pwa.css";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";

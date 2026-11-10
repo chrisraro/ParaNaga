@@ -198,14 +198,14 @@ export function StopDetailView({ data }: { data: StopDetail }) {
           </div>
         </section>
 
-        <dl className="pn-group" style={{ margin: 0 }}>
-          <div className="pn-kv" style={{ borderBottom: "1px solid var(--pn-sep)" }}>
+        <dl className="pn-group">
+          <div className="pn-kv">
             <dt className="pn-kv__key">{s.curbSide}</dt>
-            <dd className="pn-kv__value" style={{ margin: 0 }}>{stop.curbSide ?? s.notSurveyed}</dd>
+            <dd className="pn-kv__value">{stop.curbSide ?? s.notSurveyed}</dd>
           </div>
           <div className="pn-kv">
             <dt className="pn-kv__key">{s.sign}</dt>
-            <dd className="pn-kv__value" style={{ margin: 0 }}>{s.notVerified}</dd>
+            <dd className="pn-kv__value">{s.notVerified}</dd>
           </div>
         </dl>
         {referencePhoto ? <ReferencePhoto photo={referencePhoto} stop /> : null}

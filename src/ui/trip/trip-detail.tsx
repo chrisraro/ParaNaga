@@ -233,13 +233,13 @@ function rideSteps(
             {fleet.classes.length > 0 ? (
               // Each vehicle class with its evidence label and date (not a nested list: the steps are the list).
               fleet.classes.map((c) => (
-                <p key={`${c.vehicleClass}-${c.status}`} className="pn-tl__sub" data-testid="ride-fleet-class">
+                <p key={`${c.vehicleClass}-${c.status}`} className="pn-tl__sub pn-tl__sub--meta" data-testid="ride-fleet-class">
                   {/* An operating class is its name; any other status keeps its evidence ("reported, not confirmed"). */}
                   {c.status === "operating" ? translated(c.label.split(" · ")[0]!, en.modes.display, ctx.t.modes.display) : c.label}
                 </p>
               ))
             ) : (
-              <p className="pn-tl__sub" data-testid="ride-fleet-class">{t.vehicleUnconfirmed}</p>
+              <p className="pn-tl__sub pn-tl__sub--meta" data-testid="ride-fleet-class">{t.vehicleUnconfirmed}</p>
             )}
           </div>
           <p className="pn-tl__sub">
@@ -250,7 +250,7 @@ function rideSteps(
             {pathLabel}
           </p>
           {leg.stops.length > 0 ? (
-            <p className="pn-tl__sub" data-testid="ride-passed-stops">
+            <p className="pn-tl__sub pn-tl__sub--meta" data-testid="ride-passed-stops">
               {t.markedStops(leg.stops.map((s) => lookups.stopName(s.id, s.name)).join(", "))}
             </p>
           ) : null}

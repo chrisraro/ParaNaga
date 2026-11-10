@@ -15,7 +15,7 @@ import "@/ui/report/report.css";
 import "./driver-report.css";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { EVIDENCE_TYPES, evidenceType, submitComplaint, uploadComplaintEvidence } from "@/client/complaints/api";
 import { useGeolocation } from "@/client/geo/use-geolocation";
@@ -286,7 +286,7 @@ export function DriverReportWizard() {
 
   return (
     <div className="pn-report" onKeyDown={onKeyDown} data-testid="driver-wizard">
-      <p className="pn-report__progress" data-testid="driver-progress">
+      <p className="pn-report__progress" style={{ "--pn-step": step, "--pn-steps": STEPS } as CSSProperties} data-testid="driver-progress">
         {form.stepOf(step, STEPS)}
       </p>
       <h2 ref={heading} tabIndex={-1} className="pn-report__step">
@@ -544,59 +544,62 @@ export function DriverReportWizard() {
         </div>
       ) : null}
 
-      {error ? (
-        <p className="pn-report__error" role="alert" data-testid="driver-error">
-          {error}
-        </p>
-      ) : null}
-      {sending ? (
-        <p className="pn-report__hint" role="status">
-          {sending}
-        </p>
-      ) : null}
+      {/* The error, the sending line and the step's actions stay together, pinned above the tab bar (report.css). */}
+      <div className="pn-report__foot">
+        {error ? (
+          <p className="pn-report__error" role="alert" data-testid="driver-error">
+            {error}
+          </p>
+        ) : null}
+        {sending ? (
+          <p className="pn-report__hint" role="status">
+            {sending}
+          </p>
+        ) : null}
 
-      <div className="pn-report__nav">
-        {step === 1 ? (
-          <Link href="/app" className="pn-btn pn-btn--secondary pn-report__action" data-testid="driver-cancel">
-            {tt.kit.cancel}
-          </Link>
-        ) : (
-          <button
-            type="button"
-            className="pn-btn pn-btn--secondary pn-report__action"
-            onClick={() => go((step - 1) as Step)}
-            disabled={sending !== null}
-            data-testid="driver-back"
-          >
-            {form.back}
-          </button>
-        )}
-        {step === 1 && user ? (
-          <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={() => go(2)} data-testid="driver-next">
-            {form.continue}
-          </button>
-        ) : null}
-        {step === 2 ? (
-          <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={() => go(3)} data-testid="driver-next">
-            {items.length > 0 ? form.continue : t.continueNoPhoto}
-          </button>
-        ) : null}
-        {step === 3 ? (
-          <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext3} data-testid="driver-next">
-            {form.review}
-          </button>
-        ) : null}
-        {step === 4 ? (
-          <button
-            type="button"
-            className="pn-btn pn-btn--primary pn-report__action"
-            onClick={() => void onSend()}
-            disabled={sending !== null}
-            data-testid="driver-send"
-          >
-            {t.sendPrivately}
-          </button>
-        ) : null}
+        <div className="pn-report__nav">
+          {step === 1 ? (
+            <Link href="/app" className="pn-btn pn-btn--secondary pn-report__action" data-testid="driver-cancel">
+              {tt.kit.cancel}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              className="pn-btn pn-btn--secondary pn-report__action"
+              onClick={() => go((step - 1) as Step)}
+              disabled={sending !== null}
+              data-testid="driver-back"
+            >
+              {form.back}
+            </button>
+          )}
+          {step === 1 && user ? (
+            <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={() => go(2)} data-testid="driver-next">
+              {form.continue}
+            </button>
+          ) : null}
+          {step === 2 ? (
+            <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={() => go(3)} data-testid="driver-next">
+              {items.length > 0 ? form.continue : t.continueNoPhoto}
+            </button>
+          ) : null}
+          {step === 3 ? (
+            <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext3} data-testid="driver-next">
+              {form.review}
+            </button>
+          ) : null}
+          {step === 4 ? (
+            <button
+              type="button"
+              className="pn-btn pn-btn--primary pn-report__action"
+              onClick={() => void onSend()}
+              disabled={sending !== null}
+              data-testid="driver-send"
+            >
+              {t.sendPrivately}
+            </button>
+          ) : null}
+        </div>
       </div>
     </div>
   );
