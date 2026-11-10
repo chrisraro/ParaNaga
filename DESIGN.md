@@ -1,6 +1,6 @@
 ---
 name: Lunad
-description: Commuter map app for Naga City, built to look and behave like the map apps riders already know.
+description: Commuter map app for Naga City, its landing page and its admin console, built to look and behave like the map apps and internal tools people already know.
 colors:
   brand: "#0b6b52"
   brand-strong: "#084d3b"
@@ -184,6 +184,52 @@ components:
     textColor: "{colors.ink}"
     rounded: "16px 16px 0 0"
     padding: "0 16px"
+  list-group:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.card}"
+    padding: "0 14px"
+  list-row:
+    textColor: "{colors.ink}"
+    typography: "{typography.body}"
+    height: "60px"
+    padding: "8px 0"
+  header-round-button:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
+    size: "48px"
+  status-chip-ok:
+    backgroundColor: "{colors.brand-soft}"
+    textColor: "{colors.brand-strong}"
+    typography: "{typography.tag}"
+    rounded: "{rounded.pill}"
+    padding: "2px 8px"
+  status-chip-neutral:
+    backgroundColor: "{colors.fill}"
+    textColor: "{colors.ink-2}"
+    typography: "{typography.tag}"
+    rounded: "{rounded.pill}"
+    padding: "2px 8px"
+  admin-rail:
+    backgroundColor: "{colors.deep}"
+    textColor: "{colors.on-brand}"
+    width: "240px"
+  admin-button-primary:
+    backgroundColor: "{colors.brand}"
+    textColor: "{colors.on-brand}"
+    rounded: "{rounded.sm}"
+    height: "40px"
+    padding: "8px 14px"
+  admin-table-header:
+    backgroundColor: "{colors.fill}"
+    textColor: "{colors.ink-2}"
+    typography: "{typography.tag}"
+    padding: "8px 12px"
+  admin-confirm-panel:
+    backgroundColor: "{colors.accent-soft}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.row}"
 ---
 
 # Design System: Lunad
@@ -192,7 +238,7 @@ components:
 
 **Creative North Star: "The category standard, played straight"**
 
-Lunad looks and behaves like the map apps a rider already has on their phone, so nothing has to be learned. The owner chose this on 2026-11-10 after seeing two rounds of more distinctive directions; the benchmarks for finish are Apple Maps, Google Maps and Moovit. The screen is a full-bleed map with white chrome floating over it: a rounded search bar at the top, pill chips under it, round controls at the right edge, a floating tab bar at the bottom, and a draggable bottom sheet for trips.
+Lunad looks and behaves like the map apps a rider already has on their phone, so nothing has to be learned. The owner chose this on 2026-11-10 after seeing two rounds of more distinctive directions; the benchmarks for finish are Apple Maps, Google Maps and Moovit. The screen is a full-bleed map with white chrome floating over it: a rounded search bar at the top, pill chips under it, round controls at the right edge, a floating tab bar at the bottom, and a draggable bottom sheet for trips. The screens without a map, the landing page and the admin console are the same system at rest: white grouped surfaces on a near-white canvas, the same green, amber and red, and, for the console, the density of a clean internal tool.
 
 Colour does little and means something each time. Green is the brand and the primary action. Amber marks "your stop", the Recommended tag and cautions. Red is the destination pin, closures and errors. Each transport mode keeps its own data colour on the line and in the legend. Everything else is white, near-white and green-tinted ink. The dark theme is the same system on green-tinted near-black.
 
@@ -208,26 +254,34 @@ The product's promise is honest data, and the system carries it visually: an unv
 
 ### Coverage of this record
 
-Only the Home screen has been rebuilt to this system: the map, the search bar, the trip sheet, the option cards, the trip detail header and the tab bar. Every other screen (stop and route detail, Explore, Saved, Community, reports, Help, Settings, sign-in, the admin console) takes the new palette through the tokens but keeps its earlier layout and component styling until later sprints. The landing page is a separate, later direction round; nothing here describes it. When extending a screen that has not been rebuilt, follow the Home patterns below, not the screen's current styling.
+The whole product is on this system (checked against the running app on 2026-11-10, light and dark): every commuter screen under `/app` (Home, Search, trip options and detail, live guidance, stop, route, terminal and place detail, Explore, Leaving Naga, Saved, Community, the report wizards, My reports, Help, Settings, sign-in), the landing page at `/`, and the admin console under `/admin`. No screen is left on an earlier look; a new screen copies its nearest sibling.
+
+Where the system lives:
+- **Tokens:** every colour is a `--color-*` value in the `@theme static` block of `src/app/globals.css`. The shared elevation, tag and map-control tokens (`--pn-elev`, `--pn-elev-sm`, `--pn-elev-sheet`, `--pn-tag-*`, `--pn-ctl-*`) are in `src/ui/theme/tokens.css`. The screens' colour aliases (`--pn-surface`, `--pn-label`, `--pn-ring`, `--pn-sep` and the rest) are set on the screen scopes in `src/ui/home/home-screen.css`.
+- **Commuter patterns:** the shared kit (large-title header, list cells, badges, segmented control, switch, confirm dialog, tab bar) is `src/ui/kit/kit.css`; the detail header, section, grouped list and state pattern is `src/ui/detail/detail.css`; option cards and the step ladder are `src/ui/trip/trip.css`.
+- **Landing page:** `src/ui/landing/landing.css`, on the same tokens through `--pnl-*` aliases.
+- **Admin console:** `src/app/admin/admin.css` (tables, focus, type) and the shared pieces in `src/ui/admin/parts.tsx` (buttons, fields, chips, notes, and `Panel variant="confirm"` for the confirm panel).
 
 ### Known deviations (present in the code, not rules)
 
-- A timeline side stripe remains at `src/ui/reports/reports.css:73` (`border-left: 3px`, the last item in brand green). Three such stripes were removed on Home. A second one sits on nested comments at `src/ui/community/community.css:363`.
-- Glass and blur remain on the landing page nav (`src/ui/landing/landing.css:301`). The map controls still carry the class name `pn-glass`, but it is a solid surface now.
-- The typeface was not changed in this sprint. See Typography.
-- The route overview card, the layers sheet, the confirm dialog and the terminal markers use older shadows, and the overview card pairs a border with a shadow (`src/ui/modes/modes.css:597`). They predate the one-elevation rule.
-- The legend, mode chip, layers sheet and overview card set their light background as a literal white instead of the surface token (`src/ui/modes/modes.css`).
-- The switch and the tab bar tabs transition `background-color` and `color` (`src/ui/kit/kit.css:256`, `:386`), outside the transform-and-opacity rule.
+- The typeface was not chosen in the rebrand. See Typography.
+- The switch's track transitions `background-color` (`src/ui/kit/kit.css`), and the landing page's links and nav transition `color` and `background-color` (`src/ui/landing/landing.css`), outside the transform-and-opacity rule.
+- Some colour aliases and modifier classes keep pre-rebrand names (`--pn-teal-soft-bg`, `--pn-coral-soft-bg`, `.pn-search__kind--teal`, `--coral`, `--gold`). They resolve to the green, red and amber tokens; only the names are old. Do not add new ones.
+- Checkboxes are the browser's native control with the brand `accent-color`. In dark, an unchecked box is the browser's grey square, not a system surface.
+- The step ladder's ride line and board dot are neutral (Ink 2), not the mode's colour, so the ladder does not key to the map line by colour.
+- Live guidance opens at the sheet's current scroll position: started from a trip detail that was scrolled to its end, the ETA card sits partly above the fold until the rider scrolls up.
+- The landing page's theme-compare handle and its QR tile are literal white (`src/ui/landing/landing.css`). The QR tile must stay white in dark to scan; the handle is a leftover literal.
+- The admin audit log breaks long JSON details mid-word (`break-all` in `src/ui/admin/audit.tsx`).
 
 ## Colors
 
-A white and near-white interface with one green, one amber and one red, over a pale map. All values are defined once in the `@theme static` block of `src/app/globals.css` as `--color-*`; screens read them through their own `--pn-*` aliases, which switch for dark and high contrast.
+A white and near-white interface with one green, one amber and one red, over a pale map. All values are defined once in the `@theme static` block of `src/app/globals.css` as `--color-*`; the app's screens read them through `--pn-*` aliases, the landing page through `--pnl-*` and the admin console through `--adm-*`, all of which switch for dark.
 
 ### Primary
 - **Lunad Green** (`brand`, #0b6b52): primary buttons, the selected option's 2 px border, the start pin, the current tab, links, the locate control, focus rings, the mark's tile.
 - **Deep Green** (`brand-strong`, #084d3b): pressed state, text on green tints, and the accent in high-contrast mode.
 - **Bright Green** (`brand-bright`, #2fbf93) with **Night Green ink** (`on-brand-bright`, #04221a): the primary colour on dark surfaces. **Light Green** (`brand-light`, #6fd9b5) is text on a green-tinted dark surface and the dark high-contrast accent.
-- **Green tint**: on Home the soft circle behind a mode icon, the current tab and the Save and Share buttons use Lunad Green at 14% over the surface (16% of Bright Green in dark), not the `brand-soft` token (#e3f1ec), which other screens use.
+- **Green tint**: the soft circle behind an icon, the current tab, a selected filter chip and the soft action buttons (Save, Share, Open trip) use Lunad Green at 14% over the surface (16% of Bright Green in dark). The `brand-soft` token is the same idea as a fixed colour, used by the admin console and the landing page.
 
 ### Secondary
 - **Stop Amber** (`accent`, #ffb81c): "your stop" (the get-off dot on the trip line and timeline, and the dot in the mark), the Recommended tag, and mapped stop pins.
@@ -277,6 +331,8 @@ The typeface is unchanged from before the rebrand and is recorded as found, not 
 - **Caption** (400, 13px, 1.4): one line of boarding guidance, transfers, footnotes, in Ink 2.
 - **Tag** (700 or 600, 12px, 16px line): tags and chips on cards, and tab labels (600, 14px line).
 
+The landing page uses the same family at larger sizes for its headings (Geist first, since it is read on desktop too). The admin console uses a denser scale: 24 px at 700 for the page title, 16 px at 600 for a section, 14 px for body, 13 px for tables and secondary text, 12 px at 600 for column headers and chips, with tabular numbers.
+
 ### Named Rules
 **The 13 Pixel Floor Rule.** Running text is never under 13 px, and tags and tab labels never under 12 px. The single exception is the map attribution strip at 10 px.
 
@@ -295,11 +351,17 @@ Responsive behaviour is driven by height and by text size, since the app is phon
 - Narrow cards (container under 21em: a 320 px phone or 200% text): the tag moves to its own row above the title.
 - Long labels are cut with an ellipsis where the row height is budgeted (peek rows, tab labels) and wrap everywhere else. Filipino and Bikol lengths are part of the budget.
 
+Screens without a map sit on Canvas with a 16 px gutter and come in two header forms. A tab's own screen (Saved, Community, Settings) opens with the large title alone. A pushed screen (a thread, a report, Help, sign-in) puts a 48 px round Back button above the same title; the detail screens (stop, route, terminal, place, a Help article) use a compact header row with Back, the parent's name at 17 px and an optional Sources link, then the title. Blocks stack with a 14 to 18 px gap, a 13 px section label sits above each grouped list, and the tab bar floats over the end of the scroll, which is padded to clear it.
+
+The admin console is desktop-first: a fixed 240 px deep-green rail on the left (a top bar with a menu under 1024 px), and a content column up to 88rem with the page title, one line of purpose, a hairline, then cards. Dashboard cards sit on a three-column grid; forms are label above, control, hint below, and the controls of one row align to the top.
+
 Interactive targets are at least 48 px. Where the visible shape is smaller (a 36 px chip, a 44 px round button, a 4 px grab handle), a pseudo-element extends the hit area to 48 px.
 
 ## Elevation & Depth
 
 Hybrid, with one rule deciding which is used. What floats over the map takes a soft shadow. What sits inside a sheet takes a hairline. An element never takes both. In the dark theme a shadow does not show against a dark map, so floating elements take a hairline ring as well and there are no shadows at all.
+
+Away from the map the same rule gives a flat page: cards and grouped lists on Canvas take the hairline ring and no shadow; only the tab bar and the segmented control's thumb, which float, take a shadow. The admin console has no shadows in its content at all: a hairline around surfaces and between rows. The landing page is hairline too, except the phone frame, which takes one soft offset shadow in light.
 
 ### Shadow Vocabulary
 - **Float** (`--pn-elev`: `0 1px 2px` Ink at 10%, plus `0 4px 14px -2px` Ink at 14%): the search bar, the accuracy pill, the tab bar, the map controls, the legend button. Dark: `0 0 0 1px` Night Ink at 16%.
@@ -311,13 +373,13 @@ Hybrid, with one rule deciding which is used. What floats over the map takes a s
 ### Named Rules
 **The Shadow Or Hairline Rule.** Over the map: shadow. Inside a sheet: hairline. Never both on one element, and in dark: hairline only.
 
-**The Solid Surface Rule.** Home's chrome is opaque. There is no blur, glass or translucency over the map; the one translucent element is the attribution strip.
+**The Solid Surface Rule.** Chrome is opaque everywhere: the app, the landing page and the console. There is no blur, glass or translucency; the one translucent element is the map's attribution strip.
 
 ## Shapes
 
 Controls are pills and containers are softly rounded. Anything a rider taps as a single action is fully round (999px): buttons, chips, tags, the search bar, map controls, the swap button, mode-icon circles. Containers step down by role: 16 px for the bottom sheet's top corners and the tab bar, 14 px for cards and status blocks, 12 px for peek rows and small notices, 10 px for insets such as the current tab and tinted boxes inside a card, 8 px for the segmented control's thumb.
 
-Selection is a 2 px green border replacing the 1 px hairline, with the padding reduced by 1 px so nothing shifts. Emphasis is never a coloured stripe on one side of a card; Home uses a soft tint with a leading icon instead.
+Selection is a 2 px green border replacing the 1 px hairline, with the padding reduced by 1 px so nothing shifts. Emphasis is never a coloured stripe on one side of a card; the system uses a soft tint with a leading icon instead.
 
 Dashes carry meaning: a dashed outline means "no value to give" (an unknown fare) or a provisional state (trial, historical), and a dotted line means walking. Do not use dashes decoratively.
 
@@ -368,13 +430,36 @@ Familiar and unremarkable on purpose: each one should look like its counterpart 
 - **Trip maps show only the route.** Stop pins are a layer the rider can switch on for the plain Home map and while placing a pin; they are never drawn on a trip's map (owner ruling 2026-10-17). The start pin, the destination pin and the amber get-off dot are the only markers on a trip.
 - **Outside the city** is dimmed (28% in light, 45% in dark) behind a neutral outline.
 
+### Lists, detail screens and states
+- **Grouped list:** one white surface with 14 px corners and the hairline ring, holding plain rows split by separators (never a card per row). A row is at least 60 px: an optional leading icon in a 40 px green-tint circle or a chip, a title line (17 px) and one secondary line (13 or 15 px, Ink 2), then trailing text or a chevron. Settings, Help, My reports, Explore results, Saved places and the detail screens all use it.
+- **Section label:** 13 px at weight 600 in Ink 2 above a group, sentence case. It names the group; it is not a kicker over a heading.
+- **Detail header:** the compact row described under Layout, then the screen's one Headline. Header controls are 48 px white circles with the hairline ring.
+- **States:** loading is skeleton bars in the content's place; not found, error and offline are a heading, one line that names the problem and the way out, and one action.
+- **Step ladder (trip detail):** a rail at the left with a dot per step and a line between them (dotted for a walk, a solid 6 px bar for a ride), the step's title at weight 600, then its facts in Ink 2. The start dot is green, the get-off dot amber with the Amber Line ring, the destination red. Advice inside a step is a green-tint box with a leading icon.
+- **Status chips:** small pills that always carry words: green tint for done or accepted, Fill for a neutral or in-progress state, Amber Wash for waiting on the rider or a caution, Red Wash for rejected or failed.
+- **Wizard:** "Step n of 3" over a thin progress bar, one question per step, choices as radio rows in a grouped list, and a pinned footer with Back (secondary) and the primary action.
+- **Option card copy budget:** what an option card says, and how much, is the owner's and is tested (`tests/unit`, `tests/e2e/trip.spec.ts`). Do not add lines, chips or words to a card.
+
+### Landing page
+A bright, product-led page in the app's palette: a solid white nav, a headline with the primary and secondary buttons, and real captures of the app in a phone frame (`public/landing`, written by `tests/e2e/landing-captures.spec.ts`; refresh them with `pnpm capture:landing`). Sections alternate Surface and Canvas, separated by hairlines. No blur, glow or gradients. Captures rise in once as they enter; text never fades.
+
+### Admin console
+A clean internal tool, English only.
+- **Rail:** Deep Green (`deep`; `deep-2` with a right hairline in dark), the mark and wordmark with "admin", links grouped under small labels. The current page takes a raised green row with an amber dot.
+- **Buttons:** 8 px corners, 40 px tall (32 px inside table rows). Primary is Lunad Green (Bright Green in dark), secondary is outlined, destructive is solid red only at the confirm step and outlined in a row.
+- **Tables:** 13 px, a Fill header band with 12 px labels, hairline rows, a neutral hover, numbers right-aligned and tabular, long values cut with an ellipsis and held in the cell's title. Wide tables scroll inside their own box with a sticky header.
+- **Chips:** one meaning per tone across the console: green = healthy or done, amber = waiting on a person or a caution, red = failed or blocked, grey fill = a neutral or closed fact, outlined = in progress.
+- **Confirm panel:** anything that publishes, rolls back or deletes opens an Amber Wash panel in the page (not a modal) that names what will change, with the committing button and Cancel. A step-up code prompt follows where one is required.
+- **Notes:** a green-tint line with a check for success, a red-wash line with an alert icon for errors.
+- **No animation** in the console.
+
 ### Motion
 CSS only, with tokens in `src/app/globals.css`: 120 ms for press feedback, 220 ms for fades, chevrons and chips, 360 ms for sheet snaps and list entrances. The standard curve is an ease-out (`cubic-bezier(0.22, 1, 0.36, 1)`); the sheet's detent curve is `cubic-bezier(0.32, 0.72, 0, 1)` with no overshoot; exits are a quicker ease-in. Lists rise 8 px and fade with a 60 ms stagger. Things that appear in place fade in. Under `prefers-reduced-motion`, durations go to zero globally and entrances become plain fades or nothing.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** read colour through the tokens: `--color-*` from `src/app/globals.css`, or the screen's `--pn-*` aliases, which already switch for dark and high contrast.
+- **Do** read colour through the tokens: `--color-*` from `src/app/globals.css`, or the surface's aliases (`--pn-*` in the app, `--pnl-*` on the landing page, `--adm-*` in the console), which already switch for dark.
 - **Do** write every dark block twice, as the stylesheets do: `:root[data-theme="dark"]` and `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }`.
 - **Do** use Ink text on Stop Amber, and Amber Line (#a86f00) when amber is a thin stroke on a light surface.
 - **Do** give anything that floats over the map the float shadow, and anything inside a sheet a hairline. In dark, hairline only.
@@ -382,6 +467,7 @@ CSS only, with tokens in `src/app/globals.css`: 120 ms for press feedback, 220 m
 - **Do** keep targets at 48 px or more, extending a smaller shape's hit area with a pseudo-element.
 - **Do** animate with CSS on transform and opacity only, using the `--pn-dur*` and `--pn-ease*` tokens, and give every animation a reduced-motion branch.
 - **Do** pair every colour cue with an icon or text: mode chips carry an icon and a label, caution chips carry words.
+- **Do** build a new screen from the shared patterns: the kit (`src/ui/kit/kit.css`), the detail pattern (`src/ui/detail/detail.css`), and for the console `src/ui/admin/parts.tsx` with `src/app/admin/admin.css`.
 - **Do** keep the legacy internal names. Storage keys (`paranaga.*`), cache names (`paranaga-*`), the database role (`paranaga_app`) and the CSS class prefix (`pn-`) keep their old names on purpose; renaming them would lose riders' saved data or break deployments.
 
 ### Don't:
@@ -396,4 +482,7 @@ CSS only, with tokens in `src/app/globals.css`: 120 ms for press feedback, 220 m
 - **Don't** redraw, recolour or re-proportion the route-shaped L, and don't place it without its tile.
 - **Don't** propose a more expressive visual world, a display typeface or a novelty layout for the app; the owner's standing choice is the category standard.
 - **Don't** style away uncertainty: an unverified route keeps its amber chip, an unknown fare keeps its dashed outline, and neither is ever shown as a confident value.
-- **Don't** treat the screens that have not been rebuilt, or the items under Known deviations, as patterns to copy.
+- **Don't** put a list row in its own card; rows belong to one grouped surface with separators.
+- **Don't** add lines, chips or words to an option card; its copy budget is the owner's and is tested.
+- **Don't** open a modal for an admin confirmation; use the in-page confirm panel.
+- **Don't** treat the items under Known deviations as patterns to copy.

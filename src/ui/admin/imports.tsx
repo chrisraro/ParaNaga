@@ -100,7 +100,7 @@ export function ImportsScreen() {
           ) : imports?.ok ? (
             <Muted>No My Maps import is committed yet; the first import runs from the command line (pnpm db:import --commit).</Muted>
           ) : null}
-          <form className="grid gap-3 md:grid-cols-3" onSubmit={(e) => void runDry(e)}>
+          <form className="grid items-start gap-3 md:grid-cols-3" onSubmit={(e) => void runDry(e)}>
             <Field label="File (KML or CSV)">
               <input
                 className={inputCls}

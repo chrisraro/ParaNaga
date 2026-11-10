@@ -370,17 +370,6 @@ abbr.pn-est {
 .pn-trip-warn p + p {
   margin-top: 4px;
 }
-.pn-trip__revision {
-  margin: 0;
-  color: var(--pn-label2);
-  font-size: 13px;
-  text-align: center;
-}
-.pn-honest .pn-trip__revision--left {
-  margin-top: 8px;
-  font-size: 13px;
-  text-align: left;
-}
 
 /* Loading / error states. */
 .pn-trip-state {

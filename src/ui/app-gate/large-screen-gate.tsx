@@ -10,7 +10,7 @@ import "@/ui/landing/landing.css";
 // Shown instead of the app when /app opens on a screen wider than a phone or small
 // tablet (design canvas: W2 · Open on your phone). The QR encodes this page's own URL,
 // so whoever scans it lands on /app on their phone. The phone shows a real capture of the app's
-// home screen (public/landing, scripts/capture-landing.ts).
+// home screen (public/landing, tests/e2e/landing-captures.spec.ts).
 
 export function LargeScreenGate() {
   const appUrl = useAppUrl();

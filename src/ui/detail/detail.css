@@ -396,15 +396,6 @@ a.pn-cell:active {
   transform: rotate(180deg);
 }
 
-/* Honest "not yet" note where the artboard has a button ("Verification opens soon."): plain,
-   muted text, so it never reads as a (disabled) control. */
-.pn-soon {
-  margin: 0;
-  color: var(--pn-label2);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
 /* ------------------------------------------------------------------ Route detail */
 /* Route facts (Fare / Service / Vehicle): one strip split by hairlines, not three cards. The 1 px
    gaps show the strip's separator colour between the cells. Three across when the strip is at

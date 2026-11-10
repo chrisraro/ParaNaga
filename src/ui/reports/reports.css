@@ -20,11 +20,6 @@
   line-height: 1.45;
   color: var(--pn-label);
 }
-.pn-reports__sub {
-  display: block;
-  font-size: 13px;
-  color: var(--pn-label2);
-}
 
 /* ------------------------------------------------------------------ status chip */
 .pn-rchip {
@@ -233,10 +228,6 @@
 }
 .pn-reports__warn p + p {
   margin-top: 6px;
-}
-.pn-reports__unavailable {
-  color: var(--pn-label2);
-  font-size: 15px;
 }
 
 /* High contrast: the ring token is already 3:1; tinted pieces get an outline in their own colour. */

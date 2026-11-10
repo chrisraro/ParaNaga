@@ -9,7 +9,7 @@ import { ROUTES, SHOWCASE_SCREENS } from "@/ui/landing/landing-content";
 
 const L = en.landing;
 const DIR = path.resolve("src/ui/landing");
-const FILES = readdirSync(DIR).filter((f) => /\.tsx?$/.test(f) && f !== "hero-lines.ts");
+const FILES = readdirSync(DIR).filter((f) => /\.tsx?$/.test(f));
 
 /** Every string in the English landing dictionary (message functions called with a placeholder). */
 const words = (tree: unknown): string[] =>

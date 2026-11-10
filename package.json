@@ -23,7 +23,7 @@
     "data:far-zone-places": "tsx scripts/far-zone-places.ts",
     "data:preview-paths": "tsx scripts/preview-route-paths.ts",
     "data:preview-road-rules": "tsx scripts/preview-road-rules.ts",
-    "capture:landing": "tsx scripts/capture-landing.ts",
+    "capture:landing": "node -e \"process.env.LANDING_SHOTS='1';import('node:child_process').then(function(c){c.execSync('pnpm exec playwright test tests/e2e/landing-captures.spec.ts --project=mobile',{stdio:'inherit'})})\"",
     "check:boundaries": "tsx scripts/check-boundaries.ts",
     "check:bundle-secrets": "tsx scripts/check-bundle-secrets.ts",
     "load:plan": "tsx scripts/load-plan.ts",

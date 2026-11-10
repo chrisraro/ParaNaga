@@ -237,9 +237,6 @@
   align-items: center;
   gap: 6px;
 }
-.pn-terminal__mode-sources {
-  font-size: 13px;
-}
 
 @media (forced-colors: active) {
   .pn-place__facts,

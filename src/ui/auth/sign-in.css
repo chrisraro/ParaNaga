@@ -37,12 +37,6 @@
   padding: 16px;
 }
 
-.pn-signin__section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--pn-label);
-}
-
 .pn-signin__form {
   display: flex;
   flex-direction: column;

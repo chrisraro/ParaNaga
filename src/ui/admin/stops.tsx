@@ -344,7 +344,7 @@ function EvidenceForm({
   };
   return (
     <Panel title="Attach evidence" testId="evidence-form">
-      <form className="grid gap-3 md:grid-cols-2" onSubmit={(e) => void submit(e)}>
+      <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={(e) => void submit(e)}>
         <Field label="Kind">
           <select className={inputCls} value={kind} onChange={(e) => setKind(e.target.value as typeof kind)} data-testid="evidence-kind">
             {EVIDENCE_KINDS.map((k) => (
@@ -400,7 +400,7 @@ function RelocateForm({ stop, disabled, run }: FormProps) {
   const valid = Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && reason.trim().length >= 3;
   return (
     <Panel title="Relocate" testId="relocate-form">
-      <form className="grid gap-3 md:grid-cols-2" onSubmit={submit}>
+      <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={submit}>
         <Field label="Latitude">
           <input className={inputCls} inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} data-testid="relocate-lat" />
         </Field>
@@ -478,7 +478,7 @@ function EditForm({ stop, disabled, run }: FormProps) {
   };
   return (
     <Panel title="Stop details" testId="edit-form">
-      <form className="grid gap-3 md:grid-cols-2" onSubmit={submit}>
+      <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={submit}>
         <Field label="Name">
           <input className={inputCls} value={name} maxLength={120} onChange={(e) => setName(e.target.value)} data-testid="edit-name" />
         </Field>

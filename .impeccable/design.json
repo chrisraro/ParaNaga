@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-10T05:05:51.350Z",
+  "generatedAt": "2026-11-10T07:12:26.000Z",
   "title": "Design System: Lunad",
   "extensions": {
     "colorMeta": {
@@ -763,21 +763,20 @@
     },
     "scope": {
       "rebuilt": [
-        "Home map",
-        "search bar",
-        "trip sheet",
-        "option cards",
-        "trip detail header",
-        "tab bar"
+        "commuter app (every screen under /app)",
+        "landing page (/)",
+        "admin console (/admin)"
       ],
-      "note": "Only the Home screen has been rebuilt to this system: the map, the search bar, the trip sheet, the option cards, the trip detail header and the tab bar. Every other screen (stop and route detail, Explore, Saved, Community, reports, Help, Settings, sign-in, the admin console) takes the new palette through the tokens but keeps its earlier layout and component styling until later sprints. The landing page is a separate, later direction round; nothing here describes it. When extending a screen that has not been rebuilt, follow the Home patterns below, not the screen's current styling.",
+      "note": "The whole product is on this system (checked against the running app on 2026-11-10, light and dark): every commuter screen under `/app` (Home, Search, trip options and detail, live guidance, stop, route, terminal and place detail, Explore, Leaving Naga, Saved, Community, the report wizards, My reports, Help, Settings, sign-in), the landing page at `/`, and the admin console under `/admin`. No screen is left on an earlier look; a new screen copies its nearest sibling.\n\nWhere the system lives:\n- **Tokens:** every colour is a `--color-*` value in the `@theme static` block of `src/app/globals.css`. The shared elevation, tag and map-control tokens (`--pn-elev`, `--pn-elev-sm`, `--pn-elev-sheet`, `--pn-tag-*`, `--pn-ctl-*`) are in `src/ui/theme/tokens.css`. The screens' colour aliases (`--pn-surface`, `--pn-label`, `--pn-ring`, `--pn-sep` and the rest) are set on the screen scopes in `src/ui/home/home-screen.css`.\n- **Commuter patterns:** the shared kit (large-title header, list cells, badges, segmented control, switch, confirm dialog, tab bar) is `src/ui/kit/kit.css`; the detail header, section, grouped list and state pattern is `src/ui/detail/detail.css`; option cards and the step ladder are `src/ui/trip/trip.css`.\n- **Landing page:** `src/ui/landing/landing.css`, on the same tokens through `--pnl-*` aliases.\n- **Admin console:** `src/app/admin/admin.css` (tables, focus, type) and the shared pieces in `src/ui/admin/parts.tsx` (buttons, fields, chips, notes, and `Panel variant=\"confirm\"` for the confirm panel).",
       "knownDeviations": [
-        "A timeline side stripe remains at `src/ui/reports/reports.css:73` (`border-left: 3px`, the last item in brand green). Three such stripes were removed on Home. A second one sits on nested comments at `src/ui/community/community.css:363`.",
-        "Glass and blur remain on the landing page nav (`src/ui/landing/landing.css:301`). The map controls still carry the class name `pn-glass`, but it is a solid surface now.",
-        "The typeface was not changed in this sprint. See Typography.",
-        "The route overview card, the layers sheet, the confirm dialog and the terminal markers use older shadows, and the overview card pairs a border with a shadow (`src/ui/modes/modes.css:597`). They predate the one-elevation rule.",
-        "The legend, mode chip, layers sheet and overview card set their light background as a literal white instead of the surface token (`src/ui/modes/modes.css`).",
-        "The switch and the tab bar tabs transition `background-color` and `color` (`src/ui/kit/kit.css:256`, `:386`), outside the transform-and-opacity rule."
+        "The typeface was not chosen in the rebrand. See Typography.",
+        "The switch's track transitions `background-color` (`src/ui/kit/kit.css`), and the landing page's links and nav transition `color` and `background-color` (`src/ui/landing/landing.css`), outside the transform-and-opacity rule.",
+        "Some colour aliases and modifier classes keep pre-rebrand names (`--pn-teal-soft-bg`, `--pn-coral-soft-bg`, `.pn-search__kind--teal`, `--coral`, `--gold`). They resolve to the green, red and amber tokens; only the names are old. Do not add new ones.",
+        "Checkboxes are the browser's native control with the brand `accent-color`. In dark, an unchecked box is the browser's grey square, not a system surface.",
+        "The step ladder's ride line and board dot are neutral (Ink 2), not the mode's colour, so the ladder does not key to the map line by colour.",
+        "Live guidance opens at the sheet's current scroll position: started from a trip detail that was scrolled to its end, the ETA card sits partly above the fold until the rider scrolls up.",
+        "The landing page's theme-compare handle and its QR tile are literal white (`src/ui/landing/landing.css`). The QR tile must stay white in dark to scan; the handle is a leftover literal.",
+        "The admin audit log breaks long JSON details mid-word (`break-all` in `src/ui/admin/audit.tsx`)."
       ]
     }
   },
@@ -853,11 +852,43 @@
       "description": "Round white controls at the map's right edge: a zoom capsule and the locate button.",
       "html": "<div class=\"ds-ctls\"><div class=\"ds-ctl-capsule\" role=\"group\" aria-label=\"Zoom\"><button class=\"ds-ctl\" aria-label=\"Zoom in\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><div class=\"ds-ctl-divider\"></div><button class=\"ds-ctl\" aria-label=\"Zoom out\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/></svg></button></div><div class=\"ds-ctl-capsule\"><button class=\"ds-ctl ds-ctl--locate\" aria-label=\"Go to my location\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M21 3 3 10.500l7 2.500 2.500 7L21 3Z\"/></svg></button></div></div>",
       "css": ".ds-ctls { display: inline-flex; flex-direction: column; gap: 12px; } .ds-ctl-capsule { display: flex; flex-direction: column; border-radius: 999px; overflow: hidden; background: var(--color-surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--color-ink) 10%, transparent), 0 4px 14px -2px color-mix(in srgb, var(--color-ink) 14%, transparent); } .ds-ctl-divider { height: 1px; margin: 0 10px; background: color-mix(in srgb, var(--color-ink) 10%, transparent); } .ds-ctl { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; padding: 0; border: 0; background: transparent; color: var(--color-ink); cursor: pointer; transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1); } .ds-ctl--locate { color: var(--color-brand); } .ds-ctl:active { transform: scale(0.97); } .ds-ctl:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; outline-offset: -3px; }"
+    },
+    {
+      "name": "Grouped List",
+      "kind": "card",
+      "refersTo": "list-group",
+      "description": "One surface with a hairline ring holding rows split by separators: Settings, Help, My reports, detail screens.",
+      "html": "<div class=\"ds-group\"><a class=\"ds-cell\" href=\"#\"><span class=\"ds-cell__icon\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/></svg></span><span class=\"ds-cell__text\"><span class=\"ds-cell__title\">How times are estimated</span><span class=\"ds-cell__sub\">Ranges, never a promise</span></span><svg class=\"ds-cell__chev\" width=\"10\" height=\"16\" viewBox=\"0 0 10 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 2l6 6-6 6\"/></svg></a><a class=\"ds-cell\" href=\"#\"><span class=\"ds-cell__text\"><span class=\"ds-cell__title\">My reports</span><span class=\"ds-cell__sub\">Corrections and driver reports you sent</span></span><svg class=\"ds-cell__chev\" width=\"10\" height=\"16\" viewBox=\"0 0 10 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 2l6 6-6 6\"/></svg></a></div>",
+      "css": ".ds-group { width: 340px; padding: 0 14px; border-radius: 14px; background: var(--color-surface); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ink) 16%, transparent); font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; } .ds-cell { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 0; color: var(--color-ink); text-decoration: none; } .ds-cell + .ds-cell { border-top: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent); } .ds-cell:focus-visible { outline: 3px solid var(--color-brand); outline-offset: 2px; border-radius: 8px; } .ds-cell__icon { display: flex; flex: none; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 999px; background: color-mix(in srgb, var(--color-brand) 14%, var(--color-surface)); color: var(--color-brand-strong); } .ds-cell__text { display: flex; flex: 1; min-width: 0; flex-direction: column; } .ds-cell__title { font-size: 17px; font-weight: 600; line-height: 1.3; } .ds-cell__sub { font-size: 13px; line-height: 1.4; color: var(--color-ink-2); } .ds-cell__chev { flex: none; color: var(--color-ink-2); }"
+    },
+    {
+      "name": "Status Chips",
+      "kind": "chip",
+      "refersTo": "status-chip-ok",
+      "description": "Report and review states, always in words: done, neutral, waiting, failed.",
+      "html": "<div class=\"ds-status\"><span class=\"ds-st ds-st--ok\">Accepted</span><span class=\"ds-st ds-st--plain\">Being reviewed</span><span class=\"ds-st ds-st--warn\">Needs a photo</span><span class=\"ds-st ds-st--error\">Not accepted</span></div>",
+      "css": ".ds-status { display: flex; flex-wrap: wrap; gap: 6px; font-family: -apple-system, 'SF Pro Text', Geist, system-ui, sans-serif; } .ds-st { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 16px; } .ds-st--ok { background: var(--color-brand-soft); color: var(--color-brand-strong); } .ds-st--plain { background: var(--color-fill); color: var(--color-ink-2); } .ds-st--warn { background: var(--color-accent-soft); color: var(--color-accent-ink); } .ds-st--error { background: var(--color-danger-soft); color: var(--color-danger-ink); }"
+    },
+    {
+      "name": "Admin Table",
+      "kind": "custom",
+      "refersTo": "admin-table-header",
+      "description": "Console table: a quiet header band, hairline rows, tabular numbers, 32 px row actions.",
+      "html": "<table class=\"ds-adm-table\"><thead><tr><th>Label</th><th>Status</th><th class=\"ds-adm-num\">Members</th><th>Actions</th></tr></thead><tbody><tr><td>draft-2026-10-22</td><td><span class=\"ds-adm-chip ds-adm-chip--info\">Draft</span></td><td class=\"ds-adm-num\">812</td><td><button class=\"ds-adm-btn\" type=\"button\">Validate</button></td></tr><tr><td>modes-lines-2026-10-16</td><td><span class=\"ds-adm-chip ds-adm-chip--ok\">Published (live)</span></td><td class=\"ds-adm-num\">812</td><td>Live</td></tr></tbody></table>",
+      "css": ".ds-adm-table { border-collapse: separate; border-spacing: 0; border: 1px solid var(--color-border); border-radius: 12px; overflow: hidden; background: var(--color-surface); color: var(--color-ink); font-family: Geist, system-ui, sans-serif; font-size: 13px; line-height: 20px; font-variant-numeric: tabular-nums; } .ds-adm-table th, .ds-adm-table td { padding: 8px 12px; border-bottom: 1px solid var(--color-border); text-align: left; vertical-align: middle; } .ds-adm-table tbody tr:last-child td { border-bottom-width: 0; } .ds-adm-table thead th { background: var(--color-fill); color: var(--color-ink-2); font-size: 12px; font-weight: 600; } .ds-adm-table tbody tr:hover { background: color-mix(in srgb, var(--color-ink) 5%, var(--color-surface)); } .ds-adm-table .ds-adm-num { text-align: right; } .ds-adm-chip { display: inline-flex; align-items: center; padding: 1px 8px; border: 1px solid transparent; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; } .ds-adm-chip--ok { background: var(--color-brand-soft); color: var(--color-brand-strong); } .ds-adm-chip--info { border-color: var(--color-ink-3); color: var(--color-ink-2); } .ds-adm-btn { min-height: 32px; padding: 4px 10px; border: 1px solid var(--color-ink-3); border-radius: 8px; background: var(--color-surface); color: var(--color-ink); font: inherit; font-weight: 600; cursor: pointer; } .ds-adm-btn:hover { background: var(--color-fill); } .ds-adm-btn:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }"
+    },
+    {
+      "name": "Admin Confirm Panel",
+      "kind": "custom",
+      "refersTo": "admin-confirm-panel",
+      "description": "In-page confirmation for publish, rollback and delete: names what changes, then the committing button and Cancel.",
+      "html": "<div class=\"ds-adm-confirm\"><p class=\"ds-adm-confirm__title\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3l10 18H2z\"/><path d=\"M12 10v5M12 18h.01\"/></svg>Publish draft-2026-10-22?</p><p class=\"ds-adm-confirm__body\">It replaces modes-lines-2026-10-16 for every rider, at once.</p><div class=\"ds-adm-confirm__actions\"><button class=\"ds-adm-go\" type=\"button\">Publish now</button><button class=\"ds-adm-cancel\" type=\"button\">Cancel</button></div></div>",
+      "css": ".ds-adm-confirm { width: 460px; padding: 16px 20px; border: 1px solid var(--color-accent-line); border-radius: 12px; background: var(--color-accent-soft); color: var(--color-ink); font-family: Geist, system-ui, sans-serif; font-size: 14px; } .ds-adm-confirm p { margin: 0; } .ds-adm-confirm__title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; } .ds-adm-confirm__title svg { color: var(--color-accent-ink); } .ds-adm-confirm__body { margin-top: 8px !important; color: var(--color-ink-2); } .ds-adm-confirm__actions { display: flex; gap: 12px; margin-top: 14px; } .ds-adm-go, .ds-adm-cancel { min-height: 40px; padding: 8px 14px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; } .ds-adm-go { border: 0; background: var(--color-brand); color: var(--color-on-brand); } .ds-adm-go:hover { background: var(--color-brand-strong); } .ds-adm-cancel { border: 1px solid var(--color-ink-3); background: var(--color-surface); color: var(--color-ink); } .ds-adm-cancel:hover { background: var(--color-fill); } .ds-adm-go:focus-visible, .ds-adm-cancel:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }"
     }
   ],
   "narrative": {
     "northStar": "The category standard, played straight",
-    "overview": "Lunad looks and behaves like the map apps a rider already has on their phone, so nothing has to be learned. The owner chose this on 2026-11-10 after seeing two rounds of more distinctive directions; the benchmarks for finish are Apple Maps, Google Maps and Moovit. The screen is a full-bleed map with white chrome floating over it: a rounded search bar at the top, pill chips under it, round controls at the right edge, a floating tab bar at the bottom, and a draggable bottom sheet for trips.\n\nColour does little and means something each time. Green is the brand and the primary action. Amber marks \"your stop\", the Recommended tag and cautions. Red is the destination pin, closures and errors. Each transport mode keeps its own data colour on the line and in the legend. Everything else is white, near-white and green-tinted ink. The dark theme is the same system on green-tinted near-black.\n\nThe product's promise is honest data, and the system carries it visually: an unverified route gets an amber chip in a fixed place, an estimate is written as \"Est.\", an unknown fare gets a dashed outline, and none of these is ever styled away.",
+    "overview": "Lunad looks and behaves like the map apps a rider already has on their phone, so nothing has to be learned. The owner chose this on 2026-11-10 after seeing two rounds of more distinctive directions; the benchmarks for finish are Apple Maps, Google Maps and Moovit. The screen is a full-bleed map with white chrome floating over it: a rounded search bar at the top, pill chips under it, round controls at the right edge, a floating tab bar at the bottom, and a draggable bottom sheet for trips. The screens without a map, the landing page and the admin console are the same system at rest: white grouped surfaces on a near-white canvas, the same green, amber and red, and, for the console, the density of a clean internal tool.\n\nColour does little and means something each time. Green is the brand and the primary action. Amber marks \"your stop\", the Recommended tag and cautions. Red is the destination pin, closures and errors. Each transport mode keeps its own data colour on the line and in the legend. Everything else is white, near-white and green-tinted ink. The dark theme is the same system on green-tinted near-black.\n\nThe product's promise is honest data, and the system carries it visually: an unverified route gets an amber chip in a fixed place, an estimate is written as \"Est.\", an unknown fare gets a dashed outline, and none of these is ever styled away.",
     "keyCharacteristics": [
       "Map first: the map is the screen and every other element floats over it or slides up from the bottom.",
       "White, rounded, quiet chrome: pills for controls, 12 to 16 px corners for cards and sheets.",
@@ -904,12 +935,12 @@
       },
       {
         "name": "The Solid Surface Rule",
-        "body": "Home's chrome is opaque. There is no blur, glass or translucency over the map; the one translucent element is the attribution strip.",
+        "body": "Chrome is opaque everywhere: the app, the landing page and the console. There is no blur, glass or translucency; the one translucent element is the map's attribution strip.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "**Do** read colour through the tokens: `--color-*` from `src/app/globals.css`, or the screen's `--pn-*` aliases, which already switch for dark and high contrast.",
+      "**Do** read colour through the tokens: `--color-*` from `src/app/globals.css`, or the surface's aliases (`--pn-*` in the app, `--pnl-*` on the landing page, `--adm-*` in the console), which already switch for dark.",
       "**Do** write every dark block twice, as the stylesheets do: `:root[data-theme=\"dark\"]` and `@media (prefers-color-scheme: dark) { :root:not([data-theme=\"light\"]) }`.",
       "**Do** use Ink text on Stop Amber, and Amber Line (#a86f00) when amber is a thin stroke on a light surface.",
       "**Do** give anything that floats over the map the float shadow, and anything inside a sheet a hairline. In dark, hairline only.",
@@ -917,6 +948,7 @@
       "**Do** keep targets at 48 px or more, extending a smaller shape's hit area with a pseudo-element.",
       "**Do** animate with CSS on transform and opacity only, using the `--pn-dur*` and `--pn-ease*` tokens, and give every animation a reduced-motion branch.",
       "**Do** pair every colour cue with an icon or text: mode chips carry an icon and a label, caution chips carry words.",
+      "**Do** build a new screen from the shared patterns: the kit (`src/ui/kit/kit.css`), the detail pattern (`src/ui/detail/detail.css`), and for the console `src/ui/admin/parts.tsx` with `src/app/admin/admin.css`.",
       "**Do** keep the legacy internal names. Storage keys (`paranaga.*`), cache names (`paranaga-*`), the database role (`paranaga_app`) and the CSS class prefix (`pn-`) keep their old names on purpose; renaming them would lose riders' saved data or break deployments."
     ],
     "donts": [
@@ -931,7 +963,10 @@
       "**Don't** redraw, recolour or re-proportion the route-shaped L, and don't place it without its tile.",
       "**Don't** propose a more expressive visual world, a display typeface or a novelty layout for the app; the owner's standing choice is the category standard.",
       "**Don't** style away uncertainty: an unverified route keeps its amber chip, an unknown fare keeps its dashed outline, and neither is ever shown as a confident value.",
-      "**Don't** treat the screens that have not been rebuilt, or the items under Known deviations, as patterns to copy."
+      "**Don't** put a list row in its own card; rows belong to one grouped surface with separators.",
+      "**Don't** add lines, chips or words to an option card; its copy budget is the owner's and is tested.",
+      "**Don't** open a modal for an admin confirmation; use the in-page confirm panel.",
+      "**Don't** treat the items under Known deviations as patterns to copy."
     ]
   }
 }

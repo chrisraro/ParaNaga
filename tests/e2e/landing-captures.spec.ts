@@ -9,7 +9,7 @@ import { FAR_JEEP_PACOL_PLAN, PROVISIONAL_PLAN } from "./fixtures/plan-responses
 
 // The landing page's screen captures (public/landing/*.webp), taken from the running app.
 //
-//   LANDING_SHOTS=1 pnpm test:e2e tests/e2e/landing-captures.spec.ts --project=mobile
+//   pnpm capture:landing     (sets LANDING_SHOTS=1 and runs this spec on the mobile project)
 //
 // Skipped unless LANDING_SHOTS is set, so a normal run never rewrites the images. Provenance: the
 // e2e build with the suite's recorded network fixtures (fixtures/network) and its illustrative

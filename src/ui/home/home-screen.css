@@ -928,10 +928,6 @@ a.pn-option {
   color: var(--pn-warn-text);
   font-size: 15px;
 }
-.pn-nearby__layer {
-  color: var(--pn-label2);
-  font-size: 13px;
-}
 .pn-nearby .pn-cell__chevron {
   flex: none;
   color: var(--pn-label2);
