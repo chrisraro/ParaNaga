@@ -1,13 +1,20 @@
 // Lines of the sources register (spec S22, Help → Sources and dates). Source values are shown
-// verbatim apart from the evidence type, which is stored as a snake_case tag and read out as words;
+// verbatim apart from the old product name (sourceTitle) and the
+// evidence type, which is stored as a snake_case tag and read out as words;
 // a missing value says it is not recorded. Pure.
 import type { SourceList } from "../api/schemas";
 import { formatIsoDate } from "../network/present";
 
 type Source = SourceList["sources"][number];
 
+/**
+ * Stored source rows are append-only provenance and immutably cached, so titles written before the
+ * rebrand keep the old product name; show the current one.
+ */
+export const sourceTitle = (title: string): string => title.replace(/ParaNaga/g, "Lunad");
+
 export function sourceTitleLine(source: Pick<Source, "code" | "title">): string {
-  return `${source.code} · ${source.title}`;
+  return `${source.code} · ${sourceTitle(source.title)}`;
 }
 
 /** "official_historical" → "Official historical"; "a;b" → "A, b". Acronyms keep their case. */

@@ -136,6 +136,8 @@ export const complaintActionSchema = z.discriminatedUnion("action", [
   z
     .object({
       action: z.literal("status"),
+      // The status the page showed; the database refuses the change (409) when it moved since.
+      expectedStatus: z.enum(COMPLAINT_STATUSES),
       to: z.enum(["under_review", "needs_information", "closed"]),
       outcomeCode: z.enum(OUTCOME_CODES).optional(),
       note: note.optional(),

@@ -20,6 +20,7 @@ import {
   sourcesLine,
   trialNoticeText,
 } from "@/domain/network/present";
+import { sourceTitle } from "@/domain/sources/present";
 import { stopDisplayName } from "@/domain/trip/present";
 import { osmObjectUrl, osmSnapshotDate, terminalEvidenceLabel } from "@/domain/places/place-detail";
 import { isRouteMode } from "@/domain/places/terminals";
@@ -147,7 +148,7 @@ function RouteSources({ data }: { data: RouteDetail }) {
         <ul className="pn-footnote pn-source-list">
           {sources.map((s) => (
             <li key={s.code}>
-              {s.code}: {s.title}
+              {s.code}: {sourceTitle(s.title)}
               {s.checkedOn ? ` (checked ${s.checkedOn})` : ""}
             </li>
           ))}

@@ -63,6 +63,10 @@ describe("sources register lines", () => {
     expect(sourceTitleLine(source)).toBe("S01 · Naga approved LPTRP, Ordinance 2025-070");
   });
 
+  it("shows the current product name in titles stored before the rebrand", () => {
+    expect(sourceTitleLine({ code: "U01", title: "Project owner confirmation to ParaNaga (2026-10-16)" })).toBe("U01 · Project owner confirmation to Lunad (2026-10-16)");
+  });
+
   it("formats evidence type, published date or text, and checked date", () => {
     expect(sourceMetaLine(source)).toBe("Official · published 23 Sep 2025 · checked 15 Oct 2026");
     expect(sourceMetaLine({ ...source, evidenceType: "official_historical", publishedOrEnacted: "1993" })).toBe(

@@ -351,6 +351,7 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
     setBusy(true);
     const r = await complaintAction(c.id, {
       action: "status",
+      expectedStatus: c.status,
       to: to as "under_review" | "needs_information" | "closed",
       ...(to === "closed" ? { outcomeCode: outcome as OutcomeCode } : {}),
       ...(note.trim() ? { note: note.trim() } : {}),

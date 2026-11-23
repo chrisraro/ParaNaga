@@ -113,7 +113,7 @@ const NOT_REVIEWERS = [
 const all = () => [
   h.getComplaints(get("/api/v1/admin/complaints")),
   h.getComplaint(get(`/api/v1/admin/complaints/${C1}`), Promise.resolve({ id: C1 })),
-  h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, { action: "status", to: "under_review" }), Promise.resolve({ id: C1 })),
+  h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, { action: "status", expectedStatus: "submitted", to: "under_review" }), Promise.resolve({ id: C1 })),
   h.postComplaintEvidence(post(`/api/v1/admin/complaints/${C1}/evidence/${E1}`), Promise.resolve({ id: C1, evidenceId: E1 })),
 ];
 
@@ -191,16 +191,17 @@ describe("status changes and legal hold", () => {
   it("passes exactly the fields to priv.set_complaint_status; closing needs an outcome, and only closing", async () => {
     state.user = REVIEWER;
     const ok = await h.postComplaintAction(
-      post(`/api/v1/admin/complaints/${C1}`, { action: "status", to: "closed", outcomeCode: "insufficient_detail", note: "No plate or time.", visibility: "reporter" }),
+      post(`/api/v1/admin/complaints/${C1}`, { action: "status", expectedStatus: "under_review", to: "closed", outcomeCode: "insufficient_detail", note: "No plate or time.", visibility: "reporter" }),
       Promise.resolve({ id: C1 }),
     );
     expect(ok.status).toBe(200);
-    expect(state.params.get("priv.set_complaint_status")).toEqual([C1, "closed", "insufficient_detail", "No plate or time.", "reporter"]);
+    expect(state.params.get("priv.set_complaint_status")).toEqual([C1, "closed", "insufficient_detail", "No plate or time.", "reporter", "under_review"]);
     for (const body of [
-      { action: "status", to: "closed" },
-      { action: "status", to: "under_review", outcomeCode: "duplicate" },
-      { action: "status", to: "withdrawn" },
-      { action: "status", to: "under_review", extra: 1 },
+      { action: "status", expectedStatus: "under_review", to: "closed" },
+      { action: "status", expectedStatus: "submitted", to: "under_review", outcomeCode: "duplicate" },
+      { action: "status", expectedStatus: "submitted", to: "withdrawn" },
+      { action: "status", expectedStatus: "submitted", to: "under_review", extra: 1 },
+      { action: "status", to: "under_review" },
       { action: "legal_hold", hold: true, note: "x" },
     ]) {
       expect((await h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, body), Promise.resolve({ id: C1 }))).status, JSON.stringify(body)).toBe(400);
@@ -209,16 +210,23 @@ describe("status changes and legal hold", () => {
 
   it("a status change defaults the note to reviewers only; legal hold goes through its own function", async () => {
     state.user = REVIEWER;
-    await h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, { action: "status", to: "under_review" }), Promise.resolve({ id: C1 }));
-    expect(state.params.get("priv.set_complaint_status")).toEqual([C1, "under_review", null, null, "reviewer_only"]);
+    await h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, { action: "status", expectedStatus: "submitted", to: "under_review" }), Promise.resolve({ id: C1 }));
+    expect(state.params.get("priv.set_complaint_status")).toEqual([C1, "under_review", null, null, "reviewer_only", "submitted"]);
     await h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, { action: "legal_hold", hold: true, note: "Police request 22 Oct." }), Promise.resolve({ id: C1 }));
     expect(state.params.get("priv.set_complaint_legal_hold")).toEqual([C1, true, "Police request 22 Oct."]);
+  });
+
+  it("a report that changed since the page loaded is a 409", async () => {
+    state.user = REVIEWER;
+    state.fail = { code: "55000", message: "this report changed since the page was loaded; reload and try again" };
+    const res = await h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, { action: "status", expectedStatus: "submitted", to: "under_review" }), Promise.resolve({ id: C1 }));
+    expect(res.status).toBe(409);
   });
 
   it("an invalid transition from the database is a 400 with its message", async () => {
     state.user = REVIEWER;
     state.fail = { code: "22023", message: "invalid transition closed to under_review" };
-    const res = await h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, { action: "status", to: "under_review" }), Promise.resolve({ id: C1 }));
+    const res = await h.postComplaintAction(post(`/api/v1/admin/complaints/${C1}`, { action: "status", expectedStatus: "submitted", to: "under_review" }), Promise.resolve({ id: C1 }));
     expect(res.status).toBe(400);
     expect((await problem(res)).message).toBe("Invalid transition closed to under_review.");
   });

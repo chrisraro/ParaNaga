@@ -40,7 +40,9 @@ export const tooManyRequests = (message: string = "Too many requests. Please wai
 
 function errorResponse(status: number, code: ApiErrorCode, message: string, requestId: string): Response {
   const body: ApiError = { error: { code, message, requestId } };
-  return Response.json(body, { status, headers: { "Cache-Control": CACHE.none, "X-Request-Id": requestId } });
+  const headers: Record<string, string> = { "Cache-Control": CACHE.none, "X-Request-Id": requestId };
+  if (status === 503) headers["Retry-After"] = "5";
+  return Response.json(body, { status, headers });
 }
 
 export type ApiResult = { body: unknown; cacheControl: string };

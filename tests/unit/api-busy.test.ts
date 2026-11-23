@@ -15,6 +15,7 @@ describe("pool timeout", () => {
       withDb(async () => ({ body: {}, cacheControl: "no-store" })),
     );
     expect(response.status).toBe(503);
+    expect(response.headers.get("retry-after")).toBe("5");
     expect((await response.json()).error.code).toBe("unavailable");
   });
 

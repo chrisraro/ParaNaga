@@ -15,11 +15,11 @@ describe("complaint review rules", () => {
   });
 
   it("an outcome exactly when closing; legal hold needs a reason", () => {
-    expect(complaintActionSchema.safeParse({ action: "status", to: "closed", outcomeCode: "duplicate" }).success).toBe(true);
-    expect(complaintActionSchema.safeParse({ action: "status", to: "closed" }).success).toBe(false);
-    expect(complaintActionSchema.safeParse({ action: "status", to: "needs_information", outcomeCode: "duplicate" }).success).toBe(false);
+    expect(complaintActionSchema.safeParse({ action: "status", expectedStatus: "under_review", to: "closed", outcomeCode: "duplicate" }).success).toBe(true);
+    expect(complaintActionSchema.safeParse({ action: "status", expectedStatus: "under_review", to: "closed" }).success).toBe(false);
+    expect(complaintActionSchema.safeParse({ action: "status", expectedStatus: "under_review", to: "needs_information", outcomeCode: "duplicate" }).success).toBe(false);
     expect(complaintActionSchema.safeParse({ action: "legal_hold", hold: true, note: "  " }).success).toBe(false);
-    expect(complaintActionSchema.parse({ action: "status", to: "under_review" })).toMatchObject({ visibility: "reviewer_only" });
+    expect(complaintActionSchema.parse({ action: "status", expectedStatus: "under_review", to: "under_review" })).toMatchObject({ visibility: "reviewer_only" });
   });
 });
 

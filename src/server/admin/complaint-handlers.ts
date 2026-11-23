@@ -111,7 +111,7 @@ export function getComplaint(request: Request, params: Promise<{ id: string }>):
 }
 
 /**
- * POST /api/v1/admin/complaints/:id {action: "status", to, outcomeCode?, note?, visibility} or
+ * POST /api/v1/admin/complaints/:id {action: "status", expectedStatus, to, outcomeCode?, note?, visibility} or
  * {action: "legal_hold", hold, note}. Step-up required; the database checks the transition.
  */
 export function postComplaintAction(request: Request, params: Promise<{ id: string }>): Promise<Response> {
@@ -125,7 +125,7 @@ export function postComplaintAction(request: Request, params: Promise<{ id: stri
       request,
       async (d) =>
         p.action === "status"
-          ? scalar(d, sql`select priv.set_complaint_status(${id}::uuid, ${p.to}, ${p.outcomeCode ?? null}, ${p.note || null}, ${p.visibility}) as ok`)
+          ? scalar(d, sql`select priv.set_complaint_status(${id}::uuid, ${p.to}, ${p.outcomeCode ?? null}, ${p.note || null}, ${p.visibility}, ${p.expectedStatus}) as ok`)
           : scalar(d, sql`select priv.set_complaint_legal_hold(${id}::uuid, ${p.hold}, ${p.note}) as ok`),
       { limit: "mutation" },
     );

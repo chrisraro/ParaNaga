@@ -901,7 +901,7 @@ test("complaint review: step-up first, list without text, open, a 60-second down
   await page.getByTestId("complaint-note-reporter").check();
   await page.getByTestId("complaint-submit").click();
   await expect(page.getByTestId("complaint-notice")).toContainText("PN-7KQ4-2M is now closed.");
-  expect(s.actions).toEqual([{ action: "status", to: "closed", outcomeCode: "insufficient_detail", note: "We could not identify the vehicle.", visibility: "reporter" }]);
+  expect(s.actions).toEqual([{ action: "status", expectedStatus: "submitted", to: "closed", outcomeCode: "insufficient_detail", note: "We could not identify the vehicle.", visibility: "reporter" }]);
 });
 
 test("users and roles: exact email lookup, a reasoned grant after step-up, no controls on your own row", async ({ page, context }) => {
