@@ -1,3 +1,4 @@
+import { sourceTitleLine } from "../../src/domain/sources/present";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { NO_ROUTE_PLAN } from "./fixtures/plan-responses";
@@ -132,7 +133,7 @@ test("Sources and credits lists the captured sources with checked dates and safe
   expect(codes.filter((c) => /^S\d\d$/.test(c ?? ""))).toEqual(expect.arrayContaining(["S01", "S22", "S28", "S33", "S34", "S37", "S39", "S40"]));
   for (const s of SOURCES.sources) {
     const row = page.locator(`[data-testid="source-row"][data-code="${s.code}"]`);
-    await expect(row).toContainText(`${s.code} · ${s.title}`);
+    await expect(row).toContainText(sourceTitleLine(s));
     await expect(row).toContainText(`· checked ${Number(s.checkedOn!.slice(8))} Oct 2026`);
     if (s.code === "S40") {
       // The KML export downloads a file: listed, never offered as a link.
