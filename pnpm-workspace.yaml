@@ -5,18 +5,18 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
 minimumReleaseAgeExclude:
-  - '@next/env@16.4.1'
-  - '@next/eslint-plugin-next@16.4.1'
-  - '@next/swc-darwin-arm64@16.4.1'
-  - '@next/swc-darwin-x64@16.4.1'
-  - '@next/swc-linux-arm64-gnu@16.4.1'
-  - '@next/swc-linux-arm64-musl@16.4.1'
-  - '@next/swc-linux-x64-gnu@16.4.1'
-  - '@next/swc-linux-x64-musl@16.4.1'
-  - '@next/swc-win32-arm64-msvc@16.4.1'
-  - '@next/swc-win32-x64-msvc@16.4.1'
-  - eslint-config-next@16.4.1
-  - next@16.4.1
+  - '@next/env@16.4.6'
+  - '@next/eslint-plugin-next@16.4.6'
+  - '@next/swc-darwin-arm64@16.4.6'
+  - '@next/swc-darwin-x64@16.4.6'
+  - '@next/swc-linux-arm64-gnu@16.4.6'
+  - '@next/swc-linux-arm64-musl@16.4.6'
+  - '@next/swc-linux-x64-gnu@16.4.6'
+  - '@next/swc-linux-x64-musl@16.4.6'
+  - '@next/swc-win32-arm64-msvc@16.4.6'
+  - '@next/swc-win32-x64-msvc@16.4.6'
+  - eslint-config-next@16.4.6
+  - next@16.4.6
 overrides:
   # N8 audit: GHSA-c83g-rgw3-j3cx, GHSA-73wf-gq98-2v4g (build-time only, via @serwist/*). Patch bump; drop once @serwist pulls >=4.28.7.
   "browserslist@<4.28.7": ^4.28.7

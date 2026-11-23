@@ -92,6 +92,8 @@ const nextConfig: NextConfig = {
     serviceWorker: { stale: 315_360_000, revalidate: 315_360_000, expire: 315_360_000 + 86_400 },
   },
   experimental: {
+    // Security upgrades only when an agent runs Next.js commands.
+    agentUpgrade: "security",
     // Soft navigations, prefetches and Server Actions stay pending offline and retry on
     // reconnect instead of throwing (useOffline from next/offline drives the offline UI, Task 12).
     useOffline: true,
