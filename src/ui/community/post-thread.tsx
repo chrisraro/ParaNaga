@@ -204,6 +204,9 @@ export function PostThread({ id }: { id: string }) {
   }
 
   const { post, comments } = load.data;
+  // The comment being replied to went away (blocked, deleted, a refresh): no reply is open then,
+  // or the main box would stay hidden with no reply box to close.
+  if (replyTo !== null && !comments.some((c) => c.id === replyTo || c.replies.some((r) => r.id === replyTo))) setReplyTo(null);
   const live = post.state === "published";
   // The author's newest version, when a person or the policy decided not to publish it (N6: appeal once).
   const latest = post.isOwn ? post.versions[0] : undefined;
@@ -369,7 +372,9 @@ export function PostThread({ id }: { id: string }) {
               busy={busy}
               replyTo={replyTo}
               onReply={(id) => {
-                if (replyDraft.current && id !== replyTo) return setNote(t.replyDraftOpen);
+                // The draft flag belongs to the open reply: with none open, nothing is unsent.
+                if (replyTo && replyDraft.current && id !== replyTo) return setNote(t.replyDraftOpen);
+                if (id !== replyTo) replyDraft.current = false;
                 setReplyTo(id);
               }}
               onHelpful={(c) =>

@@ -116,6 +116,9 @@ function attentionItems(d: Dashboard, corrections: boolean): Item[] {
   return items;
 }
 
+// The moderation queue endpoint returns at most 100 items (review-repo.ts); appeals are not capped.
+const QUEUE_CAP = 100;
+
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
 
 /** The queues outside the network data. A queue this page cannot count is listed as such, never as empty. */
@@ -123,7 +126,7 @@ function queueItems(queue: AdminResult<ModerationQueue> | null, complaints: bool
   const items: Item[] = [];
   if (queue?.ok) {
     const { items: waiting, appeals } = queue.data;
-    if (waiting.length > 0) items.push({ tone: "warn", chip: "Moderation", text: `${plural(waiting.length, "item")} (posts, comments or photos) waiting for a decision.`, href: "/admin/moderation", cta: "Open moderation" });
+    if (waiting.length > 0) items.push({ tone: "warn", chip: "Moderation", text: `${waiting.length >= QUEUE_CAP ? `${QUEUE_CAP}+ items` : plural(waiting.length, "item")} (posts, comments or photos) waiting for a decision.`, href: "/admin/moderation", cta: "Open moderation" });
     if (appeals.length > 0) items.push({ tone: "warn", chip: "Appeals", text: `${plural(appeals.length, "appeal")} to decide.`, href: "/admin/moderation", cta: "Decide appeals" });
   } else if (queue) {
     items.push({ tone: "plain", chip: "Moderation", text: "The moderation queue could not be counted just now. It may hold posts or appeals.", href: "/admin/moderation", cta: "Open moderation" });

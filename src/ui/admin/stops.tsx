@@ -52,6 +52,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
     const mine = ++loads.current;
     const r = await fetchStops();
     if (loads.current === mine) setList(r);
+    return r;
   }, []);
   useEffect(() => {
     let live = true;
@@ -87,8 +88,15 @@ export function StopsScreen({ mode }: { mode: Mode }) {
   };
 
   const done = async (r: AdminResult<unknown>, text: string) => {
-    setNotice(r.ok ? { ok: true, text } : { ok: false, text: r.message });
-    await load();
+    const fresh = await load();
+    const now = fresh.ok ? fresh.data.stops.find((s) => s.stopPointId === selected?.stopPointId) : undefined;
+    // The list is already reloaded here: say what changed on the page instead of "reload".
+    const stale = !r.ok && r.status === 409 && now !== undefined && now.versionId !== selected?.versionId;
+    setNotice(
+      r.ok
+        ? { ok: true, text }
+        : { ok: false, text: stale ? "Someone else changed this stop, so nothing was saved. Its current values are loaded and what you typed is kept. Check them before you send again." : r.message },
+    );
     return r.ok;
   };
 
@@ -297,6 +305,26 @@ function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode
 type Run = (action: StopAction, text: string) => Promise<boolean>;
 type FormProps = { stop: StopRow; disabled: boolean; run: Run };
 
+/**
+ * A field that follows the stop until the person types in it, so a reload never leaves an old value
+ * to be sent back over a colleague's. `clash`: the stop's value changed under what was typed.
+ */
+function useTyped(current: string) {
+  const [typed, setTyped] = useState<{ value: string; base: string } | null>(null);
+  const set = (value: string) => setTyped((t) => (value === current ? null : { value, base: t?.base ?? current }));
+  const touched = typed !== null && typed.value !== current;
+  return { value: typed?.value ?? current, touched, clash: touched && typed.base !== current, set };
+}
+
+const clashHint = (clash: boolean, now: string) => (clash ? `Someone else changed this meanwhile. It is now: ${now}. Sending replaces it with yours.` : undefined);
+
+/** Both coordinates as one field: a point is never half typed and half a colleague's. */
+function useTypedPoint(stop: StopRow) {
+  const { value, touched, clash, set } = useTyped(`${stop.lat.toFixed(7)}\n${stop.lng.toFixed(7)}`);
+  const [lat, lng] = value.split("\n") as [string, string];
+  return { lat, lng, touched, hint: clashHint(clash, coords(stop.lat, stop.lng)), setLat: (v: string) => set(`${v}\n${lng}`), setLng: (v: string) => set(`${lat}\n${v}`) };
+}
+
 function PromoteForm({ stop, disabled, run }: FormProps) {
   const options = promotionOptions(stop);
   const firstAllowed = options.find((o) => o.allowed)?.status ?? options[0]!.status;
@@ -423,8 +451,7 @@ function EvidenceForm({
 }
 
 function RelocateForm({ stop, disabled, run }: FormProps) {
-  const [lat, setLat] = useState(stop.lat.toFixed(7));
-  const [lng, setLng] = useState(stop.lng.toFixed(7));
+  const { lat, lng, hint, setLat, setLng } = useTypedPoint(stop);
   const [reason, setReason] = useState("");
   const problem = useFormProblem();
   // Number("") is 0: a blank coordinate must be refused here, not sent as the equator.
@@ -440,7 +467,7 @@ function RelocateForm({ stop, disabled, run }: FormProps) {
   return (
     <Panel title="Relocate" testId="relocate-form">
       <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={submit} noValidate>
-        <Field label="Latitude" error={problem.errorFor("lat")}>
+        <Field label="Latitude" hint={hint} error={problem.errorFor("lat")}>
           <input className={inputCls} inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} data-testid="relocate-lat" />
         </Field>
         <Field label="Longitude" error={problem.errorFor("lng")}>
@@ -492,13 +519,12 @@ const triValue = (v: boolean | null) => (v === null ? "" : v ? "yes" : "no");
 const fromTri = (v: string): boolean | null => (v === "" ? null : v === "yes");
 
 function EditForm({ stop, disabled, run }: FormProps) {
-  const [name, setName] = useState(stop.name);
-  const [aliases, setAliases] = useState(stop.aliases.join(", "));
-  const [curbSide, setCurbSide] = useState(stop.curbSide ?? "");
-  const [curbLat, setCurbLat] = useState(stop.lat.toFixed(7));
-  const [curbLng, setCurbLng] = useState(stop.lng.toFixed(7));
-  const [boarding, setBoarding] = useState(triValue(stop.boardingAllowed));
-  const [alighting, setAlighting] = useState(triValue(stop.alightingAllowed));
+  const name = useTyped(stop.name);
+  const aliases = useTyped(stop.aliases.join(", "));
+  const curbSide = useTyped(stop.curbSide ?? "");
+  const curb = useTypedPoint(stop);
+  const boarding = useTyped(triValue(stop.boardingAllowed));
+  const alighting = useTyped(triValue(stop.alightingAllowed));
   const [note, setNote] = useState("");
   const curbEvidence = stop.evidence.some((e) => e.claim === "curb_position");
   const problem = useFormProblem();
@@ -506,34 +532,34 @@ function EditForm({ stop, disabled, run }: FormProps) {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (curbEvidence && blank(curbLat)) return problem.fail("Enter the curb latitude as a number.", "curbLat");
-    if (curbEvidence && blank(curbLng)) return problem.fail("Enter the curb longitude as a number.", "curbLng");
+    if (curbEvidence && blank(curb.lat)) return problem.fail("Enter the curb latitude as a number.", "curbLat");
+    if (curbEvidence && blank(curb.lng)) return problem.fail("Enter the curb longitude as a number.", "curbLng");
     problem.clear();
     const changes: Extract<StopAction, { action: "edit" }>["changes"] = {};
-    if (name.trim() && name.trim() !== stop.name) changes.name = name.trim();
-    const list = aliases.split(",").map((a) => a.trim()).filter(Boolean);
-    if (list.join("|") !== stop.aliases.join("|")) changes.aliases = list;
-    if ((curbSide || null) !== stop.curbSide) changes.curbSide = (curbSide || null) as typeof changes.curbSide;
-    if (Number(curbLat) !== Number(stop.lat.toFixed(7)) || Number(curbLng) !== Number(stop.lng.toFixed(7))) {
-      changes.curbLat = Number(curbLat);
-      changes.curbLng = Number(curbLng);
+    if (name.touched && name.value.trim() && name.value.trim() !== stop.name) changes.name = name.value.trim();
+    const list = aliases.value.split(",").map((a) => a.trim()).filter(Boolean);
+    if (aliases.touched && list.join("|") !== stop.aliases.join("|")) changes.aliases = list;
+    if (curbSide.touched) changes.curbSide = (curbSide.value || null) as typeof changes.curbSide;
+    if (curb.touched && (Number(curb.lat) !== Number(stop.lat.toFixed(7)) || Number(curb.lng) !== Number(stop.lng.toFixed(7)))) {
+      changes.curbLat = Number(curb.lat);
+      changes.curbLng = Number(curb.lng);
     }
-    if (fromTri(boarding) !== stop.boardingAllowed) changes.boardingAllowed = fromTri(boarding);
-    if (fromTri(alighting) !== stop.alightingAllowed) changes.alightingAllowed = fromTri(alighting);
+    if (boarding.touched) changes.boardingAllowed = fromTri(boarding.value);
+    if (alighting.touched) changes.alightingAllowed = fromTri(alighting.value);
     if (note.trim()) changes.note = note.trim();
     void run({ action: "edit", expectedVersionId: stop.versionId, changes }, `${stop.code ?? stop.name} updated.`);
   };
   return (
     <Panel title="Stop details" testId="edit-form">
       <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={submit} noValidate>
-        <Field label="Name">
-          <input className={inputCls} value={name} maxLength={120} onChange={(e) => setName(e.target.value)} data-testid="edit-name" />
+        <Field label="Name" hint={clashHint(name.clash, stop.name)}>
+          <input className={inputCls} value={name.value} maxLength={120} onChange={(e) => name.set(e.target.value)} data-testid="edit-name" />
         </Field>
-        <Field label="Other names" hint="Separated by commas, at most 10.">
-          <input className={inputCls} value={aliases} onChange={(e) => setAliases(e.target.value)} data-testid="edit-aliases" />
+        <Field label="Other names" hint={clashHint(aliases.clash, stop.aliases.join(", ") || "None") ?? "Separated by commas, at most 10."}>
+          <input className={inputCls} value={aliases.value} onChange={(e) => aliases.set(e.target.value)} data-testid="edit-aliases" />
         </Field>
-        <Field label="Curb side" hint={curbEvidence ? undefined : "Needs curb position evidence first."}>
-          <select className={inputCls} value={curbSide} disabled={!curbEvidence} onChange={(e) => setCurbSide(e.target.value)} data-testid="edit-curb-side">
+        <Field label="Curb side" hint={curbEvidence ? clashHint(curbSide.clash, stop.curbSide ? label(stop.curbSide) : "Not recorded") : "Needs curb position evidence first."}>
+          <select className={inputCls} value={curbSide.value} disabled={!curbEvidence} onChange={(e) => curbSide.set(e.target.value)} data-testid="edit-curb-side">
             <option value="">Not recorded</option>
             {CURB_SIDES.map((c) => (
               <option key={c} value={c}>
@@ -543,22 +569,22 @@ function EditForm({ stop, disabled, run }: FormProps) {
           </select>
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Curb latitude" error={problem.errorFor("curbLat")}>
-            <input className={inputCls} inputMode="decimal" value={curbLat} disabled={!curbEvidence} onChange={(e) => setCurbLat(e.target.value)} />
+          <Field label="Curb latitude" hint={curb.hint} error={problem.errorFor("curbLat")}>
+            <input className={inputCls} inputMode="decimal" value={curb.lat} disabled={!curbEvidence} onChange={(e) => curb.setLat(e.target.value)} />
           </Field>
           <Field label="Curb longitude" error={problem.errorFor("curbLng")}>
-            <input className={inputCls} inputMode="decimal" value={curbLng} disabled={!curbEvidence} onChange={(e) => setCurbLng(e.target.value)} />
+            <input className={inputCls} inputMode="decimal" value={curb.lng} disabled={!curbEvidence} onChange={(e) => curb.setLng(e.target.value)} />
           </Field>
         </div>
-        <Field label="Boarding allowed">
-          <select className={inputCls} value={boarding} onChange={(e) => setBoarding(e.target.value)}>
+        <Field label="Boarding allowed" hint={clashHint(boarding.clash, yesNo(stop.boardingAllowed))}>
+          <select className={inputCls} value={boarding.value} onChange={(e) => boarding.set(e.target.value)}>
             <option value="">Not stated</option>
             <option value="yes">Yes</option>
             <option value="no">No</option>
           </select>
         </Field>
-        <Field label="Alighting allowed">
-          <select className={inputCls} value={alighting} onChange={(e) => setAlighting(e.target.value)}>
+        <Field label="Alighting allowed" hint={clashHint(alighting.clash, yesNo(stop.alightingAllowed))}>
+          <select className={inputCls} value={alighting.value} onChange={(e) => alighting.set(e.target.value)}>
             <option value="">Not stated</option>
             <option value="yes">Yes</option>
             <option value="no">No</option>

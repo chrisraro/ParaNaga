@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HALF_VISIBLE, MAP_MIN_SHARE, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, mapInsetFor, offsetFor, sheetGrows } from "@/ui/app-shell/bottom-sheet";
+import { HALF_VISIBLE, MAP_MIN_SHARE, PEEK_HEAD_AROUND, PEEK_OPTIONS_VISIBLE, PEEK_VISIBLE, mapInsetFor, offsetFor, peekVisibleFor, sheetGrows } from "@/ui/app-shell/bottom-sheet";
 
 describe("offsetFor with a taller peek (options listed)", () => {
   it("defaults to the 214 px peek and keeps half and full", () => {
@@ -65,5 +65,25 @@ describe("short and zoomed screens (WCAG 1.4.10)", () => {
         expect(shown(2)).toBeGreaterThanOrEqual(shown(1));
       }
     }
+  });
+});
+
+describe("the peek with larger text", () => {
+  const head = { px: 300, key: "1.3|2|" };
+
+  it("is the fixed budget at the default text size, measured or not", () => {
+    expect(peekVisibleFor(PEEK_VISIBLE, 1, null, "1|0|")).toBe(PEEK_VISIBLE);
+    expect(peekVisibleFor(PEEK_OPTIONS_VISIBLE, 1, { px: 300, key: "1|2|" }, "1|2|")).toBe(PEEK_OPTIONS_VISIBLE);
+  });
+
+  it("fits the measured head, for the plain rows as for the option cards", () => {
+    expect(peekVisibleFor(PEEK_OPTIONS_VISIBLE, 1.3, head, "1.3|2|")).toBe(300 + PEEK_HEAD_AROUND);
+    expect(peekVisibleFor(PEEK_VISIBLE, 1.3, { px: 200, key: "1.3|0|" }, "1.3|0|")).toBe(200 + PEEK_HEAD_AROUND);
+  });
+
+  it("falls back to the scaled budget when the head was measured for other cards or notes, or not yet", () => {
+    expect(peekVisibleFor(PEEK_VISIBLE, 1.3, head, "1.3|0|")).toBe(Math.round(PEEK_VISIBLE * 1.3));
+    expect(peekVisibleFor(PEEK_OPTIONS_VISIBLE, 1.3, head, "1.3|2|Saved offline")).toBe(Math.round(PEEK_OPTIONS_VISIBLE * 1.3));
+    expect(peekVisibleFor(PEEK_VISIBLE, 1.3, null, "1.3|0|")).toBe(Math.round(PEEK_VISIBLE * 1.3));
   });
 });

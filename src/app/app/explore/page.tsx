@@ -4,6 +4,7 @@ import { ExplorePage as ExploreTab } from "@/ui/explore/explore-screen";
 export const metadata: Metadata = {
   title: "Explore",
   description: "Places in Naga from OpenStreetMap, and how to get there, plus everything Lunad has on file.",
+  alternates: { canonical: "/app/explore" },
 };
 
 // Tab page over the mounted home map (src/ui/app-shell/app-frame.tsx). Static shell; the places

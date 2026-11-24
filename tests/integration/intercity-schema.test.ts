@@ -100,8 +100,11 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("intercity schema (0029, Neo
   });
 
   it("keeps the existing regional services valid (community_mapped, no dates)", async () => {
-    const { rows } = await owner.query("select count(*)::int as n from transit.regional_service_version where status <> 'community_mapped'");
-    expect(rows[0]).toEqual({ n: 0 });
+    // The seven services of the modes seed, older than 0029; the intercity imports add dated ones beside them.
+    const { rows } = await owner.query(
+      `select count(distinct regional_service_id)::int as n from transit.regional_service_version
+        where status = 'community_mapped' and as_of is null and review_by is null`);
+    expect(rows[0].n).toBeGreaterThanOrEqual(7);
   });
 
   it("accepts departures and a dated fare observation under an operating service", async () => {

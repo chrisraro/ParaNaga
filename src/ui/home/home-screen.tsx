@@ -54,7 +54,7 @@ import { previewIndex } from "@/domain/trip/option-card";
 import { OPTIONS_TOGGLE_ID, OptionsPeek, TripOptions, optionDomId, peekOptionDomId, peekOptions } from "@/ui/trip/trip-options";
 import { TripError, TripLoading, TripNoCoverage } from "@/ui/trip/trip-status";
 import { planLookups } from "@/ui/trip/trip-parts";
-import { PEEK_HEAD_AROUND, PEEK_NOTE_VISIBLE, PEEK_VISIBLE, peekOptionsVisible, TINY_SHEET, mapInsetFor, useSheet, useTextScale, type Snap } from "@/ui/app-shell/bottom-sheet";
+import { PEEK_NOTE_VISIBLE, PEEK_VISIBLE, peekOptionsVisible, peekVisibleFor, TINY_SHEET, mapInsetFor, useSheet, useTextScale, type HeadMeasure, type Snap } from "@/ui/app-shell/bottom-sheet";
 import { EndpointSheet, endpointRowMainId } from "./endpoint-sheet";
 import { LunadMark } from "@/ui/brand/lunad-mark";
 import { HomeSearchBar } from "./home-search-bar";
@@ -288,13 +288,17 @@ export function HomeScreen() {
   // The peek's option cards have a fixed height: the peek is known from how many there are (one or two), never measured.
   const peekRows = optionsListed ? peekOptions(planData.plan.options).length : 0;
   const [follow] = useState(createSheetFollow);
-  // Larger text: the cards wrap and grow, so the head is measured at the peek (endpoint-sheet.tsx);
-  // until it is, the budget grown by the text scale stands in.
+  // Larger text: the rows and cards wrap and grow, so the head is measured at the peek
+  // (endpoint-sheet.tsx). The measure is kept with what it was measured for: until the head is
+  // measured for the current cards and notes, the budget grown by the text scale stands in.
   const textScale = useTextScale();
-  const [headHeight, setHeadHeight] = useState<number | null>(null);
-  const optionsPeek = peekOptionsVisible(peekRows) + PEEK_NOTE_VISIBLE * peekNotes.length;
-  const largePeek = textScale > 1 ? (headHeight === null ? Math.round(optionsPeek * textScale) : headHeight + PEEK_HEAD_AROUND) : optionsPeek;
-  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, optionsListed ? largePeek : PEEK_VISIBLE, (visible, height, dragging) =>
+  const [head, setHead] = useState<HeadMeasure | null>(null);
+  const headKey = `${textScale}|${peekRows}|${peekNotes.join("|")}`;
+  const onHeadHeight = useCallback((px: number) => setHead((was) => (was?.px === px && was.key === headKey ? was : { px, key: headKey })), [headKey]);
+  const basePeek = optionsListed ? peekOptionsVisible(peekRows) + PEEK_NOTE_VISIBLE * peekNotes.length : PEEK_VISIBLE;
+  // Trip detail and guidance have no head to measure: their peek keeps the fixed budget.
+  const headShown = !guiding && !stored && !openOption;
+  const sheet = useSheet(1, frame?.tabBarClearance ?? 0, headShown ? peekVisibleFor(basePeek, textScale, head, headKey) : basePeek, (visible, height, dragging) =>
     follow(homeRef.current, `${Math.round(Math.max(0, visible - mapInsetFor(height)))}px`, dragging),
   );
   // Where focus goes once the results render: the results heading, or an option card.
@@ -1119,7 +1123,7 @@ export function HomeScreen() {
           onUseCurrentLocation={() => handleUseCurrentLocation()}
           onChooseOnMap={handleChooseOnMap}
           detailOpen={tripDetailOpen || guiding}
-          onHeadHeight={optionsListed && textScale > 1 ? setHeadHeight : undefined}
+          onHeadHeight={textScale > 1 ? onHeadHeight : undefined}
           summary={
             optionsListed && planData ? (
               <OptionsPeek data={planData} etaModel={snapshotState.snapshot?.etaModel} expanded={sheet.snap === 2} listShown={sheet.snap !== 0} notes={peekNotes} onToggle={handleToggleOptions} onOpen={handleOpenOption} />

@@ -7,6 +7,7 @@ import { LeavingFallback, LeavingScreen } from "@/ui/intercity/leaving-screen";
 export const metadata: Metadata = {
   title: "Leaving Naga",
   description: "Buses, vans, trains and flights from Naga to towns outside the city: the terminal, what is known about fares and departures, and when each fact was checked.",
+  alternates: { canonical: "/app/leaving" },
 };
 
 // S24 (IC1). A static shell, listed in the worker's SHELL_PATHS: `?to=` (the destination) is read

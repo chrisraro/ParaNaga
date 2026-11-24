@@ -401,6 +401,7 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
         <select className={inputCls} value={to} onChange={(e) => {
             // The outcome field comes and goes with the status: an old problem must not come back with it.
             problem.clear();
+            setConfirming(false);
             setTo(e.target.value as ComplaintStatus);
           }} data-testid="complaint-to">
           {options.map((s) => (

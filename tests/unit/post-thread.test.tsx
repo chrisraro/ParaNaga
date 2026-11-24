@@ -150,6 +150,32 @@ describe("post thread actions", () => {
     expect(back.closest("[hidden]")).toBeNull();
   });
 
+  it("a reply whose comment went away (blocked) no longer hides the main box or refuses another reply", async () => {
+    const OTHER_ID = "33333333-3333-4333-8333-333333333333";
+    const two = detail();
+    two.comments.push({ ...two.comments[0]!, id: OTHER_ID, authorHandle: "rider-4", body: "Agreed." });
+    api.fetchPost.mockResolvedValueOnce({ ok: true, data: two });
+    api.blockPerson.mockResolvedValue({ ok: true });
+    render(<PostThread id={POST_ID} />);
+    const [first] = await screen.findAllByTestId("comment");
+    fireEvent.click(within(first!).getByTestId("comment-reply"));
+    fireEvent.change(screen.getByLabelText("Your reply"), { target: { value: "Thanks" } });
+
+    // Blocking the person reloads the thread without their comment (the reply box goes with it).
+    api.fetchPost.mockResolvedValueOnce({ ok: true, data: { ...two, comments: [two.comments[1]!] } });
+    fireEvent.click(within(first!).getAllByRole("button", { hidden: true }).find((b) => b.textContent === "Block this person")!);
+    await act(async () => fireEvent.click(confirmBlock()[0]!));
+    await act(async () => undefined);
+    expect(screen.getAllByTestId("comment")).toHaveLength(1);
+    expect(screen.queryByLabelText("Your reply")).toBeNull();
+    expect(screen.getByLabelText("Your comment").closest("[hidden]")).toBeNull();
+
+    // The lost reply's text does not count as an open draft.
+    fireEvent.click(screen.getByTestId("comment-reply"));
+    expect((screen.getByLabelText("Your reply") as HTMLTextAreaElement).value).toBe("");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
   it("focus goes to the error message when a reload fails and the focused control is gone", async () => {
     api.toggleHelpful.mockResolvedValue({ ok: true, data: { active: true, count: 1 } });
     render(<PostThread id={POST_ID} />);

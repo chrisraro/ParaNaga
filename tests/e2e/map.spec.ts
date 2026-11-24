@@ -38,6 +38,7 @@ async function openApp(page: Page) {
 
 async function readView(page: Page) {
   const el = mapEl(page);
+  await expect(el).toHaveAttribute("data-zoom", /\d/); // after a full load the map mounts late
   return {
     lat: Number(await el.getAttribute("data-center-lat")),
     lng: Number(await el.getAttribute("data-center-lng")),

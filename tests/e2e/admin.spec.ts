@@ -503,6 +503,40 @@ test("stops and curbs: curb side waits for curb evidence; edits go to the draft"
   expect(s.actions.at(-1)).toMatchObject({ action: "edit", changes: { name: "Naga Metropolitan Cathedral", aliases: ["Cathedral", "Katedral"], curbSide: "right_of_travel" } });
 });
 
+test("stops: after a 409 only typed fields are sent, and a field a colleague also changed says so", async ({ page, context }) => {
+  await signInAs(context, "commuter,admin");
+  const s = await mockStopsApi(page);
+  await page.goto("/admin/stops");
+  await page.getByTestId("stop-Loop Service C-C5").getByRole("button", { name: /Edit/ }).click();
+  await page.getByTestId("edit-name").fill("My name");
+  // A colleague changes the name and the other names of this stop.
+  Object.assign(s.stops[1]!, { name: "Colleague name", aliases: ["Katedral"], versionId: ID(990) });
+  await page.getByTestId("edit-go").click();
+  await expect(page.getByTestId("stops-notice")).toContainText("Someone else changed this stop");
+  await expect(page.getByTestId("edit-aliases")).toHaveValue("Katedral"); // untouched: follows the stop
+  await expect(page.getByTestId("edit-name")).toHaveValue("My name"); // typed: kept, with the current value beside it
+  await expect(page.getByTestId("edit-form")).toContainText("It is now: Colleague name.");
+  await page.getByTestId("edit-go").click();
+  await expect(page.getByTestId("stops-notice")).toContainText("updated");
+  expect(s.actions.at(-1)).toMatchObject({ expectedVersionId: ID(990) });
+  expect(s.actions.at(-1)!.changes).toEqual({ name: "My name" });
+  expect(s.stops[1]!.aliases).toEqual(["Katedral"]);
+
+  // Relocate: untouched coordinates follow the stop; a typed point stays whole and says so.
+  await page.goto("/admin/candidates");
+  await page.getByTestId("stop-Loop Service C-C5").getByRole("button", { name: /Review/ }).click();
+  await page.getByTestId("relocate-reason").fill("Wrong side of the road.");
+  Object.assign(s.stops[1]!, { lat: 13.627, lng: 123.19, versionId: ID(991) });
+  await page.getByTestId("relocate-go").click();
+  await expect(page.getByTestId("relocate-lat")).toHaveValue("13.6270000");
+  await page.getByTestId("relocate-lat").fill("13.6263");
+  Object.assign(s.stops[1]!, { lat: 13.628, lng: 123.191, versionId: ID(992) });
+  await page.getByTestId("relocate-go").click();
+  await expect(page.getByTestId("relocate-form")).toContainText("It is now: 13.628000, 123.191000.");
+  await expect(page.getByTestId("relocate-lat")).toHaveValue("13.6263");
+  await expect(page.getByTestId("relocate-lng")).toHaveValue("123.1900000");
+});
+
 test("reconciliation: decide a same-point pair; pin mismatches are listed read-only", async ({ page, context }) => {
   await signInAs(context, "commuter,transport_reviewer");
   const s = await mockStopsApi(page);

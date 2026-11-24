@@ -32,6 +32,15 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
   const [canClip] = useState(() => typeof window !== "undefined" && supportedClipType() !== null);
   // The item a Retake replaces: it stays until the new capture exists (a closed or failed camera keeps it).
   const retaking = useRef<string | null>(null);
+  // The capture being finished (the photo is encoded, the clip is recorded). A second tap waits for
+  // it; closing the camera or leaving the step forgets it, and what it then produces is dropped.
+  const capture = useRef<object | null>(null);
+  useEffect(
+    () => () => {
+      capture.current = null;
+    },
+    [],
+  );
   const full = items.length >= max;
   const live = state === "live";
 
@@ -56,9 +65,12 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
   };
 
   const onPhoto = async () => {
-    if (!live || recording) return;
+    if (!live || recording || capture.current) return;
+    const mine = (capture.current = {});
     const replacing = retaking.current ?? undefined;
     const blob = await takePhoto();
+    if (capture.current !== mine) return;
+    capture.current = null;
     stop();
     retaking.current = null;
     add(blob, "in_app_camera", replacing);
@@ -66,19 +78,25 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
   const onClip = async () => {
     if (!live) return;
     if (recording) return stopClip();
+    if (capture.current) return;
+    const mine = (capture.current = {});
     const replacing = retaking.current ?? undefined;
     const blob = await recordClip();
+    if (capture.current !== mine) return;
+    capture.current = null;
     stop();
     retaking.current = null;
     add(blob, "in_app_camera", replacing);
   };
   const retake = (key: string) => {
     retaking.current = key;
+    capture.current = null;
     setNote(null);
     void start();
   };
   const closeCamera = () => {
     retaking.current = null;
+    capture.current = null;
     stop();
   };
 
@@ -154,6 +172,7 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
         <div className="pn-report__row">
           <button ref={openRef} type="button" className="pn-btn pn-btn--primary pn-report__small" onClick={() => {
               retaking.current = null;
+              capture.current = null;
               void start();
             }} data-testid="driver-open-camera">
             {items.length > 0 ? t.addAnother : t.openCamera}

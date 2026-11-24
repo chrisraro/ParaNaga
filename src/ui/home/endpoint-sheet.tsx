@@ -72,7 +72,7 @@ type Props = {
   detailOpen?: boolean;
   /** Always operable, even at the peek snap (outside the inert part): the best-option summary and its toggle. */
   summary?: ReactNode;
-  /** Larger text: told the head's height (rows + summary) at the peek snap, so the peek can fit it. */
+  /** Larger text: told the head's height (rows + summary) at the peek snap, so the peek can fit it. A new function asks for a new measure. */
   onHeadHeight?: ((px: number) => void) | undefined;
 };
 

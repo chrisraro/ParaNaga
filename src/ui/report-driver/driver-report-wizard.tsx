@@ -205,7 +205,13 @@ function Wizard() {
 
   // `replacing`: a Retake. The new file takes the old one's place only now that it exists and passed.
   const addItem = (blob: Blob, captureKind: CaptureKind, replacing?: string): string | null => {
-    if (!replacing && itemsRef.current.length >= MAX_COMPLAINT_EVIDENCE) return t.tooMany(MAX_COMPLAINT_EVIDENCE);
+    // A file that arrives after the screen was left is dropped: no preview URL, no evidence kept.
+    if (left.current) return null;
+    // The ref is brought up to date here, not only after a render: two files in a row see each other.
+    const all = itemsRef.current;
+    const old = replacing ? all.find((i) => i.key === replacing) : undefined;
+    // A Retake whose old file is gone (replaced already) is one more file: the limit applies.
+    if (!old && all.length >= MAX_COMPLAINT_EVIDENCE) return t.tooMany(MAX_COMPLAINT_EVIDENCE);
     const problem = evidenceFileProblem(blob, t);
     if (problem) return problem;
     const mime = evidenceType(blob.type)!;
@@ -217,9 +223,10 @@ function Wizard() {
       captureKind,
       capturedAt: new Date().toISOString(),
     };
-    const old = replacing ? itemsRef.current.find((i) => i.key === replacing) : undefined;
     if (old) URL.revokeObjectURL(old.url);
-    setItems((all) => (old ? all.map((i) => (i.key === old.key ? item : i)) : [...all, item]));
+    const next = old ? all.map((i) => (i.key === old.key ? item : i)) : [...all, item];
+    itemsRef.current = next;
+    setItems(next);
     return null;
   };
   const removeItem = (key: string) => {

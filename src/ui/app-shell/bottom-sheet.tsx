@@ -37,6 +37,16 @@ export const PEEK_NOTE_VISIBLE = 24;
  * measured and this is added, instead of the fixed budget above.
  */
 export const PEEK_HEAD_AROUND = 59;
+/** The head's measured height, with what it was measured for (text scale, cards, notes). */
+export type HeadMeasure = { px: number; key: string };
+/**
+ * The peek for a px budget `base`. Larger text: the head as measured for `key`, else (not measured
+ * yet, or measured for other content) the budget grown by the text scale. Scale 1 is the budget.
+ */
+export function peekVisibleFor(base: number, scale: number, head: HeadMeasure | null, key: string): number {
+  if (scale <= 1) return base;
+  return head?.key === key ? head.px + PEEK_HEAD_AROUND : Math.round(base * scale);
+}
 
 let textScale = 1;
 const textScaleListeners = new Set<() => void>();

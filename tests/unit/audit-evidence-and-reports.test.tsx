@@ -153,6 +153,43 @@ describe("evidence files (F13)", () => {
     expect(p.onRemove).not.toHaveBeenCalled();
   });
 
+  const pendingPhoto = () => {
+    let resolve!: (blob: Blob) => void;
+    camera.takePhoto.mockReturnValue(new Promise<Blob>((r) => (resolve = r)));
+    return () => act(async () => resolve(new Blob(["y"], { type: "image/jpeg" })));
+  };
+
+  it("two taps on the shutter during Retake make one photo", async () => {
+    const p = props();
+    const finish = pendingPhoto();
+    camera.state = "live";
+    render(<CameraCapture {...p} />);
+    fireEvent.click(screen.getByRole("button", { name: "Retake photo 1" }));
+    fireEvent.click(screen.getByTestId("driver-shutter"));
+    fireEvent.click(screen.getByTestId("driver-shutter"));
+    await finish();
+    expect(camera.takePhoto).toHaveBeenCalledTimes(1);
+    expect(p.onAdd).toHaveBeenCalledTimes(1);
+    expect(p.onAdd).toHaveBeenCalledWith(expect.any(Blob), "in_app_camera", "k1");
+  });
+
+  it("a photo that finishes after the camera was closed, or the step was left, is dropped", async () => {
+    const p = props();
+    let finish = pendingPhoto();
+    camera.state = "live";
+    const view = render(<CameraCapture {...p} />);
+    fireEvent.click(screen.getByTestId("driver-shutter"));
+    fireEvent.click(screen.getByTestId("driver-camera-close"));
+    await finish();
+    expect(p.onAdd).not.toHaveBeenCalled();
+
+    finish = pendingPhoto();
+    fireEvent.click(screen.getByTestId("driver-shutter"));
+    view.unmount();
+    await finish();
+    expect(p.onAdd).not.toHaveBeenCalled();
+  });
+
   it("closing the camera after Retake keeps the old file, and the next capture is not a replacement", async () => {
     const p = props();
     camera.takePhoto.mockResolvedValue(new Blob(["y"], { type: "image/jpeg" }));
