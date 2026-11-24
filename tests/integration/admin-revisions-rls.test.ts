@@ -218,12 +218,26 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("admin revisions and publica
       "insert into transit.revision (label, kind, status, created_by) values ($1, 'provisional', 'draft', 'test') returning id", [`adm-${run}-orphan`])).rows[0]!.id;
     expect((await failure(publish(admin, orphan, newer, "publish"))).message).toMatch(/made from an older revision/);
 
+    // Edits never land in a stale draft (the helper every edit path opens the draft with).
+    const openDraft = async () => {
+      await owner.query("begin");
+      try {
+        await owner.query("select set_config('app.user_id', 'test-editor', true)");
+        await owner.query("set local role paranaga_definer");
+        return (await owner.query<{ id: string }>("select transit.admin_open_draft() as id")).rows[0]!.id;
+      } finally {
+        await owner.query("rollback");
+      }
+    };
+    expect((await failure(openDraft())).message).toMatch(/made from an older revision; create a new draft/);
+
     // Neither stale draft blocks the replacement (labels are per second), which publishes as usual;
     // a draft made from the live revision still blocks a second one.
     await new Promise((r) => setTimeout(r, 1100));
     const fresh = (await one<{ id: string }>(reviewer, sql`select transit.admin_create_draft() as id`)).id;
     expect((await owner.query("select parent_revision_id as p from transit.revision where id = $1", [fresh])).rows[0].p).toBe(newer);
     expect((await failure(one(admin, sql`select transit.admin_create_draft()`))).code).toBe("55000");
+    expect(await openDraft()).toBe(fresh);
     await validate(reviewer, fresh);
     expect((await publish(admin, fresh, newer, "publish")).p).toMatchObject({ revisionId: fresh, previousRevisionId: newer, mode: "publish" });
     expect(await pointer()).toBe(fresh);

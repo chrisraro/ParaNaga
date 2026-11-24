@@ -780,7 +780,7 @@ describe("0031: a draft made from an older revision is refused at publication (a
   }
 
   it("changes no table, policy or table grant, and gives schema CREATE only for the length of the migration", () => {
-    expect(fns31.map((f) => f.name).sort()).toEqual(["transit.admin_create_draft", "transit.admin_publish_revision"]);
+    expect(fns31.map((f) => f.name).sort()).toEqual(["transit.admin_create_draft", "transit.admin_open_draft", "transit.admin_publish_revision"]);
     expect(SQL31).not.toMatch(/create policy|drop policy|row level security|alter table|create table|drop function/);
     expect(SQL31).not.toMatch(/grant (?!execute|create on schema)[^;]*;/);
     expect(SQL31.trimStart().startsWith("grant create on schema transit to paranaga_definer;")).toBe(true);

@@ -4,8 +4,8 @@
 -- the page showed and the membership hash, but never that the draft's parent is still the
 -- published revision. So: an admin opens draft D from A; an import publishes B (or someone rolls
 -- back to an older revision); the admin reloads, validates and publishes D; everything B changed
--- disappears without a word. No table is created, altered or rewritten; two function bodies
--- change. Runs in one transaction (scripts/migrate.ts).
+-- disappears without a word. No table is created, altered or rewritten; three function
+-- bodies change. Runs in one transaction (scripts/migrate.ts).
 --
 -- 1. transit.admin_publish_revision (latest definition: 0027; same signature, owner, SECURITY
 --    DEFINER, search_path and grants). New, in mode 'publish' only, under the publish lock and the
@@ -28,11 +28,14 @@
 --    grants). It refused while ANY draft was open, and nothing can discard a draft. With (1) alone
 --    a stale draft would be a dead end: it cannot be published and it blocks its replacement. Now
 --    only a draft made from the published revision blocks a new one. A stale draft stays in the
---    list as a draft that cannot be published; every edit function takes the newest draft
---    (order by seq desc), which is the new one.
---    Known limit: roll back to the parent of an older stale draft while a newer draft is open, and
---    the older one is publishable again while edits still go to the newer one. Nothing published
---    is lost in that case; (1) decides at publication.
+--    list as a draft that cannot be published. It also
+--    takes the publish lock, so a draft cannot be born stale while a publication commits.
+--
+-- 3. transit.admin_open_draft (0027; helper of every edit: stop edits, corrections, reconciliation,
+--    map import). It took the newest draft whatever its parent, so work could be accepted into a
+--    draft that can never be published, with no way to redo it. Now: the newest draft made from
+--    the published revision; none of those but a stale one open -> 55000, create a new draft.
+--    Known limit: work accepted into a draft before a rollback stays in that draft.
 --
 -- Backward compatibility: the running app works before and after this migration with no code
 -- change. Same signatures and result shapes; the new refusal is one more 55000 message, shown as
@@ -40,9 +43,10 @@
 -- published revision.
 --
 -- Manual rollback (owner connection): `grant create on schema transit to paranaga_definer;`, run
--- the transit.admin_publish_revision block of 0027 and the transit.admin_create_draft block of
--- 0023 (create or replace, owner, revoke, grant), then
--- `revoke create on schema transit from paranaga_definer;`. No data needs to be restored.
+-- the transit.admin_open_draft and transit.admin_publish_revision blocks of 0027 and the
+-- transit.admin_create_draft block of 0023 (create or replace, owner, revoke, grant), then
+-- `revoke create on schema transit from paranaga_definer;`. No data needs to be restored,
+-- but stale drafts left open then block 0023's create and can be published again: check them first.
 
 grant create on schema transit to paranaga_definer;
 
@@ -129,6 +133,8 @@ declare
   v_label text;
 begin
   perform pg_advisory_xact_lock(hashtext('transit.admin_create_draft'));
+  -- Taken second, here only: a publication in progress finishes before its result is copied.
+  perform pg_advisory_xact_lock(hashtext('transit.publish_revision'));
   select r.* into v_pub
     from transit.published_pointer pp join transit.revision r on r.id = pp.revision_id
    where pp.singleton;
@@ -156,5 +162,36 @@ $$;
 alter function transit.admin_create_draft() owner to paranaga_definer;
 revoke execute on function transit.admin_create_draft() from public;
 grant execute on function transit.admin_create_draft() to paranaga_app;
+
+-- ---------------------------------------------------------------- the open draft (helper)
+-- The newest draft made from the published revision, locked (FOR UPDATE: edits serialize with each
+-- other and with publication), with the caller recorded as its last editor.
+create or replace function transit.admin_open_draft() returns uuid
+  language plpgsql volatile
+  set search_path = pg_catalog, transit, pg_temp
+as $$
+declare
+  v_user text := core.current_user_id();
+  v_draft uuid;
+begin
+  if v_user is null then
+    raise exception 'forbidden' using errcode = '42501';
+  end if;
+  select r.id into v_draft from transit.revision r
+   where r.status = 'draft'
+     and r.parent_revision_id is not distinct from (select pp.revision_id from transit.published_pointer pp where pp.singleton)
+   order by r.seq desc limit 1 for update of r;
+  if v_draft is null then
+    if exists (select 1 from transit.revision r where r.status = 'draft') then
+      raise exception 'the open draft was made from an older revision; create a new draft under Revisions first' using errcode = '55000';
+    end if;
+    raise exception 'no draft revision is open; create one under Revisions first' using errcode = '55000';
+  end if;
+  update transit.revision set last_edited_by = v_user where id = v_draft;
+  return v_draft;
+end;
+$$;
+alter function transit.admin_open_draft() owner to paranaga_definer;
+revoke execute on function transit.admin_open_draft() from public;
 
 revoke create on schema transit from paranaga_definer;

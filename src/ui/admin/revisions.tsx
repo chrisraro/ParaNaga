@@ -196,6 +196,7 @@ export function RevisionsScreen() {
           <Panel key={`${flow.target.mode}:${flow.target.id}`} focusOnOpen variant="confirm" title={flow.target.mode === "publish" ? `Publish ${flow.target.label}?` : `Roll back to ${flow.target.label}?`}>
             <Muted>
               {`It replaces ${published?.label ?? "the published revision"} for every rider, at once. Saved trips on phones are checked against it the next time they open.`}
+              {flow.target.mode === "rollback" ? " An open draft stops accepting edits and cannot be published after this; what is in it has to be redone in a new draft." : ""}
             </Muted>
             <div className="mt-4 flex flex-wrap gap-3">
               <button
