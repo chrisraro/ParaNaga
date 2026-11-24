@@ -1829,15 +1829,15 @@ The 98 dashed lines in §2: 37 from `revision_member`; 23 source code columns; t
 
 ## 5. Proposed migrations (words only)
 
-Forward-only, one file each, in this order. No SQL is written yet. Numbers are the next free ones.
+Forward-only, one file each, in this order. 0031 to 0035 are applied (see §1.5); the rest are proposals without SQL.
 
 | Order | Proposal | Findings | Risk |
 |---|---|---|---|
-| 0031 | Replace `admin_publish_revision` with the parent check. Decide the message and whether an override exists | C1 | Low: one function. It blocks a draft that predates a rollback, which is the point |
-| 0032 | Take-down function, audit in `resolve_report`, post-first lock order in `content_target`; `toggle_*` with `on conflict` and a locked or incremental count | C2 to C5 | Medium: moderation behaviour changes; needs RLS tests for every role |
-| 0033 | Two small indexes: evidence access by complaint, decisions by date (I1 and I2 are in 0032) | I3, I4 | Low: tiny tables |
-| 0034 | Narrow grants: `profile` columns, `ops.job` column, revoke three dead functions | S1 to S3 | Low: no code was found that depends on them |
-| 0035 | Role timeouts for `paranaga_app`; none for the import role | O3 | Medium: a value that is too short breaks revision validation; try it on a branch through the pooler first |
+| 0031 (applied) | Replace `admin_publish_revision` with the parent check. Decide the message and whether an override exists | C1 | Low: one function. It blocks a draft that predates a rollback, which is the point |
+| 0032 (applied) | Take-down function, audit in `resolve_report`, post-first lock order in `content_target`; `toggle_*` with `on conflict` and a locked or incremental count | C2 to C5 | Medium: moderation behaviour changes; needs RLS tests for every role |
+| 0033 (applied) | Two small indexes: evidence access by complaint, decisions by date (I1 and I2 are in 0032) | I3, I4 | Low: tiny tables |
+| 0034 (applied) | Narrow grants: `profile` columns, `ops.job` column, revoke three dead functions | S1 to S3 | Low: no code was found that depends on them |
+| 0035 (applied) | Role timeouts for `paranaga_app`; none for the import role | O3 | Medium: a value that is too short breaks revision validation; try it on a branch through the pooler first |
 | 0036 | Photo removal states and functions | §4.6 | Medium: touches the delete policy on `media_object` |
 | 0037 | Withdraw and answer functions for reporters | §4.6 | Medium: personal data; needs a security review |
 | later | Account deletion with F5, F6, I5; keys F2 to F4; drop indexes I6 and I7 after production statistics; drop `moderation_policy`, `ingest.error` and legacy functions | as listed | Dropping is irreversible: backup branch first |
@@ -1845,6 +1845,8 @@ Forward-only, one file each, in this order. No SQL is written yet. Numbers are t
 Every migration: a backup branch, `pnpm db:check-rls`, and integration tests through `scripts/with-neon-branch.sh`.
 
 ## 6. Before new code
+
+Items 1 to 8 are done as of 2026-11-24, except refreshing spec 04 (item 8).
 
 1. **Approve or correct this document** (remove the AI draft mark).
 2. **C1:** stop a stale draft from overwriting a newer publication. Until then: no publishing CLI import while an admin draft is open.
