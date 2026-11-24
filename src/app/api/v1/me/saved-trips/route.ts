@@ -88,8 +88,18 @@ async function postSaved(request: Request, requestId: string) {
   );
   if (!allowed) throw tooManyRequests();
 
-  await withRequestContext({ userId: user.id, requestId }, async (db) => {
+  // A trip planned on a revision this database does not have (a preview, another environment) cannot
+  // be stored: revision_id is a NOT NULL key. Only that trip is left out; it stays on the phone.
+  const rejected = await withRequestContext({ userId: user.id, requestId }, async (db) => {
+    const revisionIds = parsed.data.trips.map((t) => t.revisionId.toLowerCase());
+    const found = await db.execute<{ id: string }>(sql`select id from transit.revision where id = any(${sql.param(revisionIds)}::uuid[])`);
+    const known = new Set(found.rows.map((r) => r.id));
+    const unknown: string[] = [];
     for (const trip of parsed.data.trips) {
+      if (!known.has(trip.revisionId.toLowerCase())) {
+        unknown.push(trip.id);
+        continue;
+      }
       await db.execute(sql`
         insert into core.saved_trip (
           user_id, client_id, revision_id, revision_label, revision_kind, published_at,
@@ -132,9 +142,10 @@ async function postSaved(request: Request, requestId: string) {
           saved_at = excluded.saved_at
       `);
     }
+    return unknown;
   });
 
-  return Response.json({ ok: true, count: parsed.data.trips.length }, {
+  return Response.json({ ok: true, count: parsed.data.trips.length - rejected.length, rejected }, {
     headers: { "Cache-Control": CACHE.none, "X-Request-Id": requestId },
   });
 }

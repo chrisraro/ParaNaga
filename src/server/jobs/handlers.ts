@@ -24,11 +24,6 @@ export function registerDefaultJobHandlers(): void {
     return { success: true };
   });
 
-  // Expire disruptions (singleton job)
-  registerJobHandler("expire_disruptions", async () => {
-    return { success: true };
-  });
-
   // Sweep unconfirmed quarantine slots older than 1 hour (spec §3.9, §3.10; 05 §5.8 "orphan
   // sweep after 1 h"): delete the uploaded object first, then reject the row. Storage I/O runs
   // outside any transaction; a delete that fails leaves the row as a slot for the next run.

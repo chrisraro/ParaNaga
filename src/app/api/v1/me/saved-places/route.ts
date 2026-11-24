@@ -1,7 +1,6 @@
-import { sql, eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { savedPlace } from "@/server/db/schema";
-import { withRequestContext, type Db } from "@/server/db/context";
+import { withRequestContext } from "@/server/db/context";
 import { deleteSavedPlaces } from "@/server/db/saved-delete";
 import { authorize } from "@/server/auth/authorize";
 import { authedRoute, CACHE, readJsonBody, badRequest, tooManyRequests } from "@/server/api/http";

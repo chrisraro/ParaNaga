@@ -3,6 +3,11 @@ import { createHmac, createHash } from "node:crypto";
 import { serverEnv } from "@/server/env";
 import type { PresignedUpload, StorageObjectMetadata, StoragePort } from "./types";
 
+/** HEAD and DELETE move no body. Some run inside an open transaction, so a slow bucket must not hold it. */
+const QUICK_MS = 5_000;
+/** GET, PUT and COPY move up to 25 MB. */
+const TRANSFER_MS = 30_000;
+
 /**
  * Standard S3 / Neon Object Storage adapter using standard HTTP & AWS Signature Version 4.
  * Avoids extra bulky SDK dependencies while providing full presigning, HEAD, GET, PUT, COPY and DELETE.
@@ -60,22 +65,20 @@ export class S3StorageAdapter implements StoragePort {
   async headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null> {
     const url = this.getUrl(bucket, key);
     const headers = this.signedHeaders("HEAD", bucket, key);
-    try {
-      const res = await fetch(url, { method: "HEAD", headers });
-      if (!res.ok) return null;
-      const length = Number(res.headers.get("content-length") ?? 0);
-      const mime = res.headers.get("content-type") ?? "application/octet-stream";
-      return { bytes: length, mime };
-    } catch {
-      return null;
-    }
+    const res = await fetch(url, { method: "HEAD", headers, signal: AbortSignal.timeout(QUICK_MS) });
+    // S3 answers 403 for a missing key when the caller may not list the bucket.
+    if (res.status === 404 || res.status === 403) return null;
+    if (!res.ok) throw new Error(`storage HEAD failed (${res.status})`);
+    const length = Number(res.headers.get("content-length") ?? 0);
+    const mime = res.headers.get("content-type") ?? "application/octet-stream";
+    return { bytes: length, mime };
   }
 
   async getObject(bucket: string, key: string, maxBytes?: number): Promise<Uint8Array | null> {
     const url = this.getUrl(bucket, key);
     const headers = this.signedHeaders("GET", bucket, key);
     try {
-      const res = await fetch(url, { method: "GET", headers });
+      const res = await fetch(url, { method: "GET", headers, signal: AbortSignal.timeout(TRANSFER_MS) });
       if (!res.ok) return null;
       // Refuse an oversized (or unsized) body before buffering it: the object can change after a HEAD.
       if (maxBytes !== undefined && !(Number(res.headers.get("content-length")) <= maxBytes)) {
@@ -101,7 +104,7 @@ export class S3StorageAdapter implements StoragePort {
       "x-amz-copy-source": copySource,
     });
     try {
-      const res = await fetch(url, { method: "PUT", headers });
+      const res = await fetch(url, { method: "PUT", headers, signal: AbortSignal.timeout(TRANSFER_MS) });
       return res.ok;
     } catch {
       return false;
@@ -112,8 +115,9 @@ export class S3StorageAdapter implements StoragePort {
     const url = this.getUrl(bucket, key);
     const headers = this.signedHeaders("DELETE", bucket, key);
     try {
-      const res = await fetch(url, { method: "DELETE", headers });
-      return res.ok || res.status === 404;
+      const res = await fetch(url, { method: "DELETE", headers, signal: AbortSignal.timeout(QUICK_MS) });
+      // Gone already counts as deleted; a missing bucket (a wrong endpoint) does not.
+      return res.ok || (res.status === 404 && !(await res.text()).includes("NoSuchBucket"));
     } catch {
       return false;
     }
@@ -128,7 +132,7 @@ export class S3StorageAdapter implements StoragePort {
     const url = this.getUrl(bucket, key);
     const headers = this.signedHeaders("PUT", bucket, key, { "content-type": mime });
     try {
-      const res = await fetch(url, { method: "PUT", headers, body: Buffer.from(data) });
+      const res = await fetch(url, { method: "PUT", headers, body: Buffer.from(data), signal: AbortSignal.timeout(TRANSFER_MS) });
       return res.ok;
     } catch {
       return false;

@@ -13,11 +13,17 @@ const state = vi.hoisted(() => ({
   autoPublish: false,
   acked: false,
   rateLimited: false,
-  dbFail: null as null | { code: string },
+  dbFail: null as null | { code: string; constraint?: string; once?: boolean },
   jev: "ok" as "ok" | "throws" | "reject",
   calls: [] as string[],
   sql: [] as string[],
 }));
+
+const fail = () => {
+  const error = state.dbFail;
+  if (error?.once) state.dbFail = null;
+  if (error) throw Object.assign(new Error("db"), error);
+};
 
 const text = (q: unknown): string => {
   const chunks = (q as { queryChunks?: unknown[] }).queryChunks ?? [];
@@ -72,15 +78,21 @@ vi.mock("@/server/db/context", () => ({
         if (t.includes("from core.ack")) return { rows: state.acked ? [{ one: 1 }] : [] };
         if (t.includes("community.create_post") || t.includes("community.edit_post") || t.includes("community.create_comment")) {
           state.calls.push("write");
-          if (state.dbFail) throw Object.assign(new Error("db"), state.dbFail);
+          fail();
           const status = "pending";
           if (t.includes("create_comment")) return { rows: [{ comment_id: POST_ID, status, depth: 1 }] };
           return { rows: [{ post_id: POST_ID, version_id: POST_ID, n: 2, status, is_live: false }] };
         }
         if (t.includes("community.toggle_reaction")) {
-          if (state.dbFail) throw Object.assign(new Error("db"), state.dbFail);
+          fail();
           return { rows: [{ active: true, helpful_count: 3 }] };
         }
+        if (t.includes("community.toggle_bookmark")) {
+          fail();
+          return { rows: [{ active: true }] };
+        }
+        if (t.includes("from community.reaction r") && t.includes("as helpful_count")) return { rows: [{ active: true, helpful_count: 9 }] };
+        if (t.includes("from community.bookmark b") && !t.includes("community.post")) return { rows: [{ active: true }] };
         if (t.includes("from community.post p")) return { rows: [feedRow] };
         return { rows: [] };
       },
@@ -93,6 +105,7 @@ const { DELETE: DELETE_COMMENT } = await import("@/app/api/v1/community/comments
 const { DELETE: UNBLOCK } = await import("@/app/api/v1/community/blocks/[id]/route");
 const { POST: COMMENT } = await import("@/app/api/v1/community/posts/[id]/comments/route");
 const { POST: REACT } = await import("@/app/api/v1/community/reactions/route");
+const { POST: BOOKMARK } = await import("@/app/api/v1/community/bookmarks/route");
 
 const json = { "content-type": "application/json" };
 const postBody = (over: Record<string, unknown> = {}) => ({
@@ -214,6 +227,42 @@ describe("edit, comment, reaction", () => {
   it("toggles a reaction", async () => {
     const res = await send(REACT, "/api/v1/community/reactions", { targetType: "post", targetId: POST_ID });
     expect(await res.json()).toEqual({ active: true, count: 3 });
+  });
+});
+
+describe("overlapping copies of one request (23505)", () => {
+  const count = (part: string) => state.sql.filter((s) => s.includes(part)).length;
+
+  it("a post: the whole transaction runs once more and the stored post is answered", async () => {
+    state.dbFail = { code: "23505", constraint: "post_author_id_client_request_id_key", once: true };
+    const res = await send(CREATE, "/api/v1/community/posts", postBody());
+    expect(res.status).toBe(201);
+    expect(submitPostResponseSchema.parse(await res.json()).post.id).toBe(POST_ID);
+    expect(count("community.create_post")).toBe(2);
+    expect(state.calls.filter((c) => c.startsWith("jev:"))).toHaveLength(1);
+  });
+  it("a comment likewise", async () => {
+    state.acked = true;
+    state.dbFail = { code: "23505", constraint: "comment_author_id_client_request_id_key", once: true };
+    const res = await send(COMMENT, `/api/v1/community/posts/${POST_ID}/comments`, { clientRequestId: REQ, body: "Thanks!" });
+    expect(res.status).toBe(201);
+    expect(count("community.create_comment")).toBe(2);
+  });
+  it("another unique violation is not retried", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    state.dbFail = { code: "23505", constraint: "post_photo_pkey" };
+    await expectError(await send(CREATE, "/api/v1/community/posts", postBody()), 500, "internal");
+    expect(count("community.create_post")).toBe(1);
+  });
+  it("toggles are not toggled again: the stored state is read", async () => {
+    state.dbFail = { code: "23505", constraint: "reaction_pkey", once: true };
+    const react = await send(REACT, "/api/v1/community/reactions", { targetType: "post", targetId: POST_ID });
+    expect(await react.json()).toEqual({ active: true, count: 9 });
+    expect(count("community.toggle_reaction")).toBe(1);
+    state.dbFail = { code: "23505", constraint: "bookmark_pkey", once: true };
+    const save = await send(BOOKMARK, "/api/v1/community/bookmarks", { postId: POST_ID });
+    expect(await save.json()).toEqual({ active: true, count: null });
+    expect(count("community.toggle_bookmark")).toBe(1);
   });
 });
 

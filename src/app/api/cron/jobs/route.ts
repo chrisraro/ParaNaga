@@ -1,37 +1,26 @@
 import "server-only";
-import { timingSafeEqual } from "node:crypto";
+import { cronAuthorized } from "@/server/cron-auth";
 import { serverEnv } from "@/server/env";
 import { safeRequestId } from "@/server/request-id";
 import { withRequestContext } from "@/server/db/context";
 import { enqueueJob, runJobBatch } from "@/server/jobs/worker";
 import { registerDefaultJobHandlers } from "@/server/jobs/handlers";
 
-/**
- * Compares two secrets in constant time. A query-string secret is never accepted: URLs end up in logs.
- */
-function secretMatches(provided: string | null, expected: string | undefined): boolean {
-  if (!provided || !expected) return false;
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
+/** Queued by every run; the fixed key (the kind) keeps one open at a time, and a finished one recurs. */
+const RECURRING = ["sweep_orphan_media", "retention_purge"] as const;
 
 /**
- * Background job runner endpoint called by Vercel Cron or Neon scheduled trigger.
+ * Background job runner endpoint called by Vercel Cron once a day (vercel.json).
  * Protected by CRON_SECRET (Bearer token in Authorization header).
  */
 export async function GET(request: Request): Promise<Response> {
   const requestId = safeRequestId(request.headers.get("x-vercel-id") ?? request.headers.get("x-request-id"));
-  const env = serverEnv();
+  const headers = { "X-Request-Id": requestId, "Cache-Control": "private, no-store" };
 
-  // Validate CRON_SECRET (Authorization header only)
-  const authHeader = request.headers.get("authorization");
-  const providedSecret = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
-
-  if (!secretMatches(providedSecret, env.CRON_SECRET)) {
+  if (!cronAuthorized(request, serverEnv().CRON_SECRET)) {
     return Response.json(
       { error: { code: "unauthorized", message: "Invalid or missing cron secret.", requestId } },
-      { status: 401, headers: { "X-Request-Id": requestId } },
+      { status: 401, headers },
     );
   }
 
@@ -39,21 +28,21 @@ export async function GET(request: Request): Promise<Response> {
   registerDefaultJobHandlers();
 
   try {
-    // The orphan media sweep (spec 05 §5.8) recurs with this endpoint; the fixed key keeps one queued.
-    await withRequestContext({ userId: null, requestId }, (db) =>
-      enqueueJob(db, "sweep_orphan_media", {}, { idempotencyKey: "sweep_orphan_media" }),
-    );
+    // The orphan media sweep (spec 05 §5.8) and the rate-limit purge (spec 04 §4.4).
+    await withRequestContext({ userId: null, requestId }, async (db) => {
+      for (const kind of RECURRING) await enqueueJob(db, kind, {}, { idempotencyKey: kind });
+    });
     const summary = await runJobBatch({ batchSize: 20 });
     return Response.json(
       { ok: true, summary, requestId },
-      { status: 200, headers: { "X-Request-Id": requestId } },
+      { status: 200, headers },
     );
   } catch (err: unknown) {
     const error = err instanceof Error ? err.name : "unknown";
     console.error(JSON.stringify({ event: "cron_jobs_error", requestId, error }));
     return Response.json(
       { error: { code: "internal", message: "Failed to run job batch.", requestId } },
-      { status: 500, headers: { "X-Request-Id": requestId } },
+      { status: 500, headers },
     );
   }
 }

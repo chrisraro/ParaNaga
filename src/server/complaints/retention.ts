@@ -42,7 +42,8 @@ export async function readDue(db: Db, limit: number): Promise<RetentionDue> {
 async function removeObjects(storage: StoragePort, objects: readonly { bucket: string; key: string }[]): Promise<boolean> {
   for (const o of objects) {
     if (!(await storage.deleteObject(o.bucket, o.key))) return false;
-    if ((await storage.headObject(o.bucket, o.key)) !== null) return false;
+    // No answer (a throw) is not proof that it is gone.
+    if ((await storage.headObject(o.bucket, o.key).catch(() => undefined)) !== null) return false;
   }
   return true;
 }

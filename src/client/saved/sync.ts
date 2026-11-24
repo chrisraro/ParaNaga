@@ -14,6 +14,8 @@ export type SyncResult = {
   placesDownloaded: number;
   tripsUploaded: number;
   tripsDownloaded: number;
+  /** Trips the account did not take: they stay on this phone only. */
+  tripsRejected: number;
 };
 
 /** The account accepts at most this many items per request. */
@@ -58,7 +60,11 @@ export async function syncSavedItems(): Promise<SyncResult> {
   const newPlaces = remotePlaces.filter((p) => !localPlaceIds.has(p.id) && !pending.places.includes(p.id));
   for (const place of newPlaces) await putSavedPlace(place);
 
-  await inBatches(localTrips, (trips) => call("trips", "POST", { trips }));
+  // The account leaves out a trip planned on data it does not have; that trip stays on this phone only.
+  let tripsRejected = 0;
+  await inBatches(localTrips, async (trips) => {
+    tripsRejected += (await call<{ rejected?: string[] }>("trips", "POST", { trips })).rejected?.length ?? 0;
+  });
   const localTripIds = new Set(localTrips.map((t) => t.id));
   const newTrips = remoteTrips.filter((t) => !localTripIds.has(t.id) && !pending.trips.includes(t.id));
   for (const trip of newTrips) await putSavedTrip(trip);
@@ -66,7 +72,8 @@ export async function syncSavedItems(): Promise<SyncResult> {
   return {
     placesUploaded: localPlaces.length,
     placesDownloaded: newPlaces.length,
-    tripsUploaded: localTrips.length,
+    tripsUploaded: localTrips.length - tripsRejected,
     tripsDownloaded: newTrips.length,
+    tripsRejected,
   };
 }

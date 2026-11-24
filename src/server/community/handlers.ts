@@ -1,5 +1,5 @@
 import "server-only";
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import { parseUuidParam } from "@/domain/api/schemas";
 import { GUIDELINES_KIND, GUIDELINES_VERSION } from "@/domain/community/guidelines";
 import {
@@ -22,6 +22,7 @@ import { contentState } from "@/domain/community/status";
 import { authedRoute, ApiProblem, badRequest, CACHE, notFound, readJsonBody, tooManyRequests } from "@/server/api/http";
 import { authorize } from "@/server/auth/authorize";
 import { withRequestContext, type Db } from "@/server/db/context";
+import { onDuplicate, pgCode } from "@/server/db/pg-error";
 import { serverEnv } from "@/server/env";
 import { checkRateLimit, RATE_LIMITS, type RateLimitConfig } from "@/server/ratelimit/rate-limiter";
 import { getStorage } from "@/server/storage/adapter";
@@ -31,13 +32,6 @@ const POST_BODY_MAX_BYTES = 16384;
 const SMALL_BODY_MAX_BYTES = 2048;
 
 const noStore = (requestId: string) => ({ "Cache-Control": CACHE.none, "X-Request-Id": requestId });
-
-/** Postgres error code, whether the driver error is wrapped or not. */
-function pgCode(error: unknown): string | undefined {
-  const e = error as { code?: unknown; cause?: { code?: unknown } } | null;
-  const code = e?.code ?? e?.cause?.code;
-  return typeof code === "string" ? code : undefined;
-}
 
 /**
  * Definer functions signal: P0002 not found, 42501 not yours, 22023 not allowed. "Not yours" answers
@@ -110,27 +104,27 @@ export function createPost(request: Request): Promise<Response> {
     );
 
     const decision = await moderateCommunityText(`${input.title}\n${input.body}`);
-    const row = await guarded(
-      () =>
-        withRequestContext({ userId: user.id, requestId }, async (db) => {
-          const res = await db.execute<PostResultRow>(sql`
-            select * from community.create_post(
-              ${input.clientRequestId}::uuid, ${input.topic}, ${input.title}, ${input.body},
-              ${pgTextArray(input.tags)}::text[], ${input.routeCode ?? null}::text, ${decision.status}, ${decision.reason}
-            )
-          `);
-          const created = res.rows[0];
-          if (created) {
-            await recordJevEvidence(db, "post_version", created.version_id, decision.jev);
-            // Photos wait for a moderator (N6); a bad id fails the whole post, so nothing half-saves.
-            if (input.photoIds.length > 0) {
-              await db.execute(sql`select community.add_post_photos(${created.post_id}::uuid, ${pgUuidArray(input.photoIds)}::uuid[])`);
-            }
+    const save = () =>
+      withRequestContext({ userId: user.id, requestId }, async (db) => {
+        const res = await db.execute<PostResultRow>(sql`
+          select * from community.create_post(
+            ${input.clientRequestId}::uuid, ${input.topic}, ${input.title}, ${input.body},
+            ${pgTextArray(input.tags)}::text[], ${input.routeCode ?? null}::text, ${decision.status}, ${decision.reason}
+          )
+        `);
+        const created = res.rows[0];
+        if (created) {
+          await recordJevEvidence(db, "post_version", created.version_id, decision.jev);
+          // Photos wait for a moderator (N6); a bad id fails the whole post, so nothing half-saves.
+          if (input.photoIds.length > 0) {
+            await db.execute(sql`select community.add_post_photos(${created.post_id}::uuid, ${pgUuidArray(input.photoIds)}::uuid[])`);
           }
-          return created;
-        }),
-      { invalid: "A photo could not be attached. Remove it and try again." },
-    );
+        }
+        return created;
+      });
+    const row = await guarded(() => onDuplicate("post_author_id_client_request_id_key", save), {
+      invalid: "A photo could not be attached. Remove it and try again.",
+    });
     if (!row) throw new ApiProblem(503, "unavailable", "The post could not be saved. Try again.");
     const state = contentState(row.status);
     const body = submitPostResponseSchema.parse({ post: { id: row.post_id, state, isEdit: false, visibleToOthers: state === "published" } });
@@ -218,21 +212,21 @@ export function createComment(request: Request, rawPostId: string): Promise<Resp
     );
 
     const decision = await moderateCommunityText(input.body);
-    const row = await guarded(
-      () =>
-        withRequestContext({ userId: user.id, requestId }, async (db) => {
-          const res = await db.execute<CommentResultRow>(sql`
-            select * from community.create_comment(
-              ${input.clientRequestId}::uuid, ${postId.value}::uuid, ${input.parentCommentId ?? null}::uuid,
-              ${input.body}, ${decision.status}, ${decision.reason}
-            )
-          `);
-          const created = res.rows[0];
-          if (created) await recordJevEvidence(db, "comment", created.comment_id, decision.jev);
-          return created;
-        }),
-      { invalid: "You can reply to a comment, but not to a reply." },
-    );
+    const save = () =>
+      withRequestContext({ userId: user.id, requestId }, async (db) => {
+        const res = await db.execute<CommentResultRow>(sql`
+          select * from community.create_comment(
+            ${input.clientRequestId}::uuid, ${postId.value}::uuid, ${input.parentCommentId ?? null}::uuid,
+            ${input.body}, ${decision.status}, ${decision.reason}
+          )
+        `);
+        const created = res.rows[0];
+        if (created) await recordJevEvidence(db, "comment", created.comment_id, decision.jev);
+        return created;
+      });
+    const row = await guarded(() => onDuplicate("comment_author_id_client_request_id_key", save), {
+      invalid: "You can reply to a comment, but not to a reply.",
+    });
     if (!row) throw new ApiProblem(503, "unavailable", "The comment could not be saved. Try again.");
     const body = submitCommentResponseSchema.parse({ comment: { id: row.comment_id, state: contentState(row.status), depth: Number(row.depth) } });
     return Response.json(body, { status: 201, headers: noStore(requestId) });
@@ -265,14 +259,25 @@ export function toggleReaction(request: Request): Promise<Response> {
     const parsed = reactionPayloadSchema.safeParse(await readJsonBody(request, SMALL_BODY_MAX_BYTES));
     if (!parsed.success) throw badRequest("Check the request and try again.");
     if (!(await rateGate(request, user.id, requestId, []))) throw tooManyRequests();
+    const { targetType, targetId } = parsed.data;
+    const asUser = (query: SQL) =>
+      withRequestContext({ userId: user.id, requestId }, async (db) =>
+        (await db.execute<{ active: boolean; helpful_count: number | null }>(query)).rows[0],
+      );
     const row = await guarded(
       () =>
-        withRequestContext({ userId: user.id, requestId }, async (db) => {
-          const res = await db.execute<{ active: boolean; helpful_count: number }>(sql`
-            select * from community.toggle_reaction(${parsed.data.targetType}, ${parsed.data.targetId}::uuid)
-          `);
-          return res.rows[0];
-        }),
+        onDuplicate(
+          "reaction_pkey",
+          () => asUser(sql`select * from community.toggle_reaction(${targetType}, ${targetId}::uuid)`),
+          // An overlapping tap already set it: answer what is stored. Toggling again would undo it.
+          () =>
+            asUser(sql`
+              select exists (select 1 from community.reaction r
+                              where r.user_id = ${user.id} and r.target_type = ${targetType} and r.target_id = ${targetId}::uuid) as active,
+                     (select t.helpful_count from ${targetType === "post" ? sql`community.post` : sql`community.comment`} t
+                       where t.id = ${targetId}::uuid) as helpful_count
+            `),
+        ),
       { invalid: "You cannot mark your own post or comment as helpful." },
     );
     if (!row) throw new ApiProblem(503, "unavailable", "Try again.");
@@ -287,11 +292,16 @@ export function toggleBookmark(request: Request): Promise<Response> {
     const parsed = bookmarkPayloadSchema.safeParse(await readJsonBody(request, SMALL_BODY_MAX_BYTES));
     if (!parsed.success) throw badRequest("Check the request and try again.");
     if (!(await rateGate(request, user.id, requestId, []))) throw tooManyRequests();
+    const { postId } = parsed.data;
+    const asUser = (query: SQL) =>
+      withRequestContext({ userId: user.id, requestId }, async (db) => (await db.execute<{ active: boolean }>(query)).rows[0]?.active === true);
     const active = await guarded(() =>
-      withRequestContext({ userId: user.id, requestId }, async (db) => {
-        const res = await db.execute<{ active: boolean }>(sql`select community.toggle_bookmark(${parsed.data.postId}::uuid) as active`);
-        return res.rows[0]?.active === true;
-      }),
+      onDuplicate(
+        "bookmark_pkey",
+        () => asUser(sql`select community.toggle_bookmark(${postId}::uuid) as active`),
+        // As for reactions: an overlapping tap already saved it, so answer what is stored.
+        () => asUser(sql`select exists (select 1 from community.bookmark b where b.user_id = ${user.id} and b.post_id = ${postId}::uuid) as active`),
+      ),
     );
     return Response.json(toggleResponseSchema.parse({ active, count: null }), { headers: noStore(requestId) });
   });
@@ -418,7 +428,7 @@ export function getPhoto(request: Request, rawId: string): Promise<Response> {
     if (!photo || photo.public_bucket !== env.STORAGE_BUCKET_PUBLIC) throw notFound("This photo is not available.");
     const storage = getStorage();
     const [head, bytes] = await Promise.all([
-      storage.headObject(photo.public_bucket, photo.public_key),
+      storage.headObject(photo.public_bucket, photo.public_key).catch(() => null),
       storage.getObject(photo.public_bucket, photo.public_key),
     ]);
     if (!bytes || !head || !PHOTO_TYPES.has(head.mime)) throw notFound("This photo is not available.");

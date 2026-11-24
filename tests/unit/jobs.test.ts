@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as cronJobsHandler } from "@/app/api/cron/jobs/route";
-import { registerJobHandler, runJobBatch } from "@/server/jobs/worker";
+import { enqueueJob, registerJobHandler, runJobBatch } from "@/server/jobs/worker";
 import type { JobRow } from "@/server/jobs/types";
 
 // ops.* calls the worker makes, in order, with scripted results (default: the lease is ours).
@@ -78,6 +78,23 @@ describe("job registry", () => {
 
     expect(typeof registerJobHandler).toBe("function");
     expect(typeof runJobBatch).toBe("function");
+  });
+});
+
+describe("enqueueJob", () => {
+  it("is due by the database clock unless a time is given (claim_jobs compares with that clock)", async () => {
+    const seen: { text: string; params: unknown[] }[] = [];
+    const fake = {
+      execute: async (q: { queryChunks: unknown[] }) => {
+        const isSql = (c: unknown): c is { value: string[] } => typeof c === "object" && c !== null && "value" in c;
+        seen.push({ text: q.queryChunks.map((c) => (isSql(c) ? c.value.join("") : "?")).join(""), params: q.queryChunks.filter((c) => !isSql(c)) });
+        return { rows: [{ id: "job-1" }] };
+      },
+    };
+    await enqueueJob(fake as never, "k", {}, { idempotencyKey: "k" });
+    await enqueueJob(fake as never, "k", {}, { runAfter: new Date("2026-11-24T00:00:00Z") });
+    expect(seen[0]!.text).toContain("coalesce(?::timestamptz, now())");
+    expect(seen.map((s) => s.params.at(-1))).toEqual([null, "2026-11-24T00:00:00.000Z"]);
   });
 });
 
