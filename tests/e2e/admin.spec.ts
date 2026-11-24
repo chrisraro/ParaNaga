@@ -117,6 +117,8 @@ async function mockAdminApi(page: Page) {
       }),
     ),
   );
+  // The dashboard counts the moderation queue for roles that moderate (A11); empty unless mockReviewApi replaces it.
+  await page.route("**/api/v1/admin/moderation", (r) => r.fulfill(json({ items: [], appeals: [], history: [] })));
   await page.route("**/api/v1/me/step-up/code", (r) => {
     s.codesSent += 1;
     return r.fulfill(json({ sent: true }));
@@ -186,6 +188,8 @@ test("the dashboard shows the counts, is private, and passes axe", async ({ page
     "Users & roles",
     "Audit log",
   ]);
+  await expect(page.getByTestId("card-attention")).toContainText("128 stop candidates still to review.");
+  await expect(page.getByTestId("card-attention")).not.toContainText("Nothing is waiting");
   await expect(page.getByTestId("card-moderation")).toBeVisible();
   await expect(page.getByTestId("card-complaints")).toHaveCount(0); // admins are not complaint reviewers
   await expect(page.getByTestId("admin-nav").getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
@@ -428,8 +432,19 @@ test("candidate review: evidence, promote, relocate and retire in the draft (AC-
   await expect(page.getByTestId("retire-form")).toContainText("In the stop order of R8-A");
   await expect(page.getByTestId("retire-go")).toBeDisabled();
 
+  // Text typed for one stop is not dropped by picking another: the browser asks first (A7).
+  await page.getByTestId("retire-reason").fill("Typed and not sent.");
+  page.once("dialog", (d) => {
+    expect(d.message()).toContain("Leave A1?");
+    void d.dismiss();
+  });
+  await page.getByTestId("stop-Loop Service C-C5").getByRole("button", { name: /Review/ }).click();
+  await expect(page.getByTestId("stop-panel")).toContainText("Plaza Rizal");
+  await expect(page.getByTestId("retire-reason")).toHaveValue("Typed and not sent.");
+  page.once("dialog", (d) => void d.accept());
   await page.getByTestId("stop-Loop Service C-C5").getByRole("button", { name: /Review/ }).click();
   await expect(page.getByTestId("stop-panel")).toContainText("Naga Cathedral");
+  await expect(page.getByRole("heading", { name: "C5 · Naga Cathedral" })).toBeFocused(); // the panel may sit below the list
   // Promotion needs evidence of the claimed kind first.
   await expect(page.getByTestId("promote-form")).toContainText("Needs evidence for legal designation.");
   await expect(page.getByTestId("promote-go")).toBeDisabled();
@@ -445,13 +460,16 @@ test("candidate review: evidence, promote, relocate and retire in the draft (AC-
   await expect(page.getByTestId("stops-notice")).toContainText("C5 is now documentary.");
   await expect(page.getByTestId("stop-status")).toHaveText("documentary");
 
+  // Sending one form leaves what was typed in the others (A7).
+  await page.getByTestId("retire-reason").fill("Duplicate of the cathedral stop on Loop A.");
   await page.getByTestId("relocate-lat").fill("13.6263");
   await page.getByTestId("relocate-reason").fill("Pin sat in the plaza; the stop is at the curb.");
   await page.getByTestId("relocate-go").click();
   await expect(page.getByTestId("stops-notice")).toContainText("C5 moved.");
   await expect(page.getByTestId("stop-position")).toHaveText("13.626300, 123.189700");
+  await expect(page.getByTestId("relocate-reason")).toHaveValue("");
 
-  await page.getByTestId("retire-reason").fill("Duplicate of the cathedral stop on Loop A.");
+  await expect(page.getByTestId("retire-reason")).toHaveValue("Duplicate of the cathedral stop on Loop A.");
   await page.getByTestId("retire-go").click();
   await expect(page.getByTestId("stops-notice")).toContainText("C5 retired.");
   await expect(page.getByTestId("stop-status")).toHaveText("retired");
@@ -678,7 +696,14 @@ test("corrections review: evidence, start review, accept a stop report as a relo
   await page.getByTestId(`correction-open-${N6(1)}`).click();
   const detail = page.getByTestId("correction-detail");
   await expect(detail).toContainText("The stop sign is now across the street");
-  await expect(detail.getByRole("img", { name: "Evidence photo 1" })).toBeVisible();
+  // The whole photo (never cropped), and a link to the same private stream at full size (A12).
+  const photo = detail.getByRole("img", { name: "Evidence photo 1" });
+  await expect(photo).toBeVisible();
+  await expect(photo).toHaveCSS("object-fit", "contain");
+  const full = detail.getByRole("link", { name: /Evidence photo 1.*Open full size/ });
+  await expect(full).toHaveAttribute("href", new URL(await photo.evaluate((el) => (el as HTMLImageElement).src)).pathname);
+  await expect(full).toHaveAttribute("href", /^\/api\/v1\/admin\/media\/[0-9a-f-]{36}$/);
+  await expect(full).toHaveAttribute("target", "_blank");
   expect(s.mediaReads).toBe(1);
   await page.getByTestId("correction-submit").click(); // Start review is the first action
   await expect(page.getByTestId("correction-notice")).toContainText("Moved to under review");
@@ -879,6 +904,9 @@ test("complaint reviewers: their own nav only; admins, moderators and transport 
   await page.goto("/admin");
   await expect(page.getByTestId("admin-nav").getByRole("link")).toHaveText(["Dashboard", "Complaint review", "Audit log"]);
   await expect(page.getByTestId("card-complaints")).toBeVisible();
+  // Driver reports are never counted on the dashboard, and it says so instead of "all clear" (A11).
+  await expect(page.getByTestId("card-attention")).toContainText("Not counted here");
+  await expect(page.getByTestId("card-attention")).not.toContainText("Nothing is waiting");
   for (const path of [...TRANSIT_PATHS, "/admin/corrections", "/admin/moderation", "/admin/users", "/admin/providers", "/admin/jobs"]) {
     await page.goto(path);
     await expect(page.getByRole("heading", { level: 1 }), path).toHaveText("Wrong stop.");
@@ -929,7 +957,17 @@ test("complaint review: step-up first, list without text, open, a 60-second down
   await page.getByTestId("complaint-outcome").selectOption("insufficient_detail");
   await page.getByTestId("complaint-note").fill("We could not identify the vehicle.");
   await page.getByTestId("complaint-note-reporter").check();
+  // Closing cannot be undone: it asks once more, Cancel sends nothing and gives focus back (A9).
   await page.getByTestId("complaint-submit").click();
+  const confirm = page.getByTestId("complaint-close-confirm");
+  await expect(confirm).toContainText("A closed report cannot be opened again.");
+  await expect(confirm.getByText("Close PN-7KQ4-2M?")).toBeFocused();
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toHaveCount(0);
+  await expect(page.getByTestId("complaint-submit")).toBeFocused();
+  expect(s.actions).toEqual([]);
+  await page.getByTestId("complaint-submit").click();
+  await page.getByTestId("complaint-close-confirm-go").click();
   await expect(page.getByTestId("complaint-notice")).toContainText("PN-7KQ4-2M is now closed.");
   expect(s.actions).toEqual([{ action: "status", expectedStatus: "submitted", to: "closed", outcomeCode: "insufficient_detail", note: "We could not identify the vehicle.", visibility: "reporter" }]);
 });
@@ -958,6 +996,37 @@ test("users and roles: exact email lookup, a reasoned grant after step-up, no co
   await page.getByTestId("admin-step-up-verify").click();
   await expect(page.getByTestId("users-notice")).toContainText("Granted Complaint reviewer to Ben.");
   expect(s.roleChanges).toEqual([{ userId: "u-ben", role: "complaint_reviewer", change: "grant", reason: "Named by the owner as complaint reviewer." }]);
+
+  // Revoke asks once more; Cancel sends nothing and gives focus back to Revoke (A9).
+  const ana = page.getByTestId("users-staff").getByTestId("user-u-ana");
+  await ana.getByTestId("reason-u-ana").fill("Left the field team.");
+  const revoke = ana.getByTestId("revoke-u-ana-transport_reviewer");
+  await revoke.click();
+  const step = ana.getByTestId("revoke-confirm-u-ana");
+  await expect(step.getByText("Revoke Transport reviewer from Ana?")).toBeFocused();
+  await step.getByRole("button", { name: "Cancel" }).click();
+  await expect(step).toHaveCount(0);
+  await expect(revoke).toBeFocused();
+  expect(s.roleChanges).toHaveLength(1);
+  await revoke.click();
+  await ana.getByTestId("revoke-confirm-u-ana-go").click();
+  await expect(page.getByTestId("users-notice")).toContainText("Revoked Transport reviewer from Ana.");
+  expect(s.roleChanges.at(-1)).toEqual({ userId: "u-ana", role: "transport_reviewer", change: "revoke", reason: "Left the field team." });
+});
+
+test("a list that fails to load keeps its page heading and offers Retry (A10)", async ({ page, context }) => {
+  await signInAs(context, "commuter,admin");
+  await mockN7Api(page);
+  let calls = 0;
+  await page.route("**/api/v1/admin/jobs", (r) =>
+    ++calls === 1 ? r.fulfill({ status: 503, contentType: "application/json", headers: PRIVATE, body: JSON.stringify({ error: { code: "unavailable", message: "The service is busy. Try again.", requestId: "e2e" } }) }) : r.fallback(),
+  );
+  await page.goto("/admin/jobs");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Jobs");
+  await expect(page.locator("#admin-main")).toContainText("The service is busy. Try again.");
+  await page.getByTestId("load-retry").click();
+  await expect(page.getByTestId("jobs-count-dead")).toHaveText("1");
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 });
 
 test("providers, jobs and the audit log: yes/no only, no diagnostic without a key, older pages by cursor", async ({ page, context }) => {
@@ -1047,7 +1116,7 @@ test("the drawer opens by keyboard, keeps its toggle reachable, makes the page i
   await signInAs(context, "commuter,admin");
   await mockAdminApi(page);
   await page.goto("/admin");
-  const menu = page.getByRole("button", { name: "Menu" });
+  const menu = page.getByRole("button", { name: "Menu", exact: true });
   await menu.focus();
   await page.keyboard.press("Enter");
   await expect(menu).toHaveAttribute("aria-expanded", "true");

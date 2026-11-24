@@ -207,6 +207,73 @@ export function ErrorNote({ children, testId, id, alert = true }: { children: Re
   );
 }
 
+/**
+ * A list or page that did not load: what the server said (never the request) and a way to ask again
+ * (A10). Retry removes this block, so the page heading takes focus; the loading state is the status.
+ */
+export function LoadError({ children, onRetry, testId }: { children: ReactNode; onRetry: () => void; testId?: string }) {
+  return (
+    <div className="grid justify-items-start gap-3">
+      <ErrorNote testId={testId}>{children}</ErrorNote>
+      <button
+        type="button"
+        className={btnSecondary}
+        onClick={() => {
+          document.querySelector<HTMLElement>("#admin-main h1")?.focus();
+          onRetry();
+        }}
+        data-testid="load-retry"
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The last question before a change that cannot be taken back (A9, WCAG 3.3.4), inside a surface
+ * that is already a box. Mount it when the person asks: its heading takes focus, and Cancel gives
+ * focus back to the button that asked (useFocusOnOpen).
+ */
+export function ConfirmStep({
+  title,
+  children,
+  go,
+  danger = false,
+  busy = false,
+  onGo,
+  onCancel,
+  testId,
+}: {
+  title: string;
+  children: ReactNode;
+  go: string;
+  danger?: boolean;
+  busy?: boolean;
+  onGo: () => void;
+  onCancel: () => void;
+  testId: string;
+}) {
+  const headingRef = useFocusOnOpen<HTMLParagraphElement>();
+  return (
+    <section className={`grid gap-3 p-4 ${confirmInset}`} aria-label={title} data-testid={testId}>
+      <p ref={headingRef} tabIndex={-1} className="flex items-start gap-2 text-sm font-semibold">
+        <Icon d={ICON_CONFIRM} className="mt-0.5 text-accent-ink dark:text-accent" />
+        {title}
+      </p>
+      <div className="text-sm">{children}</div>
+      <div className="flex flex-wrap gap-3">
+        <button type="button" className={danger ? btnDanger : btnPrimary} aria-disabled={busy} onClick={() => !busy && onGo()} data-testid={`${testId}-go`}>
+          {go}
+        </button>
+        <button type="button" className={btnSecondary} onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function OkNote({ children, testId }: { children: ReactNode; testId?: string }) {
   return (
     <p role="status" className={`${noteCls} ${okTone}`} data-testid={testId}>

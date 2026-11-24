@@ -85,8 +85,9 @@ export function AdminNav({ items, children }: { items: readonly AdminNavItem[]; 
       <aside
         ref={rail}
         id="admin-rail"
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-5 overflow-y-auto bg-deep p-3 pt-16 lg:pt-3 text-white transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-60 lg:shrink-0 lg:translate-x-0 lg:visible dark:bg-deep-2 dark:border-r dark:border-night-border ${
-          open ? "translate-x-0 visible" : "-translate-x-full invisible"
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-5 overflow-y-auto bg-deep p-3 pt-16 lg:pt-3 text-white duration-200 ease-out motion-reduce:transition-none lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-60 lg:shrink-0 lg:translate-x-0 lg:visible dark:bg-deep-2 dark:border-r dark:border-night-border ${
+          // Opening shows it at once (a link in it takes focus in the same turn); closing keeps it visible while it slides out.
+          open ? "translate-x-0 visible transition-[translate]" : "-translate-x-full invisible transition-[translate,visibility]"
         }`}
       >
         <p className="flex items-center gap-2.5 px-3 pt-2">

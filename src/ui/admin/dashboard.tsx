@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { fetchDashboard, type AdminResult } from "@/client/admin/api";
+import { fetchDashboard, fetchModeration, type AdminResult } from "@/client/admin/api";
+import type { ModerationQueue } from "@/domain/admin/moderation";
 import type { AdminDashboard as Dashboard } from "@/domain/admin/schemas";
-import { Chip, ErrorNote, linkCls, Loading, Muted, PageTitle, Panel, when, type ChipTone } from "./parts";
+import { Chip, linkCls, Loading, LoadError, Muted, PageTitle, Panel, when, type ChipTone } from "./parts";
 
 const DAY_MS = 86_400_000;
 
 // A1 Dashboard (N5a, C1; redesigned N8): answers "is the network healthy, what needs me now" from
 // the counts that exist in the database today (no extra endpoints). Transport staff see the data
-// counts; a moderator only the moderation queue (N6), whose data endpoint is theirs.
+// counts; a moderator the size of the moderation queue (N6), from the queue's own endpoint.
+// "Nothing is waiting" is only said about what was counted (A11): a queue that could not be counted
+// says so, and driver reports are never counted here (their list needs a fresh code and is logged).
 export function AdminDashboard({
   transit,
   corrections,
@@ -23,30 +26,45 @@ export function AdminDashboard({
   complaints?: boolean;
 }) {
   const [state, setState] = useState<AdminResult<Dashboard> | null>(null);
+  const [queue, setQueue] = useState<AdminResult<ModerationQueue> | null>(null);
   const [now, setNow] = useState(0); // set when the data arrives, so render stays pure
+  const [tries, setTries] = useState(0); // bumped by Retry
   useEffect(() => {
-    if (!transit) return;
     let live = true;
-    void fetchDashboard().then((r) => {
-      if (!live) return;
-      setNow(Date.now());
-      setState(r);
-    });
+    if (transit) {
+      void fetchDashboard().then((r) => {
+        if (!live) return;
+        setNow(Date.now());
+        setState(r);
+      });
+    }
+    if (moderation) void fetchModeration().then((r) => live && setQueue(r));
     return () => {
       live = false;
     };
-  }, [transit]);
+  }, [transit, moderation, tries]);
+  const loading = (transit && state === null) || (moderation && queue === null);
+  const data = state?.ok ? state.data : null;
 
   return (
     <div data-testid="admin-dashboard">
       <PageTitle lead="What is published, what is waiting, and the last import. Counts only; nothing here changes data.">Dashboard</PageTitle>
       <div className="grid gap-4">
-        {!transit ? null : state === null ? (
+        {loading ? (
           <Loading />
-        ) : !state.ok ? (
-          <ErrorNote testId="admin-dashboard-error">{state.message}</ErrorNote>
+        ) : state && !state.ok ? (
+          <LoadError
+            testId="admin-dashboard-error"
+            onRetry={() => {
+              setState(null);
+              setQueue(null);
+              setTries((n) => n + 1);
+            }}
+          >
+            {state.message}
+          </LoadError>
         ) : (
-          <Attention d={state.data} corrections={corrections} />
+          <Attention items={[...(data ? attentionItems(data, corrections) : []), ...queueItems(queue, complaints)]} counted={countedThings(Boolean(data), corrections, moderation)} live={Boolean(data)} />
         )}
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {transit && state?.ok ? <Cards d={state.data} corrections={corrections} now={now} /> : null}
@@ -98,14 +116,38 @@ function attentionItems(d: Dashboard, corrections: boolean): Item[] {
   return items;
 }
 
-function Attention({ d, corrections }: { d: Dashboard; corrections: boolean }) {
-  const items = attentionItems(d, corrections);
+const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
+
+/** The queues outside the network data. A queue this page cannot count is listed as such, never as empty. */
+function queueItems(queue: AdminResult<ModerationQueue> | null, complaints: boolean): Item[] {
+  const items: Item[] = [];
+  if (queue?.ok) {
+    const { items: waiting, appeals } = queue.data;
+    if (waiting.length > 0) items.push({ tone: "warn", chip: "Moderation", text: `${plural(waiting.length, "item")} (posts, comments or photos) waiting for a decision.`, href: "/admin/moderation", cta: "Open moderation" });
+    if (appeals.length > 0) items.push({ tone: "warn", chip: "Appeals", text: `${plural(appeals.length, "appeal")} to decide.`, href: "/admin/moderation", cta: "Decide appeals" });
+  } else if (queue) {
+    items.push({ tone: "plain", chip: "Moderation", text: "The moderation queue could not be counted just now. It may hold posts or appeals.", href: "/admin/moderation", cta: "Open moderation" });
+  }
+  if (complaints) {
+    items.push({ tone: "plain", chip: "Driver reports", text: "Not counted here: the list opens only after a fresh code, and each opening is logged.", href: "/admin/complaints", cta: "Open complaint review" });
+  }
+  return items;
+}
+
+/** What "nothing is waiting" covers for these roles: only the things this page counted. */
+function countedThings(transit: boolean, corrections: boolean, moderation: boolean): string {
+  const things = [...(transit ? ["draft", "stop candidate"] : []), ...(transit && corrections ? ["correction"] : []), ...(moderation ? ["moderation item", "appeal"] : [])];
+  return things.length > 1 ? `${things.slice(0, -1).join(", ")} or ${things.at(-1)}` : (things[0] ?? "");
+}
+
+function Attention({ items, counted, live }: { items: Item[]; counted: string; live: boolean }) {
+  if (items.length === 0 && !counted) return null; // a role with nothing counted: no claim at all
   return (
     <Panel title="Needs your attention" testId="card-attention">
       {items.length === 0 ? (
         <p className="flex items-center gap-3 text-sm">
           <Chip tone="ok">All clear</Chip>
-          <span>Nothing is waiting on you. A published revision is live and no draft, candidate or correction is open.</span>
+          <span>{`Nothing is waiting on you. ${live ? "A published revision is live and no" : "No"} ${counted} is open.`}</span>
         </p>
       ) : (
         <ul className="divide-y divide-border dark:divide-night-border">

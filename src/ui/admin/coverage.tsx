@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchCoverage, type AdminResult } from "@/client/admin/api";
 import type { Coverage } from "@/domain/admin/schemas";
-import { Empty, ErrorNote, Loading, PageTitle, TableScroll } from "./parts";
+import { Empty, Loading, LoadError, PageTitle, TableScroll } from "./parts";
 
 // A13 Coverage audit (N5a, C8, F-E12): what the published revision holds per barangay. The
 // spec's 27 × 9 matrix needs field data: today each barangay has a survey status and one
@@ -13,13 +13,19 @@ const survey = (s: string) => s.replace(/_/g, " ");
 
 export function CoverageScreen() {
   const [state, setState] = useState<AdminResult<Coverage> | null>(null);
+  // Bumped by Retry: the load runs again.
+  const [tries, setTries] = useState(0);
+  const retry = () => {
+    setState(null);
+    setTries((n) => n + 1);
+  };
   useEffect(() => {
     let live = true;
     void fetchCoverage().then((r) => live && setState(r));
     return () => {
       live = false;
     };
-  }, []);
+  }, [tries]);
 
   return (
     <div data-testid="admin-coverage">
@@ -29,7 +35,7 @@ export function CoverageScreen() {
       {state === null ? (
         <Loading />
       ) : !state.ok ? (
-        <ErrorNote>{state.message}</ErrorNote>
+        <LoadError onRetry={retry}>{state.message}</LoadError>
       ) : state.data.rows.length === 0 ? (
         <Empty title="The published revision has no barangay rows.">Rows appear once a revision with barangay survey data is published.</Empty>
       ) : (

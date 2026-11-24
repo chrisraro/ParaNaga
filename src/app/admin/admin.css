@@ -206,9 +206,12 @@
   overflow-x: auto;
   overscroll-behavior-x: contain;
 }
+/* Positioned: a visually hidden label inside a scrolled-away cell (absolute) is then clipped by the
+   region and cannot widen the page. */
 .adm-scroll,
 .adm-xscroll {
   container-type: inline-size;
+  position: relative;
 }
 .adm-pin {
   position: sticky;

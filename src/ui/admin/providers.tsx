@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchProviders, runJevDiagnostic, type AdminResult } from "@/client/admin/api";
 import { diagnosticBlocker, type DiagnosticResult, type Providers } from "@/domain/admin/system";
 import { label } from "@/domain/admin/stops";
-import { btnPrimary, Chip, ErrorNote, Muted, PageTitle, Panel, ResultNotice, when, Loading, type Notice, TableScroll } from "./parts";
+import { btnPrimary, Chip, Muted, PageTitle, Panel, ResultNotice, when, Loading, LoadError, type Notice, TableScroll } from "./parts";
 
 // A19 Jev & providers (N7, C12). What is configured, as yes/no: never a key, a secret or an error
 // body. Moderators and admins read it; admins can run one synthetic Decisions call (only when the
@@ -25,13 +25,15 @@ export function ProvidersScreen() {
   }, [diag]);
   const [busy, setBusy] = useState(false);
 
+  // Bumped by Retry: the load runs again.
+  const [tries, setTries] = useState(0);
   useEffect(() => {
     let live = true;
     void fetchProviders().then((r) => live && setState(r));
     return () => {
       live = false;
     };
-  }, []);
+  }, [tries]);
 
   const run = async () => {
     if (busy) return;
@@ -43,17 +45,22 @@ export function ProvidersScreen() {
     setState(await fetchProviders());
   };
 
-  if (state === null) return <Loading />;
-  if (!state.ok) return <ErrorNote>{state.message}</ErrorNote>;
+  // The page heading is there while loading and after a failed load too (A10).
+  const title = <PageTitle lead="Configuration as yes or no. Keys and secrets are never shown here; they live in the deployment's environment.">Jev and providers</PageTitle>;
+  const retry = () => {
+    setState(null);
+    setTries((n) => n + 1);
+  };
+  if (state === null || !state.ok) return <div>{title}{state ? <LoadError onRetry={retry}>{state.message}</LoadError> : <Loading />}</div>;
   const { jev, providers, flags, canRunDiagnostic } = state.data;
   const blocked = diagnosticBlocker(jev);
 
   return (
     <div data-testid="admin-providers">
-      <PageTitle lead="Configuration as yes or no. Keys and secrets are never shown here; they live in the deployment's environment.">Jev and providers</PageTitle>
+      {title}
       <div className="grid gap-6">
         <Panel title="Jev (community moderation advice)" testId="providers-jev">
-          <dl className="break-words grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
+          <dl className="break-words grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-2 text-sm">
             <dt className="font-medium">API key present</dt>
             <dd data-testid="jev-key-present">{yesNo(jev.keyPresent)}</dd>
             <dt className="font-medium">Calls Jev</dt>

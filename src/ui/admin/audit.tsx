@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchAudit, type AdminResult, type AuditFilters } from "@/client/admin/api";
 import type { AuditPage } from "@/domain/admin/system";
-import { btnPrimary, btnSecondary, Empty, ErrorNote, Field, inputCls, Loading, PageTitle, when, TableScroll } from "./parts";
+import { btnPrimary, btnSecondary, Empty, Field, inputCls, Loading, LoadError, PageTitle, when, TableScroll } from "./parts";
 
 // A21 Audit log (N7, C12). Read-only, newest first, 50 rows a page. Admins read every row and can
 // filter by actor; other staff read their own actions only (the database decides, not this page).
@@ -18,6 +18,12 @@ export function AuditScreen({ all }: { all: boolean }) {
   const [filters, setFilters] = useState<Filters>({});
   const [cursors, setCursors] = useState<string[]>([]);
   const [state, setState] = useState<AdminResult<AuditPage> | null>(null);
+  // Bumped by Retry: the load runs again.
+  const [tries, setTries] = useState(0);
+  const retry = () => {
+    setState(null);
+    setTries((n) => n + 1);
+  };
 
   const before = cursors.at(-1);
   useEffect(() => {
@@ -26,7 +32,7 @@ export function AuditScreen({ all }: { all: boolean }) {
     return () => {
       live = false;
     };
-  }, [filters, before]);
+  }, [filters, before, tries]);
 
   const apply = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +81,7 @@ export function AuditScreen({ all }: { all: boolean }) {
       {state === null ? (
         <Loading />
       ) : !state.ok ? (
-        <ErrorNote testId="audit-error">{state.message}</ErrorNote>
+        <LoadError testId="audit-error" onRetry={retry}>{state.message}</LoadError>
       ) : state.data.rows.length === 0 ? (
         <Empty title="No recorded action matches.">Staff actions are recorded as they happen. Try again after the next change.</Empty>
       ) : (

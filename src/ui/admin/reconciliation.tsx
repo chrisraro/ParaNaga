@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { decidePair, fetchReconciliation, type AdminResult } from "@/client/admin/api";
 import { label, PIN_MISMATCH_M, type Reconciliation } from "@/domain/admin/stops";
-import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, insetCls, Loading, type Notice, TableScroll } from "./parts";
+import { btnPrimary, btnRow, Chip, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, insetCls, Loading, LoadError, type Notice, TableScroll } from "./parts";
 
 // A7 Reconciliation (N5b, C3). Stops of the open draft within 15 m of each other: never merged
 // automatically; a reviewer links them (one kept, the other retired, its pins added to the kept
@@ -62,9 +62,9 @@ export function ReconciliationScreen() {
       {state === null ? (
         <Loading />
       ) : !state.ok ? (
-        <ErrorNote>{state.message}</ErrorNote>
+        <LoadError onRetry={() => { setState(null); void load(); }}>{state.message}</LoadError>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid gap-6 [&>*]:min-w-0">
           {!data?.editable ? <Muted>No draft is open: decisions need a draft (Revisions & publication).</Muted> : null}
           <Panel title={`Nearby stops to decide (${data?.pairs.length ?? 0})`} testId="pairs">
             {data?.pairs.length === 0 ? (

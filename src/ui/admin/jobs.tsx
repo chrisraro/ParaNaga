@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchJobs, type AdminResult } from "@/client/admin/api";
 import type { Jobs } from "@/domain/admin/system";
 import { label } from "@/domain/admin/stops";
-import { Chip, ErrorNote, Muted, PageTitle, Panel, when, Empty, Loading, TableScroll } from "./parts";
+import { Chip, Muted, PageTitle, Panel, when, Empty, Loading, LoadError, TableScroll } from "./parts";
 
 // A20 Jobs (N7, C12), admins only: the background job queue (ops.job) by status, the latest 100
 // rows (kind, status, attempts, error code; never the payload), and the last retention runs.
@@ -12,21 +12,28 @@ import { Chip, ErrorNote, Muted, PageTitle, Panel, when, Empty, Loading, TableSc
 
 export function JobsScreen() {
   const [state, setState] = useState<AdminResult<Jobs> | null>(null);
+  // Bumped by Retry: the load runs again.
+  const [tries, setTries] = useState(0);
+  const retry = () => {
+    setState(null);
+    setTries((n) => n + 1);
+  };
   useEffect(() => {
     let live = true;
     void fetchJobs().then((r) => live && setState(r));
     return () => {
       live = false;
     };
-  }, []);
+  }, [tries]);
 
-  if (state === null) return <Loading />;
-  if (!state.ok) return <ErrorNote>{state.message}</ErrorNote>;
+  // The page heading is there while loading and after a failed load too (A10).
+  const title = <PageTitle lead="Background work: moderation, photo processing, clean-up. Jobs retry on their own with a growing delay; a dead job has used all its attempts.">Jobs</PageTitle>;
+  if (state === null || !state.ok) return <div>{title}{state ? <LoadError onRetry={retry}>{state.message}</LoadError> : <Loading />}</div>;
   const { counts, jobs, retention } = state.data;
 
   return (
     <div data-testid="admin-jobs">
-      <PageTitle lead="Background work: moderation, photo processing, clean-up. Jobs retry on their own with a growing delay; a dead job has used all its attempts.">Jobs</PageTitle>
+      {title}
       <div className="grid gap-6">
         <Panel title="Queue" testId="jobs-counts">
           {counts.length === 0 ? (

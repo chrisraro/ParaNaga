@@ -17,7 +17,7 @@ import {
 import { label } from "@/domain/admin/stops";
 import { INFO_REASONS, REJECT_REASONS } from "@/domain/corrections/review-reasons";
 import { en } from "@/i18n/dict";
-import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, insetCls, Loading, segBtn, segGroup, type Notice, TableScroll } from "./parts";
+import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, insetCls, linkCls, Loading, LoadError, segBtn, segGroup, type Notice, TableScroll } from "./parts";
 
 // A14 Corrections review (N6, C9). Commuter reports with their evidence; a transport reviewer
 // starts the review, asks for information, rejects, marks a duplicate or accepts. Accepting puts
@@ -101,7 +101,14 @@ export function CorrectionsScreen() {
       {state === null ? (
         <Loading />
       ) : !state.ok ? (
-        <ErrorNote>{state.message}</ErrorNote>
+        <LoadError
+          onRetry={() => {
+            setState(null);
+            void reload();
+          }}
+        >
+          {state.message}
+        </LoadError>
       ) : (
         <div className="grid gap-4">
           <Muted>{data?.draft ? `Accepted changes go into the open draft ${data.draft.label}.` : "No draft is open: accepting a report needs one (Revisions & publication)."}</Muted>
@@ -218,8 +225,15 @@ function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean
             <ul className="mt-1 grid grid-cols-3 gap-2">
               {c.media.map((m, i) => (
                 <li key={m.id}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={reviewMediaSrc(m.id)} alt={`Evidence photo ${i + 1}`} className="aspect-[4/3] w-full rounded-lg object-cover" loading="lazy" />
+                  {/* The whole photo, never cropped (A12). The link opens the same private, audited
+                      stream in a new tab: same sign-in and role check, nothing stored, no other URL. */}
+                  <a href={reviewMediaSrc(m.id)} target="_blank" rel="noreferrer" className={`grid gap-1 adm-meta ${linkCls}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={reviewMediaSrc(m.id)} alt={`Evidence photo ${i + 1}`} className="aspect-[4/3] w-full rounded-lg object-contain" loading="lazy" />
+                    <span>
+                      Open full size<span className="sr-only"> (new tab; logged)</span>
+                    </span>
+                  </a>
                 </li>
               ))}
             </ul>

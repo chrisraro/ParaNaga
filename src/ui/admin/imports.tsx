@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { fetchImports, importCommit, importDryRun, type AdminResult } from "@/client/admin/api";
 import { IMPORT_MAX_CHARS, label, type ImportCommitResult, type ImportDryRun, type ImportFormat, type ImportList, type ImportUpload } from "@/domain/admin/stops";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, confirmInset, Loading, type Notice, TableScroll } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, confirmInset, Loading, LoadError, type Notice, TableScroll } from "./parts";
 
 // A2 Imports (N5b, C2). Upload a My Maps export (KML, the raw authority, or the package CSV), run a
 // dry run on the server (nothing is written: the diff against the newest committed batch, the
@@ -138,7 +138,7 @@ export function ImportsScreen() {
           {imports === null ? (
             <Loading />
           ) : !imports.ok ? (
-            <ErrorNote>{imports.message}</ErrorNote>
+            <LoadError onRetry={() => { setImports(null); void load(); }}>{imports.message}</LoadError>
           ) : imports.data.batches.length === 0 ? (
             <Empty title="No batches yet.">Run a dry run from the command line first; its result is listed here.</Empty>
           ) : (
