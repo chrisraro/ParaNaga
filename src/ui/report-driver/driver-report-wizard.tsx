@@ -36,6 +36,7 @@ import {
   type ComplaintReceipt,
 } from "@/domain/complaints/schemas";
 import { complaintStatusLabel } from "@/domain/complaints/status";
+import { MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from "@/domain/media/schemas";
 import { en, translated, type Dict } from "@/i18n/dict";
 import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 import { useLocale, useT } from "@/i18n/provider";
@@ -73,6 +74,20 @@ function whenProblem(local: string, t: Dict["driverReport"]): string | null {
 function formatLocal(local: string, locale: Locale = DEFAULT_LOCALE): string {
   const t = new Date(local);
   return Number.isFinite(t.getTime()) ? t.toLocaleString(formatLocale(locale), { dateStyle: "medium", timeStyle: "short" }) : "";
+}
+
+/**
+ * Why a file cannot be added, or null. The size limit is checked when the file arrives, not at
+ * Send: a file that cannot be sent is said so at once, by name when it has one.
+ */
+export function evidenceFileProblem(blob: Blob, t: Dict["driverReport"]): string | null {
+  const mime = evidenceType(blob.type);
+  if (!mime) return t.api.badType;
+  if (blob.size === 0) return t.camera.nothingCaptured;
+  const max = mime.startsWith("video/") ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES;
+  if (blob.size <= max) return null;
+  const mb = Math.round(max / 1024 / 1024);
+  return blob instanceof File && blob.name ? t.fileTooLarge(blob.name.slice(0, 60), mb) : t.api.tooLarge(mb);
 }
 
 /**
@@ -188,10 +203,12 @@ function Wizard() {
     go((step - 1) as Step);
   };
 
-  const addItem = (blob: Blob, captureKind: CaptureKind): string | null => {
-    if (itemsRef.current.length >= MAX_COMPLAINT_EVIDENCE) return t.tooMany(MAX_COMPLAINT_EVIDENCE);
-    const mime = evidenceType(blob.type);
-    if (!mime) return t.api.badType;
+  // `replacing`: a Retake. The new file takes the old one's place only now that it exists and passed.
+  const addItem = (blob: Blob, captureKind: CaptureKind, replacing?: string): string | null => {
+    if (!replacing && itemsRef.current.length >= MAX_COMPLAINT_EVIDENCE) return t.tooMany(MAX_COMPLAINT_EVIDENCE);
+    const problem = evidenceFileProblem(blob, t);
+    if (problem) return problem;
+    const mime = evidenceType(blob.type)!;
     const item: Evidence = {
       key: crypto.randomUUID(),
       blob,
@@ -200,7 +217,9 @@ function Wizard() {
       captureKind,
       capturedAt: new Date().toISOString(),
     };
-    setItems((all) => [...all, item]);
+    const old = replacing ? itemsRef.current.find((i) => i.key === replacing) : undefined;
+    if (old) URL.revokeObjectURL(old.url);
+    setItems((all) => (old ? all.map((i) => (i.key === old.key ? item : i)) : [...all, item]));
     return null;
   };
   const removeItem = (key: string) => {

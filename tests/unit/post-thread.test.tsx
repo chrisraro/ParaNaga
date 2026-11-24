@@ -2,7 +2,7 @@
 // The post thread's actions (src/ui/community/post-thread.tsx): each action has its own in-flight
 // key, so one never clears another's busy state or sends twice; answers patch the newest state, so
 // two in a row both stay on screen; a sign-in check with no answer is never shown as signed out.
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PostDetail } from "@/domain/community/schemas";
 
@@ -89,11 +89,27 @@ describe("post thread actions", () => {
     expect(off(bookmark())).toBe(false);
   });
 
-  it("Block is sent once however often it is tapped, and is off while it runs", async () => {
+  // The dialog's own buttons: Block this person (first), Cancel. A closed <dialog> hides them from role queries.
+  const confirmBlock = () => within(screen.getByTestId("block-confirm")).getAllByRole("button", { hidden: true });
+
+  it("Block asks first, says what happens, and Cancel sends nothing", async () => {
+    render(<PostThread id={POST_ID} />);
+    fireEvent.click(await screen.findByTestId("thread-block"));
+    const dialog = screen.getByTestId("block-confirm");
+    expect(dialog.textContent).toContain("Block this person?");
+    expect(dialog.textContent).toContain("You can unblock them at the bottom of the community feed.");
+    expect(api.blockPerson).not.toHaveBeenCalled();
+    fireEvent.click(confirmBlock()[1]!);
+    expect(api.blockPerson).not.toHaveBeenCalled();
+  });
+
+  it("Block is sent once however often it is confirmed, and is off while it runs", async () => {
     const pending = deferred<{ ok: false; message: string }>();
     api.blockPerson.mockReturnValue(pending.promise);
     render(<PostThread id={POST_ID} />);
     const block = (await screen.findByTestId("thread-block")) as HTMLButtonElement;
+    fireEvent.click(block);
+    fireEvent.click(confirmBlock()[0]!);
     fireEvent.click(block);
     fireEvent.click(block);
     expect(api.blockPerson).toHaveBeenCalledTimes(1);
@@ -105,6 +121,45 @@ describe("post thread actions", () => {
     api.toggleSaved.mockReturnValue(deferred<Toggle>().promise);
     fireEvent.click(bookmark());
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("opening a reply keeps what was typed in the main comment box, and Escape keeps a reply that has text", async () => {
+    render(<PostThread id={POST_ID} />);
+    const main = (await screen.findByLabelText("Your comment")) as HTMLTextAreaElement;
+    fireEvent.change(main, { target: { value: "My long comment" } });
+
+    fireEvent.click(screen.getByTestId("comment-reply"));
+    const reply = screen.getByLabelText("Your reply") as HTMLTextAreaElement;
+    // Hidden while the reply is open, not removed.
+    expect(main.isConnected).toBe(true);
+    expect(main.closest("[hidden]")).not.toBeNull();
+
+    // Escape on an empty reply closes it; on one with text it does nothing.
+    fireEvent.keyDown(reply, { key: "Escape" });
+    expect(screen.queryByLabelText("Your reply")).toBeNull();
+    fireEvent.click(screen.getByTestId("comment-reply"));
+    fireEvent.change(screen.getByLabelText("Your reply"), { target: { value: "Thanks" } });
+    fireEvent.keyDown(screen.getByLabelText("Your reply"), { key: "Escape" });
+    expect((screen.getByLabelText("Your reply") as HTMLTextAreaElement).value).toBe("Thanks");
+
+    // Cancel is the way out; the main box still has its text.
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByLabelText("Your reply")).toBeNull();
+    const back = screen.getByLabelText("Your comment") as HTMLTextAreaElement;
+    expect(back.value).toBe("My long comment");
+    expect(back.closest("[hidden]")).toBeNull();
+  });
+
+  it("focus goes to the error message when a reload fails and the focused control is gone", async () => {
+    api.toggleHelpful.mockResolvedValue({ ok: true, data: { active: true, count: 1 } });
+    render(<PostThread id={POST_ID} />);
+    const comment = await screen.findByTestId("comment");
+    api.fetchPost.mockResolvedValueOnce({ ok: false, message: "Could not load this post. Try again.", reason: "failed" });
+    // Focus is on the page body, as when the control that had it was removed.
+    await act(async () => fireEvent.click(within(comment).getByRole("button", { name: /Helpful/ })));
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toBe("Could not load this post. Try again.");
+    expect(document.activeElement).toBe(alert);
   });
 
   it("a sign-in check with no answer offers Try again under the comments, never the sign-in prompt", async () => {

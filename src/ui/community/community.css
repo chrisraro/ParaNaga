@@ -377,6 +377,10 @@
   gap: 12px;
 }
 /* A fieldset's legend flows like a heading (floated, it is laid out as the first item). */
+/* Its display above would otherwise show a hidden panel (a draft kept while a reply is open). */
+.pn-comm__panel[hidden] {
+  display: none;
+}
 .pn-comm__panel > legend {
   float: left;
   width: 100%;

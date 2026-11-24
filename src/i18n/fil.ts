@@ -565,6 +565,15 @@ export const fil: Dict = {
     pageTripTo: (label: string) => `Papunta sa ${label}`,
     pageTripFrom: (label: string) => `Mula sa ${label}`,
     pageShowSteps: "Ipakita ang mga hakbang",
+    stepStartAt: (place: string) => `Magsimula sa ${place}.`,
+    stepWalkTo: (distance: string, place: string) => `Maglakad ${distance} papunta sa ${place} (di pa kumpirmado ang daan).`,
+    stepRideFree: (chip: string, board: string, alight: string, badge: string) => `Sumakay sa ${chip} sa tinatayang daan mula sa ${board}. ${alight}. ${badge}.`,
+    stepRidePinned: (chip: string, direction: string | null, board: string, alight: string, stops: string, badge: string) =>
+      `Sumakay sa ${chip}${direction ? `, ${direction}` : ""}, mula ${board} hanggang ${alight}: ${stops} ayon sa ayos ng pin. ${badge}.`,
+    stepTransferAt: (place: string) => `Lumipat ng sasakyan sa ${place}.`,
+    stepTransferWalk: (distance: string, place: string) => `Maglakad ${distance} papunta sa ${place} para lumipat ng sasakyan (di pa kumpirmado ang daan).`,
+    stepArriveAt: (place: string) => `Dumating sa ${place}.`,
+    stepArriveWalk: (distance: string, place: string) => `Maglakad ${distance} papunta sa ${place} (di pa kumpirmado ang daan).`,
   },
   settings: {
     title: "Settings",
@@ -651,6 +660,12 @@ export const fil: Dict = {
     pageNotFound: "Hindi nakita",
     pageNotFoundCopy: "Walang laman ang link na ito.",
     notFoundTabTitle: (title: string) => `${title} · Lunad`,
+    // The root 404 (src/app/not-found-view.tsx).
+    lostTitle: "Mali ang hintuan.",
+    lostCopy: "Walang laman ang link na ito. Baka nalipat ito, o may mali sa pagkakasulat ng address.",
+    lostOpenMap: "Buksan ang mapa",
+    lostHome: "Home ng Lunad",
+    lostTabTitle: "Hindi nakita ang pahina",
   },
   stops: {
     showOnMap: "Ipakita sa mapa",
@@ -1769,6 +1784,7 @@ export const fil: Dict = {
     title: "I-report ang driver",
     steps: { start: "Bago ka magsimula", media: "Larawan o video", what: "Ang nangyari", review: "Suriin at ipadala" },
     tooMany: (max: number) => `Hanggang ${max} larawan o video.`,
+    fileTooLarge: (name: string, mb: number) => `Masyadong malaki ang “${name}”. Hanggang ${mb} MB lang.`,
     outsideNaga: "Nasa labas ng Naga City ang puwestong ito, kaya hindi ito idinagdag. Puwede mong ilarawan na lang ang lugar.",
     locationOff: "Naka-off ang lokasyon para sa Lunad. Puwede mong ilarawan na lang ang lugar.",
     locationFailed: "Hindi mahanap ang lokasyon mo. Puwede mong ilarawan na lang ang lugar.",
@@ -1843,8 +1859,8 @@ export const fil: Dict = {
       denied: "Naka-off ang access sa camera para sa Lunad. Puwede kang mag-upload ng larawan o video, o magpatuloy nang wala nito. Para magamit ang camera, payagan ito sa settings ng browser mo.",
       unavailable: "Hindi mabuksan ang camera sa phone na ito. Puwede kang mag-upload ng larawan o video, o magpatuloy nang wala nito.",
       upload: "Mag-upload na lang ng larawan o video",
-      limits: (max: number, s: number) =>
-        `Hanggang ${max} larawan o video. Hanggang ${s} segundo ang video. Walang data ng lokasyon ang mga larawang kinunan dito. Nasa pribadong storage ang mga file.`,
+      limits: (max: number, s: number, photoMb: number, videoMb: number) =>
+        `Hanggang ${max} larawan o video. Hanggang ${photoMb} MB ang larawan at ${videoMb} MB ang video. Humihinto sa ${s} segundo ang video na kinukunan dito. Walang data ng lokasyon ang larawang kinunan dito. Ang file na ina-upload mo ay dala pa rin ang inilagay ng phone mo, gaya ng kung saan at kailan ito kinunan. Nasa pribadong storage ang mga file.`,
       nothingCaptured: "Walang nakuha. Subukan ulit.",
     },
     categories: {
@@ -1915,6 +1931,9 @@ export const fil: Dict = {
     openSteps: "Buksan ang mga hakbang para sa MyNaga",
     continueMyNaga: "Ituloy sa MyNaga",
     signInOne: "Mag-sign in para makita ang ulat na ito.",
+    moreInfoNote: "Hindi pa puwedeng dagdagan ang report na ito dito. Kung may naaalala ka pa, magpadala ng bagong report tungkol sa driver.",
+    moreDetailNote: "Hindi pa puwedeng dagdagan ang report na ito dito. Para maipadala ang kulang na detalye, magpadala ng bagong report tungkol sa parehong bagay.",
+    sendNewReport: "Magpadala ng bagong report tungkol dito",
     allMine: "Lahat ng ulat ko",
     outcomes: {
       info_provided_to_reporter: "Naipadala na sa iyo ang impormasyon",
@@ -2036,6 +2055,7 @@ export const fil: Dict = {
     showMore: "Magpakita pa",
     feedNotice: "Isinulat ng ibang commuter. Hindi kinumpirma ng Lunad. Ang mga tip dito tungkol sa pasahe o ruta ay hindi pasahe o rutang itinakda ng lungsod.",
     blocked: (n: number) => `Mga naka-block (${n})`,
+    blockedLoadFailed: "Hindi ma-load ang mga taong na-block mo.",
     unblock: "I-unblock",
     unblockLabel: (handle: string) => `I-unblock si ${handle}`,
     labels: { community: "Obserbasyon ng commuter", official_notice: "Pormal na paunawa", incorporated_change: "Pagbabagong naisama na" },
@@ -2122,6 +2142,9 @@ export const fil: Dict = {
     more: "Iba pa",
     report: "I-report",
     block: "I-block ang taong ito",
+    blockTitle: "I-block ang taong ito?",
+    blockBody: "Hindi mo na makikita ang mga post at komento niya. Puwede mo siyang i-unblock sa ibaba ng community feed.",
+    replyDraftOpen: "Ipadala muna o i-cancel ang sinusulat mong sagot.",
     history: (n: number) => `Kasaysayan ng edit (${n})`,
     version: (n: number) => `Bersyon ${n}`,
     visibleToAll: "Nakikita ng lahat",

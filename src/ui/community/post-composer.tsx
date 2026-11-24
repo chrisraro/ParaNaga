@@ -55,6 +55,8 @@ export function PostComposer(props: Props) {
   const [tagText, setTagText] = useState("");
   const [route, setRoute] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const loadRef = useRef<HTMLParagraphElement>(null);
   const [draftReady, setDraftReady] = useState(props.mode === "new");
   const { error, errorProps, fail, clear, edited, field } = useFieldError();
   // One request at a time: a photo upload must finish before the post is sent, or it would go
@@ -103,7 +105,7 @@ export function PostComposer(props: Props) {
     return () => {
       cancelled = true;
     };
-  }, [editId, user]);
+  }, [editId, user, loadAttempt]);
 
   const firstRender = useRef(true);
   useEffect(() => {
@@ -236,11 +238,38 @@ export function PostComposer(props: Props) {
     return (
       <div className="pn-comm" data-testid="composer-loading">
         {loadError ? (
-          <p className="pn-comm__error" role="alert">
-            {translated(translated(loadError, en.community.api, t.api), en.community, t)}
-          </p>
+          <>
+            <p className="pn-comm__error" role="alert">
+              {translated(translated(loadError, en.community.api, t.api), en.community, t)}
+            </p>
+            <div className="pn-comm__nav">
+              {loadError === en.community.onlyAuthor ? null : (
+                <button
+                  type="button"
+                  className="pn-btn pn-btn--secondary pn-comm__action"
+                  onClick={() =>
+                    updateThenFocus(
+                      () => {
+                        setLoadError(null);
+                        setLoadAttempt((n) => n + 1);
+                      },
+                      () => loadRef.current,
+                    )
+                  }
+                  data-testid="composer-retry"
+                >
+                  {tt.forms.tryAgain}
+                </button>
+              )}
+              <Link href="/app/community" className="pn-btn pn-btn--primary pn-comm__action">
+                {t.backToCommunity}
+              </Link>
+            </div>
+          </>
         ) : (
-          <p className="pn-comm__muted">{tt.forms.loading}</p>
+          <p ref={loadRef} tabIndex={-1} className="pn-comm__muted">
+            {tt.forms.loading}
+          </p>
         )}
       </div>
     );

@@ -198,12 +198,14 @@ test("signed in: capture, retake, details, review and a private receipt; the cam
   await expect(page.getByRole("img", { name: "Photo 1 preview" })).toBeVisible();
   await expect.poll(() => liveTracks(page)).toBe(0);
 
-  // Retake: the old photo goes, the camera opens again.
+  // Retake: the camera opens again and the old photo stays until the new one exists, then it is replaced (one photo).
   await page.getByRole("button", { name: "Retake" }).click();
-  await expect(page.getByRole("img", { name: "Photo 1 preview" })).toHaveCount(0);
+  await expect(page.getByRole("img", { name: "Photo 1 preview" })).toHaveCount(1);
   await expect.poll(() => liveTracks(page)).toBe(1);
   await page.getByTestId("driver-shutter").click();
-  await expect(page.getByRole("img", { name: "Photo 1 preview" })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Photo 1 preview" })).toHaveCount(1);
+  await expect(page.getByRole("img", { name: /Photo 2 preview/ })).toHaveCount(0);
+  await expect.poll(() => liveTracks(page)).toBe(0);
 
   // Leaving the step with the camera open stops it.
   await page.getByTestId("driver-open-camera").click();

@@ -37,7 +37,7 @@ import { SAME_PLACE_M } from "@/domain/planner/labels";
 import { pinnedEndName, type SavedPlaceSource, type SavedTrip } from "@/domain/saved/saved";
 import { planAnnouncement } from "@/domain/trip/present";
 import { en, type Dict } from "@/i18n/dict";
-import { useT } from "@/i18n/provider";
+import { useLocale, useT } from "@/i18n/provider";
 import {
   endpointLabel,
   endpointsReducer,
@@ -197,6 +197,7 @@ function createSheetFollow() {
 
 export function HomeScreen() {
   const t = useT();
+  const locale = useLocale();
   const frame = useAppFrame();
   const router = useRouter();
   const geo = useGeolocation();
@@ -276,7 +277,7 @@ export function HomeScreen() {
   // The two staleness notes also show at the peek (the list below is inert there), one line each.
   const peekNotes: string[] = [];
   if (optionsListed && reopen.changed) peekNotes.push(t.home.changedSinceSaved);
-  if (optionsListed && plan.status === "ready" && plan.offline) peekNotes.push(offlinePlanChip(plan.data.revision.publishedAt, plan.offline, t.pwa));
+  if (optionsListed && plan.status === "ready" && plan.offline) peekNotes.push(offlinePlanChip(plan.data.revision.publishedAt, plan.offline, t.pwa, locale));
   // The newest request for this trip failed: the options stay, said to be possibly out of date.
   const planStale = plan.status === "ready" && plan.refresh.status === "failed";
   if (optionsListed && planStale) peekNotes.push(t.trip.refreshFailed);
@@ -1143,7 +1144,7 @@ export function HomeScreen() {
                 (planStale
                   ? { text: t.trip.refreshFailed, tone: "warning" }
                   : plan.status === "ready" && plan.offline
-                    ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline, t.pwa), tone: "warning" }
+                    ? { text: offlinePlanNote(planData.revision.publishedAt, plan.offline, t.pwa, locale), tone: "warning" }
                     : null)
               }
               onStart={(walkLengths) =>
@@ -1162,7 +1163,7 @@ export function HomeScreen() {
               ) : null}
               {plan.status === "ready" && plan.offline ? (
                 <p className="pn-trip-reopen pn-trip-reopen--warn" role="status" data-testid="trip-offline-note">
-                  {offlinePlanNote(plan.data.revision.publishedAt, plan.offline, t.pwa)}
+                  {offlinePlanNote(plan.data.revision.publishedAt, plan.offline, t.pwa, locale)}
                 </p>
               ) : null}
               {planStale ? (

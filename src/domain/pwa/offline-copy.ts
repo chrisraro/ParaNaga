@@ -3,18 +3,19 @@
 // phone has no data date, the copy says so.
 import { en, type Dict } from "@/i18n/dict";
 import { publishedDateText } from "../network/present";
+import type { Locale } from "@/i18n/locales";
 
 /** "Offline — data from Oct 15, 2026. Fares may have changed." (the app frame's banner) */
-export function offlineBannerText(publishedAt: string | null | undefined, hasData: boolean, copy: Dict["pwa"] = en.pwa): string {
+export function offlineBannerText(publishedAt: string | null | undefined, hasData: boolean, copy: Dict["pwa"] = en.pwa, locale?: Locale): string {
   if (!hasData) return copy.offlineNoData;
-  const date = publishedDateText(publishedAt);
+  const date = publishedDateText(publishedAt, locale);
   return date ? copy.offlineFromDate(date) : copy.offlineFromVisit;
 }
 
 /** "Data from Oct 15, 2026. Fares may have changed." (the /offline page) */
-export function offlineDataLine(publishedAt: string | null | undefined, hasData: boolean, copy: Dict["pwa"] = en.pwa): string {
+export function offlineDataLine(publishedAt: string | null | undefined, hasData: boolean, copy: Dict["pwa"] = en.pwa, locale?: Locale): string {
   if (!hasData) return copy.dataNone;
-  const date = publishedDateText(publishedAt);
+  const date = publishedDateText(publishedAt, locale);
   return date ? copy.dataFromDate(date) : copy.dataFromVisit;
 }
 
@@ -26,8 +27,9 @@ export function offlinePlanNote(
   publishedAt: string | null | undefined,
   reason: "offline" | "unreachable" = "offline",
   copy: Dict["pwa"] = en.pwa,
+  locale?: Locale,
 ): string {
-  const date = publishedDateText(publishedAt);
+  const date = publishedDateText(publishedAt, locale);
   if (reason === "unreachable") return date ? copy.planUnreachableDate(date) : copy.planUnreachable;
   return date ? copy.planOfflineDate(date) : copy.planOffline;
 }
@@ -37,8 +39,9 @@ export function offlinePlanChip(
   publishedAt: string | null | undefined,
   reason: "offline" | "unreachable" = "offline",
   copy: Dict["pwa"] = en.pwa,
+  locale?: Locale,
 ): string {
-  const date = publishedDateText(publishedAt);
+  const date = publishedDateText(publishedAt, locale);
   const base = reason === "unreachable" ? copy.chipUnreachable : copy.chipOffline;
   return date ? copy.chipDate(base, date) : base;
 }

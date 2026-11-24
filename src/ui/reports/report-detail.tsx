@@ -10,7 +10,7 @@ import "@/ui/report/report.css";
 import "./reports.css";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { loadComplaint, loadCorrection, type Loaded } from "@/client/reports/api";
@@ -18,11 +18,13 @@ import { complaintCategoryLabel } from "@/domain/complaints/categories";
 import { complaintStatusLabel } from "@/domain/complaints/status";
 import { categoryLabel } from "@/domain/corrections/categories";
 import { reviewReasonText } from "@/domain/corrections/review-reasons";
+import { reportHref } from "@/domain/corrections/href";
 import { statusLabel } from "@/domain/corrections/status";
 import { complaintTone, correctionTone, manilaDate, outcomeLabel } from "@/domain/reports/list";
 import type { ComplaintDetail, CorrectionDetail } from "@/domain/reports/schemas";
 import { en, translated } from "@/i18n/dict";
 import { useLocale, useT } from "@/i18n/provider";
+import { updateThenFocus } from "@/ui/report/form-a11y";
 import { StatusChip } from "./reports-screen";
 
 export const MYNAGA_PANEL_NOTE = en.reports.mynagaPanelNote;
@@ -67,6 +69,11 @@ function ComplaintView({ c }: { c: ComplaintDetail }) {
         {outcome ? <p className="pn-reports__note">{outcome}.</p> : null}
         <h3>{t.statusInParaNaga}</h3>
         <TimelineList events={c.events} label={(s) => complaintStatusLabel(s as ComplaintDetail["status"], d)} />
+        {c.status === "needs_information" ? (
+          <p className="pn-reports__note" data-testid="report-next-step">
+            {t.moreInfoNote}
+          </p>
+        ) : null}
       </div>
 
       <div className="pn-reports__panel" data-testid="report-content">
@@ -116,6 +123,14 @@ function CorrectionView({ c }: { c: CorrectionDetail }) {
           events={c.events.map((e) => ({ status: e.status, at: e.at, note: e.reason ? reviewReasonText(e.reason, r) : null }))}
           label={(s) => statusLabel(s as CorrectionDetail["status"], r)}
         />
+        {c.status === "needs_evidence" ? (
+          <div data-testid="report-next-step">
+            <p className="pn-reports__note">{t.moreDetailNote}</p>
+            <Link href={reportHref({ entityType: c.entityType, entityId: c.entityId, ...(c.entityLabel ? { entityLabel: c.entityLabel } : {}) })} prefetch={false} className="pn-btn pn-btn--secondary pn-report__action" data-testid="report-send-new">
+              {t.sendNewReport}
+            </Link>
+          </div>
+        ) : null}
       </div>
       <div className="pn-reports__panel" data-testid="report-content">
         <h3>{t.whatYouReported}</h3>
@@ -134,6 +149,8 @@ export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correcti
   const tt = useT();
   const { user, loading, status, refresh, refreshing } = useAuthSession();
   const [view, setView] = useState<View>({ phase: "loading" });
+  const [attempt, setAttempt] = useState(0);
+  const loadingRef = useRef<HTMLParagraphElement>(null);
   const userId = user?.id ?? null;
 
   useEffect(() => {
@@ -147,7 +164,7 @@ export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correcti
     return () => {
       live = false;
     };
-  }, [userId, kind, id]);
+  }, [userId, kind, id, attempt]);
 
   if (loading) {
     return (
@@ -170,13 +187,28 @@ export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correcti
   return (
     <div className="pn-reports" data-testid="report-detail">
       {view.phase === "loading" ? (
-        <p className="pn-reports__intro" role="status">
+        <p ref={loadingRef} tabIndex={-1} className="pn-reports__intro" role="status">
           {tt.forms.loading}
         </p>
       ) : null}
       {view.phase === "error" ? (
-        <div className="pn-report__error" role="alert">
-          {translated(view.message, en.reports.api, tt.reports.api)}
+        <div className="pn-report__error" data-testid="report-error">
+          <p role="alert">{translated(view.message, en.reports.api, tt.reports.api)}</p>
+          <button
+            type="button"
+            className="pn-btn pn-btn--secondary pn-report__action"
+            onClick={() =>
+              updateThenFocus(
+                () => {
+                  setView({ phase: "loading" });
+                  setAttempt((n) => n + 1);
+                },
+                () => loadingRef.current,
+              )
+            }
+          >
+            {tt.forms.tryAgain}
+          </button>
         </div>
       ) : null}
       {view.phase === "complaint" ? <ComplaintView c={view.data} /> : null}
