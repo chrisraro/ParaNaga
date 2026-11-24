@@ -259,6 +259,33 @@ test("Add a place: search in save mode, name it, and it is under Places; a tap p
   await expect(page.getByTestId("endpoint-destination").locator(".pn-endpoint__main")).toContainText("The mall");
 });
 
+test("removing a saved place: Undo sits above the list and takes focus, and Undo restores it", async ({ page }) => {
+  await openApp(page);
+  await tabBar(page).getByRole("link", { name: "Saved", exact: true }).click();
+  await page.getByRole("tab", { name: "Places" }).click();
+  await page.getByTestId("saved-add-place").click();
+  await page.getByRole("searchbox").fill("SM City");
+  await page.getByTestId("search-result-osm").filter({ hasText: "SM City Naga" }).click();
+  await page.getByTestId("search-save-dialog").getByRole("button", { name: "Save" }).click();
+  await expect(page.getByTestId("saved-place")).toHaveCount(1);
+
+  await page.getByRole("button", { name: /^Remove: SM City Naga/ }).click();
+  const undo = page.getByTestId("saved-undo");
+  await expect(undo).toContainText("SM City Naga");
+  await expect(undo).toBeFocused();
+  // Above the list, so it is on screen whichever row was removed.
+  const undoY = (await undo.boundingBox())!.y;
+  const listY = (await page.getByTestId("saved-places").boundingBox())!.y;
+  expect(undoY).toBeLessThan(listY);
+  await page.keyboard.press("Tab");
+  await expect(undo.getByRole("button", { name: "Undo" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("saved-place")).toHaveCount(1);
+  // Undo took its own button away: the note says so and keeps focus.
+  await expect(undo).toHaveText("Restored.");
+  await expect(undo).toBeFocused();
+});
+
 async function expectTripDetailAxeClean(page: Page) {
   await page.waitForFunction(() =>
     document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity),

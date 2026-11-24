@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fetchProviders, runJevDiagnostic, type AdminResult } from "@/client/admin/api";
 import { diagnosticBlocker, type DiagnosticResult, type Providers } from "@/domain/admin/system";
 import { label } from "@/domain/admin/stops";
-import { btnPrimary, Chip, ErrorNote, Muted, OkNote, PageTitle, Panel, when, Loading } from "./parts";
+import { btnPrimary, Chip, ErrorNote, Muted, PageTitle, Panel, ResultNotice, when, Loading, type Notice } from "./parts";
 
 // A19 Jev & providers (N7, C12). What is configured, as yes/no: never a key, a secret or an error
 // body. Moderators and admins read it; admins can run one synthetic Decisions call (only when the
@@ -15,6 +15,14 @@ const yesNo = (v: boolean) => <Chip tone={v ? "ok" : "warn"}>{v ? "Yes" : "No"}<
 export function ProvidersScreen() {
   const [state, setState] = useState<AdminResult<Providers> | null>(null);
   const [diag, setDiag] = useState<AdminResult<DiagnosticResult> | null>(null);
+  // One notice object per diagnostic run, so each answer takes focus once.
+  const diagNotice = useMemo<Notice>(() => {
+    if (!diag) return null;
+    if (!diag.ok) return { ok: false, text: diag.message };
+    if (diag.data.status === "ok") return { ok: true, text: `Jev answered in ${diag.data.ms} ms: ${label(diag.data.recommendation ?? "")} at ${Math.round((diag.data.confidence ?? 0) * 100)}%.` };
+    if (diag.data.status === "skipped") return { ok: false, text: `The diagnostic did not run: ${diag.data.reason ?? "no reason given"}` };
+    return { ok: false, text: `Jev did not answer: ${label(diag.data.reason ?? "unknown")}. Posts stay pending for a person.` };
+  }, [diag]);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -26,6 +34,7 @@ export function ProvidersScreen() {
   }, []);
 
   const run = async () => {
+    if (busy) return;
     setBusy(true);
     setDiag(null);
     const r = await runJevDiagnostic();
@@ -89,25 +98,13 @@ export function ProvidersScreen() {
               <>
                 <Muted>Sends one made-up sentence (no user text) to the Decisions API and shows only the outcome. It counts as one call against today&apos;s budget.</Muted>
                 <div>
-                  <button type="button" className={btnPrimary} disabled={busy} onClick={() => void run()} data-testid="jev-diagnostic-run">
+                  <button type="button" className={btnPrimary} aria-disabled={busy} onClick={() => void run()} data-testid="jev-diagnostic-run">
                     {busy ? "Calling Jev…" : "Run the diagnostic"}
                   </button>
                 </div>
               </>
             )}
-            {diag ? (
-              !diag.ok ? (
-                <ErrorNote testId="jev-diagnostic-result">{diag.message}</ErrorNote>
-              ) : diag.data.status === "ok" ? (
-                <OkNote testId="jev-diagnostic-result">
-                  Jev answered in {diag.data.ms} ms: {label(diag.data.recommendation ?? "")} at {Math.round((diag.data.confidence ?? 0) * 100)}%.
-                </OkNote>
-              ) : diag.data.status === "skipped" ? (
-                <Muted>{diag.data.reason}</Muted>
-              ) : (
-                <ErrorNote testId="jev-diagnostic-result">Jev did not answer: {label(diag.data.reason ?? "unknown")}. Posts stay pending for a person.</ErrorNote>
-              )
-            ) : null}
+            {diagNotice ? <ResultNotice notice={diagNotice} testId="jev-diagnostic-result" /> : null}
           </div>
         </Panel>
 

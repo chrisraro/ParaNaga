@@ -10,7 +10,7 @@ import "@/ui/report/report.css";
 import "./reports.css";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { loadMyReports } from "@/client/reports/api";
 import { manilaDay, type ReportRow } from "@/domain/reports/list";
@@ -18,6 +18,7 @@ import { en, translated } from "@/i18n/dict";
 import { useLocale, useT } from "@/i18n/provider";
 import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { ListCell, ListGroup } from "@/ui/kit/list";
+import { updateThenFocus } from "@/ui/report/form-a11y";
 import { Note } from "@/ui/kit/note";
 
 export const REPORTS_INTRO = en.reports.intro;
@@ -34,6 +35,7 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
   const locale = useLocale();
   const { user, loading, status, refresh, refreshing } = useAuthSession();
   const [state, setState] = useState<State>({ phase: "loading" });
+  const intro = useRef<HTMLParagraphElement>(null);
   const [attempt, setAttempt] = useState(0);
   const userId = user?.id ?? null;
 
@@ -72,7 +74,7 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
 
   return (
     <div className="pn-reports" data-testid="reports-list-screen">
-      <p className="pn-reports__intro">{t.intro}</p>
+      <p ref={intro} tabIndex={-1} className="pn-reports__intro">{t.intro}</p>
       {state.phase === "loading" ? (
         <p className="pn-reports__intro" role="status">
           {t.loadingList}
@@ -85,8 +87,10 @@ export function ReportsScreen({ driverReports = false }: { driverReports?: boole
             type="button"
             className="pn-btn pn-btn--secondary pn-report__action"
             onClick={() => {
-              setState({ phase: "loading" });
-              setAttempt((n) => n + 1);
+              updateThenFocus(() => {
+                setState({ phase: "loading" });
+                setAttempt((n) => n + 1);
+              }, () => intro.current);
             }}
           >
             {tt.forms.tryAgain}

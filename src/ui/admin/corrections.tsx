@@ -17,7 +17,7 @@ import {
 import { label } from "@/domain/admin/stops";
 import { INFO_REASONS, REJECT_REASONS } from "@/domain/corrections/review-reasons";
 import { en } from "@/i18n/dict";
-import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, insetCls, Loading, segBtn, segGroup } from "./parts";
+import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, insetCls, Loading, segBtn, segGroup, type Notice } from "./parts";
 
 // A14 Corrections review (N6, C9). Commuter reports with their evidence; a transport reviewer
 // starts the review, asks for information, rejects, marks a duplicate or accepts. Accepting puts
@@ -33,7 +33,7 @@ export function CorrectionsScreen() {
   const [scope, setScope] = useState<CorrectionScope>("open");
   const [state, setState] = useState<AdminResult<CorrectionQueue> | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
 
   // Bumped to load the list again after a review action. The effect always reads the scope on
   // screen and drops an answer that a newer request has replaced (same pattern as Complaint review).
@@ -93,7 +93,11 @@ export function CorrectionsScreen() {
           </button>
         ))}
       </div>
-      {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="correction-notice">{notice.text}</OkNote> : <ErrorNote testId="correction-notice">{notice.text}</ErrorNote>}</div> : null}
+      {notice ? (
+        <div className="mb-4">
+          <ResultNotice notice={notice} testId="correction-notice" />
+        </div>
+      ) : null}
       {state === null ? (
         <Loading />
       ) : !state.ok ? (
@@ -311,7 +315,7 @@ function ActionForm({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boo
   const [fareRule, setFareRule] = useState<string>("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+  const problem = useFormProblem();
 
   if (actions.length === 0) {
     return (
@@ -321,22 +325,24 @@ function ActionForm({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boo
     );
   }
 
-  const build = (): ReviewPayload | string => {
+  // A problem names the field it belongs to; one without a field (no draft open) stays a general alert.
+  const bad = (error: string, field?: string) => ({ error, field });
+  const build = (): ReviewPayload | ReturnType<typeof bad> => {
     const base = { expectedStatus: c.status, ...(note.trim() ? { note: note.trim() } : {}) };
     switch (action) {
       case "start_review":
         return { action, ...base };
       case "request_info":
-        if (!(INFO_REASONS as readonly string[]).includes(reason)) return "Choose what information is needed.";
+        if (!(INFO_REASONS as readonly string[]).includes(reason)) return bad("Choose what information is needed.", "reason");
         return { action, ...base, reason: reason as (typeof INFO_REASONS)[number] };
       case "reject":
-        if (!(REJECT_REASONS as readonly string[]).includes(reason)) return "Choose a reason for rejecting.";
+        if (!(REJECT_REASONS as readonly string[]).includes(reason)) return bad("Choose a reason for rejecting.", "reason");
         return { action, ...base, reason: reason as (typeof REJECT_REASONS)[number] };
       case "duplicate":
-        if (!/^[0-9a-f-]{36}$/i.test(duplicateOf.trim())) return "Choose or paste the report this one duplicates.";
+        if (!/^[0-9a-f-]{36}$/i.test(duplicateOf.trim())) return bad("Choose or paste the report this one duplicates.", "duplicate");
         return { action, ...base, duplicateOf: duplicateOf.trim() };
       case "accept": {
-        if (!draftOpen) return "Open a draft under Revisions & publication first.";
+        if (!draftOpen) return bad("Open a draft under Revisions & publication first.");
         const why = `Commuter correction ${c.id.slice(0, 8)}${note.trim() ? `: ${note.trim()}` : ""}`.slice(0, 500);
         let change: AcceptChange;
         if (kind === "relocate" && c.stop && c.location) {
@@ -346,13 +352,13 @@ function ActionForm({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boo
         } else if (kind === "draft_version" && c.stop) {
           change = { kind: "draft_version", versionId: c.stop.versionId };
         } else {
-          if (!note.trim()) return "A proposal needs a note that says what to change.";
+          if (!note.trim()) return bad("A proposal needs a note that says what to change.", "note");
           change = { kind: "proposal" };
         }
         return { action, ...base, change, ...(fareRule ? { fareRuleVersionId: fareRule } : {}) };
       }
       default:
-        return "Choose an action.";
+        return bad("Choose an action.");
     }
   };
 
@@ -363,8 +369,8 @@ function ActionForm({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boo
       onSubmit={(e) => {
         e.preventDefault();
         const p = build();
-        if (typeof p === "string") return setProblem(p);
-        setProblem(null);
+        if ("error" in p) return problem.fail(p.error, p.field);
+        problem.clear();
         setBusy(true);
         void onAct(c, p).finally(() => setBusy(false));
       }}
@@ -373,13 +379,13 @@ function ActionForm({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boo
         <legend className="mb-1 font-semibold">Action</legend>
         {actions.map((a) => (
           <label key={a} className="flex items-center gap-2">
-            <input type="radio" name={`action-${c.id}`} value={a} checked={action === a} onChange={() => { setAction(a); setReason(""); }} />
+            <input type="radio" name={`action-${c.id}`} value={a} checked={action === a} onChange={() => { setAction(a); setReason(""); problem.clear(); }} />
             {ACTION_LABELS[a]}
           </label>
         ))}
       </fieldset>
       {action === "request_info" || action === "reject" ? (
-        <Field label={action === "request_info" ? "What is needed (the reporter sees this, in their language)" : "Reason (the reporter sees this, in their language)"}>
+        <Field label={action === "request_info" ? "What is needed (the reporter sees this, in their language)" : "Reason (the reporter sees this, in their language)"} error={problem.errorFor("reason")}>
           <select className={inputCls} value={reason} onChange={(e) => setReason(e.target.value)} data-testid="correction-reason">
             <option value="">Choose…</option>
             {(action === "request_info" ? INFO_REASONS : REJECT_REASONS).map((r) => (
@@ -391,7 +397,7 @@ function ActionForm({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boo
         </Field>
       ) : null}
       {action === "duplicate" ? (
-        <Field label="Duplicate of" hint="A similar report on the same item, or paste a report id.">
+        <Field label="Duplicate of" hint="A similar report on the same item, or paste a report id." error={problem.errorFor("duplicate")}>
           <input className={inputCls} list={`similar-${c.id}`} value={duplicateOf} onChange={(e) => setDuplicateOf(e.target.value)} />
           <datalist id={`similar-${c.id}`}>
             {c.similar.map((s) => (
@@ -427,10 +433,10 @@ function ActionForm({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boo
           ) : null}
         </>
       ) : null}
-      <Field label="Note (reviewers only; never shown to the reporter)">
+      <Field label="Note (reviewers only; never shown to the reporter)" error={problem.errorFor("note")}>
         <textarea className={inputCls} rows={3} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} data-testid="correction-note" />
       </Field>
-      {problem ? <ErrorNote>{problem}</ErrorNote> : null}
+      {problem.general ? <ErrorNote>{problem.general}</ErrorNote> : null}
       <div>
         <button type="submit" className={btnPrimary} disabled={busy || action === null} aria-busy={busy} data-testid="correction-submit">
           {action ? ACTION_LABELS[action] : "Choose an action"}

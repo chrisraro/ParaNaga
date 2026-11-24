@@ -9,6 +9,7 @@ import "@/ui/detail/detail.css";
 import "@/ui/kit/styles";
 
 import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useDocumentTitle } from "./document-title";
 import { useEscapeToClose, useFocusOnMount } from "./panel";
 import { ScreenHeader } from "@/ui/kit/screen-header";
 import { useAppFrame, useAppPanel } from "./app-frame-context";
@@ -27,6 +28,7 @@ type Props = {
 
 export function PageFrame({ title, action, header, back = false, children, testId }: Props) {
   useAppPanel("page");
+  useDocumentTitle(title);
   const root = useRef<HTMLDivElement>(null);
   useEscapeToClose(root);
   const heading = useFocusOnMount<HTMLHeadingElement>(true);

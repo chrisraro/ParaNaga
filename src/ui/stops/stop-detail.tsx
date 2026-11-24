@@ -5,6 +5,7 @@
 // survey data. The pin's source record (layer, code, coordinates, raw description) is on Sources and
 // credits, one "Sources" link away.
 
+import { DocumentTitle } from "@/ui/app-shell/document-title";
 import "@/ui/kit/styles";
 
 import Link from "next/link";
@@ -115,6 +116,7 @@ export function StopDetailView({ data }: { data: StopDetail }) {
         <div className="pn-detail__head">
           <CandidateRing size={40} onRoute={onRoute} />
           <div className="pn-detail__head-text">
+            <DocumentTitle title={stopDisplayName(stop.name, stop.source.code, t.trip)} />
             <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
               {stopDisplayName(stop.name, stop.source.code, t.trip)}
             </h1>

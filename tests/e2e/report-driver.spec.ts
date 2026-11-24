@@ -221,6 +221,12 @@ test("signed in: capture, retake, details, review and a private receipt; the cam
   // Details: required checks, then location on tap with accuracy.
   await page.getByTestId("driver-next").click();
   await expect(page.getByTestId("driver-error")).toContainText("Choose what happened");
+  await expect(page.getByRole("radio").first()).toBeFocused();
+  await fillDetails(page);
+  await page.getByLabel("What happened?").fill("short");
+  await page.getByTestId("driver-next").click();
+  await expect(page.getByLabel("What happened?")).toBeFocused();
+  await expect(page.getByLabel("What happened?")).toHaveAccessibleDescription(/at least/);
   await fillDetails(page);
   await expect(page.getByLabel("When did it happen?")).not.toHaveValue("");
   await page.getByTestId("driver-add-location").click();
@@ -234,6 +240,7 @@ test("signed in: capture, retake, details, review and a private receipt; the cam
   await expect(summary).toContainText("ABC 1234");
   await expect(summary).toContainText("about 18 m · Near the plaza");
   await expect(page.getByTestId("driver-ack-notice")).toContainText("Lunad does not send it to Naga City");
+  await expect(page.getByTestId("driver-ack-notice").locator('[lang="en"]')).toContainText("Lunad does not send it");
 
   await page.getByTestId("driver-send").click();
   await expect(page.getByTestId("driver-error")).toContainText("Tick the box");
@@ -274,6 +281,7 @@ test("camera denied: explains, and the upload fallback works", async ({ page }) 
   await expect(page.getByRole("img", { name: "Photo 1 preview" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Retake" })).toHaveCount(0);
   await page.getByRole("button", { name: "Remove photo 1" }).click();
+  await expect(page.getByTestId("driver-open-camera")).toBeFocused();
   await expect(page.getByTestId("driver-next")).toHaveText("Continue without photo");
 });
 

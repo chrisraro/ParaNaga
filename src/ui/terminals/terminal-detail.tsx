@@ -11,6 +11,7 @@
 // leaves from it, then its destination categories (services not verified). "Help map an entrance" is
 // not offered until corrections open (no dead buttons).
 
+import { DocumentTitle } from "@/ui/app-shell/document-title";
 import "@/ui/kit/styles";
 import "@/ui/places/places.css";
 
@@ -249,6 +250,7 @@ export function TerminalDetailView({ data }: { data: TerminalDetail }) {
       {point ? <TerminalMap terminal={terminal} point={point} /> : null}
       <main className="pn-detail__main pn-detail-in">
         <div className="pn-place__head">
+          <DocumentTitle title={terminal.name} />
           <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
             {terminal.name}
           </h1>

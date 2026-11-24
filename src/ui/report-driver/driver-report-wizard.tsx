@@ -36,10 +36,11 @@ import {
   type ComplaintReceipt,
 } from "@/domain/complaints/schemas";
 import { complaintStatusLabel } from "@/domain/complaints/status";
-import { en, translated } from "@/i18n/dict";
+import { en, translated, type Dict } from "@/i18n/dict";
 import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 import { useLocale, useT } from "@/i18n/provider";
 import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
+import { Live, updateThenFocus, useFieldError } from "@/ui/report/form-a11y";
 import { CameraCapture } from "./camera-capture";
 
 type Step = 1 | 2 | 3 | 4;
@@ -65,6 +66,9 @@ function localNow(): string {
 function localToIso(local: string): string | null {
   const t = new Date(local).getTime();
   return Number.isFinite(t) ? new Date(t).toISOString() : null;
+}
+function whenProblem(local: string, t: Dict["driverReport"]): string | null {
+  return incidentTimeProblem(localToIso(local) ?? "", Date.now(), t);
 }
 function formatLocal(local: string, locale: Locale = DEFAULT_LOCALE): string {
   const t = new Date(local);
@@ -104,11 +108,12 @@ function Wizard() {
   const [plate, setPlate] = useState("");
   const [bodyNumber, setBodyNumber] = useState("");
   const [accepted, setAccepted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { error, errorProps, fail, clear, edited, field } = useFieldError();
   const [sending, setSending] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<ComplaintReceipt | null>(null);
   const [requestId] = useState(() => crypto.randomUUID());
   const heading = useRef<HTMLHeadingElement>(null);
+  const f = { kind: `${uid}-kind`, desc: `${uid}-desc`, when: `${uid}-when`, plate: `${uid}-plate`, body: `${uid}-body`, ack: `${uid}-ack-box` };
 
   // Object URLs of captured files are released when the screen closes.
   const itemsRef = useRef(items);
@@ -167,7 +172,7 @@ function Wizard() {
   }, [step, receipt]);
 
   const go = (next: Step) => {
-    setError(null);
+    clear();
     if (next === 3 && !incidentLocal) setIncidentLocal(localNow());
     if (next !== 3 && locating) {
       wantFix.current = false;
@@ -207,22 +212,23 @@ function Wizard() {
   };
 
   const onNext3 = () => {
-    const problem =
-      validateCategory(category, tt) ??
-      validateComplaintDescription(description, tt) ??
-      incidentTimeProblem(localToIso(incidentLocal) ?? "", Date.now(), t) ??
-      validateVehicleId(plate, t.plateName, t) ??
-      validateVehicleId(bodyNumber, t.bodyName, t);
-    if (problem) return setError(problem);
+    const checks: [string, string | null][] = [
+      [f.kind, validateCategory(category, tt)],
+      [f.desc, validateComplaintDescription(description, tt)],
+      [f.when, whenProblem(incidentLocal, t)],
+      [f.plate, validateVehicleId(plate, t.plateName, t)],
+      [f.body, validateVehicleId(bodyNumber, t.bodyName, t)],
+    ];
+    for (const [id, problem] of checks) if (problem) return fail(problem, id);
     go(4);
   };
 
   const onSend = async () => {
-    if (!user || !category) return;
-    if (!accepted) return setError(t.tickBox);
+    if (!user || !category || sending) return;
+    if (!accepted) return fail(t.tickBox, f.ack);
     const incidentAt = localToIso(incidentLocal);
     if (!incidentAt) return go(3);
-    setError(null);
+    clear();
 
     // Upload what is not uploaded yet; uploaded ids are kept, so a retry does not upload twice.
     const uploaded: Evidence[] = [];
@@ -236,7 +242,7 @@ function Wizard() {
       if (left.current) return;
       if (!result.ok) {
         setSending(null);
-        return setError(translated(result.message, en.driverReport.api, t.api));
+        return fail(translated(result.message, en.driverReport.api, t.api));
       }
       const done = { ...item, mediaId: result.mediaId };
       uploaded.push(done);
@@ -258,7 +264,7 @@ function Wizard() {
       noticeAccepted: true,
     });
     setSending(null);
-    if (!result.ok) return setError(translated(result.message, en.driverReport.api, t.api));
+    if (!result.ok) return fail(translated(result.message, en.driverReport.api, t.api));
     // The report is stored: drop the local copies of the files and the answers.
     items.forEach((i) => URL.revokeObjectURL(i.url));
     setItems([]);
@@ -354,7 +360,7 @@ function Wizard() {
         <div className="pn-report__form">
           <fieldset className="pn-report__fieldset">
             <legend className="pn-report__label">{t.kindLegend}</legend>
-            <div className="pn-group" role="radiogroup" aria-label={t.kindLegend}>
+            <div className="pn-group" role="radiogroup" aria-label={t.kindLegend} {...field(f.kind)}>
               {complaintCategoryInfo(t).map((c) => (
                 <label key={c.value} className="pn-report__option">
                   <input
@@ -364,7 +370,7 @@ function Wizard() {
                     checked={category === c.value}
                     onChange={() => {
                       setCategory(c.value);
-                      setError(null);
+                      edited(f.kind);
                     }}
                   />
                   <span className="pn-report__option-text">
@@ -384,13 +390,15 @@ function Wizard() {
               {t.whatHint}
             </p>
             <textarea
-              id={`${uid}-desc`}
+              {...field(f.desc, `${uid}-desc-hint ${uid}-count`)}
               className="pn-report__input pn-report__textarea"
               rows={6}
               maxLength={COMPLAINT_DESCRIPTION_MAX}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              aria-describedby={`${uid}-desc-hint ${uid}-count`}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                edited(f.desc);
+              }}
             />
             <span id={`${uid}-count`} className="pn-report__count">
               {form.count(description.trim().length, COMPLAINT_DESCRIPTION_MAX)}
@@ -402,13 +410,15 @@ function Wizard() {
               {t.whenLabel}
             </label>
             <input
-              id={`${uid}-when`}
+              {...field(f.when, `${uid}-when-hint`)}
               type="datetime-local"
               className="pn-report__input"
               value={incidentLocal}
               max={localNow()}
-              onChange={(e) => setIncidentLocal(e.target.value)}
-              aria-describedby={`${uid}-when-hint`}
+              onChange={(e) => {
+                setIncidentLocal(e.target.value);
+                edited(f.when);
+              }}
             />
             <p id={`${uid}-when-hint`} className="pn-report__hint">
               {t.whenHint}
@@ -417,38 +427,35 @@ function Wizard() {
 
           <div className="pn-report__field">
             <span className="pn-report__label">{t.whereOptional}</span>
-            {gps ? (
-              <p className="pn-report__value" data-testid="driver-location">
-                {form.locationAdded(gps.accuracyM)}
-              </p>
-            ) : null}
+            {/* Always in the page, so the location is announced when it is found. */}
+            <Live className="pn-report__value" data-testid="driver-location">
+              {gps ? form.locationAdded(gps.accuracyM) : null}
+            </Live>
             <div className="pn-report__row">
               <button
                 type="button"
                 className="pn-btn pn-btn--secondary pn-report__small"
+                id={`${uid}-locate`}
                 onClick={() => {
+                  if (findingLocation) return;
                   setLocationNote(null);
                   wantFix.current = true;
                   setLocating(true);
                   geo.start();
                 }}
-                disabled={findingLocation}
+                aria-disabled={findingLocation || undefined}
                 data-testid="driver-add-location"
               >
                 {findingLocation ? form.findingLocation : gps ? form.updateLocation : t.useLocation}
               </button>
               {gps ? (
-                <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => setGps(null)}>
+                <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => updateThenFocus(() => setGps(null), () => document.getElementById(`${uid}-locate`))}>
                   {form.removeLocation}
                 </button>
               ) : null}
             </div>
             <p className="pn-report__hint">{form.permissionHint}</p>
-            {shownLocationNote ? (
-              <p className="pn-report__hint" role="status">
-                {shownLocationNote}
-              </p>
-            ) : null}
+            <Live className="pn-report__hint">{shownLocationNote}</Live>
             <label htmlFor={`${uid}-place`} className="pn-report__label">
               {t.describePlace}
             </label>
@@ -482,11 +489,14 @@ function Wizard() {
                 {t.plateOptional}
               </label>
               <input
-                id={`${uid}-plate`}
+                {...field(f.plate)}
                 className="pn-report__input"
                 maxLength={VEHICLE_ID_MAX}
                 value={plate}
-                onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  setPlate(e.target.value.toUpperCase());
+                  edited(f.plate);
+                }}
                 autoComplete="off"
                 autoCapitalize="characters"
               />
@@ -496,11 +506,14 @@ function Wizard() {
                 {t.bodyOptional}
               </label>
               <input
-                id={`${uid}-body`}
+                {...field(f.body)}
                 className="pn-report__input"
                 maxLength={VEHICLE_ID_MAX}
                 value={bodyNumber}
-                onChange={(e) => setBodyNumber(e.target.value.toUpperCase())}
+                onChange={(e) => {
+                  setBodyNumber(e.target.value.toUpperCase());
+                  edited(f.body);
+                }}
                 autoComplete="off"
                 autoCapitalize="characters"
               />
@@ -555,9 +568,9 @@ function Wizard() {
               {t.beforeSend}
             </h3>
             {/* The acknowledgment is English in every language until its verbatim-reviewed translation. */}
-            <p className="pn-driver__ack-text">{tt.acknowledgments.driverReport}</p>
+            <p className="pn-driver__ack-text" lang="en">{tt.acknowledgments.driverReport}</p>
             <label className="pn-report__check">
-              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} data-testid="driver-ack" />
+              <input type="checkbox" {...field(f.ack)} checked={accepted} onChange={(e) => { setAccepted(e.target.checked); edited(f.ack); }} data-testid="driver-ack" />
               <span>{t.ackCheckbox}</span>
             </label>
           </section>
@@ -567,15 +580,11 @@ function Wizard() {
       {/* The error, the sending line and the step's actions stay together, pinned above the tab bar (report.css). */}
       <div className="pn-report__foot">
         {error ? (
-          <p className="pn-report__error" role="alert" data-testid="driver-error">
+          <p {...errorProps} className="pn-report__error" data-testid="driver-error">
             {error}
           </p>
         ) : null}
-        {sending ? (
-          <p className="pn-report__hint" role="status">
-            {sending}
-          </p>
-        ) : null}
+        <Live className="pn-report__hint">{sending}</Live>
 
         <div className="pn-report__nav">
           {step === 1 ? (
@@ -586,8 +595,10 @@ function Wizard() {
             <button
               type="button"
               className="pn-btn pn-btn--secondary pn-report__action"
-              onClick={() => go((step - 1) as Step)}
-              disabled={sending !== null}
+              onClick={() => {
+                if (!sending) go((step - 1) as Step);
+              }}
+              aria-disabled={sending !== null || undefined}
               data-testid="driver-back"
             >
               {form.back}
@@ -613,7 +624,7 @@ function Wizard() {
               type="button"
               className="pn-btn pn-btn--primary pn-report__action"
               onClick={() => void onSend()}
-              disabled={sending !== null}
+              aria-disabled={sending !== null || undefined}
               data-testid="driver-send"
             >
               {t.sendPrivately}

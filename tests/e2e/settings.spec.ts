@@ -85,6 +85,23 @@ const DARK_BG = "rgb(14, 21, 18)";
 test.describe("phone", () => {
   test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
 
+  test("forced colours: the segmented control keeps a border and shows the selected option", async ({ page }) => {
+    await page.emulateMedia({ forcedColors: "active" });
+    await openSettings(page);
+    const seg = page.locator(".pn-seg--kit").first();
+    await expect(seg).toBeVisible();
+    const style = await seg.evaluate((el) => {
+      const box = getComputedStyle(el);
+      const thumb = getComputedStyle(el.querySelector(".pn-seg__thumb")!);
+      const on = getComputedStyle(el.querySelector("[aria-checked='true'], [aria-selected='true']")!);
+      return { border: box.borderTopWidth, thumb: thumb.backgroundColor, text: on.color, canvas: box.backgroundColor };
+    });
+    expect(style.border).toBe("1px");
+    // The thumb is Highlight and the chosen label HighlightText: two different system colours, not Canvas.
+    expect(style.thumb).not.toBe(style.canvas);
+    expect(style.text).not.toBe(style.thumb);
+  });
+
   test("the Settings screen shows its sections with the exact copy", async ({ page }) => {
     await openSettings(page);
     await expect(page.getByTestId("settings-account")).toHaveText(

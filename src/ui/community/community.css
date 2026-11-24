@@ -72,7 +72,7 @@
   text-align: center;
   text-decoration: none;
 }
-.pn-comm__action:disabled,
+.pn-comm__action[aria-disabled="true"],
 .pn-comm__small:disabled,
 .pn-comm__small[aria-disabled="true"] {
   opacity: 0.4;
@@ -312,6 +312,9 @@
   font-size: 17px;
   font-family: inherit;
   width: 100%;
+}
+.pn-comm__input[aria-invalid="true"] {
+  border-color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
 }
 .pn-comm__input::placeholder {
   color: var(--pn-label2);

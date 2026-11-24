@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { fetchImports, importCommit, importDryRun, type AdminResult } from "@/client/admin/api";
 import { IMPORT_MAX_CHARS, label, type ImportCommitResult, type ImportDryRun, type ImportFormat, type ImportList, type ImportUpload } from "@/domain/admin/stops";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, confirmInset, Loading } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, confirmInset, Loading, type Notice } from "./parts";
 
 // A2 Imports (N5b, C2). Upload a My Maps export (KML, the raw authority, or the package CSV), run a
 // dry run on the server (nothing is written: the diff against the newest committed batch, the
@@ -65,7 +65,7 @@ export function ImportsScreen() {
 
   const runDry = async (e: FormEvent) => {
     e.preventDefault();
-    if (!current) return;
+    if (!current || busy) return;
     const mine = edits.current;
     setBusy("dry");
     setCommitted(null);
@@ -75,7 +75,7 @@ export function ImportsScreen() {
   };
 
   const runCommit = async () => {
-    if (!dry?.result.ok || !dry.result.data.baseline) return;
+    if (busy || !dry?.result.ok || !dry.result.data.baseline) return;
     setBusy("commit");
     const r = await importCommit(dry.payload, dry.result.data.baseline.batchId);
     setBusy(null);
@@ -121,7 +121,7 @@ export function ImportsScreen() {
               <input className={inputCls} type="date" required value={retrievedOn} disabled={busy !== null} onChange={(e) => { edited(); setRetrievedOn(e.target.value); }} data-testid="import-date" />
             </Field>
             <div className="flex flex-wrap items-center gap-3 md:col-span-3">
-              <button type="submit" className={btnSecondary} disabled={!current || !retrievedOn || busy !== null} data-testid="import-dry-run">
+              <button type="submit" className={btnSecondary} disabled={!current || !retrievedOn} aria-disabled={busy !== null} data-testid="import-dry-run">
                 {busy === "dry" ? "Checking…" : "Run dry run"}
               </button>
               {current ? <Muted>{`${current.fileName}, ${current.text.length.toLocaleString("en-PH")} characters`}</Muted> : null}
@@ -130,7 +130,7 @@ export function ImportsScreen() {
           {fileError ? <div className="mt-3"><ErrorNote>{fileError}</ErrorNote></div> : null}
         </Panel>
 
-        {dry && !dry.result.ok ? <ErrorNote testId="import-error">{dry.result.message}</ErrorNote> : null}
+        {dry && !dry.result.ok ? <DryRunError message={dry.result.message} stamp={dry} /> : null}
         {dry?.result.ok ? <DryRun dry={dry.result.data} busy={busy === "commit"} onCommit={() => void runCommit()} /> : null}
         {committed ? <CommitOutcome result={committed} /> : null}
 
@@ -181,8 +181,19 @@ export function ImportsScreen() {
 function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onCommit: () => void }) {
   const { changes } = dry;
   const nothing = changes.added + changes.changed + changes.missing === 0;
+  // One notice per dry run (a new `dry` each time): the result takes focus, so it is not silent.
+  const notice = useMemo<Notice>(
+    () => ({
+      ok: dry.canCommit,
+      text: `Dry run finished: ${dry.changes.added} added, ${dry.changes.changed} changed, ${dry.changes.unchanged} unchanged, ${dry.changes.missing} missing. ${dry.canCommit ? "Nothing is written until you commit." : "Nothing was written, and the file has problems to fix."}`,
+    }),
+    [dry],
+  );
   return (
     <Panel title="Dry run" testId="import-dry">
+      <div className="mb-3">
+        <ResultNotice notice={notice} testId="import-dry-result" />
+      </div>
       <p className="mb-3 text-sm">
         {dry.snapshotVersion ?? "No snapshot"} · sha256 <span className="break-all font-mono">{dry.sha256}</span>
       </p>
@@ -223,7 +234,8 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
 
       {dry.problems.length > 0 ? (
         <div className="mb-4" data-testid="import-problems">
-          <ErrorNote>{`${dry.problems.length} problem${dry.problems.length === 1 ? "" : "s"}; commit is disabled until the file is fixed.`}</ErrorNote>
+          {/* The focused notice above already says there are problems: no second announcement. */}
+          <ErrorNote alert={false}>{`${dry.problems.length} problem${dry.problems.length === 1 ? "" : "s"}; commit is disabled until the file is fixed.`}</ErrorNote>
           <ul className="mt-2 list-disc pl-5 text-sm">
             {dry.problems.slice(0, 30).map((p, i) => (
               <li key={i}>{p}</li>
@@ -282,7 +294,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
 
       {/* The commit step: the amber wash marks the one control here that writes. */}
       <div className={`mt-4 flex flex-wrap items-center gap-3 p-4 ${confirmInset}`}>
-        <button type="button" className={btnPrimary} disabled={!dry.canCommit || busy} onClick={onCommit} data-testid="import-commit">
+        <button type="button" className={btnPrimary} disabled={!dry.canCommit} aria-disabled={busy} onClick={onCommit} data-testid="import-commit">
           {busy ? "Committing…" : nothing ? "Commit (nothing will change)" : "Commit to the open draft"}
         </button>
         {!dry.canCommit ? <Muted>Fix the problems above to commit.</Muted> : null}
@@ -291,16 +303,25 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
   );
 }
 
+/** A dry run that failed: it takes focus (one notice per run, hence `stamp`). */
+function DryRunError({ message, stamp }: { message: string; stamp: object }) {
+  const notice = useMemo<Notice>(() => ({ ok: false, text: message }), [stamp]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <ResultNotice notice={notice} testId="import-error" />;
+}
+
 function CommitOutcome({ result }: { result: AdminResult<ImportCommitResult> }) {
-  if (!result.ok) return <ErrorNote testId="import-commit-result">{result.message}</ErrorNote>;
-  const r = result.data;
-  const n = (k: string) => Number(r.counts[k] ?? 0);
-  return r.outcome === "unchanged" ? (
-    <OkNote testId="import-commit-result">{`Nothing changed: ${n("unchanged")} pins unchanged since ${r.snapshotVersion}. Nothing was written.`}</OkNote>
-  ) : (
-    <OkNote testId="import-commit-result">
-      {`Committed ${r.snapshotVersion}: ${n("added")} added, ${n("changed")} changed, ${n("unchanged")} unchanged, ${n("missing")} missing. ` +
-        `${n("new_candidate_stops")} new candidates and ${n("new_stop_versions")} moved candidates are in the open draft; review them under Candidate review, then validate the draft.`}
-    </OkNote>
-  );
+  const notice = useMemo<Notice>(() => {
+    if (!result.ok) return { ok: false, text: result.message };
+    const r = result.data;
+    const n = (k: string) => Number(r.counts[k] ?? 0);
+    return r.outcome === "unchanged"
+      ? { ok: true, text: `Nothing changed: ${n("unchanged")} pins unchanged since ${r.snapshotVersion}. Nothing was written.` }
+      : {
+          ok: true,
+          text:
+            `Committed ${r.snapshotVersion}: ${n("added")} added, ${n("changed")} changed, ${n("unchanged")} unchanged, ${n("missing")} missing. ` +
+            `${n("new_candidate_stops")} new candidates and ${n("new_stop_versions")} moved candidates are in the open draft; review them under Candidate review, then validate the draft.`,
+        };
+  }, [result]);
+  return <ResultNotice notice={notice} testId="import-commit-result" />;
 }

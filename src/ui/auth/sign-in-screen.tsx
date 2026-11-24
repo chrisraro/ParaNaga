@@ -10,6 +10,7 @@ import { clearReportDraft } from "@/client/corrections/draft";
 import { safeReturnPath } from "@/domain/auth/return-path";
 import type { Dict } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
+import { useFieldError } from "@/ui/report/form-a11y";
 
 type AuthResult = { error?: { message?: string } | null } | undefined | null;
 
@@ -22,14 +23,20 @@ type AuthClientLike = {
   };
 };
 
+/** A new code can be asked for this long after the last one. */
+const RESEND_SECONDS = 30;
+
 /** Turns the service's technical messages into calm copy; unknown messages fall back to ours. */
 function friendlyAuthError(message: string | undefined, fallback: string, t: Dict["auth"]): string {
   if (!message) return fallback;
   if (/invalid origin/i.test(message)) return t.errOrigin;
   if (/too many|rate/i.test(message)) return t.errRate;
-  if (/invalid|expired|otp/i.test(message)) return t.errCode;
+  if (/expired|otp/i.test(message)) return t.errCode;
   return fallback;
 }
+
+/** The Neon client throws the service's refusals (a wrong code, too many tries) as well as network failures. */
+const thrown = (e: unknown) => (e instanceof Error ? e : null);
 
 /** The page to open once signed in. Read when it is needed, so the page itself stays static. */
 function returnPath(): string {
@@ -42,8 +49,11 @@ export function SignInScreen() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"email" | "otp">("email");
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+  const [busy, setBusy] = useState<null | "send" | "verify" | "google">(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const { error, errorProps, fail, clear, edited, field } = useFieldError();
+  // When the next code may be asked for (ms); null once the wait is over.
+  const [resendAt, setResendAt] = useState<number | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const backToEmail = useRef(false);
 
@@ -61,76 +71,103 @@ export function SignInScreen() {
     }
   }, [step]);
 
-  const fail = (error: { message?: string } | null | undefined, fallback: string) =>
-    setStatus({ type: "error", message: friendlyAuthError(error?.message, fallback, t) });
+  useEffect(() => {
+    if (resendAt === null) return undefined;
+    const timer = setTimeout(() => setResendAt(null), Math.max(0, resendAt - Date.now()));
+    return () => clearTimeout(timer);
+  }, [resendAt]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setBusy(true);
+  const start = (what: "send" | "verify" | "google") => {
+    setBusy(what);
     setStatus(null);
+    clear();
+  };
+  const sayFailed = (authError: { message?: string } | null | undefined, fallback: string) => fail(friendlyAuthError(authError?.message, fallback, t));
+
+  const sayCodeFailed = (authError: { message?: string } | null | undefined, fallback: string) => {
+    const message = friendlyAuthError(authError?.message, fallback, t);
+    fail(message, message === t.errCode || message === t.codeFailed ? "signin-otp" : null);
+  };
+
+  const sendCode = async (resend: boolean) => {
+    start("send");
     try {
       const client = (await getAuthClient()) as AuthClientLike | null;
       // Never report success unless the service answered without an error.
       if (!client?.emailOtp?.sendVerificationOtp) {
-        fail(null, t.unavailable);
+        sayFailed(null, t.unavailable);
         return;
       }
       const res = await client.emailOtp.sendVerificationOtp({ email: email.trim(), type: "sign-in" });
       if (!res || res.error) {
-        fail(res?.error, t.sendFailed);
+        sayFailed(res?.error, t.sendFailed);
         return;
       }
-      setStatus({ type: "success", message: t.codeSent(email.trim()) });
+      setStatus(resend ? t.codeSentAgain(email.trim()) : t.codeSent(email.trim()));
+      setResendAt(Date.now() + RESEND_SECONDS * 1000);
       setStep("otp");
-    } catch {
-      fail(null, t.sendNetwork);
+    } catch (e) {
+      sayFailed(thrown(e), t.sendNetwork);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
+  };
+
+  const handleSendOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    if (!email.trim() || emailRef.current?.validity.valid === false) return fail(t.enterEmail, "signin-email");
+    void sendCode(false);
+  };
+
+  const handleResend = () => {
+    if (busy) return;
+    // The wait is said once, when the button is pressed, not counted down out loud.
+    if (resendAt !== null) {
+      clear();
+      return setStatus(t.resendWait(Math.max(1, Math.ceil((resendAt - Date.now()) / 1000))));
+    }
+    void sendCode(true);
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otp.trim()) return;
-    setBusy(true);
-    setStatus(null);
+    if (busy) return;
+    if (!otp) return fail(t.enterCode, "signin-otp");
+    start("verify");
     try {
       const client = (await getAuthClient()) as AuthClientLike | null;
       if (!client?.signIn?.emailOtp) {
-        fail(null, t.unavailable);
+        sayFailed(null, t.unavailable);
         return;
       }
-      const res = await client.signIn.emailOtp({ email: email.trim(), otp: otp.trim() });
-      if (!res || res.error) {
-        fail(res?.error, t.codeFailed);
-        return;
-      }
-      setStatus({ type: "success", message: t.signedIn });
+      const res = await client.signIn.emailOtp({ email: email.trim(), otp });
+      if (!res || res.error) return sayCodeFailed(res?.error, t.codeFailed);
+      setStatus(t.signedIn);
       window.location.href = returnPath();
-    } catch {
-      fail(null, t.verifyFailed);
+    } catch (e) {
+      sayCodeFailed(thrown(e), t.verifyFailed);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setBusy(true);
-    setStatus(null);
+    if (busy) return;
+    start("google");
     try {
       const client = (await getAuthClient()) as AuthClientLike | null;
       if (!client?.signIn?.social) {
-        fail(null, t.googleUnavailable);
+        sayFailed(null, t.googleUnavailable);
         return;
       }
       // Absolute, so Neon sends the browser back to this site (its host is a trusted origin) and not to its own.
       const res = await client.signIn.social({ provider: "google", callbackURL: `${window.location.origin}${returnPath()}` });
-      if (res?.error) fail(res.error, t.googleFailed);
-    } catch {
-      fail(null, t.googleFailed);
+      if (res?.error) sayFailed(res.error, t.googleFailed);
+    } catch (e) {
+      sayFailed(thrown(e), t.googleFailed);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
@@ -144,79 +181,106 @@ export function SignInScreen() {
       </div>
 
       <div className="pn-card pn-signin__card">
-        {status && (
-          <div className={`pn-signin__status pn-signin__status--${status.type}`} role={status.type === "error" ? "alert" : "status"}>
-            {status.message}
+        {/* Always in the page, so each message in it is announced. */}
+        <div className="pn-signin__live" role="status">
+          {status && !error ? <div className="pn-signin__status pn-signin__status--success">{status}</div> : null}
+        </div>
+        {error ? (
+          <div {...errorProps} className="pn-signin__status pn-signin__status--error">
+            {error}
           </div>
-        )}
+        ) : null}
 
         {step === "email" ? (
-          <form className="pn-signin__form" onSubmit={handleSendOtp}>
+          // Keyed: without it React turns the email form into the code form in place, the code field
+          // never mounts (no autofocus) and focus stays on the button.
+          <form key="email" className="pn-signin__form" noValidate onSubmit={handleSendOtp}>
             <div className="pn-signin__field">
               <label htmlFor="signin-email" className="pn-signin__label">
                 {t.emailLabel}
               </label>
               <input
-                id="signin-email"
+                {...field("signin-email")}
                 type="email"
                 required
                 autoComplete="email"
                 ref={emailRef}
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  edited("signin-email");
+                }}
                 className="pn-signin__input"
-                disabled={busy}
+                readOnly={busy !== null}
               />
             </div>
             <button
               type="submit"
               className="pn-btn pn-btn--primary pn-signin__btn"
-              disabled={busy || !email.trim()}
+              aria-disabled={busy !== null || undefined}
               data-testid="send-otp-btn"
             >
-              {busy ? t.sendingCode : t.continueEmail}
+              {busy === "send" ? t.sendingCode : t.continueEmail}
             </button>
           </form>
         ) : (
-          <form className="pn-signin__form" onSubmit={handleVerifyOtp}>
+          <form key="otp" className="pn-signin__form" noValidate onSubmit={handleVerifyOtp}>
             <div className="pn-signin__field">
               <label htmlFor="signin-otp" className="pn-signin__label">
                 {t.codeLabel(email)}
               </label>
               <input
-                id="signin-otp"
+                {...field("signin-otp")}
                 type="text"
                 required
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                pattern="[0-9]*"
-                maxLength={6}
                 placeholder="123456"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                onChange={(e) => {
+                  setOtp(e.target.value.replace(/\D/g, "")); // a pasted "123 456" works
+                  edited("signin-otp");
+                }}
                 className="pn-signin__input"
-                disabled={busy}
+                readOnly={busy !== null}
                 autoFocus
               />
             </div>
             <button
               type="submit"
               className="pn-btn pn-btn--primary pn-signin__btn"
-              disabled={busy || !otp.trim()}
+              aria-disabled={busy !== null || undefined}
               data-testid="verify-otp-btn"
             >
-              {busy ? t.verifying : t.verify}
+              {busy === "verify" ? t.verifying : t.verify}
             </button>
             <button
               type="button"
               className="pn-btn pn-btn--secondary"
+              onClick={handleResend}
+              aria-disabled={busy !== null || resendAt !== null || undefined}
+              aria-describedby={resendAt !== null ? "signin-resend-hint" : undefined}
+              data-testid="resend-otp-btn"
+            >
+              {busy === "send" ? t.sendingCode : tt.stepUp.resend}
+            </button>
+            {resendAt !== null ? (
+              <p id="signin-resend-hint" className="pn-signin__body">
+                {t.resendHint(RESEND_SECONDS)}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className="pn-btn pn-btn--secondary"
               onClick={() => {
+                if (busy) return;
                 backToEmail.current = true;
                 setStep("email");
                 setStatus(null);
+                clear();
               }}
-              disabled={busy}
+              aria-disabled={busy !== null || undefined}
             >
               {t.differentEmail}
             </button>
@@ -231,7 +295,7 @@ export function SignInScreen() {
           type="button"
           className="pn-signin__google-btn"
           onClick={handleGoogleSignIn}
-          disabled={busy}
+          aria-disabled={busy !== null || undefined}
           data-testid="google-sign-in-btn"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">

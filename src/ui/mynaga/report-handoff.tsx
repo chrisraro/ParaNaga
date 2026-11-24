@@ -24,6 +24,7 @@ import { loadComplaint, loadEvidenceUrl, saveMyNagaSelfReport } from "@/client/r
 import { buildMyNagaSummary } from "@/domain/mynaga/summary";
 import { en, translated } from "@/i18n/dict";
 import { useLocale, useT } from "@/i18n/provider";
+import { updateThenFocus } from "@/ui/report/form-a11y";
 import { StepUpPrompt } from "@/ui/auth/step-up-prompt";
 import { MYNAGA_REFERENCE_MAX, type ComplaintDetail } from "@/domain/reports/schemas";
 
@@ -91,7 +92,10 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
     }
   };
 
+  const closeStepUp = (n: number) => updateThenFocus(() => setStepUpFor(null), () => document.getElementById(`${uid}-dl-${n}`));
+
   const onDownload = async (evidenceId: string, n: number) => {
+    if (busy !== null) return;
     setBusy(evidenceId);
     setNote("");
     setStepUpFor(null);
@@ -145,7 +149,9 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
               key={e.id}
               type="button"
               className="pn-btn pn-btn--secondary"
-              disabled={!ack || busy !== null}
+              id={`${uid}-dl-${i + 1}`}
+              disabled={!ack}
+              aria-disabled={busy !== null || undefined}
               onClick={() => void onDownload(e.id, i + 1)}
               data-testid={`handoff-download-${i + 1}`}
             >
@@ -154,10 +160,10 @@ function PrepareStep({ c }: { c: ComplaintDetail }) {
           ))}
           {stepUpFor ? (
             <StepUpPrompt
-              onCancel={() => setStepUpFor(null)}
+              onCancel={() => closeStepUp(stepUpFor.n)}
               onVerified={() => {
                 const pending = stepUpFor;
-                setStepUpFor(null);
+                closeStepUp(pending.n);
                 setNote(stepUpText.verified);
                 void onDownload(pending.evidenceId, pending.n);
               }}
@@ -184,6 +190,7 @@ function SelfReport({ c }: { c: ComplaintDetail }) {
   const [error, setError] = useState("");
 
   const onSave = async () => {
+    if (busy) return;
     setBusy(true);
     setMessage("");
     setError("");
@@ -229,7 +236,7 @@ function SelfReport({ c }: { c: ComplaintDetail }) {
         </div>
       ) : null}
       <div className="pn-reports__actions">
-        <button type="button" className="pn-btn pn-btn--secondary" onClick={() => void onSave()} disabled={busy} data-testid="handoff-save">
+        <button type="button" className="pn-btn pn-btn--secondary" onClick={() => void onSave()} aria-disabled={busy || undefined} data-testid="handoff-save">
           {busy ? t.saving : t.saveNote}
         </button>
       </div>

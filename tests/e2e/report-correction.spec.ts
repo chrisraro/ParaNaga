@@ -69,6 +69,9 @@ test.describe("guest", () => {
     // Step 1 needs a choice.
     await page.getByTestId("report-next").click();
     await expect(page.getByTestId("report-error")).toContainText("Choose what is wrong");
+    await expect(page.getByRole("radio").first()).toBeFocused();
+    await expect(page.getByRole("radiogroup")).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByRole("radiogroup")).toHaveAccessibleDescription(/Choose what is wrong/);
 
     await fillStep1And2(page);
     await expect(page.getByTestId("report-summary")).toContainText("Wrong curb side");
@@ -198,9 +201,15 @@ test.describe("signed in", () => {
     await page.getByLabel("What did you see?").fill("short");
     await page.getByTestId("report-next").click();
     await expect(page.getByTestId("report-error")).toContainText("at least 10");
+    const desc = page.getByLabel("What did you see?");
+    await expect(desc).toBeFocused();
+    await expect(desc).toHaveAccessibleDescription(/at least 10/);
+    await desc.pressSequentially(" more");
+    await expect(desc).toHaveAttribute("aria-invalid", "false");
+    await expect(page.getByTestId("report-error")).toHaveCount(0);
 
     // Location is asked only on tap, and shows its accuracy.
-    await expect(page.getByTestId("report-location")).toHaveCount(0);
+    await expect(page.getByTestId("report-location")).toBeEmpty();
     await page.getByTestId("report-add-location").click();
     await expect(page.getByTestId("report-location")).toContainText("accurate to about 18 m");
 
@@ -218,6 +227,7 @@ test.describe("signed in", () => {
     // The disclosure must be accepted first.
     await page.getByTestId("report-send").click();
     await expect(page.getByTestId("report-error")).toContainText("Tick the box");
+    await expect(page.getByTestId("report-ack")).toBeFocused();
     expect(sent).toBeNull();
     await page.getByTestId("report-ack").check();
     await page.getByTestId("report-send").click();
@@ -262,6 +272,7 @@ test.describe("signed in", () => {
     await page.getByLabel("What did you see?").fill("Something is wrong with this thing here.");
     await page.getByTestId("report-next").click();
     await expect(page.getByTestId("report-error")).toContainText("Choose what this is about");
+    await expect(page.getByLabel("What is it about?")).toBeFocused();
     await page.getByLabel("What is it about?").selectOption("route");
     await page.getByLabel("Name or code").fill("Route 4");
     await page.getByTestId("report-next").click();

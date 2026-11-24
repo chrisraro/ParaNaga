@@ -213,18 +213,36 @@ test("validate a draft, publish it after step-up; rollback is offered on superse
   await expect(page.getByTestId("confirm-publication")).toContainText("It replaces modes-lines-2026-10-16 for every rider");
   await page.getByTestId("confirm-publication-go").click();
   await expect(page.getByTestId("admin-step-up")).toBeVisible();
+  // The step-up opens away from its trigger: its heading takes focus, then the code field once sent.
+  await expect(page.getByRole("heading", { name: "Confirm it is you" })).toBeFocused();
   expect(s.published).toEqual([]);
   await page.getByTestId("admin-step-up-send").click();
+  await expect(page.getByTestId("admin-step-up-code")).toBeFocused();
   await page.getByTestId("admin-step-up-code").fill("123456");
   await page.getByTestId("admin-step-up-verify").click();
 
   await expect(page.getByTestId("admin-notice")).toContainText("Published draft-2026-10-22-100000. The public head now names it");
+  await expect(page.getByTestId("admin-notice")).toBeFocused(); // the result is brought to the person, and read once
   expect(s.codesSent).toBe(1);
   expect(s.published).toEqual([{ id: DRAFT, mode: "publish", body: { expectedPublishedId: PUB } }]);
   await expect(draft).toContainText("Published (live)");
   await expect(page.getByTestId("revision-modes-lines-2026-10-16")).toContainText("Superseded");
   await expect(page.getByTestId("rollback-modes-lines-2026-10-16")).toBeVisible();
   await expect(page.getByTestId("create-draft")).toBeEnabled();
+});
+
+test("the confirm step takes focus when it opens and gives it back to Publish on cancel", async ({ page, context }) => {
+  await signInAs(context, "commuter,transport_reviewer");
+  await mockAdminApi(page);
+  await page.goto("/admin/revisions");
+  await page.getByTestId("validate-draft-2026-10-22-100000").click();
+  await expect(page.getByTestId("validation-ok")).toBeFocused();
+  const publish = page.getByTestId("publish-draft-2026-10-22-100000");
+  await publish.click();
+  await expect(page.getByRole("heading", { name: "Publish draft-2026-10-22-100000?" })).toBeFocused();
+  await page.getByTestId("confirm-publication").getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("confirm-publication")).toHaveCount(0);
+  await expect(publish).toBeFocused();
 });
 
 test("coverage lists the barangays on file", async ({ page, context }) => {
@@ -704,6 +722,7 @@ test("moderation: an override of Jev needs a note; approving a photo makes it pu
   await expect(page.getByTestId(`override-post_version-${N6(40)}`)).toBeVisible();
   await page.getByTestId(`decide-post_version-${N6(40)}`).click();
   await expect(post).toContainText("needs a note");
+  await expect(page.getByTestId(`note-post_version-${N6(40)}`)).toBeFocused();
   expect(s.decisions).toEqual([]);
   await page.getByTestId(`reason-post_version-${N6(40)}`).selectOption("personal_info");
   await page.getByTestId(`note-post_version-${N6(40)}`).fill("Names a private person.");
@@ -902,7 +921,11 @@ test("complaint review: step-up first, list without text, open, a 60-second down
 
   await page.getByTestId("complaint-to").selectOption("closed");
   await page.getByTestId("complaint-submit").click();
+  // The error belongs to the Outcome field: it takes focus, is marked invalid and is its description.
   await expect(page.getByTestId("complaint-form-error")).toContainText("Choose an outcome");
+  await expect(page.getByTestId("complaint-outcome")).toBeFocused();
+  await expect(page.getByTestId("complaint-outcome")).toHaveAttribute("aria-invalid", "true");
+  await expect(page.getByTestId("complaint-outcome")).toHaveAccessibleDescription(/Choose an outcome to close the report/);
   await page.getByTestId("complaint-outcome").selectOption("insufficient_detail");
   await page.getByTestId("complaint-note").fill("We could not identify the vehicle.");
   await page.getByTestId("complaint-note-reporter").check();

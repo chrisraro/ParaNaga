@@ -5,6 +5,7 @@
 // also list their provisional stops (pin order) and the unconfirmed trial revision. Fares are an
 // estimate range from the reported rules or "Unknown"; service hours were not observed.
 
+import { DocumentTitle } from "@/ui/app-shell/document-title";
 import Link from "next/link";
 import { ReportLink } from "@/ui/report/report-link";
 import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
@@ -160,6 +161,7 @@ export function RouteDetailView({ data }: { data: RouteDetail }) {
             <LoopChip leg={{ routeCode: route.code, routeName: route.name }} icon={isCircuit ? "loop" : "line"} short />
             <span className="pn-detail__caption">{[routeChipText(route.code) === route.code ? null : route.code, group].filter(Boolean).join(" · ")}</span>
           </div>
+          <DocumentTitle title={routeLabel(route.code, route.name)} />
           <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
             {routeLabel(route.code, route.name)}
           </h1>

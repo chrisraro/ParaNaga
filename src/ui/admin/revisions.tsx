@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createDraft, fetchRevisions, publish, validate, type AdminResult } from "@/client/admin/api";
 import type { RevisionList, RevisionRow, StoredValidationReport } from "@/domain/admin/schemas";
 import { RULES } from "@/domain/admin/validation";
-import { btnDanger, btnPrimary, btnRow, btnRowDanger, btnRowPrimary, btnSecondary, Chip, ErrorNote, Muted, OkNote, PageTitle, Panel, when, cardCls, Loading } from "./parts";
+import { btnDanger, btnPrimary, btnRow, btnRowDanger, btnRowPrimary, btnSecondary, Chip, ErrorNote, Muted, PageTitle, Panel, ResultNotice, when, cardCls, Loading, type Notice } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A12 Revisions & publication (N5a, C8, F-E11). Validate runs every rule and stores the report;
@@ -17,7 +17,6 @@ type Target = { id: string; label: string; mode: Mode };
  *  for. The step-up belongs to its target, so picking another revision starts at confirm again. */
 type Flow = { step: "idle" } | { step: "confirming" | "running" | "stepUp"; target: Target };
 const IDLE: Flow = { step: "idle" };
-type Notice = { ok: boolean; text: string } | null;
 
 const STATUS: Record<RevisionRow["status"], string> = { draft: "Draft", validating: "Validating", published: "Published", superseded: "Superseded" };
 
@@ -108,7 +107,11 @@ export function RevisionsScreen() {
         Revisions and publication
       </PageTitle>
 
-      {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="admin-notice">{notice.text}</OkNote> : <ErrorNote testId="admin-notice">{notice.text}</ErrorNote>}</div> : null}
+      {notice ? (
+        <div className="mb-4">
+          <ResultNotice notice={notice} testId="admin-notice" />
+        </div>
+      ) : null}
 
       {list === null ? (
         <Loading />
@@ -184,7 +187,8 @@ export function RevisionsScreen() {
 
       {flow.step !== "idle" ? (
         <div className="mt-4" data-testid="confirm-publication">
-          <Panel variant="confirm" title={flow.target.mode === "publish" ? `Publish ${flow.target.label}?` : `Roll back to ${flow.target.label}?`}>
+          {/* Keyed on the target: choosing another revision is a new question, and its heading takes focus. */}
+          <Panel key={`${flow.target.mode}:${flow.target.id}`} focusOnOpen variant="confirm" title={flow.target.mode === "publish" ? `Publish ${flow.target.label}?` : `Roll back to ${flow.target.label}?`}>
             <Muted>
               {`It replaces ${published?.label ?? "the published revision"} for every rider, at once. Saved trips on phones are checked against it the next time they open.`}
             </Muted>
@@ -220,19 +224,19 @@ export function RevisionsScreen() {
 }
 
 function Report({ report }: { report: StoredValidationReport }) {
+  // The headline takes focus when a report arrives (a new object per report, not per render).
+  const headline = useMemo<Notice>(
+    () =>
+      report.ok
+        ? { ok: true, text: `No errors${report.warningCount ? `, ${report.warningCount} warnings` : ""}. It can be published for the next 30 minutes, unless it changes.` }
+        : { ok: false, text: `${report.errorCount} errors and ${report.warningCount} warnings. Publishing stays blocked until the errors are fixed.` },
+    [report],
+  );
   return (
     <div className="mt-6" data-testid="validation-report">
       <Panel title={`Validation of ${report.label}`}>
         <div className="mb-3">
-          {report.ok ? (
-            <OkNote testId="validation-ok">
-              No errors{report.warningCount ? `, ${report.warningCount} warnings` : ""}. It can be published for the next 30 minutes, unless it changes.
-            </OkNote>
-          ) : (
-            <ErrorNote testId="validation-errors">
-              {report.errorCount} errors and {report.warningCount} warnings. Publishing stays blocked until the errors are fixed.
-            </ErrorNote>
-          )}
+          <ResultNotice notice={headline} testId={report.ok ? "validation-ok" : "validation-errors"} />
         </div>
         {report.issues.length > 0 ? (
           <table className="mb-4 w-full text-left text-sm" data-testid="validation-issues">

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { changeRole, fetchStaff, findUser, type AdminResult } from "@/client/admin/api";
 import { GRANTABLE_ROLES, ROLE_LABELS, wouldRemoveLastAdmin, type FoundUser, type GrantableRole, type StaffList, type UserCard } from "@/domain/admin/system";
 import type { Role } from "@/domain/auth/permissions";
-import { btnPrimary, btnRowDanger, btnSecondary, cardCls, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Loading } from "./parts";
+import { btnPrimary, btnRowDanger, btnSecondary, cardCls, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, when, Loading, ResultNotice, useFormProblem, type Notice } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A18 Users & roles (N7, C12), admins only. Find an account by its full email address (no list of
@@ -25,7 +25,7 @@ export function UsersScreen() {
   const [email, setEmail] = useState("");
   const [lookedUp, setLookedUp] = useState<Lookup | null>(null);
   const [lookupError, setLookupError] = useState("");
-  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
   const [flow, setFlow] = useState<Flow>(IDLE);
   const found = lookedUp?.user;
 
@@ -74,7 +74,11 @@ export function UsersScreen() {
       <PageTitle lead="Find a person by their full email address, then grant or revoke a role with a reason. Each change needs a fresh code and is recorded in the audit log. You cannot change your own roles, and the last admin cannot be removed.">
         Users and roles
       </PageTitle>
-      {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="users-notice">{notice.text}</OkNote> : <ErrorNote testId="users-notice">{notice.text}</ErrorNote>}</div> : null}
+      {notice ? (
+        <div className="mb-4">
+          <ResultNotice notice={notice} testId="users-notice" />
+        </div>
+      ) : null}
       {flow.step === "stepUp" ? <AdminStepUp action={`${flow.change.change} a role`} onVerified={() => void apply(flow.change)} onCancel={() => setFlow(IDLE)} /> : null}
 
       <div className="mt-4 grid gap-6">
@@ -90,14 +94,19 @@ export function UsersScreen() {
             </button>
           </form>
           {lookupError ? <div className="mt-3"><ErrorNote testId="users-lookup-error">{lookupError}</ErrorNote></div> : null}
-          {found === null ? <div className="mt-3"><Muted>No account uses that address. They need to sign in to Lunad once first.</Muted></div> : null}
-          {found ? (
+          {/* Always in the page, so each answer to Find is announced (the card itself holds controls, so it stays outside). */}
+          <div role="status" data-testid="users-lookup-status">
+            {found === null ? (
+              <div className="mt-3"><Muted>No account uses that address. They need to sign in to Lunad once first.</Muted></div>
+            ) : found && !found.hasProfile ? (
+              <div className="mt-4"><Muted>This account has not opened Lunad yet; roles can be given after their first sign-in.</Muted></div>
+            ) : found ? (
+              <span className="sr-only">{`Found ${found.name}. Their roles are below.`}</span>
+            ) : null}
+          </div>
+          {found?.hasProfile ? (
             <div className="mt-4">
-              {!found.hasProfile ? (
-                <Muted>This account has not opened Lunad yet; roles can be given after their first sign-in.</Muted>
-              ) : (
-                <UserRoles user={found} staff={staffList} busy={flow.step === "applying"} onChange={(p) => void apply(p)} />
-              )}
+              <UserRoles user={found} staff={staffList} busy={flow.step === "applying"} onChange={(p) => void apply(p)} />
             </div>
           ) : null}
         </Panel>
@@ -127,7 +136,7 @@ export function UsersScreen() {
 function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: readonly UserCard[]; busy: boolean; onChange: (p: Pending) => void }) {
   const [picked, setRole] = useState<GrantableRole | "">("");
   const [reason, setReason] = useState("");
-  const [error, setError] = useState("");
+  const problem = useFormProblem();
   const active = user.roles.filter((r) => r.active);
   const missing = GRANTABLE_ROLES.filter((r) => !active.some((a) => a.role === r));
   // A role just granted is no longer on offer, so the choice falls back to "Choose…".
@@ -135,9 +144,10 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
   const tid = user.userId.replace(/[^\w-]/g, "");
 
   const go = (change: "grant" | "revoke", which: Role) => {
-    setError("");
-    if (reason.trim().length < 3) return setError("Give a reason (at least 3 characters).");
-    if (wouldRemoveLastAdmin(staff, user.userId, which, change)) return setError("This is the last admin; grant admin to someone else first.");
+    if (busy) return;
+    problem.clear();
+    if (reason.trim().length < 3) return problem.fail("Give a reason (at least 3 characters).", "reason");
+    if (wouldRemoveLastAdmin(staff, user.userId, which, change)) return problem.fail("This is the last admin; grant admin to someone else first.");
     onChange({ userId: user.userId, name: user.name, role: which, change, reason: reason.trim() });
   };
 
@@ -166,7 +176,7 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
               {r.grantedBy ? ` by ${r.grantedBy}` : ""} – {r.reason}
             </span>
             {!user.self && r.role !== "commuter" ? (
-              <button type="button" className={`${btnRowDanger} ml-auto`} disabled={busy} onClick={() => go("revoke", r.role)} data-testid={`revoke-${tid}-${r.role}`}>
+              <button type="button" className={`${btnRowDanger} ml-auto`} aria-disabled={busy} onClick={() => go("revoke", r.role)} data-testid={`revoke-${tid}-${r.role}`}>
                 Revoke
               </button>
             ) : null}
@@ -190,16 +200,16 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
             </Field>
           </div>
           <div className="w-80">
-            <Field label="Reason (recorded)">
+            <Field label="Reason (recorded)" hint="At least 3 characters." error={problem.errorFor("reason")} errorTestId={`user-error-${tid}`}>
               <input className={inputCls} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} data-testid={`reason-${tid}`} />
             </Field>
           </div>
-          <button type="button" className={btnSecondary} disabled={!role || busy} onClick={() => role && go("grant", role)} data-testid={`grant-${tid}`}>
+          <button type="button" className={btnSecondary} disabled={!role} aria-disabled={busy} onClick={() => role && go("grant", role)} data-testid={`grant-${tid}`}>
             Grant
           </button>
         </div>
       )}
-      {error ? <ErrorNote testId={`user-error-${tid}`}>{error}</ErrorNote> : null}
+      {problem.general ? <ErrorNote testId={`user-error-${tid}`}>{problem.general}</ErrorNote> : null}
     </div>
   );
 }

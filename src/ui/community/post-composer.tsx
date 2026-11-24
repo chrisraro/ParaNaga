@@ -31,6 +31,7 @@ import { topicsIn, type CommunityTopic } from "@/domain/community/topics";
 import { en, translated } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
 import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
+import { Live, updateThenFocus, useFieldError } from "@/ui/report/form-a11y";
 import { GuidelinesAck, SignInPrompt } from "./parts";
 
 type Props = { mode: "new" } | { mode: "edit"; postId: string };
@@ -55,7 +56,7 @@ export function PostComposer(props: Props) {
   const [route, setRoute] = useState("");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [draftReady, setDraftReady] = useState(props.mode === "new");
-  const [error, setError] = useState<string | null>(null);
+  const { error, errorProps, fail, clear, edited, field } = useFieldError();
   // One request at a time: a photo upload must finish before the post is sent, or it would go
   // without the photo.
   const [busy, setBusy] = useState<"idle" | "uploading" | "sending">("idle");
@@ -65,6 +66,8 @@ export function PostComposer(props: Props) {
   const [photos, setPhotos] = useState<{ id: string; name: string }[]>([]);
   const [photoNote, setPhotoNote] = useState<string | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const photoList = useRef<HTMLUListElement>(null);
+  const f = { topic: `${uid}-topic`, title: `${uid}-title`, body: `${uid}-body`, tags: `${uid}-tags`, route: `${uid}-route`, ack: `${uid}-ack` };
 
   // Has this person accepted the guidelines? If not, they come first.
   useEffect(() => {
@@ -115,14 +118,14 @@ export function PostComposer(props: Props) {
     if (e.key !== "Escape" || sent) return;
     if (step === "write" && accepted === false) {
       e.preventDefault();
-      setError(null);
+      clear();
       setStep("guidelines");
     }
   };
 
   const onContinue = () => {
-    if (!ackChecked) return setError(t.tickGuidelines);
-    setError(null);
+    if (!ackChecked) return fail(t.tickGuidelines, f.ack);
+    clear();
     setStep("write");
   };
 
@@ -134,23 +137,43 @@ export function PostComposer(props: Props) {
     setPhotoNote(null);
     const result = await uploadPhoto(file, "community_photo");
     setBusy("idle");
-    if (result.ok) setPhotos((p) => [...p, { id: result.mediaId, name: file.name.slice(0, 60) }]);
+    // The last photo takes the picker away.
+    if (result.ok)
+      updateThenFocus(
+        () => {
+          setPhotos((p) => [...p, { id: result.mediaId, name: file.name.slice(0, 60) }]);
+          setPhotoNote(tt.forms.photoAdded);
+        },
+        () => photoList.current,
+      );
     else setPhotoNote(result.message === en.report.api.photoType ? t.photos.type : t.photos.failed);
   };
+
+  const removePhoto = (i: number) =>
+    updateThenFocus(
+      () => {
+        setPhotos((all) => all.filter((_, n) => n !== i));
+        setPhotoNote(null);
+      },
+      () => {
+        const left = photoList.current?.querySelectorAll("button");
+        return left?.[Math.min(i, left.length - 1)] ?? document.getElementById(`${uid}-photo`);
+      },
+    );
 
   const onSend = async () => {
     if (!user || busy !== "idle") return;
     const tags = parseTagInput(tagText);
-    const problem =
-      (props.mode === "new" && !topic ? t.chooseTopic : null) ??
-      validateTitle(title, tt) ??
-      validateBody(body, tt) ??
-      (tags.invalid.length > 0 ? t.badTags(tags.invalid.join(", ")) : null) ??
-      (tags.tags.length > MAX_TAGS ? t.maxTags(MAX_TAGS) : null) ??
-      (route.trim() && !routeCodeSchema.safeParse(route).success ? t.badRoute : null);
-    if (problem) return setError(problem);
+    const checks: [string, string | null][] = [
+      [f.topic, props.mode === "new" && !topic ? t.chooseTopic : null],
+      [f.title, validateTitle(title, tt)],
+      [f.body, validateBody(body, tt)],
+      [f.tags, tags.invalid.length > 0 ? t.badTags(tags.invalid.join(", ")) : tags.tags.length > MAX_TAGS ? t.maxTags(MAX_TAGS) : null],
+      [f.route, route.trim() && !routeCodeSchema.safeParse(route).success ? t.badRoute : null],
+    ];
+    for (const [id, problem] of checks) if (problem) return fail(problem, id);
     setBusy("sending");
-    setError(null);
+    clear();
     const common = { clientRequestId: requestId, title: title.trim(), body: body.trim(), tags: tags.tags, guidelinesAccepted: accepted === false ? ackChecked : true };
     const result =
       props.mode === "edit"
@@ -163,7 +186,7 @@ export function PostComposer(props: Props) {
           });
     setBusy("idle");
     if (result.ok) setSent(result.data.post);
-    else setError(translated(result.message, en.community.api, t.api));
+    else fail(translated(result.message, en.community.api, t.api));
   };
 
   const heading1 = props.mode === "edit" ? t.editHeading : t.newPost;
@@ -231,17 +254,17 @@ export function PostComposer(props: Props) {
 
       {step === "guidelines" ? (
         <div className="pn-comm__form">
-          <GuidelinesAck id={`${uid}-g`} checked={ackChecked} onChange={(v) => { setAckChecked(v); setError(null); }} />
+          <GuidelinesAck id={`${uid}-g`} checked={ackChecked} field={field(f.ack)} onChange={(v) => { setAckChecked(v); edited(f.ack); }} />
         </div>
       ) : (
         <div className="pn-comm__form">
           {props.mode === "new" ? (
             <fieldset className="pn-comm__field">
               <legend className="pn-comm__label">{t.topicGroup}</legend>
-              <div className="pn-group" role="radiogroup" aria-label={t.topicGroup}>
+              <div className="pn-group" role="radiogroup" aria-label={t.topicGroup} {...field(f.topic)}>
                 {topicsIn(t).map((x) => (
                   <label key={x.value} className="pn-comm__option">
-                    <input type="radio" name={`${uid}-topic`} value={x.value} checked={topic === x.value} onChange={() => { setTopic(x.value); setError(null); }} />
+                    <input type="radio" name={`${uid}-topic-choice`} value={x.value} checked={topic === x.value} onChange={() => { setTopic(x.value); edited(f.topic); }} />
                     <span className="pn-comm__option-text">
                       <span className="pn-comm__option-label">{x.label}</span>
                       <span className="pn-comm__option-hint">{x.hint}</span>
@@ -256,7 +279,7 @@ export function PostComposer(props: Props) {
             <label htmlFor={`${uid}-title`} className="pn-comm__label">
               {t.titleLabel}
             </label>
-            <input id={`${uid}-title`} className="pn-comm__input" maxLength={TITLE_MAX} value={title} onChange={(e) => setTitle(e.target.value)} autoComplete="off" />
+            <input {...field(f.title)} className="pn-comm__input" maxLength={TITLE_MAX} value={title} onChange={(e) => { setTitle(e.target.value); edited(f.title); }} autoComplete="off" />
           </div>
 
           <div className="pn-comm__field">
@@ -264,13 +287,12 @@ export function PostComposer(props: Props) {
               {t.bodyLabel}
             </label>
             <textarea
-              id={`${uid}-body`}
+              {...field(f.body, `${uid}-count ${uid}-driver`)}
               className="pn-comm__input pn-comm__textarea"
               rows={7}
               maxLength={BODY_MAX}
               value={body}
-              onChange={(e) => setBody(e.target.value)}
-              aria-describedby={`${uid}-count ${uid}-driver`}
+              onChange={(e) => { setBody(e.target.value); edited(f.body); }}
             />
             <span id={`${uid}-count`} className="pn-comm__count">
               {tt.forms.count(body.trim().length, BODY_MAX)}
@@ -284,7 +306,7 @@ export function PostComposer(props: Props) {
             <label htmlFor={`${uid}-tags`} className="pn-comm__label">
               {t.tagsLabel(MAX_TAGS)}
             </label>
-            <input id={`${uid}-tags`} className="pn-comm__input" value={tagText} onChange={(e) => setTagText(e.target.value)} autoComplete="off" placeholder={t.tagsPlaceholder} />
+            <input {...field(f.tags)} className="pn-comm__input" value={tagText} onChange={(e) => { setTagText(e.target.value); edited(f.tags); }} autoComplete="off" placeholder={t.tagsPlaceholder} />
           </div>
 
           {props.mode === "new" ? (
@@ -292,7 +314,7 @@ export function PostComposer(props: Props) {
               <label htmlFor={`${uid}-route`} className="pn-comm__label">
                 {t.routeLabel}
               </label>
-              <input id={`${uid}-route`} className="pn-comm__input" maxLength={16} value={route} onChange={(e) => setRoute(e.target.value)} autoComplete="off" placeholder="R4" />
+              <input {...field(f.route)} className="pn-comm__input" maxLength={16} value={route} onChange={(e) => { setRoute(e.target.value); edited(f.route); }} autoComplete="off" placeholder="R4" />
             </div>
           ) : null}
 
@@ -300,14 +322,14 @@ export function PostComposer(props: Props) {
             <div className="pn-comm__field">
               <span className="pn-comm__label">{t.photos.label}</span>
               {photos.length > 0 ? (
-                <ul className="pn-comm__photo-list" data-testid="composer-photos">
-                  {photos.map((p) => (
+                <ul ref={photoList} tabIndex={-1} aria-label={t.photos.label} className="pn-comm__photo-list" data-testid="composer-photos">
+                  {photos.map((p, i) => (
                     <li key={p.id}>
                       <span className="pn-comm__photo-name">{p.name}</span>
                       <button
                         type="button"
                         className="pn-btn pn-btn--secondary pn-comm__small"
-                        onClick={() => setPhotos((all) => all.filter((x) => x.id !== p.id))}
+                        onClick={() => removePhoto(i)}
                         aria-label={t.photos.remove(p.name)}
                       >
                         {tt.forms.remove}
@@ -323,7 +345,10 @@ export function PostComposer(props: Props) {
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     className="pn-comm__file"
-                    disabled={busy !== "idle"}
+                    aria-disabled={busy !== "idle" || undefined}
+                    onClick={(e) => {
+                      if (busy !== "idle") e.preventDefault(); // no second picker while one uploads
+                    }}
                     data-testid="composer-photo-input"
                     onChange={(e) => {
                       void onPickPhoto(e.target.files);
@@ -336,11 +361,7 @@ export function PostComposer(props: Props) {
                 </>
               ) : null}
               <span className="pn-comm__hint">{t.photos.hint(MAX_PHOTOS)}</span>
-              {photoNote ? (
-                <p className="pn-comm__hint" role="status">
-                  {photoNote}
-                </p>
-              ) : null}
+              <Live className="pn-comm__hint">{photoNote}</Live>
             </div>
           ) : null}
 
@@ -353,14 +374,14 @@ export function PostComposer(props: Props) {
       {/* The error and the actions stay together, pinned above the tab bar (community.css). */}
       <div className="pn-comm__foot">
         {error ? (
-          <p className="pn-comm__error" role="alert" data-testid="composer-error">
+          <p {...errorProps} className="pn-comm__error" data-testid="composer-error">
             {error}
           </p>
         ) : null}
 
         <div className="pn-comm__nav">
           {step === "write" && accepted === false ? (
-            <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => { setError(null); setStep("guidelines"); }}>
+            <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => { clear(); setStep("guidelines"); }}>
               {tt.forms.back}
             </button>
           ) : null}
@@ -369,7 +390,7 @@ export function PostComposer(props: Props) {
               {tt.forms.continue}
             </button>
           ) : (
-            <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={() => void onSend()} disabled={busy !== "idle"} data-testid="composer-send">
+            <button type="button" className="pn-btn pn-btn--primary pn-comm__action" onClick={() => void onSend()} aria-disabled={busy !== "idle" || undefined} data-testid="composer-send">
               {busy === "sending" ? tt.forms.sending : busy === "uploading" ? t.photos.uploading : props.mode === "edit" ? t.sendEdit : t.post}
             </button>
           )}

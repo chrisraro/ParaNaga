@@ -99,7 +99,7 @@
   font-size: 0.8125rem;
 }
 
-/* A button that is working: it is disabled as well, so the cursor and the dots are the visible part. */
+/* A button that is working: it is aria-disabled as well (it keeps focus), so the cursor and the dots are the visible part. */
 [data-testid="admin-shell"] button[aria-busy="true"] {
   cursor: progress;
 }
@@ -205,4 +205,26 @@
   max-height: min(72vh, 52rem);
   overflow: auto;
   overscroll-behavior: contain;
+}
+
+/* Forced colours (Windows high contrast): author fills are dropped, so state needs a line or a
+   system colour. Buttons keep a border (the primary and danger tones carry a transparent one, which
+   becomes visible here), and a pressed segment, a pressed row action, the current nav link and a
+   selected table row use Highlight, so "on" differs from "off" without colour or fill. */
+@media (forced-colors: active) {
+  [data-testid="admin-shell"] :is(button, a)[aria-pressed="true"],
+  [data-testid="admin-shell"] a[aria-current="page"] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+    border-color: Highlight;
+  }
+  [data-testid="admin-shell"] table tbody tr[data-selected] {
+    outline: 3px solid Highlight;
+    outline-offset: -3px;
+  }
+  [data-testid="admin-shell"] :is(input, select, textarea)[aria-invalid="true"] {
+    outline: 2px solid LinkText;
+    outline-offset: 1px;
+  }
 }

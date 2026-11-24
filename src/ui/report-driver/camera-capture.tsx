@@ -8,6 +8,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { MAX_CLIP_SECONDS, supportedClipType, useCamera } from "@/client/complaints/use-camera";
 import type { CaptureKind } from "@/domain/complaints/schemas";
 import { useT } from "@/i18n/provider";
+import { Live, updateThenFocus } from "@/ui/report/form-a11y";
 import type { Evidence } from "./driver-report-wizard";
 
 type Props = {
@@ -30,35 +31,33 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
   const live = state === "live";
 
   // The button that was pressed disappears when the camera opens or closes: move focus to the
-  // shutter when it is live, and back to "Add another" (or the captured list) when it closes, so
-  // keyboard and screen reader users never land on the page body.
+  // shutter when it opens, and back to "Add another" (or the captured list) when it closes, so
+  // keyboard and screen reader users never land on the page body. Only on those two changes:
+  // "starting" turning into "live" leaves focus where the person put it (on "Close camera", say).
   const shutterRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const wasActive = useRef(false);
   useEffect(() => {
-    if (live) {
-      wasActive.current = true;
-      shutterRef.current?.focus();
-    } else if (state === "starting") {
-      wasActive.current = true;
-    } else if (wasActive.current) {
-      wasActive.current = false;
-      (openRef.current ?? listRef.current)?.focus();
-    }
-  }, [live, state, items.length]);
+    const active = live || state === "starting";
+    if (active === wasActive.current) return;
+    wasActive.current = active;
+    (active ? shutterRef.current : (openRef.current ?? listRef.current))?.focus();
+  }, [live, state]);
 
   const add = (blob: Blob | null, kind: CaptureKind) => {
     if (!blob) return setNote(t.nothingCaptured);
-    setNote(onAdd(blob, kind));
+    setNote(onAdd(blob, kind) ?? t.added);
   };
 
   const onPhoto = async () => {
+    if (!live || recording) return;
     const blob = await takePhoto();
     stop();
     add(blob, "in_app_camera");
   };
   const onClip = async () => {
+    if (!live) return;
     if (recording) return stopClip();
     const blob = await recordClip();
     stop();
@@ -88,14 +87,22 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
               )}
               <div className="pn-report__row">
                 {item.captureKind === "in_app_camera" ? (
-                  <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => retake(item.key)}>
+                  <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => retake(item.key)} aria-label={item.kind === "photo" ? t.retakePhoto(n + 1) : t.retakeVideo(n + 1)}>
                     {t.retake}
                   </button>
                 ) : null}
                 <button
                   type="button"
                   className="pn-btn pn-btn--secondary pn-report__small"
-                  onClick={() => onRemove(item.key)}
+                  onClick={() =>
+                    updateThenFocus(
+                      () => {
+                        onRemove(item.key);
+                        setNote(null);
+                      },
+                      () => (listRef.current?.children[n] ?? listRef.current?.lastElementChild)?.querySelector<HTMLElement>("button:last-of-type") ?? openRef.current ?? shutterRef.current,
+                    )
+                  }
                   aria-label={item.kind === "photo" ? t.removePhoto(n + 1) : t.removeVideo(n + 1)}
                 >
                   {tt.forms.remove}
@@ -110,11 +117,11 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
         <div className="pn-driver__camera" data-testid="driver-camera">
           <video ref={attach} className="pn-driver__viewfinder" playsInline muted aria-label={t.preview} />
           <div className="pn-report__row">
-            <button ref={shutterRef} type="button" className="pn-btn pn-btn--primary pn-report__small" onClick={() => void onPhoto()} disabled={!live || recording} data-testid="driver-shutter">
+            <button ref={shutterRef} type="button" className="pn-btn pn-btn--primary pn-report__small" onClick={() => void onPhoto()} aria-disabled={!live || recording || undefined} data-testid="driver-shutter">
               {t.takePhoto}
             </button>
             {canClip ? (
-              <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => void onClip()} disabled={!live} data-testid="driver-record">
+              <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => void onClip()} aria-disabled={!live || undefined} data-testid="driver-record">
                 {recording ? t.stopRecording : t.recordVideo(MAX_CLIP_SECONDS)}
               </button>
             ) : null}
@@ -122,11 +129,7 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
               {t.closeCamera}
             </button>
           </div>
-          {recording ? (
-            <p className="pn-report__hint" role="status">
-              {t.recording}
-            </p>
-          ) : null}
+          <Live className="pn-report__hint">{recording ? t.recording : null}</Live>
         </div>
       ) : null}
 
@@ -138,16 +141,12 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
         </div>
       ) : null}
 
-      {state === "denied" ? (
-        <p className="pn-report__hint" role="status" data-testid="driver-camera-denied">
-          {t.denied}
-        </p>
-      ) : null}
-      {state === "unavailable" ? (
-        <p className="pn-report__hint" role="status" data-testid="driver-camera-unavailable">
-          {t.unavailable}
-        </p>
-      ) : null}
+      <Live className="pn-report__hint" data-testid="driver-camera-denied">
+        {state === "denied" ? t.denied : null}
+      </Live>
+      <Live className="pn-report__hint" data-testid="driver-camera-unavailable">
+        {state === "unavailable" ? t.unavailable : null}
+      </Live>
 
       {!full ? (
         <div className="pn-report__field">
@@ -160,7 +159,8 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
             onChange={(e) => {
               const file = e.target.files?.[0];
               e.target.value = "";
-              if (file) add(file, "file_upload");
+              // The last file takes the picker away.
+              if (file) updateThenFocus(() => add(file, "file_upload"), () => listRef.current);
             }}
           />
           <label htmlFor={`${uid}-file`} className="pn-btn pn-btn--secondary pn-report__small pn-driver__upload">
@@ -172,11 +172,9 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
       <p className="pn-report__hint">
         {t.limits(max, MAX_CLIP_SECONDS)}
       </p>
-      {note ? (
-        <p className="pn-report__hint" role="status" data-testid="driver-capture-note">
-          {note}
-        </p>
-      ) : null}
+      <Live className="pn-report__hint" data-testid="driver-capture-note">
+        {note}
+      </Live>
     </div>
   );
 }

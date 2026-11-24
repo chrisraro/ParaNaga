@@ -129,8 +129,28 @@ test.describe("feed", () => {
     });
     await page.getByRole("button", { name: "First-time questions" }).click();
     await expect(page.getByTestId("community-post")).toHaveCount(1);
+    await expect(page.getByTestId("community-results")).toHaveText("1 post shown");
+    await expect(page.getByTestId("community-results")).toHaveAttribute("aria-live", "polite");
     expect(asked).toContain("topic=first_time");
     expect(asked).not.toContain("me=1");
+  });
+
+  test("a failed load is announced, and Try again keeps focus on the results", async ({ page }) => {
+    await mockApi(page, { signedIn: false, sent: [] });
+    let fail = true;
+    await page.route("**/api/v1/community/posts?*", (route) =>
+      fail ? json(route, { error: { code: "internal", message: "No", requestId: "r" } }, 500) : json(route, FEED),
+    );
+    await page.route("**/api/v1/community/posts", (route) =>
+      fail ? json(route, { error: { code: "internal", message: "No", requestId: "r" } }, 500) : json(route, FEED),
+    );
+    await page.goto("/app/community");
+    const results = page.getByTestId("community-results");
+    await expect(results).toContainText("did not work");
+    fail = false;
+    await results.getByRole("button", { name: "Try again" }).click();
+    await expect(results).toBeFocused();
+    await expect(results).toHaveText("2 posts shown");
   });
 
   test("a signed-in commuter sees Save and the personal scopes", async ({ page }) => {
@@ -211,12 +231,15 @@ test.describe("composer", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Before you post" })).toBeVisible();
     await page.getByTestId("composer-continue").click();
     await expect(page.getByTestId("composer-error")).toContainText("Tick the box");
+    await expect(page.getByTestId("guidelines-ack")).toBeFocused();
+    await expect(page.getByTestId("guidelines").locator('[lang="en"]')).toContainText("Keep this about commuting");
     await page.getByTestId("guidelines-ack").check();
     await page.getByTestId("composer-continue").click();
     await expect(page.getByRole("heading", { level: 2, name: "New post" })).toBeFocused();
 
     await page.getByTestId("composer-send").click();
     await expect(page.getByTestId("composer-error")).toContainText("Choose a topic");
+    await expect(page.getByRole("radio").first()).toBeFocused();
     await page.getByRole("radio", { name: /Commute tips/ }).check();
     await page.getByLabel("Title").fill("Loop A is easier before 7 am");
     await page.getByLabel("Your post").fill("Seats are easy to find before 7 am on weekdays.");

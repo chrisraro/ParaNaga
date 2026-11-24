@@ -20,7 +20,8 @@ import "./saved.css";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { syncSavedItems } from "@/client/saved/sync";
 import { clearHistory } from "@/client/history/trip-history";
@@ -126,7 +127,8 @@ function SkippedRecords({ store, dropped, unreadable }: { store: "savedTrips" | 
     setStatus("");
     removeUnreadable(store).then(
       (n) => {
-        setStatus(n === 1 ? t.removedDamagedOne : t.removedDamaged(n));
+        // In the page before focus moves: the line is hidden (and cannot take focus) while empty.
+        flushSync(() => setStatus(n === 1 ? t.removedDamagedOne : t.removedDamaged(n)));
         statusRef.current?.focus();
       },
       () => setStatus(t.removeFailed),
@@ -179,7 +181,9 @@ function useRemoval() {
       () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text: t.removeFailed, undo: null })),
     );
   };
-  return { removed, run, clear: () => setRemoved(null) };
+  // Undo takes its own button away: the note says "Restored" and takes focus (a new `n`).
+  const restored = () => setRemoved((prev) => ({ n: (prev?.n ?? 0) + 1, text: t.restored, undo: null }));
+  return { removed, run, restored };
 }
 
 function UndoBody({ removed, onDone }: { removed: NonNullable<Removed>; onDone: () => void }) {
@@ -207,9 +211,18 @@ function UndoBody({ removed, onDone }: { removed: NonNullable<Removed>; onDone: 
   );
 }
 
+/**
+ * Sits above the list, so Undo is on screen whichever row went. A removal unmounts the focused Remove
+ * button (and Undo unmounts itself), so focus moves here (the next Tab stop is Undo) and the text is read out.
+ */
 function UndoNote({ removed, onDone }: { removed: Removed; onDone: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const n = removed?.n;
+  useEffect(() => {
+    if (n) ref.current?.focus();
+  }, [n]);
   return (
-    <div className="pn-saved__undo" role="status" data-testid="saved-undo">
+    <div ref={ref} tabIndex={-1} className="pn-saved__undo" role="status" data-testid="saved-undo">
       {removed ? <UndoBody key={removed.n} removed={removed} onDone={onDone} /> : null}
     </div>
   );
@@ -305,6 +318,7 @@ function TripsPanel() {
     <>
       <p className="pn-saved__intro">{t.tripsIntro}</p>
       <SkippedRecords store="savedTrips" dropped={trips.dropped} unreadable={trips.unreadable} />
+      <UndoNote removed={removal.removed} onDone={removal.restored} />
       {trips.records.length === 0 ? (
         <p className="pn-saved__empty" data-testid="saved-trips-empty">
           {t.noTrips}
@@ -323,7 +337,6 @@ function TripsPanel() {
           ))}
         </ul>
       )}
-      <UndoNote removed={removal.removed} onDone={removal.clear} />
     </>
   );
 }
@@ -385,6 +398,7 @@ function PlacesPanel() {
         {t.placesTitle}
       </h2>
       <SkippedRecords store="savedPlaces" dropped={places.dropped} unreadable={places.unreadable} />
+      <UndoNote removed={removal.removed} onDone={removal.restored} />
       <ul className="pn-group" data-testid="saved-places">
         {places.records.length === 0 ? (
           <li className="pn-cell pn-cell--empty" data-testid="saved-places-empty">
@@ -402,7 +416,6 @@ function PlacesPanel() {
           </Link>
         </li>
       </ul>
-      <UndoNote removed={removal.removed} onDone={removal.clear} />
       <SavePlaceDialog
         open={renaming !== null}
         title={t.renameTitle}
@@ -446,7 +459,13 @@ function HistoryPanel() {
   const history = useHistoryList(historyEnabled);
   const [confirm, setConfirm] = useState(false);
   const [status, setStatus] = useState("");
+  const statusRef = useRef<HTMLParagraphElement>(null);
   const titleId = useId();
+  // Clear removes the focused button; focus goes to the status line once it has its text (it is hidden while empty).
+  const cleared = status === t.historyDeleted;
+  useEffect(() => {
+    if (cleared) statusRef.current?.focus();
+  }, [cleared]);
   if (!historyEnabled) return <HistoryOff />;
   if (history.status === "loading") return <Loading label={t.loadingHistory} />;
   if (history.status === "error") return <Note testId="saved-error">{readError(t.whatHistory, history.unavailable, t)}</Note>;
@@ -487,7 +506,7 @@ function HistoryPanel() {
           {t.clearHistory}
         </button>
       ) : null}
-      <p className="pn-saved__status" aria-live="polite">
+      <p ref={statusRef} tabIndex={-1} className="pn-saved__status" aria-live="polite" data-testid="history-status">
         {status}
       </p>
       <ConfirmDialog
@@ -551,6 +570,7 @@ export function SavedScreen() {
   };
 
   const handleSync = async () => {
+    if (syncing) return;
     setSyncing(true);
     setSyncStatus(null);
     try {
@@ -573,13 +593,16 @@ export function SavedScreen() {
         <div className="pn-card pn-saved__sync" data-testid="saved-sync-card">
           <div className="pn-saved__sync-text">
             <strong>{t.syncTitle}</strong>
-            <span>{syncStatus || t.syncHint}</span>
+            {syncStatus ? null : <span>{t.syncHint}</span>}
+            <span aria-live="polite" data-testid="saved-sync-status">
+              {syncStatus}
+            </span>
           </div>
           <button
             type="button"
             className="pn-btn pn-btn--secondary pn-saved__sync-btn"
             onClick={handleSync}
-            disabled={syncing}
+            aria-disabled={syncing}
             data-testid="saved-sync-btn"
           >
             {syncing ? t.syncing : t.syncNow}

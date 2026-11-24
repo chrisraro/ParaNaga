@@ -1,8 +1,8 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { sendStepUpCode, verifyStepUpCode, type StepUpResult } from "@/client/auth/step-up";
-import { btnPrimary, btnSecondary, confirmCls, ErrorNote, inputCls, Muted } from "./parts";
+import { btnPrimary, btnSecondary, confirmCls, ErrorNote, inputCls, Muted, useFocusOnOpen } from "./parts";
 
 // Step-up for publish and rollback (N3 flow, English for the admin console): a fresh email code,
 // checked by the server and recorded for this session for 15 minutes.
@@ -23,6 +23,19 @@ export function AdminStepUp({ action, onVerified, onCancel, nested = false }: { 
   const [phase, setPhase] = useState<Phase>("idle");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  // The panel opens away from its trigger: its heading takes focus, and closing gives focus back (A2).
+  const headingRef = useFocusOnOpen<HTMLHeadingElement>();
+  const codeRef = useRef<HTMLInputElement>(null);
+  const sendRef = useRef<HTMLButtonElement>(null);
+
+  // The button that was focused goes away with each step: carry focus to what comes next.
+  useEffect(() => {
+    if (phase === "sent") {
+      // Enter in the field leaves focus there: leaving and coming back makes a refused code's message (its description) heard.
+      codeRef.current?.blur();
+      codeRef.current?.focus();
+    } else if (phase === "idle" && error) sendRef.current?.focus();
+  }, [phase, error]);
 
   const send = async () => {
     setPhase("sending");
@@ -55,7 +68,7 @@ export function AdminStepUp({ action, onVerified, onCancel, nested = false }: { 
       className={`mt-4 grid gap-3 ${nested ? "border-t border-accent-line pt-4 dark:border-accent/50" : `p-5 ${confirmCls}`}`}
       data-testid="admin-step-up"
     >
-      <h3 id={`${uid}-t`} className="font-semibold">
+      <h3 id={`${uid}-t`} ref={headingRef} tabIndex={-1} className="font-semibold">
         Confirm it is you
       </h3>
       <Muted>
@@ -68,6 +81,7 @@ export function AdminStepUp({ action, onVerified, onCancel, nested = false }: { 
           <label htmlFor={`${uid}-code`} className="grid w-40 gap-1.5 text-sm font-semibold">
             Code
             <input
+              ref={codeRef}
               id={`${uid}-code`}
               type="text"
               inputMode="numeric"
@@ -75,6 +89,8 @@ export function AdminStepUp({ action, onVerified, onCancel, nested = false }: { 
               maxLength={12}
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? `${uid}-error` : undefined}
               className={`${inputCls} font-normal tabular-nums`}
               data-testid="admin-step-up-code"
             />
@@ -88,7 +104,7 @@ export function AdminStepUp({ action, onVerified, onCancel, nested = false }: { 
         </form>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={btnPrimary} disabled={phase === "sending"} onClick={() => void send()} data-testid="admin-step-up-send">
+          <button type="button" ref={sendRef} className={btnPrimary} disabled={phase === "sending"} onClick={() => void send()} data-testid="admin-step-up-send">
             {phase === "sending" ? "Sending…" : "Email me a code"}
           </button>
           <button type="button" className={btnSecondary} onClick={onCancel}>
@@ -96,7 +112,8 @@ export function AdminStepUp({ action, onVerified, onCancel, nested = false }: { 
           </button>
         </div>
       )}
-      {error ? <ErrorNote testId="admin-step-up-error">{error}</ErrorNote> : null}
+      {/* With the code field on screen the problem is its description and the field has focus: read once, no alert. */}
+      {error ? <ErrorNote id={`${uid}-error`} alert={!asked} testId="admin-step-up-error">{error}</ErrorNote> : null}
     </section>
   );
 }

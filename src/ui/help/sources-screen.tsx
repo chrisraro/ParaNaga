@@ -62,9 +62,9 @@ function Register({ sources, title }: { sources: readonly RegisterSource[]; titl
           const href = externalHref(s.url);
           return (
             <li key={s.code} className="pn-source" data-testid="source-row" data-code={s.code}>
-              <span className="pn-source__title">{sourceTitleLine(s)}</span>
-              <span className="pn-source__meta">{sourceMetaLine(s)}</span>
-              <span className="pn-source__meta">{rightsForSource(s.code)?.publisher ?? v.publisherNotRecorded} · {rightsForSource(s.code)?.license ?? v.rightsNotRecorded}</span>
+              <span className="pn-source__title" lang="en">{sourceTitleLine(s)}</span>
+              <span className="pn-source__meta" lang="en">{sourceMetaLine(s)}</span>
+              <span className="pn-source__meta" lang="en">{rightsForSource(s.code)?.publisher ?? v.publisherNotRecorded} · {rightsForSource(s.code)?.license ?? v.rightsNotRecorded}</span>
               {href ? (
                 <a
                   className="pn-source__link"
@@ -78,7 +78,7 @@ function Register({ sources, title }: { sources: readonly RegisterSource[]; titl
                   <ExternalIcon />
                 </a>
               ) : (
-                <span className="pn-source__none" data-testid="source-unlinked">
+                <span className="pn-source__none" lang="en" data-testid="source-unlinked">
                   {s.url ? v.notLinked : v.noAddress}
                 </span>
               )}
@@ -206,17 +206,17 @@ export function SourcesScreen() {
         </Suspense>
         <section aria-labelledby="data-basis" className="pn-section">
           <h2 id="data-basis" className="pn-section__title">{t.dataBasisTitle}</h2>
-          <p className="pn-footnote" data-testid="sources-data-basis">{dataBasisNote(resource.status === "ready" ? (resource.data.sources.find((x) => x.code === "S39")?.checkedOn ?? null) : null)}</p>
-          <p className="pn-footnote">{v.fleetBasis}</p>
-          <p className="pn-footnote" data-testid="sources-far-basis">{v.farBasis}</p>
+          <p className="pn-footnote" lang="en" data-testid="sources-data-basis">{dataBasisNote(resource.status === "ready" ? (resource.data.sources.find((x) => x.code === "S39")?.checkedOn ?? null) : null)}</p>
+          <p className="pn-footnote" lang="en">{v.fleetBasis}</p>
+          <p className="pn-footnote" lang="en" data-testid="sources-far-basis">{v.farBasis}</p>
         </section>
         <section aria-labelledby="fare-basis-title" className="pn-section" id="fare-basis">
           <h2 id="fare-basis-title" className="pn-section__title">{t.fareBasisTitle}</h2>
-          <p className="pn-footnote" data-testid="sources-fare-basis">{v.fareBasis}</p>
+          <p className="pn-footnote" lang="en" data-testid="sources-fare-basis">{v.fareBasis}</p>
         </section>
         <section aria-labelledby="time-basis" className="pn-section">
           <h2 id="time-basis" className="pn-section__title">{t.timeBasisTitle}</h2>
-          <p className="pn-footnote">{v.timeBasis} <Link href="/app/help/how-times-are-estimated">{t.timeBasisLink}</Link></p>
+          <p className="pn-footnote"><span lang="en">{v.timeBasis}</span> <Link href="/app/help/how-times-are-estimated">{t.timeBasisLink}</Link></p>
         </section>
         {resource.status === "loading" ? (
           <div role="status" aria-label={t.loading} className="pn-detail__stack">
@@ -225,7 +225,7 @@ export function SourcesScreen() {
           </div>
         ) : resource.status === "ready" ? (
           <>
-            <p className="pn-footnote" data-testid="sources-revision">
+            <p className="pn-footnote" lang="en" data-testid="sources-revision">
               {v.citedBy(resource.data.revision.label)}{publishedDateText(resource.data.revision.publishedAt) ? v.published(publishedDateText(resource.data.revision.publishedAt)!) : ""}.
             </p>
             <Suspense fallback={<Register sources={resource.data.sources} />}>
@@ -233,14 +233,14 @@ export function SourcesScreen() {
             </Suspense>
           </>
         ) : <div role="status"><p>{t.unavailable}</p><button type="button" className="pn-detail__retry" onClick={resource.retry}>{tt.forms.tryAgain}</button></div>}
-        <Note testId="sources-owner-note"><a href="https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4" target="_blank" rel="noopener noreferrer">{v.mapOwner}</a></Note>
+        <Note testId="sources-owner-note"><a lang="en" href="https://www.google.com/maps/d/viewer?mid=1f0HedvouLfPzGTte38TdqNM4pYBICG4" target="_blank" rel="noopener noreferrer">{v.mapOwner}</a></Note>
         <OsmAttribution testId="sources-osm-attribution" />
         <p className="pn-footnote" data-testid="sources-places-note">{tt.explore.placesNote}</p>
         <p className="pn-footnote" data-testid="sources-rail-note">
           {tt.explore.railStatus} {t.railSources} {railSourcesText(resource.status === "ready" ? new Set(resource.data.sources.map((s) => s.code)) : null, tt.explore)}
         </p>
         <SourceCredits revisionId={resource.status === "ready" ? resource.data.revision.revisionId : undefined} />
-        <p className="pn-footnote" data-testid="sources-corrections-note">{v.corrections}</p>
+        <p className="pn-footnote" lang="en" data-testid="sources-corrections-note">{v.corrections}</p>
       </main>
     </DetailPanel>
   );

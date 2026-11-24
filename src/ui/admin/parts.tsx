@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 // Small building blocks of the admin screens (N5a; finished to the Lunad system in N8). Colours are
 // the design tokens; every pair passes WCAG AA in light and dark (tests/e2e/admin.spec.ts runs axe
@@ -7,12 +9,14 @@ import type { ReactNode } from "react";
 
 // Buttons. Form and page actions are 40px tall; the two that commit something (primary, danger)
 // reach 48px with an invisible extension above and below. Row actions inside tables are 32px.
-const btnBase = "relative inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50";
+// A button that is working takes `aria-disabled` (it looks disabled) and its handler ignores the
+// click: `disabled` would drop the focus the person left on it.
+const btnBase = "relative inline-flex items-center justify-center gap-2 rounded-lg text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50";
 const btnMd = "min-h-10 px-3.5 py-2";
 const btnSm = "min-h-8 whitespace-nowrap px-2.5 py-1";
 const btnHit = "before:absolute before:inset-x-0 before:-inset-y-1 before:content-['']";
-const tonePrimary = "bg-brand text-on-brand hover:bg-brand-strong dark:bg-brand-bright dark:text-on-brand-bright dark:hover:bg-brand-light";
-const toneDanger = "bg-danger-ink text-white hover:bg-danger dark:bg-danger-bright dark:text-night dark:hover:bg-white";
+const tonePrimary = "border border-transparent bg-brand text-on-brand hover:bg-brand-strong dark:bg-brand-bright dark:text-on-brand-bright dark:hover:bg-brand-light";
+const toneDanger = "border border-transparent bg-danger-ink text-white hover:bg-danger dark:bg-danger-bright dark:text-night dark:hover:bg-white";
 const toneSecondary = "border border-ink-3 bg-surface text-ink hover:bg-fill dark:border-night-ink-3 dark:bg-transparent dark:text-white dark:hover:bg-night-raised";
 const toneDangerQuiet = "border border-danger-ink bg-surface text-danger-ink hover:bg-danger-soft dark:border-danger-bright dark:bg-transparent dark:text-danger-bright dark:hover:bg-night-raised";
 
@@ -53,12 +57,62 @@ const ICON_ALERT = "M12 8v5m0 3.5v.01M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z";
 const ICON_CHECK = "m8 12.5 3 3 5-6M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z";
 const ICON_CONFIRM = "M12 9v4m0 3.5v.01M10.3 4.2 2.9 17a2 2 0 0 0 1.7 3h14.8a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0Z";
 
+// Where focus was last put by a person (a click or Tab). A panel that opens remembers it, so that
+// closing the panel can give focus back even when the control was disabled or re-rendered meanwhile.
+let lastControl: HTMLElement | null = null;
+if (typeof document !== "undefined") {
+  const note = (e: Event) => {
+    const t = e.target instanceof Element ? e.target.closest<HTMLElement>("button, a[href], input, select, textarea, summary") : null;
+    if (t) lastControl = t;
+  };
+  document.addEventListener("focusin", note, true);
+  document.addEventListener("click", note, true);
+}
+
+/** Focus an element and scroll it into view; the scroll is instant when the person asks for less motion. */
+function bringIntoView(el: HTMLElement) {
+  el.focus({ preventScroll: true });
+  const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView?.({ block: "center", behavior: calm ? "auto" : "smooth" });
+}
+
+/**
+ * For a step-up, report or confirm panel that opens away from its trigger: put the ref on its
+ * heading (`tabIndex={-1}`). The heading takes focus when the panel opens (A2, WCAG 2.4.3), and when
+ * the panel closes with focus lost, the control that opened it gets focus back, or the page heading
+ * if that control is gone. The heading is the announcement, so the panel needs no live region.
+ * "return-only" is a panel that reloaded in place: its heading takes no focus, closing still gives
+ * focus back. The opening focus happens once: a screen that is shown again (Activity) runs its
+ * effects again, and must not pull focus back to an old panel.
+ */
+export function useFocusOnOpen<T extends HTMLElement>(mode: boolean | "return-only" = true) {
+  const ref = useRef<T>(null);
+  const opener = useRef<HTMLElement | null | undefined>(undefined);
+  const opened = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!mode || !el) return;
+    const panel = el.closest("section") ?? el;
+    if (opener.current === undefined) opener.current = lastControl?.isConnected && !panel.contains(lastControl) ? lastControl : null;
+    if (mode === true && !opened.current) bringIntoView(el);
+    opened.current = true;
+    return () => {
+      const now = document.activeElement;
+      if (now && now !== document.body) return; // the person has moved on
+      const back = opener.current?.isConnected ? opener.current : null;
+      back?.focus();
+      if (!back || document.activeElement !== back) document.querySelector<HTMLElement>("#admin-main h1")?.focus();
+    };
+  }, [mode]);
+  return ref;
+}
+
 /** Page header: title, one line of purpose, and the screen's primary action on the right. */
 export function PageTitle({ children, lead, actions }: { children: ReactNode; lead?: ReactNode; actions?: ReactNode }) {
   return (
     <header className={`mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b pb-5 ${ruleCls}`}>
       <div className="min-w-0">
-        <h1 className="text-balance text-2xl font-bold tracking-tight">{children}</h1>
+        <h1 tabIndex={-1} className="text-balance text-2xl font-bold tracking-tight">{children}</h1>
         {lead ? <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-ink-2 dark:text-night-ink-2">{lead}</p> : null}
       </div>
       {actions ? <div className="ml-auto flex flex-wrap items-center gap-3">{actions}</div> : null}
@@ -71,11 +125,25 @@ export function PageTitle({ children, lead, actions }: { children: ReactNode; le
  * items are already boxed; "rule" is a divider for sections nested inside a boxed one (never a box
  * in a box); "confirm" is the amber step that asks before something is published or rolled back.
  */
-export function Panel({ title, children, testId, variant = "box" }: { title: string; children: ReactNode; testId?: string; variant?: "box" | "bare" | "rule" | "confirm" }) {
+export function Panel({
+  title,
+  children,
+  testId,
+  variant = "box",
+  focusOnOpen = false,
+}: {
+  title: string;
+  children: ReactNode;
+  testId?: string;
+  variant?: "box" | "bare" | "rule" | "confirm";
+  /** A panel the person opens (a report, a confirm step): its heading takes focus; see useFocusOnOpen. */
+  focusOnOpen?: boolean | "return-only";
+}) {
+  const headingRef = useFocusOnOpen<HTMLHeadingElement>(focusOnOpen);
   const cls = variant === "box" ? `${cardCls} p-5` : variant === "confirm" ? `${confirmCls} p-5` : variant === "rule" ? `border-t pt-4 ${ruleCls}` : "";
   return (
     <section className={cls} data-testid={testId} aria-label={title}>
-      <h2 className="mb-3 flex items-start gap-2 text-base font-semibold">
+      <h2 ref={headingRef} tabIndex={focusOnOpen === true ? -1 : undefined} className="mb-3 flex items-start gap-2 text-base font-semibold">
         {variant === "confirm" ? <Icon d={ICON_CONFIRM} className="mt-1 text-accent-ink dark:text-accent" /> : null}
         <span className="min-w-0">{title}</span>
       </h2>
@@ -108,10 +176,17 @@ export function Muted({ children }: { children: ReactNode }) {
 }
 
 const noteCls = "flex items-start gap-2 rounded-lg px-3 py-2.5 text-sm";
+const errorTone = "bg-danger-soft text-danger-ink dark:bg-danger-bright/14 dark:text-danger-bright";
+const okTone = "bg-brand-soft text-brand-strong dark:bg-brand-bright/14 dark:text-brand-light";
 
-export function ErrorNote({ children, testId }: { children: ReactNode; testId?: string }) {
+/**
+ * A problem that belongs to no single field: announced at once. A field's own problem goes through
+ * Field's `error`. `alert={false}` with an `id` is for a message that a focused control names as its
+ * description: it is read there, once.
+ */
+export function ErrorNote({ children, testId, id, alert = true }: { children: ReactNode; testId?: string; id?: string; alert?: boolean }) {
   return (
-    <p role="alert" className={`${noteCls} bg-danger-soft text-danger-ink dark:bg-danger-bright/14 dark:text-danger-bright`} data-testid={testId}>
+    <p id={id} role={alert ? "alert" : undefined} className={`${noteCls} ${errorTone}`} data-testid={testId}>
       <Icon d={ICON_ALERT} />
       <span className="min-w-0">{children}</span>
     </p>
@@ -120,9 +195,34 @@ export function ErrorNote({ children, testId }: { children: ReactNode; testId?: 
 
 export function OkNote({ children, testId }: { children: ReactNode; testId?: string }) {
   return (
-    <p role="status" className={`${noteCls} bg-brand-soft text-brand-strong dark:bg-brand-bright/14 dark:text-brand-light`} data-testid={testId}>
+    <p role="status" className={`${noteCls} ${okTone}`} data-testid={testId}>
       <Icon d={ICON_CHECK} />
       <span className="min-w-0">{children}</span>
+    </p>
+  );
+}
+
+export type Notice = { ok: boolean; text: string } | null;
+
+/**
+ * The result of something the person just did, often far from the button. Each new `notice` takes
+ * focus and scrolls into view (A2, WCAG 4.1.3), and reading the focused text is the announcement, so
+ * it carries no live-region role of its own (that would say it twice).
+ */
+export function ResultNotice({ notice, testId }: { notice: Notice; testId: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  // Once per notice: not again when the screen is shown again (Activity runs the effects again).
+  const shown = useRef<Notice>(null);
+  useEffect(() => {
+    if (!notice || notice === shown.current || !ref.current) return;
+    shown.current = notice;
+    bringIntoView(ref.current);
+  }, [notice]);
+  if (!notice) return null;
+  return (
+    <p ref={ref} tabIndex={-1} className={`${noteCls} ${notice.ok ? okTone : errorTone}`} data-testid={testId}>
+      <Icon d={notice.ok ? ICON_CHECK : ICON_ALERT} />
+      <span className="min-w-0">{notice.text}</span>
     </p>
   );
 }
@@ -131,14 +231,62 @@ export function OkNote({ children, testId }: { children: ReactNode; testId?: str
 export const inputCls =
   "w-full min-h-10 rounded-lg border border-ink-3 bg-surface px-3 py-2 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-60 dark:border-night-ink-3 dark:bg-night dark:text-white";
 
-/** A labelled form control: the label wraps the control, so it is its accessible name. Label above, hint below. */
-export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
+/** A form problem. `field` names the Field it belongs to; without one it is a general problem (an alert). `seq` makes a repeat of the same message focus again. */
+export type FormProblem = { message: string; field?: string; seq: number };
+
+/** One problem at a time for a form: `fail` it, `errorFor("field")` feeds Field, `general` feeds an ErrorNote. */
+export function useFormProblem() {
+  const [problem, setProblem] = useState<FormProblem | null>(null);
+  const seq = useRef(0);
+  return {
+    general: problem && !problem.field ? problem.message : null,
+    errorFor: (field: string) => (problem?.field === field ? problem : null),
+    fail: (message: string, field?: string) => setProblem({ message, field, seq: ++seq.current }),
+    clear: () => setProblem(null),
+  };
+}
+
+/**
+ * A labelled form control: the label wraps the control, so it is its accessible name. Label above,
+ * hint below. With `error` the control is marked aria-invalid and described by the message under it,
+ * and takes focus (A8, WCAG 3.3.1), so the message is read once, on the field.
+ */
+export function Field({ label, hint, error, errorTestId, children }: { label: string; hint?: ReactNode; error?: FormProblem | null; errorTestId?: string; children: ReactNode }) {
+  const errorId = useId();
+  const labelRef = useRef<HTMLLabelElement>(null);
+  const message = error?.message;
+  const seq = error?.seq;
+  useEffect(() => {
+    const control = labelRef.current?.querySelector<HTMLElement>("input, select, textarea");
+    if (!control || !message) return;
+    control.setAttribute("aria-invalid", "true");
+    control.setAttribute("aria-describedby", errorId);
+    return () => {
+      control.removeAttribute("aria-invalid");
+      control.removeAttribute("aria-describedby");
+    };
+  }, [message, errorId]);
+  const focused = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    // Once per problem, like ResultNotice.
+    if (seq === undefined || seq === focused.current) return;
+    focused.current = seq;
+    labelRef.current?.querySelector<HTMLElement>("input, select, textarea")?.focus();
+  }, [seq]);
   return (
-    <label className="grid gap-1.5 text-sm">
-      <span className="font-semibold">{label}</span>
-      {children}
-      {hint ? <span className="adm-meta text-ink-2 dark:text-night-ink-2">{hint}</span> : null}
-    </label>
+    <div className="grid gap-1.5">
+      <label ref={labelRef} className="grid gap-1.5 text-sm">
+        <span className="font-semibold">{label}</span>
+        {children}
+        {hint ? <span className="adm-meta text-ink-2 dark:text-night-ink-2">{hint}</span> : null}
+      </label>
+      {message ? (
+        <p id={errorId} className="adm-meta flex items-start gap-1.5 font-semibold text-danger-ink dark:text-danger-bright" data-testid={errorTestId}>
+          <Icon d={ICON_ALERT} className="mt-px" />
+          <span className="min-w-0">{message}</span>
+        </p>
+      ) : null}
+    </div>
   );
 }
 

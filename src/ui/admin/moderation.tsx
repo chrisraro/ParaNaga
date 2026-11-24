@@ -13,7 +13,7 @@ import {
   type ModerationQueue,
   type ModerationReason,
 } from "@/domain/admin/moderation";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, cardCls, Loading } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, cardCls, Loading, type Notice } from "./parts";
 
 // A15 Community moderation and A16 Appeals (N6, C10). Posts, comments and photos waiting for a
 // person, with Jev's typed answer as a probability (advice, never a decision). Going against it is
@@ -37,7 +37,7 @@ function JevLine({ jev }: { jev: ModerationItem["jev"] }) {
 
 export function ModerationScreen() {
   const [state, setState] = useState<AdminResult<ModerationQueue> | null>(null);
-  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
 
   const load = useCallback(async () => setState(await fetchModeration()), []);
   useEffect(() => {
@@ -55,7 +55,11 @@ export function ModerationScreen() {
       <PageTitle lead="Posts, comments and photos waiting for a person. Jev's answer is advice: deciding against it is an override and needs a note. Approving a photo is the only way it becomes public. You never see your own content, and appeals go to someone other than who decided.">
         Moderation & appeals
       </PageTitle>
-      {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="moderation-notice">{notice.text}</OkNote> : <ErrorNote testId="moderation-notice">{notice.text}</ErrorNote>}</div> : null}
+      {notice ? (
+        <div className="mb-4">
+          <ResultNotice notice={notice} testId="moderation-notice" />
+        </div>
+      ) : null}
       {state === null ? (
         <Loading />
       ) : !state.ok ? (
@@ -143,15 +147,16 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
   const [reason, setReason] = useState<ModerationReason>("meets_guidelines");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+  const problem = useFormProblem();
   // Nothing is preselected: publishing is always the moderator's own choice (Jev is evidence only).
   const override = outcome !== null && isOverride(item.jev?.recommendation, outcome);
   const id = `${item.kind}-${item.id}`;
 
   const submit = async () => {
-    if (!outcome) return setProblem("Choose a decision first.");
-    if ((override || reason === "other") && !note.trim()) return setProblem(override ? "Deciding against Jev's recommendation needs a note." : "The reason “Other” needs a note.");
-    setProblem(null);
+    // The radios are `required`, so the browser focuses the first one when none is chosen; this is the backstop.
+    if (!outcome) return problem.fail("Choose a decision first.");
+    if ((override || reason === "other") && !note.trim()) return problem.fail(override ? "Deciding against Jev's recommendation needs a note." : "The reason “Other” needs a note.", "note");
+    problem.clear();
     setBusy(true);
     const r = await decideItem({ targetType: item.kind, targetId: item.id, outcome, reason, ...(note.trim() ? { note: note.trim() } : {}) });
     setBusy(false);
@@ -225,10 +230,10 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
             </Field>
         ) : null}
         {override ? <ErrorNote testId={`override-${id}`}>This goes against Jev&apos;s recommendation. Write why; it is recorded as an override.</ErrorNote> : null}
-        <Field label={override || reason === "other" ? "Note (required)" : "Note (optional)"}>
+        <Field label={override || reason === "other" ? "Note (required)" : "Note (optional)"} error={problem.errorFor("note")}>
           <textarea className={inputCls} rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} data-testid={`note-${id}`} />
         </Field>
-        {problem ? <ErrorNote>{problem}</ErrorNote> : null}
+        {problem.general ? <ErrorNote>{problem.general}</ErrorNote> : null}
         <div>
           <button type="submit" className={outcome === "published" ? btnPrimary : btnSecondary} disabled={busy} aria-busy={busy} data-testid={`decide-${id}`}>
             Record decision
@@ -243,11 +248,11 @@ function AppealCard({ appeal, onDone }: { appeal: AppealItem; onDone: (text: str
   const [outcome, setOutcome] = useState<"upheld" | "overturned">("upheld");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+  const problem = useFormProblem();
 
   const submit = async () => {
-    if (note.trim().length < 3) return setProblem("Write a note for the decision history.");
-    setProblem(null);
+    if (note.trim().length < 3) return problem.fail("Write a note for the decision history (at least 3 characters).", "note");
+    problem.clear();
     setBusy(true);
     const r = await resolveAppeal(appeal.id, { outcome, note: note.trim() });
     setBusy(false);
@@ -302,10 +307,9 @@ function AppealCard({ appeal, onDone }: { appeal: AppealItem; onDone: (text: str
           ))}
         </fieldset>
         {outcome === "overturned" && appeal.decidedBy === "policy" ? <Muted>Overturning the policy&apos;s decision is recorded as an override.</Muted> : null}
-        <Field label="Note for the decision history (required)">
+        <Field label="Note for the decision history (required)" error={problem.errorFor("note")}>
           <textarea className={inputCls} rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} data-testid={`appeal-note-${appeal.id}`} />
         </Field>
-        {problem ? <ErrorNote>{problem}</ErrorNote> : null}
         <div>
           <button type="submit" className={btnPrimary} disabled={busy} aria-busy={busy} data-testid={`appeal-go-${appeal.id}`}>
             Record outcome

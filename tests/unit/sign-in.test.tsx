@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SignInScreen } from "@/ui/auth/sign-in-screen";
 
@@ -78,7 +78,10 @@ describe("SignInScreen (S21)", () => {
     await waitFor(() => expect(screen.getByTestId("verify-otp-btn")).toBeTruthy());
     fireEvent.change(screen.getByLabelText(/One-time code/), { target: { value: "123456" } });
     fireEvent.click(screen.getByTestId("verify-otp-btn"));
-    await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/code did not work/i));
+    // The focused field's description, so not also an alert (it would be read twice).
+    const code = screen.getByLabelText(/One-time code/);
+    await waitFor(() => expect(document.getElementById(code.getAttribute("aria-describedby")!)!.textContent).toMatch(/code did not work/i));
+    expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByText(/Signed in/)).toBeNull();
   });
 
@@ -95,5 +98,57 @@ describe("SignInScreen (S21)", () => {
     render(<SignInScreen />);
     fireEvent.click(screen.getByTestId("google-sign-in-btn"));
     await waitFor(() => expect(screen.getByRole("alert").textContent).toMatch(/Could not start Google sign-in/));
+  });
+
+  it("keeps the button on and ties a missing email or code to its field", async () => {
+    render(<SignInScreen />);
+    const button = screen.getByTestId("send-otp-btn") as HTMLButtonElement;
+    expect(button.disabled).toBe(false);
+    fireEvent.click(button);
+    const email = screen.getByLabelText("Email address");
+    expect(document.activeElement).toBe(email);
+    expect(email.getAttribute("aria-invalid")).toBe("true");
+    expect(document.getElementById(email.getAttribute("aria-describedby")!)!.textContent).toMatch(/Enter your email address/);
+    await submitEmail();
+    fireEvent.click(await screen.findByTestId("verify-otp-btn"));
+    const code = screen.getByLabelText(/One-time code/);
+    expect(document.activeElement).toBe(code);
+    expect(document.getElementById(code.getAttribute("aria-describedby")!)!.textContent).toBe("Enter the code from the email.");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("accepts a pasted code with a space", async () => {
+    const verify = vi.fn(async () => ({ data: null, error: { message: "Invalid OTP" } }));
+    auth.client = fakeClient({ verify });
+    render(<SignInScreen />);
+    await submitEmail();
+    const code = await screen.findByLabelText(/One-time code/);
+    fireEvent.change(code, { target: { value: "123 456" } });
+    fireEvent.click(screen.getByTestId("verify-otp-btn"));
+    await waitFor(() => expect(document.activeElement).toBe(code));
+    expect(verify).toHaveBeenCalledWith({ email: "commuter@example.com", otp: "123456" });
+    await waitFor(() => expect(code.getAttribute("aria-invalid")).toBe("true"));
+  });
+
+  it("sends a new code only after the wait, and says the wait once when asked early", async () => {
+    vi.useFakeTimers();
+    try {
+      const send = vi.fn(async () => ({ data: { success: true }, error: null }));
+      auth.client = fakeClient({ send });
+      render(<SignInScreen />);
+      await act(submitEmail);
+      const resend = screen.getByTestId("resend-otp-btn");
+      fireEvent.click(resend);
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("status").textContent).toMatch(/Wait 30 more seconds/);
+      await act(async () => vi.advanceTimersByTime(5_000));
+      expect(screen.getByRole("status").textContent).toMatch(/Wait 30 more seconds/);
+      await act(async () => vi.advanceTimersByTime(25_000));
+      await act(async () => fireEvent.click(resend));
+      expect(send).toHaveBeenCalledTimes(2);
+      expect(screen.getByRole("status").textContent).toBe("New code sent to commuter@example.com.");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

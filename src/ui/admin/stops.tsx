@@ -15,7 +15,7 @@ import {
   type StopList,
   type StopRow,
 } from "@/domain/admin/stops";
-import { btnDanger, btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, cardCls, Loading } from "./parts";
+import { btnDanger, btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, cardCls, Loading, type Notice } from "./parts";
 
 // A3 Candidate review and A6 Stops & curbs (N5b, C3). One list of the open draft's stops; the
 // selected stop's panel offers the actions of the screen. Every action is a new stop version in
@@ -24,7 +24,6 @@ import { btnDanger, btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, in
 // order cannot be retired). Publishing stays on Revisions & publication.
 
 type Mode = "candidates" | "stops";
-type Notice = { ok: boolean; text: string } | null;
 
 const COPY: Record<Mode, { title: string; lead: string }> = {
   candidates: {
@@ -95,7 +94,11 @@ export function StopsScreen({ mode }: { mode: Mode }) {
         </div>
       ) : null}
 
-      {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="stops-notice">{notice.text}</OkNote> : <ErrorNote testId="stops-notice">{notice.text}</ErrorNote>}</div> : null}
+      {notice ? (
+        <div className="mb-4">
+          <ResultNotice notice={notice} testId="stops-notice" />
+        </div>
+      ) : null}
 
       {list === null ? (
         <Loading />
@@ -393,27 +396,33 @@ function RelocateForm({ stop, disabled, run }: FormProps) {
   const [lat, setLat] = useState(stop.lat.toFixed(7));
   const [lng, setLng] = useState(stop.lng.toFixed(7));
   const [reason, setReason] = useState("");
+  const problem = useFormProblem();
+  // Number("") is 0: a blank coordinate must be refused here, not sent as the equator.
+  const bad = (v: string) => v.trim() === "" || !Number.isFinite(Number(v));
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (bad(lat)) return problem.fail("Enter the latitude as a number, e.g. 13.6263.", "lat");
+    if (bad(lng)) return problem.fail("Enter the longitude as a number, e.g. 123.1855.", "lng");
+    if (reason.trim().length < 3) return problem.fail("Give a reason (at least 3 characters).", "reason");
+    problem.clear();
     void run({ action: "relocate", expectedVersionId: stop.versionId, lat: Number(lat), lng: Number(lng), reason: reason.trim() }, `${stop.code ?? stop.name} moved.`);
   };
-  const valid = Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && reason.trim().length >= 3;
   return (
     <Panel title="Relocate" testId="relocate-form">
-      <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={submit}>
-        <Field label="Latitude">
+      <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={submit} noValidate>
+        <Field label="Latitude" error={problem.errorFor("lat")}>
           <input className={inputCls} inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} data-testid="relocate-lat" />
         </Field>
-        <Field label="Longitude">
+        <Field label="Longitude" error={problem.errorFor("lng")}>
           <input className={inputCls} inputMode="decimal" value={lng} onChange={(e) => setLng(e.target.value)} data-testid="relocate-lng" />
         </Field>
         <div className="md:col-span-2">
-          <Field label="Reason" hint="Recorded in the audit log. Curb evidence and the navigation approval are dropped.">
+          <Field label="Reason" hint="At least 3 characters. Recorded in the audit log. Curb evidence and the navigation approval are dropped." error={problem.errorFor("reason")}>
             <input className={inputCls} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} data-testid="relocate-reason" />
           </Field>
         </div>
         <div>
-          <button type="submit" className={btnSecondary} disabled={disabled || !valid || stop.status === "retired"} data-testid="relocate-go">
+          <button type="submit" className={btnSecondary} disabled={disabled || stop.status === "retired"} data-testid="relocate-go">
             Relocate
           </button>
         </div>
@@ -424,20 +433,23 @@ function RelocateForm({ stop, disabled, run }: FormProps) {
 
 function RetireForm({ stop, disabled, run }: FormProps) {
   const [reason, setReason] = useState("");
+  const problem = useFormProblem();
   const blocked = stop.sequences.length > 0;
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (reason.trim().length < 3) return problem.fail("Give a reason (at least 3 characters).", "reason");
+    problem.clear();
     void run({ action: "retire", expectedVersionId: stop.versionId, reason: reason.trim() }, `${stop.code ?? stop.name} retired.`);
   };
   return (
     <Panel title="Retire" testId="retire-form">
       <form className="grid gap-3" onSubmit={submit}>
         {blocked ? <Muted>{`In the stop order of ${stop.sequences.join(", ")}: change the route's stops before retiring it.`}</Muted> : null}
-        <Field label="Reason">
+        <Field label="Reason" hint="At least 3 characters." error={problem.errorFor("reason")}>
           <input className={inputCls} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} data-testid="retire-reason" />
         </Field>
         <div>
-          <button type="submit" className={btnDanger} disabled={disabled || blocked || reason.trim().length < 3 || stop.status === "retired"} data-testid="retire-go">
+          <button type="submit" className={btnDanger} disabled={disabled || blocked || stop.status === "retired"} data-testid="retire-go">
             Retire
           </button>
         </div>
@@ -459,9 +471,14 @@ function EditForm({ stop, disabled, run }: FormProps) {
   const [alighting, setAlighting] = useState(triValue(stop.alightingAllowed));
   const [note, setNote] = useState("");
   const curbEvidence = stop.evidence.some((e) => e.claim === "curb_position");
+  const problem = useFormProblem();
+  const blank = (v: string) => v.trim() === "" || !Number.isFinite(Number(v));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (curbEvidence && blank(curbLat)) return problem.fail("Enter the curb latitude as a number.", "curbLat");
+    if (curbEvidence && blank(curbLng)) return problem.fail("Enter the curb longitude as a number.", "curbLng");
+    problem.clear();
     const changes: Extract<StopAction, { action: "edit" }>["changes"] = {};
     if (name.trim() && name.trim() !== stop.name) changes.name = name.trim();
     const list = aliases.split(",").map((a) => a.trim()).filter(Boolean);
@@ -478,7 +495,7 @@ function EditForm({ stop, disabled, run }: FormProps) {
   };
   return (
     <Panel title="Stop details" testId="edit-form">
-      <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={submit}>
+      <form className="grid items-start gap-3 md:grid-cols-2" onSubmit={submit} noValidate>
         <Field label="Name">
           <input className={inputCls} value={name} maxLength={120} onChange={(e) => setName(e.target.value)} data-testid="edit-name" />
         </Field>
@@ -496,10 +513,10 @@ function EditForm({ stop, disabled, run }: FormProps) {
           </select>
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Curb latitude">
+          <Field label="Curb latitude" error={problem.errorFor("curbLat")}>
             <input className={inputCls} inputMode="decimal" value={curbLat} disabled={!curbEvidence} onChange={(e) => setCurbLat(e.target.value)} />
           </Field>
-          <Field label="Curb longitude">
+          <Field label="Curb longitude" error={problem.errorFor("curbLng")}>
             <input className={inputCls} inputMode="decimal" value={curbLng} disabled={!curbEvidence} onChange={(e) => setCurbLng(e.target.value)} />
           </Field>
         </div>

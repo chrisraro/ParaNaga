@@ -40,6 +40,7 @@ import { statusLabel, type CorrectionStatus } from "@/domain/corrections/status"
 import { en, translated } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
 import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
+import { Live, updateThenFocus, useFieldError } from "./form-a11y";
 
 type Step = 1 | 2 | 3;
 type Photo = { id: string; name: string };
@@ -90,10 +91,12 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
   const [busy, setBusy] = useState<"idle" | "uploading" | "sending">("idle");
   const [photoNote, setPhotoNote] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { error, errorProps, fail, clear, edited, field } = useFieldError();
   const [sent, setSent] = useState<{ status: CorrectionStatus } | null>(null);
   const [requestId] = useState(() => crypto.randomUUID());
   const heading = useRef<HTMLHeadingElement>(null);
+  const photoList = useRef<HTMLUListElement>(null);
+  const f = { what: `${uid}-what`, etype: `${uid}-etype`, ename: `${uid}-ename`, desc: `${uid}-desc`, ack: `${uid}-ack` };
   const wantFix = useRef(false);
   const stopGeo = useRef<() => void>(() => undefined);
   // A requested location arrives as a fix; keep it once, then stop watching (battery, privacy).
@@ -155,7 +158,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
   const categories = categoriesFor(entityType, t);
 
   const go = (next: Step) => {
-    setError(null);
+    clear();
     // Leaving the step that asked for the location cancels the request (battery, privacy).
     if (next !== 2 && locating) {
       wantFix.current = false;
@@ -167,15 +170,15 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
 
   const onNext1 = () => {
     const problem = validateWhatsWrong(category, tt);
-    if (problem) return setError(problem);
+    if (problem) return fail(problem, f.what);
     go(2);
   };
   const onNext2 = () => {
     if (busy !== "idle") return;
-    if (!entityType) return setError(t.chooseEntity);
-    if (!entityId) return setError(t.sayWhich);
+    if (!entityType) return fail(t.chooseEntity, f.etype);
+    if (!entityId) return fail(t.sayWhich, f.ename);
     const problem = validateDescription(description, tt);
-    if (problem) return setError(problem);
+    if (problem) return fail(problem, f.desc);
     go(3);
   };
 
@@ -192,16 +195,36 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
     setPhotoNote(null);
     const result = await uploadEvidencePhoto(file);
     setBusy("idle");
-    if (result.ok) setPhotos((p) => [...p, { id: result.mediaId, name: file.name.slice(0, 60) }]);
+    // The last photo takes the picker away.
+    if (result.ok)
+      updateThenFocus(
+        () => {
+          setPhotos((p) => [...p, { id: result.mediaId, name: file.name.slice(0, 60) }]);
+          setPhotoNote(form.photoAdded);
+        },
+        () => photoList.current,
+      );
     else setPhotoNote(translated(result.message, en.report.api, t.api));
   };
 
+  const removePhoto = (i: number) =>
+    updateThenFocus(
+      () => {
+        setPhotos((all) => all.filter((_, n) => n !== i));
+        setPhotoNote(null);
+      },
+      () => {
+        const left = photoList.current?.querySelectorAll("button");
+        return left?.[Math.min(i, left.length - 1)] ?? document.getElementById(`${uid}-photo`) ?? heading.current;
+      },
+    );
+
   const onSend = async () => {
     if (!user || busy !== "idle") return;
-    if (!accepted) return setError(t.tickBox);
+    if (!accepted) return fail(t.tickBox, f.ack);
     if (!category || !entityType) return;
     setBusy("sending");
-    setError(null);
+    clear();
     const result = await submitCorrection({
       clientRequestId: requestId,
       category,
@@ -215,7 +238,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
     });
     setBusy("idle");
     if (result.ok) setSent({ status: result.correction.status });
-    else setError(translated(result.message, en.report.api, t.api));
+    else fail(translated(result.message, en.report.api, t.api));
   };
 
   if (sent) {
@@ -250,7 +273,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
       {step === 1 ? (
         <fieldset className="pn-report__fieldset">
           <legend className="pn-report__legend">{t.pickClosest}</legend>
-          <div className="pn-group" role="radiogroup" aria-label={t.whatIsWrong}>
+          <div className="pn-group" role="radiogroup" aria-label={t.whatIsWrong} {...field(f.what)}>
             {categories.map((c) => (
               <label key={c.value} className="pn-report__option">
                 <input
@@ -260,7 +283,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
                   checked={category === c.value}
                   onChange={() => {
                     setCategory(c.value);
-                    setError(null);
+                    edited(f.what);
                   }}
                 />
                 <span className="pn-report__option-text">
@@ -287,11 +310,12 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
                   {t.whatAbout}
                 </label>
                 <select
-                  id={`${uid}-etype`}
+                  {...field(f.etype)}
                   className="pn-report__input"
                   value={entityType ?? ""}
                   onChange={(e) => {
                     const v = e.target.value;
+                    edited(f.etype);
                     setEntityType(isEntityType(v) ? v : null);
                     setCategory((c) => (c && isEntityType(v) && !categoriesFor(v).some((x) => x.value === c) ? null : c));
                   }}
@@ -309,11 +333,14 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
                   {t.nameOrCode}
                 </label>
                 <input
-                  id={`${uid}-ename`}
+                  {...field(f.ename)}
                   className="pn-report__input"
                   maxLength={120}
                   value={entityText}
-                  onChange={(e) => setEntityText(e.target.value)}
+                  onChange={(e) => {
+                    setEntityText(e.target.value);
+                    edited(f.ename);
+                  }}
                   autoComplete="off"
                 />
               </div>
@@ -329,13 +356,15 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
               {t.whatDidYouSee}
             </label>
             <textarea
-              id={`${uid}-desc`}
+              {...field(f.desc, `${uid}-count`)}
               className="pn-report__input pn-report__textarea"
               rows={5}
               maxLength={DESCRIPTION_MAX}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              aria-describedby={`${uid}-count`}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                edited(f.desc);
+              }}
             />
             <span id={`${uid}-count`} className="pn-report__count">
               {form.count(description.trim().length, DESCRIPTION_MAX)}
@@ -344,51 +373,48 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
 
           <div className="pn-report__field">
             <span className="pn-report__label">{t.whereOptional}</span>
-            {location ? (
-              <p className="pn-report__value" data-testid="report-location">
-                {form.locationAdded(location.accuracyM)}
-              </p>
-            ) : null}
+            {/* Always in the page, so the location is announced when it is found. */}
+            <Live className="pn-report__value" data-testid="report-location">
+              {location ? form.locationAdded(location.accuracyM) : null}
+            </Live>
             <div className="pn-report__row">
               <button
                 type="button"
                 className="pn-btn pn-btn--secondary pn-report__small"
+                id={`${uid}-locate`}
                 onClick={() => {
+                  if (findingLocation) return;
                   setLocationNote(null);
                   wantFix.current = true;
                   setLocating(true);
                   geo.start();
                 }}
-                disabled={findingLocation}
+                aria-disabled={findingLocation || undefined}
                 data-testid="report-add-location"
               >
                 {findingLocation ? form.findingLocation : location ? form.updateLocation : t.addLocation}
               </button>
               {location ? (
-                <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => setLocation(null)}>
+                <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={() => updateThenFocus(() => setLocation(null), () => document.getElementById(`${uid}-locate`))}>
                   {form.removeLocation}
                 </button>
               ) : null}
             </div>
             <p className="pn-report__hint">{form.permissionHint}</p>
-            {shownLocationNote ? (
-              <p className="pn-report__hint" role="status">
-                {shownLocationNote}
-              </p>
-            ) : null}
+            <Live className="pn-report__hint">{shownLocationNote}</Live>
           </div>
 
           <div className="pn-report__field">
             <span className="pn-report__label">{t.photosOptional}</span>
             {photos.length > 0 ? (
-              <ul className="pn-report__photos" data-testid="report-photos">
-                {photos.map((p) => (
+              <ul ref={photoList} tabIndex={-1} aria-label={t.summary.photos} className="pn-report__photos" data-testid="report-photos">
+                {photos.map((p, i) => (
                   <li key={p.id}>
                     <span className="pn-report__photo-name">{p.name}</span>
                     <button
                       type="button"
                       className="pn-btn pn-btn--secondary pn-report__small"
-                      onClick={() => setPhotos((all) => all.filter((x) => x.id !== p.id))}
+                      onClick={() => removePhoto(i)}
                       aria-label={t.removePhoto(p.name)}
                     >
                       {form.remove}
@@ -404,7 +430,10 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   className="pn-report__file"
-                  disabled={busy !== "idle"}
+                  aria-disabled={busy !== "idle" || undefined}
+                  onClick={(e) => {
+                    if (busy !== "idle") e.preventDefault(); // no second picker while one uploads
+                  }}
                   onChange={(e) => {
                     void onPickPhoto(e.target.files);
                     e.target.value = "";
@@ -417,11 +446,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
             ) : null}
             {auth.status === "signedOut" ? <p className="pn-report__hint">{t.signInPhotos}</p> : null}
             <p className="pn-report__hint">{t.photosHint(MAX_EVIDENCE_PHOTOS)}</p>
-            {photoNote ? (
-              <p className="pn-report__hint" role="status">
-                {photoNote}
-              </p>
-            ) : null}
+            <Live className="pn-report__hint">{photoNote}</Live>
           </div>
         </div>
       ) : null}
@@ -463,7 +488,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
               ))}
             </ul>
             <label className="pn-report__check">
-              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} data-testid="report-ack" />
+              <input type="checkbox" {...field(f.ack)} checked={accepted} onChange={(e) => { setAccepted(e.target.checked); edited(f.ack); }} data-testid="report-ack" />
               <span>{t.disclosure.checkbox}</span>
             </label>
           </section>
@@ -489,7 +514,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
       {/* The error and the step's actions stay together, pinned above the tab bar (report.css). */}
       <div className="pn-report__foot">
         {error ? (
-          <p className="pn-report__error" role="alert" data-testid="report-error">
+          <p {...errorProps} className="pn-report__error" data-testid="report-error">
             {error}
           </p>
         ) : null}
@@ -506,7 +531,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
           </button>
         ) : null}
         {step === 2 ? (
-          <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext2} disabled={busy === "uploading"} data-testid="report-next">
+          <button type="button" className="pn-btn pn-btn--primary pn-report__action" onClick={onNext2} aria-disabled={busy === "uploading" || undefined} data-testid="report-next">
             {busy === "uploading" ? t.uploading : form.review}
           </button>
         ) : null}
@@ -515,7 +540,7 @@ function Wizard({ report, prefilled, onReset }: { report: string; prefilled: Rep
             type="button"
             className="pn-btn pn-btn--primary pn-report__action"
             onClick={() => void onSend()}
-            disabled={busy !== "idle"}
+            aria-disabled={busy !== "idle" || undefined}
             data-testid="report-send"
           >
             {busy === "sending" ? form.sending : t.send}

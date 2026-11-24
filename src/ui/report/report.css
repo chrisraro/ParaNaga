@@ -162,6 +162,9 @@ legend.pn-report__label {
   resize: vertical;
   line-height: 1.45;
 }
+.pn-report__input[aria-invalid="true"] {
+  border-color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
+}
 .pn-report__input:focus-visible,
 .pn-report__file:focus-visible + label,
 .pn-report__option input:focus-visible,
@@ -425,7 +428,7 @@ legend.pn-report__label {
   text-align: center;
   text-decoration: none;
 }
-.pn-report__action:disabled {
+.pn-report__action[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
 }

@@ -10,6 +10,7 @@ import "@/ui/trip/trip.css";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
+import { DocumentTitle } from "@/ui/app-shell/document-title";
 import { cameFromInsideApp, useAppFrame, useAppPanel } from "@/ui/app-shell/app-frame-context";
 import { BackButton, useEscapeToClose, useFocusOnMount } from "@/ui/app-shell/panel";
 import { useIsOffline } from "@/client/pwa/connectivity";
@@ -122,6 +123,7 @@ export function DetailLoading({ title: titleProp, what }: { title?: string; what
   if (offline) {
     return (
       <DetailPanel title={title} testId="detail-offline">
+        <DocumentTitle title={title} />
         <div className="pn-detail__state" role="status">
           <p>{t.pwa.panelOffline}</p>
         </div>
@@ -130,6 +132,7 @@ export function DetailLoading({ title: titleProp, what }: { title?: string; what
   }
   return (
     <DetailPanel title={title} testId="detail-loading">
+      <DocumentTitle title={title} />
       <div className="pn-detail__state" role="status" aria-label={t.detail.loading(title)}>
         <div className="pn-skeleton" style={{ width: "60%", height: 28 }} />
         <div className="pn-skeleton" style={{ width: "40%" }} />

@@ -308,6 +308,50 @@ button.pn-cell:active {
   }
 }
 
+/* Forced colours drop fills and shadows: the segmented box and its buttons keep a border, and the chosen
+   option is Highlight with HighlightText (the thumb, or the button itself in tablists). The same pair
+   marks any pressed chip (aria-pressed), so selection never depends on a tint or a shadow. */
+@media (forced-colors: active) {
+  .pn-seg {
+    border: 1px solid ButtonBorder;
+  }
+  .pn-seg__btn {
+    border: 1px solid transparent;
+  }
+  .pn-seg__thumb {
+    forced-color-adjust: none;
+    background: Highlight;
+    box-shadow: none;
+  }
+  .pn-seg--kit .pn-seg__btn[aria-checked="true"],
+  .pn-seg--kit .pn-seg__btn[aria-selected="true"] {
+    /* No backplate behind the label: it sits on the Highlight thumb. */
+    forced-color-adjust: none;
+    color: HighlightText;
+    border-color: ButtonBorder;
+  }
+  button[class*="chip"] {
+    border: 1px solid ButtonBorder;
+  }
+  button[class*="chip"][aria-pressed="true"] {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+    border-color: HighlightText;
+  }
+}
+
+/* A status line that stays in the page while empty (form-a11y `Live`), so its text is announced when
+   it arrives; empty, it takes no room and shows nothing. */
+.pn-live:empty {
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
 /* ------------------------------------------------------------------ Confirm dialog (native <dialog>) */
 .pn-dialog {
   width: min(340px, calc(100vw - 32px));

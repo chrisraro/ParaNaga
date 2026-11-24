@@ -11,6 +11,7 @@ import { stateLabel, type ContentState } from "@/domain/community/status";
 import { topicLabel } from "@/domain/community/topics";
 import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 import { useLocale, useT } from "@/i18n/provider";
+import type { useFieldError } from "@/ui/report/form-a11y";
 
 export const formatDate = (iso: string, locale: Locale = DEFAULT_LOCALE) =>
   new Date(iso).toLocaleDateString(formatLocale(locale), { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Manila" });
@@ -50,7 +51,7 @@ export function PostBadges({ post }: { post: Pick<PostSummary, "label" | "topic"
 }
 
 /** The guidelines text with its acknowledgement box. */
-export function GuidelinesAck({ id, checked, onChange }: { id: string; checked: boolean; onChange: (v: boolean) => void }) {
+export function GuidelinesAck({ id, checked, onChange, field }: { id: string; checked: boolean; onChange: (v: boolean) => void; field?: ReturnType<ReturnType<typeof useFieldError>["field"]> }) {
   const tt = useT();
   return (
     <section className="pn-comm__panel" aria-labelledby={`${id}-title`} data-testid="guidelines">
@@ -58,9 +59,9 @@ export function GuidelinesAck({ id, checked, onChange }: { id: string; checked: 
         {tt.community.guidelinesTitle}
       </h3>
       {/* The guidelines are English in every language until their verbatim-reviewed translation. */}
-      <p className="pn-comm__body">{tt.acknowledgments.community}</p>
+      <p className="pn-comm__body" lang="en">{tt.acknowledgments.community}</p>
       <label className="pn-comm__check">
-        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} data-testid="guidelines-ack" />
+        <input type="checkbox" {...field} checked={checked} onChange={(e) => onChange(e.target.checked)} data-testid="guidelines-ack" />
         <span>{tt.community.guidelinesCheckbox}</span>
       </label>
     </section>

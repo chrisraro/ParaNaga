@@ -8,6 +8,7 @@
 // "Report" link is not rendered (corrections open with Increment B). The two kinds with a location
 // have "Save place" (Task 8): saved on this phone, never sent anywhere.
 
+import { DocumentTitle } from "@/ui/app-shell/document-title";
 import "@/ui/kit/styles";
 import "./places.css";
 
@@ -87,6 +88,7 @@ function PlaceHead({ title, kind, badges }: { title: string; kind: string; badge
   const heading = useFocusOnMount<HTMLHeadingElement>(true);
   return (
     <div className="pn-place__head">
+      <DocumentTitle title={title} />
       <h1 ref={heading} tabIndex={-1} className="pn-detail__title">
         {title}
       </h1>

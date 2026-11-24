@@ -15,7 +15,7 @@ import {
   type OutcomeCode,
 } from "@/domain/admin/complaints";
 import type { ComplaintStatus } from "@/domain/complaints/status";
-import { btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, cardCls, insetCls, Loading, segBtn, segGroup } from "./parts";
+import { btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, when, Empty, cardCls, insetCls, Loading, ResultNotice, segBtn, segGroup, useFormProblem, type Notice } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A17 Complaint review (N7, C11). Private driver reports, for the complaint reviewer role only.
@@ -24,7 +24,6 @@ import { AdminStepUp } from "./step-up";
 // evidence is metadata until the reviewer asks for one file, which comes as a 60-second download
 // link (never a preview, never in the page). Outcomes are neutral: never a finding about a driver.
 
-type Notice = { ok: boolean; text: string } | null;
 /** The queue. `needsStepUp` is its own state so that closing the code panel leaves a way back in. */
 type ListState = { step: "loading" } | { step: "needsStepUp" } | { step: "error"; message: string } | { step: "ready"; data: ComplaintList };
 const LOADING: ListState = { step: "loading" };
@@ -38,6 +37,8 @@ export function ComplaintsScreen() {
   const [stepUp, setStepUp] = useState<(() => void) | null>(null);
   const [notice, setNotice] = useState<Notice>(null);
   const [openKey, setOpenKey] = useState(0);
+  // After a change the report reloads in place; focus stays on the result notice, not the report heading.
+  const [reloaded, setReloaded] = useState(false);
 
   // Bumped to load the list again (after a step-up or a change).
   const [nonce, setNonce] = useState(0);
@@ -80,7 +81,11 @@ export function ComplaintsScreen() {
         />
       ) : null}
 
-      {notice ? <div className="my-4">{notice.ok ? <OkNote testId="complaint-notice">{notice.text}</OkNote> : <ErrorNote testId="complaint-notice">{notice.text}</ErrorNote>}</div> : null}
+      {notice ? (
+        <div className="my-4">
+          <ResultNotice notice={notice} testId="complaint-notice" />
+        </div>
+      ) : null}
 
       <div className={`my-4 ${segGroup}`} role="group" aria-label="Which reports">
         {(["open", "closed"] as const).map((s) => (
@@ -107,11 +112,9 @@ export function ComplaintsScreen() {
       ) : list.step === "needsStepUp" ? (
         <div className="grid justify-items-start gap-2">
           <Muted>Confirm it is you to see the reports.</Muted>
-          {stepUp ? null : (
-            <button type="button" className={btnSecondary} onClick={() => askStepUp(retryList)} data-testid="complaints-step-up">
-              Enter a code
-            </button>
-          )}
+          <button type="button" className={btnSecondary} onClick={() => askStepUp(retryList)} data-testid="complaints-step-up">
+            Enter a code
+          </button>
         </div>
       ) : list.step === "error" ? (
         <ErrorNote testId="complaints-error">{list.message}</ErrorNote>
@@ -147,7 +150,10 @@ export function ComplaintsScreen() {
                   <td>{when(c.submittedAt)}</td>
                   <td className="adm-num">{c.evidenceCount}</td>
                   <td>
-                    <button type="button" className={btnRow} onClick={() => setOpenId(c.id)} aria-label={`Open report ${c.publicRef}`} data-testid={`complaint-open-${c.id}`}>
+                    <button type="button" className={btnRow} onClick={() => {
+                        setReloaded(false);
+                        setOpenId(c.id);
+                      }} aria-label={`Open report ${c.publicRef}`} data-testid={`complaint-open-${c.id}`}>
                       Open
                     </button>
                   </td>
@@ -163,11 +169,13 @@ export function ComplaintsScreen() {
           <ComplaintDetailView
             key={`${openId}-${openKey}`}
             id={openId}
+            focusHeading={!reloaded}
             askStepUp={askStepUp}
             onClose={() => setOpenId(null)}
             onChanged={async (text) => {
               setNotice({ ok: true, text });
               setOpenKey((k) => k + 1);
+              setReloaded(true);
               reload();
             }}
           />
@@ -179,11 +187,13 @@ export function ComplaintsScreen() {
 
 function ComplaintDetailView({
   id,
+  focusHeading,
   askStepUp,
   onClose,
   onChanged,
 }: {
   id: string;
+  focusHeading: boolean;
   askStepUp: (retry: () => void) => void;
   onClose: () => void;
   onChanged: (text: string) => Promise<void>;
@@ -231,7 +241,7 @@ function ComplaintDetailView({
   const c = state.data;
 
   return (
-    <Panel title={`Report ${c.publicRef}`} testId="complaint-detail">
+    <Panel title={`Report ${c.publicRef}`} testId="complaint-detail" focusOnOpen={focusHeading || "return-only"}>
       <div className="grid gap-5">
         <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="font-medium">Category</dt>
@@ -285,7 +295,11 @@ function ComplaintDetailView({
               ))}
             </ul>
           )}
-          {linkNote ? <div className="mt-2">{linkNote.ok ? <OkNote testId="evidence-note">{linkNote.text}</OkNote> : <ErrorNote testId="evidence-note">{linkNote.text}</ErrorNote>}</div> : null}
+          {linkNote ? (
+            <div className="mt-2">
+              <ResultNotice notice={linkNote} testId="evidence-note" />
+            </div>
+          ) : null}
         </section>
 
         <section aria-label="History">
@@ -338,16 +352,17 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
   const [outcome, setOutcome] = useState<OutcomeCode | "">("");
   const [note, setNote] = useState("");
   const [toReporter, setToReporter] = useState(false);
-  const [error, setError] = useState("");
+  const problem = useFormProblem();
   const [busy, setBusy] = useState(false);
   if (options.length === 0) return <Muted>No further status change: this report is {label(c.status).toLowerCase()}.</Muted>;
 
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    setError("");
+    if (busy) return;
+    problem.clear();
     if (!to) return;
-    if (to === "closed" && !outcome) return setError("Choose an outcome to close the report.");
-    if (toReporter && !note.trim()) return setError("Write the note the reporter will see.");
+    if (to === "closed" && !outcome) return problem.fail("Choose an outcome to close the report.", "outcome");
+    if (toReporter && !note.trim()) return problem.fail("Write the note the reporter will see.", "note");
     setBusy(true);
     const r = await complaintAction(c.id, {
       action: "status",
@@ -359,7 +374,7 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
     });
     setBusy(false);
     if (isStepUp(r)) return askStepUp(() => void submit());
-    if (!r.ok) return setError(r.message);
+    if (!r.ok) return problem.fail(r.message);
     await onChanged(`${c.publicRef} is now ${label(to).toLowerCase()}.`);
   };
 
@@ -367,7 +382,11 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
     <form className="grid max-w-xl gap-3 border-t border-border pt-4 dark:border-night-border" onSubmit={(e) => void submit(e)} aria-label="Change the status" data-testid="complaint-status-form">
       <h3 className="text-sm font-semibold">Change the status</h3>
       <Field label="New status">
-        <select className={inputCls} value={to} onChange={(e) => setTo(e.target.value as ComplaintStatus)} data-testid="complaint-to">
+        <select className={inputCls} value={to} onChange={(e) => {
+            // The outcome field comes and goes with the status: an old problem must not come back with it.
+            problem.clear();
+            setTo(e.target.value as ComplaintStatus);
+          }} data-testid="complaint-to">
           {options.map((s) => (
             <option key={s} value={s}>
               {STATUS_LABELS[s]}
@@ -376,7 +395,7 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
         </select>
       </Field>
       {to === "closed" ? (
-        <Field label="Outcome" hint="Neutral wording; the reporter sees it.">
+        <Field label="Outcome" hint="Neutral wording; the reporter sees it." error={problem.errorFor("outcome")} errorTestId="complaint-form-error">
           <select className={inputCls} value={outcome} onChange={(e) => setOutcome(e.target.value as OutcomeCode)} data-testid="complaint-outcome">
             <option value="">Choose…</option>
             {OUTCOME_CODES.map((o) => (
@@ -387,16 +406,16 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
           </select>
         </Field>
       ) : null}
-      <Field label="Note (optional)">
+      <Field label={toReporter ? "Note (required when shown to the reporter)" : "Note (optional)"} error={problem.errorFor("note")} errorTestId="complaint-form-error">
         <textarea className={inputCls} rows={3} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} data-testid="complaint-note" />
       </Field>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={toReporter} onChange={(e) => setToReporter(e.target.checked)} data-testid="complaint-note-reporter" />
         Show this note to the reporter (otherwise reviewers only)
       </label>
-      {error ? <ErrorNote testId="complaint-form-error">{error}</ErrorNote> : null}
+      {problem.general ? <ErrorNote testId="complaint-form-error">{problem.general}</ErrorNote> : null}
       <div>
-        <button type="submit" className={btnPrimary} disabled={busy} data-testid="complaint-submit">
+        <button type="submit" className={btnPrimary} aria-disabled={busy} data-testid="complaint-submit">
           {busy ? "Saving…" : "Save the status"}
         </button>
       </div>
@@ -406,29 +425,30 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
 
 function HoldForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp: (retry: () => void) => void; onChanged: (text: string) => Promise<void> }) {
   const [note, setNote] = useState("");
-  const [error, setError] = useState("");
+  const problem = useFormProblem();
   const [busy, setBusy] = useState(false);
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    setError("");
-    if (note.trim().length < 3) return setError("Say why (at least 3 characters).");
+    if (busy) return;
+    problem.clear();
+    if (note.trim().length < 3) return problem.fail("Say why (at least 3 characters).", "reason");
     setBusy(true);
     const r = await complaintAction(c.id, { action: "legal_hold", hold: !c.legalHold, note: note.trim() });
     setBusy(false);
     if (isStepUp(r)) return askStepUp(() => void submit());
-    if (!r.ok) return setError(r.message);
+    if (!r.ok) return problem.fail(r.message);
     await onChanged(c.legalHold ? `Legal hold lifted on ${c.publicRef}.` : `${c.publicRef} is on legal hold and will not be purged.`);
   };
   return (
     <form className="grid max-w-xl gap-3 border-t border-border pt-4 dark:border-night-border" onSubmit={(e) => void submit(e)} aria-label="Legal hold" data-testid="complaint-hold-form">
       <h3 className="text-sm font-semibold">Legal hold</h3>
       <Muted>{c.legalHold ? "This report is on legal hold: the retention purge skips it." : "A legal hold stops the retention purge (for example, a request from the authorities)."}</Muted>
-      <Field label="Reason (reviewers only)">
+      <Field label="Reason (reviewers only)" hint="At least 3 characters." error={problem.errorFor("reason")}>
         <input className={inputCls} value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} data-testid="complaint-hold-note" />
       </Field>
-      {error ? <ErrorNote>{error}</ErrorNote> : null}
+      {problem.general ? <ErrorNote>{problem.general}</ErrorNote> : null}
       <div>
-        <button type="submit" className={btnSecondary} disabled={busy} aria-busy={busy} data-testid="complaint-hold">
+        <button type="submit" className={btnSecondary} aria-disabled={busy} aria-busy={busy} data-testid="complaint-hold">
           {c.legalHold ? "Lift the legal hold" : "Put on legal hold"}
         </button>
       </div>

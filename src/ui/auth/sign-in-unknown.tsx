@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
 import { useT } from "@/i18n/provider";
 
 // The screen's own classes: report.css on the report screens, community.css on the community ones.
@@ -10,7 +11,7 @@ const LOOK = {
 
 /**
  * The sign-in check got no answer (offline, server error): offer to check again, never "sign in".
- * While a retry runs (`busy`) the button is off and the status line says so; a retry that fails
+ * While a retry runs (`busy`) the button does nothing and the status line says so; a retry that fails
  * again puts the message back, so the result is announced.
  */
 export function SignInUnknown({
@@ -26,12 +27,32 @@ export function SignInUnknown({
 }) {
   const tt = useT();
   const c = LOOK[look];
+  const box = useRef<HTMLDivElement>(null);
+
+  // An answer takes this box away, with the button that has focus: go to the nearest heading left.
+  useLayoutEffect(() => {
+    const el = box.current;
+    return () => {
+      if (!el?.contains(document.activeElement)) return;
+      const headings: HTMLElement[] = [];
+      for (let up = el.parentElement; up; up = up.parentElement) {
+        headings.push(...up.querySelectorAll<HTMLElement>('h1[tabindex="-1"], h2[tabindex="-1"], h3[tabindex="-1"]'));
+      }
+      queueMicrotask(() => {
+        for (const h of headings) {
+          if (document.activeElement && document.activeElement !== document.body) return;
+          if (h.isConnected) h.focus();
+        }
+      });
+    };
+  }, []);
+
   return (
-    <div className={c.box} data-testid={testId}>
+    <div ref={box} className={c.box} data-testid={testId}>
       <p className={c.text} role="status">
         {busy ? tt.settings.checking : tt.forms.signInUnknown}
       </p>
-      <button type="button" className={`pn-btn pn-btn--secondary ${c.action}`} onClick={onRetry} disabled={busy} aria-busy={busy}>
+      <button type="button" className={`pn-btn pn-btn--secondary ${c.action}`} onClick={busy ? undefined : onRetry} aria-disabled={busy || undefined} aria-busy={busy}>
         {tt.forms.tryAgain}
       </button>
     </div>

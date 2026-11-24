@@ -54,7 +54,7 @@
   padding: 0 18px;
   font-size: 15px;
 }
-.pn-saved__sync-btn:disabled {
+.pn-saved__sync-btn[aria-disabled="true"] {
   opacity: 0.4;
   cursor: default;
 }

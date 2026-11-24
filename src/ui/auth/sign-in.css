@@ -82,8 +82,12 @@
   outline-offset: 2px;
 }
 
-.pn-signin__input:disabled {
+.pn-signin__input:read-only {
   opacity: 0.6;
+}
+
+.pn-signin__input[aria-invalid="true"] {
+  border-color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
 }
 
 /* The form's buttons follow their label's height (Filipino at large text wraps inside the pill). */
@@ -95,7 +99,7 @@
   text-align: center;
 }
 
-.pn-signin .pn-btn:disabled {
+.pn-signin .pn-btn[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -155,9 +159,14 @@
   transform: scale(0.97);
 }
 
-.pn-signin__google-btn:disabled {
+.pn-signin__google-btn[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Empty, the status line takes no room in the card (it stays in the page for screen readers). */
+.pn-signin__live:empty {
+  position: absolute;
 }
 
 /* The form's message: what happened and what to do, above the field it is about. */

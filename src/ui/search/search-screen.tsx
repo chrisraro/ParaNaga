@@ -37,6 +37,7 @@ import { NearbyStops } from "@/ui/home/nearby-stops";
 import { StatusBadge } from "@/ui/kit/badge";
 import { ListChevron } from "@/ui/kit/list";
 import { Note } from "@/ui/kit/note";
+import { Live } from "@/ui/report/form-a11y";
 import { Switch } from "@/ui/kit/switch";
 import { SavePlaceDialog } from "@/ui/saved/save-place-dialog";
 import { GoogleSuggestions } from "./google-suggestions";
@@ -513,7 +514,13 @@ function SearchBody({
     else router.push("/app/saved?tab=places");
   };
 
-  const liveText = !hasQuery || !index ? "" : total === 1 ? t.resultOne : t.resultMany(total);
+  // "0 results" is not said while more places are still loading: they may hold the match.
+  const liveText = !hasQuery || !index || (total === 0 && morePlaces === "loading") ? "" : total === 1 ? t.resultOne : t.resultMany(total);
+  // Retry goes away with its error: focus returns to the search box.
+  const retry = () => {
+    indexState.retry();
+    input.current?.focus();
+  };
   const date = index ? publishedDate(index.revision.publishedAt) : null;
   const nearby = frame?.nearbyStops;
 
@@ -611,10 +618,10 @@ function SearchBody({
 
         {indexState.status === "loading" ? <SkeletonRows /> : null}
         {indexState.status === "error" ? (
-          <div className="pn-search__error" data-testid="search-error">
+          <div className="pn-search__error" role="alert" data-testid="search-error">
             <WarnIcon />
             <p>{indexState.problem === "offline" ? t.needsConnection : t.failed}</p>
-            <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
+            <button type="button" className="pn-btn pn-btn--secondary" onClick={retry}>
               {tt.trip.tryAgain}
             </button>
           </div>
@@ -625,20 +632,18 @@ function SearchBody({
           </Note>
         ) : null}
         {indexState.status === "ready" && indexState.problem === "failed" ? (
-          <div className="pn-search__error" data-testid="search-failed">
+          <div className="pn-search__error" role="alert" data-testid="search-failed">
             <WarnIcon />
             <p>{t.failed}</p>
-            <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
+            <button type="button" className="pn-btn pn-btn--secondary" onClick={retry}>
               {tt.trip.tryAgain}
             </button>
           </div>
         ) : null}
 
-        {alreadySaved && alreadySaved.query === debounced ? (
-          <p className="pn-search__already" role="status" data-testid="search-already-saved">
-            {t.alreadySavedAs(alreadySaved.label)}
-          </p>
-        ) : null}
+        <Live className="pn-search__already" data-testid="search-already-saved">
+          {alreadySaved && alreadySaved.query === debounced ? t.alreadySavedAs(alreadySaved.label) : null}
+        </Live>
         {openNotice ? (
           <NoticeCard
             result={openNotice}
@@ -677,10 +682,10 @@ function SearchBody({
           </p>
         ) : null}
         {index && hasQuery && morePlaces === "failed" ? (
-          <div className="pn-search__error" data-testid="search-more-failed">
+          <div className="pn-search__error" role="alert" data-testid="search-more-failed">
             <WarnIcon />
             <p>{t.moreFailed}</p>
-            <button type="button" className="pn-btn pn-btn--secondary" onClick={indexState.retry}>
+            <button type="button" className="pn-btn pn-btn--secondary" onClick={retry}>
               {tt.trip.tryAgain}
             </button>
           </div>

@@ -43,6 +43,7 @@ import { captureOpener } from "@/ui/kit/opener";
 import { en, translated, type Dict } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
 import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
+import { Live, updateThenFocus, useFieldError } from "@/ui/report/form-a11y";
 import { GuidelinesAck, PostBadges, SignInPrompt, StateBadge, useFormatDate } from "./parts";
 
 const apiText = (message: string, current: Dict["community"]["api"]) => translated(message, en.community.api, current);
@@ -68,8 +69,14 @@ export function PostThread({ id }: { id: string }) {
   const [report, setReport] = useState<{ type: TargetType; id: string } | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ type: TargetType; id: string } | null>(null);
-  const [commentSent, setCommentSent] = useState<string | null>(null);
-  const statusRef = useRef<HTMLParagraphElement>(null);
+  // Numbered, so a second comment that ends in the same state is announced again.
+  const [commentSent, setSent] = useState<{ state: string; n: number } | null>(null);
+  const setCommentSent = (state: string) => setSent((prev) => ({ state, n: (prev?.n ?? 0) + 1 }));
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const commentsRef = useRef<HTMLHeadingElement>(null);
+  const commentSentRef = useRef<HTMLParagraphElement>(null);
+  // Set when the control in use may be gone after the next load: where focus goes then.
+  const afterLoad = useRef<(() => HTMLElement | null) | null>(null);
   const reportOpener = useRef<Element | null>(null);
 
   useEffect(() => {
@@ -77,7 +84,11 @@ export function PostThread({ id }: { id: string }) {
     let cancelled = false;
     void fetchPost(id, signedIn).then((r) => {
       if (cancelled) return;
-      setLoad(r.ok ? { status: "ready", data: r.data } : { status: "error", message: r.message, notFound: r.reason === "not_found" });
+      const next: Load = r.ok ? { status: "ready", data: r.data } : { status: "error", message: r.message, notFound: r.reason === "not_found" };
+      const target = afterLoad.current;
+      afterLoad.current = null;
+      if (target) updateThenFocus(() => setLoad(next), target);
+      else setLoad(next);
     });
     return () => {
       cancelled = true;
@@ -96,13 +107,25 @@ export function PostThread({ id }: { id: string }) {
   }, [signedIn]);
 
   const refresh = useCallback(() => setReload((n) => n + 1), []);
+  const refreshThen = (target: () => HTMLElement | null) => {
+    afterLoad.current = target;
+    refresh();
+  };
+  const closeReply = (id: string, also?: () => void) =>
+    updateThenFocus(
+      () => {
+        setReplyTo(null);
+        also?.();
+      },
+      () => (also ? commentSentRef.current : document.getElementById(`reply-${id}`)),
+    );
 
   const run = async (name: string, fn: () => Promise<{ ok: true } | { ok: false; message: string }>, after?: () => void) => {
     if (inFlight.current.has(name)) return;
     inFlight.current.add(name);
     setBusy(new Set(inFlight.current));
     setNote(null);
-    setCommentSent(null);
+    setSent(null);
     const r = await fn();
     inFlight.current.delete(name);
     setBusy(new Set(inFlight.current));
@@ -121,8 +144,12 @@ export function PostThread({ id }: { id: string }) {
       closeReport();
     } else if (replyTo) {
       e.preventDefault();
-      setReplyTo(null);
+      closeReply(replyTo);
     }
+  };
+
+  const askDelete = (type: TargetType, targetId: string) => {
+    if (!inFlight.current.has(`delete-${targetId}`)) setConfirmDelete({ type, id: targetId });
   };
 
   const openReport = (type: TargetType, targetId: string) => {
@@ -134,7 +161,7 @@ export function PostThread({ id }: { id: string }) {
     const back = reportOpener.current;
     reportOpener.current = null;
     if (back instanceof HTMLElement && back.isConnected) back.focus();
-    else statusRef.current?.focus();
+    else titleRef.current?.focus();
   };
 
   if (load.status === "loading" || authLoading) {
@@ -152,7 +179,7 @@ export function PostThread({ id }: { id: string }) {
         </p>
         <div className="pn-comm__nav">
           {load.notFound ? null : (
-            <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={refresh}>
+            <button type="button" className="pn-btn pn-btn--secondary pn-comm__action" onClick={() => refreshThen(() => titleRef.current)}>
               {tt.forms.tryAgain}
             </button>
           )}
@@ -175,7 +202,7 @@ export function PostThread({ id }: { id: string }) {
     <div className="pn-comm" onKeyDown={onKeyDown} data-testid="thread">
       <article className="pn-comm__form" aria-labelledby={`${uid}-title`}>
         <PostBadges post={post} />
-        <h2 id={`${uid}-title`} className="pn-comm__h2">
+        <h2 ref={titleRef} tabIndex={-1} id={`${uid}-title`} className="pn-comm__h2">
           {post.title}
         </h2>
         <div className="pn-comm__meta">
@@ -212,7 +239,7 @@ export function PostThread({ id }: { id: string }) {
         ) : null}
 
         {post.isOwn && post.state !== "published" ? (
-          <p ref={statusRef} tabIndex={-1} className={`pn-comm__status pn-comm__status--${post.state}`} role="status" data-testid="thread-state">
+          <p className={`pn-comm__status pn-comm__status--${post.state}`} role="status" data-testid="thread-state">
             {t.stateLine(stateLabel(post.state, t), stateHint(post.state, "post", t))}
           </p>
         ) : null}
@@ -231,7 +258,7 @@ export function PostThread({ id }: { id: string }) {
               type="button"
               className="pn-btn pn-btn--secondary pn-comm__small"
               aria-pressed={post.viewerHelpful}
-              disabled={busy.has("helpful")}
+              aria-disabled={busy.has("helpful") || undefined}
               onClick={() =>
                 void run("helpful", async () => {
                   const r = await toggleHelpful("post", post.id);
@@ -251,7 +278,7 @@ export function PostThread({ id }: { id: string }) {
               type="button"
               className="pn-btn pn-btn--secondary pn-comm__small"
               aria-pressed={post.viewerBookmarked}
-              disabled={busy.has("bookmark")}
+              aria-disabled={busy.has("bookmark") || undefined}
               onClick={() =>
                 void run("bookmark", async () => {
                   const r = await toggleSaved(post.id);
@@ -269,7 +296,7 @@ export function PostThread({ id }: { id: string }) {
               <Link href={`/app/community/${post.id}/edit`} className="pn-btn pn-btn--secondary pn-comm__small" data-testid="thread-edit">
                 {t.edit}
               </Link>
-              <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" disabled={busy.has(`delete-${post.id}`)} onClick={() => setConfirmDelete({ type: "post", id: post.id })} data-testid="thread-delete">
+              <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" aria-disabled={busy.has(`delete-${post.id}`) || undefined} onClick={() => askDelete("post", post.id)} data-testid="thread-delete">
                 {t.delete}
               </button>
             </>
@@ -283,7 +310,7 @@ export function PostThread({ id }: { id: string }) {
                 <button
                   type="button"
                   className="pn-btn pn-btn--secondary pn-comm__small"
-                  disabled={busy.has(`block-${post.id}`)}
+                  aria-disabled={busy.has(`block-${post.id}`) || undefined}
                   onClick={() =>
                     void run(`block-${post.id}`, () => blockPerson("post", post.id), () => router.replace("/app/community"))
                   }
@@ -323,7 +350,7 @@ export function PostThread({ id }: { id: string }) {
 
       {live ? (
         <section className="pn-comm__form" aria-label={t.commentsLabel} data-testid="thread-comments">
-          <h3 className="pn-comm__panel-title">{t.commentsLabel}</h3>
+          <h3 ref={commentsRef} tabIndex={-1} className="pn-comm__panel-title">{t.commentsLabel}</h3>
           {comments.length === 0 ? <p className="pn-comm__muted">{t.noComments}</p> : null}
           {comments.length > 0 ? (
             <CommentList
@@ -340,8 +367,8 @@ export function PostThread({ id }: { id: string }) {
                 })
               }
               onReport={(c) => openReport("comment", c.id)}
-              onBlock={(c) => void run(`block-${c.id}`, () => blockPerson("comment", c.id), refresh)}
-              onDelete={(c) => setConfirmDelete({ type: "comment", id: c.id })}
+              onBlock={(c) => void run(`block-${c.id}`, () => blockPerson("comment", c.id), () => refreshThen(() => commentsRef.current))}
+              onDelete={(c) => askDelete("comment", c.id)}
               report={report?.type === "comment" ? report : null}
               closeReport={closeReport}
               onAppealed={refresh}
@@ -351,26 +378,31 @@ export function PostThread({ id }: { id: string }) {
                   parentId={parentId}
                   needGuidelines={guidelinesOk === false}
                   onSent={(state) => {
-                    setReplyTo(null);
-                    setNote(null);
-                    setCommentSent(state);
+                    const show = () => {
+                      setNote(null);
+                      setCommentSent(state);
+                    };
+                    if (parentId) closeReply(parentId, show);
+                    else show();
                     refresh();
                   }}
-                  onCancel={parentId ? () => setReplyTo(null) : undefined}
+                  onCancel={parentId ? () => closeReply(parentId) : undefined}
                 />
               )}
             />
           ) : null}
 
-          {commentSent ? (
-            <p className={`pn-comm__status pn-comm__status--${commentSent}`} role="status" data-testid="comment-sent">
-              {commentSent === "pending"
-                ? t.commentPending
-                : commentSent === "rejected"
-                  ? t.commentRejected
-                  : t.commentPosted}
-            </p>
-          ) : null}
+          <Live ref={commentSentRef} tabIndex={-1} className={`pn-comm__status pn-comm__status--${commentSent?.state}`} data-testid="comment-sent">
+            {commentSent ? (
+              <span key={commentSent.n}>
+                {commentSent.state === "pending"
+                  ? t.commentPending
+                  : commentSent.state === "rejected"
+                    ? t.commentRejected
+                    : t.commentPosted}
+              </span>
+            ) : null}
+          </Live>
 
           {authStatus === "signedOut" ? <SignInPrompt text={t.signInComment} /> : null}
           {authStatus === "unknown" ? <SignInUnknown look="community" onRetry={() => void recheckAuth()} busy={recheckingAuth} /> : null}
@@ -403,7 +435,7 @@ export function PostThread({ id }: { id: string }) {
           setConfirmDelete(null);
           if (!target) return;
           if (target.type === "post") void run(`delete-${target.id}`, () => removePost(target.id), () => router.replace("/app/community"));
-          else void run(`delete-${target.id}`, () => removeComment(target.id), refresh);
+          else void run(`delete-${target.id}`, () => removeComment(target.id), () => refreshThen(() => commentsRef.current));
         }}
       >
         <p>{t.deleteBody}</p>
@@ -450,7 +482,7 @@ function CommentList(props: ListProps) {
                   type="button"
                   className="pn-btn pn-btn--secondary pn-comm__small"
                   aria-pressed={c.viewerHelpful}
-                  disabled={props.busy.has(`c-${c.id}`)}
+                  aria-disabled={props.busy.has(`c-${c.id}`) || undefined}
                   onClick={() => props.onHelpful(c)}
                 >
                   {t.helpful(c.helpfulCount)}
@@ -463,6 +495,7 @@ function CommentList(props: ListProps) {
               <button
                 type="button"
                 className="pn-btn pn-btn--secondary pn-comm__small"
+                id={`reply-${c.id}`}
                 onClick={() => props.onReply(c.id)}
                 aria-expanded={props.replyTo === c.id}
                 data-testid="comment-reply"
@@ -471,7 +504,7 @@ function CommentList(props: ListProps) {
               </button>
             ) : null}
             {c.isOwn ? (
-              <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" disabled={props.busy.has(`delete-${c.id}`)} onClick={() => props.onDelete(c)}>
+              <button type="button" className="pn-btn pn-btn--secondary pn-comm__small pn-comm__danger" aria-disabled={props.busy.has(`delete-${c.id}`) || undefined} onClick={() => props.onDelete(c)}>
                 {t.delete}
               </button>
             ) : props.signedIn && c.state === "published" ? (
@@ -481,7 +514,7 @@ function CommentList(props: ListProps) {
                   <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => props.onReport(c)}>
                     {t.report}
                   </button>
-                  <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" disabled={props.busy.has(`block-${c.id}`)} onClick={() => props.onBlock(c)}>
+                  <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" aria-disabled={props.busy.has(`block-${c.id}`) || undefined} onClick={() => props.onBlock(c)}>
                     {t.block}
                   </button>
                 </div>
@@ -515,20 +548,24 @@ function CommentComposer({
   const uid = useId();
   const [text, setText] = useState("");
   const [ack, setAck] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { error, errorProps, fail, clear, edited, field: fieldProps } = useFieldError();
   const [sending, setSending] = useState(false);
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
   const field = useRef<HTMLTextAreaElement>(null);
+  const textId = `${uid}-c`;
+  const ackId = `${uid}-ack`;
 
   useEffect(() => {
     if (parentId) field.current?.focus();
   }, [parentId]);
 
   const send = async () => {
-    const problem = validateComment(text, tt) ?? (needGuidelines && !ack ? t.tickGuidelines : null);
-    if (problem) return setError(problem);
+    if (sending) return;
+    const problem = validateComment(text, tt);
+    if (problem) return fail(problem, textId);
+    if (needGuidelines && !ack) return fail(t.tickGuidelines, ackId);
     setSending(true);
-    setError(null);
+    clear();
     const r = await submitComment(postId, {
       clientRequestId: requestId,
       body: text.trim(),
@@ -536,7 +573,7 @@ function CommentComposer({
       guidelinesAccepted: needGuidelines ? ack : true,
     });
     setSending(false);
-    if (!r.ok) return setError(apiText(r.message, t.api));
+    if (!r.ok) return fail(apiText(r.message, t.api));
     setText("");
     setRequestId(crypto.randomUUID());
     onSent(r.data.comment.state);
@@ -545,30 +582,33 @@ function CommentComposer({
   return (
     <div className="pn-comm__form">
       <div className="pn-comm__field">
-        <label htmlFor={`${uid}-c`} className="pn-comm__label">
+        <label htmlFor={textId} className="pn-comm__label">
           {parentId ? t.yourReply : t.yourComment}
         </label>
         <textarea
           ref={field}
-          id={`${uid}-c`}
+          {...fieldProps(textId)}
           className="pn-comm__input pn-comm__textarea"
           rows={3}
           maxLength={COMMENT_MAX}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            edited(textId);
+          }}
         />
         <span className="pn-comm__count">
           {tt.forms.count(text.trim().length, COMMENT_MAX)}
         </span>
       </div>
-      {needGuidelines ? <GuidelinesAck id={`${uid}-g`} checked={ack} onChange={setAck} /> : null}
+      {needGuidelines ? <GuidelinesAck id={`${uid}-g`} checked={ack} field={fieldProps(ackId)} onChange={(v) => { setAck(v); edited(ackId); }} /> : null}
       {error ? (
-        <p className="pn-comm__error" role="alert">
+        <p {...errorProps} className="pn-comm__error">
           {error}
         </p>
       ) : null}
       <div className="pn-comm__row">
-        <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} disabled={sending} data-testid="comment-send">
+        <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} aria-disabled={sending || undefined} data-testid="comment-send">
           {sending ? tt.forms.sending : parentId ? t.sendReply : t.sendComment}
         </button>
         {onCancel ? (
@@ -587,10 +627,12 @@ function ReportForm({ target, onDone }: { target: { type: TargetType; id: string
   const uid = useId();
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [noteText, setNoteText] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { error, errorProps, fail, clear, edited, field: fieldProps } = useFieldError();
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const first = useRef<HTMLInputElement>(null);
+  const doneRef = useRef<HTMLParagraphElement>(null);
+  const reasonId = `${uid}-reasons`;
 
   useEffect(() => {
     first.current?.focus();
@@ -599,7 +641,7 @@ function ReportForm({ target, onDone }: { target: { type: TargetType; id: string
   if (done) {
     return (
       <div className="pn-comm__panel" data-testid="report-done">
-        <p className="pn-comm__status" role="status">
+        <p ref={doneRef} tabIndex={-1} className="pn-comm__status" role="status">
           {t.reportDone}
         </p>
         <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={onDone}>
@@ -610,22 +652,23 @@ function ReportForm({ target, onDone }: { target: { type: TargetType; id: string
   }
 
   const send = async () => {
-    if (!reason) return setError(t.chooseReason);
+    if (sending) return;
+    if (!reason) return fail(t.chooseReason, reasonId);
     setSending(true);
-    setError(null);
+    clear();
     const r = await reportPost(target.type, target.id, reason, noteText.trim() || undefined);
     setSending(false);
-    if (r.ok) setDone(true);
-    else setError(apiText(r.message, t.api));
+    if (r.ok) updateThenFocus(() => setDone(true), () => doneRef.current);
+    else fail(apiText(r.message, t.api));
   };
 
   return (
     <fieldset className="pn-comm__panel" data-testid="report-form">
       <legend className="pn-comm__panel-title">{target.type === "post" ? t.reportPost : t.reportComment}</legend>
-      <div role="radiogroup" aria-label={t.reason}>
+      <div role="radiogroup" aria-label={t.reason} {...fieldProps(reasonId)}>
         {reportReasonsIn(t).map((r, i) => (
           <label key={r.value} className="pn-comm__option">
-            <input ref={i === 0 ? first : undefined} type="radio" name={`${uid}-reason`} value={r.value} checked={reason === r.value} onChange={() => { setReason(r.value); setError(null); }} />
+            <input ref={i === 0 ? first : undefined} type="radio" name={`${uid}-reason`} value={r.value} checked={reason === r.value} onChange={() => { setReason(r.value); edited(reasonId); }} />
             <span className="pn-comm__option-label">{r.label}</span>
           </label>
         ))}
@@ -637,12 +680,12 @@ function ReportForm({ target, onDone }: { target: { type: TargetType; id: string
         <textarea id={`${uid}-note`} className="pn-comm__input pn-comm__textarea" rows={2} maxLength={NOTE_MAX} value={noteText} onChange={(e) => setNoteText(e.target.value)} />
       </div>
       {error ? (
-        <p className="pn-comm__error" role="alert">
+        <p {...errorProps} className="pn-comm__error">
           {error}
         </p>
       ) : null}
       <div className="pn-comm__row">
-        <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} disabled={sending} data-testid="report-send">
+        <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} aria-disabled={sending || undefined} data-testid="report-send">
           {sending ? tt.forms.sending : t.sendReport}
         </button>
         <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={onDone}>
@@ -663,13 +706,16 @@ function AppealBox({ targetType, targetId, appeal, onSent }: { targetType: Appea
   const uid = useId();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { error, errorProps, fail, clear, edited, field: fieldProps } = useFieldError();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const noteId = `${uid}-a`;
+  const stateRef = useRef<HTMLParagraphElement>(null);
+  const openRef = useRef<HTMLButtonElement>(null);
 
   if (appeal || sent) {
     return (
-      <p className="pn-comm__status" role="status" data-testid="appeal-state">
+      <p ref={stateRef} tabIndex={-1} className="pn-comm__status" role="status" data-testid="appeal-state">
         {sent && !appeal ? t.appeal.sent : t.appeal.states[appeal ?? "open"]}
       </p>
     );
@@ -677,53 +723,56 @@ function AppealBox({ targetType, targetId, appeal, onSent }: { targetType: Appea
   if (!open) {
     return (
       <div className="pn-comm__row">
-        <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => setOpen(true)} data-testid="appeal-open">
+        <button ref={openRef} type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => updateThenFocus(() => setOpen(true), () => document.getElementById(noteId))} data-testid="appeal-open">
           {t.appeal.ask}
         </button>
       </div>
     );
   }
   const send = async () => {
+    if (sending) return;
     const n = text.trim().length;
-    if (n < APPEAL_NOTE_MIN) return setError(tt.forms.minChars(APPEAL_NOTE_MIN));
+    if (n < APPEAL_NOTE_MIN) return fail(tt.forms.minChars(APPEAL_NOTE_MIN), noteId);
     setSending(true);
-    setError(null);
+    clear();
     const r = await submitAppeal({ targetType, targetId, note: text.trim() });
     setSending(false);
     if (r.ok) {
-      setSent(true);
+      updateThenFocus(() => setSent(true), () => stateRef.current);
       onSent();
-    } else setError(r.reason === "conflict" ? t.appeal.already : r.reason === "failed" ? t.appeal.failed : apiText(r.message, t.api));
+    } else fail(r.reason === "conflict" ? t.appeal.already : r.reason === "failed" ? t.appeal.failed : apiText(r.message, t.api));
   };
   return (
     <div className="pn-comm__panel" data-testid="appeal-form">
       <div className="pn-comm__field">
-        <label htmlFor={`${uid}-a`} className="pn-comm__label">
+        <label htmlFor={noteId} className="pn-comm__label">
           {t.appeal.noteLabel}
         </label>
         <textarea
-          id={`${uid}-a`}
+          {...fieldProps(noteId, `${uid}-ah`)}
           className="pn-comm__input pn-comm__textarea"
           rows={3}
           maxLength={APPEAL_NOTE_MAX}
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          aria-describedby={`${uid}-ah`}
+          onChange={(e) => {
+            setText(e.target.value);
+            edited(noteId);
+          }}
         />
         <span id={`${uid}-ah`} className="pn-comm__hint">
           {t.appeal.noteHint(APPEAL_NOTE_MIN)}
         </span>
       </div>
       {error ? (
-        <p className="pn-comm__error" role="alert">
+        <p {...errorProps} className="pn-comm__error">
           {error}
         </p>
       ) : null}
       <div className="pn-comm__row">
-        <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} disabled={sending} data-testid="appeal-send">
+        <button type="button" className="pn-btn pn-btn--primary pn-comm__small" onClick={() => void send()} aria-disabled={sending || undefined} data-testid="appeal-send">
           {sending ? tt.forms.sending : t.appeal.send}
         </button>
-        <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => setOpen(false)}>
+        <button type="button" className="pn-btn pn-btn--secondary pn-comm__small" onClick={() => updateThenFocus(() => setOpen(false), () => openRef.current)}>
           {t.appeal.cancel}
         </button>
       </div>

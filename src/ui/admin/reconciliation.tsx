@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { decidePair, fetchReconciliation, type AdminResult } from "@/client/admin/api";
 import { label, PIN_MISMATCH_M, type Reconciliation } from "@/domain/admin/stops";
-import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, OkNote, PageTitle, Panel, when, Empty, insetCls, Loading } from "./parts";
+import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, insetCls, Loading, type Notice } from "./parts";
 
 // A7 Reconciliation (N5b, C3). Stops of the open draft within 15 m of each other: never merged
 // automatically; a reviewer links them (one kept, the other retired, its pins added to the kept
@@ -18,7 +18,7 @@ const who = (s: Pair["a"]) => `${s.layer?.replace(/^Loop Service /, "") ?? ""} $
 export function ReconciliationScreen() {
   const [state, setState] = useState<AdminResult<Reconciliation> | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [notice, setNotice] = useState<Notice>(null);
 
   const load = useCallback(async () => setState(await fetchReconciliation()), []);
   useEffect(() => {
@@ -54,7 +54,11 @@ export function ReconciliationScreen() {
       <PageTitle lead="Stops within 15 m of each other, from the same or different layers. Nothing is merged automatically: link two pins that are one stop, or keep them separate. Decisions go into the open draft.">
         Reconciliation
       </PageTitle>
-      {notice ? <div className="mb-4">{notice.ok ? <OkNote testId="reconcile-notice">{notice.text}</OkNote> : <ErrorNote testId="reconcile-notice">{notice.text}</ErrorNote>}</div> : null}
+      {notice ? (
+        <div className="mb-4">
+          <ResultNotice notice={notice} testId="reconcile-notice" />
+        </div>
+      ) : null}
       {state === null ? (
         <Loading />
       ) : !state.ok ? (

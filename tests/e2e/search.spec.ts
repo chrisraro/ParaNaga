@@ -70,6 +70,17 @@ async function expectAxeClean(page: Page) {
   expect(serious, serious.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`).join("\n")).toEqual([]);
 }
 
+
+test("a search load failure is announced as an alert, once", async ({ page }) => {
+  await page.route(/\/api\/v1\/network\/search-index\/[^/?]+$/, (route) => route.fulfill({ status: 500, body: "" }));
+  await page.goto("/app/search");
+  const failure = page.getByTestId("search-error");
+  await expect(failure).toBeVisible();
+  await expect(failure).toHaveAttribute("role", "alert");
+  // Next's route announcer is also an alert, so count only the page's own.
+  await expect(page.locator(".pn-search__error[role='alert']")).toHaveCount(1);
+});
+
 test("search sets the start and the destination; the map announces, recentres and plans", async ({ page }, testInfo) => {
   const { plans } = (testInfo as unknown as { seen: Seen }).seen;
   await openApp(page);

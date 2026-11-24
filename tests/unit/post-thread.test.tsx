@@ -59,6 +59,8 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+// aria-disabled, never disabled: the button keeps focus while its request runs.
+const off = (el: HTMLElement) => el.getAttribute("aria-disabled") === "true" && !(el as HTMLButtonElement).disabled;
 const helpful = () => screen.getByTestId("thread-helpful") as HTMLButtonElement;
 const bookmark = () => screen.getByTestId("thread-bookmark") as HTMLButtonElement;
 
@@ -73,18 +75,18 @@ describe("post thread actions", () => {
 
     fireEvent.click(helpful());
     fireEvent.click(bookmark());
-    expect(helpful().disabled).toBe(true);
-    expect(bookmark().disabled).toBe(true);
+    expect(off(helpful())).toBe(true);
+    expect(off(bookmark())).toBe(true);
 
     // The first answer leaves the second action busy; the second answer does not undo the first.
     await act(async () => h.resolve({ ok: true, data: { active: true, count: 4 } }));
-    expect(helpful().disabled).toBe(false);
-    expect(bookmark().disabled).toBe(true);
+    expect(off(helpful())).toBe(false);
+    expect(off(bookmark())).toBe(true);
     await act(async () => b.resolve({ ok: true, data: { active: true, count: null } }));
     expect(helpful().getAttribute("aria-pressed")).toBe("true");
     expect(helpful().textContent).toContain("4");
     expect(bookmark().getAttribute("aria-pressed")).toBe("true");
-    expect(bookmark().disabled).toBe(false);
+    expect(off(bookmark())).toBe(false);
   });
 
   it("Block is sent once however often it is tapped, and is off while it runs", async () => {
@@ -95,10 +97,10 @@ describe("post thread actions", () => {
     fireEvent.click(block);
     fireEvent.click(block);
     expect(api.blockPerson).toHaveBeenCalledTimes(1);
-    expect(block.disabled).toBe(true);
+    expect(off(block)).toBe(true);
     // A failure shows its message; the next action clears it.
     await act(async () => pending.resolve({ ok: false, message: "Could not block. Try again." }));
-    expect(block.disabled).toBe(false);
+    expect(off(block)).toBe(false);
     expect(screen.getByRole("alert").textContent).toBe("Could not block. Try again.");
     api.toggleSaved.mockReturnValue(deferred<Toggle>().promise);
     fireEvent.click(bookmark());
@@ -117,12 +119,49 @@ describe("post thread actions", () => {
     // While the retry runs: the button is off and the status line says so.
     auth.current = { ...auth.current, refreshing: true };
     view.rerender(<PostThread id={POST_ID} />);
-    expect((screen.getByRole("button", { name: "Try again" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(off(screen.getByRole("button", { name: "Try again" }))).toBe(true);
     expect(box.querySelector('[role="status"]')!.textContent).toBe("Checking…");
 
     auth.current = { ...auth.current, status: "signedOut", refreshing: false };
     view.rerender(<PostThread id={POST_ID} />);
     expect(screen.getByTestId("community-signin")).toBeTruthy();
     expect(screen.queryByTestId("signin-unknown")).toBeNull();
+  });
+
+  it("ties a comment error to its field, and Cancel on a reply returns to its Reply button", async () => {
+    render(<PostThread id={POST_ID} />);
+    fireEvent.click(await screen.findByTestId("comment-send"));
+    const field = screen.getByLabelText("Your comment");
+    expect(document.activeElement).toBe(field);
+    expect(field.getAttribute("aria-invalid")).toBe("true");
+    expect(document.getElementById(field.getAttribute("aria-describedby")!)!.textContent).toBeTruthy();
+    // Read as the focused field's description, so not also an alert.
+    expect(screen.queryByRole("alert")).toBeNull();
+    fireEvent.change(field, { target: { value: "Hello" } });
+    expect(field.getAttribute("aria-invalid")).toBe("false");
+    expect(screen.queryByRole("alert")).toBeNull();
+
+    fireEvent.click(screen.getByTestId("comment-reply"));
+    const reply = screen.getByLabelText("Your reply");
+    expect(document.activeElement).toBe(reply);
+    reply.focus();
+    screen.getByRole("button", { name: "Cancel" }).focus();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(document.activeElement).toBe(screen.getByTestId("comment-reply"));
+  });
+
+  it("a sent report moves focus to its result", async () => {
+    api.reportPost.mockResolvedValue({ ok: true });
+    render(<PostThread id={POST_ID} />);
+    fireEvent.click(await screen.findByTestId("thread-report"));
+    const send = screen.getByTestId("report-send");
+    fireEvent.click(send);
+    expect(document.activeElement).toBe(screen.getAllByRole("radio")[0]);
+    expect(screen.getByRole("radiogroup").getAttribute("aria-invalid")).toBe("true");
+    fireEvent.click(screen.getAllByRole("radio")[0]!);
+    expect(screen.getByRole("radiogroup").getAttribute("aria-invalid")).toBe("false");
+    send.focus();
+    await act(async () => fireEvent.click(send));
+    expect(document.activeElement).toBe(screen.getByText(/Report sent/));
   });
 });
