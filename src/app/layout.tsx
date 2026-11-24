@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { DocumentPrefs } from "@/ui/theme/document-prefs";
 import { PwaRoot } from "@/ui/pwa/pwa-root";
 import { LocaleProvider } from "@/i18n/provider";
+import { SITE_URL } from "@/ui/landing/site-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,6 +23,10 @@ export const metadata: Metadata = {
   },
   description:
     "Where to wait, which jeepney to take, where to transfer and when to say Para! Step-by-step commuting in Naga City, Camarines Sur.",
+  metadataBase: new URL(SITE_URL),
+  // Titles and descriptions come from each page; the image is src/app/opengraph-image.png.
+  openGraph: { type: "website", siteName: "Lunad", locale: "en_PH" },
+  twitter: { card: "summary_large_image" },
   applicationName: "Lunad",
   appleWebApp: { title: "Lunad" },
 };

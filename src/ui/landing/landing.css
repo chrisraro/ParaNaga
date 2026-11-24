@@ -635,7 +635,6 @@
   gap: 16px;
   width: 100%;
   min-height: 60px;
-  /* The side padding leaves room for the icon's corners when it turns. */
   padding: 10px 4px 10px 0;
   text-align: left;
   font-size: 1.1875rem;
@@ -646,17 +645,16 @@
   transition: color 200ms;
 }
 .pnl-show__item button:hover,
-.pnl-show__item button[aria-expanded="true"] {
+.pnl-show__item button[aria-pressed="true"] {
   color: var(--pnl-ink);
 }
 .pnl-show__item button svg {
   flex-shrink: 0;
   color: var(--pnl-ink3);
-  transition: transform 220ms var(--pnl-ease);
 }
-.pnl-show__item button[aria-expanded="true"] svg {
-  transform: rotate(45deg);
-  color: var(--pnl-accent);
+/* One step is always chosen and pressing it again does nothing, so it shows no open or close icon. */
+.pnl-show__item button[aria-pressed="true"] svg {
+  visibility: hidden;
 }
 .pnl-show__panel:not([hidden]) {
   display: grid;

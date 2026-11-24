@@ -1399,8 +1399,8 @@ export const fil: Dict = {
         body: "Sakop ng paghahanap ang bawat lugar na may pangalan sa OpenStreetMap, pati mga hintuan at ruta. Kapag kulang ang resulta, dinadagdagan ito ng mga mungkahi ng Google, bawat isa may label na di pa kumpirmado.",
       },
       directions: {
-        title: "Tingnan ang sakay sa mapa ng kalye.",
-        body: "Plaza Rizal papunta sa Camarines Sur National High School: ang lakad at ang jeep na iginuhit sa mapa ng kalye, at ang dalawang pinakamainam na opsyon sa ilalim nito, ang Inirerekomendang jeep at isang tricycle.",
+        title: "Tingnan ang sakay sa mapa.",
+        body: "Plaza Rizal papunta sa Camarines Sur National High School: ang lakad at ang jeep na iginuhit sa mapa, at ang dalawang pinakamainam na opsyon sa ilalim nito, ang Inirerekomendang jeep at isang tricycle.",
       },
       options: {
         title: "Ihambing ang lahat ng paraan.",
@@ -1544,6 +1544,21 @@ export const fil: Dict = {
       far: "Mga opsyon sa biyahe papunta sa Pacol Barangay Hall: tala na Local report na special-trip ang singil ng mga tricycle papunta sa Pacol, at isang Recommended na Centro-Pacol na jeep na may markang Unverified route at tinatayang pasaheng ₱18 hanggang ₱20.",
       report: "Mag-ulat ng pagwawasto, hakbang 1 ng 3: mga pagpipilian gaya ng Wrong curb side, Stop moved or removed at Fare mismatch.",
     },
+  },
+  // The large-screen gate (N8 draft; still needs a native Naga speaker).
+  gate: {
+    back: "Bumalik sa website",
+    detected: "Malaki ang screen na gamit mo",
+    title: "Kasama mo ang Lunad sa bulsa.",
+    body: "Ginagabayan ka ng app sa kalye gamit ang lokasyon mo, ang mapa at mga kontrol na pang-isang kamay, kaya sa mga phone at maliliit na tablet lang ito bumubukas. I-scan ang code para magpatuloy sa phone mo.",
+    steps: { camera: "Buksan ang camera ng phone mo", scan: "Itutok ito sa code at i-tap ang link", home: "I-add sa Home Screen para isang tap na lang" },
+    linkLabel: "Link ng app",
+    copy: "Kopyahin ang link",
+    copied: "Nakopya na",
+    copiedStatus: "Nakopya ang link",
+    copyFailed: "Hindi makopya. Piliin ang link at ikaw ang kumopya.",
+    note: "Naka-tablet o makitid ang window mo? Kusang bubukas ang Lunad kapag kasinlaki na ng phone o maliit na tablet ang screen.",
+    loading: "Naglo-load ang Lunad",
   },
   // P3 screens (T13 draft, opus-reviewed; review:true rows in docs/i18n/ledger-fil.json still need a
   // native Naga speaker, above all privacy, evidence and moderation text, which must keep its exact meaning).

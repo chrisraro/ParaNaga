@@ -11,18 +11,18 @@ const FILE: Partial<Record<Screen, Screen>> = { directions: "hero" };
 
 /**
  * One app capture in both themes. Only the one for the page's theme is displayed (landing.css), and
- * a lazy image that is not displayed is never fetched, so each viewer downloads one of the two. An
- * eager capture keeps its dark copy lazy for the same reason (it still loads at once when shown).
+ * a lazy image that is not displayed is never fetched, so each viewer downloads one of the two. The
+ * hero's is also preloaded at high priority (landing-page.tsx), for the theme that shows.
  */
-export function Shot({ screen, eager = false, decorative = false }: { screen: Screen; eager?: boolean; decorative?: boolean }) {
+export function Shot({ screen, decorative = false }: { screen: Screen; decorative?: boolean }) {
   const alt = useT().landing.alt;
   const text = decorative ? "" : alt[screen];
   const file = FILE[screen] ?? screen;
-  const common = { width: SHOT_W, height: SHOT_H, decoding: "async" as const };
+  const common = { width: SHOT_W, height: SHOT_H, loading: "lazy" as const, decoding: "async" as const };
   return (
     <>
-      <img {...common} loading={eager ? "eager" : "lazy"} src={`/landing/${file}-light.webp`} alt={text} className="pnl-shot pnl-shot--light" fetchPriority={eager ? "high" : undefined} />
-      <img {...common} loading="lazy" src={`/landing/${file}-dark.webp`} alt={text} className="pnl-shot pnl-shot--dark" />
+      <img {...common} src={`/landing/${file}-light.webp`} alt={text} className="pnl-shot pnl-shot--light" />
+      <img {...common} src={`/landing/${file}-dark.webp`} alt={text} className="pnl-shot pnl-shot--dark" />
     </>
   );
 }

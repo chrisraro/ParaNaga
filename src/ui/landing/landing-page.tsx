@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type CSSProperties, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { attributionParts, currentTileConfig } from "@/client/map/tile-config";
 import { useT } from "@/i18n/provider";
 import { LunadMark, LunadWordmark } from "@/ui/brand/lunad-mark";
@@ -54,6 +55,11 @@ const ICON = {
   para: "M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
 };
 
+// The LCP candidate, for the theme that shows: theme-init.js has already set data-theme, which a media
+// query on a preload link cannot see. Runs while the HTML is parsed; on a client navigation the
+// images load by themselves (Next's "preventing flash before hydration" guide: text/plain there).
+const PRELOAD_HERO = `(function(){var t=document.documentElement.dataset.theme,l=document.createElement("link");l.rel="preload";l.as="image";l.fetchPriority="high";l.href="/landing/hero-"+(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light")+".webp";document.head.append(l)})()`;
+
 /** A phone on the page's tinted stage. */
 function Stage({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <div className={`pnl-stage ${className}`}>{children}</div>;
@@ -63,9 +69,7 @@ function Hero() {
   const t = useT().landing;
   return (
     <section id="top" aria-labelledby="hero-h" className="pnl-hero">
-      {/* The LCP candidate: React hoists these into <head>, one per colour scheme. */}
-      <link rel="preload" as="image" href="/landing/hero-light.webp" media="(prefers-color-scheme: light)" fetchPriority="high" />
-      <link rel="preload" as="image" href="/landing/hero-dark.webp" media="(prefers-color-scheme: dark)" fetchPriority="high" />
+      <script type={typeof window === "undefined" ? "text/javascript" : "text/plain"} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: PRELOAD_HERO }} />
       <div className="pnl-wrap pnl-hero__grid">
         <div className="pnl-hero__copy">
           <h1 id="hero-h">
@@ -91,7 +95,7 @@ function Hero() {
         </div>
         <Stage className="pnl-hero__stage">
           <DeviceFrame>
-            <Shot screen="hero" eager />
+            <Shot screen="hero" />
           </DeviceFrame>
         </Stage>
       </div>
@@ -141,6 +145,11 @@ function How() {
 function Showcase() {
   const t = useT().landing.showcase;
   const [open, setOpen] = useState<Screen>(SHOWCASE_SCREENS[0]);
+  // On a phone the panel that closes can sit above the one that opens: keep the pressed step on screen.
+  const show = (screen: Screen, button: HTMLButtonElement) => {
+    flushSync(() => setOpen(screen));
+    button.scrollIntoView({ block: "nearest", behavior: "instant" });
+  };
   return (
     <section aria-labelledby="show-h" className="pnl-section">
       <div className="pnl-wrap pnl-show">
@@ -153,7 +162,7 @@ function Showcase() {
             return (
               <li key={screen} className="pnl-show__item" data-on={on}>
                 <h3>
-                  <button type="button" aria-expanded={on} aria-controls={`show-${screen}`} onClick={() => setOpen(screen)}>
+                  <button type="button" aria-pressed={on} aria-controls={`show-${screen}`} onClick={(e) => show(screen, e.currentTarget)}>
                     {t[screen].title}
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
                       <path d="M8 3v10M3 8h10" />
