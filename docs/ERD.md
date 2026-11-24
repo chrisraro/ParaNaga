@@ -1,6 +1,6 @@
 # Lunad data model: ERD and audit
 
-> **Source of truth for the data model as built** (approved by the owner 2026-11-24; written by AI from the live catalog). It describes migrations 0000 to 0030: update it with every later migration. `db/migrations/` decides if they ever disagree. The audit in §3 is a snapshot of that date.
+> **Source of truth for the data model as built** (approved by the owner 2026-11-24; written by AI from the live catalog). The diagrams and appendices describe migrations 0000 to 0032; the counts and checks in §1.3 were taken at 0030 (§1.5 lists what changed since): update it with every later migration. `db/migrations/` decides if they ever disagree. The audit in §3 is a snapshot of that date.
 >
 > Date: 2026-11-24. Commit: `c5293bbdf7a515c5ad8ce2c221537d55f94eb277` (`main`) when the catalog was read; `main` moved to `9959a76` while this was written, with no change under `db/` or `src/server/`. Database: PostgreSQL 18.7, throwaway Neon branch of `main`, migrations 0000 to 0030.
 
@@ -66,7 +66,7 @@ Roles: `paranaga_app` (runtime, pooled URL), `paranaga_import` (CLI imports), `p
 | transit-fares | 4 | 48 | 5 | 3 |
 | transit-geo | 6 | 55 | 6 | 1 |
 | transit-reference | 7 | 46 | 1 | 6 |
-| community | 13 | 139 | 15 | 19 |
+| community (139 at 0030, 142 now) | 13 | 139 | 15 | 19 |
 | priv | 5 | 57 | 6 | 1 |
 | ops | 7 | 35 | 0 | 0 |
 | public | 1 | 3 | 0 | 0 |
@@ -87,6 +87,16 @@ The helper scripts lived in a temporary directory and are not committed. To repe
 3. Compare block, column and solid-line counts with the catalog, and run `mermaid.parse` on each diagram.
 
 If this document becomes the source of truth, move the dump and generator into `scripts/` (owner decision).
+
+### 1.5 Changes since the catalog was read
+
+| Migration | Changed | Closes |
+|---|---|---|
+| 0031 | Functions only: `transit.admin_publish_revision` (a draft must come from the live revision), `admin_create_draft`, `admin_open_draft` | C1 |
+| 0032 | `taken_down_at` on `post_version`, `comment`, `post_photo` (each with a CHECK); `appeal_target_uq` replaced by `appeal_target_idx` (one appeal per decision); `reaction_target_idx`, `content_report_open_target_idx`; `created_at` default `clock_timestamp()` on `moderation_decision` and `appeal`; new `community.admin_take_down`, `admin_report_queue`; `resolve_report` takes four arguments; changed `content_target`, `apply_content_outcome`, `submit_appeal`, `report_content`, `toggle_reaction`, `toggle_bookmark` | C2, C3, C4, I1, I2 |
+| code, no migration | Daily Vercel cron, queued rate-limit purge, 40P01/40001/23505 handling, saved trips with an unknown revision, storage timeouts, `schema.ts` cut to the tables in use | O1, O2, C5, F1, C6, §4.1 |
+
+App schemas now: 89 tables, 854 columns, 79 foreign keys, 83 SECURITY DEFINER functions.
 
 ## 2. Diagrams
 
@@ -1198,6 +1208,7 @@ erDiagram
     timestamptz deleted_at "null"
     timestamptz created_at
     timestamptz decided_at "null"
+    timestamptz taken_down_at "null"
   }
   community_content_report["community.content_report"] {
     uuid id PK
@@ -1302,6 +1313,7 @@ erDiagram
     text public_key "null"
     timestamptz decided_at "null"
     timestamptz created_at
+    timestamptz taken_down_at "null"
   }
   community_post_version["community.post_version"] {
     uuid id PK
@@ -1316,6 +1328,7 @@ erDiagram
     text moderation_reason "null"
     timestamptz submitted_at
     timestamptz decided_at "null"
+    timestamptz taken_down_at "null"
   }
   community_reaction["community.reaction"] {
     text user_id PK
@@ -1819,7 +1832,7 @@ Forward-only, one file each, in this order. No SQL is written yet. Numbers are t
 |---|---|---|---|
 | 0031 | Replace `admin_publish_revision` with the parent check. Decide the message and whether an override exists | C1 | Low: one function. It blocks a draft that predates a rollback, which is the point |
 | 0032 | Take-down function, audit in `resolve_report`, post-first lock order in `content_target`; `toggle_*` with `on conflict` and a locked or incremental count | C2 to C5 | Medium: moderation behaviour changes; needs RLS tests for every role |
-| 0033 | Four small indexes: reaction target, open reports by target, evidence access by complaint, decisions by date | I1 to I4 | Low: tiny tables |
+| 0033 | Two small indexes: evidence access by complaint, decisions by date (I1 and I2 are in 0032) | I3, I4 | Low: tiny tables |
 | 0034 | Narrow grants: `profile` columns, `ops.job` column, revoke three dead functions | S1 to S3 | Low: no code was found that depends on them |
 | 0035 | Role timeouts for `paranaga_app`; none for the import role | O3 | Medium: a value that is too short breaks revision validation; try it on a branch through the pooler first |
 | 0036 | Photo removal states and functions | §4.6 | Medium: touches the delete policy on `media_object` |
@@ -1936,10 +1949,12 @@ Every index that does not back a primary key or a unique constraint. All are val
 | community.appeal | `appeal_author_idx` | btree (author_id) |
 | community.appeal | `appeal_open_idx` | btree (created_at) WHERE (status = 'open') |
 | community.appeal | `appeal_resolution_idx` | btree (resolution_decision_id) |
-| community.appeal | `appeal_target_uq` | unique btree (target_type, target_id) |
+| community.appeal | `appeal_target_idx` | btree (target_type, target_id, created_at DESC) |
 | community.comment | `comment_post_idx` | btree (post_id, created_at, id) WHERE (deleted_at IS NULL) |
 | community.comment | `comment_status_idx` | btree (moderation_status, created_at) WHERE ((moderation_status = ANY (ARRAY['pending', 'human_review'])) AND (deleted_at IS NULL)) |
 | community.content_report | `content_report_open_idx` | btree (created_at) WHERE (status = 'open') |
+| community.content_report | `content_report_open_target_idx` | btree (target_type, target_id) WHERE (status = 'open') |
+| community.reaction | `reaction_target_idx` | btree (target_type, target_id) |
 | community.correction | `correction_author_idx` | btree (author_id, created_at DESC) |
 | community.correction | `correction_draft_idx` | btree (draft_revision_id) WHERE (draft_revision_id IS NOT NULL) |
 | community.correction | `correction_duplicate_idx` | btree (duplicate_of) WHERE (duplicate_of IS NOT NULL) |

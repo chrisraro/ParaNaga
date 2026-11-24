@@ -568,10 +568,15 @@ declare
   v_author text;
   v_count integer;
   v_active boolean;
+  v_had boolean;
 begin
   if v_user is null then
     raise exception 'not authenticated' using errcode = '28000';
   end if;
+  -- Read before the lock: a double tap or an overlapping retry means the same change once (C5),
+  -- not on and off again.
+  v_had := exists (select 1 from community.reaction r
+                    where r.user_id = v_user and r.target_type = p_target_type and r.target_id = p_target_id);
   if p_target_type = 'post' then
     select p.author_id into v_author from community.post p
      where p.id = p_target_id and p.deleted_at is null and p.published_version_id is not null
@@ -590,8 +595,8 @@ begin
     raise exception 'own content' using errcode = '22023';
   end if;
 
-  delete from community.reaction r where r.user_id = v_user and r.target_type = p_target_type and r.target_id = p_target_id;
-  if found then
+  if v_had then
+    delete from community.reaction r where r.user_id = v_user and r.target_type = p_target_type and r.target_id = p_target_id;
     v_active := false;
   else
     insert into community.reaction (user_id, target_type, target_id) values (v_user, p_target_type, p_target_id)
