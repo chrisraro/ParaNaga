@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { fetchImports, importCommit, importDryRun, type AdminResult } from "@/client/admin/api";
 import { IMPORT_MAX_CHARS, label, type ImportCommitResult, type ImportDryRun, type ImportFormat, type ImportList, type ImportUpload } from "@/domain/admin/stops";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, confirmInset, Loading, type Notice } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, confirmInset, Loading, type Notice, TableScroll } from "./parts";
 
 // A2 Imports (N5b, C2). Upload a My Maps export (KML, the raw authority, or the package CSV), run a
 // dry run on the server (nothing is written: the diff against the newest committed batch, the
@@ -142,6 +142,7 @@ export function ImportsScreen() {
           ) : imports.data.batches.length === 0 ? (
             <Empty title="No batches yet.">Run a dry run from the command line first; its result is listed here.</Empty>
           ) : (
+            <TableScroll label="Import batches">
             <table className="w-full text-left text-sm" data-testid="import-batches">
               <caption className="sr-only">Import batches, newest first</caption>
               <thead>
@@ -171,6 +172,7 @@ export function ImportsScreen() {
                 ))}
               </tbody>
             </table>
+            </TableScroll>
           )}
         </Panel>
       </div>
@@ -205,6 +207,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
       </ul>
 
       <h3 className="mb-1 text-sm font-semibold">Counts check</h3>
+      <TableScroll label="Counts check">
       <table className="mb-4 text-left text-sm" data-testid="import-counts">
         <caption className="sr-only">Pins per layer against the expected counts</caption>
         <thead>
@@ -231,6 +234,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
           </tr>
         </tbody>
       </table>
+      </TableScroll>
 
       {dry.problems.length > 0 ? (
         <div className="mb-4" data-testid="import-problems">
@@ -247,6 +251,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
       {dry.rows.length > 0 ? (
         <>
           <h3 className="mb-1 text-sm font-semibold">Differences</h3>
+          <TableScroll label="Differences">
           <table className="mb-4 w-full text-left text-sm" data-testid="import-rows">
             <caption className="sr-only">Added, changed and missing pins</caption>
             <thead>
@@ -275,6 +280,7 @@ function DryRun({ dry, busy, onCommit }: { dry: ImportDryRun; busy: boolean; onC
               ))}
             </tbody>
           </table>
+          </TableScroll>
         </>
       ) : null}
 

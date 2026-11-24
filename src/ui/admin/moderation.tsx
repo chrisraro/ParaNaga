@@ -13,7 +13,7 @@ import {
   type ModerationQueue,
   type ModerationReason,
 } from "@/domain/admin/moderation";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, cardCls, Loading, type Notice } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, cardCls, Loading, type Notice, TableScroll } from "./parts";
 
 // A15 Community moderation and A16 Appeals (N6, C10). Posts, comments and photos waiting for a
 // person, with Jev's typed answer as a probability (advice, never a decision). Going against it is
@@ -106,6 +106,7 @@ export function ModerationScreen() {
 
           <Panel title="Recent decisions" testId="moderation-history">
             {data?.history.length ? (
+              <TableScroll label="Recent moderation decisions">
               <table className="w-full text-left text-sm" data-testid="moderation-history-table">
                 <caption className="sr-only">The 50 most recent moderation decisions</caption>
                 <thead>
@@ -132,6 +133,7 @@ export function ModerationScreen() {
                   ))}
                 </tbody>
               </table>
+              </TableScroll>
             ) : (
               <Muted>None yet.</Muted>
             )}

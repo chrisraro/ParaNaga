@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchProviders, runJevDiagnostic, type AdminResult } from "@/client/admin/api";
 import { diagnosticBlocker, type DiagnosticResult, type Providers } from "@/domain/admin/system";
 import { label } from "@/domain/admin/stops";
-import { btnPrimary, Chip, ErrorNote, Muted, PageTitle, Panel, ResultNotice, when, Loading, type Notice } from "./parts";
+import { btnPrimary, Chip, ErrorNote, Muted, PageTitle, Panel, ResultNotice, when, Loading, type Notice, TableScroll } from "./parts";
 
 // A19 Jev & providers (N7, C12). What is configured, as yes/no: never a key, a secret or an error
 // body. Moderators and admins read it; admins can run one synthetic Decisions call (only when the
@@ -53,7 +53,7 @@ export function ProvidersScreen() {
       <PageTitle lead="Configuration as yes or no. Keys and secrets are never shown here; they live in the deployment's environment.">Jev and providers</PageTitle>
       <div className="grid gap-6">
         <Panel title="Jev (community moderation advice)" testId="providers-jev">
-          <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
+          <dl className="break-words grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
             <dt className="font-medium">API key present</dt>
             <dd data-testid="jev-key-present">{yesNo(jev.keyPresent)}</dd>
             <dt className="font-medium">Calls Jev</dt>
@@ -109,6 +109,7 @@ export function ProvidersScreen() {
         </Panel>
 
         <Panel title="Other providers" testId="providers-list">
+          <TableScroll label="Providers">
           <table className="w-full text-left text-sm">
             <caption className="sr-only">Providers and whether they are configured</caption>
             <thead>
@@ -133,6 +134,7 @@ export function ProvidersScreen() {
               ))}
             </tbody>
           </table>
+          </TableScroll>
         </Panel>
 
         <Panel title="Feature flags (database)" testId="providers-flags">

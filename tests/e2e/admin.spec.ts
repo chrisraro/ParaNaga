@@ -1007,3 +1007,59 @@ for (const scheme of ["light", "dark"] as const) {
     }
   });
 }
+
+// ================================================================ Responsive: 320px, skip link, drawer
+
+test("no admin screen scrolls the page sideways at 320px", async ({ page, context }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await signInAs(context, "commuter,admin,complaint_reviewer");
+  await mockAdminApi(page);
+  await mockStopsApi(page);
+  await mockReviewApi(page);
+  await mockN7Api(page);
+  for (const path of ADMIN_PATHS) {
+    await page.goto(path);
+    await expect(page.locator("#admin-main h1")).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    const { scrollWidth, innerWidth } = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }));
+    expect(scrollWidth, `${path} overflows ${innerWidth}px`).toBeLessThanOrEqual(innerWidth);
+  }
+  // A form opened inside a table row stays one screen wide.
+  await page.goto("/admin/reconciliation");
+  await page.getByTestId("pair-open-A1-A1").click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});
+
+test("a skip link jumps to the main content", async ({ page, context }) => {
+  await signInAs(context, "commuter,admin");
+  await mockAdminApi(page);
+  await page.goto("/admin");
+  await page.keyboard.press("Tab");
+  const skip = page.getByRole("link", { name: "Skip to main content" });
+  await expect(skip).toBeFocused();
+  await expect(skip).toBeInViewport();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#admin-main")).toBeFocused();
+});
+
+test("the drawer opens by keyboard, keeps its toggle reachable, makes the page inert and gives focus back on Escape", async ({ page, context }) => {
+  await page.setViewportSize({ width: 800, height: 700 });
+  await signInAs(context, "commuter,admin");
+  await mockAdminApi(page);
+  await page.goto("/admin");
+  const menu = page.getByRole("button", { name: "Menu" });
+  await menu.focus();
+  await page.keyboard.press("Enter");
+  await expect(menu).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#admin-rail a").first()).toBeFocused();
+  await expect(page.locator("#admin-main")).toHaveJSProperty("inert", true);
+  await expect(menu).toBeInViewport();
+  await page.keyboard.press("Escape");
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+  await expect(menu).toBeFocused();
+  await expect(page.locator("#admin-main")).toHaveJSProperty("inert", false);
+  // Not covered by the open drawer: a real click on the toggle closes it again.
+  await menu.click();
+  await menu.click();
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
+});

@@ -17,7 +17,7 @@ import {
 import { label } from "@/domain/admin/stops";
 import { INFO_REASONS, REJECT_REASONS } from "@/domain/corrections/review-reasons";
 import { en } from "@/i18n/dict";
-import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, insetCls, Loading, segBtn, segGroup, type Notice } from "./parts";
+import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, insetCls, Loading, segBtn, segGroup, type Notice, TableScroll } from "./parts";
 
 // A14 Corrections review (N6, C9). Commuter reports with their evidence; a transport reviewer
 // starts the review, asks for information, rejects, marks a duplicate or accepts. Accepting puts
@@ -109,6 +109,7 @@ export function CorrectionsScreen() {
             {data?.corrections.length === 0 ? (
               <Empty title="Nothing here.">No reports match this filter. Switch the filter above to see other reports.</Empty>
             ) : (
+              <TableScroll label="Correction reports">
               <table className="w-full text-left text-sm" data-testid="corrections-table">
                 <caption className="sr-only">Correction reports</caption>
                 <thead>
@@ -126,6 +127,7 @@ export function CorrectionsScreen() {
                   ))}
                 </tbody>
               </table>
+              </TableScroll>
             )}
           </Panel>
         </div>
@@ -170,13 +172,13 @@ function Row({ c, open, draftOpen, onOpen, onAct }: { c: CorrectionItem; open: b
 
 function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean; onAct: (c: CorrectionItem, p: ReviewPayload) => Promise<void> }) {
   return (
-    <div className={`grid gap-4 p-4 lg:grid-cols-2 ${insetCls}`} data-testid="correction-detail">
+    <div className={`adm-pin grid gap-4 break-words p-4 lg:grid-cols-2 [&>*]:min-w-0 ${insetCls}`} data-testid="correction-detail">
       <div className="grid gap-3 text-sm">
         <section aria-label="What the commuter wrote">
           <h3 className="font-semibold">What they wrote</h3>
           <p className="whitespace-pre-wrap">{c.description}</p>
         </section>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+        <dl className="break-words grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
           <dt className="font-medium">About</dt>
           <dd>
             {entity(c)} <span className="adm-meta">({c.entityId})</span>
@@ -266,6 +268,7 @@ function FareTrace({ c }: { c: CorrectionItem }) {
       {fares.length === 0 ? (
         <Muted>No fare rule is published for this mode.</Muted>
       ) : (
+        <TableScroll label="Published fare rules">
         <table className="mt-1 w-full" data-testid="fare-trace">
           <caption className="sr-only">Fare rules with sources and conflicts</caption>
           <thead>
@@ -292,6 +295,7 @@ function FareTrace({ c }: { c: CorrectionItem }) {
             ))}
           </tbody>
         </table>
+        </TableScroll>
       )}
     </section>
   );

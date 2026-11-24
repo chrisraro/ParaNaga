@@ -15,7 +15,7 @@ import {
   type StopList,
   type StopRow,
 } from "@/domain/admin/stops";
-import { btnDanger, btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, cardCls, Loading, type Notice } from "./parts";
+import { btnDanger, btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Loading, type Notice, TableScroll } from "./parts";
 
 // A3 Candidate review and A6 Stops & curbs (N5b, C3). One list of the open draft's stops; the
 // selected stop's panel offers the actions of the screen. Every action is a new stop version in
@@ -105,9 +105,9 @@ export function StopsScreen({ mode }: { mode: Mode }) {
       ) : !list.ok ? (
         <ErrorNote testId="stops-error">{list.message}</ErrorNote>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] [&>*]:min-w-0">
           <div>
-            <div className="mb-3 grid grid-cols-2 gap-3 md:max-w-xl">
+            <div className="mb-3 grid gap-3 sm:grid-cols-2 md:max-w-xl [&>*]:min-w-0">
               <Field label="Search">
                 <input className={inputCls} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Code, name or label" data-testid="stops-search" />
               </Field>
@@ -123,7 +123,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                 </select>
               </Field>
             </div>
-            <div className={`adm-scroll ${cardCls}`}>
+            <TableScroll label="Stops" card>
               <table className="w-full text-left text-sm" data-testid="stops-table">
                 <caption className="text-left text-ink-2 dark:text-night-ink-2">
                   {rows.length} of {data?.stops.length ?? 0} stops in {data?.revision?.label ?? "no revision"}
@@ -163,7 +163,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableScroll>
           </div>
           <div>
             {selected ? (
@@ -196,7 +196,7 @@ function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode
   return (
     <div className="grid gap-4" data-testid="stop-panel">
       <Panel title={`${stop.code ? `${stop.code} · ` : ""}${stop.name}`}>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+        <dl className="break-words grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="font-medium">Status</dt>
           <dd data-testid="stop-status">{label(stop.status)}</dd>
           <dt className="font-medium">Position</dt>

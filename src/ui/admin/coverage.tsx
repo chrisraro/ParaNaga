@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchCoverage, type AdminResult } from "@/client/admin/api";
 import type { Coverage } from "@/domain/admin/schemas";
-import { cardCls, Empty, ErrorNote, Loading, PageTitle } from "./parts";
+import { Empty, ErrorNote, Loading, PageTitle, TableScroll } from "./parts";
 
 // A13 Coverage audit (N5a, C8, F-E12): what the published revision holds per barangay. The
 // spec's 27 × 9 matrix needs field data: today each barangay has a survey status and one
@@ -33,7 +33,7 @@ export function CoverageScreen() {
       ) : state.data.rows.length === 0 ? (
         <Empty title="The published revision has no barangay rows.">Rows appear once a revision with barangay survey data is published.</Empty>
       ) : (
-        <div tabIndex={0} className={`adm-scroll ${cardCls}`}>
+        <TableScroll label="Coverage by barangay" card>
           <table className="w-full text-left text-sm" data-testid="coverage-table">
             <caption className="text-left text-ink-2 dark:text-night-ink-2">
               {state.data.rows.length} barangays in {state.data.label}
@@ -55,7 +55,7 @@ export function CoverageScreen() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
     </div>
   );

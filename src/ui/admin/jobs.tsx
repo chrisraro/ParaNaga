@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchJobs, type AdminResult } from "@/client/admin/api";
 import type { Jobs } from "@/domain/admin/system";
 import { label } from "@/domain/admin/stops";
-import { Chip, ErrorNote, Muted, PageTitle, Panel, when, Empty, Loading } from "./parts";
+import { Chip, ErrorNote, Muted, PageTitle, Panel, when, Empty, Loading, TableScroll } from "./parts";
 
 // A20 Jobs (N7, C12), admins only: the background job queue (ops.job) by status, the latest 100
 // rows (kind, status, attempts, error code; never the payload), and the last retention runs.
@@ -68,7 +68,7 @@ export function JobsScreen() {
           {jobs.length === 0 ? (
             <Empty title="No job has run yet.">Once the scheduled jobs start, the latest runs are listed here.</Empty>
           ) : (
-            <div className="overflow-x-auto">
+            <TableScroll label="Latest jobs">
               <table className="w-full text-left text-sm" data-testid="jobs-table">
                 <caption className="sr-only">The 100 most recent jobs, newest first</caption>
                 <thead>
@@ -98,7 +98,7 @@ export function JobsScreen() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableScroll>
           )}
         </Panel>
       </div>

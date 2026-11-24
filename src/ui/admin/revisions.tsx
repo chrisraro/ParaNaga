@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createDraft, fetchRevisions, publish, validate, type AdminResult } from "@/client/admin/api";
 import type { RevisionList, RevisionRow, StoredValidationReport } from "@/domain/admin/schemas";
 import { RULES } from "@/domain/admin/validation";
-import { btnDanger, btnPrimary, btnRow, btnRowDanger, btnRowPrimary, btnSecondary, Chip, ErrorNote, Muted, PageTitle, Panel, ResultNotice, when, cardCls, Loading, type Notice } from "./parts";
+import { btnDanger, btnPrimary, btnRow, btnRowDanger, btnRowPrimary, btnSecondary, Chip, ErrorNote, Muted, PageTitle, Panel, ResultNotice, when, Loading, type Notice, TableScroll } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A12 Revisions & publication (N5a, C8, F-E11). Validate runs every rule and stores the report;
@@ -118,7 +118,7 @@ export function RevisionsScreen() {
       ) : !list.ok ? (
         <ErrorNote testId="revisions-error">{list.message}</ErrorNote>
       ) : (
-        <div tabIndex={0} className={`adm-scroll ${cardCls}`}>
+        <TableScroll label="Revisions" card>
           <table className="w-full text-left text-sm" data-testid="revisions-table">
             <caption className="sr-only">Revisions, newest first</caption>
             <thead>
@@ -182,7 +182,7 @@ export function RevisionsScreen() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
 
       {flow.step !== "idle" ? (
@@ -239,6 +239,7 @@ function Report({ report }: { report: StoredValidationReport }) {
           <ResultNotice notice={headline} testId={report.ok ? "validation-ok" : "validation-errors"} />
         </div>
         {report.issues.length > 0 ? (
+          <TableScroll label="Validation issues">
           <table className="mb-4 w-full text-left text-sm" data-testid="validation-issues">
             <caption className="sr-only">Issues found</caption>
             <thead>
@@ -261,6 +262,7 @@ function Report({ report }: { report: StoredValidationReport }) {
               ))}
             </tbody>
           </table>
+          </TableScroll>
         ) : null}
         <h3 className="mb-1 text-sm font-semibold">Rules checked</h3>
         <ul className="mb-4 grid gap-0.5 text-sm" data-testid="validation-rules">

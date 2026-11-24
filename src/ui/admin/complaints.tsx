@@ -15,7 +15,7 @@ import {
   type OutcomeCode,
 } from "@/domain/admin/complaints";
 import type { ComplaintStatus } from "@/domain/complaints/status";
-import { btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, when, Empty, cardCls, insetCls, Loading, ResultNotice, segBtn, segGroup, useFormProblem, type Notice } from "./parts";
+import { btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, when, Empty, insetCls, Loading, ResultNotice, segBtn, segGroup, useFormProblem, type Notice, TableScroll } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A17 Complaint review (N7, C11). Private driver reports, for the complaint reviewer role only.
@@ -121,7 +121,7 @@ export function ComplaintsScreen() {
       ) : list.data.complaints.length === 0 ? (
         <Empty title={scope === "open" ? "No open reports." : "No closed reports."}>Reports appear here when a commuter files one.</Empty>
       ) : (
-        <div tabIndex={0} className={`adm-scroll ${cardCls}`}>
+        <TableScroll label="Reports" card>
           <table className="w-full text-left text-sm" data-testid="complaints-table">
             <caption className="sr-only">{scope === "open" ? "Open reports, priority first" : "Closed and withdrawn reports, newest first"}</caption>
             <thead>
@@ -161,7 +161,7 @@ export function ComplaintsScreen() {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
 
       {openId ? (
@@ -243,7 +243,7 @@ function ComplaintDetailView({
   return (
     <Panel title={`Report ${c.publicRef}`} testId="complaint-detail" focusOnOpen={focusHeading || "return-only"}>
       <div className="grid gap-5">
-        <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
+        <dl className="break-words grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="font-medium">Category</dt>
           <dd>{CATEGORY_LABELS[c.category]}</dd>
           <dt className="font-medium">Status</dt>

@@ -30,6 +30,20 @@ export const btnRowPrimary = `${btnBase} ${btnSm} ${tonePrimary}`;
 /** A destructive row action. Outlined: a list never shows a column of solid red. */
 export const btnRowDanger = `${btnBase} ${btnSm} ${toneDangerQuiet}`;
 
+/**
+ * The one scroll wrapper for a data table: a named, focusable region (WCAG 1.4.10 exempts the table
+ * itself, 2.1.1 needs the keyboard to reach it). `card` is the standalone list (own surface, sticky
+ * header, capped height); without it the table sits inside a Panel and only scrolls sideways.
+ * `adm-pin` on a form inside a row keeps it one screen wide while the table scrolls under it.
+ */
+export function TableScroll({ label, card = false, children }: { label: string; card?: boolean; children: ReactNode }) {
+  return (
+    <div role="region" aria-label={label} tabIndex={0} className={card ? `adm-scroll ${cardCls}` : "adm-xscroll"}>
+      {children}
+    </div>
+  );
+}
+
 /** A two-way filter ("Open" / "Closed"): the group is the track, the pressed button is the thumb. */
 export const segGroup = "inline-flex gap-1 rounded-xl border border-border bg-fill p-1 dark:border-night-border dark:bg-night-surface";
 export const segBtn =

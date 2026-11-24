@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { fetchAudit, type AdminResult, type AuditFilters } from "@/client/admin/api";
 import type { AuditPage } from "@/domain/admin/system";
-import { btnPrimary, btnSecondary, cardCls, Empty, ErrorNote, Field, inputCls, Loading, PageTitle, when } from "./parts";
+import { btnPrimary, btnSecondary, Empty, ErrorNote, Field, inputCls, Loading, PageTitle, when, TableScroll } from "./parts";
 
 // A21 Audit log (N7, C12). Read-only, newest first, 50 rows a page. Admins read every row and can
 // filter by actor; other staff read their own actions only (the database decides, not this page).
@@ -79,7 +79,7 @@ export function AuditScreen({ all }: { all: boolean }) {
       ) : state.data.rows.length === 0 ? (
         <Empty title="No recorded action matches.">Staff actions are recorded as they happen. Try again after the next change.</Empty>
       ) : (
-        <div tabIndex={0} className={`adm-scroll ${cardCls}`}>
+        <TableScroll label="Audit log" card>
           <table className="w-full text-left text-sm" data-testid="audit-table">
             <caption className="sr-only">Audit log rows, newest first</caption>
             <thead>
@@ -113,7 +113,7 @@ export function AuditScreen({ all }: { all: boolean }) {
               ))}
             </tbody>
           </table>
-        </div>
+        </TableScroll>
       )}
 
       <div className="mt-4 flex gap-2">

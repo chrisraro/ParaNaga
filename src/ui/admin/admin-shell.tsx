@@ -10,12 +10,18 @@ export function AdminShell({ roles, children }: { roles: readonly Role[]; childr
   const staffRoles = roles.filter((r) => r !== "commuter");
   return (
     <div lang="en" className="min-h-screen bg-canvas text-ink lg:flex dark:bg-night dark:text-white" data-testid="admin-shell">
+      <a
+        href="#admin-main"
+        className="fixed left-2 top-2 z-[60] -translate-y-20 rounded-lg bg-surface px-4 py-2.5 text-sm font-semibold text-ink shadow focus:translate-y-0 motion-reduce:transition-none dark:bg-night-raised dark:text-white"
+      >
+        Skip to main content
+      </a>
       <AdminNav items={adminNavFor(roles)}>
         <p className="adm-meta px-3 text-night-ink-2" data-testid="admin-roles">
           Signed in as {staffRoles.join(" · ")}
         </p>
       </AdminNav>
-      <main className="min-w-0 flex-1 px-4 pb-16 pt-20 sm:px-6 lg:px-10 lg:pt-8" id="admin-main">
+      <main className="min-w-0 flex-1 px-4 pb-16 pt-20 sm:px-6 lg:px-10 lg:pt-8" id="admin-main" tabIndex={-1}>
         <div className="mx-auto max-w-[88rem]">{children}</div>
       </main>
     </div>

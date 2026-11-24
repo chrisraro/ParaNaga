@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { decidePair, fetchReconciliation, type AdminResult } from "@/client/admin/api";
 import { label, PIN_MISMATCH_M, type Reconciliation } from "@/domain/admin/stops";
-import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, insetCls, Loading, type Notice } from "./parts";
+import { btnPrimary, btnRow, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, when, Empty, insetCls, Loading, type Notice, TableScroll } from "./parts";
 
 // A7 Reconciliation (N5b, C3). Stops of the open draft within 15 m of each other: never merged
 // automatically; a reviewer links them (one kept, the other retired, its pins added to the kept
@@ -70,6 +70,7 @@ export function ReconciliationScreen() {
             {data?.pairs.length === 0 ? (
               <Empty title="Nothing to decide.">No stops sit within 15 m of each other. New pairs appear after an import.</Empty>
             ) : (
+              <TableScroll label="Nearby stop pairs">
               <table className="w-full text-left text-sm" data-testid="pairs-table">
                 <caption className="sr-only">Pairs of stops within 15 m</caption>
                 <thead>
@@ -87,12 +88,14 @@ export function ReconciliationScreen() {
                   ))}
                 </tbody>
               </table>
+              </TableScroll>
             )}
           </Panel>
 
           <Panel title={`Stops and their source pins that disagree (${data?.mismatches.length ?? 0})`} testId="mismatches">
             <Muted>{`A pin more than ${PIN_MISMATCH_M} m from its stop, or labelled differently from the stop's name. Read-only: relocate or rename the stop under Candidate review or Stops & curbs.`}</Muted>
             {data?.mismatches.length ? (
+              <TableScroll label="Stops that disagree with a source pin">
               <table className="mt-3 w-full text-left text-sm" data-testid="mismatches-table">
                 <caption className="sr-only">Stops that disagree with a source pin</caption>
                 <thead>
@@ -121,6 +124,7 @@ export function ReconciliationScreen() {
                   ))}
                 </tbody>
               </table>
+              </TableScroll>
             ) : null}
           </Panel>
 
@@ -183,7 +187,7 @@ function PairRow({
         <tr>
           <td colSpan={5} className="pb-3">
             <form
-              className={`grid gap-3 p-4 md:grid-cols-[auto_1fr_auto] ${insetCls}`}
+              className={`adm-pin grid gap-3 break-words p-4 md:grid-cols-[auto_1fr_auto] [&>*]:min-w-0 ${insetCls}`}
               onSubmit={(e) => {
                 e.preventDefault();
                 setBusy(true);

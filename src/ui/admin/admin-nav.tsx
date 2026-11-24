@@ -22,6 +22,11 @@ export function AdminNav({ items, children }: { items: readonly AdminNavItem[]; 
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const toggle = useRef<HTMLButtonElement>(null);
+  const rail = useRef<HTMLElement>(null);
+  const close = () => {
+    setOpen(false);
+    toggle.current?.focus();
+  };
   const isCurrent = (href: string) => (href === "/admin" ? path === "/admin" : path === href || path.startsWith(`${href}/`));
   // The page title is set here, in the browser, once the server let the staff user in (no page metadata).
   const label = items.find((i) => isCurrent(i.href))?.label;
@@ -30,13 +35,24 @@ export function AdminNav({ items, children }: { items: readonly AdminNavItem[]; 
   }, [label]);
   useEffect(() => {
     if (!open) return;
+    // The drawer is modal under 1024px: focus moves in, the page behind is inert, Escape closes.
+    const main = document.getElementById("admin-main");
+    const wide = window.matchMedia("(min-width: 1024px)");
+    if (main) main.inert = true;
+    rail.current?.querySelector<HTMLElement>("a")?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       setOpen(false);
       toggle.current?.focus();
     };
+    const onWide = () => wide.matches && setOpen(false);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    wide.addEventListener("change", onWide);
+    return () => {
+      if (main) main.inert = false;
+      window.removeEventListener("keydown", onKey);
+      wide.removeEventListener("change", onWide);
+    };
   }, [open]);
 
   // Routes missing from GROUPS still show (under System), so a new screen is never hidden.
@@ -48,7 +64,7 @@ export function AdminNav({ items, children }: { items: readonly AdminNavItem[]; 
 
   return (
     <>
-      <div className="adm-topbar fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-2 border-b border-white/10 bg-deep px-2 text-white lg:hidden dark:bg-deep-2">
+      <div className="adm-topbar fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 border-b border-white/10 bg-deep px-2 text-white lg:hidden dark:bg-deep-2">
         <button
           ref={toggle}
           type="button"
@@ -65,10 +81,11 @@ export function AdminNav({ items, children }: { items: readonly AdminNavItem[]; 
         <LunadMark size={24} tone="bright" variant="glyph" />
         <span className="min-w-0 truncate text-sm font-medium text-night-ink">{label ?? "Admin"}</span>
       </div>
-      {open ? <button type="button" tabIndex={-1} aria-label="Close menu" onClick={() => setOpen(false)} className="fixed inset-0 z-30 bg-black/50 lg:hidden" /> : null}
+      {open ? <button type="button" tabIndex={-1} aria-label="Close menu" onClick={close} className="fixed inset-0 z-30 bg-black/50 lg:hidden" /> : null}
       <aside
+        ref={rail}
         id="admin-rail"
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-5 overflow-y-auto bg-deep p-3 text-white transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-60 lg:shrink-0 lg:translate-x-0 lg:visible dark:bg-deep-2 dark:border-r dark:border-night-border ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 flex-col gap-5 overflow-y-auto bg-deep p-3 pt-16 lg:pt-3 text-white transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-60 lg:shrink-0 lg:translate-x-0 lg:visible dark:bg-deep-2 dark:border-r dark:border-night-border ${
           open ? "translate-x-0 visible" : "-translate-x-full invisible"
         }`}
       >

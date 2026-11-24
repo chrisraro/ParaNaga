@@ -200,6 +200,22 @@
   }
 }
 
+/* Tables inside a Panel scroll sideways in a named region. Both wrappers are containers so that a
+   form inside a row (.adm-pin) can be as wide as the visible box, not the table, and stay put. */
+.adm-xscroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.adm-scroll,
+.adm-xscroll {
+  container-type: inline-size;
+}
+.adm-pin {
+  position: sticky;
+  inset-inline-start: 0;
+  inline-size: min(100%, 100cqw);
+}
+
 /* Wide tables scroll inside their own box, so the sticky header has something to stick to. */
 .adm-scroll {
   max-height: min(72vh, 52rem);
