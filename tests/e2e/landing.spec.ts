@@ -65,9 +65,45 @@ test("every call to action opens the app, and the credits link to Sources and cr
   await expect(page.getByRole("link", { name: "See how it works" })).toHaveAttribute("href", "#how");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Para!");
   await expect(page.getByRole("contentinfo")).toContainText("OpenStreetMap contributors");
-  // The hero capture (the LCP candidate) is preloaded at high priority, one per colour scheme.
-  await expect(page.locator('head link[rel="preload"][as="image"][href="/landing/hero-light.webp"]')).toHaveCount(1);
-  await expect(page.locator('head link[rel="preload"][as="image"][href="/landing/hero-dark.webp"]')).toHaveCount(1);
+});
+
+for (const [shown, hidden, colorScheme, theme] of [
+  ["light", "dark", "light", "system"],
+  ["dark", "light", "dark", "system"],
+  ["dark", "light", "light", "dark"],
+  ["light", "dark", "dark", "light"],
+] as const) {
+  test(`theme ${theme} on a ${colorScheme} device downloads only the ${shown} hero, at high priority`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme });
+    await page.addInitScript((value) => localStorage.setItem("paranaga.prefs", JSON.stringify({ theme: value })), theme);
+    const fetched: string[] = [];
+    page.on("request", (r) => {
+      if (r.url().includes("/landing/")) fetched.push(new URL(r.url()).pathname);
+    });
+    const response = await page.goto("/", { waitUntil: "networkidle" });
+    expect(response?.headers()["link"] ?? "").not.toContain("/landing/");
+    expect(fetched.filter((p) => p === `/landing/hero-${shown}.webp`)).toHaveLength(1);
+    expect(fetched).not.toContain(`/landing/hero-${hidden}.webp`);
+    await expect(page.locator(`head link[rel="preload"][as="image"][fetchpriority="high"][href="/landing/hero-${shown}.webp"]`)).toHaveCount(1);
+  });
+}
+
+test("share and search metadata point at the canonical domain", async ({ page, request }) => {
+  const site = "https://lunad-app.vercel.app";
+  const meta = (selector: string) => page.locator(`head ${selector}`).first();
+  for (const path of ["/", "/app/help/sources", "/app/explore"]) {
+    await page.goto(`${path}?x=1`);
+    await expect(meta('meta[property="og:title"]')).toHaveAttribute("content", await page.title());
+    await expect(meta('meta[name="twitter:card"]')).toHaveAttribute("content", "summary_large_image");
+    await expect(meta('meta[property="og:image"]')).toHaveAttribute("content", new RegExp(`^${site}/opengraph-image`));
+    await expect(meta('meta[property="og:image:alt"]')).toHaveAttribute("content", /Unverified route/);
+  }
+  await page.goto("/?x=1");
+  await expect(meta('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`^${site}/?$`));
+  const image = new URL((await meta('meta[property="og:image"]').getAttribute("content"))!);
+  expect((await request.get(image.pathname + image.search)).headers()["content-type"]).toBe("image/png");
+  expect(await (await request.get("/sitemap.xml")).text()).toContain(`<loc>${site}/app/help</loc>`);
+  expect(await (await request.get("/robots.txt")).text()).toContain(`Sitemap: ${site}/sitemap.xml`);
 });
 
 test("captures are real images with alt text and fixed dimensions", async ({ page }) => {
@@ -154,13 +190,21 @@ test("the showcase shows the screen of the step that is open", async ({ page }) 
   await page.goto("/");
   const list = page.getByRole("list", { name: "Lunad screens" });
   const step = (name: string) => list.getByRole("button", { name });
-  await expect(step("Start from the map.")).toHaveAttribute("aria-expanded", "true");
+  await expect(step("Start from the map.")).toHaveAttribute("aria-pressed", "true");
   await expect(list.getByRole("img")).toHaveAttribute("src", "/landing/home-light.webp");
   await step("Compare every way there.").click();
-  await expect(step("Compare every way there.")).toHaveAttribute("aria-expanded", "true");
-  await expect(step("Start from the map.")).toHaveAttribute("aria-expanded", "false");
+  await expect(step("Compare every way there.")).toHaveAttribute("aria-pressed", "true");
+  await expect(step("Start from the map.")).toHaveAttribute("aria-pressed", "false");
   await expect(list.getByRole("img")).toHaveAttribute("src", "/landing/options-light.webp");
   await expect(list.getByText(/One option is Recommended/)).toBeVisible();
+  // A chosen step stays chosen, and on a narrow screen the pressed step stays in view.
+  await step("Compare every way there.").click();
+  await expect(step("Compare every way there.")).toHaveAttribute("aria-pressed", "true");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await step("Start from the map.").click();
+  await step("Find any named place.").click();
+  await step("Keep trips on your phone.").click();
+  await expect(step("Keep trips on your phone.")).toBeInViewport();
 });
 
 test.describe("large screens", () => {
@@ -171,6 +215,17 @@ test.describe("large screens", () => {
     const qr = page.getByRole("img", { name: /^QR code that opens http:\/\/localhost:\d+\/app$/ });
     await qr.scrollIntoViewIfNeeded();
     await expect(qr).toBeVisible();
+  });
+
+  test("the gate speaks the chosen language and its code and link keep the deep link", async ({ page }) => {
+    await page.goto("/app/explore?c=schools#x");
+    await expect(page.getByLabel("App link")).toHaveValue(/^http:\/\/localhost:\d+\/app\/explore\?c=schools$/);
+    await expect(page.getByRole("img", { name: /^QR code that opens .*\/app\/explore\?c=schools$/ })).toBeVisible();
+    test.skip(!FILIPINO_ENABLED, "Filipino is hidden until its review (plan T10)");
+    await page.evaluate(() => localStorage.setItem("paranaga.prefs", JSON.stringify({ locale: "fil" })));
+    await page.goto("/app/routes/R4");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Kasama mo ang Lunad sa bulsa.");
+    await expect(page.getByLabel("Link ng app")).toHaveValue(/\/app\/routes\/R4$/);
   });
 });
 

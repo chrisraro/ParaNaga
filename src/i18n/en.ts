@@ -1409,8 +1409,8 @@ export const en = {
         body: "Search covers every named place in OpenStreetMap, plus stops and routes. When it finds too little, Google suggestions fill in, each labelled not verified.",
       },
       directions: {
-        title: "See the ride on the street map.",
-        body: "Plaza Rizal to Camarines Sur National High School: the walk and the jeepney drawn on the street map, and the two best options right under it, the Recommended jeepney and a tricycle.",
+        title: "See the ride on the map.",
+        body: "Plaza Rizal to Camarines Sur National High School: the walk and the jeepney drawn on the map, and the two best options right under it, the Recommended jeepney and a tricycle.",
       },
       options: {
         title: "Compare every way there.",
@@ -1554,6 +1554,21 @@ export const en = {
       far: "Trip options to Pacol Barangay Hall: a Local report note that tricycles to Pacol charge special-trip fares, and a Recommended Centro-Pacol jeepney marked Unverified route, with an estimated fare of ₱18 to ₱20.",
       report: "Report a correction, step 1 of 3: choices such as Wrong curb side, Stop moved or removed and Fare mismatch.",
     },
+  },
+  // The large-screen gate over /app (src/ui/app-gate).
+  gate: {
+    back: "Back to the website",
+    detected: "Large screen detected",
+    title: "Lunad rides in your pocket.",
+    body: "The app guides you on the street with your location, the map and one-hand controls, so it only opens on phones and small tablets. Scan the code to continue on your phone.",
+    steps: { camera: "Open your phone's camera", scan: "Point it at the code and tap the link", home: "Add to Home Screen for one-tap access" },
+    linkLabel: "App link",
+    copy: "Copy link",
+    copied: "Copied",
+    copiedStatus: "Link copied",
+    copyFailed: "Couldn't copy. Select the link and copy it yourself.",
+    note: "On a tablet or a narrow window? Lunad opens automatically once the screen is phone or small-tablet size.",
+    loading: "Lunad is loading",
   },
   // P3 screens (T13): help, sources, report a correction, report a driver, my reports, MyNaga,
   // community and sign-in. `forms` holds the words the P3 forms share.

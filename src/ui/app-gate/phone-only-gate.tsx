@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { useViewportClass } from "@/client/use-viewport-class";
 import { opensOnLargeScreen, type ViewportClass } from "@/domain/device/viewport-gate";
+import { useT } from "@/i18n/provider";
 import { LunadMark } from "@/ui/brand/lunad-mark";
 import { LargeScreenGate } from "@/ui/app-gate/large-screen-gate";
 
@@ -37,7 +38,7 @@ function Gate({ viewport, children }: { viewport: ViewportClass; children: React
       </div>
       {covered ? (
         <div className="fixed inset-0 z-[5000] overflow-y-auto" data-testid="large-screen-overlay">
-          <LargeScreenGate />
+          <LargeScreenGate focusHeading />
         </div>
       ) : null}
     </>
@@ -45,9 +46,10 @@ function Gate({ viewport, children }: { viewport: ViewportClass; children: React
 }
 
 function Splash() {
+  const t = useT().gate;
   return (
     <div className="flex min-h-dvh items-center justify-center bg-deep" aria-busy="true">
-      <LunadMark size={72} tone="bright" title="Lunad is loading" />
+      <LunadMark size={72} tone="bright" title={t.loading} />
     </div>
   );
 }
