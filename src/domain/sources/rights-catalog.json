@@ -2011,5 +2011,27 @@
     "status": "owner_report",
     "license": "Owner-contributed field evidence",
     "licenseUrl": null
+  },
+  {
+    "code": "RT33",
+    "title": "DILG Memorandum Circular No. 2020-036 (tricycles and pedicabs on national highways), as reported by DILG Region IV-A (2024-02-20)",
+    "url": "https://calabarzon.dilg.gov.ph/abalos-enforce-trikes-pedicabs-ban-on-highways/",
+    "publisher": "Department of the Interior and Local Government",
+    "checkedOn": "2026-10-29",
+    "use": "Official government page cited for facts; no page text reproduced.",
+    "status": "facts_only",
+    "license": "Official government web page: no content reuse licence recorded",
+    "licenseUrl": null
+  },
+  {
+    "code": "U05",
+    "title": "Project owner instruction, 2026-10-29: tricycle trips must not use highways such as Almeda Highway",
+    "url": null,
+    "publisher": "Lunad project owner",
+    "checkedOn": "2026-10-29",
+    "use": "Project owner instruction on tricycle and pedicab routing. No private identity or message is reproduced.",
+    "status": "owner_report",
+    "license": "Owner-supplied instruction",
+    "licenseUrl": null
   }
 ]

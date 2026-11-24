@@ -209,7 +209,10 @@ describe.skipIf(!ownerUrl || !appUrl || !runtimeUrl)("road outputs import and en
     expect(kinds("walk_graph")).toHaveLength(1);
     expect(kinds("eta_param")).toHaveLength(5);
     expect(kinds("route_note")).toHaveLength(9);
-    expect(kinds("regional_service")).toHaveLength(7);
+    // The road stage only adds distance versions: same services as before, at least every one the seed imports.
+    const serviceIds = (list: Member[]) => list.filter((m) => m.entity_kind === "regional_service").map((m) => m.entity_id);
+    expect(serviceIds(after)).toEqual(serviceIds(previous));
+    expect(serviceIds(after).length).toBeGreaterThanOrEqual(plan.modes!.regionalServices.length);
 
     const shapes = await appRows(sql`
       select route_code, trace_status, untraced_reason, length_m::float8 as length_m, road_source_code, label,

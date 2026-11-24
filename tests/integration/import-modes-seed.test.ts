@@ -71,6 +71,22 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
     asImport(async (c) => (await c.query<Member>(
       `select entity_kind, entity_id, version_id from transit.revision_member where revision_id = $1
         order by entity_kind, entity_id`, [revisionId])).rows);
+  /** Codes of a revision's terminal or regional service members, sorted. */
+  const memberCodes = (revisionId: string, kind: "terminal" | "regional_service") =>
+    asImport(async (c) => (await c.query<{ code: string }>(
+      `select e.code from transit.revision_member m join transit.${kind} e on e.id = m.entity_id
+        where m.revision_id = $1 and m.entity_kind = $2`, [revisionId, kind])).rows.map((x) => x.code).sort());
+  /**
+   * The codes LABEL must hold: every one the seed imports plus every one its parent revision already
+   * had (the intercity import adds services and terminals, which the modes import must carry forward).
+   */
+  const expectedCodes = async (revisionId: string, kind: "terminal" | "regional_service") => {
+    const parent = (await owner.query<{ id: string }>(
+      "select parent_revision_id as id from transit.revision where id = $1", [revisionId])).rows[0]!.id;
+    const modes = buildImportPlan(files, null, realSeed).modes!;
+    const seedCodes = (kind === "terminal" ? modes.terminals : modes.regionalServices).map((x) => x.code);
+    return [...new Set([...seedCodes, ...(await memberCodes(parent, kind))])].sort();
+  };
   const revisionIdOf = async (label: string) =>
     (await owner.query<{ id: string }>("select id from transit.revision where label = $1", [label])).rows[0]?.id;
   const failure = async (promise: Promise<unknown>) => {
@@ -182,12 +198,12 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
     // start already holds a modes seed (main, after later imports) the same ids are carried, nothing new.
     const startHasModes = kinds(previous, "route_vehicle_class").length > 0;
     expect(kinds(after, "route")).toHaveLength(kinds(previous, "route").length + (startHasModes ? 0 : 2));
-    expect(kinds(after, "terminal")).toHaveLength(16);
+    expect(await memberCodes(revisionId, "terminal")).toEqual(await expectedCodes(revisionId, "terminal"));
     expect(kinds(after, "route_vehicle_class")).toHaveLength(15);
     expect(kinds(after, "route_cooperative")).toHaveLength(7);
     expect(kinds(after, "route_operating_status")).toHaveLength(11);
     expect(kinds(after, "route_fare_observation")).toHaveLength(2);
-    expect(kinds(after, "regional_service")).toHaveLength(7);
+    expect(await memberCodes(revisionId, "regional_service")).toEqual(await expectedCodes(revisionId, "regional_service"));
     expect(kinds(after, "route_alias")).toHaveLength(9);
     expect(kinds(after, "fare_rule")).toHaveLength(kinds(previous, "fare_rule").length + (startHasModes ? 0 : 7));
     if (result.modes?.outcome === "committed" && !startHasModes) {
@@ -253,7 +269,7 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed modes seed import (Neon branch)"
         join transit.revision_member m on m.entity_kind = 'regional_service' and m.entity_id = s.id
         join transit.published_pointer p on p.revision_id = m.revision_id
         join transit.regional_service_version v on v.id = m.version_id order by 1`);
-    expect(regional).toHaveLength(7);
+    expect(regional.map((s) => s.code)).toEqual(await expectedCodes((await revisionIdOf(LABEL))!, "regional_service"));
     expect(regional[0]).toEqual({ code: "RS01", terminal_code: "T03", relations: ["11498944", "11498945"] });
 
     const feeders = await appRows(sql`
