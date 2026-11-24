@@ -17,6 +17,7 @@ const SECRET_REF = "MN-SECRET-REF-9931";
 const state = vi.hoisted(() => ({
   user: null as { id: string; name: string; roles: string[] } | null,
   rateLimited: false,
+  fail: null as string | null,
   owners: new Map<string, string>(),
   calls: [] as string[],
   queries: [] as { userId: string | null; text: string; params: unknown[] }[],
@@ -105,6 +106,11 @@ vi.mock("@/server/db/context", () => ({
         if (t.includes("from community.correction_event")) {
           return { rows: [{ to_status: "submitted", at: "2026-10-10T00:00:00Z" }, { to_status: "accepted", at: "2026-10-12T00:00:00Z" }] };
         }
+        if (/priv\.(withdraw|answer)_complaint|community\.answer_correction/.test(t)) {
+          state.calls.push("action");
+          if (state.fail) throw new Error("Failed query", { cause: { code: state.fail } });
+          return { rows: [{ done: owns(p[0]) ? true : null }] };
+        }
         if (t.includes("priv.set_mynaga_handoff")) {
           state.calls.push("handoff");
           // The definer function returns no row for a report that is not the caller's.
@@ -120,6 +126,13 @@ vi.mock("@/server/db/context", () => ({
 const { GET: GET_COMPLAINT } = await import("@/app/api/v1/me/complaints/[id]/route");
 const { GET: GET_CORRECTION } = await import("@/app/api/v1/me/corrections/[id]/route");
 const { POST: POST_HANDOFF } = await import("@/app/api/v1/me/reports/[kind]/[id]/mynaga/route");
+
+const { POST: POST_WITHDRAW } = await import("@/app/api/v1/me/reports/[kind]/[id]/withdraw/route");
+const { POST: POST_ANSWER } = await import("@/app/api/v1/me/reports/[kind]/[id]/answer/route");
+const act = (post: typeof POST_ANSWER | typeof POST_WITHDRAW, body: unknown, kind = "complaint", id = COMPLAINT_ID) =>
+  post(new Request(`http://localhost/api/v1/me/reports/${kind}/${id}/x`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }), {
+    params: Promise.resolve({ kind, id }),
+  } as never);
 
 const getComplaint = (id = COMPLAINT_ID) =>
   GET_COMPLAINT(new Request(`http://localhost/api/v1/me/complaints/${id}`), { params: Promise.resolve({ id }) } as never);
@@ -145,6 +158,7 @@ let logged: string[];
 beforeEach(() => {
   state.user = OWNER;
   state.rateLimited = false;
+  state.fail = null;
   state.owners = new Map([
     [COMPLAINT_ID, OWNER.id],
     [CORRECTION_ID, OWNER.id],
@@ -254,5 +268,54 @@ describe("POST /api/v1/me/reports/[kind]/[id]/mynaga", () => {
     await handoff({ submitted: true, reference: SECRET_REF });
     expect(logged.join("\n")).not.toContain(SECRET_REF);
     expect(logged.join("\n")).not.toContain("Asked for 40 pesos");
+  });
+});
+
+describe("POST withdraw and answer (migration 0038)", () => {
+  const SECRET_TEXT = "It was the jeep to Pacol SECRET";
+  it("withdraws through the definer function; only driver reports", async () => {
+    const res = await act(POST_WITHDRAW, {});
+    expect(res.status).toBe(200);
+    expectPrivate(res);
+    expect(await res.json()).toEqual({ ok: true });
+    expect(state.queries.find((q) => q.text.includes("withdraw_complaint"))).toMatchObject({ userId: OWNER.id, params: [COMPLAINT_ID] });
+    await expectError(await act(POST_WITHDRAW, {}, "correction", CORRECTION_ID), 404, "not_found");
+  });
+
+  it("answers a driver report and a correction, each with its own permission", async () => {
+    expect((await act(POST_ANSWER, { text: ` ${SECRET_TEXT} `, evidence: [{ mediaId: EVIDENCE_ID, captureKind: "file_upload" }] })).status).toBe(200);
+    expect(state.queries.find((q) => q.text.includes("answer_complaint"))?.params).toEqual([COMPLAINT_ID, SECRET_TEXT, JSON.stringify([{ mediaId: EVIDENCE_ID, captureKind: "file_upload" }])]);
+    expect((await act(POST_ANSWER, { text: SECRET_TEXT, mediaIds: [EVIDENCE_ID] }, "correction", CORRECTION_ID)).status).toBe(200);
+    expect(state.queries.find((q) => q.text.includes("answer_correction"))?.params).toEqual([CORRECTION_ID, SECRET_TEXT, `{${EVIDENCE_ID}}`]);
+    expect(state.authorized).toEqual(["complaint.submit", "correction.submit"]);
+  });
+
+  it("someone else's report, an unknown kind and a bad id are the same 404", async () => {
+    state.user = OTHER;
+    await expectError(await act(POST_WITHDRAW, {}), 404, "not_found");
+    await expectError(await act(POST_ANSWER, { text: "x" }), 404, "not_found");
+    state.user = OWNER;
+    await expectError(await act(POST_ANSWER, { text: "x" }, "post"), 404, "not_found");
+    await expectError(await act(POST_ANSWER, { text: "x" }, "complaint", "nope"), 404, "not_found");
+  });
+
+  it.each([{}, { text: "  " }, { text: "x".repeat(1001) }, { text: "a\u202eb" }, { text: "x", status: "closed" }, { text: "x", mediaIds: [EVIDENCE_ID] },
+    { text: "x", evidence: [1, 2].map(() => ({ mediaId: EVIDENCE_ID, captureKind: "file_upload" })) }])("refuses a bad answer before the database (%#)", async (body) => {
+    await expectError(await act(POST_ANSWER, body), 400, "bad_request");
+    expect(state.calls).toEqual([]);
+  });
+
+  it.each([["55000", 409, "conflict"], ["22023", 400, "bad_request"], ["23505", 400, "bad_request"], ["XX000", 500, "internal"]] as const)("database code %s answers %i", async (code, status, name) => {
+    state.fail = code;
+    await expectError(await act(POST_ANSWER, { text: SECRET_TEXT }), status, name);
+    expect(logged.join("\n")).not.toContain("SECRET");
+  });
+
+  it("guests get 401; too many requests never reach the function", async () => {
+    state.rateLimited = true;
+    await expectError(await act(POST_WITHDRAW, {}), 429, "too_many_requests");
+    state.user = null;
+    await expectError(await act(POST_ANSWER, { text: "x" }), 401, "unauthorized");
+    expect(state.calls).not.toContain("action");
   });
 });

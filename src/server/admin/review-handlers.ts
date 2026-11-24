@@ -14,7 +14,7 @@ import { parseUuidParam } from "@/domain/api/schemas";
 import { can } from "@/domain/auth/permissions";
 import { badRequest, conflict, notFound, readJsonBody, tooManyRequests, unavailable } from "@/server/api/http";
 import { serverEnv } from "@/server/env";
-import { syncPublicPhotos } from "@/server/community/photo-removal";
+import { recheckPublicPhoto, syncPublicPhotos } from "@/server/community/photo-removal";
 import { getStorage } from "@/server/storage/adapter";
 import { adminRoute, firstIssue, json, limited } from "./handlers";
 import { auditPublicCopyLeft, moderate, readCorrections, readModerationQueue, resolveAppeal, resolveReports, reviewCorrection, reviewMedia, takeDown } from "./review-repo";
@@ -82,7 +82,10 @@ async function decide<T>(run: (copied: Copied) => Promise<T>): Promise<T> {
     return await run(copied);
   } catch (error) {
     const storage = getStorage();
-    await Promise.all(copied.map((c) => storage.deleteObject(c.bucket, c.key).catch(() => false)));
+    for (const c of copied) {
+      await recheckPublicPhoto(c.key);
+      await storage.deleteObject(c.bucket, c.key).catch(() => false);
+    }
     if (error instanceof Error && error.message === "photo copy to the public bucket failed") {
       throw unavailable("The photo could not be copied for publishing; nothing was changed. Try again.");
     }
@@ -137,10 +140,14 @@ export function postTakeDown(request: Request): Promise<Response> {
     const result = await db(async (d) => ((await limited(d, request, user.id)) ? null : takeDown(d, parsed.data)));
     if (!result) throw tooManyRequests();
     const { removed } = result;
+    if (removed) await recheckPublicPhoto(removed.key);
     // Only ever the configured public bucket: the private original stays for an appeal.
     const publicCopy = !removed
       ? "none"
-      : removed.bucket === serverEnv().STORAGE_BUCKET_PUBLIC && (await getStorage().deleteObject(removed.bucket, removed.key).catch(() => false))
+      : removed.bucket === serverEnv().STORAGE_BUCKET_PUBLIC &&
+          // Twice: the recheck above keeps the job away from it for 5 minutes.
+          ((await getStorage().deleteObject(removed.bucket, removed.key).catch(() => false)) ||
+            (await getStorage().deleteObject(removed.bucket, removed.key).catch(() => false)))
         ? "removed"
         : "left";
     // Best effort: the take-down is committed, so a failed audit write must not turn it into an error.

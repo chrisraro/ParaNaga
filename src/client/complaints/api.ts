@@ -54,6 +54,20 @@ export function evidenceType(mime: string): EvidenceType | null {
   return (EVIDENCE_TYPES as readonly string[]).includes(base) ? (base as EvidenceType) : null;
 }
 
+/**
+ * Why a file cannot be added, or null. The size limit is checked when the file arrives, not at
+ * Send: a file that cannot be sent is said so at once, by name when it has one.
+ */
+export function evidenceFileProblem(blob: Blob, t: Dict["driverReport"]): string | null {
+  const mime = evidenceType(blob.type);
+  if (!mime) return t.api.badType;
+  if (blob.size === 0) return t.camera.nothingCaptured;
+  const max = mime.startsWith("video/") ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES;
+  if (blob.size <= max) return null;
+  const mb = Math.round(max / 1024 / 1024);
+  return blob instanceof File && blob.name ? t.fileTooLarge(blob.name.slice(0, 60), mb) : t.api.tooLarge(mb);
+}
+
 export type EvidenceUploadResult = { ok: true; mediaId: string } | { ok: false; message: string };
 const UPLOAD_FAILED = M.uploadFailed;
 

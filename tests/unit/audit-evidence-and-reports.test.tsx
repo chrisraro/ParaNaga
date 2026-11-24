@@ -51,7 +51,8 @@ const correction = (status: CorrectionDetail["status"]): CorrectionDetail => ({
   status,
   submittedAt: "2026-10-10T00:00:00.000Z",
   description: "The sign moved.",
-  events: [{ status, at: "2026-10-11T00:00:00.000Z", reason: status === "needs_evidence" ? "need_photo" : null }],
+  events: [{ status, at: "2026-10-11T00:00:00.000Z", reason: status === "needs_evidence" ? "need_photo" : null, answer: null }],
+  photoCount: 0,
 });
 
 beforeEach(() => {
@@ -65,13 +66,13 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("a report that needs more detail (F12)", () => {
-  it("says it cannot be added to here, and links to a new report about the same stop", async () => {
+  it("offers an answer form on the report instead of sending the person to a new report", async () => {
     reports.loadCorrection.mockResolvedValue({ ok: true, data: correction("needs_evidence") });
     render(<ReportDetailScreen kind="correction" id={CORRECTION_ID} />);
     const next = await screen.findByTestId("report-next-step");
-    expect(next.textContent).toContain("You cannot add to this report here yet.");
-    const link = within(next).getByRole("link", { name: "Send a new report about this" });
-    expect(link.getAttribute("href")).toBe("/app/report?type=stop&id=stop-a1&label=Plaza+Rizal");
+    expect(within(next).getByLabelText("Your answer")).toBeTruthy();
+    expect(within(next).getByRole("button", { name: "Send answer" })).toBeTruthy();
+    expect(within(next).queryByRole("link")).toBeNull();
     // The reviewer's reason is still shown in the timeline.
     expect(screen.getByTestId("report-timeline").textContent).toContain("Please add a photo of what you saw.");
   });

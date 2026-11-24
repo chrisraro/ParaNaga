@@ -262,6 +262,8 @@ function Detail({ c, draftOpen, onAct }: { c: CorrectionItem; draftOpen: boolean
                 {e.actorRole ? ` (${label(e.actorRole)})` : ""}
                 {e.reasonCode && e.actorRole !== "commuter" ? `, ${REASON_LABELS[e.reasonCode as keyof typeof REASON_LABELS] ?? label(e.reasonCode)}` : ""}
                 {e.note && e.actorRole !== "commuter" ? `: ${e.note}` : ""}
+                {/* The reporter's answer to a request for evidence; the note of their first submission is advisory and stays hidden. */}
+                {e.note && e.actorRole === "commuter" && e.from === "needs_evidence" ? ` – the reporter answered: "${e.note}"` : ""}
               </li>
             ))}
           </ol>

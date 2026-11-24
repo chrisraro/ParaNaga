@@ -76,6 +76,23 @@ export async function runPhotoRemoval(opts: {
   return out;
 }
 
+/**
+ * Before the server deletes a public copy directly: marks it unknown, so the daily job settles it even
+ * if that delete lands after another moderator's copy (migration 0037). Waits longer than the app's
+ * usual limits (0035): an approval holds the post row while storage copies, up to 30 s. Never throws.
+ */
+export async function recheckPublicPhoto(key: string): Promise<void> {
+  const requestId = safeRequestId();
+  try {
+    await withRequestContext({ userId: null, requestId }, async (db) => {
+      await db.execute(sql`select set_config('lock_timeout', '40s', true), set_config('statement_timeout', '45s', true)`);
+      await db.execute(sql`select community.photo_recheck(${key})`);
+    });
+  } catch (error) {
+    console.warn(JSON.stringify({ event: "photo_recheck_failed", requestId, error: error instanceof Error ? error.name : "unknown" }));
+  }
+}
+
 /** After a committed delete or decision, once the answer is sent: public copies only. The daily job does what is left. */
 export function syncPublicPhotos(): void {
   try {

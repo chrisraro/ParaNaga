@@ -11,6 +11,7 @@ import "./reports.css";
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { SignInUnknown } from "@/ui/auth/sign-in-unknown";
 import { loadComplaint, loadCorrection, type Loaded } from "@/client/reports/api";
@@ -18,28 +19,41 @@ import { complaintCategoryLabel } from "@/domain/complaints/categories";
 import { complaintStatusLabel } from "@/domain/complaints/status";
 import { categoryLabel } from "@/domain/corrections/categories";
 import { reviewReasonText } from "@/domain/corrections/review-reasons";
-import { reportHref } from "@/domain/corrections/href";
 import { statusLabel } from "@/domain/corrections/status";
 import { complaintTone, correctionTone, manilaDate, outcomeLabel } from "@/domain/reports/list";
-import type { ComplaintDetail, CorrectionDetail } from "@/domain/reports/schemas";
+import { canWithdraw, COMPLAINT_FILES_MAX, CORRECTION_PHOTOS_MAX, type ComplaintDetail, type CorrectionDetail } from "@/domain/reports/schemas";
 import { en, translated } from "@/i18n/dict";
 import { useLocale, useT } from "@/i18n/provider";
-import { updateThenFocus } from "@/ui/report/form-a11y";
+import { Live, updateThenFocus } from "@/ui/report/form-a11y";
+import { AnswerForm, WithdrawButton } from "./report-actions";
 import { StatusChip } from "./reports-screen";
 
 export const MYNAGA_PANEL_NOTE = en.reports.mynagaPanelNote;
 
-type Timeline = { status: string; at: string; note?: string | null }[];
+type Timeline = { status: string; at: string; note?: string | null; own?: boolean }[];
+
+/** What the screen gives the actions: reload the report, then say what happened. */
+type Actions = {
+  sent: () => Promise<void>;
+  changed: (unsent?: string) => Promise<void>;
+  withdrawn: () => Promise<void>;
+};
 
 function TimelineList({ events, label }: { events: Timeline; label: (status: string) => string }) {
   const locale = useLocale();
+  const t = useT().reports;
   return (
     <ol className="pn-reports__timeline" data-testid="report-timeline">
       {events.map((e, i) => (
         <li key={`${e.status}-${e.at}-${i}`}>
           <span className="pn-reports__event">{label(e.status)}</span>
           <span className="pn-reports__when">{manilaDate(e.at, locale)}</span>
-          {e.note ? <span className="pn-reports__note">{e.note}</span> : null}
+          {e.note ? (
+            <span className="pn-reports__note">
+              {e.own ? <strong className="pn-reports__you">{t.answer.youAnswered}: </strong> : null}
+              {e.note}
+            </span>
+          ) : null}
         </li>
       ))}
     </ol>
@@ -55,7 +69,7 @@ function Fact({ name, children }: { name: string; children: ReactNode }) {
   );
 }
 
-function ComplaintView({ c }: { c: ComplaintDetail }) {
+function ComplaintView({ c, act }: { c: ComplaintDetail; act: Actions }) {
   const tt = useT();
   const t = tt.reports;
   const d = tt.driverReport;
@@ -69,12 +83,13 @@ function ComplaintView({ c }: { c: ComplaintDetail }) {
         {outcome ? <p className="pn-reports__note">{outcome}.</p> : null}
         <h3>{t.statusInParaNaga}</h3>
         <TimelineList events={c.events} label={(s) => complaintStatusLabel(s as ComplaintDetail["status"], d)} />
-        {c.status === "needs_information" ? (
-          <p className="pn-reports__note" data-testid="report-next-step">
-            {t.moreInfoNote}
-          </p>
-        ) : null}
       </div>
+
+      {c.status === "needs_information" ? (
+        <div className="pn-reports__panel" data-testid="report-next-step">
+          <AnswerForm kind="complaint" id={c.id} room={Math.max(0, Math.min(3, COMPLAINT_FILES_MAX - c.evidence.length))} onSent={act.sent} onChanged={act.changed} />
+        </div>
+      ) : null}
 
       <div className="pn-reports__panel" data-testid="report-content">
         <h3>{t.whatYouReported}</h3>
@@ -105,11 +120,17 @@ function ComplaintView({ c }: { c: ComplaintDetail }) {
           {c.handoff.submitted ? t.openSteps : t.continueMyNaga}
         </Link>
       </section>
+
+      {canWithdraw(c.status) || c.status === "under_review" ? (
+        <div className="pn-reports__panel" data-testid="report-withdraw">
+          {canWithdraw(c.status) ? <WithdrawButton id={c.id} onDone={act.withdrawn} onChanged={() => act.changed()} /> : <p className="pn-reports__note">{t.withdraw.underReview}</p>}
+        </div>
+      ) : null}
     </>
   );
 }
 
-function CorrectionView({ c }: { c: CorrectionDetail }) {
+function CorrectionView({ c, act }: { c: CorrectionDetail; act: Actions }) {
   const tt = useT();
   const t = tt.reports;
   const r = tt.report;
@@ -120,18 +141,15 @@ function CorrectionView({ c }: { c: CorrectionDetail }) {
         <StatusChip tone={correctionTone(c.status)}>{statusLabel(c.status, r)}</StatusChip>
         <h3>{t.statusInParaNaga}</h3>
         <TimelineList
-          events={c.events.map((e) => ({ status: e.status, at: e.at, note: e.reason ? reviewReasonText(e.reason, r) : null }))}
+          events={c.events.map((e) => ({ status: e.status, at: e.at, note: e.answer ?? (e.reason ? reviewReasonText(e.reason, r) : null), own: Boolean(e.answer) }))}
           label={(s) => statusLabel(s as CorrectionDetail["status"], r)}
         />
-        {c.status === "needs_evidence" ? (
-          <div data-testid="report-next-step">
-            <p className="pn-reports__note">{t.moreDetailNote}</p>
-            <Link href={reportHref({ entityType: c.entityType, entityId: c.entityId, ...(c.entityLabel ? { entityLabel: c.entityLabel } : {}) })} prefetch={false} className="pn-btn pn-btn--secondary pn-report__action" data-testid="report-send-new">
-              {t.sendNewReport}
-            </Link>
-          </div>
-        ) : null}
       </div>
+      {c.status === "needs_evidence" ? (
+        <div className="pn-reports__panel" data-testid="report-next-step">
+          <AnswerForm kind="correction" id={c.id} room={Math.max(0, CORRECTION_PHOTOS_MAX - c.photoCount)} onSent={act.sent} onChanged={act.changed} />
+        </div>
+      ) : null}
       <div className="pn-reports__panel" data-testid="report-content">
         <h3>{t.whatYouReported}</h3>
         <dl className="pn-reports__kv">
@@ -145,12 +163,27 @@ function CorrectionView({ c }: { c: CorrectionDetail }) {
 
 type View = { phase: "loading" } | { phase: "error"; message: string } | { phase: "complaint"; data: ComplaintDetail } | { phase: "correction"; data: CorrectionDetail };
 
-export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correction"; id: string }) {
+/**
+ * The router keeps a page it has left mounted but hidden, with its state, so leaving drops what was
+ * typed and chosen (an answer is private): effects clean up on hiding, and the new key replaces the
+ * screen by an empty one.
+ */
+export function ReportDetailScreen(props: { kind: "complaint" | "correction"; id: string }) {
+  const [visit, setVisit] = useState(0);
+  useEffect(() => () => setVisit((n) => n + 1), []);
+  return <Detail key={`${visit}:${props.kind}:${props.id}`} {...props} />;
+}
+
+function Detail({ kind, id }: { kind: "complaint" | "correction"; id: string }) {
   const tt = useT();
   const { user, loading, status, refresh, refreshing } = useAuthSession();
   const [view, setView] = useState<View>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
   const loadingRef = useRef<HTMLParagraphElement>(null);
+  const noteRef = useRef<HTMLParagraphElement>(null);
+  const [note, setNote] = useState<string | null>(null);
+  // What the person typed when the report changed under them, so it is not lost with the form.
+  const [unsent, setUnsent] = useState<string | null>(null);
   const userId = user?.id ?? null;
 
   useEffect(() => {
@@ -165,6 +198,31 @@ export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correcti
       live = false;
     };
   }, [userId, kind, id, attempt]);
+
+  // Reloads the report, then says what happened and moves focus there: the control that held it is gone.
+  const settle = async (message: string, kept: string | null = null) => {
+    const r = kind === "complaint" ? await loadComplaint(id) : await loadCorrection(id);
+    // The answer arrived but its response did not, and the retry was told the report changed.
+    const events = r.ok ? r.data.events : [];
+    if (kept !== null && events.some((e) => ("own" in e ? e.own && e.note === kept : e.answer === kept))) {
+      message = tt.reports.answer.sent;
+      kept = null;
+    }
+    flushSync(() => {
+      if (!r.ok) setView({ phase: "error", message: r.message });
+      else if (kind === "complaint") setView({ phase: "complaint", data: r.data as ComplaintDetail });
+      else setView({ phase: "correction", data: r.data as CorrectionDetail });
+      setNote(message);
+      setUnsent(kept);
+    });
+    noteRef.current?.focus();
+  };
+  const act: Actions = {
+    sent: () => settle(tt.reports.answer.sent),
+    changed: (kept) => settle(tt.reports.api.changed, kept ?? null),
+    withdrawn: () => settle(tt.reports.withdraw.done),
+  };
+  const asking = (view.phase === "complaint" && view.data.status === "needs_information") || (view.phase === "correction" && view.data.status === "needs_evidence");
 
   if (loading) {
     return (
@@ -186,6 +244,19 @@ export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correcti
   }
   return (
     <div className="pn-reports" data-testid="report-detail">
+      <Live ref={noteRef} tabIndex={-1} className="pn-report__status pn-reports__live" data-testid="report-note">
+        {note}
+      </Live>
+      {unsent && !asking ? (
+        <section className="pn-reports__panel" aria-labelledby="pn-unsent" data-testid="report-unsent">
+          <h3 id="pn-unsent">{tt.reports.answer.unsentTitle}</h3>
+          <p className="pn-reports__note">{tt.reports.answer.unsentBody}</p>
+          <label htmlFor="pn-unsent-text" className="pn-report__label">
+            {tt.reports.answer.unsentLabel}
+          </label>
+          <textarea id="pn-unsent-text" readOnly rows={4} className="pn-report__input pn-report__textarea" value={unsent} />
+        </section>
+      ) : null}
       {view.phase === "loading" ? (
         <p ref={loadingRef} tabIndex={-1} className="pn-reports__intro" role="status">
           {tt.forms.loading}
@@ -211,8 +282,8 @@ export function ReportDetailScreen({ kind, id }: { kind: "complaint" | "correcti
           </button>
         </div>
       ) : null}
-      {view.phase === "complaint" ? <ComplaintView c={view.data} /> : null}
-      {view.phase === "correction" ? <CorrectionView c={view.data} /> : null}
+      {view.phase === "complaint" ? <ComplaintView c={view.data} act={act} /> : null}
+      {view.phase === "correction" ? <CorrectionView c={view.data} act={act} /> : null}
       <Link href="/app/reports" className="pn-btn pn-btn--secondary pn-report__action">
         {tt.reports.allMine}
       </Link>

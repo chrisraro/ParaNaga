@@ -316,6 +316,30 @@ describe.skipIf(!ownerUrl || !appUrl)("photo removal (Neon branch)", () => {
     expect((await due()).get(f.photoId)).toBe("purge");
   });
 
+  it("0037: a direct delete is settled later, whatever happened to the photo meanwhile; system only", async () => {
+    const f = await live();
+    const recheck = (userId: string | null, key = f.key) => value<boolean>(userId, sql`select community.photo_recheck(${key})`);
+    for (const userId of [author, mod]) expect(await code(recheck(userId))).toBe("42501");
+    expect(await recheck(null, "community_photo/none.jpeg")).toBe(false);
+    // Live and approved: the copy is made again once the delete has certainly ended.
+    expect(await recheck(null)).toBe(true);
+    expect((await due()).has(f.photoId)).toBe(false);
+    await expireClaim(f);
+    expect((await due()).get(f.photoId)).toBe("restore");
+    await apply(f.photoId, "restore");
+    expect((await due()).has(f.photoId)).toBe(false);
+    // Failed approval of a waiting photo: an orphan copy goes; an approval in between keeps the mark.
+    await past("update community.post_photo set moderation_status = 'pending', public_bucket = null, public_key = null, decided_at = null where id = $1", [f.photoId]);
+    await recheck(null);
+    await expireClaim(f);
+    expect((await due()).get(f.photoId)).toBe("remove");
+    await recheck(null);
+    await rows(mod, sql`select community.admin_moderate('photo', ${f.photoId}::uuid, 'published', 'meets_guidelines', null, 'public-media')`);
+    expect((await due()).has(f.photoId)).toBe(false);
+    await expireClaim(f);
+    expect((await due()).get(f.photoId)).toBe("restore");
+  });
+
   it("a photo still waiting for review is kept while its taken-down post is not deleted", async () => {
     const f = await live();
     await takeDown("post_version", f.versionId);

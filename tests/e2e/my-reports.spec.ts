@@ -7,7 +7,9 @@ import { routeNetwork } from "./fixtures/network";
 // labels and no report text, the detail screen with the separate self-reported MyNaga panel, the
 // handoff (copy summary, the bystander acknowledgement gate on evidence download, verified
 // external links, the self-report toggle) and axe in light and dark on the list, a detail and the
-// handoff. Every test checks for CSP (report-only) violations.
+// handoff. Reporter actions (0038): answering a reviewer (text, files, a 409 that keeps the text),
+// withdrawing with a confirm dialog, keyboard focus, axe in both themes and no sideways scroll at
+// 320 px. Every test checks for CSP (report-only) violations.
 
 const TILE_RE = /tile\.openstreetmap\.org|api\.maptiler\.com/;
 const PREFS_KEY = "paranaga.prefs";
@@ -15,19 +17,21 @@ const USER = { user: { id: "user-1", name: "Maria", roles: ["commuter"] } };
 const COMPLAINT_ID = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a99";
 const CORRECTION_ID = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a55";
 const EVIDENCE_ID = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a77";
+const UPLOAD_ID = "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8b02";
 const DESCRIPTION = "The driver asked for 40 pesos for a short trip on the loop.";
 const PRIVATE_HEADERS = { "cache-control": "private, no-store" };
 
 test.skip(({ isMobile }) => !isMobile, "The app lives behind the phone-only gate");
 
 type Handoff = { submitted: boolean; submittedAt: string | null; reference: string | null };
+type Ev = { status: string; at: string; note: string | null; own?: boolean };
 
-const complaintDetail = (handoff: Handoff) => ({
+const complaintDetail = (handoff: Handoff, status = "under_review", events?: Ev[]) => ({
   complaint: {
     id: COMPLAINT_ID,
     reference: "PN-7KQ4-2M",
     category: "overcharging",
-    status: "under_review",
+    status,
     submittedAt: "2026-10-17T16:00:00.000Z",
     incidentAt: "2026-10-17T14:30:00.000Z",
     description: DESCRIPTION,
@@ -37,7 +41,7 @@ const complaintDetail = (handoff: Handoff) => ({
     bodyNumber: null,
     outcomeCode: null,
     evidence: [{ id: EVIDENCE_ID, captureKind: "in_app_camera" }],
-    events: [
+    events: events ?? [
       { status: "submitted", at: "2026-10-17T16:00:00.000Z", note: null },
       { status: "under_review", at: "2026-10-18T01:00:00.000Z", note: null },
     ],
@@ -45,8 +49,14 @@ const complaintDetail = (handoff: Handoff) => ({
   },
 });
 
-async function mockApi(page: Page, opts: { signedIn: boolean; stepUp?: boolean }) {
+async function mockApi(page: Page, opts: { signedIn: boolean; stepUp?: boolean; complaintStatus?: string; answers?: "ok" | "conflict" | "fail-once" }) {
   const state = {
+    complaintStatus: opts.complaintStatus ?? "under_review",
+    events: undefined as Ev[] | undefined,
+    answered: [] as { text: string; evidence: unknown[] }[],
+    withdrawCalls: 0,
+    answerCalls: 0,
+    uploads: 0,
     handoff: { submitted: false, submittedAt: null, reference: null } as Handoff,
     posted: [] as unknown[],
     evidenceCalls: 0,
@@ -77,7 +87,42 @@ async function mockApi(page: Page, opts: { signedIn: boolean; stepUp?: boolean }
       }),
     ),
   );
-  await page.route(`**/api/v1/me/complaints/${COMPLAINT_ID}`, (route) => route.fulfill(json(complaintDetail(state.handoff))));
+  await page.route(`**/api/v1/me/complaints/${COMPLAINT_ID}`, (route) => route.fulfill(json(complaintDetail(state.handoff, state.complaintStatus, state.events))));
+  await page.route(`**/api/v1/me/reports/complaint/${COMPLAINT_ID}/answer`, (route) => {
+    state.answerCalls += 1;
+    if (opts.answers === "conflict") {
+      state.complaintStatus = "under_review";
+      return route.fulfill(json({ error: { code: "conflict", message: "x", requestId: "r" } }, 409));
+    }
+    if (opts.answers === "fail-once" && state.answerCalls === 1) return route.fulfill(json({ error: { code: "internal", message: "x", requestId: "r" } }, 500));
+    const body = route.request().postDataJSON() as { text: string; evidence: unknown[] };
+    state.answered.push(body);
+    state.complaintStatus = "under_review";
+    state.events = [
+      { status: "submitted", at: "2026-10-17T16:00:00.000Z", note: null },
+      { status: "needs_information", at: "2026-10-18T01:00:00.000Z", note: "Which stop was it?" },
+      { status: "under_review", at: "2026-10-19T01:00:00.000Z", note: body.text, own: true },
+    ];
+    return route.fulfill(json({ ok: true }));
+  });
+  await page.route(`**/api/v1/me/reports/complaint/${COMPLAINT_ID}/withdraw`, (route) => {
+    state.withdrawCalls += 1;
+    state.complaintStatus = "withdrawn";
+    return route.fulfill(json({ ok: true }));
+  });
+  await page.route("**/api/v1/media/slots", (route) => {
+    state.uploads += 1;
+    return route.fulfill(
+      json(
+        { slot: { id: UPLOAD_ID, bucket: "quarantine", objectKey: `quarantine/complaint_evidence/2026/${UPLOAD_ID}`, uploadUrl: `${new URL(page.url()).origin}/__e2e-upload/${UPLOAD_ID}`, maxBytes: 1000000 } },
+        201,
+      ),
+    );
+  });
+  await page.route("**/__e2e-upload/**", (route) => route.fulfill({ status: 200, body: "" }));
+  await page.route("**/api/v1/media/confirm", (route) =>
+    route.fulfill(json({ media: { id: UPLOAD_ID, bucket: "evidence-private", objectKey: "complaint_evidence/ab/x.jpg", status: "verified", bytes: 4, sha256: "a".repeat(64) } })),
+  );
   await page.route(`**/api/v1/me/corrections/${CORRECTION_ID}`, (route) =>
     route.fulfill(
       json({
@@ -343,6 +388,145 @@ for (const scheme of ["light", "dark"] as const) {
     await expect(page.getByTestId("handoff-summary")).toBeVisible();
     await page.getByTestId("handoff-ack").check();
     await page.getByTestId("handoff-submitted").check();
+    await expectAxeClean(page);
+  });
+}
+
+
+// ------------------------------------------------------------------ reporter actions (0038)
+
+const detailUrl = `/app/reports/complaint/${COMPLAINT_ID}`;
+const tinyJpeg = { name: "street.jpg", mimeType: "image/jpeg", buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]) };
+
+test("answering a reviewer: the form is labelled, empty is refused, files are listed, and the answer shows in the timeline", async ({ page }) => {
+  const state = await mockApi(page, { signedIn: true, complaintStatus: "needs_information" });
+  await page.goto(detailUrl);
+  const form = page.getByTestId("answer-form");
+  await expect(form.getByLabel("Your answer")).toBeVisible();
+
+  // Keyboard: an empty answer is refused with focus back in the field and the error read out.
+  await form.getByTestId("answer-send").focus();
+  await page.keyboard.press("Enter");
+  await expect(form.getByLabel("Your answer")).toBeFocused();
+  await expect(form.getByTestId("answer-error")).toContainText("Write your answer first.");
+  expect(state.answerCalls).toBe(0);
+
+  await form.getByLabel("Your answer").fill("It was the Centro stop.");
+  await form.getByTestId("answer-file-input").setInputFiles(tinyJpeg);
+  await expect(form.getByTestId("answer-files")).toContainText("street.jpg");
+  await form.getByRole("button", { name: "Remove street.jpg" }).click();
+  await expect(form.getByTestId("answer-files")).toHaveCount(0);
+  await form.getByTestId("answer-file-input").setInputFiles(tinyJpeg);
+  await form.getByTestId("answer-send").click();
+
+  // Success: the form is gone, the status message holds focus, and the answer is labelled "You answered".
+  await expect(form).toHaveCount(0);
+  const note = page.getByTestId("report-note");
+  await expect(note).toHaveText("Your answer was sent. A reviewer will look at the report again.");
+  await expect(note).toBeFocused();
+  await expect(page.getByTestId("report-timeline")).toContainText("You answered: It was the Centro stop.");
+  expect(state.answered).toHaveLength(1);
+  expect(state.answered[0]?.text).toBe("It was the Centro stop.");
+  expect(state.answered[0]?.evidence).toHaveLength(1);
+  expect(state.uploads).toBe(1);
+});
+
+test("a failed send keeps the text and the file; the retry does not upload the file again", async ({ page }) => {
+  const state = await mockApi(page, { signedIn: true, complaintStatus: "needs_information", answers: "fail-once" });
+  await page.goto(detailUrl);
+  const form = page.getByTestId("answer-form");
+  await form.getByLabel("Your answer").fill("Please keep this.");
+  await form.getByTestId("answer-file-input").setInputFiles(tinyJpeg);
+  await form.getByTestId("answer-send").click();
+  await expect(form.getByTestId("answer-error")).toContainText("What you wrote is kept");
+  await expect(form.getByLabel("Your answer")).toHaveValue("Please keep this.");
+  await expect(form.getByTestId("answer-files")).toContainText("street.jpg");
+  await form.getByTestId("answer-send").click();
+  await expect(form).toHaveCount(0);
+  expect(state.uploads).toBe(1);
+  expect(state.answerCalls).toBe(2);
+});
+
+test("409: the report is reloaded, the change is said, and the typed text stays on screen", async ({ page }) => {
+  await mockApi(page, { signedIn: true, complaintStatus: "needs_information", answers: "conflict" });
+  await page.goto(detailUrl);
+  const form = page.getByTestId("answer-form");
+  await form.getByLabel("Your answer").fill("Words I do not want to lose.");
+  await form.getByTestId("answer-send").click();
+  await expect(page.getByTestId("report-note")).toContainText("This report changed in the meantime.");
+  await expect(page.getByTestId("report-note")).toBeFocused();
+  await expect(form).toHaveCount(0);
+  await expect(page.getByTestId("report-unsent").getByLabel("Your unsent answer")).toHaveValue("Words I do not want to lose.");
+  await expect(page.getByTestId("report-timeline")).toContainText("Being reviewed");
+});
+
+test("withdraw: Cancel keeps the report; Withdraw asks first, then deletes after 30 days and moves focus to the message", async ({ page }) => {
+  const state = await mockApi(page, { signedIn: true, complaintStatus: "submitted" });
+  await page.goto(detailUrl);
+  const open = page.getByTestId("withdraw-open");
+  await open.focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.getByTestId("withdraw-dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("deleted after 30 days");
+  await expect(dialog).toContainText("cannot undo");
+  await expect(dialog).toContainText("legal hold");
+  // Focus starts on the safe choice and Escape cancels, handing focus back.
+  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(open).toBeFocused();
+  expect(state.withdrawCalls).toBe(0);
+
+  await open.click();
+  await dialog.getByRole("button", { name: "Withdraw report" }).click();
+  await expect(open).toHaveCount(0);
+  await expect(page.getByTestId("report-note")).toHaveText("You withdrew this report. It will be deleted after 30 days.");
+  await expect(page.getByTestId("report-note")).toBeFocused();
+  expect(state.withdrawCalls).toBe(1);
+});
+
+test("under review: no withdraw button, and one line says why", async ({ page }) => {
+  await mockApi(page, { signedIn: true });
+  await page.goto(detailUrl);
+  await expect(page.getByTestId("withdraw-open")).toHaveCount(0);
+  await expect(page.getByTestId("report-withdraw")).toContainText("cannot be withdrawn");
+});
+
+test("the answer form and the withdraw button do not scroll the page sideways at 320 px", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await mockApi(page, { signedIn: true, complaintStatus: "needs_information" });
+  await page.goto(detailUrl);
+  await page.getByTestId("answer-form").getByLabel("Your answer").fill("w".repeat(400));
+  await page.getByTestId("answer-form").getByTestId("answer-file-input").setInputFiles({ ...tinyJpeg, name: `${"long-name-".repeat(8)}.jpg` });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await expect(page.getByTestId("withdraw-open")).toBeVisible();
+  await page.getByTestId("withdraw-open").click();
+  await expect(page.getByTestId("withdraw-dialog")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+});
+
+for (const scheme of ["light", "dark"] as const) {
+  test(`the answer form and the withdraw dialog pass axe: ${scheme}`, async ({ page }) => {
+    await seedTheme(page, scheme);
+    await mockApi(page, { signedIn: true, complaintStatus: "needs_information" });
+    await page.goto(detailUrl);
+    const form = page.getByTestId("answer-form");
+    await form.getByLabel("Your answer").fill("An answer.");
+    await form.getByTestId("answer-file-input").setInputFiles(tinyJpeg);
+    await expect(form.getByTestId("answer-files")).toBeVisible();
+    await form.getByTestId("answer-send").focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId("report-note")).toBeFocused();
+    await expectAxeClean(page);
+  });
+
+  test(`the withdraw dialog passes axe: ${scheme}`, async ({ page }) => {
+    await seedTheme(page, scheme);
+    await mockApi(page, { signedIn: true, complaintStatus: "submitted" });
+    await page.goto(detailUrl);
+    await page.getByTestId("withdraw-open").click();
+    await expect(page.getByTestId("withdraw-dialog")).toBeVisible();
     await expectAxeClean(page);
   });
 }

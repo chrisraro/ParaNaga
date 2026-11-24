@@ -40,16 +40,15 @@ describe("corrections review mirrors 0025", () => {
     for (const s of ["draft", "accepted", "rejected", "duplicate", "incorporated", "superseded"] as const) expect(reviewActions(s)).toEqual([]);
   });
 
-  it("system transitions are the submission and the publication trigger, and no reviewer can make them", () => {
-    expect(SYSTEM_TRANSITIONS.map((p) => p.join(">"))).toEqual(["draft>submitted", "accepted>incorporated"]);
+  it("system transitions are the submission, the answer and the publication trigger, and no reviewer can make them", () => {
+    expect(SYSTEM_TRANSITIONS.map((p) => p.join(">"))).toEqual(["draft>submitted", "needs_evidence>submitted", "accepted>incorporated"]);
     expect(body("community.incorporate_corrections")).toMatch(/set status = 'incorporated'[\s\S]*?where c\.status = 'accepted'/);
     expect(SQL_0016).toContain("values (v_row.id, 'draft', 'submitted', v_user_id, 'commuter', p_moderation_reason)");
     for (const [from, to] of SYSTEM_TRANSITIONS) {
       expect(TRANSITIONS[from]).not.toContain(to);
       expect(canTransition(from, to)).toBe(true);
     }
-    // In neither list: 0025 never moves a report back to submitted, and nothing sets superseded.
-    expect(canTransition("needs_evidence", "submitted")).toBe(false);
+    // In neither list: nothing sets superseded.
     expect(canTransition("accepted", "superseded")).toBe(false);
   });
 

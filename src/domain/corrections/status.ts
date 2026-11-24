@@ -36,11 +36,12 @@ export const TRANSITIONS: Readonly<Record<CorrectionStatus, readonly CorrectionS
 };
 
 /**
- * Moves no reviewer makes: the commuter's submission (community.submit_correction, 0016) and the
- * publication trigger (community.incorporate_corrections, 0025).
+ * Moves no reviewer makes: the commuter's submission (community.submit_correction, 0016), their
+ * answer to a reviewer (community.answer_correction, 0038) and the publication trigger (community.incorporate_corrections, 0025).
  */
 export const SYSTEM_TRANSITIONS: readonly (readonly [CorrectionStatus, CorrectionStatus])[] = [
   ["draft", "submitted"],
+  ["needs_evidence", "submitted"],
   ["accepted", "incorporated"],
 ];
 

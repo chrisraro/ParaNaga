@@ -98,9 +98,11 @@ If this document becomes the source of truth, move the dump and generator into `
 | 0034 | App role updates only `profile` (`display_name`, `locale`) and `job` (`run_after`); execute revoked on `community.review_queue`, `community.content_review_queue`, `priv.review_queue` | S1, S2, S3 |
 | 0035 | `paranaga_app`: `statement_timeout` 15 s, `lock_timeout` 5 s; both answer 503. The import role and the owner have none | O3 |
 | 0036 | `post_photo`: `public_copy`, `removal_claimed_at`, `purge_started_at` and a trigger; `community.photo_action`, `photo_removal_due`, `photo_removal_begin`, `photo_removal_finish`; `content_target` treats a photo being purged as gone; restrictive read policy; definer delete on `post_photo` and on community photos in `media_object` (system only, once its purge started) | §4.6 photo removal |
+| 0037 | `community.photo_recheck`: a photo's public copy is settled after a direct delete | race left by 0036 |
+| 0038 | `priv.withdraw_complaint` (deleted 30 days later), `priv.answer_complaint`, `community.answer_correction` | §4.3 one-way states, §4.6 |
 | code, no migration | Daily Vercel cron, queued rate-limit purge, 40P01/40001/23505 handling, saved trips with an unknown revision, storage timeouts, `schema.ts` cut to the tables in use | O1, O2, C5, F1, C6, §4.1 |
 
-App schemas now: 89 tables, 857 columns, 79 foreign keys, 86 SECURITY DEFINER functions.
+App schemas now: 89 tables, 857 columns, 79 foreign keys, 90 SECURITY DEFINER functions.
 
 ## 2. Diagrams
 
@@ -1811,8 +1813,8 @@ The 98 dashed lines in §2: 37 from `revision_member`; 23 source code columns; t
 | Stale draft guard (C1) | Yes: replace one function |
 | Content reports cannot be resolved (handoff) | For resolve alone: **none** (functions and grant exist), but add an audit call. For a meaningful "actioned": yes, take-down (C2) |
 | **Done in 0036** (copy removed at once, original after 30 days, never during an open appeal that can still be decided; an appeal on a deleted post cannot). Public photo copy stays after post deletion (handoff). The app answers 404 after deletion, but the object and the private original remain | Yes: a removed state for `post_photo` (its CHECK ties `published` to the public key), a definer list and mark function, a definer delete path on `media_object` for `community_photo`, and a job |
-| `withdrawn` unreachable (handoff) | Yes: an owner-only withdraw function that writes the event and `retention_until`. The purge already covers the status |
-| Reporter answers `needs_evidence` / `needs_information` (§4.3) | Yes: one function each, with new evidence links |
+| **Done in 0038.** `withdrawn` unreachable (handoff) | Yes: an owner-only withdraw function that writes the event and `retention_until`. The purge already covers the status |
+| **Done in 0038.** Reporter answers `needs_evidence` / `needs_information` (§4.3) | Yes: one function each, with new evidence links |
 | Unscheduled cron (handoff) | None (`vercel.json` or a Neon schedule, plus O1) |
 | Bikol (i18n plan) | None for the interface; `profile.locale` already allows `bcl`. `route_note.text` and dataset notes are single-language: yes only if server text is translated |
 | `better-auth` advisories (handoff) | None. After an upgrade, check that `neon_auth."user"` keeps `id`, `name`, `email`, `emailVerified`: two definer functions read them, and both handle a missing table but not a renamed column (42703) |
@@ -1830,7 +1832,7 @@ The 98 dashed lines in §2: 37 from `revision_member`; 23 source code columns; t
 
 ## 5. Proposed migrations (words only)
 
-Forward-only, one file each, in this order. 0031 to 0036 are applied (see §1.5); the rest are proposals without SQL.
+Forward-only, one file each, in this order. 0031 to 0038 are applied (see §1.5); the rest are proposals without SQL.
 
 | Order | Proposal | Findings | Risk |
 |---|---|---|---|
@@ -1840,7 +1842,7 @@ Forward-only, one file each, in this order. 0031 to 0036 are applied (see §1.5)
 | 0034 (applied) | Narrow grants: `profile` columns, `ops.job` column, revoke three dead functions | S1 to S3 | Low: no code was found that depends on them |
 | 0035 (applied) | Role timeouts for `paranaga_app`; none for the import role | O3 | Medium: a value that is too short breaks revision validation; try it on a branch through the pooler first |
 | 0036 (applied) | Photo removal states and functions | §4.6 | Medium: touches the delete policy on `media_object` |
-| 0037 | Withdraw and answer functions for reporters | §4.6 | Medium: personal data; needs a security review |
+| 0038 (applied; 0037 became the photo recheck) | Withdraw and answer functions for reporters | §4.6 | Medium: personal data; needs a security review |
 | later | Account deletion with F5, F6, I5; keys F2 to F4; drop indexes I6 and I7 after production statistics; drop `moderation_policy`, `ingest.error` and legacy functions | as listed | Dropping is irreversible: backup branch first |
 
 Every migration: a backup branch, `pnpm db:check-rls`, and integration tests through `scripts/with-neon-branch.sh`.

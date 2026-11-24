@@ -217,7 +217,7 @@ Inputs, copied to `data/source/naga/`: `naga_mapped_stops_source.kml`, `naga_map
 
 `priv` has no public views. `community_moderator` has no grant on `priv`. Reviewers read complaints through `priv.v_complaint_review`, which omits `reporter_id` (shown only through an audited definer function when contact is needed).
 
-Retention: closed/withdrawn complaints purged 365 days after closure (configurable); abandoned drafts after 30 days; `legal_hold boolean` suspends purging. The `retention_purge` job deletes, in one idempotent flow, the S3 originals and redacted copies, `media_object`, `complaint_media`, `evidence_access`, events and the complaint row, then verifies no orphaned objects remain. Neon point-in-time-restore history is kept ≤ 7 days so purged rows do not linger in history. On account deletion, `reporter_id` on retained complaints is replaced with a pseudonymous tombstone id.
+Retention: closed complaints purged 365 days after closure, withdrawn ones 30 days after withdrawal (owner decision 2026-11-24); abandoned drafts after 30 days; `legal_hold boolean` suspends purging. The `retention_purge` job deletes, in one idempotent flow, the S3 originals and redacted copies, `media_object`, `complaint_media`, `evidence_access`, events and the complaint row, then verifies no orphaned objects remain. Neon point-in-time-restore history is kept ≤ 7 days so purged rows do not linger in history. On account deletion, `reporter_id` on retained complaints is replaced with a pseudonymous tombstone id.
 
 ## 4.9 Ops
 

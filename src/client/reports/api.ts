@@ -12,14 +12,17 @@ import {
   complaintDetailResponseSchema,
   correctionDetailResponseSchema,
   myNagaHandoffResponseSchema,
+  reportActionResponseSchema,
+  type ComplaintAnswer,
   type ComplaintDetail,
+  type CorrectionAnswer,
   type CorrectionDetail,
   type MyNagaHandoff,
   type MyNagaSelfReport,
 } from "@/domain/reports/schemas";
 import { en, type Dict } from "@/i18n/dict";
 
-export type Loaded<T> = { ok: true; data: T } | { ok: false; reason: "signed_out" | "not_found" | "rate_limited" | "failed"; message: string };
+export type Loaded<T> = { ok: true; data: T } | { ok: false; reason: "signed_out" | "not_found" | "rate_limited" | "failed" | "changed" | "invalid"; message: string };
 
 const get = { credentials: "same-origin", cache: "no-store" } as const;
 // English messages from the dictionary; screens show them with translated(message, en.reports.api, t.reports.api).
@@ -97,3 +100,34 @@ export async function saveMyNagaSelfReport(complaintId: string, input: MyNagaSel
     return fail(null);
   }
 }
+
+/** A reporter's own action on a report. 409: the report moved on; 400: the answer or files were refused. */
+function actionFail(status: number | null): Loaded<true> {
+  if (status === 409) return { ok: false, reason: "changed", message: M.changed };
+  if (status === 400) return { ok: false, reason: "invalid", message: M.invalid };
+  const r = fail<true>(status);
+  return !r.ok && r.reason === "failed" ? { ...r, message: M.sendFailed } : r;
+}
+
+async function postAction(kind: "complaint" | "correction", id: string, action: "withdraw" | "answer", body: unknown): Promise<Loaded<true>> {
+  try {
+    const res = await fetch(`/api/v1/me/reports/${kind}/${encodeURIComponent(id)}/${action}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      credentials: "same-origin",
+      cache: "no-store",
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) return actionFail(res.status);
+    return reportActionResponseSchema.safeParse(await res.json().catch(() => null)).success ? { ok: true, data: true } : actionFail(null);
+  } catch {
+    return actionFail(null);
+  }
+}
+
+/** Takes back a driver report; it is deleted 30 days later. */
+export const withdrawComplaint = (id: string) => postAction("complaint", id, "withdraw", {});
+/** The reply to a reviewer who asked for more information on a driver report. */
+export const answerComplaint = (id: string, answer: ComplaintAnswer) => postAction("complaint", id, "answer", answer);
+/** The reply to a reviewer who asked for more evidence on a correction. */
+export const answerCorrection = (id: string, answer: CorrectionAnswer) => postAction("correction", id, "answer", answer);

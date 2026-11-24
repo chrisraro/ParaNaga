@@ -17,7 +17,9 @@ import "./driver-report.css";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
-import { EVIDENCE_TYPES, evidenceType, submitComplaint, uploadComplaintEvidence } from "@/client/complaints/api";
+import { EVIDENCE_TYPES, evidenceFileProblem, evidenceType, submitComplaint, uploadComplaintEvidence } from "@/client/complaints/api";
+
+export { evidenceFileProblem };
 import { useGeolocation } from "@/client/geo/use-geolocation";
 import { complaintCategoryInfo, complaintCategoryLabel, type ComplaintCategory } from "@/domain/complaints/categories";
 import {
@@ -36,7 +38,6 @@ import {
   type ComplaintReceipt,
 } from "@/domain/complaints/schemas";
 import { complaintStatusLabel } from "@/domain/complaints/status";
-import { MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from "@/domain/media/schemas";
 import { en, translated, type Dict } from "@/i18n/dict";
 import { DEFAULT_LOCALE, formatLocale, type Locale } from "@/i18n/locales";
 import { useLocale, useT } from "@/i18n/provider";
@@ -74,20 +75,6 @@ function whenProblem(local: string, t: Dict["driverReport"]): string | null {
 function formatLocal(local: string, locale: Locale = DEFAULT_LOCALE): string {
   const t = new Date(local);
   return Number.isFinite(t.getTime()) ? t.toLocaleString(formatLocale(locale), { dateStyle: "medium", timeStyle: "short" }) : "";
-}
-
-/**
- * Why a file cannot be added, or null. The size limit is checked when the file arrives, not at
- * Send: a file that cannot be sent is said so at once, by name when it has one.
- */
-export function evidenceFileProblem(blob: Blob, t: Dict["driverReport"]): string | null {
-  const mime = evidenceType(blob.type);
-  if (!mime) return t.api.badType;
-  if (blob.size === 0) return t.camera.nothingCaptured;
-  const max = mime.startsWith("video/") ? MAX_VIDEO_BYTES : MAX_PHOTO_BYTES;
-  if (blob.size <= max) return null;
-  const mb = Math.round(max / 1024 / 1024);
-  return blob instanceof File && blob.name ? t.fileTooLarge(blob.name.slice(0, 60), mb) : t.api.tooLarge(mb);
 }
 
 /**
