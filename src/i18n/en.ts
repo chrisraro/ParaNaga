@@ -2154,6 +2154,14 @@ export const en = {
         overturned: "Reviewed again: now published",
       },
     },
+    // A moderator unpublished something that was public (migration 0032). The author sees this on
+    // their own post, comment or photo, next to "Ask for another review".
+    takenDown: {
+      badge: "Taken down",
+      post: "A moderator took this post down. It did not meet the community guidelines, so others can no longer see it.",
+      comment: "A moderator took this comment down. It did not meet the community guidelines, so others can no longer see it.",
+      photo: "A moderator took this photo down. Others can no longer see it.",
+    },
     // The guidelines text itself is acknowledgments.community (English until its reviewed translation).
     guidelinesTitle: "Community guidelines",
     guidelinesCheckbox: "I have read the community guidelines.",

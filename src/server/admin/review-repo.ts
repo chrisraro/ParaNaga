@@ -12,10 +12,13 @@ import {
   decisionResultSchema,
   moderationQueueSchema,
   photoCopySchema,
+  removedCopySchema,
   type DecisionResult,
   type ModeratePayload,
   type ModerationQueue,
   type ResolveAppealPayload,
+  type ResolveReportsPayload,
+  type TakeDownPayload,
 } from "@/domain/admin/moderation";
 import type { Db } from "@/server/db/context";
 import type { StoragePort } from "@/server/storage/types";
@@ -87,7 +90,23 @@ export async function readModerationQueue(db: Db): Promise<ModerationQueue> {
     items: list(d.items).map((i) => ({ ...iso(i, ["submittedAt"]), mediaId: i.mediaId ?? undefined })),
     appeals: list(d.appeals).map((a) => iso(a, ["decidedAt", "createdAt"])),
     history: list(d.history).map((h) => iso(h, ["at"])),
+    reports: list(await scalar(db, sql`select community.admin_report_queue(100) as r`)).map((r) => iso(r, ["firstAt", "lastAt"])),
   });
+}
+
+/**
+ * Takes down published content (migration 0032): the decision, the author's notice and closing the
+ * open reports on it are one transaction. `removed` is the public copy a photo no longer points to;
+ * the caller deletes that object after the commit, never inside it.
+ */
+export async function takeDown(db: Db, p: TakeDownPayload): Promise<{ decisionId: string; reportsClosed: number; removed: { bucket: string; key: string } | null }> {
+  const r = ((await scalar(db, sql`select community.admin_take_down(${p.targetType}, ${p.targetId}::uuid, ${p.reason}, ${p.note ?? null}) as r`)) ?? {}) as Obj;
+  return { decisionId: String(r.decisionId), reportsClosed: Number(r.reportsClosed ?? 0), removed: removedCopySchema.parse(r.removed ?? null) };
+}
+
+/** Closes every open report on the content `reportId` is about; false when they were closed already. */
+export async function resolveReports(db: Db, reportId: string, status: ResolveReportsPayload["status"]): Promise<boolean> {
+  return (await scalar(db, sql`select community.resolve_report(${reportId}::uuid, ${status}) as ok`)) === true;
 }
 
 /**

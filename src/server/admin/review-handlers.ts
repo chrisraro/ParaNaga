@@ -1,18 +1,27 @@
 import "server-only";
 import { CORRECTION_SCOPES, correctionQueueSchema, reviewPayloadSchema, reviewResultSchema, type CorrectionScope } from "@/domain/admin/corrections";
-import { decisionResultSchema, moderatePayloadSchema, moderationQueueSchema, resolveAppealPayloadSchema } from "@/domain/admin/moderation";
+import {
+  decisionResultSchema,
+  moderatePayloadSchema,
+  moderationQueueSchema,
+  reportsClosedSchema,
+  resolveAppealPayloadSchema,
+  resolveReportsPayloadSchema,
+  takeDownPayloadSchema,
+  takeDownResultSchema,
+} from "@/domain/admin/moderation";
 import { parseUuidParam } from "@/domain/api/schemas";
 import { can } from "@/domain/auth/permissions";
-import { badRequest, notFound, readJsonBody, tooManyRequests, unavailable } from "@/server/api/http";
+import { badRequest, conflict, notFound, readJsonBody, tooManyRequests, unavailable } from "@/server/api/http";
 import { serverEnv } from "@/server/env";
 import { getStorage } from "@/server/storage/adapter";
 import { adminRoute, firstIssue, json, limited } from "./handlers";
-import { moderate, readCorrections, readModerationQueue, resolveAppeal, reviewCorrection, reviewMedia } from "./review-repo";
+import { moderate, readCorrections, readModerationQueue, resolveAppeal, resolveReports, reviewCorrection, reviewMedia, takeDown } from "./review-repo";
 
 // /api/v1/admin/corrections/** (C9), /api/v1/admin/moderation/** (C10) and /api/v1/admin/media/:id
 // (N6). Same three walls as the rest of /api/v1/admin (handlers.ts): the session's roles, the
-// action's permission, and the definer functions of migration 0025, which check the role again,
-// refuse your own content and stale pages, and audit. Every answer is private, no-store.
+// action's permission, and the definer functions of migrations 0025 and 0032, which check the role
+// again, refuse your own content and stale pages, and audit. Every answer is private, no-store.
 
 const ACTION_MAX_BYTES = 8192;
 
@@ -56,7 +65,7 @@ export function postCorrectionReview(request: Request, params: Promise<{ id: str
 
 // ---------------------------------------------------------------- C10 moderation
 
-/** GET /api/v1/admin/moderation: pending posts, comments and photos (with Jev's evidence), open appeals routed away from their decider, recent decisions. */
+/** GET /api/v1/admin/moderation: pending posts, comments and photos (with Jev's evidence), open content reports by item, open appeals routed away from their decider, recent decisions. */
 export function getModeration(request: Request): Promise<Response> {
   return adminRoute(request, "admin/moderation", "community.moderate", async ({ requestId, db }) =>
     json(moderationQueueSchema, await db(readModerationQueue, true), requestId),
@@ -106,6 +115,43 @@ export function postAppealResolution(request: Request, params: Promise<{ id: str
     );
     if (!result) throw tooManyRequests();
     return json(decisionResultSchema, result, requestId);
+  });
+}
+
+/**
+ * POST /api/v1/admin/moderation/takedowns {targetType, targetId, reason, note?}: unpublishes a
+ * published post, comment or photo. One transaction records the decision, shows it to the author
+ * (who can appeal) and closes the open reports on it as actioned. A photo's public copy is deleted
+ * after the commit, never inside the transaction: from then on the app answers 404 for it either
+ * way, and "left" tells the moderator when the object itself could not be deleted.
+ */
+export function postTakeDown(request: Request): Promise<Response> {
+  return adminRoute(request, "admin/moderation/takedown", "community.moderate", async ({ user, requestId, db }) => {
+    const parsed = takeDownPayloadSchema.safeParse(await readJsonBody(request, ACTION_MAX_BYTES));
+    if (!parsed.success) throw badRequest(firstIssue(parsed.error));
+    const result = await db(async (d) => ((await limited(d, request, user.id)) ? null : takeDown(d, parsed.data)));
+    if (!result) throw tooManyRequests();
+    const { removed } = result;
+    // Only ever the configured public bucket: the private original stays for an appeal.
+    const publicCopy = !removed
+      ? "none"
+      : removed.bucket === serverEnv().STORAGE_BUCKET_PUBLIC && (await getStorage().deleteObject(removed.bucket, removed.key).catch(() => false))
+        ? "removed"
+        : "left";
+    return json(takeDownResultSchema, { decisionId: result.decisionId, reportsClosed: result.reportsClosed, publicCopy }, requestId);
+  });
+}
+
+/** POST /api/v1/admin/moderation/reports/:id {status}: closes every open report on the same content with no take-down. */
+export function postReportResolution(request: Request, params: Promise<{ id: string }>): Promise<Response> {
+  return adminRoute(request, "admin/moderation/report", "community.moderate", async ({ user, requestId, db }) => {
+    const id = await idParam(params, "No such report.");
+    const parsed = resolveReportsPayloadSchema.safeParse(await readJsonBody(request, ACTION_MAX_BYTES));
+    if (!parsed.success) throw badRequest("Send the status: dismissed or actioned.");
+    const closed = await db(async (d) => ((await limited(d, request, user.id)) ? null : resolveReports(d, id, parsed.data.status)));
+    if (closed === null) throw tooManyRequests();
+    if (!closed) throw conflict("These reports were already closed. Reload.");
+    return json(reportsClosedSchema, { ok: true }, requestId);
   });
 }
 

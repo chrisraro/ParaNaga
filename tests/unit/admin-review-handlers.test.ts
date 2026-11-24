@@ -5,7 +5,7 @@
 // photo stream with its headers.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { correctionQueueSchema, reviewResultSchema } from "@/domain/admin/corrections";
-import { decisionResultSchema, moderationQueueSchema } from "@/domain/admin/moderation";
+import { decisionResultSchema, moderationQueueSchema, takeDownResultSchema } from "@/domain/admin/moderation";
 import { apiErrorSchema } from "@/domain/api/schemas";
 
 const C1 = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a01";
@@ -18,6 +18,7 @@ const PHOTO = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a07";
 const MEDIA = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a08";
 const DECISION = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a09";
 const APPEAL = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a0a";
+const REPORT = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a0b";
 const KEY = `community_photo/${MEDIA}.jpeg`;
 
 const state = vi.hoisted(() => ({
@@ -30,6 +31,10 @@ const state = vi.hoisted(() => ({
   storage: [] as string[],
   photoCopy: null as unknown,
   media: null as { bucket: string; object_key: string; mime: string } | null,
+  reports: [] as unknown[],
+  removed: null as { bucket: string; key: string } | null,
+  resolved: true,
+  deleteOk: true,
 }));
 
 const text = (q: unknown): string =>
@@ -67,7 +72,7 @@ vi.mock("@/server/db/context", () => ({
   withRequestContext: async (_ctx: unknown, fn: (db: unknown) => Promise<unknown>) => {
     const out = await fn({
       execute: async (q: unknown) => {
-        const key = text(q).match(/ops\.take_token|(?:transit|ingest|community|core)\.admin_\w+/)?.[0] ?? "other";
+        const key = text(q).match(/ops\.take_token|community\.resolve_report|(?:transit|ingest|community|core)\.admin_\w+/)?.[0] ?? "other";
         state.calls.push(key);
         state.params.set(key, flat(q));
         if (key === "ops.take_token") return { rows: [{ ok: true }] };
@@ -82,6 +87,12 @@ vi.mock("@/server/db/context", () => ({
           case "community.admin_moderate":
           case "community.admin_resolve_appeal":
             return { rows: [{ r: { decisionId: DECISION, isOverride: false, copy: state.photoCopy } }] };
+          case "community.admin_report_queue":
+            return { rows: [{ r: state.reports }] };
+          case "community.admin_take_down":
+            return { rows: [{ r: { decisionId: DECISION, isOverride: false, reportsClosed: 2, removed: state.removed } }] };
+          case "community.resolve_report":
+            return { rows: [{ ok: state.resolved }] };
           case "core.admin_review_media":
             return { rows: state.media ? [state.media] : [] };
           default:
@@ -103,7 +114,7 @@ vi.mock("@/server/storage/adapter", () => ({
     },
     deleteObject: async (b: string, k: string) => {
       state.storage.push(`delete ${b}/${k}`);
-      return true;
+      return state.deleteOk;
     },
     getObject: async (b: string, k: string) => {
       state.storage.push(`get ${b}/${k}`);
@@ -138,6 +149,10 @@ beforeEach(() => {
   state.storage = [];
   state.photoCopy = null;
   state.media = null;
+  state.reports = [];
+  state.removed = null;
+  state.resolved = true;
+  state.deleteOk = true;
 });
 
 describe("role guard", () => {
@@ -162,6 +177,8 @@ describe("role guard", () => {
         await h.getModeration(get("/api/v1/admin/moderation")),
         await h.postModerationDecision(post("/api/v1/admin/moderation/decisions", { targetType: "comment", targetId: C1, outcome: "published", reason: "meets_guidelines" })),
         await h.postAppealResolution(post(`/api/v1/admin/moderation/appeals/${APPEAL}`, { outcome: "upheld", note: "Still a threat." }), idParams(APPEAL)),
+        await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "comment", targetId: C1, reason: "spam" })),
+        await h.postReportResolution(post(`/api/v1/admin/moderation/reports/${REPORT}`, { status: "dismissed" }), idParams(REPORT)),
       ]) {
         expect(res.status, JSON.stringify(user)).toBe(404);
       }
@@ -345,6 +362,109 @@ describe("moderation (C10)", () => {
     const res = await h.postAppealResolution(post(`/api/v1/admin/moderation/appeals/${APPEAL}`, { outcome: "upheld", note: "Mine." }), idParams(APPEAL));
     expect(res.status).toBe(403);
     expect((await problem(res)).message).toBe("A different moderator must decide this appeal.");
+  });
+});
+
+describe("content reports and take-down (migration 0032)", () => {
+  const GROUP = {
+    reportId: REPORT, targetType: "post", targetId: C1, postId: C1, state: "published", count: 2, reasons: { spam: 2 }, notes: ["An advert."],
+    firstAt: "2026-11-24 10:00:00.5+08", lastAt: "2026-11-24 11:00:00+08", contentKind: "post_version", contentId: C2,
+    title: "A reported post", body: "Its text.", authorHandle: "Commuter AB12C", photos: [{ id: PHOTO, mediaId: MEDIA }],
+  };
+
+  it("the queue carries the open reports by item, with ISO times and no reporter", async () => {
+    state.user = MODERATOR;
+    state.reports = [GROUP];
+    const res = await h.getModeration(get("/api/v1/admin/moderation"));
+    expect(res.status).toBe(200);
+    const body = moderationQueueSchema.parse(await res.json());
+    expect(body.reports).toEqual([{ ...GROUP, firstAt: "2026-11-24T02:00:00.500Z", lastAt: "2026-11-24T03:00:00.000Z" }]);
+    expect(db()).toEqual(["community.admin_moderation_queue", "community.admin_report_queue"]);
+  });
+
+  it("taking text down calls the database once and touches no storage", async () => {
+    state.user = MODERATOR;
+    const res = await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "post_version", targetId: C2, reason: "other", note: " Names a private person. " }));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    expect(takeDownResultSchema.parse(await res.json())).toEqual({ decisionId: DECISION, reportsClosed: 2, publicCopy: "none" });
+    expect(db()).toEqual(["community.admin_take_down"]);
+    expect(state.params.get("community.admin_take_down")).toEqual(["post_version", C2, "other", "Names a private person."]);
+    expect(state.storage).toEqual([]);
+  });
+
+  it("taking a photo down deletes its public copy after the commit, only in the public bucket, and says so when it could not", async () => {
+    state.user = ADMIN;
+    const body = { targetType: "photo", targetId: PHOTO, reason: "unsafe_photo" };
+    const result = async () => takeDownResultSchema.parse(await (await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", body))).json()).publicCopy;
+    state.removed = { bucket: "public-media", key: KEY };
+    expect(await result()).toBe("removed");
+    expect(state.storage).toEqual([`delete public-media/${KEY}`]);
+    state.deleteOk = false;
+    expect(await result()).toBe("left");
+    // A bucket the server does not serve photos from is never touched.
+    state.storage = [];
+    state.removed = { bucket: "evidence-private", key: KEY };
+    expect(await result()).toBe("left");
+    expect(state.storage).toEqual([]);
+    // Nothing is deleted when the transaction did not commit.
+    state.removed = { bucket: "public-media", key: KEY };
+    state.commitFail = true;
+    expect((await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", body))).status).toBe(500);
+    expect(state.storage).toEqual([]);
+  });
+
+  it("400 without a database call: a publish reason, other without a note, an unknown type, an extra field", async () => {
+    state.user = MODERATOR;
+    for (const body of [
+      { targetType: "comment", targetId: C1, reason: "meets_guidelines" },
+      { targetType: "comment", targetId: C1, reason: "other" },
+      { targetType: "comment", targetId: C1 },
+      { targetType: "post", targetId: C1, reason: "spam" },
+      { targetType: "comment", targetId: C1, reason: "spam", outcome: "published" },
+    ]) {
+      expect((await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", body))).status, JSON.stringify(body)).toBe(400);
+    }
+    expect(db()).toEqual([]);
+  });
+
+  it("maps refusals: own content 403, already unpublished or superseded 409, unknown 404", async () => {
+    state.user = MODERATOR;
+    for (const [fail, status] of [
+      [{ code: "42501", message: "you cannot moderate your own content" }, 403],
+      [{ code: "55000", message: "this item is already unpublished; reload" }, 409],
+      [{ code: "55000", message: "a newer version of this post is live now; reload" }, 409],
+      [{ code: "22023", message: "unknown item" }, 404],
+    ] as const) {
+      state.fail = fail;
+      const res = await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "comment", targetId: C1, reason: "spam" }));
+      expect(res.status, fail.message).toBe(status);
+    }
+    state.fail = { code: "55000", message: "this item is already unpublished; reload" };
+    expect((await problem(await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "comment", targetId: C1, reason: "spam" })))).message).toBe("This item is already unpublished; reload.");
+  });
+
+  it("reports: dismissing closes them; closed already is 409; a bad status or id never reaches the database", async () => {
+    state.user = MODERATOR;
+    const send = (body: unknown, id = REPORT) => h.postReportResolution(post(`/api/v1/admin/moderation/reports/${id}`, body), idParams(id));
+    const ok = await send({ status: "dismissed" });
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toEqual({ ok: true });
+    expect(state.params.get("community.resolve_report")).toEqual([REPORT, "dismissed"]);
+
+    state.resolved = false;
+    const again = await send({ status: "dismissed" });
+    expect(again.status).toBe(409);
+    expect((await problem(again)).message).toBe("These reports were already closed. Reload.");
+
+    state.calls = [];
+    expect((await send({ status: "closed" })).status).toBe(400);
+    expect((await send({ status: "dismissed", note: "x" })).status).toBe(400);
+    expect((await send({ status: "dismissed" }, "x")).status).toBe(404);
+    expect(db()).toEqual([]);
+
+    state.fail = { code: "55000", message: "this content is still public; take it down, or dismiss the reports" };
+    expect((await send({ status: "actioned" })).status).toBe(409);
   });
 });
 
