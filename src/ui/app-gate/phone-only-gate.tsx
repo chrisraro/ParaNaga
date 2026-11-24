@@ -1,7 +1,9 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { useViewportClass } from "@/client/use-viewport-class";
+import { opensOnLargeScreen, type ViewportClass } from "@/domain/device/viewport-gate";
 import { LunadMark } from "@/ui/brand/lunad-mark";
 import { LargeScreenGate } from "@/ui/app-gate/large-screen-gate";
 
@@ -10,18 +12,24 @@ import { LargeScreenGate } from "@/ui/app-gate/large-screen-gate";
  * decision is made in the browser and follows resize/rotation; the server sends a neutral splash
  * so a desktop never flashes app UI before the gate appears.
  *
+ * Sign-in, Settings and Help open on any screen (opensOnLargeScreen).
+ *
  * Once the app has mounted it is never unmounted by the gate: if the screen later counts as
  * large (a window dragged wider), the gate covers the app and the app turns inert, so the trip,
  * the map view and the sheet are all still there when the screen is phone-sized again.
  */
 export function PhoneOnlyGate({ children }: { children: ReactNode }) {
   const viewport = useViewportClass();
-  const [appMounted, setAppMounted] = useState(false);
-  if (viewport === "phone" && !appMounted) setAppMounted(true);
+  // The path is read only past the splash, in the browser: the static shell has no request data.
+  return viewport === null ? <Splash /> : <Gate viewport={viewport}>{children}</Gate>;
+}
 
-  if (viewport === null) return <Splash />;
-  if (!appMounted) return viewport === "large" ? <LargeScreenGate /> : null;
-  const covered = viewport === "large";
+function Gate({ viewport, children }: { viewport: ViewportClass; children: ReactNode }) {
+  const covered = !opensOnLargeScreen(usePathname()) && viewport === "large";
+  const [appMounted, setAppMounted] = useState(false);
+  if (!covered && !appMounted) setAppMounted(true);
+
+  if (!appMounted) return covered ? <LargeScreenGate /> : null;
   return (
     <>
       <div className="contents" inert={covered} aria-hidden={covered || undefined} data-testid="app-root">

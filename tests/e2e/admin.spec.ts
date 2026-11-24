@@ -714,6 +714,13 @@ test("moderation: an override of Jev needs a note; approving a photo makes it pu
   const photo = page.getByTestId(`item-photo-${N6(42)}`);
   await expect(photo.getByRole("img")).toBeVisible();
   await expect(photo).toContainText("Photos are never sent to Jev.");
+  // Nothing is preselected: without a choice, nothing is recorded.
+  await expect(photo.getByRole("radio", { checked: true })).toHaveCount(0);
+  const before = s.decisions.length;
+  await page.getByTestId(`decide-photo-${N6(42)}`).click();
+  await expect(photo.getByLabel("Approve and make public")).toBeFocused();
+  expect(s.decisions).toHaveLength(before);
+  await photo.getByLabel("Approve and make public").check();
   await page.getByTestId(`decide-photo-${N6(42)}`).click();
   expect(s.decisions.at(-1)).toEqual({ targetType: "photo", targetId: N6(42), outcome: "published", reason: "meets_guidelines" });
 

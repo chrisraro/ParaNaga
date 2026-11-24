@@ -11,11 +11,13 @@ import "@/ui/kit/styles";
 import "./report.css";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { useAuthSession } from "@/client/auth/use-auth-session";
 import { submitCorrection, uploadEvidencePhoto } from "@/client/corrections/api";
+import { clearReportDraft, readReportDraft, saveReportDraft } from "@/client/corrections/draft";
 import { useGeolocation } from "@/client/geo/use-geolocation";
+import { signInHref } from "@/domain/auth/return-path";
 import {
   categoriesFor,
   categoryLabel,
@@ -25,7 +27,7 @@ import {
   type CorrectionCategory,
   type EntityType,
 } from "@/domain/corrections/categories";
-import { parseReportEntity } from "@/domain/corrections/href";
+import { parseReportEntity, reportHref, type ReportEntity } from "@/domain/corrections/href";
 import {
   correctionLocationSchema,
   DESCRIPTION_MAX,
@@ -44,21 +46,41 @@ type Photo = { id: string; name: string };
 
 const STEP_KEYS = { 1: "what", 2: "saw", 3: "review" } as const;
 
+/**
+ * The router keeps a page it has left mounted but hidden, with its state. A report about another
+ * stop or route, or the next report after one was sent, must start empty: each gets its own wizard.
+ */
 export function ReportWizard() {
+  // Both hooks follow the page on screen, also while this one is hidden: take the entity only from
+  // this page's own URL, or visiting another page would look like a report about something else.
+  const here = usePathname() === "/app/report";
+  const query = useSearchParams().toString();
+  const [held, setHeld] = useState(query);
+  if (here && held !== query) setHeld(query);
+  const prefilled = parseReportEntity(new URLSearchParams(here ? query : held));
+  const [run, setRun] = useState(0);
+  const onReset = useCallback(() => setRun((n) => n + 1), []);
+  const report = prefilled ? `${prefilled.entityType}:${prefilled.entityId}` : "";
+  return <Wizard key={`${run}:${report}`} report={report} prefilled={prefilled} onReset={onReset} />;
+}
+
+function Wizard({ report, prefilled, onReset }: { report: string; prefilled: ReportEntity | null; onReset: () => void }) {
   const tt = useT();
   const t = tt.report;
   const form = tt.forms;
   const uid = useId();
-  const params = useSearchParams();
-  const prefilled = parseReportEntity(params);
   const auth = useAuthSession();
   const user = auth.user;
 
-  const [step, setStep] = useState<Step>(1);
-  const [category, setCategory] = useState<CorrectionCategory | null>(null);
-  const [entityType, setEntityType] = useState<EntityType | null>(prefilled?.entityType ?? null);
-  const [entityText, setEntityText] = useState(prefilled ? (prefilled.entityLabel ?? prefilled.entityId) : "");
-  const [description, setDescription] = useState("");
+  // Back from signing in: continue where it was left (on step 2 when the location, which is never
+  // kept, has to be added again).
+  const [draft] = useState(() => readReportDraft(report));
+  useEffect(clearReportDraft, []);
+  const [step, setStep] = useState<Step>(draft ? (draft.hadLocation ? 2 : 3) : 1);
+  const [category, setCategory] = useState<CorrectionCategory | null>(draft?.category ?? null);
+  const [entityType, setEntityType] = useState<EntityType | null>(prefilled?.entityType ?? draft?.entityType ?? null);
+  const [entityText, setEntityText] = useState(prefilled ? (prefilled.entityLabel ?? prefilled.entityId) : (draft?.entityText ?? ""));
+  const [description, setDescription] = useState(draft?.description ?? "");
   const [location, setLocation] = useState<CorrectionLocation | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationNote, setLocationNote] = useState<string | null>(null);
@@ -101,7 +123,9 @@ export function ReportWizard() {
       ? t.locationOff
       : locating && geoFailed
         ? t.locationFailed
-        : null);
+        : draft?.hadLocation && !location && !locating
+          ? t.locationNotKept
+          : null);
 
 
   // Focus the step heading whenever the step (or the done screen) changes. Not on first render:
@@ -114,6 +138,17 @@ export function ReportWizard() {
     }
     heading.current?.focus();
   }, [step, sent]);
+
+  // Leaving the "sent" screen ends this report.
+  useEffect(() => (sent ? onReset : undefined), [sent, onReset]);
+
+  // Signing out, or another account, ends it too: one person's answers never go out as another's.
+  // (A guest's answers stay when they sign in.)
+  const owner = useRef<string | null>(null);
+  useEffect(() => {
+    if (owner.current && (auth.status === "signedOut" || (user && user.id !== owner.current))) onReset();
+    else if (user) owner.current = user.id;
+  }, [auth.status, user, onReset]);
 
   const entityId = entityText.trim();
   const entityName = prefilled?.entityLabel ?? entityId;
@@ -436,7 +471,11 @@ export function ReportWizard() {
           {auth.status === "signedOut" ? (
             <div className="pn-report__signin" data-testid="report-signin">
               <p>{t.signInToSend}</p>
-              <Link href="/app/sign-in" className="pn-btn pn-btn--primary pn-report__action">
+              <Link
+                href={signInHref(prefilled ? reportHref(prefilled) : "/app/report")}
+                onClick={() => saveReportDraft(report, { category, entityType, entityText: prefilled ? "" : entityText, description, hadLocation: location !== null })}
+                className="pn-btn pn-btn--primary pn-report__action"
+              >
                 {form.signIn}
               </Link>
             </div>

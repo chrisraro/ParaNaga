@@ -139,15 +139,17 @@ export function ModerationScreen() {
 }
 
 function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: string, ok: boolean) => Promise<void> }) {
-  const [outcome, setOutcome] = useState<"published" | "rejected">(item.jev?.recommendation === "reject" ? "rejected" : "published");
-  const [reason, setReason] = useState<ModerationReason>(outcome === "published" ? "meets_guidelines" : "spam");
+  const [outcome, setOutcome] = useState<"published" | "rejected" | null>(null);
+  const [reason, setReason] = useState<ModerationReason>("meets_guidelines");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const override = isOverride(item.jev?.recommendation, outcome);
+  // Nothing is preselected: publishing is always the moderator's own choice (Jev is evidence only).
+  const override = outcome !== null && isOverride(item.jev?.recommendation, outcome);
   const id = `${item.kind}-${item.id}`;
 
   const submit = async () => {
+    if (!outcome) return setProblem("Choose a decision first.");
     if ((override || reason === "other") && !note.trim()) return setProblem(override ? "Deciding against Jev's recommendation needs a note." : "The reason “Other” needs a note.");
     setProblem(null);
     setBusy(true);
@@ -199,6 +201,7 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
               <input
                 type="radio"
                 name={`outcome-${id}`}
+                required
                 value={o}
                 checked={outcome === o}
                 onChange={() => {
@@ -210,15 +213,17 @@ function ItemCard({ item, onDone }: { item: ModerationItem; onDone: (text: strin
             </label>
           ))}
         </fieldset>
-        <Field label="Reason">
-          <select className={inputCls} value={reason} onChange={(e) => setReason(e.target.value as ModerationReason)} data-testid={`reason-${id}`}>
-            {reasonsFor(outcome).map((r) => (
-              <option key={r} value={r}>
-                {REASON_LABELS[r]}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {outcome ? (
+          <Field label="Reason">
+            <select className={inputCls} value={reason} onChange={(e) => setReason(e.target.value as ModerationReason)} data-testid={`reason-${id}`}>
+              {reasonsFor(outcome).map((r) => (
+                <option key={r} value={r}>
+                  {REASON_LABELS[r]}
+                </option>
+              ))}
+            </select>
+            </Field>
+        ) : null}
         {override ? <ErrorNote testId={`override-${id}`}>This goes against Jev&apos;s recommendation. Write why; it is recorded as an override.</ErrorNote> : null}
         <Field label={override || reason === "other" ? "Note (required)" : "Note (optional)"}>
           <textarea className={inputCls} rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} data-testid={`note-${id}`} />

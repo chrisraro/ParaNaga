@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import type { AuthUserDto } from "@/domain/auth/schemas";
+import { clearReportDraft } from "@/client/corrections/draft";
 import { getAuthClient } from "./client";
 
 /**
@@ -54,6 +55,7 @@ export function useAuthSession() {
   }, []);
 
   const signOut = useCallback(async () => {
+    clearReportDraft();
     let done = true;
     try {
       const client = await getAuthClient();

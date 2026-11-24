@@ -27,5 +27,13 @@ export function classifyViewport({ widthPx, heightPx, coarsePointer }: ViewportF
   return Math.min(widthPx, heightPx) <= PHONE_MAX_WIDTH_PX ? "phone" : "large";
 }
 
+/**
+ * Pages that also open on a large screen: staff sign in and out at a desk (the admin console is a
+ * desktop tool), and the website links to the help and source pages.
+ */
+export function opensOnLargeScreen(pathname: string): boolean {
+  return pathname === "/app/sign-in" || pathname === "/app/more" || pathname === "/app/help" || pathname.startsWith("/app/help/");
+}
+
 /** CSS media query that matches exactly the viewports classifyViewport calls "phone". */
 export const PHONE_MEDIA_QUERY = `(max-width: ${PHONE_MAX_WIDTH_PX}px), (pointer: coarse) and (max-height: ${PHONE_MAX_WIDTH_PX}px)`;

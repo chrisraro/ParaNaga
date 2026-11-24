@@ -1692,6 +1692,7 @@ export const fil: Dict = {
     outsideNaga: "Nasa labas ng Naga City ang puwestong ito, kaya hindi ito idinagdag.",
     locationOff: "Naka-off ang lokasyon para sa Lunad. Puwede mo pa ring ipadala ang ulat nang wala ito.",
     locationFailed: "Hindi mahanap ang lokasyon mo. Puwede mo pa ring ipadala ang ulat nang wala ito.",
+    locationNotKept: "Hindi itinabi ang lokasyon mo habang nagsa-sign in ka. Idagdag ulit kung gusto mong ipadala.",
     photosOptional: "Mga larawan (opsyonal)",
     removePhoto: (name: string) => `Alisin ang larawang ${name}`,
     uploading: "Ina-upload…",

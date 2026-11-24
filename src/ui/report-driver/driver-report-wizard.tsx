@@ -71,7 +71,18 @@ function formatLocal(local: string, locale: Locale = DEFAULT_LOCALE): string {
   return Number.isFinite(t.getTime()) ? t.toLocaleString(formatLocale(locale), { dateStyle: "medium", timeStyle: "short" }) : "";
 }
 
+/**
+ * The router keeps a page it has left mounted but hidden, with its state, so leaving has to drop
+ * the report itself (driverReport.sharedPhone promises it). Effects are cleaned up on hiding: the
+ * new key then replaces the wizard, with its answers, location and captured files, by an empty one.
+ */
 export function DriverReportWizard() {
+  const [visit, setVisit] = useState(0);
+  useEffect(() => () => setVisit((n) => n + 1), []);
+  return <Wizard key={visit} />;
+}
+
+function Wizard() {
   const tt = useT();
   const t = tt.driverReport;
   const form = tt.forms;
@@ -105,6 +116,14 @@ export function DriverReportWizard() {
     itemsRef.current = items;
   });
   useEffect(() => () => itemsRef.current.forEach((i) => URL.revokeObjectURL(i.url)), []);
+  // Leaving while files upload stops there: the report is not sent from a screen that is gone.
+  const left = useRef(false);
+  useEffect(() => {
+    left.current = false;
+    return () => {
+      left.current = true;
+    };
+  }, []);
 
   // Location: asked only on tap; one fix is kept, then the watch stops (battery, privacy).
   const wantFix = useRef(false);
@@ -214,6 +233,7 @@ export function DriverReportWizard() {
       }
       setSending(t.uploadingN(n + 1, items.length));
       const result = await uploadComplaintEvidence(item.blob, t.api);
+      if (left.current) return;
       if (!result.ok) {
         setSending(null);
         return setError(translated(result.message, en.driverReport.api, t.api));

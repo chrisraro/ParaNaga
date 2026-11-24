@@ -6,6 +6,8 @@ import "@/ui/auth/sign-in.css";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getAuthClient } from "@/client/auth/client";
+import { clearReportDraft } from "@/client/corrections/draft";
+import { safeReturnPath } from "@/domain/auth/return-path";
 import type { Dict } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
 
@@ -29,6 +31,11 @@ function friendlyAuthError(message: string | undefined, fallback: string, t: Dic
   return fallback;
 }
 
+/** The page to open once signed in. Read when it is needed, so the page itself stays static. */
+function returnPath(): string {
+  return safeReturnPath(new URLSearchParams(window.location.search).get("next")) ?? "/app/more";
+}
+
 export function SignInScreen() {
   const tt = useT();
   const t = tt.auth;
@@ -39,6 +46,12 @@ export function SignInScreen() {
   const [status, setStatus] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const backToEmail = useRef(false);
+
+  // A sign-in that does not go back to the report (from Settings, say): whatever an earlier guest
+  // left on the way to signing in is not this person's.
+  useEffect(() => {
+    if (!returnPath().startsWith("/app/report")) clearReportDraft();
+  }, []);
 
   // "Use a different email" unmounts the code form: put focus back on the email field.
   useEffect(() => {
@@ -94,7 +107,7 @@ export function SignInScreen() {
         return;
       }
       setStatus({ type: "success", message: t.signedIn });
-      window.location.href = "/app/more";
+      window.location.href = returnPath();
     } catch {
       fail(null, t.verifyFailed);
     } finally {
@@ -112,7 +125,7 @@ export function SignInScreen() {
         return;
       }
       // Absolute, so Neon sends the browser back to this site (its host is a trusted origin) and not to its own.
-      const res = await client.signIn.social({ provider: "google", callbackURL: `${window.location.origin}/app/more` });
+      const res = await client.signIn.social({ provider: "google", callbackURL: `${window.location.origin}${returnPath()}` });
       if (res?.error) fail(res.error, t.googleFailed);
     } catch {
       fail(null, t.googleFailed);

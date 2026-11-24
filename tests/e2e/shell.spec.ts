@@ -239,4 +239,17 @@ test.describe("large screen", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Explore" })).toHaveCount(0);
     await expect(tabBar(page)).toHaveCount(0);
   });
+
+  test("sign-in, settings and help open on a large screen; leaving them for the map shows the gate", async ({ page }) => {
+    for (const path of ["/app/sign-in", "/app/more", "/app/help/sources", "/app/help"]) {
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1 }).filter({ visible: true }).first()).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Lunad rides in your pocket." })).toHaveCount(0);
+      await page.screenshot({ path: test.info().outputPath(`large${path.replaceAll("/", "-")}.png`) });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    }
+    await page.evaluate(() => (window as unknown as { next: { router: { push(p: string): void } } }).next.router.push("/app/explore"));
+    await expect(page.getByTestId("large-screen-overlay")).toBeVisible();
+    await expect(page.getByTestId("app-root")).toHaveAttribute("inert", "");
+  });
 });

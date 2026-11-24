@@ -136,6 +136,23 @@ async function fillDetails(page: Page) {
   await page.getByLabel("Plate number (optional)").fill("abc 1234");
 }
 
+test("leaving before sending clears the answers", async ({ page }) => {
+  await mockApi(page, { signedIn: true });
+  await page.goto("/app/report-driver");
+  await page.getByTestId("driver-next").click();
+  await page.getByTestId("driver-next").click();
+  await page.locator("textarea:visible").first().fill("SECRET driver text");
+  const go = (path: string) => page.evaluate((p) => (window as unknown as { next: { router: { push(p: string): void } } }).next.router.push(p), path);
+  await go("/app/explore");
+  await expect(page.getByRole("heading", { level: 1, name: "Explore" })).toBeVisible();
+  // Gone from the hidden page too, not only once it is shown again.
+  await expect.poll(() => page.locator("textarea").evaluateAll((all) => all.map((x) => (x as HTMLTextAreaElement).value))).not.toContain("SECRET driver text");
+  await go("/app/report-driver");
+  await page.getByTestId("driver-next").filter({ visible: true }).click();
+  await page.getByTestId("driver-next").filter({ visible: true }).click();
+  await expect(page.locator("textarea:visible").first()).toHaveValue("");
+});
+
 test("guest reads the explainer and is asked to sign in", async ({ page }) => {
   await fakeCamera(page, "ok");
   await mockApi(page, { signedIn: false });

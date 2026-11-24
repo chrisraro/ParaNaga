@@ -74,8 +74,91 @@ test.describe("guest", () => {
     await expect(page.getByTestId("report-summary")).toContainText("Wrong curb side");
     await expect(page.getByTestId("report-summary")).toContainText("Plaza Rizal");
     await expect(page.getByTestId("report-signin")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/app/sign-in");
+    await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", /^\/app\/sign-in\?next=%2Fapp%2Freport/);
     await expect(page.getByTestId("report-send")).toHaveCount(0);
+  });
+});
+
+/** A soft navigation, as a link makes it: the router keeps the page it leaves mounted but hidden. */
+async function go(page: Page, path: string) {
+  await page.evaluate((p) => (window as unknown as { next: { router: { push(p: string): void } } }).next.router.push(p), path);
+  await page.waitForURL((u) => u.pathname + u.search === path);
+}
+
+test.describe("leaving", () => {
+  test("a report about something else starts empty; the same one keeps its answers", async ({ page }) => {
+    await mockApi(page, { signedIn: true });
+    await open(page);
+    await fillStep1And2(page);
+    await go(page, "/app/explore");
+    await expect(page.getByRole("heading", { level: 1, name: "Explore" })).toBeVisible();
+    await page.waitForTimeout(1500); // hidden pages update late: give a wrong reset time to happen
+    await go(page, STOP_URL);
+    await expect(page.getByTestId("report-summary").filter({ visible: true })).toContainText("opposite side");
+    await go(page, "/app/explore");
+    await go(page, "/app/report?type=route&id=R4&label=Route%204");
+    await expect(page.getByTestId("report-progress").filter({ visible: true })).toHaveText("Step 1 of 3");
+    await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
+  });
+
+  for (const how of ["sent", "signed out"] as const) {
+    test(`the same entity starts empty once the report was ${how}`, async ({ page }) => {
+      let user: typeof USER | { user: null } = USER;
+      await mockApi(page, { signedIn: true });
+      await page.route("**/api/v1/me", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(user) }));
+      await page.route("**/api/v1/corrections", (route) =>
+        route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ correction: { id: "6f1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a99", category: "wrong_curb_side", entityType: "stop", entityId: "stop-101", entityLabel: "Plaza Rizal", status: "submitted", submittedAt: "2026-10-18T01:00:00.000Z" } }) }),
+      );
+      await open(page);
+      await fillStep1And2(page);
+      await expect(page.getByTestId("report-send")).toBeVisible();
+      if (how === "sent") {
+        await page.getByTestId("report-ack").check();
+        await page.getByTestId("report-send").click();
+        await expect(page.getByTestId("report-done")).toBeVisible();
+      } else user = { user: null };
+      await go(page, "/app/explore");
+      await expect(page.getByRole("heading", { level: 1, name: "Explore" })).toBeVisible();
+      await go(page, STOP_URL);
+      await expect(page.getByTestId("report-progress").filter({ visible: true })).toHaveText("Step 1 of 3");
+      await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
+    });
+  }
+
+  test("signing in keeps what was typed, never the location", async ({ page, context }) => {
+    await context.grantPermissions(["geolocation"]);
+    await context.setGeolocation({ latitude: 13.6233869, longitude: 123.1846726, accuracy: 18 });
+    let signedIn = false;
+    await mockApi(page, { signedIn: false });
+    await page.route("**/api/v1/me", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(signedIn ? USER : { user: null }) }));
+    await page.route("**/api/auth/**", (route) => {
+      if (route.request().url().includes("sign-in/email-otp")) signedIn = true;
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(signedIn ? { token: "t", user: { id: "user-1", email: "a@example.com" } } : { success: true }) });
+    });
+    await open(page);
+    await page.getByRole("radio", { name: /Wrong curb side/ }).check();
+    await page.getByTestId("report-next").click();
+    await page.getByLabel("What did you see?").fill("Kept while signing in.");
+    await page.getByTestId("report-add-location").click();
+    await expect(page.getByTestId("report-location")).toBeVisible();
+    await page.getByTestId("report-next").click();
+    await page.getByRole("link", { name: "Sign in" }).click();
+    await page.waitForURL("**/app/sign-in?next=**");
+    const stored = await page.evaluate(() => sessionStorage.getItem("paranaga.reportDraft"));
+    expect(stored).toContain("Kept while signing in.");
+    expect(stored).not.toMatch(/13\.62|123\.18|"lat"/);
+
+    await page.locator("#signin-email").fill("a@example.com");
+    await page.getByTestId("send-otp-btn").click();
+    await page.locator("#signin-otp").fill("123456");
+    await page.getByTestId("verify-otp-btn").click();
+    await page.waitForURL((u) => u.pathname === "/app/report" && u.searchParams.get("id") === "stop-101");
+    await expect(page.getByTestId("report-progress")).toHaveText("Step 2 of 3");
+    await expect(page.getByLabel("What did you see?")).toHaveValue("Kept while signing in.");
+    await expect(page.getByText("Your location was not kept")).toBeVisible();
+    expect(await page.evaluate(() => sessionStorage.getItem("paranaga.reportDraft"))).toBeNull();
+    await page.getByTestId("report-next").click();
+    await expect(page.getByTestId("report-send")).toBeVisible();
   });
 });
 

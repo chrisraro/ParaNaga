@@ -1721,6 +1721,7 @@ export const en = {
     outsideNaga: "This spot is outside Naga City, so it was not added.",
     locationOff: "Location is off for Lunad. You can still send the report without it.",
     locationFailed: "Your location could not be found. You can still send the report without it.",
+    locationNotKept: "Your location was not kept while you signed in. Add it again if you want to send it.",
     photosOptional: "Photos (optional)",
     removePhoto: (name: string) => `Remove photo ${name}`,
     uploading: "Uploading…",
