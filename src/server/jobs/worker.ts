@@ -25,11 +25,13 @@ export async function enqueueJob(
 ): Promise<string> {
   const idempotencyKey = options.idempotencyKey ?? crypto.randomUUID();
   const maxAttempts = options.maxAttempts ?? 5;
-  const runAfter = options.runAfter ? options.runAfter.toISOString() : new Date().toISOString();
+  // Due now by the database's clock, not this server's: ops.claim_jobs compares with its own, and a
+  // server clock a moment ahead would leave the job for the next (daily) run.
+  const runAfter = options.runAfter?.toISOString() ?? null;
 
   const result = await db.execute<{ id: string }>(sql`
     insert into ops.job (kind, payload, idempotency_key, max_attempts, run_after)
-    values (${kind}, ${JSON.stringify(payload)}::jsonb, ${idempotencyKey}, ${maxAttempts}, ${runAfter}::timestamptz)
+    values (${kind}, ${JSON.stringify(payload)}::jsonb, ${idempotencyKey}, ${maxAttempts}, coalesce(${runAfter}::timestamptz, now()))
     on conflict (kind, idempotency_key) where status not in ('done', 'dead')
     do update set run_after = least(ops.job.run_after, excluded.run_after)
     returning id

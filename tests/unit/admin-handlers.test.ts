@@ -230,6 +230,8 @@ describe("publish and rollback", () => {
       [{ code: "42501", message: "a second reviewer must publish this revision" }, 403, "forbidden"],
       [{ code: "42501", message: "forbidden" }, 404, "not_found"],
       [{ code: "22023", message: "unknown revision" }, 404, "not_found"],
+      [{ code: "40P01", message: "deadlock detected" }, 503, "unavailable"],
+      [{ code: "40001", message: "could not serialize access" }, 503, "unavailable"],
     ];
     for (const [fail, status, code] of cases) {
       state.publishFail = fail;

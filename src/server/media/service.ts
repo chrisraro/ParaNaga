@@ -129,7 +129,9 @@ export async function confirmMediaSlot(
   };
 
   // 2. Size check before buffering the object
-  const head = await storage.headObject(slot.bucket, slot.object_key);
+  const head = await storage.headObject(slot.bucket, slot.object_key).catch(() => {
+    throw new MediaConfirmError("failed"); // storage did not answer: keep the slot, the client can retry
+  });
   if (!head || head.bytes === 0) throw await reject(false);
   if (head.bytes > Number(slot.expected_bytes)) throw await reject(true);
 

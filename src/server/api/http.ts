@@ -2,6 +2,7 @@ import "server-only";
 import type { z } from "zod";
 import type { ApiError, ApiErrorCode } from "@/domain/api/schemas";
 import { withRequestContext, type Db } from "@/server/db/context";
+import { isTransientConflict } from "@/server/db/pg-error";
 import { safeRequestId } from "@/server/request-id";
 
 export const CACHE = {
@@ -92,6 +93,8 @@ export function publicText(request: Request, route: string, run: (ctx: RunContex
 
 /** pg-pool gave up waiting for a free connection: busy, not broken (503, the client retries). */
 const isPoolTimeout = (error: unknown) => error instanceof Error && /timeout exceeded when trying to connect/i.test(error.message);
+/** Also a deadlock or serialization failure: nothing was written, the same request may be sent again. */
+const isBusy = (error: unknown) => isPoolTimeout(error) || isTransientConflict(error);
 const BUSY = "Lunad is busy. Try again in a moment.";
 
 async function handle(request: Request, route: string, respond: (ctx: RunContext) => Promise<Response>): Promise<Response> {
@@ -102,7 +105,7 @@ async function handle(request: Request, route: string, respond: (ctx: RunContext
     return await respond({ requestId, withDb });
   } catch (error) {
     if (error instanceof ApiProblem) return errorResponse(error.status, error.code, error.message, requestId);
-    if (isPoolTimeout(error)) return errorResponse(503, "unavailable", BUSY, requestId);
+    if (isBusy(error)) return errorResponse(503, "unavailable", BUSY, requestId);
     console.error(JSON.stringify({
       event: "api_error",
       route,
@@ -130,7 +133,7 @@ export async function authedRoute(request: Request, route: string, run: (request
         ? errorResponse(401, "unauthorized", "Sign in to continue.", requestId)
         : errorResponse(403, "forbidden", "You are not allowed to do this.", requestId);
     }
-    if (isPoolTimeout(error)) return errorResponse(503, "unavailable", BUSY, requestId);
+    if (isBusy(error)) return errorResponse(503, "unavailable", BUSY, requestId);
     console.error(JSON.stringify({ event: "api_error", route, requestId, error: error instanceof Error ? error.name : "unknown" }));
     return errorResponse(500, "internal", "Something went wrong.", requestId);
   }

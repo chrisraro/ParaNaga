@@ -117,6 +117,14 @@ describe("complaint evidence confirm", () => {
     expect(state.promoted[1]?.[2]).not.toBe(state.promoted[0]?.[2]);
   });
 
+  it("a storage that does not answer fails the confirm (retryable) and keeps the slot", async () => {
+    await storage.putObject("quarantine", QKEY, JPEG, "image/jpeg");
+    vi.spyOn(storage, "headObject").mockRejectedValue(new Error("timed out"));
+    await expect(confirmMediaSlot(USER, SLOT_ID)).rejects.toMatchObject({ kind: "failed" });
+    expect(state.rejected).toEqual([]);
+    expect(await storage.getObject("quarantine", QKEY)).toEqual(JPEG);
+  });
+
   it("reads the quarantine object with the slot's size cap", async () => {
     await storage.putObject("quarantine", QKEY, JPEG, "image/jpeg");
     const get = vi.spyOn(storage, "getObject");
@@ -133,6 +141,41 @@ describe("S3 adapter limits", () => {
     const u = new URL(up.url);
     expect(u.searchParams.get("X-Amz-SignedHeaders")).toBe("content-length;content-type;host");
     expect(up.headers).toEqual({ "Content-Type": "image/jpeg" });
+  });
+
+  it.each([
+    ["headObject", 5_000, () => s3.headObject("b", "k")],
+    ["deleteObject", 5_000, () => s3.deleteObject("b", "k")],
+    ["getObject", 30_000, () => s3.getObject("b", "k")],
+    ["copyObject", 30_000, () => s3.copyObject("b", "k", "b2", "k")],
+    ["putObject", 30_000, () => s3.putObject("b", "k", JPEG, "image/jpeg")],
+  ] as const)("%s gives up after %i ms", async (name, ms, call) => {
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new DOMException("timed out", "TimeoutError"));
+    try {
+      const out = await call().catch(() => "threw");
+      expect(timeout).toHaveBeenCalledExactlyOnceWith(ms);
+      expect(fetchSpy.mock.calls[0]?.[1]?.signal).toBe(timeout.mock.results[0]?.value);
+      // Never read as done or gone: HEAD throws, the others report failure.
+      expect(out).toBe(name === "headObject" ? "threw" : name === "getObject" ? null : false);
+    } finally {
+      fetchSpy.mockRestore();
+      timeout.mockRestore();
+    }
+  });
+
+  it("HEAD: missing is null, a server error throws", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    try {
+      for (const status of [404, 403]) {
+        fetchSpy.mockResolvedValueOnce(new Response(null, { status }));
+        expect(await s3.headObject("b", "k")).toBeNull();
+      }
+      fetchSpy.mockResolvedValueOnce(new Response(null, { status: 503 }));
+      await expect(s3.headObject("b", "k")).rejects.toThrow("503");
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 
   it("refuses a body larger than the cap before buffering it", async () => {
@@ -172,14 +215,20 @@ describe("orphan media sweep", () => {
 });
 
 describe("cron jobs route", () => {
-  it("queues the orphan sweep (one at a time) on every authorized run", async () => {
+  it("queues the orphan sweep and the rate-limit purge (fixed keys) on every authorized run, never cached", async () => {
     const res = await cronJobs(new Request("http://localhost/api/cron/jobs", { headers: { authorization: "Bearer cron-secret" } }));
     expect(res.status).toBe(200);
-    expect(state.enqueued).toEqual([{ kind: "sweep_orphan_media", key: "sweep_orphan_media" }]);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    expect(state.enqueued).toEqual([
+      { kind: "sweep_orphan_media", key: "sweep_orphan_media" },
+      { kind: "retention_purge", key: "retention_purge" },
+    ]);
+    // Every queued kind has a handler, and nothing registers the old empty stub.
+    expect([...state.handlers.keys()].sort()).toEqual(["retention_purge", "sweep_orphan_media"]);
 
     const denied = await cronJobs(new Request("http://localhost/api/cron/jobs"));
     expect(denied.status).toBe(401);
-    expect(state.enqueued).toHaveLength(1);
+    expect(state.enqueued).toHaveLength(2);
   });
 });
 

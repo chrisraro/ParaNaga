@@ -111,6 +111,17 @@ describe("runEvidenceRetention", () => {
     expect(db.runs.at(-1)).toEqual([false, 1, 1, 2, 1]);
   });
 
+  it("a HEAD check with no answer (timeout) is not proof: the rows stay and the run is still recorded", async () => {
+    const db = fakeDb();
+    const storage = await storageWithObjects();
+    storage.headObject = async () => {
+      throw new Error("timed out");
+    };
+    expect(await runEvidenceRetention({ dryRun: false, storage, asSystem: db.asSystem })).toMatchObject({ complaints: 0, uploads: 0, failed: 3 });
+    expect(db.live.size).toBe(3);
+    expect(db.runs).toEqual([[false, 0, 0, 0, 3]]);
+  });
+
   it("an object still present after delete (HEAD check) also rolls back", async () => {
     const db = fakeDb();
     const storage = await storageWithObjects();

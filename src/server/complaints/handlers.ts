@@ -16,6 +16,7 @@ import { ApiProblem, authedRoute, badRequest, CACHE, notFound, readJsonBody, ste
 import { authorize } from "@/server/auth/authorize";
 import { applyStepUp, currentStepUpKey, isStepUpError } from "@/server/auth/step-up";
 import { withRequestContext } from "@/server/db/context";
+import { pgCode } from "@/server/db/pg-error";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
 import { driverReportsEnabled } from "@/server/flags";
 import { getStorage } from "@/server/storage/adapter";
@@ -61,13 +62,6 @@ async function privateRoute(request: Request, route: string, run: (requestId: st
 
 const json = (body: unknown, requestId: string, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": CACHE.private, "X-Request-Id": requestId } });
-
-/** Postgres error code, whether the driver error is wrapped or not. */
-function pgCode(error: unknown): string | undefined {
-  const e = error as { code?: unknown; cause?: { code?: unknown } } | null;
-  const code = e?.code ?? e?.cause?.code;
-  return typeof code === "string" ? code : undefined;
-}
 
 /**
  * POST /api/v1/complaints: authorize, strict body, idempotent replay, rate limit, notice

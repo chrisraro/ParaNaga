@@ -9,7 +9,7 @@ const state = vi.hoisted(() => ({
   allowed: true,
   acked: false,
   rateLimited: false,
-  dbFail: null as null | { code: string },
+  dbFail: null as null | { code: string; constraint?: string; once?: boolean },
   jev: "ok" as "ok" | "throws" | "unavailable" | "reject",
   calls: [] as string[],
   authorized: [] as string[],
@@ -58,7 +58,9 @@ vi.mock("@/server/db/context", () => ({
         if (t.includes("from core.ack")) return { rows: state.acked ? [{ one: 1 }] : [] };
         if (t.includes("submit_correction")) {
           state.calls.push("submit");
-          if (state.dbFail) throw Object.assign(new Error("db"), state.dbFail);
+          const fail = state.dbFail;
+          if (fail?.once) state.dbFail = null;
+          if (fail) throw Object.assign(new Error("db"), fail);
           return {
             rows: [
               {
@@ -193,6 +195,19 @@ describe("POST /api/v1/corrections", () => {
     const res = await post(body());
     expect(res.status).toBe(201);
     expect(createCorrectionResponseSchema.parse(await res.json()).correction.status).toBe("submitted");
+  });
+
+  it("an overlapping copy of the same request (23505) answers the stored report; another clash is not retried", async () => {
+    state.dbFail = { code: "23505", constraint: "correction_author_id_client_request_id_key", once: true };
+    const res = await post(body());
+    expect(res.status).toBe(201);
+    createCorrectionResponseSchema.parse(await res.json());
+    expect(state.calls.filter((c) => c === "submit")).toHaveLength(2);
+    expect(state.calls.filter((c) => c.startsWith("jev:"))).toHaveLength(1);
+    state.calls = [];
+    state.dbFail = { code: "23505", constraint: "something_else_key" };
+    await expectError(await post(body()), 500, "internal");
+    expect(state.calls.filter((c) => c === "submit")).toHaveLength(1);
   });
 
   it("maps a rejected photo reference to 400 and other database failures to 500 without leaks", async () => {

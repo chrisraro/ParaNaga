@@ -35,7 +35,8 @@ export interface StoragePort {
   ): Promise<string>;
 
   /**
-   * Reads metadata of an object in storage.
+   * Reads metadata of an object in storage; null when it is not there. Throws when storage gave no
+   * usable answer (timeout, network, 5xx), so "unknown" is never read as "gone".
    */
   headObject(bucket: string, key: string): Promise<StorageObjectMetadata | null>;
 

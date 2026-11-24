@@ -187,9 +187,22 @@ Adds migrations 0010 (route notes, street graph v2, research source codes), 0011
 
 - Auth: `Authorization: Bearer $CRON_SECRET` only (a query-string secret is refused). The mode is required: `?mode=dry-run` lists and counts and deletes nothing; `?mode=commit` purges. No mode answers 400, so a misconfigured call does nothing.
 - Up to 50 reports and 50 uploads per call; call again while the summary reports work done.
-- It is not scheduled by this repository. Once a day is enough: a Vercel Cron entry (`{ "path": "/api/cron/retention?mode=commit", "schedule": "30 18 * * *" }`, 02:30 Manila) works on Hobby (daily); or a Neon scheduled Function, or any scheduler that can send the header. Run `?mode=dry-run` by hand first:
+- Scheduled once a day by `vercel.json` (see "Scheduled jobs" below). A commit answers 503 and deletes nothing when `STORAGE_*` is not configured. To see what is due without deleting:
   `curl -s -H "Authorization: Bearer $CRON_SECRET" "https://<host>/api/cron/retention?mode=dry-run"`.
 - The database functions only run without a signed-in user (the cron route), so no user request can purge anything.
+
+## Scheduled jobs (Vercel Cron)
+
+`vercel.json` `crons` (UTC; production deployments only). Hobby allows one run a day per job and starts it at any minute of the hour, so each has its own hour:
+
+| Path | Schedule (UTC) | Manila | Does |
+|---|---|---|---|
+| `/api/cron/jobs` | `0 18 * * *` | 02:00 to 02:59 | Queues `sweep_orphan_media` (unconfirmed uploads) and `retention_purge` (rate-limit buckets older than 2 days, expired Places cache), then runs up to 20 due jobs |
+| `/api/cron/retention?mode=commit` | `0 19 * * *` | 03:00 to 03:59 | The driver-evidence purge above |
+
+- Vercel sends a GET with `Authorization: Bearer $CRON_SECRET`, so `CRON_SECRET` must be set for Production. Both routes answer 401 without it, are never cached and redirect nowhere. They use the default function limit (300 s on Hobby).
+- Vercel does not retry a failed run and may deliver one twice or not at all; both routes are safe to repeat.
+- Vercel's cron documentation does not mention query strings in `path`. After the first deploy, check that the admin Jobs screen lists a retention run the next day; if Vercel dropped the query, the route answers 400 and deletes nothing.
 
 ## Content Security Policy (N8)
 
@@ -212,5 +225,5 @@ Each request carries its own `x-real-ip` from 198.18.0.0/15 so the per-client li
 
 ## Notes
 
-- Per-minute Vercel Cron needs a paid Vercel plan; on Hobby, increment 6 falls back to a Neon scheduled Function calling the job endpoint.
+- Cron runs daily (Hobby). Per-minute Vercel Cron needs a paid Vercel plan; otherwise a Neon scheduled Function can call the job endpoint.
 - The project lives in OneDrive. If installs or builds get slow or files lock, move the repo outside OneDrive or exclude `node_modules` and `.next` from sync.

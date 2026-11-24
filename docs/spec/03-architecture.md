@@ -302,7 +302,7 @@ Accepted types: JPEG, PNG, WebP. HEIC is converted to JPEG **on the client** (ca
   returning *;
   ```
 - Batch size is chosen to fit the function `maxDuration`; long kinds (`import_batch`, `media_derivatives`) extend `locked_until` with a heartbeat. At `attempts = max_attempts` → `dead`.
-- Triggers: `/api/cron/jobs` authenticated by `CRON_SECRET`, plus an opportunistic drain via `after()` right after enqueue. Per-minute Vercel Cron needs a paid Vercel plan; on Hobby (daily cron only) the fallback is a Neon Function scheduled trigger calling the same endpoint. `retention_purge` and `expire_disruptions` run as singleton jobs.
+- Triggers: `/api/cron/jobs` authenticated by `CRON_SECRET`, plus an opportunistic drain via `after()` right after enqueue. Per-minute Vercel Cron needs a paid Vercel plan; on Hobby (daily cron only) the fallback is a Neon Function scheduled trigger calling the same endpoint. As built: `vercel.json` calls `/api/cron/jobs` and `/api/cron/retention?mode=commit` once a day each (docs/setup.md); `sweep_orphan_media` and `retention_purge` run as singleton jobs (fixed key, queued by every `/api/cron/jobs` run). `expire_disruptions` is not built (there is no disruption table).
 - Handlers check target state first, so a re-run is harmless.
 - Kinds: `moderate_submission`, `media_derivatives`, `image_safety`, `publish_followups` (cache revalidation, saved-trip invalidation flags), `expire_disruptions`, `retention_purge`, `import_batch`.
 - After max attempts → dead-letter view in admin.

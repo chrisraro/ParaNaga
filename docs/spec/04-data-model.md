@@ -133,7 +133,7 @@ All PostGIS / trigram / btree_gist objects are referenced schema-qualified (`ext
 - `is_synthetic boolean NOT NULL DEFAULT false` on every transit table; publication fails if any member of the revision is synthetic.
 - Trigram GIN on `transit.f_norm(name)` — an `IMMUTABLE` wrapper around `unaccent(lower(...))` — and queries use the identical expression.
 - Every RLS policy column (`author_id`, `reporter_id`, `user_id`) is indexed; `core.user_role (user_id, role_code) WHERE revoked_at IS NULL`.
-- High-write tables (`core.audit_event`, `ops.job`, `ops.rate_limit_bucket`) use UUIDv7 ids generated in the app; `ops.rate_limit_bucket` has primary key `(key_hash, window_start)` and old windows are purged hourly.
+- High-write tables (`core.audit_event`, `ops.job`, `ops.rate_limit_bucket`) use UUIDv7 ids generated in the app; `ops.rate_limit_bucket` has primary key `(key_hash, window_start)` and old windows are purged by the daily `retention_purge` job.
 - Arrays of ids that need integrity (`post_version.media_ids`, `fare_conflict.observation_ids`, `moderation_decision.evidence_ids`) become join tables at implementation; `ingest.conflict.refs` stays an array (sorted) with `UNIQUE (batch_id, kind, refs)`.
 
 ### Public read model

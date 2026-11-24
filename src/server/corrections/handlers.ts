@@ -14,6 +14,7 @@ import { createJevClient } from "@/server/adapters/jev/client";
 import { badRequest, authedRoute, CACHE, readJsonBody, tooManyRequests, ApiProblem } from "@/server/api/http";
 import { authorize } from "@/server/auth/authorize";
 import { withRequestContext } from "@/server/db/context";
+import { onDuplicate, pgCode } from "@/server/db/pg-error";
 import { serverEnv } from "@/server/env";
 import { checkRateLimit, RATE_LIMITS } from "@/server/ratelimit/rate-limiter";
 
@@ -42,13 +43,6 @@ const toSummary = (r: SummaryRow): CorrectionSummary =>
   });
 
 const noStore = (requestId: string) => ({ "Cache-Control": CACHE.none, "X-Request-Id": requestId });
-
-/** Postgres error code, whether the driver error is wrapped or not. */
-function pgCode(error: unknown): string | undefined {
-  const e = error as { code?: unknown; cause?: { code?: unknown } } | null;
-  const code = e?.code ?? e?.cause?.code;
-  return typeof code === "string" ? code : undefined;
-}
 
 /** Jev is advisory only: any failure keeps the report pending and never blocks the commuter. */
 async function moderate(description: string): Promise<{ reason: string }> {
@@ -97,9 +91,8 @@ export function createCorrection(request: Request): Promise<Response> {
 
     const { reason } = await moderate(input.description);
 
-    let row: SummaryRow | undefined;
-    try {
-      row = await withRequestContext({ userId: user.id, requestId }, async (db) => {
+    const save = () =>
+      withRequestContext({ userId: user.id, requestId }, async (db) => {
         const res = await db.execute<SummaryRow>(sql`
           select * from community.submit_correction(
             ${input.clientRequestId}::uuid, ${input.category}, ${input.entityType}, ${input.entityId},
@@ -111,6 +104,9 @@ export function createCorrection(request: Request): Promise<Response> {
         `);
         return res.rows[0];
       });
+    let row: SummaryRow | undefined;
+    try {
+      row = await onDuplicate("correction_author_id_client_request_id_key", save);
     } catch (error) {
       if (pgCode(error) === "22023") throw badRequest("A photo could not be attached. Remove it and try again.");
       throw error;

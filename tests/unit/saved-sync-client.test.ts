@@ -22,12 +22,14 @@ type Call = { method: string; url: string; body: unknown };
 let calls: Call[];
 let remote: { places: SavedPlace[]; trips: ReturnType<typeof trip>[] };
 let failOn: string | null;
+let rejected: string[];
 
 beforeEach(async () => {
   await clearAllStores();
   calls = [];
   remote = { places: [], trips: [] };
   failOn = null;
+  rejected = [];
   vi.stubGlobal(
     "fetch",
     vi.fn(async (url: string, init?: RequestInit) => {
@@ -35,7 +37,7 @@ beforeEach(async () => {
       calls.push({ method, url, body: init?.body ? JSON.parse(String(init.body)) : null });
       if (failOn === method) return new Response("{}", { status: 500 });
       if (method === "GET") return Response.json(url.endsWith("places") ? { places: remote.places } : { trips: remote.trips });
-      return Response.json({ ok: true });
+      return Response.json(url.endsWith("trips") ? { ok: true, rejected } : { ok: true });
     }),
   );
 });
@@ -85,6 +87,14 @@ describe("syncSavedItems", () => {
     failOn = "POST";
     await putSavedPlace(place("p"));
     await expect(syncSavedItems()).rejects.toThrow();
+  });
+
+  it("a trip the account left out is not counted as sent, stays on the phone, and does not fail the sync", async () => {
+    await putSavedTrip(trip("ok"));
+    await putSavedTrip(trip("unknown-revision"));
+    rejected = ["unknown-revision"];
+    expect((await syncSavedItems()).tripsUploaded).toBe(1);
+    expect((await listSavedTrips()).records).toHaveLength(2);
   });
 
   it("sends more than 50 items in chunks of 50", async () => {
