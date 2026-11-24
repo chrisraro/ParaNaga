@@ -560,6 +560,16 @@ export const en = {
     pageTripTo: (label: string) => `To ${label}`,
     pageTripFrom: (label: string) => `From ${label}`,
     pageShowSteps: "Show the steps",
+    // One saved trip as text steps (src/domain/saved/trip-text.ts). Distances arrive formatted ("≈ 230 m").
+    stepStartAt: (place: string) => `Start at ${place}.`,
+    stepWalkTo: (distance: string, place: string) => `Walk ${distance} to ${place} (path not verified).`,
+    stepRideFree: (chip: string, board: string, alight: string, badge: string) => `Ride ${chip} along the approximate path from ${board}. ${alight}. ${badge}.`,
+    stepRidePinned: (chip: string, direction: string | null, board: string, alight: string, stops: string, badge: string) =>
+      `Ride ${chip}${direction ? `, ${direction}` : ""}, from ${board} to ${alight}: ${stops} by pin order. ${badge}.`,
+    stepTransferAt: (place: string) => `Transfer at ${place}.`,
+    stepTransferWalk: (distance: string, place: string) => `Walk ${distance} to ${place} to transfer (path not verified).`,
+    stepArriveAt: (place: string) => `Arrive at ${place}.`,
+    stepArriveWalk: (distance: string, place: string) => `Walk ${distance} to ${place} (path not verified).`,
   },
   // More tab (src/ui/settings, src/domain/device/location-permission).
   settings: {
@@ -649,6 +659,12 @@ export const en = {
     pageNotFound: "Not found",
     pageNotFoundCopy: "There is nothing at this link.",
     notFoundTabTitle: (title: string) => `${title} · Lunad`,
+    // The root 404 (src/app/not-found-view.tsx).
+    lostTitle: "Wrong stop.",
+    lostCopy: "There is nothing at this link. It may have moved, or the address may have a typo.",
+    lostOpenMap: "Open the map",
+    lostHome: "Lunad home",
+    lostTabTitle: "Page not found",
   },
   // Stop detail (src/ui/stops) and its wording in src/domain/network/present.
   stops: {
@@ -1814,6 +1830,7 @@ export const en = {
     title: "Report a driver",
     steps: { start: "Before you start", media: "Photo or video", what: "What happened", review: "Review and send" },
     tooMany: (max: number) => `Up to ${max} photos or videos.`,
+    fileTooLarge: (name: string, mb: number) => `“${name}” is too large. The limit is ${mb} MB.`,
     outsideNaga: "This spot is outside Naga City, so it was not added. You can describe the place instead.",
     locationOff: "Location is off for Lunad. You can describe the place instead.",
     locationFailed: "Your location could not be found. You can describe the place instead.",
@@ -1888,8 +1905,8 @@ export const en = {
       denied: "Camera access is off for Lunad. You can upload a photo or video instead, or continue without one. To use the camera, allow it in your browser settings.",
       unavailable: "The camera could not be opened on this phone. You can upload a photo or video instead, or continue without one.",
       upload: "Upload a photo or video instead",
-      limits: (max: number, s: number) =>
-        `Up to ${max} photos or videos. Videos up to ${s} seconds. Photos taken here carry no location data. Files are kept in private storage.`,
+      limits: (max: number, s: number, photoMb: number, videoMb: number) =>
+        `Up to ${max} photos or videos. Photos up to ${photoMb} MB, videos up to ${videoMb} MB. Videos recorded here stop at ${s} seconds. A photo taken here carries no location data. A file you upload keeps what your phone saved in it, such as where and when it was taken. Files are kept in private storage.`,
       nothingCaptured: "Nothing was captured. Try again.",
     },
     categories: {
@@ -1960,6 +1977,9 @@ export const en = {
     openSteps: "Open the MyNaga steps",
     continueMyNaga: "Continue in MyNaga",
     signInOne: "Sign in to see this report.",
+    moreInfoNote: "You cannot add to this report here yet. If you remember more, send a new driver report.",
+    moreDetailNote: "You cannot add to this report here yet. To send the missing detail, send a new report about the same thing.",
+    sendNewReport: "Send a new report about this",
     allMine: "All my reports",
     // Neutral wording for a closed driver report; never a finding about the driver.
     outcomes: {
@@ -2084,6 +2104,7 @@ export const en = {
     showMore: "Show more",
     feedNotice: "Written by other commuters. Not verified by Lunad. A fare or route tip here is not an official fare or route.",
     blocked: (n: number) => `Blocked people (${n})`,
+    blockedLoadFailed: "Could not load the people you blocked.",
     unblock: "Unblock",
     unblockLabel: (handle: string) => `Unblock ${handle}`,
     labels: { community: "Community observation", official_notice: "Official notice", incorporated_change: "Incorporated change" },
@@ -2171,6 +2192,9 @@ export const en = {
     more: "More",
     report: "Report",
     block: "Block this person",
+    blockTitle: "Block this person?",
+    blockBody: "You will not see their posts or comments any more. You can unblock them at the bottom of the community feed.",
+    replyDraftOpen: "Send or cancel the reply you are writing first.",
     history: (n: number) => `Edit history (${n})`,
     version: (n: number) => `Version ${n}`,
     visibleToAll: "Visible to everyone",

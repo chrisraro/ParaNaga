@@ -69,10 +69,14 @@ export function PostThread({ id }: { id: string }) {
   const [report, setReport] = useState<{ type: TargetType; id: string } | null>(null);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ type: TargetType; id: string } | null>(null);
+  const [confirmBlock, setConfirmBlock] = useState<{ type: "post" | "comment"; id: string } | null>(null);
+  // Is there unsent text in the open reply? Escape and another Reply must not throw it away.
+  const replyDraft = useRef(false);
   // Numbered, so a second comment that ends in the same state is announced again.
   const [commentSent, setSent] = useState<{ state: string; n: number } | null>(null);
   const setCommentSent = (state: string) => setSent((prev) => ({ state, n: (prev?.n ?? 0) + 1 }));
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
   const commentsRef = useRef<HTMLHeadingElement>(null);
   const commentSentRef = useRef<HTMLParagraphElement>(null);
   // Set when the control in use may be gone after the next load: where focus goes then.
@@ -87,7 +91,9 @@ export function PostThread({ id }: { id: string }) {
       const next: Load = r.ok ? { status: "ready", data: r.data } : { status: "error", message: r.message, notFound: r.reason === "not_found" };
       const target = afterLoad.current;
       afterLoad.current = null;
-      if (target) updateThenFocus(() => setLoad(next), target);
+      // A failed reload removes the page the focused control sat on: the message takes focus then.
+      if (next.status === "error") updateThenFocus(() => setLoad(next), () => errorRef.current);
+      else if (target) updateThenFocus(() => setLoad(next), target);
       else setLoad(next);
     });
     return () => {
@@ -114,6 +120,7 @@ export function PostThread({ id }: { id: string }) {
   const closeReply = (id: string, also?: () => void) =>
     updateThenFocus(
       () => {
+        replyDraft.current = false;
         setReplyTo(null);
         also?.();
       },
@@ -144,12 +151,17 @@ export function PostThread({ id }: { id: string }) {
       closeReport();
     } else if (replyTo) {
       e.preventDefault();
-      closeReply(replyTo);
+      // Typed text is kept: Cancel is the way to throw it away.
+      if (!replyDraft.current) closeReply(replyTo);
     }
   };
 
   const askDelete = (type: TargetType, targetId: string) => {
     if (!inFlight.current.has(`delete-${targetId}`)) setConfirmDelete({ type, id: targetId });
+  };
+
+  const askBlock = (type: "post" | "comment", targetId: string) => {
+    if (!inFlight.current.has(`block-${targetId}`)) setConfirmBlock({ type, id: targetId });
   };
 
   const openReport = (type: TargetType, targetId: string) => {
@@ -174,7 +186,7 @@ export function PostThread({ id }: { id: string }) {
   if (load.status === "error") {
     return (
       <div className="pn-comm" data-testid="thread-error">
-        <p className="pn-comm__error" role="alert">
+        <p ref={errorRef} tabIndex={-1} className="pn-comm__error" role="alert">
           {load.notFound ? t.notAvailable : apiText(load.message, t.api)}
         </p>
         <div className="pn-comm__nav">
@@ -311,9 +323,7 @@ export function PostThread({ id }: { id: string }) {
                   type="button"
                   className="pn-btn pn-btn--secondary pn-comm__small"
                   aria-disabled={busy.has(`block-${post.id}`) || undefined}
-                  onClick={() =>
-                    void run(`block-${post.id}`, () => blockPerson("post", post.id), () => router.replace("/app/community"))
-                  }
+                  onClick={() => askBlock("post", post.id)}
                   data-testid="thread-block"
                 >
                   {t.block}
@@ -358,7 +368,10 @@ export function PostThread({ id }: { id: string }) {
               signedIn={signedIn}
               busy={busy}
               replyTo={replyTo}
-              onReply={setReplyTo}
+              onReply={(id) => {
+                if (replyDraft.current && id !== replyTo) return setNote(t.replyDraftOpen);
+                setReplyTo(id);
+              }}
               onHelpful={(c) =>
                 void run("c-" + c.id, async () => {
                   const r = await toggleHelpful("comment", c.id);
@@ -367,7 +380,7 @@ export function PostThread({ id }: { id: string }) {
                 })
               }
               onReport={(c) => openReport("comment", c.id)}
-              onBlock={(c) => void run(`block-${c.id}`, () => blockPerson("comment", c.id), () => refreshThen(() => commentsRef.current))}
+              onBlock={(c) => askBlock("comment", c.id)}
               onDelete={(c) => askDelete("comment", c.id)}
               report={report?.type === "comment" ? report : null}
               closeReport={closeReport}
@@ -387,6 +400,7 @@ export function PostThread({ id }: { id: string }) {
                     refresh();
                   }}
                   onCancel={parentId ? () => closeReply(parentId) : undefined}
+                  onDraft={parentId ? (has) => (replyDraft.current = has) : undefined}
                 />
               )}
             />
@@ -406,8 +420,9 @@ export function PostThread({ id }: { id: string }) {
 
           {authStatus === "signedOut" ? <SignInPrompt text={t.signInComment} /> : null}
           {authStatus === "unknown" ? <SignInUnknown look="community" onRetry={() => void recheckAuth()} busy={recheckingAuth} /> : null}
-          {signedIn && replyTo === null ? (
-            <div className="pn-comm__panel">
+          {signedIn ? (
+            // Hidden, not removed, while a reply is open: what was typed here is still there after.
+            <div className="pn-comm__panel" hidden={replyTo !== null}>
               <h4 className="pn-comm__panel-title">{t.addComment}</h4>
               <CommentComposer
                 postId={post.id}
@@ -439,6 +454,24 @@ export function PostThread({ id }: { id: string }) {
         }}
       >
         <p>{t.deleteBody}</p>
+      </ConfirmDialog>
+
+      <ConfirmDialog
+        open={confirmBlock !== null}
+        title={t.blockTitle}
+        confirmLabel={t.block}
+        testId="block-confirm"
+        tone="danger"
+        onCancel={() => setConfirmBlock(null)}
+        onConfirm={() => {
+          const target = confirmBlock;
+          setConfirmBlock(null);
+          if (!target) return;
+          if (target.type === "post") void run(`block-${target.id}`, () => blockPerson("post", target.id), () => router.replace("/app/community"));
+          else void run(`block-${target.id}`, () => blockPerson("comment", target.id), () => refreshThen(() => commentsRef.current));
+        }}
+      >
+        <p>{t.blockBody}</p>
       </ConfirmDialog>
     </div>
   );
@@ -536,12 +569,14 @@ function CommentComposer({
   needGuidelines,
   onSent,
   onCancel,
+  onDraft,
 }: {
   postId: string;
   parentId: string | null;
   needGuidelines: boolean;
   onSent: (state: "published" | "pending" | "rejected") => void;
   onCancel?: () => void;
+  onDraft?: (has: boolean) => void;
 }) {
   const tt = useT();
   const t = tt.community;
@@ -594,6 +629,7 @@ function CommentComposer({
           value={text}
           onChange={(e) => {
             setText(e.target.value);
+            onDraft?.(e.target.value.trim().length > 0);
             edited(textId);
           }}
         />

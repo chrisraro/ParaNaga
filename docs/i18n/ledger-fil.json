@@ -11857,11 +11857,11 @@
   },
   {
     "key": "driverReport.camera.limits",
-    "en": "Up to {0} photos or videos. Videos up to {1} seconds. Photos taken here carry no location data. Files are kept in private storage.",
-    "fil": "Hanggang {0} larawan o video. Hanggang {1} segundo ang video. Walang data ng lokasyon ang mga larawang kinunan dito. Nasa pribadong storage ang mga file.",
+    "en": "Up to {0} photos or videos. Photos up to {2} MB, videos up to {3} MB. Videos recorded here stop at {1} seconds. A photo taken here carries no location data. A file you upload keeps what your phone saved in it, such as where and when it was taken. Files are kept in private storage.",
+    "fil": "Hanggang {0} larawan o video. Hanggang {2} MB ang larawan at {3} MB ang video. Humihinto sa {1} segundo ang video na kinukunan dito. Walang data ng lokasyon ang larawang kinunan dito. Ang file na ina-upload mo ay dala pa rin ang inilagay ng phone mo, gaya ng kung saan at kailan ito kinunan. Nasa pribadong storage ang mga file.",
     "review": true,
-    "note": "message function; {0},{1}.. are the arguments in order | Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm.",
-    "reviewed": "opus",
+    "note": "message function; {0},{1}.. are the arguments in order | Evidence-handling text (originals, bystanders, location data): meaning must stay exact; native speaker to confirm. | N8 audit sprint 3: limits and upload metadata now stated before capture; native speaker to confirm.",
+    "reviewed": "claude",
     "t15": "checked"
   },
   {
@@ -15285,6 +15285,195 @@
     "fil": "Nakatago ang oras mula sa booking site: baka luma na. Magtanong sa terminal.",
     "review": true,
     "note": "IC1 Leaving Naga (2026-10-28), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "pwa.stepStartAt",
+    "en": "Start at {0}.",
+    "fil": "Magsimula sa {0}.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "pwa.stepWalkTo",
+    "en": "Walk {0} to {1} (path not verified).",
+    "fil": "Maglakad {0} papunta sa {1} (di pa kumpirmado ang daan).",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "pwa.stepRideFree",
+    "en": "Ride {0} along the approximate path from {1}. {2}. {3}.",
+    "fil": "Sumakay sa {0} sa tinatayang daan mula sa {1}. {2}. {3}.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "pwa.stepRidePinned",
+    "en": "Ride {0}, {1}, from {2} to {3}: {4} by pin order. {5}.",
+    "fil": "Sumakay sa {0}, {1}, mula {2} hanggang {3}: {4} ayon sa ayos ng pin. {5}.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "pwa.stepTransferAt",
+    "en": "Transfer at {0}.",
+    "fil": "Lumipat ng sasakyan sa {0}.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "pwa.stepTransferWalk",
+    "en": "Walk {0} to {1} to transfer (path not verified).",
+    "fil": "Maglakad {0} papunta sa {1} para lumipat ng sasakyan (di pa kumpirmado ang daan).",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "pwa.stepArriveAt",
+    "en": "Arrive at {0}.",
+    "fil": "Dumating sa {0}.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "pwa.stepArriveWalk",
+    "en": "Walk {0} to {1} (path not verified).",
+    "fil": "Maglakad {0} papunta sa {1} (di pa kumpirmado ang daan).",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "detail.lostTitle",
+    "en": "Wrong stop.",
+    "fil": "Mali ang hintuan.",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "detail.lostCopy",
+    "en": "There is nothing at this link. It may have moved, or the address may have a typo.",
+    "fil": "Walang laman ang link na ito. Baka nalipat ito, o may mali sa pagkakasulat ng address.",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "detail.lostOpenMap",
+    "en": "Open the map",
+    "fil": "Buksan ang mapa",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "detail.lostHome",
+    "en": "Lunad home",
+    "fil": "Home ng Lunad",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "detail.lostTabTitle",
+    "en": "Page not found",
+    "fil": "Hindi nakita ang pahina",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "community.blockTitle",
+    "en": "Block this person?",
+    "fil": "I-block ang taong ito?",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "community.blockBody",
+    "en": "You will not see their posts or comments any more. You can unblock them at the bottom of the community feed.",
+    "fil": "Hindi mo na makikita ang mga post at komento niya. Puwede mo siyang i-unblock sa ibaba ng community feed.",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "community.replyDraftOpen",
+    "en": "Send or cancel the reply you are writing first.",
+    "fil": "Ipadala muna o i-cancel ang sinusulat mong sagot.",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "community.blockedLoadFailed",
+    "en": "Could not load the people you blocked.",
+    "fil": "Hindi ma-load ang mga taong na-block mo.",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "reports.moreInfoNote",
+    "en": "You cannot add to this report here yet. If you remember more, send a new driver report.",
+    "fil": "Hindi pa puwedeng dagdagan ang report na ito dito. Kung may naaalala ka pa, magpadala ng bagong report tungkol sa driver.",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "reports.moreDetailNote",
+    "en": "You cannot add to this report here yet. To send the missing detail, send a new report about the same thing.",
+    "fil": "Hindi pa puwedeng dagdagan ang report na ito dito. Para maipadala ang kulang na detalye, magpadala ng bagong report tungkol sa parehong bagay.",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "reports.sendNewReport",
+    "en": "Send a new report about this",
+    "fil": "Magpadala ng bagong report tungkol dito",
+    "review": true,
+    "note": "N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "driverReport.fileTooLarge",
+    "en": "“{0}” is too large. The limit is {1} MB.",
+    "fil": "Masyadong malaki ang “{0}”. Hanggang {1} MB lang.",
+    "review": true,
+    "note": "message function; {0},{1}.. are the arguments in order | N8 audit sprint 3 (2026-11-24), AI draft: everyday Filipino; a native Naga speaker to confirm.",
     "reviewed": "claude",
     "t15": "added"
   }

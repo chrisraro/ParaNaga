@@ -263,6 +263,8 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
   const t = tt.mynaga;
   const { user, loading, status, refresh, refreshing } = useAuthSession();
   const [state, setState] = useState<Load>({ phase: "loading" });
+  const [attempt, setAttempt] = useState(0);
+  const loadingRef = useRef<HTMLParagraphElement>(null);
   const userId = user?.id ?? null;
 
   useEffect(() => {
@@ -274,7 +276,7 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
     return () => {
       live = false;
     };
-  }, [userId, id]);
+  }, [userId, id, attempt]);
 
   if (loading) return <p className="pn-reports__intro" role="status">{tt.forms.loading}</p>;
   if (status === "unknown") return <SignInUnknown onRetry={() => void refresh()} busy={refreshing} />;
@@ -288,11 +290,32 @@ export function ReportHandoff({ id, links }: { id: string; links: React.ReactNod
       </div>
     );
   }
-  if (state.phase === "loading") return <p className="pn-reports__intro" role="status">{t.loadingReport}</p>;
+  if (state.phase === "loading") {
+    return (
+      <p ref={loadingRef} tabIndex={-1} className="pn-reports__intro" role="status">
+        {t.loadingReport}
+      </p>
+    );
+  }
   if (state.phase === "error") {
     return (
-      <div className="pn-report__error" role="alert" data-testid="handoff-error">
-        {translated(state.message, en.reports.api, tt.reports.api)}
+      <div className="pn-report__error" data-testid="handoff-error">
+        <p role="alert">{translated(state.message, en.reports.api, tt.reports.api)}</p>
+        <button
+          type="button"
+          className="pn-btn pn-btn--secondary pn-report__action"
+          onClick={() =>
+            updateThenFocus(
+              () => {
+                setState({ phase: "loading" });
+                setAttempt((n) => n + 1);
+              },
+              () => loadingRef.current,
+            )
+          }
+        >
+          {tt.forms.tryAgain}
+        </button>
       </div>
     );
   }

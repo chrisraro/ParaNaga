@@ -14,11 +14,12 @@ import { useSnapshot } from "@/client/network/use-snapshot";
 import { readSnapshotMeta } from "@/client/storage/db";
 import { offlineBannerText } from "@/domain/pwa/offline-copy";
 import type { SnapshotMeta } from "@/domain/saved/saved";
-import { useT } from "@/i18n/provider";
+import { useLocale, useT } from "@/i18n/provider";
 import { usePresence } from "@/ui/app-shell/presence";
 
 export function OfflineBanner() {
   const t = useT().pwa;
+  const locale = useLocale();
   const offline = useIsOffline();
   // Read only: the home screen loads the snapshot.
   const { snapshot } = useSnapshot(false);
@@ -38,7 +39,7 @@ export function OfflineBanner() {
 
   const known = snapshot !== null || meta !== undefined;
   const banner = useRef<HTMLParagraphElement>(null);
-  const live = offline && known ? offlineBannerText(snapshot?.revision.publishedAt ?? meta?.publishedAt, snapshot !== null || Boolean(meta), t) : null;
+  const live = offline && known ? offlineBannerText(snapshot?.revision.publishedAt ?? meta?.publishedAt, snapshot !== null || Boolean(meta), t, locale) : null;
   const { shown: text, props: presence } = usePresence(live);
   // While it shows, every screen's top chrome (panel headers, map controls, search bar) moves down
   // by its height (--pn-offline-inset), so the banner never covers a Back button or a title.

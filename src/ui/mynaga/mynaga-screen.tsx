@@ -36,10 +36,11 @@ function ExternalIcon() {
   );
 }
 
-function CheckIcon() {
+// A plain bullet: this is a list of things to have ready, not boxes to tick (nothing here is saved).
+function BulletIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <rect x="4" y="4" width="16" height="16" rx="4" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="3.5" />
     </svg>
   );
 }
@@ -107,7 +108,7 @@ export function MyNagaScreen({ reportId }: { reportId?: string } = {}) {
               <ul className="pn-group" data-testid="mynaga-prepare">
                 {Object.values(t.prepare).map((item) => (
                   <li key={item} className="pn-mynaga__check">
-                    <CheckIcon />
+                    <BulletIcon />
                     <span>{item}</span>
                   </li>
                 ))}

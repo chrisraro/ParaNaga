@@ -7,16 +7,19 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { MAX_CLIP_SECONDS, supportedClipType, useCamera } from "@/client/complaints/use-camera";
 import type { CaptureKind } from "@/domain/complaints/schemas";
+import { MAX_PHOTO_BYTES, MAX_VIDEO_BYTES } from "@/domain/media/schemas";
 import { useT } from "@/i18n/provider";
 import { Live, updateThenFocus } from "@/ui/report/form-a11y";
 import type { Evidence } from "./driver-report-wizard";
+
+const MB = 1024 * 1024;
 
 type Props = {
   items: readonly Evidence[];
   max: number;
   accept: string;
-  /** Returns a message when the file cannot be added. */
-  onAdd: (blob: Blob, kind: CaptureKind) => string | null;
+  /** Returns a message when the file cannot be added. `replacing`: the item this one takes the place of (Retake). */
+  onAdd: (blob: Blob, kind: CaptureKind, replacing?: string) => string | null;
   onRemove: (key: string) => void;
 };
 
@@ -27,6 +30,8 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
   const { state, recording, start, stop, attach, takePhoto, recordClip, stopClip } = useCamera();
   const [note, setNote] = useState<string | null>(null);
   const [canClip] = useState(() => typeof window !== "undefined" && supportedClipType() !== null);
+  // The item a Retake replaces: it stays until the new capture exists (a closed or failed camera keeps it).
+  const retaking = useRef<string | null>(null);
   const full = items.length >= max;
   const live = state === "live";
 
@@ -45,34 +50,46 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
     (active ? shutterRef.current : (openRef.current ?? listRef.current))?.focus();
   }, [live, state]);
 
-  const add = (blob: Blob | null, kind: CaptureKind) => {
+  const add = (blob: Blob | null, kind: CaptureKind, replacing?: string) => {
     if (!blob) return setNote(t.nothingCaptured);
-    setNote(onAdd(blob, kind) ?? t.added);
+    setNote(onAdd(blob, kind, replacing) ?? t.added);
   };
 
   const onPhoto = async () => {
     if (!live || recording) return;
+    const replacing = retaking.current ?? undefined;
     const blob = await takePhoto();
     stop();
-    add(blob, "in_app_camera");
+    retaking.current = null;
+    add(blob, "in_app_camera", replacing);
   };
   const onClip = async () => {
     if (!live) return;
     if (recording) return stopClip();
+    const replacing = retaking.current ?? undefined;
     const blob = await recordClip();
     stop();
-    add(blob, "in_app_camera");
+    retaking.current = null;
+    add(blob, "in_app_camera", replacing);
   };
   const retake = (key: string) => {
-    onRemove(key);
+    retaking.current = key;
     setNote(null);
     void start();
+  };
+  const closeCamera = () => {
+    retaking.current = null;
+    stop();
   };
 
   return (
     <div className="pn-report__form">
       <p className="pn-report__body">
         {t.intro}
+      </p>
+      {/* Before the buttons: what is allowed, and what an uploaded file carries, is read before choosing. */}
+      <p className="pn-report__hint" data-testid="driver-limits">
+        {t.limits(max, MAX_CLIP_SECONDS, Math.round(MAX_PHOTO_BYTES / MB), Math.round(MAX_VIDEO_BYTES / MB))}
       </p>
 
       {items.length > 0 ? (
@@ -125,7 +142,7 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
                 {recording ? t.stopRecording : t.recordVideo(MAX_CLIP_SECONDS)}
               </button>
             ) : null}
-            <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={stop} data-testid="driver-camera-close">
+            <button type="button" className="pn-btn pn-btn--secondary pn-report__small" onClick={closeCamera} data-testid="driver-camera-close">
               {t.closeCamera}
             </button>
           </div>
@@ -135,7 +152,10 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
 
       {!live && state !== "starting" && !full ? (
         <div className="pn-report__row">
-          <button ref={openRef} type="button" className="pn-btn pn-btn--primary pn-report__small" onClick={() => void start()} data-testid="driver-open-camera">
+          <button ref={openRef} type="button" className="pn-btn pn-btn--primary pn-report__small" onClick={() => {
+              retaking.current = null;
+              void start();
+            }} data-testid="driver-open-camera">
             {items.length > 0 ? t.addAnother : t.openCamera}
           </button>
         </div>
@@ -169,9 +189,6 @@ export function CameraCapture({ items, max, accept, onAdd, onRemove }: Props) {
         </div>
       ) : null}
 
-      <p className="pn-report__hint">
-        {t.limits(max, MAX_CLIP_SECONDS)}
-      </p>
       <Live className="pn-report__hint" data-testid="driver-capture-note">
         {note}
       </Live>

@@ -279,9 +279,11 @@ export function CommunityFeed() {
 
 /** The people this commuter blocked, with a way to undo it. Their posts and comments stay hidden until then. */
 function BlockedPeople({ onChanged, onEmpty }: { onChanged: () => void; onEmpty: () => HTMLElement | null }) {
-  const t = useT().community;
+  const tt = useT();
+  const t = tt.community;
   const [people, setPeople] = useState<{ id: string; handle: string }[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   const list = useRef<HTMLUListElement>(null);
 
@@ -304,14 +306,37 @@ function BlockedPeople({ onChanged, onEmpty }: { onChanged: () => void; onEmpty:
     let cancelled = false;
     void fetchCommunityMe().then((r) => {
       if (cancelled) return;
-      if (r.ok) setPeople(r.data.blocked);
-      else setError(r.message);
+      if (!r.ok) return setError(r.message);
+      // After a retry the button that held focus is gone: focus goes back to the results.
+      if (attempt > 0) updateThenFocus(() => setPeople(r.data.blocked), onEmpty);
+      else setPeople(r.data.blocked);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+    // `onEmpty` only reads a ref: a new function each render must not fetch again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attempt]);
 
+  // The list could not be read: say so (it is how a blocked person is brought back), with a retry.
+  if (!people && error)
+    return (
+      <div className="pn-comm__panel pn-comm__panel--error" data-testid="blocked-error">
+        <p className="pn-comm__body" role="alert">
+          {t.blockedLoadFailed}
+        </p>
+        <button
+          type="button"
+          className="pn-btn pn-btn--secondary pn-comm__small"
+          onClick={() => {
+            setError(null);
+            setAttempt((n) => n + 1);
+          }}
+        >
+          {tt.forms.tryAgain}
+        </button>
+      </div>
+    );
   if (!people || people.length === 0) return null;
   return (
     <details className="pn-comm__more" data-testid="blocked-people">

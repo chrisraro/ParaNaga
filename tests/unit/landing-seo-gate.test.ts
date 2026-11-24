@@ -18,8 +18,8 @@ describe("sitemap and robots", () => {
     }
   });
 
-  it("keeps crawlers out of the admin area and the API, and names the sitemap", () => {
-    expect(robots()).toMatchObject({ rules: { disallow: ["/api/", "/admin"] }, sitemap: `${SITE_URL}/sitemap.xml` });
+  it("keeps crawlers out of the API, never names the admin area, and names the sitemap", () => {
+    expect(robots()).toMatchObject({ rules: { disallow: ["/api/"] }, sitemap: `${SITE_URL}/sitemap.xml` });
   });
 });
 

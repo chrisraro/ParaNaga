@@ -262,6 +262,8 @@ describe("MyNaga handoff", () => {
       "Lunad is independent. It is not affiliated with MyNaga or the City Government and is not an official channel. Opening MyNaga does not submit your report.",
     );
     expect(within(screen.getByTestId("mynaga-prepare")).getAllByRole("listitem").map((li) => li.textContent)).toEqual([...PREPARE_ITEMS]);
+    // A plain bullet, not a box that looks ticked or tickable: nothing here is saved or checked off.
+    expect(screen.getByTestId("mynaga-prepare").querySelector("rect, input")).toBeNull();
     const links = within(screen.getByTestId("mynaga-links")).getAllByRole("link");
     expect(links.map((l) => l.textContent)).toEqual(["Get MyNaga on the App Store", "Get MyNaga on Google Play", "Open mynaga.app", "About MyNaga (City of Naga)"]);
     for (const l of links) {

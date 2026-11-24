@@ -17,10 +17,11 @@ import { offlineDataLine } from "@/domain/pwa/offline-copy";
 import type { EtaModel } from "@/domain/api/schemas";
 import { tripCardMeta, type SavedTrip, type SnapshotMeta } from "@/domain/saved/saved";
 import { savedTripSteps } from "@/domain/saved/trip-text";
-import { useT } from "@/i18n/provider";
+import { useLocale, useT } from "@/i18n/provider";
 
 function DataLine() {
   const t = useT().pwa;
+  const locale = useLocale();
   // undefined: not read yet.
   const [meta, setMeta] = useState<SnapshotMeta | null | undefined>(undefined);
   useEffect(() => {
@@ -33,12 +34,13 @@ function DataLine() {
       live = false;
     };
   }, []);
-  return <p data-testid="offline-data-date">{meta === undefined ? t.pageChecking : offlineDataLine(meta?.publishedAt, meta !== null, t)}</p>;
+  return <p data-testid="offline-data-date">{meta === undefined ? t.pageChecking : offlineDataLine(meta?.publishedAt, meta !== null, t, locale)}</p>;
 }
 
 function OfflineTripMeta({ trip, etaModel }: { trip: SavedTrip; etaModel: EtaModel | null }) {
+  const t = useT();
   const walkLengths = useSavedWalkLengths(trip.option, trip.revisionId);
-  return <p className="pn-offline__meta">{tripCardMeta(trip, etaModel, new Date(), walkLengths)}</p>;
+  return <p className="pn-offline__meta">{tripCardMeta(trip, etaModel, new Date(), walkLengths, t)}</p>;
 }
 
 function SavedTrips() {
@@ -60,7 +62,7 @@ function SavedTrips() {
               <span className="pn-offline__trip-hint">{t.pwa.pageShowSteps}</span>
             </summary>
             <ol className="pn-offline__steps">
-              {savedTripSteps(trip).map((step, i) => (
+              {savedTripSteps(trip, t).map((step, i) => (
                 // Fixed text of this saved card: its order is its identity.
                 <li key={i}>{step}</li>
               ))}
