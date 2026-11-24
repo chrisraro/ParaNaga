@@ -14,6 +14,8 @@ export type SyncResult = {
   placesDownloaded: number;
   tripsUploaded: number;
   tripsDownloaded: number;
+  /** Trips the account did not take: they stay on this phone only. */
+  tripsRejected: number;
 };
 
 /** The account accepts at most this many items per request. */
@@ -72,5 +74,6 @@ export async function syncSavedItems(): Promise<SyncResult> {
     placesDownloaded: newPlaces.length,
     tripsUploaded: localTrips.length - tripsRejected,
     tripsDownloaded: newTrips.length,
+    tripsRejected,
   };
 }

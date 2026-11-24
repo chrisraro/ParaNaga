@@ -578,7 +578,7 @@ export function SavedScreen() {
       const sent = res.placesUploaded + res.tripsUploaded;
       const received = res.placesDownloaded + res.tripsDownloaded;
       setSyncStatus(
-        sent === 0 && received === 0 ? t.upToDate : t.synced(sent, received),
+        res.tripsRejected > 0 ? t.syncedSome(sent, received, res.tripsRejected) : sent === 0 && received === 0 ? t.upToDate : t.synced(sent, received),
       );
     } catch {
       setSyncStatus(t.syncFailed);

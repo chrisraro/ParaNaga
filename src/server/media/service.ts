@@ -136,7 +136,9 @@ export async function confirmMediaSlot(
   if (head.bytes > Number(slot.expected_bytes)) throw await reject(true);
 
   const bytes = await storage.getObject(slot.bucket, slot.object_key, Number(slot.expected_bytes));
-  if (!bytes || bytes.byteLength === 0) throw await reject(true);
+  // No answer (or the object changed since the HEAD): keep the upload; the client retries, the sweep cleans up.
+  if (!bytes) throw new MediaConfirmError("failed");
+  if (bytes.byteLength === 0) throw await reject(true);
   if (bytes.byteLength > Number(slot.expected_bytes)) throw await reject(true);
 
   // 3. Verify magic bytes
@@ -159,6 +161,7 @@ export async function confirmMediaSlot(
     stored = stripped;
   }
   if (!(await storage.putObject(destBucket, destKey, stored, sniffed.mime))) {
+    await storage.deleteObject(destBucket, destKey); // a PUT that timed out may have landed under a key nothing records
     throw new MediaConfirmError("failed");
   }
   const sha256 = createHash("sha256").update(stored).digest("hex");

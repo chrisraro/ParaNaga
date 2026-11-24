@@ -116,7 +116,8 @@ export class S3StorageAdapter implements StoragePort {
     const headers = this.signedHeaders("DELETE", bucket, key);
     try {
       const res = await fetch(url, { method: "DELETE", headers, signal: AbortSignal.timeout(QUICK_MS) });
-      return res.ok || res.status === 404;
+      // Gone already counts as deleted; a missing bucket (a wrong endpoint) does not.
+      return res.ok || (res.status === 404 && !(await res.text()).includes("NoSuchBucket"));
     } catch {
       return false;
     }

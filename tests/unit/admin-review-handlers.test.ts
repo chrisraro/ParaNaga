@@ -292,7 +292,7 @@ describe("moderation (C10)", () => {
     state.copy = false;
     const body = { targetType: "photo", targetId: PHOTO, outcome: "published", reason: "meets_guidelines" };
     expect((await h.postModerationDecision(post("/api/v1/admin/moderation/decisions", body))).status).toBe(503);
-    expect(state.storage.filter((s) => s.startsWith("delete"))).toEqual([]);
+    expect(state.storage.filter((s) => s.startsWith("delete"))).toEqual([`delete public-media/${KEY}`]); // a copy that timed out may still land
     state.copy = true;
     state.commitFail = true;
     state.storage = [];

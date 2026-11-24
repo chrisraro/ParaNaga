@@ -99,10 +99,11 @@ async function withPhotoCopy(raw: unknown, storage: StoragePort, copied: { bucke
   const r = (raw ?? {}) as Obj;
   const copy = photoCopySchema.parse(r.copy ?? null);
   if (copy) {
+    // Listed before the copy: one that timed out may still land, and must be deleted with the rest.
+    copied.push({ bucket: copy.publicBucket, key: copy.key });
     if (!(await storage.copyObject(copy.sourceBucket, copy.key, copy.publicBucket, copy.key))) {
       throw new Error("photo copy to the public bucket failed");
     }
-    copied.push({ bucket: copy.publicBucket, key: copy.key });
   }
   return decisionResultSchema.parse({ decisionId: r.decisionId, isOverride: r.isOverride });
 }
