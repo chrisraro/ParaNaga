@@ -639,7 +639,7 @@ function correctionRow(over: Record<string, unknown>) {
 function reportGroup(over: Record<string, unknown>) {
   return {
     reportId: N6(80), targetType: "post", targetId: N6(81), postId: N6(81), state: "published", count: 3, reasons: { spam: 2, off_topic: 1 },
-    notes: ["It is an advert for a lending app."], firstAt: "2026-11-23T02:00:00.000Z", lastAt: "2026-11-24T02:00:00.000Z",
+    notes: ["It is an advert for a lending app."], firstAt: "2026-11-23T02:00:00.000Z", lastAt: "2026-11-24T02:00:00.123456+00:00",
     contentKind: "post_version", contentId: N6(82) as string | null, title: "Cheap loans, message me" as string | null,
     body: "Fast approval, no papers. Message me." as string | null, authorHandle: "Commuter ZX9Q1", photos: [{ id: N6(83), mediaId: N6(84) }],
     ...over,
@@ -896,12 +896,14 @@ test("reports: nothing is preselected; a take-down needs a reason and a confirm 
   await expect(confirm.getByText("Take down this post?")).toBeFocused();
   await confirm.getByRole("button", { name: "Cancel" }).click();
   await expect(confirm).toHaveCount(0);
+  // Cancel puts focus back on the button that opened the step (it stays mounted, hidden, meanwhile).
+  await expect(page.getByTestId(`report-go-post-${N6(81)}`)).toBeFocused();
   expect(s.takedowns).toEqual([]);
   await page.getByTestId(`report-go-post-${N6(81)}`).click();
   await page.getByTestId(`report-confirm-post-${N6(81)}-go`).click();
   await expect(page.getByTestId("moderation-notice")).toHaveText("Post taken down. 3 reports closed as actioned.");
   await expect(page.getByTestId("moderation-notice")).toBeFocused();
-  expect(s.takedowns).toEqual([{ targetType: "post_version", targetId: N6(82), reason: "spam" }]);
+  expect(s.takedowns).toEqual([{ targetType: "post_version", targetId: N6(82), reason: "spam", lastAt: "2026-11-24T02:00:00.123456+00:00" }]);
   await expect(post).toHaveCount(0);
 
   // One photo only: the post stays, the photo's public copy goes.
@@ -913,7 +915,7 @@ test("reports: nothing is preselected; a take-down needs a reason and a confirm 
   await expect(page.getByTestId(`report-confirm-post-${N6(91)}`)).toContainText("The photo stops being shown; the post itself stays public. The author is told and can ask for another review. The 1 report on this post closes as actioned.");
   await page.getByTestId(`report-confirm-post-${N6(91)}-go`).click();
   await expect(page.getByTestId("moderation-notice")).toHaveText("Photo taken down. 1 report closed as actioned.");
-  expect(s.takedowns.at(-1)).toEqual({ targetType: "photo", targetId: N6(93), reason: "unsafe_photo", note: "A plate number is readable." });
+  expect(s.takedowns.at(-1)).toEqual({ targetType: "photo", targetId: N6(93), reason: "unsafe_photo", note: "A plate number is readable.", lastAt: "2026-11-24T02:00:00.123456+00:00" });
 
   // Dismiss: no reason, no confirm step, nothing changes.
   const comment = page.getByTestId(`report-comment-${N6(86)}`);
@@ -922,7 +924,7 @@ test("reports: nothing is preselected; a take-down needs a reason and a confirm 
   await expect(page.getByTestId(`report-reason-comment-${N6(86)}`)).toHaveCount(0);
   await page.getByTestId(`report-go-comment-${N6(86)}`).click();
   await expect(page.getByTestId("moderation-notice")).toHaveText("1 report dismissed. Nothing was changed.");
-  expect(s.resolved).toEqual([{ id: N6(85), body: { status: "dismissed" } }]);
+  expect(s.resolved).toEqual([{ id: N6(85), body: { status: "dismissed", lastAt: "2026-11-24T02:00:00.123456+00:00", contentId: N6(86) } }]);
 
   // Content its author deleted: no decision is offered, only closing.
   const gone = page.getByTestId(`report-post-${N6(88)}`);
@@ -930,7 +932,7 @@ test("reports: nothing is preselected; a take-down needs a reason and a confirm 
   await expect(gone.getByRole("radio")).toHaveCount(0);
   await page.getByTestId(`report-close-post-${N6(88)}`).click();
   await expect(page.getByTestId("moderation-reports")).toContainText("No open report for you.");
-  expect(s.resolved.at(-1)).toEqual({ id: N6(87), body: { status: "dismissed" } });
+  expect(s.resolved.at(-1)).toEqual({ id: N6(87), body: { status: "dismissed", lastAt: "2026-11-24T02:00:00.123456+00:00", contentId: null } });
   expect(s.takedowns).toHaveLength(2);
 });
 

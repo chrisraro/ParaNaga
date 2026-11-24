@@ -408,6 +408,10 @@ const PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 /**
  * GET /api/v1/community/photos/:id: an approved photo, read from the PUBLIC bucket only (the copy a
  * moderator's approval made). Pending and rejected photos are never served here, to anyone.
+ * Caching: `private, no-cache` with an ETag. Every view asks again, so a photo a moderator took
+ * down stops at once (it was up to 5 minutes with max-age=300), in the browser and with no shared
+ * cache in between. The repeat view costs one row read and no storage call (304): a photo's bytes
+ * never change for its id (the public copy is always made from the same private original).
  */
 export function getPhoto(request: Request, rawId: string): Promise<Response> {
   return authedRoute(request, "community-photo", async (requestId) => {
@@ -426,6 +430,8 @@ export function getPhoto(request: Request, rawId: string): Promise<Response> {
     );
     const env = serverEnv();
     if (!photo || photo.public_bucket !== env.STORAGE_BUCKET_PUBLIC) throw notFound("This photo is not available.");
+    const cache = { "Cache-Control": "private, no-cache", ETag: `"${id.value}"`, "X-Request-Id": requestId };
+    if (request.headers.get("if-none-match") === cache.ETag) return new Response(null, { status: 304, headers: cache });
     const storage = getStorage();
     const [head, bytes] = await Promise.all([
       storage.headObject(photo.public_bucket, photo.public_key).catch(() => null),
@@ -434,11 +440,10 @@ export function getPhoto(request: Request, rawId: string): Promise<Response> {
     if (!bytes || !head || !PHOTO_TYPES.has(head.mime)) throw notFound("This photo is not available.");
     return new Response(bytes as BodyInit, {
       headers: {
+        ...cache,
         "Content-Type": head.mime,
-        "Cache-Control": "public, max-age=300, s-maxage=300",
         "X-Content-Type-Options": "nosniff",
         "Content-Security-Policy": "default-src 'none'; sandbox",
-        "X-Request-Id": requestId,
       },
     });
   });

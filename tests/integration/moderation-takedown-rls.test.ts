@@ -3,8 +3,10 @@
 //   bash scripts/with-neon-branch.sh pnpm exec vitest run --project integration tests/integration/moderation-takedown-rls.test.ts
 // Every role (guest, commuter, the author, moderator, admin, transport reviewer, complaint
 // reviewer) on the new and changed definer functions; what each of them can read afterwards; an
-// appeal that restores the item and a second take-down that can be appealed again; reports closing
-// together; two moderators deciding at once; an edit racing a take-down (ERD C3); the helpful
+// appeal that restores the item and a second take-down that can be appealed again; an appeal
+// overturned after a later edit was rejected; reports closing together, never one the moderator
+// did not see, never over changed content, and reported again after closing; two moderators
+// deciding at once; an edit racing a take-down (ERD C3); the helpful
 // count under concurrent taps (C4) and a double tap (C5); the two indexes (I1, I2).
 import { createHash, randomUUID } from "node:crypto";
 import pg from "pg";
@@ -67,10 +69,16 @@ describe.skipIf(!ownerUrl || !appUrl)("take-down and content reports (Neon branc
   };
   const report = (userId: string, type: string, id: string, reason: string, note: string | null = null) =>
     value<boolean>(userId, sql`select community.report_content(${type}, ${id}::uuid, ${reason}, ${note}) as ok`);
-  const takeDown = (userId: string | null, type: string, id: string, reason: string, note: string | null = null) =>
-    value<Obj>(userId, sql`select community.admin_take_down(${type}, ${id}::uuid, ${reason}, ${note}) as r`);
+  /** `seen`: the newest report the moderator's page showed ('infinity': all of them; null: none). */
+  const takeDown = (userId: string | null, type: string, id: string, reason: string, note: string | null = null, seen: string | null = "infinity") =>
+    value<Obj>(userId, sql`select community.admin_take_down(${type}, ${id}::uuid, ${reason}, ${note}, ${seen}::timestamptz) as r`);
   const reportQueue = (userId: string | null) => value<Obj[]>(userId, sql`select community.admin_report_queue(200) as r`);
-  const resolve = (userId: string | null, id: string, status: string) => value<boolean>(userId, sql`select community.resolve_report(${id}::uuid, ${status}) as ok`);
+  const resolve = (userId: string | null, id: string, status: string, contentId: string | null = null, seen: string | null = "infinity") =>
+    value<boolean>(userId, sql`select community.resolve_report(${id}::uuid, ${status}, ${seen}::timestamptz, ${contentId}::uuid) as ok`);
+  const reject = (userId: string, type: string, id: string) =>
+    value<Obj>(userId, sql`select community.admin_moderate(${type}, ${id}::uuid, 'rejected', 'off_topic', null, null) as r`);
+  const edit = async (userId: string, postId: string, title: string) =>
+    (await rows(userId, sql`select * from community.edit_post(${postId}::uuid, ${randomUUID()}::uuid, ${title}, 'A test body that is long enough, edited.', '{}'::text[], 'pending', 'auto_publish_disabled')`))[0]!.version_id as string;
   const appeal = (userId: string, type: string, id: string) => value<string>(userId, sql`select community.submit_appeal(${type}, ${id}::uuid, 'Please look at this again, it follows the rules.') as id`);
   const resolveAppeal = (userId: string, id: string, outcome: string, bucket: string | null = null) =>
     value<Obj>(userId, sql`select community.admin_resolve_appeal(${id}::uuid, ${outcome}, 'Looked at it again.', ${bucket}) as r`);
@@ -115,9 +123,9 @@ describe.skipIf(!ownerUrl || !appUrl)("take-down and content reports (Neon branc
     const x = randomUUID();
     for (const userId of [null, author, other, transport, complaintReviewer]) {
       for (const q of [
-        sql`select community.admin_take_down('comment', ${x}::uuid, 'spam', null)`,
+        sql`select community.admin_take_down('comment', ${x}::uuid, 'spam', null, now())`,
         sql`select community.admin_report_queue(10)`,
-        sql`select community.resolve_report(${x}::uuid, 'dismissed')`,
+        sql`select community.resolve_report(${x}::uuid, 'dismissed', now(), null)`,
       ]) {
         expect((await failure(rows(userId, q))).code, String(userId)).toBe("42501");
       }
@@ -307,8 +315,9 @@ describe.skipIf(!ownerUrl || !appUrl)("take-down and content reports (Neon branc
     const reportId = group.reportId as string;
 
     expect((await failure(resolve(moderator, reportId, "closed"))).code).toBe("22023");
-    expect(await failure(resolve(moderator, reportId, "actioned"))).toMatchObject({ code: "55000", message: expect.stringMatching(/still public/) });
-    expect(await resolve(moderator, reportId, "dismissed")).toBe(true);
+    expect(await failure(resolve(moderator, reportId, "actioned", p.versionId))).toMatchObject({ code: "55000", message: expect.stringMatching(/still public/) });
+    expect((await failure(resolve(moderator, reportId, "dismissed", p.versionId, null))).code).toBe("22023"); // nothing seen
+    expect(await resolve(moderator, reportId, "dismissed", p.versionId)).toBe(true);
     expect(await reportsOn(p.postId)).toEqual([{ status: "dismissed", resolved_by: moderator }, { status: "dismissed", resolved_by: moderator }]);
     expect(await guestTitle(p.postId)).toBe("Reported, but fine");
     expect(await resolve(moderator2, reportId, "dismissed")).toBe(false); // already closed
@@ -321,8 +330,8 @@ describe.skipIf(!ownerUrl || !appUrl)("take-down and content reports (Neon branc
     await report(other, "post", mine.postId, "spam");
     expect((await reportQueue(moderator)).some((r) => r.targetId === mine.postId)).toBe(false);
     const theirs = (await reportQueue(moderator2)).find((r) => r.targetId === mine.postId)!;
-    expect((await failure(resolve(moderator, theirs.reportId as string, "dismissed"))).code).toBe("42501");
-    expect(await resolve(moderator2, theirs.reportId as string, "dismissed")).toBe(true);
+    expect((await failure(resolve(moderator, theirs.reportId as string, "dismissed", mine.versionId))).code).toBe("42501");
+    expect(await resolve(moderator2, theirs.reportId as string, "dismissed", mine.versionId)).toBe(true);
 
     // The author deleted what was reported: no content is shown, and the reports can be closed.
     const gone = await livePost(author, "Deleted by its author");
@@ -331,6 +340,67 @@ describe.skipIf(!ownerUrl || !appUrl)("take-down and content reports (Neon branc
     const deleted = (await reportQueue(moderator)).find((r) => r.targetId === gone.postId)!;
     expect(deleted).toMatchObject({ state: "deleted", contentId: null, title: null, body: null, count: 1 });
     expect(await resolve(moderator, deleted.reportId as string, "dismissed")).toBe(true);
+  });
+
+  it("an appeal of a take-down is overturned after the author's later edit was rejected; an edit still waiting blocks it", async () => {
+    const p = await livePost(author, "First, taken down");
+    await takeDown(moderator, "post_version", p.versionId, "off_topic");
+    const v2 = await edit(author, p.postId, "Second, never published");
+    const a = await appeal(author, "post_version", p.versionId);
+    // The edit is waiting: it is reviewed on its own first.
+    expect(await failure(resolveAppeal(moderator2, a, "overturned"))).toMatchObject({ code: "55000", message: expect.stringMatching(/review the newer version/) });
+    await reject(moderator, "post_version", v2);
+    expect(await resolveAppeal(moderator2, a, "overturned")).toMatchObject({ isOverride: false });
+    expect(await guestTitle(p.postId)).toBe("First, taken down");
+    expect((await rows(author, sql`select moderation_status from community.post_version where post_id = ${p.postId}::uuid order by n`)).map((v) => v.moderation_status)).toEqual(["published", "rejected"]);
+  });
+
+  it("reports a moderator did not see are never closed: a newer report refuses dismissing and taking down; changed content refuses dismissing; a closed report can be filed again", async () => {
+    const p = await livePost(author, "Reported while the moderator reads");
+    await report(other, "post", p.postId, "spam");
+    const shown = (await reportQueue(moderator)).find((r) => r.targetId === p.postId)!;
+    // To the microsecond, as text: exactly the row's created_at.
+    expect(shown.lastAt).toMatch(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d{1,6})?\+00:00$/);
+    expect((await owner.query("select count(*)::int as n from community.content_report where target_id = $1 and created_at = $2::timestamptz", [p.postId, shown.lastAt])).rows[0].n).toBe(1);
+
+    await report(third, "post", p.postId, "harassment", "This one names a person.");
+    const unseen = { code: "55000", message: expect.stringMatching(/a new report came in/) };
+    expect(await failure(resolve(moderator, shown.reportId as string, "dismissed", p.versionId, shown.lastAt as string))).toMatchObject(unseen);
+    expect(await failure(takeDown(moderator, "post_version", p.versionId, "spam", null, shown.lastAt as string))).toMatchObject(unseen);
+    expect(await reportsOn(p.postId)).toEqual([{ status: "open", resolved_by: null }, { status: "open", resolved_by: null }]);
+    expect(await guestTitle(p.postId)).toBe("Reported while the moderator reads");
+
+    // The content changed under the reports: an approved edit is not what the moderator read.
+    const fresh = (await reportQueue(moderator)).find((r) => r.targetId === p.postId)!;
+    expect(fresh).toMatchObject({ count: 2, contentId: p.versionId });
+    const v2 = await edit(author, p.postId, "Edited after the reports");
+    await approve(moderator2, "post_version", v2);
+    expect(await failure(resolve(moderator, fresh.reportId as string, "dismissed", p.versionId, fresh.lastAt as string))).toMatchObject({ code: "55000", message: expect.stringMatching(/content changed/) });
+    expect(await resolve(moderator, fresh.reportId as string, "dismissed", v2, fresh.lastAt as string)).toBe(true);
+    expect((await reportsOn(p.postId)).map((r) => r.status)).toEqual(["dismissed", "dismissed"]);
+
+    // Reported again after closing: the same row, open again, with the new reason; once while it is open.
+    expect(await report(other, "post", p.postId, "misleading", "Still wrong after the edit.")).toBe(true);
+    expect(await report(other, "post", p.postId, "off_topic")).toBe(false);
+    expect((await owner.query("select status, reason, note, resolved_by, resolved_at from community.content_report where target_id = $1 and reporter_id = $2", [p.postId, other])).rows).toEqual([
+      { status: "open", reason: "misleading", note: "Still wrong after the edit.", resolved_by: null, resolved_at: null },
+    ]);
+    const again = (await reportQueue(moderator)).find((r) => r.targetId === p.postId)!;
+    expect(again).toMatchObject({ count: 1, reasons: { misleading: 1 }, contentId: v2 });
+
+    // A take-down that saw no report closes none; one that saw them closes them.
+    const q = await livePost(author, "Taken down without reading reports");
+    await report(other, "post", q.postId, "spam");
+    expect(await takeDown(moderator, "post_version", q.versionId, "spam", null, null)).toMatchObject({ reportsClosed: 0 });
+    expect(await reportsOn(q.postId)).toEqual([{ status: "open", resolved_by: null }]);
+    expect(await takeDown(moderator, "post_version", v2, "misleading", null, again.lastAt as string)).toMatchObject({ reportsClosed: 1 });
+  });
+
+  it("decisions and appeals are stamped with the clock, not the start of the transaction", async () => {
+    const defaults = (await owner.query<{ table_name: string; column_default: string }>(
+      "select table_name, column_default from information_schema.columns where table_schema = 'community' and table_name in ('moderation_decision', 'appeal') and column_name = 'created_at' order by table_name",
+    )).rows;
+    expect(defaults).toEqual([{ table_name: "appeal", column_default: "clock_timestamp()" }, { table_name: "moderation_decision", column_default: "clock_timestamp()" }]);
   });
 
   it("concurrency: two moderators taking the same comment down at once make one decision; an author's edit racing a take-down never deadlocks (C3)", async () => {

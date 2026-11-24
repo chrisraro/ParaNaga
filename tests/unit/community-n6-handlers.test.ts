@@ -131,7 +131,7 @@ describe("appeals", () => {
 });
 
 describe("approved photos", () => {
-  it("served from the public bucket only, with a short public cache", async () => {
+  it("served from the public bucket only; every view asks again, so a take-down stops it at once, and an unchanged photo costs no storage call", async () => {
     state.photoRow = { public_bucket: "public-media", public_key: `community_photo/${M1}.jpeg` };
     const res = await h.getPhoto(new Request(`http://localhost/api/v1/community/photos/${PHOTO}`), PHOTO);
     expect(res.status).toBe(200);
@@ -139,6 +139,21 @@ describe("approved photos", () => {
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
     expect(state.storage.every((s) => s.includes("public-media/"))).toBe(true);
     expect(state.sql.some((q) => q.includes("ph.moderation_status = 'published'"))).toBe(true);
+    expect(res.headers.get("cache-control")).toBe("private, no-cache");
+    const etag = res.headers.get("etag")!;
+    expect(etag).toBe(`"${PHOTO}"`);
+
+    // The browser's repeat view: the row is read again, storage is not.
+    state.storage = [];
+    state.sql = [];
+    const again = await h.getPhoto(new Request(`http://localhost/api/v1/community/photos/${PHOTO}`, { headers: { "If-None-Match": etag } }), PHOTO);
+    expect(again.status).toBe(304);
+    expect(again.headers.get("cache-control")).toBe("private, no-cache");
+    expect(state.sql.some((q) => q.includes("from community.post_photo"))).toBe(true);
+    expect(state.storage).toEqual([]);
+    // Taken down since: the same request gets 404, never 304.
+    state.photoRow = null;
+    expect((await h.getPhoto(new Request(`http://localhost/api/v1/community/photos/${PHOTO}`, { headers: { "If-None-Match": etag } }), PHOTO)).status).toBe(404);
   });
 
   it("404 for a pending photo, another bucket or a bad id, without touching storage", async () => {

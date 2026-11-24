@@ -250,8 +250,11 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
     const theirs = await rows(moderator2, sql`select id, target_id from community.report_queue(200)`);
     const report = theirs.find((r) => r.target_id === modPostId);
     expect(report).toBeDefined();
-    expect(await pgError(rows(moderator, sql`select community.resolve_report(${report!.id as string}::uuid, 'dismissed')`))).toBe("42501");
-    expect((await rows(moderator2, sql`select community.resolve_report(${report!.id as string}::uuid, 'dismissed') as ok`))[0]!.ok).toBe(true);
+    // 0032: the call names the newest report and the live content the page showed.
+    const live = (await rows(null, sql`select published_version_id as id from community.post where id = ${modPostId}::uuid`))[0]!.id as string;
+    const resolve = sql`select community.resolve_report(${report!.id as string}::uuid, 'dismissed', 'infinity', ${live}::uuid) as ok`;
+    expect(await pgError(rows(moderator, resolve))).toBe("42501");
+    expect((await rows(moderator2, resolve))[0]!.ok).toBe(true);
   });
 
   it("no community role reaches priv", async () => {

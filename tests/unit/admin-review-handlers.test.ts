@@ -19,6 +19,8 @@ const MEDIA = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a08";
 const DECISION = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a09";
 const APPEAL = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a0a";
 const REPORT = "7a1c1c7e-6f0a-4a39-9d62-0d0f5f2a8a0b";
+/** A report time as the database's jsonb writes it: microseconds, which a JS date would round away. */
+const LAST = "2026-11-24T03:00:00.123456+00:00";
 const KEY = `community_photo/${MEDIA}.jpeg`;
 
 const state = vi.hoisted(() => ({
@@ -72,7 +74,7 @@ vi.mock("@/server/db/context", () => ({
   withRequestContext: async (_ctx: unknown, fn: (db: unknown) => Promise<unknown>) => {
     const out = await fn({
       execute: async (q: unknown) => {
-        const key = text(q).match(/ops\.take_token|community\.resolve_report|(?:transit|ingest|community|core)\.admin_\w+/)?.[0] ?? "other";
+        const key = text(q).match(/ops\.take_token|community\.resolve_report|core\.audit|(?:transit|ingest|community|core)\.admin_\w+/)?.[0] ?? "other";
         state.calls.push(key);
         state.params.set(key, flat(q));
         if (key === "ops.take_token") return { rows: [{ ok: true }] };
@@ -368,40 +370,43 @@ describe("moderation (C10)", () => {
 describe("content reports and take-down (migration 0032)", () => {
   const GROUP = {
     reportId: REPORT, targetType: "post", targetId: C1, postId: C1, state: "published", count: 2, reasons: { spam: 2 }, notes: ["An advert."],
-    firstAt: "2026-11-24 10:00:00.5+08", lastAt: "2026-11-24 11:00:00+08", contentKind: "post_version", contentId: C2,
+    firstAt: "2026-11-24 10:00:00.5+08", lastAt: LAST, contentKind: "post_version", contentId: C2,
     title: "A reported post", body: "Its text.", authorHandle: "Commuter AB12C", photos: [{ id: PHOTO, mediaId: MEDIA }],
   };
 
-  it("the queue carries the open reports by item, with ISO times and no reporter", async () => {
+  it("the queue carries the open reports by item, with an ISO first time, the last time exactly as the database wrote it, and no reporter", async () => {
     state.user = MODERATOR;
     state.reports = [GROUP];
     const res = await h.getModeration(get("/api/v1/admin/moderation"));
     expect(res.status).toBe(200);
     const body = moderationQueueSchema.parse(await res.json());
-    expect(body.reports).toEqual([{ ...GROUP, firstAt: "2026-11-24T02:00:00.500Z", lastAt: "2026-11-24T03:00:00.000Z" }]);
+    expect(body.reports).toEqual([{ ...GROUP, firstAt: "2026-11-24T02:00:00.500Z", lastAt: LAST }]);
     expect(db()).toEqual(["community.admin_moderation_queue", "community.admin_report_queue"]);
   });
 
   it("taking text down calls the database once and touches no storage", async () => {
     state.user = MODERATOR;
-    const res = await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "post_version", targetId: C2, reason: "other", note: " Names a private person. " }));
+    const res = await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "post_version", targetId: C2, reason: "other", note: " Names a private person. ", lastAt: LAST }));
     expect(res.status).toBe(200);
     expect(res.headers.get("cache-control")).toBe("private, no-store");
     expect(takeDownResultSchema.parse(await res.json())).toEqual({ decisionId: DECISION, reportsClosed: 2, publicCopy: "none" });
     expect(db()).toEqual(["community.admin_take_down"]);
-    expect(state.params.get("community.admin_take_down")).toEqual(["post_version", C2, "other", "Names a private person."]);
+    expect(state.params.get("community.admin_take_down")).toEqual(["post_version", C2, "other", "Names a private person.", LAST]);
     expect(state.storage).toEqual([]);
   });
 
   it("taking a photo down deletes its public copy after the commit, only in the public bucket, and says so when it could not", async () => {
     state.user = ADMIN;
-    const body = { targetType: "photo", targetId: PHOTO, reason: "unsafe_photo" };
+    const body = { targetType: "photo", targetId: PHOTO, reason: "unsafe_photo", lastAt: LAST };
     const result = async () => takeDownResultSchema.parse(await (await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", body))).json()).publicCopy;
     state.removed = { bucket: "public-media", key: KEY };
     expect(await result()).toBe("removed");
     expect(state.storage).toEqual([`delete public-media/${KEY}`]);
+    expect(state.calls).not.toContain("core.audit");
     state.deleteOk = false;
     expect(await result()).toBe("left");
+    // A copy that stays is named in the audit trail (ids and a storage key only), so it can be deleted later.
+    expect(state.params.get("core.audit")).toEqual([PHOTO, JSON.stringify({ decision_id: DECISION, public_copy_left: true, bucket: "public-media", key: KEY })]);
     // A bucket the server does not serve photos from is never touched.
     state.storage = [];
     state.removed = { bucket: "evidence-private", key: KEY };
@@ -417,11 +422,13 @@ describe("content reports and take-down (migration 0032)", () => {
   it("400 without a database call: a publish reason, other without a note, an unknown type, an extra field", async () => {
     state.user = MODERATOR;
     for (const body of [
-      { targetType: "comment", targetId: C1, reason: "meets_guidelines" },
-      { targetType: "comment", targetId: C1, reason: "other" },
-      { targetType: "comment", targetId: C1 },
-      { targetType: "post", targetId: C1, reason: "spam" },
-      { targetType: "comment", targetId: C1, reason: "spam", outcome: "published" },
+      { targetType: "comment", targetId: C1, reason: "meets_guidelines", lastAt: LAST },
+      { targetType: "comment", targetId: C1, reason: "other", lastAt: LAST },
+      { targetType: "comment", targetId: C1, lastAt: LAST },
+      { targetType: "post", targetId: C1, reason: "spam", lastAt: LAST },
+      { targetType: "comment", targetId: C1, reason: "spam", outcome: "published", lastAt: LAST },
+      { targetType: "comment", targetId: C1, reason: "spam" },
+      { targetType: "comment", targetId: C1, reason: "spam", lastAt: "2026-11-24 11:00" },
     ]) {
       expect((await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", body))).status, JSON.stringify(body)).toBe(400);
     }
@@ -434,23 +441,25 @@ describe("content reports and take-down (migration 0032)", () => {
       [{ code: "42501", message: "you cannot moderate your own content" }, 403],
       [{ code: "55000", message: "this item is already unpublished; reload" }, 409],
       [{ code: "55000", message: "a newer version of this post is live now; reload" }, 409],
+      [{ code: "55000", message: "a new report came in on this item; reload and read it first" }, 409],
       [{ code: "22023", message: "unknown item" }, 404],
     ] as const) {
       state.fail = fail;
-      const res = await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "comment", targetId: C1, reason: "spam" }));
+      const res = await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "comment", targetId: C1, reason: "spam", lastAt: LAST }));
       expect(res.status, fail.message).toBe(status);
     }
     state.fail = { code: "55000", message: "this item is already unpublished; reload" };
-    expect((await problem(await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "comment", targetId: C1, reason: "spam" })))).message).toBe("This item is already unpublished; reload.");
+    expect((await problem(await h.postTakeDown(post("/api/v1/admin/moderation/takedowns", { targetType: "comment", targetId: C1, reason: "spam", lastAt: LAST })))).message).toBe("This item is already unpublished; reload.");
   });
 
-  it("reports: dismissing closes them; closed already is 409; a bad status or id never reaches the database", async () => {
+  it("reports: dismissing closes what the page showed; closed already, a newer report or changed content is 409; a bad body or id never reaches the database", async () => {
     state.user = MODERATOR;
-    const send = (body: unknown, id = REPORT) => h.postReportResolution(post(`/api/v1/admin/moderation/reports/${id}`, body), idParams(id));
+    const send = (body: Record<string, unknown>, id = REPORT, seen: Record<string, unknown> = { lastAt: LAST, contentId: C2 }) =>
+      h.postReportResolution(post(`/api/v1/admin/moderation/reports/${id}`, { ...body, ...seen }), idParams(id));
     const ok = await send({ status: "dismissed" });
     expect(ok.status).toBe(200);
     expect(await ok.json()).toEqual({ ok: true });
-    expect(state.params.get("community.resolve_report")).toEqual([REPORT, "dismissed"]);
+    expect(state.params.get("community.resolve_report")).toEqual([REPORT, "dismissed", LAST, C2]);
 
     state.resolved = false;
     const again = await send({ status: "dismissed" });
@@ -461,10 +470,19 @@ describe("content reports and take-down (migration 0032)", () => {
     expect((await send({ status: "closed" })).status).toBe(400);
     expect((await send({ status: "dismissed", note: "x" })).status).toBe(400);
     expect((await send({ status: "dismissed" }, "x")).status).toBe(404);
+    expect((await send({ status: "dismissed" }, REPORT, {})).status).toBe(400);
+    expect((await send({ status: "dismissed" }, REPORT, { lastAt: LAST })).status).toBe(400);
+    expect((await send({ status: "dismissed" }, REPORT, { lastAt: "now", contentId: C2 })).status).toBe(400);
     expect(db()).toEqual([]);
 
-    state.fail = { code: "55000", message: "this content is still public; take it down, or dismiss the reports" };
-    expect((await send({ status: "actioned" })).status).toBe(409);
+    for (const message of [
+      "this content is still public; take it down, or dismiss the reports",
+      "a new report came in on this item; reload and read it first",
+      "this content changed since you loaded the page; reload",
+    ]) {
+      state.fail = { code: "55000", message };
+      expect((await send({ status: "actioned" }, REPORT, { lastAt: LAST, contentId: null })).status, message).toBe(409);
+    }
   });
 });
 

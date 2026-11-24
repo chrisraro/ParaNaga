@@ -213,7 +213,9 @@ export function PostThread({ id }: { id: string }) {
   // A version a moderator took down after it was public (the author's own list; empty for others).
   // Usually the newest one; an edit sent since then is newer and waits for review on its own.
   const down = live ? undefined : post.versions.find((v) => v.removed);
-  const appealable = latest?.state === "rejected" ? latest : down;
+  // The taken-down version first: it is the one that was public, and overturning its appeal puts
+  // the post back. A newer edit that was not published is appealed only when nothing was taken down.
+  const appealable = down ?? (latest?.state === "rejected" ? latest : undefined);
   const shownPhotos = post.photos.filter((ph) => ph.state === "published");
   const ownPhotos = post.isOwn ? post.photos.filter((ph) => ph.state !== "published") : [];
 

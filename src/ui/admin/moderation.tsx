@@ -295,7 +295,7 @@ function ReportCard({ report, onDone }: { report: ReportItem; onDone: (text: str
 
   const close = async (status: "dismissed" | "actioned") => {
     setBusy(true);
-    const r = await resolveReports(report.reportId, { status });
+    const r = await resolveReports(report.reportId, { status, lastAt: report.lastAt, contentId: report.contentId });
     setBusy(false);
     await onDone(r.ok ? (status === "dismissed" ? `${reports} dismissed. Nothing was changed.` : `${reports} closed.`) : r.message, r.ok);
   };
@@ -317,6 +317,7 @@ function ReportCard({ report, onDone }: { report: ReportItem; onDone: (text: str
       targetId: photoNo ? choice! : report.contentId,
       reason,
       ...(note.trim() ? { note: note.trim() } : {}),
+      lastAt: report.lastAt,
     });
     setBusy(false);
     setConfirming(false);
@@ -410,13 +411,13 @@ function ReportCard({ report, onDone }: { report: ReportItem; onDone: (text: str
                 : `Others will no longer see it${report.contentKind === "post_version" ? ", its comments or its photos" : ""}. `}
               {`The author is told and can ask for another review. The ${reports} on this ${thing} ${report.count === 1 ? "closes" : "close"} as actioned.`}
             </ConfirmStep>
-          ) : (
-            <div>
-              <button type="submit" className={btnSecondary} disabled={busy} aria-busy={busy} data-testid={`report-go-${id}`}>
-                {choice === "dismiss" ? "Dismiss the reports" : choice ? "Take down…" : "Record decision"}
-              </button>
-            </div>
-          )}
+          ) : null}
+          {/* Stays mounted while the confirm step is open: Cancel puts focus back on it (useFocusOnOpen). */}
+          <div hidden={confirming}>
+            <button type="submit" className={btnSecondary} disabled={busy} aria-busy={busy} data-testid={`report-go-${id}`}>
+              {choice === "dismiss" ? "Dismiss the reports" : choice ? "Take down…" : "Record decision"}
+            </button>
+          </div>
         </form>
       ) : (
         <div className="grid min-w-0 content-start gap-2 text-sm">

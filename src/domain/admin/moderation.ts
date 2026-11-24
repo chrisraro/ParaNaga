@@ -121,6 +121,7 @@ export const reportItemSchema = z.object({
   /** Up to five of the reporters' own words, newest first. */
   notes: z.array(z.string()),
   firstAt: ts,
+  /** The newest open report, as the database wrote it (microseconds): sent back so a decision closes only what was shown. */
   lastAt: ts,
   contentKind: z.enum(["post_version", "comment"]),
   contentId: uuid.nullable(),
@@ -163,6 +164,8 @@ export const moderationQueueSchema = z.object({
 export type ModerationQueue = z.infer<typeof moderationQueueSchema>;
 
 const note = z.string().trim().max(1000);
+/** A report group's `lastAt`, unchanged: the database compares it to the microsecond. */
+const seenUntil = z.iso.datetime({ offset: true, message: "Reload the page and try again." }).max(40);
 
 export const moderatePayloadSchema = z
   .object({
@@ -199,6 +202,8 @@ export const takeDownPayloadSchema = z
     targetId: uuid,
     reason: z.enum(REJECT_REASONS, { message: "Choose a reason for taking this down." }),
     note: note.optional(),
+    /** The report group's `lastAt`: a report filed after it refuses the take-down (409) instead of closing unread. */
+    lastAt: seenUntil,
   })
   .strict()
   .refine((p) => p.reason !== "other" || (p.note ?? "").length > 0, { message: "The reason “Other” needs a note." });
@@ -214,8 +219,12 @@ export type TakeDownResult = z.infer<typeof takeDownResultSchema>;
 /** The public copy a taken-down photo no longer points to (from the database). */
 export const removedCopySchema = z.object({ bucket: z.string(), key: z.string() }).nullable();
 
-/** Closing the open reports on one item without a take-down. "actioned" only fits content that is already gone. */
-export const resolveReportsPayloadSchema = z.object({ status: z.enum(["dismissed", "actioned"]) }).strict();
+/**
+ * Closing the open reports on one item without a take-down. "actioned" only fits content that is
+ * already gone. `lastAt` and `contentId` are the group's, as shown: a newer report or other live
+ * content (an approved edit) is a 409, never closed unread.
+ */
+export const resolveReportsPayloadSchema = z.object({ status: z.enum(["dismissed", "actioned"]), lastAt: seenUntil, contentId: uuid.nullable() }).strict();
 export type ResolveReportsPayload = z.infer<typeof resolveReportsPayloadSchema>;
 export const reportsClosedSchema = z.object({ ok: z.literal(true) });
 

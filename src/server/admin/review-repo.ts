@@ -90,7 +90,8 @@ export async function readModerationQueue(db: Db): Promise<ModerationQueue> {
     items: list(d.items).map((i) => ({ ...iso(i, ["submittedAt"]), mediaId: i.mediaId ?? undefined })),
     appeals: list(d.appeals).map((a) => iso(a, ["decidedAt", "createdAt"])),
     history: list(d.history).map((h) => iso(h, ["at"])),
-    reports: list(await scalar(db, sql`select community.admin_report_queue(100) as r`)).map((r) => iso(r, ["firstAt", "lastAt"])),
+    // lastAt stays the database's text (microseconds): it is sent back and compared exactly; a JS date would round it.
+    reports: list(await scalar(db, sql`select community.admin_report_queue(100) as r`)).map((r) => iso(r, ["firstAt"])),
   });
 }
 
@@ -100,13 +101,22 @@ export async function readModerationQueue(db: Db): Promise<ModerationQueue> {
  * the caller deletes that object after the commit, never inside it.
  */
 export async function takeDown(db: Db, p: TakeDownPayload): Promise<{ decisionId: string; reportsClosed: number; removed: { bucket: string; key: string } | null }> {
-  const r = ((await scalar(db, sql`select community.admin_take_down(${p.targetType}, ${p.targetId}::uuid, ${p.reason}, ${p.note ?? null}) as r`)) ?? {}) as Obj;
+  const r = ((await scalar(db, sql`select community.admin_take_down(${p.targetType}, ${p.targetId}::uuid, ${p.reason}, ${p.note ?? null}, ${p.lastAt}::timestamptz) as r`)) ?? {}) as Obj;
   return { decisionId: String(r.decisionId), reportsClosed: Number(r.reportsClosed ?? 0), removed: removedCopySchema.parse(r.removed ?? null) };
 }
 
-/** Closes every open report on the content `reportId` is about; false when they were closed already. */
-export async function resolveReports(db: Db, reportId: string, status: ResolveReportsPayload["status"]): Promise<boolean> {
-  return (await scalar(db, sql`select community.resolve_report(${reportId}::uuid, ${status}) as ok`)) === true;
+/** Closes the open reports the page showed on the content `reportId` is about; false when they were closed already. */
+export async function resolveReports(db: Db, reportId: string, p: ResolveReportsPayload): Promise<boolean> {
+  return (await scalar(db, sql`select community.resolve_report(${reportId}::uuid, ${p.status}, ${p.lastAt}::timestamptz, ${p.contentId}::uuid) as ok`)) === true;
+}
+
+/**
+ * A taken-down photo whose public copy could not be deleted: the audit trail names the object, so
+ * it can be removed by hand. A storage key is an id, never personal text.
+ */
+export async function auditPublicCopyLeft(db: Db, photoId: string, decisionId: string, copy: { bucket: string; key: string }): Promise<void> {
+  const detail = JSON.stringify({ decision_id: decisionId, public_copy_left: true, bucket: copy.bucket, key: copy.key });
+  await db.execute(sql`select core.audit('community.take_down_copy_left', 'community.photo', ${photoId}, ${detail}::jsonb)`);
 }
 
 /**

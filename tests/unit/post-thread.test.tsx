@@ -291,6 +291,24 @@ describe("post thread actions", () => {
     expect(await screen.findByTestId("thread-taken-down")).toBeTruthy();
     expect(screen.getByTestId("thread-state").textContent).toContain("Awaiting review.");
     expect(screen.getByTestId("appeal-state").textContent).toBe("Another review requested");
+    cleanup();
+
+    // The edit was turned down too: the appeal offered is still the taken-down version's, the one that puts the post back.
+    d.post = {
+      ...d.post, state: "rejected",
+      versions: [
+        { id: V2, n: 2, title: "Seats, edited", state: "rejected", isLive: false, submittedAt: "2026-11-03T00:00:00.000Z", appeal: null },
+        { id: V1, n: 1, title: "Seats", state: "rejected", isLive: false, submittedAt: "2026-11-01T00:00:00.000Z", appeal: null, removed: true },
+      ],
+    };
+    api.submitAppeal.mockResolvedValue({ ok: true, data: { appeal: { id: V2, state: "open" } } });
+    render(<PostThread id={POST_ID} />);
+    fireEvent.click(await screen.findByTestId("appeal-open"));
+    fireEvent.change(within(screen.getByTestId("appeal-form")).getByRole("textbox"), { target: { value: "Please look at the first version again." } });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("appeal-send"));
+    });
+    expect(api.submitAppeal.mock.calls[0]![0]).toMatchObject({ targetType: "post_version", targetId: V1 });
   });
 
   it("a sent report moves focus to its result", async () => {

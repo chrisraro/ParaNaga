@@ -17,12 +17,15 @@
 --    else changes for pending content, so community.admin_moderate and admin_resolve_appeal keep
 --    their behaviour, and an overturned appeal restores a taken-down item through the same code
 --    path as before (a photo is copied again from its private original, which is never removed).
--- 4. community.admin_take_down(type, id, reason_code, note): NEW. Moderator or admin (same check
+-- 4. community.admin_take_down(type, id, reason_code, note, seen_until): NEW. Moderator or admin (same check
 --    as admin_moderate), never your own content, the reason list of a rejection, "other" needs a
 --    note. The item must be published right now: 55000 with a plain message when it was already
 --    taken down, when a newer version went live, or when it is still waiting. Records a
---    moderation_decision (outcome 'rejected'), closes every open report on the same post or comment
+--    moderation_decision (outcome 'rejected'), closes the open reports on the same post or comment
 --    as 'actioned' in the same transaction, audits 'community.take_down' (ids and codes only).
+--    seen_until is the newest report the moderator's page showed (admin_report_queue 'lastAt', to
+--    the microsecond): a newer open report refuses the call (55000, reload) and only reports up to
+--    it are closed, so nobody closes a report they never read. Null closes none.
 --    It is a decision about published content, not an answer to Jev: is_override stays false and
 --    nothing is audited as 'community.override'; Jev's stored answer is copied to the decision as
 --    before. For a photo it returns the public copy (bucket, key) the row no longer points to, so
@@ -32,10 +35,14 @@
 --    appealed and overturned. A decision made on an appeal still cannot be appealed. The unique
 --    index appeal_target_uq becomes the plain index appeal_target_idx; appeal.decision_id stays
 --    unique.
--- 6. community.resolve_report(id, status): same signature and grant. Now closes every open report
---    on the same target together and audits 'community.report_resolve'. 'actioned' is accepted
---    only when the content is no longer public (a take-down closes its reports itself; this is for
---    a report that arrived during one). Still refused on your own content.
+-- 6. community.resolve_report(id, status, seen_until, content_id) REPLACES resolve_report(id,
+--    status), which is dropped: no app version before this migration calls it (there was no route).
+--    Closes the open reports on the same target together and audits 'community.report_resolve'.
+--    seen_until as in 4; content_id is the live content the page showed (the published post
+--    version, the comment, null when it was gone): 55000 when it is another one now, so a dismissal
+--    never covers an edit the moderator did not read. 'actioned' is accepted only when the content
+--    is no longer public (a take-down closes its reports itself; this is for a report that arrived
+--    during one). Still refused on your own content.
 -- 7. community.admin_report_queue(limit): NEW. Open reports grouped by target with the reported
 --    content, the reasons with counts, up to five reporter notes, and the post's public photos.
 --    Never a reporter's identity; never reports on the caller's own content.
@@ -43,23 +50,48 @@
 --    insert with ON CONFLICT DO NOTHING (C5: a double tap answers instead of failing on 23505).
 -- 9. Indexes: reaction_target_idx (I1, the helpful recount) and content_report_open_target_idx
 --    (I2: open reports per target in the queues and when closing them).
+-- 10. community.report_content: same signature. A rider whose earlier report on the item was closed
+--    can report it again (it was restored on appeal, or it got worse): the closed row is reopened
+--    with the new reason and note. An open report still answers false, as before.
+-- 11. community.moderation_decision.created_at and appeal.created_at default to clock_timestamp()
+--    (was now(), the START of the transaction). Both are written under the content row lock, so
+--    their order now follows the order of the commits: "the newest decision" in submit_appeal and
+--    "an appeal made since the take-down" in the thread cannot be decided by which request began
+--    first. Catalog change only.
+--
+-- lock_timeout 5 s: the ALTERs, the index builds and DROP INDEX wait for running statements; this
+-- fails the migration (nothing applied, run it again) instead of queueing every request behind it.
 --
 -- Order: MIGRATE FIRST, then deploy the code. The app running before this migration keeps working
--- after it: no signature it calls changes, the new columns are ignored, and it cannot create a
--- take-down. The new code does NOT work before the migration: it reads taken_down_at and calls
--- admin_take_down and admin_report_queue (42703 / 42883 until they exist).
+-- after it: no signature it calls changes (it never called resolve_report), the new columns are
+-- ignored, and it cannot create a take-down. The new code does NOT work before the migration: it
+-- reads taken_down_at and calls admin_take_down and admin_report_queue (42703 / 42883 until they
+-- exist).
 --
--- Manual rollback (owner connection; first deploy the previous app version):
+-- Rolling back the CODE only (the previous app on this schema): that app reads an appeal's state
+-- with a scalar subquery without LIMIT (src/server/community/read.ts, appealCol). An item with two
+-- appeals makes it fail (21000) and the author cannot open that thread. No such item can exist
+-- between this migration and the deploy of the new code (a second appeal needs a take-down, which
+-- only the new code can make); it can after the new code has run. Check before a code rollback:
+--   select target_type, target_id from community.appeal group by 1, 2 having count(*) > 1;
+-- No rows: safe. Rows: fix forward, or ship the previous app with `order by a.created_at desc
+-- limit 1` in appealCol. Nothing in the database can hide the older appeal from that query without
+-- changing what the author is allowed to read.
+--
+-- Manual rollback of the schema (owner connection; first deploy the previous app version, see above):
 --   1. Every taken-down item needs a decision first, because the old functions leave a rejected
 --      item as it is: `select count(*) from community.post_version where taken_down_at is not null`
 --      (same for comment and post_photo). Rows may stay rejected; only the column goes.
 --   2. begin;
 --      grant create on schema community to paranaga_definer;
---      drop function community.admin_take_down(text, uuid, text, text);
+--      drop function community.admin_take_down(text, uuid, text, text, timestamptz);
 --      drop function community.admin_report_queue(integer);
+--      drop function community.resolve_report(uuid, text, timestamptz, uuid);
 --      -- run again, in this order: content_target, apply_content_outcome and submit_appeal from
---      -- 0025; resolve_report from 0020; toggle_reaction and toggle_bookmark from 0017
---      -- (each block: create or replace, owner, revoke, grant).
+--      -- 0025; resolve_report from 0020; report_content, toggle_reaction and toggle_bookmark from
+--      -- 0017 (each block: create or replace, owner, revoke, grant).
+--      alter table community.moderation_decision alter column created_at set default now();
+--      alter table community.appeal alter column created_at set default now();
 --      drop index community.reaction_target_idx, community.content_report_open_target_idx, community.appeal_target_idx;
 --      -- only when no item has two appeals:
 --      create unique index appeal_target_uq on community.appeal (target_type, target_id);
@@ -67,7 +99,11 @@
 --      alter table community.comment drop column taken_down_at;
 --      alter table community.post_photo drop column taken_down_at;
 --      revoke create on schema community from paranaga_definer;
+--      -- scripts/migrate.ts skips a file that has a row here; without this it never runs again:
+--      delete from public.schema_migrations where name = '0032_moderation_takedown.sql';
 --      commit;
+
+set local lock_timeout = '5s';
 
 grant create on schema community to paranaga_definer;
 
@@ -84,6 +120,10 @@ alter table community.post_photo
 -- post_version and comment already give the definer role UPDATE on the whole table (0017);
 -- post_photo lists its columns (0025).
 grant update (taken_down_at) on community.post_photo to paranaga_definer;
+
+-- ================================================================ 11. commit-order timestamps
+alter table community.moderation_decision alter column created_at set default clock_timestamp();
+alter table community.appeal alter column created_at set default clock_timestamp();
 
 -- ================================================================ 9. indexes (I1, I2)
 create index reaction_target_idx on community.reaction (target_type, target_id);
@@ -127,7 +167,9 @@ revoke execute on function community.content_target(text, uuid) from public;
 
 -- ================================================================ 3. outcomes
 -- Applies an outcome to a target already locked by content_target. A post version is published
--- only while it is the newest version (an edit since then is reviewed on its own). Rejecting the
+-- only while no newer version is live or waiting (that edit is reviewed on its own). A newer
+-- version that was rejected or superseded does not count: the appeal of a take-down can still be
+-- overturned after the author's later edit was turned down. Rejecting the
 -- live item takes it down: the post loses its live version, a photo its public copy columns.
 -- For a photo, publishing records the public copy (bucket + key the server copies to) and returns
 -- the private source for the server to copy from.
@@ -144,7 +186,8 @@ begin
     select v.post_id into v_post from community.post_version v where v.id = p_id;
     if p_outcome = 'published' then
       if exists (select 1 from community.post_version n
-                  where n.post_id = v_post and n.n > (select v.n from community.post_version v where v.id = p_id)) then
+                  where n.post_id = v_post and n.n > (select v.n from community.post_version v where v.id = p_id)
+                    and n.moderation_status in ('pending', 'human_review', 'published')) then
         raise exception 'the author has edited this post since; review the newer version' using errcode = '55000';
       end if;
       update community.post_version set moderation_status = 'superseded' where post_id = v_post and moderation_status = 'published';
@@ -194,7 +237,8 @@ revoke execute on function community.apply_content_outcome(text, uuid, text, tex
 
 -- ================================================================ 4. take-down
 -- Reason codes mirrored in src/domain/admin/moderation.ts (REJECT_REASONS).
-create or replace function community.admin_take_down(p_target_type text, p_target_id uuid, p_reason_code text, p_note text)
+create or replace function community.admin_take_down(p_target_type text, p_target_id uuid, p_reason_code text, p_note text,
+                                                     p_seen_until timestamptz)
 returns jsonb
   language plpgsql volatile security definer
   set search_path = pg_catalog, community, core, pg_temp
@@ -208,6 +252,9 @@ declare
   v_removed jsonb;
   v_decision uuid;
   v_reports integer;
+  -- Reports name the post or the comment: a post version or a photo closes the reports on its post.
+  v_rtype text := case when p_target_type = 'comment' then 'comment' else 'post' end;
+  v_rid uuid;
 begin
   if p_reason_code is null or p_reason_code not in (
        'spam', 'harassment', 'threat', 'personal_info', 'driver_allegation', 'off_topic', 'misleading', 'unsafe_photo', 'other') then
@@ -233,6 +280,11 @@ begin
   elsif t.o_status <> 'published' then
     raise exception 'this item is not published; decide it in the review queue' using errcode = '55000';
   end if;
+  v_rid := case when p_target_type = 'comment' then p_target_id else t.o_post end;
+  if exists (select 1 from community.content_report r
+              where r.status = 'open' and r.target_type = v_rtype and r.target_id = v_rid and r.created_at > p_seen_until) then
+    raise exception 'a new report came in on this item; reload and read it first' using errcode = '55000';
+  end if;
   if p_target_type = 'photo' then
     select jsonb_build_object('bucket', ph.public_bucket, 'key', ph.public_key) into v_removed
       from community.post_photo ph where ph.id = p_target_id;
@@ -244,12 +296,10 @@ begin
   values (p_target_type, p_target_id, t.o_author, 'rejected', v_user, v_role, p_reason_code, v_note,
           j.recommendation, j.confidence, false)
   returning id into v_decision;
-  -- Reports name the post or the comment: a post version or a photo closes the reports on its post.
+  -- Only what the moderator read: a report filed since the check above stays open.
   update community.content_report r
      set status = 'actioned', resolved_by = v_user, resolved_at = now()
-   where r.status = 'open'
-     and r.target_type = case when p_target_type = 'comment' then 'comment' else 'post' end
-     and r.target_id = case when p_target_type = 'comment' then p_target_id else t.o_post end;
+   where r.status = 'open' and r.target_type = v_rtype and r.target_id = v_rid and r.created_at <= p_seen_until;
   get diagnostics v_reports = row_count;
   perform core.audit('community.take_down', 'community.' || p_target_type, p_target_id::text,
     jsonb_build_object('decision_id', v_decision, 'reason_code', p_reason_code, 'post_id', t.o_post,
@@ -257,9 +307,9 @@ begin
   return jsonb_build_object('decisionId', v_decision, 'isOverride', false, 'reportsClosed', v_reports, 'removed', v_removed);
 end;
 $$;
-alter function community.admin_take_down(text, uuid, text, text) owner to paranaga_definer;
-revoke execute on function community.admin_take_down(text, uuid, text, text) from public;
-grant execute on function community.admin_take_down(text, uuid, text, text) to paranaga_app;
+alter function community.admin_take_down(text, uuid, text, text, timestamptz) owner to paranaga_definer;
+revoke execute on function community.admin_take_down(text, uuid, text, text, timestamptz) from public;
+grant execute on function community.admin_take_down(text, uuid, text, text, timestamptz) to paranaga_app;
 
 -- ================================================================ 5. appeals: one per decision
 drop index community.appeal_target_uq;
@@ -329,11 +379,14 @@ revoke execute on function community.submit_appeal(text, uuid, text) from public
 grant execute on function community.submit_appeal(text, uuid, text) to paranaga_app;
 
 -- ================================================================ 6. reports: resolve
--- Closes every open report on the same target as p_id. 'dismissed': nothing was needed.
--- 'actioned': only for content that is no longer public (admin_take_down closes its reports
--- itself; this covers a report that was filed while the take-down ran). False when the report
--- does not exist or was already closed.
-create or replace function community.resolve_report(p_id uuid, p_status text) returns boolean
+-- Closes the open reports on the same target as p_id that the moderator's page showed (created up
+-- to p_seen_until). 'dismissed': nothing was needed. 'actioned': only for content that is no
+-- longer public (admin_take_down closes its reports itself; this covers a report that was filed
+-- while the take-down ran). 55000 when a newer report came in, or when the live content is not
+-- p_content_id any more (an approved edit, a take-down, a delete). False when the report does not
+-- exist or was already closed.
+drop function community.resolve_report(uuid, text);
+create or replace function community.resolve_report(p_id uuid, p_status text, p_seen_until timestamptz, p_content_id uuid) returns boolean
   language plpgsql volatile security definer
   set search_path = pg_catalog, community, core, pg_temp
 as $$
@@ -342,10 +395,10 @@ declare
   v_type text;
   v_target uuid;
   v_author text;
-  v_public boolean;
+  v_live uuid;
   v_count integer;
 begin
-  if p_status is null or p_status not in ('actioned', 'dismissed') then
+  if p_status is null or p_status not in ('actioned', 'dismissed') or p_seen_until is null then
     raise exception 'invalid status' using errcode = '22023';
   end if;
   select r.target_type, r.target_id into v_type, v_target
@@ -353,23 +406,31 @@ begin
   if not found then
     return false;
   end if;
-  -- The content row is locked, so a take-down of it cannot run in between.
+  -- The content row is locked, so a take-down or an approved edit of it cannot run in between.
+  -- v_live: what the public sees now, as admin_report_queue names it ('contentId').
   if v_type = 'post' then
-    select p.author_id, p.deleted_at is null and p.published_version_id is not null into v_author, v_public
+    select p.author_id, case when p.deleted_at is null then p.published_version_id end into v_author, v_live
       from community.post p where p.id = v_target for update;
   else
-    select c.author_id, c.deleted_at is null and c.moderation_status = 'published' into v_author, v_public
+    select c.author_id, case when c.deleted_at is null and c.moderation_status = 'published' then c.id end into v_author, v_live
       from community.comment c where c.id = v_target for update;
   end if;
   if v_author = v_actor then
     raise exception 'you cannot moderate your own content' using errcode = '42501';
   end if;
-  if p_status = 'actioned' and coalesce(v_public, false) then
+  if v_live is distinct from p_content_id then
+    raise exception 'this content changed since you loaded the page; reload' using errcode = '55000';
+  end if;
+  if p_status = 'actioned' and v_live is not null then
     raise exception 'this content is still public; take it down, or dismiss the reports' using errcode = '55000';
+  end if;
+  if exists (select 1 from community.content_report r
+              where r.target_type = v_type and r.target_id = v_target and r.status = 'open' and r.created_at > p_seen_until) then
+    raise exception 'a new report came in on this item; reload and read it first' using errcode = '55000';
   end if;
   update community.content_report r
      set status = p_status, resolved_by = v_actor, resolved_at = now()
-   where r.target_type = v_type and r.target_id = v_target and r.status = 'open';
+   where r.target_type = v_type and r.target_id = v_target and r.status = 'open' and r.created_at <= p_seen_until;
   get diagnostics v_count = row_count;
   if v_count > 0 then
     perform core.audit('community.report_resolve', 'community.' || v_type, v_target::text,
@@ -378,9 +439,55 @@ begin
   return v_count > 0;
 end;
 $$;
-alter function community.resolve_report(uuid, text) owner to paranaga_definer;
-revoke execute on function community.resolve_report(uuid, text) from public;
-grant execute on function community.resolve_report(uuid, text) to paranaga_app;
+alter function community.resolve_report(uuid, text, timestamptz, uuid) owner to paranaga_definer;
+revoke execute on function community.resolve_report(uuid, text, timestamptz, uuid) from public;
+grant execute on function community.resolve_report(uuid, text, timestamptz, uuid) to paranaga_app;
+
+-- ================================================================ 10. reports: report again
+-- Report content: one row per reporter and target, never your own, only content that is public.
+-- A closed report is reopened as a new one (reason, note, time); an open one answers false.
+-- created_at is the clock, not the start of the transaction: it is what seen_until is compared to.
+create or replace function community.report_content(p_target_type text, p_target_id uuid, p_reason text, p_note text)
+returns boolean
+  language plpgsql volatile security definer
+  set search_path = pg_catalog, community, core, pg_temp
+as $$
+declare
+  v_user text := core.current_user_id();
+  v_author text;
+  v_count integer;
+begin
+  if v_user is null then
+    raise exception 'not authenticated' using errcode = '28000';
+  end if;
+  if p_target_type = 'post' then
+    select p.author_id into v_author from community.post p
+     where p.id = p_target_id and p.deleted_at is null and p.published_version_id is not null;
+  elsif p_target_type = 'comment' then
+    select c.author_id into v_author from community.comment c
+     where c.id = p_target_id and c.deleted_at is null and c.moderation_status = 'published';
+  else
+    raise exception 'invalid target' using errcode = '22023';
+  end if;
+  if v_author is null then
+    raise exception 'not found' using errcode = 'P0002';
+  end if;
+  if v_author = v_user then
+    raise exception 'own content' using errcode = '22023';
+  end if;
+  insert into community.content_report as r (reporter_id, target_type, target_id, reason, note, created_at)
+  values (v_user, p_target_type, p_target_id, p_reason, p_note, clock_timestamp())
+  on conflict (reporter_id, target_type, target_id) do update
+    set reason = excluded.reason, note = excluded.note, created_at = excluded.created_at,
+        status = 'open', resolved_by = null, resolved_at = null
+    where r.status <> 'open';
+  get diagnostics v_count = row_count;
+  return v_count > 0;
+end;
+$$;
+alter function community.report_content(text, uuid, text, text) owner to paranaga_definer;
+revoke execute on function community.report_content(text, uuid, text, text) from public;
+grant execute on function community.report_content(text, uuid, text, text) to paranaga_app;
 
 -- ================================================================ 7. reports: queue
 -- Open reports grouped by what they are about, oldest first. No reporter id leaves this function.

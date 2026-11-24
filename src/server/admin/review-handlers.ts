@@ -16,7 +16,7 @@ import { badRequest, conflict, notFound, readJsonBody, tooManyRequests, unavaila
 import { serverEnv } from "@/server/env";
 import { getStorage } from "@/server/storage/adapter";
 import { adminRoute, firstIssue, json, limited } from "./handlers";
-import { moderate, readCorrections, readModerationQueue, resolveAppeal, resolveReports, reviewCorrection, reviewMedia, takeDown } from "./review-repo";
+import { auditPublicCopyLeft, moderate, readCorrections, readModerationQueue, resolveAppeal, resolveReports, reviewCorrection, reviewMedia, takeDown } from "./review-repo";
 
 // /api/v1/admin/corrections/** (C9), /api/v1/admin/moderation/** (C10) and /api/v1/admin/media/:id
 // (N6). Same three walls as the rest of /api/v1/admin (handlers.ts): the session's roles, the
@@ -123,7 +123,9 @@ export function postAppealResolution(request: Request, params: Promise<{ id: str
  * published post, comment or photo. One transaction records the decision, shows it to the author
  * (who can appeal) and closes the open reports on it as actioned. A photo's public copy is deleted
  * after the commit, never inside the transaction: from then on the app answers 404 for it either
- * way, and "left" tells the moderator when the object itself could not be deleted.
+ * way, and "left" tells the moderator when the object itself could not be deleted. A copy that is
+ * left is written to the audit trail with its bucket and key ('community.take_down_copy_left'), so
+ * it is found and deleted later; nothing retries it on its own.
  */
 export function postTakeDown(request: Request): Promise<Response> {
   return adminRoute(request, "admin/moderation/takedown", "community.moderate", async ({ user, requestId, db }) => {
@@ -138,6 +140,8 @@ export function postTakeDown(request: Request): Promise<Response> {
       : removed.bucket === serverEnv().STORAGE_BUCKET_PUBLIC && (await getStorage().deleteObject(removed.bucket, removed.key).catch(() => false))
         ? "removed"
         : "left";
+    // Best effort: the take-down is committed, so a failed audit write must not turn it into an error.
+    if (removed && publicCopy === "left") await db((d) => auditPublicCopyLeft(d, parsed.data.targetId, result.decisionId, removed)).catch(() => undefined);
     return json(takeDownResultSchema, { decisionId: result.decisionId, reportsClosed: result.reportsClosed, publicCopy }, requestId);
   });
 }
@@ -147,8 +151,8 @@ export function postReportResolution(request: Request, params: Promise<{ id: str
   return adminRoute(request, "admin/moderation/report", "community.moderate", async ({ user, requestId, db }) => {
     const id = await idParam(params, "No such report.");
     const parsed = resolveReportsPayloadSchema.safeParse(await readJsonBody(request, ACTION_MAX_BYTES));
-    if (!parsed.success) throw badRequest("Send the status: dismissed or actioned.");
-    const closed = await db(async (d) => ((await limited(d, request, user.id)) ? null : resolveReports(d, id, parsed.data.status)));
+    if (!parsed.success) throw badRequest("Send the status (dismissed or actioned) and the report group's lastAt and contentId. Reload the page.");
+    const closed = await db(async (d) => ((await limited(d, request, user.id)) ? null : resolveReports(d, id, parsed.data)));
     if (closed === null) throw tooManyRequests();
     if (!closed) throw conflict("These reports were already closed. Reload.");
     return json(reportsClosedSchema, { ok: true }, requestId);
