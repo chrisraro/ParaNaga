@@ -62,7 +62,7 @@ describe("useAuthSession", () => {
     signOut.mockRejectedValue(new Error("network"));
     const hook = renderHook(() => useAuthSession());
     await waitFor(() => expect(hook.result.current.status).toBe("signedIn"));
-    await act(() => hook.result.current.signOut());
+    expect(await act(() => hook.result.current.signOut())).toBe(false);
     expect(hook.result.current).toMatchObject({ status: "signedIn", user: USER });
   });
 
@@ -71,7 +71,7 @@ describe("useAuthSession", () => {
     signOut.mockResolvedValue({ data: { success: true }, error: null });
     const hook = renderHook(() => useAuthSession());
     await waitFor(() => expect(hook.result.current.status).toBe("signedIn"));
-    await act(() => hook.result.current.signOut());
+    expect(await act(() => hook.result.current.signOut())).toBe(true);
     expect(hook.result.current).toMatchObject({ status: "signedOut", user: null });
   });
 });

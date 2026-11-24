@@ -148,6 +148,7 @@ export function MoreScreen({ driverReports = false }: { driverReports?: boolean 
   };
 
   const { user, status: authStatus, signOut, refresh, refreshing } = useAuthSession();
+  const [signOutFailed, setSignOutFailed] = useState(false);
   // The sign-in check got no answer (offline, a server error): never shown as "no account".
   const authUnknown = authStatus === "unknown";
 
@@ -186,7 +187,10 @@ export function MoreScreen({ driverReports = false }: { driverReports?: boolean 
           <button
             type="button"
             className="pn-settings__account-action"
-            onClick={signOut}
+            onClick={async () => {
+              setSignOutFailed(false);
+              setSignOutFailed(!(await signOut()));
+            }}
             data-testid="settings-sign-out"
           >
             {t.signOut}
@@ -201,6 +205,11 @@ export function MoreScreen({ driverReports = false }: { driverReports?: boolean 
           </Link>
         )}
       </div>
+      {signOutFailed && user ? (
+        <p className="pn-footnote" role="alert" data-testid="settings-sign-out-failed">
+          {t.signOutFailed}
+        </p>
+      ) : null}
 
       <div className="pn-settings__group">
         <ListGroup title={t.general} testId="settings-general">

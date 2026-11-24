@@ -54,7 +54,8 @@ export function useAuthSession() {
     };
   }, []);
 
-  const signOut = useCallback(async () => {
+  /** True once signed out; false when it failed (the person is still signed in). */
+  const signOut = useCallback(async (): Promise<boolean> => {
     clearReportDraft();
     let done = true;
     try {
@@ -73,6 +74,7 @@ export function useAuthSession() {
     // (the session is most likely still valid on the server), so what is on screen stays.
     if (next.status !== "unknown") setSession(next);
     else if (done) setSession(SIGNED_OUT);
+    return next.status === "unknown" ? done : next.status === "signedOut";
   }, []);
 
   return { user: session.user, loading: session.status === "checking", status: session.status, signOut, refresh, refreshing };

@@ -579,6 +579,7 @@ export const en = {
     roleCommuter: "commuter",
     staysOnPhone: "Saved trips and places stay on this phone.",
     signOut: "Sign out",
+    signOutFailed: "Could not sign out. You are still signed in on this phone. Check your connection and try again.",
     signIn: "Sign in",
     general: "General",
     language: "Language",

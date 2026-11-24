@@ -582,6 +582,7 @@ export const fil: Dict = {
     roleCommuter: "commuter",
     staysOnPhone: "Nananatili sa phone na ito ang mga naka-save na biyahe at lugar.",
     signOut: "Mag-sign out",
+    signOutFailed: "Hindi naka-sign out. Naka-sign in ka pa rin sa phone na ito. Tingnan ang koneksyon mo at subukan ulit.",
     signIn: "Mag-sign in",
     general: "Pangkalahatan",
     language: "Wika",
