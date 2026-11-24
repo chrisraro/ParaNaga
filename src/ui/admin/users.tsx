@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { changeRole, fetchStaff, findUser, type AdminResult } from "@/client/admin/api";
 import { GRANTABLE_ROLES, ROLE_LABELS, wouldRemoveLastAdmin, type FoundUser, type GrantableRole, type StaffList, type UserCard } from "@/domain/admin/system";
 import type { Role } from "@/domain/auth/permissions";
-import { btnPrimary, btnRowDanger, btnSecondary, cardCls, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, when, Loading, ResultNotice, useFormProblem, type Notice } from "./parts";
+import { btnPrimary, btnRowDanger, btnSecondary, cardCls, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, when, Loading, LoadError, ConfirmStep, ResultNotice, useFormProblem, type Notice } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A18 Users & roles (N7, C12), admins only. Find an account by its full email address (no list of
@@ -115,7 +115,14 @@ export function UsersScreen() {
           {staff === null ? (
             <Loading />
           ) : !staff.ok ? (
-            <ErrorNote>{staff.message}</ErrorNote>
+            <LoadError
+              onRetry={() => {
+                setStaff(null);
+                void loadStaff();
+              }}
+            >
+              {staff.message}
+            </LoadError>
           ) : staffList.length === 0 ? (
             <Muted>Nobody holds a staff role.</Muted>
           ) : (
@@ -137,17 +144,21 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
   const [picked, setRole] = useState<GrantableRole | "">("");
   const [reason, setReason] = useState("");
   const problem = useFormProblem();
+  // Revoke asks once more before it is sent (A9): the role stops working on the person's next request.
+  const [revoking, setRevoking] = useState<Role | null>(null);
   const active = user.roles.filter((r) => r.active);
   const missing = GRANTABLE_ROLES.filter((r) => !active.some((a) => a.role === r));
   // A role just granted is no longer on offer, so the choice falls back to "Choose…".
   const role = picked && missing.includes(picked) ? picked : "";
   const tid = user.userId.replace(/[^\w-]/g, "");
 
-  const go = (change: "grant" | "revoke", which: Role) => {
+  const go = (change: "grant" | "revoke", which: Role, confirmed = false) => {
     if (busy) return;
     problem.clear();
+    setRevoking(null);
     if (reason.trim().length < 3) return problem.fail("Give a reason (at least 3 characters).", "reason");
     if (wouldRemoveLastAdmin(staff, user.userId, which, change)) return problem.fail("This is the last admin; grant admin to someone else first.");
+    if (change === "revoke" && !confirmed) return setRevoking(which);
     onChange({ userId: user.userId, name: user.name, role: which, change, reason: reason.trim() });
   };
 
@@ -177,7 +188,7 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
             </span>
             {!user.self && r.role !== "commuter" ? (
               <button type="button" className={`${btnRowDanger} ml-auto`} aria-disabled={busy} onClick={() => go("revoke", r.role)} data-testid={`revoke-${tid}-${r.role}`}>
-                Revoke
+                Revoke…
               </button>
             ) : null}
           </li>
@@ -210,6 +221,11 @@ function UserRoles({ user, staff, busy, onChange }: { user: UserCard; staff: rea
         </div>
       )}
       {problem.general ? <ErrorNote testId={`user-error-${tid}`}>{problem.general}</ErrorNote> : null}
+      {revoking ? (
+        <ConfirmStep title={`Revoke ${ROLE_LABELS[revoking]} from ${user.name}?`} go="Revoke now" danger busy={busy} onGo={() => go("revoke", revoking, true)} onCancel={() => setRevoking(null)} testId={`revoke-confirm-${tid}`}>
+          {`It stops working on their next request. The reason “${reason.trim()}” is recorded in the audit log.`}
+        </ConfirmStep>
+      ) : null}
     </div>
   );
 }

@@ -13,7 +13,7 @@ import {
   type ModerationQueue,
   type ModerationReason,
 } from "@/domain/admin/moderation";
-import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, cardCls, Loading, type Notice, TableScroll } from "./parts";
+import { btnPrimary, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Empty, cardCls, Loading, LoadError, type Notice, TableScroll } from "./parts";
 
 // A15 Community moderation and A16 Appeals (N6, C10). Posts, comments and photos waiting for a
 // person, with Jev's typed answer as a probability (advice, never a decision). Going against it is
@@ -63,7 +63,7 @@ export function ModerationScreen() {
       {state === null ? (
         <Loading />
       ) : !state.ok ? (
-        <ErrorNote>{state.message}</ErrorNote>
+        <LoadError onRetry={() => { setState(null); void load(); }}>{state.message}</LoadError>
       ) : (
         <div className="grid gap-6">
           <Panel title={`Waiting for review (${data?.items.length ?? 0})`} variant="bare" testId="moderation-items">

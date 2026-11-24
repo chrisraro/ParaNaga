@@ -15,7 +15,7 @@ import {
   type OutcomeCode,
 } from "@/domain/admin/complaints";
 import type { ComplaintStatus } from "@/domain/complaints/status";
-import { btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, when, Empty, insetCls, Loading, ResultNotice, segBtn, segGroup, useFormProblem, type Notice, TableScroll } from "./parts";
+import { btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, when, Empty, insetCls, Loading, ResultNotice, LoadError, ConfirmStep, segBtn, segGroup, useFormProblem, type Notice, TableScroll } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A17 Complaint review (N7, C11). Private driver reports, for the complaint reviewer role only.
@@ -117,7 +117,7 @@ export function ComplaintsScreen() {
           </button>
         </div>
       ) : list.step === "error" ? (
-        <ErrorNote testId="complaints-error">{list.message}</ErrorNote>
+        <LoadError testId="complaints-error" onRetry={retryList}>{list.message}</LoadError>
       ) : list.data.complaints.length === 0 ? (
         <Empty title={scope === "open" ? "No open reports." : "No closed reports."}>Reports appear here when a commuter files one.</Empty>
       ) : (
@@ -228,7 +228,19 @@ function ComplaintDetailView({
 
   if (state === null) return <Loading>Loading the report…</Loading>;
   if (!state.ok) {
-    if (!isStepUp(state)) return <ErrorNote testId="complaint-error">{state.message}</ErrorNote>;
+    if (!isStepUp(state)) {
+      return (
+        <LoadError
+          testId="complaint-error"
+          onRetry={() => {
+            setState(null);
+            reload();
+          }}
+        >
+          {state.message}
+        </LoadError>
+      );
+    }
     return (
       <div className="grid justify-items-start gap-2">
         <Muted>Confirm it is you to open this report.</Muted>
@@ -354,15 +366,19 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
   const [toReporter, setToReporter] = useState(false);
   const problem = useFormProblem();
   const [busy, setBusy] = useState(false);
+  // Closed has no next status: saving it asks once more, in words (A9, WCAG 3.3.4).
+  const [confirming, setConfirming] = useState(false);
   if (options.length === 0) return <Muted>No further status change: this report is {label(c.status).toLowerCase()}.</Muted>;
 
-  const submit = async (e?: React.FormEvent) => {
+  const submit = async (e?: React.FormEvent, confirmed = false) => {
     e?.preventDefault();
     if (busy) return;
     problem.clear();
+    setConfirming(false);
     if (!to) return;
     if (to === "closed" && !outcome) return problem.fail("Choose an outcome to close the report.", "outcome");
     if (toReporter && !note.trim()) return problem.fail("Write the note the reporter will see.", "note");
+    if (to === "closed" && !confirmed) return setConfirming(true);
     setBusy(true);
     const r = await complaintAction(c.id, {
       action: "status",
@@ -373,7 +389,7 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
       visibility: toReporter ? "reporter" : "reviewer_only",
     });
     setBusy(false);
-    if (isStepUp(r)) return askStepUp(() => void submit());
+    if (isStepUp(r)) return askStepUp(() => void submit(undefined, confirmed));
     if (!r.ok) return problem.fail(r.message);
     await onChanged(`${c.publicRef} is now ${label(to).toLowerCase()}.`);
   };
@@ -416,9 +432,14 @@ function StatusForm({ c, askStepUp, onChanged }: { c: ComplaintDetail; askStepUp
       {problem.general ? <ErrorNote testId="complaint-form-error">{problem.general}</ErrorNote> : null}
       <div>
         <button type="submit" className={btnPrimary} aria-disabled={busy} data-testid="complaint-submit">
-          {busy ? "Saving…" : "Save the status"}
+          {busy ? "Saving…" : to === "closed" ? "Close the report…" : "Save the status"}
         </button>
       </div>
+      {confirming && outcome ? (
+        <ConfirmStep title={`Close ${c.publicRef}?`} go="Close the report" onGo={() => void submit(undefined, true)} onCancel={() => setConfirming(false)} testId="complaint-close-confirm">
+          {`A closed report cannot be opened again. The reporter sees the outcome “${OUTCOME_LABELS[outcome]}”${toReporter ? " and your note" : ""}.`}
+        </ConfirmStep>
+      ) : null}
     </form>
   );
 }

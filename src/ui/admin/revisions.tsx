@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createDraft, fetchRevisions, publish, validate, type AdminResult } from "@/client/admin/api";
 import type { RevisionList, RevisionRow, StoredValidationReport } from "@/domain/admin/schemas";
 import { RULES } from "@/domain/admin/validation";
-import { btnDanger, btnPrimary, btnRow, btnRowDanger, btnRowPrimary, btnSecondary, Chip, ErrorNote, Muted, PageTitle, Panel, ResultNotice, when, Loading, type Notice, TableScroll } from "./parts";
+import { btnDanger, btnPrimary, btnRow, btnRowDanger, btnRowPrimary, btnSecondary, Chip, Muted, PageTitle, Panel, ResultNotice, when, Loading, LoadError, type Notice, TableScroll } from "./parts";
 import { AdminStepUp } from "./step-up";
 
 // A12 Revisions & publication (N5a, C8, F-E11). Validate runs every rule and stores the report;
@@ -116,7 +116,7 @@ export function RevisionsScreen() {
       {list === null ? (
         <Loading />
       ) : !list.ok ? (
-        <ErrorNote testId="revisions-error">{list.message}</ErrorNote>
+        <LoadError testId="revisions-error" onRetry={() => { setList(null); void load(); }}>{list.message}</LoadError>
       ) : (
         <TableScroll label="Revisions" card>
           <table className="w-full text-left text-sm" data-testid="revisions-table">

@@ -15,7 +15,7 @@ import {
   type StopList,
   type StopRow,
 } from "@/domain/admin/stops";
-import { btnDanger, btnPrimary, btnRow, btnSecondary, Chip, ErrorNote, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Loading, type Notice, TableScroll } from "./parts";
+import { btnDanger, btnPrimary, btnRow, btnSecondary, Chip, Field, inputCls, Muted, PageTitle, Panel, ResultNotice, useFormProblem, when, Loading, LoadError, type Notice, TableScroll } from "./parts";
 
 // A3 Candidate review and A6 Stops & curbs (N5b, C3). One list of the open draft's stops; the
 // selected stop's panel offers the actions of the screen. Every action is a new stop version in
@@ -71,6 +71,21 @@ export function StopsScreen({ mode }: { mode: Mode }) {
   }, [data, query, status]);
   const selected = data?.stops.find((s) => s.stopPointId === selectedId) ?? null;
 
+  // What was typed for the open stop and not sent (A7): the forms that took input and are still on
+  // screen (a form that was sent is replaced by a fresh one). Another row asks before dropping it.
+  const touched = useRef(new Set<HTMLFormElement>());
+  const select = (s: StopRow) => {
+    if (s.stopPointId === selectedId) return;
+    const unsaved = [...touched.current].some((f) => f.isConnected);
+    if (unsaved && !window.confirm(`Leave ${selected?.code ?? selected?.name ?? "this stop"}? What you typed there and did not send will be lost.`)) return;
+    touched.current.clear();
+    setSelectedId(s.stopPointId);
+  };
+  const retry = () => {
+    setList(null);
+    void load();
+  };
+
   const done = async (r: AdminResult<unknown>, text: string) => {
     setNotice(r.ok ? { ok: true, text } : { ok: false, text: r.message });
     await load();
@@ -103,7 +118,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
       {list === null ? (
         <Loading />
       ) : !list.ok ? (
-        <ErrorNote testId="stops-error">{list.message}</ErrorNote>
+        <LoadError testId="stops-error" onRetry={retry}>{list.message}</LoadError>
       ) : (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] [&>*]:min-w-0">
           <div>
@@ -154,7 +169,7 @@ export function StopsScreen({ mode }: { mode: Mode }) {
                       <td>{s.evidence.length === 0 ? "None" : [...new Set(s.evidence.map((e) => label(e.claim)))].join(", ")}</td>
                       <td>{s.sequences.join(", ") || "–"}</td>
                       <td>
-                        <button type="button" className={btnRow} onClick={() => setSelectedId(s.stopPointId)} aria-pressed={s.stopPointId === selectedId}>
+                        <button type="button" className={btnRow} onClick={() => select(s)} aria-pressed={s.stopPointId === selectedId}>
                           {mode === "candidates" ? "Review" : "Edit"}
                           <span className="sr-only"> {s.code ?? s.name}</span>
                         </button>
@@ -165,9 +180,18 @@ export function StopsScreen({ mode }: { mode: Mode }) {
               </table>
             </TableScroll>
           </div>
-          <div>
+          {/* Beside the list on a wide screen it stays in view and scrolls by itself; below the list
+              its heading takes focus when a stop is picked. Typing in a form marks it as touched. */}
+          <div
+            className="xl:sticky xl:top-4 xl:max-h-[calc(100vh-2rem)] xl:self-start xl:overflow-y-auto"
+            onChange={(e) => {
+              const form = (e.target as Element).closest("form");
+              if (form) touched.current.add(form);
+            }}
+          >
             {selected ? (
-              <StopPanel key={selected.versionId} stop={selected} mode={mode} editable={data?.editable === true} onDone={done} />
+              // Keyed on the stop, not its version: an action on one form leaves the others as typed.
+              <StopPanel key={selected.stopPointId} stop={selected} mode={mode} editable={data?.editable === true} onDone={done} />
             ) : (
               <Panel title="No stop selected">
                 <Muted>Pick a stop in the list to see its source pins and evidence.</Muted>
@@ -184,18 +208,22 @@ type Done = (r: AdminResult<unknown>, text: string) => Promise<boolean>;
 
 function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode; editable: boolean; onDone: Done }) {
   const [busy, setBusy] = useState(false);
+  // How many times each form was sent: a form that was sent starts over from the new version (its
+  // key changes); the other forms keep what was typed in them (A7).
+  const [sent, setSent] = useState<Partial<Record<StopAction["action"], number>>>({});
   const run = async (action: StopAction, text: string) => {
     setBusy(true);
     const r = await stopAction(stop.stopPointId, action);
     // Busy until the list is back: a click before then would send the version this action replaced.
     const ok = await onDone(r, text);
+    if (ok) setSent((n) => ({ ...n, [action.action]: (n[action.action] ?? 0) + 1 }));
     setBusy(false);
     return ok;
   };
   const disabled = !editable || busy;
   return (
     <div className="grid gap-4" data-testid="stop-panel">
-      <Panel title={`${stop.code ? `${stop.code} · ` : ""}${stop.name}`}>
+      <Panel title={`${stop.code ? `${stop.code} · ` : ""}${stop.name}`} focusOnOpen>
         <dl className="break-words grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
           <dt className="font-medium">Status</dt>
           <dd data-testid="stop-status">{label(stop.status)}</dd>
@@ -251,15 +279,15 @@ function StopPanel({ stop, mode, editable, onDone }: { stop: StopRow; mode: Mode
 
       {mode === "candidates" ? (
         <>
-          <PromoteForm stop={stop} disabled={disabled} run={run} />
-          <EvidenceForm stop={stop} disabled={disabled} run={run} setBusy={setBusy} onDone={onDone} />
-          <RelocateForm stop={stop} disabled={disabled} run={run} />
-          <RetireForm stop={stop} disabled={disabled} run={run} />
+          <PromoteForm key={`promote-${sent.promote ?? 0}`} stop={stop} disabled={disabled} run={run} />
+          <EvidenceForm key={`evidence-${sent.evidence ?? 0}`} stop={stop} disabled={disabled} run={run} setBusy={setBusy} onDone={onDone} />
+          <RelocateForm key={`relocate-${sent.relocate ?? 0}`} stop={stop} disabled={disabled} run={run} />
+          <RetireForm key={`retire-${sent.retire ?? 0}`} stop={stop} disabled={disabled} run={run} />
         </>
       ) : (
         <>
-          <EditForm stop={stop} disabled={disabled} run={run} />
-          <EvidenceForm stop={stop} disabled={disabled} run={run} setBusy={setBusy} onDone={onDone} />
+          <EditForm key={`edit-${sent.edit ?? 0}`} stop={stop} disabled={disabled} run={run} />
+          <EvidenceForm key={`evidence-${sent.evidence ?? 0}`} stop={stop} disabled={disabled} run={run} setBusy={setBusy} onDone={onDone} />
         </>
       )}
     </div>
@@ -272,9 +300,11 @@ type FormProps = { stop: StopRow; disabled: boolean; run: Run };
 function PromoteForm({ stop, disabled, run }: FormProps) {
   const options = promotionOptions(stop);
   const firstAllowed = options.find((o) => o.allowed)?.status ?? options[0]!.status;
-  const [target, setTarget] = useState(firstAllowed);
+  // Until the person picks one, the choice follows the evidence: another form may change what is allowed.
+  const [picked, setTarget] = useState<typeof firstAllowed | null>(null);
   const [note, setNote] = useState("");
-  const choice = options.find((o) => o.status === target)!;
+  const choice = options.find((o) => o.status === picked) ?? options.find((o) => o.status === firstAllowed)!;
+  const target = choice.status;
   const submit = (e: FormEvent) => {
     e.preventDefault();
     void run({ action: "promote", expectedVersionId: stop.versionId, status: target, ...(note.trim() ? { note: note.trim() } : {}) }, `${stop.code ?? stop.name} is now ${label(target)}.`);
