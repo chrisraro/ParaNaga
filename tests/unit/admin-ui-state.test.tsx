@@ -214,7 +214,8 @@ describe("AdminDashboard: all clear is only said about what was counted (A11)", 
     openCorrections: 0,
     lastImport: null,
   };
-  const queue = (items: number, appeals: number) => ok({ items: Array.from({ length: items }, () => ({})), appeals: Array.from({ length: appeals }, () => ({})), history: [] });
+  const some = (n: number) => Array.from({ length: n }, () => ({}));
+  const queue = (items: number, appeals: number, reports = 0) => ok({ items: some(items), reports: some(reports), appeals: some(appeals), history: [] });
   const FAILED = { ok: false as const, status: 0, code: null, message: "The request failed. Check the connection and try again." };
   const attention = async () => (await screen.findByTestId("card-attention")).textContent ?? "";
 
@@ -225,14 +226,15 @@ describe("AdminDashboard: all clear is only said about what was counted (A11)", 
   it("names every queue it counted when nothing is waiting", async () => {
     api.fetchModeration.mockResolvedValue(queue(0, 0));
     render(<AdminDashboard transit corrections moderation />);
-    expect(await attention()).toContain("Nothing is waiting on you. A published revision is live and no draft, stop candidate, correction, moderation item or appeal is open.");
+    expect(await attention()).toContain("Nothing is waiting on you. A published revision is live and no draft, stop candidate, correction, moderation item, content report or appeal is open.");
   });
 
-  it("counts the moderation queue and the appeals", async () => {
-    api.fetchModeration.mockResolvedValue(queue(2, 1));
+  it("counts the moderation queue, the reported items and the appeals", async () => {
+    api.fetchModeration.mockResolvedValue(queue(2, 1, 3));
     render(<AdminDashboard transit corrections moderation />);
     const text = await attention();
     expect(text).toContain("2 items (posts, comments or photos) waiting for a decision.");
+    expect(text).toContain("3 reported items (posts or comments) to look at.");
     expect(text).toContain("1 appeal to decide.");
     expect(text).not.toContain("Nothing is waiting");
   });
@@ -250,7 +252,7 @@ describe("AdminDashboard: all clear is only said about what was counted (A11)", 
   it("a moderator alone gets the claim about the moderation queue only", async () => {
     api.fetchModeration.mockResolvedValue(queue(0, 0));
     render(<AdminDashboard transit={false} corrections={false} moderation />);
-    expect(await attention()).toContain("Nothing is waiting on you. No moderation item or appeal is open.");
+    expect(await attention()).toContain("Nothing is waiting on you. No moderation item, content report or appeal is open.");
     expect(api.fetchDashboard).not.toHaveBeenCalled();
   });
 

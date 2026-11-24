@@ -14470,6 +14470,42 @@
     "t15": "added"
   },
   {
+    "key": "community.takenDown.badge",
+    "en": "Taken down",
+    "fil": "Inalis",
+    "review": true,
+    "note": "N6 take-down (2026-11-24), AI draft: a moderator unpublished the author's own content. 'Inalis' as in community.notAvailable ('Baka inalis na'). Meaning must stay exact (no finding of fault); a native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "community.takenDown.post",
+    "en": "A moderator took this post down. It did not meet the community guidelines, so others can no longer see it.",
+    "fil": "Inalis ng moderator ang post na ito. Hindi ito pumasa sa mga alituntunin ng Komunidad, kaya hindi na ito nakikita ng iba.",
+    "review": true,
+    "note": "N6 take-down (2026-11-24), AI draft: second sentence follows community.stateHints.rejected, with 'hindi na' (no longer). 'moderator' kept as the everyday loanword. A native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "community.takenDown.comment",
+    "en": "A moderator took this comment down. It did not meet the community guidelines, so others can no longer see it.",
+    "fil": "Inalis ng moderator ang komentong ito. Hindi ito pumasa sa mga alituntunin ng Komunidad, kaya hindi na ito nakikita ng iba.",
+    "review": true,
+    "note": "N6 take-down (2026-11-24), AI draft: same wording as community.takenDown.post. A native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
+    "key": "community.takenDown.photo",
+    "en": "A moderator took this photo down. Others can no longer see it.",
+    "fil": "Inalis ng moderator ang larawang ito. Hindi na ito nakikita ng iba.",
+    "review": true,
+    "note": "N6 take-down (2026-11-24), AI draft: no reason is stated for a photo, as in community.photos.rejected. A native Naga speaker to confirm.",
+    "reviewed": "claude",
+    "t15": "added"
+  },
+  {
     "key": "terminals.destinationsFromHere",
     "en": "Destinations from here",
     "fil": "Mga destinasyon mula rito",

@@ -70,7 +70,7 @@ export function AdminDashboard({
           {transit && state?.ok ? <Cards d={state.data} corrections={corrections} now={now} /> : null}
           {moderation ? (
             <Panel title="Community moderation" testId="card-moderation">
-              <Muted>Posts, comments and photos waiting for a person, and appeals to decide.</Muted>
+              <Muted>Posts, comments and photos waiting for a person, reported content, and appeals to decide.</Muted>
               <p className="mt-3 text-sm">
                 <Link href="/admin/moderation" prefetch={false} className={linkCls}>
                   Moderation and appeals
@@ -116,7 +116,7 @@ function attentionItems(d: Dashboard, corrections: boolean): Item[] {
   return items;
 }
 
-// The moderation queue endpoint returns at most 100 items (review-repo.ts); appeals are not capped.
+// The moderation queue endpoint returns at most 100 items and 100 reported items (review-repo.ts); appeals are not capped.
 const QUEUE_CAP = 100;
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
@@ -125,7 +125,8 @@ const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
 function queueItems(queue: AdminResult<ModerationQueue> | null, complaints: boolean): Item[] {
   const items: Item[] = [];
   if (queue?.ok) {
-    const { items: waiting, appeals } = queue.data;
+    const { items: waiting, appeals, reports } = queue.data;
+    if (reports.length > 0) items.push({ tone: "warn", chip: "Reports", text: `${reports.length >= QUEUE_CAP ? `${QUEUE_CAP}+ reported items` : plural(reports.length, "reported item")} (posts or comments) to look at.`, href: "/admin/moderation", cta: "Open reports" });
     if (waiting.length > 0) items.push({ tone: "warn", chip: "Moderation", text: `${waiting.length >= QUEUE_CAP ? `${QUEUE_CAP}+ items` : plural(waiting.length, "item")} (posts, comments or photos) waiting for a decision.`, href: "/admin/moderation", cta: "Open moderation" });
     if (appeals.length > 0) items.push({ tone: "warn", chip: "Appeals", text: `${plural(appeals.length, "appeal")} to decide.`, href: "/admin/moderation", cta: "Decide appeals" });
   } else if (queue) {
@@ -139,7 +140,7 @@ function queueItems(queue: AdminResult<ModerationQueue> | null, complaints: bool
 
 /** What "nothing is waiting" covers for these roles: only the things this page counted. */
 function countedThings(transit: boolean, corrections: boolean, moderation: boolean): string {
-  const things = [...(transit ? ["draft", "stop candidate"] : []), ...(transit && corrections ? ["correction"] : []), ...(moderation ? ["moderation item", "appeal"] : [])];
+  const things = [...(transit ? ["draft", "stop candidate"] : []), ...(transit && corrections ? ["correction"] : []), ...(moderation ? ["moderation item", "content report", "appeal"] : [])];
   return things.length > 1 ? `${things.slice(0, -1).join(", ")} or ${things.at(-1)}` : (things[0] ?? "");
 }
 

@@ -2121,6 +2121,13 @@ export const fil: Dict = {
         overturned: "Nasuri ulit: nailathala na",
       },
     },
+    // Migration 0032 draft; review:true rows in docs/i18n/ledger-fil.json still need a native Naga speaker.
+    takenDown: {
+      badge: "Inalis",
+      post: "Inalis ng moderator ang post na ito. Hindi ito pumasa sa mga alituntunin ng Komunidad, kaya hindi na ito nakikita ng iba.",
+      comment: "Inalis ng moderator ang komentong ito. Hindi ito pumasa sa mga alituntunin ng Komunidad, kaya hindi na ito nakikita ng iba.",
+      photo: "Inalis ng moderator ang larawang ito. Hindi na ito nakikita ng iba.",
+    },
     guidelinesTitle: "Mga alituntunin ng Komunidad",
     guidelinesCheckbox: "Nabasa ko ang mga alituntunin ng Komunidad.",
     unverifiedNotice: "Isinulat ng ibang commuter. Hindi kinumpirma ng Lunad.",

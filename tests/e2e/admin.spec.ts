@@ -636,6 +636,16 @@ function correctionRow(over: Record<string, unknown>) {
   };
 }
 
+function reportGroup(over: Record<string, unknown>) {
+  return {
+    reportId: N6(80), targetType: "post", targetId: N6(81), postId: N6(81), state: "published", count: 3, reasons: { spam: 2, off_topic: 1 },
+    notes: ["It is an advert for a lending app."], firstAt: "2026-11-23T02:00:00.000Z", lastAt: "2026-11-24T02:00:00.000Z",
+    contentKind: "post_version", contentId: N6(82) as string | null, title: "Cheap loans, message me" as string | null,
+    body: "Fast approval, no papers. Message me." as string | null, authorHandle: "Commuter ZX9Q1", photos: [{ id: N6(83), mediaId: N6(84) }],
+    ...over,
+  };
+}
+
 async function mockReviewApi(page: Page) {
   const s = {
     corrections: [
@@ -650,6 +660,15 @@ async function mockReviewApi(page: Page) {
     decisions: [] as unknown[],
     appeals: [] as { id: string; body: unknown }[],
     mediaReads: 0,
+    // Open content reports by item (migration 0032): two posts (each with a public photo), a comment, a post its author deleted.
+    reports: [
+      reportGroup({}),
+      reportGroup({ reportId: N6(90), targetId: N6(91), postId: N6(91), count: 1, reasons: { personal_info: 1 }, notes: [], contentId: N6(92), title: "Traffic at the terminal", body: "Look at this.", photos: [{ id: N6(93), mediaId: N6(94) }] }),
+      reportGroup({ reportId: N6(85), targetType: "comment", targetId: N6(86), postId: N6(41), count: 1, reasons: { harassment: 1 }, notes: [], contentKind: "comment", contentId: N6(86), title: null, body: "You are all idiots.", photos: [] }),
+      reportGroup({ reportId: N6(87), targetId: N6(88), postId: N6(88), state: "deleted", count: 1, reasons: { misleading: 1 }, notes: [], contentId: null, title: null, body: null, photos: [] }),
+    ],
+    takedowns: [] as unknown[],
+    resolved: [] as { id: string; body: unknown }[],
   };
   const json = (body: unknown, status = 200) => ({ status, contentType: "application/json", headers: PRIVATE, body: JSON.stringify(body) });
   await page.route(/tile\.openstreetmap\.org|api\.maptiler\.com/, (r) => r.abort());
@@ -691,9 +710,24 @@ async function mockReviewApi(page: Page) {
           },
         ],
         history: [{ id: N6(60), targetType: "comment", targetId: N6(61), outcome: "rejected", reasonCode: "spam", deciderRole: "community_moderator", isOverride: false, mine: false, appealed: false, at: "2026-10-21T03:00:00.000Z" }],
+        reports: s.reports,
       }),
     ),
   );
+  // A take-down closes the open reports on that post or comment, so its group leaves the queue.
+  await page.route("**/api/v1/admin/moderation/takedowns", (r) => {
+    const body = r.request().postDataJSON() as { targetType: string; targetId: string };
+    s.takedowns.push(body);
+    const group = s.reports.find((g) => g.contentId === body.targetId || g.photos.some((p) => p.id === body.targetId));
+    s.reports = s.reports.filter((g) => g !== group);
+    return r.fulfill(json({ decisionId: N6(72), reportsClosed: group?.count ?? 0, publicCopy: body.targetType === "photo" ? "removed" : "none" }));
+  });
+  await page.route(/\/api\/v1\/admin\/moderation\/reports\/[^/]+$/, (r) => {
+    const id = r.request().url().split("/").at(-1)!;
+    s.resolved.push({ id, body: r.request().postDataJSON() });
+    s.reports = s.reports.filter((g) => g.reportId !== id);
+    return r.fulfill(json({ ok: true }));
+  });
   await page.route("**/api/v1/admin/moderation/decisions", (r) => {
     const body = r.request().postDataJSON() as { outcome: string; targetType: string };
     s.decisions.push(body);
@@ -822,6 +856,84 @@ test("moderation: an override of Jev needs a note; approving a photo makes it pu
   expect(s.appeals).toEqual([{ id: N6(50), body: { outcome: "overturned", note: "Criticism of a policy, not a threat." } }]);
 });
 
+test("reports: nothing is preselected; a take-down needs a reason and a confirm step and closes the reports; Dismiss changes nothing; deleted content can only be closed", async ({ page, context }) => {
+  await signInAs(context, "commuter,community_moderator");
+  const s = await mockReviewApi(page);
+  // The dashboard counts reported items from the queue call it already makes.
+  await page.goto("/admin");
+  await expect(page.getByText("4 reported items (posts or comments) to look at.")).toBeVisible();
+
+  await page.goto("/admin/moderation");
+  await expect(page.getByTestId("moderation-reports").getByRole("heading", { level: 2 })).toHaveText("Reports (4)");
+  const post = page.getByTestId(`report-post-${N6(81)}`);
+  await expect(post).toContainText("3 reports");
+  await expect(post).toContainText("Reported for: Spam or advertising ×2, Off topic");
+  await expect(post).toContainText("It is an advert for a lending app.");
+  await expect(post).toContainText("Commuter ZX9Q1");
+  await expect(post.getByRole("img", { name: "Public photo 1 on “Cheap loans, message me”" })).toBeVisible();
+
+  // Nothing preselected: no decision, no reason.
+  await expect(post.getByRole("radio", { checked: true })).toHaveCount(0);
+  await page.getByTestId(`report-go-post-${N6(81)}`).click();
+  await expect(post.getByLabel("Take down this post")).toBeFocused();
+  await post.getByLabel("Take down this post").check();
+  await expect(page.getByTestId(`report-reason-post-${N6(81)}`)).toHaveValue("");
+  await page.getByTestId(`report-go-post-${N6(81)}`).click();
+  await expect(page.getByTestId(`report-reason-post-${N6(81)}`)).toBeFocused();
+  // "Other" needs a note, said on the field.
+  await page.getByTestId(`report-reason-post-${N6(81)}`).selectOption("other");
+  await page.getByTestId(`report-go-post-${N6(81)}`).click();
+  await expect(post).toContainText("The reason “Other” needs a note.");
+  await expect(page.getByTestId(`report-note-post-${N6(81)}`)).toBeFocused();
+  expect(s.takedowns).toEqual([]);
+
+  // The confirm step says what happens; Cancel sends nothing; confirming sends the live version.
+  await page.getByTestId(`report-reason-post-${N6(81)}`).selectOption("spam");
+  await page.getByTestId(`report-go-post-${N6(81)}`).click();
+  const confirm = page.getByTestId(`report-confirm-post-${N6(81)}`);
+  await expect(confirm).toContainText("Take down this post?");
+  await expect(confirm).toContainText("Others will no longer see it, its comments or its photos. The author is told and can ask for another review. The 3 reports on this post close as actioned.");
+  await expect(confirm.getByText("Take down this post?")).toBeFocused();
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toHaveCount(0);
+  expect(s.takedowns).toEqual([]);
+  await page.getByTestId(`report-go-post-${N6(81)}`).click();
+  await page.getByTestId(`report-confirm-post-${N6(81)}-go`).click();
+  await expect(page.getByTestId("moderation-notice")).toHaveText("Post taken down. 3 reports closed as actioned.");
+  await expect(page.getByTestId("moderation-notice")).toBeFocused();
+  expect(s.takedowns).toEqual([{ targetType: "post_version", targetId: N6(82), reason: "spam" }]);
+  await expect(post).toHaveCount(0);
+
+  // One photo only: the post stays, the photo's public copy goes.
+  const second = page.getByTestId(`report-post-${N6(91)}`);
+  await second.getByLabel("Take down photo 1 only").check();
+  await page.getByTestId(`report-reason-post-${N6(91)}`).selectOption("unsafe_photo");
+  await page.getByTestId(`report-note-post-${N6(91)}`).fill("A plate number is readable.");
+  await page.getByTestId(`report-go-post-${N6(91)}`).click();
+  await expect(page.getByTestId(`report-confirm-post-${N6(91)}`)).toContainText("The photo stops being shown; the post itself stays public. The author is told and can ask for another review. The 1 report on this post closes as actioned.");
+  await page.getByTestId(`report-confirm-post-${N6(91)}-go`).click();
+  await expect(page.getByTestId("moderation-notice")).toHaveText("Photo taken down. 1 report closed as actioned.");
+  expect(s.takedowns.at(-1)).toEqual({ targetType: "photo", targetId: N6(93), reason: "unsafe_photo", note: "A plate number is readable." });
+
+  // Dismiss: no reason, no confirm step, nothing changes.
+  const comment = page.getByTestId(`report-comment-${N6(86)}`);
+  await expect(comment).toContainText("Reported for: Harassment or insults");
+  await comment.getByLabel("Dismiss: nothing needs to change").check();
+  await expect(page.getByTestId(`report-reason-comment-${N6(86)}`)).toHaveCount(0);
+  await page.getByTestId(`report-go-comment-${N6(86)}`).click();
+  await expect(page.getByTestId("moderation-notice")).toHaveText("1 report dismissed. Nothing was changed.");
+  expect(s.resolved).toEqual([{ id: N6(85), body: { status: "dismissed" } }]);
+
+  // Content its author deleted: no decision is offered, only closing.
+  const gone = page.getByTestId(`report-post-${N6(88)}`);
+  await expect(gone).toContainText("deleted by its author");
+  await expect(gone.getByRole("radio")).toHaveCount(0);
+  await page.getByTestId(`report-close-post-${N6(88)}`).click();
+  await expect(page.getByTestId("moderation-reports")).toContainText("No open report for you.");
+  expect(s.resolved.at(-1)).toEqual({ id: N6(87), body: { status: "dismissed" } });
+  expect(s.takedowns).toHaveLength(2);
+});
+
 for (const scheme of ["light", "dark"] as const) {
   test(`corrections review and moderation pass axe (${scheme})`, async ({ page, context }) => {
     await page.emulateMedia({ colorScheme: scheme });
@@ -835,6 +947,12 @@ for (const scheme of ["light", "dark"] as const) {
     await page.getByTestId(`item-post_version-${N6(40)}`).getByLabel("Do not publish").check();
     await expect(page.getByTestId(`override-post_version-${N6(40)}`)).toBeVisible();
     await axe(page, `moderation-${scheme}`);
+    // The Reports panel with a take-down form open and its confirm step shown.
+    await page.getByTestId(`report-post-${N6(81)}`).getByLabel("Take down this post").check();
+    await page.getByTestId(`report-reason-post-${N6(81)}`).selectOption("spam");
+    await page.getByTestId(`report-go-post-${N6(81)}`).click();
+    await expect(page.getByTestId(`report-confirm-post-${N6(81)}`)).toBeVisible();
+    await axe(page, `moderation-reports-${scheme}`);
   });
 }
 

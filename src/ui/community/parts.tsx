@@ -23,24 +23,24 @@ export function useFormatDate(): (iso: string) => string {
 }
 
 /** The state of the author's own content. Always text, never colour alone. */
-export function StateBadge({ state }: { state: ContentState }) {
+export function StateBadge({ state, removed = false }: { state: ContentState; removed?: boolean | undefined }) {
   const t = useT().community;
   if (state === "published") return null;
   return (
     <span className={`pn-comm__badge ${state === "pending" ? "pn-comm__badge--pending" : "pn-comm__badge--rejected"}`} data-testid="state-badge">
-      {stateLabel(state, t)}
+      {state === "rejected" && removed ? t.takenDown.badge : stateLabel(state, t)}
     </span>
   );
 }
 
-export function PostBadges({ post }: { post: Pick<PostSummary, "label" | "topic" | "routeCode" | "state" | "hasPendingEdit"> }) {
+export function PostBadges({ post }: { post: Pick<PostSummary, "label" | "topic" | "routeCode" | "state" | "hasPendingEdit" | "removed"> }) {
   const t = useT().community;
   return (
     <div className="pn-comm__badges">
       <span className={`pn-comm__badge ${post.label === "community" ? "" : "pn-comm__badge--official"}`}>{t.labels[post.label]}</span>
       <span className="pn-comm__badge">{topicLabel(post.topic, t)}</span>
       {post.routeCode ? <span className="pn-comm__badge">{t.routeBadge(post.routeCode)}</span> : null}
-      <StateBadge state={post.state} />
+      <StateBadge state={post.state} removed={post.removed} />
       {post.hasPendingEdit ? (
         <span className="pn-comm__badge pn-comm__badge--pending" data-testid="edit-badge">
           {t.editAwaiting}

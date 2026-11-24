@@ -156,6 +156,8 @@ export const postSummarySchema = z.object({
   viewerBookmarked: z.boolean(),
   state: stateSchema,
   hasPendingEdit: z.boolean(),
+  /** The author's own view: a moderator took the shown version down after it was public (it can be appealed). */
+  removed: z.boolean().optional(),
 });
 export type PostSummary = z.infer<typeof postSummarySchema>;
 
@@ -178,6 +180,8 @@ export type CommentDto = {
   state: z.infer<typeof stateSchema>;
   /** The author's appeal of a rejection; null when none (and always for other people's comments). */
   appeal: AppealState | null;
+  /** The author's own comment was taken down by a moderator after it was public. */
+  removed?: boolean | undefined;
   replies: CommentDto[];
 };
 export const commentSchema: z.ZodType<CommentDto> = z.lazy(() =>
@@ -193,6 +197,7 @@ export const commentSchema: z.ZodType<CommentDto> = z.lazy(() =>
     viewerHelpful: z.boolean(),
     state: stateSchema,
     appeal: appealStateSchema,
+    removed: z.boolean().optional(),
     replies: z.array(commentSchema),
   }),
 );
@@ -205,10 +210,12 @@ export const versionEntrySchema = z.object({
   isLive: z.boolean(),
   submittedAt: z.string(),
   appeal: appealStateSchema,
+  /** A moderator took this version down after it was public. */
+  removed: z.boolean().optional(),
 });
 
 /** A photo of the post: everyone sees published ones; the author also sees their pending and rejected ones (no image). */
-export const postPhotoSchema = z.object({ id: z.string().uuid(), state: stateSchema, appeal: appealStateSchema });
+export const postPhotoSchema = z.object({ id: z.string().uuid(), state: stateSchema, appeal: appealStateSchema, removed: z.boolean().optional() });
 export type PostPhoto = z.infer<typeof postPhotoSchema>;
 
 export const postDetailSchema = z.object({

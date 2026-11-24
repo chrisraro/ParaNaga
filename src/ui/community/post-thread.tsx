@@ -210,6 +210,10 @@ export function PostThread({ id }: { id: string }) {
   const live = post.state === "published";
   // The author's newest version, when a person or the policy decided not to publish it (N6: appeal once).
   const latest = post.isOwn ? post.versions[0] : undefined;
+  // A version a moderator took down after it was public (the author's own list; empty for others).
+  // Usually the newest one; an edit sent since then is newer and waits for review on its own.
+  const down = live ? undefined : post.versions.find((v) => v.removed);
+  const appealable = latest?.state === "rejected" ? latest : down;
   const shownPhotos = post.photos.filter((ph) => ph.state === "published");
   const ownPhotos = post.isOwn ? post.photos.filter((ph) => ph.state !== "published") : [];
 
@@ -240,7 +244,7 @@ export function PostThread({ id }: { id: string }) {
         ) : null}
         {ownPhotos.map((ph) => (
           <div key={ph.id} className="pn-comm__panel" data-testid="thread-own-photo">
-            <p className={`pn-comm__status pn-comm__status--${ph.state}`}>{ph.state === "rejected" ? t.photos.rejected : t.photos.pending}</p>
+            <p className={`pn-comm__status pn-comm__status--${ph.state}`}>{ph.state !== "rejected" ? t.photos.pending : ph.removed ? t.takenDown.photo : t.photos.rejected}</p>
             {ph.state === "rejected" ? <AppealBox targetType="photo" targetId={ph.id} appeal={ph.appeal} onSent={refresh} /> : null}
           </div>
         ))}
@@ -253,14 +257,17 @@ export function PostThread({ id }: { id: string }) {
           </p>
         ) : null}
 
-        {post.isOwn && post.state !== "published" ? (
+        {down ? (
+          <p className="pn-comm__status pn-comm__status--rejected" role="status" data-testid="thread-taken-down">
+            {t.takenDown.post}
+          </p>
+        ) : null}
+        {post.isOwn && post.state !== "published" && !(down && down === latest) ? (
           <p className={`pn-comm__status pn-comm__status--${post.state}`} role="status" data-testid="thread-state">
             {t.stateLine(stateLabel(post.state, t), stateHint(post.state, "post", t))}
           </p>
         ) : null}
-        {latest && latest.state === "rejected" ? (
-          <AppealBox targetType="post_version" targetId={latest.id} appeal={latest.appeal} onSent={refresh} />
-        ) : null}
+        {appealable ? <AppealBox key={appealable.id} targetType="post_version" targetId={appealable.id} appeal={appealable.appeal} onSent={refresh} /> : null}
         {post.isOwn && post.hasPendingEdit ? (
           <p className="pn-comm__status pn-comm__status--pending" role="status" data-testid="thread-edit-state">
             {t.editPendingNote}
@@ -508,10 +515,10 @@ function CommentList(props: ListProps) {
           <div className="pn-comm__meta">
             <span>{c.isOwn ? t.you : c.authorHandle}</span>
             <span>{formatDate(c.createdAt)}</span>
-            <StateBadge state={c.state} />
+            <StateBadge state={c.state} removed={c.removed} />
           </div>
           <p className="pn-comm__body">{c.body}</p>
-          {c.state !== "published" && c.isOwn ? <p className="pn-comm__hint">{stateHint(c.state, "comment", t)}</p> : null}
+          {c.state !== "published" && c.isOwn ? <p className="pn-comm__hint">{c.removed ? t.takenDown.comment : stateHint(c.state, "comment", t)}</p> : null}
           {c.state === "rejected" && c.isOwn ? <AppealBox targetType="comment" targetId={c.id} appeal={c.appeal} onSent={props.onAppealed} /> : null}
           <div className="pn-comm__row">
             {c.state === "published" ? (

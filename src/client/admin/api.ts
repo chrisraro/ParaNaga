@@ -25,7 +25,16 @@ import {
   type StopAction,
 } from "@/domain/admin/stops";
 import { correctionQueueSchema, reviewResultSchema, type CorrectionScope, type ReviewPayload } from "@/domain/admin/corrections";
-import { decisionResultSchema, moderationQueueSchema, type ModeratePayload, type ResolveAppealPayload } from "@/domain/admin/moderation";
+import {
+  decisionResultSchema,
+  moderationQueueSchema,
+  reportsClosedSchema,
+  takeDownResultSchema,
+  type ModeratePayload,
+  type ResolveAppealPayload,
+  type ResolveReportsPayload,
+  type TakeDownPayload,
+} from "@/domain/admin/moderation";
 import {
   complaintActionResultSchema,
   complaintDetailSchema,
@@ -103,6 +112,10 @@ export const fetchModeration = () => call("/api/v1/admin/moderation", moderation
 export const decideItem = (payload: ModeratePayload) => call("/api/v1/admin/moderation/decisions", decisionResultSchema, payload);
 export const resolveAppeal = (id: string, payload: ResolveAppealPayload) =>
   call(`/api/v1/admin/moderation/appeals/${encodeURIComponent(id)}`, decisionResultSchema, payload);
+export const takeDown = (payload: TakeDownPayload) => call("/api/v1/admin/moderation/takedowns", takeDownResultSchema, payload);
+/** Closes every open report on the content that `reportId` is about. */
+export const resolveReports = (reportId: string, payload: ResolveReportsPayload) =>
+  call(`/api/v1/admin/moderation/reports/${encodeURIComponent(reportId)}`, reportsClosedSchema, payload);
 /** A private photo under review, streamed by the server (same origin; each read is audited). */
 export const reviewMediaSrc = (mediaId: string) => `/api/v1/admin/media/${encodeURIComponent(mediaId)}`;
 

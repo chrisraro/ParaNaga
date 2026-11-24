@@ -231,6 +231,68 @@ describe("post thread actions", () => {
     expect(document.activeElement).toBe(screen.getByTestId("comment-reply"));
   });
 
+  it("the author of a taken-down post, comment or photo is told so, and can ask for another review", async () => {
+    const V = "33333333-3333-4333-8333-333333333333";
+    const PH = "44444444-4444-4444-8444-444444444444";
+    const d = detail();
+    d.post = {
+      ...d.post, isOwn: true, state: "rejected", removed: true,
+      versions: [{ id: V, n: 1, title: "Seats", state: "rejected", isLive: false, submittedAt: "2026-11-01T00:00:00.000Z", appeal: null, removed: true }],
+      photos: [{ id: PH, state: "rejected", appeal: null, removed: true }],
+    };
+    api.fetchPost.mockImplementation(async () => ({ ok: true, data: d }));
+    const first = render(<PostThread id={POST_ID} />);
+
+    // The post: the take-down line stands in for "Not published"; it is a status, and an appeal is offered.
+    const line = await screen.findByTestId("thread-taken-down");
+    expect(line.textContent).toBe("A moderator took this post down. It did not meet the community guidelines, so others can no longer see it.");
+    expect(line.getAttribute("role")).toBe("status");
+    expect(screen.queryByTestId("thread-state")).toBeNull();
+    expect(screen.getByTestId("state-badge").textContent).toBe("Taken down");
+    expect(screen.getByTestId("thread-own-photo").textContent).toContain("A moderator took this photo down. Others can no longer see it.");
+    expect(screen.getAllByTestId("appeal-open")).toHaveLength(2);
+    first.unmount();
+
+    // A comment of mine under someone else's live post.
+    const live = detail();
+    live.comments = [{ ...live.comments[0]!, isOwn: true, state: "rejected", removed: true }];
+    api.fetchPost.mockImplementation(async () => ({ ok: true, data: live }));
+    render(<PostThread id={POST_ID} />);
+    const comment = await screen.findByTestId("comment");
+    expect(within(comment).getByTestId("state-badge").textContent).toBe("Taken down");
+    expect(comment.textContent).toContain("A moderator took this comment down. It did not meet the community guidelines, so others can no longer see it.");
+    expect(within(comment).getByTestId("appeal-open")).toBeTruthy();
+  });
+
+  it("a rejection before publication keeps its own words, and an edit sent after a take-down shows both", async () => {
+    const V1 = "33333333-3333-4333-8333-333333333333";
+    const V2 = "55555555-5555-4555-8555-555555555555";
+    const d = detail();
+    d.post = {
+      ...d.post, isOwn: true, state: "rejected",
+      versions: [{ id: V1, n: 1, title: "Seats", state: "rejected", isLive: false, submittedAt: "2026-11-01T00:00:00.000Z", appeal: null }],
+    };
+    api.fetchPost.mockImplementation(async () => ({ ok: true, data: d }));
+    const first = render(<PostThread id={POST_ID} />);
+    expect((await screen.findByTestId("thread-state")).textContent).toContain("Not published.");
+    expect(screen.queryByTestId("thread-taken-down")).toBeNull();
+    expect(screen.getByTestId("state-badge").textContent).toBe("Not published");
+    first.unmount();
+
+    // The newest version is an edit waiting for review; the one below it was taken down and can still be appealed.
+    d.post = {
+      ...d.post, state: "pending",
+      versions: [
+        { id: V2, n: 2, title: "Seats, edited", state: "pending", isLive: false, submittedAt: "2026-11-03T00:00:00.000Z", appeal: null },
+        { id: V1, n: 1, title: "Seats", state: "rejected", isLive: false, submittedAt: "2026-11-01T00:00:00.000Z", appeal: "open", removed: true },
+      ],
+    };
+    render(<PostThread id={POST_ID} />);
+    expect(await screen.findByTestId("thread-taken-down")).toBeTruthy();
+    expect(screen.getByTestId("thread-state").textContent).toContain("Awaiting review.");
+    expect(screen.getByTestId("appeal-state").textContent).toBe("Another review requested");
+  });
+
   it("a sent report moves focus to its result", async () => {
     api.reportPost.mockResolvedValue({ ok: true });
     render(<PostThread id={POST_ID} />);
