@@ -14,6 +14,7 @@ import { parseUuidParam } from "@/domain/api/schemas";
 import { can } from "@/domain/auth/permissions";
 import { badRequest, conflict, notFound, readJsonBody, tooManyRequests, unavailable } from "@/server/api/http";
 import { serverEnv } from "@/server/env";
+import { syncPublicPhotos } from "@/server/community/photo-removal";
 import { getStorage } from "@/server/storage/adapter";
 import { adminRoute, firstIssue, json, limited } from "./handlers";
 import { auditPublicCopyLeft, moderate, readCorrections, readModerationQueue, resolveAppeal, resolveReports, reviewCorrection, reviewMedia, takeDown } from "./review-repo";
@@ -99,6 +100,7 @@ export function postModerationDecision(request: Request): Promise<Response> {
       db(async (d) => ((await limited(d, request, user.id)) ? null : moderate(d, parsed.data, bucket, getStorage(), copied))),
     );
     if (!result) throw tooManyRequests();
+    syncPublicPhotos(); // a post that went live again gets its photos back
     return json(decisionResultSchema, result, requestId);
   });
 }
@@ -114,6 +116,7 @@ export function postAppealResolution(request: Request, params: Promise<{ id: str
       db(async (d) => ((await limited(d, request, user.id)) ? null : resolveAppeal(d, id, parsed.data, bucket, getStorage(), copied))),
     );
     if (!result) throw tooManyRequests();
+    syncPublicPhotos(); // a post that went live again gets its photos back
     return json(decisionResultSchema, result, requestId);
   });
 }
@@ -125,7 +128,7 @@ export function postAppealResolution(request: Request, params: Promise<{ id: str
  * after the commit, never inside the transaction: from then on the app answers 404 for it either
  * way, and "left" tells the moderator when the object itself could not be deleted. A copy that is
  * left is written to the audit trail with its bucket and key ('community.take_down_copy_left'), so
- * it is found and deleted later; nothing retries it on its own.
+ * it is found; the daily photo_removal job tries again (migration 0036).
  */
 export function postTakeDown(request: Request): Promise<Response> {
   return adminRoute(request, "admin/moderation/takedown", "community.moderate", async ({ user, requestId, db }) => {
@@ -142,6 +145,7 @@ export function postTakeDown(request: Request): Promise<Response> {
         : "left";
     // Best effort: the take-down is committed, so a failed audit write must not turn it into an error.
     if (removed && publicCopy === "left") await db((d) => auditPublicCopyLeft(d, parsed.data.targetId, result.decisionId, removed)).catch(() => undefined);
+    syncPublicPhotos(); // a post's photos go with it
     return json(takeDownResultSchema, { decisionId: result.decisionId, reportsClosed: result.reportsClosed, publicCopy }, requestId);
   });
 }

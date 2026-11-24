@@ -7,7 +7,7 @@ import { enqueueJob, runJobBatch } from "@/server/jobs/worker";
 import { registerDefaultJobHandlers } from "@/server/jobs/handlers";
 
 /** Queued by every run; the fixed key (the kind) keeps one open at a time, and a finished one recurs. */
-const RECURRING = ["sweep_orphan_media", "retention_purge"] as const;
+const RECURRING = ["sweep_orphan_media", "retention_purge", "photo_removal"] as const;
 
 /**
  * Background job runner endpoint called by Vercel Cron once a day (vercel.json).
@@ -28,7 +28,7 @@ export async function GET(request: Request): Promise<Response> {
   registerDefaultJobHandlers();
 
   try {
-    // The orphan media sweep (spec 05 §5.8) and the rate-limit purge (spec 04 §4.4).
+    // The orphan media sweep (spec 05 §5.8), the rate-limit purge (spec 04 §4.4) and photos of removed posts (0036).
     await withRequestContext({ userId: null, requestId }, async (db) => {
       for (const kind of RECURRING) await enqueueJob(db, kind, {}, { idempotencyKey: kind });
     });

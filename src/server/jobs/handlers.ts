@@ -2,6 +2,7 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import { withRequestContext } from "@/server/db/context";
 import { safeRequestId } from "@/server/request-id";
+import { runPhotoRemoval } from "@/server/community/photo-removal";
 import { getStorage } from "@/server/storage/adapter";
 import { registerJobHandler } from "./worker";
 
@@ -22,6 +23,13 @@ export function registerDefaultJobHandlers(): void {
       await db.execute(sql`delete from ops.places_cache where expires_at < now()`);
     });
     return { success: true };
+  });
+
+  // Photos of deleted and taken-down posts (migration 0036). What storage refused is tried again.
+  registerJobHandler("photo_removal", async (_job, heartbeat) => {
+    const copies = await runPhotoRemoval({ purge: false, onItem: heartbeat });
+    const purges = await runPhotoRemoval({ purge: true, onItem: heartbeat });
+    return copies.failed + purges.failed === 0 ? { success: true } : { success: false, retry: true, errorCode: "PHOTOS_LEFT" };
   });
 
   // Sweep unconfirmed quarantine slots older than 1 hour (spec §3.9, §3.10; 05 §5.8 "orphan

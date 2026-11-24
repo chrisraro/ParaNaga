@@ -235,13 +235,14 @@ describe("cron jobs route", () => {
     expect(state.enqueued).toEqual([
       { kind: "sweep_orphan_media", key: "sweep_orphan_media" },
       { kind: "retention_purge", key: "retention_purge" },
+      { kind: "photo_removal", key: "photo_removal" },
     ]);
     // Every queued kind has a handler, and nothing registers the old empty stub.
-    expect([...state.handlers.keys()].sort()).toEqual(["retention_purge", "sweep_orphan_media"]);
+    expect([...state.handlers.keys()].sort()).toEqual(["photo_removal", "retention_purge", "sweep_orphan_media"]);
 
     const denied = await cronJobs(new Request("http://localhost/api/cron/jobs"));
     expect(denied.status).toBe(401);
-    expect(state.enqueued).toHaveLength(2);
+    expect(state.enqueued).toHaveLength(3);
   });
 });
 

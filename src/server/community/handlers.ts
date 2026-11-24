@@ -22,6 +22,7 @@ import { contentState } from "@/domain/community/status";
 import { authedRoute, ApiProblem, badRequest, CACHE, notFound, readJsonBody, tooManyRequests } from "@/server/api/http";
 import { authorize } from "@/server/auth/authorize";
 import { withRequestContext, type Db } from "@/server/db/context";
+import { syncPublicPhotos } from "@/server/community/photo-removal";
 import { onDuplicate, pgCode } from "@/server/db/pg-error";
 import { serverEnv } from "@/server/env";
 import { checkRateLimit, RATE_LIMITS, type RateLimitConfig } from "@/server/ratelimit/rate-limiter";
@@ -168,6 +169,7 @@ export function editPost(request: Request, rawId: string): Promise<Response> {
       }),
     );
     if (!row) throw new ApiProblem(503, "unavailable", "The edit could not be saved. Try again.");
+    if (row.is_live) syncPublicPhotos(); // a taken-down post may be live again
     const state = contentState(row.status);
     const body = submitPostResponseSchema.parse({ post: { id: row.post_id, state, isEdit: true, visibleToOthers: row.is_live } });
     return Response.json(body, { headers: noStore(requestId) });
@@ -188,6 +190,7 @@ export function deletePost(request: Request, rawId: string): Promise<Response> {
       }),
     );
     if (!done) throw notFound("This post is not available.");
+    syncPublicPhotos();
     return Response.json(okResponseSchema.parse({ ok: true }), { headers: noStore(requestId) });
   });
 }
