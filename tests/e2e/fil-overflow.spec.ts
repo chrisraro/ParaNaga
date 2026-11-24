@@ -217,8 +217,17 @@ async function measure(page: Page): Promise<Problems> {
       if (scroller && visible(el) && el.scrollWidth > el.clientWidth + 1) sideways.push(`${name(el)} ${el.scrollWidth} > ${el.clientWidth}: ${culprits(el)}`);
       if (!el.matches(controls) || !visible(el)) continue;
       if (/auto|scroll/.test(style.overflowX)) continue; // a chip row that scrolls sideways on purpose
-      if (style.textOverflow === "ellipsis") continue;
       if (!el.textContent?.trim()) continue;
+      // The text itself taller than its box: cut off, or spilling over what comes next. (Not
+      // scrollHeight: that counts the invisible tap-area pseudo-elements.)
+      if (el.innerText.trim() && style.display !== "inline" && !el.querySelector(".pn-comm__link") && !/auto|scroll/.test(style.overflowY)) {
+        const text = document.createRange();
+        text.selectNodeContents(el);
+        const spill = text.getBoundingClientRect().height - el.getBoundingClientRect().height;
+        // A line box is shorter than its glyphs by design (headings): allow a third of the type size.
+        if (spill > Math.max(4, parseFloat(style.fontSize) * 0.35)) clipped.push(`${name(el)} spills ${Math.round(spill)}`);
+      }
+      if (parseFloat(style.lineHeight) < parseFloat(style.fontSize) * 0.98) clipped.push(`${name(el)} line ${style.lineHeight} < ${style.fontSize}`);
       if (el.scrollWidth > el.clientWidth + 1) clipped.push(`${name(el)} ${el.scrollWidth} > ${el.clientWidth}`);
     }
     const english = new Set<string>();

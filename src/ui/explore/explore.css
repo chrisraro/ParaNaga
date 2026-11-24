@@ -47,7 +47,7 @@
 .pn-explore__intro {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 
@@ -59,7 +59,7 @@
   min-height: 48px;
   margin: -10px 4px;
   color: var(--pn-accent);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -83,14 +83,14 @@
 .pn-explore__chip {
   position: relative;
   flex: none;
-  height: 36px;
+  min-height: 36px;
   padding: 0 14px;
   border: 0;
   border-radius: 18px;
   background: var(--pn-surface);
   box-shadow: inset 0 0 0 1px var(--pn-ring);
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
@@ -216,7 +216,7 @@
   grid-column: 2;
   grid-row: 1;
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -247,7 +247,7 @@
   grid-row: 2;
   margin: 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   /* Under the name link's extended target, so a tap on this line opens the place. */
   padding-right: 18px;
@@ -264,9 +264,9 @@
   grid-column: 2;
   justify-self: start;
   margin-top: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 16px;
+  line-height: 1rem;
 }
 .pn-explore__photo {
   padding: 2px 8px;
@@ -305,7 +305,7 @@
   border-radius: 20px; /* a pill on one line; still a soft shape if a long label wraps */
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.25;
   text-align: left;
@@ -346,13 +346,13 @@
   background: var(--pn-surface);
   box-shadow: inset 0 0 0 1px var(--pn-ring);
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 /* The load error over the directory: body text, not a footnote. */
 .pn-explore [role="alert"].pn-footnote {
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 
@@ -364,10 +364,10 @@
 .pn-explore__directory-title {
   margin: 0;
   scroll-margin-top: 16px;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   letter-spacing: -0.015em;
-  line-height: 28px;
+  line-height: 1.75rem;
 }
 .pn-explore__directory-title:focus {
   outline: none;
@@ -375,7 +375,7 @@
 .pn-explore__directory .pn-seg__btn {
   min-height: 44px;
   padding: 0 2px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.15;
 }
 .pn-explore__directory .pn-seg__btn::after {
@@ -390,14 +390,14 @@
 .pn-explore__count {
   margin: 0 4px;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 .pn-explore__rail {
   margin: 0 4px;
   color: var(--pn-caption, var(--pn-label2));
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 

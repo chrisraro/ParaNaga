@@ -12,11 +12,11 @@
   font-variant-numeric: tabular-nums;
 }
 .pn-reports .pn-cell__title {
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 .pn-reports__intro {
   margin: 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
   color: var(--pn-label);
 }
@@ -29,9 +29,9 @@
   margin-top: 2px;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
-  line-height: 16px;
+  line-height: 1rem;
   background: var(--pn-fill);
   color: var(--pn-label2);
 }
@@ -57,16 +57,16 @@
 /* The report's own name (its PN reference, or the correction's category). */
 .pn-reports__panel h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
-  line-height: 28px;
+  line-height: 1.75rem;
   letter-spacing: -0.015em;
   color: var(--pn-label);
   overflow-wrap: anywhere;
 }
 .pn-reports__panel h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
   color: var(--pn-label);
@@ -129,7 +129,7 @@
   background: var(--pn-ring);
 }
 .pn-reports__event {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.45;
   color: var(--pn-label);
@@ -137,7 +137,7 @@
 .pn-reports__when,
 .pn-reports__note {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--pn-label2);
 }
@@ -164,14 +164,14 @@
   border-top: 1px solid var(--pn-sep);
 }
 .pn-reports__kv dt {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
   color: var(--pn-label2);
 }
 .pn-reports__kv dd {
   margin: 2px 0 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
   color: var(--pn-label);
   overflow-wrap: anywhere;
@@ -190,7 +190,7 @@
   background: var(--pn-surface);
   color: var(--pn-label);
   font: inherit;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-reports__summary:focus-visible {
@@ -206,7 +206,7 @@
   height: auto;
   min-height: 50px;
   padding: 6px 20px;
-  font-size: 17px;
+  font-size: 1.0625rem;
   text-align: center;
 }
 .pn-reports__actions .pn-btn:disabled,
@@ -220,7 +220,7 @@
   border-radius: 14px;
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-reports__warn p {

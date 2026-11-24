@@ -53,7 +53,7 @@
   gap: 6px;
   min-width: 0;
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
@@ -70,12 +70,12 @@
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  height: 32px;
+  min-height: 32px;
   padding: 0 10px;
   border-radius: 999px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -113,7 +113,7 @@
 }
 .pn-trip-status__eta {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
@@ -122,7 +122,7 @@
 .pn-trip-status__caption {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
@@ -135,7 +135,7 @@
 }
 .pn-guide__title {
   margin: 0;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.015em;
   line-height: 1.2;
@@ -152,14 +152,14 @@
 .pn-guide__body {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 17px;
+  font-size: 1.0625rem;
   line-height: 1.4;
   overflow-wrap: break-word;
 }
 .pn-guide__sub {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.4;
   overflow-wrap: break-word;
 }
@@ -167,7 +167,7 @@
 .pn-guide__keep {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.45;
 }
 .pn-guide__note:empty {
@@ -180,7 +180,7 @@
 .pn-guide__distance {
   margin: 0;
   color: var(--pn-label);
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.35;
   font-variant-numeric: tabular-nums;
@@ -190,7 +190,7 @@
 }
 .pn-guide__direction {
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 400;
 }
 
@@ -201,7 +201,7 @@
   padding: 12px 14px;
   border-radius: 14px;
   background: var(--pn-fill);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
   overflow-wrap: break-word;
 }
@@ -220,7 +220,7 @@
 .pn-guide__loc {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-guide__loc--off {
@@ -240,7 +240,7 @@
   border-radius: 999px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.25;
   cursor: pointer;
@@ -260,13 +260,13 @@
   gap: 6px 8px;
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.4;
 }
 .pn-guide__transfer-line > span:first-child {
   min-width: 0;
   color: var(--pn-label);
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -287,7 +287,7 @@
   min-height: 48px;
   padding: 6px 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.35;
 }
 .pn-guide__check + .pn-guide__check {
@@ -303,7 +303,7 @@
   border-radius: 999px;
   background: var(--pn-fill);
   color: var(--pn-label);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -313,7 +313,7 @@
 }
 .pn-guide__check[aria-current="step"] {
   color: var(--pn-label);
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
 }
 .pn-guide__check[aria-current="step"] .pn-guide__check-mark {
@@ -334,7 +334,7 @@
 }
 .pn-guide__count {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
@@ -382,7 +382,7 @@
   gap: 12px;
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.35;
 }
 .pn-guide__rail-alight {
@@ -403,7 +403,7 @@
   border-radius: 16px;
   background: var(--color-accent);
   color: var(--color-ink);
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.35;
 }
@@ -411,7 +411,7 @@
   margin: 0;
 }
 .pn-guide__para-word {
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.15;
@@ -460,7 +460,7 @@
   padding: 12px 14px;
   border-radius: 14px;
   background: var(--pn-fill);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
@@ -528,11 +528,11 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .pn-guide__save-text strong {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
 }
@@ -593,7 +593,7 @@
   gap: 2px;
 }
 .pn-guide-banner__title {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -601,7 +601,7 @@
 .pn-guide-banner__sub {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
   overflow-wrap: break-word;
@@ -615,7 +615,7 @@
   box-shadow: var(--pn-elev);
   color: var(--pn-accent);
   font: inherit;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
   transition: transform var(--pn-dur-fast) var(--pn-ease);
@@ -646,14 +646,14 @@
   gap: 2px;
 }
 .pn-guide-strip__step {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
   font-variant-numeric: tabular-nums;
 }
 .pn-guide-strip__time {
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.35;
   font-variant-numeric: tabular-nums;
 }

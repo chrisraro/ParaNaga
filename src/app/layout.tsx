@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     "Where to wait, which jeepney to take, where to transfer and when to say Para! Step-by-step commuting in Naga City, Camarines Sur.",
   applicationName: "Lunad",
   appleWebApp: { title: "Lunad" },
+  // The phone's text size sets 1rem (Chrome on Android; ignored elsewhere). Type is in rem: never set a
+  // font-size on html.
+  other: { "text-scale": "scale" },
 };
 
 export const viewport: Viewport = {

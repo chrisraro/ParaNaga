@@ -63,7 +63,7 @@
   padding: calc(env(safe-area-inset-top, 0px) + var(--pn-offline-inset, 0px) + 12px) 16px 0;
 }
 .pn-detail__header-title {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
 }
@@ -110,7 +110,7 @@
   min-height: 48px;
   padding: 0 8px;
   color: var(--pn-accent);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -127,7 +127,7 @@
 /* The screen's one headline (DESIGN.md Headline: 700, 24 px, 1.2). */
 .pn-detail__title {
   margin: 0;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.015em;
   line-height: 1.2;
@@ -162,7 +162,7 @@
 }
 .pn-detail__caption {
   color: var(--pn-caption);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 
@@ -177,9 +177,9 @@
   min-height: 24px;
   padding: 2px 9px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 16px;
+  line-height: 1rem;
 }
 .pn-badge--candidate {
   background: var(--pn-warn-bg);
@@ -203,7 +203,7 @@
   border-radius: 14px;
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-note--small {
@@ -232,25 +232,25 @@
 }
 .pn-card__label {
   color: var(--pn-caption);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .pn-card__text {
   margin: 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
 .pn-card__sub {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 .pn-card__mono {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .pn-detail a.pn-inline-link {
   color: var(--pn-accent);
@@ -268,7 +268,7 @@
 .pn-section__title {
   margin: 0 4px;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -322,14 +322,14 @@ a.pn-cell:active {
   min-width: 0;
 }
 .pn-cell__title {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
 .pn-cell__sub {
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -347,7 +347,7 @@ a.pn-cell:active {
 .pn-cell--empty {
   min-height: 48px;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 
@@ -360,12 +360,12 @@ a.pn-cell:active {
   min-height: 48px;
 }
 .pn-kv__key {
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .pn-kv__value {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   text-align: right;
   overflow-wrap: anywhere;
 }
@@ -382,7 +382,7 @@ a.pn-cell:active {
   border-radius: 10px;
   background: transparent;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
   text-align: left;
@@ -423,7 +423,7 @@ a.pn-cell:active {
 }
 .pn-tile dt {
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .pn-tile dd {
@@ -431,7 +431,7 @@ a.pn-cell:active {
 }
 .pn-tile__value {
   display: block;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.35;
   font-variant-numeric: tabular-nums;
@@ -440,8 +440,8 @@ a.pn-cell:active {
 .pn-tile__note {
   display: block;
   color: var(--pn-label2);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 0.75rem;
+  line-height: 1rem;
   overflow-wrap: anywhere;
 }
 
@@ -468,14 +468,14 @@ a.pn-cell:active {
   padding: 8px 12px;
   border-top: 1px solid var(--pn-sep);
   color: var(--pn-label);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .pn-route-map__trace {
   color: var(--pn-label2);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 16px;
+  line-height: 1rem;
 }
 
 /* The fleet summary line over the fleet rows. */
@@ -501,7 +501,7 @@ a.pn-cell:active {
   border: 0;
   border-radius: 8px;
   background: transparent;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.25;
   cursor: pointer;
@@ -587,7 +587,7 @@ a.pn-cell:active {
   min-width: 0;
 }
 .pn-street__name {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 500;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -598,14 +598,14 @@ a.pn-cell:active {
 }
 .pn-street__note {
   color: var(--pn-caption);
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 0.75rem;
+  line-height: 1rem;
 }
 
 .pn-footnote {
   margin: 0 4px;
   color: var(--pn-caption);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 
@@ -620,10 +620,10 @@ a.pn-cell:active {
 }
 .pn-detail__state h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   letter-spacing: -0.015em;
-  line-height: 28px;
+  line-height: 1.75rem;
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
@@ -631,7 +631,7 @@ a.pn-cell:active {
   margin: 0;
   max-width: 34em;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 /* "Try again" / "Back to map": the soft action (green tint, deep green text), a 48 px pill. */
@@ -646,7 +646,7 @@ a.pn-cell:active {
   border-radius: 999px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;

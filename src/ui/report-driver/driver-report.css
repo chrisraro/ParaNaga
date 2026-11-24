@@ -9,7 +9,7 @@
 }
 .pn-driver__emergency p {
   margin: 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-driver__list {
@@ -19,13 +19,13 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
   color: var(--pn-label);
 }
 .pn-driver__ack-text {
   margin: 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.5;
   color: var(--pn-label);
 }
@@ -94,12 +94,12 @@
   color: var(--pn-teal-soft-text);
 }
 .pn-driver__receipt-label {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
 }
 .pn-driver__reference {
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;

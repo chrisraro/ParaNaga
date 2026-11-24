@@ -16,7 +16,7 @@
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
   box-shadow: var(--pn-elev);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.35;
   /* The banner says what it says; it never blocks a tap on the map controls under it. */
@@ -51,7 +51,7 @@
   background: var(--pn-surface);
   color: var(--pn-label);
   box-shadow: var(--pn-elev);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-update p {
@@ -102,7 +102,7 @@
 }
 .pn-offline h1 {
   margin: 0;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.015em;
@@ -110,14 +110,14 @@
 }
 .pn-offline h2 {
   margin: 16px 0 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
 }
 .pn-offline p {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-offline__links {
@@ -137,7 +137,7 @@
   border-radius: 999px;
   background: var(--pn-accent);
   color: var(--pn-on-primary);
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
   text-align: center;
@@ -188,21 +188,21 @@
   border-radius: 14px;
 }
 .pn-offline__trip-to {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
   color: var(--pn-label);
   overflow-wrap: anywhere;
 }
 .pn-offline__trip-from {
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   color: var(--pn-label2);
   overflow-wrap: anywhere;
 }
 .pn-offline__trip-hint {
   margin-top: 2px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.45;
   color: var(--pn-accent);
@@ -215,12 +215,12 @@
   flex-direction: column;
   gap: 6px;
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-offline .pn-offline__meta {
   padding: 0 14px 14px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 

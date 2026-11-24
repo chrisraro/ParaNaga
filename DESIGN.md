@@ -331,6 +331,8 @@ The typeface is unchanged from before the rebrand and is recorded as found, not 
 - **Caption** (400, 13px, 1.4): one line of boarding guidance, transfers, footnotes, in Ink 2.
 - **Tag** (700 or 600, 12px, 16px line): tags and chips on cards, and tab labels (600, 14px line).
 
+Sizes here are given in px at the default text size; in the commuter app's CSS they are written in rem (px / 16), so the phone's text size scales them (`text-scale` meta, and never a font-size on `html`). Boxes that hold text use min-height, not height. The map attribution and map notice stay in px.
+
 The landing page uses the same family at larger sizes for its headings (Geist first, since it is read on desktop too). The admin console uses a denser scale: 24 px at 700 for the page title, 16 px at 600 for a section, 14 px for body, 13 px for tables and secondary text, 12 px at 600 for column headers and chips, with tabular numbers.
 
 ### Named Rules
@@ -342,7 +344,7 @@ The landing page uses the same family at larger sizes for its headings (Geist fi
 
 The map fills the screen and the chrome is positioned over it. Floating elements sit 12 px from the side edges (search bar, chips row, tab bar) and controls 16 px from the right. Sheet content has a 16 px gutter. Safe-area insets are added to the top chrome, the tab bar and sheet footers.
 
-The bottom sheet has three detents (peek, half, full) and moves by transform only. At peek it shows up to three fixed-height option rows (56 px) and a "Show more options" button; the rest is inert. At full, the option cards list with a 10 px gap and the toggle becomes a quiet text button at the right of the heading. Vertical rhythm inside the sheet is 14 px between blocks, 12 px inside a card between columns, 6 px between chips.
+The bottom sheet has three detents (peek, half, full) and moves by transform only. At peek it shows up to two fixed-height option cards (56 px) and an "All options" button; the rest is inert. With larger text (root font above 16 px) the cards and place names wrap instead of being cut and the peek is measured; above 150 % one card shows, under the button, and half grows with the text as far as the map controls allow. At full, the option cards list with a 10 px gap and the toggle becomes a quiet text button at the right of the heading. Vertical rhythm inside the sheet is 14 px between blocks, 12 px inside a card between columns, 6 px between chips.
 
 An option card is one button on a three-column grid: a 40 px icon column, the text column, and a tag column. The icon column is constant, so titles, guidance lines, times and fares share a left edge across cards.
 

@@ -40,7 +40,7 @@
   border-radius: 12px;
   background: var(--pn-fill);
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-street-view > a {
@@ -48,7 +48,7 @@
   align-items: center;
   min-height: 48px;
   color: var(--pn-accent);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;

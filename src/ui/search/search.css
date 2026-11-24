@@ -22,7 +22,7 @@
   align-items: center;
   gap: 10px;
   min-width: 0;
-  height: 52px;
+  min-height: 52px;
   padding: 0 2px 0 16px;
   border-radius: 26px;
   background: var(--pn-surface);
@@ -54,7 +54,7 @@
   background: transparent;
   color: var(--pn-label);
   font: inherit;
-  font-size: 17px;
+  font-size: 1.0625rem;
   outline: none;
   -webkit-appearance: none;
   appearance: none;
@@ -104,7 +104,7 @@
   border-radius: 8px;
   background: transparent;
   color: var(--pn-accent);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -218,7 +218,7 @@ div.pn-search__cell:focus-visible {
   margin: 0;
   padding: 8px 4px;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 
@@ -239,14 +239,14 @@ div.pn-search__cell:focus-visible {
 .pn-search__error p {
   grid-column: 2;
   margin: 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-search__error .pn-btn {
   grid-column: 2;
   justify-self: start;
   width: auto;
-  height: 48px;
+  min-height: 48px;
   padding: 0 18px;
   background: var(--pn-surface);
   box-shadow: 0 0 0 1px var(--pn-ring);
@@ -264,7 +264,7 @@ div.pn-search__cell:focus-visible {
 }
 .pn-search__notice-title {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
 }
@@ -317,7 +317,7 @@ div.pn-search__cell:focus-visible {
   border-radius: 12px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.45;
 }

@@ -329,7 +329,7 @@
   border: 1.5px solid var(--color-ink);
   background: var(--color-surface);
   color: var(--color-ink);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
@@ -782,8 +782,8 @@
   background: var(--color-ink);
   color: var(--color-surface);
   border: 2px solid var(--color-surface);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
-  line-height: 16px;
+  line-height: 1rem;
   text-align: center;
 }

@@ -16,7 +16,7 @@
   text-transform: none;
 }
 .pn-saved .pn-cell__title {
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 
 /* ------------------------------------------------------------------ sync row (signed in) */
@@ -37,13 +37,13 @@
 }
 .pn-saved__sync-text strong {
   color: var(--pn-label);
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
 }
 .pn-saved__sync-text span {
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .pn-btn.pn-saved__sync-btn {
@@ -52,7 +52,7 @@
   height: auto;
   min-height: 48px;
   padding: 0 18px;
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .pn-saved__sync-btn[aria-disabled="true"] {
   opacity: 0.4;
@@ -67,7 +67,7 @@
 .pn-saved__intro {
   margin: 0 4px;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 /* Nothing saved yet: a quiet block in the list's place, so it reads as "the list is empty". */
@@ -78,7 +78,7 @@
   background: var(--pn-surface);
   box-shadow: inset 0 0 0 1px var(--pn-ring);
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
   text-align: center;
   text-wrap: balance;
@@ -113,9 +113,9 @@
   gap: 4px;
   padding: 2px 8px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
-  line-height: 16px;
+  line-height: 1rem;
 }
 .pn-saved-badge svg {
   flex: none;
@@ -131,12 +131,12 @@
 .pn-saved-card__from {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .pn-saved-card__to {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
   overflow-wrap: anywhere;
@@ -144,13 +144,13 @@
 .pn-saved-card__meta {
   margin: 0;
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-saved-card__date {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .pn-saved-card__actions {
@@ -174,7 +174,7 @@
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
   font: inherit;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
   transition: transform var(--pn-dur-fast) var(--pn-ease);
@@ -212,7 +212,7 @@
   background: var(--pn-surface);
   box-shadow: inset 0 0 0 1px var(--pn-ring);
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-saved__undo > span {
@@ -225,7 +225,7 @@
 .pn-saved__status {
   margin: 0 4px;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-saved__status:empty {
@@ -273,7 +273,7 @@
 .pn-saved .pn-saved-add {
   gap: 12px;
   color: var(--pn-accent);
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
 }
 .pn-saved-add svg {
@@ -306,7 +306,7 @@
 }
 .pn-saved-off__title {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
   text-wrap: balance;
@@ -315,7 +315,7 @@
   margin: 0;
   max-width: 34em;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-saved-off__link {
@@ -324,7 +324,7 @@
   min-height: 48px;
   padding: 0 8px;
   color: var(--pn-accent);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -333,7 +333,7 @@
 .pn-saved-dialog__label {
   display: block;
   margin: 14px 0 6px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 .pn-saved-dialog__input {
@@ -347,7 +347,7 @@
   background: var(--pn-surface);
   color: var(--pn-label);
   font: inherit;
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 .pn-saved-dialog__input:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
@@ -360,13 +360,13 @@
 .pn-saved-dialog__hint {
   margin: 6px 0 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .pn-saved-dialog__error {
   margin: 6px 0 0;
   color: var(--pn-coral-strong-text, var(--pn-coral-soft-text));
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.4;
 }

@@ -34,7 +34,7 @@ export function LargeScreenGate() {
           <LunadMark size={30} tone="bright" />
           <LunadWordmark className="text-xl" />
         </Link>
-        <Link href="/" className="flex min-h-12 items-center text-[15px] font-semibold text-white/80 hover:text-white">Back to the website</Link>
+        <Link href="/" className="flex min-h-12 items-center text-[0.9375rem] font-semibold text-white/80 hover:text-white">Back to the website</Link>
       </header>
 
       <main className="mx-auto flex w-full max-w-[1180px] flex-1 flex-wrap items-center justify-center gap-[clamp(32px,6vw,88px)] px-4 pb-14 pt-6 md:px-8 md:pt-14">
@@ -45,12 +45,12 @@ export function LargeScreenGate() {
         </div>
 
         <section aria-labelledby="gate-h" className="flex min-w-0 max-w-[540px] flex-[1_1_420px] flex-col gap-5">
-          <span className="inline-flex items-center gap-2 self-start text-[15px] font-semibold text-white/80">
+          <span className="inline-flex items-center gap-2 self-start text-[0.9375rem] font-semibold text-white/80">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden><rect x="2" y="4" width="20" height="13" rx="2" /><path d="M8 21h8M12 17v4" /></svg>
             Large screen detected
           </span>
-          <h1 id="gate-h" className="text-balance text-[32px] font-bold leading-[1.15] tracking-[-0.02em]">Lunad rides in your pocket.</h1>
-          <p className="max-w-[34em] text-[17px] leading-normal text-white/80">
+          <h1 id="gate-h" className="text-balance text-[2rem] font-bold leading-[1.15] tracking-[-0.02em]">Lunad rides in your pocket.</h1>
+          <p className="max-w-[34em] text-[1.0625rem] leading-normal text-white/80">
             The app guides you on the street with your location, the map and one-hand controls, so it only opens on phones and small tablets. Scan the code to continue on your phone.
           </p>
 
@@ -58,10 +58,10 @@ export function LargeScreenGate() {
             <div className="size-[196px] shrink-0 overflow-hidden rounded-xl bg-white p-3.5">
               <QrCode value={appUrl} />
             </div>
-            <ol className="flex flex-[1_1_200px] flex-col gap-3 text-[15px] leading-snug text-white/90">
+            <ol className="flex flex-[1_1_200px] flex-col gap-3 text-[0.9375rem] leading-snug text-white/90">
               {["Open your phone's camera", "Point it at the code and tap the link", "Add to Home Screen for one-tap access"].map((t, i) => (
                 <li key={t} className="flex gap-2.5">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-bright text-[13px] font-bold tabular-nums text-on-brand-bright">{i + 1}</span>
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-bright text-[0.8125rem] font-bold tabular-nums text-on-brand-bright">{i + 1}</span>
                   {t}
                 </li>
               ))}
@@ -74,19 +74,19 @@ export function LargeScreenGate() {
               id="app-link"
               readOnly
               value={appUrl}
-              className="h-12 min-w-0 flex-[1_1_220px] rounded-xl bg-deep-2 px-4 font-mono text-[15px] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]"
+              className="h-12 min-w-0 flex-[1_1_220px] rounded-xl bg-deep-2 px-4 font-mono text-[0.9375rem] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]"
             />
             <button
               type="button"
               onClick={copy}
-              className={`inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-semibold transition-transform active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 ${copied ? "bg-brand-bright/20 text-brand-light" : "bg-brand-bright text-on-brand-bright"}`}
+              className={`inline-flex h-12 items-center gap-2 rounded-full px-6 text-[0.9375rem] font-semibold transition-transform active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100 ${copied ? "bg-brand-bright/20 text-brand-light" : "bg-brand-bright text-on-brand-bright"}`}
             >
               {copied ? "Copied" : "Copy link"}
             </button>
             <span role="status" className="sr-only">{copied ? "Link copied" : ""}</span>
           </div>
 
-          <p className="flex items-start gap-2.5 text-[13px] leading-normal text-white/70">
+          <p className="flex items-start gap-2.5 text-[0.8125rem] leading-normal text-white/70">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="mt-px shrink-0"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg>
             On a tablet or a narrow window? Lunad opens automatically once the screen is phone or small-tablet size.
           </p>

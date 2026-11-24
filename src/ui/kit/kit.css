@@ -119,7 +119,7 @@ button.pn-cell:active {
   text-align: end;
   overflow-wrap: break-word;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 /* ------------------------------------------------------------------ Status badges (text + icon) */
@@ -149,7 +149,7 @@ button.pn-cell:active {
   gap: 8px;
   margin: 0 4px;
   color: var(--pn-caption, var(--pn-label2));
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
   text-align: left;
 }
@@ -239,11 +239,11 @@ button.pn-cell:active {
   min-width: 0;
 }
 .pn-switch-row__label {
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 .pn-switch-row__hint {
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .pn-switch {
   position: relative;
@@ -371,14 +371,14 @@ button.pn-cell:active {
 }
 .pn-dialog__title {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
 }
 .pn-dialog__body {
   margin: 8px 0 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-dialog__actions {
@@ -391,10 +391,10 @@ button.pn-cell:active {
   font: inherit;
 }
 .pn-btn--danger {
-  height: 50px;
+  min-height: 50px;
   background: var(--pn-coral-soft-bg);
   color: var(--pn-coral-ink, var(--pn-coral-soft-text));
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 .pn-dialog button:focus-visible {
   outline: 3px solid var(--pn-accent, var(--color-brand));
@@ -418,15 +418,15 @@ button.pn-cell:active {
 .pn-tabbar__tab {
   display: flex;
   /* Each tab takes the width of its label plus an equal share of what is left, so the longest
-     label ("Community", "Komunidad") fits at 320 px without shrinking the type. When even that is
-     too narrow (200 % text), the tabs shrink together and a label ends in an ellipsis. */
+     label ("Community", "Komunidad") fits at 320 px. Larger text grows the labels only as far as
+     all five still fit whole (as a phone's own tab bar does): a cut label says nothing. */
   flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 3px;
   min-width: 0;
-  height: 54px;
+  min-height: 54px;
   padding: 0 2px;
   border-radius: 10px;
   color: var(--pn-tab-idle);
@@ -449,11 +449,9 @@ button.pn-cell:active {
 }
 .pn-tabbar__label {
   max-width: 100%;
-  overflow: hidden;
-  font-size: 12px;
+  font-size: min(0.75rem, 3.75vw);
   font-weight: 600;
-  line-height: 14px;
-  text-overflow: ellipsis;
+  line-height: calc(14 / 12);
   white-space: nowrap;
 }
 /* Short screens (landscape, 200-400 % zoom): a compact bar, icons only (the labels stay the tabs'
@@ -464,7 +462,7 @@ button.pn-cell:active {
     padding: 4px;
   }
   .pn-tabbar__tab {
-    height: 44px;
+    min-height: 44px;
   }
   .pn-tabbar__label {
     position: absolute;
@@ -494,5 +492,20 @@ button.pn-cell:active {
   button.pn-cell:active,
   .pn-tabbar__tab:active {
     transform: none;
+  }
+}
+
+/* Pages that also open on a desktop (opensOnLargeScreen): one readable column. Padding, not a
+   max-width, so the panel and its scrollbar still span the window. */
+@media (min-width: 821px) and (pointer: fine) {
+  .pn-page,
+  .pn-detail {
+    padding-inline: max(0px, calc((100% - 720px) / 2));
+  }
+  .pn-tabbar {
+    right: auto;
+    left: 50%;
+    width: min(720px, calc(100% - 24px));
+    translate: -50% 0;
   }
 }

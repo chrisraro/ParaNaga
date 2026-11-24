@@ -72,6 +72,8 @@ type Props = {
   detailOpen?: boolean;
   /** Always operable, even at the peek snap (outside the inert part): the best-option summary and its toggle. */
   summary?: ReactNode;
+  /** Larger text: told the head's height (rows + summary) at the peek snap, so the peek can fit it. */
+  onHeadHeight?: ((px: number) => void) | undefined;
 };
 
 export function EndpointSheet({
@@ -88,6 +90,7 @@ export function EndpointSheet({
   children,
   detailOpen = false,
   summary,
+  onHeadHeight,
 }: Props) {
   const home = useT().home;
   const { attach, snap, offset } = sheet;
@@ -117,6 +120,13 @@ export function EndpointSheet({
     observer.observe(footer);
     return () => observer.disconnect();
   }, [footer]);
+  // Only at the peek: at half the notes are gone and at full the cards are, so the head is shorter there.
+  useEffect(() => {
+    if (!header || !onHeadHeight || snap !== 0) return undefined;
+    const observer = new ResizeObserver(() => onHeadHeight(header.offsetHeight));
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, [header, onHeadHeight, snap]);
   // Tapping a row at the peek snap lifts the sheet to half so its options aren't offscreen/inert.
   const onRowTap = (which: EndpointWhich) => {
     if (snap === 0) {
@@ -139,7 +149,7 @@ export function EndpointSheet({
       data-testid="trip-sheet"
       data-snap={snap}
       data-grow={grow ? "" : undefined}
-      className="pn-sheet"
+      className={sheet.scale > 1 ? "pn-sheet pn-sheet--large" : "pn-sheet"}
       style={style}
     >
       <SheetGrabber sheet={sheet} />

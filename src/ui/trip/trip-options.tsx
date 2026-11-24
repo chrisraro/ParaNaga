@@ -15,7 +15,7 @@ import type { EtaModel, NetworkSnapshot } from "@/domain/api/schemas";
 import { UNVERIFIED_ROUTE_BADGE } from "@/domain/planner/labels";
 import { en, translated } from "@/i18n/dict";
 import { useT } from "@/i18n/provider";
-import { PEEK_ROW, PEEK_ROW_GAP } from "@/ui/app-shell/bottom-sheet";
+import { PEEK_ROW, PEEK_ROW_GAP, useTextScale } from "@/ui/app-shell/bottom-sheet";
 import { accessTricycleChip, cardRouteNotes, isAccessOption, isSpecialTrip, jeepneyReasonText, optionRoadside, optionsCountText, previewIndex, recommendedIndex, specialFareText, streetCardView, tricycleTerminalCardLines, viaChipText } from "@/domain/trip/option-card";
 import { formatDistance, isNegligibleWalk, optionTitle, transfersText } from "@/domain/trip/present";
 import { optionNotesView } from "@/domain/trip/option-notes";
@@ -419,17 +419,21 @@ export function OptionsPeek({
   // The Recommended option (the jeepney from 500 m), not the first card: what is read out must match the list.
   // With nothing Recommended (a far trip without a jeepney) no card is marked and the toggle counts the options.
   const best = data.plan.options[recommendedIndex(data.plan.options)];
-  const shown = peekOptions(data.plan.options);
+  // Larger text: the cards wrap and grow instead of cutting their lines (home-screen.css), and
+  // from 150 % one card shows under the toggle, so "All options" is never the part left off screen.
+  const oneCard = useTextScale() > 1.5;
+  const shown = peekOptions(data.plan.options).slice(0, oneCard ? 1 : 2);
   if (data.plan.options.length === 0) return null;
+  const rows = expanded ? null : (
+    <div className="pn-peek__rows">
+      {shown.map((o) => (
+        <PeekOption key={o.id} option={o} best={o === best} etaModel={etaModel} onOpen={onOpen} />
+      ))}
+    </div>
+  );
   return (
     <div className="pn-peek" data-testid="options-peek" style={{ ["--pn-peek-row" as string]: `${PEEK_ROW}px`, ["--pn-peek-row-gap" as string]: `${PEEK_ROW_GAP}px` }}>
-      {expanded ? null : (
-        <div className="pn-peek__rows">
-          {shown.map((o) => (
-            <PeekOption key={o.id} option={o} best={o === best} etaModel={etaModel} onOpen={onOpen} />
-          ))}
-        </div>
-      )}
+      {oneCard ? null : rows}
       {listShown
         ? null
         : notes.map((note) => (
@@ -457,6 +461,7 @@ export function OptionsPeek({
           <path d="M6 15l6-6 6 6" />
         </svg>
       </button>
+      {oneCard ? rows : null}
     </div>
   );
 }

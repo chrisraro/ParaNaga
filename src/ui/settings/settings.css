@@ -21,7 +21,7 @@
   text-transform: none;
 }
 .pn-settings .pn-cell__title {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 400;
 }
 .pn-settings .pn-cell__trailing {
@@ -72,14 +72,14 @@
   min-width: 0;
 }
 .pn-settings__account-text strong {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
 .pn-settings__account-text span {
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 /* Sign in / Sign out / Try again: the soft green pill, 48 px tall. */
@@ -95,7 +95,7 @@
   border-radius: 999px;
   background: var(--pn-teal-soft-bg);
   color: var(--pn-teal-soft-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
@@ -118,7 +118,7 @@
   padding: 14px 0;
 }
 .pn-settings__row-label {
-  font-size: 17px;
+  font-size: 1.0625rem;
   line-height: 1.3;
 }
 

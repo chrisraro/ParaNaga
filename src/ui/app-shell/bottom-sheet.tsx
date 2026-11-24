@@ -7,7 +7,7 @@
 // top continues a downward drag as a sheet drag). Snaps follow the map design brief §1
 // (visible 214 / 444 / full).
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type PointerEvent } from "react";
 import { prefersReducedMotion } from "@/client/map/use-reduced-motion";
 import { useT } from "@/i18n/provider";
 import { createSheetDrag, type SheetDrag } from "./sheet-drag";
@@ -31,6 +31,48 @@ export const peekOptionsVisible = (rows: number) => PEEK_OPTIONS_BASE + rows * P
 export const PEEK_OPTIONS_VISIBLE = peekOptionsVisible(2);
 /** One staleness line (offline plan, changed since saved) under the best option at the peek snap. */
 export const PEEK_NOTE_VISIBLE = 24;
+/**
+ * Around the sheet's head (start / destination, the option cards, "All options") at the options
+ * peek: the grabber above it (34 px) and the room under it (25 px). With larger text the head is
+ * measured and this is added, instead of the fixed budget above.
+ */
+export const PEEK_HEAD_AROUND = 59;
+
+let textScale = 1;
+const textScaleListeners = new Set<() => void>();
+let stopTextScale: (() => void) | null = null;
+function subscribeTextScale(onChange: () => void) {
+  if (typeof ResizeObserver === "undefined") return () => undefined;
+  textScaleListeners.add(onChange);
+  if (!stopTextScale) {
+    // No event says the root font size changed: a 1rem probe changes width exactly when it does.
+    const probe = document.createElement("span");
+    probe.style.cssText = "position:absolute;top:0;left:0;width:1rem;height:1px;visibility:hidden;pointer-events:none";
+    document.body.append(probe);
+    const observer = new ResizeObserver(() => {
+      const next = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
+      if (next === textScale) return;
+      textScale = next;
+      for (const listener of textScaleListeners) listener();
+    });
+    observer.observe(probe);
+    stopTextScale = () => {
+      observer.disconnect();
+      probe.remove();
+    };
+  }
+  return () => {
+    textScaleListeners.delete(onChange);
+    if (textScaleListeners.size > 0) return;
+    stopTextScale?.();
+    stopTextScale = null;
+  };
+}
+/**
+ * The rider's text size as a factor: root font size / 16 px (1 by default; the phone's text size
+ * sets it, see `text-scale` in app/layout.tsx). Px budgets that hold text follow it.
+ */
+export const useTextScale = () => useSyncExternalStore(subscribeTextScale, () => textScale, () => 1);
 export const HALF_VISIBLE = 444;
 /**
  * Short or zoomed screens (landscape, 400 % zoom): peek and half never take more than this share
@@ -55,14 +97,17 @@ const GRABBER_VISIBLE = 44;
 /**
  * `clearance`: what the tab bar covers at the bottom of the screen. The peek snap rises by it so
  * the start and destination rows stay above the tab bar; half and full keep their height (their
- * content scrolls, with room at the end for the tab bar), so the map keeps its view.
+ * content scrolls, with room at the end for the tab bar), so the map keeps its view. `scale`: the
+ * text scale (useTextScale); half grows with it, up to where the map controls and the map strip allow.
  */
-export function offsetFor(snap: Snap, height: number, clearance = 0, peek = PEEK_VISIBLE): number {
+export function offsetFor(snap: Snap, height: number, clearance = 0, peek = PEEK_VISIBLE, scale = 1): number {
   if (snap === 2) return 0;
   if (snap === 0 && height < TINY_SHEET) return Math.max(0, height - GRABBER_VISIBLE - clearance);
   // Below ~417 px the controls cannot be cleared without a sheet shorter than its peek: those keep half.
   // Never below the peek (options peek + tab bar can exceed the cap on 440-600 px screens).
-  const half = height - MAP_CONTROLS_CLEAR >= PEEK_VISIBLE ? Math.max(Math.min(HALF_VISIBLE, height - MAP_CONTROLS_CLEAR), peek + clearance) : HALF_VISIBLE;
+  // Larger text: half grows with it, but stops 32 px sooner, since the map credit over the sheet's edge can then take two lines.
+  const room = height - MAP_CONTROLS_CLEAR - (scale > 1 ? 32 : 0);
+  const half = height - MAP_CONTROLS_CLEAR >= PEEK_VISIBLE ? Math.max(Math.min(HALF_VISIBLE * scale, room), peek + clearance) : HALF_VISIBLE;
   const visible = Math.min(snap === 0 ? peek + clearance : half, height * (1 - MAP_MIN_SHARE));
   return Math.max(0, Math.round(height - visible));
 }
@@ -101,6 +146,8 @@ export type SheetControl = {
   clearance: number;
   /** Visible height at the peek snap, in px (taller while trip options are listed). */
   peek: number;
+  /** The text scale (useTextScale): above 1 the sheet lets its rows wrap. */
+  scale: number;
   /** The drag controller (plain JS): pointer and touch handlers feed it, it writes to the element. */
   drag: SheetDrag;
 };
@@ -113,9 +160,10 @@ export function useSheet(initial: Snap = 1, clearance = 0, peek = PEEK_VISIBLE, 
   const [snap, setSnap] = useState<Snap>(initial);
   const [height, setHeight] = useState<number | null>(null);
   const element = useRef<HTMLElement | null>(null);
-  const latest = useRef({ snap, height, clearance, peek, onFrame });
+  const scale = useTextScale();
+  const latest = useRef({ snap, height, clearance, peek, scale, onFrame });
   useLayoutEffect(() => {
-    latest.current = { snap, height, clearance, peek, onFrame };
+    latest.current = { snap, height, clearance, peek, scale, onFrame };
   });
 
   // The controller is created once; its host callbacks read the refs only when a gesture runs, never while rendering.
@@ -125,8 +173,8 @@ export function useSheet(initial: Snap = 1, clearance = 0, peek = PEEK_VISIBLE, 
       el: () => element.current,
       height: () => latest.current.height,
       offsets: () => {
-        const { height: h, clearance: c, peek: p } = latest.current;
-        return h === null ? null : ([offsetFor(0, h, c, p), offsetFor(1, h, c, p), offsetFor(2, h, c, p)] as const);
+        const { height: h, clearance: c, peek: p, scale: s } = latest.current;
+        return h === null ? null : ([offsetFor(0, h, c, p, s), offsetFor(1, h, c, p, s), offsetFor(2, h, c, p, s)] as const);
       },
       snap: () => latest.current.snap,
       setSnap: (s) => setSnap(s),
@@ -148,9 +196,9 @@ export function useSheet(initial: Snap = 1, clearance = 0, peek = PEEK_VISIBLE, 
     };
   }, [drag]);
 
-  const offset = height === null ? null : offsetFor(snap, height, clearance, peek);
+  const offset = height === null ? null : offsetFor(snap, height, clearance, peek, scale);
   const visible = height === null || offset === null ? HALF_VISIBLE : height - offset;
-  return { snap, setSnap, height, offset, visible, attach, clearance, peek, drag };
+  return { snap, setSnap, height, offset, visible, attach, clearance, peek, scale, drag };
 }
 
 /**

@@ -159,13 +159,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 32px;
+  min-height: 32px;
   padding: 0 12px 0 8px;
   border-radius: 999px;
   background: var(--pn-surface);
   box-shadow: var(--pn-elev);
   color: var(--pn-label);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -361,8 +361,8 @@
   background: var(--pn-surface);
   color: var(--pn-label);
   font: inherit;
-  font-size: 13px;
-  line-height: 16px;
+  font-size: 0.8125rem;
+  line-height: 1rem;
   text-align: left;
   cursor: pointer;
 }
@@ -411,7 +411,7 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 700;
 }
 .pn-peek-row__mark {
@@ -420,8 +420,36 @@
   border-radius: 999px;
   background: var(--pn-tag-bg);
   color: var(--pn-tag-text);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 700;
+}
+/* Larger text (root font above 16 px, useTextScale): the place names and the cards wrap and grow
+   instead of being cut, and the peek is measured (home-screen.tsx) instead of budgeted. */
+.pn-sheet--large .pn-endpoint__value {
+  padding-block: 4px;
+  line-height: 1.2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.pn-sheet--large .pn-peek-row {
+  height: auto;
+  min-height: var(--pn-peek-row, 56px);
+  padding-block: 6px;
+}
+.pn-sheet--large .pn-peek-row__line {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+.pn-sheet--large .pn-peek-row__line,
+.pn-sheet--large .pn-peek-row__text,
+.pn-sheet--large .pn-peek__chip {
+  white-space: normal;
+}
+.pn-sheet--large .pn-peek-row__title {
+  overflow-wrap: anywhere;
+}
+.pn-sheet--large .pn-peek__chip {
+  border-radius: 10px;
 }
 /* Landscape and zoomed phones: one card, so the route keeps the strip of map above the sheet. */
 @media (max-height: 480px) {
@@ -436,7 +464,7 @@
   border-radius: 999px;
   background: var(--pn-warn-bg);
   color: var(--pn-warn-text);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -444,9 +472,9 @@
   margin: 0;
   min-height: 22px;
   color: var(--pn-warn-text);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
-  line-height: 22px;
+  line-height: 1.375rem;
 }
 .pn-peek__toggle {
   display: flex;
@@ -460,7 +488,7 @@
   border-radius: 999px;
   background: var(--pn-fill);
   color: var(--pn-teal-soft-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -573,7 +601,7 @@
 }
 .pn-endpoint__value {
   overflow: hidden;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -584,7 +612,7 @@
 }
 .pn-endpoint__sub {
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .pn-icon-btn {
   flex: none;
@@ -625,7 +653,7 @@
 .pn-section-title {
   margin: 0 0 4px;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 .pn-option {
@@ -638,7 +666,7 @@
   border: 0;
   border-bottom: 1px solid var(--pn-sep);
   background: transparent;
-  font-size: 17px;
+  font-size: 1.0625rem;
   text-align: left;
   cursor: pointer;
 }
@@ -669,7 +697,7 @@ a.pn-option {
   gap: 10px;
   padding: 12px 14px;
   border-radius: 14px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-status p {
@@ -718,7 +746,7 @@ a.pn-option {
 .pn-status__action {
   display: inline-flex;
   align-items: center;
-  height: 48px;
+  min-height: 48px;
   margin-top: 10px;
   padding: 0 16px;
   border: 0;
@@ -726,7 +754,7 @@ a.pn-option {
   background: var(--pn-surface);
   box-shadow: 0 0 0 1px var(--pn-ring);
   color: var(--pn-accent);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -734,11 +762,11 @@ a.pn-option {
   flex: none;
   display: inline-flex;
   align-items: center;
-  height: 28px;
+  min-height: 28px;
   padding: 0 10px;
   border-radius: 999px;
   background: var(--pn-surface);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -767,7 +795,7 @@ a.pn-option {
 }
 .pn-honest h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.3;
@@ -775,7 +803,7 @@ a.pn-option {
 .pn-honest p {
   margin: 4px 0 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-text-btn {
@@ -785,7 +813,7 @@ a.pn-option {
   border: 0;
   background: transparent;
   color: var(--pn-accent);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -807,13 +835,13 @@ a.pn-option {
 }
 .pn-pick__title {
   margin: 0;
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
 }
 .pn-pick__hint {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 15px;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 .pn-pick__hint--warn {
@@ -841,19 +869,19 @@ a.pn-option {
   transform: scale(0.97);
 }
 .pn-btn--primary {
-  height: 50px;
+  min-height: 50px;
   background: var(--pn-accent);
   color: var(--pn-on-primary);
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 .pn-btn--primary[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
 }
 .pn-btn--secondary {
-  height: 48px;
+  min-height: 48px;
   background: var(--pn-fill);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -884,12 +912,12 @@ a.pn-option {
 .pn-nearby__empty {
   margin: 0;
   color: var(--pn-label2);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .pn-nearby__empty {
   padding: 12px 0;
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .pn-nearby__list {
   margin: 0;
@@ -920,13 +948,13 @@ a.pn-option {
   min-width: 0;
 }
 .pn-nearby__text strong {
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   overflow-wrap: anywhere;
 }
 .pn-nearby__sub {
   color: var(--pn-warn-text);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .pn-nearby .pn-cell__chevron {
   flex: none;
@@ -952,14 +980,14 @@ a.pn-option {
   display: flex;
   align-items: center;
   gap: 12px;
-  height: 52px;
+  min-height: 52px;
   margin: 0 12px;
   padding: 0 18px 0 12px;
   border-radius: 26px;
   background: var(--pn-surface);
   box-shadow: var(--pn-elev);
   color: var(--pn-label2);
-  font-size: 17px;
+  font-size: 1.0625rem;
   text-decoration: none;
   transition: transform var(--pn-dur-fast) var(--pn-ease);
 }
@@ -1002,14 +1030,14 @@ a.pn-option {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  min-height: 36px;
   padding: 0 14px;
   border: 0;
   border-radius: 18px;
   background: var(--pn-surface);
   box-shadow: var(--pn-elev-sm);
   color: var(--pn-label);
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1;
   text-decoration: none;
