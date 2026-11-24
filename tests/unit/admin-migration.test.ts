@@ -710,3 +710,80 @@ describe("0027: the publisher must differ from the revision's last editor (spec 
     expect(SQL27.trimEnd().endsWith("revoke create on schema transit from paranaga_definer;")).toBe(true);
   });
 });
+
+// ================================================================ 0031: a stale draft is never published (audit C1)
+
+describe("0031: a draft made from an older revision is refused at publication (audit C1)", () => {
+  const SQL31 = strip(readFileSync(path.join(DIR, "0031_stale_draft_guard.sql"), "utf8"));
+  const fns31 = [...SQL31.matchAll(/create or replace function ([\w.]+)\(([^)]*)\)([\s\S]*?)\$\$([\s\S]*?)\$\$;/g)].map((m) => ({
+    name: m[1]!,
+    header: m[3]!,
+    body: m[4]!,
+  }));
+  const fn31 = (name: string) => fns31.find((f) => f.name === name)!;
+  const bodyOf = (sqlText: string, name: string) =>
+    [...sqlText.matchAll(/create or replace function ([\w.]+)\(([^)]*)\)([\s\S]*?)\$\$([\s\S]*?)\$\$;/g)].find((m) => m[1] === name)![4]!;
+
+  it("is the latest definition of both functions (no later migration replaces them)", () => {
+    for (const name of ["transit.admin_publish_revision", "transit.admin_create_draft"]) {
+      const last = ALL.filter((m) => m.sql.includes(`create or replace function ${name}(`)).at(-1)!;
+      expect(last.file, name).toBe("0031_stale_draft_guard.sql");
+    }
+  });
+
+  it("publish: the parent check is the only change to 0027's body", () => {
+    const check =
+      /\n  if p_mode = 'publish' and v_rev\.parent_revision_id is distinct from v_current then\n    raise exception '[^']*made from an older revision[^']*create a new draft[^']*' using errcode = '55000';\n  end if;\n/;
+    const body = fn31("transit.admin_publish_revision").body;
+    expect(body).toMatch(check);
+    const before = bodyOf(strip(readFileSync(path.join(DIR, "0027_revision_last_editor.sql"), "utf8")), "transit.admin_publish_revision");
+    const squash = (s: string) => s.replace(/\s+/g, " ").trim();
+    expect(squash(body.replace(check, "\n"))).toBe(squash(before));
+  });
+
+  it("publish: under the pointer lock, after the status checks, before validation; rollback is not checked", () => {
+    const b = fn31("transit.admin_publish_revision").body;
+    const order = [
+      "transit.admin_assert_staff()", "priv.require_step_up()", "pg_advisory_xact_lock(hashtext('transit.publish_revision'))",
+      "where pp.singleton for update", "p_expected_published", "only a draft revision can be published",
+      "v_rev.parent_revision_id is distinct from v_current", "validate the revision first", "membershipHash",
+      "interval '30 minutes'", "publish_requires_second_reviewer", "perform transit.publish_revision(p_revision)",
+    ];
+    const at = order.map((s) => b.indexOf(s));
+    expect(at.every((i) => i >= 0), JSON.stringify(at)).toBe(true);
+    expect([...at].sort((x, y) => x - y)).toEqual(at);
+    expect(b.match(/parent_revision_id/g)).toHaveLength(1);
+  });
+
+  it("create draft: only a draft made from the published revision blocks a new one; nothing else changes", () => {
+    const body = fn31("transit.admin_create_draft").body;
+    expect(body).toMatch(/where r\.status in \('draft', 'validating'\) and r\.parent_revision_id = v_pub\.id\) then\s+raise exception 'a draft revision is already open/);
+    expect(body.indexOf("from transit.published_pointer pp")).toBeLessThan(body.indexOf("a draft revision is already open"));
+    const before = bodyOf(SQL, "transit.admin_create_draft");
+    for (const kept of ["pg_advisory_xact_lock(hashtext('transit.admin_create_draft'))", "no revision is published, so there is nothing to copy",
+      "values (v_label, v_pub.kind, 'draft', v_user, v_pub.id)", "from transit.revision_member m where m.revision_id = v_pub.id", "perform core.audit('revision.draft_create'"]) {
+      expect(before, kept).toContain(kept);
+      expect(body, kept).toContain(kept);
+    }
+  });
+
+  for (const [name, args] of [["transit.admin_publish_revision", "uuid, uuid, text"], ["transit.admin_create_draft", ""]] as const) {
+    it(`${name}: same definer, search_path, owner and grants`, () => {
+      const f = fn31(name);
+      expect(f.header).toContain("security definer");
+      expect(f.header).toMatch(/set search_path = pg_catalog,[\w, ]*pg_temp\s/);
+      expect(f.body).toContain("transit.admin_assert_staff()");
+      expect(SQL31).toContain(`alter function ${name}(${args}) owner to paranaga_definer;`);
+      expect(SQL31).toContain(`revoke execute on function ${name}(${args}) from public;`);
+      expect(grantsOf(SQL31, name)).toEqual(["paranaga_app"]);
+    });
+  }
+
+  it("changes no table, policy or table grant, and gives schema CREATE only for the length of the migration", () => {
+    expect(fns31.map((f) => f.name).sort()).toEqual(["transit.admin_create_draft", "transit.admin_publish_revision"]);
+    expect(SQL31).not.toMatch(/create policy|drop policy|row level security|alter table|create table|drop function/);
+    expect(SQL31).not.toMatch(/grant (?!execute|create on schema)[^;]*;/);
+    expect(SQL31.trimStart().startsWith("grant create on schema transit to paranaga_definer;")).toBe(true);
+    expect(SQL31.trimEnd().endsWith("revoke create on schema transit from paranaga_definer;")).toBe(true);
+  });
+});

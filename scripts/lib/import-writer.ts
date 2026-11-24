@@ -36,6 +36,7 @@ import {
   IMPORT_ACTOR,
   ImportRefusedError,
   insertRows,
+  lockPublishedBase,
   point,
   publishedIncludes,
   textArray,
@@ -411,11 +412,8 @@ async function writePlaces(c: pg.ClientBase, osm: OsmPlan): Promise<PlacesOutcom
     );
   }
 
-  const published = await c.query<{ id: string; kind: string; label: string }>(
-    `select r.id, r.kind, r.label from transit.published_pointer p join transit.revision r on r.id = p.revision_id`,
-  );
-  const base = published.rows[0];
-  if (!base) throw new ImportRefusedError("no published revision to carry forward; import the transit files first");
+  // The base stays the published revision until our publish; refused while an admin draft is open (C1).
+  const base = await lockPublishedBase(c);
 
   // ---------------------------------------------------------------- ingest provenance
   const batchId = randomUUID();

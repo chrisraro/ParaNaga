@@ -421,9 +421,20 @@ export async function commitIntercity(connectionString: string, plan: IntercityP
 }
 
 async function writeIntercity(c: pg.ClientBase, plan: IntercityPlan): Promise<IntercityOutcome> {
-  const draftRow = await c.query<Draft>("select id, label from transit.revision where status = 'draft' order by seq desc limit 1 for update");
+  const draftRow = await c.query<Draft & { stale: boolean }>(
+    `select r.id, r.label,
+            r.parent_revision_id is distinct from (select p.revision_id from transit.published_pointer p) as stale
+       from transit.revision r where r.status = 'draft' order by r.seq desc limit 1 for update of r`);
   const draft = draftRow.rows[0];
   if (!draft) throw new ImportRefusedError("no open draft revision: create one in the admin console first; nothing written");
+  // C1 (migration 0031): a draft made from an older revision can never be published, and a seed
+  // committed into it would read "unchanged" on the next run, so it would never reach a new draft.
+  if (draft.stale) {
+    throw new ImportRefusedError(
+      `the open draft ${draft.label} was made from an older revision and cannot be published; ` +
+        "create a new draft in the admin console first; nothing written",
+    );
+  }
 
   const prior = await c.query<{ id: string; snapshot_version: string; counts: Row }>(
     `select id, snapshot_version, counts from ingest.batch

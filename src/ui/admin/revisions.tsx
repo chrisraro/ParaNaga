@@ -21,8 +21,13 @@ const IDLE: Flow = { step: "idle" };
 const STATUS: Record<RevisionRow["status"], string> = { draft: "Draft", validating: "Validating", published: "Published", superseded: "Superseded" };
 
 const publishable = (r: RevisionRow) => r.validation?.ok === true && r.validation.current;
+const isOpen = (r: RevisionRow) => r.status === "draft" || r.status === "validating";
+/** A draft is a full snapshot of the revision it was made from. Once another revision is live the
+ *  database refuses to publish it (migration 0031), and it no longer blocks a new draft. */
+const isStale = (r: RevisionRow, publishedId: string | null) => isOpen(r) && r.parentId !== publishedId;
 
-function validationText(r: RevisionRow): string {
+function validationText(r: RevisionRow, stale: boolean): string {
+  if (stale) return "Made from an older revision; cannot be published";
   const v = r.validation;
   if (!v) return "Not validated";
   if (!v.current) return "Changed since validation";
@@ -48,7 +53,7 @@ export function RevisionsScreen() {
 
   const data = list?.ok ? list.data : null;
   const published = data?.revisions.find((r) => r.isPublished) ?? null;
-  const openDraft = data?.revisions.some((r) => r.status === "draft" || r.status === "validating") ?? false;
+  const openDraft = data?.revisions.some((r) => isOpen(r) && !isStale(r, data.publishedId)) ?? false;
 
   const onCreate = async () => {
     setBusy("create");
@@ -145,7 +150,7 @@ export function RevisionsScreen() {
                   <td className="adm-num">{r.memberCount}</td>
                   <td>{when(r.createdAt)}</td>
                   <td>{when(r.publishedAt)}</td>
-                  <td>{r.isPublished ? "–" : validationText(r)}</td>
+                  <td>{r.isPublished ? "–" : validationText(r, isStale(r, list.data.publishedId))}</td>
                   <td>
                     {r.isPublished ? (
                       <Muted>Live</Muted>
@@ -154,11 +159,11 @@ export function RevisionsScreen() {
                         <button type="button" className={btnRow} disabled={working} onClick={() => void onValidate(r)} data-testid={`validate-${r.label}`}>
                           {busy === `validate:${r.id}` ? "Validating…" : "Validate"}
                         </button>
-                        {r.status === "draft" || r.status === "validating" ? (
+                        {isOpen(r) ? (
                           <button
                             type="button"
                             className={btnRowPrimary}
-                            disabled={working || !publishable(r)}
+                            disabled={working || !publishable(r) || isStale(r, list.data.publishedId)}
                             onClick={() => setFlow({ step: "confirming", target: { id: r.id, label: r.label, mode: "publish" } })}
                             data-testid={`publish-${r.label}`}
                           >

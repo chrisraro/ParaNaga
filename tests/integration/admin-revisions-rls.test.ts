@@ -191,9 +191,60 @@ describe.skipIf(!ownerUrl || !appUrl || !importUrl)("admin revisions and publica
     ]);
   });
 
+  it("0031 (audit C1): a draft made from an older revision is refused; its replacement publishes; rollback is not checked", async () => {
+    const statusOf = async (id: string) => (await owner.query<{ status: string }>("select status from transit.revision where id = $1", [id])).rows[0]!.status;
+    const draft = (await one<{ id: string }>(reviewer, sql`select transit.admin_create_draft() as id`)).id;
+
+    // Another publication lands while the draft is open (an import, or another session): base → newer.
+    const newer = (await importer.query<{ id: string }>(
+      "insert into transit.revision (label, kind, status, created_by, parent_revision_id) values ($1, 'provisional', 'draft', 'test', $2) returning id",
+      [`adm-${run}-newer`, base])).rows[0]!.id;
+    await importer.query(
+      "insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id) select $1, entity_kind, entity_id, version_id from transit.revision_member where revision_id = $2",
+      [newer, base]);
+    await importer.query("select transit.publish_revision($1)", [newer]);
+    expect(await pointer()).toBe(newer);
+
+    // The admin reloads (the page names the new pointer) and validates: everything else passes, and it is still refused.
+    expect((await validate(admin, draft)).report.ok).toBe(true);
+    const refused = await failure(publish(admin, draft, newer, "publish"));
+    expect(refused.code).toBe("55000");
+    expect(refused.message).toMatch(/made from an older revision and cannot be published; create a new draft/);
+    expect(await pointer()).toBe(newer);
+    expect(await statusOf(draft)).toBe("draft");
+
+    // A draft with no parent is refused the same way while a revision is published (before any validation).
+    const orphan = (await importer.query<{ id: string }>(
+      "insert into transit.revision (label, kind, status, created_by) values ($1, 'provisional', 'draft', 'test') returning id", [`adm-${run}-orphan`])).rows[0]!.id;
+    expect((await failure(publish(admin, orphan, newer, "publish"))).message).toMatch(/made from an older revision/);
+
+    // Neither stale draft blocks the replacement (labels are per second), which publishes as usual;
+    // a draft made from the live revision still blocks a second one.
+    await new Promise((r) => setTimeout(r, 1100));
+    const fresh = (await one<{ id: string }>(reviewer, sql`select transit.admin_create_draft() as id`)).id;
+    expect((await owner.query("select parent_revision_id as p from transit.revision where id = $1", [fresh])).rows[0].p).toBe(newer);
+    expect((await failure(one(admin, sql`select transit.admin_create_draft()`))).code).toBe("55000");
+    await validate(reviewer, fresh);
+    expect((await publish(admin, fresh, newer, "publish")).p).toMatchObject({ revisionId: fresh, previousRevisionId: newer, mode: "publish" });
+    expect(await pointer()).toBe(fresh);
+
+    // Rollback is unchanged: the target's parent (none for base) is not looked at.
+    await validate(reviewer, base);
+    expect((await publish(reviewer, base, fresh, "rollback")).p).toMatchObject({ revisionId: base, previousRevisionId: fresh, mode: "rollback" });
+    expect(await pointer()).toBe(base);
+    expect(await statusOf(draft)).toBe("draft");
+
+    // Close what this test left open so later tests start clean.
+    await owner.query("begin");
+    await owner.query("set local role paranaga_definer");
+    await owner.query("update transit.revision set status = 'superseded' where status in ('draft', 'validating')");
+    await owner.query("commit");
+  }, 180_000);
+
   it("a synthetic revision validates with errors and can never be published", async () => {
+    // Made from the published revision, as every real draft is (0031 refuses any other before validation).
     const rev = (await importer.query<{ id: string }>(
-      "insert into transit.revision (label, kind, status, created_by, is_synthetic) values ($1, 'provisional', 'draft', 'test', true) returning id", [`adm-${run}-fx`])).rows[0]!;
+      "insert into transit.revision (label, kind, status, created_by, is_synthetic, parent_revision_id) values ($1, 'provisional', 'draft', 'test', true, $2) returning id", [`adm-${run}-fx`, base])).rows[0]!;
     const route = (await importer.query<{ id: string }>(
       "insert into transit.route (public_code, name, is_synthetic) values ($1, 'Fixture Loop X', true) returning id", [`FX-${run}`])).rows[0]!;
     await importer.query("insert into transit.revision_member (revision_id, entity_kind, entity_id, version_id) values ($1, 'route', $2, $2)", [rev.id, route.id]);

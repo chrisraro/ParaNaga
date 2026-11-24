@@ -25,6 +25,11 @@
 // parameters and the regional relation lengths. Untraced variants are reported, never an abort; an
 // over-budget graph, a road-rule way missing from the snapshot or a missing time-estimate parameter
 // aborts. --commit publishes anywhere-alight-<roads date> (scripts/lib/lines-writer.ts).
+//
+// Open admin draft (audit C1, migration 0031): a stage that would publish is refused, with nothing
+// written, while a draft made from the published revision is open in the admin console. Publishing
+// over it would leave the draft on an older revision, which the console then refuses to publish.
+// Publish the draft first, then run the import again. A run that changes nothing is not refused.
 // Connection strings are never printed.
 import {
   buildImportPlan,

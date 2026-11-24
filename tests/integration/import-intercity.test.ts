@@ -300,15 +300,25 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed intercity seed import (Neon bran
     const rs06 = (await serviceIn(draftId, "RS06"))!;
     const rs01 = (await serviceIn(draftId, "RS01"))!;
     const rs08 = (await serviceIn(draftId, "RS08"))!;
-    // The test, not the writer, publishes the draft (an admin would, after review and step-up).
-    await publish(draftId);
-    expect(await pointer()).toBe(draftId);
-
     // The same modes seed with other bytes: a new batch of the same date, carried from the draft.
     const seed = readNewestModesSeed()!;
     const reformatted: ModesFile = { fileName: seed.fileName, bytes: Buffer.from(`${JSON.stringify(JSON.parse(seed.bytes.toString("utf8")), null, 3)}\n`) };
     const plan = buildImportPlan(readDataFiles("Data_Sets"), readNewestOsmSnapshot(), reformatted, readPinnedRoadsSnapshot());
     expect(plan.problems).toEqual([]);
+
+    // Audit C1 (0031): while the admin draft is open, a publishing import is refused and writes nothing.
+    const live = await pointer();
+    const before = await tableCounts();
+    const refused = await failure(commitImport(ownerUrl!, plan));
+    expect(refused).toBeInstanceOf(ImportRefusedError);
+    expect(refused.message).toMatch(/draft revision \S+ is open in the admin console/);
+    expect(await tableCounts()).toEqual(before);
+    expect(await pointer()).toBe(live);
+
+    // The test, not the writer, publishes the draft (an admin would, after review and step-up).
+    await publish(draftId);
+    expect(await pointer()).toBe(draftId);
+
     const result = await commitImport(ownerUrl!, plan);
     expect(result.modes).toMatchObject({ outcome: "committed" });
     expect(result.lines).toMatchObject({ outcome: "committed" });
@@ -322,6 +332,14 @@ describe.skipIf(!ownerUrl || !appUrl)("reviewed intercity seed import (Neon bran
     const destinations = await runInRequestContext(app, { userId: null, requestId: `ic-${run}` }, async (db) =>
       (await db.execute(sql`select count(*)::int as n from transit.v_published_regional_destinations`)).rows);
     expect(destinations).toEqual([{ n: 31 }]);
+
+    // Audit C1 (0031): a draft left on an older revision can never be published, so the intercity
+    // import refuses to write into it (the same file would otherwise read "unchanged" from then on).
+    await runInRequestContext(app, { userId: reviewer, requestId: `ic-${run}` }, (db) => db.execute(sql`select transit.admin_create_draft()`));
+    await publish(draftId); // a rollback: the new draft's parent (head) is not live any more
+    const stale = await failure(commitIntercity(ownerUrl!, buildIntercityPlan(approved)));
+    expect(stale).toBeInstanceOf(ImportRefusedError);
+    expect(stale.message).toMatch(/made from an older revision and cannot be published/);
   }, 600_000);
 });
 

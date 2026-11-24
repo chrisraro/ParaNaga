@@ -47,6 +47,37 @@ export const IMPORT_ACTOR = "scripts/import-naga";
 /** A deliberate refusal (nothing written): the inputs conflict with what is committed. */
 export class ImportRefusedError extends Error {}
 
+export type PublishedBase = { id: string; kind: string; label: string };
+
+/**
+ * The published revision a publishing stage carries forward, read under transit.publish_revision's
+ * own transaction lock (re-entrant), so no other publication can slip in before this stage's.
+ * Audit finding C1 (migration 0031): refuses while a draft made from that revision is open.
+ * Publishing here would leave the draft on an older revision, and the admin console then refuses
+ * to publish it, so its edits would have to be made again. A stage's own draft is never seen here:
+ * it is published before the next stage starts. A draft that is already stale does not block.
+ */
+export async function lockPublishedBase(c: pg.ClientBase): Promise<PublishedBase> {
+  await c.query("select pg_advisory_xact_lock(hashtext('transit.publish_revision'))");
+  const published = await c.query<PublishedBase>(
+    `select r.id, r.kind, r.label from transit.published_pointer p join transit.revision r on r.id = p.revision_id`,
+  );
+  const base = published.rows[0];
+  if (!base) throw new ImportRefusedError("no published revision to carry forward; import the transit files first");
+  const open = await c.query<{ label: string }>(
+    `select label from transit.revision
+      where status in ('draft', 'validating') and parent_revision_id = $1 order by seq desc limit 1`,
+    [base.id],
+  );
+  if (open.rows[0]) {
+    throw new ImportRefusedError(
+      `draft revision ${open.rows[0].label} is open in the admin console and was made from the published ${base.label}; ` +
+        "publishing this import would make that draft unpublishable. Publish the draft first (Revisions), then run the import again. Nothing was written.",
+    );
+  }
+  return base;
+}
+
 /**
  * True when the published revision holds every member (same entity and version) of `revisionId`
  * of the given kinds: the batch's data is published, by that revision or by one that carried it forward.

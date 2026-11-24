@@ -239,6 +239,18 @@ describe("publish and rollback", () => {
     }
   });
 
+  it("a stale draft (0031, audit C1) is a 409 that carries the database's message to the admin", async () => {
+    state.user = STAFF[0]!;
+    state.stepUpAt = new Date();
+    state.publishFail = { code: "55000", message: "this draft was made from an older revision and cannot be published; create a new draft from the published revision" };
+    const res = await postPublish(post(`/api/v1/admin/revisions/${REV}/publish`, { expectedPublishedId: PUB }), idParams());
+    expect(res.status).toBe(409);
+    expect(apiErrorSchema.parse(await res.json()).error).toMatchObject({
+      code: "conflict",
+      message: "This draft was made from an older revision and cannot be published; create a new draft from the published revision.",
+    });
+  });
+
   it("adminProblem leaves unknown errors alone (they become 500)", () => {
     const e = new Error("boom");
     expect(adminProblem(e)).toBe(e);

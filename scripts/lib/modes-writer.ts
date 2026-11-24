@@ -26,6 +26,7 @@ import {
   IMPORT_ACTOR,
   ImportRefusedError,
   insertRows,
+  lockPublishedBase,
   numberArray,
   point,
   publishedIncludes,
@@ -79,14 +80,8 @@ export async function writeModes(c: pg.ClientBase, modes: ModesPlan): Promise<Mo
     if (sameDate.length > 0) snapshotVersion = `${modes.snapshotVersion}:${modes.sha256.slice(0, 12)}`;
   }
 
-  // The base must stay the published revision until our publish: take publish_revision's own
-  // transaction lock (re-entrant) before reading the pointer, so no other publish can slip in.
-  await c.query("select pg_advisory_xact_lock(hashtext('transit.publish_revision'))");
-  const published = await c.query<{ id: string; kind: string; label: string }>(
-    `select r.id, r.kind, r.label from transit.published_pointer p join transit.revision r on r.id = p.revision_id`,
-  );
-  const base = published.rows[0];
-  if (!base) throw new ImportRefusedError("no published revision to carry forward; import the transit files first");
+  // The base stays the published revision until our publish; refused while an admin draft is open (C1).
+  const base = await lockPublishedBase(c);
 
   // ---------------------------------------------------------------- ingest provenance
   const batchId = randomUUID();

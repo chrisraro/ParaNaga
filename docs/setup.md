@@ -80,6 +80,7 @@ pnpm db:import --commit    # write everything in one transaction
 - It connects with the owner URL `DATABASE_URL_UNPOOLED` from `.env.local`, then runs the whole write as `paranaga_import` in a single transaction.
 - It aborts, writing nothing, on any data-check problem.
 - A second `--commit` on the same data reports `unchanged`. A changed-data import is refused for now (a versioned importer is a follow-up).
+- A `--commit` that would publish is refused, writing nothing, while a draft made from the published revision is open in the admin console (Revisions). Publish that draft first, then run the import again. Publishing over it would leave the draft on an older revision, and the console never publishes such a draft (migration 0031).
 - Integration tests and RLS checks against a throwaway Neon branch: `bash scripts/with-neon-branch.sh pnpm test:integration` (also works with `pnpm db:check-rls`).
 
 ### Modes, lines and time-estimate import

@@ -128,7 +128,8 @@ describe("RevisionsScreen: a step-up belongs to the revision that asked for it",
     status,
     createdAt: "2026-10-20T00:00:00.000Z",
     publishedAt: null,
-    parentId: null,
+    // A draft is made from the live revision (live-b); see the stale-draft test below.
+    parentId: status === "draft" ? id(2) : null,
     isSynthetic: false,
     memberCount: 1,
     isPublished: status === "published",
@@ -166,6 +167,23 @@ describe("RevisionsScreen: a step-up belongs to the revision that asked for it",
       [id(1), "rollback", id(2)],
     ]);
     expect(screen.queryByTestId("confirm-publication")).toBeNull();
+  });
+
+  it("a draft made from an older revision says so, cannot be published, and does not block a new draft (audit C1)", async () => {
+    // draft-c was made from old-a; live-b was published over it.
+    api.fetchRevisions.mockResolvedValue(ok({ ...LIST, revisions: [{ ...row(3, "draft-c", "draft"), parentId: id(1) }, ...LIST.revisions.slice(1)] }));
+    render(<RevisionsScreen />);
+    expect((await screen.findByTestId("revision-draft-c")).textContent).toContain("Made from an older revision; cannot be published");
+    expect(screen.getByTestId<HTMLButtonElement>("publish-draft-c").disabled).toBe(true);
+    expect(screen.getByTestId<HTMLButtonElement>("create-draft").disabled).toBe(false);
+  });
+
+  it("a draft made from the live revision can be published and blocks a second draft", async () => {
+    api.fetchRevisions.mockResolvedValue(ok(LIST));
+    render(<RevisionsScreen />);
+    expect((await screen.findByTestId("revision-draft-c")).textContent).not.toContain("Made from an older revision");
+    expect(screen.getByTestId<HTMLButtonElement>("publish-draft-c").disabled).toBe(false);
+    expect(screen.getByTestId<HTMLButtonElement>("create-draft").disabled).toBe(true);
   });
 
   it("reads Working… on the confirm button only while its own request runs", async () => {

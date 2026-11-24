@@ -235,6 +235,16 @@ test("validate a draft, publish it after step-up; rollback is offered on superse
   await expect(page.getByTestId("create-draft")).toBeEnabled();
 });
 
+test("a draft made from an older revision says so, cannot be published, and does not block a new draft", async ({ page, context }) => {
+  await signInAs(context, "commuter,transport_reviewer");
+  const s = await mockAdminApi(page);
+  s.rows[0]!.parentId = OLD; // audit C1: modes-lines was published over the revision this draft was made from
+  await page.goto("/admin/revisions");
+  await expect(page.getByTestId("revision-draft-2026-10-22-100000")).toContainText("Made from an older revision; cannot be published");
+  await expect(page.getByTestId("publish-draft-2026-10-22-100000")).toBeDisabled();
+  await expect(page.getByTestId("create-draft")).toBeEnabled();
+});
+
 test("the confirm step takes focus when it opens and gives it back to Publish on cancel", async ({ page, context }) => {
   await signInAs(context, "commuter,transport_reviewer");
   await mockAdminApi(page);

@@ -24,7 +24,7 @@ import { randomUUID } from "node:crypto";
 import type pg from "pg";
 import type { LinesPlan, PlannedTrace } from "./lines-plan";
 import { carryForwardRevision, intercityKeptServices } from "./modes-writer";
-import { IMPORT_ACTOR, ImportRefusedError, insertRows, numberArray, point, publishedIncludes, textArrayNotNull, type Row } from "./sql-rows";
+import { IMPORT_ACTOR, ImportRefusedError, insertRows, lockPublishedBase, numberArray, point, publishedIncludes, textArrayNotNull, type Row } from "./sql-rows";
 
 export type LinesOutcome =
   | { outcome: "committed"; batchId: string; revisionId: string; revisionLabel: string; counts: Record<string, number> }
@@ -74,13 +74,8 @@ export async function writeLines(c: pg.ClientBase, lines: LinesPlan): Promise<Li
     throw new ImportRefusedError(`road snapshot ${lines.roadsFileName} is older than the committed ${newer.snapshot_version}; nothing written`);
   }
 
-  // The base must stay the published revision until our publish (same lock as publish_revision).
-  await c.query("select pg_advisory_xact_lock(hashtext('transit.publish_revision'))");
-  const published = await c.query<{ id: string; kind: string; label: string }>(
-    `select r.id, r.kind, r.label from transit.published_pointer p join transit.revision r on r.id = p.revision_id`,
-  );
-  const base = published.rows[0];
-  if (!base) throw new ImportRefusedError("no published revision to carry forward; import the transit files first");
+  // The base stays the published revision until our publish; refused while an admin draft is open (C1).
+  const base = await lockPublishedBase(c);
 
   // ---------------------------------------------------------------- ingest provenance
   const batchId = randomUUID();
