@@ -16,7 +16,7 @@ const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x4
 const HTML = new TextEncoder().encode("<html><script>x</script></html>");
 
 const state = vi.hoisted(() => ({
-  promoteResults: [] as boolean[],
+  promoteResults: [] as (boolean | Error)[],
   promoted: [] as unknown[][],
   rejected: [] as string[],
   orphans: [] as { id: string; bucket: string; object_key: string }[],
@@ -54,7 +54,9 @@ vi.mock("@/server/db/context", () => ({
         }
         if (t.includes("verify_and_promote_media")) {
           state.promoted.push(params(q));
-          return { rows: [{ ok: state.promoteResults.shift() ?? true }] };
+          const result = state.promoteResults.shift() ?? true;
+          if (result instanceof Error) throw result;
+          return { rows: [{ ok: result }] };
         }
         if (t.includes("find_orphan_media_slots")) return { rows: state.orphans };
         if (t.includes("reject_media")) {
@@ -115,6 +117,17 @@ describe("complaint evidence confirm", () => {
     expect(await storage.getObject(first.bucket, first.objectKey)).toEqual(JPEG);
     // Each attempt writes its own key, so the loser never overwrote the winner's object either.
     expect(state.promoted[1]?.[2]).not.toBe(state.promoted[0]?.[2]);
+  });
+
+  it.each([
+    ["57014", false],
+    ["08006", true],
+  ])("promote failing with %s keeps the copy: %s (only a certain rollback removes it)", async (code, kept) => {
+    state.promoteResults = [Object.assign(new Error("x"), { code })];
+    await storage.putObject("quarantine", QKEY, JPEG, "image/jpeg");
+    await expect(confirmMediaSlot(USER, SLOT_ID)).rejects.toMatchObject({ code });
+    expect((await storage.headObject("evidence-private", String(state.promoted[0]?.[2]))) !== null).toBe(kept);
+    expect(await storage.getObject("quarantine", QKEY)).toEqual(JPEG);
   });
 
   it("a storage that does not answer fails the confirm (retryable) and keeps the slot", async () => {

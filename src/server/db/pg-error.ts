@@ -11,10 +11,10 @@ function field(error: unknown, name: keyof PgFields): string | undefined {
 
 export const pgCode = (error: unknown) => field(error, "code");
 
-/** Deadlock victim or serialization failure: the transaction rolled back whole and may be sent again. */
+/** Deadlock victim, serialization failure, or a lock or statement timeout (0035): the transaction rolled back whole and may be sent again. */
 export function isTransientConflict(error: unknown): boolean {
   const code = pgCode(error);
-  return code === "40P01" || code === "40001";
+  return code === "40P01" || code === "40001" || code === "55P03" || code === "57014";
 }
 
 /**

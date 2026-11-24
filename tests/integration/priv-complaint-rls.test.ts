@@ -156,20 +156,28 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on priv.complaint (Neon branch)", () 
 
   it("reviewer functions refuse moderators and commuters, and a reviewer without step-up", async () => {
     for (const userId of [other, moderator, reporter]) {
-      expect(await pgError(rows(userId, sql`select * from priv.review_queue(10)`))).toBe("42501");
+      expect(await pgError(rows(userId, sql`select priv.review_list('open', 10)`))).toBe("42501");
       expect(await pgError(rows(userId, sql`select * from priv.reviewer_evidence_download(${complaintId}::uuid, ${evidenceId}::uuid)`))).toBe("42501");
     }
-    expect(await pgError(rows(reviewer, sql`select * from priv.review_queue(10)`))).toBe("42501");
+    expect(await pgError(rows(reviewer, sql`select priv.review_list('open', 10)`))).toBe("42501");
+  });
+
+  it("0034: the superseded queue is closed even to a reviewer with a step-up", async () => {
+    expect(await pgError(as(reviewer, async (db) => {
+      await db.execute(sql`select set_config('app.step_up_at', now()::text, true)`);
+      return (await db.execute(sql`select * from priv.review_queue(10)`)).rows;
+    }))).toBe("42501");
   });
 
   it("a reviewer with a fresh step-up sees the queue without reporter ids", async () => {
     // The setting by hand tests the gate alone; the record that fills it is step-up-rls.test.ts.
     const queue = await as(reviewer, async (db) => {
       await db.execute(sql`select set_config('app.step_up_at', now()::text, true)`);
-      return (await db.execute(sql`select * from priv.review_queue(100)`)).rows;
+      return (await db.execute(sql`select j as r from jsonb_array_elements(priv.review_list('open', 200)) j`)).rows.map((x) => x.r as Record<string, unknown>);
     });
     const mine = queue.find((r) => r.id === complaintId);
     expect(mine).toBeDefined();
-    expect(Object.keys(mine!)).not.toContain("reporter_id");
+    expect(Object.keys(mine!)).not.toContain("reporterId");
+    expect(JSON.stringify(mine)).not.toContain(reporter);
   });
 });

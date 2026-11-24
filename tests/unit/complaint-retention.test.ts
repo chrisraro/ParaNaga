@@ -122,6 +122,27 @@ describe("runEvidenceRetention", () => {
     expect(db.runs).toEqual([[false, 0, 0, 0, 3]]);
   });
 
+  it("a complaint a reviewer holds (lock timeout) counts as failed; the others proceed", async () => {
+    const db = fakeDb();
+    const storage = await storageWithObjects();
+    let first = true;
+    const asSystem: typeof db.asSystem = (fn) =>
+      db.asSystem((d) =>
+        fn({
+          execute: async (q: never) => {
+            const r = await (d as { execute: (q: never) => Promise<unknown> }).execute(q);
+            if (first && db.log.length > 0) {
+              first = false;
+              throw new Error("Failed query", { cause: { code: "55P03" } });
+            }
+            return r;
+          },
+        } as never),
+      );
+    expect(await runEvidenceRetention({ dryRun: false, storage, asSystem })).toMatchObject({ complaints: 1, uploads: 1, failed: 1 });
+    expect(db.live.size).toBe(1);
+  });
+
   it("an object still present after delete (HEAD check) also rolls back", async () => {
     const db = fakeDb();
     const storage = await storageWithObjects();

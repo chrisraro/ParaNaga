@@ -94,6 +94,9 @@ If this document becomes the source of truth, move the dump and generator into `
 |---|---|---|
 | 0031 | Functions only: `transit.admin_publish_revision` (a draft must come from the live revision), `admin_create_draft`, `admin_open_draft` | C1 |
 | 0032 | `taken_down_at` on `post_version`, `comment`, `post_photo` (each with a CHECK); `appeal_target_uq` replaced by `appeal_target_idx` (one appeal per decision); `reaction_target_idx`, `content_report_open_target_idx`; `created_at` default `clock_timestamp()` on `moderation_decision` and `appeal`; new `community.admin_take_down`, `admin_report_queue`; `resolve_report` takes four arguments; changed `content_target`, `apply_content_outcome`, `submit_appeal`, `report_content`, `toggle_reaction`, `toggle_bookmark` | C2, C3, C4, I1, I2 |
+| 0033 | `evidence_access_complaint_idx`, `moderation_decision_created_idx` | I3, I4 |
+| 0034 | App role updates only `profile` (`display_name`, `locale`) and `job` (`run_after`); execute revoked on `community.review_queue`, `community.content_review_queue`, `priv.review_queue` | S1, S2, S3 |
+| 0035 | `paranaga_app`: `statement_timeout` 15 s, `lock_timeout` 5 s; both answer 503. The import role and the owner have none | O3 |
 | code, no migration | Daily Vercel cron, queued rate-limit purge, 40P01/40001/23505 handling, saved trips with an unknown revision, storage timeouts, `schema.ts` cut to the tables in use | O1, O2, C5, F1, C6, §4.1 |
 
 App schemas now: 89 tables, 854 columns, 79 foreign keys, 83 SECURITY DEFINER functions.

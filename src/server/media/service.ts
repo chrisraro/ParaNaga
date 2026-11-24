@@ -2,6 +2,7 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import { withRequestContext, type Db } from "@/server/db/context";
+import { isTransientConflict } from "@/server/db/pg-error";
 import { safeRequestId } from "@/server/request-id";
 import { getStorage } from "@/server/storage/adapter";
 import { sniffMagicBytes } from "@/domain/media/sniff";
@@ -179,6 +180,10 @@ export async function confirmMediaSlot(
       ) as ok
     `);
     return res.rows[0]?.ok === true;
+  }).catch(async (error: unknown) => {
+    // Certainly rolled back, so nothing records this copy. After any other error it may be in use.
+    if (isTransientConflict(error)) await storage.deleteObject(destBucket, destKey).catch(() => false);
+    throw error;
   });
   if (!promoted) {
     await storage.deleteObject(destBucket, destKey);

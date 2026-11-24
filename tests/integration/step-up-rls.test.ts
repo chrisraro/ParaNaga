@@ -169,12 +169,12 @@ describe.skipIf(!ownerUrl || !appUrl)("step-up record and gates (Neon branch)", 
     const k = key("reviewer-session");
     expect(await pgError(as(reviewer, async (db) => {
       await db.execute(sql`select core.step_up_apply(${k})`);
-      return (await db.execute(sql`select * from priv.review_queue(10)`)).rows;
+      return (await db.execute(sql`select priv.review_list('open', 10)`)).rows;
     }))).toBe("42501");
     expect((await verify(reviewer, k)).at).not.toBeNull();
     const queue = await as(reviewer, async (db) => {
       await db.execute(sql`select core.step_up_apply(${k})`);
-      return (await db.execute(sql`select * from priv.review_queue(100)`)).rows;
+      return (await db.execute(sql`select j as r from jsonb_array_elements(priv.review_list('open', 200)) j`)).rows.map((x) => x.r as Record<string, unknown>);
     });
     expect(queue.some((r) => r.id === complaintId)).toBe(true);
   });

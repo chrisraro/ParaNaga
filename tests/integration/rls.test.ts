@@ -165,6 +165,38 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on core (Neon branch)", () => {
     expect(active).toHaveLength(0);
   });
 
+  it("0034: a person edits only their own name and language; suspension and deletion are out of reach", async () => {
+    for (const set of [sql`suspended_until = null`, sql`deleted_at = now()`, sql`user_id = user_id`]) {
+      expect((await pgError(rows(alice, sql`update core.profile set ${set} where user_id = ${alice}`))).code).toBe("42501");
+    }
+    expect(await rows(alice, sql`update core.profile set display_name = 'Alice B' where user_id = ${alice} returning display_name`)).toEqual([{ display_name: "Alice B" }]);
+    expect(await rows(alice, sql`update core.profile set display_name = 'x' where user_id = ${bob} returning user_id`)).toHaveLength(0);
+  });
+
+  it("0034: the app role may only reschedule a job", async () => {
+    for (const set of [sql`status = 'done'`, sql`payload = '{}'::jsonb`, sql`attempts = 0`]) {
+      expect((await pgError(rows(null, sql`update ops.job set ${set}`))).code).toBe("42501");
+    }
+    await rows(null, sql`update ops.job set run_after = run_after where false`);
+  });
+
+  it("0035: the app role has timeouts through the pooler, and a blocked lock ends by itself", async () => {
+    const settings = async (c: pg.Pool | pg.Client) =>
+      (await c.query("select current_setting('statement_timeout') as s, current_setting('lock_timeout') as l")).rows[0];
+    expect(await settings(app)).toEqual({ s: "15s", l: "5s" });
+    expect(await settings(owner)).toEqual({ s: "0", l: "0" });
+    await owner.query("begin");
+    try {
+      await owner.query("select pg_advisory_xact_lock(hashtext($1))", [run]);
+      expect((await pgError(rows(alice, sql`select pg_advisory_xact_lock(hashtext(${run}))`))).code).toBe("55P03");
+    } finally {
+      await owner.query("rollback");
+    }
+    expect((await pgError(rows(alice, sql`select pg_sleep(20)`))).code).toBe("57014");
+    // The connection is usable afterwards.
+    expect(await rows(alice, sql`select 1 as ok`)).toEqual([{ ok: 1 }]);
+  }, 60_000);
+
   it("users cannot mark their own uploads verified", async () => {
     await expect(
       rows(alice, sql`insert into core.media_object (bucket, object_key, expected_bytes, owner_id, purpose, status)

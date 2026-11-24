@@ -1,4 +1,5 @@
 import "server-only";
+import { pgCode } from "@/server/db/pg-error";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Db } from "@/server/db/context";
@@ -65,7 +66,8 @@ async function purgeOne(asSystem: SystemDb, purge: ReturnType<typeof sql>, remov
       return "purged" as const;
     });
   } catch (error) {
-    if (error instanceof ObjectsRemain) return "failed";
+    // A reviewer holds the row (lock timeout, 0035): nothing was touched, the next run takes it.
+    if (error instanceof ObjectsRemain || pgCode(error) === "55P03") return "failed";
     throw error;
   }
 }

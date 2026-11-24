@@ -52,7 +52,7 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
     }
     throw new Error("expected the query to fail");
   };
-  const NO_GRANT = /^42501 permission denied for function set_(correction|content)_status$/;
+  const NO_GRANT = /^42501 permission denied for function (set_(correction|content)_status|(content_)?review_queue)$/;
   const moderate = (userId: string, type: string, id: string) =>
     rows(userId, sql`select community.admin_moderate(${type}, ${id}::uuid, 'published', 'meets_guidelines', null, null) as r`);
 
@@ -134,11 +134,13 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
     for (const [name, userId] of everyone()) {
       if (userId === null) continue;
       if (userId === transport || userId === admin) {
-        const queue = await rows(userId, sql`select id from community.review_queue(200)`);
-        expect(queue.some((r) => r.id === correctionId), name).toBe(true);
+        const [row] = await rows(userId, sql`select community.admin_corrections('open', 200) as r`);
+        expect(JSON.stringify(row!.r), name).toContain(correctionId);
       } else {
-        expect(await pgError(rows(userId, sql`select * from community.review_queue(10)`)), name).toBe("42501");
+        expect(await pgError(rows(userId, sql`select community.admin_corrections('open', 10)`)), name).toBe("42501");
       }
+      // 0034: the superseded queue is closed to everyone.
+      expect(await noGrant(rows(userId, sql`select * from community.review_queue(10)`)), name).toMatch(NO_GRANT);
     }
   });
 
@@ -174,7 +176,7 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
 
   it("posts: only moderators and admins reach the content queue, never for their own content", async () => {
     for (const userId of [author, other, contributor, transport, complaintReviewer]) {
-      expect(await pgError(rows(userId, sql`select * from community.content_review_queue(10)`)), userId).toBe("42501");
+      expect(await pgError(rows(userId, sql`select community.admin_moderation_queue(10)`)), userId).toBe("42501");
       expect(await pgError(moderate(userId, "post_version", versionId)), userId).toBe("42501");
     }
     // 0030: the legacy function is closed to the app role, moderators and admins included.
@@ -184,8 +186,10 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on community (Neon branch)", () => {
         userId,
       ).toMatch(NO_GRANT);
     }
-    const queue = await rows(moderator, sql`select id from community.content_review_queue(200)`);
-    expect(queue.some((r) => r.id === versionId)).toBe(true);
+    const [row] = await rows(moderator, sql`select community.admin_moderation_queue(200) as r`);
+    expect(JSON.stringify((row!.r as { items: unknown }).items)).toContain(versionId);
+    // 0034: the superseded queue is closed to everyone.
+    expect(await noGrant(rows(moderator, sql`select * from community.content_review_queue(10)`))).toMatch(NO_GRANT);
   });
 
   it("posts: once a moderator publishes, everyone reads the post; nobody writes it directly", async () => {

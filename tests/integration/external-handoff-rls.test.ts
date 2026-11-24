@@ -116,7 +116,7 @@ describe.skipIf(!ownerUrl || !appUrl)("RLS on priv.external_handoff (Neon branch
   it("the reviewer queue never carries the reference", async () => {
     const queue = await as(reviewer, async (db) => {
       await db.execute(sql`select set_config('app.step_up_at', now()::text, true)`);
-      return (await db.execute(sql`select * from priv.review_queue(100)`)).rows;
+      return (await db.execute(sql`select j as r from jsonb_array_elements(priv.review_list('open', 200)) j`)).rows.map((x) => x.r as Record<string, unknown>);
     });
     const row = queue.find((r) => r.id === complaintId);
     expect(row).toBeDefined();

@@ -35,7 +35,8 @@ describe("database conflicts", () => {
       throw error;
     });
 
-  it.each(["40P01", "40001"])("%s answers 503 with Retry-After, wrapped or not (admin routes: admin-handlers.test.ts)", async (code) => {
+  it.each(["40P01", "40001", "55P03", "57014"])("%s answers 503 with Retry-After, wrapped or not (admin routes: admin-handlers.test.ts)", async (code) => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const raw = Object.assign(new Error("deadlock detected; secret-row-text"), { code });
     const wrapped = new Error("Failed query", { cause: raw });
     for (const error of [raw, wrapped]) {
@@ -45,6 +46,8 @@ describe("database conflicts", () => {
       const text = await response.text();
       expect(JSON.parse(text).error.code).toBe("unavailable");
       expect(text).not.toContain("secret-row-text");
+      expect(JSON.parse(String(warn.mock.lastCall?.[0]))).toMatchObject({ event: "api_busy", code });
+      expect(String(warn.mock.lastCall?.[0])).not.toContain("secret-row-text");
     }
   });
 
